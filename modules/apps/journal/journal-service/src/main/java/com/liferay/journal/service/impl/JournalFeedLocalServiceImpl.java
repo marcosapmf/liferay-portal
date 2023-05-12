@@ -14,6 +14,10 @@
 
 package com.liferay.journal.service.impl;
 
+import com.liferay.asset.kernel.model.AssetEntry;
+import com.liferay.asset.kernel.model.AssetLinkConstants;
+import com.liferay.asset.kernel.service.AssetEntryLocalService;
+import com.liferay.asset.kernel.service.AssetLinkLocalService;
 import com.liferay.dynamic.data.mapping.model.DDMForm;
 import com.liferay.dynamic.data.mapping.model.DDMFormField;
 import com.liferay.dynamic.data.mapping.model.DDMFormFieldOptions;
@@ -28,7 +32,6 @@ import com.liferay.journal.exception.FeedContentFieldException;
 import com.liferay.journal.exception.FeedIdException;
 import com.liferay.journal.exception.FeedNameException;
 import com.liferay.journal.exception.FeedTargetLayoutFriendlyUrlException;
-import com.liferay.journal.model.JournalArticle;
 import com.liferay.journal.model.JournalFeed;
 import com.liferay.journal.service.base.JournalFeedLocalServiceBaseImpl;
 import com.liferay.petra.string.CharPool;
@@ -45,6 +48,7 @@ import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.service.permission.ModelPermissions;
 import com.liferay.portal.kernel.systemevent.SystemEvent;
+import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -70,7 +74,7 @@ public class JournalFeedLocalServiceImpl
 	@Override
 	public JournalFeed addFeed(
 			long userId, long groupId, String feedId, boolean autoFeedId,
-			String name, String description, String ddmStructureKey,
+			String name, String description, long ddmStructureId,
 			String ddmTemplateKey, String ddmRendererTemplateKey, int delta,
 			String orderByCol, String orderByType,
 			String targetLayoutFriendlyUrl, String targetPortletId,
@@ -83,9 +87,16 @@ public class JournalFeedLocalServiceImpl
 		User user = _userLocalService.getUser(userId);
 		feedId = StringUtil.toUpperCase(StringUtil.trim(feedId));
 
+		DDMStructure ddmStructure = null;
+
+		if (ddmStructureId > 0) {
+			ddmStructure = _ddmStructureLocalService.fetchStructure(
+				ddmStructureId);
+		}
+
 		_validate(
 			user.getCompanyId(), groupId, feedId, autoFeedId, name,
-			ddmStructureKey, targetLayoutFriendlyUrl, contentField);
+			ddmStructure, targetLayoutFriendlyUrl, contentField);
 
 		if (autoFeedId) {
 			feedId = String.valueOf(counterLocalService.increment());
@@ -103,9 +114,13 @@ public class JournalFeedLocalServiceImpl
 		feed.setFeedId(feedId);
 		feed.setName(name);
 		feed.setDescription(description);
-		feed.setDDMStructureKey(ddmStructureKey);
-		feed.setDDMTemplateKey(ddmTemplateKey);
-		feed.setDDMRendererTemplateKey(ddmRendererTemplateKey);
+
+		if (ddmStructure != null) {
+			feed.setDDMStructureId(ddmStructure.getStructureId());
+			feed.setDDMTemplateKey(ddmTemplateKey);
+			feed.setDDMRendererTemplateKey(ddmRendererTemplateKey);
+		}
+
 		feed.setDelta(delta);
 		feed.setOrderByCol(orderByCol);
 		feed.setOrderByType(orderByType);
@@ -126,16 +141,19 @@ public class JournalFeedLocalServiceImpl
 
 		feed = journalFeedPersistence.update(feed);
 
-		// DDM Structure Link
+		// Asset
 
-		DDMStructure ddmStructure = _ddmStructureLocalService.getStructure(
-			groupId,
-			_classNameLocalService.getClassNameId(JournalArticle.class),
-			ddmStructureKey, true);
+		_updateAssetEntry(
+			userId, feed, serviceContext.getAssetCategoryIds(),
+			serviceContext.getAssetTagNames(),
+			serviceContext.getAssetLinkEntryIds(),
+			serviceContext.getAssetPriority());
 
-		_ddmStructureLinkLocalService.addStructureLink(
-			_classNameLocalService.getClassNameId(JournalFeed.class),
-			feed.getPrimaryKey(), ddmStructure.getStructureId());
+		if (ddmStructure != null) {
+			_ddmStructureLinkLocalService.addStructureLink(
+				_classNameLocalService.getClassNameId(JournalFeed.class),
+				feed.getPrimaryKey(), ddmStructure.getStructureId());
+		}
 
 		// Resources
 
@@ -194,22 +212,30 @@ public class JournalFeedLocalServiceImpl
 
 		journalFeedPersistence.remove(feed);
 
-		// DDM Structure Link
-
-		DDMStructure ddmStructure = _ddmStructureLocalService.getStructure(
-			feed.getGroupId(),
-			_classNameLocalService.getClassNameId(JournalArticle.class),
-			feed.getDDMStructureKey(), true);
-
-		_ddmStructureLinkLocalService.deleteStructureLink(
-			_classNameLocalService.getClassNameId(JournalFeed.class),
-			feed.getPrimaryKey(), ddmStructure.getStructureId());
-
 		// Resources
 
 		_resourceLocalService.deleteResource(
 			feed.getCompanyId(), JournalFeed.class.getName(),
 			ResourceConstants.SCOPE_INDIVIDUAL, feed.getId());
+
+		// Asset
+
+		_assetEntryLocalService.deleteEntry(
+			JournalFeed.class.getName(), feed.getId());
+
+		// DDM Structure Link
+
+		if (feed.getDDMStructureId() > 0) {
+			DDMStructure ddmStructure =
+				_ddmStructureLocalService.fetchStructure(
+					feed.getDDMStructureId());
+
+			if (ddmStructure != null) {
+				_ddmStructureLinkLocalService.deleteStructureLink(
+					_classNameLocalService.getClassNameId(JournalFeed.class),
+					feed.getPrimaryKey(), ddmStructure.getStructureId());
+			}
+		}
 
 		// Expando
 
@@ -305,7 +331,7 @@ public class JournalFeedLocalServiceImpl
 	@Override
 	public JournalFeed updateFeed(
 			long groupId, String feedId, String name, String description,
-			String ddmStructureKey, String ddmTemplateKey,
+			long ddmStructureId, String ddmTemplateKey,
 			String ddmRendererTemplateKey, int delta, String orderByCol,
 			String orderByType, String targetLayoutFriendlyUrl,
 			String targetPortletId, String contentField, String feedFormat,
@@ -316,15 +342,31 @@ public class JournalFeedLocalServiceImpl
 
 		JournalFeed feed = journalFeedPersistence.findByG_F(groupId, feedId);
 
+		DDMStructure ddmStructure = null;
+
+		if (ddmStructureId > 0) {
+			ddmStructure = _ddmStructureLocalService.fetchStructure(
+				ddmStructureId);
+		}
+
 		_validate(
-			feed.getCompanyId(), groupId, name, ddmStructureKey,
-			targetLayoutFriendlyUrl, contentField);
+			feed.getCompanyId(), name, ddmStructure, targetLayoutFriendlyUrl,
+			contentField);
 
 		feed.setName(name);
 		feed.setDescription(description);
-		feed.setDDMStructureKey(ddmStructureKey);
-		feed.setDDMTemplateKey(ddmTemplateKey);
-		feed.setDDMRendererTemplateKey(ddmRendererTemplateKey);
+
+		if (ddmStructure != null) {
+			feed.setDDMStructureId(ddmStructure.getStructureId());
+			feed.setDDMTemplateKey(ddmTemplateKey);
+			feed.setDDMRendererTemplateKey(ddmRendererTemplateKey);
+		}
+		else {
+			feed.setDDMStructureId(0);
+			feed.setDDMTemplateKey(null);
+			feed.setDDMRendererTemplateKey(null);
+		}
+
 		feed.setDelta(delta);
 		feed.setOrderByCol(orderByCol);
 		feed.setOrderByType(orderByType);
@@ -345,23 +387,42 @@ public class JournalFeedLocalServiceImpl
 
 		feed = journalFeedPersistence.update(feed);
 
+		// Asset
+
+		_updateAssetEntry(
+			serviceContext.getUserId(), feed,
+			serviceContext.getAssetCategoryIds(),
+			serviceContext.getAssetTagNames(),
+			serviceContext.getAssetLinkEntryIds(),
+			serviceContext.getAssetPriority());
+
 		// DDM Structure Link
 
 		long classNameId = _classNameLocalService.getClassNameId(
 			JournalFeed.class);
 
-		DDMStructureLink ddmStructureLink =
-			_ddmStructureLinkLocalService.getUniqueStructureLink(
-				classNameId, feed.getPrimaryKey());
+		if (ddmStructure == null) {
+			_ddmStructureLinkLocalService.deleteStructureLinks(
+				classNameId, feed.getId());
+		}
+		else {
+			int count = _ddmStructureLinkLocalService.getStructureLinksCount(
+				classNameId, feed.getId());
 
-		DDMStructure ddmStructure = _ddmStructureLocalService.getStructure(
-			groupId,
-			_classNameLocalService.getClassNameId(JournalArticle.class),
-			ddmStructureKey, true);
+			if (count == 0) {
+				_ddmStructureLinkLocalService.addStructureLink(
+					classNameId, feed.getId(), ddmStructure.getStructureId());
+			}
+			else {
+				DDMStructureLink ddmStructureLink =
+					_ddmStructureLinkLocalService.getUniqueStructureLink(
+						classNameId, feed.getId());
 
-		_ddmStructureLinkLocalService.updateStructureLink(
-			ddmStructureLink.getStructureLinkId(), classNameId,
-			feed.getPrimaryKey(), ddmStructure.getStructureId());
+				_ddmStructureLinkLocalService.updateStructureLink(
+					ddmStructureLink.getStructureLinkId(), classNameId,
+					feed.getId(), ddmStructure.getStructureId());
+			}
+		}
 
 		return feed;
 	}
@@ -394,10 +455,28 @@ public class JournalFeedLocalServiceImpl
 		return false;
 	}
 
+	private void _updateAssetEntry(
+			long userId, JournalFeed feed, long[] assetCategoryIds,
+			String[] assetTagNames, long[] assetLinkEntryIds, Double priority)
+		throws PortalException {
+
+		AssetEntry assetEntry = _assetEntryLocalService.updateEntry(
+			userId, feed.getGroupId(), feed.getCreateDate(),
+			feed.getModifiedDate(), JournalFeed.class.getName(), feed.getId(),
+			feed.getUuid(), 0, assetCategoryIds, assetTagNames, true, true,
+			null, null, feed.getCreateDate(), null, ContentTypes.TEXT_PLAIN,
+			feed.getName(), feed.getDescription(), null, null, null, 0, 0,
+			priority);
+
+		_assetLinkLocalService.updateLinks(
+			userId, assetEntry.getEntryId(), assetLinkEntryIds,
+			AssetLinkConstants.TYPE_RELATED);
+	}
+
 	private void _validate(
 			long companyId, long groupId, String feedId, boolean autoFeedId,
-			String name, String ddmStructureKey, String targetLayoutFriendlyUrl,
-			String contentField)
+			String name, DDMStructure ddmStructure,
+			String targetLayoutFriendlyUrl, String contentField)
 		throws PortalException {
 
 		if (!autoFeedId) {
@@ -419,12 +498,12 @@ public class JournalFeedLocalServiceImpl
 		}
 
 		_validate(
-			companyId, groupId, name, ddmStructureKey, targetLayoutFriendlyUrl,
+			companyId, name, ddmStructure, targetLayoutFriendlyUrl,
 			contentField);
 	}
 
 	private void _validate(
-			long companyId, long groupId, String name, String ddmStructureKey,
+			long companyId, String name, DDMStructure ddmStructure,
 			String targetLayoutFriendlyUrl, String contentField)
 		throws PortalException {
 
@@ -448,10 +527,10 @@ public class JournalFeedLocalServiceImpl
 			return;
 		}
 
-		DDMStructure ddmStructure = _ddmStructureLocalService.getStructure(
-			groupId,
-			_classNameLocalService.getClassNameId(JournalArticle.class),
-			ddmStructureKey, true);
+		if (ddmStructure == null) {
+			throw new FeedContentFieldException(
+				"Invalid content field " + contentField);
+		}
 
 		DDMForm ddmForm = ddmStructure.getDDMForm();
 
@@ -467,6 +546,12 @@ public class JournalFeedLocalServiceImpl
 				"Invalid content field " + contentField);
 		}
 	}
+
+	@Reference
+	private AssetEntryLocalService _assetEntryLocalService;
+
+	@Reference
+	private AssetLinkLocalService _assetLinkLocalService;
 
 	@Reference
 	private ClassNameLocalService _classNameLocalService;

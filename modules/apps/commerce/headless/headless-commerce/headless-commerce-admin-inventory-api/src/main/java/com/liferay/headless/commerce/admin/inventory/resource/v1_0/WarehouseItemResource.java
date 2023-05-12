@@ -25,6 +25,7 @@ import com.liferay.portal.odata.filter.ExpressionConvert;
 import com.liferay.portal.odata.filter.FilterParserProvider;
 import com.liferay.portal.odata.sort.SortParserProvider;
 import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
+import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineExportTaskResource;
 import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineImportTaskResource;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
@@ -79,8 +80,7 @@ public interface WarehouseItemResource {
 
 	public Response deleteWarehouseItem(Long id) throws Exception;
 
-	public Response deleteWarehouseItemBatch(
-			Long id, String callbackURL, Object object)
+	public Response deleteWarehouseItemBatch(String callbackURL, Object object)
 		throws Exception;
 
 	public WarehouseItem getWarehouseItem(Long id) throws Exception;
@@ -106,7 +106,7 @@ public interface WarehouseItemResource {
 		throws Exception;
 
 	public Response postWarehouseIdWarehouseItemBatch(
-			Long id, String callbackURL, Object object)
+			String callbackURL, Object object)
 		throws Exception;
 
 	public default void setContextAcceptLanguage(
@@ -147,6 +147,10 @@ public interface WarehouseItemResource {
 	public void setRoleLocalService(RoleLocalService roleLocalService);
 
 	public void setSortParserProvider(SortParserProvider sortParserProvider);
+
+	public void setVulcanBatchEngineExportTaskResource(
+		VulcanBatchEngineExportTaskResource
+			vulcanBatchEngineExportTaskResource);
 
 	public void setVulcanBatchEngineImportTaskResource(
 		VulcanBatchEngineImportTaskResource

@@ -91,6 +91,11 @@ public class ServletDataImpl implements ServletData {
 			new HashMap<String, ObjectValuePair<Class<?>, String>>() {
 				{
 					put(
+						"mutation#createCountriesPageExportBatch",
+						new ObjectValuePair<>(
+							CountryResourceImpl.class,
+							"postCountriesPageExportBatch"));
+					put(
 						"mutation#createCountry",
 						new ObjectValuePair<>(
 							CountryResourceImpl.class, "postCountry"));
@@ -119,6 +124,11 @@ public class ServletDataImpl implements ServletData {
 						new ObjectValuePair<>(
 							CountryResourceImpl.class, "putCountryBatch"));
 					put(
+						"mutation#createCountryRegionsPageExportBatch",
+						new ObjectValuePair<>(
+							RegionResourceImpl.class,
+							"postCountryRegionsPageExportBatch"));
+					put(
 						"mutation#createCountryRegion",
 						new ObjectValuePair<>(
 							RegionResourceImpl.class, "postCountryRegion"));
@@ -127,6 +137,11 @@ public class ServletDataImpl implements ServletData {
 						new ObjectValuePair<>(
 							RegionResourceImpl.class,
 							"postCountryRegionBatch"));
+					put(
+						"mutation#createRegionsPageExportBatch",
+						new ObjectValuePair<>(
+							RegionResourceImpl.class,
+							"postRegionsPageExportBatch"));
 					put(
 						"mutation#deleteRegion",
 						new ObjectValuePair<>(
@@ -189,6 +204,16 @@ public class ServletDataImpl implements ServletData {
 						"query#region",
 						new ObjectValuePair<>(
 							RegionResourceImpl.class, "getRegion"));
+
+					put(
+						"query#Region.country",
+						new ObjectValuePair<>(
+							CountryResourceImpl.class, "getCountry"));
+					put(
+						"query#Country.regionByRegionCode",
+						new ObjectValuePair<>(
+							RegionResourceImpl.class,
+							"getCountryRegionByRegionCode"));
 				}
 			};
 

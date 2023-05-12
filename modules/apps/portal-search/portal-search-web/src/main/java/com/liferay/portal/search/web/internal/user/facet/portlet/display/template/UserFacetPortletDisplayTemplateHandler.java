@@ -32,15 +32,12 @@ import java.util.Map;
 import java.util.ResourceBundle;
 
 import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Kevin Tan
  */
 @Component(
-	configurationPid = "com.liferay.portal.search.web.internal.user.facet.configuration.UserFacetTemplateConfiguration",
-	configurationPolicy = ConfigurationPolicy.OPTIONAL,
 	property = "javax.portlet.name=" + UserFacetPortletKeys.USER_FACET,
 	service = TemplateHandler.class
 )

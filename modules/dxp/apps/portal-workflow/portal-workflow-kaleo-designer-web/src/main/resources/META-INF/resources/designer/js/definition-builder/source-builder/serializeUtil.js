@@ -80,6 +80,7 @@ function appendXMLActions(
 			priority,
 			script,
 			scriptLanguage,
+			status,
 		} = actions;
 
 		const xmlAction = XMLUtil.createObj(actionNodeName || 'action');
@@ -99,16 +100,23 @@ function appendXMLActions(
 				);
 			}
 
-			if (isValidValue(script, index)) {
-				buffer.push(XMLUtil.create('script', cdata(script[index])));
+			if (isValidValue(status, index)) {
+				buffer.push(
+					createTagWithEscapedContent('status', status[index])
+				);
 			}
+			else {
+				if (isValidValue(script, index)) {
+					buffer.push(XMLUtil.create('script', cdata(script[index])));
+				}
 
-			buffer.push(
-				createTagWithEscapedContent(
-					'scriptLanguage',
-					scriptLanguage[index] || DEFAULT_LANGUAGE
-				)
-			);
+				buffer.push(
+					createTagWithEscapedContent(
+						'scriptLanguage',
+						scriptLanguage[index] || DEFAULT_LANGUAGE
+					)
+				);
+			}
 
 			if (isValidValue(priority, index)) {
 				buffer.push(
@@ -179,8 +187,6 @@ function appendXMLAssignments(
 
 		const xmlRoles = XMLUtil.createObj('roles');
 
-		const roleTypeName = exporting ? 'depot' : 'asset library';
-
 		if (assignmentType === 'resourceActions') {
 			const xmlResourceAction = XMLUtil.createObj('resourceActions');
 
@@ -213,18 +219,14 @@ function appendXMLAssignments(
 			const xmlRole = XMLUtil.createObj('role');
 
 			dataAssignments.roleType.forEach((item, index) => {
-				const roleName = dataAssignments.roleName[index];
-				let roleType = dataAssignments.roleType[index];
+				const roleKey = dataAssignments.roleKey[index];
+				const roleType = dataAssignments.roleType[index];
 
-				if (item === 'asset library') {
-					roleType = roleTypeName;
-				}
-
-				if (roleName) {
+				if (roleKey) {
 					buffer.push(
 						xmlRole.open,
 						createTagWithEscapedContent('roleType', roleType),
-						createTagWithEscapedContent('name', roleName)
+						createTagWithEscapedContent('name', roleKey)
 					);
 
 					let autoCreate = dataAssignments.autoCreate?.[index];
@@ -361,13 +363,33 @@ function appendXMLAssignments(
 	}
 }
 
+function appendXMLRecipients(buffer, exporting, recipients) {
+	const recipientsAttrs = {};
+
+	if (
+		recipients?.receptionType &&
+		recipients.receptionType.some((receptionType) => receptionType !== '')
+	) {
+		recipientsAttrs.receptionType = recipients.receptionType;
+	}
+
+	if (isObject(recipients) && !isObjectEmpty(recipients)) {
+		appendXMLAssignments(
+			buffer,
+			recipients,
+			exporting,
+			'recipients',
+			recipientsAttrs
+		);
+	}
+}
+
 function appendXMLNotifications(buffer, notifications, nodeName, exporting) {
 	if (notifications && notifications.name && !!notifications.name.length) {
 		const {
 			description,
 			executionType,
 			notificationTypes,
-			receptionType,
 			recipients,
 			template,
 			templateLanguage,
@@ -386,8 +408,6 @@ function appendXMLNotifications(buffer, notifications, nodeName, exporting) {
 					XMLUtil.create('description', cdata(description[index]))
 				);
 			}
-
-			const roleTypeName = exporting ? 'depot' : 'asset library';
 
 			if (isValidValue(template, index)) {
 				buffer.push(XMLUtil.create('template', cdata(template[index])));
@@ -413,37 +433,29 @@ function appendXMLNotifications(buffer, notifications, nodeName, exporting) {
 				});
 			}
 
-			const recipientsAttrs = {};
+			let currentRecipients = recipients;
+
+			if (Array.isArray(recipients) && recipients.length === 1) {
+				currentRecipients = recipients[0];
+			}
 
 			if (
-				recipients[index]?.receptionType &&
-				recipients[index]?.receptionType.some(
-					(receptionType) => receptionType !== ''
-				)
+				Array.isArray(currentRecipients) &&
+				Array.isArray(currentRecipients[index])
 			) {
-				recipientsAttrs.receptionType = recipients[index].receptionType;
-			}
-
-			if (!recipientsAttrs.receptionType && receptionType?.[0]) {
-				recipientsAttrs.receptionType = receptionType[0];
-			}
-
-			recipients[index]?.roleType?.forEach((item, roleTypeIndex) => {
-				if (item === 'depot' || item === 'asset library') {
-					recipients[index].roleType[roleTypeIndex] = roleTypeName;
+				for (const recipientsIndex in currentRecipients[index]) {
+					appendXMLRecipients(
+						buffer,
+						exporting,
+						currentRecipients[index][recipientsIndex]
+					);
 				}
-			});
-
-			if (
-				isObject(recipients[index]) &&
-				!isObjectEmpty(recipients[index])
-			) {
-				appendXMLAssignments(
+			}
+			else {
+				appendXMLRecipients(
 					buffer,
-					recipients[index],
 					exporting,
-					'recipients',
-					recipientsAttrs
+					currentRecipients[index]
 				);
 			}
 
@@ -555,7 +567,7 @@ function appendXMLTaskTimers(buffer, taskTimers, exporting) {
 	}
 }
 
-function appendXMLTransitions(buffer, transitions, exporting) {
+function appendXMLTransitions(buffer, transitions) {
 	if (transitions.length) {
 		const xmlTransitions = XMLUtil.createObj('transitions');
 
@@ -581,11 +593,7 @@ function appendXMLTransitions(buffer, transitions, exporting) {
 
 			buffer.push(xmlLabels.close);
 
-			const tagTransitionNameId = exporting ? 'name' : 'id';
-
-			buffer.push(
-				createTagWithEscapedContent(`${tagTransitionNameId}`, item.id)
-			);
+			buffer.push(createTagWithEscapedContent('name', item.id));
 
 			buffer.push(
 				createTagWithEscapedContent('target', item.target),
@@ -648,8 +656,8 @@ function serializeDefinition(
 
 	nodes?.forEach((item) => {
 		const description = item.data?.description;
-		const id = item.id;
 		const initial = item.type === 'start';
+		const name = item.id;
 		const script = item.data?.script;
 		const scriptLanguage = item.data?.scriptLanguage;
 		let xmlType = item.type;
@@ -660,12 +668,7 @@ function serializeDefinition(
 
 		const xmlNode = XMLUtil.createObj(xmlType);
 
-		const tagNodeNameId = exporting ? 'name' : 'id';
-
-		buffer.push(
-			xmlNode.open,
-			createTagWithEscapedContent(`${tagNodeNameId}`, id)
-		);
+		buffer.push(xmlNode.open, createTagWithEscapedContent('name', name));
 
 		if (description) {
 			const descriptionWithHTMLEscape = Liferay.Util.escape(description);
@@ -730,10 +733,10 @@ function serializeDefinition(
 		}
 
 		const nodeTransitions = transitions.filter(
-			(transition) => transition.source === id
+			(transition) => transition.source === name
 		);
 
-		appendXMLTransitions(buffer, nodeTransitions, exporting);
+		appendXMLTransitions(buffer, nodeTransitions);
 
 		buffer.push(xmlNode.close);
 	});

@@ -49,8 +49,7 @@ public class SearchResultsPortletSharedSearchContributor
 
 		SearchRequestBuilder searchRequestBuilder =
 			portletSharedSearchSettings.getFederatedSearchRequestBuilder(
-				searchResultsPortletPreferences.
-					getFederatedSearchKeyOptional());
+				searchResultsPortletPreferences.getFederatedSearchKey());
 
 		_paginate(
 			searchResultsPortletPreferences, portletSharedSearchSettings,
@@ -60,7 +59,7 @@ public class SearchResultsPortletSharedSearchContributor
 			searchRequestBuilder.highlightEnabled(true);
 
 			String[] fieldsToDisplay = SearchStringUtil.splitAndUnquote(
-				searchResultsPortletPreferences.getFieldsToDisplayOptional());
+				searchResultsPortletPreferences.getFieldsToDisplay());
 
 			searchRequestBuilder.highlightFields(fieldsToDisplay);
 		}

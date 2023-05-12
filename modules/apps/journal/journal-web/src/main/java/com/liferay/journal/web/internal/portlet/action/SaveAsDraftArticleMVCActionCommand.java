@@ -31,7 +31,6 @@ import com.liferay.journal.model.JournalArticle;
 import com.liferay.journal.service.JournalArticleService;
 import com.liferay.journal.util.JournalConverter;
 import com.liferay.journal.util.JournalHelper;
-import com.liferay.journal.web.internal.util.JournalUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONUtil;
@@ -182,13 +181,11 @@ public class SaveAsDraftArticleMVCActionCommand extends BaseMVCActionCommand {
 		Map<Locale, String> titleMap = _localization.getLocalizationMap(
 			actionRequest, "titleMapAsXML");
 
-		String ddmStructureKey = ParamUtil.getString(
-			uploadPortletRequest, "ddmStructureKey");
+		long ddmStructureId = ParamUtil.getLong(
+			uploadPortletRequest, "ddmStructureId");
 
 		DDMStructure ddmStructure = _ddmStructureLocalService.getStructure(
-			_portal.getSiteGroupId(groupId),
-			_portal.getClassNameId(JournalArticle.class), ddmStructureKey,
-			true);
+			ddmStructureId);
 
 		ServiceContext serviceContext = ServiceContextFactory.getInstance(
 			JournalArticle.class.getName(), uploadPortletRequest);
@@ -352,7 +349,7 @@ public class SaveAsDraftArticleMVCActionCommand extends BaseMVCActionCommand {
 			article = _journalArticleService.addArticle(
 				null, groupId, folderId, classNameId, classPK, articleId,
 				autoArticleId, titleMap, descriptionMap, friendlyURLMap,
-				content, ddmStructureKey, ddmTemplateKey, layoutUuid,
+				content, ddmStructureId, ddmTemplateKey, layoutUuid,
 				displayDateMonth, displayDateDay, displayDateYear,
 				displayDateHour, displayDateMinute, expirationDateMonth,
 				expirationDateDay, expirationDateYear, expirationDateHour,
@@ -374,21 +371,17 @@ public class SaveAsDraftArticleMVCActionCommand extends BaseMVCActionCommand {
 			if (Objects.equals(cmd, Constants.UPDATE)) {
 				article = _journalArticleService.updateArticle(
 					groupId, folderId, articleId, version, titleMap,
-					descriptionMap, friendlyURLMap, content, ddmStructureKey,
-					ddmTemplateKey, layoutUuid, displayDateMonth,
-					displayDateDay, displayDateYear, displayDateHour,
-					displayDateMinute, expirationDateMonth, expirationDateDay,
-					expirationDateYear, expirationDateHour,
-					expirationDateMinute, neverExpire, reviewDateMonth,
-					reviewDateDay, reviewDateYear, reviewDateHour,
-					reviewDateMinute, neverReview, indexable, smallImage,
-					smallImageURL, smallFile, null, articleURL, serviceContext);
+					descriptionMap, friendlyURLMap, content, ddmTemplateKey,
+					layoutUuid, displayDateMonth, displayDateDay,
+					displayDateYear, displayDateHour, displayDateMinute,
+					expirationDateMonth, expirationDateDay, expirationDateYear,
+					expirationDateHour, expirationDateMinute, neverExpire,
+					reviewDateMonth, reviewDateDay, reviewDateYear,
+					reviewDateHour, reviewDateMinute, neverReview, indexable,
+					smallImage, smallImageURL, smallFile, null, articleURL,
+					serviceContext);
 			}
 		}
-
-		// Recent articles
-
-		JournalUtil.addRecentArticle(actionRequest, article);
 
 		// Asset display page
 

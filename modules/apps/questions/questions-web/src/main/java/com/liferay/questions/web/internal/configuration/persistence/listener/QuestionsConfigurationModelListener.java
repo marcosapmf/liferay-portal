@@ -38,17 +38,15 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Dictionary;
+import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Modified;
 import org.osgi.service.component.annotations.Reference;
@@ -57,8 +55,6 @@ import org.osgi.service.component.annotations.Reference;
  * @author Javier Gamarra
  */
 @Component(
-	configurationPid = "com.liferay.questions.web.internal.configuration.QuestionsConfiguration",
-	configurationPolicy = ConfigurationPolicy.REQUIRE,
 	property = "model.class.name=com.liferay.questions.web.internal.configuration.QuestionsConfiguration",
 	service = ConfigurationModelListener.class
 )
@@ -68,12 +64,15 @@ public class QuestionsConfigurationModelListener
 	@Override
 	public void onAfterSave(String pid, Dictionary<String, Object> properties) {
 		try {
-			List<String> keys = Collections.list(properties.keys());
+			Map<String, Object> propertiesMap = new HashMap<>();
 
-			Stream<String> stream = keys.stream();
+			Enumeration<String> enumeration = properties.keys();
 
-			Map<String, Object> propertiesMap = stream.collect(
-				Collectors.toMap(Function.identity(), properties::get));
+			while (enumeration.hasMoreElements()) {
+				String key = enumeration.nextElement();
+
+				propertiesMap.put(key, properties.get(key));
+			}
 
 			_enableAssetRenderer(propertiesMap);
 
@@ -159,6 +158,10 @@ public class QuestionsConfigurationModelListener
 					headlessDeliveryPackage,
 					"MessageBoardMessageResourceImpl#getMessageBoardMessage\n",
 					headlessDeliveryPackage, "MessageBoardMessageResourceImpl#",
+					"getMessageBoardMessageMessageBoardMessagesPage\n",
+					headlessDeliveryPackage, "MessageBoardMessageResourceImpl#",
+					"getMessageBoardMessageMyRating\n", headlessDeliveryPackage,
+					"MessageBoardMessageResourceImpl#",
 					"getMessageBoardThreadMessageBoardMessagesPage\n",
 					headlessDeliveryPackage, "MessageBoardMessageResourceImpl#",
 					"getSiteMessageBoardMessageByFriendlyUrlPath\n",
@@ -168,11 +171,15 @@ public class QuestionsConfigurationModelListener
 					"getMessageBoardSection\n", headlessDeliveryPackage,
 					"MessageBoardSectionResourceImpl#",
 					"getSiteMessageBoardSectionsPage\n",
+					headlessDeliveryPackage, "MessageBoardSectionResourceImpl#",
+					"getMessageBoardSectionMessageBoardSectionsPage\n",
 					headlessDeliveryPackage, "MessageBoardThreadResourceImpl#",
 					"getMessageBoardSectionMessageBoardThreadsPage\n",
 					headlessDeliveryPackage, "MessageBoardThreadResourceImpl#",
 					"getMessageBoardThreadsRankedPage\n",
 					headlessDeliveryPackage, "MessageBoardThreadResourceImpl#",
+					"getMessageBoardThreadMyRating\n", headlessDeliveryPackage,
+					"MessageBoardThreadResourceImpl#",
 					"getSiteMessageBoardThreadByFriendlyUrlPath\n",
 					headlessDeliveryPackage, "MessageBoardThreadResourceImpl#",
 					"getSiteMessageBoardThreadsPage\n"),

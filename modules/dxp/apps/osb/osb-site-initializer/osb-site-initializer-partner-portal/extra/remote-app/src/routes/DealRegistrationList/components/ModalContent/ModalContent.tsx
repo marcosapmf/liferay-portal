@@ -67,51 +67,178 @@ export default function ModalContent({content, onClose}: ModalContentProps) {
 							label="Status"
 						/>
 					)}
+
+					{content[DealRegistrationColumnKey.STATUS_DETAIL] && (
+						<ModalFormatedInformation
+							className="col mb-3"
+							information={
+								content[DealRegistrationColumnKey.STATUS_DETAIL]
+							}
+							label="Status Detail"
+						/>
+					)}
+
+					{content[DealRegistrationColumnKey.PROSPECT_ADDRESS] && (
+						<ModalFormatedInformation
+							className="col mb-3"
+							information={
+								content[
+									DealRegistrationColumnKey.PROSPECT_ADDRESS
+								]
+							}
+							label="Prospect Address"
+						/>
+					)}
+
+					{content[DealRegistrationColumnKey.CURRENCY_NAME] && (
+						<ModalFormatedInformation
+							className="col mb-3"
+							information={
+								content[DealRegistrationColumnKey.CURRENCY_NAME]
+							}
+							label="Currency"
+						/>
+					)}
+
+					{content[DealRegistrationColumnKey.CURRENCY_KEY] && (
+						<ModalFormatedInformation
+							className="col mb-3"
+							information={
+								content[DealRegistrationColumnKey.CURRENCY_KEY]
+							}
+							label="Currency abreviation"
+						/>
+					)}
+
+					{content[DealRegistrationColumnKey.COUTRY_CODE] && (
+						<ModalFormatedInformation
+							className="col mb-3"
+							information={
+								content[DealRegistrationColumnKey.COUTRY_CODE]
+							}
+							label="Country Code"
+						/>
+					)}
 				</div>
 
 				<div className="col">
 					{content[
-						DealRegistrationColumnKey.PRIMARY_PROSPECT_NAME
+						DealRegistrationColumnKey.PROPECT_BUSINES_UNIT
 					] && (
 						<ModalFormatedInformation
 							className="col mb-3"
 							information={
 								content[
 									DealRegistrationColumnKey
-										.PRIMARY_PROSPECT_NAME
+										.PROPECT_BUSINES_UNIT
 								]
 							}
-							label="Primary Prospect Name"
+							label="Prospect Busines Unit"
 						/>
 					)}
 
 					{content[
-						DealRegistrationColumnKey.PRIMARY_PROSPECT_EMAIL
+						DealRegistrationColumnKey.PROSPECT_ACCOUNT_NAME
 					] && (
 						<ModalFormatedInformation
 							className="col mb-3"
 							information={
 								content[
 									DealRegistrationColumnKey
-										.PRIMARY_PROSPECT_EMAIL
+										.PROSPECT_ACCOUNT_NAME
 								]
 							}
-							label="Primary Prospect Email"
+							label="Prospect Account Name"
+						/>
+					)}
+
+					{content[DealRegistrationColumnKey.PROSPECT_DEPARTMENT] && (
+						<ModalFormatedInformation
+							className="col mb-3"
+							information={
+								content[
+									DealRegistrationColumnKey
+										.PROSPECT_DEPARTMENT
+								]
+							}
+							label=" Prospect Department"
+						/>
+					)}
+
+					{content[DealRegistrationColumnKey.PROSPECT_JOB_ROLE] && (
+						<ModalFormatedInformation
+							className="col mb-3"
+							information={
+								content[
+									DealRegistrationColumnKey.PROSPECT_JOB_ROLE
+								]
+							}
+							label=" Prospect Job Role"
+						/>
+					)}
+
+					{content[DealRegistrationColumnKey.PROSPECT_CITY] && (
+						<ModalFormatedInformation
+							className="col mb-3"
+							information={
+								content[DealRegistrationColumnKey.PROSPECT_CITY]
+							}
+							label="Prospect City"
+						/>
+					)}
+
+					{content[DealRegistrationColumnKey.PROSPECT_INDUSTRY] && (
+						<ModalFormatedInformation
+							className="col mb-3"
+							information={
+								content[
+									DealRegistrationColumnKey.PROSPECT_INDUSTRY
+								]
+							}
+							label="Prospect Industry"
 						/>
 					)}
 
 					{content[
-						DealRegistrationColumnKey.PRIMARY_PROSPECT_PHONE
+						DealRegistrationColumnKey.PROSPECT_POSTAL_CODE
 					] && (
 						<ModalFormatedInformation
 							className="col mb-3"
 							information={
 								content[
 									DealRegistrationColumnKey
-										.PRIMARY_PROSPECT_PHONE
+										.PROSPECT_POSTAL_CODE
 								]
 							}
-							label="Primary Prospect Phone"
+							label="Prospect Postal Code"
+						/>
+					)}
+
+					{content[
+						DealRegistrationColumnKey.PARTNER_ACCOUNT_NAME
+					] && (
+						<ModalFormatedInformation
+							className="col mb-3"
+							information={
+								content[
+									DealRegistrationColumnKey
+										.PARTNER_ACCOUNT_NAME
+								]
+							}
+							label="Partner Accoount Name"
+						/>
+					)}
+
+					{content[DealRegistrationColumnKey.ADDITIONAL_CONTACTS] && (
+						<ModalFormatedInformation
+							className="col mb-3"
+							information={
+								content[
+									DealRegistrationColumnKey
+										.ADDITIONAL_CONTACTS
+								]
+							}
+							label="Additional Contacts"
 						/>
 					)}
 				</div>

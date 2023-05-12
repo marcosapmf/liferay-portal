@@ -14,7 +14,6 @@
 
 import ClayIcon from '@clayui/icon';
 import ClayManagementToolbar from '@clayui/management-toolbar';
-import {useEffect} from 'react';
 import {useOutletContext, useParams} from 'react-router-dom';
 
 import Button from '../../../components/Button';
@@ -22,9 +21,8 @@ import Container from '../../../components/Layout/Container';
 import ListView from '../../../components/ListView';
 import MarkdownPreview from '../../../components/Markdown';
 import QATable from '../../../components/Table/QATable';
-import useHeader from '../../../hooks/useHeader';
+import SearchBuilder from '../../../core/SearchBuilder';
 import i18n from '../../../i18n';
-import {filters} from '../../../schema/filter';
 import {
 	TestrayRequirement,
 	TestrayRequirementCase,
@@ -32,7 +30,6 @@ import {
 	testrayCaseRequirementsImpl,
 } from '../../../services/rest';
 import {DescriptionType} from '../../../types';
-import {searchUtil} from '../../../util/search';
 import RequirementCaseLinkModal from './RequirementCaseLinkModal';
 import useRequirementCaseActions from './useRequirementCaseActions';
 
@@ -42,22 +39,6 @@ const Requirement = () => {
 		testrayRequirement,
 	}: {testrayRequirement: TestrayRequirement} = useOutletContext();
 	const {actions, formModal} = useRequirementCaseActions(testrayRequirement);
-
-	const {context, setHeading, setTabs} = useHeader({shouldUpdate: false});
-
-	const maxHeads = context.heading.length === 2;
-
-	useEffect(() => {
-		if (testrayRequirement && !maxHeads) {
-			setTimeout(() => {
-				setHeading([{title: testrayRequirement.key}], true);
-			}, 0);
-		}
-	}, [setHeading, testrayRequirement, maxHeads]);
-
-	useEffect(() => {
-		setTabs([]);
-	}, [setTabs]);
 
 	return (
 		<>
@@ -137,7 +118,7 @@ const Requirement = () => {
 								</Button>
 							</ClayManagementToolbar.Item>
 						),
-						filterFields: filters.requirementCase as any,
+						filterSchema: 'requirementCases',
 						title: i18n.translate('cases'),
 					}}
 					resource={requirementsCasesResource}
@@ -181,7 +162,7 @@ const Requirement = () => {
 						)
 					}
 					variables={{
-						filter: searchUtil.eq(
+						filter: SearchBuilder.eq(
 							'requirementId',
 							testrayRequirement.id
 						),

@@ -80,11 +80,9 @@ function DisplayPageItemContextualSidebar({
 
 	const openChooseItemModal = () =>
 		openSelectionModal({
-			onSelect: (selectedItem) => {
-				if (selectedItem) {
-					let infoItem = {
-						...selectedItem,
-					};
+			onSelect: (selectedItems) => {
+				if (selectedItems) {
+					let infoItem = Object.values(selectedItems)[0];
 
 					let value;
 
@@ -234,6 +232,7 @@ function DisplayPageItemContextualSidebar({
 						<ClayAlert
 							className="mt-1"
 							displayType="warning"
+							role={null}
 							title={Liferay.Language.get('no-display-page')}
 							variant="feedback"
 						/>

@@ -28,7 +28,9 @@ import com.liferay.exportimport.kernel.model.ExportImportConfiguration;
 import com.liferay.exportimport.kernel.service.ExportImportConfigurationLocalService;
 import com.liferay.portal.kernel.backgroundtask.BackgroundTask;
 import com.liferay.portal.kernel.backgroundtask.BackgroundTaskManagerUtil;
+import com.liferay.portal.kernel.backgroundtask.constants.BackgroundTaskContextMapConstants;
 import com.liferay.portal.kernel.bean.BeanReference;
+import com.liferay.portal.kernel.change.tracking.CTAware;
 import com.liferay.portal.kernel.exception.LocaleException;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
@@ -48,6 +50,7 @@ import java.io.Serializable;
 /**
  * @author Daniel Kocsis
  */
+@CTAware
 public class ExportImportLocalServiceImpl
 	extends ExportImportLocalServiceBaseImpl {
 
@@ -301,6 +304,8 @@ public class ExportImportLocalServiceImpl
 				BackgroundTaskExecutorNames.
 					LAYOUT_SET_PROTOTYPE_IMPORT_BACKGROUND_TASK_EXECUTOR,
 				HashMapBuilder.<String, Serializable>put(
+					BackgroundTaskContextMapConstants.DELETE_ON_SUCCESS, true
+				).put(
 					"exportImportConfigurationId",
 					exportImportConfiguration.getExportImportConfigurationId()
 				).build(),
@@ -604,6 +609,28 @@ public class ExportImportLocalServiceImpl
 			_exportImportConfigurationLocalService.getExportImportConfiguration(
 				exportImportConfigurationId),
 			inputStream);
+	}
+
+	@Override
+	public long mergeLayoutSetPrototypeInBackground(
+			long userId, long groupId,
+			ExportImportConfiguration exportImportConfiguration)
+		throws PortalException {
+
+		BackgroundTask backgroundTask =
+			BackgroundTaskManagerUtil.addBackgroundTask(
+				userId, groupId, exportImportConfiguration.getName(),
+				BackgroundTaskExecutorNames.
+					LAYOUT_SET_PROTOTYPE_MERGE_BACKGROUND_TASK_EXECUTOR,
+				HashMapBuilder.<String, Serializable>put(
+					BackgroundTaskContextMapConstants.DELETE_ON_SUCCESS, true
+				).put(
+					"exportImportConfigurationId",
+					exportImportConfiguration.getExportImportConfigurationId()
+				).build(),
+				new ServiceContext());
+
+		return backgroundTask.getBackgroundTaskId();
 	}
 
 	@Override

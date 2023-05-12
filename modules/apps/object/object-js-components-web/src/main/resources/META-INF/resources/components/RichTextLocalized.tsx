@@ -32,8 +32,8 @@ const defaultLanguageId = Liferay.ThemeDisplay.getDefaultLanguageId();
 const availableLocales = Object.keys(Liferay.Language.available)
 	.sort((languageId) => (languageId === defaultLanguageId ? -1 : 1))
 	.map((language) => ({
-		label: language as Locale,
-		symbol: language.replace('_', '-').toLowerCase(),
+		label: language as Liferay.Language.Locale,
+		symbol: language.replace(/_/g, '-').toLowerCase(),
 	}));
 
 export function RichTextLocalized({
@@ -105,7 +105,7 @@ export function RichTextLocalized({
 							<span className="inline-item">
 								<ClayIcon
 									symbol={selectedLocale
-										.replace('_', '-')
+										.replace(/_/g, '-')
 										.toLowerCase()}
 								/>
 							</span>
@@ -118,7 +118,10 @@ export function RichTextLocalized({
 				>
 					<ClayDropDown.ItemList>
 						{availableLocales.map((locale) => {
-							const value = translations[locale.label as Locale];
+							const value =
+								translations[
+									locale.label as Liferay.Language.Locale
+								];
 
 							return (
 								<ClayDropDown.Item
@@ -175,7 +178,7 @@ export function RichTextLocalized({
 	);
 }
 interface IItem {
-	label: Locale;
+	label: Liferay.Language.Locale;
 	symbol: string;
 }
 interface IProps extends React.InputHTMLAttributes<HTMLInputElement> {
@@ -190,6 +193,6 @@ interface IProps extends React.InputHTMLAttributes<HTMLInputElement> {
 	label: string;
 	onSelectedLocaleChange: (val: IItem) => void;
 	onTranslationsChange: (val: LocalizedValue<string>) => void;
-	selectedLocale: Locale;
+	selectedLocale: Liferay.Language.Locale;
 	translations: LocalizedValue<string>;
 }

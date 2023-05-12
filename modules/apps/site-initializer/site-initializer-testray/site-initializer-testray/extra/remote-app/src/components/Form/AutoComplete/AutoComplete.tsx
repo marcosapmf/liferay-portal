@@ -15,6 +15,7 @@
 import ClayAutocomplete from '@clayui/autocomplete';
 import ClayDropDown from '@clayui/drop-down';
 import {useEffect, useState} from 'react';
+import {Params} from 'react-router-dom';
 
 import useDebounce from '../../../hooks/useDebounce';
 import {useFetch} from '../../../hooks/useFetch';
@@ -22,7 +23,7 @@ import {useFetch} from '../../../hooks/useFetch';
 export type AutoCompleteProps = {
 	label?: string;
 	onSearch: (keyword: string) => any;
-	resource: string;
+	resource?: ((params: Readonly<Params<string>>) => string) | string;
 	transformData?: (item: any) => any;
 };
 
@@ -39,9 +40,11 @@ const AutoComplete: React.FC<AutoCompleteProps> = ({
 	const debouncedValue = useDebounce(value, 1000);
 
 	const {called, data, error, isValidating} = useFetch(
-		debouncedValue ? resource : null,
+		debouncedValue ? ((resource as unknown) as string) : null,
 		{
-			filter: onSearch(debouncedValue),
+			params: {
+				filter: onSearch(debouncedValue),
+			},
 			transformData,
 		}
 	);

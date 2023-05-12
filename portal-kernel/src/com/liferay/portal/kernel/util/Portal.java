@@ -139,10 +139,6 @@ public interface Portal {
 	public void addPageTitle(
 		String title, HttpServletRequest httpServletRequest);
 
-	public boolean addPortalInetSocketAddressEventListener(
-		PortalInetSocketAddressEventListener
-			portalInetSocketAddressEventListener);
-
 	/**
 	 * Adds an entry to the portlet breadcrumbs for the page.
 	 *
@@ -306,6 +302,11 @@ public interface Portal {
 
 	public Map<Locale, String> getAlternateURLs(
 			String canonicalURL, ThemeDisplay themeDisplay, Layout layout)
+		throws PortalException;
+
+	public Map<Locale, String> getAlternateURLs(
+			String canonicalURL, ThemeDisplay themeDisplay, Layout layout,
+			Set<Locale> availableLocales)
 		throws PortalException;
 
 	public long[] getAncestorSiteGroupIds(long groupId);
@@ -646,11 +647,6 @@ public interface Portal {
 			ExpandoBridge expandoBridge, PortletRequest portletRequest)
 		throws PortalException;
 
-	public Map<String, Serializable> getExpandoBridgeAttributes(
-			ExpandoBridge expandoBridge,
-			UploadPortletRequest uploadPortletRequest)
-		throws PortalException;
-
 	public Serializable getExpandoValue(
 			HttpServletRequest httpServletRequest, String name, int type,
 			String displayType)
@@ -658,11 +654,6 @@ public interface Portal {
 
 	public Serializable getExpandoValue(
 			PortletRequest portletRequest, String name, int type,
-			String displayType)
-		throws PortalException;
-
-	public Serializable getExpandoValue(
-			UploadPortletRequest uploadPortletRequest, String name, int type,
 			String displayType)
 		throws PortalException;
 
@@ -847,9 +838,6 @@ public interface Portal {
 
 	public long getPlidFromPortletId(long groupId, String portletId)
 		throws PortalException;
-
-	public PortalInetSocketAddressEventListener[]
-		getPortalInetSocketAddressEventListeners();
 
 	public InetAddress getPortalLocalInetAddress(boolean secure);
 
@@ -1062,7 +1050,7 @@ public interface Portal {
 
 	public UploadServletRequest getUploadServletRequest(
 		HttpServletRequest httpServletRequest, int fileSizeThreshold,
-		String location, long maxRequestSize, long maxFileSize);
+		String location);
 
 	public Date getUptime();
 
@@ -1187,10 +1175,6 @@ public interface Portal {
 	public boolean isValidPortalDomain(long companyId, String domain);
 
 	public boolean isValidResourceId(String resourceId);
-
-	public boolean removePortalInetSocketAddressEventListener(
-		PortalInetSocketAddressEventListener
-			portalInetSocketAddressEventListener);
 
 	public void resetCDNHosts();
 

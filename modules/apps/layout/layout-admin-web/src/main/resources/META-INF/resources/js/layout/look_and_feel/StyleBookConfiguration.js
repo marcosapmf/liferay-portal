@@ -12,7 +12,8 @@
  * details.
  */
 
-import ClayButton from '@clayui/button';
+import {ClayButtonWithIcon} from '@clayui/button';
+import ClayForm, {ClayInput} from '@clayui/form';
 import {openSelectionModal} from 'frontend-js-web';
 import React, {useState} from 'react';
 
@@ -54,27 +55,28 @@ export default function StyleBookConfiguration({
 				value={styleBookEntry.styleBookEntryId}
 			/>
 
-			<h3 className="sheet-subtitle">
+			<label htmlFor={`${portletNamespace}styleBookEntry`}>
 				{Liferay.Language.get('style-book')}
-			</h3>
+			</label>
 
-			<p>
-				<strong>{`${Liferay.Language.get(
-					'style-book-name'
-				)}: `}</strong>
+			<div className="d-flex">
+				<ClayForm.Group className="flex-grow-1 mb-0">
+					<ClayInput
+						id={`${portletNamespace}styleBookEntry`}
+						onClick={handleChangeStyleBookClick}
+						readOnly
+						value={styleBookEntry.name}
+					/>
+				</ClayForm.Group>
 
-				{styleBookEntry.name}
-			</p>
-
-			<ClayButton.Group spaced>
-				<ClayButton
+				<ClayButtonWithIcon
+					aria-label={Liferay.Language.get('change-style-book')}
+					className="ml-2"
 					displayType="secondary"
 					onClick={handleChangeStyleBookClick}
-					size="sm"
-				>
-					{Liferay.Language.get('change-style-book')}
-				</ClayButton>
-			</ClayButton.Group>
+					symbol="plus"
+				/>
+			</div>
 		</>
 	);
 }

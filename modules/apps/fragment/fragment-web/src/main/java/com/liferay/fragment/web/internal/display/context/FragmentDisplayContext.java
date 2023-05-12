@@ -65,7 +65,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-import java.util.stream.Stream;
 
 import javax.portlet.ActionRequest;
 import javax.portlet.PortletURL;
@@ -89,9 +88,9 @@ public class FragmentDisplayContext {
 
 		_fragmentCollectionContributorRegistry =
 			(FragmentCollectionContributorRegistry)
-				_httpServletRequest.getAttribute(
+				httpServletRequest.getAttribute(
 					FragmentWebKeys.FRAGMENT_COLLECTION_CONTRIBUTOR_TRACKER);
-		_themeDisplay = (ThemeDisplay)_httpServletRequest.getAttribute(
+		_themeDisplay = (ThemeDisplay)httpServletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 	}
 
@@ -707,15 +706,13 @@ public class FragmentDisplayContext {
 			return StringPool.BLANK;
 		}
 
-		Stream<FragmentCollectionContributor> stream =
-			fragmentCollectionContributors.stream();
+		fragmentCollectionContributors = ListUtil.sort(
+			fragmentCollectionContributors,
+			new FragmentCollectionContributorNameComparator(
+				_themeDisplay.getLocale()));
 
 		FragmentCollectionContributor fragmentCollectionContributor =
-			stream.sorted(
-				new FragmentCollectionContributorNameComparator(
-					_themeDisplay.getLocale())
-			).findFirst(
-			).get();
+			fragmentCollectionContributors.get(0);
 
 		return fragmentCollectionContributor.getFragmentCollectionKey();
 	}

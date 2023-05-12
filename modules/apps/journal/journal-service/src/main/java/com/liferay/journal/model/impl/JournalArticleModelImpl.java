@@ -85,7 +85,7 @@ public class JournalArticleModelImpl
 		{"classNameId", Types.BIGINT}, {"classPK", Types.BIGINT},
 		{"treePath", Types.VARCHAR}, {"articleId", Types.VARCHAR},
 		{"version", Types.DOUBLE}, {"urlTitle", Types.VARCHAR},
-		{"DDMStructureKey", Types.VARCHAR}, {"DDMTemplateKey", Types.VARCHAR},
+		{"DDMStructureId", Types.BIGINT}, {"DDMTemplateKey", Types.VARCHAR},
 		{"defaultLanguageId", Types.VARCHAR}, {"layoutUuid", Types.VARCHAR},
 		{"displayDate", Types.TIMESTAMP}, {"expirationDate", Types.TIMESTAMP},
 		{"reviewDate", Types.TIMESTAMP}, {"indexable", Types.BOOLEAN},
@@ -118,7 +118,7 @@ public class JournalArticleModelImpl
 		TABLE_COLUMNS_MAP.put("articleId", Types.VARCHAR);
 		TABLE_COLUMNS_MAP.put("version", Types.DOUBLE);
 		TABLE_COLUMNS_MAP.put("urlTitle", Types.VARCHAR);
-		TABLE_COLUMNS_MAP.put("DDMStructureKey", Types.VARCHAR);
+		TABLE_COLUMNS_MAP.put("DDMStructureId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("DDMTemplateKey", Types.VARCHAR);
 		TABLE_COLUMNS_MAP.put("defaultLanguageId", Types.VARCHAR);
 		TABLE_COLUMNS_MAP.put("layoutUuid", Types.VARCHAR);
@@ -137,7 +137,7 @@ public class JournalArticleModelImpl
 	}
 
 	public static final String TABLE_SQL_CREATE =
-		"create table JournalArticle (mvccVersion LONG default 0 not null,ctCollectionId LONG default 0 not null,uuid_ VARCHAR(75) null,id_ LONG not null,resourcePrimKey LONG,groupId LONG,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,externalReferenceCode VARCHAR(75) null,folderId LONG,classNameId LONG,classPK LONG,treePath STRING null,articleId VARCHAR(75) null,version DOUBLE,urlTitle VARCHAR(255) null,DDMStructureKey VARCHAR(75) null,DDMTemplateKey VARCHAR(75) null,defaultLanguageId VARCHAR(75) null,layoutUuid VARCHAR(75) null,displayDate DATE null,expirationDate DATE null,reviewDate DATE null,indexable BOOLEAN,smallImage BOOLEAN,smallImageId LONG,smallImageURL STRING null,lastPublishDate DATE null,status INTEGER,statusByUserId LONG,statusByUserName VARCHAR(75) null,statusDate DATE null,primary key (id_, ctCollectionId))";
+		"create table JournalArticle (mvccVersion LONG default 0 not null,ctCollectionId LONG default 0 not null,uuid_ VARCHAR(75) null,id_ LONG not null,resourcePrimKey LONG,groupId LONG,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,externalReferenceCode VARCHAR(75) null,folderId LONG,classNameId LONG,classPK LONG,treePath STRING null,articleId VARCHAR(75) null,version DOUBLE,urlTitle VARCHAR(255) null,DDMStructureId LONG,DDMTemplateKey VARCHAR(75) null,defaultLanguageId VARCHAR(75) null,layoutUuid VARCHAR(75) null,displayDate DATE null,expirationDate DATE null,reviewDate DATE null,indexable BOOLEAN,smallImage BOOLEAN,smallImageId LONG,smallImageURL STRING null,lastPublishDate DATE null,status INTEGER,statusByUserId LONG,statusByUserName VARCHAR(75) null,statusDate DATE null,primary key (id_, ctCollectionId))";
 
 	public static final String TABLE_SQL_DROP = "drop table JournalArticle";
 
@@ -157,7 +157,7 @@ public class JournalArticleModelImpl
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
-	public static final long DDMSTRUCTUREKEY_COLUMN_BITMASK = 1L;
+	public static final long DDMSTRUCTUREID_COLUMN_BITMASK = 1L;
 
 	/**
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
@@ -357,202 +357,242 @@ public class JournalArticleModelImpl
 	public Map<String, Function<JournalArticle, Object>>
 		getAttributeGetterFunctions() {
 
-		return _attributeGetterFunctions;
+		return AttributeGetterFunctionsHolder._attributeGetterFunctions;
 	}
 
 	public Map<String, BiConsumer<JournalArticle, Object>>
 		getAttributeSetterBiConsumers() {
 
-		return _attributeSetterBiConsumers;
+		return AttributeSetterBiConsumersHolder._attributeSetterBiConsumers;
 	}
 
-	private static final Map<String, Function<JournalArticle, Object>>
-		_attributeGetterFunctions;
-	private static final Map<String, BiConsumer<JournalArticle, Object>>
-		_attributeSetterBiConsumers;
+	private static class AttributeGetterFunctionsHolder {
 
-	static {
-		Map<String, Function<JournalArticle, Object>> attributeGetterFunctions =
-			new LinkedHashMap<String, Function<JournalArticle, Object>>();
-		Map<String, BiConsumer<JournalArticle, ?>> attributeSetterBiConsumers =
-			new LinkedHashMap<String, BiConsumer<JournalArticle, ?>>();
+		private static final Map<String, Function<JournalArticle, Object>>
+			_attributeGetterFunctions;
 
-		attributeGetterFunctions.put(
-			"mvccVersion", JournalArticle::getMvccVersion);
-		attributeSetterBiConsumers.put(
-			"mvccVersion",
-			(BiConsumer<JournalArticle, Long>)JournalArticle::setMvccVersion);
-		attributeGetterFunctions.put(
-			"ctCollectionId", JournalArticle::getCtCollectionId);
-		attributeSetterBiConsumers.put(
-			"ctCollectionId",
-			(BiConsumer<JournalArticle, Long>)
-				JournalArticle::setCtCollectionId);
-		attributeGetterFunctions.put("uuid", JournalArticle::getUuid);
-		attributeSetterBiConsumers.put(
-			"uuid",
-			(BiConsumer<JournalArticle, String>)JournalArticle::setUuid);
-		attributeGetterFunctions.put("id", JournalArticle::getId);
-		attributeSetterBiConsumers.put(
-			"id", (BiConsumer<JournalArticle, Long>)JournalArticle::setId);
-		attributeGetterFunctions.put(
-			"resourcePrimKey", JournalArticle::getResourcePrimKey);
-		attributeSetterBiConsumers.put(
-			"resourcePrimKey",
-			(BiConsumer<JournalArticle, Long>)
-				JournalArticle::setResourcePrimKey);
-		attributeGetterFunctions.put("groupId", JournalArticle::getGroupId);
-		attributeSetterBiConsumers.put(
-			"groupId",
-			(BiConsumer<JournalArticle, Long>)JournalArticle::setGroupId);
-		attributeGetterFunctions.put("companyId", JournalArticle::getCompanyId);
-		attributeSetterBiConsumers.put(
-			"companyId",
-			(BiConsumer<JournalArticle, Long>)JournalArticle::setCompanyId);
-		attributeGetterFunctions.put("userId", JournalArticle::getUserId);
-		attributeSetterBiConsumers.put(
-			"userId",
-			(BiConsumer<JournalArticle, Long>)JournalArticle::setUserId);
-		attributeGetterFunctions.put("userName", JournalArticle::getUserName);
-		attributeSetterBiConsumers.put(
-			"userName",
-			(BiConsumer<JournalArticle, String>)JournalArticle::setUserName);
-		attributeGetterFunctions.put(
-			"createDate", JournalArticle::getCreateDate);
-		attributeSetterBiConsumers.put(
-			"createDate",
-			(BiConsumer<JournalArticle, Date>)JournalArticle::setCreateDate);
-		attributeGetterFunctions.put(
-			"modifiedDate", JournalArticle::getModifiedDate);
-		attributeSetterBiConsumers.put(
-			"modifiedDate",
-			(BiConsumer<JournalArticle, Date>)JournalArticle::setModifiedDate);
-		attributeGetterFunctions.put(
-			"externalReferenceCode", JournalArticle::getExternalReferenceCode);
-		attributeSetterBiConsumers.put(
-			"externalReferenceCode",
-			(BiConsumer<JournalArticle, String>)
-				JournalArticle::setExternalReferenceCode);
-		attributeGetterFunctions.put("folderId", JournalArticle::getFolderId);
-		attributeSetterBiConsumers.put(
-			"folderId",
-			(BiConsumer<JournalArticle, Long>)JournalArticle::setFolderId);
-		attributeGetterFunctions.put(
-			"classNameId", JournalArticle::getClassNameId);
-		attributeSetterBiConsumers.put(
-			"classNameId",
-			(BiConsumer<JournalArticle, Long>)JournalArticle::setClassNameId);
-		attributeGetterFunctions.put("classPK", JournalArticle::getClassPK);
-		attributeSetterBiConsumers.put(
-			"classPK",
-			(BiConsumer<JournalArticle, Long>)JournalArticle::setClassPK);
-		attributeGetterFunctions.put("treePath", JournalArticle::getTreePath);
-		attributeSetterBiConsumers.put(
-			"treePath",
-			(BiConsumer<JournalArticle, String>)JournalArticle::setTreePath);
-		attributeGetterFunctions.put("articleId", JournalArticle::getArticleId);
-		attributeSetterBiConsumers.put(
-			"articleId",
-			(BiConsumer<JournalArticle, String>)JournalArticle::setArticleId);
-		attributeGetterFunctions.put("version", JournalArticle::getVersion);
-		attributeSetterBiConsumers.put(
-			"version",
-			(BiConsumer<JournalArticle, Double>)JournalArticle::setVersion);
-		attributeGetterFunctions.put("urlTitle", JournalArticle::getUrlTitle);
-		attributeSetterBiConsumers.put(
-			"urlTitle",
-			(BiConsumer<JournalArticle, String>)JournalArticle::setUrlTitle);
-		attributeGetterFunctions.put(
-			"DDMStructureKey", JournalArticle::getDDMStructureKey);
-		attributeSetterBiConsumers.put(
-			"DDMStructureKey",
-			(BiConsumer<JournalArticle, String>)
-				JournalArticle::setDDMStructureKey);
-		attributeGetterFunctions.put(
-			"DDMTemplateKey", JournalArticle::getDDMTemplateKey);
-		attributeSetterBiConsumers.put(
-			"DDMTemplateKey",
-			(BiConsumer<JournalArticle, String>)
-				JournalArticle::setDDMTemplateKey);
-		attributeGetterFunctions.put(
-			"defaultLanguageId", JournalArticle::getDefaultLanguageId);
-		attributeSetterBiConsumers.put(
-			"defaultLanguageId",
-			(BiConsumer<JournalArticle, String>)
-				JournalArticle::setDefaultLanguageId);
-		attributeGetterFunctions.put(
-			"layoutUuid", JournalArticle::getLayoutUuid);
-		attributeSetterBiConsumers.put(
-			"layoutUuid",
-			(BiConsumer<JournalArticle, String>)JournalArticle::setLayoutUuid);
-		attributeGetterFunctions.put(
-			"displayDate", JournalArticle::getDisplayDate);
-		attributeSetterBiConsumers.put(
-			"displayDate",
-			(BiConsumer<JournalArticle, Date>)JournalArticle::setDisplayDate);
-		attributeGetterFunctions.put(
-			"expirationDate", JournalArticle::getExpirationDate);
-		attributeSetterBiConsumers.put(
-			"expirationDate",
-			(BiConsumer<JournalArticle, Date>)
-				JournalArticle::setExpirationDate);
-		attributeGetterFunctions.put(
-			"reviewDate", JournalArticle::getReviewDate);
-		attributeSetterBiConsumers.put(
-			"reviewDate",
-			(BiConsumer<JournalArticle, Date>)JournalArticle::setReviewDate);
-		attributeGetterFunctions.put("indexable", JournalArticle::getIndexable);
-		attributeSetterBiConsumers.put(
-			"indexable",
-			(BiConsumer<JournalArticle, Boolean>)JournalArticle::setIndexable);
-		attributeGetterFunctions.put(
-			"smallImage", JournalArticle::getSmallImage);
-		attributeSetterBiConsumers.put(
-			"smallImage",
-			(BiConsumer<JournalArticle, Boolean>)JournalArticle::setSmallImage);
-		attributeGetterFunctions.put(
-			"smallImageId", JournalArticle::getSmallImageId);
-		attributeSetterBiConsumers.put(
-			"smallImageId",
-			(BiConsumer<JournalArticle, Long>)JournalArticle::setSmallImageId);
-		attributeGetterFunctions.put(
-			"smallImageURL", JournalArticle::getSmallImageURL);
-		attributeSetterBiConsumers.put(
-			"smallImageURL",
-			(BiConsumer<JournalArticle, String>)
-				JournalArticle::setSmallImageURL);
-		attributeGetterFunctions.put(
-			"lastPublishDate", JournalArticle::getLastPublishDate);
-		attributeSetterBiConsumers.put(
-			"lastPublishDate",
-			(BiConsumer<JournalArticle, Date>)
-				JournalArticle::setLastPublishDate);
-		attributeGetterFunctions.put("status", JournalArticle::getStatus);
-		attributeSetterBiConsumers.put(
-			"status",
-			(BiConsumer<JournalArticle, Integer>)JournalArticle::setStatus);
-		attributeGetterFunctions.put(
-			"statusByUserId", JournalArticle::getStatusByUserId);
-		attributeSetterBiConsumers.put(
-			"statusByUserId",
-			(BiConsumer<JournalArticle, Long>)
-				JournalArticle::setStatusByUserId);
-		attributeGetterFunctions.put(
-			"statusByUserName", JournalArticle::getStatusByUserName);
-		attributeSetterBiConsumers.put(
-			"statusByUserName",
-			(BiConsumer<JournalArticle, String>)
-				JournalArticle::setStatusByUserName);
-		attributeGetterFunctions.put(
-			"statusDate", JournalArticle::getStatusDate);
-		attributeSetterBiConsumers.put(
-			"statusDate",
-			(BiConsumer<JournalArticle, Date>)JournalArticle::setStatusDate);
+		static {
+			Map<String, Function<JournalArticle, Object>>
+				attributeGetterFunctions =
+					new LinkedHashMap
+						<String, Function<JournalArticle, Object>>();
 
-		_attributeGetterFunctions = Collections.unmodifiableMap(
-			attributeGetterFunctions);
-		_attributeSetterBiConsumers = Collections.unmodifiableMap(
-			(Map)attributeSetterBiConsumers);
+			attributeGetterFunctions.put(
+				"mvccVersion", JournalArticle::getMvccVersion);
+			attributeGetterFunctions.put(
+				"ctCollectionId", JournalArticle::getCtCollectionId);
+			attributeGetterFunctions.put("uuid", JournalArticle::getUuid);
+			attributeGetterFunctions.put("id", JournalArticle::getId);
+			attributeGetterFunctions.put(
+				"resourcePrimKey", JournalArticle::getResourcePrimKey);
+			attributeGetterFunctions.put("groupId", JournalArticle::getGroupId);
+			attributeGetterFunctions.put(
+				"companyId", JournalArticle::getCompanyId);
+			attributeGetterFunctions.put("userId", JournalArticle::getUserId);
+			attributeGetterFunctions.put(
+				"userName", JournalArticle::getUserName);
+			attributeGetterFunctions.put(
+				"createDate", JournalArticle::getCreateDate);
+			attributeGetterFunctions.put(
+				"modifiedDate", JournalArticle::getModifiedDate);
+			attributeGetterFunctions.put(
+				"externalReferenceCode",
+				JournalArticle::getExternalReferenceCode);
+			attributeGetterFunctions.put(
+				"folderId", JournalArticle::getFolderId);
+			attributeGetterFunctions.put(
+				"classNameId", JournalArticle::getClassNameId);
+			attributeGetterFunctions.put("classPK", JournalArticle::getClassPK);
+			attributeGetterFunctions.put(
+				"treePath", JournalArticle::getTreePath);
+			attributeGetterFunctions.put(
+				"articleId", JournalArticle::getArticleId);
+			attributeGetterFunctions.put("version", JournalArticle::getVersion);
+			attributeGetterFunctions.put(
+				"urlTitle", JournalArticle::getUrlTitle);
+			attributeGetterFunctions.put(
+				"DDMStructureId", JournalArticle::getDDMStructureId);
+			attributeGetterFunctions.put(
+				"DDMTemplateKey", JournalArticle::getDDMTemplateKey);
+			attributeGetterFunctions.put(
+				"defaultLanguageId", JournalArticle::getDefaultLanguageId);
+			attributeGetterFunctions.put(
+				"layoutUuid", JournalArticle::getLayoutUuid);
+			attributeGetterFunctions.put(
+				"displayDate", JournalArticle::getDisplayDate);
+			attributeGetterFunctions.put(
+				"expirationDate", JournalArticle::getExpirationDate);
+			attributeGetterFunctions.put(
+				"reviewDate", JournalArticle::getReviewDate);
+			attributeGetterFunctions.put(
+				"indexable", JournalArticle::getIndexable);
+			attributeGetterFunctions.put(
+				"smallImage", JournalArticle::getSmallImage);
+			attributeGetterFunctions.put(
+				"smallImageId", JournalArticle::getSmallImageId);
+			attributeGetterFunctions.put(
+				"smallImageURL", JournalArticle::getSmallImageURL);
+			attributeGetterFunctions.put(
+				"lastPublishDate", JournalArticle::getLastPublishDate);
+			attributeGetterFunctions.put("status", JournalArticle::getStatus);
+			attributeGetterFunctions.put(
+				"statusByUserId", JournalArticle::getStatusByUserId);
+			attributeGetterFunctions.put(
+				"statusByUserName", JournalArticle::getStatusByUserName);
+			attributeGetterFunctions.put(
+				"statusDate", JournalArticle::getStatusDate);
+
+			_attributeGetterFunctions = Collections.unmodifiableMap(
+				attributeGetterFunctions);
+		}
+
+	}
+
+	private static class AttributeSetterBiConsumersHolder {
+
+		private static final Map<String, BiConsumer<JournalArticle, Object>>
+			_attributeSetterBiConsumers;
+
+		static {
+			Map<String, BiConsumer<JournalArticle, ?>>
+				attributeSetterBiConsumers =
+					new LinkedHashMap<String, BiConsumer<JournalArticle, ?>>();
+
+			attributeSetterBiConsumers.put(
+				"mvccVersion",
+				(BiConsumer<JournalArticle, Long>)
+					JournalArticle::setMvccVersion);
+			attributeSetterBiConsumers.put(
+				"ctCollectionId",
+				(BiConsumer<JournalArticle, Long>)
+					JournalArticle::setCtCollectionId);
+			attributeSetterBiConsumers.put(
+				"uuid",
+				(BiConsumer<JournalArticle, String>)JournalArticle::setUuid);
+			attributeSetterBiConsumers.put(
+				"id", (BiConsumer<JournalArticle, Long>)JournalArticle::setId);
+			attributeSetterBiConsumers.put(
+				"resourcePrimKey",
+				(BiConsumer<JournalArticle, Long>)
+					JournalArticle::setResourcePrimKey);
+			attributeSetterBiConsumers.put(
+				"groupId",
+				(BiConsumer<JournalArticle, Long>)JournalArticle::setGroupId);
+			attributeSetterBiConsumers.put(
+				"companyId",
+				(BiConsumer<JournalArticle, Long>)JournalArticle::setCompanyId);
+			attributeSetterBiConsumers.put(
+				"userId",
+				(BiConsumer<JournalArticle, Long>)JournalArticle::setUserId);
+			attributeSetterBiConsumers.put(
+				"userName",
+				(BiConsumer<JournalArticle, String>)
+					JournalArticle::setUserName);
+			attributeSetterBiConsumers.put(
+				"createDate",
+				(BiConsumer<JournalArticle, Date>)
+					JournalArticle::setCreateDate);
+			attributeSetterBiConsumers.put(
+				"modifiedDate",
+				(BiConsumer<JournalArticle, Date>)
+					JournalArticle::setModifiedDate);
+			attributeSetterBiConsumers.put(
+				"externalReferenceCode",
+				(BiConsumer<JournalArticle, String>)
+					JournalArticle::setExternalReferenceCode);
+			attributeSetterBiConsumers.put(
+				"folderId",
+				(BiConsumer<JournalArticle, Long>)JournalArticle::setFolderId);
+			attributeSetterBiConsumers.put(
+				"classNameId",
+				(BiConsumer<JournalArticle, Long>)
+					JournalArticle::setClassNameId);
+			attributeSetterBiConsumers.put(
+				"classPK",
+				(BiConsumer<JournalArticle, Long>)JournalArticle::setClassPK);
+			attributeSetterBiConsumers.put(
+				"treePath",
+				(BiConsumer<JournalArticle, String>)
+					JournalArticle::setTreePath);
+			attributeSetterBiConsumers.put(
+				"articleId",
+				(BiConsumer<JournalArticle, String>)
+					JournalArticle::setArticleId);
+			attributeSetterBiConsumers.put(
+				"version",
+				(BiConsumer<JournalArticle, Double>)JournalArticle::setVersion);
+			attributeSetterBiConsumers.put(
+				"urlTitle",
+				(BiConsumer<JournalArticle, String>)
+					JournalArticle::setUrlTitle);
+			attributeSetterBiConsumers.put(
+				"DDMStructureId",
+				(BiConsumer<JournalArticle, Long>)
+					JournalArticle::setDDMStructureId);
+			attributeSetterBiConsumers.put(
+				"DDMTemplateKey",
+				(BiConsumer<JournalArticle, String>)
+					JournalArticle::setDDMTemplateKey);
+			attributeSetterBiConsumers.put(
+				"defaultLanguageId",
+				(BiConsumer<JournalArticle, String>)
+					JournalArticle::setDefaultLanguageId);
+			attributeSetterBiConsumers.put(
+				"layoutUuid",
+				(BiConsumer<JournalArticle, String>)
+					JournalArticle::setLayoutUuid);
+			attributeSetterBiConsumers.put(
+				"displayDate",
+				(BiConsumer<JournalArticle, Date>)
+					JournalArticle::setDisplayDate);
+			attributeSetterBiConsumers.put(
+				"expirationDate",
+				(BiConsumer<JournalArticle, Date>)
+					JournalArticle::setExpirationDate);
+			attributeSetterBiConsumers.put(
+				"reviewDate",
+				(BiConsumer<JournalArticle, Date>)
+					JournalArticle::setReviewDate);
+			attributeSetterBiConsumers.put(
+				"indexable",
+				(BiConsumer<JournalArticle, Boolean>)
+					JournalArticle::setIndexable);
+			attributeSetterBiConsumers.put(
+				"smallImage",
+				(BiConsumer<JournalArticle, Boolean>)
+					JournalArticle::setSmallImage);
+			attributeSetterBiConsumers.put(
+				"smallImageId",
+				(BiConsumer<JournalArticle, Long>)
+					JournalArticle::setSmallImageId);
+			attributeSetterBiConsumers.put(
+				"smallImageURL",
+				(BiConsumer<JournalArticle, String>)
+					JournalArticle::setSmallImageURL);
+			attributeSetterBiConsumers.put(
+				"lastPublishDate",
+				(BiConsumer<JournalArticle, Date>)
+					JournalArticle::setLastPublishDate);
+			attributeSetterBiConsumers.put(
+				"status",
+				(BiConsumer<JournalArticle, Integer>)JournalArticle::setStatus);
+			attributeSetterBiConsumers.put(
+				"statusByUserId",
+				(BiConsumer<JournalArticle, Long>)
+					JournalArticle::setStatusByUserId);
+			attributeSetterBiConsumers.put(
+				"statusByUserName",
+				(BiConsumer<JournalArticle, String>)
+					JournalArticle::setStatusByUserName);
+			attributeSetterBiConsumers.put(
+				"statusDate",
+				(BiConsumer<JournalArticle, Date>)
+					JournalArticle::setStatusDate);
+
+			_attributeSetterBiConsumers = Collections.unmodifiableMap(
+				(Map)attributeSetterBiConsumers);
+		}
+
 	}
 
 	@JSON
@@ -1032,22 +1072,17 @@ public class JournalArticleModelImpl
 
 	@JSON
 	@Override
-	public String getDDMStructureKey() {
-		if (_DDMStructureKey == null) {
-			return "";
-		}
-		else {
-			return _DDMStructureKey;
-		}
+	public long getDDMStructureId() {
+		return _DDMStructureId;
 	}
 
 	@Override
-	public void setDDMStructureKey(String DDMStructureKey) {
+	public void setDDMStructureId(long DDMStructureId) {
 		if (_columnOriginalValues == Collections.EMPTY_MAP) {
 			_setColumnOriginalValues();
 		}
 
-		_DDMStructureKey = DDMStructureKey;
+		_DDMStructureId = DDMStructureId;
 	}
 
 	/**
@@ -1055,8 +1090,9 @@ public class JournalArticleModelImpl
 	 *             #getColumnOriginalValue(String)}
 	 */
 	@Deprecated
-	public String getOriginalDDMStructureKey() {
-		return getColumnOriginalValue("DDMStructureKey");
+	public long getOriginalDDMStructureId() {
+		return GetterUtil.getLong(
+			this.<Long>getColumnOriginalValue("DDMStructureId"));
 	}
 
 	@JSON
@@ -1571,7 +1607,7 @@ public class JournalArticleModelImpl
 		journalArticleImpl.setArticleId(getArticleId());
 		journalArticleImpl.setVersion(getVersion());
 		journalArticleImpl.setUrlTitle(getUrlTitle());
-		journalArticleImpl.setDDMStructureKey(getDDMStructureKey());
+		journalArticleImpl.setDDMStructureId(getDDMStructureId());
 		journalArticleImpl.setDDMTemplateKey(getDDMTemplateKey());
 		journalArticleImpl.setDefaultLanguageId(getDefaultLanguageId());
 		journalArticleImpl.setLayoutUuid(getLayoutUuid());
@@ -1634,8 +1670,8 @@ public class JournalArticleModelImpl
 			this.<Double>getColumnOriginalValue("version"));
 		journalArticleImpl.setUrlTitle(
 			this.<String>getColumnOriginalValue("urlTitle"));
-		journalArticleImpl.setDDMStructureKey(
-			this.<String>getColumnOriginalValue("DDMStructureKey"));
+		journalArticleImpl.setDDMStructureId(
+			this.<Long>getColumnOriginalValue("DDMStructureId"));
 		journalArticleImpl.setDDMTemplateKey(
 			this.<String>getColumnOriginalValue("DDMTemplateKey"));
 		journalArticleImpl.setDefaultLanguageId(
@@ -1850,13 +1886,7 @@ public class JournalArticleModelImpl
 			journalArticleCacheModel.urlTitle = null;
 		}
 
-		journalArticleCacheModel.DDMStructureKey = getDDMStructureKey();
-
-		String DDMStructureKey = journalArticleCacheModel.DDMStructureKey;
-
-		if ((DDMStructureKey != null) && (DDMStructureKey.length() == 0)) {
-			journalArticleCacheModel.DDMStructureKey = null;
-		}
+		journalArticleCacheModel.DDMStructureId = getDDMStructureId();
 
 		journalArticleCacheModel.DDMTemplateKey = getDDMTemplateKey();
 
@@ -2035,7 +2065,7 @@ public class JournalArticleModelImpl
 	private String _articleId;
 	private double _version;
 	private String _urlTitle;
-	private String _DDMStructureKey;
+	private long _DDMStructureId;
 	private String _DDMTemplateKey;
 	private String _defaultLanguageId;
 	private String _layoutUuid;
@@ -2056,7 +2086,8 @@ public class JournalArticleModelImpl
 		columnName = _attributeNames.getOrDefault(columnName, columnName);
 
 		Function<JournalArticle, Object> function =
-			_attributeGetterFunctions.get(columnName);
+			AttributeGetterFunctionsHolder._attributeGetterFunctions.get(
+				columnName);
 
 		if (function == null) {
 			throw new IllegalArgumentException(
@@ -2101,7 +2132,7 @@ public class JournalArticleModelImpl
 		_columnOriginalValues.put("articleId", _articleId);
 		_columnOriginalValues.put("version", _version);
 		_columnOriginalValues.put("urlTitle", _urlTitle);
-		_columnOriginalValues.put("DDMStructureKey", _DDMStructureKey);
+		_columnOriginalValues.put("DDMStructureId", _DDMStructureId);
 		_columnOriginalValues.put("DDMTemplateKey", _DDMTemplateKey);
 		_columnOriginalValues.put("defaultLanguageId", _defaultLanguageId);
 		_columnOriginalValues.put("layoutUuid", _layoutUuid);
@@ -2179,7 +2210,7 @@ public class JournalArticleModelImpl
 
 		columnBitmasks.put("urlTitle", 262144L);
 
-		columnBitmasks.put("DDMStructureKey", 524288L);
+		columnBitmasks.put("DDMStructureId", 524288L);
 
 		columnBitmasks.put("DDMTemplateKey", 1048576L);
 

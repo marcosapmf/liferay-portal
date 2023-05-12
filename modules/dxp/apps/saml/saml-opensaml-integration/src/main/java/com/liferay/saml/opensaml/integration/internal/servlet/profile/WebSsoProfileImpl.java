@@ -14,6 +14,7 @@
 
 package com.liferay.saml.opensaml.integration.internal.servlet.profile;
 
+import com.liferay.petra.concurrent.DCLSingleton;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.kernel.cookies.CookiesManagerUtil;
@@ -36,6 +37,8 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.saml.constants.SamlWebKeys;
 import com.liferay.saml.opensaml.integration.internal.binding.SamlBinding;
+import com.liferay.saml.opensaml.integration.internal.bootstrap.ParserPoolUtil;
+import com.liferay.saml.opensaml.integration.internal.metadata.MetadataManager;
 import com.liferay.saml.opensaml.integration.internal.resolver.AttributePublisherImpl;
 import com.liferay.saml.opensaml.integration.internal.resolver.AttributeResolverRegistry;
 import com.liferay.saml.opensaml.integration.internal.resolver.AttributeResolverSAMLContextImpl;
@@ -44,6 +47,7 @@ import com.liferay.saml.opensaml.integration.internal.resolver.NameIdResolverReg
 import com.liferay.saml.opensaml.integration.internal.resolver.NameIdResolverSAMLContextImpl;
 import com.liferay.saml.opensaml.integration.internal.resolver.SubjectAssertionContext;
 import com.liferay.saml.opensaml.integration.internal.resolver.UserResolverSAMLContextImpl;
+import com.liferay.saml.opensaml.integration.internal.util.ConfigurationServiceBootstrapUtil;
 import com.liferay.saml.opensaml.integration.internal.util.OpenSamlUtil;
 import com.liferay.saml.opensaml.integration.internal.util.SamlUtil;
 import com.liferay.saml.opensaml.integration.resolver.AttributeResolver;
@@ -82,21 +86,22 @@ import com.liferay.saml.runtime.servlet.profile.WebSsoProfile;
 import java.io.IOException;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import net.shibboleth.utilities.java.support.resolver.CriteriaSet;
+import net.shibboleth.utilities.java.support.resolver.ResolverException;
+import net.shibboleth.utilities.java.support.xml.ParserPool;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.Duration;
 
-import org.opensaml.core.config.ConfigurationService;
 import org.opensaml.core.criterion.EntityIdCriterion;
 import org.opensaml.messaging.context.InOutOperationContext;
 import org.opensaml.messaging.context.MessageContext;
@@ -146,22 +151,26 @@ import org.opensaml.security.credential.Credential;
 import org.opensaml.security.credential.UsageType;
 import org.opensaml.security.criteria.UsageCriterion;
 import org.opensaml.security.trust.TrustEngine;
+import org.opensaml.xmlsec.DecryptionParameters;
+import org.opensaml.xmlsec.DecryptionParametersResolver;
 import org.opensaml.xmlsec.EncryptionConfiguration;
 import org.opensaml.xmlsec.EncryptionParameters;
+import org.opensaml.xmlsec.SecurityConfigurationSupport;
 import org.opensaml.xmlsec.context.SecurityParametersContext;
+import org.opensaml.xmlsec.criterion.DecryptionConfigurationCriterion;
 import org.opensaml.xmlsec.criterion.EncryptionConfigurationCriterion;
 import org.opensaml.xmlsec.criterion.EncryptionOptionalCriterion;
 import org.opensaml.xmlsec.encryption.support.DataEncryptionParameters;
 import org.opensaml.xmlsec.encryption.support.DecryptionException;
 import org.opensaml.xmlsec.encryption.support.KeyEncryptionParameters;
+import org.opensaml.xmlsec.impl.BasicDecryptionParametersResolver;
+import org.opensaml.xmlsec.keyinfo.KeyInfoCredentialResolver;
 import org.opensaml.xmlsec.signature.Signature;
 import org.opensaml.xmlsec.signature.support.SignatureTrustEngine;
 
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Reference;
-import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicyOption;
 
 /**
@@ -169,7 +178,6 @@ import org.osgi.service.component.annotations.ReferencePolicyOption;
  */
 @Component(
 	configurationPid = "com.liferay.saml.runtime.configuration.SamlConfiguration",
-	configurationPolicy = ConfigurationPolicy.OPTIONAL,
 	service = WebSsoProfile.class
 )
 public class WebSsoProfileImpl extends BaseProfile implements WebSsoProfile {
@@ -217,29 +225,44 @@ public class WebSsoProfileImpl extends BaseProfile implements WebSsoProfile {
 				}
 			}
 
-			if (messageContext != null) {
-				SAMLPeerEntityContext samlPeerEntityContext =
-					messageContext.getSubcontext(SAMLPeerEntityContext.class);
+			if (messageContext == null) {
+				ExceptionHandlerUtil.handleException(exception);
 
-				if (samlPeerEntityContext != null) {
-					String nameIdValue = Optional.ofNullable(
-						messageContext.getSubcontext(
-							SAMLSubjectNameIdentifierContext.class)
-					).map(
-						SAMLSubjectNameIdentifierContext::getSAML2SubjectNameID
-					).map(
-						NameID::getValue
-					).orElse(
-						null
-					);
-
-					throw new EntityInteractionException(
-						samlPeerEntityContext.getEntityId(), nameIdValue,
-						exception);
-				}
+				return;
 			}
 
-			ExceptionHandlerUtil.handleException(exception);
+			SAMLPeerEntityContext samlPeerEntityContext =
+				messageContext.getSubcontext(SAMLPeerEntityContext.class);
+
+			if (samlPeerEntityContext == null) {
+				ExceptionHandlerUtil.handleException(exception);
+
+				return;
+			}
+
+			SAMLSubjectNameIdentifierContext samlSubjectNameIdentifierContext =
+				messageContext.getSubcontext(
+					SAMLSubjectNameIdentifierContext.class);
+
+			if (samlSubjectNameIdentifierContext == null) {
+				ExceptionHandlerUtil.handleException(exception);
+
+				return;
+			}
+
+			NameID saml2SubjectNameID =
+				samlSubjectNameIdentifierContext.getSAML2SubjectNameID();
+
+			if (saml2SubjectNameID == null) {
+				ExceptionHandlerUtil.handleException(exception);
+
+				return;
+			}
+
+			String nameIdValue = saml2SubjectNameID.getValue();
+
+			throw new EntityInteractionException(
+				samlPeerEntityContext.getEntityId(), nameIdValue, exception);
 		}
 	}
 
@@ -288,13 +311,6 @@ public class WebSsoProfileImpl extends BaseProfile implements WebSsoProfile {
 	protected void activate(Map<String, Object> properties) {
 		_samlConfiguration = ConfigurableUtil.createConfigurable(
 			SamlConfiguration.class, properties);
-
-		_samlMetadataEncryptionParametersResolver =
-			new SAMLMetadataEncryptionParametersResolver(
-				metadataManager.getMetadataCredentialResolver());
-
-		_samlMetadataEncryptionParametersResolver.
-			setAutoGenerateDataEncryptionCredential(true);
 	}
 
 	protected SamlSsoRequestContext decodeAuthnRequest(
@@ -497,10 +513,6 @@ public class WebSsoProfileImpl extends BaseProfile implements WebSsoProfile {
 		SPSSODescriptor spSSODescriptor =
 			(SPSSODescriptor)samlSelfMetadataContext.getRoleDescriptor();
 
-		AssertionConsumerService assertionConsumerService =
-			SamlUtil.getAssertionConsumerServiceForBinding(
-				spSSODescriptor, SAMLConstants.SAML2_POST_BINDING_URI);
-
 		SAMLPeerEntityContext samlPeerEntityContext =
 			messageContext.getSubcontext(SAMLPeerEntityContext.class);
 
@@ -522,7 +534,9 @@ public class WebSsoProfileImpl extends BaseProfile implements WebSsoProfile {
 		nameIDPolicy.setFormat(metadataManager.getNameIdFormat(entityId));
 
 		AuthnRequest authnRequest = OpenSamlUtil.buildAuthnRequest(
-			samlSelfEntityContext.getEntityId(), assertionConsumerService,
+			samlSelfEntityContext.getEntityId(),
+			SamlUtil.getAssertionConsumerServiceForBinding(
+				spSSODescriptor, SAMLConstants.SAML2_POST_BINDING_URI),
 			singleSignOnService, nameIDPolicy);
 
 		if (samlSpIdpConnection.isForceAuthn() ||
@@ -617,9 +631,7 @@ public class WebSsoProfileImpl extends BaseProfile implements WebSsoProfile {
 	}
 
 	protected Subject getSuccessSubject(
-		SamlSsoRequestContext samlSsoRequestContext,
-		AssertionConsumerService assertionConsumerService, NameID nameID,
-		SubjectConfirmationData subjectConfirmationData) {
+		NameID nameID, SubjectConfirmationData subjectConfirmationData) {
 
 		SubjectConfirmation subjectConfirmation =
 			OpenSamlUtil.buildSubjectConfirmation();
@@ -1013,6 +1025,55 @@ public class WebSsoProfileImpl extends BaseProfile implements WebSsoProfile {
 			samlSsoRequestContext.getSamlSsoSessionId());
 	}
 
+	private Decrypter _createDecrypter() {
+		DecryptionParametersResolver decryptionParametersResolver =
+			new BasicDecryptionParametersResolver();
+
+		try {
+			DecryptionParameters decryptionParameters =
+				decryptionParametersResolver.resolveSingle(
+					new CriteriaSet(
+						new DecryptionConfigurationCriterion(
+							SecurityConfigurationSupport.
+								getGlobalDecryptionConfiguration())));
+
+			if (decryptionParameters == null) {
+				throw new RuntimeException(
+					"Unable to resolve decryption parameters from the " +
+						"configuration");
+			}
+
+			decryptionParameters.setKEKKeyInfoCredentialResolver(
+				new DefaultKeyInfoCredentialResolver());
+
+			Decrypter decrypter = new CustomParserPoolDecrypter(
+				decryptionParameters);
+
+			decrypter.setRootInNewDocument(true);
+
+			return decrypter;
+		}
+		catch (ResolverException resolverException) {
+			_log.error(resolverException);
+		}
+
+		return null;
+	}
+
+	private SAMLMetadataEncryptionParametersResolver
+		_createSAMLMetadataEncryptionParametersResolver() {
+
+		SAMLMetadataEncryptionParametersResolver
+			samlMetadataEncryptionParametersResolver =
+				new SAMLMetadataEncryptionParametersResolver(
+					metadataManager.getMetadataCredentialResolver());
+
+		samlMetadataEncryptionParametersResolver.
+			setAutoGenerateDataEncryptionCredential(true);
+
+		return samlMetadataEncryptionParametersResolver;
+	}
+
 	private SamlSsoRequestContext _decodeAuthnConversationAfterLogin(
 			HttpServletRequest httpServletRequest,
 			HttpServletResponse httpServletResponse)
@@ -1110,10 +1171,22 @@ public class WebSsoProfileImpl extends BaseProfile implements WebSsoProfile {
 		List<Assertion> assertions = new ArrayList<>(
 			samlResponse.getAssertions());
 
-		if (_decrypter != null) {
+		Decrypter decrypter = _decrypterDCLSingleton.getSingleton(
+			this::_createDecrypter);
+
+		if (decrypter == null) {
+			if (!encryptedAssertions.isEmpty()) {
+				if (_log.isWarnEnabled()) {
+					_log.warn(
+						"Message returned encrypted assertions but there is " +
+							"no decrypter available");
+				}
+			}
+		}
+		else {
 			for (EncryptedAssertion encryptedAssertion : encryptedAssertions) {
 				try {
-					assertions.add(_decrypter.decrypt(encryptedAssertion));
+					assertions.add(decrypter.decrypt(encryptedAssertion));
 				}
 				catch (DecryptionException decryptionException) {
 					_log.error(
@@ -1122,16 +1195,7 @@ public class WebSsoProfileImpl extends BaseProfile implements WebSsoProfile {
 			}
 
 			inboundMessageContext.addSubcontext(
-				new DecrypterContext(_decrypter));
-		}
-		else {
-			if (!encryptedAssertions.isEmpty()) {
-				if (_log.isWarnEnabled()) {
-					_log.warn(
-						"Message returned encrypted assertions but there is " +
-							"no decrypter available");
-				}
-			}
+				new DecrypterContext(decrypter));
 		}
 
 		SignatureTrustEngine signatureTrustEngine =
@@ -1251,9 +1315,7 @@ public class WebSsoProfileImpl extends BaseProfile implements WebSsoProfile {
 			OpenSamlUtil.buildIssuer(samlSelfEntityContext.getEntityId()));
 
 		assertion.setSubject(
-			getSuccessSubject(
-				samlSsoRequestContext, assertionConsumerService, nameID,
-				subjectConfirmationData));
+			getSuccessSubject(nameID, subjectConfirmationData));
 		assertion.setVersion(SAMLVersion.VERSION_20);
 
 		List<AuthnStatement> authnStatements = assertion.getAuthnStatements();
@@ -1453,9 +1515,15 @@ public class WebSsoProfileImpl extends BaseProfile implements WebSsoProfile {
 			if ((authnRequest != null) && authnRequest.isPassive() &&
 				(user == null)) {
 
+				SamlProviderConfiguration samlProviderConfiguration =
+					samlProviderConfigurationHelper.
+						getSamlProviderConfiguration();
+
 				_sendFailureResponse(
-					samlSsoRequestContext, StatusCode.NO_PASSIVE,
-					httpServletResponse);
+					samlProviderConfiguration.
+						authnRequestSigningAllowsDynamicACSURL(),
+					httpServletResponse, samlSsoRequestContext,
+					StatusCode.NO_PASSIVE);
 
 				return;
 			}
@@ -1509,7 +1577,12 @@ public class WebSsoProfileImpl extends BaseProfile implements WebSsoProfile {
 				forceAuthn);
 		}
 		else {
+			SamlProviderConfiguration samlProviderConfiguration =
+				samlProviderConfigurationHelper.getSamlProviderConfiguration();
+
 			_sendSuccessResponse(
+				samlProviderConfiguration.
+					authnRequestSigningAllowsDynamicACSURL(),
 				httpServletRequest, httpServletResponse, samlSsoRequestContext);
 
 			HttpSession httpSession = httpServletRequest.getSession(false);
@@ -1737,8 +1810,8 @@ public class WebSsoProfileImpl extends BaseProfile implements WebSsoProfile {
 	}
 
 	private void _sendFailureResponse(
-			SamlSsoRequestContext samlSsoRequestContext, String statusURI,
-			HttpServletResponse httpServletResponse)
+			boolean dynamicACSURL, HttpServletResponse httpServletResponse,
+			SamlSsoRequestContext samlSsoRequestContext, String statusURI)
 		throws Exception {
 
 		MessageContext<?> messageContext =
@@ -1749,7 +1822,8 @@ public class WebSsoProfileImpl extends BaseProfile implements WebSsoProfile {
 
 		AssertionConsumerService assertionConsumerService =
 			SamlUtil.resolverAssertionConsumerService(
-				messageContext, samlBinding.getCommunicationProfileId());
+				messageContext, samlBinding.getCommunicationProfileId(),
+				dynamicACSURL);
 
 		SAMLPeerEntityContext samlPeerEntityContext =
 			messageContext.getSubcontext(SAMLPeerEntityContext.class);
@@ -1810,7 +1884,7 @@ public class WebSsoProfileImpl extends BaseProfile implements WebSsoProfile {
 	}
 
 	private void _sendSuccessResponse(
-			HttpServletRequest httpServletRequest,
+			boolean dynamicACSURL, HttpServletRequest httpServletRequest,
 			HttpServletResponse httpServletResponse,
 			SamlSsoRequestContext samlSsoRequestContext)
 		throws Exception {
@@ -1823,7 +1897,8 @@ public class WebSsoProfileImpl extends BaseProfile implements WebSsoProfile {
 
 		AssertionConsumerService assertionConsumerService =
 			SamlUtil.resolverAssertionConsumerService(
-				messageContext, samlBinding.getCommunicationProfileId());
+				messageContext, samlBinding.getCommunicationProfileId(),
+				dynamicACSURL);
 
 		NameID nameID = _getSuccessNameId(samlSsoRequestContext);
 
@@ -1856,16 +1931,22 @@ public class WebSsoProfileImpl extends BaseProfile implements WebSsoProfile {
 
 		CriteriaSet criteriaSet = new CriteriaSet(
 			new EncryptionConfigurationCriterion(
-				ConfigurationService.get(EncryptionConfiguration.class)),
+				ConfigurationServiceBootstrapUtil.get(
+					EncryptionConfiguration.class)),
 			new RoleDescriptorCriterion(spSSODescriptor));
 
 		if (!samlIdpSpConnection.isEncryptionForced()) {
 			criteriaSet.add(new EncryptionOptionalCriterion(true));
 		}
 
+		SAMLMetadataEncryptionParametersResolver
+			samlMetadataEncryptionParametersResolver =
+				_samlMetadataEncryptionParametersResolverDCLSingleton.
+					getSingleton(
+						this::_createSAMLMetadataEncryptionParametersResolver);
+
 		EncryptionParameters encryptionParameters =
-			_samlMetadataEncryptionParametersResolver.resolveSingle(
-				criteriaSet);
+			samlMetadataEncryptionParametersResolver.resolveSingle(criteriaSet);
 
 		if (encryptionParameters != null) {
 			Encrypter encrypter = new Encrypter(
@@ -2039,8 +2120,11 @@ public class WebSsoProfileImpl extends BaseProfile implements WebSsoProfile {
 	@Reference
 	private AttributeResolverRegistry _attributeResolverRegistry;
 
-	@Reference(cardinality = ReferenceCardinality.OPTIONAL)
-	private Decrypter _decrypter;
+	private final DCLSingleton<Decrypter> _decrypterDCLSingleton =
+		new DCLSingleton<>();
+
+	@Reference
+	private MetadataManager _metadataManager;
 
 	@Reference
 	private NameIdResolverRegistry _nameIdResolverRegistry;
@@ -2056,8 +2140,9 @@ public class WebSsoProfileImpl extends BaseProfile implements WebSsoProfile {
 	@Reference
 	private SamlIdpSsoSessionLocalService _samlIdpSsoSessionLocalService;
 
-	private SAMLMetadataEncryptionParametersResolver
-		_samlMetadataEncryptionParametersResolver;
+	private final DCLSingleton<SAMLMetadataEncryptionParametersResolver>
+		_samlMetadataEncryptionParametersResolverDCLSingleton =
+			new DCLSingleton<>();
 
 	@Reference
 	private SamlSpAuthRequestLocalService _samlSpAuthRequestLocalService;
@@ -2073,5 +2158,44 @@ public class WebSsoProfileImpl extends BaseProfile implements WebSsoProfile {
 
 	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	private UserResolver _userResolver;
+
+	private class CustomParserPoolDecrypter extends Decrypter {
+
+		public CustomParserPoolDecrypter(
+			DecryptionParameters decryptionParameters) {
+
+			super(decryptionParameters);
+		}
+
+		@Override
+		protected ParserPool buildParserPool() {
+			return ParserPoolUtil.getParserPool();
+		}
+
+	}
+
+	private class DefaultKeyInfoCredentialResolver
+		implements KeyInfoCredentialResolver {
+
+		@Override
+		public Iterable<Credential> resolve(CriteriaSet criteria)
+			throws ResolverException {
+
+			return Collections.singletonList(resolveSingle(criteria));
+		}
+
+		@Override
+		public Credential resolveSingle(CriteriaSet criteria)
+			throws ResolverException {
+
+			try {
+				return _metadataManager.getEncryptionCredential();
+			}
+			catch (SamlException samlException) {
+				throw new ResolverException(samlException);
+			}
+		}
+
+	}
 
 }

@@ -14,115 +14,76 @@
 
 package com.liferay.frontend.taglib.internal.util;
 
-import com.liferay.frontend.js.module.launcher.JSModuleLauncher;
-import com.liferay.frontend.js.module.launcher.JSModuleResolver;
+import com.liferay.osgi.util.service.Snapshot;
+import com.liferay.petra.concurrent.DCLSingleton;
 import com.liferay.portal.url.builder.AbsolutePortalURLBuilderFactory;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 
 import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
-import org.osgi.service.component.annotations.Activate;
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Deactivate;
-import org.osgi.service.component.annotations.Reference;
+import org.osgi.framework.FrameworkUtil;
 import org.osgi.util.tracker.BundleTracker;
 import org.osgi.util.tracker.BundleTrackerCustomizer;
 
 /**
  * @author Iván Zaera Avellón
  */
-@Component(service = {})
 public class ServicesProvider {
 
 	public static AbsolutePortalURLBuilderFactory
 		getAbsolutePortalURLBuilderFactory() {
 
-		return _absolutePortalURLBuilderFactory;
+		return _absolutePortalURLBuilderFactorySnapshot.get();
 	}
 
 	public static Map<String, Bundle> getBundleMap() {
-		return _bundleConcurrentMap;
-	}
+		return _bundleMapDCLSingleton.getSingleton(
+			() -> {
+				Map<String, Bundle> bundleMap = new ConcurrentHashMap<>();
 
-	public static JSModuleLauncher getJSModuleLauncher() {
-		return _jsModuleLauncher;
-	}
+				Bundle bundle = FrameworkUtil.getBundle(ServicesProvider.class);
 
-	public static JSModuleResolver getJSModuleResolver() {
-		return _jsModuleResolver;
-	}
+				BundleTracker<String> bundleTracker = new BundleTracker<>(
+					bundle.getBundleContext(), Bundle.ACTIVE,
+					new BundleTrackerCustomizer<String>() {
 
-	@Reference(unbind = "-")
-	public void setAbsolutePortalURLBuilderFactory(
-		AbsolutePortalURLBuilderFactory absolutePortalURLBuilderFactory) {
+						@Override
+						public String addingBundle(
+							Bundle bundle, BundleEvent bundleEvent) {
 
-		_absolutePortalURLBuilderFactory = absolutePortalURLBuilderFactory;
-	}
+							bundleMap.put(bundle.getSymbolicName(), bundle);
 
-	@Reference(unbind = "-")
-	public void setJsModuleLauncher(JSModuleLauncher jsModuleLauncher) {
-		_jsModuleLauncher = jsModuleLauncher;
-	}
+							return bundle.getSymbolicName();
+						}
 
-	@Reference(unbind = "-")
-	public void setJSModuleResolver(JSModuleResolver jsModuleResolver) {
-		_jsModuleResolver = jsModuleResolver;
-	}
+						@Override
+						public void modifiedBundle(
+							Bundle bundle, BundleEvent bundleEvent,
+							String symbolicName) {
+						}
 
-	@Activate
-	protected void activate(BundleContext bundleContext) {
-		_bundleConcurrentMap = new ConcurrentHashMap<>();
+						@Override
+						public void removedBundle(
+							Bundle bundle, BundleEvent bundleEvent,
+							String symbolicName) {
 
-		_bundleTracker = new BundleTracker(
-			bundleContext, Bundle.ACTIVE,
-			new BundleTrackerCustomizer<String>() {
+							bundleMap.remove(symbolicName);
+						}
 
-				@Override
-				public String addingBundle(
-					Bundle bundle, BundleEvent bundleEvent) {
+					});
 
-					_bundleConcurrentMap.put(bundle.getSymbolicName(), bundle);
+				bundleTracker.open();
 
-					return bundle.getSymbolicName();
-				}
-
-				@Override
-				public void modifiedBundle(
-					Bundle bundle, BundleEvent bundleEvent,
-					String symbolicName) {
-				}
-
-				@Override
-				public void removedBundle(
-					Bundle bundle, BundleEvent bundleEvent,
-					String symbolicName) {
-
-					_bundleConcurrentMap.remove(symbolicName);
-				}
-
+				return bundleMap;
 			});
-
-		_bundleTracker.open();
 	}
 
-	@Deactivate
-	protected void deactivate() {
-		_bundleTracker.close();
-
-		_bundleTracker = null;
-
-		_bundleConcurrentMap = null;
-	}
-
-	private static AbsolutePortalURLBuilderFactory
-		_absolutePortalURLBuilderFactory;
-	private static ConcurrentMap<String, Bundle> _bundleConcurrentMap;
-	private static BundleTracker<String> _bundleTracker;
-	private static JSModuleLauncher _jsModuleLauncher;
-	private static JSModuleResolver _jsModuleResolver;
+	private static final Snapshot<AbsolutePortalURLBuilderFactory>
+		_absolutePortalURLBuilderFactorySnapshot = new Snapshot<>(
+			ServicesProvider.class, AbsolutePortalURLBuilderFactory.class);
+	private static final DCLSingleton<Map<String, Bundle>>
+		_bundleMapDCLSingleton = new DCLSingleton<>();
 
 }

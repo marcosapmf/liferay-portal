@@ -1525,6 +1525,19 @@ public class VerifyProperties {
 			"com.liferay.asset.tags.compiler.web"
 		},
 
+		// Text Extraction
+
+		{
+			"text.extraction.fork.process.enabled",
+			"text-extraction-fork-process-enabled",
+			"com.liferay.portal.tika"
+		},
+		{
+			"text.extraction.fork.process.mime.types",
+			"text-extraction-fork-process-mime-types",
+			"com.liferay.portal.tika"
+		},
+
 		// Translator
 
 		{
@@ -1625,7 +1638,14 @@ public class VerifyProperties {
 		{
 			"ical4j.validation.relaxed", "ical4j.validation.relaxed",
 			"com.liferay.calendar.service"
+		},
+
+		// Tika
+
+		{
+			"tika.config", "tika-config-xml", "com.liferay.portal.tika"
 		}
+
 	};
 
 	private static final String[] _OBSOLETE_PORTAL_KEYS = {
@@ -1684,6 +1704,7 @@ public class VerifyProperties {
 		"com.liferay.portal.servlet.filters.doubleclick.DoubleClickFilter",
 		"com.liferay.portal.servlet.filters.charbufferpool." +
 			"CharBufferPoolFilter",
+		"com.liferay.portal.servlet.filters.i18n.I18nFilter",
 		"com.liferay.portal.servlet.filters.jsoncontenttype." +
 			"JSONContentTypeFilter",
 		"com.liferay.portal.servlet.filters.monitoring.MonitoringFilter",
@@ -1699,7 +1720,7 @@ public class VerifyProperties {
 		"control.panel.home.portlet.id",
 		"control.panel.navigation.max.organizations",
 		"control.panel.navigation.max.sites", "convert.processes",
-		"data.limit.max.dl.storage.size",
+		"counter.jdbc.prefix", "data.limit.max.dl.storage.size",
 		"data.limit.max.journal.article.count",
 		"data.limit.max.journal.folder.count",
 		"data.limit.max.mail.message.count",

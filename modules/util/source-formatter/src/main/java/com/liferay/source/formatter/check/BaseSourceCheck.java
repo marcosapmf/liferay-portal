@@ -785,8 +785,12 @@ public abstract class BaseSourceCheck implements SourceCheck {
 
 		Matcher matcher = pattern.matcher(content);
 
-		if (matcher.find()) {
-			return matcher.group(1);
+		while (matcher.find()) {
+			String group = matcher.group(1);
+
+			if (!group.equals("return")) {
+				return group;
+			}
 		}
 
 		if (!includeArrayOrCollectionTypes) {

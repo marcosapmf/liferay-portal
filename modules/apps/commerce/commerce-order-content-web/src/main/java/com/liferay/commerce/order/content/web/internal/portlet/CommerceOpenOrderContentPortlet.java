@@ -41,6 +41,7 @@ import com.liferay.item.selector.ItemSelector;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermission;
@@ -86,7 +87,7 @@ import org.osgi.service.component.annotations.Reference;
 		"javax.portlet.security-role-ref=power-user,user",
 		"javax.portlet.version=3.0"
 	},
-	service = {CommerceOpenOrderContentPortlet.class, Portlet.class}
+	service = Portlet.class
 )
 public class CommerceOpenOrderContentPortlet extends MVCPortlet {
 
@@ -108,7 +109,7 @@ public class CommerceOpenOrderContentPortlet extends MVCPortlet {
 						_commercePaymentMethodGroupRelLocalService,
 						_commercePaymentMethodRegistry,
 						_commerceShipmentItemService, _commerceTermEntryService,
-						_dlAppLocalService,
+						_configurationProvider, _dlAppLocalService,
 						_portal.getHttpServletRequest(renderRequest),
 						_itemSelector, _modelResourcePermission,
 						_percentageFormatter, _portletResourcePermission);
@@ -146,24 +147,31 @@ public class CommerceOpenOrderContentPortlet extends MVCPortlet {
 		super.render(renderRequest, renderResponse);
 	}
 
-	private CommerceOrder _getCommerceOrder(PortletRequest portletRequest)
-		throws PortalException {
-
+	private CommerceOrder _getCommerceOrder(PortletRequest portletRequest) {
 		String commerceOrderUuid = ParamUtil.getString(
 			portletRequest, "commerceOrderUuid");
 
-		if (Validator.isNotNull(commerceOrderUuid)) {
-			long groupId =
-				_commerceChannelLocalService.
-					getCommerceChannelGroupIdBySiteGroupId(
-						_portal.getScopeGroupId(portletRequest));
+		try {
+			if (Validator.isNotNull(commerceOrderUuid)) {
+				long groupId =
+					_commerceChannelLocalService.
+						getCommerceChannelGroupIdBySiteGroupId(
+							_portal.getScopeGroupId(portletRequest));
 
-			return _commerceOrderService.getCommerceOrderByUuidAndGroupId(
-				commerceOrderUuid, groupId);
+				return _commerceOrderService.getCommerceOrderByUuidAndGroupId(
+					commerceOrderUuid, groupId);
+			}
+
+			return _commerceOrderHttpHelper.getCurrentCommerceOrder(
+				_portal.getHttpServletRequest(portletRequest));
 		}
+		catch (PortalException portalException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(portalException);
+			}
 
-		return _commerceOrderHttpHelper.getCurrentCommerceOrder(
-			_portal.getHttpServletRequest(portletRequest));
+			return null;
+		}
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(
@@ -215,6 +223,9 @@ public class CommerceOpenOrderContentPortlet extends MVCPortlet {
 
 	@Reference
 	private CommerceTermEntryService _commerceTermEntryService;
+
+	@Reference
+	private ConfigurationProvider _configurationProvider;
 
 	@Reference
 	private DLAppLocalService _dlAppLocalService;

@@ -374,6 +374,27 @@ public class Document implements Cloneable, Serializable {
 
 	protected String fileExtension;
 
+	public String getFileName() {
+		return fileName;
+	}
+
+	public void setFileName(String fileName) {
+		this.fileName = fileName;
+	}
+
+	public void setFileName(
+		UnsafeSupplier<String, Exception> fileNameUnsafeSupplier) {
+
+		try {
+			fileName = fileNameUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String fileName;
+
 	public Long getId() {
 		return id;
 	}

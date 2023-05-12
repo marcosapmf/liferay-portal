@@ -46,6 +46,12 @@ export default function ThemeCSSReplacementSelector({
 
 	return (
 		<>
+			<p className="text-secondary">
+				{Liferay.Language.get(
+					'use-this-client-extension-to-fully-replace-the-default-css-contained-in-the-theme'
+				)}
+			</p>
+
 			<ClayInput
 				name={`${portletNamespace}themeCSSCETExternalReferenceCode`}
 				type="hidden"
@@ -55,10 +61,10 @@ export default function ThemeCSSReplacementSelector({
 				<label
 					htmlFor={`${portletNamespace}themeCSSReplacementExtension`}
 				>
-					{Liferay.Language.get('client-extension')}
+					{Liferay.Language.get('theme-css')}
 				</label>
 
-				<ClayInput.Group className="w-50" small>
+				<ClayInput.Group>
 					<ClayInput.GroupItem>
 						<ClayInput
 							id={`${portletNamespace}themeCSSReplacementExtension`}
@@ -78,7 +84,6 @@ export default function ThemeCSSReplacementSelector({
 									className="mr-2"
 									displayType="secondary"
 									onClick={onClick}
-									small
 									symbol="change"
 								/>
 
@@ -89,7 +94,6 @@ export default function ThemeCSSReplacementSelector({
 										setExtensionName('');
 										setCETExternalReferenceCode('');
 									}}
-									small
 									symbol="trash"
 								/>
 							</>
@@ -98,7 +102,6 @@ export default function ThemeCSSReplacementSelector({
 								aria-label={Liferay.Language.get('select')}
 								displayType="secondary"
 								onClick={onClick}
-								small
 								symbol="plus"
 							/>
 						)}

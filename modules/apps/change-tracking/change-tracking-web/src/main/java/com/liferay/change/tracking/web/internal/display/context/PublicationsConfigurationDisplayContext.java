@@ -36,9 +36,10 @@ public class PublicationsConfigurationDisplayContext {
 		HttpServletRequest httpServletRequest, RenderResponse renderResponse) {
 
 		_httpServletRequest = httpServletRequest;
+		_renderResponse = renderResponse;
 
 		ThemeDisplay themeDisplay =
-			(ThemeDisplay)_httpServletRequest.getAttribute(
+			(ThemeDisplay)httpServletRequest.getAttribute(
 				WebKeys.THEME_DISPLAY);
 
 		CTSettingsConfiguration ctSettingsConfiguration =
@@ -47,8 +48,8 @@ public class PublicationsConfigurationDisplayContext {
 
 		_publicationsEnabled = ctSettingsConfiguration.enabled();
 		_sandboxOnlyEnabled = ctSettingsConfiguration.sandboxEnabled();
-
-		_renderResponse = renderResponse;
+		_unapprovedChangesAllowed =
+			ctSettingsConfiguration.unapprovedChangesAllowed();
 	}
 
 	public String getActionURL() {
@@ -83,10 +84,15 @@ public class PublicationsConfigurationDisplayContext {
 		return _sandboxOnlyEnabled;
 	}
 
+	public boolean isUnapprovedChangesAllowed() {
+		return _unapprovedChangesAllowed;
+	}
+
 	private final HttpServletRequest _httpServletRequest;
 	private String _navigation;
 	private final boolean _publicationsEnabled;
 	private final RenderResponse _renderResponse;
 	private final boolean _sandboxOnlyEnabled;
+	private final boolean _unapprovedChangesAllowed;
 
 }

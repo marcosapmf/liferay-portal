@@ -29,6 +29,7 @@ import com.liferay.headless.commerce.admin.catalog.client.pagination.Pagination;
 import com.liferay.headless.commerce.admin.catalog.client.resource.v1_0.MappedProductResource;
 import com.liferay.headless.commerce.admin.catalog.client.serdes.v1_0.MappedProductSerDes;
 import com.liferay.petra.function.UnsafeTriConsumer;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
@@ -64,8 +65,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.annotation.Generated;
 
@@ -282,7 +281,10 @@ public abstract class BaseMappedProductResourceTestCase {
 			assertEquals(
 				Arrays.asList(irrelevantMappedProduct),
 				(List<MappedProduct>)page.getItems());
-			assertValid(page);
+			assertValid(
+				page,
+				testGetProductByExternalReferenceCodeMappedProductsPage_getExpectedActions(
+					irrelevantExternalReferenceCode));
 		}
 
 		MappedProduct mappedProduct1 =
@@ -303,11 +305,24 @@ public abstract class BaseMappedProductResourceTestCase {
 		assertEqualsIgnoringOrder(
 			Arrays.asList(mappedProduct1, mappedProduct2),
 			(List<MappedProduct>)page.getItems());
-		assertValid(page);
+		assertValid(
+			page,
+			testGetProductByExternalReferenceCodeMappedProductsPage_getExpectedActions(
+				externalReferenceCode));
 
 		mappedProductResource.deleteMappedProduct(mappedProduct1.getId());
 
 		mappedProductResource.deleteMappedProduct(mappedProduct2.getId());
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetProductByExternalReferenceCodeMappedProductsPage_getExpectedActions(
+				String externalReferenceCode)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
 	}
 
 	@Test
@@ -615,6 +630,7 @@ public abstract class BaseMappedProductResourceTestCase {
 											"\"" +
 												testGraphQLGetProductByExternalReferenceCodeMappedProductBySequence_getExternalReferenceCode() +
 													"\"");
+
 										put(
 											"sequence",
 											"\"" + mappedProduct.getSequence() +
@@ -693,7 +709,10 @@ public abstract class BaseMappedProductResourceTestCase {
 			assertEquals(
 				Arrays.asList(irrelevantMappedProduct),
 				(List<MappedProduct>)page.getItems());
-			assertValid(page);
+			assertValid(
+				page,
+				testGetProductIdMappedProductsPage_getExpectedActions(
+					irrelevantProductId));
 		}
 
 		MappedProduct mappedProduct1 =
@@ -712,11 +731,23 @@ public abstract class BaseMappedProductResourceTestCase {
 		assertEqualsIgnoringOrder(
 			Arrays.asList(mappedProduct1, mappedProduct2),
 			(List<MappedProduct>)page.getItems());
-		assertValid(page);
+		assertValid(
+			page,
+			testGetProductIdMappedProductsPage_getExpectedActions(productId));
 
 		mappedProductResource.deleteMappedProduct(mappedProduct1.getId());
 
 		mappedProductResource.deleteMappedProduct(mappedProduct2.getId());
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetProductIdMappedProductsPage_getExpectedActions(
+				Long productId)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
 	}
 
 	@Test
@@ -960,11 +991,19 @@ public abstract class BaseMappedProductResourceTestCase {
 
 		MappedProduct getMappedProduct =
 			mappedProductResource.getProductMappedProductBySequence(
-				postMappedProduct.getProductId(),
+				testGetProductMappedProductBySequence_getProductId(
+					postMappedProduct),
 				postMappedProduct.getSequence());
 
 		assertEquals(postMappedProduct, getMappedProduct);
 		assertValid(getMappedProduct);
+	}
+
+	protected Long testGetProductMappedProductBySequence_getProductId(
+			MappedProduct mappedProduct)
+		throws Exception {
+
+		return mappedProduct.getProductId();
 	}
 
 	protected MappedProduct
@@ -994,7 +1033,9 @@ public abstract class BaseMappedProductResourceTestCase {
 									{
 										put(
 											"productId",
-											mappedProduct.getProductId());
+											testGraphQLGetProductMappedProductBySequence_getProductId(
+												mappedProduct));
+
 										put(
 											"sequence",
 											"\"" + mappedProduct.getSequence() +
@@ -1004,6 +1045,13 @@ public abstract class BaseMappedProductResourceTestCase {
 								getGraphQLFields())),
 						"JSONObject/data",
 						"Object/productMappedProductBySequence"))));
+	}
+
+	protected Long testGraphQLGetProductMappedProductBySequence_getProductId(
+			MappedProduct mappedProduct)
+		throws Exception {
+
+		return mappedProduct.getProductId();
 	}
 
 	@Test
@@ -1226,6 +1274,13 @@ public abstract class BaseMappedProductResourceTestCase {
 	}
 
 	protected void assertValid(Page<MappedProduct> page) {
+		assertValid(page, Collections.emptyMap());
+	}
+
+	protected void assertValid(
+		Page<MappedProduct> page,
+		Map<String, Map<String, String>> expectedActions) {
+
 		boolean valid = false;
 
 		java.util.Collection<MappedProduct> mappedProducts = page.getItems();
@@ -1240,6 +1295,20 @@ public abstract class BaseMappedProductResourceTestCase {
 		}
 
 		Assert.assertTrue(valid);
+
+		Map<String, Map<String, String>> actions = page.getActions();
+
+		for (String key : expectedActions.keySet()) {
+			Map action = actions.get(key);
+
+			Assert.assertNotNull(key + " does not contain an action", action);
+
+			Map expectedAction = expectedActions.get(key);
+
+			Assert.assertEquals(
+				expectedAction.get("method"), action.get("method"));
+			Assert.assertEquals(expectedAction.get("href"), action.get("href"));
+		}
 	}
 
 	protected String[] getAdditionalAssertFieldNames() {
@@ -1480,14 +1549,16 @@ public abstract class BaseMappedProductResourceTestCase {
 	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
 		throws Exception {
 
-		Stream<java.lang.reflect.Field> stream = Stream.of(
-			ReflectionUtil.getDeclaredFields(clazz));
+		return TransformUtil.transform(
+			ReflectionUtil.getDeclaredFields(clazz),
+			field -> {
+				if (field.isSynthetic()) {
+					return null;
+				}
 
-		return stream.filter(
-			field -> !field.isSynthetic()
-		).toArray(
-			java.lang.reflect.Field[]::new
-		);
+				return field;
+			},
+			java.lang.reflect.Field.class);
 	}
 
 	protected java.util.Collection<EntityField> getEntityFields()
@@ -1504,6 +1575,10 @@ public abstract class BaseMappedProductResourceTestCase {
 		EntityModel entityModel = entityModelResource.getEntityModel(
 			new MultivaluedHashMap());
 
+		if (entityModel == null) {
+			return Collections.emptyList();
+		}
+
 		Map<String, EntityField> entityFieldsMap =
 			entityModel.getEntityFieldsMap();
 
@@ -1513,18 +1588,18 @@ public abstract class BaseMappedProductResourceTestCase {
 	protected List<EntityField> getEntityFields(EntityField.Type type)
 		throws Exception {
 
-		java.util.Collection<EntityField> entityFields = getEntityFields();
+		return TransformUtil.transform(
+			getEntityFields(),
+			entityField -> {
+				if (!Objects.equals(entityField.getType(), type) ||
+					ArrayUtil.contains(
+						getIgnoredEntityFieldNames(), entityField.getName())) {
 
-		Stream<EntityField> stream = entityFields.stream();
+					return null;
+				}
 
-		return stream.filter(
-			entityField ->
-				Objects.equals(entityField.getType(), type) &&
-				!ArrayUtil.contains(
-					getIgnoredEntityFieldNames(), entityField.getName())
-		).collect(
-			Collectors.toList()
-		);
+				return entityField;
+			});
 	}
 
 	protected String getFilterString(

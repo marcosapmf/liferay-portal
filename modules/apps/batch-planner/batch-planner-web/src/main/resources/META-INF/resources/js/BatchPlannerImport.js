@@ -14,18 +14,11 @@
 
 import {fetch} from 'frontend-js-web';
 
+import {downloadFile} from './DownloadHelper';
 import {HEADERS, HEADLESS_BATCH_ENGINE_URL} from './constants';
 
 export function getImportTaskStatusURL(externalReferenceCode) {
 	return `${HEADLESS_BATCH_ENGINE_URL}/import-task/by-external-reference-code/${externalReferenceCode}`;
-}
-
-export function getImportFileURL(externalReferenceCode) {
-	return `${HEADLESS_BATCH_ENGINE_URL}/import-task/by-external-reference-code/${externalReferenceCode}/content`;
-}
-
-export function getErrorReportFileURL(externalReferenceCode) {
-	return `${HEADLESS_BATCH_ENGINE_URL}/import-task/by-external-reference-code/${externalReferenceCode}/failed-items/report`;
 }
 
 export async function importStatus(externalReferenceCode) {
@@ -43,9 +36,6 @@ export async function importStatus(externalReferenceCode) {
 	return await response.json();
 }
 
-export async function fetchErrorReportFile(externalReferenceCode) {
-	const response = await fetch(getErrorReportFileURL(externalReferenceCode));
-	const blob = await response.blob();
-
-	return URL.createObjectURL(blob);
+export function fetchErrorReportFile(externalReferenceCode) {
+	downloadFile({externalReferenceCode, fileType: 'errorReport'});
 }

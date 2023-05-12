@@ -38,7 +38,7 @@ String inputName = featureFlagDisplay.getKey() + "-toggle";
 	module="js/FeatureFlagToggle"
 	props='<%=
 		HashMapBuilder.<String, Object>put(
-			"enabled", featureFlagDisplay.isEnabled()
+			"disabled", !featureFlagDisplay.isDependenciesFulfilled()
 		).put(
 			"featureFlagKey", featureFlagDisplay.getKey()
 		).put(
@@ -47,6 +47,8 @@ String inputName = featureFlagDisplay.getKey() + "-toggle";
 			"labelOff", labelOff
 		).put(
 			"labelOn", labelOn
+		).put(
+			"toggled", featureFlagDisplay.isEnabled()
 		).build()
 	%>'
 />

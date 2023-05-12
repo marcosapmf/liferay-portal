@@ -46,14 +46,14 @@ if (priceDisplayType.equals(CommercePricingConstants.TAX_INCLUDED_IN_PRICE)) {
 	totalOrderCommerceMoney = commerceOrderPrice.getTotalWithTaxAmount();
 }
 
-CommerceAccount commerceAccount = commerceOrderContentDisplayContext.getCommerceAccount();
+AccountEntry accountEntry = commerceOrderContentDisplayContext.getAccountEntry();
 
 if (commerceOrder != null) {
-	commerceAccount = commerceOrder.getCommerceAccount();
+	accountEntry = commerceOrder.getAccountEntry();
 }
 
-List<CommerceAddress> shippingAddresses = commerceOrderContentDisplayContext.getShippingCommerceAddresses(commerceAccount.getCommerceAccountId(), commerceAccount.getCompanyId());
-List<CommerceAddress> billingAddresses = commerceOrderContentDisplayContext.getBillingCommerceAddresses(commerceAccount.getCommerceAccountId(), commerceAccount.getCompanyId());
+List<CommerceAddress> shippingAddresses = commerceOrderContentDisplayContext.getShippingCommerceAddresses(accountEntry.getAccountEntryId());
+List<CommerceAddress> billingAddresses = commerceOrderContentDisplayContext.getBillingCommerceAddresses(accountEntry.getAccountEntryId());
 
 List<String> errorMessages = (List<String>)request.getAttribute(CommerceWebKeys.COMMERCE_ORDER_ERROR_MESSAGES);
 
@@ -165,7 +165,7 @@ if (backURL != null) {
 			<div class="align-items-center row">
 				<div class="col-md-3">
 					<div class="commerce-order-title">
-						<%= HtmlUtil.escape(commerceAccount.getName()) %>
+						<%= HtmlUtil.escape(accountEntry.getName()) %>
 					</div>
 				</div>
 
@@ -198,7 +198,7 @@ if (backURL != null) {
 				<div class="col-md-3">
 					<dl class="commerce-list">
 						<dt><liferay-ui:message key="account-id" /></dt>
-						<dd><%= commerceAccount.getCommerceAccountId() %></dd>
+						<dd><%= accountEntry.getAccountEntryId() %></dd>
 					</dl>
 				</div>
 
@@ -262,7 +262,7 @@ if (backURL != null) {
 				<div class="commerce-panel__content">
 					<div class="row">
 						<div class="col-md-12">
-							<c:if test="<%= commerceOrderContentDisplayContext.hasViewBillingAddressPermission(permissionChecker, commerceAccount) %>">
+							<c:if test="<%= commerceOrderContentDisplayContext.hasViewBillingAddressPermission(permissionChecker, accountEntry) %>">
 								<c:choose>
 									<c:when test="<%= commerceOrderContentDisplayContext.hasModelPermission(commerceOrder, ActionKeys.UPDATE) %>">
 										<dl class="commerce-list">
@@ -448,8 +448,17 @@ if (backURL != null) {
 
 		<liferay-commerce:order-transitions
 			commerceOrderId="<%= commerceOrder.getCommerceOrderId() %>"
-			cssClass="btn btn-fixed btn-lg btn-primary ml-3"
+			cssClass="btn btn-fixed btn-primary ml-3"
 		/>
+
+		<c:if test="<%= commerceOrderContentDisplayContext.isRequestQuoteEnabled() %>">
+			<clay:button
+				cssClass="btn-fixed btn-secondary ml-3 request-quote"
+				displayType="secondary"
+				label='<%= LanguageUtil.get(request, "request-a-quote") %>'
+				small="<%= false %>"
+			/>
+		</c:if>
 	</div>
 </aui:form>
 

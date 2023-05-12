@@ -274,6 +274,19 @@ public class LayoutServiceWrapper
 			groupId, folderName, fileName, inputStream, mimeType);
 	}
 
+	@Override
+	public Layout copyLayout(
+			long groupId, boolean privateLayout,
+			java.util.Map<java.util.Locale, String> localeNamesMap,
+			boolean hidden, boolean system, boolean copyPermissions,
+			long sourcePlid, ServiceContext serviceContext)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _layoutService.copyLayout(
+			groupId, privateLayout, localeNamesMap, hidden, system,
+			copyPermissions, sourcePlid, serviceContext);
+	}
+
 	/**
 	 * Deletes the layout with the primary key, also deleting the layout's child
 	 * layouts, and associated resources.

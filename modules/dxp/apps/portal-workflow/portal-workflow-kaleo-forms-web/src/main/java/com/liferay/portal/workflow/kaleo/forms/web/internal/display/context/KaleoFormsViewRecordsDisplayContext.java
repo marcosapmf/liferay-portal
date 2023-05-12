@@ -85,7 +85,7 @@ public class KaleoFormsViewRecordsDisplayContext {
 		_renderRequest = renderRequest;
 		_renderResponse = renderResponse;
 
-		_kaleoProcess = (KaleoProcess)_renderRequest.getAttribute(
+		_kaleoProcess = (KaleoProcess)renderRequest.getAttribute(
 			KaleoFormsWebKeys.KALEO_PROCESS);
 
 		_ddlRecordSet = _kaleoProcess.getDDLRecordSet();
@@ -395,7 +395,7 @@ public class KaleoFormsViewRecordsDisplayContext {
 
 		User user = _kaleoFormsAdminRequestHelper.getUser();
 
-		if (!user.isDefaultUser()) {
+		if (!user.isGuestUser()) {
 			_searchContainer.setRowChecker(
 				new EmptyOnClickRowChecker(_renderResponse));
 		}
@@ -530,13 +530,13 @@ public class KaleoFormsViewRecordsDisplayContext {
 	private Sort _getSort() {
 		boolean ascending = false;
 
-		if (Objects.equals("asc", getOrderByType())) {
+		if (Objects.equals(getOrderByType(), "asc")) {
 			ascending = true;
 		}
 
 		String fieldName = Field.MODIFIED_DATE;
 
-		if (Objects.equals("create-date", getOrderByCol())) {
+		if (Objects.equals(getOrderByCol(), "create-date")) {
 			fieldName = Field.CREATE_DATE;
 		}
 

@@ -37,7 +37,20 @@ import {downloadActivationLicenseKey} from './utils/downloadActivationLicenseKey
 import {getActivationKeyDownload} from './utils/getActivationKeyDownload';
 import {getTooltipContentRenderer} from './utils/getTooltipContentRenderer';
 
-const ActivationKeysTable = ({productName, project, sessionId}) => {
+const messageNewKeyGeneratedAlert = i18n.translate(
+	'activation-key-was-generated-successfully'
+);
+
+const messageDeactivateKey = i18n.translate(
+	'activation-keys-were-deactivated-successfully'
+);
+
+const ActivationKeysTable = ({
+	initialFilter,
+	productName,
+	project,
+	sessionId,
+}) => {
 	const {provisioningServerAPI} = useAppPropertiesContext();
 	const [isVisibleModal, setIsVisibleModal] = useState(false);
 	const [downloadStatus, setDownloadStatus] = useState('');
@@ -58,19 +71,11 @@ const ActivationKeysTable = ({productName, project, sessionId}) => {
 		state?.deactivateKeyAlert ? 'success' : ''
 	);
 
-	const messageNewKeyGeneratedAlert = i18n.translate(
-		'activation-key-was-generated-successfully'
-	);
-
-	const messageDeactivateKey = i18n.translate(
-		'activation-keys-were-deactivated-successfully'
-	);
-
 	const {
 		activationKeysState: [activationKeys, setActivationKeys],
 		loading,
 		setFilterTerm,
-	} = useGetActivationKeysData(project, sessionId, productName);
+	} = useGetActivationKeysData(project, initialFilter);
 
 	const {
 		navigationGroupButtons,
@@ -82,7 +87,11 @@ const ActivationKeysTable = ({productName, project, sessionId}) => {
 		statusFilter
 	);
 
-	const [filters, setFilters] = useFilters(setFilterTerm, productName);
+	const [filters, setFilters] = useFilters(
+		setFilterTerm,
+		productName,
+		initialFilter
+	);
 
 	const [currentActivationKey, setCurrentActivationKey] = useState();
 	const [activationKeysIdChecked, setActivationKeysIdChecked] = useState([]);

@@ -43,7 +43,7 @@ if (editKBArticleDisplayContext.isPortletTitleBasedNavigation()) {
 		<clay:container-fluid>
 			<ul class="tbar-nav">
 				<li class="tbar-item tbar-item-expand">
-					<aui:input autocomplete="off" cssClass="form-control-inline" label="" name="title" placeholder='<%= LanguageUtil.format(request, "untitled-x", "article") %>' required="<%= true %>" type="text" value="<%= HtmlUtil.escape(editKBArticleDisplayContext.getKBArticleTitle()) %>" wrapperCssClass="mb-0" />
+					<aui:input autocomplete="off" cssClass="form-control-inline" label='<%= LanguageUtil.get(request, "name") %>' labelCssClass="sr-only" name="title" placeholder='<%= LanguageUtil.format(request, "untitled-x", "article") %>' required="<%= true %>" type="text" value="<%= HtmlUtil.escape(editKBArticleDisplayContext.getKBArticleTitle()) %>" wrapperCssClass="mb-0" />
 				</li>
 				<li class="tbar-item">
 					<div class="tbar-section text-right">
@@ -155,23 +155,21 @@ if (editKBArticleDisplayContext.isPortletTitleBasedNavigation()) {
 						/>
 					</aui:fieldset>
 
-					<c:if test='<%= GetterUtil.getBoolean(com.liferay.portal.kernel.util.PropsUtil.get("feature.flag.LPS-165476")) %>'>
-						<liferay-frontend:fieldset
-							collapsed="<%= true %>"
-							collapsible="<%= true %>"
-							label="expiration-date"
-						>
-							<aui:model-context bean="<%= editKBArticleDisplayContext.getKBArticle() %>" model="<%= KBArticle.class %>" />
+					<liferay-frontend:fieldset
+						collapsed="<%= true %>"
+						collapsible="<%= true %>"
+						label="expiration-date"
+					>
+						<aui:model-context bean="<%= editKBArticleDisplayContext.getKBArticle() %>" model="<%= KBArticle.class %>" />
 
-							<p class="text-secondary">
-								<liferay-ui:message key="including-an-expiration-date-will-allow-your-articles-to-expire-automatically-and-become-unpublished" />
-							</p>
+						<p class="text-secondary">
+							<liferay-ui:message key="including-an-expiration-date-will-allow-your-articles-to-expire-automatically-and-become-unpublished" />
+						</p>
 
-							<aui:input dateTogglerCheckboxLabel="never-expire" disabled="<%= editKBArticleDisplayContext.isNeverExpire() %>" formName="fm" name="expirationDate" wrapperCssClass="expiration-date mb-3" />
+						<aui:input dateTogglerCheckboxLabel="never-expire" disabled="<%= editKBArticleDisplayContext.isNeverExpire() %>" formName="fm" name="expirationDate" wrapperCssClass="expiration-date mb-3" />
 
-							<aui:input dateTogglerCheckboxLabel="never-review" disabled="<%= editKBArticleDisplayContext.isNeverReview() %>" formName="fm" name="reviewDate" wrapperCssClass="mb-3 review-date" />
-						</liferay-frontend:fieldset>
-					</c:if>
+						<aui:input dateTogglerCheckboxLabel="never-review" disabled="<%= editKBArticleDisplayContext.isNeverReview() %>" formName="fm" name="reviewDate" wrapperCssClass="mb-3 review-date" />
+					</liferay-frontend:fieldset>
 
 					<aui:fieldset collapsed="<%= true %>" collapsible="<%= true %>" label="related-assets">
 						<liferay-asset:input-asset-links
@@ -187,9 +185,7 @@ if (editKBArticleDisplayContext.isPortletTitleBasedNavigation()) {
 							<aui:input cssClass="input-medium" data-custom-url="<%= false %>" disabled="<%= editKBArticleDisplayContext.isURLTitleDisabled() %>" ignoreRequestValue="<%= true %>" label="" name="urlTitle" placeholder="sample-article-url-title" type="text" value="<%= editKBArticleDisplayContext.getKBArticleURLTitle() %>" />
 						</aui:field-wrapper>
 
-						<c:if test="<%= editKBArticleDisplayContext.isKBArticleDescriptionEnabled() %>">
-							<aui:input name="description" value="<%= editKBArticleDisplayContext.getKBArticleDescription() %>" />
-						</c:if>
+						<aui:input name="description" value="<%= editKBArticleDisplayContext.getKBArticleDescription() %>" />
 
 						<c:if test="<%= editKBArticleDisplayContext.isSourceURLEnabled() %>">
 							<aui:input label="source-url" name="sourceURL" value="<%= editKBArticleDisplayContext.getKBArticleSourceURL() %>" />
@@ -275,7 +271,7 @@ if (editKBArticleDisplayContext.isPortletTitleBasedNavigation()) {
 				<liferay-ui:error exception="<%= NoSuchFileException.class %>" message="the-document-could-not-be-found" />
 
 				<liferay-ui:error exception="<%= UploadRequestSizeException.class %>">
-					<liferay-ui:message arguments="<%= LanguageUtil.formatStorageSize(UploadServletRequestConfigurationHelperUtil.getMaxSize(), locale) %>" key="request-is-larger-than-x-and-could-not-be-processed" translateArguments="<%= false %>" />
+					<liferay-ui:message arguments="<%= LanguageUtil.formatStorageSize(UploadServletRequestConfigurationProviderUtil.getMaxSize(), locale) %>" key="request-is-larger-than-x-and-could-not-be-processed" translateArguments="<%= false %>" />
 				</liferay-ui:error>
 
 				<liferay-asset:asset-categories-error />

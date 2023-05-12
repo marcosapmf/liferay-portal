@@ -16,6 +16,7 @@ package com.liferay.portal.search.elasticsearch7.internal;
 
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.json.JSONFactoryImpl;
+import com.liferay.portal.kernel.module.util.SystemBundleUtil;
 import com.liferay.portal.kernel.search.SearchEngine;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.search.elasticsearch7.configuration.ElasticsearchConfiguration;
@@ -33,6 +34,8 @@ import com.liferay.portal.search.test.util.search.engine.SearchEngineFixture;
 
 import java.util.Map;
 import java.util.Objects;
+
+import org.osgi.framework.BundleContext;
 
 /**
  * @author Adam Brandizzi
@@ -87,6 +90,15 @@ public class ElasticsearchSearchEngineFixture implements SearchEngineFixture {
 	@Override
 	public void tearDown() throws Exception {
 		_elasticsearchConnectionFixture.destroyNode();
+
+		_elasticsearchEngineAdapterFixture.tearDown();
+
+		if (_companyIndexFactory != null) {
+			ReflectionTestUtil.invoke(
+				_companyIndexFactory, "deactivate", new Class<?>[0]);
+
+			_companyIndexFactory = null;
+		}
 	}
 
 	protected static ElasticsearchConfigurationWrapper
@@ -105,14 +117,22 @@ public class ElasticsearchSearchEngineFixture implements SearchEngineFixture {
 	private CompanyIndexFactory _createCompanyIndexFactory(
 		IndexNameBuilder indexNameBuilder, Map<String, Object> properites) {
 
-		return new CompanyIndexFactory() {
-			{
-				setElasticsearchConfigurationWrapper(
-					createElasticsearchConfigurationWrapper(properites));
-				setIndexNameBuilder(indexNameBuilder);
-				setJsonFactory(new JSONFactoryImpl());
-			}
-		};
+		_companyIndexFactory = new CompanyIndexFactory();
+
+		ReflectionTestUtil.setFieldValue(
+			_companyIndexFactory, "_elasticsearchConfigurationWrapper",
+			createElasticsearchConfigurationWrapper(properites));
+		ReflectionTestUtil.setFieldValue(
+			_companyIndexFactory, "_indexNameBuilder", indexNameBuilder);
+		ReflectionTestUtil.setFieldValue(
+			_companyIndexFactory, "_jsonFactory", new JSONFactoryImpl());
+
+		ReflectionTestUtil.invoke(
+			_companyIndexFactory, "activate",
+			new Class<?>[] {BundleContext.class},
+			SystemBundleUtil.getBundleContext());
+
+		return _companyIndexFactory;
 	}
 
 	private ElasticsearchConnectionManager
@@ -182,21 +202,24 @@ public class ElasticsearchSearchEngineFixture implements SearchEngineFixture {
 	private SearchEngineAdapter _createSearchEngineAdapter(
 		ElasticsearchClientResolver elasticsearchClientResolver) {
 
-		ElasticsearchEngineAdapterFixture elasticsearchEngineAdapterFixture =
+		_elasticsearchEngineAdapterFixture =
 			new ElasticsearchEngineAdapterFixture() {
 				{
 					setElasticsearchClientResolver(elasticsearchClientResolver);
 				}
 			};
 
-		elasticsearchEngineAdapterFixture.setUp();
+		_elasticsearchEngineAdapterFixture.setUp();
 
-		return elasticsearchEngineAdapterFixture.getSearchEngineAdapter();
+		return _elasticsearchEngineAdapterFixture.getSearchEngineAdapter();
 	}
 
+	private CompanyIndexFactory _companyIndexFactory;
 	private final ElasticsearchConnectionFixture
 		_elasticsearchConnectionFixture;
 	private ElasticsearchConnectionManager _elasticsearchConnectionManager;
+	private ElasticsearchEngineAdapterFixture
+		_elasticsearchEngineAdapterFixture;
 	private ElasticsearchSearchEngine _elasticsearchSearchEngine;
 	private IndexNameBuilder _indexNameBuilder;
 

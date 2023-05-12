@@ -21,8 +21,13 @@ public class LayoutScreenNavigationEntryConstants {
 
 	public static final String CATEGORY_KEY_GENERAL = "general";
 
+	public static final String ENTRY_KEY_DESIGN = "design";
+
 	public static final String ENTRY_KEY_GENERAL = "general";
 
 	public static final String SCREEN_NAVIGATION_KEY_LAYOUT = "layout.form";
+
+	public static final String SCREEN_NAVIGATION_KEY_LAYOUT_SET =
+		"layout.set.form";
 
 }

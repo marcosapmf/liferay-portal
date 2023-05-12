@@ -21,6 +21,17 @@ export default function propsTransformer({
 }) {
 	return {
 		...otherProps,
+		onActionButtonClick: (event, {item}) => {
+			const data = item?.data;
+
+			const action = data?.action;
+
+			if (action) {
+				event.preventDefault();
+
+				ACTIONS[action](data, portletNamespace);
+			}
+		},
 		onCreationMenuItemClick(event, {item}) {
 			const data = item?.data;
 

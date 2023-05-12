@@ -64,13 +64,10 @@ import com.liferay.portal.vulcan.util.LocalizedMapUtil;
 import com.liferay.ratings.kernel.service.RatingsStatsLocalService;
 import com.liferay.subscription.service.SubscriptionLocalService;
 
+import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -85,7 +82,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = "dto.class.name=com.liferay.journal.model.JournalArticle",
-	service = {DTOConverter.class, StructuredContentDTOConverter.class}
+	service = DTOConverter.class
 )
 public class StructuredContentDTOConverter
 	implements DTOConverter<JournalArticle, StructuredContent> {
@@ -139,7 +136,7 @@ public class StructuredContentDTOConverter
 					_layoutLocalService);
 				contentStructureId = ddmStructure.getStructureId();
 				creator = CreatorUtil.toCreator(
-					_portal, dtoConverterContext.getUriInfoOptional(),
+					_portal, dtoConverterContext.getUriInfo(),
 					_userLocalService.fetchUser(journalArticle.getUserId()));
 				customFields = CustomFieldsUtil.toCustomFields(
 					dtoConverterContext.isAcceptAllLanguages(),
@@ -221,15 +218,17 @@ public class StructuredContentDTOConverter
 	private Map<Locale, String> _filterDescriptionMap(
 		Map<Locale, String> descriptionMap) {
 
-		Set<Map.Entry<Locale, String>> set = descriptionMap.entrySet();
+		Map<Locale, String> filterDescriptionMap = new HashMap<>();
 
-		Stream<Map.Entry<Locale, String>> stream = set.stream();
+		for (Map.Entry<Locale, String> entry : descriptionMap.entrySet()) {
+			if (StringPool.BLANK.equals(entry.getValue())) {
+				continue;
+			}
 
-		return stream.filter(
-			entry -> !StringPool.BLANK.equals(entry.getValue())
-		).collect(
-			Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)
-		);
+			filterDescriptionMap.put(entry.getKey(), entry.getValue());
+		}
+
+		return filterDescriptionMap;
 	}
 
 	private ContentField[] _toContentFields(
@@ -254,10 +253,9 @@ public class StructuredContentDTOConverter
 		DDMStructure ddmStructure, DTOConverterContext dtoConverterContext,
 		JournalArticle journalArticle) {
 
-		Optional<UriInfo> uriInfoOptional =
-			dtoConverterContext.getUriInfoOptional();
+		UriInfo uriInfo = dtoConverterContext.getUriInfo();
 
-		if (!uriInfoOptional.isPresent()) {
+		if (uriInfo == null) {
 			return null;
 		}
 
@@ -265,7 +263,6 @@ public class StructuredContentDTOConverter
 		HttpServletRequest httpServletRequest =
 			dtoConverterContext.getHttpServletRequest();
 		Locale locale = dtoConverterContext.getLocale();
-		UriInfo uriInfo = uriInfoOptional.get();
 
 		RenderedContent[] renderedContents = TransformUtil.transformToArray(
 			ddmStructure.getTemplates(),
@@ -295,17 +292,8 @@ public class StructuredContentDTOConverter
 						});
 					setRenderedContentValue(
 						() -> {
-							if (!uriInfoOptional.map(
-									UriInfo::getQueryParameters
-								).map(
-									parameters -> parameters.getFirst(
-										"nestedFields")
-								).map(
-									fields -> fields.contains(
-										"renderedContentValue")
-								).orElse(
-									false
-								)) {
+							if (!dtoConverterContext.containsNestedFieldsValue(
+									"renderedContentValue")) {
 
 								return null;
 							}

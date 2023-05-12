@@ -14,6 +14,7 @@
 
 package com.liferay.poshi.runner.selenium;
 
+import com.liferay.poshi.core.selenium.LiferaySelenium;
 import com.liferay.poshi.core.util.OSDetector;
 import com.liferay.poshi.core.util.PropsValues;
 import com.liferay.poshi.core.util.StringPool;
@@ -32,7 +33,6 @@ import java.util.Map;
 
 import org.openqa.selenium.Capabilities;
 import org.openqa.selenium.MutableCapabilities;
-import org.openqa.selenium.UnexpectedAlertBehaviour;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
@@ -57,19 +57,95 @@ import org.openqa.selenium.safari.SafariOptions;
  */
 public class WebDriverUtil extends PropsValues {
 
-	public static WebDriver getWebDriver() {
-		return _webDriverUtil._getWebDriver();
+	public static LiferaySelenium getLiferaySelenium(String testName) {
+		if (!_webDrivers.containsKey(testName)) {
+			startWebDriver(testName);
+		}
+
+		return (LiferaySelenium)_webDrivers.get(testName);
 	}
 
-	public static void startWebDriver() {
-		_webDriverUtil._startWebDriver();
+	public static WebDriver getWebDriver(String testName) {
+		return _webDrivers.get(testName);
 	}
 
-	public static void stopWebDriver() {
-		_webDriverUtil._stopWebDriver();
+	public static synchronized void startWebDriver(String testName) {
+		if (_webDrivers.containsKey(testName)) {
+			throw new RuntimeException(
+				"WebDriver instance already started for: " + testName);
+		}
+
+		String portalURL = PORTAL_URL;
+
+		if (TCAT_ENABLED) {
+			portalURL = "http://localhost:8180/console";
+		}
+
+		if (BROWSER_TYPE.equals("chrome")) {
+			_webDrivers.put(
+				testName,
+				new ChromeWebDriverImpl(portalURL, _getChromeDriver()));
+		}
+		else if (BROWSER_TYPE.equals("edge")) {
+			if (SELENIUM_EDGE_DRIVER_EXECUTABLE != null) {
+				System.setProperty(
+					"webdriver.edge.driver",
+					SELENIUM_EXECUTABLE_DIR_NAME +
+						SELENIUM_EDGE_DRIVER_EXECUTABLE);
+			}
+
+			_webDrivers.put(
+				testName, new EdgeWebDriverImpl(portalURL, _getEdgeDriver()));
+		}
+		else if (BROWSER_TYPE.equals("firefox")) {
+			_webDrivers.put(
+				testName,
+				new FirefoxWebDriverImpl(portalURL, _getFirefoxDriver()));
+		}
+		else if (BROWSER_TYPE.equals("internetexplorer")) {
+			if (SELENIUM_IE_DRIVER_EXECUTABLE != null) {
+				System.setProperty(
+					"webdriver.ie.driver",
+					SELENIUM_EXECUTABLE_DIR_NAME +
+						SELENIUM_IE_DRIVER_EXECUTABLE);
+			}
+
+			_webDrivers.put(
+				testName,
+				new InternetExplorerWebDriverImpl(
+					portalURL, _getInternetExplorerDriver()));
+		}
+		else if (BROWSER_TYPE.equals("safari")) {
+			_webDrivers.put(
+				testName,
+				new SafariWebDriverImpl(portalURL, _getSafariDriver()));
+		}
+
+		if (!_webDrivers.containsKey(testName)) {
+			throw new RuntimeException("Invalid browser type " + BROWSER_TYPE);
+		}
+
+		LiferaySelenium liferaySelenium = (LiferaySelenium)_webDrivers.get(
+			testName);
+
+		liferaySelenium.setTestName(testName);
 	}
 
-	private WebDriver _getChromeDriver() {
+	public static void stopWebDriver(String testName) {
+		WebDriver webDriver = _webDrivers.get(testName);
+
+		if (webDriver != null) {
+			webDriver.quit();
+		}
+
+		_webDrivers.remove(testName);
+	}
+
+	private static WebDriver _getChromeDriver() {
+		if (Validator.isNotNull(SELENIUM_REMOTE_DRIVER_URL)) {
+			return _getChromeRemoteDriver();
+		}
+
 		_validateWebDriverBinary("webdriver.chrome.driver", "chromedriver");
 
 		ChromeOptions chromeOptions = _getDefaultChromeOptions();
@@ -81,11 +157,11 @@ public class WebDriverUtil extends PropsValues {
 		return new ChromeDriver(chromeOptions);
 	}
 
-	private WebDriver _getChromeRemoteDriver() {
+	private static WebDriver _getChromeRemoteDriver() {
 		return _getRemoteWebDriver(_getDefaultChromeOptions());
 	}
 
-	private ChromeOptions _getDefaultChromeOptions() {
+	private static ChromeOptions _getDefaultChromeOptions() {
 		ChromeOptions chromeOptions = new ChromeOptions();
 
 		_setGenericCapabilities(chromeOptions);
@@ -122,10 +198,14 @@ public class WebDriverUtil extends PropsValues {
 				PropsValues.BROWSER_CHROME_BIN_ARGS.split("\\s+"));
 		}
 
+		chromeOptions.addArguments("--remote-allow-origins=*");
+
 		return chromeOptions;
 	}
 
-	private InternetExplorerOptions _getDefaultInternetExplorerOptions() {
+	private static InternetExplorerOptions
+		_getDefaultInternetExplorerOptions() {
+
 		InternetExplorerOptions internetExplorerOptions =
 			new InternetExplorerOptions();
 
@@ -137,11 +217,15 @@ public class WebDriverUtil extends PropsValues {
 		return internetExplorerOptions;
 	}
 
-	private WebDriver _getEdgeDriver() {
+	private static WebDriver _getEdgeDriver() {
+		if (Validator.isNotNull(SELENIUM_REMOTE_DRIVER_URL)) {
+			return _getEdgeRemoteDriver();
+		}
+
 		return new EdgeDriver();
 	}
 
-	private WebDriver _getEdgeRemoteDriver() {
+	private static WebDriver _getEdgeRemoteDriver() {
 		EdgeOptions edgeOptions = new EdgeOptions();
 
 		_setGenericCapabilities(edgeOptions);
@@ -151,7 +235,11 @@ public class WebDriverUtil extends PropsValues {
 		return _getRemoteWebDriver(edgeOptions);
 	}
 
-	private WebDriver _getFirefoxDriver() {
+	private static WebDriver _getFirefoxDriver() {
+		if (Validator.isNotNull(SELENIUM_REMOTE_DRIVER_URL)) {
+			return _getFirefoxRemoteDriver();
+		}
+
 		_validateWebDriverBinary("webdriver.gecko.driver", "geckodriver");
 
 		FirefoxOptions firefoxOptions = new FirefoxOptions();
@@ -209,7 +297,7 @@ public class WebDriverUtil extends PropsValues {
 		return new FirefoxDriver(firefoxOptions);
 	}
 
-	private WebDriver _getFirefoxRemoteDriver() {
+	private static WebDriver _getFirefoxRemoteDriver() {
 		FirefoxOptions firefoxOptions = new FirefoxOptions();
 
 		_setGenericCapabilities(firefoxOptions);
@@ -217,11 +305,15 @@ public class WebDriverUtil extends PropsValues {
 		return _getRemoteWebDriver(firefoxOptions);
 	}
 
-	private WebDriver _getInternetExplorerDriver() {
+	private static WebDriver _getInternetExplorerDriver() {
+		if (Validator.isNotNull(SELENIUM_REMOTE_DRIVER_URL)) {
+			return _getInternetExplorerRemoteDriver();
+		}
+
 		return new InternetExplorerDriver(_getDefaultInternetExplorerOptions());
 	}
 
-	private WebDriver _getInternetExplorerRemoteDriver() {
+	private static WebDriver _getInternetExplorerRemoteDriver() {
 		InternetExplorerOptions internetExplorerOptions =
 			_getDefaultInternetExplorerOptions();
 
@@ -233,7 +325,9 @@ public class WebDriverUtil extends PropsValues {
 		return _getRemoteWebDriver(internetExplorerOptions);
 	}
 
-	private RemoteWebDriver _getRemoteWebDriver(Capabilities capabilities) {
+	private static RemoteWebDriver _getRemoteWebDriver(
+		Capabilities capabilities) {
+
 		RemoteWebDriver remoteWebDriver = new RemoteWebDriver(
 			_REMOTE_DRIVER_URL, capabilities);
 
@@ -242,13 +336,17 @@ public class WebDriverUtil extends PropsValues {
 		return remoteWebDriver;
 	}
 
-	private WebDriver _getSafariDriver() {
+	private static WebDriver _getSafariDriver() {
+		if (Validator.isNotNull(SELENIUM_REMOTE_DRIVER_URL)) {
+			return _getSafariRemoteDriver();
+		}
+
 		_setGenericCapabilities(new SafariOptions());
 
 		return new SafariDriver();
 	}
 
-	private WebDriver _getSafariRemoteDriver() {
+	private static WebDriver _getSafariRemoteDriver() {
 		SafariOptions safariOptions = new SafariOptions();
 
 		_setGenericCapabilities(safariOptions);
@@ -256,12 +354,11 @@ public class WebDriverUtil extends PropsValues {
 		return _getRemoteWebDriver(safariOptions);
 	}
 
-	private WebDriver _getWebDriver() {
-		return _webDriver;
-	}
-
-	private void _setGenericCapabilities(
+	private static void _setGenericCapabilities(
 		MutableCapabilities mutableCapabilities) {
+
+		mutableCapabilities.setCapability(
+			CapabilityType.UNHANDLED_PROMPT_BEHAVIOUR, "ignore");
 
 		for (Map.Entry<String, Object> entry :
 				_genericCapabilities.entrySet()) {
@@ -275,71 +372,7 @@ public class WebDriverUtil extends PropsValues {
 		}
 	}
 
-	private void _startWebDriver() {
-		if (Validator.isNotNull(SELENIUM_REMOTE_DRIVER_URL)) {
-			if (BROWSER_TYPE.equals("chrome")) {
-				_webDriver = _getChromeRemoteDriver();
-			}
-
-			if (BROWSER_TYPE.equals("edge")) {
-				_webDriver = _getEdgeRemoteDriver();
-			}
-
-			if (BROWSER_TYPE.equals("firefox")) {
-				_webDriver = _getFirefoxRemoteDriver();
-			}
-
-			if (BROWSER_TYPE.equals("internetexplorer")) {
-				_webDriver = _getInternetExplorerRemoteDriver();
-			}
-
-			if (BROWSER_TYPE.equals("safari")) {
-				_webDriver = _getSafariRemoteDriver();
-			}
-		}
-		else if (BROWSER_TYPE.equals("chrome")) {
-			_webDriver = _getChromeDriver();
-		}
-		else if (BROWSER_TYPE.equals("edge")) {
-			if (SELENIUM_EDGE_DRIVER_EXECUTABLE != null) {
-				System.setProperty(
-					"webdriver.edge.driver",
-					SELENIUM_EXECUTABLE_DIR_NAME +
-						SELENIUM_EDGE_DRIVER_EXECUTABLE);
-			}
-
-			_webDriver = _getEdgeDriver();
-		}
-		else if (BROWSER_TYPE.equals("firefox")) {
-			_webDriver = _getFirefoxDriver();
-		}
-		else if (BROWSER_TYPE.equals("internetexplorer")) {
-			if (SELENIUM_IE_DRIVER_EXECUTABLE != null) {
-				System.setProperty(
-					"webdriver.ie.driver",
-					SELENIUM_EXECUTABLE_DIR_NAME +
-						SELENIUM_IE_DRIVER_EXECUTABLE);
-			}
-
-			_webDriver = _getInternetExplorerDriver();
-		}
-		else if (BROWSER_TYPE.equals("safari")) {
-			_webDriver = _getSafariDriver();
-		}
-		else {
-			throw new RuntimeException("Invalid browser type " + BROWSER_TYPE);
-		}
-	}
-
-	private void _stopWebDriver() {
-		if (_webDriver != null) {
-			_webDriver.quit();
-		}
-
-		_webDriver = null;
-	}
-
-	private void _validateWebDriverBinary(
+	private static void _validateWebDriverBinary(
 		String webDriverBinaryPropertyName, String webDriverBinaryName) {
 
 		if ((SELENIUM_EXECUTABLE_DIR_NAME != null) &&
@@ -375,16 +408,10 @@ public class WebDriverUtil extends PropsValues {
 			{
 				if (PropsValues.PROXY_SERVER_ENABLED) {
 					put(CapabilityType.ACCEPT_INSECURE_CERTS, true);
-					put(CapabilityType.ACCEPT_SSL_CERTS, true);
 				}
-
-				put(
-					CapabilityType.UNEXPECTED_ALERT_BEHAVIOUR,
-					UnexpectedAlertBehaviour.IGNORE);
 			}
 		};
-
-	private static final WebDriverUtil _webDriverUtil = new WebDriverUtil();
+	private static final Map<String, WebDriver> _webDrivers = new HashMap<>();
 
 	static {
 		try {
@@ -403,7 +430,5 @@ public class WebDriverUtil extends PropsValues {
 			throw new RuntimeException(malformedURLException);
 		}
 	}
-
-	private WebDriver _webDriver;
 
 }

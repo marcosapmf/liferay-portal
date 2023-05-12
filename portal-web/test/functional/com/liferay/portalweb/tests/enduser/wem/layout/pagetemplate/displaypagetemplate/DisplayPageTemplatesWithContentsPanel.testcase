@@ -3,7 +3,7 @@ definition {
 
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property testray.main.component.name = "Display Pages";
+	property testray.main.component.name = "Display Page Templates";
 
 	setUp {
 		task ("Set up instance and sign in") {
@@ -13,7 +13,7 @@ definition {
 		}
 
 		task ("Add a site via JSON") {
-			JSONGroup.addGroup(groupName = "Test Site Name");
+			HeadlessSite.addSite(siteName = "Test Site Name");
 		}
 
 		task ("Add a display page") {
@@ -28,7 +28,7 @@ definition {
 	tearDown {
 		var testPortalInstance = PropsUtil.get("test.portal.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testPortalInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -37,7 +37,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-153356. View Page Content tab on sidebar of display page template."
-	@priority = "4"
+	@priority = 4
 	test ViewPageContentOnSidebarOfDisplayPageTemplate {
 		task ("Given a page creator has a display page template") {
 			DisplayPageTemplatesAdmin.openDisplayPagesAdmin(siteURLKey = "test-site-name");

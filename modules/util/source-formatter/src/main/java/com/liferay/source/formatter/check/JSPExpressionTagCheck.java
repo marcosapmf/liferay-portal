@@ -42,10 +42,15 @@ public class JSPExpressionTagCheck extends BaseFileCheck {
 		while (matcher.find()) {
 			String jspExpressionTag = matcher.group();
 
-			if ((jspExpressionTag.contains(StringPool.COLON) &&
-				 jspExpressionTag.contains(StringPool.QUESTION)) ||
-				(getLevel(jspExpressionTag, "(", ")") != 0)) {
+			String replacement = jspExpressionTag.replaceFirst(
+				"<%= \"([^\"]+?)\" \\+(.+)", "$1<%=$2");
 
+			if (!jspExpressionTag.equals(replacement)) {
+				return StringUtil.replaceFirst(
+					content, matcher.group(), replacement);
+			}
+
+			if (getLevel(jspExpressionTag) != 0) {
 				continue;
 			}
 
@@ -69,18 +74,16 @@ public class JSPExpressionTagCheck extends BaseFileCheck {
 
 		int startPosition = 0;
 
-		int x = startPosition;
+		int x = -1;
 
 		while (true) {
-			x = expression.indexOf("+", x);
+			x = expression.indexOf("+", x + 1);
 
 			if (x == -1) {
 				break;
 			}
 
 			if (ToolsUtil.isInsideQuotes(expression, x)) {
-				x = x + 1;
-
 				continue;
 			}
 
@@ -88,8 +91,6 @@ public class JSPExpressionTagCheck extends BaseFileCheck {
 				char c = expression.charAt(x + 1);
 
 				if (c == CharPool.PLUS) {
-					x = x + 1;
-
 					continue;
 				}
 			}
@@ -98,25 +99,30 @@ public class JSPExpressionTagCheck extends BaseFileCheck {
 				char c = expression.charAt(x - 1);
 
 				if (c == CharPool.PLUS) {
-					x = x + 1;
-
 					continue;
 				}
 			}
 
 			String operand = expression.substring(startPosition, x);
 
-			if (getLevel(operand, "(", ")") != 0) {
-				x = x + 1;
+			if (getLevel(operand) != 0) {
+				continue;
+			}
+
+			String trimmedOperand = operand.trim();
+
+			if ((operand.contains("?") || operand.contains(":")) &&
+				(!trimmedOperand.startsWith("(") ||
+				 !trimmedOperand.endsWith(")") ||
+				 (_getMatchedCloseParenthesisPosition(trimmedOperand) !=
+					 (trimmedOperand.length() - 1)))) {
 
 				continue;
 			}
 
-			operandList.add(operand.trim());
+			operandList.add(trimmedOperand);
 
-			x = x + 1;
-
-			startPosition = x;
+			startPosition = x + 1;
 		}
 
 		operandList.add(StringUtil.trim(expression.substring(startPosition)));
@@ -159,6 +165,21 @@ public class JSPExpressionTagCheck extends BaseFileCheck {
 		}
 
 		return sb.toString();
+	}
+
+	private int _getMatchedCloseParenthesisPosition(String content) {
+		int x = -1;
+
+		while (true) {
+			x = content.indexOf(")", x + 1);
+
+			if ((x == -1) ||
+				(!ToolsUtil.isInsideQuotes(content, x) &&
+				 (getLevel(content.substring(0, x + 1)) == 0))) {
+
+				return x;
+			}
+		}
 	}
 
 	private static final Pattern _jspExpressionTagPattern = Pattern.compile(

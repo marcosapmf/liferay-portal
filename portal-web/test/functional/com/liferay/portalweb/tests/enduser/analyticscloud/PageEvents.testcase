@@ -33,11 +33,13 @@ definition {
 	tearDown {
 		var testPortalInstance = PropsUtil.get("test.portal.instance");
 
-		ACUtils.tearDownAC();
+		// It is not possible to delete properties and data source after LRAC-13389. This functionality should return after LRAC-8040
+
+		//ACUtils.tearDownAC();
 
 		ACUtils.tearDownDXP();
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testPortalInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -46,7 +48,7 @@ definition {
 	}
 
 	@description = "Feature ID: Legacy | Automation ID: LRAC-8805 | Test Summary: Check pageDepthReached triggers ([depth] = 25) and check its properties (see reference document in comments)"
-	@priority = "5"
+	@priority = 5
 	test CheckPageDepthReachedTo25 {
 		property proxy.server.enabled = "true";
 
@@ -57,11 +59,7 @@ definition {
 		}
 
 		task ("Add 10 blogs entries with long content") {
-			var n = "0";
-
-			while ("${n}" != "10") {
-				var n = ${n} + 1;
-
+			for (var n : list "1,2,3,4,5,6,7,8,9") {
 				ACUtils.createBlogsAndAddToPage(
 					entryContent = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce in lacus nunc. Etiam et volutpat est. Quisque quis mi erat. Donec maximus mauris augue, nec convallis metus aliquet vitae. Nullam venenatis a nisl in tincidunt. Aliquam venenatis, enim in venenatis aliquam, mauris erat blandit nulla, sit amet tincidunt elit enim sit amet dolor. Aliquam fringilla condimentum varius. Maecenas tincidunt elit eget lacinia aliquam. Proin congue diam lorem. Vestibulum tristique elit mi, non dapibus erat lobortis.",
 					entryTitle = "Blogs Entry Title ${n}",
@@ -74,15 +72,15 @@ definition {
 
 			ACNavigation.goToSettings();
 
-			var expectedChannelId = ACSettings.getPropertyId(propertyName = "${assignedPropertyName}");
+			var expectedChannelId = ACSettings.getPropertyId(propertyName = ${assignedPropertyName});
 		}
 
 		task ("Get the DXP Instance ID in AC") {
-			var dataSourceName = StringUtil.extractFirst("${assignedPropertyName}", "Combined");
+			var dataSourceName = StringUtil.extractFirst(${assignedPropertyName}, "Combined");
 
-			var dataSourceName = StringUtil.trim("${dataSourceName}");
+			var dataSourceName = StringUtil.trim(${dataSourceName});
 
-			var expectedDataSourceId = ACSettings.getDXPInstanceId(dataSourceName = "${dataSourceName}");
+			var expectedDataSourceId = ACSettings.getDXPInstanceId(dataSourceName = ${dataSourceName});
 		}
 
 		task ("Sign in as Test Test") {
@@ -112,18 +110,18 @@ definition {
 				applicationId = "Page",
 				eventId = "pageDepthReached",
 				property = "depth",
-				value = "25");
+				value = 25);
 		}
 
 		task ("View the request common properties value") {
 			ACUtils.assertRequestCommonPropertiesValue(
-				expectedChannelId = "${expectedChannelId}",
-				expectedDataSourceId = "${expectedDataSourceId}");
+				expectedChannelId = ${expectedChannelId},
+				expectedDataSourceId = ${expectedDataSourceId});
 		}
 	}
 
 	@description = "Feature ID: Legacy | Automation ID: LRAC-8806 | Test Summary: Check pageDepthReached trigggers ([depth] = 50) and check its properties (see reference document in comments)"
-	@priority = "5"
+	@priority = 5
 	test CheckPageDepthReachedTo50 {
 		property proxy.server.enabled = "true";
 
@@ -134,11 +132,7 @@ definition {
 		}
 
 		task ("Add 10 blogs entries with long content") {
-			var n = "0";
-
-			while ("${n}" != "10") {
-				var n = ${n} + 1;
-
+			for (var n : list "1,2,3,4,5,6,7,8,9") {
 				ACUtils.createBlogsAndAddToPage(
 					entryContent = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce in lacus nunc. Etiam et volutpat est. Quisque quis mi erat. Donec maximus mauris augue, nec convallis metus aliquet vitae. Nullam venenatis a nisl in tincidunt. Aliquam venenatis, enim in venenatis aliquam, mauris erat blandit nulla, sit amet tincidunt elit enim sit amet dolor. Aliquam fringilla condimentum varius. Maecenas tincidunt elit eget lacinia aliquam. Proin congue diam lorem. Vestibulum tristique elit mi, non dapibus erat lobortis.",
 					entryTitle = "Blogs Entry Title ${n}",
@@ -151,15 +145,15 @@ definition {
 
 			ACNavigation.goToSettings();
 
-			var expectedChannelId = ACSettings.getPropertyId(propertyName = "${assignedPropertyName}");
+			var expectedChannelId = ACSettings.getPropertyId(propertyName = ${assignedPropertyName});
 		}
 
 		task ("Get the DXP Instance ID in AC") {
-			var dataSourceName = StringUtil.extractFirst("${assignedPropertyName}", "Combined");
+			var dataSourceName = StringUtil.extractFirst(${assignedPropertyName}, "Combined");
 
-			var dataSourceName = StringUtil.trim("${dataSourceName}");
+			var dataSourceName = StringUtil.trim(${dataSourceName});
 
-			var expectedDataSourceId = ACSettings.getDXPInstanceId(dataSourceName = "${dataSourceName}");
+			var expectedDataSourceId = ACSettings.getDXPInstanceId(dataSourceName = ${dataSourceName});
 		}
 
 		task ("Sign in as Test Test") {
@@ -189,18 +183,18 @@ definition {
 				applicationId = "Page",
 				eventId = "pageDepthReached",
 				property = "depth",
-				value = "50");
+				value = 50);
 		}
 
 		task ("View the request common properties value") {
 			ACUtils.assertRequestCommonPropertiesValue(
-				expectedChannelId = "${expectedChannelId}",
-				expectedDataSourceId = "${expectedDataSourceId}");
+				expectedChannelId = ${expectedChannelId},
+				expectedDataSourceId = ${expectedDataSourceId});
 		}
 	}
 
 	@description = "Feature ID: Legacy | Automation ID: LRAC-8807 | Test Summary: Check pageDepthReached trigggers ([depth] = 75) and check its properties (see reference document in comments)"
-	@priority = "5"
+	@priority = 5
 	test CheckPageDepthReachedTo75 {
 		property proxy.server.enabled = "true";
 
@@ -211,11 +205,7 @@ definition {
 		}
 
 		task ("Add 10 blogs entries with long content") {
-			var n = "0";
-
-			while ("${n}" != "10") {
-				var n = ${n} + 1;
-
+			for (var n : list "1,2,3,4,5,6,7,8,9") {
 				ACUtils.createBlogsAndAddToPage(
 					entryContent = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce in lacus nunc. Etiam et volutpat est. Quisque quis mi erat. Donec maximus mauris augue, nec convallis metus aliquet vitae. Nullam venenatis a nisl in tincidunt. Aliquam venenatis, enim in venenatis aliquam, mauris erat blandit nulla, sit amet tincidunt elit enim sit amet dolor. Aliquam fringilla condimentum varius. Maecenas tincidunt elit eget lacinia aliquam. Proin congue diam lorem. Vestibulum tristique elit mi, non dapibus erat lobortis.",
 					entryTitle = "Blogs Entry Title ${n}",
@@ -228,15 +218,15 @@ definition {
 
 			ACNavigation.goToSettings();
 
-			var expectedChannelId = ACSettings.getPropertyId(propertyName = "${assignedPropertyName}");
+			var expectedChannelId = ACSettings.getPropertyId(propertyName = ${assignedPropertyName});
 		}
 
 		task ("Get the DXP Instance ID in AC") {
-			var dataSourceName = StringUtil.extractFirst("${assignedPropertyName}", "Combined");
+			var dataSourceName = StringUtil.extractFirst(${assignedPropertyName}, "Combined");
 
-			var dataSourceName = StringUtil.trim("${dataSourceName}");
+			var dataSourceName = StringUtil.trim(${dataSourceName});
 
-			var expectedDataSourceId = ACSettings.getDXPInstanceId(dataSourceName = "${dataSourceName}");
+			var expectedDataSourceId = ACSettings.getDXPInstanceId(dataSourceName = ${dataSourceName});
 		}
 
 		task ("Sign in as Test Test") {
@@ -266,35 +256,50 @@ definition {
 				applicationId = "Page",
 				eventId = "pageDepthReached",
 				property = "depth",
-				value = "75");
+				value = 75);
 		}
 
 		task ("View the request common properties value") {
 			ACUtils.assertRequestCommonPropertiesValue(
-				expectedChannelId = "${expectedChannelId}",
-				expectedDataSourceId = "${expectedDataSourceId}");
+				expectedChannelId = ${expectedChannelId},
+				expectedDataSourceId = ${expectedDataSourceId});
 		}
 	}
 
 	@description = "Feature ID: Legacy | Automation ID: LRAC-8808 | Test Summary: Check pageDepthReached trigggers ([depth] = 100) and check its properties (see reference document in comments)"
-	@priority = "5"
+	@priority = 5
 	test CheckPageDepthReachedTo100 {
 		property proxy.server.enabled = "true";
+
+		task ("Add a Blogs widget to page") {
+			ACUtils.addWidgetToPage(
+				layoutName = "AC Page",
+				widgetName = "Blogs");
+		}
+
+		task ("Add 10 blogs entries with long content") {
+			for (var n : list "1,2,3,4,5,6,7,8,9") {
+				ACUtils.createBlogsAndAddToPage(
+					entryContent = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce in lacus nunc. Etiam et volutpat est. Quisque quis mi erat. Donec maximus mauris augue, nec convallis metus aliquet vitae. Nullam venenatis a nisl in tincidunt. Aliquam venenatis, enim in venenatis aliquam, mauris erat blandit nulla, sit amet tincidunt elit enim sit amet dolor. Aliquam fringilla condimentum varius. Maecenas tincidunt elit eget lacinia aliquam. Proin congue diam lorem. Vestibulum tristique elit mi, non dapibus erat lobortis.",
+					entryTitle = "Blogs Entry Title ${n}",
+					groupName = "Site Name");
+			}
+		}
 
 		task ("Get the Property ID in AC") {
 			ACUtils.launchAC();
 
 			ACNavigation.goToSettings();
 
-			var expectedChannelId = ACSettings.getPropertyId(propertyName = "${assignedPropertyName}");
+			var expectedChannelId = ACSettings.getPropertyId(propertyName = ${assignedPropertyName});
 		}
 
 		task ("Get the DXP Instance ID in AC") {
-			var dataSourceName = StringUtil.extractFirst("${assignedPropertyName}", "Combined");
+			var dataSourceName = StringUtil.extractFirst(${assignedPropertyName}, "Combined");
 
-			var dataSourceName = StringUtil.trim("${dataSourceName}");
+			var dataSourceName = StringUtil.trim(${dataSourceName});
 
-			var expectedDataSourceId = ACSettings.getDXPInstanceId(dataSourceName = "${dataSourceName}");
+			var expectedDataSourceId = ACSettings.getDXPInstanceId(dataSourceName = ${dataSourceName});
 		}
 
 		task ("Sign in as Test Test") {
@@ -324,35 +329,50 @@ definition {
 				applicationId = "Page",
 				eventId = "pageDepthReached",
 				property = "depth",
-				value = "100");
+				value = 100);
 		}
 
 		task ("View the request common properties value") {
 			ACUtils.assertRequestCommonPropertiesValue(
-				expectedChannelId = "${expectedChannelId}",
-				expectedDataSourceId = "${expectedDataSourceId}");
+				expectedChannelId = ${expectedChannelId},
+				expectedDataSourceId = ${expectedDataSourceId});
 		}
 	}
 
 	@description = "Feature ID: Legacy | Automation ID: LRAC-8871 | Test Summary: Check pageDepthReached events trigger when scrolling the page by hitting the Page Dn or the Down arrow keys"
-	@priority = "3"
+	@priority = 3
 	test CheckPageDepthReachedWhenPressPageDownKey {
 		property proxy.server.enabled = "true";
+
+		task ("Add a Blogs widget to page") {
+			ACUtils.addWidgetToPage(
+				layoutName = "AC Page",
+				widgetName = "Blogs");
+		}
+
+		task ("Add 10 blogs entries with long content") {
+			for (var n : list "1,2,3,4,5,6,7,8,9") {
+				ACUtils.createBlogsAndAddToPage(
+					entryContent = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce in lacus nunc. Etiam et volutpat est. Quisque quis mi erat. Donec maximus mauris augue, nec convallis metus aliquet vitae. Nullam venenatis a nisl in tincidunt. Aliquam venenatis, enim in venenatis aliquam, mauris erat blandit nulla, sit amet tincidunt elit enim sit amet dolor. Aliquam fringilla condimentum varius. Maecenas tincidunt elit eget lacinia aliquam. Proin congue diam lorem. Vestibulum tristique elit mi, non dapibus erat lobortis.",
+					entryTitle = "Blogs Entry Title ${n}",
+					groupName = "Site Name");
+			}
+		}
 
 		task ("Get the Property ID in AC") {
 			ACUtils.launchAC();
 
 			ACNavigation.goToSettings();
 
-			var expectedChannelId = ACSettings.getPropertyId(propertyName = "${assignedPropertyName}");
+			var expectedChannelId = ACSettings.getPropertyId(propertyName = ${assignedPropertyName});
 		}
 
 		task ("Get the DXP Instance ID in AC") {
-			var dataSourceName = StringUtil.extractFirst("${assignedPropertyName}", "Combined");
+			var dataSourceName = StringUtil.extractFirst(${assignedPropertyName}, "Combined");
 
-			var dataSourceName = StringUtil.trim("${dataSourceName}");
+			var dataSourceName = StringUtil.trim(${dataSourceName});
 
-			var expectedDataSourceId = ACSettings.getDXPInstanceId(dataSourceName = "${dataSourceName}");
+			var expectedDataSourceId = ACSettings.getDXPInstanceId(dataSourceName = ${dataSourceName});
 		}
 
 		task ("Sign in as Test Test") {
@@ -384,18 +404,18 @@ definition {
 				applicationId = "Page",
 				eventId = "pageDepthReached",
 				property = "depth",
-				value = "100");
+				value = 100);
 		}
 
 		task ("View the request common properties value") {
 			ACUtils.assertRequestCommonPropertiesValue(
-				expectedChannelId = "${expectedChannelId}",
-				expectedDataSourceId = "${expectedDataSourceId}");
+				expectedChannelId = ${expectedChannelId},
+				expectedDataSourceId = ${expectedDataSourceId});
 		}
 	}
 
 	@description = "Feature ID: Legacy | Automation ID: LRAC-8935 | Test Summary: Check all page events can be sent again if the page is refreshed/hard refreshed"
-	@priority = "4"
+	@priority = 4
 	test CheckPageEventsTriggeredAgainAfterHardRefresh {
 		property proxy.server.enabled = "true";
 
@@ -404,15 +424,15 @@ definition {
 
 			ACNavigation.goToSettings();
 
-			var expectedChannelId = ACSettings.getPropertyId(propertyName = "${assignedPropertyName}");
+			var expectedChannelId = ACSettings.getPropertyId(propertyName = ${assignedPropertyName});
 		}
 
 		task ("Get the DXP Instance ID in AC") {
-			var dataSourceName = StringUtil.extractFirst("${assignedPropertyName}", "Combined");
+			var dataSourceName = StringUtil.extractFirst(${assignedPropertyName}, "Combined");
 
-			var dataSourceName = StringUtil.trim("${dataSourceName}");
+			var dataSourceName = StringUtil.trim(${dataSourceName});
 
-			var expectedDataSourceId = ACSettings.getDXPInstanceId(dataSourceName = "${dataSourceName}");
+			var expectedDataSourceId = ACSettings.getDXPInstanceId(dataSourceName = ${dataSourceName});
 		}
 
 		task ("Sign in as Test Test") {
@@ -450,8 +470,8 @@ definition {
 				property = "viewDuration");
 
 			TestUtils.isGreaterThan(
-				actual = "${viewDuration}",
-				expected = "0");
+				actual = ${viewDuration},
+				expected = 0);
 		}
 
 		task ("View the pageViewed event triggered") {
@@ -467,19 +487,19 @@ definition {
 				property = "pageLoadTime");
 
 			TestUtils.isGreaterThan(
-				actual = "${pageLoadTime}",
-				expected = "0");
+				actual = ${pageLoadTime},
+				expected = 0);
 		}
 
 		task ("View the request common properties value") {
 			ACUtils.assertRequestCommonPropertiesValue(
-				expectedChannelId = "${expectedChannelId}",
-				expectedDataSourceId = "${expectedDataSourceId}");
+				expectedChannelId = ${expectedChannelId},
+				expectedDataSourceId = ${expectedDataSourceId});
 		}
 	}
 
 	@description = "Feature ID: Legacy | Automation ID: LRAC-8802 | Test Summary: Check all page events are triggered over again after a page refresh"
-	@priority = "4"
+	@priority = 4
 	test CheckPageEventsTriggeredAgainAfterRefresh {
 		property proxy.server.enabled = "true";
 
@@ -488,15 +508,15 @@ definition {
 
 			ACNavigation.goToSettings();
 
-			var expectedChannelId = ACSettings.getPropertyId(propertyName = "${assignedPropertyName}");
+			var expectedChannelId = ACSettings.getPropertyId(propertyName = ${assignedPropertyName});
 		}
 
 		task ("Get the DXP Instance ID in AC") {
-			var dataSourceName = StringUtil.extractFirst("${assignedPropertyName}", "Combined");
+			var dataSourceName = StringUtil.extractFirst(${assignedPropertyName}, "Combined");
 
-			var dataSourceName = StringUtil.trim("${dataSourceName}");
+			var dataSourceName = StringUtil.trim(${dataSourceName});
 
-			var expectedDataSourceId = ACSettings.getDXPInstanceId(dataSourceName = "${dataSourceName}");
+			var expectedDataSourceId = ACSettings.getDXPInstanceId(dataSourceName = ${dataSourceName});
 		}
 
 		task ("Sign in as Test Test") {
@@ -534,8 +554,8 @@ definition {
 				property = "viewDuration");
 
 			TestUtils.isGreaterThan(
-				actual = "${viewDuration}",
-				expected = "0");
+				actual = ${viewDuration},
+				expected = 0);
 		}
 
 		task ("View the pageViewed event triggered") {
@@ -551,19 +571,19 @@ definition {
 				property = "pageLoadTime");
 
 			TestUtils.isGreaterThan(
-				actual = "${pageLoadTime}",
-				expected = "0");
+				actual = ${pageLoadTime},
+				expected = 0);
 		}
 
 		task ("View the request common properties value") {
 			ACUtils.assertRequestCommonPropertiesValue(
-				expectedChannelId = "${expectedChannelId}",
-				expectedDataSourceId = "${expectedDataSourceId}");
+				expectedChannelId = ${expectedChannelId},
+				expectedDataSourceId = ${expectedDataSourceId});
 		}
 	}
 
 	@description = "Feature ID: Legacy | Automation ID: LRAC-8799 | Test Summary: Check pageLoaded triggers when visiting a DXP page and check its properties (see reference document in comments)"
-	@priority = "5"
+	@priority = 5
 	test CheckPageLoadedWhenViewPage {
 		property proxy.server.enabled = "true";
 
@@ -572,15 +592,15 @@ definition {
 
 			ACNavigation.goToSettings();
 
-			var expectedChannelId = ACSettings.getPropertyId(propertyName = "${assignedPropertyName}");
+			var expectedChannelId = ACSettings.getPropertyId(propertyName = ${assignedPropertyName});
 		}
 
 		task ("Get the DXP Instance ID in AC") {
-			var dataSourceName = StringUtil.extractFirst("${assignedPropertyName}", "Combined");
+			var dataSourceName = StringUtil.extractFirst(${assignedPropertyName}, "Combined");
 
-			var dataSourceName = StringUtil.trim("${dataSourceName}");
+			var dataSourceName = StringUtil.trim(${dataSourceName});
 
-			var expectedDataSourceId = ACSettings.getDXPInstanceId(dataSourceName = "${dataSourceName}");
+			var expectedDataSourceId = ACSettings.getDXPInstanceId(dataSourceName = ${dataSourceName});
 		}
 
 		task ("Sign in as Test Test") {
@@ -608,19 +628,19 @@ definition {
 				property = "pageLoadTime");
 
 			TestUtils.isGreaterThan(
-				actual = "${pageLoadTime}",
-				expected = "0");
+				actual = ${pageLoadTime},
+				expected = 0);
 		}
 
 		task ("View the request common properties value") {
 			ACUtils.assertRequestCommonPropertiesValue(
-				expectedChannelId = "${expectedChannelId}",
-				expectedDataSourceId = "${expectedDataSourceId}");
+				expectedChannelId = ${expectedChannelId},
+				expectedDataSourceId = ${expectedDataSourceId});
 		}
 	}
 
 	@description = "Feature ID: Legacy | Automation ID: LRAC-8870 | Test Summary: Check pageUnloaded does not trigger when coming from untracked or external sites"
-	@priority = "4"
+	@priority = 4
 	test CheckPageUnLoadedIsNotTriggeredWhenComesFromUntrackedPage {
 		property proxy.server.enabled = "true";
 
@@ -629,15 +649,15 @@ definition {
 
 			ACNavigation.goToSettings();
 
-			var expectedChannelId = ACSettings.getPropertyId(propertyName = "${assignedPropertyName}");
+			var expectedChannelId = ACSettings.getPropertyId(propertyName = ${assignedPropertyName});
 		}
 
 		task ("Get the DXP Instance ID in AC") {
-			var dataSourceName = StringUtil.extractFirst("${assignedPropertyName}", "Combined");
+			var dataSourceName = StringUtil.extractFirst(${assignedPropertyName}, "Combined");
 
-			var dataSourceName = StringUtil.trim("${dataSourceName}");
+			var dataSourceName = StringUtil.trim(${dataSourceName});
 
-			var expectedDataSourceId = ACSettings.getDXPInstanceId(dataSourceName = "${dataSourceName}");
+			var expectedDataSourceId = ACSettings.getDXPInstanceId(dataSourceName = ${dataSourceName});
 		}
 
 		task ("Sign in as Test Test") {
@@ -666,13 +686,13 @@ definition {
 
 		task ("View the request common properties value") {
 			ACUtils.assertRequestCommonPropertiesValue(
-				expectedChannelId = "${expectedChannelId}",
-				expectedDataSourceId = "${expectedDataSourceId}");
+				expectedChannelId = ${expectedChannelId},
+				expectedDataSourceId = ${expectedDataSourceId});
 		}
 	}
 
 	@description = "Feature ID: Legacy | Automation ID: LRAC-8801 | Test Summary: Check pageUnloaded triggers when leaving a DXPpage and check its properties (see reference document in comments)"
-	@priority = "5"
+	@priority = 5
 	test CheckPageUnLoadedWhenLeavePage {
 		property proxy.server.enabled = "true";
 
@@ -685,15 +705,15 @@ definition {
 
 			ACNavigation.goToSettings();
 
-			var expectedChannelId = ACSettings.getPropertyId(propertyName = "${assignedPropertyName}");
+			var expectedChannelId = ACSettings.getPropertyId(propertyName = ${assignedPropertyName});
 		}
 
 		task ("Get the DXP Instance ID in AC") {
-			var dataSourceName = StringUtil.extractFirst("${assignedPropertyName}", "Combined");
+			var dataSourceName = StringUtil.extractFirst(${assignedPropertyName}, "Combined");
 
-			var dataSourceName = StringUtil.trim("${dataSourceName}");
+			var dataSourceName = StringUtil.trim(${dataSourceName});
 
-			var expectedDataSourceId = ACSettings.getDXPInstanceId(dataSourceName = "${dataSourceName}");
+			var expectedDataSourceId = ACSettings.getDXPInstanceId(dataSourceName = ${dataSourceName});
 		}
 
 		task ("Sign in as Test Test") {
@@ -725,19 +745,19 @@ definition {
 				property = "viewDuration");
 
 			TestUtils.isGreaterThan(
-				actual = "${viewDuration}",
-				expected = "0");
+				actual = ${viewDuration},
+				expected = 0);
 		}
 
 		task ("View the request common properties value") {
 			ACUtils.assertRequestCommonPropertiesValue(
-				expectedChannelId = "${expectedChannelId}",
-				expectedDataSourceId = "${expectedDataSourceId}");
+				expectedChannelId = ${expectedChannelId},
+				expectedDataSourceId = ${expectedDataSourceId});
 		}
 	}
 
 	@description = "Feature ID: Legacy | Automation ID: LRAC-8800 | Test Summary: Check pageViewed triggers when visiting a DXP page and check its properties (see reference document in comments)"
-	@priority = "5"
+	@priority = 5
 	test CheckPageViewedWhenViewPage {
 		property proxy.server.enabled = "true";
 
@@ -746,15 +766,15 @@ definition {
 
 			ACNavigation.goToSettings();
 
-			var expectedChannelId = ACSettings.getPropertyId(propertyName = "${assignedPropertyName}");
+			var expectedChannelId = ACSettings.getPropertyId(propertyName = ${assignedPropertyName});
 		}
 
 		task ("Get the DXP Instance ID in AC") {
-			var dataSourceName = StringUtil.extractFirst("${assignedPropertyName}", "Combined");
+			var dataSourceName = StringUtil.extractFirst(${assignedPropertyName}, "Combined");
 
-			var dataSourceName = StringUtil.trim("${dataSourceName}");
+			var dataSourceName = StringUtil.trim(${dataSourceName});
 
-			var expectedDataSourceId = ACSettings.getDXPInstanceId(dataSourceName = "${dataSourceName}");
+			var expectedDataSourceId = ACSettings.getDXPInstanceId(dataSourceName = ${dataSourceName});
 		}
 
 		task ("Sign in as Test Test") {
@@ -783,18 +803,18 @@ definition {
 
 		task ("View the request common properties value") {
 			ACUtils.assertRequestCommonPropertiesValue(
-				expectedChannelId = "${expectedChannelId}",
-				expectedDataSourceId = "${expectedDataSourceId}");
+				expectedChannelId = ${expectedChannelId},
+				expectedDataSourceId = ${expectedDataSourceId});
 		}
 	}
 
 	@description = "Feature ID: Legacy | Automation ID: LRAC-8804 | Test Summary: Check tabBlurred fires whenever the user navigates to a different tab, window minimized or when the page is unloaded and check its properties (see reference document in comments)"
-	@priority = "5"
+	@priority = 5
 	test CheckTabBlurredOnlyTriggerIfChangeToUntrackedTab {
 		property proxy.server.enabled = "true";
 
 		task ("Get site assigned property name and get data source name") {
-			var dataSource = StringUtil.extractFirst("${assignedPropertyName}", " ");
+			var dataSource = StringUtil.extractFirst(${assignedPropertyName}, " ");
 		}
 
 		task ("Get the Property ID in AC") {
@@ -802,15 +822,15 @@ definition {
 
 			ACNavigation.goToSettings();
 
-			var expectedChannelId = ACSettings.getPropertyId(propertyName = "${assignedPropertyName}");
+			var expectedChannelId = ACSettings.getPropertyId(propertyName = ${assignedPropertyName});
 		}
 
 		task ("Get the DXP Instance ID in AC") {
-			var dataSourceName = StringUtil.extractFirst("${assignedPropertyName}", "Combined");
+			var dataSourceName = StringUtil.extractFirst(${assignedPropertyName}, "Combined");
 
-			var dataSourceName = StringUtil.trim("${dataSourceName}");
+			var dataSourceName = StringUtil.trim(${dataSourceName});
 
-			var expectedDataSourceId = ACSettings.getDXPInstanceId(dataSourceName = "${dataSourceName}");
+			var expectedDataSourceId = ACSettings.getDXPInstanceId(dataSourceName = ${dataSourceName});
 		}
 
 		task ("Add a new site with a public widget page") {
@@ -879,18 +899,18 @@ definition {
 
 		task ("View the request common properties value") {
 			ACUtils.assertRequestCommonPropertiesValue(
-				expectedChannelId = "${expectedChannelId}",
-				expectedDataSourceId = "${expectedDataSourceId}");
+				expectedChannelId = ${expectedChannelId},
+				expectedDataSourceId = ${expectedDataSourceId});
 		}
 	}
 
 	@description = "Feature ID: Legacy | Automation ID: LRAC-8869 | Test Summary: Check tabFocused fires once the tab is active and check its properties (see reference document in comments)"
-	@priority = "5"
+	@priority = 5
 	test CheckTabFocusedOnceTabIsActive {
 		property proxy.server.enabled = "true";
 
 		task ("Get site assigned property name and get data source name") {
-			var dataSource = StringUtil.extractFirst("${assignedPropertyName}", " ");
+			var dataSource = StringUtil.extractFirst(${assignedPropertyName}, " ");
 		}
 
 		task ("Get the Property ID in AC") {
@@ -898,15 +918,15 @@ definition {
 
 			ACNavigation.goToSettings();
 
-			var expectedChannelId = ACSettings.getPropertyId(propertyName = "${assignedPropertyName}");
+			var expectedChannelId = ACSettings.getPropertyId(propertyName = ${assignedPropertyName});
 		}
 
 		task ("Get the DXP Instance ID in AC") {
-			var dataSourceName = StringUtil.extractFirst("${assignedPropertyName}", "Combined");
+			var dataSourceName = StringUtil.extractFirst(${assignedPropertyName}, "Combined");
 
-			var dataSourceName = StringUtil.trim("${dataSourceName}");
+			var dataSourceName = StringUtil.trim(${dataSourceName});
 
-			var expectedDataSourceId = ACSettings.getDXPInstanceId(dataSourceName = "${dataSourceName}");
+			var expectedDataSourceId = ACSettings.getDXPInstanceId(dataSourceName = ${dataSourceName});
 		}
 
 		task ("Navigate to the site page") {
@@ -951,8 +971,8 @@ definition {
 
 		task ("View the request common properties value") {
 			ACUtils.assertRequestCommonPropertiesValue(
-				expectedChannelId = "${expectedChannelId}",
-				expectedDataSourceId = "${expectedDataSourceId}");
+				expectedChannelId = ${expectedChannelId},
+				expectedDataSourceId = ${expectedDataSourceId});
 		}
 	}
 

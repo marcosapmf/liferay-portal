@@ -15,6 +15,11 @@
 import {StatusBadgeType} from '../../components/StatusBadge/StatusBadge';
 import {DescriptionType} from '../../types';
 
+export type ActionPermissionProperties = {
+	href: string;
+	method: string;
+};
+
 type Facets = {
 	facetCriteria: string;
 	facetValues: {
@@ -27,8 +32,22 @@ export type FacetAggregation = {
 	facets: Facets[];
 };
 
+type ObjectActions = {
+	create?: ActionPermissionProperties;
+	createBatch?: ActionPermissionProperties;
+	deleteBatch?: ActionPermissionProperties;
+	updateBatch?: ActionPermissionProperties;
+};
+
+export type ObjectActionsItems = {
+	delete?: ActionPermissionProperties;
+	get?: ActionPermissionProperties;
+	replace?: ActionPermissionProperties;
+	update?: ActionPermissionProperties;
+};
+
 export type APIResponse<Query = any> = {
-	actions: Object;
+	actions: ObjectActions;
 	facets: Facets[];
 	items: Query[];
 	lastPage: number;
@@ -54,7 +73,15 @@ export type UserGroup = {
 	name: string;
 };
 
+export type UserActions = {
+	'delete-user-account': ActionPermissionProperties;
+	'get-my-user-account': ActionPermissionProperties;
+	'patch-user-account': ActionPermissionProperties;
+	'put-user-account': ActionPermissionProperties;
+};
+
 export type UserAccount = {
+	actions: UserActions;
 	additionalName: string;
 	alternateName: string;
 	emailAddress: string;
@@ -62,9 +89,20 @@ export type UserAccount = {
 	givenName: string;
 	id: number;
 	image: string;
+	name: string;
 	roleBriefs: Role[];
 	userGroupBriefs: UserGroup[];
 	uuid: number;
+};
+
+export type CaseResultAggregation = {
+	caseResultBlocked: number | string;
+	caseResultFailed: number | string;
+	caseResultInProgress: number | string;
+	caseResultIncomplete: number | string;
+	caseResultPassed: number | string;
+	caseResultTestFix: number | string;
+	caseResultUntested: number | string;
 };
 
 export type UserRole = {
@@ -74,14 +112,8 @@ export type UserRole = {
 };
 
 export type TestrayBuild = {
-	active: boolean;
-	caseResultBlocked: string;
-	caseResultFailed: string;
-	caseResultInProgress: string;
-	caseResultIncomplete: string;
-	caseResultPassed: string;
-	caseResultTestFix: string;
-	caseResultUntested: string;
+	actions: ObjectActionsItems;
+	buildToTasks: TestrayTask[];
 	creator: {
 		name: string;
 	};
@@ -98,11 +130,15 @@ export type TestrayBuild = {
 	r_projectToBuilds_c_project?: TestrayProject;
 	r_routineToBuilds_c_routine?: TestrayRoutine;
 	routine?: TestrayRoutine;
+	tasks: TestrayTask[];
 	template: boolean;
 	templateTestrayBuildId: string;
-};
+} & CaseResultAggregation;
 
 export type TestrayCase = {
+	actions: ObjectActionsItems;
+	caseResults?: TestrayCaseResult[];
+	caseToCaseResult?: TestrayCaseResult[];
 	caseType?: TestrayCaseType;
 	component?: TestrayComponent;
 	dateCreated: string;
@@ -124,10 +160,12 @@ export type TestrayCase = {
 };
 
 export type TestrayCaseResult = {
+	actions: ObjectActionsItems;
 	assignedUserId: string;
 	attachments: string;
 	build?: TestrayBuild;
 	case?: TestrayCase;
+	caseResultToCaseResultsIssues: TestrayCaseResultIssue[];
 	closedDate: string;
 	comment: string;
 	component?: TestrayComponent;
@@ -136,21 +174,24 @@ export type TestrayCaseResult = {
 	dueStatus: PickList;
 	errors: string;
 	id: number;
-	issues: string;
+	issues: TestrayCaseResultIssue[];
 	key: string;
 	mbMessageId: number;
 	mbThreadId: number;
 	r_buildToCaseResult_c_build?: TestrayBuild;
+	r_buildToCaseResult_c_buildId?: number;
 	r_caseToCaseResult_c_case?: TestrayCase;
 	r_caseToCaseResult_c_caseId?: number;
 	r_componentToCaseResult_c_component?: TestrayComponent;
 	r_runToCaseResult_c_run?: TestrayRun;
+	r_runToCaseResult_c_runId?: number;
 	r_userToCaseResults_user?: UserAccount;
 	run?: TestrayRun;
+	runId?: number;
 	startDate: string;
 	user?: UserAccount;
 	warnings: number;
-};
+} & CaseResultAggregation;
 
 export type TestrayCaseResultIssue = {
 	caseResult?: TestrayCaseResult;
@@ -203,6 +244,7 @@ export type TestrayProductVersion = {
 };
 
 export type TestrayProject = {
+	actions: ObjectActionsItems;
 	creator: {
 		name: string;
 	};
@@ -213,6 +255,7 @@ export type TestrayProject = {
 };
 
 export type TestrayRequirement = {
+	actions: ObjectActionsItems;
 	component?: TestrayComponent;
 	components: string;
 	description: string;
@@ -235,7 +278,7 @@ export type TestrayRequirementCase = {
 };
 
 export type TestrayRun = {
-	build: TestrayBuild;
+	build?: TestrayBuild;
 	dateCreated: string;
 	dateModified: string;
 	description: string;
@@ -248,11 +291,12 @@ export type TestrayRun = {
 	jenkinsJobKey: string;
 	name: string;
 	number: string;
-	r_buildToRuns_c_build: TestrayBuild;
+	r_buildToRuns_c_build?: TestrayBuild;
 	status: string;
-};
+} & CaseResultAggregation;
 
 export type TestraySubTask = {
+	actions: ObjectActionsItems;
 	dateCreated: string;
 	dateModified: string;
 	dueStatus: PickList;
@@ -267,6 +311,7 @@ export type TestraySubTask = {
 	r_splitFromTestraySubtask_c_subtask: TestraySubTask;
 	r_taskToSubtasks_c_task: TestrayTask;
 	r_userToSubtasks_user: UserAccount;
+	r_userToSubtasks_userId: number;
 	score: number;
 	splitFromSubtask: TestraySubTask;
 	statusUpdateDate: string;
@@ -293,6 +338,7 @@ export type TestraySubTaskIssue = {
 };
 
 export type TestraySuite = {
+	actions: ObjectActionsItems;
 	caseParameters: string;
 	creator: {
 		name: string;
@@ -307,6 +353,7 @@ export type TestraySuite = {
 
 export type TestraySuiteCase = {
 	case: TestrayCase;
+	caseId: Number;
 	id: number;
 	r_caseToSuitesCases_c_case: TestrayCase;
 	r_caseToSuitesCases_c_caseId: number;
@@ -315,6 +362,7 @@ export type TestraySuiteCase = {
 };
 
 export type TestrayTask = {
+	actions: ObjectActionsItems;
 	build?: TestrayBuild;
 	dateCreated: string;
 	dispatchTriggerId: number;
@@ -324,7 +372,8 @@ export type TestrayTask = {
 	r_buildToTasks_c_build?: TestrayBuild;
 	subtaskScore: string;
 	subtaskScoreCompleted: string;
-	subtaskScoreIncomplete: string;
+	subtaskScoreSelfIncomplete: string;
+	taskToTasksUsers: any;
 };
 
 export type TestrayTaskCaseTypes = {
@@ -369,7 +418,7 @@ export type TestrayComponent = {
 	status: string;
 	team?: TestrayTeam;
 	teamId: number;
-};
+} & CaseResultAggregation;
 
 export type TestrayFactorCategory = {
 	dateCreated: string;
@@ -381,9 +430,12 @@ export type TestrayFactorCategory = {
 };
 
 export type TestrayRoutine = {
+	actions: ObjectActionsItems;
+	builds: TestrayBuild[];
 	dateCreated: string;
 	id: number;
 	name: string;
+	routineToBuilds: TestrayBuild[];
 };
 
 export type TestrayFactor = {
@@ -429,3 +481,5 @@ export type MessageBoardMessage = {
 	headline: string;
 	id: string;
 };
+
+export type StorageType = 'persisted' | 'temporary';

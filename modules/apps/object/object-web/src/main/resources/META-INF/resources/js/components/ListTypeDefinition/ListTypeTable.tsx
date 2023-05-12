@@ -26,6 +26,8 @@ import {IModalState} from './ListTypeEntriesModal';
 interface IProps {
 	pickListId: number;
 	readOnly: boolean;
+	setValues: (values: Partial<PickList>) => void;
+	values: Partial<PickList>;
 }
 
 interface ItemData {
@@ -42,7 +44,12 @@ interface fdsItem {
 	value: string;
 }
 
-export default function ListTypeTable({pickListId, readOnly}: IProps) {
+export default function ListTypeTable({
+	pickListId,
+	readOnly,
+	setValues,
+	values,
+}: IProps) {
 	const [dataSetProps, setDataSetProps] = useState<IFrontendDataSetProps>();
 
 	useEffect(() => {
@@ -67,12 +74,14 @@ export default function ListTypeTable({pickListId, readOnly}: IProps) {
 
 		Liferay.on('handleAddItems', handleAddItems);
 
-		setDataSetProps(getDataSetProps(fireModal, pickListId!, readOnly));
+		setDataSetProps(
+			getDataSetProps(fireModal, pickListId!, readOnly, setValues, values)
+		);
 
 		return () => {
 			Liferay.detach('handleAddItems');
 		};
-	}, [pickListId, readOnly]);
+	}, [pickListId, readOnly, setValues, values]);
 
 	return dataSetProps && Object.keys(dataSetProps).length ? (
 		<FrontendDataSet {...dataSetProps} />
@@ -82,7 +91,9 @@ export default function ListTypeTable({pickListId, readOnly}: IProps) {
 function getDataSetProps(
 	fireModal: (modalProps: IModalState) => void,
 	pickListId: number,
-	readOnly: boolean
+	readOnly: boolean,
+	setValues: (values: Partial<PickList>) => void,
+	values: Partial<PickList>
 ): IFrontendDataSetProps {
 	const onActionDropdownItemClick = ({action, itemData}: fdsItem) => {
 		if (action.id === 'addListTypeEntry') {
@@ -94,6 +105,18 @@ function getDataSetProps(
 				modalType: 'edit',
 				name_i18n: itemData.name_i18n,
 				readOnly,
+			});
+		}
+
+		if (action.id === 'deleteListTypeEntry') {
+			const {listTypeEntries} = values;
+			const newListTypeEntries = listTypeEntries?.filter(
+				(listTypeEntry) => listTypeEntry.key !== itemData.key
+			);
+
+			setValues({
+				...values,
+				listTypeEntries: newListTypeEntries as PickListItem[],
 			});
 		}
 	};
@@ -122,196 +145,104 @@ function getDataSetProps(
 
 	const addItemMenu = readOnly ? [] : [addButton];
 
-	return Liferay.FeatureFlags['LPS-168886']
-		? {
-				actionParameterName: '',
-				apiURL: `/o/headless-admin-list-type/v1.0/list-type-definitions/${pickListId}/list-type-entries`,
-				creationMenu: {
-					primaryItems: addItemMenu,
+	return {
+		actionParameterName: '',
+		apiURL: `/o/headless-admin-list-type/v1.0/list-type-definitions/${pickListId}/list-type-entries`,
+		creationMenu: {
+			primaryItems: addItemMenu,
+		},
+		currentURL: window.location.pathname + window.location.search,
+		customDataRenderers: {
+			itemNameRenderer,
+		},
+		customViewsEnabled: false,
+		formName: 'fm',
+		id:
+			'com_liferay_object_web_internal_list_type_portlet_portlet_ListTypeDefinitionsPortlet-listTypeDefinitionItems',
+		itemsActions: [
+			{
+				icon: 'view',
+				id: 'addListTypeEntry',
+				label: Liferay.Language.get('view'),
+			},
+			{
+				data: {
+					id: 'delete',
+					method: 'delete',
+					permissionKey: 'delete',
 				},
-				currentURL: window.location.pathname + window.location.search,
-				customDataRenderers: {
-					itemNameRenderer,
+				href: '/o/headless-admin-list-type/v1.0/list-type-entries/{id}',
+				icon: 'trash',
+				id: 'deleteListTypeEntry',
+				label: 'Delete',
+				target: 'async',
+			},
+		],
+		namespace:
+			'_com_liferay_object_web_internal_list_type_portlet_portlet_ListTypeDefinitionsPortlet_',
+		onActionDropdownItemClick,
+		pagination: {
+			deltas: [
+				{
+					label: 4,
 				},
-				customViewsEnabled: false,
-				formName: 'fm',
-				id:
-					'com_liferay_object_web_internal_list_type_portlet_portlet_ListTypeDefinitionsPortlet-listTypeDefinitionItems',
-				itemsActions: [
-					{
-						icon: 'view',
-						id: 'addListTypeEntry',
-						label: Liferay.Language.get('view'),
-					},
-					{
-						data: {
-							id: 'delete',
-							method: 'delete',
-							permissionKey: 'delete',
-						},
-						href:
-							'/o/headless-admin-list-type/v1.0/list-type-entries/{id}',
-						icon: 'trash',
-						label: 'Delete',
-						target: 'async',
-					},
-				],
-				namespace:
-					'_com_liferay_object_web_internal_list_type_portlet_portlet_ListTypeDefinitionsPortlet_',
-				onActionDropdownItemClick,
-				pagination: {
-					deltas: [
+				{
+					label: 8,
+				},
+				{
+					label: 20,
+				},
+				{
+					label: 40,
+				},
+				{
+					label: 60,
+				},
+			],
+			initialDelta: 8,
+			initialPageNumber: 0,
+		},
+		portletId:
+			'com_liferay_object_web_internal_list_type_portlet_portlet_ListTypeDefinitionsPortlet',
+		showManagementBar: true,
+		showPagination: true,
+		showSearch: true,
+		style: 'fluid',
+		views: [
+			{
+				contentRenderer: 'table',
+				label: 'Table',
+				name: 'table',
+				schema: {
+					fields: [
 						{
-							label: 4,
-						},
-						{
-							label: 8,
-						},
-						{
-							label: 20,
-						},
-						{
-							label: 40,
+							contentRenderer: 'itemNameRenderer',
+							expand: false,
+							fieldName: 'name',
+							label: Liferay.Language.get('name'),
+							localizeLabel: true,
+							sortable: false,
 						},
 						{
-							label: 60,
+							expand: false,
+							fieldName: 'key',
+							label: Liferay.Language.get('key'),
+							localizeLabel: true,
+							sortable: false,
+						},
+						{
+							expand: false,
+							fieldName: 'externalReferenceCode',
+							label: Liferay.Language.get(
+								'external-reference-code'
+							),
+							localizeLabel: true,
+							sortable: false,
 						},
 					],
-					initialDelta: 8,
-					initialPageNumber: 0,
 				},
-				portletId:
-					'com_liferay_object_web_internal_list_type_portlet_portlet_ListTypeDefinitionsPortlet',
-				showManagementBar: true,
-				showPagination: true,
-				showSearch: true,
-				style: 'fluid',
-				views: [
-					{
-						contentRenderer: 'table',
-						label: 'Table',
-						name: 'table',
-						schema: {
-							fields: [
-								{
-									contentRenderer: 'itemNameRenderer',
-									expand: false,
-									fieldName: 'name',
-									label: Liferay.Language.get('name'),
-									localizeLabel: true,
-									sortable: false,
-								},
-								{
-									expand: false,
-									fieldName: 'key',
-									label: Liferay.Language.get('key'),
-									localizeLabel: true,
-									sortable: false,
-								},
-								{
-									expand: false,
-									fieldName: 'externalReferenceCode',
-									label: Liferay.Language.get(
-										'external-reference-code'
-									),
-									localizeLabel: true,
-									sortable: false,
-								},
-							],
-						},
-						thumbnail: 'table',
-					},
-				],
-		  }
-		: {
-				actionParameterName: '',
-				apiURL: `/o/headless-admin-list-type/v1.0/list-type-definitions/${pickListId}/list-type-entries`,
-				creationMenu: {
-					primaryItems: addItemMenu,
-				},
-				currentURL: window.location.pathname + window.location.search,
-				customDataRenderers: {
-					itemNameRenderer,
-				},
-				customViewsEnabled: false,
-				formName: 'fm',
-				id:
-					'com_liferay_object_web_internal_list_type_portlet_portlet_ListTypeDefinitionsPortlet-listTypeDefinitionItems',
-				itemsActions: [
-					{
-						icon: 'view',
-						id: 'addListTypeEntry',
-						label: Liferay.Language.get('view'),
-					},
-					{
-						data: {
-							id: 'delete',
-							method: 'delete',
-							permissionKey: 'delete',
-						},
-						href:
-							'/o/headless-admin-list-type/v1.0/list-type-entries/{id}',
-						icon: 'trash',
-						label: 'Delete',
-						target: 'async',
-					},
-				],
-				namespace:
-					'_com_liferay_object_web_internal_list_type_portlet_portlet_ListTypeDefinitionsPortlet_',
-				onActionDropdownItemClick,
-				pagination: {
-					deltas: [
-						{
-							label: 4,
-						},
-						{
-							label: 8,
-						},
-						{
-							label: 20,
-						},
-						{
-							label: 40,
-						},
-						{
-							label: 60,
-						},
-					],
-					initialDelta: 8,
-					initialPageNumber: 0,
-				},
-				portletId:
-					'com_liferay_object_web_internal_list_type_portlet_portlet_ListTypeDefinitionsPortlet',
-				showManagementBar: true,
-				showPagination: true,
-				showSearch: true,
-				style: 'fluid',
-				views: [
-					{
-						contentRenderer: 'table',
-						label: 'Table',
-						name: 'table',
-						schema: {
-							fields: [
-								{
-									contentRenderer: 'itemNameRenderer',
-									expand: false,
-									fieldName: 'name',
-									label: Liferay.Language.get('name'),
-									localizeLabel: true,
-									sortable: false,
-								},
-								{
-									expand: false,
-									fieldName: 'key',
-									label: Liferay.Language.get('key'),
-									localizeLabel: true,
-									sortable: false,
-								},
-							],
-						},
-						thumbnail: 'table',
-					},
-				],
-		  };
+				thumbnail: 'table',
+			},
+		],
+	};
 }

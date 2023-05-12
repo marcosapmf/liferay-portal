@@ -13,40 +13,83 @@ import {useEffect, useState} from 'react';
 
 import LiferayAccountBrief from '../interfaces/liferayAccountBrief';
 import LiferayPicklist from '../interfaces/liferayPicklist';
-import useGetCompanyExtenderByAccountEntryId from '../services/liferay/object/company-extenders/useGetCompanyExtenderByAccountEntryId';
+import useGetAccountById from '../services/liferay/accounts/useGetAccountById';
+import isObjectEmpty from '../utils/isObjectEmpty';
 
 export default function useCompanyOptions(
-	companyOptions: React.OptionHTMLAttributes<HTMLOptionElement>[],
 	handleSelected: (
-		country: LiferayPicklist,
+		partnerCountry: LiferayPicklist,
 		company: LiferayAccountBrief,
-		accountExternalReferenceCodeSF?: string
+		currency: LiferayPicklist,
+		accountExternalReferenceCode?: string
 	) => void,
-	currentCompany?: LiferayAccountBrief,
-	currentCountry?: LiferayPicklist
+	companyOptions?: React.OptionHTMLAttributes<HTMLOptionElement>[],
+	currencyOptions?: React.OptionHTMLAttributes<HTMLOptionElement>[],
+	currentCurrency?: LiferayPicklist,
+	countryOptions?: React.OptionHTMLAttributes<HTMLOptionElement>[],
+	currentCountry?: LiferayPicklist,
+	currentCompany?: LiferayAccountBrief
 ) {
 	const [selectedAccountBrief, setSelectedAccountBrief] = useState<
 		LiferayAccountBrief | undefined
 	>(currentCompany);
 
-	const {data: companyExtender} = useGetCompanyExtenderByAccountEntryId(
-		selectedAccountBrief?.id
-	);
+	const {data: account} = useGetAccountById(selectedAccountBrief?.id);
+
+	const currencyPicklist =
+		account &&
+		currencyOptions &&
+		currencyOptions.find((options) => options.value === account.currency);
+
+	const countryPicklist =
+		account &&
+		countryOptions &&
+		countryOptions.find(
+			(options) => options.value === account.partnerCountry
+		);
+
+	if (!companyOptions && account) {
+		companyOptions = [
+			{
+				label: account.name,
+				value: account.id,
+			},
+		];
+	}
 
 	useEffect(() => {
-		if (selectedAccountBrief) {
+		if (!isObjectEmpty(selectedAccountBrief) && selectedAccountBrief) {
 			handleSelected(
 				currentCountry
 					? currentCountry
-					: companyExtender?.country || {},
+					: (countryPicklist && {
+							key: countryPicklist.value as string,
+							name: countryPicklist.label as string,
+					  }) ||
+							{},
 				selectedAccountBrief,
-				companyExtender?.accountExternalReferenceCodeSF
+				currentCurrency && !isObjectEmpty(currentCurrency)
+					? currentCurrency
+					: (currencyPicklist && {
+							key: currencyPicklist.value as string,
+							name: currencyPicklist.label as string,
+					  }) ||
+							{},
+				account?.externalReferenceCode
 			);
 		}
-	}, [companyExtender, currentCountry, handleSelected, selectedAccountBrief]);
+	}, [
+		account?.externalReferenceCode,
+		countryPicklist,
+		currencyPicklist,
+		currentCountry,
+		currentCurrency,
+		handleSelected,
+		selectedAccountBrief,
+	]);
 
 	const onCompanySelected = (event: React.ChangeEvent<HTMLInputElement>) => {
-		const optionSelected = companyOptions.find(
+		const optionSelected = companyOptions?.find(
 			(options) => options.value === +event.target.value
 		);
 

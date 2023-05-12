@@ -3811,7 +3811,9 @@ public class CommerceChannelPersistenceImpl
 				if (ercCommerceChannel != null) {
 					throw new DuplicateCommerceChannelExternalReferenceCodeException(
 						"Duplicate commerce channel with external reference code " +
-							commerceChannel.getExternalReferenceCode());
+							commerceChannel.getExternalReferenceCode() +
+								" and company " +
+									commerceChannel.getCompanyId());
 				}
 			}
 			else {
@@ -3821,7 +3823,9 @@ public class CommerceChannelPersistenceImpl
 
 					throw new DuplicateCommerceChannelExternalReferenceCodeException(
 						"Duplicate commerce channel with external reference code " +
-							commerceChannel.getExternalReferenceCode());
+							commerceChannel.getExternalReferenceCode() +
+								" and company " +
+									commerceChannel.getCompanyId());
 				}
 			}
 		}

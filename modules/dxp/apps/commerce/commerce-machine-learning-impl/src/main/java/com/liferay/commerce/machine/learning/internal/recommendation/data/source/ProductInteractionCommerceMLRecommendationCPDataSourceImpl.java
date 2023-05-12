@@ -14,13 +14,14 @@
 
 package com.liferay.commerce.machine.learning.internal.recommendation.data.source;
 
-import com.liferay.commerce.account.model.CommerceAccount;
+import com.liferay.account.model.AccountEntry;
 import com.liferay.commerce.machine.learning.recommendation.ProductInteractionCommerceMLRecommendation;
 import com.liferay.commerce.machine.learning.recommendation.ProductInteractionCommerceMLRecommendationManager;
 import com.liferay.commerce.product.catalog.CPCatalogEntry;
 import com.liferay.commerce.product.constants.CPWebKeys;
 import com.liferay.commerce.product.data.source.CPDataSource;
 import com.liferay.commerce.product.data.source.CPDataSourceResult;
+import com.liferay.commerce.product.service.CommerceChannelLocalService;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.Language;
@@ -68,10 +69,15 @@ public class ProductInteractionCommerceMLRecommendationCPDataSourceImpl
 			HttpServletRequest httpServletRequest, int start, int end)
 		throws Exception {
 
-		CommerceAccount commerceAccount =
-			commerceAccountHelper.getCurrentCommerceAccount(httpServletRequest);
+		long groupId = portal.getScopeGroupId(httpServletRequest);
 
-		if (commerceAccount == null) {
+		AccountEntry accountEntry =
+			commerceAccountHelper.getCurrentAccountEntry(
+				_commerceChannelLocalService.
+					getCommerceChannelGroupIdBySiteGroupId(groupId),
+				httpServletRequest);
+
+		if (accountEntry == null) {
 			return new CPDataSourceResult(Collections.emptyList(), 0);
 		}
 
@@ -93,8 +99,6 @@ public class ProductInteractionCommerceMLRecommendationCPDataSourceImpl
 		if (productInteractionCommerceMLRecommendations.isEmpty()) {
 			return new CPDataSourceResult(Collections.emptyList(), 0);
 		}
-
-		long groupId = portal.getScopeGroupId(httpServletRequest);
 
 		List<CPCatalogEntry> cpCatalogEntries = new ArrayList<>();
 
@@ -123,7 +127,7 @@ public class ProductInteractionCommerceMLRecommendationCPDataSourceImpl
 			try {
 				CPCatalogEntry recommendedCPCatalogEntry =
 					cpDefinitionHelper.getCPCatalogEntry(
-						commerceAccount.getCommerceAccountId(), groupId,
+						accountEntry.getAccountEntryId(), groupId,
 						recommendedEntryClassPK,
 						portal.getLocale(httpServletRequest));
 
@@ -143,6 +147,9 @@ public class ProductInteractionCommerceMLRecommendationCPDataSourceImpl
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		ProductInteractionCommerceMLRecommendationCPDataSourceImpl.class);
+
+	@Reference
+	private CommerceChannelLocalService _commerceChannelLocalService;
 
 	@Reference
 	private Language _language;

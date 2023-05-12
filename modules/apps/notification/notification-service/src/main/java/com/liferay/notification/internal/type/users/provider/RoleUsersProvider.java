@@ -23,10 +23,11 @@ import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Role;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.model.UserConstants;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
 
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -52,7 +53,7 @@ public class RoleUsersProvider
 	public List<User> provide(NotificationContext notificationContext)
 		throws PortalException {
 
-		Set<Long> userIds = new HashSet<>();
+		Set<Long> userIds = new LinkedHashSet<>();
 
 		NotificationTemplate notificationTemplate =
 			notificationContext.getNotificationTemplate();
@@ -68,7 +69,8 @@ public class RoleUsersProvider
 				notificationRecipientSetting.getValue());
 
 			for (long userId :
-					_userLocalService.getRoleUserIds(role.getRoleId())) {
+					_userLocalService.getRoleUserIds(
+						role.getRoleId(), UserConstants.TYPE_REGULAR)) {
 
 				userIds.add(userId);
 			}

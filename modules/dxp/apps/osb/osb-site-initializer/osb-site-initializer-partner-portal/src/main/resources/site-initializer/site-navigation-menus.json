@@ -22,7 +22,12 @@
 				"type": "layout"
 			},
 			{
-				"friendlyURL": "/Dashboard",
+				"friendlyURL": "/Library",
+				"privateLayout": false,
+				"type": "layout"
+			},
+			{
+				"friendlyURL": "/Events",
 				"privateLayout": false,
 				"type": "layout"
 			}

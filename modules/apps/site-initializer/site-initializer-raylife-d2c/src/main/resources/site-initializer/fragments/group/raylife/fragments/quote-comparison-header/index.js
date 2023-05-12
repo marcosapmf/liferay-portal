@@ -14,7 +14,10 @@
 
 try {
 	const firstName = JSON.parse(
-		localStorage.getItem('raylife-application-form')
+		Liferay.Util.LocalStorage.getItem(
+			'raylife-application-form',
+			Liferay.Util.LocalStorage.TYPES.NECESSARY
+		)
 	).basics.businessInformation.firstName;
 
 	if (firstName) {

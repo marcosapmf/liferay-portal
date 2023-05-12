@@ -30,7 +30,6 @@ import java.awt.image.RenderedImage;
 import java.io.IOException;
 import java.io.InputStream;
 
-import java.util.Optional;
 import java.util.function.Supplier;
 
 /**
@@ -43,12 +42,11 @@ public class TiffOrientationTransformer {
 		throws PortalException {
 
 		try {
-			Optional<Integer> tiffOrientationValueOptional =
-				_getTiffOrientationValue(inputStreamSupplier);
+			int tiffOrientationValue = _getTiffOrientationValue(
+				inputStreamSupplier);
 
-			if (tiffOrientationValueOptional.isPresent()) {
-				return _transform(
-					inputStreamSupplier, tiffOrientationValueOptional.get());
+			if (tiffOrientationValue != _ORIENTATION_VALUE_NOT_FOUND) {
+				return _transform(inputStreamSupplier, tiffOrientationValue);
 			}
 
 			return RenderedImageUtil.readImage(inputStreamSupplier.get());
@@ -58,7 +56,7 @@ public class TiffOrientationTransformer {
 		}
 	}
 
-	private static Optional<Integer> _getTiffOrientationValue(
+	private static int _getTiffOrientationValue(
 		Supplier<InputStream> inputStreamSupplier) {
 
 		try (InputStream inputStream = inputStreamSupplier.get()) {
@@ -71,11 +69,10 @@ public class TiffOrientationTransformer {
 				!exifIFD0Directory.containsTag(
 					ExifIFD0Directory.TAG_ORIENTATION)) {
 
-				return Optional.empty();
+				return _ORIENTATION_VALUE_NOT_FOUND;
 			}
 
-			return Optional.of(
-				exifIFD0Directory.getInt(ExifIFD0Directory.TAG_ORIENTATION));
+			return exifIFD0Directory.getInt(ExifIFD0Directory.TAG_ORIENTATION);
 		}
 		catch (Exception exception) {
 			if (_log.isWarnEnabled()) {
@@ -83,7 +80,7 @@ public class TiffOrientationTransformer {
 			}
 		}
 
-		return Optional.empty();
+		return _ORIENTATION_VALUE_NOT_FOUND;
 	}
 
 	private static RenderedImage _transform(
@@ -138,6 +135,8 @@ public class TiffOrientationTransformer {
 		_ORIENTATION_VALUE_MIRROR_HORIZONTAL_ROTATE_270_CW = 5;
 
 	private static final int _ORIENTATION_VALUE_MIRROR_VERTICAL = 4;
+
+	private static final int _ORIENTATION_VALUE_NOT_FOUND = -1;
 
 	private static final int _ORIENTATION_VALUE_ROTATE_90_CW = 6;
 

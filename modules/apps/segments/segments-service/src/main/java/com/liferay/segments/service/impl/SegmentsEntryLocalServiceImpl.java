@@ -273,6 +273,10 @@ public class SegmentsEntryLocalServiceImpl
 		long groupId, String segmentsEntryKey,
 		boolean includeAncestorSegmentsEntries) {
 
+		if (Validator.isNotNull(segmentsEntryKey)) {
+			segmentsEntryKey = StringUtil.toUpperCase(segmentsEntryKey.trim());
+		}
+
 		SegmentsEntry segmentsEntry = segmentsEntryPersistence.fetchByG_S(
 			groupId, segmentsEntryKey);
 
@@ -531,9 +535,10 @@ public class SegmentsEntryLocalServiceImpl
 
 	private String _getSource(String criteria, String source) {
 		if (Validator.isNotNull(criteria)) {
-			Criteria criteriaObj = CriteriaSerializer.deserialize(criteria);
+			Criteria deserializedCriteria = CriteriaSerializer.deserialize(
+				criteria);
 
-			String referredFilterString = criteriaObj.getFilterString(
+			String referredFilterString = deserializedCriteria.getFilterString(
 				Criteria.Type.REFERRED);
 
 			if (Validator.isNotNull(referredFilterString)) {

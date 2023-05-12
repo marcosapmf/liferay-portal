@@ -50,6 +50,7 @@ import javax.ws.rs.ext.WriterInterceptorContext;
 import org.apache.cxf.Bus;
 import org.apache.cxf.jaxrs.ext.ContextProvider;
 import org.apache.cxf.jaxrs.provider.ProviderFactory;
+import org.apache.cxf.message.ExchangeImpl;
 import org.apache.cxf.message.Message;
 import org.apache.cxf.message.MessageImpl;
 
@@ -178,7 +179,7 @@ public class NestedFieldsWriterInterceptorTest {
 
 		NestedFieldsContextThreadLocal.setNestedFieldsContext(
 			new NestedFieldsContext(
-				Arrays.asList("productOptions", "skus"), new MessageImpl(),
+				1, Arrays.asList("productOptions", "skus"), _getMessageImpl(),
 				new MultivaluedHashMap<>(), "v1.0",
 				new MultivaluedHashMap<>()));
 
@@ -215,7 +216,7 @@ public class NestedFieldsWriterInterceptorTest {
 
 		NestedFieldsContextThreadLocal.setNestedFieldsContext(
 			new NestedFieldsContext(
-				Arrays.asList("productOptions", "skus"), new MessageImpl(),
+				1, Arrays.asList("productOptions", "skus"), _getMessageImpl(),
 				_getPathParameters(), "v1.0", new MultivaluedHashMap<>()));
 
 		_nestedFieldsWriterInterceptor.aroundWriteTo(_writerInterceptorContext);
@@ -252,9 +253,10 @@ public class NestedFieldsWriterInterceptorTest {
 
 		NestedFieldsContextThreadLocal.setNestedFieldsContext(
 			new NestedFieldsContext(
+				1,
 				Arrays.asList(
 					"productOptions", "productOptions.productOptionValues"),
-				new MessageImpl(), _getPathParameters(), "v1.0",
+				_getMessageImpl(), _getPathParameters(), "v1.0",
 				new MultivaluedHashMap<>()));
 
 		_nestedFieldsWriterInterceptor.aroundWriteTo(_writerInterceptorContext);
@@ -305,7 +307,7 @@ public class NestedFieldsWriterInterceptorTest {
 
 		NestedFieldsContextThreadLocal.setNestedFieldsContext(
 			new NestedFieldsContext(
-				Collections.singletonList("categories"), new MessageImpl(),
+				1, Collections.singletonList("categories"), _getMessageImpl(),
 				_getPathParameters(), "v1.0", new MultivaluedHashMap<>()));
 
 		_nestedFieldsWriterInterceptor.aroundWriteTo(_writerInterceptorContext);
@@ -316,7 +318,7 @@ public class NestedFieldsWriterInterceptorTest {
 
 		NestedFieldsContextThreadLocal.setNestedFieldsContext(
 			new NestedFieldsContext(
-				Collections.singletonList("categories"), new MessageImpl(),
+				1, Collections.singletonList("categories"), _getMessageImpl(),
 				_getPathParameters(), "v2.0", new MultivaluedHashMap<>()));
 
 		_nestedFieldsWriterInterceptor.aroundWriteTo(_writerInterceptorContext);
@@ -338,7 +340,7 @@ public class NestedFieldsWriterInterceptorTest {
 
 		NestedFieldsContextThreadLocal.setNestedFieldsContext(
 			new NestedFieldsContext(
-				Collections.emptyList(), new MessageImpl(),
+				1, Collections.emptyList(), _getMessageImpl(),
 				_getPathParameters(), "v1.0", new MultivaluedHashMap<>()));
 
 		_nestedFieldsWriterInterceptor.aroundWriteTo(_writerInterceptorContext);
@@ -347,7 +349,7 @@ public class NestedFieldsWriterInterceptorTest {
 
 		NestedFieldsContextThreadLocal.setNestedFieldsContext(
 			new NestedFieldsContext(
-				Collections.singletonList("nonexistent"), new MessageImpl(),
+				1, Collections.singletonList("nonexistent"), _getMessageImpl(),
 				_getPathParameters(), "v1.0", new MultivaluedHashMap<>()));
 
 		_nestedFieldsWriterInterceptor.aroundWriteTo(_writerInterceptorContext);
@@ -376,7 +378,7 @@ public class NestedFieldsWriterInterceptorTest {
 
 		NestedFieldsContextThreadLocal.setNestedFieldsContext(
 			new NestedFieldsContext(
-				Arrays.asList("productOptions", "skus"), new MessageImpl(),
+				1, Arrays.asList("productOptions", "skus"), _getMessageImpl(),
 				_getPathParameters(), "v1.0", new MultivaluedHashMap<>()));
 
 		Assert.assertNull(_productResource_v1_0_Impl.contextThemeDisplay);
@@ -416,7 +418,7 @@ public class NestedFieldsWriterInterceptorTest {
 
 		NestedFieldsContextThreadLocal.setNestedFieldsContext(
 			new NestedFieldsContext(
-				Collections.singletonList("externalCode"), new MessageImpl(),
+				1, Collections.singletonList("externalCode"), _getMessageImpl(),
 				_getPathParameters(), "v1.0", queryParameters));
 
 		_nestedFieldsWriterInterceptor.aroundWriteTo(_writerInterceptorContext);
@@ -447,7 +449,7 @@ public class NestedFieldsWriterInterceptorTest {
 
 		NestedFieldsContextThreadLocal.setNestedFieldsContext(
 			new NestedFieldsContext(
-				Collections.singletonList("skus"), new MessageImpl(),
+				1, Collections.singletonList("skus"), _getMessageImpl(),
 				_getPathParameters(), "v1.0", new MultivaluedHashMap<>()));
 
 		_nestedFieldsWriterInterceptor.aroundWriteTo(_writerInterceptorContext);
@@ -488,8 +490,9 @@ public class NestedFieldsWriterInterceptorTest {
 
 		NestedFieldsContextThreadLocal.setNestedFieldsContext(
 			new NestedFieldsContext(
-				Collections.singletonList("productOptions"), new MessageImpl(),
-				_getPathParameters(), "v1.0", queryParameters));
+				1, Collections.singletonList("productOptions"),
+				_getMessageImpl(), _getPathParameters(), "v1.0",
+				queryParameters));
 
 		_nestedFieldsWriterInterceptor.aroundWriteTo(_writerInterceptorContext);
 
@@ -524,7 +527,7 @@ public class NestedFieldsWriterInterceptorTest {
 
 		NestedFieldsContextThreadLocal.setNestedFieldsContext(
 			new NestedFieldsContext(
-				Collections.singletonList("skus"), new MessageImpl(),
+				1, Collections.singletonList("skus"), _getMessageImpl(),
 				_getPathParameters(), "v2.0", new MultivaluedHashMap<>()));
 
 		_nestedFieldsWriterInterceptor.aroundWriteTo(_writerInterceptorContext);
@@ -555,7 +558,7 @@ public class NestedFieldsWriterInterceptorTest {
 
 		NestedFieldsContextThreadLocal.setNestedFieldsContext(
 			new NestedFieldsContext(
-				Collections.singletonList("skus"), new MessageImpl(),
+				1, Collections.singletonList("skus"), _getMessageImpl(),
 				_getPathParameters(), "v2.0", new MultivaluedHashMap<>()));
 
 		_nestedFieldsWriterInterceptor.aroundWriteTo(_writerInterceptorContext);
@@ -586,7 +589,7 @@ public class NestedFieldsWriterInterceptorTest {
 
 		NestedFieldsContextThreadLocal.setNestedFieldsContext(
 			new NestedFieldsContext(
-				Arrays.asList("productOptions", "skus"), new MessageImpl(),
+				1, Arrays.asList("productOptions", "skus"), _getMessageImpl(),
 				_getPathParameters(), "v1.0", new MultivaluedHashMap<>()));
 
 		Assert.assertNull(_productResource_v1_0_Impl.themeDisplay);
@@ -636,6 +639,14 @@ public class NestedFieldsWriterInterceptorTest {
 		sku.setId(id);
 
 		return sku;
+	}
+
+	private MessageImpl _getMessageImpl() {
+		MessageImpl messageImpl = new MessageImpl();
+
+		messageImpl.setExchange(new ExchangeImpl());
+
+		return messageImpl;
 	}
 
 	private MultivaluedHashMap<String, String> _getPathParameters() {
@@ -788,9 +799,8 @@ public class NestedFieldsWriterInterceptorTest {
 
 				return (ContextProvider<T>)new ThemeDisplayContextProvider();
 			}
-			else {
-				return null;
-			}
+
+			return null;
 		}
 
 		@Override
@@ -942,9 +952,8 @@ public class NestedFieldsWriterInterceptorTest {
 				return Arrays.asList(
 					_toProductOptionValue(400L), _toProductOptionValue(500L));
 			}
-			else {
-				return Collections.emptyList();
-			}
+
+			return Collections.emptyList();
 		}
 
 		@GET

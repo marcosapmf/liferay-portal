@@ -15,14 +15,11 @@
 package com.liferay.frontend.taglib.clay.internal.servlet.taglib;
 
 import com.liferay.frontend.js.loader.modules.extender.npm.NPMResolvedPackageNameUtil;
-import com.liferay.frontend.js.module.launcher.JSModuleResolver;
 import com.liferay.frontend.taglib.clay.internal.servlet.ServletContextUtil;
-import com.liferay.frontend.taglib.clay.internal.util.ServicesProvider;
+import com.liferay.frontend.taglib.clay.internal.servlet.taglib.util.ServicesProvider;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringPool;
 import com.liferay.petra.string.StringUtil;
-import com.liferay.portal.kernel.log.Log;
-import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.theme.PortletDisplay;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.JavaConstants;
@@ -55,6 +52,10 @@ public class BaseContainerTag extends AttributesTagSupport {
 	@Override
 	public int doEndTag() throws JspException {
 		try {
+			if (_hasBodyContent()) {
+				processEndBodyTag();
+			}
+
 			return processEndTag();
 		}
 		catch (Exception exception) {
@@ -68,7 +69,13 @@ public class BaseContainerTag extends AttributesTagSupport {
 	@Override
 	public int doStartTag() throws JspException {
 		try {
-			return processStartTag();
+			_tagAction = processStartTag();
+
+			if (_hasBodyContent()) {
+				processStartBodyTag();
+			}
+
+			return _tagAction;
 		}
 		catch (Exception exception) {
 			throw new JspException(exception);
@@ -270,6 +277,7 @@ public class BaseContainerTag extends AttributesTagSupport {
 		_namespace = null;
 		_propsTransformer = null;
 		_propsTransformerServletContext = null;
+		_tagAction = EVAL_BODY_INCLUDE;
 	}
 
 	protected void doClearTag() {
@@ -305,11 +313,18 @@ public class BaseContainerTag extends AttributesTagSupport {
 			props.put("defaultEventHandler", defaultEventHandler);
 		}
 
+		props.put("hasBodyContent", _hasBodyContent());
 		props.put("id", getId());
 
 		props.putAll(getDynamicAttributes());
 
 		return props;
+	}
+
+	protected String processBodyCssClasses(Set<String> cssClasses) {
+		cssClasses.add("tag-body-content");
+
+		return StringUtil.merge(cssClasses, StringPool.SPACE);
 	}
 
 	protected String processCssClasses(Set<String> cssClasses) {
@@ -330,6 +345,12 @@ public class BaseContainerTag extends AttributesTagSupport {
 		return data;
 	}
 
+	protected void processEndBodyTag() throws Exception {
+		JspWriter jspWriter = pageContext.getOut();
+
+		jspWriter.write("</div>");
+	}
+
 	protected int processEndTag() throws Exception {
 		JspWriter jspWriter = pageContext.getOut();
 
@@ -343,25 +364,8 @@ public class BaseContainerTag extends AttributesTagSupport {
 			String propsTransformer = null;
 
 			if (Validator.isNotNull(_propsTransformer)) {
-				String resolvedPackageName;
-
-				try {
-					resolvedPackageName = NPMResolvedPackageNameUtil.get(
-						getPropsTransformerServletContext());
-				}
-				catch (UnsupportedOperationException
-							unsupportedOperationException) {
-
-					if (_log.isDebugEnabled()) {
-						_log.debug(unsupportedOperationException);
-					}
-
-					JSModuleResolver jsModuleResolver =
-						ServicesProvider.getJSModuleResolver();
-
-					resolvedPackageName = jsModuleResolver.resolveModule(
-						getPropsTransformerServletContext(), null);
-				}
+				String resolvedPackageName = NPMResolvedPackageNameUtil.get(
+					getPropsTransformerServletContext());
 
 				propsTransformer =
 					resolvedPackageName + "/" + _propsTransformer;
@@ -388,6 +392,16 @@ public class BaseContainerTag extends AttributesTagSupport {
 		}
 
 		return EVAL_PAGE;
+	}
+
+	protected void processStartBodyTag() throws Exception {
+		JspWriter jspWriter = pageContext.getOut();
+
+		jspWriter.write("<div ");
+
+		writeBodyCssClassAttribute();
+
+		jspWriter.write(">");
 	}
 
 	protected int processStartTag() throws Exception {
@@ -419,12 +433,12 @@ public class BaseContainerTag extends AttributesTagSupport {
 		return EVAL_BODY_INCLUDE;
 	}
 
-	protected void writeCssClassAttribute() throws Exception {
-		JspWriter jspWriter = pageContext.getOut();
+	protected void writeBodyCssClassAttribute() throws Exception {
+		_writeCssClassAttribute(processBodyCssClasses(new LinkedHashSet<>()));
+	}
 
-		jspWriter.write(" class=\"");
-		jspWriter.write(processCssClasses(new LinkedHashSet<>()));
-		jspWriter.write("\"");
+	protected void writeCssClassAttribute() throws Exception {
+		_writeCssClassAttribute(processCssClasses(new LinkedHashSet<>()));
 	}
 
 	protected void writeDynamicAttributes() throws Exception {
@@ -445,6 +459,16 @@ public class BaseContainerTag extends AttributesTagSupport {
 		jspWriter.write(" id=\"");
 		jspWriter.write(getId());
 		jspWriter.write("\"");
+	}
+
+	private boolean _hasBodyContent() {
+		if ((_tagAction == EVAL_BODY_INCLUDE) &&
+			(getHydratedModuleName() != null)) {
+
+			return true;
+		}
+
+		return false;
 	}
 
 	private boolean _isPositionInLine() {
@@ -481,8 +505,13 @@ public class BaseContainerTag extends AttributesTagSupport {
 		return false;
 	}
 
-	private static final Log _log = LogFactoryUtil.getLog(
-		BaseContainerTag.class);
+	private void _writeCssClassAttribute(String cssClasses) throws Exception {
+		JspWriter jspWriter = pageContext.getOut();
+
+		jspWriter.write(" class=\"");
+		jspWriter.write(cssClasses);
+		jspWriter.write("\"");
+	}
 
 	private Map<String, Object> _additionalProps;
 	private String _componentId;
@@ -497,5 +526,6 @@ public class BaseContainerTag extends AttributesTagSupport {
 	private String _namespace;
 	private String _propsTransformer;
 	private ServletContext _propsTransformerServletContext;
+	private int _tagAction = EVAL_BODY_INCLUDE;
 
 }

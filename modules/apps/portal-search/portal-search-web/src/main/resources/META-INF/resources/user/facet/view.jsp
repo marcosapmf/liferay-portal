@@ -19,6 +19,7 @@
 <%@ taglib uri="http://java.sun.com/portlet_2_0" prefix="portlet" %>
 
 <%@ taglib uri="http://liferay.com/tld/aui" prefix="aui" %><%@
+taglib uri="http://liferay.com/tld/clay" prefix="clay" %><%@
 taglib uri="http://liferay.com/tld/ddm" prefix="liferay-ddm" %><%@
 taglib uri="http://liferay.com/tld/ui" prefix="liferay-ui" %>
 
@@ -45,12 +46,12 @@ UserFacetPortletInstanceConfiguration userFacetPortletInstanceConfiguration = us
 
 <c:choose>
 	<c:when test="<%= userSearchFacetDisplayContext.isRenderNothing() %>">
-		<aui:input autocomplete="off" name="<%= HtmlUtil.escapeAttribute(userSearchFacetDisplayContext.getParamName()) %>" type="hidden" value="<%= userSearchFacetDisplayContext.getParamValue() %>" />
+		<aui:input autocomplete="off" name="<%= HtmlUtil.escapeAttribute(userSearchFacetDisplayContext.getParameterName()) %>" type="hidden" value="<%= userSearchFacetDisplayContext.getParameterValue() %>" />
 	</c:when>
 	<c:otherwise>
 		<aui:form action="#" method="post" name="fm">
-			<aui:input autocomplete="off" name="<%= HtmlUtil.escapeAttribute(userSearchFacetDisplayContext.getParamName()) %>" type="hidden" value="<%= userSearchFacetDisplayContext.getParamValue() %>" />
-			<aui:input cssClass="facet-parameter-name" name="facet-parameter-name" type="hidden" value="<%= userSearchFacetDisplayContext.getParamName() %>" />
+			<aui:input autocomplete="off" name="<%= HtmlUtil.escapeAttribute(userSearchFacetDisplayContext.getParameterName()) %>" type="hidden" value="<%= userSearchFacetDisplayContext.getParameterValue() %>" />
+			<aui:input cssClass="facet-parameter-name" name="facet-parameter-name" type="hidden" value="<%= userSearchFacetDisplayContext.getParameterName() %>" />
 			<aui:input cssClass="start-parameter-name" name="start-parameter-name" type="hidden" value="<%= userSearchFacetDisplayContext.getPaginationStartParameterName() %>" />
 
 			<liferay-ddm:template-renderer
@@ -80,55 +81,67 @@ UserFacetPortletInstanceConfiguration userFacetPortletInstanceConfiguration = us
 						persistState="<%= true %>"
 						title="user"
 					>
-						<aui:fieldset>
-							<ul class="list-unstyled">
-
-								<%
-								int i = 0;
-
-								for (BucketDisplayContext bucketDisplayContext : userSearchFacetDisplayContext.getBucketDisplayContexts()) {
-									i++;
-								%>
-
-									<li class="facet-value">
-										<div class="custom-checkbox custom-control">
-											<label class="facet-checkbox-label" for="<portlet:namespace />term_<%= i %>">
-												<input
-													autocomplete="off"
-													<%= bucketDisplayContext.isSelected() ? "checked" : StringPool.BLANK %>
-													class="custom-control-input facet-term"
-													data-term-id="<%= HtmlUtil.escapeAttribute(bucketDisplayContext.getBucketText()) %>"
-													disabled
-													id="<portlet:namespace />term_<%= i %>"name="<portlet:namespace />term_<%= i %>"
-													onChange="Liferay.Search.FacetUtil.changeSelection(event);"
-													type="checkbox"
-												/>
-
-												<span class="custom-control-label term-name <%= bucketDisplayContext.isSelected() ? "facet-term-selected" : "facet-term-unselected" %>">
-													<span class="custom-control-label-text">
-														<%= HtmlUtil.escape(bucketDisplayContext.getBucketText()) %>
-													</span>
-												</span>
-
-												<c:if test="<%= bucketDisplayContext.isFrequencyVisible() %>">
-													<small class="term-count">
-														(<%= bucketDisplayContext.getFrequency() %>)
-													</small>
-												</c:if>
-											</label>
-										</div>
-									</li>
-
-								<%
-								}
-								%>
-
-							</ul>
-						</aui:fieldset>
-
 						<c:if test="<%= !userSearchFacetDisplayContext.isNothingSelected() %>">
-							<aui:button cssClass="btn-link btn-unstyled facet-clear-btn" onClick="Liferay.Search.FacetUtil.clearSelections(event);" value="clear" />
+							<clay:button
+								cssClass="btn-unstyled c-mb-4 facet-clear-btn"
+								displayType="link"
+								id='<%= liferayPortletResponse.getNamespace() + "facetUserClear" %>'
+								onClick="Liferay.Search.FacetUtil.clearSelections(event);"
+							>
+								<strong><liferay-ui:message key="clear" /></strong>
+							</clay:button>
 						</c:if>
+
+						<ul class="list-unstyled">
+
+							<%
+							int i = 0;
+
+							for (BucketDisplayContext bucketDisplayContext : userSearchFacetDisplayContext.getBucketDisplayContexts()) {
+								i++;
+							%>
+
+								<li class="facet-value">
+									<div class="custom-checkbox custom-control">
+										<label class="facet-checkbox-label" for="<portlet:namespace />term_<%= i %>">
+											<input
+												autocomplete="off"
+												<%= bucketDisplayContext.isSelected() ? "checked" : StringPool.BLANK %>
+												class="custom-control-input facet-term"
+												data-term-id="<%= HtmlUtil.escapeAttribute(bucketDisplayContext.getBucketText()) %>"
+												disabled
+												id="<portlet:namespace />term_<%= i %>"name="<portlet:namespace />term_<%= i %>"
+												onChange="Liferay.Search.FacetUtil.changeSelection(event);"
+												type="checkbox"
+											/>
+
+											<span class="custom-control-label term-name <%= bucketDisplayContext.isSelected() ? "facet-term-selected" : "facet-term-unselected" %>">
+												<span class="custom-control-label-text">
+													<c:choose>
+														<c:when test="<%= bucketDisplayContext.isSelected() %>">
+															<strong><%= HtmlUtil.escape(bucketDisplayContext.getBucketText()) %></strong>
+														</c:when>
+														<c:otherwise>
+															<%= HtmlUtil.escape(bucketDisplayContext.getBucketText()) %>
+														</c:otherwise>
+													</c:choose>
+												</span>
+											</span>
+
+											<c:if test="<%= bucketDisplayContext.isFrequencyVisible() %>">
+												<small class="term-count">
+													(<%= bucketDisplayContext.getFrequency() %>)
+												</small>
+											</c:if>
+										</label>
+									</div>
+								</li>
+
+							<%
+							}
+							%>
+
+						</ul>
 					</liferay-ui:panel>
 				</liferay-ui:panel-container>
 			</liferay-ddm:template-renderer>

@@ -25,6 +25,7 @@ import com.liferay.portal.odata.filter.ExpressionConvert;
 import com.liferay.portal.odata.filter.FilterParserProvider;
 import com.liferay.portal.odata.sort.SortParserProvider;
 import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
+import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineExportTaskResource;
 import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineImportTaskResource;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
@@ -85,7 +86,7 @@ public interface PriceModifierCategoryResource {
 		throws Exception;
 
 	public Response postPriceModifierIdPriceModifierCategoryBatch(
-			Long id, String callbackURL, Object object)
+			String callbackURL, Object object)
 		throws Exception;
 
 	public default void setContextAcceptLanguage(
@@ -126,6 +127,10 @@ public interface PriceModifierCategoryResource {
 	public void setRoleLocalService(RoleLocalService roleLocalService);
 
 	public void setSortParserProvider(SortParserProvider sortParserProvider);
+
+	public void setVulcanBatchEngineExportTaskResource(
+		VulcanBatchEngineExportTaskResource
+			vulcanBatchEngineExportTaskResource);
 
 	public void setVulcanBatchEngineImportTaskResource(
 		VulcanBatchEngineImportTaskResource

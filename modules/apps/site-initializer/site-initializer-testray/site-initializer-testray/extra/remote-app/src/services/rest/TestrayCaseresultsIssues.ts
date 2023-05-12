@@ -12,9 +12,8 @@
  * details.
  */
 
+import Rest from '../../core/Rest';
 import yupSchema from '../../schema/yup';
-import {searchUtil} from '../../util/search';
-import Rest from './Rest';
 import {TestrayCaseResultIssue} from './types';
 
 type CaseResultsIssues = typeof yupSchema.caseResultIssues.__outputType;
@@ -37,31 +36,12 @@ class TestrayCaseResultsIssuesImpl extends Rest<
 			nestedFields: 'caseResults,issue',
 			transformData: (caseResultsIssue) => ({
 				...caseResultsIssue,
-				caseResult: caseResultsIssue?.r_caseResultToCaseResultsIssues_c_caseResult
-					? {
-							...caseResultsIssue.r_caseResultToCaseResultsIssues_c_caseResult,
-					  }
-					: undefined,
-				issue: caseResultsIssue?.r_issueToCaseResultsIssues_c_issue
-					? {
-							...caseResultsIssue.r_issueToCaseResultsIssues_c_issue,
-					  }
-					: undefined,
+				caseResult:
+					caseResultsIssue?.r_caseResultToCaseResultsIssues_c_caseResult,
+				issue: caseResultsIssue?.r_issueToCaseResultsIssues_c_issue,
 			}),
 			uri: 'caseresultsissueses',
 		});
-	}
-
-	public async createIfNotExist(data: CaseResultsIssues) {
-		const response = await this.getAll({
-			filter: searchUtil.eq('name', data.name as string),
-		});
-
-		if ((response?.totalCount ?? 0) > 0) {
-			return response?.items[0];
-		}
-
-		return this.create(data);
 	}
 }
 

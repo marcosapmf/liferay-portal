@@ -228,7 +228,7 @@ public class RepositoryBrowserServlet extends HttpServlet {
 				httpServletRequest, "parentFolderId");
 
 			_dlAppService.addFolder(
-				repositoryId, parentFolderId, name, StringPool.BLANK,
+				null, repositoryId, parentFolderId, name, StringPool.BLANK,
 				ServiceContextFactory.getInstance(
 					Folder.class.getName(), httpServletRequest));
 
@@ -259,7 +259,7 @@ public class RepositoryBrowserServlet extends HttpServlet {
 		try {
 			User user = _portal.getUser(httpServletRequest);
 
-			if ((user == null) || user.isDefaultUser()) {
+			if ((user == null) || user.isGuestUser()) {
 				throw new PrincipalException.MustBeAuthenticated(
 					StringPool.BLANK);
 			}

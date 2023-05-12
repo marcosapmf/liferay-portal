@@ -57,12 +57,7 @@ public class ObjectValidationRuleScriptExceptionMapper
 					objectValidationRuleScriptException.getMessageKey())
 			).toString(),
 			Response.Status.BAD_REQUEST, null,
-			"ObjectValidationRuleScriptException");
-	}
-
-	@Override
-	protected boolean isSanitize() {
-		return false;
+			ObjectValidationRuleScriptException.class.getName());
 	}
 
 	@Context

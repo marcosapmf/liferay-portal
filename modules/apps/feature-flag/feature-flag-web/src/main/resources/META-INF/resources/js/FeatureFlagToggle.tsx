@@ -16,52 +16,65 @@ import {ClayToggle} from '@clayui/form';
 import React, {useState} from 'react';
 
 interface IProps {
-	enabled: boolean;
+	disabled: boolean;
 	featureFlagKey: string;
 	inputName: string;
 	labelOff: string;
 	labelOn: string;
+	toggled: boolean;
 }
 
 const FeatureFlagToggle = ({
-	enabled: initialEnabled,
+	disabled: initialDisabled,
 	featureFlagKey,
 	inputName,
 	labelOff,
 	labelOn,
+	toggled: initialToggled,
 }: IProps) => {
-	const [enabled, setEnabled] = useState(initialEnabled);
+	const [disabled, setDisabled] = useState(initialDisabled);
+	const [toggled, setToggled] = useState(initialToggled);
 
-	async function updateEnabled(newEnabled: boolean) {
-		const response = await Liferay.Util.fetch(
-			'/o/com-liferay-feature-flag-web/set-enabled',
-			{
-				body: Liferay.Util.objectToFormData({
-					enabled: newEnabled,
-					key: featureFlagKey,
-				}),
-				method: 'POST',
+	async function updateToggled(newToggled: boolean) {
+		setDisabled(true);
+
+		try {
+			const response = await Liferay.Util.fetch(
+				'/o/com-liferay-feature-flag-web/set-enabled',
+				{
+					body: Liferay.Util.objectToFormData({
+						enabled: newToggled,
+						key: featureFlagKey,
+					}),
+					method: 'POST',
+				}
+			);
+
+			if (response.ok) {
+				setToggled(newToggled);
 			}
-		);
-
-		if (response.ok) {
-			setEnabled(newEnabled);
+			else {
+				Liferay.Util.openToast({
+					message: Liferay.Language.get(
+						'could-not-update-feature-flag'
+					),
+					type: 'danger',
+				});
+			}
 		}
-		else {
-			Liferay.Util.openToast({
-				message: Liferay.Language.get('could-not-update-feature-flag'),
-				type: 'danger',
-			});
+		finally {
+			setDisabled(false);
 		}
 	}
 
 	return (
 		<>
 			<ClayToggle
+				disabled={disabled}
 				id={inputName}
-				label={enabled ? labelOn : labelOff}
-				onToggle={updateEnabled}
-				toggled={enabled}
+				label={toggled ? labelOn : labelOff}
+				onToggle={updateToggled}
+				toggled={toggled}
 				type="checkbox"
 			/>
 		</>

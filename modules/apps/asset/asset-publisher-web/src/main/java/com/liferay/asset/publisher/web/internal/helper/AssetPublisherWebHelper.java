@@ -31,6 +31,8 @@ import com.liferay.asset.util.AssetRendererFactoryClassProvider;
 import com.liferay.dynamic.data.mapping.util.DDMIndexer;
 import com.liferay.osgi.service.tracker.collections.list.ServiceTrackerList;
 import com.liferay.osgi.service.tracker.collections.list.ServiceTrackerListFactory;
+import com.liferay.petra.concurrent.DCLSingleton;
+import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
@@ -91,7 +93,6 @@ import org.osgi.framework.BundleContext;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
-import org.osgi.service.component.annotations.Modified;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -266,8 +267,12 @@ public class AssetPublisherWebHelper {
 		Locale defaultLocale = LocaleUtil.getSiteDefault();
 
 		if (Validator.isNull(emailAssetEntryAddedBodyMap.get(defaultLocale))) {
+			AssetPublisherPortletInstanceConfiguration
+				assetPublisherPortletInstanceConfiguration =
+					_getAssetPublisherPortletInstanceConfiguration();
+
 			LocalizedValuesMap emailAssetEntryAddedLocalizedBodyMap =
-				_assetPublisherPortletInstanceConfiguration.
+				assetPublisherPortletInstanceConfiguration.
 					emailAssetEntryAddedBody();
 
 			emailAssetEntryAddedBodyMap.put(
@@ -288,7 +293,11 @@ public class AssetPublisherWebHelper {
 			return GetterUtil.getBoolean(emailAssetEntryAddedEnabled);
 		}
 
-		return _assetPublisherPortletInstanceConfiguration.
+		AssetPublisherPortletInstanceConfiguration
+			assetPublisherPortletInstanceConfiguration =
+				_getAssetPublisherPortletInstanceConfiguration();
+
+		return assetPublisherPortletInstanceConfiguration.
 			emailAssetEntryAddedEnabled();
 	}
 
@@ -306,8 +315,12 @@ public class AssetPublisherWebHelper {
 		if (Validator.isNull(
 				emailAssetEntryAddedSubjectMap.get(defaultLocale))) {
 
+			AssetPublisherPortletInstanceConfiguration
+				assetPublisherPortletInstanceConfiguration =
+					_getAssetPublisherPortletInstanceConfiguration();
+
 			LocalizedValuesMap emailAssetEntryAddedLocalizedSubjectMap =
-				_assetPublisherPortletInstanceConfiguration.
+				assetPublisherPortletInstanceConfiguration.
 					emailAssetEntryAddedSubject();
 
 			emailAssetEntryAddedSubjectMap.put(
@@ -387,17 +400,25 @@ public class AssetPublisherWebHelper {
 	public String getEmailFromAddress(
 		PortletPreferences portletPreferences, long companyId) {
 
+		AssetPublisherPortletInstanceConfiguration
+			assetPublisherPortletInstanceConfiguration =
+				_getAssetPublisherPortletInstanceConfiguration();
+
 		return _portal.getEmailFromAddress(
 			portletPreferences, companyId,
-			_assetPublisherPortletInstanceConfiguration.emailFromAddress());
+			assetPublisherPortletInstanceConfiguration.emailFromAddress());
 	}
 
 	public String getEmailFromName(
 		PortletPreferences portletPreferences, long companyId) {
 
+		AssetPublisherPortletInstanceConfiguration
+			assetPublisherPortletInstanceConfiguration =
+				_getAssetPublisherPortletInstanceConfiguration();
+
 		return _portal.getEmailFromName(
 			portletPreferences, companyId,
-			_assetPublisherPortletInstanceConfiguration.emailFromName());
+			assetPublisherPortletInstanceConfiguration.emailFromName());
 	}
 
 	public long getSubscriptionClassPK(
@@ -554,15 +575,7 @@ public class AssetPublisherWebHelper {
 	}
 
 	@Activate
-	@Modified
-	protected void activate(
-			BundleContext bundleContext, Map<String, Object> properties)
-		throws ConfigurationException {
-
-		_assetPublisherPortletInstanceConfiguration =
-			_configurationProvider.getSystemConfiguration(
-				AssetPublisherPortletInstanceConfiguration.class);
-
+	protected void activate(BundleContext bundleContext) {
 		_serviceTrackerList = ServiceTrackerListFactory.open(
 			bundleContext, AssetEntryQueryProcessor.class);
 	}
@@ -601,6 +614,23 @@ public class AssetPublisherWebHelper {
 		}
 
 		return xml;
+	}
+
+	private AssetPublisherPortletInstanceConfiguration
+		_getAssetPublisherPortletInstanceConfiguration() {
+
+		return _assetPublisherPortletInstanceConfigurationDCLSingleton.
+			getSingleton(
+				() -> {
+					try {
+						return _configurationProvider.getSystemConfiguration(
+							AssetPublisherPortletInstanceConfiguration.class);
+					}
+					catch (ConfigurationException configurationException) {
+						return ReflectionUtil.throwException(
+							configurationException);
+					}
+				});
 	}
 
 	private Long[] _getClassTypeIds(
@@ -643,8 +673,9 @@ public class AssetPublisherWebHelper {
 	@Reference
 	private AssetPublisherHelper _assetPublisherHelper;
 
-	private volatile AssetPublisherPortletInstanceConfiguration
-		_assetPublisherPortletInstanceConfiguration;
+	private final DCLSingleton<AssetPublisherPortletInstanceConfiguration>
+		_assetPublisherPortletInstanceConfigurationDCLSingleton =
+			new DCLSingleton<>();
 
 	@Reference
 	private AssetRendererFactoryClassProvider

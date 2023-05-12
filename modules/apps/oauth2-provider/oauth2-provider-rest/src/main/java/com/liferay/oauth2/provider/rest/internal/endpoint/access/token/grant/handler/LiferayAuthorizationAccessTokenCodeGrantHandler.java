@@ -29,6 +29,7 @@ import java.util.Map;
 import javax.ws.rs.core.MultivaluedMap;
 
 import org.apache.cxf.rs.security.oauth2.common.Client;
+import org.apache.cxf.rs.security.oauth2.common.ServerAccessToken;
 import org.apache.cxf.rs.security.oauth2.common.UserSubject;
 import org.apache.cxf.rs.security.oauth2.grants.code.AuthorizationCodeGrantHandler;
 import org.apache.cxf.rs.security.oauth2.grants.code.DigestCodeVerifier;
@@ -50,6 +51,11 @@ import org.osgi.service.component.annotations.Reference;
 public class LiferayAuthorizationAccessTokenCodeGrantHandler
 	extends BaseAccessTokenGrantHandler {
 
+	@Override
+	public List<String> getSupportedGrantTypes() {
+		return _authorizationCodeGrantHandler.getSupportedGrantTypes();
+	}
+
 	@Activate
 	protected void activate(Map<String, Object> properties) {
 		_authorizationCodeGrantHandler = new AuthorizationCodeGrantHandler();
@@ -67,8 +73,10 @@ public class LiferayAuthorizationAccessTokenCodeGrantHandler
 	}
 
 	@Override
-	protected AccessTokenGrantHandler getAccessTokenGrantHandler() {
-		return _authorizationCodeGrantHandler;
+	protected ServerAccessToken doCreateAccessToken(
+		Client client, MultivaluedMap<String, String> params) {
+
+		return _authorizationCodeGrantHandler.createAccessToken(client, params);
 	}
 
 	@Override

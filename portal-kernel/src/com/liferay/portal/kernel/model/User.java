@@ -98,9 +98,9 @@ public interface User extends PersistedModel, UserModel {
 	/**
 	 * Returns a digest for the user, incorporating the password.
 	 *
-	 * @deprecated As of Cavanaugh (7.4.x), with no direct replacement
 	 * @param password a password to incorporate with the digest
 	 * @return a digest for the user, incorporating the password
+	 * @deprecated As of Cavanaugh (7.4.x), with no direct replacement
 	 */
 	@Deprecated
 	public String getDigest(String password);
@@ -334,6 +334,12 @@ public interface User extends PersistedModel, UserModel {
 
 	public boolean isActive();
 
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link #isGuestUser}
+	 */
+	@Deprecated
+	public boolean isDefaultUser();
+
 	public boolean isEmailAddressComplete();
 
 	public boolean isEmailAddressVerificationComplete();
@@ -341,12 +347,16 @@ public interface User extends PersistedModel, UserModel {
 	public boolean isFemale()
 		throws com.liferay.portal.kernel.exception.PortalException;
 
+	public boolean isGuestUser();
+
 	public boolean isMale()
 		throws com.liferay.portal.kernel.exception.PortalException;
 
 	public boolean isPasswordModified();
 
 	public boolean isReminderQueryComplete();
+
+	public boolean isServiceAccountUser();
 
 	public boolean isSetupComplete();
 

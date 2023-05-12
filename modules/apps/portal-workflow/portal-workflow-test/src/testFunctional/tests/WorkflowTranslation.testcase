@@ -14,7 +14,7 @@ definition {
 	tearDown {
 		var testPortalInstance = PropsUtil.get("test.portal.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testPortalInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -27,10 +27,8 @@ definition {
 	}
 
 	@description = "Verify that the user can Approve a Translation"
-	@priority = "5"
+	@priority = 5
 	test CanApproveTranslation {
-		property portal.upstream = "quarantine";
-
 		Workflow.openWorkflowProcessBuilderConfiguration();
 
 		Workflow.configureWorkflow(
@@ -55,7 +53,7 @@ definition {
 			currentTargetLocale = "ar-SA",
 			newTargetLocale = "pt-BR");
 
-		Button.clickSubmitForPublication();
+		Button.clickSubmitForWorkflow();
 
 		WorkflowTranslation.openTranslationProcessesAdmin();
 
@@ -85,7 +83,7 @@ definition {
 	}
 
 	@description = "Verify that a notification is sent when the Translation is rejected"
-	@priority = "3"
+	@priority = 3
 	test NotificationIsSentOnReject {
 		Workflow.openWorkflowProcessBuilderConfiguration();
 
@@ -111,7 +109,7 @@ definition {
 			currentTargetLocale = "ar-SA",
 			newTargetLocale = "pt-BR");
 
-		Button.clickSubmitForPublication();
+		Button.clickSubmitForWorkflow();
 
 		UserBar.gotoDropdownItem(dropdownItem = "My Workflow Tasks");
 
@@ -133,7 +131,7 @@ definition {
 	}
 
 	@description = "Verify that the Translation status changes after approval"
-	@priority = "4"
+	@priority = 4
 	test TranslationStatusChangesAfterApproval {
 		Workflow.openWorkflowProcessBuilderConfiguration();
 
@@ -159,7 +157,7 @@ definition {
 			currentTargetLocale = "ar-SA",
 			newTargetLocale = "pt-BR");
 
-		Button.clickSubmitForPublication();
+		Button.clickSubmitForWorkflow();
 
 		WebContentNavigator.gotoEditCP(webContentTitle = "Web Content Title");
 
@@ -208,7 +206,7 @@ definition {
 	}
 
 	@description = "Verify that the Translation status does not change when the Translation is rejected"
-	@priority = "4"
+	@priority = 4
 	test TranslationStatusDoesNotChangeAfterReject {
 		Workflow.openWorkflowProcessBuilderConfiguration();
 
@@ -234,7 +232,7 @@ definition {
 			currentTargetLocale = "ar-SA",
 			newTargetLocale = "pt-BR");
 
-		Button.clickSubmitForPublication();
+		Button.clickSubmitForWorkflow();
 
 		WebContentNavigator.gotoEditCP(webContentTitle = "Web Content Title");
 
@@ -276,7 +274,7 @@ definition {
 	}
 
 	@description = "Verify that the Translation status still Pending when the Translation is rejected"
-	@priority = "4"
+	@priority = 4
 	test TranslationStatusIsPendingOnReject {
 		Workflow.openWorkflowProcessBuilderConfiguration();
 
@@ -302,7 +300,7 @@ definition {
 			currentTargetLocale = "ar-SA",
 			newTargetLocale = "pt-BR");
 
-		Button.clickSubmitForPublication();
+		Button.clickSubmitForWorkflow();
 
 		UserBar.gotoDropdownItem(dropdownItem = "My Workflow Tasks");
 

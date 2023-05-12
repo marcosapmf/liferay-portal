@@ -1981,7 +1981,8 @@ public class ERCGroupEntryPersistenceImpl
 				if (ercERCGroupEntry != null) {
 					throw new DuplicateERCGroupEntryExternalReferenceCodeException(
 						"Duplicate erc group entry with external reference code " +
-							ercGroupEntry.getExternalReferenceCode());
+							ercGroupEntry.getExternalReferenceCode() +
+								" and group " + ercGroupEntry.getGroupId());
 				}
 			}
 			else {
@@ -1991,7 +1992,8 @@ public class ERCGroupEntryPersistenceImpl
 
 					throw new DuplicateERCGroupEntryExternalReferenceCodeException(
 						"Duplicate erc group entry with external reference code " +
-							ercGroupEntry.getExternalReferenceCode());
+							ercGroupEntry.getExternalReferenceCode() +
+								" and group " + ercGroupEntry.getGroupId());
 				}
 			}
 		}

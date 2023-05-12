@@ -19,12 +19,14 @@ import com.liferay.commerce.product.exception.NoSuchCPDefinitionException;
 import com.liferay.commerce.product.model.CPAttachmentFileEntry;
 import com.liferay.commerce.product.model.CPDefinition;
 import com.liferay.commerce.product.service.CPAttachmentFileEntryService;
+import com.liferay.commerce.product.service.CPDefinitionOptionRelService;
+import com.liferay.commerce.product.service.CPDefinitionOptionValueRelService;
 import com.liferay.commerce.product.service.CPDefinitionService;
+import com.liferay.commerce.product.service.CPOptionService;
 import com.liferay.headless.commerce.admin.catalog.dto.v1_0.Attachment;
 import com.liferay.headless.commerce.admin.catalog.dto.v1_0.AttachmentBase64;
 import com.liferay.headless.commerce.admin.catalog.dto.v1_0.AttachmentUrl;
 import com.liferay.headless.commerce.admin.catalog.dto.v1_0.Product;
-import com.liferay.headless.commerce.admin.catalog.internal.dto.v1_0.converter.AttachmentDTOConverter;
 import com.liferay.headless.commerce.admin.catalog.internal.dto.v1_0.util.CustomFieldsUtil;
 import com.liferay.headless.commerce.admin.catalog.internal.util.v1_0.AttachmentUtil;
 import com.liferay.headless.commerce.admin.catalog.resource.v1_0.AttachmentResource;
@@ -35,6 +37,7 @@ import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.service.ClassNameLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
+import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.fields.NestedField;
 import com.liferay.portal.vulcan.fields.NestedFieldId;
@@ -381,6 +384,8 @@ public class AttachmentResourceImpl
 		CPAttachmentFileEntry cpAttachmentFileEntry =
 			AttachmentUtil.addOrUpdateCPAttachmentFileEntry(
 				cpDefinition.getGroupId(), _cpAttachmentFileEntryService,
+				_cpDefinitionOptionRelService,
+				_cpDefinitionOptionValueRelService, _cpOptionService,
 				_uniqueFileNameProvider, attachment,
 				_classNameLocalService.getClassNameId(
 					cpDefinition.getModelClassName()),
@@ -407,8 +412,9 @@ public class AttachmentResourceImpl
 
 		CPAttachmentFileEntry cpAttachmentFileEntry =
 			AttachmentUtil.addOrUpdateCPAttachmentFileEntry(
-				_cpAttachmentFileEntryService, _uniqueFileNameProvider,
-				attachmentBase64,
+				_cpAttachmentFileEntryService, _cpDefinitionOptionRelService,
+				_cpDefinitionOptionValueRelService, _cpOptionService,
+				_uniqueFileNameProvider, attachmentBase64,
 				_classNameLocalService.getClassNameId(
 					cpDefinition.getModelClassName()),
 				cpDefinition.getCPDefinitionId(), type, serviceContext);
@@ -433,8 +439,9 @@ public class AttachmentResourceImpl
 
 		CPAttachmentFileEntry cpAttachmentFileEntry =
 			AttachmentUtil.addOrUpdateCPAttachmentFileEntry(
-				_cpAttachmentFileEntryService, _uniqueFileNameProvider,
-				attachmentUrl,
+				_cpAttachmentFileEntryService, _cpDefinitionOptionRelService,
+				_cpDefinitionOptionValueRelService, _cpOptionService,
+				_uniqueFileNameProvider, attachmentUrl,
 				_classNameLocalService.getClassNameId(
 					cpDefinition.getModelClassName()),
 				cpDefinition.getCPDefinitionId(), type, serviceContext);
@@ -573,8 +580,11 @@ public class AttachmentResourceImpl
 		return attachments;
 	}
 
-	@Reference
-	private AttachmentDTOConverter _attachmentDTOConverter;
+	@Reference(
+		target = "(component.name=com.liferay.headless.commerce.admin.catalog.internal.dto.v1_0.converter.AttachmentDTOConverter)"
+	)
+	private DTOConverter<CPAttachmentFileEntry, Attachment>
+		_attachmentDTOConverter;
 
 	@Reference
 	private ClassNameLocalService _classNameLocalService;
@@ -583,7 +593,17 @@ public class AttachmentResourceImpl
 	private CPAttachmentFileEntryService _cpAttachmentFileEntryService;
 
 	@Reference
+	private CPDefinitionOptionRelService _cpDefinitionOptionRelService;
+
+	@Reference
+	private CPDefinitionOptionValueRelService
+		_cpDefinitionOptionValueRelService;
+
+	@Reference
 	private CPDefinitionService _cpDefinitionService;
+
+	@Reference
+	private CPOptionService _cpOptionService;
 
 	@Reference
 	private ServiceContextHelper _serviceContextHelper;

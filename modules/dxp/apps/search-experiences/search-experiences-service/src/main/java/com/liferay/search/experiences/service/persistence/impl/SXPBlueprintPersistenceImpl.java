@@ -3475,7 +3475,8 @@ public class SXPBlueprintPersistenceImpl
 				if (ercSXPBlueprint != null) {
 					throw new DuplicateSXPBlueprintExternalReferenceCodeException(
 						"Duplicate sxp blueprint with external reference code " +
-							sxpBlueprint.getExternalReferenceCode());
+							sxpBlueprint.getExternalReferenceCode() +
+								" and company " + sxpBlueprint.getCompanyId());
 				}
 			}
 			else {
@@ -3485,7 +3486,8 @@ public class SXPBlueprintPersistenceImpl
 
 					throw new DuplicateSXPBlueprintExternalReferenceCodeException(
 						"Duplicate sxp blueprint with external reference code " +
-							sxpBlueprint.getExternalReferenceCode());
+							sxpBlueprint.getExternalReferenceCode() +
+								" and company " + sxpBlueprint.getCompanyId());
 				}
 			}
 		}

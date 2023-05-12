@@ -47,7 +47,6 @@ import com.liferay.headless.delivery.dto.v1_0.util.DDMFormValuesUtil;
 import com.liferay.headless.delivery.dto.v1_0.util.DDMValueUtil;
 import com.liferay.headless.delivery.dto.v1_0.util.StructuredContentUtil;
 import com.liferay.headless.delivery.dynamic.data.mapping.DDMFormFieldUtil;
-import com.liferay.headless.delivery.internal.dto.v1_0.converter.StructuredContentDTOConverter;
 import com.liferay.headless.delivery.internal.dto.v1_0.util.DisplayPageRendererUtil;
 import com.liferay.headless.delivery.internal.dto.v1_0.util.RatingUtil;
 import com.liferay.headless.delivery.internal.dto.v1_0.util.RenderedContentValueUtil;
@@ -73,6 +72,7 @@ import com.liferay.layout.page.template.service.LayoutPageTemplateEntryService;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.change.tracking.CTAware;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.search.BooleanClauseOccur;
@@ -106,6 +106,7 @@ import com.liferay.portal.search.query.Queries;
 import com.liferay.portal.search.searcher.SearchRequestBuilder;
 import com.liferay.portal.search.sort.Sorts;
 import com.liferay.portal.vulcan.aggregation.Aggregation;
+import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterRegistry;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.pagination.Page;
@@ -142,6 +143,7 @@ import org.osgi.service.component.annotations.ServiceScope;
 	properties = "OSGI-INF/liferay/rest/v1_0/structured-content.properties",
 	scope = ServiceScope.PROTOTYPE, service = StructuredContentResource.class
 )
+@CTAware
 public class StructuredContentResourceImpl
 	extends BaseStructuredContentResourceImpl {
 
@@ -404,6 +406,13 @@ public class StructuredContentResourceImpl
 					journalFolder.getUserId(), JournalConstants.RESOURCE_NAME,
 					journalFolder.getGroupId())
 			).put(
+				"createBatch",
+				addAction(
+					ActionKeys.ADD_ARTICLE, journalFolder.getFolderId(),
+					"postStructuredContentFolderStructuredContentBatch",
+					journalFolder.getUserId(), JournalConstants.RESOURCE_NAME,
+					journalFolder.getGroupId())
+			).put(
 				"get",
 				addAction(
 					ActionKeys.VIEW, journalFolder.getFolderId(),
@@ -507,17 +516,17 @@ public class StructuredContentResourceImpl
 			_journalArticleService.updateArticle(
 				journalArticle.getGroupId(), journalArticle.getFolderId(),
 				journalArticle.getArticleId(), journalArticle.getVersion(),
-				LocalizedMapUtil.patch(
+				LocalizedMapUtil.patchLocalizedMap(
 					journalArticle.getTitleMap(),
 					contextAcceptLanguage.getPreferredLocale(),
 					structuredContent.getTitle(),
 					structuredContent.getTitle_i18n()),
-				LocalizedMapUtil.patch(
+				LocalizedMapUtil.patchLocalizedMap(
 					journalArticle.getDescriptionMap(),
 					contextAcceptLanguage.getPreferredLocale(),
 					structuredContent.getDescription(),
 					structuredContent.getDescription_i18n()),
-				LocalizedMapUtil.patch(
+				LocalizedMapUtil.patchLocalizedMap(
 					journalArticle.getFriendlyURLMap(),
 					contextAcceptLanguage.getPreferredLocale(),
 					structuredContent.getFriendlyUrlPath(),
@@ -527,7 +536,6 @@ public class StructuredContentResourceImpl
 					_toPatchedFields(
 						structuredContent.getContentFields(), journalArticle),
 					journalArticle.getGroupId()),
-				journalArticle.getDDMStructureKey(),
 				_getDDMTemplateKey(ddmStructure),
 				journalArticle.getLayoutUuid(),
 				localDateTime.getMonthValue() - 1,
@@ -536,7 +544,9 @@ public class StructuredContentResourceImpl
 				0, true, 0, 0, 0, 0, 0, true, true, false, null, null, null,
 				null,
 				_createServiceContext(
+					_getAssetCategoryIds(journalArticle, structuredContent),
 					_getAssetPriority(journalArticle, structuredContent),
+					_getAssetTagNames(journalArticle, structuredContent),
 					journalArticle.getGroupId(), structuredContent)));
 	}
 
@@ -743,24 +753,25 @@ public class StructuredContentResourceImpl
 						_getRootDDMFormFields(ddmStructure)),
 					_jsonDDMFormValuesSerializer, _ddmFormValuesValidator,
 					ddmStructure, _journalConverter),
-				ddmStructure.getStructureKey(),
-				_getDDMTemplateKey(ddmStructure), null,
-				localDateTime.getMonthValue() - 1,
+				ddmStructure.getStructureId(), _getDDMTemplateKey(ddmStructure),
+				null, localDateTime.getMonthValue() - 1,
 				localDateTime.getDayOfMonth(), localDateTime.getYear(),
 				localDateTime.getHour(), localDateTime.getMinute(), 0, 0, 0, 0,
 				0, true, 0, 0, 0, 0, 0, true, true, false, null, null, null,
 				null,
-				_createServiceContext(priority, groupId, structuredContent)));
+				_createServiceContext(
+					structuredContent.getTaxonomyCategoryIds(), priority,
+					structuredContent.getKeywords(), groupId,
+					structuredContent)));
 	}
 
 	private ServiceContext _createServiceContext(
-		double assetPriority, long groupId,
-		StructuredContent structuredContent) {
+		Long[] assetCategoryIds, double assetPriority, String[] assetTagNames,
+		long groupId, StructuredContent structuredContent) {
 
 		ServiceContext serviceContext =
 			ServiceContextRequestUtil.createServiceContext(
-				structuredContent.getTaxonomyCategoryIds(),
-				structuredContent.getKeywords(),
+				assetCategoryIds, assetTagNames,
 				_getExpandoBridgeAttributes(structuredContent), groupId,
 				contextHttpServletRequest,
 				structuredContent.getViewableByAsString());
@@ -789,6 +800,27 @@ public class StructuredContentResourceImpl
 		};
 	}
 
+	private Long[] _getAssetCategoryIds(
+			JournalArticle journalArticle, StructuredContent structuredContent)
+		throws Exception {
+
+		if ((journalArticle == null) ||
+			(structuredContent.getTaxonomyCategoryIds() != null)) {
+
+			return structuredContent.getTaxonomyCategoryIds();
+		}
+
+		AssetRendererFactory<?> assetRendererFactory =
+			AssetRendererFactoryRegistryUtil.getAssetRendererFactoryByClass(
+				JournalArticle.class);
+
+		AssetEntry assetEntry = assetRendererFactory.getAssetEntry(
+			JournalArticle.class.getName(),
+			journalArticle.getResourcePrimKey());
+
+		return ArrayUtil.toLongArray(assetEntry.getCategoryIds());
+	}
+
 	private double _getAssetPriority(
 			JournalArticle journalArticle, StructuredContent structuredContent)
 		throws Exception {
@@ -808,6 +840,27 @@ public class StructuredContentResourceImpl
 			journalArticle.getResourcePrimKey());
 
 		return assetEntry.getPriority();
+	}
+
+	private String[] _getAssetTagNames(
+			JournalArticle journalArticle, StructuredContent structuredContent)
+		throws Exception {
+
+		if ((journalArticle == null) ||
+			(structuredContent.getKeywords() != null)) {
+
+			return structuredContent.getKeywords();
+		}
+
+		AssetRendererFactory<?> assetRendererFactory =
+			AssetRendererFactoryRegistryUtil.getAssetRendererFactoryByClass(
+				JournalArticle.class);
+
+		AssetEntry assetEntry = assetRendererFactory.getAssetEntry(
+			JournalArticle.class.getName(),
+			journalArticle.getResourcePrimKey());
+
+		return ArrayUtil.toStringArray(assetEntry.getTagNames());
 	}
 
 	private String _getDDMTemplateKey(DDMStructure ddmStructure) {
@@ -1198,7 +1251,6 @@ public class StructuredContentResourceImpl
 						titleMap.keySet(), structuredContent.getContentFields(),
 						journalArticle),
 					journalArticle.getGroupId()),
-				journalArticle.getDDMStructureKey(),
 				_getDDMTemplateKey(ddmStructure),
 				journalArticle.getLayoutUuid(),
 				localDateTime.getMonthValue() - 1,
@@ -1207,7 +1259,9 @@ public class StructuredContentResourceImpl
 				0, true, 0, 0, 0, 0, 0, true, true, false, null, null, null,
 				null,
 				_createServiceContext(
+					_getAssetCategoryIds(journalArticle, structuredContent),
 					_getAssetPriority(journalArticle, structuredContent),
+					_getAssetTagNames(journalArticle, structuredContent),
 					journalArticle.getGroupId(), structuredContent)));
 	}
 
@@ -1338,8 +1392,11 @@ public class StructuredContentResourceImpl
 	@Reference
 	private Sorts _sorts;
 
-	@Reference
-	private StructuredContentDTOConverter _structuredContentDTOConverter;
+	@Reference(
+		target = "(component.name=com.liferay.headless.delivery.internal.dto.v1_0.converter.StructuredContentDTOConverter)"
+	)
+	private DTOConverter<JournalArticle, StructuredContent>
+		_structuredContentDTOConverter;
 
 	@Reference
 	private UserLocalService _userLocalService;

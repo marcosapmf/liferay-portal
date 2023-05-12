@@ -19,6 +19,7 @@ import com.jayway.jsonpath.JsonPath;
 
 import com.liferay.data.engine.model.DEDataDefinitionFieldLink;
 import com.liferay.data.engine.service.DEDataDefinitionFieldLinkLocalService;
+import com.liferay.dynamic.data.mapping.form.field.type.constants.DDMFormFieldTypeConstants;
 import com.liferay.dynamic.data.mapping.io.DDMFormDeserializer;
 import com.liferay.dynamic.data.mapping.io.DDMFormLayoutDeserializer;
 import com.liferay.dynamic.data.mapping.io.DDMFormLayoutSerializer;
@@ -238,16 +239,26 @@ public class DDMDataDefinitionConverterImpl
 			long fieldSetDDMStructureId = GetterUtil.getLong(
 				ddmFormField.getProperty("ddmStructureId"));
 
-			if (fieldSetDDMStructureId != 0) {
+			if (fieldSetDDMStructureId == 0) {
+				continue;
+			}
+
+			DEDataDefinitionFieldLink deDataDefinitionFieldLink =
+				_deDataDefinitionFieldLinkLocalService.
+					fetchDEDataDefinitionFieldLinks(
+						classNameId, dataDefinitionId, fieldSetDDMStructureId,
+						ddmFormField.getName());
+
+			if (deDataDefinitionFieldLink == null) {
 				_deDataDefinitionFieldLinkLocalService.
 					addDEDataDefinitionFieldLink(
 						groupId, classNameId, dataDefinitionId,
 						fieldSetDDMStructureId, ddmFormField.getName());
-
-				_addDataDefinitionFieldLinks(
-					classNameId, dataDefinitionId,
-					ddmFormField.getNestedDDMFormFields(), groupId);
 			}
+
+			_addDataDefinitionFieldLinks(
+				classNameId, dataDefinitionId,
+				ddmFormField.getNestedDDMFormFields(), groupId);
 		}
 	}
 
@@ -321,6 +332,26 @@ public class DDMDataDefinitionConverterImpl
 
 		return documentContext.read(
 			"$[\"pages\"][*][\"rows\"][*][\"columns\"][*][\"fieldNames\"][*]");
+	}
+
+	private DDMFormField _getFieldSetDDMFormField(
+		DDMFormField ddmFormField, Locale defaultLocale) {
+
+		DDMFormField fieldSetDDMFormField = _createFieldSetDDMFormField(
+			defaultLocale, ddmFormField.getName() + "FieldSet",
+			ListUtil.fromArray(ddmFormField), ddmFormField.isRepeatable());
+
+		_upgradeNestedFields(
+			ddmFormField.getNestedDDMFormFields(), defaultLocale,
+			fieldSetDDMFormField);
+
+		fieldSetDDMFormField.setProperty(
+			"rows", _getDDMFormFieldsRows(fieldSetDDMFormField));
+
+		ddmFormField.setNestedDDMFormFields(Collections.emptyList());
+		ddmFormField.setRepeatable(false);
+
+		return fieldSetDDMFormField;
 	}
 
 	private boolean _hasNestedFields(DDMForm ddmForm) {
@@ -565,21 +596,9 @@ public class DDMDataDefinitionConverterImpl
 				continue;
 			}
 
-			DDMFormField fieldSetDDMFormField = _createFieldSetDDMFormField(
-				ddmForm.getDefaultLocale(), ddmFormField.getName() + "FieldSet",
-				ListUtil.fromArray(ddmFormField), ddmFormField.isRepeatable());
-
-			_upgradeNestedFields(
-				ddmFormField.getNestedDDMFormFields(),
-				ddmForm.getDefaultLocale(), fieldSetDDMFormField);
-
-			fieldSetDDMFormField.setProperty(
-				"rows", _getDDMFormFieldsRows(fieldSetDDMFormField));
-
-			ddmFormField.setNestedDDMFormFields(Collections.emptyList());
-			ddmFormField.setRepeatable(false);
-
-			newDDMForm.addDDMFormField(fieldSetDDMFormField);
+			newDDMForm.addDDMFormField(
+				_getFieldSetDDMFormField(
+					ddmFormField, ddmForm.getDefaultLocale()));
 		}
 
 		return newDDMForm;
@@ -589,30 +608,41 @@ public class DDMDataDefinitionConverterImpl
 		List<DDMFormField> ddmFormFields, Locale defaultLocale,
 		DDMFormField parentFieldSetDDMFormField) {
 
+		List<DDMFormField> nestedDDMFormFields = new ArrayList<>();
+
 		for (DDMFormField ddmFormField : ddmFormFields) {
 			if (ListUtil.isEmpty(ddmFormField.getNestedDDMFormFields())) {
-				parentFieldSetDDMFormField.addNestedDDMFormField(ddmFormField);
+				nestedDDMFormFields.add(ddmFormField);
 
 				continue;
 			}
 
-			DDMFormField fieldSetDDMFormField = _createFieldSetDDMFormField(
-				defaultLocale, ddmFormField.getName() + "FieldSet",
-				ListUtil.fromArray(ddmFormField), ddmFormField.isRepeatable());
-
-			_upgradeNestedFields(
-				ddmFormField.getNestedDDMFormFields(), defaultLocale,
-				fieldSetDDMFormField);
-
-			fieldSetDDMFormField.setProperty(
-				"rows", _getDDMFormFieldsRows(fieldSetDDMFormField));
-
-			ddmFormField.setNestedDDMFormFields(Collections.emptyList());
-			ddmFormField.setRepeatable(false);
-
-			parentFieldSetDDMFormField.addNestedDDMFormField(
-				fieldSetDDMFormField);
+			nestedDDMFormFields.add(
+				_getFieldSetDDMFormField(ddmFormField, defaultLocale));
 		}
+
+		if (nestedDDMFormFields.size() == 1) {
+			DDMFormField nestedDDMFormField = nestedDDMFormFields.get(0);
+
+			if (Objects.equals(
+					nestedDDMFormField.getType(),
+					DDMFormFieldTypeConstants.FIELDSET)) {
+
+				parentFieldSetDDMFormField.addNestedDDMFormField(
+					nestedDDMFormField);
+
+				return;
+			}
+		}
+
+		DDMFormField fieldSetDDMFormField = _createFieldSetDDMFormField(
+			defaultLocale, parentFieldSetDDMFormField.getName() + "FieldSet",
+			nestedDDMFormFields, false);
+
+		fieldSetDDMFormField.setProperty(
+			"rows", _getDDMFormFieldsRows(fieldSetDDMFormField));
+
+		parentFieldSetDDMFormField.addNestedDDMFormField(fieldSetDDMFormField);
 	}
 
 	private void _upgradeNumberField(DDMFormField ddmFormField) {

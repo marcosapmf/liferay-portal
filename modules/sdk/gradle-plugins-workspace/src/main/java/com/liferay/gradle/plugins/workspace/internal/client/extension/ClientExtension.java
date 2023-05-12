@@ -15,7 +15,9 @@
 package com.liferay.gradle.plugins.workspace.internal.client.extension;
 
 import com.fasterxml.jackson.annotation.JsonAnySetter;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
@@ -25,7 +27,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -38,31 +39,31 @@ public class ClientExtension {
 
 	@JsonAnySetter
 	public void ignored(String name, Object value) {
-		_typeSettings.put(name, value);
+		typeSettings.put(name, value);
 	}
 
-	public Map<String, Object> toJSONMap() throws Exception {
-		Properties clientExtensionProperties = _getClientExtensionProperties();
-
-		String pid = clientExtensionProperties.getProperty(type);
-
-		if (pid == null) {
-			throw new Exception("Unable to find PID for type: " + type);
-		}
-
+	public Map<String, Object> toJSONMap(String pid) {
 		Map<String, Object> jsonMap = new HashMap<>();
 
 		Map<String, Object> configMap = new HashMap<>();
 
-		configMap.put("baseURL", "${portalURL}/o/" + projectName);
+		configMap.put(
+			"baseURL",
+			typeSettings.getOrDefault(
+				"baseURL", "${portalURL}/o/" + projectName));
 		configMap.put("description", description);
-		configMap.put("dxp.lxc.liferay.com.virtualInstanceId", "default");
+		configMap.put(
+			"dxp.lxc.liferay.com.virtualInstanceId", virtualInstanceId);
 		configMap.put("name", name);
+		configMap.put("projectName", projectName);
 		configMap.put("properties", _encode(properties));
 		configMap.put("sourceCodeURL", sourceCodeURL);
 		configMap.put("type", type);
+		configMap.put(
+			"webContextPath",
+			typeSettings.getOrDefault("webContextPath", "/" + projectName));
 
-		Set<Map.Entry<String, Object>> set = _typeSettings.entrySet();
+		Set<Map.Entry<String, Object>> set = typeSettings.entrySet();
 
 		set.forEach(
 			entry -> {
@@ -76,18 +77,19 @@ public class ClientExtension {
 
 			configMap.put(
 				"homePageURL",
-				_typeSettings.getOrDefault(
+				typeSettings.getOrDefault(
 					"homePageURL",
-					"https://$[conf:ext.lxc.liferay.com.mainDomain]"));
+					"$[conf:.serviceScheme]://$[conf:.serviceAddress]"));
 		}
 
-		configMap.put("typeSettings", _encode(_typeSettings));
+		configMap.put("typeSettings", _encode(typeSettings));
 
 		jsonMap.put(pid + "~" + id, configMap);
 
 		return jsonMap;
 	}
 
+	public String classification = "static";
 	public String description = "";
 	public String id;
 	public String name = "";
@@ -95,6 +97,12 @@ public class ClientExtension {
 	public Map<String, Object> properties = Collections.emptyMap();
 	public String sourceCodeURL = "";
 	public String type;
+
+	@JsonIgnore
+	public Map<String, Object> typeSettings = new HashMap<>();
+
+	@JsonProperty("dxp.lxc.liferay.com.virtualInstanceId")
+	public String virtualInstanceId = "default";
 
 	private List<String> _encode(Map<String, Object> map) {
 		Set<Map.Entry<String, Object>> set = map.entrySet();
@@ -116,17 +124,5 @@ public class ClientExtension {
 			Collectors.toList()
 		);
 	}
-
-	private Properties _getClientExtensionProperties() throws Exception {
-		Properties properties = new Properties();
-
-		properties.load(
-			ClientExtension.class.getResourceAsStream(
-				"client-extension.properties"));
-
-		return properties;
-	}
-
-	private final Map<String, Object> _typeSettings = new HashMap<>();
 
 }

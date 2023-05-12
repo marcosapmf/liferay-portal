@@ -81,7 +81,6 @@ import com.liferay.portal.kernel.service.LayoutRevisionLocalService;
 import com.liferay.portal.kernel.service.PortletPreferencesLocalService;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
-import com.liferay.portal.kernel.service.ServiceComponentLocalService;
 import com.liferay.portal.kernel.servlet.DirectServletRegistry;
 import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.servlet.SessionMessages;
@@ -239,9 +238,6 @@ public class EditServerMVCActionCommand
 		}
 		else if (cmd.equals("verifyMembershipPolicies")) {
 			_verifyMembershipPolicies();
-		}
-		else if (cmd.equals("verifyPluginTables")) {
-			_verifyPluginTables();
 		}
 
 		sendRedirect(actionRequest, actionResponse, redirect);
@@ -729,6 +725,8 @@ public class EditServerMVCActionCommand
 		int pop3Port = ParamUtil.getInteger(actionRequest, "pop3Port");
 		boolean pop3Secure = ParamUtil.getBoolean(actionRequest, "pop3Secure");
 		String pop3User = ParamUtil.getString(actionRequest, "pop3User");
+		boolean popServerNotificationsEnabled = ParamUtil.getBoolean(
+			actionRequest, "popServerNotificationsEnabled");
 		String smtpHost = ParamUtil.getString(actionRequest, "smtpHost");
 		String smtpPassword = ParamUtil.getString(
 			actionRequest, "smtpPassword");
@@ -805,6 +803,9 @@ public class EditServerMVCActionCommand
 			PropsKeys.MAIL_SESSION_MAIL_STORE_PROTOCOL, storeProtocol);
 		portletPreferences.setValue(
 			PropsKeys.MAIL_SESSION_MAIL_TRANSPORT_PROTOCOL, transportProtocol);
+		portletPreferences.setValue(
+			PropsKeys.POP_SERVER_NOTIFICATIONS_ENABLED,
+			String.valueOf(popServerNotificationsEnabled));
 
 		portletPreferences.store();
 
@@ -856,10 +857,6 @@ public class EditServerMVCActionCommand
 			_userGroupMembershipPolicyFactory.getUserGroupMembershipPolicy();
 
 		userGroupMembershipPolicy.verifyPolicy();
-	}
-
-	private void _verifyPluginTables() throws Exception {
-		_serviceComponentLocalService.verifyDB();
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(
@@ -929,9 +926,6 @@ public class EditServerMVCActionCommand
 
 	@Reference
 	private ServerScripting _serverScripting;
-
-	@Reference
-	private ServiceComponentLocalService _serviceComponentLocalService;
 
 	@Reference
 	private SingleVMPool _singleVMPool;

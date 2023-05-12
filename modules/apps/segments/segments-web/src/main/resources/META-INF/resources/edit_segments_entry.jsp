@@ -17,7 +17,7 @@
 <%@ include file="/init.jsp" %>
 
 <%
-EditSegmentsEntryDisplayContext editSegmentsEntryDisplayContext = (EditSegmentsEntryDisplayContext)request.getAttribute(SegmentsWebKeys.EDIT_SEGMENTS_ENTRY_DISPLAY_CONTEXT);
+EditSegmentsEntryDisplayContext editSegmentsEntryDisplayContext = (EditSegmentsEntryDisplayContext)request.getAttribute(EditSegmentsEntryDisplayContext.class.getName());
 
 String backURL = editSegmentsEntryDisplayContext.getBackURL();
 
@@ -35,7 +35,7 @@ renderResponse.setTitle(editSegmentsEntryDisplayContext.getTitle(locale));
 
 <portlet:actionURL name="/segments/update_segments_entry" var="updateSegmentsEntryActionURL" />
 
-<aui:form action="<%= updateSegmentsEntryActionURL %>" method="post" name="editSegmentFm" onSubmit='<%= "event.preventDefault(); " + liferayPortletResponse.getNamespace() + "saveSegmentsEntry();" %>'>
+<aui:form action="<%= updateSegmentsEntryActionURL %>" method="post" name="editSegmentFm">
 	<aui:input name="redirect" type="hidden" value="<%= editSegmentsEntryDisplayContext.getRedirect() %>" />
 	<aui:input name="groupId" type="hidden" value="<%= editSegmentsEntryDisplayContext.getGroupId() %>" />
 	<aui:input name="segmentsEntryId" type="hidden" value="<%= editSegmentsEntryDisplayContext.getSegmentsEntryId() %>" />
@@ -54,9 +54,3 @@ renderResponse.setTitle(editSegmentsEntryDisplayContext.getTitle(locale));
 		/>
 	</div>
 </aui:form>
-
-<aui:script>
-	function <portlet:namespace />saveSegmentsEntry() {
-		submitForm(document.<portlet:namespace />editSegmentFm);
-	}
-</aui:script>

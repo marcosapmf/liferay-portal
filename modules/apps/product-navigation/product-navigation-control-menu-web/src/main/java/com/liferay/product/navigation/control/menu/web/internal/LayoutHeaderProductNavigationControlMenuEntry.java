@@ -87,28 +87,37 @@ public class LayoutHeaderProductNavigationControlMenuEntry
 
 		Writer writer = httpServletResponse.getWriter();
 
-		StringBundler sb = new StringBundler(18);
+		StringBundler sb = new StringBundler(22);
 
 		sb.append("<div class=\"");
 		sb.append(_getCssClass(httpServletRequest));
 		sb.append("\"><span class=\"align-items-center ");
 		sb.append("control-menu-level-1-heading d-flex mr-1\" ");
 		sb.append("data-qa-id=\"headerTitle\"><h1 class=\"");
-		sb.append("lfr-portal-tooltip text-truncate h4 mb-0\" title=\"");
+		sb.append("lfr-portal-tooltip h4 mb-0\" title=\"");
 
-		String headerTitle = HtmlUtil.escapeAttribute(
-			_getHeaderTitle(httpServletRequest));
+		String headerTitle = _getHeaderTitle(httpServletRequest);
 
-		sb.append(headerTitle);
+		sb.append(HtmlUtil.escapeAttribute(headerTitle));
 
 		sb.append("\">");
-		sb.append(headerTitle);
+		sb.append(HtmlUtil.escape(headerTitle));
+
+		if (_hasDraftLayout(httpServletRequest) &&
+			_hasEditPermission(httpServletRequest)) {
+
+			sb.append("<span class=\"sr-only\">");
+			sb.append(_language.get(httpServletRequest, "draft"));
+			sb.append("</span>");
+		}
+
 		sb.append("</h1>");
 
 		if (_hasDraftLayout(httpServletRequest) &&
 			_hasEditPermission(httpServletRequest)) {
 
-			sb.append("<sup class=\"flex-shrink-0 small\">*</sup>");
+			sb.append("<sup aria-hidden=\"true\" ");
+			sb.append("class=\"flex-shrink-0 small\">*</sup>");
 		}
 
 		sb.append("</span>");
@@ -212,20 +221,16 @@ public class LayoutHeaderProductNavigationControlMenuEntry
 					infoItemFieldValues.getInfoFieldValue("title");
 
 				if (titleInfoFieldValue != null) {
-					return HtmlUtil.escape(
-						String.valueOf(
-							titleInfoFieldValue.getValue(
-								themeDisplay.getLocale())));
+					return String.valueOf(
+						titleInfoFieldValue.getValue(themeDisplay.getLocale()));
 				}
 
 				InfoFieldValue<Object> nameInfoFieldValue =
 					infoItemFieldValues.getInfoFieldValue("name");
 
 				if (nameInfoFieldValue != null) {
-					return HtmlUtil.escape(
-						String.valueOf(
-							nameInfoFieldValue.getValue(
-								themeDisplay.getLocale())));
+					return String.valueOf(
+						nameInfoFieldValue.getValue(themeDisplay.getLocale()));
 				}
 			}
 
@@ -233,12 +238,11 @@ public class LayoutHeaderProductNavigationControlMenuEntry
 				WebKeys.LAYOUT_ASSET_ENTRY);
 
 			if (assetEntry != null) {
-				return HtmlUtil.escape(
-					assetEntry.getTitle(themeDisplay.getLanguageId()));
+				return assetEntry.getTitle(themeDisplay.getLanguageId());
 			}
 		}
 
-		return HtmlUtil.escape(layout.getName(themeDisplay.getLocale()));
+		return layout.getName(themeDisplay.getLocale());
 	}
 
 	private boolean _hasDraftLayout(HttpServletRequest httpServletRequest) {

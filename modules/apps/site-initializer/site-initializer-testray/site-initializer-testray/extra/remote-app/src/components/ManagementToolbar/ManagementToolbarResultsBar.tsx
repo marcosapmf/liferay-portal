@@ -56,8 +56,9 @@ const ManagementToolbarResultsBar: React.FC<ManagementToolbarResultsBarProps> = 
 				</span>
 			</ClayResultsBar.Item>
 
-			{entries.map((entry, index) => {
-				return (
+			{entries
+				.filter(({value}) => value)
+				.map((entry, index) => (
 					<ClayResultsBar.Item
 						expand={index === entries.length - 1}
 						key={index}
@@ -69,7 +70,23 @@ const ManagementToolbarResultsBar: React.FC<ManagementToolbarResultsBarProps> = 
 							<span className="d-flex flex-row">
 								<b>{entry.label}</b>
 
-								{`: ${entry.value}`}
+								{`: ${
+									Array.isArray(entry.value)
+										? entry.value
+												.map((entryValue) =>
+													String(
+														typeof entryValue ===
+															'object'
+															? entryValue.label
+															: entryValue
+													)
+												)
+												.sort((entryA, entryB) =>
+													entryA.localeCompare(entryB)
+												)
+												.join(', ')
+										: entry.value
+								}`}
 
 								<ClayIcon
 									className="cursor-pointer ml-2"
@@ -79,8 +96,7 @@ const ManagementToolbarResultsBar: React.FC<ManagementToolbarResultsBarProps> = 
 							</span>
 						</ClayLabel>
 					</ClayResultsBar.Item>
-				);
-			})}
+				))}
 
 			<ClayResultsBar.Item>
 				<ClayButton

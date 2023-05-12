@@ -128,8 +128,7 @@ public class LayoutModelListener extends BaseModelListener<Layout> {
 
 		try {
 			_segmentsExperienceLocalService.deleteSegmentsExperiences(
-				layout.getGroupId(), _portal.getClassNameId(Layout.class),
-				layout.getPlid());
+				layout.getGroupId(), layout.getPlid());
 
 			if (!layout.isTypeContent()) {
 				return;
@@ -156,7 +155,7 @@ public class LayoutModelListener extends BaseModelListener<Layout> {
 		SegmentsExperience segmentsExperience =
 			_segmentsExperienceLocalService.fetchSegmentsExperience(
 				layout.getGroupId(), SegmentsExperienceConstants.KEY_DEFAULT,
-				_portal.getClassNameId(Layout.class), layout.getPlid());
+				layout.getPlid());
 
 		if (segmentsExperience != null) {
 			return segmentsExperience;
@@ -206,7 +205,7 @@ public class LayoutModelListener extends BaseModelListener<Layout> {
 				layoutPageTemplateEntryLayout.getGroupId(),
 				layoutPageTemplateEntryLayout.getPlid(), true);
 
-		draftLayout = _layoutCopyHelper.copyLayout(
+		draftLayout = _layoutCopyHelper.copyLayoutContent(
 			layoutPageTemplateEntryLayout, draftLayout);
 
 		draftLayout.setStatus(WorkflowConstants.STATUS_APPROVED);
@@ -220,7 +219,8 @@ public class LayoutModelListener extends BaseModelListener<Layout> {
 
 		_layoutLocalService.updateLayout(draftLayout);
 
-		_layoutCopyHelper.copyLayout(layoutPageTemplateEntryLayout, layout);
+		_layoutCopyHelper.copyLayoutContent(
+			layoutPageTemplateEntryLayout, layout);
 
 		return null;
 	}

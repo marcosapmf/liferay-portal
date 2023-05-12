@@ -20,8 +20,6 @@ import com.liferay.portal.search.tuning.rankings.web.internal.index.Ranking;
 import com.liferay.portal.search.tuning.rankings.web.internal.searcher.helper.RankingSearchRequestHelper;
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
-import java.util.Optional;
-
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -57,8 +55,9 @@ public class RankingGetVisibleResultsBuilderTest
 		setUpComplexQueryPartBuilderFactory(setUpComplexQueryPartBuilder());
 		setUpDLAppLocalService();
 		setUpFastDateFormatFactory();
-		setUpQuery();
+		setUpPortalUtil();
 		setUpPropsUtil();
+		setUpQuery();
 
 		Ranking ranking = Mockito.mock(Ranking.class);
 
@@ -68,9 +67,8 @@ public class RankingGetVisibleResultsBuilderTest
 			ranking
 		).getQueryString();
 
-		setUpRankingIndexReader(Optional.of(ranking));
+		setUpRankingIndexReader(ranking);
 
-		setUpRankingResultUtil();
 		setUpResourceRequest();
 		setUpSearchRequestBuilderFactory(setUpSearchRequestBuilder());
 		setUpSearcher(setUpSearchResponse(setUpDocumentWithGetString()));
@@ -83,8 +81,8 @@ public class RankingGetVisibleResultsBuilderTest
 	}
 
 	@Test
-	public void testBuildWithOptionalRankingNotPresent() {
-		setUpRankingIndexReader(Optional.empty());
+	public void testBuildWithRankingNotPresent() {
+		setUpRankingIndexReader(null);
 
 		Assert.assertEquals(
 			JSONUtil.put(

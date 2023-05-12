@@ -29,6 +29,7 @@ import com.liferay.headless.commerce.delivery.catalog.client.pagination.Paginati
 import com.liferay.headless.commerce.delivery.catalog.client.resource.v1_0.ProductResource;
 import com.liferay.headless.commerce.delivery.catalog.client.serdes.v1_0.ProductSerDes;
 import com.liferay.petra.function.UnsafeTriConsumer;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
@@ -65,8 +66,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.annotation.Generated;
 
@@ -185,6 +184,7 @@ public abstract class BaseProductResourceTestCase {
 		Product product = randomProduct();
 
 		product.setDescription(regex);
+		product.setExternalReferenceCode(regex);
 		product.setMetaDescription(regex);
 		product.setMetaKeyword(regex);
 		product.setMetaTitle(regex);
@@ -201,6 +201,7 @@ public abstract class BaseProductResourceTestCase {
 		product = ProductSerDes.toDTO(json);
 
 		Assert.assertEquals(regex, product.getDescription());
+		Assert.assertEquals(regex, product.getExternalReferenceCode());
 		Assert.assertEquals(regex, product.getMetaDescription());
 		Assert.assertEquals(regex, product.getMetaKeyword());
 		Assert.assertEquals(regex, product.getMetaTitle());
@@ -235,7 +236,10 @@ public abstract class BaseProductResourceTestCase {
 			assertEquals(
 				Arrays.asList(irrelevantProduct),
 				(List<Product>)page.getItems());
-			assertValid(page);
+			assertValid(
+				page,
+				testGetChannelProductsPage_getExpectedActions(
+					irrelevantChannelId));
 		}
 
 		Product product1 = testGetChannelProductsPage_addProduct(
@@ -251,7 +255,17 @@ public abstract class BaseProductResourceTestCase {
 
 		assertEqualsIgnoringOrder(
 			Arrays.asList(product1, product2), (List<Product>)page.getItems());
-		assertValid(page);
+		assertValid(
+			page, testGetChannelProductsPage_getExpectedActions(channelId));
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetChannelProductsPage_getExpectedActions(Long channelId)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
 	}
 
 	@Test
@@ -567,6 +581,7 @@ public abstract class BaseProductResourceTestCase {
 										put(
 											"channelId",
 											testGraphQLGetChannelProduct_getChannelId());
+
 										put("productId", product.getId());
 									}
 								},
@@ -729,8 +744,26 @@ public abstract class BaseProductResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals(
+					"externalReferenceCode", additionalAssertFieldName)) {
+
+				if (product.getExternalReferenceCode() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("images", additionalAssertFieldName)) {
 				if (product.getImages() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("linkedProducts", additionalAssertFieldName)) {
+				if (product.getLinkedProducts() == null) {
 					valid = false;
 				}
 
@@ -896,6 +929,12 @@ public abstract class BaseProductResourceTestCase {
 	}
 
 	protected void assertValid(Page<Product> page) {
+		assertValid(page, Collections.emptyMap());
+	}
+
+	protected void assertValid(
+		Page<Product> page, Map<String, Map<String, String>> expectedActions) {
+
 		boolean valid = false;
 
 		java.util.Collection<Product> products = page.getItems();
@@ -910,6 +949,20 @@ public abstract class BaseProductResourceTestCase {
 		}
 
 		Assert.assertTrue(valid);
+
+		Map<String, Map<String, String>> actions = page.getActions();
+
+		for (String key : expectedActions.keySet()) {
+			Map action = actions.get(key);
+
+			Assert.assertNotNull(key + " does not contain an action", action);
+
+			Map expectedAction = expectedActions.get(key);
+
+			Assert.assertEquals(
+				expectedAction.get("method"), action.get("method"));
+			Assert.assertEquals(expectedAction.get("href"), action.get("href"));
+		}
 	}
 
 	protected String[] getAdditionalAssertFieldNames() {
@@ -1029,6 +1082,19 @@ public abstract class BaseProductResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals(
+					"externalReferenceCode", additionalAssertFieldName)) {
+
+				if (!Objects.deepEquals(
+						product1.getExternalReferenceCode(),
+						product2.getExternalReferenceCode())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("id", additionalAssertFieldName)) {
 				if (!Objects.deepEquals(product1.getId(), product2.getId())) {
 					return false;
@@ -1040,6 +1106,17 @@ public abstract class BaseProductResourceTestCase {
 			if (Objects.equals("images", additionalAssertFieldName)) {
 				if (!Objects.deepEquals(
 						product1.getImages(), product2.getImages())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("linkedProducts", additionalAssertFieldName)) {
+				if (!Objects.deepEquals(
+						product1.getLinkedProducts(),
+						product2.getLinkedProducts())) {
 
 					return false;
 				}
@@ -1276,14 +1353,16 @@ public abstract class BaseProductResourceTestCase {
 	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
 		throws Exception {
 
-		Stream<java.lang.reflect.Field> stream = Stream.of(
-			ReflectionUtil.getDeclaredFields(clazz));
+		return TransformUtil.transform(
+			ReflectionUtil.getDeclaredFields(clazz),
+			field -> {
+				if (field.isSynthetic()) {
+					return null;
+				}
 
-		return stream.filter(
-			field -> !field.isSynthetic()
-		).toArray(
-			java.lang.reflect.Field[]::new
-		);
+				return field;
+			},
+			java.lang.reflect.Field.class);
 	}
 
 	protected java.util.Collection<EntityField> getEntityFields()
@@ -1300,6 +1379,10 @@ public abstract class BaseProductResourceTestCase {
 		EntityModel entityModel = entityModelResource.getEntityModel(
 			new MultivaluedHashMap());
 
+		if (entityModel == null) {
+			return Collections.emptyList();
+		}
+
 		Map<String, EntityField> entityFieldsMap =
 			entityModel.getEntityFieldsMap();
 
@@ -1309,18 +1392,18 @@ public abstract class BaseProductResourceTestCase {
 	protected List<EntityField> getEntityFields(EntityField.Type type)
 		throws Exception {
 
-		java.util.Collection<EntityField> entityFields = getEntityFields();
+		return TransformUtil.transform(
+			getEntityFields(),
+			entityField -> {
+				if (!Objects.equals(entityField.getType(), type) ||
+					ArrayUtil.contains(
+						getIgnoredEntityFieldNames(), entityField.getName())) {
 
-		Stream<EntityField> stream = entityFields.stream();
+					return null;
+				}
 
-		return stream.filter(
-			entityField ->
-				Objects.equals(entityField.getType(), type) &&
-				!ArrayUtil.contains(
-					getIgnoredEntityFieldNames(), entityField.getName())
-		).collect(
-			Collectors.toList()
-		);
+				return entityField;
+			});
 	}
 
 	protected String getFilterString(
@@ -1390,12 +1473,25 @@ public abstract class BaseProductResourceTestCase {
 				"Invalid entity field " + entityFieldName);
 		}
 
+		if (entityFieldName.equals("externalReferenceCode")) {
+			sb.append("'");
+			sb.append(String.valueOf(product.getExternalReferenceCode()));
+			sb.append("'");
+
+			return sb.toString();
+		}
+
 		if (entityFieldName.equals("id")) {
 			throw new IllegalArgumentException(
 				"Invalid entity field " + entityFieldName);
 		}
 
 		if (entityFieldName.equals("images")) {
+			throw new IllegalArgumentException(
+				"Invalid entity field " + entityFieldName);
+		}
+
+		if (entityFieldName.equals("linkedProducts")) {
 			throw new IllegalArgumentException(
 				"Invalid entity field " + entityFieldName);
 		}
@@ -1587,6 +1683,8 @@ public abstract class BaseProductResourceTestCase {
 			{
 				createDate = RandomTestUtil.nextDate();
 				description = StringUtil.toLowerCase(
+					RandomTestUtil.randomString());
+				externalReferenceCode = StringUtil.toLowerCase(
 					RandomTestUtil.randomString());
 				id = RandomTestUtil.randomLong();
 				metaDescription = StringUtil.toLowerCase(

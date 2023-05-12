@@ -27,6 +27,11 @@ import MDFRequestList from './routes/MDFRequestList';
 import PartnerOpportunitiesList from './routes/PartnerOpportunitiesList';
 import getOpportunityDates from './routes/PartnerOpportunitiesList/utils/getOpportunityDates';
 import getRenewalsDates from './routes/PartnerOpportunitiesList/utils/getRenewalsDates';
+import DealsChart from './routes/dashboard/DealsChart';
+import LevelChart from './routes/dashboard/LevelChart';
+import MDFRequestChart from './routes/dashboard/MDFRequestChart';
+import RenewalsChart from './routes/dashboard/RenewalsChart';
+import RevenueChart from './routes/dashboard/RevenueChart';
 
 interface IProps {
 	liferayWebDAV: string;
@@ -71,6 +76,7 @@ const appRoutes: AppRouteComponent = {
 			}
 			getFilteredItems={(items) => items}
 			name="Partner Opportunities"
+			newButtonDeal={false}
 			sort="dateCreated:desc"
 		/>
 	),
@@ -87,9 +93,15 @@ const appRoutes: AppRouteComponent = {
 				items.filter((item) => item.STAGE !== 'Closed Lost')
 			}
 			name="Renewal Opportunities"
+			newButtonDeal={false}
 			sort="closeDate:asc"
 		/>
 	),
+	[AppRouteType.DASHBOARD_DEALS_CHART]: <DealsChart />,
+	[AppRouteType.DASHBOARD_LEVEL_CHART]: <LevelChart />,
+	[AppRouteType.DASHBOARD_MDF_REQUEST_CHART]: <MDFRequestChart />,
+	[AppRouteType.DASHBOARD_RENEWALS_CHART]: <RenewalsChart />,
+	[AppRouteType.DASHBOARD_REVENUE_CHART]: <RevenueChart />,
 };
 
 const PartnerPortalApp = ({liferayWebDAV, route}: IProps) => {

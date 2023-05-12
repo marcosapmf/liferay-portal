@@ -17,9 +17,11 @@ package com.liferay.notification.type;
 import com.liferay.notification.constants.NotificationQueueEntryConstants;
 import com.liferay.notification.context.NotificationContext;
 import com.liferay.notification.exception.NotificationTemplateAttachmentObjectFieldIdException;
+import com.liferay.notification.exception.NotificationTemplateDescriptionException;
 import com.liferay.notification.exception.NotificationTemplateEditorTypeException;
 import com.liferay.notification.exception.NotificationTemplateNameException;
 import com.liferay.notification.exception.NotificationTemplateObjectDefinitionIdException;
+import com.liferay.notification.exception.NotificationTemplateSubjectException;
 import com.liferay.notification.model.NotificationQueueEntry;
 import com.liferay.notification.model.NotificationRecipient;
 import com.liferay.notification.model.NotificationRecipientSetting;
@@ -29,7 +31,6 @@ import com.liferay.notification.service.NotificationRecipientLocalService;
 import com.liferay.notification.service.NotificationRecipientSettingLocalService;
 import com.liferay.notification.term.evaluator.NotificationTermEvaluator;
 import com.liferay.notification.term.evaluator.NotificationTermEvaluatorTracker;
-import com.liferay.notification.util.LocalizedMapUtil;
 import com.liferay.object.constants.ObjectFieldConstants;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectField;
@@ -43,6 +44,7 @@ import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.vulcan.util.LocalizedMapUtil;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -138,6 +140,23 @@ public abstract class BaseNotificationType implements NotificationType {
 		NotificationTemplate notificationTemplate =
 			notificationContext.getNotificationTemplate();
 
+		if (notificationTemplate.getObjectDefinitionId() > 0) {
+			ObjectDefinition objectDefinition =
+				ObjectDefinitionLocalServiceUtil.fetchObjectDefinition(
+					notificationTemplate.getObjectDefinitionId());
+
+			if (objectDefinition == null) {
+				throw new NotificationTemplateObjectDefinitionIdException();
+			}
+		}
+
+		String description = notificationTemplate.getDescription();
+
+		if (description.length() > 255) {
+			throw new NotificationTemplateDescriptionException(
+				"The description cannot contain more than 255 characters");
+		}
+
 		if (Validator.isNull(notificationTemplate.getEditorType())) {
 			throw new NotificationTemplateEditorTypeException(
 				"Editor type is null");
@@ -147,14 +166,8 @@ public abstract class BaseNotificationType implements NotificationType {
 			throw new NotificationTemplateNameException("Name is null");
 		}
 
-		if (notificationTemplate.getObjectDefinitionId() > 0) {
-			ObjectDefinition objectDefinition =
-				ObjectDefinitionLocalServiceUtil.fetchObjectDefinition(
-					notificationTemplate.getObjectDefinitionId());
-
-			if (objectDefinition == null) {
-				throw new NotificationTemplateObjectDefinitionIdException();
-			}
+		if (Validator.isNull(notificationTemplate.getSubject())) {
+			throw new NotificationTemplateSubjectException("Subject is null");
 		}
 
 		for (long attachmentObjectFieldId :
@@ -299,7 +312,7 @@ public abstract class BaseNotificationType implements NotificationType {
 
 		List<String> termNames = new ArrayList<>();
 
-		Matcher matcher = _pattern.matcher(content);
+		Matcher matcher = _termNamePattern.matcher(content);
 
 		while (matcher.find()) {
 			termNames.add(matcher.group());
@@ -392,7 +405,7 @@ public abstract class BaseNotificationType implements NotificationType {
 	@Reference
 	protected UserLocalService userLocalService;
 
-	private static final Pattern _pattern = Pattern.compile(
+	private static final Pattern _termNamePattern = Pattern.compile(
 		"\\[%[^\\[%]+%\\]", Pattern.CASE_INSENSITIVE);
 
 }

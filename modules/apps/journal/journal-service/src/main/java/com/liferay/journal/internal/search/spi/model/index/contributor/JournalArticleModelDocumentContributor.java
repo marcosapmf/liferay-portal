@@ -73,13 +73,14 @@ public class JournalArticleModelDocumentContributor
 		DDMFormValues ddmFormValues = null;
 
 		DDMStructure ddmStructure = _ddmStructureLocalService.fetchStructure(
-			_portal.getSiteGroupId(journalArticle.getGroupId()),
-			_portal.getClassNameId(JournalArticle.class),
-			journalArticle.getDDMStructureKey(), true);
+			journalArticle.getDDMStructureId());
 
 		if (ddmStructure != null) {
 			document.addKeyword(
 				Field.CLASS_TYPE_ID, ddmStructure.getStructureId());
+
+			document.addKeyword(
+				"ddmStructureKey", ddmStructure.getStructureKey());
 
 			ddmFormValues = journalArticle.getDDMFormValues();
 
@@ -142,8 +143,6 @@ public class JournalArticleModelDocumentContributor
 			StringUtil.split(journalArticle.getTreePath(), CharPool.SLASH));
 		document.addKeyword(Field.VERSION, journalArticle.getVersion());
 		document.addKeyword(
-			"ddmStructureKey", journalArticle.getDDMStructureKey());
-		document.addKeyword(
 			"ddmTemplateKey", journalArticle.getDDMTemplateKey());
 
 		if (ddmFormValues != null) {
@@ -165,6 +164,8 @@ public class JournalArticleModelDocumentContributor
 
 		document.addKeyword(
 			"latest", JournalUtil.isLatestArticle(journalArticle));
+
+		document.addDate("reviewDate", journalArticle.getReviewDate());
 
 		// Scheduled listable articles should be visible in asset browser
 
@@ -198,6 +199,8 @@ public class JournalArticleModelDocumentContributor
 
 		document.addNumber(
 			"versionCount", GetterUtil.getDouble(journalArticle.getVersion()));
+
+		document.addKeyword(Field.UUID, journalArticle.getUuid());
 
 		if (_log.isDebugEnabled()) {
 			_log.debug("Document " + journalArticle + " indexed successfully");

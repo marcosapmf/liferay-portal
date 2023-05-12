@@ -35,6 +35,7 @@ import com.liferay.asset.util.AssetHelper;
 import com.liferay.dynamic.data.mapping.model.DDMFormField;
 import com.liferay.dynamic.data.mapping.model.DDMFormFieldOptions;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
+import com.liferay.dynamic.data.mapping.model.LocalizedValue;
 import com.liferay.dynamic.data.mapping.storage.Field;
 import com.liferay.dynamic.data.mapping.storage.Fields;
 import com.liferay.dynamic.data.mapping.util.DDMUtil;
@@ -125,7 +126,7 @@ import org.osgi.service.component.annotations.Reference;
 		"javax.portlet.supported-public-render-parameter=tags",
 		"javax.portlet.version=3.0"
 	},
-	service = {AssetPublisherPortlet.class, Portlet.class}
+	service = Portlet.class
 )
 public class AssetPublisherPortlet extends MVCPortlet {
 
@@ -511,11 +512,11 @@ public class AssetPublisherPortlet extends MVCPortlet {
 		DDMFormFieldOptions ddmFormFieldOptions =
 			ddmFormField.getDDMFormFieldOptions();
 
-		String optionReference = ddmFormFieldOptions.getOptionReference(
+		LocalizedValue localizedValue = ddmFormFieldOptions.getOptionLabels(
 			String.valueOf(fieldValue));
 
-		if (optionReference != null) {
-			return optionReference;
+		if (localizedValue != null) {
+			return localizedValue.getString(themeDisplay.getLocale());
 		}
 
 		return fieldValue;

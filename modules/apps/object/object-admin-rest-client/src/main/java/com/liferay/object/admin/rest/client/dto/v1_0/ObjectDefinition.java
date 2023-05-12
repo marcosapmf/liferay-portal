@@ -232,6 +232,27 @@ public class ObjectDefinition implements Cloneable, Serializable {
 
 	protected Boolean enableComments;
 
+	public Boolean getEnableLocalization() {
+		return enableLocalization;
+	}
+
+	public void setEnableLocalization(Boolean enableLocalization) {
+		this.enableLocalization = enableLocalization;
+	}
+
+	public void setEnableLocalization(
+		UnsafeSupplier<Boolean, Exception> enableLocalizationUnsafeSupplier) {
+
+		try {
+			enableLocalization = enableLocalizationUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Boolean enableLocalization;
+
 	public Boolean getEnableObjectEntryHistory() {
 		return enableObjectEntryHistory;
 	}
@@ -315,6 +336,27 @@ public class ObjectDefinition implements Cloneable, Serializable {
 	}
 
 	protected Map<String, String> label;
+
+	public Boolean getModifiable() {
+		return modifiable;
+	}
+
+	public void setModifiable(Boolean modifiable) {
+		this.modifiable = modifiable;
+	}
+
+	public void setModifiable(
+		UnsafeSupplier<Boolean, Exception> modifiableUnsafeSupplier) {
+
+		try {
+			modifiable = modifiableUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Boolean modifiable;
 
 	public String getName() {
 		return name;
@@ -421,6 +463,30 @@ public class ObjectDefinition implements Cloneable, Serializable {
 	}
 
 	protected ObjectRelationship[] objectRelationships;
+
+	public ObjectValidationRule[] getObjectValidationRules() {
+		return objectValidationRules;
+	}
+
+	public void setObjectValidationRules(
+		ObjectValidationRule[] objectValidationRules) {
+
+		this.objectValidationRules = objectValidationRules;
+	}
+
+	public void setObjectValidationRules(
+		UnsafeSupplier<ObjectValidationRule[], Exception>
+			objectValidationRulesUnsafeSupplier) {
+
+		try {
+			objectValidationRules = objectValidationRulesUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected ObjectValidationRule[] objectValidationRules;
 
 	public ObjectView[] getObjectViews() {
 		return objectViews;

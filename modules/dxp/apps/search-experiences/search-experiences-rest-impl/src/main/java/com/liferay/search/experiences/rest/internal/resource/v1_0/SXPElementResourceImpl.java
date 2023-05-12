@@ -27,6 +27,7 @@ import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.odata.entity.EntityModel;
+import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterRegistry;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.pagination.Page;
@@ -37,7 +38,6 @@ import com.liferay.search.experiences.constants.SXPConstants;
 import com.liferay.search.experiences.rest.dto.v1_0.SXPElement;
 import com.liferay.search.experiences.rest.dto.v1_0.util.ElementDefinitionUtil;
 import com.liferay.search.experiences.rest.dto.v1_0.util.SXPElementUtil;
-import com.liferay.search.experiences.rest.internal.dto.v1_0.converter.SXPElementDTOConverter;
 import com.liferay.search.experiences.rest.internal.odata.entity.v1_0.SXPElementEntityModel;
 import com.liferay.search.experiences.rest.internal.resource.v1_0.util.SearchUtil;
 import com.liferay.search.experiences.rest.internal.resource.v1_0.util.TitleMapUtil;
@@ -104,6 +104,8 @@ public class SXPElementResourceImpl extends BaseSXPElementResourceImpl {
 				"elementDefinition",
 				_jsonFactory.createJSONObject(
 					sxpElement.getElementDefinitionJSON())
+			).put(
+				"externalReferenceCode", sxpElement.getExternalReferenceCode()
 			).put(
 				"schemaVersion", sxpElement.getSchemaVersion()
 			).put(
@@ -236,6 +238,7 @@ public class SXPElementResourceImpl extends BaseSXPElementResourceImpl {
 				sxpElement.getId(), contextAcceptLanguage.getPreferredLocale(),
 				contextUriInfo, contextUser),
 			_sxpElementService.addSXPElement(
+				sxpElement.getExternalReferenceCode(),
 				LocalizedMapUtil.getLocalizedMap(
 					contextAcceptLanguage.getPreferredLocale(),
 					sxpElement.getDescription(),
@@ -262,7 +265,7 @@ public class SXPElementResourceImpl extends BaseSXPElementResourceImpl {
 				contextAcceptLanguage.getPreferredLocale(), contextUriInfo,
 				contextUser),
 			_sxpElementService.addSXPElement(
-				sxpElement.getDescriptionMap(),
+				null, sxpElement.getDescriptionMap(),
 				sxpElement.getElementDefinitionJSON(), false,
 				sxpElement.getSchemaVersion(),
 				TitleMapUtil.copy(sxpElement.getTitleMap()),
@@ -298,8 +301,12 @@ public class SXPElementResourceImpl extends BaseSXPElementResourceImpl {
 	@Reference
 	private JSONFactory _jsonFactory;
 
-	@Reference
-	private SXPElementDTOConverter _sxpElementDTOConverter;
+	@Reference(
+		target = "(component.name=com.liferay.search.experiences.rest.internal.dto.v1_0.converter.SXPElementDTOConverter)"
+	)
+	private DTOConverter
+		<com.liferay.search.experiences.model.SXPElement, SXPElement>
+			_sxpElementDTOConverter;
 
 	@Reference
 	private SXPElementService _sxpElementService;

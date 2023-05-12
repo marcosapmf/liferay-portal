@@ -57,7 +57,7 @@
 </tr>
 <tr>
 	<td>EDIT_ANSWER</td>
-	<td>//button[contains(@class,'btn btn-secondary') and contains(.,'Edit')]</td>
+	<td>//a[@class='text-reset' and contains(text(),'Edit')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -212,7 +212,7 @@
 </tr>
 <tr>
 	<td>QUESTIONS_LIST_VOTED_COUNT</td>
-	<td>//*[*[name()='svg'][contains(@class,'lexicon-icon-caret-${key_text}')]]//span[contains(.,'${key_count}')]</td>
+	<td>//*[*[name()='svg'][contains(@class,'lexicon-icon-caret-${key_text}')]][contains(.,'${key_count}')]</td>
 	<td></td>
 </tr>
 <tr>

@@ -19,6 +19,7 @@ import com.liferay.headless.admin.user.resource.v1_0.PostalAddressResource;
 import com.liferay.petra.function.UnsafeBiConsumer;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.function.UnsafeFunction;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.GroupedModel;
 import com.liferay.portal.kernel.search.Sort;
@@ -40,15 +41,16 @@ import com.liferay.portal.odata.sort.SortParser;
 import com.liferay.portal.odata.sort.SortParserProvider;
 import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
 import com.liferay.portal.vulcan.batch.engine.VulcanBatchEngineTaskItemDelegate;
+import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineExportTaskResource;
 import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineImportTaskResource;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 import com.liferay.portal.vulcan.util.ActionUtil;
-import com.liferay.portal.vulcan.util.TransformUtil;
 
 import java.io.Serializable;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
@@ -60,8 +62,10 @@ import javax.annotation.Generated;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import javax.ws.rs.NotSupportedException;
 import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
 /**
@@ -112,6 +116,77 @@ public abstract class BasePostalAddressResourceImpl
 	/**
 	 * Invoke this method with the command line:
 	 *
+	 * curl -X 'POST' 'http://localhost:8080/o/headless-admin-user/v1.0/accounts/{accountId}/postal-addresses/export-batch'  -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "accountId"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "callbackURL"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "contentType"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "fieldNames"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {
+			@io.swagger.v3.oas.annotations.tags.Tag(name = "PostalAddress")
+		}
+	)
+	@javax.ws.rs.Consumes("application/json")
+	@javax.ws.rs.Path("/accounts/{accountId}/postal-addresses/export-batch")
+	@javax.ws.rs.POST
+	@javax.ws.rs.Produces("application/json")
+	@Override
+	public Response postAccountPostalAddressesPageExportBatch(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull
+			@javax.ws.rs.PathParam("accountId")
+			Long accountId,
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.ws.rs.QueryParam("callbackURL")
+			String callbackURL,
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.ws.rs.DefaultValue("JSON")
+			@javax.ws.rs.QueryParam("contentType")
+			String contentType,
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.ws.rs.QueryParam("fieldNames")
+			String fieldNames)
+		throws Exception {
+
+		vulcanBatchEngineExportTaskResource.setContextAcceptLanguage(
+			contextAcceptLanguage);
+		vulcanBatchEngineExportTaskResource.setContextCompany(contextCompany);
+		vulcanBatchEngineExportTaskResource.setContextHttpServletRequest(
+			contextHttpServletRequest);
+		vulcanBatchEngineExportTaskResource.setContextUriInfo(contextUriInfo);
+		vulcanBatchEngineExportTaskResource.setContextUser(contextUser);
+		vulcanBatchEngineExportTaskResource.setGroupLocalService(
+			groupLocalService);
+
+		Response.ResponseBuilder responseBuilder = Response.accepted();
+
+		return responseBuilder.entity(
+			vulcanBatchEngineExportTaskResource.postExportTask(
+				PostalAddress.class.getName(), callbackURL, contentType,
+				fieldNames)
+		).build();
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
 	 * curl -X 'GET' 'http://localhost:8080/o/headless-admin-user/v1.0/organizations/{organizationId}/postal-addresses'  -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Operation(
@@ -142,6 +217,79 @@ public abstract class BasePostalAddressResourceImpl
 		throws Exception {
 
 		return Page.of(Collections.emptyList());
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'POST' 'http://localhost:8080/o/headless-admin-user/v1.0/organizations/{organizationId}/postal-addresses/export-batch'  -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "organizationId"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "callbackURL"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "contentType"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "fieldNames"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {
+			@io.swagger.v3.oas.annotations.tags.Tag(name = "PostalAddress")
+		}
+	)
+	@javax.ws.rs.Consumes("application/json")
+	@javax.ws.rs.Path(
+		"/organizations/{organizationId}/postal-addresses/export-batch"
+	)
+	@javax.ws.rs.POST
+	@javax.ws.rs.Produces("application/json")
+	@Override
+	public Response postOrganizationPostalAddressesPageExportBatch(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull
+			@javax.ws.rs.PathParam("organizationId")
+			String organizationId,
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.ws.rs.QueryParam("callbackURL")
+			String callbackURL,
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.ws.rs.DefaultValue("JSON")
+			@javax.ws.rs.QueryParam("contentType")
+			String contentType,
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.ws.rs.QueryParam("fieldNames")
+			String fieldNames)
+		throws Exception {
+
+		vulcanBatchEngineExportTaskResource.setContextAcceptLanguage(
+			contextAcceptLanguage);
+		vulcanBatchEngineExportTaskResource.setContextCompany(contextCompany);
+		vulcanBatchEngineExportTaskResource.setContextHttpServletRequest(
+			contextHttpServletRequest);
+		vulcanBatchEngineExportTaskResource.setContextUriInfo(contextUriInfo);
+		vulcanBatchEngineExportTaskResource.setContextUser(contextUser);
+		vulcanBatchEngineExportTaskResource.setGroupLocalService(
+			groupLocalService);
+
+		Response.ResponseBuilder responseBuilder = Response.accepted();
+
+		return responseBuilder.entity(
+			vulcanBatchEngineExportTaskResource.postExportTask(
+				PostalAddress.class.getName(), callbackURL, contentType,
+				fieldNames)
+		).build();
 	}
 
 	/**
@@ -214,10 +362,83 @@ public abstract class BasePostalAddressResourceImpl
 		return Page.of(Collections.emptyList());
 	}
 
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'POST' 'http://localhost:8080/o/headless-admin-user/v1.0/user-accounts/{userAccountId}/postal-addresses/export-batch'  -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "userAccountId"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "callbackURL"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "contentType"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "fieldNames"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {
+			@io.swagger.v3.oas.annotations.tags.Tag(name = "PostalAddress")
+		}
+	)
+	@javax.ws.rs.Consumes("application/json")
+	@javax.ws.rs.Path(
+		"/user-accounts/{userAccountId}/postal-addresses/export-batch"
+	)
+	@javax.ws.rs.POST
+	@javax.ws.rs.Produces("application/json")
+	@Override
+	public Response postUserAccountPostalAddressesPageExportBatch(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull
+			@javax.ws.rs.PathParam("userAccountId")
+			Long userAccountId,
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.ws.rs.QueryParam("callbackURL")
+			String callbackURL,
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.ws.rs.DefaultValue("JSON")
+			@javax.ws.rs.QueryParam("contentType")
+			String contentType,
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.ws.rs.QueryParam("fieldNames")
+			String fieldNames)
+		throws Exception {
+
+		vulcanBatchEngineExportTaskResource.setContextAcceptLanguage(
+			contextAcceptLanguage);
+		vulcanBatchEngineExportTaskResource.setContextCompany(contextCompany);
+		vulcanBatchEngineExportTaskResource.setContextHttpServletRequest(
+			contextHttpServletRequest);
+		vulcanBatchEngineExportTaskResource.setContextUriInfo(contextUriInfo);
+		vulcanBatchEngineExportTaskResource.setContextUser(contextUser);
+		vulcanBatchEngineExportTaskResource.setGroupLocalService(
+			groupLocalService);
+
+		Response.ResponseBuilder responseBuilder = Response.accepted();
+
+		return responseBuilder.entity(
+			vulcanBatchEngineExportTaskResource.postExportTask(
+				PostalAddress.class.getName(), callbackURL, contentType,
+				fieldNames)
+		).build();
+	}
+
 	@Override
 	@SuppressWarnings("PMD.UnusedLocalVariable")
 	public void create(
-			java.util.Collection<PostalAddress> postalAddresses,
+			Collection<PostalAddress> postalAddresses,
 			Map<String, Serializable> parameters)
 		throws Exception {
 
@@ -227,7 +448,7 @@ public abstract class BasePostalAddressResourceImpl
 
 	@Override
 	public void delete(
-			java.util.Collection<PostalAddress> postalAddresses,
+			Collection<PostalAddress> postalAddresses,
 			Map<String, Serializable> parameters)
 		throws Exception {
 
@@ -268,8 +489,22 @@ public abstract class BasePostalAddressResourceImpl
 			Map<String, Serializable> parameters, String search)
 		throws Exception {
 
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
+		if (parameters.containsKey("accountId")) {
+			return getAccountPostalAddressesPage(
+				_parseLong((String)parameters.get("accountId")));
+		}
+		else if (parameters.containsKey("organizationId")) {
+			return getOrganizationPostalAddressesPage(
+				(String)parameters.get("organizationId"));
+		}
+		else if (parameters.containsKey("userAccountId")) {
+			return getUserAccountPostalAddressesPage(
+				_parseLong((String)parameters.get("userAccountId")));
+		}
+		else {
+			throw new NotSupportedException(
+				"One of the following parameters must be specified: [accountId, organizationId, userAccountId]");
+		}
 	}
 
 	@Override
@@ -296,12 +531,20 @@ public abstract class BasePostalAddressResourceImpl
 
 	@Override
 	public void update(
-			java.util.Collection<PostalAddress> postalAddresses,
+			Collection<PostalAddress> postalAddresses,
 			Map<String, Serializable> parameters)
 		throws Exception {
 
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
+	}
+
+	private Long _parseLong(String value) {
+		if (value != null) {
+			return Long.parseLong(value);
+		}
+
+		return null;
 	}
 
 	public void setContextAcceptLanguage(AcceptLanguage contextAcceptLanguage) {
@@ -310,7 +553,7 @@ public abstract class BasePostalAddressResourceImpl
 
 	public void setContextBatchUnsafeConsumer(
 		UnsafeBiConsumer
-			<java.util.Collection<PostalAddress>,
+			<Collection<PostalAddress>,
 			 UnsafeConsumer<PostalAddress, Exception>, Exception>
 				contextBatchUnsafeConsumer) {
 
@@ -379,6 +622,14 @@ public abstract class BasePostalAddressResourceImpl
 
 	public void setSortParserProvider(SortParserProvider sortParserProvider) {
 		this.sortParserProvider = sortParserProvider;
+	}
+
+	public void setVulcanBatchEngineExportTaskResource(
+		VulcanBatchEngineExportTaskResource
+			vulcanBatchEngineExportTaskResource) {
+
+		this.vulcanBatchEngineExportTaskResource =
+			vulcanBatchEngineExportTaskResource;
 	}
 
 	public void setVulcanBatchEngineImportTaskResource(
@@ -489,8 +740,7 @@ public abstract class BasePostalAddressResourceImpl
 	}
 
 	protected <T, R, E extends Throwable> List<R> transform(
-		java.util.Collection<T> collection,
-		UnsafeFunction<T, R, E> unsafeFunction) {
+		Collection<T> collection, UnsafeFunction<T, R, E> unsafeFunction) {
 
 		return TransformUtil.transform(collection, unsafeFunction);
 	}
@@ -502,8 +752,8 @@ public abstract class BasePostalAddressResourceImpl
 	}
 
 	protected <T, R, E extends Throwable> R[] transformToArray(
-		java.util.Collection<T> collection,
-		UnsafeFunction<T, R, E> unsafeFunction, Class<?> clazz) {
+		Collection<T> collection, UnsafeFunction<T, R, E> unsafeFunction,
+		Class<?> clazz) {
 
 		return TransformUtil.transformToArray(
 			collection, unsafeFunction, clazz);
@@ -515,9 +765,14 @@ public abstract class BasePostalAddressResourceImpl
 		return TransformUtil.transformToList(array, unsafeFunction);
 	}
 
+	protected <T, R, E extends Throwable> long[] transformToLongArray(
+		Collection<T> collection, UnsafeFunction<T, R, E> unsafeFunction) {
+
+		return TransformUtil.transformToLongArray(collection, unsafeFunction);
+	}
+
 	protected <T, R, E extends Throwable> List<R> unsafeTransform(
-			java.util.Collection<T> collection,
-			UnsafeFunction<T, R, E> unsafeFunction)
+			Collection<T> collection, UnsafeFunction<T, R, E> unsafeFunction)
 		throws E {
 
 		return TransformUtil.unsafeTransform(collection, unsafeFunction);
@@ -531,8 +786,8 @@ public abstract class BasePostalAddressResourceImpl
 	}
 
 	protected <T, R, E extends Throwable> R[] unsafeTransformToArray(
-			java.util.Collection<T> collection,
-			UnsafeFunction<T, R, E> unsafeFunction, Class<?> clazz)
+			Collection<T> collection, UnsafeFunction<T, R, E> unsafeFunction,
+			Class<?> clazz)
 		throws E {
 
 		return TransformUtil.unsafeTransformToArray(
@@ -546,11 +801,18 @@ public abstract class BasePostalAddressResourceImpl
 		return TransformUtil.unsafeTransformToList(array, unsafeFunction);
 	}
 
+	protected <T, R, E extends Throwable> long[] unsafeTransformToLongArray(
+			Collection<T> collection, UnsafeFunction<T, R, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToLongArray(
+			collection, unsafeFunction);
+	}
+
 	protected AcceptLanguage contextAcceptLanguage;
 	protected UnsafeBiConsumer
-		<java.util.Collection<PostalAddress>,
-		 UnsafeConsumer<PostalAddress, Exception>, Exception>
-			contextBatchUnsafeConsumer;
+		<Collection<PostalAddress>, UnsafeConsumer<PostalAddress, Exception>,
+		 Exception> contextBatchUnsafeConsumer;
 	protected com.liferay.portal.kernel.model.Company contextCompany;
 	protected HttpServletRequest contextHttpServletRequest;
 	protected HttpServletResponse contextHttpServletResponse;
@@ -564,6 +826,8 @@ public abstract class BasePostalAddressResourceImpl
 	protected ResourcePermissionLocalService resourcePermissionLocalService;
 	protected RoleLocalService roleLocalService;
 	protected SortParserProvider sortParserProvider;
+	protected VulcanBatchEngineExportTaskResource
+		vulcanBatchEngineExportTaskResource;
 	protected VulcanBatchEngineImportTaskResource
 		vulcanBatchEngineImportTaskResource;
 

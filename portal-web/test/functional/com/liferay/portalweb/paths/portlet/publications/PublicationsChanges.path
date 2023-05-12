@@ -57,7 +57,7 @@
 </tr>
 <tr>
 	<td>CONFLICTING_CHANGES_DETAILS_IFRAME_TITLE</td>
-	<td>//div[contains(@class,'modal-header')]/div[@class='modal-title' and contains(.,'${key_iframeTitle}')]</td>
+	<td>//div[contains(@class,'modal-header')]//div[@class='modal-title' and contains(.,'${key_iframeTitle}')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -76,8 +76,18 @@
 	<td></td>
 </tr>
 <tr>
+	<td>INVITE_USERS_ICON</td>
+	<td>//span[contains(@title,'Invite Users')]</td>
+	<td></td>
+</tr>
+<tr>
 	<td>MESSAGE_NO_CHANGES</td>
-	<td>//div[contains(@class, 'taglib-empty-result-message')]/div[contains(.,'No changes were found.')]</td>
+	<td>//div[contains(@class, 'c-empty-state-text') and contains(.,'No changes were found.')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>PUBLICATIONS_CHANGE_CATEGORY</td>
+	<td>//tr[contains(@class,'table-divider')]/td[contains(.,'${key_changeCategory}')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -87,27 +97,27 @@
 </tr>
 <tr>
 	<td>PUBLICATIONS_CHANGE_SITE</td>
-	<td>//tr[contains(@class,'table-divider') and contains(.,'${key_changeCategory}')]//following-sibling::tr[${changeOrder}]/td[2][contains(.,'${key_changeSite}')]</td>
+	<td>//tr[contains(@class,'table-divider') and contains(.,'${key_changeCategory}')]//following-sibling::tr[${changeOrder}]/td[3][contains(.,'${key_changeSite}')]</td>
 	<td></td>
 </tr>
 <tr>
 	<td>PUBLICATIONS_CHANGE_STATUS</td>
-	<td>//tr[contains(@class,'table-divider') and contains(.,'${key_changeCategory}')]//following-sibling::tr[${changeOrder}]/td[4][contains(.,'${key_changeStatus}')]</td>
+	<td>//tr[contains(@class,'table-divider') and contains(.,'${key_changeCategory}')]//following-sibling::tr[${changeOrder}]/td[5][contains(.,'${key_changeStatus}')]</td>
 	<td></td>
 </tr>
 <tr>
 	<td>PUBLICATIONS_CHANGE_TITLE</td>
-	<td>//tr[contains(@class,'table-divider') and contains(.,'${key_changeCategory}')]//following-sibling::tr[${changeOrder}]/td[3][contains(.,'${key_changeTitle}')]</td>
+	<td>//tr[contains(@class,'table-divider') and contains(.,'${key_changeCategory}')]//following-sibling::tr[${changeOrder}]/td[4][contains(.,'${key_changeTitle}')]</td>
 	<td></td>
 </tr>
 <tr>
 	<td>PUBLICATIONS_CHANGE_TYPE</td>
-	<td>//tr[contains(@class,'table-divider') and contains(.,'${key_changeCategory}')]//following-sibling::tr[${changeOrder}]/td[5][contains(.,'${key_changeType}')]</td>
+	<td>//tr[contains(@class,'table-divider') and contains(.,'${key_changeCategory}')]//following-sibling::tr[${changeOrder}]/td[6][contains(.,'${key_changeType}')]</td>
 	<td></td>
 </tr>
 <tr>
 	<td>PUBLICATIONS_CHANGE_USER</td>
-	<td>//tr[contains(@class,'table-divider') and contains(.,'${key_changeCategory}')]//following-sibling::tr[${changeOrder}]/td[1]/span[contains(@title,'${key_changeUser}')]</td>
+	<td>//tr[contains(@class,'table-divider') and contains(.,'${key_changeCategory}')]//following-sibling::tr[${changeOrder}]/td[2]/span[contains(@title,'${key_changeUser}')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -134,6 +144,12 @@
 	<td>SORTED_DESCENDING_ICON</td>
 	<td>//span//*[name()='svg'][contains(@class,'lexicon-icon-order-list-down')]</td>
 	<td></td>
+</tr>
+<tr>
+	<td>CHANGES_CHECK_BOX</td>
+	<td>//tr[contains(@class,'table-divider') and contains(.,'${key_changeCategory}')]//following-sibling::tr[${changeOrder}]/td[4][contains(.,'${key_changeTitle}')]//preceding-sibling::td//input[@type='checkbox']
+	</td>
+<td></td>
 </tr>
 </tbody>
 </table>

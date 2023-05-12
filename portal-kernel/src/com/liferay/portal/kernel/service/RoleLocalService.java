@@ -404,14 +404,15 @@ public interface RoleLocalService
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<Role> getGroupRolesAndTeamRoles(
-		long companyId, String keywords, List<String> excludedNames,
-		int[] types, long excludedTeamRoleId, long teamGroupId, int start,
-		int end);
+		long companyId, String name, List<String> excludedNames, String title,
+		String description, int[] types, long excludedTeamRoleId,
+		long teamGroupId, int start, int end);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public int getGroupRolesAndTeamRolesCount(
-		long companyId, String keywords, List<String> excludedNames,
-		int[] types, long excludedTeamRoleId, long teamGroupId);
+		long companyId, String name, List<String> excludedNames, String title,
+		String description, int[] types, long excludedTeamRoleId,
+		long teamGroupId);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public int getGroupRolesCount(long groupId);
@@ -701,7 +702,9 @@ public interface RoleLocalService
 	public long[] getUserPrimaryKeys(long roleId);
 
 	/**
-	 * Returns the union of all the user's roles within the groups.
+	 * Returns the union of all the user's roles within the groups. If no
+	 * groups are provided, only the user's directly assigned roles are
+	 * returned.
 	 *
 	 * @param userId the primary key of the user
 	 * @param groups the groups (optionally <code>null</code>)
@@ -721,7 +724,9 @@ public interface RoleLocalService
 	public List<Role> getUserRelatedRoles(long userId, long groupId);
 
 	/**
-	 * Returns the union of all the user's roles within the groups.
+	 * Returns the union of all the user's roles within the groups. If no
+	 * groupIds are provided, only the user's directly assigned roles are
+	 * returned.
 	 *
 	 * @param userId the primary key of the user
 	 * @param groupIds the primary keys of the groups

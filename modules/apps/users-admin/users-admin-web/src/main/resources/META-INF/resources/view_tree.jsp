@@ -103,7 +103,6 @@ if (organization != null) {
 		/>
 
 		<aui:form cssClass="container-fluid container-fluid-max-xl" method="post" name="fm" onSubmit='<%= "event.preventDefault(); " + liferayPortletResponse.getNamespace() + "search();" %>'>
-			<aui:input name="<%= Constants.CMD %>" type="hidden" />
 			<aui:input name="toolbarItem" type="hidden" value="<%= toolbarItem %>" />
 			<aui:input name="redirect" type="hidden" value="<%= viewTreeManagementToolbarDisplayContext.getPortletURL().toString() %>" />
 			<aui:input name="onErrorRedirect" type="hidden" value="<%= currentURL %>" />
@@ -183,60 +182,3 @@ if (organization != null) {
 		/>
 	</c:otherwise>
 </c:choose>
-
-<aui:script>
-	function <portlet:namespace />delete(organizationsRedirect) {
-		<portlet:namespace />deleteOrganizations(organizationsRedirect);
-	}
-
-	function <portlet:namespace />doDeleteOrganizations(
-		organizationIds,
-		organizationsRedirect
-	) {
-		var form = document.<portlet:namespace />fm;
-
-		if (organizationsRedirect) {
-			Liferay.Util.setFormValues(form, {
-				redirect: organizationsRedirect,
-			});
-		}
-
-		Liferay.Util.postForm(form, {
-			data: {
-				deleteOrganizationIds: organizationIds,
-				deleteUserIds: Liferay.Util.getCheckedCheckboxes(
-					form,
-					'<portlet:namespace />allRowIds',
-					'<portlet:namespace />rowIdsUser'
-				),
-			},
-			url:
-				'<portlet:actionURL name="/users_admin/delete_organizations_and_users" />',
-		});
-	}
-
-	<portlet:actionURL name="/users_admin/edit_organization_assignments" var="removeOrganizationsAndUsersURL">
-		<portlet:param name="assignmentsRedirect" value="<%= currentURL %>" />
-		<portlet:param name="organizationId" value="<%= String.valueOf(organizationId) %>" />
-	</portlet:actionURL>
-
-	function <portlet:namespace />removeOrganizationsAndUsers() {
-		var form = document.<portlet:namespace />fm;
-
-		Liferay.Util.postForm(form, {
-			data: {
-				removeOrganizationIds: Liferay.Util.getCheckedCheckboxes(
-					form,
-					'<portlet:namespace />allRowIds',
-					'<portlet:namespace />rowIdsOrganization'
-				),
-				removeUserIds: Liferay.Util.getCheckedCheckboxes(
-					form,
-					'<portlet:namespace />allRowIds',
-					'<portlet:namespace />rowIdsUser'
-				),
-			},
-			url: '<%= removeOrganizationsAndUsersURL.toString() %>',
-		});
-	}
-</aui:script>

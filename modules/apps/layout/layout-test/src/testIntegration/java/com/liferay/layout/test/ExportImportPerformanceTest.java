@@ -271,7 +271,7 @@ public class ExportImportPerformanceTest {
 
 			_layoutLocalService.updateLayout(layoutPrototypeLayout);
 
-			_layoutCopyHelper.copyLayout(layout, layoutPrototypeLayout);
+			_layoutCopyHelper.copyLayoutContent(layout, layoutPrototypeLayout);
 
 			layout.setLayoutPrototypeUuid(layoutPrototype.getUuid());
 			layout.setLayoutPrototypeLinkEnabled(true);
@@ -419,7 +419,7 @@ public class ExportImportPerformanceTest {
 				defaultSegmentsExperienceId,
 				_generateContentLayoutStructureJSONObject(draftLayout));
 
-		_layoutCopyHelper.copyLayout(draftLayout, layout);
+		_layoutCopyHelper.copyLayoutContent(draftLayout, layout);
 	}
 
 	private JournalArticle _addJournalArticle() throws Exception {
@@ -438,7 +438,7 @@ public class ExportImportPerformanceTest {
 			RandomTestUtil.randomLocaleStringMap(defaultLocale),
 			RandomTestUtil.randomLocaleStringMap(defaultLocale),
 			RandomTestUtil.randomLocaleStringMap(defaultLocale), content,
-			_ddmStructure.getStructureKey(), _ddmTemplate.getTemplateKey(),
+			_ddmStructure.getStructureId(), _ddmTemplate.getTemplateKey(),
 			StringPool.BLANK, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, true, 0, 0, 0, 0, 0,
 			true, true, false, null, null, null, null, _serviceContext);
 	}
@@ -516,18 +516,14 @@ public class ExportImportPerformanceTest {
 		return layoutStructure.toString();
 	}
 
-	private String _getInvokerName() {
+	private Closeable _startTimer() {
 		Thread thread = Thread.currentThread();
 
-		StackTraceElement stackTraceElement = thread.getStackTrace()[3];
+		StackTraceElement stackTraceElement = thread.getStackTrace()[2];
 
-		return StringBundler.concat(
+		String invokerName = StringBundler.concat(
 			stackTraceElement.getClassName(), StringPool.POUND,
 			stackTraceElement.getMethodName());
-	}
-
-	private Closeable _startTimer() {
-		String invokerName = _getInvokerName();
 
 		long startTime = System.currentTimeMillis();
 

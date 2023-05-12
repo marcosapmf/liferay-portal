@@ -33,6 +33,7 @@ import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.site.admin.web.internal.constants.SiteAdminPortletKeys;
 import com.liferay.site.admin.web.internal.display.context.SiteAdminDisplayContext;
 import com.liferay.sites.kernel.util.SitesUtil;
 
@@ -203,7 +204,23 @@ public class SiteActionDropdownItemsProvider {
 				).setActionName(
 					"/site_admin/delete_groups"
 				).setRedirect(
-					_getRedirect()
+					() -> {
+						if (_themeDisplay.getScopeGroupId() ==
+								_group.getGroupId()) {
+
+							PortletURL redirectURL =
+								PortalUtil.getControlPanelPortletURL(
+									_httpServletRequest,
+									GroupLocalServiceUtil.fetchCompanyGroup(
+										_themeDisplay.getCompanyId()),
+									SiteAdminPortletKeys.SITE_ADMIN, 0, 0,
+									PortletRequest.RENDER_PHASE);
+
+							return redirectURL.toString();
+						}
+
+						return _getRedirect();
+					}
 				).setParameter(
 					"groupId", _group.getGroupId()
 				).buildString());

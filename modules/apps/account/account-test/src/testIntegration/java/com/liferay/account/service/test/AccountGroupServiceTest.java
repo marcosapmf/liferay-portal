@@ -26,6 +26,7 @@ import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.search.BaseModelSearchResult;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
+import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
@@ -75,14 +76,14 @@ public class AccountGroupServiceTest {
 
 		_accountGroupService.addAccountGroup(
 			_user.getUserId(), RandomTestUtil.randomString(),
-			RandomTestUtil.randomString());
+			RandomTestUtil.randomString(), new ServiceContext());
 	}
 
 	@Test(expected = PrincipalException.class)
 	public void testAddAccountGroupWithoutPermission() throws Exception {
 		_accountGroupService.addAccountGroup(
 			_user.getUserId(), RandomTestUtil.randomString(),
-			RandomTestUtil.randomString());
+			RandomTestUtil.randomString(), new ServiceContext());
 	}
 
 	@Test
@@ -175,7 +176,7 @@ public class AccountGroupServiceTest {
 
 		_accountGroupService.updateAccountGroup(
 			accountGroup.getAccountGroupId(), RandomTestUtil.randomString(),
-			accountGroup.getName());
+			accountGroup.getName(), new ServiceContext());
 	}
 
 	@Test(expected = PrincipalException.class)
@@ -186,7 +187,7 @@ public class AccountGroupServiceTest {
 
 		_accountGroupService.updateAccountGroup(
 			accountGroup.getAccountGroupId(), RandomTestUtil.randomString(),
-			accountGroup.getName());
+			accountGroup.getName(), new ServiceContext());
 	}
 
 	@Inject

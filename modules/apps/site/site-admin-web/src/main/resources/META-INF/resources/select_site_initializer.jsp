@@ -22,8 +22,12 @@ SelectSiteInitializerDisplayContext selectSiteInitializerDisplayContext = new Se
 portletDisplay.setShowBackIcon(true);
 portletDisplay.setURLBack(selectSiteInitializerDisplayContext.getBackURL());
 
-renderResponse.setTitle(LanguageUtil.get(request, "select-site-template"));
+renderResponse.setTitle(LanguageUtil.get(request, "select-template"));
 %>
+
+<clay:navigation-bar
+	navigationItems="<%= selectSiteInitializerDisplayContext.getNavigationItems() %>"
+/>
 
 <aui:form cssClass="container-fluid container-fluid-max-xl" name="fm">
 	<liferay-ui:search-container

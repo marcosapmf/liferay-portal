@@ -14,7 +14,7 @@ definition {
 	tearDown {
 		var testPortalInstance = PropsUtil.get("test.portal.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testPortalInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -38,7 +38,7 @@ definition {
 		}
 	}
 
-	@priority = "3"
+	@priority = 3
 	test AddDataDefinitionWithoutANameAndAssertErrorMessage {
 		Navigator.openURL();
 
@@ -58,7 +58,7 @@ definition {
 		Alert.viewSpecificRequiredField(fieldFieldLabel = "Name");
 	}
 
-	@priority = "3"
+	@priority = 3
 	test AddListWithoutDataDefinitionAndAssertErrorMessage {
 		Navigator.openURL();
 
@@ -78,8 +78,7 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-50557."
-	@ignore = "true"
-	@priority = "4"
+	@priority = 4
 	test AddListWithXSSWorkflowDefinition {
 		property test.name.skip.portal.instance = "DynamicdatalistUsecase#AddListWithXSSWorkflowDefinition";
 
@@ -117,7 +116,7 @@ definition {
 		DDLList.viewCP();
 	}
 
-	@priority = "4"
+	@priority = 4
 	test AddRecord {
 		Navigator.openURL();
 
@@ -208,7 +207,7 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-51513."
-	@priority = "3"
+	@priority = 3
 	test AddRecordBlankDateField {
 		Navigator.openURL();
 
@@ -307,7 +306,7 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-66229."
-	@priority = "3"
+	@priority = 3
 	test AddRecordWithBlankDocumentsAndMediaField {
 		DDLList.openDynamicDataListsAdmin(siteURLKey = "guest");
 
@@ -354,7 +353,7 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-66229."
-	@priority = "3"
+	@priority = 3
 	test AddRecordWithBlankLinkToPageField {
 		task ("Create a DDL containing a Link to Page") {
 			PagesAdmin.openPagesAdmin(siteURLKey = "guest");
@@ -406,7 +405,7 @@ definition {
 
 	@description = "This is a use case for LPS-66229."
 	@ignore = "true"
-	@priority = "3"
+	@priority = 3
 	test AddRecordWithBlankWebContentField {
 		PagesAdmin.openPagesAdmin(siteURLKey = "guest");
 
@@ -448,7 +447,7 @@ definition {
 
 	@description = "This is a use case for LPS-66439."
 	@ignore = "true"
-	@priority = "5"
+	@priority = 5
 	test AddRecordWithPopulatedWebContentField {
 		Navigator.openURL();
 
@@ -509,10 +508,8 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-65069."
-	@priority = "5"
+	@priority = 5
 	test AddRecordWithRepeatableTextField {
-		property portal.acceptance = "quarantine";
-
 		DDLList.openDynamicDataListsAdmin(siteURLKey = "guest");
 
 		DDLDataDefinition.addCP();
@@ -583,7 +580,7 @@ definition {
 		PortletEntry.publish();
 	}
 
-	@priority = "4"
+	@priority = 4
 	test AddRepeatableFieldAndAssertOrderInTranslation {
 		Navigator.openURL();
 
@@ -691,7 +688,7 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-69273."
-	@priority = "4"
+	@priority = 4
 	test AddRepeatableFieldAsNonAdminUser {
 		JSONRole.addRegularRole(
 			roleKey = "DDMRegRole Name",
@@ -699,7 +696,7 @@ definition {
 
 		for (var resourceActionIndex : list "VIEW,ADD_RECORD") {
 			Permissions.definePermissionViaJSONAPI(
-				resourceAction = "${resourceActionIndex}",
+				resourceAction = ${resourceActionIndex},
 				resourceName = "com.liferay.dynamic.data.lists.model.DDLRecordSet",
 				roleTitle = "DDMRegRole Name");
 		}
@@ -711,7 +708,7 @@ definition {
 
 		for (var resourceActionIndex : list "VIEW,PREFERENCES,PERMISSIONS,CONFIGURATION,ACCESS_IN_CONTROL_PANEL") {
 			Permissions.definePermissionViaJSONAPI(
-				resourceAction = "${resourceActionIndex}",
+				resourceAction = ${resourceActionIndex},
 				resourceName = "com_liferay_dynamic_data_lists_web_portlet_DDLPortlet",
 				roleTitle = "DDMRegRole Name");
 		}
@@ -800,9 +797,9 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-68216."
-	@priority = "4"
+	@priority = 4
 	test AddSelectFieldWithTranslationAndViewInSpreadsheetView {
-		var portalURL = PropsUtil.get("portal.url");
+		var portalURL = JSONCompany.getPortalURL();
 
 		Navigator.openURL();
 
@@ -889,7 +886,7 @@ definition {
 
 		DDLDisplayPortlet.viewFieldSelectViaSpreadsheetView(
 			ddlRecordFieldData = "ENGOption1",
-			ddlRecordRow = "1",
+			ddlRecordRow = 1,
 			fieldName = "Select");
 
 		Navigator.openSpecificURL(url = "${portalURL}/ja/");
@@ -898,13 +895,12 @@ definition {
 
 		DDLDisplayPortlet.viewFieldSelectViaSpreadsheetView(
 			ddlRecordFieldData = "JAOption1",
-			ddlRecordRow = "1",
+			ddlRecordRow = 1,
 			fieldName = "Select");
 	}
 
 	@description = "This is a use case for LPS-50549."
-	@ignore = "true"
-	@priority = "4"
+	@priority = 4
 	test AddXSSToHTMLField {
 		var ddlRecordFieldData1 = '''<img src=x onerror=alert(/xss/) />''';
 		var ddlRecordFieldData2 = ''''+alert('xss')+'"+alert("xss")+"''';
@@ -926,7 +922,7 @@ definition {
 			field = "HTML",
 			fieldFieldLabel = "HTML",
 			fieldName = "HTML",
-			fieldPredefinedValue = "${ddlRecordFieldData2}");
+			fieldPredefinedValue = ${ddlRecordFieldData2});
 
 		DDLDataDefinition.save();
 
@@ -963,7 +959,7 @@ definition {
 
 		DDLRecord.addCP();
 
-		FormFields.editParagraphBody(content = "${ddlRecordFieldData1}");
+		FormFields.editParagraphBody(content = ${ddlRecordFieldData1});
 
 		PortletEntry.publish();
 
@@ -1006,13 +1002,13 @@ definition {
 		DDLNavigator.gotoListRecords();
 
 		DDLRecord.viewFirstFieldCP(
-			ddlRecordFieldData = "${ddlRecordFieldData2}",
+			ddlRecordFieldData = ${ddlRecordFieldData2},
 			field = "HTML",
 			fieldFieldLabel = "HTML",
 			fieldName = "HTML");
 	}
 
-	@priority = "2"
+	@priority = 2
 	test AssertConfigurationMenulist {
 		PagesAdmin.openPagesAdmin(siteURLKey = "guest");
 
@@ -1048,7 +1044,7 @@ definition {
 		Portlet.viewPortletOptionsMenulist();
 	}
 
-	@priority = "3"
+	@priority = 3
 	test AssertDecimalFieldInvalidDataErrorMessage {
 		PagesAdmin.openPagesAdmin(siteURLKey = "guest");
 
@@ -1099,7 +1095,7 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-48736."
-	@priority = "3"
+	@priority = 3
 	test AssertFieldAfterNavigatingToManageTemplates {
 		Navigator.openURL();
 
@@ -1143,7 +1139,7 @@ definition {
 			fieldName = "Text");
 	}
 
-	@priority = "4"
+	@priority = 4
 	test AssertGuestCannotEditRecord {
 		DDLList.openDynamicDataListsAdmin(siteURLKey = "guest");
 
@@ -1222,7 +1218,7 @@ definition {
 			locator1 = "AppBuilder#WIDGET_DEPLOYED",
 			value1 = "Dynamic Data Lists Display");
 
-		var adminViewURL = Navigator.getCurrentURL(adminViewURL = "${adminViewURL}");
+		var adminViewURL = Navigator.getCurrentURL(adminViewURL = ${adminViewURL});
 
 		Navigator.gotoPage(pageName = "Dynamic Data Lists Display Page");
 
@@ -1232,7 +1228,7 @@ definition {
 			key_fieldLabel = "Text",
 			locator1 = "TextInput#GENERIC_TEXT_INPUT");
 
-		var adminEditURL = Navigator.getCurrentURL(adminEditURL = "${adminEditURL}");
+		var adminEditURL = Navigator.getCurrentURL(adminEditURL = ${adminEditURL});
 
 		User.logoutPG();
 
@@ -1254,7 +1250,7 @@ definition {
 
 		Portlet.viewCannotEdit();
 
-		Navigator.openSpecificURL(url = "${adminEditURL}");
+		Navigator.openSpecificURL(url = ${adminEditURL});
 
 		PortletEntry.changeLocale(locale = "es-ES");
 
@@ -1262,7 +1258,7 @@ definition {
 
 		Navigator.gotoPage(pageName = "Dynamic Data Lists Display Page");
 
-		Navigator.openSpecificURL(url = "${adminEditURL}");
+		Navigator.openSpecificURL(url = ${adminEditURL});
 
 		DDLRecord.viewTranslationNotAvailable(localizedLanguage = "Spanish (Spain)");
 
@@ -1273,18 +1269,18 @@ definition {
 
 		Portlet.viewCannotPublish();
 
-		Navigator.openSpecificURL(url = "${adminEditURL}");
+		Navigator.openSpecificURL(url = ${adminEditURL});
 
 		DDLRecord.clearFieldDocumentsAndMedia(fieldName = "Document");
 
 		Portlet.viewCannotPublish();
 
-		Navigator.openSpecificURL(url = "${adminEditURL}");
+		Navigator.openSpecificURL(url = ${adminEditURL});
 
 		Portlet.viewCannotSaveAsDraft();
 	}
 
-	@priority = "3"
+	@priority = 3
 	test AssertIntegerFieldInvalidDataErrorMessage {
 		PagesAdmin.openPagesAdmin(siteURLKey = "guest");
 
@@ -1334,7 +1330,7 @@ definition {
 			value1 = "Please enter only digits.");
 	}
 
-	@priority = "4"
+	@priority = 4
 	test AssertNumberFieldInvalidDataErrorMessage {
 		PagesAdmin.openPagesAdmin(siteURLKey = "guest");
 
@@ -1384,9 +1380,9 @@ definition {
 			value1 = "Please enter a valid number.");
 	}
 
-	@priority = "4"
+	@priority = 4
 	test AssertUserCannotDeleteEntryAfterPermissionRemoved {
-		var siteName = TestCase.getSiteName(siteName = "${siteName}");
+		var siteName = TestCase.getSiteName(siteName = ${siteName});
 
 		JSONUser.addUser(
 			userEmailAddress = "userea1@liferay.com",
@@ -1455,7 +1451,7 @@ definition {
 		User.openUsersAdmin();
 
 		User.impersonateCP(
-			siteName = "${siteName}",
+			siteName = ${siteName},
 			userScreenName = "usersn1");
 
 		Navigator._gotoPage(pageName = "Data Definition Page Name");
@@ -1479,7 +1475,7 @@ definition {
 		User.openUsersAdmin();
 
 		User.impersonateCP(
-			siteName = "${siteName}",
+			siteName = ${siteName},
 			userScreenName = "usersn1");
 
 		Navigator._gotoPage(pageName = "Data Definition Page Name");
@@ -1487,7 +1483,7 @@ definition {
 		Alert.viewErrorMessage(errorMessage = "You do not have the required permissions.");
 	}
 
-	@priority = "4"
+	@priority = 4
 	test AssertUserUpdateRejectedRecord {
 		PagesAdmin.openPagesAdmin(siteURLKey = "guest");
 
@@ -1524,7 +1520,7 @@ definition {
 
 		Permissions.definePermissionViaJSONAPI(
 			resourceAction = "ACCESS_IN_CONTROL_PANEL",
-			resourceName = "90",
+			resourceName = 90,
 			roleTitle = "User");
 
 		Permissions.definePermissionViaJSONAPI(
@@ -1564,7 +1560,7 @@ definition {
 			fieldFieldLabel = "Title",
 			fieldName = "title");
 
-		DDLRecord.submitForPublication();
+		DDLRecord.submitForWorkflow();
 
 		User.logoutPG();
 
@@ -1617,7 +1613,7 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-50557."
-	@priority = "3"
+	@priority = 3
 	test CreateSiteAndViewDefaultDataDefinitions {
 		JSONGroup.addGroup(groupName = "Site Name");
 
@@ -1626,11 +1622,11 @@ definition {
 		DDLNavigator.gotoManageDataDefinitions();
 
 		for (var ddlDataDefinitionName : list "Contacts,Events,Inventory,Issues Tracking,Meeting Minutes,To Do") {
-			DDLDataDefinition.viewName(ddlDataDefinitionName = "${ddlDataDefinitionName}");
+			DDLDataDefinition.viewName(ddlDataDefinitionName = ${ddlDataDefinitionName});
 		}
 	}
 
-	@priority = "3"
+	@priority = 3
 	test DeleteStructure {
 		Navigator.openURL();
 
@@ -1706,7 +1702,7 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-59154 and LPS-62523."
-	@priority = "3"
+	@priority = 3
 	test EditDefaultLanguageAndPublishRecord {
 		property test.name.skip.portal.instance = "DynamicdatalistUsecase#EditDefaultLanguageAndPublishRecord";
 
@@ -1719,12 +1715,12 @@ definition {
 
 		PortalSettings.setCurrentInstanceLanguageCP(newLanguage = "Spanish (Spain)");
 
-		var siteName = TestCase.getSiteName(siteName = "${siteName}");
+		var siteName = TestCase.getSiteName(siteName = ${siteName});
 
 		ProductMenu.gotoPortlet(
 			category = "Content & Data",
 			portlet = "Dynamic Data Lists",
-			site = "${siteName}");
+			site = ${siteName});
 
 		DDLDataDefinition.addCP(ddlDataDefinitionName = "Data Definition");
 
@@ -1744,7 +1740,7 @@ definition {
 		ProductMenu.gotoPortlet(
 			category = "Content & Data",
 			portlet = "Dynamic Data Lists",
-			site = "${siteName}");
+			site = ${siteName});
 
 		DDLList.addCP(ddlListName = "List Name");
 
@@ -1757,7 +1753,7 @@ definition {
 		ProductMenu.gotoPortlet(
 			category = "Content & Data",
 			portlet = "Dynamic Data Lists",
-			site = "${siteName}");
+			site = ${siteName});
 
 		DDLRecord.addCP(
 			ddlDataDefinitionName = "Data Definition",
@@ -1774,7 +1770,7 @@ definition {
 		ProductMenu.gotoPortlet(
 			category = "Content & Data",
 			portlet = "Dynamic Data Lists",
-			site = "${siteName}");
+			site = ${siteName});
 
 		DDLRecord.editCP(
 			ddlListName = "List Name",
@@ -1795,7 +1791,7 @@ definition {
 		ProductMenu.gotoPortlet(
 			category = "Content & Data",
 			portlet = "Dynamic Data Lists",
-			site = "${siteName}");
+			site = ${siteName});
 
 		DDLRecord.editCP(
 			ddlListName = "List Name",
@@ -1818,7 +1814,7 @@ definition {
 		ProductMenu.gotoPortlet(
 			category = "Site Builder",
 			portlet = "Pages",
-			site = "${siteName}");
+			site = ${siteName});
 
 		PagesAdmin.addPage(pageName = "Dynamic Data Lists Display Page");
 
@@ -1880,7 +1876,7 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-59272."
-	@priority = "3"
+	@priority = 3
 	test EditListRecordWithNestedFieldViaSpreadsheetView {
 		Navigator.openURL();
 
@@ -1946,12 +1942,12 @@ definition {
 
 		DDLRecord.populateFieldTextViaSpreadsheetView(
 			ddlRecordFieldData = "Text Edit",
-			ddlRecordRow = "1",
+			ddlRecordRow = 1,
 			fieldName = "Text");
 
 		DDLRecord.populateFieldSelectViaSpreadsheetView(
 			ddlRecordFieldData = "option 2",
-			ddlRecordRow = "1",
+			ddlRecordRow = 1,
 			fieldName = "Select");
 
 		ProductMenu.gotoPortlet(
@@ -1967,7 +1963,7 @@ definition {
 			nestedFieldFieldLabel = "Select");
 	}
 
-	@priority = "4"
+	@priority = 4
 	test FormTemplateUniqueField {
 		task ("Create a Data Definition containing a boolean field and a text field") {
 			DDLList.openDynamicDataListsAdmin(siteURLKey = "guest");
@@ -2043,7 +2039,7 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-65479."
-	@priority = "4"
+	@priority = 4
 	test RemoveRepeatableDateField {
 		property test.name.skip.portal.instance = "DynamicdatalistsUsecase#RemoveRepeatableDateField";
 
@@ -2095,11 +2091,11 @@ definition {
 
 		DDLRecord.deleteRepeatableField(
 			fieldName = "Date",
-			fieldNumber = "2");
+			fieldNumber = 2);
 
 		DDLRecord.deleteRepeatableField(
 			fieldName = "Date",
-			fieldNumber = "2");
+			fieldNumber = 2);
 
 		DDLRecord.viewFieldRepeatedNotPresent(
 			ddlRecordFieldData = "04/01/2018",
@@ -2108,7 +2104,7 @@ definition {
 		PortletEntry.publish();
 	}
 
-	@priority = "3"
+	@priority = 3
 	test RemoveRepeatableFieldAndAssertOrderInTranslation {
 		Navigator.openURL();
 
@@ -2191,7 +2187,7 @@ definition {
 
 		DDLRecord.deleteRepeatableField(
 			fieldName = "Text",
-			fieldNumber = "2");
+			fieldNumber = 2);
 
 		PortletEntry.publish();
 
@@ -2212,7 +2208,7 @@ definition {
 			ddlRecordFieldData2 = "Contenido 3");
 	}
 
-	@priority = "4"
+	@priority = 4
 	test RolesPermissionsDynamicDataLists {
 		property custom.properties = "jsonws.web.service.paths.excludes=";
 
@@ -2370,16 +2366,15 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-69667."
-	@ignore = "true"
-	@priority = "2"
+	@priority = 2
 	test SelectLinkToPagePage {
-		property portal.upstream = "quarantine";
+		for (var pageNumber : list "1,2,3,4,5,6,7,8,9,10,11,12") {
+			JSONLayout.addPublicLayout(
+				groupName = "Guest",
+				layoutName = "Test Page ${pageNumber}");
+		}
 
 		DDLList.openDynamicDataListsAdmin(siteURLKey = "guest");
-
-		for (var pageName : list "P1,P2,P3,P4,P5,P6,P7,P8,P9,P10,P11,P12") {
-			PagesAdmin.addPage(pageName = "${pageName}");
-		}
 
 		ProductMenu.gotoPortlet(
 			category = "Content & Data",
@@ -2417,19 +2412,18 @@ definition {
 			ddlListName = "List Name");
 
 		DDLRecord.populateFieldLinkToPage(
-			ddlRecordFieldData = "P10",
-			fieldName = "LinkToPage",
-			pagePrivacy = "Public");
+			ddlRecordFieldData = "Test Page 10",
+			fieldName = "LinkToPage");
 
 		PortletEntry.publish();
 
 		DDLRecord.viewFirstFieldCP(
-			ddlRecordFieldData = "P10",
+			ddlRecordFieldData = "Test Page 10",
 			fieldFieldLabel = "Link to Page");
 	}
 
 	@description = "This is a use case for LPS-48743."
-	@priority = "3"
+	@priority = 3
 	test TemplateAddDeletedField {
 		task ("Create a Data Definition containing a boolean field and a text field") {
 			DDLList.openDynamicDataListsAdmin(siteURLKey = "guest");
@@ -2503,7 +2497,7 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-52865."
-	@priority = "4"
+	@priority = 4
 	test ViewCannotSaveWithDuplicateFieldNames {
 		property test.name.skip.portal.instance = "DynamicdatalistsUsecase#ViewCannotSaveWithDuplicateFieldNames";
 
@@ -2535,7 +2529,7 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-66228."
-	@priority = "4"
+	@priority = 4
 	test ViewDisplayTemplateClassLinks {
 		property test.name.skip.portal.instance = "DynamicdatalistsUsecase#ViewDisplayTemplateClassLinks";
 
@@ -2549,14 +2543,14 @@ definition {
 
 		LexiconEntry.gotoAddMenuItem(menuItem = "Add Display Template");
 
-		var siteName = TestCase.getSiteName(siteName = "${siteName}");
+		var siteName = TestCase.getSiteName(siteName = ${siteName});
 
 		DDLList.expandCollapsedIcon(classNameList = "General Variables,Data List Record Fields,Util");
 
 		for (var fieldName : list "Device,Company,PermissionChecker") {
-			var key_fieldName = "${fieldName}";
+			var key_fieldName = ${fieldName};
 
-			if ("${fieldName}" == "PermissionChecker") {
+			if (${fieldName} == "PermissionChecker") {
 				MouseOver(locator1 = "DDMEditTemplate#SCRIPT_UTIL");
 			}
 			else {
@@ -2565,23 +2559,21 @@ definition {
 
 			AssertClick(
 				locator1 = "JavaDocs#TOOLTIP_JAVA_CLASS_LINK",
-				value1 = "${fieldName}");
+				value1 = ${fieldName});
 
 			SelectWindow.selectPopUp(locator1 = "null");
 
 			AssertTextEquals(
 				locator1 = "JavaDocs#JAVA_CLASS_NAME",
-				value1 = "${fieldName}");
+				value1 = ${fieldName});
 
 			Close.closeAndSelectWindow(locator1 = "title=New Template for Structure: Contacts - ${siteName}");
 		}
 	}
 
 	@description = "This is a use case for LPS-48913."
-	@priority = "3"
+	@priority = 3
 	test ViewFieldsNestedInDDLRecord {
-		property portal.upstream = "quarantine";
-
 		Navigator.openURL();
 
 		ProductMenu.gotoPortlet(
@@ -2631,7 +2623,7 @@ definition {
 			fieldName = "Text");
 
 		DDLRecord.populateFieldInteger(
-			ddlRecordFieldData = "123",
+			ddlRecordFieldData = 123,
 			fieldName = "Integer");
 
 		PortletEntry.publish();
@@ -2658,11 +2650,11 @@ definition {
 		AssertTextEquals(
 			key_fieldName = "Integer",
 			locator1 = "TextInput#DDM",
-			value1 = "123");
+			value1 = 123);
 	}
 
 	@description = "This is a use case for LPS-48591."
-	@priority = "3"
+	@priority = 3
 	test ViewFormTemplateFieldsAfterBackNavigation {
 		Navigator.openURL();
 
@@ -2729,93 +2721,8 @@ definition {
 			fieldName = "TextBox");
 	}
 
-	@description = "This is a use case for LPS-67478 ."
-	@ignore = "true"
-	@priority = "3"
-	test ViewLinkToPageBreadcrumb {
-		ProductMenu.gotoPortlet(
-			category = "Site Builder",
-			portlet = "Pages");
-
-		PagesAdmin.addPage(pageName = "Parent Page Name");
-
-		PagesAdmin.addChildPage(
-			childPageName = "Child Page Name",
-			parentPageName = "Parent Page Name");
-
-		ProductMenu.gotoPortlet(
-			category = "Content & Data",
-			portlet = "Dynamic Data Lists");
-
-		DDLDataDefinition.addCP(ddlDataDefinitionName = "Data Definition");
-
-		DynamicDataMapping.addField(
-			field = "Link to Page",
-			fieldFieldLabel = "Link to Page",
-			fieldName = "LinkToPage");
-
-		DDLDataDefinition.save();
-
-		Navigator.openURL();
-
-		ProductMenu.gotoPortlet(
-			category = "Content & Data",
-			portlet = "Dynamic Data Lists");
-
-		DDLDataDefinition.viewCP(
-			ddlDataDefinitionName = "Data Definition",
-			fieldFieldLabel = "Link to Page");
-
-		DynamicDataMapping.viewField(
-			field = "Link to Page",
-			fieldFieldLabel = "Link to Page",
-			fieldName = "LinkToPage");
-
-		Navigator.openURL();
-
-		ProductMenu.gotoPortlet(
-			category = "Content & Data",
-			portlet = "Dynamic Data Lists");
-
-		DDLList.addCP(ddlListName = "List Name");
-
-		DDLDataDefinition.selectCP(ddlDataDefinitionName = "Data Definition");
-
-		DDLDataDefinition.save();
-
-		Navigator.openURL();
-
-		ProductMenu.gotoPortlet(
-			category = "Content & Data",
-			portlet = "Dynamic Data Lists");
-
-		DDLRecord.addCP(
-			ddlDataDefinitionName = "Data Definition",
-			ddlListName = "List Name");
-
-		DDLRecord.populateFieldLinkToPage(
-			ddlRecordFieldData = "Child Page Name",
-			fieldName = "LinkToPage",
-			pagePrivacy = "Public",
-			parentPage = "Parent Page Name");
-
-		DDLRecord.gotoLinkToPageSelect(fieldName = "LinkToPage");
-
-		DDLRecord.viewLinkToPageBreadcrumbCount(count = "2");
-
-		DDLRecord.gotoLinkToPageNavItem(pagePrivacy = "Private");
-
-		DDLRecord.gotoLinkToPageNavItem(pagePrivacy = "Public");
-
-		DDLRecord.gotoLinkToPageChildPages(parentPage = "Parent Page Name");
-
-		DDLRecord.selectLinkToPageRadio(ddlRecordFieldData = "Child Page Name");
-
-		DDLRecord.viewLinkToPageBreadcrumbCount(count = "2");
-	}
-
 	@description = "This is a use case for LPS-57993"
-	@priority = "3"
+	@priority = 3
 	test ViewMultipleDDLRecordsInAssetPublisherAndSortByModifiedDate {
 		ProductMenu.gotoPortlet(
 			category = "Site Builder",
@@ -2866,8 +2773,8 @@ definition {
 			DDLNavigator.gotoAddListRecord();
 
 			DDLRecord.populateFieldText(
-				ddlRecordFieldData = "${ddlRecordFieldData}",
-				fieldFieldLabel = "${fieldFieldLabel}",
+				ddlRecordFieldData = ${ddlRecordFieldData},
+				fieldFieldLabel = ${fieldFieldLabel},
 				fieldName = "TextName");
 
 			PortletEntry.publish();
@@ -2897,7 +2804,7 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-51538."
-	@priority = "3"
+	@priority = 3
 	test ViewNestedFieldDoesNotDisplayInRecordTable {
 		Navigator.openURL();
 
@@ -2948,7 +2855,7 @@ definition {
 			fieldName = "Text");
 
 		DDLRecord.populateFieldInteger(
-			ddlRecordFieldData = "253",
+			ddlRecordFieldData = 253,
 			fieldName = "Integer");
 
 		PortletEntry.publish();
@@ -2975,11 +2882,11 @@ definition {
 		AssertTextEquals(
 			key_fieldName = "Integer",
 			locator1 = "TextInput#DDM",
-			value1 = "253");
+			value1 = 253);
 	}
 
 	@description = "This is a use case for LPS-48969."
-	@priority = "3"
+	@priority = 3
 	test ViewNestedFieldEntryWithBlankParentField {
 		Navigator.openURL();
 
@@ -3026,7 +2933,7 @@ definition {
 			ddlListName = "Dynamic Data List");
 
 		DDLRecord.populateFieldInteger(
-			ddlRecordFieldData = "253",
+			ddlRecordFieldData = 253,
 			fieldName = "Integer");
 
 		PortletEntry.publish();
@@ -3053,11 +2960,11 @@ definition {
 		AssertTextEquals(
 			key_fieldName = "Integer",
 			locator1 = "TextInput#DDM",
-			value1 = "253");
+			value1 = 253);
 	}
 
 	@description = "This is a use case for LPS-63290 and LPS-72216."
-	@priority = "4"
+	@priority = 4
 	test ViewRepeatableNestedFields {
 		property test.name.skip.portal.instance = "DynamicdatalistsUsecase#ViewRepeatableNestedFields";
 
@@ -3115,16 +3022,16 @@ definition {
 
 		DDLRecord.deleteRepeatableField(
 			fieldName = "Text",
-			fieldNumber = "2");
+			fieldNumber = 2);
 
 		AssertElementNotPresent(
 			key_fieldName = "Text",
-			key_fieldNumber = "2",
+			key_fieldNumber = 2,
 			locator1 = "DDLEditRecord#FIELD_DELETE");
 	}
 
 	@description = "This is a use case for LPS-60155."
-	@priority = "5"
+	@priority = 5
 	test ViewRequiredNestedDocumentsAndMediaField {
 		DDLList.openDynamicDataListsAdmin(siteURLKey = "guest");
 
@@ -3191,7 +3098,7 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-51684."
-	@priority = "4"
+	@priority = 4
 	test ViewUniqueFieldLabels {
 		property test.name.skip.portal.instance = "DynamicdatalistsUsecase#ViewUniqueFieldLabels";
 

@@ -59,6 +59,12 @@
 		</attribute>
 		<attribute>
 			<description></description>
+			<name>symbol</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<description></description>
 			<name>title</name>
 			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
@@ -945,6 +951,12 @@
 			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
+		<attribute>
+			<description></description>
+			<name>translated</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
 		<dynamic-attributes>true</dynamic-attributes>
 	</tag>
 	<tag>
@@ -1316,6 +1328,12 @@
 		</attribute>
 		<attribute>
 			<description></description>
+			<name>decoration</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<description></description>
 			<name>displayType</name>
 			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
@@ -1328,6 +1346,12 @@
 		</attribute>
 		<attribute>
 			<description></description>
+			<name>fontSize</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<description></description>
 			<name>href</name>
 			<required>true</required>
 			<rtexprvalue>true</rtexprvalue>
@@ -1335,6 +1359,12 @@
 		<attribute>
 			<description></description>
 			<name>icon</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<description></description>
+			<name>iconAfter</name>
 			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
@@ -1382,7 +1412,19 @@
 		</attribute>
 		<attribute>
 			<description></description>
+			<name>translated</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<description></description>
 			<name>type</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<description></description>
+			<name>weight</name>
 			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
@@ -1510,6 +1552,12 @@
 		<attribute>
 			<description></description>
 			<name>itemsTotal</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<description></description>
+			<name>itemsType</name>
 			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
@@ -1843,6 +1891,12 @@
 		<name>navigation-bar</name>
 		<tag-class>com.liferay.frontend.taglib.clay.servlet.taglib.NavigationBarTag</tag-class>
 		<body-content>empty</body-content>
+		<attribute>
+			<description></description>
+			<name>activeItemAriaCurrent</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
 		<attribute>
 			<description></description>
 			<name>cssClass</name>
@@ -2478,6 +2532,54 @@
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
 		<dynamic-attributes>true</dynamic-attributes>
+	</tag>
+	<tag>
+		<description></description>
+		<name>tabs</name>
+		<tag-class>com.liferay.frontend.taglib.clay.servlet.taglib.TabsTag</tag-class>
+		<body-content>JSP</body-content>
+		<attribute>
+			<description></description>
+			<name>activation</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<description></description>
+			<name>additionalProps</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<description></description>
+			<name>displayType</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<description></description>
+			<name>fade</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<description></description>
+			<name>justified</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<description></description>
+			<name>tabsItems</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+	</tag>
+	<tag>
+		<description></description>
+		<name>tabs-panel</name>
+		<tag-class>com.liferay.frontend.taglib.clay.servlet.taglib.TabsPanelTag</tag-class>
+		<body-content>JSP</body-content>
 	</tag>
 	<tag>
 		<description></description>

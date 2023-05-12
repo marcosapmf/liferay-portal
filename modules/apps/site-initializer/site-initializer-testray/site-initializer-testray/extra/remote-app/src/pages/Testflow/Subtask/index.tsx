@@ -17,7 +17,7 @@ import {useOutletContext} from 'react-router-dom';
 import {KeyedMutator} from 'swr';
 
 import Avatar from '../../../components/Avatar';
-import AssignToMe from '../../../components/Avatar/AssigneToMe';
+import AssignToMe from '../../../components/Avatar/AssignToMe';
 import Code from '../../../components/Code';
 import Container from '../../../components/Layout/Container';
 import Loading from '../../../components/Loading';
@@ -43,7 +43,11 @@ type OutletContext = {
 		mergedSubtaskNames: string;
 		splitSubtaskNames: string;
 		subtaskIssues: TestraySubTaskIssue[];
-		testraySubtask: TestraySubTask;
+		testraySubtask: TestraySubTask & {
+			actions: {
+				[key: string]: string;
+			};
+		};
 		testrayTask: TestrayTask;
 	};
 	mutate: {
@@ -69,9 +73,11 @@ const Subtasks = () => {
 		return <Loading />;
 	}
 
+	const hasSubtaskEditPermission = !!testraySubtask.actions?.update;
+
 	return (
 		<>
-			<SubtaskHeaderActions />
+			{hasSubtaskEditPermission && <SubtaskHeaderActions />}
 
 			<Container
 				className="pb-6"
@@ -98,7 +104,8 @@ const Subtasks = () => {
 									value: testraySubtask.user ? (
 										<Avatar
 											displayName
-											name={`${testraySubtask.user?.givenName} ${testraySubtask?.user?.additionalName}`}
+											name={testraySubtask.user?.name}
+											url={testraySubtask.user?.image}
 										/>
 									) : (
 										<AssignToMe
@@ -109,6 +116,9 @@ const Subtasks = () => {
 											}
 										/>
 									),
+									visible:
+										!!testraySubtask.user ||
+										hasSubtaskEditPermission,
 								},
 								{
 									title: i18n.translate('updated'),
@@ -144,11 +154,9 @@ const Subtasks = () => {
 											<small className="mt-1 text-gray">
 												<Avatar
 													displayName
-													name={`${
+													name={
 														mbMessage.creator?.name
-													} · ${getTimeFromNow(
-														mbMessage.dateCreated
-													)}`}
+													}
 													url={
 														mbMessage.creator?.image
 													}

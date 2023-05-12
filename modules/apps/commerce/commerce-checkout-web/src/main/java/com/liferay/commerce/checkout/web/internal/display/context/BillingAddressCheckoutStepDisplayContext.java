@@ -17,8 +17,8 @@ package com.liferay.commerce.checkout.web.internal.display.context;
 import com.liferay.account.model.AccountEntry;
 import com.liferay.account.service.AccountEntryLocalService;
 import com.liferay.account.service.AccountRoleLocalService;
-import com.liferay.commerce.account.model.CommerceAccount;
 import com.liferay.commerce.constants.CommerceCheckoutWebKeys;
+import com.liferay.commerce.context.CommerceContext;
 import com.liferay.commerce.model.CommerceAddress;
 import com.liferay.commerce.model.CommerceOrder;
 import com.liferay.commerce.product.constants.CommerceChannelAccountEntryRelConstants;
@@ -26,6 +26,7 @@ import com.liferay.commerce.product.model.CommerceChannelAccountEntryRel;
 import com.liferay.commerce.product.service.CommerceChannelAccountEntryRelLocalService;
 import com.liferay.commerce.product.service.CommerceChannelLocalService;
 import com.liferay.commerce.service.CommerceAddressService;
+import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermission;
@@ -63,11 +64,13 @@ public class BillingAddressCheckoutStepDisplayContext
 
 	@Override
 	public List<CommerceAddress> getCommerceAddresses() throws PortalException {
+		CommerceContext commerceContext = getCommerceContext();
 		CommerceOrder commerceOrder = getCommerceOrder();
 
 		return commerceAddressService.getBillingCommerceAddresses(
-			commerceOrder.getCompanyId(), AccountEntry.class.getName(),
-			commerceOrder.getCommerceAccountId());
+			commerceContext.getCommerceChannelId(),
+			AccountEntry.class.getName(), commerceOrder.getCommerceAccountId(),
+			QueryUtil.ALL_POS, QueryUtil.ALL_POS);
 	}
 
 	@Override
@@ -92,10 +95,7 @@ public class BillingAddressCheckoutStepDisplayContext
 			return billingAddressId;
 		}
 
-		CommerceAccount commerceAccount = commerceOrder.getCommerceAccount();
-
-		AccountEntry accountEntry = accountEntryLocalService.fetchAccountEntry(
-			commerceAccount.getCommerceAccountId());
+		AccountEntry accountEntry = commerceOrder.getAccountEntry();
 
 		if (accountEntry == null) {
 			return billingAddressId;

@@ -79,11 +79,12 @@ const activitiesSchema = object({
 							),
 						})
 					)
+					.compact((budget) => budget.removed)
 					.min(1, 'Required'),
 				endDate: date()
 					.test(
 						'end-date-six-month',
-						'End date must be less than six month after start date',
+						'The activity period can not be longer than 6 months',
 						(endDate, testContext) => {
 							if (endDate) {
 								const startDate = testContext.parent.startDate;
@@ -159,7 +160,7 @@ const activitiesSchema = object({
 					),
 				name: string()
 					.trim()
-					.max(255, 'You have exceeded the character limit')
+					.max(40, 'You have exceeded the character limit')
 					.required('Required'),
 				startDate: date()
 					.test(
@@ -209,6 +210,7 @@ const activitiesSchema = object({
 				),
 			})
 		)
+		.compact((activity) => activity.removed)
 		.min(1),
 });
 

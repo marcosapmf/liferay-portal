@@ -29,6 +29,7 @@ type _adaptGoogleMapsAddressIntoAddress = (
 	streetNumber: string;
 	zip: string;
 };
+
 const setup = (GOOGLE_API: any) => {
 	try {
 		const googleMapsLoader = new Loader({
@@ -48,8 +49,6 @@ const setup = (GOOGLE_API: any) => {
  * @returns {any} Google Maps Autocomplete Instance
  */
 const autocomplete = (input: any) => {
-	const google = window.google;
-
 	if (!google) {
 		throw new Error(
 			'google is not defined. Please check the Google Maps API key within System Settings and ensure a valid API key is entered'
@@ -80,8 +79,6 @@ const autocomplete = (input: any) => {
  * @returns {any} Google Maps InfoWindow Instance
  */
 const InfoWindow = () => {
-	const google = window.google;
-
 	if (!google) {
 		throw new Error(
 			'google is not defined. Please check the Google Maps API key within System Settings and ensure a valid API key is entered'
@@ -89,6 +86,27 @@ const InfoWindow = () => {
 	}
 
 	return new google.maps.InfoWindow();
+};
+
+const GeoLocation = async (addressLocation: string) => {
+	let lat = 0;
+	let lng = 0;
+	const address = addressLocation;
+
+	const google = window.google;
+
+	if (google) {
+		const geocoder = new google.maps.Geocoder();
+
+		await geocoder.geocode({address}, (results, status) => {
+			if (status === google.maps.GeocoderStatus.OK && results) {
+				lat = results[0].geometry.location.lat();
+				lng = results[0].geometry.location.lng();
+			}
+		});
+	}
+
+	return [lat, lng];
 };
 
 /**
@@ -150,6 +168,7 @@ const _adaptGoogleMapsAddressIntoAddress = (addressComponents: any) => {
 };
 
 export const GoogleMapsService = {
+	GeoLocation,
 	InfoWindow,
 	autocomplete,
 	getAutocompletePlaces,

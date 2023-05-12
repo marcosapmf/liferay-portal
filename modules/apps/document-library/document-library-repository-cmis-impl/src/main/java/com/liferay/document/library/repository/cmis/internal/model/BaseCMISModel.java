@@ -130,7 +130,7 @@ public abstract class BaseCMISModel {
 
 		if (user == null) {
 			try {
-				user = UserLocalServiceUtil.getDefaultUser(getCompanyId());
+				user = UserLocalServiceUtil.getGuestUser(getCompanyId());
 			}
 			catch (Exception exception) {
 				if (_log.isDebugEnabled()) {
@@ -159,6 +159,8 @@ public abstract class BaseCMISModel {
 			ActionKeys.DELETE, Action.CAN_DELETE_OBJECT
 		).put(
 			ActionKeys.DELETE_DISCUSSION, Action.CAN_DELETE_OBJECT
+		).put(
+			ActionKeys.DOWNLOAD, Action.CAN_GET_CONTENT_STREAM
 		).put(
 			ActionKeys.UPDATE, Action.CAN_UPDATE_PROPERTIES
 		).put(

@@ -34,7 +34,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
-import java.util.stream.Stream;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -453,23 +452,20 @@ public class DDMFormTemplateContextFactoryTest {
 			Arrays.toString(actualValidations), expectedValidationsMap.size(),
 			actualValidations.length);
 
-		Stream.of(
-			actualValidations
-		).map(
-			HashMap.class::cast
-		).forEach(
-			actualValidation -> {
-				Assert.assertTrue(actualValidation.containsKey("label"));
-				Assert.assertTrue(actualValidation.containsKey("name"));
-				Assert.assertTrue(
-					actualValidation.containsKey("parameterMessage"));
-				Assert.assertTrue(actualValidation.containsKey("template"));
+		for (Object actualValidation : actualValidations) {
+			HashMap<String, Object> actualValidationMap =
+				(HashMap<String, Object>)actualValidation;
 
-				Assert.assertEquals(
-					expectedValidationsMap.remove(actualValidation.get("name")),
-					actualValidation.get("template"));
-			}
-		);
+			Assert.assertTrue(actualValidationMap.containsKey("label"));
+			Assert.assertTrue(actualValidationMap.containsKey("name"));
+			Assert.assertTrue(
+				actualValidationMap.containsKey("parameterMessage"));
+			Assert.assertTrue(actualValidationMap.containsKey("template"));
+
+			Assert.assertEquals(
+				expectedValidationsMap.remove(actualValidationMap.get("name")),
+				actualValidationMap.get("template"));
+		}
 
 		Assert.assertEquals(
 			expectedValidationsMap.toString(), 0,

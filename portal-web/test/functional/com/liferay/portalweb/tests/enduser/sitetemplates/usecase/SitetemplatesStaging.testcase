@@ -1,6 +1,7 @@
 @component-name = "portal-staging"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property release.feature.flags.disable.DISABLE_PRIVATE_LAYOUTS = "true";
@@ -15,7 +16,7 @@ definition {
 	tearDown {
 		var testPortalInstance = PropsUtil.get("test.portal.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testPortalInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -25,7 +26,7 @@ definition {
 
 	@description = "User can enable local staging on site which is based on Masterclass site template. Blocked by LPS-172531."
 	@ignore = "true"
-	@priority = "4"
+	@priority = 4
 	test CanEnableLocalStagingOnMasterclassSiteTemplate {
 		task ("Given: Add a new site based on Masterclass site template") {
 			Site.openSitesAdmin();
@@ -61,7 +62,7 @@ definition {
 
 	@description = "User can enable local staging on site which is based on Minium site template. Blocked by LPS-172633."
 	@ignore = "true"
-	@priority = "4"
+	@priority = 4
 	test CanEnableLocalStagingOnMiniumSiteTemplate {
 		task ("Given: Add a new site based on Minium site template") {
 			Site.openSitesAdmin();
@@ -97,7 +98,7 @@ definition {
 
 	@description = "User can enable local staging on site which is based on Raylife site template. Blocked by LPS-172534 and LPS-172537."
 	@ignore = "true"
-	@priority = "4"
+	@priority = 4
 	test CanEnableLocalStagingOnRaylifeSiteTemplate {
 		task ("Given: Add a new site based on Raylife site template") {
 			Site.openSitesAdmin();
@@ -132,7 +133,7 @@ definition {
 	}
 
 	@description = "User can enable local staging on site which is based on Speedwell site template."
-	@priority = "4"
+	@priority = 4
 	test CanEnableLocalStagingOnSpeedwellSiteTemplate {
 		task ("Given: Add a new site based on Speedwell site template") {
 			Site.openSitesAdmin();
@@ -152,22 +153,16 @@ definition {
 		task ("Then: User can publish the staging site") {
 			Navigator.openSiteURL(siteName = "Test Speedwell Site");
 
-			var key_tabName = "Staging";
+			Staging.openStagingAdmin(siteURLKey = "test-speedwell-site-staging");
 
-			while (IsElementNotPresent(locator1 = "StagingPublishToLive#TAB_NAME")) {
-				Refresh();
-			}
+			WaitForElementPresent(locator1 = "Staging#PROCESS_SUCCESSFUL");
 
-			Click(locator1 = "StagingPublishToLive#TAB_NAME");
-
-			Staging.gotoPublishToLive();
-
-			Staging.publishToLive();
+			Staging.publishCustomPublication();
 		}
 	}
 
 	@description = "User can enable local staging on site which is based on Welcome site template."
-	@priority = "4"
+	@priority = 4
 	test CanEnableLocalStagingOnWelcomeSiteTemplate {
 		task ("Given: Add a new site based on Welcome site template") {
 			Site.openSitesAdmin();

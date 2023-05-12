@@ -109,7 +109,8 @@ public interface DLFileEntryLocalService
 	public DLFileVersion cancelCheckOut(long userId, long fileEntryId)
 		throws PortalException;
 
-	public void checkFileEntries(long checkInterval) throws PortalException;
+	public void checkFileEntries(long companyId, long checkInterval)
+		throws PortalException;
 
 	public void checkInFileEntry(
 			long userId, long fileEntryId,
@@ -144,13 +145,14 @@ public interface DLFileEntryLocalService
 	public void convertExtraSettings(String[] keys) throws PortalException;
 
 	public DLFileEntry copyFileEntry(
-			long userId, long groupId, long repositoryId, long fileEntryId,
-			long destFolderId, String fileName, ServiceContext serviceContext)
+			long userId, long groupId, long repositoryId,
+			long sourceFileEntryId, long targetFolderId, String fileName,
+			ServiceContext serviceContext)
 		throws PortalException;
 
 	public void copyFileEntryMetadata(
 			long companyId, long fileEntryTypeId, long fileEntryId,
-			long fromFileVersionId, long toFileVersionId,
+			long sourceFileVersionId, long targetFileVersionId,
 			ServiceContext serviceContext)
 		throws PortalException;
 

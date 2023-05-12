@@ -69,6 +69,7 @@ type TItemsActions = {
 	icon?: string;
 	id?: string;
 	label?: string;
+	onClick?: Function;
 	target?: 'async' | 'headless' | 'link' | 'modal' | 'sidePanel' | 'event';
 };
 
@@ -80,6 +81,7 @@ type TSorting = {
 type TViews = {
 	component?: any;
 	contentRenderer?: string;
+	contentRendererClientExtension?: boolean;
 	contentRendererModuleURL?: string;
 	label?: string;
 	name?: string;

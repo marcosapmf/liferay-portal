@@ -73,6 +73,7 @@ if (filterManageableOrganizations) {
 			creationMenu="<%= viewOrganizationsManagementToolbarDisplayContext.getCreationMenu() %>"
 			filterDropdownItems="<%= viewOrganizationsManagementToolbarDisplayContext.getFilterDropdownItems() %>"
 			itemsTotal="<%= searchContainer.getTotal() %>"
+			propsTransformer="js/ViewFlatOrganizationsAndUsersManagementToolbarPropsTransformer"
 			searchActionURL="<%= viewOrganizationsManagementToolbarDisplayContext.getSearchActionURL() %>"
 			searchContainerId="organizations"
 			searchFormName="searchFm"

@@ -21,11 +21,17 @@ public class ClientExtensionEntryConstants {
 
 	public static final String TYPE_CUSTOM_ELEMENT = "customElement";
 
+	public static final String TYPE_FDS_CELL_RENDERER = "fdsCellRenderer";
+
 	public static final String TYPE_GLOBAL_CSS = "globalCSS";
 
 	public static final String TYPE_GLOBAL_JS = "globalJS";
 
 	public static final String TYPE_IFRAME = "iframe";
+
+	public static final String TYPE_JS_IMPORT_MAPS_ENTRY = "jsImportMapsEntry";
+
+	public static final String TYPE_STATIC_CONTENT = "staticContent";
 
 	public static final String TYPE_THEME_CSS = "themeCSS";
 

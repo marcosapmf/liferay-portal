@@ -17,7 +17,6 @@ package com.liferay.commerce.internal.upgrade.v7_0_0;
 import com.liferay.account.constants.AccountListTypeConstants;
 import com.liferay.account.model.AccountEntry;
 import com.liferay.account.service.AccountEntryLocalService;
-import com.liferay.commerce.account.model.CommerceAccount;
 import com.liferay.commerce.constants.CommerceAddressConstants;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
@@ -30,6 +29,8 @@ import com.liferay.portal.kernel.service.ListTypeLocalService;
 import com.liferay.portal.kernel.service.PhoneLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.upgrade.UpgradeProcess;
+import com.liferay.portal.kernel.upgrade.UpgradeProcessFactory;
+import com.liferay.portal.kernel.upgrade.UpgradeStep;
 
 import java.sql.ResultSet;
 import java.sql.Statement;
@@ -94,9 +95,14 @@ public class CommerceAddressUpgradeProcess extends UpgradeProcess {
 				_setDefaultShipping(
 					address, resultSet.getBoolean("defaultShipping"));
 			}
-
-			runSQL("drop table CommerceAddress");
 		}
+	}
+
+	@Override
+	protected UpgradeStep[] getPostUpgradeSteps() {
+		return new UpgradeStep[] {
+			UpgradeProcessFactory.dropTables("CommerceAddress")
+		};
 	}
 
 	private long _getListTypeId(int commerceAddressType) {
@@ -134,7 +140,9 @@ public class CommerceAddressUpgradeProcess extends UpgradeProcess {
 
 		if (defaultBilling &&
 			(Objects.equals(AccountEntry.class.getName(), className) ||
-			 Objects.equals(CommerceAccount.class.getName(), className))) {
+			 Objects.equals(
+				 className,
+				 "com.liferay.commerce.account.model.CommerceAccount"))) {
 
 			try {
 				_accountEntryLocalService.updateDefaultBillingAddressId(
@@ -151,7 +159,9 @@ public class CommerceAddressUpgradeProcess extends UpgradeProcess {
 
 		if (defaultShipping &&
 			(Objects.equals(AccountEntry.class.getName(), className) ||
-			 Objects.equals(CommerceAccount.class.getName(), className))) {
+			 Objects.equals(
+				 className,
+				 "com.liferay.commerce.account.model.CommerceAccount"))) {
 
 			try {
 				_accountEntryLocalService.updateDefaultShippingAddressId(

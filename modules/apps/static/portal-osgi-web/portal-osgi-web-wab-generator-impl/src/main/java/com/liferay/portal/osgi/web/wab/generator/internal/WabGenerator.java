@@ -15,9 +15,9 @@
 package com.liferay.portal.osgi.web.wab.generator.internal;
 
 import com.liferay.portal.file.install.FileInstaller;
+import com.liferay.portal.kernel.dependency.manager.DependencyManagerSyncUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.module.framework.ModuleServiceLifecycle;
 import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.osgi.web.wab.generator.internal.artifact.ArtifactURLUtil;
@@ -31,7 +31,6 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import java.net.URI;
-import java.net.URL;
 
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
@@ -44,7 +43,6 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -58,9 +56,6 @@ import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
-import org.osgi.service.component.annotations.ReferenceCardinality;
-import org.osgi.service.component.annotations.ReferencePolicy;
-import org.osgi.service.component.annotations.ReferencePolicyOption;
 import org.osgi.service.url.URLConstants;
 import org.osgi.service.url.URLStreamHandlerService;
 import org.osgi.util.tracker.BundleTracker;
@@ -93,71 +88,79 @@ public class WabGenerator
 
 		_registerArtifactUrlTransformer(bundleContext);
 
-		final Set<String> requiredForStartupContextPaths =
-			_getRequiredForStartupContextPaths(
-				Paths.get(PropsValues.LIFERAY_HOME, "osgi/war"));
+		DependencyManagerSyncUtil.registerSyncCallable(
+			() -> {
+				Set<String> requiredForStartupContextPaths =
+					_getRequiredForStartupContextPaths(
+						Paths.get(PropsValues.LIFERAY_HOME, "osgi/war"));
 
-		if (requiredForStartupContextPaths.isEmpty()) {
-			return;
-		}
-
-		final CountDownLatch countDownLatch = new CountDownLatch(1);
-
-		BundleTracker<Void> bundleTracker = new BundleTracker<Void>(
-			bundleContext, Bundle.ACTIVE, null) {
-
-			@Override
-			public Void addingBundle(Bundle bundle, BundleEvent bundleEvent) {
-				String location = bundle.getLocation();
-
-				if (_log.isDebugEnabled()) {
-					_log.debug("Activated bundle " + location);
+				if (requiredForStartupContextPaths.isEmpty()) {
+					return null;
 				}
 
-				if (requiredForStartupContextPaths.remove(
-						HttpComponentsUtil.getParameter(
-							location, "Web-ContextPath", false))) {
+				CountDownLatch countDownLatch = new CountDownLatch(1);
 
-					if (_log.isDebugEnabled()) {
-						_log.debug(
-							"Bundle " + location + " is required for startup");
+				BundleTracker<Void> bundleTracker = new BundleTracker<Void>(
+					bundleContext, Bundle.ACTIVE, null) {
+
+					@Override
+					public Void addingBundle(
+						Bundle bundle, BundleEvent bundleEvent) {
+
+						String location = bundle.getLocation();
+
+						if (_log.isDebugEnabled()) {
+							_log.debug("Activated bundle " + location);
+						}
+
+						if (requiredForStartupContextPaths.remove(
+								HttpComponentsUtil.getParameter(
+									location, "Web-ContextPath", false))) {
+
+							if (_log.isDebugEnabled()) {
+								_log.debug(
+									"Bundle " + location +
+										" is required for startup");
+							}
+
+							if (requiredForStartupContextPaths.isEmpty()) {
+								countDownLatch.countDown();
+							}
+						}
+
+						return null;
 					}
 
-					if (requiredForStartupContextPaths.isEmpty()) {
-						countDownLatch.countDown();
+				};
+
+				if (_log.isDebugEnabled()) {
+					_log.debug(
+						"Bundles required for startup: " +
+							requiredForStartupContextPaths);
+				}
+
+				bundleTracker.open();
+
+				while (true) {
+					if (countDownLatch.await(1, TimeUnit.MINUTES)) {
+						break;
 					}
+
+					if (_log.isWarnEnabled()) {
+						_log.warn(
+							"Waiting on startup required bundles to " +
+								"activate: " + requiredForStartupContextPaths);
+					}
+				}
+
+				bundleTracker.close();
+
+				if (_log.isDebugEnabled()) {
+					_log.debug("All startup required bundles are active");
 				}
 
 				return null;
-			}
-
-		};
-
-		if (_log.isDebugEnabled()) {
-			_log.debug(
-				"Bundles required for startup: " +
-					requiredForStartupContextPaths);
-		}
-
-		bundleTracker.open();
-
-		while (true) {
-			if (countDownLatch.await(1, TimeUnit.MINUTES)) {
-				break;
-			}
-
-			if (_log.isWarnEnabled()) {
-				_log.warn(
-					"Waiting on startup required bundles to activate: " +
-						requiredForStartupContextPaths);
-			}
-		}
-
-		bundleTracker.close();
-
-		if (_log.isDebugEnabled()) {
-			_log.debug("All startup required bundles are active");
-		}
+			});
 	}
 
 	@Deactivate
@@ -165,24 +168,6 @@ public class WabGenerator
 		_serviceRegistration.unregister();
 
 		_serviceRegistration = null;
-	}
-
-	@Reference(
-		cardinality = ReferenceCardinality.OPTIONAL,
-		policy = ReferencePolicy.DYNAMIC,
-		policyOption = ReferencePolicyOption.GREEDY,
-		target = "(&(original.bean=true)(bean.id=javax.servlet.ServletContext))"
-	)
-	protected void setServletContext(ServletContext servletContext) {
-		_portalIsReady.set(true);
-	}
-
-	protected void unsetModuleServiceLifecycle(
-		ModuleServiceLifecycle moduleServiceLifecycle) {
-	}
-
-	protected void unsetServletContext(ServletContext servletContext) {
-		_portalIsReady.set(false);
 	}
 
 	private Set<String> _getRequiredForStartupContextPaths(Path path)
@@ -215,11 +200,15 @@ public class WabGenerator
 						continue;
 					}
 
-					URL url = ArtifactURLUtil.transform(uri.toURL());
+					String contextName = properties.getProperty(
+						"servlet-context-name");
 
-					contextPaths.add(
-						HttpComponentsUtil.getParameter(
-							url.toString(), "Web-ContextPath", false));
+					if (contextName == null) {
+						contextName = ArtifactURLUtil.getSymbolicName(
+							uri.getPath());
+					}
+
+					contextPaths.add("/".concat(contextName));
 				}
 			}
 		}
@@ -229,8 +218,7 @@ public class WabGenerator
 
 	private void _registerArtifactUrlTransformer(BundleContext bundleContext) {
 		_serviceRegistration = bundleContext.registerService(
-			FileInstaller.class, new WarArtifactUrlTransformer(_portalIsReady),
-			null);
+			FileInstaller.class, new WarArtifactUrlTransformer(), null);
 	}
 
 	private void _registerURLStreamHandlerService(BundleContext bundleContext) {
@@ -250,10 +238,11 @@ public class WabGenerator
 
 	private static final Log _log = LogFactoryUtil.getLog(WabGenerator.class);
 
-	@Reference(target = ModuleServiceLifecycle.PORTAL_INITIALIZED)
-	private ModuleServiceLifecycle _moduleServiceLifecycle;
-
-	private final AtomicBoolean _portalIsReady = new AtomicBoolean();
 	private ServiceRegistration<FileInstaller> _serviceRegistration;
+
+	@Reference(
+		target = "(&(original.bean=true)(bean.id=javax.servlet.ServletContext))"
+	)
+	private ServletContext _servletContext;
 
 }

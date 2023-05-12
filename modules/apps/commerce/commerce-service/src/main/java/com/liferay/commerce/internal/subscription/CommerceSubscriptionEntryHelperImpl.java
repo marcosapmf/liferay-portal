@@ -14,7 +14,7 @@
 
 package com.liferay.commerce.internal.subscription;
 
-import com.liferay.commerce.account.model.CommerceAccount;
+import com.liferay.account.model.AccountEntry;
 import com.liferay.commerce.constants.CommerceSubscriptionEntryConstants;
 import com.liferay.commerce.model.CommerceOrder;
 import com.liferay.commerce.model.CommerceOrderItem;
@@ -48,7 +48,7 @@ public class CommerceSubscriptionEntryHelperImpl
 	public void checkCommerceSubscriptions(CommerceOrder commerceOrder)
 		throws PortalException {
 
-		CommerceAccount commerceAccount = commerceOrder.getCommerceAccount();
+		AccountEntry accountEntry = commerceOrder.getAccountEntry();
 
 		List<CommerceOrderItem> commerceOrderItems =
 			_commerceOrderItemLocalService.getSubscriptionCommerceOrderItems(
@@ -88,20 +88,20 @@ public class CommerceSubscriptionEntryHelperImpl
 
 					_commerceSubscriptionEntryLocalService.
 						addCommerceSubscriptionEntry(
-							commerceAccount.getUserId(),
+							accountEntry.getUserId(),
 							commerceOrder.getGroupId(),
 							commerceOrderItem.getCommerceOrderItemId(),
 							cpSubscriptionInfo.getSubscriptionLength(),
 							subscriptionType,
 							cpSubscriptionInfo.getMaxSubscriptionCycles(),
 							cpSubscriptionInfo.
-								getSubscriptionTypeSettingsProperties(),
+								getSubscriptionTypeSettingsUnicodeProperties(),
 							cpSubscriptionInfo.getDeliverySubscriptionLength(),
 							deliverySubscriptionType,
 							cpSubscriptionInfo.
 								getDeliveryMaxSubscriptionCycles(),
 							cpSubscriptionInfo.
-								getDeliverySubscriptionTypeSettingsProperties());
+								getDeliverySubscriptionTypeSettingsUnicodeProperties());
 				}
 			}
 		}

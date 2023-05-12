@@ -87,6 +87,21 @@ public class DropdownItemList extends ArrayList<DropdownItem> {
 		add(dropdownCheckboxItem);
 	}
 
+	public void addContext(
+		UnsafeConsumer<DropdownContextItem, Exception> unsafeConsumer) {
+
+		DropdownContextItem dropdownContextItem = new DropdownContextItem();
+
+		try {
+			unsafeConsumer.accept(dropdownContextItem);
+		}
+		catch (Exception exception) {
+			throw new RuntimeException(exception);
+		}
+
+		add(dropdownContextItem);
+	}
+
 	public void addGroup(
 		UnsafeConsumer<DropdownGroupItem, Exception> unsafeConsumer) {
 

@@ -14,14 +14,19 @@
 
 package com.liferay.object.rest.internal.resource.v1_0.test.util;
 
+import com.liferay.object.constants.ObjectDefinitionConstants;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectEntry;
 import com.liferay.object.service.ObjectEntryLocalServiceUtil;
+import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.StringUtil;
 
 import java.io.Serializable;
+
+import java.util.Map;
 
 /**
  * @author Luis Miguel Barcos
@@ -29,17 +34,41 @@ import java.io.Serializable;
 public class ObjectEntryTestUtil {
 
 	public static ObjectEntry addObjectEntry(
-			ObjectDefinition objectDefinition, String objectFieldName,
-			String objectFieldValue)
+			ObjectDefinition objectDefinition, Map<String, Serializable> values,
+			String... keywords)
 		throws Exception {
 
+		long groupId = 0;
+
+		if (StringUtil.equals(
+				objectDefinition.getScope(),
+				ObjectDefinitionConstants.SCOPE_SITE)) {
+
+			groupId = TestPropsValues.getGroupId();
+		}
+
+		ServiceContext serviceContext =
+			ServiceContextTestUtil.getServiceContext();
+
+		if (keywords.length > 0) {
+			serviceContext.setAssetTagNames(keywords);
+		}
+
 		return ObjectEntryLocalServiceUtil.addObjectEntry(
-			TestPropsValues.getUserId(), 0,
-			objectDefinition.getObjectDefinitionId(),
+			TestPropsValues.getUserId(), groupId,
+			objectDefinition.getObjectDefinitionId(), values, serviceContext);
+	}
+
+	public static ObjectEntry addObjectEntry(
+			ObjectDefinition objectDefinition, String objectFieldName,
+			Serializable objectFieldValue)
+		throws Exception {
+
+		return addObjectEntry(
+			objectDefinition,
 			HashMapBuilder.<String, Serializable>put(
 				objectFieldName, objectFieldValue
-			).build(),
-			ServiceContextTestUtil.getServiceContext());
+			).build());
 	}
 
 }

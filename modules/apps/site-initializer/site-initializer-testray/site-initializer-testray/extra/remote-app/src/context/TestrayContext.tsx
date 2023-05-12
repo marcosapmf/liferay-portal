@@ -15,10 +15,16 @@
 
 import {ReactNode, createContext, useEffect, useMemo, useReducer} from 'react';
 import {KeyedMutator} from 'swr';
+import {STORAGE_KEYS} from '~/core/Storage';
 
 import {useFetch} from '../hooks/useFetch';
 import useStorage from '../hooks/useStorage';
-import {UserAccount} from '../services/rest';
+import {
+	APIResponse,
+	TestrayDispatchTrigger,
+	UserAccount,
+} from '../services/rest';
+import {testrayDispatchTriggerImpl} from '../services/rest/TestrayDispatchTrigger';
 import {ActionMap} from '../types';
 
 export type RunId = number | null;
@@ -32,22 +38,30 @@ export type CompareRuns = {
 type InitialState = {
 	compareRuns: CompareRuns;
 	myUserAccount?: UserAccount;
+	testrayDispatchTriggers: APIResponse<TestrayDispatchTrigger>;
 };
 
 const initialState: InitialState = {
 	compareRuns: {
 		runA: null,
 		runB: null,
-		runId: null,
 	},
 	myUserAccount: undefined,
+	testrayDispatchTriggers: {
+		actions: {},
+		facets: [],
+		items: [],
+		lastPage: 1,
+		page: 1,
+		pageSize: 1,
+		totalCount: 1,
+	},
 };
 
 export const enum TestrayTypes {
 	SET_MY_USER_ACCOUNT = 'SET_MY_USER_ACCOUNT',
 	SET_RUN_A = 'SET_RUN_A',
 	SET_RUN_B = 'SET_RUN_B',
-	SET_RUN_ID = 'SET_RUN_ID',
 }
 
 type TestrayPayload = {
@@ -56,7 +70,6 @@ type TestrayPayload = {
 	};
 	[TestrayTypes.SET_RUN_A]: RunId;
 	[TestrayTypes.SET_RUN_B]: RunId;
-	[TestrayTypes.SET_RUN_ID]: RunId;
 };
 
 type AppActions = ActionMap<TestrayPayload>[keyof ActionMap<TestrayPayload>];
@@ -91,12 +104,6 @@ const reducer = (state: InitialState, action: AppActions) => {
 				compareRuns: {...state.compareRuns, runB: action.payload},
 			};
 
-		case TestrayTypes.SET_RUN_ID:
-			return {
-				...state,
-				compareRuns: {...state.compareRuns, runId: action.payload},
-			};
-
 		default:
 			return state;
 	}
@@ -107,15 +114,29 @@ const TestrayContextProvider: React.FC<{
 }> = ({children}) => {
 	const [storageValue, setStorageValue] = useStorage<{
 		compareRuns: CompareRuns;
-	}>('compareRuns', initialState, sessionStorage);
+	}>(STORAGE_KEYS.COMPARE_RUNS, {
+		initialValue: initialState,
+		storageType: 'temporary',
+	});
 
 	const [state, dispatch] = useReducer(reducer, {
 		...initialState,
 		compareRuns: storageValue?.compareRuns,
 	});
 
+	const {data: testrayDispatchTriggers} = useFetch<
+		APIResponse<TestrayDispatchTrigger>
+	>(testrayDispatchTriggerImpl.resource, {
+		params: {
+			aggregationTerms: 'dueStatus',
+			pageSize: 10,
+			sort: 'dateCreated:asc',
+		},
+	});
+
 	const {data: myUserAccount, mutate} = useFetch('/my-user-account', {
 		transformData: (user: UserAccount) => ({
+			actions: user?.actions,
 			additionalName: user?.additionalName,
 			alternateName: user?.alternateName,
 			emailAddress: user?.emailAddress,
@@ -123,6 +144,7 @@ const TestrayContextProvider: React.FC<{
 			givenName: user?.givenName,
 			id: user?.id,
 			image: user.image,
+			name: user.name,
 			roleBriefs: user?.roleBriefs,
 			userGroupBriefs: user?.userGroupBriefs,
 			uuid: user?.uuid,
@@ -149,7 +171,18 @@ const TestrayContextProvider: React.FC<{
 	}, [myUserAccount]);
 
 	return (
-		<TestrayContext.Provider value={[state, dispatch, mutate]}>
+		<TestrayContext.Provider
+			value={[
+				{
+					...state,
+					testrayDispatchTriggers: testrayDispatchTriggers as APIResponse<
+						TestrayDispatchTrigger
+					>,
+				},
+				dispatch,
+				mutate,
+			]}
+		>
 			{children}
 		</TestrayContext.Provider>
 	);

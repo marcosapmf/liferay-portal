@@ -101,7 +101,7 @@ public class AddDefaultSharedFormLayoutPortalInstanceLifecycleListener
 
 	private Group _addFormsGroup(long companyId) throws Exception {
 		return _groupLocalService.addGroup(
-			_userLocalService.getDefaultUserId(companyId),
+			_userLocalService.getGuestUserId(companyId),
 			GroupConstants.DEFAULT_PARENT_GROUP_ID, null, 0,
 			GroupConstants.DEFAULT_LIVE_GROUP_ID,
 			HashMapBuilder.put(
@@ -124,12 +124,12 @@ public class AddDefaultSharedFormLayoutPortalInstanceLifecycleListener
 		serviceContext.setAttribute("layoutUpdateable", Boolean.FALSE);
 		serviceContext.setScopeGroupId(groupId);
 
-		long defaultUserId = _userLocalService.getDefaultUserId(companyId);
+		long guestUserId = _userLocalService.getGuestUserId(companyId);
 
-		serviceContext.setUserId(defaultUserId);
+		serviceContext.setUserId(guestUserId);
 
 		Layout layout = _layoutLocalService.addLayout(
-			defaultUserId, groupId, true,
+			guestUserId, groupId, true,
 			LayoutConstants.DEFAULT_PARENT_LAYOUT_ID, "Shared",
 			StringPool.BLANK, StringPool.BLANK,
 			DDMFormPortletLayoutTypeConstants.LAYOUT_TYPE, true, "/shared",
@@ -152,12 +152,12 @@ public class AddDefaultSharedFormLayoutPortalInstanceLifecycleListener
 		serviceContext.setAttribute("layoutUpdateable", Boolean.FALSE);
 		serviceContext.setScopeGroupId(groupId);
 
-		long defaultUserId = _userLocalService.getDefaultUserId(companyId);
+		long guestUserId = _userLocalService.getGuestUserId(companyId);
 
-		serviceContext.setUserId(defaultUserId);
+		serviceContext.setUserId(guestUserId);
 
 		return _layoutLocalService.addLayout(
-			defaultUserId, groupId, false,
+			guestUserId, groupId, false,
 			LayoutConstants.DEFAULT_PARENT_LAYOUT_ID, "Shared",
 			StringPool.BLANK, StringPool.BLANK,
 			DDMFormPortletLayoutTypeConstants.LAYOUT_TYPE, true, "/shared",
@@ -169,6 +169,15 @@ public class AddDefaultSharedFormLayoutPortalInstanceLifecycleListener
 		throws Exception {
 
 		Role role = _roleLocalService.getRole(companyId, RoleConstants.USER);
+
+		if (_resourcePermissionLocalService.hasResourcePermission(
+				role.getCompanyId(), Layout.class.getName(),
+				ResourceConstants.SCOPE_COMPANY,
+				String.valueOf(layout.getCompanyId()), role.getRoleId(),
+				ActionKeys.VIEW)) {
+
+			return;
+		}
 
 		_resourcePermissionLocalService.addResourcePermission(
 			role.getCompanyId(), Layout.class.getName(),

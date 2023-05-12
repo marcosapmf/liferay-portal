@@ -13,7 +13,7 @@ definition {
 		}
 
 		task ("Add a site") {
-			JSONGroup.addGroup(groupName = "Test Site Name");
+			HeadlessSite.addSite(siteName = "Test Site Name");
 		}
 
 		task ("Add a widget page") {
@@ -40,7 +40,7 @@ definition {
 	tearDown {
 		var testPortalInstance = PropsUtil.get("test.portal.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testPortalInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -49,7 +49,7 @@ definition {
 	}
 
 	@description = "Publish an expired web content to live."
-	@priority = "4"
+	@priority = 4
 	test PublishExpiredWebContentToLive {
 		property testray.component.names = "Staging,Web Content Administration";
 
@@ -124,7 +124,7 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-101289. View comment is shown after edited in a staging site."
-	@priority = "4"
+	@priority = 4
 	test ViewCommentAfterEditingInStaging {
 		task ("Change the layout of page to 1 Column") {
 			JSONLayout.updateLayoutTemplateOfPublicLayout(
@@ -189,7 +189,7 @@ definition {
 			Comments.addPG(entryComment = "Web Content Comment");
 
 			Comments.viewPG(
-				commentCount = "1",
+				commentCount = 1,
 				entryComment = "Web Content Comment",
 				userFullName = "Test Test (You)");
 		}
@@ -231,16 +231,17 @@ definition {
 				siteName = "Test Site Name");
 
 			Comments.viewPG(
-				commentCount = "1",
+				commentCount = 1,
 				entryComment = "Web Content Comment",
 				userFullName = "Test Test (You)");
 		}
 	}
 
 	@description = "This is a use case for LPS-77769. View a web content with an edited image field in live."
-	@priority = "5"
+	@priority = 5
 	test ViewWebContentWithEditedImageField {
 		property portal.acceptance = "true";
+		property timeout.explicit.wait = "20";
 
 		task ("Add an image field to web content structure") {
 			WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name-staging");

@@ -25,8 +25,7 @@ import com.liferay.object.constants.ObjectFieldSettingConstants;
 import com.liferay.object.service.ObjectFieldLocalService;
 import com.liferay.object.service.ObjectFieldSettingLocalService;
 import com.liferay.object.service.ObjectFilterLocalService;
-import com.liferay.object.util.LocalizedMapUtil;
-import com.liferay.petra.function.transform.TransformUtil;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
@@ -34,9 +33,9 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
-import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.vulcan.util.LocalizedMapUtil;
 
 import java.util.Collections;
 import java.util.Objects;
@@ -53,10 +52,18 @@ public class ObjectFieldUtil {
 			ObjectField objectField, long userId)
 		throws Exception {
 
-		if (Validator.isNull(
-				objectField.getListTypeDefinitionExternalReferenceCode())) {
+		if (!(StringUtil.equals(
+				objectField.getBusinessTypeAsString(),
+				ObjectFieldConstants.BUSINESS_TYPE_MULTISELECT_PICKLIST) ||
+			  StringUtil.equals(
+				  objectField.getBusinessTypeAsString(),
+				  ObjectFieldConstants.BUSINESS_TYPE_PICKLIST))) {
 
 			return 0;
+		}
+
+		if (objectField.getListTypeDefinitionId() != null) {
+			return objectField.getListTypeDefinitionId();
 		}
 
 		ListTypeDefinition listTypeDefinition =
@@ -134,13 +141,14 @@ public class ObjectFieldUtil {
 	}
 
 	public static com.liferay.object.model.ObjectField toObjectField(
+		boolean enableLocalization,
 		ListTypeDefinitionLocalService listTypeDefinitionLocalService,
 		ObjectField objectField,
 		ObjectFieldLocalService objectFieldLocalService,
 		ObjectFieldSettingLocalService objectFieldSettingLocalService,
 		ObjectFilterLocalService objectFilterLocalService) {
 
-		if (!GetterUtil.getBoolean(PropsUtil.get("feature.flag.LPS-164948")) &&
+		if (!FeatureFlagManagerUtil.isEnabled("LPS-164948") &&
 			Objects.equals(
 				objectField.getBusinessTypeAsString(),
 				ObjectFieldConstants.BUSINESS_TYPE_FORMULA)) {
@@ -166,12 +174,6 @@ public class ObjectFieldUtil {
 			getDBType(
 				objectField.getDBTypeAsString(),
 				objectField.getTypeAsString()));
-
-		if (Validator.isNotNull(objectField.getDefaultValue())) {
-			serviceBuilderObjectField.setDefaultValue(
-				objectField.getDefaultValue());
-		}
-
 		serviceBuilderObjectField.setIndexed(
 			GetterUtil.getBoolean(objectField.getIndexed()));
 		serviceBuilderObjectField.setIndexedAsKeyword(
@@ -180,16 +182,28 @@ public class ObjectFieldUtil {
 			objectField.getIndexedLanguageId());
 		serviceBuilderObjectField.setLabelMap(
 			LocalizedMapUtil.getLocalizedMap(objectField.getLabel()));
+
+		if (FeatureFlagManagerUtil.isEnabled("LPS-146755") &&
+			(Objects.equals(
+				ObjectField.BusinessType.LONG_TEXT,
+				objectField.getBusinessType()) ||
+			 Objects.equals(
+				 ObjectField.BusinessType.RICH_TEXT,
+				 objectField.getBusinessType()) ||
+			 Objects.equals(
+				 ObjectField.BusinessType.TEXT,
+				 objectField.getBusinessType()))) {
+
+			serviceBuilderObjectField.setLocalized(
+				GetterUtil.getBoolean(
+					objectField.getLocalized(), enableLocalization));
+		}
+
 		serviceBuilderObjectField.setName(objectField.getName());
 		serviceBuilderObjectField.setObjectFieldSettings(
-			TransformUtil.transformToList(
-				objectField.getObjectFieldSettings(),
-				objectFieldSetting ->
-					ObjectFieldSettingUtil.toObjectFieldSetting(
-						objectField.getBusinessTypeAsString(),
-						listTypeDefinitionId, objectFieldSetting,
-						objectFieldSettingLocalService,
-						objectFilterLocalService)));
+			ObjectFieldSettingUtil.toObjectFieldSettings(
+				listTypeDefinitionId, objectField,
+				objectFieldSettingLocalService, objectFilterLocalService));
 		serviceBuilderObjectField.setRequired(
 			GetterUtil.getBoolean(objectField.getRequired()));
 
@@ -241,7 +255,8 @@ public class ObjectFieldUtil {
 				}
 
 				listTypeEntryLocalService.addListTypeEntry(
-					userId, listTypeDefinition.getListTypeDefinitionId(), key,
+					null, userId, listTypeDefinition.getListTypeDefinitionId(),
+					key,
 					Collections.singletonMap(LocaleUtil.getDefault(), key));
 			}
 		}

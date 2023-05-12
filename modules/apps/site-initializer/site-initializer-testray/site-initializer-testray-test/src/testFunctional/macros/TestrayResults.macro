@@ -1,13 +1,20 @@
 definition {
 
+	macro assertIssue {
+		AssertElementPresent(
+			key_issue = ${issue},
+			key_label = ${label},
+			locator1 = "TestrayResults#ISSUE_WITH_LABEL");
+	}
+
 	macro caseResultsMetrics {
 		AssertTextEquals(
 			locator1 = "TestrayResults#TOTAL_TEST_CASE_RESULTS",
-			value1 = "${totalTestCases}");
+			value1 = ${totalTestCases});
 	}
 
 	macro goToCaseResults {
-		TestrayRoutines.goToRoutine(routineName = "${caseResultsName}");
+		TestrayRoutines.goToRoutine(routineName = ${caseResultsName});
 	}
 
 }

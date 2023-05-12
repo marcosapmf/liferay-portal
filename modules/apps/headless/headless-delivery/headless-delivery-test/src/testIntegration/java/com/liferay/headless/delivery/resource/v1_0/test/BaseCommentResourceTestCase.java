@@ -30,6 +30,7 @@ import com.liferay.headless.delivery.client.pagination.Pagination;
 import com.liferay.headless.delivery.client.resource.v1_0.CommentResource;
 import com.liferay.headless.delivery.client.serdes.v1_0.CommentSerDes;
 import com.liferay.petra.function.UnsafeTriConsumer;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.json.JSONArray;
@@ -67,8 +68,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.annotation.Generated;
 
@@ -224,7 +223,10 @@ public abstract class BaseCommentResourceTestCase {
 			assertEquals(
 				Arrays.asList(irrelevantComment),
 				(List<Comment>)page.getItems());
-			assertValid(page);
+			assertValid(
+				page,
+				testGetBlogPostingCommentsPage_getExpectedActions(
+					irrelevantBlogPostingId));
 		}
 
 		Comment comment1 = testGetBlogPostingCommentsPage_addComment(
@@ -240,11 +242,32 @@ public abstract class BaseCommentResourceTestCase {
 
 		assertEqualsIgnoringOrder(
 			Arrays.asList(comment1, comment2), (List<Comment>)page.getItems());
-		assertValid(page);
+		assertValid(
+			page,
+			testGetBlogPostingCommentsPage_getExpectedActions(blogPostingId));
 
 		commentResource.deleteComment(comment1.getId());
 
 		commentResource.deleteComment(comment2.getId());
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetBlogPostingCommentsPage_getExpectedActions(
+				Long blogPostingId)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		Map createBatchAction = new HashMap<>();
+		createBatchAction.put("method", "POST");
+		createBatchAction.put(
+			"href",
+			"http://localhost:8080/o/headless-delivery/v1.0/blog-postings/{blogPostingId}/comments/batch".
+				replace("{blogPostingId}", String.valueOf(blogPostingId)));
+
+		expectedActions.put("createBatch", createBatchAction);
+
+		return expectedActions;
 	}
 
 	@Test
@@ -715,7 +738,10 @@ public abstract class BaseCommentResourceTestCase {
 			assertEquals(
 				Arrays.asList(irrelevantComment),
 				(List<Comment>)page.getItems());
-			assertValid(page);
+			assertValid(
+				page,
+				testGetCommentCommentsPage_getExpectedActions(
+					irrelevantParentCommentId));
 		}
 
 		Comment comment1 = testGetCommentCommentsPage_addComment(
@@ -731,11 +757,22 @@ public abstract class BaseCommentResourceTestCase {
 
 		assertEqualsIgnoringOrder(
 			Arrays.asList(comment1, comment2), (List<Comment>)page.getItems());
-		assertValid(page);
+		assertValid(
+			page,
+			testGetCommentCommentsPage_getExpectedActions(parentCommentId));
 
 		commentResource.deleteComment(comment1.getId());
 
 		commentResource.deleteComment(comment2.getId());
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetCommentCommentsPage_getExpectedActions(Long parentCommentId)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
 	}
 
 	@Test
@@ -1058,7 +1095,10 @@ public abstract class BaseCommentResourceTestCase {
 			assertEquals(
 				Arrays.asList(irrelevantComment),
 				(List<Comment>)page.getItems());
-			assertValid(page);
+			assertValid(
+				page,
+				testGetDocumentCommentsPage_getExpectedActions(
+					irrelevantDocumentId));
 		}
 
 		Comment comment1 = testGetDocumentCommentsPage_addComment(
@@ -1074,11 +1114,30 @@ public abstract class BaseCommentResourceTestCase {
 
 		assertEqualsIgnoringOrder(
 			Arrays.asList(comment1, comment2), (List<Comment>)page.getItems());
-		assertValid(page);
+		assertValid(
+			page, testGetDocumentCommentsPage_getExpectedActions(documentId));
 
 		commentResource.deleteComment(comment1.getId());
 
 		commentResource.deleteComment(comment2.getId());
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetDocumentCommentsPage_getExpectedActions(Long documentId)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		Map createBatchAction = new HashMap<>();
+		createBatchAction.put("method", "POST");
+		createBatchAction.put(
+			"href",
+			"http://localhost:8080/o/headless-delivery/v1.0/documents/{documentId}/comments/batch".
+				replace("{documentId}", String.valueOf(documentId)));
+
+		expectedActions.put("createBatch", createBatchAction);
+
+		return expectedActions;
 	}
 
 	@Test
@@ -1501,6 +1560,7 @@ public abstract class BaseCommentResourceTestCase {
 											"\"" +
 												testGraphQLGetSiteBlogPostingByExternalReferenceCodeBlogPostingExternalReferenceCodeCommentByExternalReferenceCode_getBlogPostingExternalReferenceCode() +
 													"\"");
+
 										put(
 											"externalReferenceCode",
 											"\"" +
@@ -1784,6 +1844,7 @@ public abstract class BaseCommentResourceTestCase {
 											"\"" +
 												testGraphQLGetSiteCommentByExternalReferenceCodeParentCommentExternalReferenceCodeCommentByExternalReferenceCode_getParentCommentExternalReferenceCode() +
 													"\"");
+
 										put(
 											"externalReferenceCode",
 											"\"" +
@@ -2067,6 +2128,7 @@ public abstract class BaseCommentResourceTestCase {
 											"\"" +
 												testGraphQLGetSiteDocumentByExternalReferenceCodeDocumentExternalReferenceCodeCommentByExternalReferenceCode_getDocumentExternalReferenceCode() +
 													"\"");
+
 										put(
 											"externalReferenceCode",
 											"\"" +
@@ -2350,6 +2412,7 @@ public abstract class BaseCommentResourceTestCase {
 											"\"" +
 												testGraphQLGetSiteStructuredContentByExternalReferenceCodeStructuredContentExternalReferenceCodeCommentByExternalReferenceCode_getStructuredContentExternalReferenceCode() +
 													"\"");
+
 										put(
 											"externalReferenceCode",
 											"\"" +
@@ -2532,7 +2595,10 @@ public abstract class BaseCommentResourceTestCase {
 			assertEquals(
 				Arrays.asList(irrelevantComment),
 				(List<Comment>)page.getItems());
-			assertValid(page);
+			assertValid(
+				page,
+				testGetStructuredContentCommentsPage_getExpectedActions(
+					irrelevantStructuredContentId));
 		}
 
 		Comment comment1 = testGetStructuredContentCommentsPage_addComment(
@@ -2548,11 +2614,35 @@ public abstract class BaseCommentResourceTestCase {
 
 		assertEqualsIgnoringOrder(
 			Arrays.asList(comment1, comment2), (List<Comment>)page.getItems());
-		assertValid(page);
+		assertValid(
+			page,
+			testGetStructuredContentCommentsPage_getExpectedActions(
+				structuredContentId));
 
 		commentResource.deleteComment(comment1.getId());
 
 		commentResource.deleteComment(comment2.getId());
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetStructuredContentCommentsPage_getExpectedActions(
+				Long structuredContentId)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		Map createBatchAction = new HashMap<>();
+		createBatchAction.put("method", "POST");
+		createBatchAction.put(
+			"href",
+			"http://localhost:8080/o/headless-delivery/v1.0/structured-contents/{structuredContentId}/comments/batch".
+				replace(
+					"{structuredContentId}",
+					String.valueOf(structuredContentId)));
+
+		expectedActions.put("createBatch", createBatchAction);
+
+		return expectedActions;
 	}
 
 	@Test
@@ -3023,6 +3113,12 @@ public abstract class BaseCommentResourceTestCase {
 	}
 
 	protected void assertValid(Page<Comment> page) {
+		assertValid(page, Collections.emptyMap());
+	}
+
+	protected void assertValid(
+		Page<Comment> page, Map<String, Map<String, String>> expectedActions) {
+
 		boolean valid = false;
 
 		java.util.Collection<Comment> comments = page.getItems();
@@ -3037,6 +3133,20 @@ public abstract class BaseCommentResourceTestCase {
 		}
 
 		Assert.assertTrue(valid);
+
+		Map<String, Map<String, String>> actions = page.getActions();
+
+		for (String key : expectedActions.keySet()) {
+			Map action = actions.get(key);
+
+			Assert.assertNotNull(key + " does not contain an action", action);
+
+			Map expectedAction = expectedActions.get(key);
+
+			Assert.assertEquals(
+				expectedAction.get("method"), action.get("method"));
+			Assert.assertEquals(expectedAction.get("href"), action.get("href"));
+		}
 	}
 
 	protected String[] getAdditionalAssertFieldNames() {
@@ -3236,14 +3346,16 @@ public abstract class BaseCommentResourceTestCase {
 	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
 		throws Exception {
 
-		Stream<java.lang.reflect.Field> stream = Stream.of(
-			ReflectionUtil.getDeclaredFields(clazz));
+		return TransformUtil.transform(
+			ReflectionUtil.getDeclaredFields(clazz),
+			field -> {
+				if (field.isSynthetic()) {
+					return null;
+				}
 
-		return stream.filter(
-			field -> !field.isSynthetic()
-		).toArray(
-			java.lang.reflect.Field[]::new
-		);
+				return field;
+			},
+			java.lang.reflect.Field.class);
 	}
 
 	protected java.util.Collection<EntityField> getEntityFields()
@@ -3260,6 +3372,10 @@ public abstract class BaseCommentResourceTestCase {
 		EntityModel entityModel = entityModelResource.getEntityModel(
 			new MultivaluedHashMap());
 
+		if (entityModel == null) {
+			return Collections.emptyList();
+		}
+
 		Map<String, EntityField> entityFieldsMap =
 			entityModel.getEntityFieldsMap();
 
@@ -3269,18 +3385,18 @@ public abstract class BaseCommentResourceTestCase {
 	protected List<EntityField> getEntityFields(EntityField.Type type)
 		throws Exception {
 
-		java.util.Collection<EntityField> entityFields = getEntityFields();
+		return TransformUtil.transform(
+			getEntityFields(),
+			entityField -> {
+				if (!Objects.equals(entityField.getType(), type) ||
+					ArrayUtil.contains(
+						getIgnoredEntityFieldNames(), entityField.getName())) {
 
-		Stream<EntityField> stream = entityFields.stream();
+					return null;
+				}
 
-		return stream.filter(
-			entityField ->
-				Objects.equals(entityField.getType(), type) &&
-				!ArrayUtil.contains(
-					getIgnoredEntityFieldNames(), entityField.getName())
-		).collect(
-			Collectors.toList()
-		);
+				return entityField;
+			});
 	}
 
 	protected String getFilterString(

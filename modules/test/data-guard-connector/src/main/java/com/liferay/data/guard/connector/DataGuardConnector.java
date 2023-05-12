@@ -31,10 +31,7 @@ import org.osgi.service.log.LoggerFactory;
 /**
  * @author Matthew Tambara
  */
-@Component(
-	configurationPid = "com.liferay.data.guard.connector.DataGuardConnectorConfiguration",
-	immediate = true, service = {}
-)
+@Component(service = {})
 public class DataGuardConnector {
 
 	@Activate

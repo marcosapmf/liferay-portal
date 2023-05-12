@@ -40,14 +40,15 @@ public class DLFolderServiceUtil {
 	 * Never modify this class directly. Add custom service methods to <code>com.liferay.portlet.documentlibrary.service.impl.DLFolderServiceImpl</code> and rerun ServiceBuilder to regenerate this class.
 	 */
 	public static DLFolder addFolder(
-			long groupId, long repositoryId, boolean mountPoint,
-			long parentFolderId, String name, String description,
+			String externalReferenceCode, long groupId, long repositoryId,
+			boolean mountPoint, long parentFolderId, String name,
+			String description,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws PortalException {
 
 		return getService().addFolder(
-			groupId, repositoryId, mountPoint, parentFolderId, name,
-			description, serviceContext);
+			externalReferenceCode, groupId, repositoryId, mountPoint,
+			parentFolderId, name, description, serviceContext);
 	}
 
 	public static void deleteFolder(long folderId) throws PortalException {
@@ -66,6 +67,14 @@ public class DLFolderServiceUtil {
 		throws PortalException {
 
 		getService().deleteFolder(groupId, parentFolderId, name);
+	}
+
+	public static DLFolder getDLFolderByExternalReferenceCode(
+			String externalReferenceCode, long groupId)
+		throws PortalException {
+
+		return getService().getDLFolderByExternalReferenceCode(
+			externalReferenceCode, groupId);
 	}
 
 	public static List<Object> getFileEntriesAndFileShortcuts(
@@ -107,6 +116,13 @@ public class DLFolderServiceUtil {
 		throws PortalException {
 
 		return getService().getFolderIds(groupId, folderId);
+	}
+
+	public static List<DLFolder> getFolders(
+			long groupId, double score, int start, int end)
+		throws PortalException {
+
+		return getService().getFolders(groupId, score, start, end);
 	}
 
 	public static List<DLFolder> getFolders(
@@ -225,6 +241,12 @@ public class DLFolderServiceUtil {
 		return getService().getFoldersAndFileEntriesAndFileShortcutsCount(
 			groupId, folderId, mimeTypes, fileEntryTypeId, includeMountFolders,
 			status);
+	}
+
+	public static int getFoldersCount(long groupId, double score)
+		throws PortalException {
+
+		return getService().getFoldersCount(groupId, score);
 	}
 
 	public static int getFoldersCount(long groupId, long parentFolderId)

@@ -14,8 +14,8 @@
 
 package com.liferay.commerce.product.content.search.web.internal.portlet.shared.search;
 
+import com.liferay.account.model.AccountEntry;
 import com.liferay.asset.kernel.model.AssetCategory;
-import com.liferay.commerce.account.model.CommerceAccount;
 import com.liferay.commerce.account.util.CommerceAccountHelper;
 import com.liferay.commerce.product.constants.CPField;
 import com.liferay.commerce.product.constants.CPPortletKeys;
@@ -42,6 +42,7 @@ import com.liferay.portal.search.searcher.SearchRequestBuilder;
 import com.liferay.portal.search.web.portlet.shared.search.PortletSharedSearchContributor;
 import com.liferay.portal.search.web.portlet.shared.search.PortletSharedSearchSettings;
 
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 import javax.portlet.PortletPreferences;
@@ -67,14 +68,20 @@ public class CPSearchResultsPortletSharedSearchContributor
 		try {
 			_contribute(portletSharedSearchSettings);
 
+			String paginationStartParameterName =
+				portletSharedSearchSettings.getPaginationStartParameterName();
+
+			if (paginationStartParameterName == null) {
+				throw new NoSuchElementException(
+					"Pagination start parameter name is null for portlet ID " +
+						portletSharedSearchSettings.getPortletId());
+			}
+
 			SearchRequestBuilder searchRequestBuilder =
 				portletSharedSearchSettings.getSearchRequestBuilder();
 
-			Optional<String> paginationStartParameterNameOptional =
-				portletSharedSearchSettings.getPaginationStartParameterName();
-
 			searchRequestBuilder.paginationStartParameterName(
-				paginationStartParameterNameOptional.get());
+				paginationStartParameterName);
 		}
 		catch (PortalException portalException) {
 			throw new SystemException(portalException);
@@ -130,16 +137,16 @@ public class CPSearchResultsPortletSharedSearchContributor
 			searchContext.setAttribute(
 				"commerceChannelGroupId", commerceChannel.getGroupId());
 
-			CommerceAccount commerceAccount =
-				_commerceAccountHelper.getCurrentCommerceAccount(
+			AccountEntry accountEntry =
+				_commerceAccountHelper.getCurrentAccountEntry(
 					commerceChannel.getGroupId(),
 					_portal.getHttpServletRequest(renderRequest));
 
-			if (commerceAccount != null) {
+			if (accountEntry != null) {
 				searchContext.setAttribute(
 					"commerceAccountGroupIds",
 					_commerceAccountHelper.getCommerceAccountGroupIds(
-						commerceAccount.getCommerceAccountId()));
+						accountEntry.getAccountEntryId()));
 			}
 		}
 

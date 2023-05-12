@@ -80,4 +80,8 @@ page import="java.util.Map" %>
 
 <%
 Format dateFormatDateTime = FastDateFormatFactoryUtil.getDateTime(locale, timeZone);
+
+boolean notificationActionIconList = false;
 %>
+
+<%@ include file="/init-ext.jsp" %>

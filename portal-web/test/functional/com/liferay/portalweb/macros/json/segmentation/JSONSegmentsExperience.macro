@@ -4,11 +4,12 @@ definition {
 		Variables.assertDefined(parameterList = "${groupName},${experienceName}");
 
 		var portalURL = JSONCompany.getPortalURL();
-		var groupId = JSONGroupSetter.setGroupId(groupName = "${groupName}");
+		var groupId = JSONGroupSetter.setGroupId(groupName = ${groupName});
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${portalURL}/api/jsonws/segments.segmentsexperience/get-segments-experiences \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-d groupId=${groupId} \
 				-d classNameId=20032 \
 				-d classPK=6 \
@@ -19,11 +20,11 @@ definition {
 		''';
 		var criteria = "$[?(@.nameCurrentValue == '${experienceName}')]['segmentsExperienceId']";
 
-		var segmentExperienceId = JSONCurlUtil.post("${curl}", "${criteria}");
+		var segmentExperienceId = JSONCurlUtil.post(${curl}, ${criteria});
 
 		echo("Segment Experience ID: ${segmentExperienceId}");
 
-		return "${segmentExperienceId}";
+		return ${segmentExperienceId};
 	}
 
 }

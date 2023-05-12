@@ -434,9 +434,14 @@
 		<exception>CommercePriceListParentPriceListGroupId</exception>
 		<exception>CommerceTierPriceEntryDisplayDate</exception>
 		<exception>CommerceTierPriceEntryExpirationDate</exception>
+		<exception>CommerceTierPriceEntryMinQuantity</exception>
 		<exception>DuplicateCommerceBasePriceList</exception>
 		<exception>DuplicateCommercePriceEntry</exception>
 		<exception>DuplicateCommercePriceList</exception>
+		<exception>DuplicateCommercePriceListAccountRel</exception>
+		<exception>DuplicateCommercePriceListChannelRel</exception>
+		<exception>DuplicateCommercePriceListCommerceAccountGroupRel</exception>
+		<exception>DuplicateCommercePriceListOrderTypeRel</exception>
 		<exception>DuplicateCommerceTierPriceEntry</exception>
 	</exceptions>
 </service-builder>

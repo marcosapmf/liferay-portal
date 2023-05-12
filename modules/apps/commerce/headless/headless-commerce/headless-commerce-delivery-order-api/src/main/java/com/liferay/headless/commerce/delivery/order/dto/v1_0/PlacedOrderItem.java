@@ -432,6 +432,34 @@ public class PlacedOrderItem implements Serializable {
 	protected Integer quantity;
 
 	@Schema
+	public String getReplacedSku() {
+		return replacedSku;
+	}
+
+	public void setReplacedSku(String replacedSku) {
+		this.replacedSku = replacedSku;
+	}
+
+	@JsonIgnore
+	public void setReplacedSku(
+		UnsafeSupplier<String, Exception> replacedSkuUnsafeSupplier) {
+
+		try {
+			replacedSku = replacedSkuUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected String replacedSku;
+
+	@Schema
 	@Valid
 	public Settings getSettings() {
 		return settings;
@@ -595,6 +623,34 @@ public class PlacedOrderItem implements Serializable {
 	@GraphQLField
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Boolean valid;
+
+	@Schema
+	public String[] getVirtualItemURLs() {
+		return virtualItemURLs;
+	}
+
+	public void setVirtualItemURLs(String[] virtualItemURLs) {
+		this.virtualItemURLs = virtualItemURLs;
+	}
+
+	@JsonIgnore
+	public void setVirtualItemURLs(
+		UnsafeSupplier<String[], Exception> virtualItemURLsUnsafeSupplier) {
+
+		try {
+			virtualItemURLs = virtualItemURLsUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected String[] virtualItemURLs;
 
 	@Override
 	public boolean equals(Object object) {
@@ -799,6 +855,20 @@ public class PlacedOrderItem implements Serializable {
 			sb.append(quantity);
 		}
 
+		if (replacedSku != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"replacedSku\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(replacedSku));
+
+			sb.append("\"");
+		}
+
 		if (settings != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -865,6 +935,30 @@ public class PlacedOrderItem implements Serializable {
 			sb.append("\"valid\": ");
 
 			sb.append(valid);
+		}
+
+		if (virtualItemURLs != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"virtualItemURLs\": ");
+
+			sb.append("[");
+
+			for (int i = 0; i < virtualItemURLs.length; i++) {
+				sb.append("\"");
+
+				sb.append(_escape(virtualItemURLs[i]));
+
+				sb.append("\"");
+
+				if ((i + 1) < virtualItemURLs.length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
 		}
 
 		sb.append("}");

@@ -16,11 +16,11 @@ import {INITIAL_FILTER} from '../../../utils/constants/initialFilter';
 const COMPLIMENTARY = 'Complimentary';
 const SUBSCRIPTION = 'Subscription';
 
-export default function useFilters(setFilterTerm, productName) {
+export default function useFilters(setFilterTerm, productName, baseFilter) {
 	const [filters, setFilters] = useState(INITIAL_FILTER);
 
 	useEffect(() => {
-		let initialFilter = `active eq true and startswith(productName,'${productName}')`;
+		let initialFilter = baseFilter;
 		let hasFilterPill = false;
 
 		if (filters.searchTerm) {
@@ -115,6 +115,17 @@ export default function useFilters(setFilterTerm, productName) {
 						return `${accumulatorEnvironmentTypesFilter}${
 							index > 0 ? ' or ' : ''
 						}complimentary eq false`;
+					}
+
+					if (
+						environmentType === 'Production' &&
+						!filters.environmentTypes.value.includes(
+							'Non-Production'
+						)
+					) {
+						return `${accumulatorEnvironmentTypesFilter}${
+							index > 0 ? ' or ' : ''
+						}contains(productName, '${environmentType}') and not contains(productName, 'Non-Production')`;
 					}
 
 					return `${accumulatorEnvironmentTypesFilter}${
@@ -265,6 +276,7 @@ export default function useFilters(setFilterTerm, productName) {
 
 		setFilterTerm(`${initialFilter}`);
 	}, [
+		baseFilter,
 		filters.environmentTypes.value,
 		filters.expirationDate.value,
 		filters.instanceSizes.value,

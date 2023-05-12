@@ -23,7 +23,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
-import java.util.stream.Stream;
 
 import javax.annotation.Generated;
 
@@ -201,6 +200,16 @@ public class ObjectFieldSerDes {
 			sb.append("\"listTypeDefinitionId\": ");
 
 			sb.append(objectField.getListTypeDefinitionId());
+		}
+
+		if (objectField.getLocalized() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"localized\": ");
+
+			sb.append(objectField.getLocalized());
 		}
 
 		if (objectField.getName() != null) {
@@ -414,6 +423,13 @@ public class ObjectFieldSerDes {
 				String.valueOf(objectField.getListTypeDefinitionId()));
 		}
 
+		if (objectField.getLocalized() == null) {
+			map.put("localized", null);
+		}
+		else {
+			map.put("localized", String.valueOf(objectField.getLocalized()));
+		}
+
 		if (objectField.getName() == null) {
 			map.put("name", null);
 		}
@@ -569,6 +585,11 @@ public class ObjectFieldSerDes {
 						Long.valueOf((String)jsonParserFieldValue));
 				}
 			}
+			else if (Objects.equals(jsonParserFieldName, "localized")) {
+				if (jsonParserFieldValue != null) {
+					objectField.setLocalized((Boolean)jsonParserFieldValue);
+				}
+			}
 			else if (Objects.equals(jsonParserFieldName, "name")) {
 				if (jsonParserFieldValue != null) {
 					objectField.setName((String)jsonParserFieldValue);
@@ -578,15 +599,20 @@ public class ObjectFieldSerDes {
 						jsonParserFieldName, "objectFieldSettings")) {
 
 				if (jsonParserFieldValue != null) {
+					Object[] jsonParserFieldValues =
+						(Object[])jsonParserFieldValue;
+
+					ObjectFieldSetting[] objectFieldSettingsArray =
+						new ObjectFieldSetting[jsonParserFieldValues.length];
+
+					for (int i = 0; i < objectFieldSettingsArray.length; i++) {
+						objectFieldSettingsArray[i] =
+							ObjectFieldSettingSerDes.toDTO(
+								(String)jsonParserFieldValues[i]);
+					}
+
 					objectField.setObjectFieldSettings(
-						Stream.of(
-							toStrings((Object[])jsonParserFieldValue)
-						).map(
-							object -> ObjectFieldSettingSerDes.toDTO(
-								(String)object)
-						).toArray(
-							size -> new ObjectFieldSetting[size]
-						));
+						objectFieldSettingsArray);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "relationshipType")) {

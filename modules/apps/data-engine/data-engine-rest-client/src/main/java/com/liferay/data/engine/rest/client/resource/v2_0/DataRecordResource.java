@@ -24,6 +24,7 @@ import com.liferay.data.engine.rest.client.serdes.v2_0.DataRecordSerDes;
 import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -49,6 +50,19 @@ public interface DataRecordResource {
 			getDataDefinitionDataRecordsPageHttpResponse(
 				Long dataDefinitionId, Long dataListViewId, String keywords,
 				Pagination pagination, String sortString)
+		throws Exception;
+
+	public void postDataDefinitionDataRecordsPageExportBatch(
+			Long dataDefinitionId, Long dataListViewId, String keywords,
+			String sortString, String callbackURL, String contentType,
+			String fieldNames)
+		throws Exception;
+
+	public HttpInvoker.HttpResponse
+			postDataDefinitionDataRecordsPageExportBatchHttpResponse(
+				Long dataDefinitionId, Long dataListViewId, String keywords,
+				String sortString, String callbackURL, String contentType,
+				String fieldNames)
 		throws Exception;
 
 	public DataRecord postDataDefinitionDataRecord(
@@ -77,6 +91,19 @@ public interface DataRecordResource {
 			getDataRecordCollectionDataRecordsPageHttpResponse(
 				Long dataRecordCollectionId, Long dataListViewId,
 				String keywords, Pagination pagination, String sortString)
+		throws Exception;
+
+	public void postDataRecordCollectionDataRecordsPageExportBatch(
+			Long dataRecordCollectionId, Long dataListViewId, String keywords,
+			String sortString, String callbackURL, String contentType,
+			String fieldNames)
+		throws Exception;
+
+	public HttpInvoker.HttpResponse
+			postDataRecordCollectionDataRecordsPageExportBatchHttpResponse(
+				Long dataRecordCollectionId, Long dataListViewId,
+				String keywords, String sortString, String callbackURL,
+				String contentType, String fieldNames)
 		throws Exception;
 
 	public DataRecord postDataRecordCollectionDataRecord(
@@ -154,6 +181,10 @@ public interface DataRecordResource {
 			return this;
 		}
 
+		public Builder bearerToken(String token) {
+			return header("Authorization", "Bearer " + token);
+		}
+
 		public DataRecordResource build() {
 			return new DataRecordResourceImpl(this);
 		}
@@ -162,6 +193,28 @@ public interface DataRecordResource {
 			_contextPath = contextPath;
 
 			return this;
+		}
+
+		public Builder endpoint(String address, String scheme) {
+			String[] addressParts = address.split(":");
+
+			String host = addressParts[0];
+
+			int port = 443;
+
+			if (addressParts.length > 1) {
+				String portString = addressParts[1];
+
+				try {
+					port = Integer.parseInt(portString);
+				}
+				catch (NumberFormatException numberFormatException) {
+					throw new IllegalArgumentException(
+						"Unable to parse port from " + portString);
+				}
+			}
+
+			return endpoint(host, port, scheme);
 		}
 
 		public Builder endpoint(String host, int port, String scheme) {
@@ -247,7 +300,29 @@ public interface DataRecordResource {
 					"HTTP response status code: " +
 						httpResponse.getStatusCode());
 
-				throw new Problem.ProblemException(Problem.toDTO(content));
+				Problem.ProblemException problemException = null;
+
+				if (Objects.equals(
+						httpResponse.getContentType(), "application/json")) {
+
+					problemException = new Problem.ProblemException(
+						Problem.toDTO(content));
+				}
+				else {
+					_logger.log(
+						Level.WARNING,
+						"Unable to process content type: " +
+							httpResponse.getContentType());
+
+					Problem problem = new Problem();
+
+					problem.setStatus(
+						String.valueOf(httpResponse.getStatusCode()));
+
+					problemException = new Problem.ProblemException(problem);
+				}
+
+				throw problemException;
 			}
 			else {
 				_logger.fine("HTTP response content: " + content);
@@ -330,6 +405,133 @@ public interface DataRecordResource {
 			return httpInvoker.invoke();
 		}
 
+		public void postDataDefinitionDataRecordsPageExportBatch(
+				Long dataDefinitionId, Long dataListViewId, String keywords,
+				String sortString, String callbackURL, String contentType,
+				String fieldNames)
+			throws Exception {
+
+			HttpInvoker.HttpResponse httpResponse =
+				postDataDefinitionDataRecordsPageExportBatchHttpResponse(
+					dataDefinitionId, dataListViewId, keywords, sortString,
+					callbackURL, contentType, fieldNames);
+
+			String content = httpResponse.getContent();
+
+			if ((httpResponse.getStatusCode() / 100) != 2) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response content: " + content);
+				_logger.log(
+					Level.WARNING,
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.log(
+					Level.WARNING,
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+
+				Problem.ProblemException problemException = null;
+
+				if (Objects.equals(
+						httpResponse.getContentType(), "application/json")) {
+
+					problemException = new Problem.ProblemException(
+						Problem.toDTO(content));
+				}
+				else {
+					_logger.log(
+						Level.WARNING,
+						"Unable to process content type: " +
+							httpResponse.getContentType());
+
+					Problem problem = new Problem();
+
+					problem.setStatus(
+						String.valueOf(httpResponse.getStatusCode()));
+
+					problemException = new Problem.ProblemException(problem);
+				}
+
+				throw problemException;
+			}
+			else {
+				_logger.fine("HTTP response content: " + content);
+				_logger.fine(
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.fine(
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+			}
+		}
+
+		public HttpInvoker.HttpResponse
+				postDataDefinitionDataRecordsPageExportBatchHttpResponse(
+					Long dataDefinitionId, Long dataListViewId, String keywords,
+					String sortString, String callbackURL, String contentType,
+					String fieldNames)
+			throws Exception {
+
+			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
+
+			if (_builder._locale != null) {
+				httpInvoker.header(
+					"Accept-Language", _builder._locale.toLanguageTag());
+			}
+
+			for (Map.Entry<String, String> entry :
+					_builder._headers.entrySet()) {
+
+				httpInvoker.header(entry.getKey(), entry.getValue());
+			}
+
+			for (Map.Entry<String, String> entry :
+					_builder._parameters.entrySet()) {
+
+				httpInvoker.parameter(entry.getKey(), entry.getValue());
+			}
+
+			httpInvoker.httpMethod(HttpInvoker.HttpMethod.POST);
+
+			if (dataListViewId != null) {
+				httpInvoker.parameter(
+					"dataListViewId", String.valueOf(dataListViewId));
+			}
+
+			if (keywords != null) {
+				httpInvoker.parameter("keywords", String.valueOf(keywords));
+			}
+
+			if (sortString != null) {
+				httpInvoker.parameter("sort", sortString);
+			}
+
+			if (callbackURL != null) {
+				httpInvoker.parameter(
+					"callbackURL", String.valueOf(callbackURL));
+			}
+
+			if (contentType != null) {
+				httpInvoker.parameter(
+					"contentType", String.valueOf(contentType));
+			}
+
+			if (fieldNames != null) {
+				httpInvoker.parameter("fieldNames", String.valueOf(fieldNames));
+			}
+
+			httpInvoker.path(
+				_builder._scheme + "://" + _builder._host + ":" +
+					_builder._port + _builder._contextPath +
+						"/o/data-engine/v2.0/data-definitions/{dataDefinitionId}/data-records/export-batch");
+
+			httpInvoker.path("dataDefinitionId", dataDefinitionId);
+
+			httpInvoker.userNameAndPassword(
+				_builder._login + ":" + _builder._password);
+
+			return httpInvoker.invoke();
+		}
+
 		public DataRecord postDataDefinitionDataRecord(
 				Long dataDefinitionId, DataRecord dataRecord)
 			throws Exception {
@@ -352,7 +554,29 @@ public interface DataRecordResource {
 					"HTTP response status code: " +
 						httpResponse.getStatusCode());
 
-				throw new Problem.ProblemException(Problem.toDTO(content));
+				Problem.ProblemException problemException = null;
+
+				if (Objects.equals(
+						httpResponse.getContentType(), "application/json")) {
+
+					problemException = new Problem.ProblemException(
+						Problem.toDTO(content));
+				}
+				else {
+					_logger.log(
+						Level.WARNING,
+						"Unable to process content type: " +
+							httpResponse.getContentType());
+
+					Problem problem = new Problem();
+
+					problem.setStatus(
+						String.valueOf(httpResponse.getStatusCode()));
+
+					problemException = new Problem.ProblemException(problem);
+				}
+
+				throw problemException;
 			}
 			else {
 				_logger.fine("HTTP response content: " + content);
@@ -438,7 +662,29 @@ public interface DataRecordResource {
 					"HTTP response status code: " +
 						httpResponse.getStatusCode());
 
-				throw new Problem.ProblemException(Problem.toDTO(content));
+				Problem.ProblemException problemException = null;
+
+				if (Objects.equals(
+						httpResponse.getContentType(), "application/json")) {
+
+					problemException = new Problem.ProblemException(
+						Problem.toDTO(content));
+				}
+				else {
+					_logger.log(
+						Level.WARNING,
+						"Unable to process content type: " +
+							httpResponse.getContentType());
+
+					Problem problem = new Problem();
+
+					problem.setStatus(
+						String.valueOf(httpResponse.getStatusCode()));
+
+					problemException = new Problem.ProblemException(problem);
+				}
+
+				throw problemException;
 			}
 			else {
 				_logger.fine("HTTP response content: " + content);
@@ -520,7 +766,29 @@ public interface DataRecordResource {
 					"HTTP response status code: " +
 						httpResponse.getStatusCode());
 
-				throw new Problem.ProblemException(Problem.toDTO(content));
+				Problem.ProblemException problemException = null;
+
+				if (Objects.equals(
+						httpResponse.getContentType(), "application/json")) {
+
+					problemException = new Problem.ProblemException(
+						Problem.toDTO(content));
+				}
+				else {
+					_logger.log(
+						Level.WARNING,
+						"Unable to process content type: " +
+							httpResponse.getContentType());
+
+					Problem problem = new Problem();
+
+					problem.setStatus(
+						String.valueOf(httpResponse.getStatusCode()));
+
+					problemException = new Problem.ProblemException(problem);
+				}
+
+				throw problemException;
 			}
 			else {
 				_logger.fine("HTTP response content: " + content);
@@ -603,6 +871,133 @@ public interface DataRecordResource {
 			return httpInvoker.invoke();
 		}
 
+		public void postDataRecordCollectionDataRecordsPageExportBatch(
+				Long dataRecordCollectionId, Long dataListViewId,
+				String keywords, String sortString, String callbackURL,
+				String contentType, String fieldNames)
+			throws Exception {
+
+			HttpInvoker.HttpResponse httpResponse =
+				postDataRecordCollectionDataRecordsPageExportBatchHttpResponse(
+					dataRecordCollectionId, dataListViewId, keywords,
+					sortString, callbackURL, contentType, fieldNames);
+
+			String content = httpResponse.getContent();
+
+			if ((httpResponse.getStatusCode() / 100) != 2) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response content: " + content);
+				_logger.log(
+					Level.WARNING,
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.log(
+					Level.WARNING,
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+
+				Problem.ProblemException problemException = null;
+
+				if (Objects.equals(
+						httpResponse.getContentType(), "application/json")) {
+
+					problemException = new Problem.ProblemException(
+						Problem.toDTO(content));
+				}
+				else {
+					_logger.log(
+						Level.WARNING,
+						"Unable to process content type: " +
+							httpResponse.getContentType());
+
+					Problem problem = new Problem();
+
+					problem.setStatus(
+						String.valueOf(httpResponse.getStatusCode()));
+
+					problemException = new Problem.ProblemException(problem);
+				}
+
+				throw problemException;
+			}
+			else {
+				_logger.fine("HTTP response content: " + content);
+				_logger.fine(
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.fine(
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+			}
+		}
+
+		public HttpInvoker.HttpResponse
+				postDataRecordCollectionDataRecordsPageExportBatchHttpResponse(
+					Long dataRecordCollectionId, Long dataListViewId,
+					String keywords, String sortString, String callbackURL,
+					String contentType, String fieldNames)
+			throws Exception {
+
+			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
+
+			if (_builder._locale != null) {
+				httpInvoker.header(
+					"Accept-Language", _builder._locale.toLanguageTag());
+			}
+
+			for (Map.Entry<String, String> entry :
+					_builder._headers.entrySet()) {
+
+				httpInvoker.header(entry.getKey(), entry.getValue());
+			}
+
+			for (Map.Entry<String, String> entry :
+					_builder._parameters.entrySet()) {
+
+				httpInvoker.parameter(entry.getKey(), entry.getValue());
+			}
+
+			httpInvoker.httpMethod(HttpInvoker.HttpMethod.POST);
+
+			if (dataListViewId != null) {
+				httpInvoker.parameter(
+					"dataListViewId", String.valueOf(dataListViewId));
+			}
+
+			if (keywords != null) {
+				httpInvoker.parameter("keywords", String.valueOf(keywords));
+			}
+
+			if (sortString != null) {
+				httpInvoker.parameter("sort", sortString);
+			}
+
+			if (callbackURL != null) {
+				httpInvoker.parameter(
+					"callbackURL", String.valueOf(callbackURL));
+			}
+
+			if (contentType != null) {
+				httpInvoker.parameter(
+					"contentType", String.valueOf(contentType));
+			}
+
+			if (fieldNames != null) {
+				httpInvoker.parameter("fieldNames", String.valueOf(fieldNames));
+			}
+
+			httpInvoker.path(
+				_builder._scheme + "://" + _builder._host + ":" +
+					_builder._port + _builder._contextPath +
+						"/o/data-engine/v2.0/data-record-collections/{dataRecordCollectionId}/data-records/export-batch");
+
+			httpInvoker.path("dataRecordCollectionId", dataRecordCollectionId);
+
+			httpInvoker.userNameAndPassword(
+				_builder._login + ":" + _builder._password);
+
+			return httpInvoker.invoke();
+		}
+
 		public DataRecord postDataRecordCollectionDataRecord(
 				Long dataRecordCollectionId, DataRecord dataRecord)
 			throws Exception {
@@ -625,7 +1020,29 @@ public interface DataRecordResource {
 					"HTTP response status code: " +
 						httpResponse.getStatusCode());
 
-				throw new Problem.ProblemException(Problem.toDTO(content));
+				Problem.ProblemException problemException = null;
+
+				if (Objects.equals(
+						httpResponse.getContentType(), "application/json")) {
+
+					problemException = new Problem.ProblemException(
+						Problem.toDTO(content));
+				}
+				else {
+					_logger.log(
+						Level.WARNING,
+						"Unable to process content type: " +
+							httpResponse.getContentType());
+
+					Problem problem = new Problem();
+
+					problem.setStatus(
+						String.valueOf(httpResponse.getStatusCode()));
+
+					problemException = new Problem.ProblemException(problem);
+				}
+
+				throw problemException;
 			}
 			else {
 				_logger.fine("HTTP response content: " + content);
@@ -711,7 +1128,29 @@ public interface DataRecordResource {
 					"HTTP response status code: " +
 						httpResponse.getStatusCode());
 
-				throw new Problem.ProblemException(Problem.toDTO(content));
+				Problem.ProblemException problemException = null;
+
+				if (Objects.equals(
+						httpResponse.getContentType(), "application/json")) {
+
+					problemException = new Problem.ProblemException(
+						Problem.toDTO(content));
+				}
+				else {
+					_logger.log(
+						Level.WARNING,
+						"Unable to process content type: " +
+							httpResponse.getContentType());
+
+					Problem problem = new Problem();
+
+					problem.setStatus(
+						String.valueOf(httpResponse.getStatusCode()));
+
+					problemException = new Problem.ProblemException(problem);
+				}
+
+				throw problemException;
 			}
 			else {
 				_logger.fine("HTTP response content: " + content);
@@ -792,7 +1231,29 @@ public interface DataRecordResource {
 					"HTTP response status code: " +
 						httpResponse.getStatusCode());
 
-				throw new Problem.ProblemException(Problem.toDTO(content));
+				Problem.ProblemException problemException = null;
+
+				if (Objects.equals(
+						httpResponse.getContentType(), "application/json")) {
+
+					problemException = new Problem.ProblemException(
+						Problem.toDTO(content));
+				}
+				else {
+					_logger.log(
+						Level.WARNING,
+						"Unable to process content type: " +
+							httpResponse.getContentType());
+
+					Problem problem = new Problem();
+
+					problem.setStatus(
+						String.valueOf(httpResponse.getStatusCode()));
+
+					problemException = new Problem.ProblemException(problem);
+				}
+
+				throw problemException;
 			}
 			else {
 				_logger.fine("HTTP response content: " + content);
@@ -879,7 +1340,29 @@ public interface DataRecordResource {
 					"HTTP response status code: " +
 						httpResponse.getStatusCode());
 
-				throw new Problem.ProblemException(Problem.toDTO(content));
+				Problem.ProblemException problemException = null;
+
+				if (Objects.equals(
+						httpResponse.getContentType(), "application/json")) {
+
+					problemException = new Problem.ProblemException(
+						Problem.toDTO(content));
+				}
+				else {
+					_logger.log(
+						Level.WARNING,
+						"Unable to process content type: " +
+							httpResponse.getContentType());
+
+					Problem problem = new Problem();
+
+					problem.setStatus(
+						String.valueOf(httpResponse.getStatusCode()));
+
+					problemException = new Problem.ProblemException(problem);
+				}
+
+				throw problemException;
 			}
 			else {
 				_logger.fine("HTTP response content: " + content);
@@ -960,7 +1443,29 @@ public interface DataRecordResource {
 					"HTTP response status code: " +
 						httpResponse.getStatusCode());
 
-				throw new Problem.ProblemException(Problem.toDTO(content));
+				Problem.ProblemException problemException = null;
+
+				if (Objects.equals(
+						httpResponse.getContentType(), "application/json")) {
+
+					problemException = new Problem.ProblemException(
+						Problem.toDTO(content));
+				}
+				else {
+					_logger.log(
+						Level.WARNING,
+						"Unable to process content type: " +
+							httpResponse.getContentType());
+
+					Problem problem = new Problem();
+
+					problem.setStatus(
+						String.valueOf(httpResponse.getStatusCode()));
+
+					problemException = new Problem.ProblemException(problem);
+				}
+
+				throw problemException;
 			}
 			else {
 				_logger.fine("HTTP response content: " + content);
@@ -1033,7 +1538,29 @@ public interface DataRecordResource {
 					"HTTP response status code: " +
 						httpResponse.getStatusCode());
 
-				throw new Problem.ProblemException(Problem.toDTO(content));
+				Problem.ProblemException problemException = null;
+
+				if (Objects.equals(
+						httpResponse.getContentType(), "application/json")) {
+
+					problemException = new Problem.ProblemException(
+						Problem.toDTO(content));
+				}
+				else {
+					_logger.log(
+						Level.WARNING,
+						"Unable to process content type: " +
+							httpResponse.getContentType());
+
+					Problem problem = new Problem();
+
+					problem.setStatus(
+						String.valueOf(httpResponse.getStatusCode()));
+
+					problemException = new Problem.ProblemException(problem);
+				}
+
+				throw problemException;
 			}
 			else {
 				_logger.fine("HTTP response content: " + content);
@@ -1115,7 +1642,29 @@ public interface DataRecordResource {
 					"HTTP response status code: " +
 						httpResponse.getStatusCode());
 
-				throw new Problem.ProblemException(Problem.toDTO(content));
+				Problem.ProblemException problemException = null;
+
+				if (Objects.equals(
+						httpResponse.getContentType(), "application/json")) {
+
+					problemException = new Problem.ProblemException(
+						Problem.toDTO(content));
+				}
+				else {
+					_logger.log(
+						Level.WARNING,
+						"Unable to process content type: " +
+							httpResponse.getContentType());
+
+					Problem problem = new Problem();
+
+					problem.setStatus(
+						String.valueOf(httpResponse.getStatusCode()));
+
+					problemException = new Problem.ProblemException(problem);
+				}
+
+				throw problemException;
 			}
 			else {
 				_logger.fine("HTTP response content: " + content);
@@ -1199,7 +1748,29 @@ public interface DataRecordResource {
 					"HTTP response status code: " +
 						httpResponse.getStatusCode());
 
-				throw new Problem.ProblemException(Problem.toDTO(content));
+				Problem.ProblemException problemException = null;
+
+				if (Objects.equals(
+						httpResponse.getContentType(), "application/json")) {
+
+					problemException = new Problem.ProblemException(
+						Problem.toDTO(content));
+				}
+				else {
+					_logger.log(
+						Level.WARNING,
+						"Unable to process content type: " +
+							httpResponse.getContentType());
+
+					Problem problem = new Problem();
+
+					problem.setStatus(
+						String.valueOf(httpResponse.getStatusCode()));
+
+					problemException = new Problem.ProblemException(problem);
+				}
+
+				throw problemException;
 			}
 			else {
 				_logger.fine("HTTP response content: " + content);
@@ -1282,7 +1853,29 @@ public interface DataRecordResource {
 					"HTTP response status code: " +
 						httpResponse.getStatusCode());
 
-				throw new Problem.ProblemException(Problem.toDTO(content));
+				Problem.ProblemException problemException = null;
+
+				if (Objects.equals(
+						httpResponse.getContentType(), "application/json")) {
+
+					problemException = new Problem.ProblemException(
+						Problem.toDTO(content));
+				}
+				else {
+					_logger.log(
+						Level.WARNING,
+						"Unable to process content type: " +
+							httpResponse.getContentType());
+
+					Problem problem = new Problem();
+
+					problem.setStatus(
+						String.valueOf(httpResponse.getStatusCode()));
+
+					problemException = new Problem.ProblemException(problem);
+				}
+
+				throw problemException;
 			}
 			else {
 				_logger.fine("HTTP response content: " + content);

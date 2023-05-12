@@ -10,44 +10,39 @@ definition {
 	var portletName = "Calendar";
 
 	setUp {
+		var portalURL = PropsUtil.get("portal.url");
+
 		TestCase.setUpPortalInstance();
 
 		User.firstLoginPG();
 
-		ProductMenu.gotoPortlet(
-			category = "Site Builder",
-			portlet = "Pages");
+		JSONLayout.addPublicLayout(
+			groupName = "Guest",
+			layoutName = "Calendar Page");
 
-		PagesAdmin.addPage(
-			pageName = "Calendar Page",
-			sitePageType = "Widget Page");
+		JSONLayout.updateLayoutTemplateOfPublicLayout(
+			groupName = "Guest",
+			layoutName = "Calendar Page",
+			layoutTemplate = "1 Column");
 
-		PagesAdmin.configurePage(
-			columnName = "1 Column",
-			pageName = "Calendar Page",
-			sitePageType = "Widget Page");
+		JSONLayout.addWidgetToPublicLayout(
+			groupName = "Guest",
+			layoutName = "Calendar Page",
+			widgetName = "Calendar");
 
-		Navigator.gotoPage(pageName = "Calendar Page");
-
-		Portlet.addPG(
-			pageName = "Calendar Page",
-			portletName = "Calendar");
+		Navigator.openSpecificURL(url = "${portalURL}/web/guest/calendar-page");
 	}
 
 	tearDown {
 		var testPortalInstance = PropsUtil.get("test.portal.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testPortalInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
 			Navigator.gotoPage(pageName = "Calendar Page");
 
-			if (IsElementPresent(locator1 = "Calendar#SCHEDULER_EVENT_GENERIC")) {
-				CalendarEvent.tearDown();
-			}
-
-			Calendar.tearDown();
+			JSONCalendar.tearDown();
 
 			CalendarConfiguration.tearDown();
 
@@ -56,7 +51,7 @@ definition {
 	}
 
 	@description = "LRQA-71891 - Verify that the user can apply the selected template"
-	@priority = "3"
+	@priority = 3
 	test CanApplySelectedTemplate {
 		Portlet.gotoPortletOptions(
 			portletName = "Calendar",
@@ -70,7 +65,7 @@ definition {
 	}
 
 	@description = "LRQA-71891 - Verify that the user can delete a template"
-	@priority = "3"
+	@priority = 3
 	test CanDeleteTemplate {
 		Portlet.gotoPortletOptions(
 			portletName = "Calendar",
@@ -86,7 +81,7 @@ definition {
 	}
 
 	@description = "LRQA-71891 - Verify that the user can filter by Modified Date"
-	@priority = "2"
+	@priority = 2
 	test CanFilterByTemplateModifiedDate {
 		Portlet.gotoPortletOptions(
 			portletName = "Calendar",
@@ -114,7 +109,7 @@ definition {
 	}
 
 	@description = "LRQA-71891 - Verify that the user can filter by Name"
-	@priority = "2"
+	@priority = 2
 	test CanFilterByTemplateName {
 		property portal.upstream = "quarantine";
 
@@ -144,7 +139,7 @@ definition {
 	}
 
 	@description = "LRQA-71891 - Verify that the user can save Current Configuration as a template"
-	@priority = "3"
+	@priority = 3
 	test CanSaveCurrentConfigurationAsTemplate {
 		Portlet.gotoPortletOptions(
 			portletName = "Calendar",

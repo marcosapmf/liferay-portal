@@ -38,19 +38,23 @@ import com.liferay.document.library.kernel.service.DLAppServiceUtil;
 import com.liferay.document.library.kernel.service.DLFileEntryLocalServiceUtil;
 import com.liferay.document.library.kernel.service.DLFileEntryMetadataLocalServiceUtil;
 import com.liferay.document.library.kernel.service.DLFileEntryTypeLocalServiceUtil;
+import com.liferay.document.library.kernel.service.DLFileVersionLocalServiceUtil;
 import com.liferay.document.library.kernel.service.DLTrashLocalServiceUtil;
 import com.liferay.document.library.kernel.store.DLStoreUtil;
 import com.liferay.document.library.kernel.util.DLAppHelperThreadLocal;
 import com.liferay.document.library.test.util.DLTestUtil;
-import com.liferay.dynamic.data.mapping.kernel.DDMForm;
-import com.liferay.dynamic.data.mapping.kernel.DDMFormField;
-import com.liferay.dynamic.data.mapping.kernel.DDMFormFieldValue;
-import com.liferay.dynamic.data.mapping.kernel.DDMFormValues;
-import com.liferay.dynamic.data.mapping.kernel.DDMStructure;
-import com.liferay.dynamic.data.mapping.kernel.LocalizedValue;
-import com.liferay.dynamic.data.mapping.kernel.StorageEngineManagerUtil;
-import com.liferay.dynamic.data.mapping.kernel.UnlocalizedValue;
-import com.liferay.dynamic.data.mapping.kernel.Value;
+import com.liferay.document.library.util.DLFileEntryTypeUtil;
+import com.liferay.dynamic.data.mapping.model.DDMForm;
+import com.liferay.dynamic.data.mapping.model.DDMFormField;
+import com.liferay.dynamic.data.mapping.model.DDMStructure;
+import com.liferay.dynamic.data.mapping.model.LocalizedValue;
+import com.liferay.dynamic.data.mapping.model.UnlocalizedValue;
+import com.liferay.dynamic.data.mapping.model.Value;
+import com.liferay.dynamic.data.mapping.storage.DDMFormFieldValue;
+import com.liferay.dynamic.data.mapping.storage.DDMFormValues;
+import com.liferay.dynamic.data.mapping.storage.DDMStorageEngineManager;
+import com.liferay.dynamic.data.mapping.test.util.DDMStructureTestUtil;
+import com.liferay.dynamic.data.mapping.util.DDMBeanTranslatorUtil;
 import com.liferay.expando.kernel.model.ExpandoBridge;
 import com.liferay.expando.kernel.model.ExpandoColumnConstants;
 import com.liferay.expando.kernel.model.ExpandoTable;
@@ -86,9 +90,9 @@ import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
+import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
-import com.liferay.portlet.dynamicdatamapping.util.test.DDMStructureTestUtil;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -465,6 +469,57 @@ public class DLFileEntryLocalServiceTest {
 	}
 
 	@Test
+	public void testCheckInFileEntryRefreshesStoreUUID() throws Exception {
+		DLFileEntry dlFileEntry = DLFileEntryLocalServiceUtil.addFileEntry(
+			null, TestPropsValues.getUserId(), _group.getGroupId(),
+			_group.getGroupId(), DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
+			StringUtil.randomString(), ContentTypes.TEXT_PLAIN,
+			StringUtil.randomString(), StringUtil.randomString(),
+			StringPool.BLANK, StringPool.BLANK, -1, new HashMap<>(), null,
+			new ByteArrayInputStream(new byte[0]), 0, null, null,
+			ServiceContextTestUtil.getServiceContext(
+				_group.getGroupId(), TestPropsValues.getUserId()));
+
+		DLFileVersion dlFileVersion = dlFileEntry.getLatestFileVersion(true);
+
+		String storeUUID1 = dlFileVersion.getStoreUUID();
+
+		Assert.assertNotNull(storeUUID1);
+
+		DLFileEntryLocalServiceUtil.checkOutFileEntry(
+			TestPropsValues.getUserId(), dlFileEntry.getFileEntryId(),
+			ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
+
+		dlFileVersion = dlFileEntry.getLatestFileVersion(true);
+
+		String storeUUID2 = dlFileVersion.getStoreUUID();
+
+		Assert.assertNotNull(storeUUID2);
+		Assert.assertNotEquals(storeUUID1, storeUUID2);
+
+		byte[] bytes = RandomTestUtil.randomBytes();
+
+		DLFileEntryLocalServiceUtil.updateFileEntry(
+			TestPropsValues.getUserId(), dlFileEntry.getFileEntryId(),
+			StringUtil.randomString(), ContentTypes.APPLICATION_OCTET_STREAM,
+			StringUtil.randomString(), StringUtil.randomString(),
+			StringPool.BLANK, StringPool.BLANK, DLVersionNumberIncrease.NONE,
+			dlFileEntry.getFileEntryTypeId(), Collections.emptyMap(), null,
+			new ByteArrayInputStream(bytes), bytes.length, null, null,
+			ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
+
+		DLFileEntryLocalServiceUtil.checkInFileEntry(
+			TestPropsValues.getUserId(), dlFileEntry.getFileEntryId(),
+			DLVersionNumberIncrease.NONE, StringPool.BLANK,
+			ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
+
+		dlFileVersion = dlFileEntry.getLatestFileVersion(true);
+
+		Assert.assertNotNull(dlFileVersion.getStoreUUID());
+		Assert.assertNotEquals(storeUUID2, dlFileVersion.getStoreUUID());
+	}
+
+	@Test
 	public void testCheckoutFileEntryCreatesPWC() throws Exception {
 		ServiceContext serviceContext =
 			ServiceContextTestUtil.getServiceContext(
@@ -483,11 +538,15 @@ public class DLFileEntryLocalServiceTest {
 			TestPropsValues.getUserId(), dlFileEntry.getFileEntryId(),
 			dlFileEntry.getFileEntryTypeId(), serviceContext);
 
+		DLFileVersion dlFileVersion = dlFileEntry.getLatestFileVersion(true);
+
+		Assert.assertEquals(
+			DLFileEntryConstants.PRIVATE_WORKING_COPY_VERSION,
+			dlFileVersion.getVersion());
 		Assert.assertTrue(
 			DLStoreUtil.hasFile(
 				dlFileEntry.getCompanyId(), dlFileEntry.getDataRepositoryId(),
-				dlFileEntry.getName(),
-				DLFileEntryConstants.PRIVATE_WORKING_COPY_VERSION));
+				dlFileEntry.getName(), dlFileVersion.getStoreFileName()));
 	}
 
 	@Test
@@ -506,7 +565,8 @@ public class DLFileEntryLocalServiceTest {
 					_group.getGroupId(), TestPropsValues.getUserId());
 
 			Folder folder = DLAppServiceUtil.addFolder(
-				_group.getGroupId(), DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
+				null, _group.getGroupId(),
+				DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
 				RandomTestUtil.randomString(), RandomTestUtil.randomString(),
 				serviceContext);
 
@@ -528,7 +588,8 @@ public class DLFileEntryLocalServiceTest {
 				_group.getGroupId(), TestPropsValues.getUserId());
 
 			Folder destinationFolder = DLAppServiceUtil.addFolder(
-				_group.getGroupId(), DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
+				null, _group.getGroupId(),
+				DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
 				RandomTestUtil.randomString(), RandomTestUtil.randomString(),
 				serviceContext);
 
@@ -550,8 +611,12 @@ public class DLFileEntryLocalServiceTest {
 
 			DLFileVersion copyDLFileVersion = copyDLFileEntry.getFileVersion();
 
+			DLFileEntryType dlFileEntryType =
+				DLFileEntryTypeLocalServiceUtil.getFileEntryType(
+					copyDLFileVersion.getFileEntryTypeId());
+
 			List<DDMStructure> copyDDMStructures =
-				copyDLFileVersion.getDDMStructures();
+				DLFileEntryTypeUtil.getDDMStructures(dlFileEntryType);
 
 			DDMStructure copyDDMStructure = copyDDMStructures.get(0);
 
@@ -561,7 +626,7 @@ public class DLFileEntryLocalServiceTest {
 					copyDLFileVersion.getFileVersionId());
 
 			DDMFormValues copyDDMFormValues =
-				StorageEngineManagerUtil.getDDMFormValues(
+				_ddmStorageEngineManager.getDDMFormValues(
 					dlFileEntryMetadata.getDDMStorageId());
 
 			List<DDMFormFieldValue> ddmFormFieldValues =
@@ -587,7 +652,8 @@ public class DLFileEntryLocalServiceTest {
 				_group.getGroupId(), TestPropsValues.getUserId());
 
 		Folder folder = DLAppServiceUtil.addFolder(
-			_group.getGroupId(), DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
+			null, _group.getGroupId(),
+			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
 			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
 			serviceContext);
 
@@ -649,7 +715,8 @@ public class DLFileEntryLocalServiceTest {
 	public void testDuplicateFileEntryExternalReferenceCode() throws Exception {
 		DLFolder dlFolder = DLTestUtil.addDLFolder(_group.getGroupId());
 		String externalReferenceCode = StringUtil.randomString();
-		Map<String, DDMFormValues> ddmFormValuesMap = Collections.emptyMap();
+		Map<String, com.liferay.dynamic.data.mapping.kernel.DDMFormValues>
+			ddmFormValuesMap = Collections.emptyMap();
 		InputStream inputStream = new ByteArrayInputStream(new byte[0]);
 
 		ServiceContext serviceContext =
@@ -677,7 +744,8 @@ public class DLFileEntryLocalServiceTest {
 	@Test
 	public void testDuplicateFileIsIgnored() throws Exception {
 		DLFolder dlFolder = DLTestUtil.addDLFolder(_group.getGroupId());
-		Map<String, DDMFormValues> ddmFormValuesMap = Collections.emptyMap();
+		Map<String, com.liferay.dynamic.data.mapping.kernel.DDMFormValues>
+			ddmFormValuesMap = Collections.emptyMap();
 		InputStream inputStream = new ByteArrayInputStream(new byte[0]);
 
 		ServiceContext serviceContext =
@@ -704,7 +772,8 @@ public class DLFileEntryLocalServiceTest {
 	public void testDuplicateTitleFileEntry() throws Exception {
 		DLFolder dlFolder = DLTestUtil.addDLFolder(_group.getGroupId());
 		String title = StringUtil.randomString();
-		Map<String, DDMFormValues> ddmFormValuesMap = Collections.emptyMap();
+		Map<String, com.liferay.dynamic.data.mapping.kernel.DDMFormValues>
+			ddmFormValuesMap = Collections.emptyMap();
 		InputStream inputStream = new ByteArrayInputStream(new byte[0]);
 
 		ServiceContext serviceContext =
@@ -725,6 +794,47 @@ public class DLFileEntryLocalServiceTest {
 			StringUtil.randomString(), StringPool.BLANK, StringPool.BLANK,
 			DLFileEntryTypeConstants.FILE_ENTRY_TYPE_ID_BASIC_DOCUMENT,
 			ddmFormValuesMap, null, inputStream, 0, null, null, serviceContext);
+	}
+
+	@Test
+	public void testExtensionValidationWithSystemScopedFileEntryType()
+		throws Exception {
+
+		ServiceContext serviceContext =
+			ServiceContextTestUtil.getServiceContext(_group.getGroupId());
+
+		DDMStructure ddmStructure = DDMStructureTestUtil.addStructure(
+			_group.getGroupId(), DLFileEntryMetadata.class.getName());
+
+		DLFileEntryType dlFileEntryType =
+			DLFileEntryTypeLocalServiceUtil.addFileEntryType(
+				TestPropsValues.getUserId(), _group.getGroupId(),
+				RandomTestUtil.randomString(), StringPool.BLANK,
+				new long[] {ddmStructure.getStructureId()}, serviceContext);
+
+		dlFileEntryType.setScope(
+			DLFileEntryTypeConstants.FILE_ENTRY_TYPE_SCOPE_SYSTEM);
+
+		DLFileEntryTypeLocalServiceUtil.updateDLFileEntryType(dlFileEntryType);
+
+		try (ConfigurationTemporarySwapper configurationTemporarySwapper =
+				new ConfigurationTemporarySwapper(
+					DLConfiguration.class.getName(),
+					HashMapDictionaryBuilder.<String, Object>put(
+						"fileExtensions", ".jpg"
+					).build())) {
+
+			DLFileEntryLocalServiceUtil.addFileEntry(
+				null, TestPropsValues.getUserId(), _group.getGroupId(),
+				_group.getGroupId(), DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
+				RandomTestUtil.randomString(),
+				ContentTypes.APPLICATION_OCTET_STREAM,
+				RandomTestUtil.randomString(), RandomTestUtil.randomString(),
+				StringUtil.randomString(), RandomTestUtil.randomString(),
+				dlFileEntryType.getFileEntryTypeId(), null, null,
+				new UnsyncByteArrayInputStream(new byte[0]), 0, null, null,
+				serviceContext);
+		}
 	}
 
 	@Test
@@ -996,6 +1106,42 @@ public class DLFileEntryLocalServiceTest {
 		Assert.assertEquals(reviewDate, dlFileEntry.getReviewDate());
 	}
 
+	@Test
+	public void testUpdateFileEntryRefreshesStoreUUID() throws Exception {
+		DLFileEntry dlFileEntry = DLFileEntryLocalServiceUtil.addFileEntry(
+			null, TestPropsValues.getUserId(), _group.getGroupId(),
+			_group.getGroupId(), DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
+			StringUtil.randomString(), ContentTypes.TEXT_PLAIN,
+			StringUtil.randomString(), StringUtil.randomString(),
+			StringPool.BLANK, StringPool.BLANK, -1, new HashMap<>(), null,
+			new ByteArrayInputStream(new byte[0]), 0, null, null,
+			ServiceContextTestUtil.getServiceContext(
+				_group.getGroupId(), TestPropsValues.getUserId()));
+
+		DLFileVersion dlFileVersion =
+			DLFileVersionLocalServiceUtil.getFileVersion(
+				dlFileEntry.getFileEntryId(), dlFileEntry.getVersion());
+
+		String storeUUID = dlFileVersion.getStoreUUID();
+
+		Assert.assertNotNull(storeUUID);
+
+		dlFileEntry = DLFileEntryLocalServiceUtil.updateFileEntry(
+			TestPropsValues.getUserId(), dlFileEntry.getFileEntryId(),
+			StringUtil.randomString(), ContentTypes.TEXT_PLAIN,
+			StringUtil.randomString(), StringUtil.randomString(),
+			StringPool.BLANK, StringPool.BLANK, DLVersionNumberIncrease.NONE,
+			dlFileEntry.getFileEntryTypeId(), null, null,
+			new ByteArrayInputStream(new byte[0]), 0, null, null,
+			ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
+
+		dlFileVersion = DLFileVersionLocalServiceUtil.getFileVersion(
+			dlFileEntry.getFileEntryId(), dlFileEntry.getVersion());
+
+		Assert.assertNotNull(dlFileVersion.getStoreUUID());
+		Assert.assertNotEquals(storeUUID, dlFileVersion.getStoreUUID());
+	}
+
 	@Test(expected = FileExtensionException.class)
 	public void testUpdateFileEntryShouldFailIfSourceFileNameExtensionNotSupported()
 		throws Exception {
@@ -1032,7 +1178,8 @@ public class DLFileEntryLocalServiceTest {
 	@Test(expected = DuplicateFolderNameException.class)
 	public void testValidateFileFailsWithAnExistingFolder() throws Exception {
 		Folder folder = DLAppServiceUtil.addFolder(
-			_group.getGroupId(), DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
+			null, _group.getGroupId(),
+			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
 			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
 			ServiceContextTestUtil.getServiceContext(
 				_group.getGroupId(), TestPropsValues.getUserId()));
@@ -1128,7 +1275,9 @@ public class DLFileEntryLocalServiceTest {
 	}
 
 	protected DLFileEntry addAndApproveFileEntry(
-			DLFolder dlFolder, Map<String, DDMFormValues> ddmFormValuesMap,
+			DLFolder dlFolder,
+			Map<String, com.liferay.dynamic.data.mapping.kernel.DDMFormValues>
+				ddmFormValuesMap,
 			InputStream inputStream, ServiceContext serviceContext)
 		throws Exception {
 
@@ -1197,8 +1346,8 @@ public class DLFileEntryLocalServiceTest {
 		throws Exception {
 
 		DDMStructure ddmStructure = DDMStructureTestUtil.addStructure(
-			_group.getGroupId(), DLFileEntryMetadata.class.getName(), "0",
-			createDDMForm(), LocaleUtil.US, serviceContext);
+			_group.getGroupId(), DLFileEntryMetadata.class.getName(),
+			createDDMForm(), LocaleUtil.US);
 
 		DLFileEntryType dlFileEntryType =
 			DLFileEntryTypeLocalServiceUtil.addFileEntryType(
@@ -1211,17 +1360,21 @@ public class DLFileEntryLocalServiceTest {
 
 		DDMFormValues ddmFormValues = createDDMFormValues();
 
+		String className =
+			com.liferay.dynamic.data.mapping.kernel.DDMFormValues.class.
+				getName();
+
 		serviceContext.setAttribute(
-			DDMFormValues.class.getName() + StringPool.POUND +
-				ddmStructure.getStructureId(),
-			ddmFormValues);
+			className + StringPool.POUND + ddmStructure.getStructureId(),
+			DDMBeanTranslatorUtil.translate(ddmFormValues));
 
 		return dlFileEntryType.getFileEntryTypeId();
 	}
 
 	protected DLFileEntry updateAndApproveDLFileEntry(
 			DLFileEntry dlFileEntry, InputStream inputStream,
-			Map<String, DDMFormValues> ddmFormValuesMap,
+			Map<String, com.liferay.dynamic.data.mapping.kernel.DDMFormValues>
+				ddmFormValuesMap,
 			ServiceContext serviceContext)
 		throws Exception {
 
@@ -1241,6 +1394,9 @@ public class DLFileEntryLocalServiceTest {
 			TestPropsValues.getUserId(), dlFileVersion.getFileVersionId(),
 			WorkflowConstants.STATUS_APPROVED, serviceContext, new HashMap<>());
 	}
+
+	@Inject
+	private DDMStorageEngineManager _ddmStorageEngineManager;
 
 	@DeleteAfterTestRun
 	private Group _group;

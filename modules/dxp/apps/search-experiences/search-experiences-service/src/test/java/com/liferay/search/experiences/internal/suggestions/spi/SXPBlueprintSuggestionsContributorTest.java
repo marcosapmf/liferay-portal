@@ -371,7 +371,7 @@ public class SXPBlueprintSuggestionsContributorTest {
 
 		SearchHits searchHits = Mockito.mock(SearchHits.class);
 
-		List<SearchHit> searchHitList = new ArrayList<>();
+		List<SearchHit> searchHitsList = new ArrayList<>();
 
 		for (int i = 0; i < totalHits; i++) {
 			SearchHit searchHit = Mockito.mock(SearchHit.class);
@@ -422,11 +422,11 @@ public class SXPBlueprintSuggestionsContributorTest {
 				searchHit
 			).getScore();
 
-			searchHitList.add(searchHit);
+			searchHitsList.add(searchHit);
 		}
 
 		Mockito.doReturn(
-			searchHitList
+			searchHitsList
 		).when(
 			searchHits
 		).getSearchHits();

@@ -24,6 +24,7 @@ import com.liferay.commerce.product.service.CProductLocalService;
 import com.liferay.commerce.product.service.CommerceCatalogLocalService;
 import com.liferay.commerce.product.service.CommerceCatalogService;
 import com.liferay.commerce.product.service.base.CPInstanceServiceBaseImpl;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -40,8 +41,6 @@ import java.math.BigDecimal;
 
 import java.util.List;
 import java.util.Map;
-import java.util.stream.LongStream;
-import java.util.stream.Stream;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -119,10 +118,18 @@ public class CPInstanceServiceImpl extends CPInstanceServiceBaseImpl {
 			int displayDateHour, int displayDateMinute, int expirationDateMonth,
 			int expirationDateDay, int expirationDateYear,
 			int expirationDateHour, int expirationDateMinute,
-			boolean neverExpire, String unspsc, boolean discontinued,
-			String replacementCPInstanceUuid, long replacementCProductId,
-			int discontinuedDateMonth, int discontinuedDateDay,
-			int discontinuedDateYear, ServiceContext serviceContext)
+			boolean neverExpire, boolean overrideSubscriptionInfo,
+			boolean subscriptionEnabled, int subscriptionLength,
+			String subscriptionType,
+			UnicodeProperties subscriptionTypeSettingsUnicodeProperties,
+			long maxSubscriptionCycles, boolean deliverySubscriptionEnabled,
+			int deliverySubscriptionLength, String deliverySubscriptionType,
+			UnicodeProperties deliverySubscriptionTypeSettingsUnicodeProperties,
+			long deliveryMaxSubscriptionCycles, String unspsc,
+			boolean discontinued, String replacementCPInstanceUuid,
+			long replacementCProductId, int discontinuedDateMonth,
+			int discontinuedDateDay, int discontinuedDateYear,
+			ServiceContext serviceContext)
 		throws PortalException {
 
 		_checkCommerceCatalog(groupId, ActionKeys.UPDATE);
@@ -133,8 +140,14 @@ public class CPInstanceServiceImpl extends CPInstanceServiceBaseImpl {
 			weight, price, promoPrice, cost, published, displayDateMonth,
 			displayDateDay, displayDateYear, displayDateHour, displayDateMinute,
 			expirationDateMonth, expirationDateDay, expirationDateYear,
-			expirationDateHour, expirationDateMinute, neverExpire, unspsc,
-			discontinued, replacementCPInstanceUuid, replacementCProductId,
+			expirationDateHour, expirationDateMinute, neverExpire,
+			overrideSubscriptionInfo, subscriptionEnabled, subscriptionLength,
+			subscriptionType, subscriptionTypeSettingsUnicodeProperties,
+			maxSubscriptionCycles, deliverySubscriptionEnabled,
+			deliverySubscriptionLength, deliverySubscriptionType,
+			deliverySubscriptionTypeSettingsUnicodeProperties,
+			deliveryMaxSubscriptionCycles, unspsc, discontinued,
+			replacementCPInstanceUuid, replacementCProductId,
 			discontinuedDateMonth, discontinuedDateDay, discontinuedDateYear,
 			serviceContext);
 	}
@@ -328,18 +341,13 @@ public class CPInstanceServiceImpl extends CPInstanceServiceBaseImpl {
 			Sort sort)
 		throws PortalException {
 
-		List<CommerceCatalog> commerceCatalogs =
-			_commerceCatalogService.getCommerceCatalogs(
-				companyId, QueryUtil.ALL_POS, QueryUtil.ALL_POS);
-
-		Stream<CommerceCatalog> stream = commerceCatalogs.stream();
-
-		LongStream longStream = stream.mapToLong(CommerceCatalog::getGroupId);
-
-		long[] groupIds = longStream.toArray();
-
 		return cpInstanceLocalService.searchCPInstances(
-			companyId, groupIds, keywords, status, start, end, sort);
+			companyId,
+			TransformUtil.transformToLongArray(
+				_commerceCatalogService.getCommerceCatalogs(
+					companyId, QueryUtil.ALL_POS, QueryUtil.ALL_POS),
+				CommerceCatalog::getGroupId),
+			keywords, status, start, end, sort);
 	}
 
 	@Override
@@ -352,7 +360,14 @@ public class CPInstanceServiceImpl extends CPInstanceServiceBaseImpl {
 			int displayDateYear, int displayDateHour, int displayDateMinute,
 			int expirationDateMonth, int expirationDateDay,
 			int expirationDateYear, int expirationDateHour,
-			int expirationDateMinute, boolean neverExpire, String unspsc,
+			int expirationDateMinute, boolean neverExpire,
+			boolean overrideSubscriptionInfo, boolean subscriptionEnabled,
+			int subscriptionLength, String subscriptionType,
+			UnicodeProperties subscriptionTypeSettingsUnicodeProperties,
+			long maxSubscriptionCycles, boolean deliverySubscriptionEnabled,
+			int deliverySubscriptionLength, String deliverySubscriptionType,
+			UnicodeProperties deliverySubscriptionTypeSettingsUnicodeProperties,
+			long deliveryMaxSubscriptionCycles, String unspsc,
 			boolean discontinued, String replacementCPInstanceUuid,
 			long replacementCProductId, int discontinuedDateMonth,
 			int discontinuedDateDay, int discontinuedDateYear,
@@ -371,10 +386,31 @@ public class CPInstanceServiceImpl extends CPInstanceServiceBaseImpl {
 			price, promoPrice, cost, published, displayDateMonth,
 			displayDateDay, displayDateYear, displayDateHour, displayDateMinute,
 			expirationDateMonth, expirationDateDay, expirationDateYear,
-			expirationDateHour, expirationDateMinute, neverExpire, unspsc,
-			discontinued, replacementCPInstanceUuid, replacementCProductId,
+			expirationDateHour, expirationDateMinute, neverExpire,
+			overrideSubscriptionInfo, subscriptionEnabled, subscriptionLength,
+			subscriptionType, subscriptionTypeSettingsUnicodeProperties,
+			maxSubscriptionCycles, deliverySubscriptionEnabled,
+			deliverySubscriptionLength, deliverySubscriptionType,
+			deliverySubscriptionTypeSettingsUnicodeProperties,
+			deliveryMaxSubscriptionCycles, unspsc, discontinued,
+			replacementCPInstanceUuid, replacementCProductId,
 			discontinuedDateMonth, discontinuedDateDay, discontinuedDateYear,
 			serviceContext);
+	}
+
+	@Override
+	public CPInstance updateExternalReferenceCode(
+			long cpInstanceId, String externalReferenceCode)
+		throws PortalException {
+
+		CPInstance cpInstance = cpInstanceLocalService.getCPInstance(
+			cpInstanceId);
+
+		_checkCommerceCatalogByCPDefinitionId(
+			cpInstance.getCPDefinitionId(), ActionKeys.UPDATE);
+
+		return cpInstanceLocalService.updateExternalReferenceCode(
+			cpInstanceId, externalReferenceCode);
 	}
 
 	@Override

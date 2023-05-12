@@ -17,7 +17,7 @@
 </tr>
 <tr>
 	<td>ADD_MENULIST_LANGUAGE</td>
-	<td>//div[contains(@class,'dropdown-menu')]//button[contains(text(),'${key_localizedLanguage}')] | //span[contains(text(),' ${key_localizedLanguage} ')]</td>
+	<td>//div[contains(@class,'dropdown-menu')]//button[contains(text(),'${key_localizedLanguage}')] | //span[contains(text(),'${key_localizedLanguage}')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -64,6 +64,11 @@
 <tr>
 	<td>DROPDOWN_MENU_ITEM_INDEX</td>
 	<td>xpath=(//div[contains(@class,'dropdown-menu')]//button[contains(@class,'dropdown-item')] //span[@class = 'text-truncate'])[${key_index}]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>EXPERIENCE_CHECKBOX</td>
+	<td>//li[contains(@class,'list-group-item') and contains(.,'${key_experienceName}')]//input[@type='checkbox']</td>
 	<td></td>
 </tr>
 <tr>
@@ -138,12 +143,12 @@
 </tr>
 <tr>
 	<td>TRANSLATION_STATUS_TITLE</td>
-	<td>//div[contains(@id,'JournalPortlet')]//span[contains(text(),'${key_localizedLanguage}')]//span</td>
+	<td>//div[contains(@id,'${key_portlet}')]//span[contains(text(),'${key_localizedLanguage}')]//span</td>
 	<td></td>
 </tr>
 <tr>
 	<td>TRANSLATION_STATUS_TITLE_PAGE</td>
-	<td>//div[contains(@class,'page-editor')]//span[contains(text(),'${key_localizedLanguage}')]//..//div</td>
+	<td>//div[contains(@class,'page-editor')]//span[contains(text(),'${key_localizedLanguage}')]//following-sibling::span//span[contains(@class,'label-item')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -153,7 +158,12 @@
 </tr>
 <tr>
 	<td>LOCALIZATION_NAME</td>
-	<td>//div[contains(@class,'menu-open')]//a[@data-languageid]//span[contains(@class,'text')]//span[normalize-space(text())='${key_locale}']</td>
+	<td>//div[contains(@class,'dropdown-menu')]//button[contains(text(),'${key_locale}')] | //span[contains(text(),'${key_locale}')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>LOCALIZATION_NAME_METATAGS</td>
+	<td>//div[contains(@class,'menu-open')]//a[@data-languageid]//span[normalize-space(text())='${key_locale}']</td>
 	<td></td>
 </tr>
 </tbody>

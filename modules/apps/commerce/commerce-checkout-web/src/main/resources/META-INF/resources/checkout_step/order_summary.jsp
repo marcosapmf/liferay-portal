@@ -19,7 +19,7 @@
 <%
 CommerceContext commerceContext = (CommerceContext)request.getAttribute(CommerceWebKeys.COMMERCE_CONTEXT);
 
-CommerceAccount commerceAccount = commerceContext.getCommerceAccount();
+AccountEntry accountEntry = commerceContext.getAccountEntry();
 
 OrderSummaryCheckoutStepDisplayContext orderSummaryCheckoutStepDisplayContext = (OrderSummaryCheckoutStepDisplayContext)request.getAttribute(CommerceCheckoutWebKeys.COMMERCE_CHECKOUT_STEP_DISPLAY_CONTEXT);
 
@@ -185,7 +185,7 @@ Map<Long, List<CommerceOrderValidatorResult>> commerceOrderValidatorResultsMap =
 								<div class="value-section">
 									<span class="price">
 										<c:choose>
-											<c:when test="<%= !unitPromoPriceCommerceMoney.isEmpty() && CommerceBigDecimalUtil.gt(unitPromoPriceCommerceMoney.getPrice(), BigDecimal.ZERO) %>">
+											<c:when test="<%= !unitPromoPriceCommerceMoney.isEmpty() && CommerceBigDecimalUtil.gt(unitPromoPriceCommerceMoney.getPrice(), BigDecimal.ZERO) && CommerceBigDecimalUtil.lt(unitPromoPriceCommerceMoney.getPrice(), unitPriceCommerceMoney.getPrice()) %>">
 												<span class="price-value price-value-promo">
 													<%= HtmlUtil.escape(unitPromoPriceCommerceMoney.format(locale)) %>
 												</span>
@@ -472,7 +472,7 @@ Map<Long, List<CommerceOrderValidatorResult>> commerceOrderValidatorResultsMap =
 			CommerceAddress commerceBillingAddress = commerceOrder.getBillingAddress();
 			%>
 
-			<c:if test="<%= (commerceBillingAddress != null) && orderSummaryCheckoutStepDisplayContext.hasViewBillingAddressPermission(permissionChecker, commerceAccount) %>">
+			<c:if test="<%= (commerceBillingAddress != null) && orderSummaryCheckoutStepDisplayContext.hasViewBillingAddressPermission(permissionChecker, accountEntry) %>">
 				<address class="billing-address">
 					<h5>
 						<liferay-ui:message key="billing-address" />

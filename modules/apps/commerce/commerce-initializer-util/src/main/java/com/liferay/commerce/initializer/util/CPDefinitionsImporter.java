@@ -287,14 +287,14 @@ public class CPDefinitionsImporter {
 				BigDecimal customValue = (BigDecimal)customValueJSONObject.get(
 					"data");
 
-				expandoBridge.setAttributeDefault(
+				expandoBridge.setAttribute(
 					customFieldJSONObject.getString("name"),
 					customValue.doubleValue());
 
 				continue;
 			}
 
-			expandoBridge.setAttributeDefault(
+			expandoBridge.setAttribute(
 				customFieldJSONObject.getString("name"),
 				(Serializable)customValueJSONObject.get("data"));
 		}
@@ -919,7 +919,7 @@ public class CPDefinitionsImporter {
 
 		boolean overrideSubscriptionInfo = false;
 		boolean subscriptionEnabled = false;
-		int subscriptionLength = 0;
+		int subscriptionLength = 1;
 		String subscriptionType = null;
 		long maxSubscriptionCycles = 0;
 

@@ -16,8 +16,8 @@ import {useNavigate, useParams} from 'react-router-dom';
 
 import Container from '../../../components/Layout/Container';
 import ListView from '../../../components/ListView';
+import SearchBuilder from '../../../core/SearchBuilder';
 import i18n from '../../../i18n';
-import {searchUtil} from '../../../util/search';
 import useSuiteActions from './useSuiteActions';
 
 const Suites = () => {
@@ -31,6 +31,7 @@ const Suites = () => {
 			<ListView
 				managementToolbarProps={{
 					addButton: () => navigate('create'),
+					filterSchema: 'suites',
 					title: i18n.translate('suites'),
 				}}
 				resource="/suites"
@@ -60,7 +61,7 @@ const Suites = () => {
 						`/project/${projectId}/suites/${suite.id}`,
 				}}
 				variables={{
-					filter: searchUtil.eq('projectId', projectId as string),
+					filter: SearchBuilder.eq('projectId', projectId as string),
 				}}
 			/>
 		</Container>

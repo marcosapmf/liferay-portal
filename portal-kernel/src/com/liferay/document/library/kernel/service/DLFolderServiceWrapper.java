@@ -37,14 +37,15 @@ public class DLFolderServiceWrapper
 
 	@Override
 	public DLFolder addFolder(
-			long groupId, long repositoryId, boolean mountPoint,
-			long parentFolderId, String name, String description,
+			String externalReferenceCode, long groupId, long repositoryId,
+			boolean mountPoint, long parentFolderId, String name,
+			String description,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _dlFolderService.addFolder(
-			groupId, repositoryId, mountPoint, parentFolderId, name,
-			description, serviceContext);
+			externalReferenceCode, groupId, repositoryId, mountPoint,
+			parentFolderId, name, description, serviceContext);
 	}
 
 	@Override
@@ -66,6 +67,15 @@ public class DLFolderServiceWrapper
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		_dlFolderService.deleteFolder(groupId, parentFolderId, name);
+	}
+
+	@Override
+	public DLFolder getDLFolderByExternalReferenceCode(
+			String externalReferenceCode, long groupId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _dlFolderService.getDLFolderByExternalReferenceCode(
+			externalReferenceCode, groupId);
 	}
 
 	@Override
@@ -114,6 +124,14 @@ public class DLFolderServiceWrapper
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _dlFolderService.getFolderIds(groupId, folderId);
+	}
+
+	@Override
+	public java.util.List<DLFolder> getFolders(
+			long groupId, double score, int start, int end)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _dlFolderService.getFolders(groupId, score, start, end);
 	}
 
 	@Override
@@ -249,6 +267,13 @@ public class DLFolderServiceWrapper
 		return _dlFolderService.getFoldersAndFileEntriesAndFileShortcutsCount(
 			groupId, folderId, mimeTypes, fileEntryTypeId, includeMountFolders,
 			status);
+	}
+
+	@Override
+	public int getFoldersCount(long groupId, double score)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _dlFolderService.getFoldersCount(groupId, score);
 	}
 
 	@Override

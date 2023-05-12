@@ -162,7 +162,7 @@ public class JournalArticlePersistenceTest {
 
 		newJournalArticle.setUrlTitle(RandomTestUtil.randomString());
 
-		newJournalArticle.setDDMStructureKey(RandomTestUtil.randomString());
+		newJournalArticle.setDDMStructureId(RandomTestUtil.nextLong());
 
 		newJournalArticle.setDDMTemplateKey(RandomTestUtil.randomString());
 
@@ -254,8 +254,8 @@ public class JournalArticlePersistenceTest {
 			existingJournalArticle.getUrlTitle(),
 			newJournalArticle.getUrlTitle());
 		Assert.assertEquals(
-			existingJournalArticle.getDDMStructureKey(),
-			newJournalArticle.getDDMStructureKey());
+			existingJournalArticle.getDDMStructureId(),
+			newJournalArticle.getDDMStructureId());
 		Assert.assertEquals(
 			existingJournalArticle.getDDMTemplateKey(),
 			newJournalArticle.getDDMTemplateKey());
@@ -351,20 +351,10 @@ public class JournalArticlePersistenceTest {
 	}
 
 	@Test
-	public void testCountByDDMStructureKey() throws Exception {
-		_persistence.countByDDMStructureKey("");
+	public void testCountByDDMStructureId() throws Exception {
+		_persistence.countByDDMStructureId(RandomTestUtil.nextLong());
 
-		_persistence.countByDDMStructureKey("null");
-
-		_persistence.countByDDMStructureKey((String)null);
-	}
-
-	@Test
-	public void testCountByDDMStructureKeyArrayable() throws Exception {
-		_persistence.countByDDMStructureKey(
-			new String[] {
-				RandomTestUtil.randomString(), "", "null", null, null
-			});
+		_persistence.countByDDMStructureId(0L);
 	}
 
 	@Test
@@ -465,12 +455,11 @@ public class JournalArticlePersistenceTest {
 	}
 
 	@Test
-	public void testCountByG_DDMSK() throws Exception {
-		_persistence.countByG_DDMSK(RandomTestUtil.nextLong(), "");
+	public void testCountByG_DDMSI() throws Exception {
+		_persistence.countByG_DDMSI(
+			RandomTestUtil.nextLong(), RandomTestUtil.nextLong());
 
-		_persistence.countByG_DDMSK(0L, "null");
-
-		_persistence.countByG_DDMSK(0L, (String)null);
+		_persistence.countByG_DDMSI(0L, 0L);
 	}
 
 	@Test
@@ -610,13 +599,12 @@ public class JournalArticlePersistenceTest {
 	}
 
 	@Test
-	public void testCountByG_C_DDMSK() throws Exception {
-		_persistence.countByG_C_DDMSK(
-			RandomTestUtil.nextLong(), RandomTestUtil.nextLong(), "");
+	public void testCountByG_C_DDMSI() throws Exception {
+		_persistence.countByG_C_DDMSI(
+			RandomTestUtil.nextLong(), RandomTestUtil.nextLong(),
+			RandomTestUtil.nextLong());
 
-		_persistence.countByG_C_DDMSK(0L, 0L, "null");
-
-		_persistence.countByG_C_DDMSK(0L, 0L, (String)null);
+		_persistence.countByG_C_DDMSI(0L, 0L, 0L);
 	}
 
 	@Test
@@ -741,12 +729,12 @@ public class JournalArticlePersistenceTest {
 			true, "modifiedDate", true, "externalReferenceCode", true,
 			"folderId", true, "classNameId", true, "classPK", true, "treePath",
 			true, "articleId", true, "version", true, "urlTitle", true,
-			"DDMStructureKey", true, "DDMTemplateKey", true,
-			"defaultLanguageId", true, "layoutUuid", true, "displayDate", true,
-			"expirationDate", true, "reviewDate", true, "indexable", true,
-			"smallImage", true, "smallImageId", true, "smallImageURL", true,
-			"lastPublishDate", true, "status", true, "statusByUserId", true,
-			"statusByUserName", true, "statusDate", true);
+			"DDMStructureId", true, "DDMTemplateKey", true, "defaultLanguageId",
+			true, "layoutUuid", true, "displayDate", true, "expirationDate",
+			true, "reviewDate", true, "indexable", true, "smallImage", true,
+			"smallImageId", true, "smallImageURL", true, "lastPublishDate",
+			true, "status", true, "statusByUserId", true, "statusByUserName",
+			true, "statusDate", true);
 	}
 
 	@Test
@@ -1046,10 +1034,10 @@ public class JournalArticlePersistenceTest {
 				journalArticle, "getColumnOriginalValue",
 				new Class<?>[] {String.class}, "classNameId"));
 		Assert.assertEquals(
-			journalArticle.getDDMStructureKey(),
-			ReflectionTestUtil.invoke(
+			Long.valueOf(journalArticle.getDDMStructureId()),
+			ReflectionTestUtil.<Long>invoke(
 				journalArticle, "getColumnOriginalValue",
-				new Class<?>[] {String.class}, "DDMStructureKey"));
+				new Class<?>[] {String.class}, "DDMStructureId"));
 
 		Assert.assertEquals(
 			Long.valueOf(journalArticle.getGroupId()),
@@ -1109,7 +1097,7 @@ public class JournalArticlePersistenceTest {
 
 		journalArticle.setUrlTitle(RandomTestUtil.randomString());
 
-		journalArticle.setDDMStructureKey(RandomTestUtil.randomString());
+		journalArticle.setDDMStructureId(RandomTestUtil.nextLong());
 
 		journalArticle.setDDMTemplateKey(RandomTestUtil.randomString());
 

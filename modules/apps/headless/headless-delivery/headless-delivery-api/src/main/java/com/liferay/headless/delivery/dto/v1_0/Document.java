@@ -553,6 +553,34 @@ public class Document implements Serializable {
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected String fileExtension;
 
+	@Schema(description = "The document's file name.")
+	public String getFileName() {
+		return fileName;
+	}
+
+	public void setFileName(String fileName) {
+		this.fileName = fileName;
+	}
+
+	@JsonIgnore
+	public void setFileName(
+		UnsafeSupplier<String, Exception> fileNameUnsafeSupplier) {
+
+		try {
+			fileName = fileNameUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField(description = "The document's file name.")
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected String fileName;
+
 	@Schema(description = "The document's ID.")
 	public Long getId() {
 		return id;
@@ -1135,6 +1163,20 @@ public class Document implements Serializable {
 			sb.append("\"");
 
 			sb.append(_escape(fileExtension));
+
+			sb.append("\"");
+		}
+
+		if (fileName != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"fileName\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(fileName));
 
 			sb.append("\"");
 		}

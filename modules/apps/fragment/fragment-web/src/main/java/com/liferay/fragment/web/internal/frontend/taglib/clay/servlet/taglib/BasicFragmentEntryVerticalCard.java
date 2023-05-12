@@ -109,11 +109,19 @@ public class BasicFragmentEntryVerticalCard
 					WorkflowConstants.STATUS_APPROVED)
 			).add(
 				labelItem -> labelItem.setStatus(WorkflowConstants.STATUS_DRAFT)
+			).add(
+				fragmentEntry::isCacheable,
+				labelItem -> labelItem.setLabel(
+					LanguageUtil.get(_httpServletRequest, "cached"))
 			).build();
 		}
 
 		return LabelItemListBuilder.add(
 			labelItem -> labelItem.setStatus(fragmentEntry.getStatus())
+		).add(
+			fragmentEntry::isCacheable,
+			labelItem -> labelItem.setLabel(
+				LanguageUtil.get(_httpServletRequest, "cached"))
 		).build();
 	}
 
@@ -123,7 +131,7 @@ public class BasicFragmentEntryVerticalCard
 			_httpServletRequest, "x-usages",
 			FragmentEntryLinkLocalServiceUtil.
 				getFragmentEntryLinksCountByFragmentEntryId(
-					fragmentEntry.getFragmentEntryId()));
+					fragmentEntry.getFragmentEntryId(), false));
 	}
 
 	@Override

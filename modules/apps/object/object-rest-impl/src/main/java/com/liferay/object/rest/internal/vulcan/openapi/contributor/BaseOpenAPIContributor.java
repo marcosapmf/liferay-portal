@@ -16,8 +16,8 @@ package com.liferay.object.rest.internal.vulcan.openapi.contributor;
 
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.system.JaxRsApplicationDescriptor;
-import com.liferay.object.system.SystemObjectDefinitionMetadata;
-import com.liferay.object.system.SystemObjectDefinitionMetadataRegistry;
+import com.liferay.object.system.SystemObjectDefinitionManager;
+import com.liferay.object.system.SystemObjectDefinitionManagerRegistry;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.vulcan.dto.converter.DTOConverter;
@@ -32,13 +32,13 @@ public abstract class BaseOpenAPIContributor implements OpenAPIContributor {
 	protected String getExternalDTOClassName(
 		ObjectDefinition systemObjectDefinition) {
 
-		SystemObjectDefinitionMetadata systemObjectDefinitionMetadata =
-			_systemObjectDefinitionMetadataRegistry.
-				getSystemObjectDefinitionMetadata(
+		SystemObjectDefinitionManager systemObjectDefinitionManager =
+			_systemObjectDefinitionManagerRegistry.
+				getSystemObjectDefinitionManager(
 					systemObjectDefinition.getName());
 
 		JaxRsApplicationDescriptor jaxRsApplicationDescriptor =
-			systemObjectDefinitionMetadata.getJaxRsApplicationDescriptor();
+			systemObjectDefinitionManager.getJaxRsApplicationDescriptor();
 
 		DTOConverter<?, ?> dtoConverter = _dtoConverterRegistry.getDTOConverter(
 			jaxRsApplicationDescriptor.getApplicationName(),
@@ -49,7 +49,7 @@ public abstract class BaseOpenAPIContributor implements OpenAPIContributor {
 	}
 
 	protected String getSchemaName(ObjectDefinition objectDefinition) {
-		if (objectDefinition.isSystem()) {
+		if (objectDefinition.isUnmodifiableSystemObject()) {
 			return StringUtil.extractLast(
 				getExternalDTOClassName(objectDefinition), StringPool.PERIOD);
 		}
@@ -59,16 +59,16 @@ public abstract class BaseOpenAPIContributor implements OpenAPIContributor {
 
 	protected void init(
 		DTOConverterRegistry dtoConverterRegistry,
-		SystemObjectDefinitionMetadataRegistry
-			systemObjectDefinitionMetadataRegistry) {
+		SystemObjectDefinitionManagerRegistry
+			systemObjectDefinitionManagerRegistry) {
 
 		_dtoConverterRegistry = dtoConverterRegistry;
-		_systemObjectDefinitionMetadataRegistry =
-			systemObjectDefinitionMetadataRegistry;
+		_systemObjectDefinitionManagerRegistry =
+			systemObjectDefinitionManagerRegistry;
 	}
 
 	private DTOConverterRegistry _dtoConverterRegistry;
-	private SystemObjectDefinitionMetadataRegistry
-		_systemObjectDefinitionMetadataRegistry;
+	private SystemObjectDefinitionManagerRegistry
+		_systemObjectDefinitionManagerRegistry;
 
 }

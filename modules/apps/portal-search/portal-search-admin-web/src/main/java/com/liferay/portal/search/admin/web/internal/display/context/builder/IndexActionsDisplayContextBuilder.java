@@ -30,6 +30,7 @@ import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.search.admin.web.internal.display.context.IndexActionsDisplayContext;
+import com.liferay.portal.search.capabilities.SearchCapabilities;
 
 import java.util.Map;
 
@@ -45,12 +46,13 @@ public class IndexActionsDisplayContextBuilder {
 
 	public IndexActionsDisplayContextBuilder(
 		Language language, Portal portal, RenderRequest renderRequest,
-		RenderResponse renderResponse) {
+		RenderResponse renderResponse, SearchCapabilities searchCapabilities) {
 
 		_language = language;
 		_portal = portal;
 		_renderRequest = renderRequest;
 		_renderResponse = renderResponse;
+		_searchCapabilities = searchCapabilities;
 
 		_httpServletRequest = portal.getHttpServletRequest(renderRequest);
 	}
@@ -68,7 +70,12 @@ public class IndexActionsDisplayContextBuilder {
 		return HashMapBuilder.<String, Object>put(
 			"initialCompanyIds", _getInitialCompanyIds()
 		).put(
+			"initialExecutionMode", _getInitialExecutionMode()
+		).put(
 			"initialScope", _getInitialScope()
+		).put(
+			"isConcurrentModeSupported",
+			_searchCapabilities.isConcurrentModeSupported()
 		).put(
 			"virtualInstances", _getVirtualInstancesJSONArray()
 		).build();
@@ -77,6 +84,10 @@ public class IndexActionsDisplayContextBuilder {
 	private long[] _getInitialCompanyIds() {
 		return StringUtil.split(
 			ParamUtil.getString(_httpServletRequest, "companyIds"), 0L);
+	}
+
+	private String _getInitialExecutionMode() {
+		return ParamUtil.getString(_httpServletRequest, "executionMode");
 	}
 
 	private String _getInitialScope() {
@@ -128,5 +139,6 @@ public class IndexActionsDisplayContextBuilder {
 	private final Portal _portal;
 	private final RenderRequest _renderRequest;
 	private final RenderResponse _renderResponse;
+	private final SearchCapabilities _searchCapabilities;
 
 }

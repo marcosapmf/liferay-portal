@@ -18,31 +18,29 @@ import {useForm} from 'react-hook-form';
 import {useOutletContext, useParams} from 'react-router-dom';
 import {KeyedMutator} from 'swr';
 import {InferType} from 'yup';
-
-import Form from '../../../../../../components/Form';
-import Footer from '../../../../../../components/Form/Footer';
-import Container from '../../../../../../components/Layout/Container';
-import useFormActions from '../../../../../../hooks/useFormActions';
-import i18n from '../../../../../../i18n';
-import yupSchema from '../../../../../../schema/yup';
-import {Liferay} from '../../../../../../services/liferay';
+import Form from '~/components/Form';
+import Footer from '~/components/Form/Footer';
+import {splitIssueName} from '~/components/JiraLink';
+import Container from '~/components/Layout/Container';
+import {withPagePermission} from '~/hoc/withPagePermission';
+import useFormActions from '~/hooks/useFormActions';
+import i18n from '~/i18n';
+import yupSchema from '~/schema/yup';
+import {Liferay} from '~/services/liferay';
 import {
-	APIResponse,
 	MessageBoardMessage,
 	TestrayCaseResult,
 	TestrayCaseResultIssue,
 	testrayCaseResultImpl,
-} from '../../../../../../services/rest';
-import {CaseResultStatuses} from '../../../../../../util/statuses';
+} from '~/services/rest';
+import {CaseResultStatuses} from '~/util/statuses';
 
 type CaseResultForm = InferType<typeof yupSchema.caseResult>;
 
 type OutletContext = {
 	caseResult: TestrayCaseResult;
-	caseResultsIssues: TestrayCaseResultIssue[];
 	mbMessage: MessageBoardMessage;
 	mutateCaseResult: KeyedMutator<TestrayCaseResult>;
-	mutateCaseResultIssues: KeyedMutator<APIResponse<TestrayCaseResultIssue>>;
 };
 
 const CaseResultEditTest = () => {
@@ -52,17 +50,15 @@ const CaseResultEditTest = () => {
 	const {caseResultId} = useParams();
 
 	const {
-		mbMessage,
 		caseResult,
-		caseResultsIssues = [],
+		mbMessage,
 		mutateCaseResult,
-		mutateCaseResultIssues,
 	}: OutletContext = useOutletContext();
 
-	const issues = caseResultsIssues
+	const issues = caseResult.issues
 		.map(
 			(caseResultIssue: TestrayCaseResultIssue) =>
-				caseResultIssue?.issue?.name
+				splitIssueName(caseResultIssue.name)[0]
 		)
 		.join(', ');
 
@@ -74,11 +70,12 @@ const CaseResultEditTest = () => {
 		defaultValues: caseResult?.dueStatus
 			? ({
 					comment: mbMessage?.articleBody,
-					dueStatus:
-						caseResult?.dueStatus.key ===
-						CaseResultStatuses.IN_PROGRESS
-							? CaseResultStatuses.PASSED
-							: caseResult?.dueStatus.key,
+					dueStatus: [
+						CaseResultStatuses.IN_PROGRESS,
+						CaseResultStatuses.UNTESTED,
+					].includes(caseResult?.dueStatus.key as CaseResultStatuses)
+						? CaseResultStatuses.PASSED
+						: caseResult?.dueStatus.key,
 					issues,
 			  } as any)
 			: {},
@@ -113,21 +110,14 @@ const CaseResultEditTest = () => {
 				}
 			);
 
-			mutateCaseResult(response);
-
-			mutateCaseResultIssues((response) => {
-				if (response) {
-					return {
-						...response,
-						items: _issues.map(
-							(issue) =>
-								(({
-									issue: {id: issue, name: issue},
-								} as unknown) as TestrayCaseResultIssue)
-						),
-						totalCount: _issues.length,
-					};
-				}
+			mutateCaseResult({
+				...response,
+				issues: _issues.map(
+					(issue) =>
+						(({
+							issue: {id: issue, name: `${issue}_${response.id}`},
+						} as unknown) as TestrayCaseResultIssue)
+				),
 			});
 
 			onSave();
@@ -152,15 +142,28 @@ const CaseResultEditTest = () => {
 			</ClayAlert>
 
 			<Form.Select
+				{...inputProps}
 				className="container-fluid-max-md"
 				defaultOption={false}
 				label={i18n.translate('status')}
 				name="dueStatus"
 				options={[
-					{label: 'Passed', value: CaseResultStatuses.PASSED},
-					{label: 'Failed', value: CaseResultStatuses.FAILED},
-					{label: 'Blocked', value: CaseResultStatuses.BLOCKED},
-					{label: 'Test Fix', value: CaseResultStatuses.TEST_FIX},
+					{
+						label: i18n.translate('passed'),
+						value: CaseResultStatuses.PASSED,
+					},
+					{
+						label: i18n.translate('failed'),
+						value: CaseResultStatuses.FAILED,
+					},
+					{
+						label: i18n.translate('blocked'),
+						value: CaseResultStatuses.BLOCKED,
+					},
+					{
+						label: i18n.translate('test-fix'),
+						value: CaseResultStatuses.TEST_FIX,
+					},
 				]}
 				register={register}
 			/>
@@ -189,4 +192,6 @@ const CaseResultEditTest = () => {
 	);
 };
 
-export default CaseResultEditTest;
+export default withPagePermission(CaseResultEditTest, {
+	restImpl: testrayCaseResultImpl,
+});

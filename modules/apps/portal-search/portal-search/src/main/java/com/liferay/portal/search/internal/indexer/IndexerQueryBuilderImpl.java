@@ -48,8 +48,6 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Stream;
 
 /**
  * @author Michael C. Han
@@ -136,22 +134,25 @@ public class IndexerQueryBuilderImpl<T extends BaseModel<?>>
 		}
 
 		contribute(
-			_modelKeywordQueryContributorsRegistry.stream(
-				_getStrings(
-					"search.full.query.clause.contributors.excludes",
-					searchContext),
-				_getStrings(
-					"search.full.query.clause.contributors.includes",
-					searchContext)),
+			_modelKeywordQueryContributorsRegistry.
+				filterKeywordQueryContributors(
+					_getStrings(
+						"search.full.query.clause.contributors.excludes",
+						searchContext),
+					_getStrings(
+						"search.full.query.clause.contributors.includes",
+						searchContext)),
 			booleanQuery, searchContext);
 	}
 
 	protected void contribute(
-		Stream<KeywordQueryContributor> stream, BooleanQuery booleanQuery,
-		SearchContext searchContext) {
+		List<KeywordQueryContributor> keywordQueryContributors,
+		BooleanQuery booleanQuery, SearchContext searchContext) {
 
-		stream.forEach(
-			keywordQueryContributor -> keywordQueryContributor.contribute(
+		for (KeywordQueryContributor keywordQueryContributor :
+				keywordQueryContributors) {
+
+			keywordQueryContributor.contribute(
 				searchContext.getKeywords(), booleanQuery,
 				new KeywordQueryContributorHelper() {
 
@@ -161,9 +162,8 @@ public class IndexerQueryBuilderImpl<T extends BaseModel<?>>
 					}
 
 					@Override
-					public Stream<String> getSearchClassNamesStream() {
-						return Stream.of(
-							_modelSearchSettings.getSearchClassNames());
+					public String[] getSearchClassNames() {
+						return _modelSearchSettings.getSearchClassNames();
 					}
 
 					@Override
@@ -171,7 +171,8 @@ public class IndexerQueryBuilderImpl<T extends BaseModel<?>>
 						return searchContext;
 					}
 
-				}));
+				});
+		}
 	}
 
 	private void _add(
@@ -238,7 +239,7 @@ public class IndexerQueryBuilderImpl<T extends BaseModel<?>>
 
 	private void _contributeSearchContext(SearchContext searchContext) {
 		SearchContextContributorHelper searchContextContributorHelper =
-			() -> _modelSearchSettings.getSearchClassNames();
+			_modelSearchSettings::getSearchClassNames;
 
 		_searchContextContributors.forEach(
 			searchContextContributor -> searchContextContributor.contribute(
@@ -324,8 +325,7 @@ public class IndexerQueryBuilderImpl<T extends BaseModel<?>>
 
 		return Arrays.asList(
 			SearchStringUtil.splitAndUnquote(
-				Optional.ofNullable(
-					(String)searchContext.getAttribute(string))));
+				(String)searchContext.getAttribute(string)));
 	}
 
 	private void _postProcessFullQuery(

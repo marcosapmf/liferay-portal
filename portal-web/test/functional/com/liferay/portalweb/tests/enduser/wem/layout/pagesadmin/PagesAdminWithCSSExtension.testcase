@@ -3,7 +3,7 @@ definition {
 
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property testray.main.component.name = "Site Pages Administration";
+	property testray.main.component.name = "Page Administration";
 
 	setUp {
 		task ("Set up instance and sign in") {
@@ -13,7 +13,7 @@ definition {
 		}
 
 		task ("Add a site") {
-			JSONGroup.addGroup(groupName = "Test Site Name");
+			HeadlessSite.addSite(siteName = "Test Site Name");
 		}
 
 		task ("Upload two CSS extension files to Documents and Media") {
@@ -40,33 +40,33 @@ definition {
 		}
 
 		task ("Add two remote apps for CSS extension") {
-			JSONRemoteApp.addRemoteAppEntry(
+			JSONClientExtension.addRemoteAppEntry(
 				name = "FontFamily",
 				type = "globalCSS",
-				url = "${firstURL}");
+				url = ${firstURL});
 
-			JSONRemoteApp.addRemoteAppEntry(
+			JSONClientExtension.addRemoteAppEntry(
 				name = "BackgroundColor",
 				type = "globalCSS",
-				url = "${secondURL}");
+				url = ${secondURL});
 		}
 	}
 
 	tearDown {
 		var testPortalInstance = PropsUtil.get("test.portal.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testPortalInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
 			JSONGroup.deleteGroupByName(groupName = "Test Site Name");
 
-			RemoteApps.tearDown();
+			ClientExtensionGeneral.tearDown();
 		}
 	}
 
 	@description = "This is a test for LPS-153656. The site designer could add CSS extension to page, page template, and group of pages."
-	@priority = "5"
+	@priority = 5
 	test AddCSSExtension {
 		property portal.acceptance = "true";
 
@@ -76,19 +76,16 @@ definition {
 				layoutName = "Test Page Name");
 		}
 
-		task ("When the site designer accesses to Look and Feel settings of widget page") {
+		task ("When the site designer accesses to Basic Settings of widget page") {
 			PagesAdmin.openPagesAdmin(siteURLKey = "test-site-name");
 
 			PagesAdmin.gotoPageEllipsisMenuItem(
 				menuItem = "Configure",
 				pageName = "Test Page Name");
 
-			Navigator.gotoNavTab(navTab = "Look and Feel");
+			Navigator.gotoNavTab(navTab = "Design");
 
-			AssertTextEquals(
-				key_sectionTitle = "CSS Client Extensions",
-				locator1 = "PagesAdmin#SECTION_SUBTITLE",
-				value1 = "No CSS Client extensions were loaded.");
+			AssertElementPresent(locator1 = "PagesAdmin#NO_CSS_THEME_LOADED");
 		}
 
 		task ("Then the site designer could add a CSS Extension to widget page") {
@@ -126,19 +123,16 @@ definition {
 			PageEditor.assertFragmentSidebarLoaded();
 		}
 
-		task ("When the site designer accesses to Look and Feel settings of content page template") {
+		task ("When the site designer accesses to Basic Settings of content page template") {
 			PageEditor.gotoTab(tabName = "Page Design Options");
 
 			Click(locator1 = "PageEditor#MORE_LINK");
 
 			WaitForPageLoad();
 
-			Navigator.gotoNavTab(navTab = "Look and Feel");
+			Navigator.gotoNavTab(navTab = "Design");
 
-			AssertTextEquals(
-				key_sectionTitle = "CSS Client Extensions",
-				locator1 = "PagesAdmin#SECTION_SUBTITLE",
-				value1 = "No CSS Client extensions were loaded.");
+			AssertElementPresent(locator1 = "PagesAdmin#NO_CSS_THEME_LOADED");
 		}
 
 		task ("Then the site designer could add a CSS Extension to widget page") {
@@ -160,7 +154,7 @@ definition {
 				value1 = "\"Times New Roman\"");
 		}
 
-		task ("When the site designer accesses to Look and Feel settings of Pages") {
+		task ("When the site designer accesses to Basic Settings of Pages") {
 			PagesAdmin.openPagesAdmin(siteURLKey = "test-site-name");
 
 			WaitForPageLoad();
@@ -171,14 +165,9 @@ definition {
 
 			WaitForPageLoad();
 
-			Navigator.gotoNavTab(navTab = "Look and Feel");
+			Navigator.gotoNavTab(navTab = "Design");
 
-			Panel.expandPanel(panel = "Look and Feel");
-
-			AssertTextEquals(
-				key_sectionTitle = "CSS Client Extensions",
-				locator1 = "PagesAdmin#SECTION_SUBTITLE",
-				value1 = "No CSS Client extensions were loaded.");
+			AssertElementPresent(locator1 = "PagesAdmin#NO_CSS_THEME_LOADED");
 		}
 
 		task ("Then the site designer could add a CSS Extension to Pages") {
@@ -221,7 +210,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-153656. The site designer could change CSS extension selection to an inheritor page from page template."
-	@priority = "5"
+	@priority = 5
 	test ChangeCSSExtensionOfInheritorPage {
 		property portal.acceptance = "true";
 
@@ -251,7 +240,7 @@ definition {
 
 			WaitForPageLoad();
 
-			Navigator.gotoNavTab(navTab = "Look and Feel");
+			Navigator.gotoNavTab(navTab = "Design");
 
 			PagesAdmin.addCSSExtensions(extensionNameList = "FontFamily");
 
@@ -285,7 +274,7 @@ definition {
 
 			WaitForPageLoad();
 
-			Navigator.gotoNavTab(navTab = "Look and Feel");
+			Navigator.gotoNavTab(navTab = "Design");
 
 			PagesAdmin.addCSSExtensions(extensionNameList = "BackgroundColor");
 
@@ -315,20 +304,17 @@ definition {
 
 			WaitForPageLoad();
 
-			Navigator.gotoNavTab(navTab = "Look and Feel");
+			Navigator.gotoNavTab(navTab = "Design");
 
 			for (var extensionName : list "BackgroundColor,FontFamily") {
 				Click(
-					key_tableEntry = "${extensionName}",
+					key_tableEntry = ${extensionName},
 					locator1 = "LexiconTable#TABLE_ENTRY_ELLIPSIS");
 
 				DropdownMenuItem.click(menuItem = "Delete");
 			}
 
-			AssertTextEquals(
-				key_sectionTitle = "CSS Client Extensions",
-				locator1 = "PagesAdmin#SECTION_SUBTITLE",
-				value1 = "No CSS Client extensions were loaded.");
+			AssertElementPresent(locator1 = "PagesAdmin#NO_CSS_THEME_LOADED");
 
 			PortletEntry.save();
 
@@ -349,7 +335,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-153656. The site designer could delete the CSS extenion selection."
-	@priority = "4"
+	@priority = 4
 	test ClearCSSExtensionSelection {
 		task ("Given a site designer has a content page with a CSS extension") {
 			JSONLayout.addPublicLayout(
@@ -367,7 +353,7 @@ definition {
 
 			WaitForPageLoad();
 
-			Navigator.gotoNavTab(navTab = "Look and Feel");
+			Navigator.gotoNavTab(navTab = "Design");
 
 			PagesAdmin.addCSSExtensions(extensionNameList = "FontFamily");
 
@@ -382,7 +368,7 @@ definition {
 			PageEditor.assertFragmentSidebarLoaded();
 		}
 
-		task ("When the site designer accesses to the Look and Feel settings") {
+		task ("When the site designer accesses to the Basic Settings") {
 			PageEditor.gotoTab(tabName = "Page Design Options");
 
 			Click(locator1 = "PageEditor#MORE_LINK");
@@ -391,7 +377,7 @@ definition {
 		}
 
 		task ("Then the site designer could clear the CSS extension selection") {
-			Navigator.gotoNavTab(navTab = "Look and Feel");
+			Navigator.gotoNavTab(navTab = "Design");
 
 			Click(
 				key_tableEntry = "FontFamily",
@@ -400,8 +386,8 @@ definition {
 			DropdownMenuItem.click(menuItem = "Delete");
 
 			AssertTextEquals(
-				key_sectionTitle = "CSS Client Extensions",
-				locator1 = "PagesAdmin#SECTION_SUBTITLE",
+				key_buttonName = "Add CSS Client Extensions",
+				locator1 = "PagesAdmin#CUSTOMIZATION_BUTTON_SECONDARY_TEXT",
 				value1 = "No CSS Client extensions were loaded.");
 
 			PortletEntry.save();
@@ -418,7 +404,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-153658. The inherited CSS extensions from master or Pages should be read-only mode."
-	@priority = "4"
+	@priority = 4
 	test ViewInheritedCSSExtensionFromMasterPageOrPages {
 		task ("Given a site designer has a master page with a CSS extension") {
 			JSONLayoutpagetemplate.addMasterPageTemplateEntry(
@@ -435,7 +421,7 @@ definition {
 
 			WaitForPageLoad();
 
-			Navigator.gotoNavTab(navTab = "Look and Feel");
+			Navigator.gotoNavTab(navTab = "Design");
 
 			PagesAdmin.addCSSExtensions(extensionNameList = "BackgroundColor");
 
@@ -468,10 +454,10 @@ definition {
 
 			WaitForPageLoad();
 
-			Navigator.gotoNavTab(navTab = "Look and Feel");
+			Navigator.gotoNavTab(navTab = "Design");
 
 			LexiconTable.viewTableEntryInfo(
-				index = "3",
+				index = 3,
 				tableEntry = "BackgroundColor",
 				tableEntryInfo = "From Master");
 
@@ -491,9 +477,7 @@ definition {
 
 			WaitForPageLoad();
 
-			Navigator.gotoNavTab(navTab = "Look and Feel");
-
-			Panel.expandPanel(panel = "Look and Feel");
+			Navigator.gotoNavTab(navTab = "Design");
 
 			PagesAdmin.addCSSExtensions(extensionNameList = "BackgroundColor");
 
@@ -513,10 +497,10 @@ definition {
 				menuItem = "Configure",
 				pageName = "Test Page Name 2");
 
-			Navigator.gotoNavTab(navTab = "Look and Feel");
+			Navigator.gotoNavTab(navTab = "Design");
 
 			LexiconTable.viewTableEntryInfo(
-				index = "3",
+				index = 3,
 				tableEntry = "BackgroundColor",
 				tableEntryInfo = "From Pages");
 
@@ -527,7 +511,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-153656. Page should inherit the CSS extension from page template."
-	@priority = "5"
+	@priority = 5
 	test ViewInheritedCSSExtensionFromPageTemplate {
 		property portal.acceptance = "true";
 
@@ -557,7 +541,7 @@ definition {
 
 			WaitForPageLoad();
 
-			Navigator.gotoNavTab(navTab = "Look and Feel");
+			Navigator.gotoNavTab(navTab = "Design");
 
 			PagesAdmin.addCSSExtensions(extensionNameList = "FontFamily");
 
@@ -591,7 +575,7 @@ definition {
 
 			WaitForPageLoad();
 
-			Navigator.gotoNavTab(navTab = "Look and Feel");
+			Navigator.gotoNavTab(navTab = "Design");
 
 			AssertVisible(
 				key_tableEntry = "FontFamily",
@@ -600,7 +584,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-153656. The order of CSS extensions loading on page are same with the order of addition."
-	@priority = "4"
+	@priority = 4
 	test ViewOrderOfCSSExtensionLoading {
 		task ("Given a site designer has a content page with two CSS extensions") {
 			JSONLayout.addPublicLayout(
@@ -618,17 +602,17 @@ definition {
 
 			WaitForPageLoad();
 
-			Navigator.gotoNavTab(navTab = "Look and Feel");
+			Navigator.gotoNavTab(navTab = "Design");
 
 			PagesAdmin.addCSSExtensions(extensionNameList = "FontFamily,BackgroundColor");
 
 			AssertVisible(
-				index = "1",
+				index = 1,
 				key_tableEntry = "FontFamily",
 				locator1 = "LexiconTable#TABLE_ENTRY_TITLE_INDEXED");
 
 			AssertVisible(
-				index = "2",
+				index = 2,
 				key_tableEntry = "BackgroundColor",
 				locator1 = "LexiconTable#TABLE_ENTRY_TITLE_INDEXED");
 

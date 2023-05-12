@@ -3,7 +3,7 @@ definition {
 
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property testray.main.component.name = "Site Pages Administration";
+	property testray.main.component.name = "Page Administration";
 
 	setUp {
 		task ("Set up instance and sign in") {
@@ -13,7 +13,7 @@ definition {
 		}
 
 		task ("Add a site") {
-			JSONGroup.addGroup(groupName = "Test Site Name");
+			HeadlessSite.addSite(siteName = "Test Site Name");
 		}
 
 		task ("Upload six JavaScript extension files to Documents and Media") {
@@ -76,53 +76,53 @@ definition {
 		}
 
 		task ("Add six remote apps for JavaScript extension") {
-			JSONRemoteApp.addRemoteAppEntry(
+			JSONClientExtension.addRemoteAppEntry(
 				name = "TextColor",
 				type = "globalJS",
-				url = "${firstURL}");
+				url = ${firstURL});
 
-			JSONRemoteApp.addRemoteAppEntry(
+			JSONClientExtension.addRemoteAppEntry(
 				name = "InnerText",
 				type = "globalJS",
-				url = "${secondURL}");
+				url = ${secondURL});
 
-			JSONRemoteApp.addRemoteAppEntry(
+			JSONClientExtension.addRemoteAppEntry(
 				name = "FontFamily",
 				type = "globalJS",
-				url = "${thirdURL}");
+				url = ${thirdURL});
 
-			JSONRemoteApp.addRemoteAppEntry(
+			JSONClientExtension.addRemoteAppEntry(
 				name = "FontSize",
 				type = "globalJS",
-				url = "${fourthURL}");
+				url = ${fourthURL});
 
-			JSONRemoteApp.addRemoteAppEntry(
+			JSONClientExtension.addRemoteAppEntry(
 				name = "FontWeight",
 				type = "globalJS",
-				url = "${fifthURL}");
+				url = ${fifthURL});
 
-			JSONRemoteApp.addRemoteAppEntry(
+			JSONClientExtension.addRemoteAppEntry(
 				name = "MarginTop",
 				type = "globalJS",
-				url = "${sixthURL}");
+				url = ${sixthURL});
 		}
 	}
 
 	tearDown {
 		var testPortalInstance = PropsUtil.get("test.portal.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testPortalInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
 			JSONGroup.deleteGroupByName(groupName = "Test Site Name");
 
-			RemoteApps.tearDown();
+			ClientExtensionGeneral.tearDown();
 		}
 	}
 
 	@description = "This is a test for LPS-153655 and LPS-153658. The site designer could add JavaScript extension to page, page template, and group of pages. The site designer could add a JavaScript Extension to Page Head or Page Bottom."
-	@priority = "5"
+	@priority = 5
 	test AddJavaScriptExtension {
 		property portal.acceptance = "true";
 
@@ -139,14 +139,11 @@ definition {
 				menuItem = "Configure",
 				pageName = "Test Page Name");
 
-			Navigator.gotoNavTab(navTab = "Advanced");
+			Navigator.gotoNavTab(navTab = "Design");
 
-			Panel.expandPanel(panel = "JavaScript");
+			Navigator.gotoNavTab(navTab = "JavaScript");
 
-			AssertTextEquals(
-				key_sectionTitle = "JavaScript Client Extensions",
-				locator1 = "PagesAdmin#SECTION_SUBTITLE",
-				value1 = "No JavaScript client extensions were loaded.");
+			AssertElementPresent(locator1 = "PagesAdmin#NO_JAVASCRIPT_EXTENSIONS_LOADED");
 		}
 
 		task ("Then the site designer could add a JavaScript Extension to widget page") {
@@ -195,14 +192,11 @@ definition {
 
 			WaitForPageLoad();
 
-			Navigator.gotoNavTab(navTab = "Advanced");
+			Navigator.gotoNavTab(navTab = "Design");
 
-			Panel.expandPanel(panel = "JavaScript");
+			Navigator.gotoNavTab(navTab = "JavaScript");
 
-			AssertTextEquals(
-				key_sectionTitle = "JavaScript Client Extensions",
-				locator1 = "PagesAdmin#SECTION_SUBTITLE",
-				value1 = "No JavaScript client extensions were loaded.");
+			AssertElementPresent(locator1 = "PagesAdmin#NO_JAVASCRIPT_EXTENSIONS_LOADED");
 		}
 
 		task ("Then the site designer could add a JavaScript Extension to widget page") {
@@ -232,14 +226,11 @@ definition {
 
 			WaitForPageLoad();
 
-			Navigator.gotoNavTab(navTab = "Advanced");
+			Navigator.gotoNavTab(navTab = "Design");
 
-			Panel.expandPanel(panel = "JavaScript");
+			Navigator.gotoNavTab(navTab = "JavaScript");
 
-			AssertTextEquals(
-				key_sectionTitle = "JavaScript Client Extensions",
-				locator1 = "PagesAdmin#SECTION_SUBTITLE",
-				value1 = "No JavaScript client extensions were loaded.");
+			AssertElementPresent(locator1 = "PagesAdmin#NO_JAVASCRIPT_EXTENSIONS_LOADED");
 		}
 
 		task ("Then the site designer could add a JavaScript Extension to Pages") {
@@ -264,7 +255,7 @@ definition {
 				menuItem = "Edit",
 				pageName = "Content Page Name");
 
-			ControlMenu.viewHeaderTitle(headerTitle = "Content Page Name *");
+			ControlMenu.viewHeaderDraftTitle(headerTitle = "Content Page Name");
 
 			AssertCssValue(
 				locator1 = "ControlMenu#HEADING",
@@ -285,7 +276,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-153658. The site designer could add same JavaScript Extension to Page Head or Page Bottom of different pages."
-	@priority = "4"
+	@priority = 4
 	test AddSameJavaScriptExtensionToPageHeadOrPageBottomOfDifferentPages {
 		task ("Given a site designer has two content pages") {
 			for (var i : list "1,2") {
@@ -305,9 +296,9 @@ definition {
 
 			Click(locator1 = "PageEditor#MORE_LINK");
 
-			Navigator.gotoNavTab(navTab = "Advanced");
+			Navigator.gotoNavTab(navTab = "Design");
 
-			Panel.expandPanel(panel = "JavaScript");
+			Navigator.gotoNavTab(navTab = "JavaScript");
 
 			PagesAdmin.addJavaScriptExtensions(
 				extensionNameList = "FontFamily",
@@ -325,9 +316,9 @@ definition {
 
 			Click(locator1 = "PageEditor#MORE_LINK");
 
-			Navigator.gotoNavTab(navTab = "Advanced");
+			Navigator.gotoNavTab(navTab = "Design");
 
-			Panel.expandPanel(panel = "JavaScript");
+			Navigator.gotoNavTab(navTab = "JavaScript");
 
 			PagesAdmin.addJavaScriptExtensions(
 				extensionNameList = "FontFamily",
@@ -356,7 +347,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-153655. The site designer could change JavaScript extension selection to an inheritor page from page template."
-	@priority = "5"
+	@priority = 5
 	test ChangeJavaScriptExtensionOfInheritorPage {
 		property portal.acceptance = "true";
 
@@ -384,9 +375,9 @@ definition {
 
 			Click(locator1 = "PageEditor#MORE_LINK");
 
-			Navigator.gotoNavTab(navTab = "Advanced");
+			Navigator.gotoNavTab(navTab = "Design");
 
-			Panel.expandPanel(panel = "JavaScript");
+			Navigator.gotoNavTab(navTab = "JavaScript");
 
 			PagesAdmin.addJavaScriptExtensions(
 				extensionNameList = "InnerText",
@@ -419,9 +410,9 @@ definition {
 
 			WaitForPageLoad();
 
-			Navigator.gotoNavTab(navTab = "Advanced");
+			Navigator.gotoNavTab(navTab = "Design");
 
-			Panel.expandPanel(panel = "JavaScript");
+			Navigator.gotoNavTab(navTab = "JavaScript");
 
 			AssertVisible(
 				key_tableEntry = "InnerText",
@@ -450,22 +441,19 @@ definition {
 
 			WaitForPageLoad();
 
-			Navigator.gotoNavTab(navTab = "Advanced");
+			Navigator.gotoNavTab(navTab = "Design");
 
-			Panel.expandPanel(panel = "JavaScript");
+			Navigator.gotoNavTab(navTab = "JavaScript");
 
 			for (var extensionName : list "InnerText,TextColor") {
 				Click(
-					key_tableEntry = "${extensionName}",
+					key_tableEntry = ${extensionName},
 					locator1 = "LexiconTable#TABLE_ENTRY_ELLIPSIS");
 
 				DropdownMenuItem.click(menuItem = "Delete");
 			}
 
-			AssertTextEquals(
-				key_sectionTitle = "JavaScript Client Extensions",
-				locator1 = "PagesAdmin#SECTION_SUBTITLE",
-				value1 = "No JavaScript client extensions were loaded.");
+			AssertElementPresent(locator1 = "PagesAdmin#NO_JAVASCRIPT_EXTENSIONS_LOADED");
 
 			PortletEntry.save();
 
@@ -473,7 +461,7 @@ definition {
 
 			PageEditor.assertFragmentSidebarLoaded();
 
-			ControlMenu.viewHeaderTitle(headerTitle = "Test Page Name *");
+			ControlMenu.viewHeaderDraftTitle(headerTitle = "Test Page Name");
 
 			AssertCssValue(
 				locator1 = "ControlMenu#HEADING",
@@ -483,7 +471,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-153655. The site designer could delete the JavaScript extenion selection."
-	@priority = "4"
+	@priority = 4
 	test ClearJavaScriptExtensionSelection {
 		task ("Given a site designer has a content page with a JavaScript extension") {
 			JSONLayout.addPublicLayout(
@@ -499,9 +487,9 @@ definition {
 
 			Click(locator1 = "PageEditor#MORE_LINK");
 
-			Navigator.gotoNavTab(navTab = "Advanced");
+			Navigator.gotoNavTab(navTab = "Design");
 
-			Panel.expandPanel(panel = "JavaScript");
+			Navigator.gotoNavTab(navTab = "JavaScript");
 
 			PagesAdmin.addJavaScriptExtensions(
 				extensionNameList = "InnerText",
@@ -525,6 +513,10 @@ definition {
 		}
 
 		task ("Then the site designer could clear the JavaScript extension selection") {
+			Navigator.gotoNavTab(navTab = "Design");
+
+			Navigator.gotoNavTab(navTab = "JavaScript");
+
 			Click(
 				key_tableEntry = "InnerText",
 				locator1 = "LexiconTable#TABLE_ENTRY_ELLIPSIS");
@@ -532,8 +524,8 @@ definition {
 			DropdownMenuItem.click(menuItem = "Delete");
 
 			AssertTextEquals(
-				key_sectionTitle = "JavaScript Client Extensions",
-				locator1 = "PagesAdmin#SECTION_SUBTITLE",
+				key_buttonName = "Add JavaScript Client Extensions",
+				locator1 = "PagesAdmin#CUSTOMIZATION_BUTTON_SECONDARY_TEXT",
 				value1 = "No JavaScript client extensions were loaded.");
 
 			PortletEntry.save();
@@ -542,12 +534,12 @@ definition {
 
 			PageEditor.assertFragmentSidebarLoaded();
 
-			ControlMenu.viewHeaderTitle(headerTitle = "Test Page Name *");
+			ControlMenu.viewHeaderDraftTitle(headerTitle = "Test Page Name");
 		}
 	}
 
 	@description = "This is a test for LPS-153658. The site designer could configure the load attribute of JavaScript Extension."
-	@priority = "5"
+	@priority = 5
 	test ConfigureLoadAttributeOfJavaScriptExtension {
 		property portal.acceptance = "true";
 
@@ -564,9 +556,9 @@ definition {
 				menuItem = "Configure",
 				pageName = "Test Page Name");
 
-			Navigator.gotoNavTab(navTab = "Advanced");
+			Navigator.gotoNavTab(navTab = "Design");
 
-			Panel.expandPanel(panel = "JavaScript");
+			Navigator.gotoNavTab(navTab = "JavaScript");
 
 			PagesAdmin.addJavaScriptExtensions(
 				extensionNameList = "FontSize",
@@ -598,9 +590,9 @@ definition {
 				menuItem = "Configure",
 				pageName = "Test Page Name");
 
-			Navigator.gotoNavTab(navTab = "Advanced");
+			Navigator.gotoNavTab(navTab = "Design");
 
-			Panel.expandPanel(panel = "JavaScript");
+			Navigator.gotoNavTab(navTab = "JavaScript");
 
 			Select(
 				key_tableEntry = "FontSize",
@@ -644,9 +636,9 @@ definition {
 
 			WaitForPageLoad();
 
-			Navigator.gotoNavTab(navTab = "Advanced");
+			Navigator.gotoNavTab(navTab = "Design");
 
-			Panel.expandPanel(panel = "JavaScript");
+			Navigator.gotoNavTab(navTab = "JavaScript");
 
 			PagesAdmin.addJavaScriptExtensions(
 				extensionNameList = "FontSize",
@@ -676,9 +668,9 @@ definition {
 
 			WaitForPageLoad();
 
-			Navigator.gotoNavTab(navTab = "Advanced");
+			Navigator.gotoNavTab(navTab = "Design");
 
-			Panel.expandPanel(panel = "JavaScript");
+			Navigator.gotoNavTab(navTab = "JavaScript");
 
 			Select(
 				key_tableEntry = "FontSize",
@@ -712,7 +704,9 @@ definition {
 
 			Click(locator1 = "PageEditor#MORE_LINK");
 
-			Navigator.gotoNavTab(navTab = "Advanced");
+			Navigator.gotoNavTab(navTab = "Design");
+
+			Navigator.gotoNavTab(navTab = "JavaScript");
 
 			PagesAdmin.addJavaScriptExtensions(
 				extensionNameList = "FontSize",
@@ -740,7 +734,9 @@ definition {
 
 			Click(locator1 = "PageEditor#MORE_LINK");
 
-			Navigator.gotoNavTab(navTab = "Advanced");
+			Navigator.gotoNavTab(navTab = "Design");
+
+			Navigator.gotoNavTab(navTab = "JavaScript");
 
 			Select(
 				key_tableEntry = "FontSize",
@@ -770,11 +766,11 @@ definition {
 
 			WaitForPageLoad();
 
-			Navigator.gotoNavTab(navTab = "Advanced");
+			Navigator.gotoNavTab(navTab = "Design");
 		}
 
 		task ("When the site designer adds a JavaScript extension to Pages") {
-			Panel.expandPanel(panel = "JavaScript");
+			Navigator.gotoNavTab(navTab = "JavaScript");
 
 			PagesAdmin.addJavaScriptExtensions(
 				extensionNameList = "FontSize",
@@ -788,6 +784,8 @@ definition {
 				value1 = "async");
 
 			PortletEntry.save();
+
+			Navigator.gotoBack();
 
 			ContentPages.addPage(pageName = "Content Page Name");
 
@@ -806,9 +804,9 @@ definition {
 
 			WaitForPageLoad();
 
-			Navigator.gotoNavTab(navTab = "Advanced");
+			Navigator.gotoNavTab(navTab = "Design");
 
-			Panel.expandPanel(panel = "JavaScript");
+			Navigator.gotoNavTab(navTab = "JavaScript");
 
 			Select(
 				key_tableEntry = "FontSize",
@@ -829,7 +827,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-153655 and LPS-153658. Page should inherit the JavaScript extension from master page. The inherited JavaScript extensions from master should be read-only mode and keep insertion configuration."
-	@priority = "4"
+	@priority = 4
 	test ViewInheritedJavaScriptExtensionFromMasterPage {
 		task ("Given a site designer has a master page with a JavaScript extension") {
 			JSONLayoutpagetemplate.addMasterPageTemplateEntry(
@@ -844,7 +842,9 @@ definition {
 
 			Click(locator1 = "PageEditor#MORE_LINK");
 
-			Navigator.gotoNavTab(navTab = "Advanced");
+			Navigator.gotoNavTab(navTab = "Design");
+
+			Navigator.gotoNavTab(navTab = "JavaScript");
 
 			PagesAdmin.addJavaScriptExtensions(
 				extensionNameList = "InnerText",
@@ -872,9 +872,9 @@ definition {
 
 			Click(locator1 = "PageEditor#MORE_LINK");
 
-			Navigator.gotoNavTab(navTab = "Advanced");
+			Navigator.gotoNavTab(navTab = "Design");
 
-			Panel.expandPanel(panel = "JavaScript");
+			Navigator.gotoNavTab(navTab = "JavaScript");
 
 			AssertVisible(
 				key_groupHeader = "Page bottom JS client extensions",
@@ -882,7 +882,7 @@ definition {
 				locator1 = "LexiconTable#GROUPED_TABLE_ENTRY");
 
 			LexiconTable.viewTableEntryInfo(
-				index = "3",
+				index = 3,
 				tableEntry = "InnerText",
 				tableEntryInfo = "From Master");
 
@@ -893,7 +893,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-153658. The inherited JavaScript extensions from Pages should be read-only mode and keep insertion configuration."
-	@priority = "4"
+	@priority = 4
 	test ViewInheritedJavaScriptExtensionFromPages {
 		task ("Given a site designer has the Pages with a JavaScript extension") {
 			PagesAdmin.openPagesAdmin(siteURLKey = "test-site-name");
@@ -906,9 +906,9 @@ definition {
 
 			WaitForPageLoad();
 
-			Navigator.gotoNavTab(navTab = "Advanced");
+			Navigator.gotoNavTab(navTab = "Design");
 
-			Panel.expandPanel(panel = "JavaScript");
+			Navigator.gotoNavTab(navTab = "JavaScript");
 
 			PagesAdmin.addJavaScriptExtensions(
 				extensionNameList = "FontFamily",
@@ -930,9 +930,9 @@ definition {
 				menuItem = "Configure",
 				pageName = "Test Page Name");
 
-			Navigator.gotoNavTab(navTab = "Advanced");
+			Navigator.gotoNavTab(navTab = "Design");
 
-			Panel.expandPanel(panel = "JavaScript");
+			Navigator.gotoNavTab(navTab = "JavaScript");
 
 			AssertVisible(
 				key_groupHeader = "Page Head JS Client Extensions",
@@ -940,7 +940,7 @@ definition {
 				locator1 = "LexiconTable#GROUPED_TABLE_ENTRY");
 
 			LexiconTable.viewTableEntryInfo(
-				index = "3",
+				index = 3,
 				tableEntry = "FontFamily",
 				tableEntryInfo = "From Pages");
 
@@ -951,7 +951,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-153658. View the loading order of applied JavaScript Extensions to page."
-	@priority = "4"
+	@priority = 4
 	test ViewLoadingOrderOfAppliedJavaScriptExtensions {
 		task ("Given a site designer has a page with multiple JavaScript extensions") {
 			task ("Add JavaScript extensions and embedded JavaScript to Pages") {
@@ -965,9 +965,9 @@ definition {
 
 				WaitForPageLoad();
 
-				Navigator.gotoNavTab(navTab = "Advanced");
+				Navigator.gotoNavTab(navTab = "Design");
 
-				Panel.expandPanel(panel = "JavaScript");
+				Navigator.gotoNavTab(navTab = "JavaScript");
 
 				PagesAdmin.addJavaScriptExtensions(
 					extensionNameList = "FontFamily",
@@ -982,7 +982,7 @@ definition {
 				Type(
 					key_text = "javascript",
 					locator1 = "TextArea#ANY",
-					value1 = "${javaScript}");
+					value1 = ${javaScript});
 
 				PortletEntry.save();
 			}
@@ -1000,7 +1000,9 @@ definition {
 
 				Click(locator1 = "PageEditor#MORE_LINK");
 
-				Navigator.gotoNavTab(navTab = "Advanced");
+				Navigator.gotoNavTab(navTab = "Design");
+
+				Navigator.gotoNavTab(navTab = "JavaScript");
 
 				PagesAdmin.addJavaScriptExtensions(
 					extensionNameList = "FontSize",
@@ -1015,7 +1017,7 @@ definition {
 				Type(
 					key_text = "javascript",
 					locator1 = "TextArea#ANY",
-					value1 = "${javaScript}");
+					value1 = ${javaScript});
 
 				PortletEntry.save();
 
@@ -1035,9 +1037,9 @@ definition {
 
 				Click(locator1 = "PageEditor#MORE_LINK");
 
-				Navigator.gotoNavTab(navTab = "Advanced");
+				Navigator.gotoNavTab(navTab = "Design");
 
-				Panel.expandPanel(panel = "JavaScript");
+				Navigator.gotoNavTab(navTab = "JavaScript");
 
 				PagesAdmin.addJavaScriptExtensions(
 					extensionNameList = "FontWeight",
@@ -1052,7 +1054,7 @@ definition {
 				Type(
 					key_text = "javascript",
 					locator1 = "TextArea#ANY",
-					value1 = "${javaScript}");
+					value1 = ${javaScript});
 
 				PortletEntry.save();
 
@@ -1071,12 +1073,12 @@ definition {
 		}
 
 		task ("Then the site designer could see the loading order of JavaScript extensions") {
-			var n = "1";
+			var n = 1;
 
 			for (var extensionName : list "font-family,font-size,font-weight,text-color,inner-text,margin-top") {
 				AssertTextEquals.assertPartialText(
 					locator1 = "xpath=(//a[contains(@class,'html-resource-link')][contains(@href,'documents/d/test-site-name')])[${n}]",
-					value1 = "${extensionName}");
+					value1 = ${extensionName});
 
 				var n = ${n} + 1;
 			}
@@ -1088,20 +1090,20 @@ definition {
 			var textColor = selenium.getElementValue("//tr[td[contains(@class,'line-content')][contains(.,'/text-color')]]/td[contains(@class,'line-number')]");
 
 			TestUtils.isLessThan(
-				actual = "${fontWeight}",
-				expected = "${pages}");
+				actual = ${fontWeight},
+				expected = ${pages});
 
 			TestUtils.isLessThan(
-				actual = "${pages}",
-				expected = "${master}");
+				actual = ${pages},
+				expected = ${master});
 
 			TestUtils.isLessThan(
-				actual = "${master}",
-				expected = "${contentPage}");
+				actual = ${master},
+				expected = ${contentPage});
 
 			TestUtils.isLessThan(
-				actual = "${contentPage}",
-				expected = "${textColor}");
+				actual = ${contentPage},
+				expected = ${textColor});
 		}
 	}
 

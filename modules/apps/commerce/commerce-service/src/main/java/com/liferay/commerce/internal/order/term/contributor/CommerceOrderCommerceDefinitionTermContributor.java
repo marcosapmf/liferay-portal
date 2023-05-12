@@ -14,8 +14,7 @@
 
 package com.liferay.commerce.internal.order.term.contributor;
 
-import com.liferay.commerce.account.constants.CommerceAccountConstants;
-import com.liferay.commerce.account.model.CommerceAccount;
+import com.liferay.account.model.AccountEntry;
 import com.liferay.commerce.constants.CommerceDefinitionTermConstants;
 import com.liferay.commerce.constants.CommerceOrderConstants;
 import com.liferay.commerce.constants.CommercePortletKeys;
@@ -71,7 +70,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.stream.Stream;
+import java.util.Objects;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -313,17 +312,15 @@ public class CommerceOrderCommerceDefinitionTermContributor
 	private String _getOrderCreatorTerm(CommerceOrder commerceOrder)
 		throws PortalException {
 
-		CommerceAccount commerceAccount = commerceOrder.getCommerceAccount();
+		AccountEntry accountEntry = commerceOrder.getAccountEntry();
 
-		if (commerceAccount.getType() ==
-				CommerceAccountConstants.ACCOUNT_TYPE_PERSONAL) {
-
-			User user = _userLocalService.getUser(commerceAccount.getUserId());
+		if (accountEntry.isPersonalAccount()) {
+			User user = _userLocalService.getUser(accountEntry.getUserId());
 
 			return user.getFullName(true, true);
 		}
 
-		return commerceAccount.getName();
+		return accountEntry.getName();
 	}
 
 	private String _getOrderCreatorUserTitleTerm(
@@ -464,33 +461,30 @@ public class CommerceOrderCommerceDefinitionTermContributor
 			commerceOrder.getCommerceShippingMethod();
 
 		if (commerceShippingMethod == null) {
-			CommerceShippingEngine commerceShippingEngine =
-				_commerceShippingEngineRegistry.getCommerceShippingEngine(
-					commerceShippingMethod.getEngineKey());
+			return StringPool.BLANK;
+		}
 
-			if (commerceShippingEngine != null) {
-				List<CommerceShippingOption> commerceShippingOptions =
-					commerceShippingEngine.getCommerceShippingOptions(
-						null, commerceOrder, locale);
+		CommerceShippingEngine commerceShippingEngine =
+			_commerceShippingEngineRegistry.getCommerceShippingEngine(
+				commerceShippingMethod.getEngineKey());
 
-				Stream<CommerceShippingOption> commerceShippingOptionsStream =
-					commerceShippingOptions.stream();
+		if (commerceShippingEngine == null) {
+			return StringPool.BLANK;
+		}
 
-				return commerceShippingOptionsStream.filter(
-					commerceShippingOption -> commerceShippingOption.getKey(
-					).equals(
-						commerceOrder.getShippingOptionName()
-					)
-				).findFirst(
-				).map(
-					CommerceShippingOption::getName
-				).orElse(
-					""
-				);
+		for (CommerceShippingOption commerceShippingOption :
+				commerceShippingEngine.getCommerceShippingOptions(
+					null, commerceOrder, locale)) {
+
+			if (Objects.equals(
+					commerceShippingOption.getKey(),
+					commerceOrder.getShippingOptionName())) {
+
+				return commerceShippingOption.getName();
 			}
 		}
 
-		return "";
+		return StringPool.BLANK;
 	}
 
 	private String _getOrderUrlTerm(CommerceOrder commerceOrder)

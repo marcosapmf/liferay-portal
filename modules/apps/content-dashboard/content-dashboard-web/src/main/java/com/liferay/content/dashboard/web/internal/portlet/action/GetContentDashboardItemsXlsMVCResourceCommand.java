@@ -20,6 +20,7 @@ import com.liferay.asset.kernel.service.AssetVocabularyLocalService;
 import com.liferay.content.dashboard.item.ContentDashboardItem;
 import com.liferay.content.dashboard.item.ContentDashboardItemFactory;
 import com.liferay.content.dashboard.item.ContentDashboardItemVersion;
+import com.liferay.content.dashboard.item.type.ContentDashboardItemSubtype;
 import com.liferay.content.dashboard.web.internal.constants.ContentDashboardPortletKeys;
 import com.liferay.content.dashboard.web.internal.item.ContentDashboardItemFactoryRegistry;
 import com.liferay.content.dashboard.web.internal.search.request.ContentDashboardSearchContextBuilder;
@@ -65,10 +66,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.portlet.ResourceRequest;
 import javax.portlet.ResourceResponse;
@@ -139,20 +137,24 @@ public class GetContentDashboardItemsXlsMVCResourceCommand
 		WorkbookBuilder workbookBuilder) {
 
 		workbookBuilder.cell(
+			String.valueOf(contentDashboardItem.getId())
+		).cell(
 			contentDashboardItem.getTitle(locale)
 		).cell(
 			contentDashboardItem.getUserName()
 		).cell(
 			contentDashboardItem.getTypeLabel(locale)
 		).cell(
-			Optional.ofNullable(
-				contentDashboardItem.getContentDashboardItemSubtype()
-			).map(
-				contentDashboardItemSubtype ->
-					contentDashboardItemSubtype.getLabel(locale)
-			).orElse(
-				StringPool.BLANK
-			)
+			() -> {
+				ContentDashboardItemSubtype<?> contentDashboardItemSubtype =
+					contentDashboardItem.getContentDashboardItemSubtype();
+
+				if (contentDashboardItemSubtype == null) {
+					return StringPool.BLANK;
+				}
+
+				return contentDashboardItemSubtype.getLabel(locale);
+			}
 		).cell(
 			contentDashboardItem.getScopeName(locale)
 		).cell(
@@ -180,6 +182,16 @@ public class GetContentDashboardItemsXlsMVCResourceCommand
 		).cell(
 			_toString(contentDashboardItem.getModifiedDate())
 		).cell(
+			() -> {
+				Date reviewDate = contentDashboardItem.getReviewDate();
+
+				if (reviewDate != null) {
+					return _toString(reviewDate);
+				}
+
+				return StringPool.DASH;
+			}
+		).cell(
 			contentDashboardItem.getDescription(locale)
 		);
 
@@ -199,20 +211,16 @@ public class GetContentDashboardItemsXlsMVCResourceCommand
 			_toString(contentDashboardItem.getCreateDate())
 		);
 
-		List<Locale> locales = contentDashboardItem.getAvailableLocales();
-
-		Stream<Locale> stream = locales.stream();
-
 		workbookBuilder.cell(
-			stream.map(
-				LocaleUtil::toLanguageId
-			).collect(
-				Collectors.joining(StringPool.COMMA)
-			));
+			StringUtil.merge(
+				contentDashboardItem.getAvailableLocales(),
+				LocaleUtil::toLanguageId, StringPool.COMMA));
 	}
 
 	private void _addWorkbookHeaders(WorkbookBuilder workbookBuilder) {
 		workbookBuilder.localizedCell(
+			"id"
+		).localizedCell(
 			"title"
 		).localizedCell(
 			"author"
@@ -230,6 +238,8 @@ public class GetContentDashboardItemsXlsMVCResourceCommand
 			"tags"
 		).localizedCell(
 			"modified-date"
+		).localizedCell(
+			"review-date"
 		).localizedCell(
 			"description"
 		).localizedCell(

@@ -14,15 +14,19 @@
 
 package com.liferay.portal.change.tracking.internal;
 
+import com.liferay.osgi.service.tracker.collections.map.ServiceReferenceMapperFactory;
+import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMap;
+import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMapFactory;
 import com.liferay.petra.io.Deserializer;
 import com.liferay.petra.io.Serializer;
 import com.liferay.petra.io.unsync.UnsyncStringReader;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.change.tracking.registry.CTModelRegistration;
 import com.liferay.portal.change.tracking.registry.CTModelRegistry;
-import com.liferay.portal.change.tracking.sql.CTSQLModeThreadLocal;
 import com.liferay.portal.change.tracking.sql.CTSQLTransformer;
 import com.liferay.portal.kernel.change.tracking.CTCollectionThreadLocal;
+import com.liferay.portal.kernel.change.tracking.sql.CTSQLModeThreadLocal;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Release;
@@ -51,7 +55,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 import net.sf.jsqlparser.JSQLParserException;
 import net.sf.jsqlparser.expression.Alias;
@@ -183,9 +186,7 @@ import net.sf.jsqlparser.statement.values.ValuesStatement;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceReference;
 import org.osgi.util.tracker.ServiceTracker;
-import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
 /**
  * @author Preston Crary
@@ -196,16 +197,19 @@ public class CTSQLTransformerImpl implements CTSQLTransformer {
 	public void activate(BundleContext bundleContext) throws Exception {
 		_bundleContext = bundleContext;
 
-		_transformedSQLs = new LRUMap<>(
+		_ctTransformedSQLs = new LRUMap<>(
+			PropsValues.CHANGE_TRACKING_SQL_TRANSFORMER_CACHE_SIZE);
+		_productionTransformedSQLs = new LRUMap<>(
 			PropsValues.CHANGE_TRACKING_SQL_TRANSFORMER_CACHE_SIZE);
 
 		_readTransformedSQLsFile();
 
-		_ctServiceServiceTracker = new ServiceTracker<>(
-			_bundleContext, (Class<CTService<?>>)(Class<?>)CTService.class,
-			new CTServiceTrackerCustomizer(_bundleContext));
-
-		_ctServiceServiceTracker.open();
+		_ctServiceServiceTrackerMap =
+			ServiceTrackerMapFactory.openSingleValueMap(
+				_bundleContext, (Class<CTService<?>>)(Class<?>)CTService.class,
+				null,
+				ServiceReferenceMapperFactory.createFromFunction(
+					_bundleContext, CTService::getModelClass));
 
 		_releaseServiceTracker = new ServiceTracker<>(
 			_bundleContext,
@@ -223,21 +227,36 @@ public class CTSQLTransformerImpl implements CTSQLTransformer {
 	public void deactivate() {
 		_writeTransformedSQLsFile();
 
-		_ctServiceServiceTracker.close();
+		_ctServiceServiceTrackerMap.close();
 
 		_releaseServiceTracker.close();
 	}
 
 	@Override
 	public String transform(String sql) {
+		if (CTSQLModeThreadLocal.getCTSQLMode() ==
+				CTSQLModeThreadLocal.CTSQLMode.CT_ALL) {
+
+			return sql;
+		}
+
 		long ctCollectionId = CTCollectionThreadLocal.getCTCollectionId();
 
-		if (ctCollectionId == 0) {
-			String transformedSQL = _transformedSQLs.get(sql);
+		String transformedSQL = null;
 
-			if (transformedSQL != null) {
-				return transformedSQL;
-			}
+		String key = _getTransformedSQLKey(ctCollectionId, sql);
+
+		if (ctCollectionId ==
+				CTCollectionThreadLocal.CT_COLLECTION_ID_PRODUCTION) {
+
+			transformedSQL = _productionTransformedSQLs.get(key);
+		}
+		else {
+			transformedSQL = _ctTransformedSQLs.get(key);
+		}
+
+		if (transformedSQL != null) {
+			return transformedSQL;
 		}
 
 		boolean foundTable = false;
@@ -251,7 +270,7 @@ public class CTSQLTransformerImpl implements CTSQLTransformer {
 		}
 
 		if (!foundTable) {
-			_transformedSQLs.put(sql, sql);
+			_productionTransformedSQLs.put(key, sql);
 
 			return sql;
 		}
@@ -260,7 +279,7 @@ public class CTSQLTransformerImpl implements CTSQLTransformer {
 			Statement statement = _jSqlParser.parse(
 				new UnsyncStringReader(_escape(sql)));
 
-			String transformedSQL = sql;
+			transformedSQL = sql;
 
 			if (statement instanceof Select) {
 				statement.accept(
@@ -278,15 +297,20 @@ public class CTSQLTransformerImpl implements CTSQLTransformer {
 				transformedSQL = _unescape(statement.toString());
 			}
 
-			if (ctCollectionId == 0) {
-				_transformedSQLs.put(sql, transformedSQL);
+			if (ctCollectionId ==
+					CTCollectionThreadLocal.CT_COLLECTION_ID_PRODUCTION) {
+
+				_productionTransformedSQLs.put(key, transformedSQL);
+			}
+			else {
+				_ctTransformedSQLs.put(key, transformedSQL);
 			}
 
 			return transformedSQL;
 		}
 		catch (JSQLParserException jsqlParserException) {
 			throw new RuntimeException(
-				"Failed to parse sql for " + sql, jsqlParserException);
+				"Unable to parse SQL for " + sql, jsqlParserException);
 		}
 	}
 
@@ -296,6 +320,16 @@ public class CTSQLTransformerImpl implements CTSQLTransformer {
 	private String _escape(String sql) {
 		return StringUtil.replace(
 			sql, "LIKE ? ESCAPE '\\'", "LIKE '[$LFR_LIKE_ESCAPE_STRING$]'");
+	}
+
+	private String _getTransformedSQLKey(long ctCollectionId, String sql) {
+		if (ctCollectionId ==
+				CTCollectionThreadLocal.CT_COLLECTION_ID_PRODUCTION) {
+
+			return sql;
+		}
+
+		return StringBundler.concat(ctCollectionId, StringPool.POUND, sql);
 	}
 
 	private void _readTransformedSQLsFile() {
@@ -319,7 +353,7 @@ public class CTSQLTransformerImpl implements CTSQLTransformer {
 			int size = deserializer.readInt();
 
 			for (int i = 0; i < size; i++) {
-				_transformedSQLs.put(
+				_productionTransformedSQLs.put(
 					deserializer.readString(), deserializer.readString());
 			}
 		}
@@ -341,7 +375,7 @@ public class CTSQLTransformerImpl implements CTSQLTransformer {
 	}
 
 	private void _writeTransformedSQLsFile() {
-		if (_transformedSQLs.isEmpty()) {
+		if (_productionTransformedSQLs.isEmpty()) {
 			return;
 		}
 
@@ -352,7 +386,7 @@ public class CTSQLTransformerImpl implements CTSQLTransformer {
 		serializer.writeLong(bundle.getLastModified());
 
 		Map<String, String> snapshotTransformedSQLs = new HashMap<>(
-			_transformedSQLs);
+			_productionTransformedSQLs);
 
 		serializer.writeInt(snapshotTransformedSQLs.size());
 
@@ -389,11 +423,11 @@ public class CTSQLTransformerImpl implements CTSQLTransformer {
 	private static final JSqlParser _jSqlParser = new CCJSqlParserManager();
 
 	private BundleContext _bundleContext;
-	private final Map<Class<?>, CTService<?>> _ctServiceMap =
-		new ConcurrentHashMap<>();
-	private ServiceTracker<?, ?> _ctServiceServiceTracker;
+	private ServiceTrackerMap<Class<?>, CTService<?>>
+		_ctServiceServiceTrackerMap;
+	private LRUMap<String, String> _ctTransformedSQLs;
+	private LRUMap<String, String> _productionTransformedSQLs;
 	private ServiceTracker<?, ?> _releaseServiceTracker;
-	private LRUMap<String, String> _transformedSQLs;
 
 	private abstract static class BaseStatementVisitor
 		implements ExpressionVisitor, FromItemVisitor, ItemsListVisitor,
@@ -1252,45 +1286,6 @@ public class CTSQLTransformerImpl implements CTSQLTransformer {
 
 	}
 
-	private class CTServiceTrackerCustomizer
-		implements ServiceTrackerCustomizer<CTService<?>, Class<?>> {
-
-		@Override
-		public Class<?> addingService(
-			ServiceReference<CTService<?>> serviceReference) {
-
-			CTService<?> ctService = _bundleContext.getService(
-				serviceReference);
-
-			Class<?> modelClass = ctService.getModelClass();
-
-			_ctServiceMap.put(modelClass, ctService);
-
-			return modelClass;
-		}
-
-		@Override
-		public void modifiedService(
-			ServiceReference<CTService<?>> serviceReference,
-			Class<?> modelClass) {
-		}
-
-		@Override
-		public void removedService(
-			ServiceReference<CTService<?>> serviceReference,
-			Class<?> modelClass) {
-
-			_ctServiceMap.remove(modelClass);
-		}
-
-		private CTServiceTrackerCustomizer(BundleContext bundleContext) {
-			_bundleContext = bundleContext;
-		}
-
-		private final BundleContext _bundleContext;
-
-	}
-
 	private class SelectStatementVisitor extends BaseStatementVisitor {
 
 		@Override
@@ -1366,7 +1361,7 @@ public class CTSQLTransformerImpl implements CTSQLTransformer {
 
 			SelectBody selectBody = ctEntryPlainSelect;
 
-			CTService<?> ctService = _ctServiceMap.get(
+			CTService<?> ctService = _ctServiceServiceTrackerMap.getService(
 				ctModelRegistration.getModelClass());
 
 			List<String[]> uniqueIndexColumnNames = Collections.emptyList();

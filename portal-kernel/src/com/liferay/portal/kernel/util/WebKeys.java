@@ -66,6 +66,8 @@ public interface WebKeys {
 
 	public static final String BEAN_PORTLET_IDS = "BEAN_PORTLET_IDS";
 
+	public static final String BLOCK_LOGIN_PROMPT = "BLOCK_LOGIN_PROMPT";
+
 	public static final String BLOGS_CATEGORY = "BLOGS_CATEGORY";
 
 	public static final String BLOGS_ENTRY = "BLOGS_ENTRY";
@@ -329,6 +331,8 @@ public interface WebKeys {
 		"LIFERAY_SHARED_LINKED_ASSET_ENTRY_IDS";
 
 	public static final String LOCALE = "LOCALE";
+
+	public static final String LOGIN_REQUEST = "LOGIN_REQUEST";
 
 	public static final String LOGOUT = "LOGOUT";
 
@@ -653,6 +657,8 @@ public interface WebKeys {
 
 	public static final String TITLE = "TITLE";
 
+	public static final String TITLE_SET_PASSWORD = "TITLE_SET_PASSWORD";
+
 	public static final String TRANSLATOR_TRANSLATION =
 		"TRANSLATOR_TRANSLATION";
 
@@ -690,7 +696,13 @@ public interface WebKeys {
 
 	public static final String USER_PASSWORD = "USER_PASSWORD";
 
+	public static final String USER_PASSWORD_MODIFIED_TIME =
+		"USER_PASSWORD_MODIFIED_TIME";
+
 	public static final String USERS_NOTIFIED = "USERS_NOTIFIED";
+
+	public static final String VIRTUAL_HOST_LANGUAGE_ID =
+		"VIRTUAL_HOST_LANGUAGE_ID";
 
 	public static final String VIRTUAL_HOST_LAYOUT_SET =
 		"VIRTUAL_HOST_LAYOUT_SET";

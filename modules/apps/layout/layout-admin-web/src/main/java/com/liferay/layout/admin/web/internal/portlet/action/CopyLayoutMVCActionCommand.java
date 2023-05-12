@@ -29,17 +29,13 @@ import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextFactory;
 import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.upload.UploadPortletRequest;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
-import com.liferay.portal.kernel.util.PropertiesParamUtil;
-import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 
-import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
@@ -67,15 +63,9 @@ public class CopyLayoutMVCActionCommand extends BaseMVCActionCommand {
 			ActionRequest actionRequest, ActionResponse actionResponse)
 		throws Exception {
 
-		UploadPortletRequest uploadPortletRequest =
-			_portal.getUploadPortletRequest(actionRequest);
-
 		ThemeDisplay themeDisplay = (ThemeDisplay)actionRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
-		String redirect = ParamUtil.getString(actionRequest, "redirect");
-
-		long sourcePlid = ParamUtil.getLong(uploadPortletRequest, "sourcePlid");
 		long groupId = ParamUtil.getLong(actionRequest, "groupId");
 		boolean privateLayout = ParamUtil.getBoolean(
 			actionRequest, "privateLayout");
@@ -98,49 +88,30 @@ public class CopyLayoutMVCActionCommand extends BaseMVCActionCommand {
 			}
 		).build();
 
-		UnicodeProperties typeSettingsUnicodeProperties =
-			PropertiesParamUtil.getProperties(
-				actionRequest, "TypeSettingsProperties--");
-
-		Layout sourceLayout = _layoutLocalService.fetchLayout(sourcePlid);
-
-		UnicodeProperties sourceTypeSettingsUnicodeProperties =
-			sourceLayout.getTypeSettingsProperties();
-
-		sourceTypeSettingsUnicodeProperties.putAll(
-			typeSettingsUnicodeProperties);
+		boolean copyPermissions = ParamUtil.getBoolean(
+			actionRequest, "copyPermissions");
+		long sourcePlid = ParamUtil.getLong(actionRequest, "sourcePlid");
 
 		ServiceContext serviceContext = ServiceContextFactory.getInstance(
 			Layout.class.getName(), actionRequest);
 
 		try {
-			Layout targetLayout = _layoutService.addLayout(
-				groupId, privateLayout, sourceLayout.getParentLayoutId(), 0, 0,
-				nameMap, sourceLayout.getTitleMap(),
-				sourceLayout.getDescriptionMap(), sourceLayout.getKeywordsMap(),
-				sourceLayout.getRobotsMap(), sourceLayout.getType(),
-				sourceTypeSettingsUnicodeProperties.toString(), false, false,
-				new HashMap<>(), sourceLayout.getMasterLayoutPlid(),
-				serviceContext);
+			Layout targetLayout = _layoutService.copyLayout(
+				groupId, privateLayout, nameMap, false, false, copyPermissions,
+				sourcePlid, serviceContext);
 
-			targetLayout = _layoutCopyHelper.copyLayout(
+			Layout sourceLayout = _layoutLocalService.fetchLayout(sourcePlid);
+
+			targetLayout = _layoutCopyHelper.copyLayoutContent(
 				sourceLayout, targetLayout);
 
 			Layout draftLayout = targetLayout.fetchDraftLayout();
 
 			if (draftLayout != null) {
-				targetLayout = _layoutCopyHelper.copyLayout(
-					targetLayout, draftLayout);
+				_layoutCopyHelper.copyLayoutContent(targetLayout, draftLayout);
 			}
 
-			targetLayout.setNameMap(nameMap);
-
-			UnicodeProperties unicodeProperties =
-				targetLayout.getTypeSettingsProperties();
-
-			unicodeProperties.put("published", Boolean.FALSE.toString());
-
-			_layoutLocalService.updateLayout(targetLayout);
+			String redirect = ParamUtil.getString(actionRequest, "redirect");
 
 			if (Validator.isNull(redirect)) {
 				redirect = PortletURLBuilder.createRenderURL(

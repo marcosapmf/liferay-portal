@@ -16,15 +16,15 @@ package com.liferay.portal.search.web.internal.type.facet.portlet;
 
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.service.ObjectDefinitionLocalService;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.security.permission.ResourceActionsUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.KeyValuePair;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.search.asset.SearchableAssetClassNamesProvider;
-import com.liferay.portal.search.web.internal.helper.PortletPreferencesHelper;
+import com.liferay.portal.search.web.internal.portlet.preferences.BasePortletPreferences;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
@@ -35,32 +35,22 @@ import javax.portlet.PortletPreferences;
  * @author Lino Alves
  */
 public class TypeFacetPortletPreferencesImpl
-	implements TypeFacetPortletPreferences {
+	extends BasePortletPreferences implements TypeFacetPortletPreferences {
 
 	public TypeFacetPortletPreferencesImpl(
 		ObjectDefinitionLocalService objectDefinitionLocalService,
 		Optional<PortletPreferences> portletPreferencesOptional,
 		SearchableAssetClassNamesProvider searchableAssetClassNamesProvider) {
 
+		super(portletPreferencesOptional.orElse(null));
+
 		_objectDefinitionLocalService = objectDefinitionLocalService;
 		_searchableAssetClassNamesProvider = searchableAssetClassNamesProvider;
-
-		_portletPreferencesHelper = new PortletPreferencesHelper(
-			portletPreferencesOptional);
 	}
 
 	@Override
-	public Optional<String[]> getAssetTypesArray() {
-		Optional<String> assetTypesOptional =
-			_portletPreferencesHelper.getString(
-				TypeFacetPortletPreferences.PREFERENCE_KEY_ASSET_TYPES);
-
-		return assetTypesOptional.map(StringUtil::split);
-	}
-
-	@Override
-	public String getAssetTypesString() {
-		return _portletPreferencesHelper.getString(
+	public String getAssetTypes() {
+		return getString(
 			TypeFacetPortletPreferences.PREFERENCE_KEY_ASSET_TYPES,
 			StringPool.BLANK);
 	}
@@ -69,66 +59,61 @@ public class TypeFacetPortletPreferencesImpl
 	public List<KeyValuePair> getAvailableAssetTypes(
 		long companyId, Locale locale) {
 
-		Optional<String[]> assetTypesOptional = getAssetTypesArray();
+		String[] assetTypes = getCurrentAssetTypesArray(companyId);
 
-		String[] allAssetTypes = getAllAssetTypes(companyId);
+		return TransformUtil.transformToList(
+			getAllAssetTypes(companyId),
+			assetType -> {
+				if (ArrayUtil.contains(assetTypes, assetType)) {
+					return null;
+				}
 
-		String[] assetTypes = assetTypesOptional.orElse(allAssetTypes);
-
-		List<KeyValuePair> availableAssetTypes = new ArrayList<>();
-
-		for (String className : allAssetTypes) {
-			if (!ArrayUtil.contains(assetTypes, className)) {
-				availableAssetTypes.add(_getKeyValuePair(locale, className));
-			}
-		}
-
-		return availableAssetTypes;
+				return _getKeyValuePair(locale, assetType);
+			});
 	}
 
 	@Override
 	public List<KeyValuePair> getCurrentAssetTypes(
 		long companyId, Locale locale) {
 
-		String[] assetTypes = getCurrentAssetTypesArray(companyId);
-
-		List<KeyValuePair> currentAssetTypes = new ArrayList<>();
-
-		for (String className : assetTypes) {
-			currentAssetTypes.add(_getKeyValuePair(locale, className));
-		}
-
-		return currentAssetTypes;
+		return TransformUtil.transformToList(
+			getCurrentAssetTypesArray(companyId),
+			assetType -> _getKeyValuePair(locale, assetType));
 	}
 
 	@Override
 	public String[] getCurrentAssetTypesArray(long companyId) {
-		Optional<String[]> assetTypesOptional = getAssetTypesArray();
+		String assetTypes = getString(
+			TypeFacetPortletPreferences.PREFERENCE_KEY_ASSET_TYPES, null);
 
-		return assetTypesOptional.orElseGet(() -> getAllAssetTypes(companyId));
+		if (assetTypes != null) {
+			return StringUtil.split(assetTypes);
+		}
+
+		return getAllAssetTypes(companyId);
 	}
 
 	@Override
 	public int getFrequencyThreshold() {
-		return _portletPreferencesHelper.getInteger(
+		return getInteger(
 			TypeFacetPortletPreferences.PREFERENCE_KEY_FREQUENCY_THRESHOLD, 1);
 	}
 
 	@Override
 	public String getOrder() {
-		return _portletPreferencesHelper.getString(
+		return getString(
 			TypeFacetPortletPreferences.PREFERENCE_KEY_ORDER, "count:desc");
 	}
 
 	@Override
 	public String getParameterName() {
-		return _portletPreferencesHelper.getString(
+		return getString(
 			TypeFacetPortletPreferences.PREFERENCE_KEY_PARAMETER_NAME, "type");
 	}
 
 	@Override
 	public boolean isFrequenciesVisible() {
-		return _portletPreferencesHelper.getBoolean(
+		return getBoolean(
 			TypeFacetPortletPreferences.PREFERENCE_KEY_FREQUENCIES_VISIBLE,
 			true);
 	}
@@ -155,7 +140,6 @@ public class TypeFacetPortletPreferencesImpl
 	}
 
 	private final ObjectDefinitionLocalService _objectDefinitionLocalService;
-	private final PortletPreferencesHelper _portletPreferencesHelper;
 	private final SearchableAssetClassNamesProvider
 		_searchableAssetClassNamesProvider;
 

@@ -20,7 +20,6 @@ import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.change.tracking.CTAware;
-import com.liferay.portal.kernel.dao.jdbc.aop.MasterDataSource;
 import com.liferay.portal.kernel.dao.orm.ORMException;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.lock.LockListener;
@@ -242,13 +241,11 @@ public class LockLocalServiceImpl extends LockLocalServiceBaseImpl {
 		return lock;
 	}
 
-	@MasterDataSource
 	@Override
 	public Lock lock(String className, String key, String owner) {
 		return lock(className, key, null, owner);
 	}
 
-	@MasterDataSource
 	@Override
 	public Lock lock(
 		String className, String key, String expectedOwner,
@@ -374,7 +371,6 @@ public class LockLocalServiceImpl extends LockLocalServiceBaseImpl {
 		}
 	}
 
-	@MasterDataSource
 	@Override
 	public void unlock(String className, String key, String owner) {
 		while (true) {
@@ -431,23 +427,37 @@ public class LockLocalServiceImpl extends LockLocalServiceBaseImpl {
 	}
 
 	private void _expireLock(Lock lock) {
-		LockListener lockListener = _getLockListener(lock.getClassName());
-
-		String key = lock.getKey();
-
-		if (lockListener != null) {
-			lockListener.onBeforeExpire(key);
-		}
-
 		try {
-			lockPersistence.remove(lock);
+			TransactionInvokerUtil.invoke(
+				_transactionConfig,
+				() -> {
+					LockListener lockListener = _getLockListener(
+						lock.getClassName());
 
-			lockPersistence.flush();
+					String key = lock.getKey();
+
+					if (lockListener != null) {
+						lockListener.onBeforeExpire(key);
+					}
+
+					try {
+						lockPersistence.remove(lock);
+
+						lockPersistence.flush();
+					}
+					finally {
+						if (lockListener != null) {
+							lockListener.onAfterExpire(key);
+						}
+					}
+
+					return null;
+				});
 		}
-		finally {
-			if (lockListener != null) {
-				lockListener.onAfterExpire(key);
-			}
+		catch (Throwable throwable) {
+			_log.error("Unable to expire lock", throwable);
+
+			ReflectionUtil.throwException(throwable);
 		}
 	}
 

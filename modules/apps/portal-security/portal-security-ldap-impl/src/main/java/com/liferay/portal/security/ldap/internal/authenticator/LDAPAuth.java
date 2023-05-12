@@ -429,6 +429,19 @@ public class LDAPAuth implements Authenticator {
 				return FAILURE;
 			}
 
+			if (user == null) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(
+						StringBundler.concat(
+							"Rejecting authenticated user ", fullUserDN,
+							" because of failed import from LDAP server ",
+							ldapServerId, ", company ", companyId,
+							", and LDAP context ", safeLdapContext));
+				}
+
+				return FAILURE;
+			}
+
 			// Process LDAP success codes
 
 			String resultCode = ldapAuthResult.getResponseControl();

@@ -14,6 +14,7 @@
 
 package com.liferay.batch.planner.web.internal.helper;
 
+import com.liferay.batch.planner.batch.engine.task.TaskItemUtil;
 import com.liferay.batch.planner.constants.BatchPlannerPolicyConstants;
 import com.liferay.batch.planner.model.BatchPlannerMapping;
 import com.liferay.batch.planner.model.BatchPlannerPlan;
@@ -64,9 +65,8 @@ public class BatchPlannerPlanHelper {
 			portletRequest, "externalType");
 		String internalClassName = _resolveInternalClassName(
 			ParamUtil.getString(portletRequest, "internalClassName"));
-		String taskItemDelegateName = _resolveTaskItemDelegateName(
-			ParamUtil.getString(portletRequest, "internalClassName"),
-			ParamUtil.getString(portletRequest, "taskItemDelegateName"));
+		String taskItemDelegateName = TaskItemUtil.getDelegateName(
+			ParamUtil.getString(portletRequest, "internalClassName"));
 		boolean template = ParamUtil.getBoolean(portletRequest, "template");
 
 		BatchPlannerPlan batchPlannerPlan =
@@ -75,7 +75,9 @@ public class BatchPlannerPlanHelper {
 				0, taskItemDelegateName, template);
 
 		_addBatchPlannerPolicies(
-			batchPlannerPlan.getBatchPlannerPlanId(), portletRequest);
+			batchPlannerPlan.getBatchPlannerPlanId(),
+			BatchPlannerPolicyConstants.exportPlanPolicyNameTypes,
+			portletRequest);
 
 		List<BatchPlannerMapping> batchPlannerMappings =
 			_getExportBatchPlannerMappings(portletRequest);
@@ -99,9 +101,8 @@ public class BatchPlannerPlanHelper {
 			portletRequest, "externalType", "CSV");
 		String internalClassName = _resolveInternalClassName(
 			ParamUtil.getString(portletRequest, "internalClassName"));
-		String taskItemDelegateName = _resolveTaskItemDelegateName(
-			ParamUtil.getString(portletRequest, "internalClassName"),
-			ParamUtil.getString(portletRequest, "taskItemDelegateName"));
+		String taskItemDelegateName = TaskItemUtil.getDelegateName(
+			ParamUtil.getString(portletRequest, "internalClassName"));
 		boolean template = ParamUtil.getBoolean(portletRequest, "template");
 
 		int size = 0;
@@ -118,7 +119,9 @@ public class BatchPlannerPlanHelper {
 				size, taskItemDelegateName, template);
 
 		_addBatchPlannerPolicies(
-			batchPlannerPlan.getBatchPlannerPlanId(), portletRequest);
+			batchPlannerPlan.getBatchPlannerPlanId(),
+			BatchPlannerPolicyConstants.importPlanPolicyNameTypes,
+			portletRequest);
 
 		List<BatchPlannerMapping> batchPlannerMappings =
 			_getImportBatchPlannerMappings(portletRequest);
@@ -164,7 +167,8 @@ public class BatchPlannerPlanHelper {
 		throws PortalException {
 
 		return _updateBatchPlannerPlan(
-			portletRequest, _getExportBatchPlannerMappings(portletRequest));
+			portletRequest, _getExportBatchPlannerMappings(portletRequest),
+			BatchPlannerPolicyConstants.exportPlanPolicyNameTypes);
 	}
 
 	public BatchPlannerPlan updateImportBatchPlannerPlan(
@@ -172,16 +176,16 @@ public class BatchPlannerPlanHelper {
 		throws PortalException {
 
 		return _updateBatchPlannerPlan(
-			portletRequest, _getImportBatchPlannerMappings(portletRequest));
+			portletRequest, _getImportBatchPlannerMappings(portletRequest),
+			BatchPlannerPolicyConstants.importPlanPolicyNameTypes);
 	}
 
 	private void _addBatchPlannerPolicies(
-			long batchPlannerPlanId, PortletRequest portletRequest)
+			long batchPlannerPlanId, Map<String, String> planPolicyNameTypes,
+			PortletRequest portletRequest)
 		throws Exception {
 
-		for (Map.Entry<String, String> entry :
-				BatchPlannerPolicyConstants.nameTypes.entrySet()) {
-
+		for (Map.Entry<String, String> entry : planPolicyNameTypes.entrySet()) {
 			String name = entry.getKey();
 
 			String value = ParamUtil.getString(portletRequest, name);
@@ -346,21 +350,10 @@ public class BatchPlannerPlanHelper {
 		return internalClassName.substring(0, index);
 	}
 
-	private String _resolveTaskItemDelegateName(
-		String internalClassName, String taskItemDelegateName) {
-
-		int index = internalClassName.indexOf(StringPool.POUND);
-
-		if (index < 0) {
-			return taskItemDelegateName;
-		}
-
-		return internalClassName.substring(index + 1);
-	}
-
 	private BatchPlannerPlan _updateBatchPlannerPlan(
 			PortletRequest portletRequest,
-			List<BatchPlannerMapping> batchPlannerMappings)
+			List<BatchPlannerMapping> batchPlannerMappings,
+			Map<String, String> planPolicyNameTypes)
 		throws PortalException {
 
 		long batchPlannerPlanId = ParamUtil.getLong(
@@ -376,7 +369,8 @@ public class BatchPlannerPlanHelper {
 			_batchPlannerPlanService.updateBatchPlannerPlan(
 				batchPlannerPlanId, externalType, internalClassName, name);
 
-		_updateBatchPlannerPolicies(batchPlannerPlanId, portletRequest);
+		_updateBatchPlannerPolicies(
+			batchPlannerPlanId, planPolicyNameTypes, portletRequest);
 
 		_batchPlannerMappingService.deleteBatchPlannerMappings(
 			batchPlannerPlanId);
@@ -392,12 +386,11 @@ public class BatchPlannerPlanHelper {
 	}
 
 	private void _updateBatchPlannerPolicies(
-			long batchPlannerPlanId, PortletRequest portletRequest)
+			long batchPlannerPlanId, Map<String, String> planPolicyNameTypes,
+			PortletRequest portletRequest)
 		throws PortalException {
 
-		for (Map.Entry<String, String> entry :
-				BatchPlannerPolicyConstants.nameTypes.entrySet()) {
-
+		for (Map.Entry<String, String> entry : planPolicyNameTypes.entrySet()) {
 			String name = entry.getKey();
 
 			String value = ParamUtil.getString(portletRequest, name);

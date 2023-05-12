@@ -130,7 +130,7 @@ import com.liferay.portal.kernel.service.permission.GroupPermission;
 import com.liferay.portal.kernel.servlet.ServletResponseConstants;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.upload.UploadRequestSizeException;
-import com.liferay.portal.kernel.upload.UploadServletRequestConfigurationHelperUtil;
+import com.liferay.portal.kernel.upload.configuration.UploadServletRequestConfigurationProviderUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.GetterUtil;
@@ -713,6 +713,38 @@ public class StagingImpl implements Staging {
 							"cannot-be-found-with-the-following-parameters-x",
 						exportImportContentValidationException.
 							getDlReferenceParameters());
+				}
+			}
+			else if (exportImportContentValidationException.getType() ==
+						ExportImportContentValidationException.
+							JOURNAL_FEED_NOT_FOUND) {
+
+				if (Validator.isNotNull(
+						exportImportContentValidationException.
+							getStagedModelClassName())) {
+
+					errorMessage = _language.format(
+						resourceBundle,
+						"unable-to-validate-referenced-article-feed-because-" +
+							"it-cannot-be-found-with-url-x-within-the-" +
+								"content-of-x-with-primary-key-x",
+						new String[] {
+							exportImportContentValidationException.
+								getJournalArticleFeedURL(),
+							exportImportContentValidationException.
+								getStagedModelClassName(),
+							String.valueOf(
+								exportImportContentValidationException.
+									getStagedModelPrimaryKeyObj())
+						});
+				}
+				else {
+					errorMessage = _language.format(
+						resourceBundle,
+						"unable-to-validate-referenced-journal-feed-because-" +
+							"it-cannot-be-found-with-url-x",
+						exportImportContentValidationException.
+							getJournalArticleFeedURL());
 				}
 			}
 			else if (exportImportContentValidationException.getType() ==
@@ -1653,7 +1685,8 @@ public class StagingImpl implements Staging {
 				resourceBundle,
 				"upload-request-reached-the-maximum-permitted-size-of-x-bytes",
 				String.valueOf(
-					UploadServletRequestConfigurationHelperUtil.getMaxSize()));
+					UploadServletRequestConfigurationProviderUtil.
+						getMaxSize()));
 			errorType = ServletResponseConstants.SC_FILE_SIZE_EXCEPTION;
 		}
 		else {

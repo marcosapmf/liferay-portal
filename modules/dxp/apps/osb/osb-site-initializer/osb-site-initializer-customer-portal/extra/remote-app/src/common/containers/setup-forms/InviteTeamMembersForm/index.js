@@ -20,16 +20,27 @@ import {useAppPropertiesContext} from '../../../contexts/AppPropertiesContext';
 import {
 	addTeamMembersInvitation,
 	associateUserAccountWithAccountAndAccountRole,
+	createAndAssociateUserAccountWithAccountAndAccountRole,
+	getUserAccountByEmail,
 } from '../../../services/liferay/graphql/queries';
 import {associateContactRoleNameByEmailByProject} from '../../../services/liferay/rest/raysource/LicenseKeys';
 import {ROLE_TYPES, SLA_TYPES} from '../../../utils/constants';
 import getInitialInvite from '../../../utils/getInitialInvite';
 import getProjectRoles from '../../../utils/getProjectRoles';
+import {getRandomUUID} from '../../../utils/getRandomUUID';
 import Layout from '../Layout';
 import TeamMemberInputs from './TeamMemberInputs';
 
-const MAXIMUM_INVITES_COUNT = 10;
 const INITIAL_INVITES_COUNT = 1;
+const MAXIMUM_REQUESTORS_DEFAULT = -1;
+const MAXIMUM_INVITES_COUNT = 10;
+const UNLIMITED_RESQUESTORS = 9999;
+
+const DEFAULT_WARNING = {
+	message: i18n.translate('one-or-more-requests-may-have-failed'),
+	title: i18n.translate('Warning'),
+	type: 'warning',
+};
 
 const InviteTeamMembersPage = ({
 	availableAdministratorAssets = 0,
@@ -63,6 +74,14 @@ const InviteTeamMembersPage = ({
 		associateUserAccount,
 		{error: associateUserAccountError},
 	] = useMutation(associateUserAccountWithAccountAndAccountRole, {
+		awaitRefetchQueries: true,
+		refetchQueries: ['getUserAccountsByAccountExternalReferenceCode'],
+	});
+
+	const [
+		createAndAssociateUserAccount,
+		{error: createAndAssociateUserAccountError},
+	] = useMutation(createAndAssociateUserAccountWithAccountAndAccountRole, {
 		awaitRefetchQueries: true,
 		refetchQueries: ['getUserAccountsByAccountExternalReferenceCode'],
 	});
@@ -141,7 +160,9 @@ const InviteTeamMembersPage = ({
 
 			const remainingAdmins = availableAdministratorAssets - totalAdmins;
 
-			setAvailableAdminsRoles(remainingAdmins);
+			return project.maxRequestors === MAXIMUM_REQUESTORS_DEFAULT
+				? setAvailableAdminsRoles(UNLIMITED_RESQUESTORS)
+				: setAvailableAdminsRoles(remainingAdmins);
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [values, project, accountRoles, availableAdministratorAssets]);
@@ -157,7 +178,8 @@ const InviteTeamMembersPage = ({
 			const sucessfullyEmails = totalEmails - failedEmails;
 
 			if (
-				availableAdministratorAssets < 1 &&
+				availableAdministratorAssets === 0 &&
+				project.maxRequestors !== MAXIMUM_REQUESTORS_DEFAULT &&
 				isSelectdAdministratorOrRequestorRole
 			) {
 				setBaseButtonDisabled(true);
@@ -178,6 +200,7 @@ const InviteTeamMembersPage = ({
 		availableAdministratorAssets,
 		isSelectdAdministratorOrRequestorRole,
 		errors,
+		project.maxRequestors,
 	]);
 
 	const handleSubmit = async () => {
@@ -185,55 +208,101 @@ const InviteTeamMembersPage = ({
 
 		if (filledEmails.length) {
 			setIsLoadingUserInvitation(true);
-			const newMembersData = await addTeamMemberInvitation({
-				context: {
-					type: 'liferay-rest',
-				},
-				variables: {
-					TeamMembersInvitation: filledEmails.map(
-						({email, role}) => ({
-							email,
-							r_accountEntryToDXPCloudEnvironment_accountEntryId:
-								project?.id,
-							role: role.key,
-						})
-					),
-				},
-			});
+			let displaySuccess = true;
 
-			filledEmails.map(async ({email, role}) => {
-				await associateUserAccount({
+			const filledEmailsPromises = filledEmails.map(
+				async (filledEmail) => {
+					const getUserAccount = await client.query({
+						query: getUserAccountByEmail,
+						variables: {
+							filter: `emailAddress eq '${filledEmail.email}'`,
+						},
+					});
+
+					const userInvitedAlreadyExists = !!getUserAccount?.data
+						.userAccounts.items.length;
+
+					const inviteNewMember = userInvitedAlreadyExists
+						? associateUserAccount
+						: createAndAssociateUserAccount;
+
+					try {
+						await inviteNewMember({
+							context: {
+								displaySuccess: false,
+							},
+							variables: {
+								accountKey: project.accountKey,
+								accountRoleId: filledEmail.role.id,
+								emailAddress: filledEmail.email,
+								...(!userInvitedAlreadyExists && {
+									userAccount: {
+										alternateName: getRandomUUID(),
+										emailAddress: filledEmail.email,
+										familyName: filledEmail.familyName,
+										givenName: filledEmail.givenName,
+									},
+								}),
+							},
+						});
+
+						await associateContactRoleNameByEmailByProject(
+							project.accountKey,
+							provisioningServerAPI,
+							sessionId,
+							encodeURI(filledEmail.email),
+							filledEmail.role.raysourceName
+						);
+
+						return filledEmail;
+					}
+					catch (error) {
+						displaySuccess = false;
+						Liferay.Util.openToast(DEFAULT_WARNING);
+					}
+				}
+			);
+
+			const filledEmailsData = await Promise.all(filledEmailsPromises);
+
+			const filledEmailsDataFiltered = filledEmailsData.filter(
+				(filledEmail) => filledEmail
+			);
+
+			if (filledEmailsDataFiltered.length) {
+				const newMembersData = await addTeamMemberInvitation({
 					context: {
-						displaySuccess: false,
+						displaySuccess,
+						type: 'liferay-rest',
 					},
 					variables: {
-						accountKey: project.accountKey,
-						accountRoleId: role.id,
-						emailAddress: email,
+						TeamMembersInvitation: filledEmailsDataFiltered.map(
+							({email, familyName, givenName, role}) => ({
+								email,
+								familyName,
+								givenName,
+								r_accountEntryToDXPCloudEnvironment_accountEntryId:
+									project?.id,
+								role: role.key,
+							})
+						),
 					},
 				});
 
-				await associateContactRoleNameByEmailByProject(
-					project.accountKey,
-					provisioningServerAPI,
-					sessionId,
-					encodeURI(email),
-					role.raysourceName
-				);
-			});
+				if (
+					!addTeamMemberError &&
+					!associateUserAccountError &&
+					!createAndAssociateUserAccountError &&
+					newMembersData
+				) {
+					if (mutateUserData) {
+						mutateUserData(newMembersData);
+					}
+					handlePage();
+				}
+			}
 
 			setIsLoadingUserInvitation(false);
-
-			if (
-				!addTeamMemberError &&
-				!associateUserAccountError &&
-				newMembersData
-			) {
-				if (mutateUserData) {
-					mutateUserData(newMembersData);
-				}
-				handlePage();
-			}
 		}
 		else {
 			setInitialError(true);

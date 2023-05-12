@@ -11,10 +11,17 @@
 				"actionIds": [
 					"MANAGE_ORGANIZATIONS"
 				],
-				"resource": "com.liferay.commerce.account.model.CommerceAccount"
+				"resource": "com.liferay.account.model.AccountEntry"
 			},
 			{
 				"actionIds": [
+					"MANAGE_USERS"
+				],
+				"resource": "com.liferay.account.model.AccountEntry"
+			},
+			{
+				"actionIds": [
+					"ADD_COMMERCE_ORDER",
 					"CHECKOUT_OPEN_COMMERCE_ORDERS",
 					"VIEW_OPEN_COMMERCE_ORDERS"
 				],
@@ -29,6 +36,16 @@
 		"actions": [
 			{
 				"actionIds": [
+					"ACCESS_IN_CONTROL_PANEL",
+					"CONFIGURATION",
+					"PERMISSIONS",
+					"PREFERENCES",
+					"VIEW"
+				],
+				"resource": "com_liferay_commerce_pricing_web_internal_portlet_CommerceDiscountPortlet"
+			},
+			{
+				"actionIds": [
 					"ACCESS_IN_CONTROL_PANEL"
 				],
 				"resource": "com_liferay_commerce_pricing_web_internal_portlet_CommercePriceListPortlet"
@@ -38,6 +55,20 @@
 					"ACCESS_IN_CONTROL_PANEL"
 				],
 				"resource": "com_liferay_commerce_pricing_web_internal_portlet_CommercePromotionPortlet"
+			},
+			{
+				"actionIds": [
+					"MANAGE_COMMERCE_CURRENCIES"
+				],
+				"resource": "com.liferay.commerce.currency"
+			},
+			{
+				"actionIds": [
+					"ADD_COMMERCE_DISCOUNT",
+					"PERMISSIONS",
+					"VIEW_COMMERCE_DISCOUNTS"
+				],
+				"resource": "com.liferay.commerce.discount"
 			},
 			{
 				"actionIds": [
@@ -64,6 +95,15 @@
 					"VIEW_CONTROL_PANEL"
 				],
 				"resource": "90"
+			},
+			{
+				"actionIds": [
+					"DELETE",
+					"PERMISSIONS",
+					"UPDATE",
+					"VIEW"
+				],
+				"resource": "com.liferay.commerce.discount.model.CommerceDiscount"
 			}
 		],
 		"name": "Discount Manager",
@@ -93,6 +133,9 @@
 			{
 				"actionIds": [
 					"ACCESS_IN_CONTROL_PANEL",
+					"CONFIGURATION",
+					"PERMISSIONS",
+					"PREFERENCES",
 					"VIEW"
 				],
 				"resource": "com_liferay_asset_categories_admin_web_portlet_AssetCategoriesAdminPortlet"
@@ -100,9 +143,29 @@
 			{
 				"actionIds": [
 					"ADD_CATEGORY",
-					"ADD_VOCABULARY"
+					"ADD_VOCABULARY",
+					"PERMISSIONS"
 				],
 				"resource": "com.liferay.asset.categories"
+			},
+			{
+				"actionIds": [
+					"DELETE",
+					"PERMISSIONS",
+					"UPDATE",
+					"VIEW"
+				],
+				"resource": "com.liferay.asset.kernel.model.AssetVocabulary"
+			},
+			{
+				"actionIds": [
+					"ADD_CATEGORY",
+					"DELETE",
+					"PERMISSIONS",
+					"UPDATE",
+					"VIEW"
+				],
+				"resource": "com.liferay.asset.kernel.model.AssetCategory"
 			},
 			{
 				"actionIds": [
@@ -152,7 +215,7 @@
 				"actionIds": [
 					"MANAGE_ALL_ACCOUNTS"
 				],
-				"resource": "com.liferay.commerce.account"
+				"resource": "com.liferay.commerce.shipment"
 			},
 			{
 				"actionIds": [
@@ -189,6 +252,18 @@
 					"MANAGE_INVENTORY"
 				],
 				"resource": "com.liferay.commerce.inventory"
+			},
+			{
+				"actionIds": [
+					"VIEW"
+				],
+				"resource": "com.liferay.account.model.AccountEntry"
+			},
+			{
+				"actionIds": [
+					"VIEW"
+				],
+				"resource": "com.liferay.commerce.model.CommerceOrder"
 			},
 			{
 				"actionIds": [

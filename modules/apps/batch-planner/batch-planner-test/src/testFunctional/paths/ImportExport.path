@@ -46,6 +46,11 @@
 	<td></td>
 </tr>
 <tr>
+	<td>IMPORT_MAPPING_HEADER</td>
+	<td>//div[contains(@class,'import-mapping-table')]//*[contains(.,'Import Mappings')]</td>
+	<td></td>
+</tr>
+<tr>
 	<td>IMPORT_MAPPING_SELECT</td>
 	<td>//div[contains(@class,'import-mapping-table')]//select[contains(@id,'input-field-${key_destinationField}')]</td>
 	<td></td>
@@ -53,6 +58,16 @@
 <tr>
 	<td>IMPORT_PREVIEW</td>
 	<td>//div[contains(@class,'import-mapping-table')]//tr[@class]/td[@class]/label[contains(text(),'${key_destinationField}')]/parent::td//following-sibling::td[2][contains(.,'${key_previewField}')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>IMPORT_STRATEGY</td>
+	<td>//div[not(contains(@class,'hide'))]/div[label[contains(.,'Import Strategy')]]/select[not(@disabled)]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>UPDATE_STRATEGY</td>
+	<td>//div[not(contains(@class,'hide'))]/div[label[contains(.,'Update Strategy')]]/select[not(@disabled)]</td>
 	<td></td>
 </tr>
 <tr>

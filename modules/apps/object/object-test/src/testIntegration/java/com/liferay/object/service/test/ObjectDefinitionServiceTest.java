@@ -23,7 +23,6 @@ import com.liferay.object.model.ObjectField;
 import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.object.service.ObjectDefinitionService;
 import com.liferay.object.service.ObjectFieldLocalService;
-import com.liferay.object.util.LocalizedMapUtil;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.security.auth.PrincipalThreadLocal;
@@ -39,6 +38,7 @@ import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.vulcan.util.LocalizedMapUtil;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -211,7 +211,7 @@ public class ObjectDefinitionServiceTest {
 			user.getUserId(), objectDefinition.getObjectDefinitionId());*/
 
 		return _objectDefinitionLocalService.addCustomObjectDefinition(
-			user.getUserId(), false,
+			user.getUserId(), false, false,
 			LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 			"A" + RandomTestUtil.randomString(), null, null,
 			LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
@@ -239,7 +239,7 @@ public class ObjectDefinitionServiceTest {
 
 			objectDefinition =
 				_objectDefinitionService.addCustomObjectDefinition(
-					false,
+					false, false,
 					LocalizedMapUtil.getLocalizedMap(
 						RandomTestUtil.randomString()),
 					"A" + RandomTestUtil.randomString(), null, null,
@@ -320,7 +320,7 @@ public class ObjectDefinitionServiceTest {
 
 			objectDefinition =
 				_objectDefinitionLocalService.addCustomObjectDefinition(
-					user.getUserId(), false,
+					user.getUserId(), false, false,
 					LocalizedMapUtil.getLocalizedMap(
 						RandomTestUtil.randomString()),
 					"A" + RandomTestUtil.randomString(), null, null,
@@ -357,7 +357,7 @@ public class ObjectDefinitionServiceTest {
 
 			objectDefinition =
 				_objectDefinitionLocalService.addCustomObjectDefinition(
-					ownerUser.getUserId(), false,
+					ownerUser.getUserId(), false, false,
 					LocalizedMapUtil.getLocalizedMap(
 						RandomTestUtil.randomString()),
 					"A" + RandomTestUtil.randomString(), null, null,
@@ -376,8 +376,9 @@ public class ObjectDefinitionServiceTest {
 				_objectDefinitionService.updateCustomObjectDefinition(
 					null, objectDefinition.getObjectDefinitionId(), 0, 0, 0,
 					false, objectDefinition.isActive(), true, false, false,
-					LocalizedMapUtil.getLocalizedMap("Able"), "Able", null,
-					null, false, LocalizedMapUtil.getLocalizedMap("Ables"),
+					false, LocalizedMapUtil.getLocalizedMap("Able"), "Able",
+					null, null, false,
+					LocalizedMapUtil.getLocalizedMap("Ables"),
 					objectDefinition.getScope());
 		}
 		finally {
@@ -398,7 +399,7 @@ public class ObjectDefinitionServiceTest {
 
 			objectDefinition =
 				_objectDefinitionLocalService.addCustomObjectDefinition(
-					ownerUser.getUserId(), false,
+					ownerUser.getUserId(), false, false,
 					LocalizedMapUtil.getLocalizedMap(
 						RandomTestUtil.randomString()),
 					"A" + RandomTestUtil.randomString(), null, null,
@@ -418,11 +419,10 @@ public class ObjectDefinitionServiceTest {
 					null, ownerUser.getUserId(), 0,
 					objectDefinition.getObjectDefinitionId(),
 					ObjectFieldConstants.BUSINESS_TYPE_TEXT,
-					ObjectFieldConstants.DB_TYPE_STRING, null, false, false,
-					null,
+					ObjectFieldConstants.DB_TYPE_STRING, false, false, null,
 					LocalizedMapUtil.getLocalizedMap(
 						RandomTestUtil.randomString()),
-					StringUtil.randomId(), false, false,
+					false, StringUtil.randomId(), false, false,
 					Collections.emptyList());
 
 			objectDefinition =

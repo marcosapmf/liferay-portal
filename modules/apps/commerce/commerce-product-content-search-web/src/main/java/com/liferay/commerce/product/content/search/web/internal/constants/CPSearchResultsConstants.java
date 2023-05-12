@@ -27,4 +27,11 @@ public class CPSearchResultsConstants {
 	public static final String FORM_NAVIGATOR_ID_CONFIGURATION =
 		"search.results.configuration";
 
+	public static final String SORT_OPTION_DEFAULT = "relevance";
+
+	public static final String[] SORT_OPTIONS = {
+		"relevance", "price-low-to-high", "price-high-to-low", "new-items",
+		"name-ascending", "name-descending"
+	};
+
 }

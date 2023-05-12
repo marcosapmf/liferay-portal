@@ -3,19 +3,21 @@ definition {
 	macro _addChannel {
 		Variables.assertDefined(parameterList = "${channelName},${channelType},${currencyCode}");
 
-		var baseURL = "${baseURL}";
+		var baseURL = ${baseURL};
 
 		if (!(isSet(baseURL))) {
-			var baseURL = PropsUtil.get("portal.url");
+			var baseURL = JSONCompany.getPortalURL();
 		}
 
 		if (!(isSet(externalReferenceCode))) {
 			var externalReferenceCode = "";
 		}
 
+		var userLoginInfo = JSONUtil2.formatJSONUser();
+
 		var curl = '''
 			${baseURL}/o/headless-commerce-admin-channel/v1.0/channels \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-H 'accept: application/json' \
 				-H 'Content-Type: application/json' \
 				-d '{
@@ -27,33 +29,35 @@ definition {
 				}'
 		''';
 
-		var addChannelResponse = JSONCurlUtil.post("${curl}");
+		var addChannelResponse = JSONCurlUtil.post(${curl});
 
-		return "${addChannelResponse}";
+		return ${addChannelResponse};
 	}
 
 	macro _deleteAllCommerceChannels {
-		var baseURL = "${baseURL}";
+		var baseURL = ${baseURL};
 
 		if (!(isSet(baseURL))) {
-			var baseURL = PropsUtil.get("portal.url");
+			var baseURL = JSONCompany.getPortalURL();
 		}
 
 		var channelsCount = CommerceJSONChannelsAPI._getCommerceChannelsCount();
 
-		if ("${channelsCount}" != "0") {
-			var channelIds = CommerceJSONChannelsAPI._getCommerceChannelIds(channelCount = "${channelsCount}");
+		if (${channelsCount} != 0) {
+			var channelIds = CommerceJSONChannelsAPI._getCommerceChannelIds(channelCount = ${channelsCount});
 
-			for (var channelId : list "${channelIds}") {
+			for (var channelId : list ${channelIds}) {
 				echo("Deleting Commerce channel with id: ${channelId}");
+
+				var userLoginInfo = JSONUtil2.formatJSONUser();
 
 				var curl = '''
 					${baseURL}/o/headless-commerce-admin-channel/v1.0/channels/${channelId} \
-						-u test@liferay.com:test \
+						-u ${userLoginInfo} \
 						-H 'accept: application/json' \
 				''';
 
-				JSONCurlUtil.delete("${curl}");
+				JSONCurlUtil.delete(${curl});
 			}
 		}
 		else {
@@ -62,75 +66,81 @@ definition {
 	}
 
 	macro _getCommerceChannelIdByName {
-		Variables.assertDefined(parameterList = "${channelName}");
+		Variables.assertDefined(parameterList = ${channelName});
 
-		var baseURL = "${baseURL}";
+		var baseURL = ${baseURL};
 
 		if (!(isSet(baseURL))) {
-			var baseURL = PropsUtil.get("portal.url");
+			var baseURL = JSONCompany.getPortalURL();
 		}
 
 		if (isSet(channelCount)) {
-			var channelsCount = "${channelCount}";
+			var channelsCount = ${channelCount};
 		}
 		else {
-			var channelsCount = "100";
+			var channelsCount = 100;
 		}
+
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${baseURL}/o/headless-commerce-admin-channel/v1.0/channels?pageSize=${channelsCount} \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-H 'accept: application/json' \
 		''';
 
-		var channelId = JSONCurlUtil.get("${curl}", "$.items[?(@['name'] == '${channelName}')].['id']");
+		var channelId = JSONCurlUtil.get(${curl}, "$.items[?(@['name'] == '${channelName}')].['id']");
 
-		return "${channelId}";
+		return ${channelId};
 	}
 
 	macro _getCommerceChannelIds {
-		var baseURL = "${baseURL}";
+		var baseURL = ${baseURL};
 
 		if (!(isSet(baseURL))) {
-			var baseURL = PropsUtil.get("portal.url");
+			var baseURL = JSONCompany.getPortalURL();
 		}
 
 		if (isSet(channelCount)) {
-			var channelsCount = "${channelCount}";
+			var channelsCount = ${channelCount};
 		}
 		else {
-			var channelsCount = "100";
+			var channelsCount = 100;
 		}
+
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${baseURL}/o/headless-commerce-admin-channel/v1.0/channels?pageSize=${channelsCount} \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-H 'accept: application/json' \
 		''';
 
-		var channelIds = JSONCurlUtil.get("${curl}", "$..['id']");
+		var channelIds = JSONCurlUtil.get(${curl}, "$..['id']");
 
-		return "${channelIds}";
+		return ${channelIds};
 	}
 
 	macro _getCommerceChannelsCount {
-		var baseURL = "${baseURL}";
+		var baseURL = ${baseURL};
 
 		if (!(isSet(baseURL))) {
-			var baseURL = PropsUtil.get("portal.url");
+			var baseURL = JSONCompany.getPortalURL();
 		}
+
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${baseURL}/o/headless-commerce-admin-channel/v1.0/channels \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-H 'accept: application/json' \
 		''';
 
-		var channelsCount = JSONCurlUtil.get("${curl}", "$['totalCount']");
+		var channelsCount = JSONCurlUtil.get(${curl}, "$['totalCount']");
 
 		echo("The Commerce channels count is: ${channelsCount}");
 
-		return "${channelsCount}";
+		return ${channelsCount};
 	}
 
 }

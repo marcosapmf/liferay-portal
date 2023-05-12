@@ -354,6 +354,9 @@
 		<field name="version" type="String" />
 		<field name="size" type="long" />
 		<field name="checksum" type="String" />
+		<field name="storeUUID" type="String">
+			<hint name="max-length">255</hint>
+		</field>
 		<field name="expirationDate" type="Date">
 			<hint name="default-year-delta">1</hint>
 		</field>
@@ -479,6 +482,7 @@
 			<hint name="display-width">210</hint>
 		</default-hints>
 		<field name="mvccVersion" type="long" />
+		<field name="ctCollectionId" type="long" />
 		<field name="uuid" type="String" />
 		<field name="externalReferenceCode" type="String" />
 		<field name="addressId" type="long" />
@@ -562,6 +566,8 @@
 		<field name="industry" type="String" />
 		<field name="type" type="String" />
 		<field name="size" type="String" />
+		<field name="indexNameCurrent" type="String" />
+		<field name="indexNameNext" type="String" />
 	</model>
 	<model name="com.liferay.portal.kernel.model.CompanyInfo">
 		<field name="mvccVersion" type="long" />
@@ -832,6 +838,7 @@
 	</model>
 	<model name="com.liferay.portal.kernel.model.LayoutPrototype">
 		<field name="mvccVersion" type="long" />
+		<field name="ctCollectionId" type="long" />
 		<field name="uuid" type="String" />
 		<field name="layoutPrototypeId" type="long" />
 		<field name="companyId" type="long" />
@@ -1119,6 +1126,7 @@
 	</model>
 	<model name="com.liferay.portal.kernel.model.Phone">
 		<field name="mvccVersion" type="long" />
+		<field name="ctCollectionId" type="long" />
 		<field name="uuid" type="String" />
 		<field name="phoneId" type="long" />
 		<field name="companyId" type="long" />
@@ -1491,7 +1499,6 @@
 		<field name="companyId" type="long" />
 		<field name="createDate" type="Date" />
 		<field name="modifiedDate" type="Date" />
-		<field name="defaultUser" type="boolean" />
 		<field name="contactId" type="long" />
 		<field name="password" type="String" />
 		<field name="passwordEncrypted" type="boolean" />
@@ -1545,6 +1552,7 @@
 		<field name="lockoutDate" type="Date" />
 		<field name="agreedToTermsOfUse" type="boolean" />
 		<field name="emailAddressVerified" type="boolean" />
+		<field name="type" type="int" />
 		<field name="status" type="int" />
 	</model>
 	<model name="com.liferay.portal.kernel.model.UserGroup">

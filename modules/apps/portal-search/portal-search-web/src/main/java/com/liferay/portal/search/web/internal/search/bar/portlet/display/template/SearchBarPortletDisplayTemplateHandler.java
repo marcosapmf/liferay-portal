@@ -21,6 +21,7 @@ import com.liferay.portal.kernel.template.TemplateVariableGroup;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.search.web.constants.SearchBarPortletKeys;
+import com.liferay.portal.search.web.internal.search.bar.portlet.SearchBarPortlet;
 import com.liferay.portal.search.web.internal.search.bar.portlet.display.context.SearchBarPortletDisplayContext;
 
 import java.util.Locale;
@@ -28,14 +29,12 @@ import java.util.Map;
 import java.util.ResourceBundle;
 
 import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Olivia Yu
  */
 @Component(
-	configurationPolicy = ConfigurationPolicy.OPTIONAL,
 	property = "javax.portlet.name=" + SearchBarPortletKeys.SEARCH_BAR,
 	service = TemplateHandler.class
 )
@@ -44,7 +43,7 @@ public class SearchBarPortletDisplayTemplateHandler
 
 	@Override
 	public String getClassName() {
-		return SearchBarPortletDisplayContext.class.getName();
+		return SearchBarPortlet.class.getName();
 	}
 
 	@Override

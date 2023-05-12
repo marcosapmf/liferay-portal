@@ -265,7 +265,7 @@ public interface ObjectEntryLocalService
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public Map<Object, Long> getAggregationCounts(
-			long objectDefinitionId, String aggregationTerm,
+			long groupId, long objectDefinitionId, String aggregationTerm,
 			Predicate predicate, int start, int end)
 		throws PortalException;
 
@@ -310,14 +310,11 @@ public interface ObjectEntryLocalService
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<ObjectEntry> getObjectEntries(
-			long groupId, long objectDefinitionId, int start, int end)
-		throws PortalException;
+		long groupId, long objectDefinitionId, int start, int end);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<ObjectEntry> getObjectEntries(
-			long groupId, long objectDefinitionId, int status, int start,
-			int end)
-		throws PortalException;
+		long groupId, long objectDefinitionId, int status, int start, int end);
 
 	/**
 	 * Returns all the object entries matching the UUID and company.
@@ -451,7 +448,7 @@ public interface ObjectEntryLocalService
 		throws PortalException;
 
 	public void insertIntoOrUpdateExtensionTable(
-			long objectDefinitionId, long primaryKey,
+			long userId, long objectDefinitionId, long primaryKey,
 			Map<String, Serializable> values)
 		throws PortalException;
 

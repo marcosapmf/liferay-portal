@@ -29,6 +29,7 @@ import com.liferay.headless.commerce.admin.order.client.pagination.Pagination;
 import com.liferay.headless.commerce.admin.order.client.resource.v1_0.OrderItemResource;
 import com.liferay.headless.commerce.admin.order.client.serdes.v1_0.OrderItemSerDes;
 import com.liferay.petra.function.UnsafeTriConsumer;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.json.JSONArray;
@@ -67,8 +68,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.annotation.Generated;
 
@@ -192,6 +191,7 @@ public abstract class BaseOrderItemResourceTestCase {
 		orderItem.setOptions(regex);
 		orderItem.setOrderExternalReferenceCode(regex);
 		orderItem.setPrintedNote(regex);
+		orderItem.setReplacedSku(regex);
 		orderItem.setSku(regex);
 		orderItem.setSkuExternalReferenceCode(regex);
 		orderItem.setUnitOfMeasure(regex);
@@ -208,6 +208,7 @@ public abstract class BaseOrderItemResourceTestCase {
 		Assert.assertEquals(regex, orderItem.getOptions());
 		Assert.assertEquals(regex, orderItem.getOrderExternalReferenceCode());
 		Assert.assertEquals(regex, orderItem.getPrintedNote());
+		Assert.assertEquals(regex, orderItem.getReplacedSku());
 		Assert.assertEquals(regex, orderItem.getSku());
 		Assert.assertEquals(regex, orderItem.getSkuExternalReferenceCode());
 		Assert.assertEquals(regex, orderItem.getUnitOfMeasure());
@@ -233,11 +234,20 @@ public abstract class BaseOrderItemResourceTestCase {
 
 		assertContains(orderItem1, (List<OrderItem>)page.getItems());
 		assertContains(orderItem2, (List<OrderItem>)page.getItems());
-		assertValid(page);
+		assertValid(page, testGetOrderItemsPage_getExpectedActions());
 
 		orderItemResource.deleteOrderItem(orderItem1.getId());
 
 		orderItemResource.deleteOrderItem(orderItem2.getId());
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetOrderItemsPage_getExpectedActions()
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
 	}
 
 	@Test
@@ -892,7 +902,10 @@ public abstract class BaseOrderItemResourceTestCase {
 			assertEquals(
 				Arrays.asList(irrelevantOrderItem),
 				(List<OrderItem>)page.getItems());
-			assertValid(page);
+			assertValid(
+				page,
+				testGetOrderByExternalReferenceCodeOrderItemsPage_getExpectedActions(
+					irrelevantExternalReferenceCode));
 		}
 
 		OrderItem orderItem1 =
@@ -911,11 +924,24 @@ public abstract class BaseOrderItemResourceTestCase {
 		assertEqualsIgnoringOrder(
 			Arrays.asList(orderItem1, orderItem2),
 			(List<OrderItem>)page.getItems());
-		assertValid(page);
+		assertValid(
+			page,
+			testGetOrderByExternalReferenceCodeOrderItemsPage_getExpectedActions(
+				externalReferenceCode));
 
 		orderItemResource.deleteOrderItem(orderItem1.getId());
 
 		orderItemResource.deleteOrderItem(orderItem2.getId());
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetOrderByExternalReferenceCodeOrderItemsPage_getExpectedActions(
+				String externalReferenceCode)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
 	}
 
 	@Test
@@ -1034,7 +1060,9 @@ public abstract class BaseOrderItemResourceTestCase {
 			assertEquals(
 				Arrays.asList(irrelevantOrderItem),
 				(List<OrderItem>)page.getItems());
-			assertValid(page);
+			assertValid(
+				page,
+				testGetOrderIdOrderItemsPage_getExpectedActions(irrelevantId));
 		}
 
 		OrderItem orderItem1 = testGetOrderIdOrderItemsPage_addOrderItem(
@@ -1051,11 +1079,20 @@ public abstract class BaseOrderItemResourceTestCase {
 		assertEqualsIgnoringOrder(
 			Arrays.asList(orderItem1, orderItem2),
 			(List<OrderItem>)page.getItems());
-		assertValid(page);
+		assertValid(page, testGetOrderIdOrderItemsPage_getExpectedActions(id));
 
 		orderItemResource.deleteOrderItem(orderItem1.getId());
 
 		orderItemResource.deleteOrderItem(orderItem2.getId());
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetOrderIdOrderItemsPage_getExpectedActions(Long id)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
 	}
 
 	@Test
@@ -1484,6 +1521,22 @@ public abstract class BaseOrderItemResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals("replacedSku", additionalAssertFieldName)) {
+				if (orderItem.getReplacedSku() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("replacedSkuId", additionalAssertFieldName)) {
+				if (orderItem.getReplacedSkuId() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals(
 					"requestedDeliveryDate", additionalAssertFieldName)) {
 
@@ -1580,6 +1633,14 @@ public abstract class BaseOrderItemResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals("virtualItemURLs", additionalAssertFieldName)) {
+				if (orderItem.getVirtualItemURLs() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
 			throw new IllegalArgumentException(
 				"Invalid additional assert field name " +
 					additionalAssertFieldName);
@@ -1589,6 +1650,13 @@ public abstract class BaseOrderItemResourceTestCase {
 	}
 
 	protected void assertValid(Page<OrderItem> page) {
+		assertValid(page, Collections.emptyMap());
+	}
+
+	protected void assertValid(
+		Page<OrderItem> page,
+		Map<String, Map<String, String>> expectedActions) {
+
 		boolean valid = false;
 
 		java.util.Collection<OrderItem> orderItems = page.getItems();
@@ -1603,6 +1671,20 @@ public abstract class BaseOrderItemResourceTestCase {
 		}
 
 		Assert.assertTrue(valid);
+
+		Map<String, Map<String, String>> actions = page.getActions();
+
+		for (String key : expectedActions.keySet()) {
+			Map action = actions.get(key);
+
+			Assert.assertNotNull(key + " does not contain an action", action);
+
+			Map expectedAction = expectedActions.get(key);
+
+			Assert.assertEquals(
+				expectedAction.get("method"), action.get("method"));
+			Assert.assertEquals(expectedAction.get("href"), action.get("href"));
+		}
 	}
 
 	protected String[] getAdditionalAssertFieldNames() {
@@ -2025,6 +2107,28 @@ public abstract class BaseOrderItemResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals("replacedSku", additionalAssertFieldName)) {
+				if (!Objects.deepEquals(
+						orderItem1.getReplacedSku(),
+						orderItem2.getReplacedSku())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("replacedSkuId", additionalAssertFieldName)) {
+				if (!Objects.deepEquals(
+						orderItem1.getReplacedSkuId(),
+						orderItem2.getReplacedSkuId())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals(
 					"requestedDeliveryDate", additionalAssertFieldName)) {
 
@@ -2151,6 +2255,17 @@ public abstract class BaseOrderItemResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals("virtualItemURLs", additionalAssertFieldName)) {
+				if (!Objects.deepEquals(
+						orderItem1.getVirtualItemURLs(),
+						orderItem2.getVirtualItemURLs())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
 			throw new IllegalArgumentException(
 				"Invalid additional assert field name " +
 					additionalAssertFieldName);
@@ -2188,14 +2303,16 @@ public abstract class BaseOrderItemResourceTestCase {
 	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
 		throws Exception {
 
-		Stream<java.lang.reflect.Field> stream = Stream.of(
-			ReflectionUtil.getDeclaredFields(clazz));
+		return TransformUtil.transform(
+			ReflectionUtil.getDeclaredFields(clazz),
+			field -> {
+				if (field.isSynthetic()) {
+					return null;
+				}
 
-		return stream.filter(
-			field -> !field.isSynthetic()
-		).toArray(
-			java.lang.reflect.Field[]::new
-		);
+				return field;
+			},
+			java.lang.reflect.Field.class);
 	}
 
 	protected java.util.Collection<EntityField> getEntityFields()
@@ -2212,6 +2329,10 @@ public abstract class BaseOrderItemResourceTestCase {
 		EntityModel entityModel = entityModelResource.getEntityModel(
 			new MultivaluedHashMap());
 
+		if (entityModel == null) {
+			return Collections.emptyList();
+		}
+
 		Map<String, EntityField> entityFieldsMap =
 			entityModel.getEntityFieldsMap();
 
@@ -2221,18 +2342,18 @@ public abstract class BaseOrderItemResourceTestCase {
 	protected List<EntityField> getEntityFields(EntityField.Type type)
 		throws Exception {
 
-		java.util.Collection<EntityField> entityFields = getEntityFields();
+		return TransformUtil.transform(
+			getEntityFields(),
+			entityField -> {
+				if (!Objects.equals(entityField.getType(), type) ||
+					ArrayUtil.contains(
+						getIgnoredEntityFieldNames(), entityField.getName())) {
 
-		Stream<EntityField> stream = entityFields.stream();
+					return null;
+				}
 
-		return stream.filter(
-			entityField ->
-				Objects.equals(entityField.getType(), type) &&
-				!ArrayUtil.contains(
-					getIgnoredEntityFieldNames(), entityField.getName())
-		).collect(
-			Collectors.toList()
-		);
+				return entityField;
+			});
 	}
 
 	protected String getFilterString(
@@ -2413,6 +2534,19 @@ public abstract class BaseOrderItemResourceTestCase {
 			return sb.toString();
 		}
 
+		if (entityFieldName.equals("replacedSku")) {
+			sb.append("'");
+			sb.append(String.valueOf(orderItem.getReplacedSku()));
+			sb.append("'");
+
+			return sb.toString();
+		}
+
+		if (entityFieldName.equals("replacedSkuId")) {
+			throw new IllegalArgumentException(
+				"Invalid entity field " + entityFieldName);
+		}
+
 		if (entityFieldName.equals("requestedDeliveryDate")) {
 			if (operator.equals("between")) {
 				sb = new StringBundler();
@@ -2507,6 +2641,11 @@ public abstract class BaseOrderItemResourceTestCase {
 				"Invalid entity field " + entityFieldName);
 		}
 
+		if (entityFieldName.equals("virtualItemURLs")) {
+			throw new IllegalArgumentException(
+				"Invalid entity field " + entityFieldName);
+		}
+
 		throw new IllegalArgumentException(
 			"Invalid entity field " + entityFieldName);
 	}
@@ -2568,6 +2707,9 @@ public abstract class BaseOrderItemResourceTestCase {
 				printedNote = StringUtil.toLowerCase(
 					RandomTestUtil.randomString());
 				quantity = RandomTestUtil.randomInt();
+				replacedSku = StringUtil.toLowerCase(
+					RandomTestUtil.randomString());
+				replacedSkuId = RandomTestUtil.randomLong();
 				requestedDeliveryDate = RandomTestUtil.nextDate();
 				shippedQuantity = RandomTestUtil.randomInt();
 				shippingAddressId = RandomTestUtil.randomLong();

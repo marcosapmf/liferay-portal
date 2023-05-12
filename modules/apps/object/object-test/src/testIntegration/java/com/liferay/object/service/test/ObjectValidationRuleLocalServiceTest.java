@@ -27,7 +27,6 @@ import com.liferay.object.model.ObjectValidationRule;
 import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.object.service.ObjectValidationRuleLocalService;
 import com.liferay.object.service.test.util.ObjectDefinitionTestUtil;
-import com.liferay.object.util.LocalizedMapUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
@@ -37,6 +36,7 @@ import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.vulcan.util.LocalizedMapUtil;
 
 import java.util.Arrays;
 import java.util.Locale;
@@ -74,11 +74,6 @@ public class ObjectValidationRuleLocalServiceTest {
 	@Test
 	public void testAddObjectValidationRule() throws Exception {
 		_testAddObjectValidationRuleFailure(
-			"abcdefghijklmnopqrstuvwxyz",
-			ObjectValidationRuleEngineException.class,
-			"Engine \"abcdefghijklmnopqrstuvwxyz\" does not exist",
-			RandomTestUtil.randomString(), _VALID_DDM_SCRIPT);
-		_testAddObjectValidationRuleFailure(
 			ObjectValidationRuleConstants.ENGINE_TYPE_DDM,
 			ObjectValidationRuleNameException.class,
 			"Name is null for locale " + LocaleUtil.US.getDisplayName(),
@@ -92,8 +87,14 @@ public class ObjectValidationRuleLocalServiceTest {
 			ObjectValidationRuleScriptException.class, "syntax-error",
 			RandomTestUtil.randomString(), "import;\ninvalidFields = false;");
 		_testAddObjectValidationRuleFailure(
-			StringPool.BLANK, ObjectValidationRuleEngineException.class,
+			StringPool.BLANK,
+			ObjectValidationRuleEngineException.MustNotBeNull.class,
 			"Engine is null", RandomTestUtil.randomString(), _VALID_DDM_SCRIPT);
+		_testAddObjectValidationRuleFailure(
+			"abcdefghijklmnopqrstuvwxyz",
+			ObjectValidationRuleEngineException.NoSuchEngine.class,
+			"Engine \"abcdefghijklmnopqrstuvwxyz\" does not exist",
+			RandomTestUtil.randomString(), _VALID_DDM_SCRIPT);
 
 		_testAddObjectValidationRuleSuccess(
 			ObjectValidationRuleConstants.ENGINE_TYPE_DDM, _VALID_DDM_SCRIPT);

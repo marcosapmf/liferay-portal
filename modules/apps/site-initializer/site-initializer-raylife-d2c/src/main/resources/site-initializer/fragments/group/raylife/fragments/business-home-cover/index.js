@@ -33,7 +33,10 @@ const fetchHeadlessWithToken = async (url, options) => {
 		return fetchHeadless(url);
 	}
 
-	const token = sessionStorage.getItem('raylife-guest-permission-token');
+	const token = Liferay.Util.SessionStorage.getItem(
+		'raylife-guest-permission-token',
+		Liferay.Util.SessionStorage.TYPES.NECESSARY
+	);
 
 	const response = await fetch(`${window.location.origin}/${url}`, {
 		...options,
@@ -43,7 +46,7 @@ const fetchHeadlessWithToken = async (url, options) => {
 		},
 	});
 
-	return await response.json();
+	return response.json();
 };
 
 const businessEmailDeliveredContainer = fragmentElement.querySelector(
@@ -63,7 +66,6 @@ const getQuoteForm = fragmentElement.querySelector('#get-quote-form');
 const newQuoteButton = fragmentElement.querySelector('#new-quote-button');
 const newQuoteContainer = fragmentElement.querySelector('#new-quote');
 const newQuoteFormContainer = fragmentElement.querySelector('.new-quote-form');
-const pathContext = Liferay.ThemeDisplay.getPathContext();
 const retrieveQuoteButton = fragmentElement.querySelector(
 	'#retrieve-quote-button'
 );
@@ -114,8 +116,7 @@ continueQuoteButton.onclick = async function () {
 	}
 
 	const raylifeApplicationResponse = await fetchHeadless(
-		pathContext +
-			`/o/c/raylifeapplications/?filter=email eq '${emailInput.value}'`
+		`o/c/raylifeapplications/?filter=email eq '${emailInput.value}'`
 	);
 
 	if (!raylifeApplicationResponse.items.length) {
@@ -163,8 +164,13 @@ getQuoteForm.onsubmit = function (event) {
 	zipContainer.classList.remove('has-error');
 	zipErrorFeedback.innerText = '';
 
-	if (localStorage.getItem('raylife-back-to-edit')) {
-		localStorage.removeItem('raylife-back-to-edit');
+	if (
+		Liferay.Util.LocalStorage.getItem(
+			'raylife-back-to-edit',
+			Liferay.Util.LocalStorage.TYPES.NECESSARY
+		)
+	) {
+		Liferay.Util.LocalStorage.removeItem('raylife-back-to-edit');
 	}
 
 	if (!formProps.zip || formProps.zip.length !== maxCharactersZIP) {
@@ -175,7 +181,11 @@ getQuoteForm.onsubmit = function (event) {
 		}
 	}
 	else {
-		localStorage.setItem('raylife-product', JSON.stringify(formProps));
+		Liferay.Util.LocalStorage.setItem(
+			'raylife-product',
+			JSON.stringify(formProps),
+			Liferay.Util.LocalStorage.TYPES.NECESSARY
+		);
 
 		const {pathname} = new URL(Liferay.ThemeDisplay.getCanonicalURL());
 

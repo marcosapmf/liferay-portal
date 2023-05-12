@@ -42,7 +42,7 @@ const FactorOptionsFormModal: React.FC<FactorOptionsProps> = ({
 	modal: {modalState, observer, onClose, onError, onSave, onSubmit},
 }) => {
 	const {
-		formState: {errors},
+		formState: {errors, isSubmitting},
 		handleSubmit,
 		register,
 		watch,
@@ -67,14 +67,13 @@ const FactorOptionsFormModal: React.FC<FactorOptionsProps> = ({
 
 	const factorCategories = data?.items || [];
 
-	const _onSubmit = (form: FactorOptionsForm) => {
+	const _onSubmit = (form: FactorOptionsForm) =>
 		onSubmit(form, {
 			create: (data) => testrayFactorOptionsImpl.create(data),
 			update: (id, data) => testrayFactorOptionsImpl.update(id, data),
 		})
 			.then(onSave)
 			.catch(onError);
-	};
 
 	const factorCategoryId = watch('factorCategoryId');
 
@@ -92,6 +91,7 @@ const FactorOptionsFormModal: React.FC<FactorOptionsProps> = ({
 				<Form.Footer
 					onClose={onClose}
 					onSubmit={handleSubmit(_onSubmit)}
+					primaryButtonProps={{loading: isSubmitting}}
 				/>
 			}
 			observer={observer}
@@ -110,6 +110,7 @@ const FactorOptionsFormModal: React.FC<FactorOptionsProps> = ({
 
 			<Form.Select
 				{...inputProps}
+				forceSelectOption
 				label={i18n.translate('type')}
 				name="factorCategoryId"
 				options={factorCategories.map(({id: value, name: label}) => ({

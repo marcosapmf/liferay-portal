@@ -15,6 +15,7 @@
 import ClayAutocomplete from '@clayui/autocomplete';
 import ClayDropDown from '@clayui/drop-down';
 import {ClayInput} from '@clayui/form';
+import {ClayTooltipProvider} from '@clayui/tooltip';
 import {usePrevious} from '@liferay/frontend-js-react-web';
 import {normalizeFieldName} from 'data-engine-js-components-web';
 import {sub} from 'frontend-js-web';
@@ -22,6 +23,7 @@ import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 
 import {FieldBase} from '../FieldBase/ReactFieldBase.es';
 import {useSyncValue} from '../hooks/useSyncValue.es';
+import {getTooltipTitle} from '../util/tooltip';
 import withConfirmationField from '../util/withConfirmationField.es';
 
 const CounterContainer = ({
@@ -70,6 +72,7 @@ const CounterContainer = ({
 };
 
 const Text = ({
+	accessibleProps,
 	defaultLanguageId,
 	disabled,
 	displayErrors,
@@ -86,6 +89,7 @@ const Text = ({
 	onBlur,
 	onChange,
 	onFocus,
+	onKeyDown,
 	placeholder,
 	setError,
 	shouldUpdateValue,
@@ -159,25 +163,34 @@ const Text = ({
 
 	return (
 		<>
-			<ClayInput
-				className="ddm-field-text"
-				dir={Liferay.Language.direction[editingLanguageId]}
-				disabled={disabled}
-				id={id}
-				lang={editingLanguageId}
-				maxLength={showCounter ? '' : maxLength}
-				name={name}
-				onBlur={(event) => {
-					onBlur(event);
-					handleChangeInput(event);
-				}}
-				onChange={handleChangeInput}
-				onFocus={onFocus}
-				placeholder={placeholder}
-				ref={inputRef}
-				type="text"
-				value={value}
-			/>
+			<ClayTooltipProvider autoAlign>
+				<div
+					data-tooltip-align="top"
+					{...getTooltipTitle({placeholder, value})}
+				>
+					<ClayInput
+						{...accessibleProps}
+						className="ddm-field-text"
+						dir={Liferay.Language.direction[editingLanguageId]}
+						disabled={disabled}
+						id={id}
+						lang={editingLanguageId?.replaceAll('_', '-')}
+						maxLength={showCounter ? '' : maxLength}
+						name={name}
+						onBlur={(event) => {
+							onBlur(event);
+							handleChangeInput(event);
+						}}
+						onChange={handleChangeInput}
+						onFocus={onFocus}
+						onKeyDown={onKeyDown}
+						placeholder={placeholder}
+						ref={inputRef}
+						type="text"
+						value={value}
+					/>
+				</div>
+			</ClayTooltipProvider>
 
 			<CounterContainer
 				counter={value?.length}
@@ -193,6 +206,7 @@ const Text = ({
 };
 
 const Textarea = ({
+	accessibleProps,
 	disabled,
 	displayErrors,
 	editingLanguageId,
@@ -214,24 +228,31 @@ const Textarea = ({
 
 	return (
 		<>
-			<textarea
-				className="ddm-field-text form-control"
-				dir={Liferay.Language.direction[editingLanguageId]}
-				disabled={disabled}
-				id={id}
-				lang={editingLanguageId}
-				name={name}
-				onBlur={onBlur}
-				onChange={(event) => {
-					setValue(event.target.value);
-					onChange(event);
-				}}
-				onFocus={onFocus}
-				placeholder={placeholder}
-				style={disabled ? {resize: 'none'} : null}
-				type="text"
-				value={value}
-			/>
+			<ClayTooltipProvider autoAlign>
+				<div
+					data-tooltip-align="top"
+					{...getTooltipTitle({placeholder, value})}
+				>
+					<textarea
+						{...accessibleProps}
+						className="ddm-field-text form-control"
+						dir={Liferay.Language.direction[editingLanguageId]}
+						disabled={disabled}
+						id={id}
+						lang={editingLanguageId?.replaceAll('_', '-')}
+						name={name}
+						onBlur={onBlur}
+						onChange={(event) => {
+							setValue(event.target.value);
+							onChange(event);
+						}}
+						onFocus={onFocus}
+						placeholder={placeholder}
+						style={disabled ? {resize: 'none'} : null}
+						value={value}
+					/>
+				</div>
+			</ClayTooltipProvider>
 
 			<CounterContainer
 				counter={value?.length}
@@ -247,6 +268,7 @@ const Textarea = ({
 };
 
 const Autocomplete = ({
+	accessibleProps,
 	disabled,
 	editingLanguageId,
 	id,
@@ -327,10 +349,11 @@ const Autocomplete = ({
 	return (
 		<ClayAutocomplete>
 			<ClayAutocomplete.Input
+				{...accessibleProps}
 				dir={Liferay.Language.direction[editingLanguageId]}
 				disabled={disabled}
 				id={id}
-				lang={editingLanguageId}
+				lang={editingLanguageId?.replaceAll('_', '-')}
 				name={name}
 				onBlur={onBlur}
 				onChange={(event) => {
@@ -440,6 +463,7 @@ const Main = ({
 	onBlur,
 	onChange,
 	onFocus,
+	onKeyDown,
 	options = [],
 	placeholder,
 	predefinedValue = '',
@@ -476,6 +500,16 @@ const Main = ({
 			valid={error.valid ?? valid}
 		>
 			<Component
+				accessibleProps={{
+					...(otherProps.tip && {
+						'aria-describedby': `${id ?? name}_fieldHelp`,
+					}),
+					...(otherProps.errorMessage && {
+						'aria-errormessage': `${id ?? name}_fieldError`,
+					}),
+					'aria-invalid': !valid,
+					'aria-required': otherProps.required,
+				}}
 				defaultLanguageId={defaultLanguageId}
 				disabled={readOnly}
 				displayErrors={displayErrors}
@@ -492,6 +526,7 @@ const Main = ({
 				onBlur={onBlur}
 				onChange={onChange}
 				onFocus={onFocus}
+				onKeyDown={onKeyDown}
 				options={optionsMemo}
 				placeholder={placeholder}
 				setError={setError}

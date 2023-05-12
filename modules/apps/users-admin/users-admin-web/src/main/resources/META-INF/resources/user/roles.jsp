@@ -49,10 +49,14 @@ currentURLObj.setParameter("historyKey", liferayPortletResponse.getNamespace() +
 <liferay-util:buffer
 	var="removeRoleIcon"
 >
-	<liferay-ui:icon
+	<clay:button
+		cssClass="lfr-portal-tooltip modify-link"
+		data-groupId="TOKEN_DATA_GROUPID"
+		data-rowId="TOKEN_DATA_ROWID"
+		displayType="null"
 		icon="times-circle"
-		markupView="lexicon"
-		message="remove"
+		small="<%= true %>"
+		title="TOKEN_TITLE"
 	/>
 </liferay-util:buffer>
 
@@ -65,7 +69,7 @@ currentURLObj.setParameter("historyKey", liferayPortletResponse.getNamespace() +
 
 <clay:sheet-section>
 	<clay:content-row
-		containerElement="h3"
+		containerElement="div"
 		cssClass="sheet-subtitle"
 	>
 		<clay:content-col
@@ -76,17 +80,14 @@ currentURLObj.setParameter("historyKey", liferayPortletResponse.getNamespace() +
 
 		<c:if test="<%= !portletName.equals(myAccountPortletId) %>">
 			<clay:content-col>
-				<span class="heading-end">
-					<liferay-ui:icon
-						cssClass="modify-link"
-						id="selectRegularRoleLink"
-						label="<%= true %>"
-						linkCssClass="btn btn-secondary btn-sm"
-						message="select"
-						method="get"
-						url="javascript:void(0);"
-					/>
-				</span>
+				<clay:button
+					aria-label='<%= LanguageUtil.format(request, "select-x", "regular-roles") %>'
+					cssClass="heading-end modify-link"
+					displayType="secondary"
+					id='<%= liferayPortletResponse.getNamespace() + "selectRegularRoleLink" %>'
+					label='<%= LanguageUtil.get(request, "select") %>'
+					small="<%= true %>"
+				/>
 			</clay:content-col>
 		</c:if>
 	</clay:content-row>
@@ -124,7 +125,14 @@ currentURLObj.setParameter("historyKey", liferayPortletResponse.getNamespace() +
 
 			<liferay-ui:search-container-column-text>
 				<c:if test="<%= !portletName.equals(myAccountPortletId) && userDisplayContext.isAllowRemoveRole(role) %>">
-					<a class="modify-link" data-rowId="<%= role.getRoleId() %>" href="javascript:void(0);"><%= removeRoleIcon %></a>
+					<clay:button
+						cssClass="lfr-portal-tooltip modify-link"
+						data-rowId="<%= role.getRoleId() %>"
+						displayType="null"
+						icon="times-circle"
+						small="<%= true %>"
+						title='<%= LanguageUtil.format(request, "remove-x", HtmlUtil.escape(role.getTitle(locale))) %>'
+					/>
 				</c:if>
 			</liferay-ui:search-container-column-text>
 		</liferay-ui:search-container-row>
@@ -240,7 +248,7 @@ currentURLObj.setParameter("historyKey", liferayPortletResponse.getNamespace() +
 
 <clay:sheet-section>
 	<clay:content-row
-		containerElement="h3"
+		containerElement="div"
 		cssClass="sheet-subtitle"
 	>
 		<clay:content-col
@@ -251,23 +259,20 @@ currentURLObj.setParameter("historyKey", liferayPortletResponse.getNamespace() +
 
 		<c:if test="<%= !portletName.equals(myAccountPortletId) && (!organizations.isEmpty() || !organizationRoles.isEmpty()) %>">
 			<clay:content-col>
-				<span class="heading-end">
-					<liferay-ui:icon
-						cssClass="modify-link"
-						id="selectOrganizationRoleLink"
-						label="<%= true %>"
-						linkCssClass="btn btn-secondary btn-sm"
-						message="select"
-						method="get"
-						url="javascript:void(0);"
-					/>
-				</span>
+				<clay:button
+					aria-label='<%= LanguageUtil.format(request, "select-x", "organization-roles") %>'
+					cssClass="heading-end modify-link"
+					displayType="secondary"
+					id='<%= liferayPortletResponse.getNamespace() + "selectOrganizationRoleLink" %>'
+					label='<%= LanguageUtil.get(request, "select") %>'
+					small="<%= true %>"
+				/>
 			</clay:content-col>
 		</c:if>
 	</clay:content-row>
 
 	<c:if test="<%= organizations.isEmpty() && organizationRoles.isEmpty() %>">
-		<div class="text-muted"><liferay-ui:message key="this-user-does-not-belong-to-an-organization-to-which-an-organization-role-can-be-assigned" /></div>
+		<div class="sheet-text"><liferay-ui:message key="this-user-does-not-belong-to-an-organization-to-which-an-organization-role-can-be-assigned" /></div>
 	</c:if>
 
 	<c:if test="<%= !organizations.isEmpty() %>">
@@ -325,7 +330,15 @@ currentURLObj.setParameter("historyKey", liferayPortletResponse.getNamespace() +
 
 				<c:if test="<%= !portletName.equals(myAccountPortletId) && !membershipProtected %>">
 					<liferay-ui:search-container-column-text>
-						<a class="modify-link" data-groupId="<%= userGroupRole.getGroupId() %>" data-rowId="<%= userGroupRole.getRoleId() %>" href="javascript:void(0);"><%= removeRoleIcon %></a>
+						<clay:button
+							cssClass="lfr-portal-tooltip modify-link"
+							data-groupId="<%= userGroupRole.getGroupId() %>"
+							data-rowId="<%= userGroupRole.getRoleId() %>"
+							displayType="null"
+							icon="remove"
+							small="<%= true %>"
+							title='<%= LanguageUtil.format(request, "remove-x", HtmlUtil.escape(userGroupRole.getGroup().getDescriptiveName(locale))) %>'
+						/>
 					</liferay-ui:search-container-column-text>
 				</c:if>
 			</liferay-ui:search-container-row>
@@ -480,7 +493,7 @@ currentURLObj.setParameter("historyKey", liferayPortletResponse.getNamespace() +
 
 <clay:sheet-section>
 	<clay:content-row
-		containerElement="h3"
+		containerElement="div"
 		cssClass="sheet-subtitle"
 	>
 		<clay:content-col
@@ -491,23 +504,20 @@ currentURLObj.setParameter("historyKey", liferayPortletResponse.getNamespace() +
 
 		<c:if test="<%= !portletName.equals(myAccountPortletId) && (!groups.isEmpty() || !siteRoles.isEmpty()) %>">
 			<clay:content-col>
-				<span class="heading-end">
-					<liferay-ui:icon
-						cssClass="modify-link"
-						id="selectSiteRoleLink"
-						label="<%= true %>"
-						linkCssClass="btn btn-secondary btn-sm"
-						message="select"
-						method="get"
-						url="javascript:void(0);"
-					/>
-				</span>
+				<clay:button
+					aria-label='<%= LanguageUtil.format(request, "select-x", "site-roles") %>'
+					cssClass="heading-end modify-link"
+					displayType="secondary"
+					id='<%= liferayPortletResponse.getNamespace() + "selectSiteRoleLink" %>'
+					label='<%= LanguageUtil.get(request, "select") %>'
+					small="<%= true %>"
+				/>
 			</clay:content-col>
 		</c:if>
 	</clay:content-row>
 
 	<c:if test="<%= groups.isEmpty() && siteRoles.isEmpty() %>">
-		<div class="text-muted"><liferay-ui:message key="this-user-does-not-belong-to-a-site-to-which-a-site-role-can-be-assigned" /></div>
+		<div class="sheet-text"><liferay-ui:message key="this-user-does-not-belong-to-a-site-to-which-a-site-role-can-be-assigned" /></div>
 	</c:if>
 
 	<c:if test="<%= !groups.isEmpty() %>">
@@ -568,7 +578,15 @@ currentURLObj.setParameter("historyKey", liferayPortletResponse.getNamespace() +
 
 				<c:if test="<%= !portletName.equals(myAccountPortletId) && !membershipProtected %>">
 					<liferay-ui:search-container-column-text>
-						<a class="modify-link" data-groupId="<%= userGroupRole.getGroupId() %>" data-rowId="<%= userGroupRole.getRoleId() %>" href="javascript:void(0);"><%= removeRoleIcon %></a>
+						<clay:button
+							cssClass="lfr-portal-tooltip modify-link"
+							data-groupId="<%= userGroupRole.getGroupId() %>"
+							data-rowId="<%= userGroupRole.getRoleId() %>"
+							displayType="null"
+							icon="times-circle"
+							small="<%= true %>"
+							title='<%= LanguageUtil.format(request, "remove-x", HtmlUtil.escape(userGroupRole.getRole().getTitle(locale))) %>'
+						/>
 					</liferay-ui:search-container-column-text>
 				</c:if>
 			</liferay-ui:search-container-row>
@@ -854,14 +872,22 @@ currentURLObj.setParameter("historyKey", liferayPortletResponse.getNamespace() +
 					rowColumns.push(Liferay.Util.escapeHTML(groupName));
 				}
 
-				if (groupId) {
-					rowColumns.push(
-						'<a class="modify-link" data-groupId="' +
-							groupId +
-							'" data-rowId="' +
-							roleId +
-							'" href="javascript:void(0);"><%= UnicodeFormatter.toString(removeRoleIcon) %></a>'
+				var removeRoleButton = '<%= UnicodeFormatter.toString(removeRoleIcon) %>';
+
+				removeRoleButton = removeRoleButton
+					.replace('TOKEN_DATA_ROWID', roleId)
+					.replace(
+						'TOKEN_TITLE',
+						Liferay.Util.sub('<liferay-ui:message key="remove-x" />', name)
 					);
+
+				if (groupId) {
+					removeRoleButton = removeRoleButton.replace(
+						'TOKEN_DATA_GROUPID',
+						groupId
+					);
+
+					rowColumns.push(removeRoleButton);
 
 					for (
 						var i = 0;
@@ -898,11 +924,12 @@ currentURLObj.setParameter("historyKey", liferayPortletResponse.getNamespace() +
 					searchContainer.addRow(rowColumns, groupId + '-' + roleId);
 				}
 				else {
-					rowColumns.push(
-						'<a class="modify-link" data-rowId="' +
-							roleId +
-							'" href="javascript:void(0);"><%= UnicodeFormatter.toString(removeRoleIcon) %></a>'
+					removeRoleButton = removeRoleButton.replace(
+						'data-groupId="TOKEN_DATA_GROUPID"',
+						''
 					);
+
+					rowColumns.push(removeRoleButton);
 
 					A.Array.removeItem(<portlet:namespace />deleteRoleIds, roleId);
 

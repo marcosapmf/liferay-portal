@@ -19,6 +19,8 @@ import com.liferay.account.service.AccountGroupLocalService;
 import com.liferay.commerce.account.model.impl.CommerceAccountGroupImpl;
 import com.liferay.portal.kernel.service.ResourceLocalService;
 import com.liferay.portal.kernel.upgrade.UpgradeProcess;
+import com.liferay.portal.kernel.upgrade.UpgradeProcessFactory;
+import com.liferay.portal.kernel.upgrade.UpgradeStep;
 
 import java.sql.ResultSet;
 import java.sql.Statement;
@@ -60,16 +62,16 @@ public class CommerceAccountGroupUpgradeProcess extends UpgradeProcess {
 					_accountGroupLocalService.createAccountGroup(
 						accountGroupId);
 
-				accountGroup.setCompanyId(resultSet.getLong("companyId"));
-				accountGroup.setCreateDate(
-					resultSet.getTimestamp("createDate"));
-				accountGroup.setDefaultAccountGroup(system);
 				accountGroup.setExternalReferenceCode(
 					resultSet.getString("externalReferenceCode"));
+				accountGroup.setCompanyId(resultSet.getLong("companyId"));
 				accountGroup.setUserId(resultSet.getLong("userId"));
 				accountGroup.setUserName(resultSet.getString("userName"));
+				accountGroup.setCreateDate(
+					resultSet.getTimestamp("createDate"));
 				accountGroup.setModifiedDate(
 					resultSet.getTimestamp("modifiedDate"));
+				accountGroup.setDefaultAccountGroup(system);
 				accountGroup.setName(resultSet.getString("name"));
 				accountGroup.setType(
 					CommerceAccountGroupImpl.toAccountGroupType(
@@ -82,9 +84,14 @@ public class CommerceAccountGroupUpgradeProcess extends UpgradeProcess {
 					resultSet.getLong("userId"), AccountGroup.class.getName(),
 					accountGroupId, false, false, false);
 			}
-
-			runSQL("drop table CommerceAccountGroup");
 		}
+	}
+
+	@Override
+	protected UpgradeStep[] getPostUpgradeSteps() {
+		return new UpgradeStep[] {
+			UpgradeProcessFactory.dropTables("CommerceAccountGroup")
+		};
 	}
 
 	private final AccountGroupLocalService _accountGroupLocalService;

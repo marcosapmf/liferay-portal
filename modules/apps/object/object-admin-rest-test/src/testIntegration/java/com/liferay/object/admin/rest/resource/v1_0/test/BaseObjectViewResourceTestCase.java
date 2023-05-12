@@ -28,6 +28,7 @@ import com.liferay.object.admin.rest.client.pagination.Page;
 import com.liferay.object.admin.rest.client.pagination.Pagination;
 import com.liferay.object.admin.rest.client.resource.v1_0.ObjectViewResource;
 import com.liferay.object.admin.rest.client.serdes.v1_0.ObjectViewSerDes;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.json.JSONArray;
@@ -56,6 +57,7 @@ import java.text.DateFormat;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -63,8 +65,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.annotation.Generated;
 
@@ -227,7 +227,10 @@ public abstract class BaseObjectViewResourceTestCase {
 			assertEquals(
 				Arrays.asList(irrelevantObjectView),
 				(List<ObjectView>)page.getItems());
-			assertValid(page);
+			assertValid(
+				page,
+				testGetObjectDefinitionByExternalReferenceCodeObjectViewsPage_getExpectedActions(
+					irrelevantExternalReferenceCode));
 		}
 
 		ObjectView objectView1 =
@@ -248,11 +251,24 @@ public abstract class BaseObjectViewResourceTestCase {
 		assertEqualsIgnoringOrder(
 			Arrays.asList(objectView1, objectView2),
 			(List<ObjectView>)page.getItems());
-		assertValid(page);
+		assertValid(
+			page,
+			testGetObjectDefinitionByExternalReferenceCodeObjectViewsPage_getExpectedActions(
+				externalReferenceCode));
 
 		objectViewResource.deleteObjectView(objectView1.getId());
 
 		objectViewResource.deleteObjectView(objectView2.getId());
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetObjectDefinitionByExternalReferenceCodeObjectViewsPage_getExpectedActions(
+				String externalReferenceCode)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
 	}
 
 	@Test
@@ -377,7 +393,10 @@ public abstract class BaseObjectViewResourceTestCase {
 			assertEquals(
 				Arrays.asList(irrelevantObjectView),
 				(List<ObjectView>)page.getItems());
-			assertValid(page);
+			assertValid(
+				page,
+				testGetObjectDefinitionObjectViewsPage_getExpectedActions(
+					irrelevantObjectDefinitionId));
 		}
 
 		ObjectView objectView1 =
@@ -396,11 +415,35 @@ public abstract class BaseObjectViewResourceTestCase {
 		assertEqualsIgnoringOrder(
 			Arrays.asList(objectView1, objectView2),
 			(List<ObjectView>)page.getItems());
-		assertValid(page);
+		assertValid(
+			page,
+			testGetObjectDefinitionObjectViewsPage_getExpectedActions(
+				objectDefinitionId));
 
 		objectViewResource.deleteObjectView(objectView1.getId());
 
 		objectViewResource.deleteObjectView(objectView2.getId());
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetObjectDefinitionObjectViewsPage_getExpectedActions(
+				Long objectDefinitionId)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		Map createBatchAction = new HashMap<>();
+		createBatchAction.put("method", "POST");
+		createBatchAction.put(
+			"href",
+			"http://localhost:8080/o/object-admin/v1.0/object-definitions/{objectDefinitionId}/object-views/batch".
+				replace(
+					"{objectDefinitionId}",
+					String.valueOf(objectDefinitionId)));
+
+		expectedActions.put("createBatch", createBatchAction);
+
+		return expectedActions;
 	}
 
 	@Test
@@ -837,6 +880,13 @@ public abstract class BaseObjectViewResourceTestCase {
 	}
 
 	protected void assertValid(Page<ObjectView> page) {
+		assertValid(page, Collections.emptyMap());
+	}
+
+	protected void assertValid(
+		Page<ObjectView> page,
+		Map<String, Map<String, String>> expectedActions) {
+
 		boolean valid = false;
 
 		java.util.Collection<ObjectView> objectViews = page.getItems();
@@ -851,6 +901,20 @@ public abstract class BaseObjectViewResourceTestCase {
 		}
 
 		Assert.assertTrue(valid);
+
+		Map<String, Map<String, String>> actions = page.getActions();
+
+		for (String key : expectedActions.keySet()) {
+			Map action = actions.get(key);
+
+			Assert.assertNotNull(key + " does not contain an action", action);
+
+			Map expectedAction = expectedActions.get(key);
+
+			Assert.assertEquals(
+				expectedAction.get("method"), action.get("method"));
+			Assert.assertEquals(expectedAction.get("href"), action.get("href"));
+		}
 	}
 
 	protected String[] getAdditionalAssertFieldNames() {
@@ -1089,14 +1153,16 @@ public abstract class BaseObjectViewResourceTestCase {
 	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
 		throws Exception {
 
-		Stream<java.lang.reflect.Field> stream = Stream.of(
-			ReflectionUtil.getDeclaredFields(clazz));
+		return TransformUtil.transform(
+			ReflectionUtil.getDeclaredFields(clazz),
+			field -> {
+				if (field.isSynthetic()) {
+					return null;
+				}
 
-		return stream.filter(
-			field -> !field.isSynthetic()
-		).toArray(
-			java.lang.reflect.Field[]::new
-		);
+				return field;
+			},
+			java.lang.reflect.Field.class);
 	}
 
 	protected java.util.Collection<EntityField> getEntityFields()
@@ -1113,6 +1179,10 @@ public abstract class BaseObjectViewResourceTestCase {
 		EntityModel entityModel = entityModelResource.getEntityModel(
 			new MultivaluedHashMap());
 
+		if (entityModel == null) {
+			return Collections.emptyList();
+		}
+
 		Map<String, EntityField> entityFieldsMap =
 			entityModel.getEntityFieldsMap();
 
@@ -1122,18 +1192,18 @@ public abstract class BaseObjectViewResourceTestCase {
 	protected List<EntityField> getEntityFields(EntityField.Type type)
 		throws Exception {
 
-		java.util.Collection<EntityField> entityFields = getEntityFields();
+		return TransformUtil.transform(
+			getEntityFields(),
+			entityField -> {
+				if (!Objects.equals(entityField.getType(), type) ||
+					ArrayUtil.contains(
+						getIgnoredEntityFieldNames(), entityField.getName())) {
 
-		Stream<EntityField> stream = entityFields.stream();
+					return null;
+				}
 
-		return stream.filter(
-			entityField ->
-				Objects.equals(entityField.getType(), type) &&
-				!ArrayUtil.contains(
-					getIgnoredEntityFieldNames(), entityField.getName())
-		).collect(
-			Collectors.toList()
-		);
+				return entityField;
+			});
 	}
 
 	protected String getFilterString(

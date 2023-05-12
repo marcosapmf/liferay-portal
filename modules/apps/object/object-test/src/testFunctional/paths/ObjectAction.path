@@ -29,7 +29,7 @@
 	</tr>
 	<tr>
 		<td>INPUT_VALUE</td>
-		<td>//input[(@placeholder='Input a value.')]</td>
+		<td>xpath=(//input[(@placeholder='Input a value.')])[${key_rowNumber}]</td>
 		<td></td>
 	</tr>
 	<tr>
@@ -44,7 +44,7 @@
 	</tr>
 	<tr>
 		<td>INPUT_METHOD</td>
-		<td>//input[contains(@class, 'custom-control-input') and contains(@type,'checkbox')]/..//span[contains(text(),'Input as a value.')]</td>
+		<td>xpath=(//input[contains(@class, 'custom-control-input') and contains(@type,'checkbox')]/..//span[contains(text(),'Input as a value.')])[${key_rowNumber}]</td>
 		<td></td>
 	</tr>
 	<tr>
@@ -70,6 +70,11 @@
 	<tr>
 		<td>SECTION_TITLE</td>
 		<td>//h3[(@class='lfr-objects__card-title') and text()='${key_title}']</td>
+		<td></td>
+	</tr>
+	<tr>
+		<td>ADD_ERROR_MESSAGE_VALIDATION</td>
+		<td>//div[contains(@class,'form-group')]//label[text()='Message']/..//input[@type='text']</td>
 		<td></td>
 	</tr>
 </tbody>

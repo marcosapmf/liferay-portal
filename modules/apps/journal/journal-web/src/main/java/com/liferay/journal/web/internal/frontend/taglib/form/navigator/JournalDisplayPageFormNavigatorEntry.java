@@ -17,7 +17,6 @@ package com.liferay.journal.web.internal.frontend.taglib.form.navigator;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.dynamic.data.mapping.service.DDMStructureLocalService;
 import com.liferay.frontend.taglib.form.navigator.FormNavigatorEntry;
-import com.liferay.item.selector.ItemSelectorView;
 import com.liferay.journal.model.JournalArticle;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.User;
@@ -27,6 +26,8 @@ import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
+
+import java.util.Objects;
 
 import javax.portlet.PortletRequest;
 
@@ -68,16 +69,6 @@ public class JournalDisplayPageFormNavigatorEntry
 		return true;
 	}
 
-	@Reference(target = "(view=private)", unbind = "-")
-	public void setPrivateLayoutsItemSelectorView(
-		ItemSelectorView<?> itemSelectorView) {
-	}
-
-	@Reference(target = "(view=public)", unbind = "-")
-	public void setPublicLayoutsItemSelectorView(
-		ItemSelectorView<?> itemSelectorView) {
-	}
-
 	@Override
 	protected String getJspPath() {
 		return "/article/asset_display_page.jsp";
@@ -108,18 +99,22 @@ public class JournalDisplayPageFormNavigatorEntry
 		DDMStructure ddmStructure = _ddmStructureLocalService.fetchDDMStructure(
 			classPK);
 
-		if (ddmStructure == null) {
-			long groupId = ParamUtil.getLong(portletRequest, "groupId");
+		long ddmStructureId = ParamUtil.getLong(
+			portletRequest, "ddmStructureId");
 
-			String ddmStructureKey = ParamUtil.getString(
-				portletRequest, "ddmStructureKey");
-
+		if ((ddmStructure == null) && (ddmStructureId > 0)) {
 			ddmStructure = _ddmStructureLocalService.fetchStructure(
-				groupId, _portal.getClassNameId(JournalArticle.class),
-				ddmStructureKey);
+				ddmStructureId);
 		}
 
-		if (ddmStructure == null) {
+		if ((ddmStructure == null) ||
+			!Objects.equals(
+				ParamUtil.getLong(portletRequest, "groupId"),
+				ddmStructure.getGroupId()) ||
+			!Objects.equals(
+				ddmStructure.getClassNameId(),
+				_portal.getClassNameId(JournalArticle.class))) {
+
 			return false;
 		}
 
@@ -141,6 +136,11 @@ public class JournalDisplayPageFormNavigatorEntry
 
 	@Reference
 	private GroupLocalService _groupLocalService;
+
+	@Reference(
+		target = "(osgi.web.symbolicname=com.liferay.layout.item.selector.web)"
+	)
+	private ServletContext _itemSelectorWebServletContext;
 
 	@Reference
 	private Portal _portal;

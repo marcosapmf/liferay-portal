@@ -14,8 +14,8 @@
 
 package com.liferay.object.internal.related.models;
 
-import com.liferay.object.internal.petra.sql.dsl.DynamicObjectDefinitionTable;
 import com.liferay.object.model.ObjectDefinition;
+import com.liferay.object.petra.sql.dsl.DynamicObjectDefinitionTable;
 import com.liferay.object.related.models.ObjectRelatedModelsPredicateProvider;
 import com.liferay.object.service.ObjectFieldLocalService;
 import com.liferay.petra.sql.dsl.Column;
@@ -64,10 +64,9 @@ public abstract class BaseObjectEntryObjectRelatedModelsPredicateProviderImpl
 	}
 
 	protected <T extends BaseTable<T>> Column<?, ?> getPKObjectFieldColumn(
-		BaseTable<T> baseTable, ObjectDefinition objectDefinition) {
+		BaseTable<T> baseTable, String pkObjectFieldDBColumnName) {
 
-		return baseTable.getColumn(
-			objectDefinition.getPKObjectFieldDBColumnName());
+		return baseTable.getColumn(pkObjectFieldDBColumnName);
 	}
 
 	protected final ObjectDefinition objectDefinition;

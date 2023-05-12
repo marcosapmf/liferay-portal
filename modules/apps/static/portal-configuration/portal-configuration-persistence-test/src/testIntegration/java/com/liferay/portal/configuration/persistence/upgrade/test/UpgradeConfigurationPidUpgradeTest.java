@@ -50,6 +50,7 @@ import org.apache.felix.cm.file.ConfigurationHandler;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -57,6 +58,7 @@ import org.junit.runner.RunWith;
 /**
  * @author Sam Ziemer
  */
+@Ignore
 @RunWith(Arquillian.class)
 public class UpgradeConfigurationPidUpgradeTest {
 

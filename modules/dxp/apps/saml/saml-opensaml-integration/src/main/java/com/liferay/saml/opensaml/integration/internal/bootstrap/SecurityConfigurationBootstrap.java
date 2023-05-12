@@ -14,12 +14,13 @@
 
 package com.liferay.saml.opensaml.integration.internal.bootstrap;
 
+import com.liferay.saml.opensaml.integration.internal.util.ConfigurationServiceBootstrapUtil;
+
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
 
-import org.opensaml.core.config.ConfigurationService;
 import org.opensaml.xmlsec.DecryptionConfiguration;
 import org.opensaml.xmlsec.EncryptionConfiguration;
 import org.opensaml.xmlsec.SignatureSigningConfiguration;
@@ -33,12 +34,11 @@ import org.opensaml.xmlsec.impl.BasicSignatureValidationConfiguration;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Modified;
-import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Carlos Sierra Andrés
  */
-@Component(service = SecurityConfigurationBootstrap.class)
+@Component(service = {})
 public class SecurityConfigurationBootstrap {
 
 	@Activate
@@ -85,14 +85,14 @@ public class SecurityConfigurationBootstrap {
 					(String[])blacklistedAlgorithmsObject));
 		}
 
-		ConfigurationService.register(
+		ConfigurationServiceBootstrapUtil.register(
 			DecryptionConfiguration.class, basicDecryptionConfiguration);
-		ConfigurationService.register(
+		ConfigurationServiceBootstrapUtil.register(
 			EncryptionConfiguration.class, basicEncryptionConfiguration);
-		ConfigurationService.register(
+		ConfigurationServiceBootstrapUtil.register(
 			SignatureSigningConfiguration.class,
 			basicSignatureSigningConfiguration);
-		ConfigurationService.register(
+		ConfigurationServiceBootstrapUtil.register(
 			SignatureValidationConfiguration.class,
 			basicSignatureValidationConfiguration);
 	}
@@ -106,8 +106,5 @@ public class SecurityConfigurationBootstrap {
 
 		return combinedCollection;
 	}
-
-	@Reference
-	private OpenSamlBootstrap _openSamlBootstrap;
 
 }

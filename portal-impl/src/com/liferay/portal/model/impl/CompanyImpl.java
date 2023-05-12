@@ -55,8 +55,6 @@ import java.util.Locale;
 import java.util.TimeZone;
 import java.util.TreeMap;
 
-import javax.portlet.PortletPreferences;
-
 /**
  * @author Brian Wing Shun Chan
  */
@@ -119,9 +117,13 @@ public class CompanyImpl extends CompanyBaseImpl {
 		return _companySecurityBag;
 	}
 
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link #getGuestUser}
+	 */
+	@Deprecated
 	@Override
 	public User getDefaultUser() throws PortalException {
-		return UserLocalServiceUtil.getDefaultUser(getCompanyId());
+		return getGuestUser();
 	}
 
 	@Override
@@ -169,6 +171,11 @@ public class CompanyImpl extends CompanyBaseImpl {
 	}
 
 	@Override
+	public User getGuestUser() throws PortalException {
+		return UserLocalServiceUtil.getGuestUser(getCompanyId());
+	}
+
+	@Override
 	public String getKey() {
 		CompanyInfo companyInfo = getCompanyInfo();
 
@@ -190,7 +197,7 @@ public class CompanyImpl extends CompanyBaseImpl {
 
 	@Override
 	public Locale getLocale() throws PortalException {
-		return getDefaultUser().getLocale();
+		return getGuestUser().getLocale();
 	}
 
 	@AutoEscape
@@ -274,7 +281,7 @@ public class CompanyImpl extends CompanyBaseImpl {
 
 	@Override
 	public TimeZone getTimeZone() throws PortalException {
-		return getDefaultUser().getTimeZone();
+		return getGuestUser().getTimeZone();
 	}
 
 	@Override
@@ -412,32 +419,26 @@ public class CompanyImpl extends CompanyBaseImpl {
 	public static class CompanySecurityBag implements Serializable {
 
 		private CompanySecurityBag(Company company) {
-			PortletPreferences preferences = PrefsPropsUtil.getPreferences(
-				company.getCompanyId());
-
 			_authType = _getPrefsPropsString(
-				preferences, company, PropsKeys.COMPANY_SECURITY_AUTH_TYPE,
+				company, PropsKeys.COMPANY_SECURITY_AUTH_TYPE,
 				PropsValues.COMPANY_SECURITY_AUTH_TYPE);
 			_autoLogin = _getPrefsPropsBoolean(
-				preferences, company, PropsKeys.COMPANY_SECURITY_AUTO_LOGIN,
+				company, PropsKeys.COMPANY_SECURITY_AUTO_LOGIN,
 				PropsValues.COMPANY_SECURITY_AUTO_LOGIN);
 			_siteLogo = _getPrefsPropsBoolean(
-				preferences, company, PropsKeys.COMPANY_SECURITY_SITE_LOGO,
+				company, PropsKeys.COMPANY_SECURITY_SITE_LOGO,
 				PropsValues.COMPANY_SECURITY_SITE_LOGO);
 			_strangers = _getPrefsPropsBoolean(
-				preferences, company, PropsKeys.COMPANY_SECURITY_STRANGERS,
+				company, PropsKeys.COMPANY_SECURITY_STRANGERS,
 				PropsValues.COMPANY_SECURITY_STRANGERS);
 			_strangersVerify = _getPrefsPropsBoolean(
-				preferences, company,
-				PropsKeys.COMPANY_SECURITY_STRANGERS_VERIFY,
+				company, PropsKeys.COMPANY_SECURITY_STRANGERS_VERIFY,
 				PropsValues.COMPANY_SECURITY_STRANGERS_VERIFY);
 			_strangersWithMx = _getPrefsPropsBoolean(
-				preferences, company,
-				PropsKeys.COMPANY_SECURITY_STRANGERS_WITH_MX,
+				company, PropsKeys.COMPANY_SECURITY_STRANGERS_WITH_MX,
 				PropsValues.COMPANY_SECURITY_STRANGERS_WITH_MX);
 			_updatePasswordRequired = _getPrefsPropsBoolean(
-				preferences, company,
-				PropsKeys.COMPANY_SECURITY_UPDATE_PASSWORD_REQUIRED,
+				company, PropsKeys.COMPANY_SECURITY_UPDATE_PASSWORD_REQUIRED,
 				PropsValues.COMPANY_SECURITY_UPDATE_PASSWORD_REQUIRED);
 		}
 
@@ -452,11 +453,10 @@ public class CompanyImpl extends CompanyBaseImpl {
 	}
 
 	private static boolean _getPrefsPropsBoolean(
-		PortletPreferences portletPreferences, Company company, String name,
-		boolean defaultValue) {
+		Company company, String name, boolean defaultValue) {
 
-		String value = portletPreferences.getValue(
-			name, PropsUtil.get(company, name));
+		String value = PrefsPropsUtil.getString(
+			company.getCompanyId(), name, PropsUtil.get(company, name));
 
 		if (value != null) {
 			return GetterUtil.getBoolean(value);
@@ -466,11 +466,10 @@ public class CompanyImpl extends CompanyBaseImpl {
 	}
 
 	private static String _getPrefsPropsString(
-		PortletPreferences portletPreferences, Company company, String name,
-		String defaultValue) {
+		Company company, String name, String defaultValue) {
 
-		String value = portletPreferences.getValue(
-			name, PropsUtil.get(company, name));
+		String value = PrefsPropsUtil.getString(
+			company.getCompanyId(), name, PropsUtil.get(company, name));
 
 		if (value != null) {
 			return value;

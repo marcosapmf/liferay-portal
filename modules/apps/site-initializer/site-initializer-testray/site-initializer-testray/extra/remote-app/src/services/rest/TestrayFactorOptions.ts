@@ -13,10 +13,10 @@
  */
 
 import TestrayError from '../../TestrayError';
+import Rest from '../../core/Rest';
+import SearchBuilder from '../../core/SearchBuilder';
 import i18n from '../../i18n';
 import yupSchema from '../../schema/yup';
-import {SearchBuilder} from '../../util/search';
-import Rest from './Rest';
 import {APIResponse, TestrayFactorOption} from './types';
 
 type FactorOption = typeof yupSchema.factorOption.__outputType;
@@ -34,11 +34,8 @@ class TestrayFactorOptionsImpl extends Rest<FactorOption, TestrayFactorOption> {
 			nestedFields: 'factorCategory',
 			transformData: (testrayFactorOption) => ({
 				...testrayFactorOption,
-				factorCategory: testrayFactorOption?.r_factorCategoryToOptions_c_factorCategory
-					? {
-							...testrayFactorOption.r_factorCategoryToOptions_c_factorCategory,
-					  }
-					: undefined,
+				factorCategory:
+					testrayFactorOption?.r_factorCategoryToOptions_c_factorCategory,
 			}),
 			uri: 'factoroptions',
 		});

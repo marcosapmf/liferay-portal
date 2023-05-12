@@ -52,7 +52,7 @@ import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 
-import java.util.stream.Stream;
+import java.util.Arrays;
 
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -348,6 +348,36 @@ public class SearchCTTest {
 				modifiedLayout));
 	}
 
+	@Test
+	public void testSearchCTCollection() throws Exception {
+		SearchRequestBuilder searchRequestBuilder =
+			_searchRequestBuilderFactory.builder(
+			).companyId(
+				_group.getCompanyId()
+			).emptySearchEnabled(
+				true
+			).entryClassNames(
+				CTCollection.class.getName()
+			).modelIndexerClasses(
+				CTCollection.class
+			).withSearchContext(
+				searchContext -> {
+				}
+			);
+
+		SearchResponse searchResponse = _searcher.search(
+			searchRequestBuilder.build());
+
+		DocumentsAssert.assertValuesIgnoreRelevance(
+			searchResponse.getRequestString(), searchResponse.getDocuments(),
+			Field.UID,
+			Arrays.asList(
+				_uidFactory.getUID(
+					CTCollection.class.getName(),
+					_ctCollection1.getCtCollectionId(),
+					CTConstants.CT_COLLECTION_ID_PRODUCTION)));
+	}
+
 	@Rule
 	public SearchTestRule searchTestRule = new SearchTestRule();
 
@@ -425,7 +455,7 @@ public class SearchCTTest {
 
 			DocumentsAssert.assertValuesIgnoreRelevance(
 				searchResponse.getRequestString(),
-				searchResponse.getDocuments(), Field.UID, Stream.of(uids));
+				searchResponse.getDocuments(), Field.UID, Arrays.asList(uids));
 		}
 	}
 

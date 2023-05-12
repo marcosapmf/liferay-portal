@@ -69,7 +69,7 @@ public class CustomServletContextHelper
 
 		_overrideDirName = StringBundler.concat(
 			PropsValues.LIFERAY_HOME, File.separator, "work", File.separator,
-			_bundle.getSymbolicName(), StringPool.DASH, _bundle.getVersion());
+			bundle.getSymbolicName(), StringPool.DASH, bundle.getVersion());
 
 		Class<?> clazz = getClass();
 
@@ -226,7 +226,7 @@ public class CustomServletContextHelper
 					String patternExtension = urlPattern.substring(2);
 
 					if (Validator.isNotNull(patternExtension) &&
-						Objects.equals("*", patternExtension)) {
+						Objects.equals(patternExtension, "*")) {
 
 						forbidden = true;
 

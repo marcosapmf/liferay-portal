@@ -109,13 +109,14 @@ public class DLFileEntryServiceWrapper
 
 	@Override
 	public DLFileEntry copyFileEntry(
-			long groupId, long repositoryId, long fileEntryId,
-			long destFolderId,
+			long groupId, long repositoryId, long sourceFileEntryId,
+			long targetFolderId,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _dlFileEntryService.copyFileEntry(
-			groupId, repositoryId, fileEntryId, destFolderId, serviceContext);
+			groupId, repositoryId, sourceFileEntryId, targetFolderId,
+			serviceContext);
 	}
 
 	@Override
@@ -180,6 +181,14 @@ public class DLFileEntryServiceWrapper
 
 	@Override
 	public java.util.List<DLFileEntry> getFileEntries(
+			long groupId, double score, int start, int end)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _dlFileEntryService.getFileEntries(groupId, score, start, end);
+	}
+
+	@Override
+	public java.util.List<DLFileEntry> getFileEntries(
 			long groupId, long folderId, int status, int start, int end,
 			com.liferay.portal.kernel.util.OrderByComparator<DLFileEntry>
 				orderByComparator)
@@ -234,6 +243,13 @@ public class DLFileEntryServiceWrapper
 
 		return _dlFileEntryService.getFileEntries(
 			groupId, folderId, mimeTypes, start, end, orderByComparator);
+	}
+
+	@Override
+	public int getFileEntriesCount(long groupId, double score)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _dlFileEntryService.getFileEntriesCount(groupId, score);
 	}
 
 	@Override

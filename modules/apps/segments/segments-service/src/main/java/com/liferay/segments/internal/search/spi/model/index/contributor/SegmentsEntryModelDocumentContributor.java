@@ -14,6 +14,7 @@
 
 package com.liferay.segments.internal.search.spi.model.index.contributor;
 
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.search.Document;
@@ -28,9 +29,7 @@ import com.liferay.segments.model.SegmentsEntry;
 import com.liferay.segments.model.SegmentsEntryRole;
 import com.liferay.segments.service.SegmentsEntryRoleLocalService;
 
-import java.util.List;
 import java.util.Locale;
-import java.util.stream.Stream;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -66,21 +65,13 @@ public class SegmentsEntryModelDocumentContributor
 				segmentsEntry.getGroupId()),
 			true, true);
 		document.addKeyword(
-			"roleIds", _getRoleIds(segmentsEntry.getSegmentsEntryId()));
+			"roleIds",
+			TransformUtil.transformToLongArray(
+				_segmentsEntryRoleLocalService.getSegmentsEntryRoles(
+					segmentsEntry.getSegmentsEntryId()),
+				SegmentsEntryRole::getRoleId));
 		document.addKeyword(
 			"source", StringUtil.toLowerCase(segmentsEntry.getSource()));
-	}
-
-	private long[] _getRoleIds(long segmentsEntryId) {
-		List<SegmentsEntryRole> segmentsEntryRoles =
-			_segmentsEntryRoleLocalService.getSegmentsEntryRoles(
-				segmentsEntryId);
-
-		Stream<SegmentsEntryRole> stream = segmentsEntryRoles.stream();
-
-		return stream.mapToLong(
-			SegmentsEntryRole::getRoleId
-		).toArray();
 	}
 
 	private Locale _getSiteDefaultLocale(long groupId) {

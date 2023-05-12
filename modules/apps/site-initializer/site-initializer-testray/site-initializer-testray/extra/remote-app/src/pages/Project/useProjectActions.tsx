@@ -70,13 +70,13 @@ const useProjectActions = ({isHeaderActions}: ActionsHookParameter = {}) => {
 			icon: 'cog',
 			name: i18n.translate('manage-product-versions'),
 		},
-
 		{
 			action: ({id}, mutate) =>
 				testrayProjectImpl
 					.remove(id)
 					?.then(() => removeItemFromList(mutate, id))
 					.then(form.onSuccess)
+					.then(() => navigate('/'))
 					.catch(form.onError),
 			icon: 'trash',
 			name: i18n.translate(isHeaderActions ? 'delete-project' : 'delete'),

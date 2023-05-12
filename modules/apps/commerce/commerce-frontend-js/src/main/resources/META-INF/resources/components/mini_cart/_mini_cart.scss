@@ -38,7 +38,7 @@
 
 	&-opener {
 		align-items: center;
-		color: $gray-600;
+		color: var(--mini-cart-icon-color, $gray-600);
 		display: flex;
 		height: 64px;
 		justify-content: center;
@@ -174,4 +174,5 @@
 	@import 'mini_cart_header';
 	@import 'mini_cart_item';
 	@import 'mini_cart_items_list';
+	@import 'mini_cart_request_quote';
 }

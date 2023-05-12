@@ -155,94 +155,6 @@ public class DLStoreImpl implements DLStore {
 	}
 
 	@Override
-	public void addFile(
-			long companyId, long repositoryId, String fileName,
-			boolean validateFileExtension, byte[] bytes)
-		throws PortalException {
-
-		addFile(
-			DLStoreRequest.builder(
-				companyId, repositoryId, fileName
-			).validateFileExtension(
-				validateFileExtension
-			).build(),
-			bytes);
-	}
-
-	@Override
-	public void addFile(
-			long companyId, long repositoryId, String fileName,
-			boolean validateFileExtension, File file)
-		throws PortalException {
-
-		addFile(
-			DLStoreRequest.builder(
-				companyId, repositoryId, fileName
-			).validateFileExtension(
-				validateFileExtension
-			).build(),
-			file);
-	}
-
-	@Override
-	public void addFile(
-			long companyId, long repositoryId, String fileName,
-			boolean validateFileExtension, InputStream inputStream)
-		throws PortalException {
-
-		addFile(
-			DLStoreRequest.builder(
-				companyId, repositoryId, fileName
-			).validateFileExtension(
-				validateFileExtension
-			).build(),
-			inputStream);
-	}
-
-	@Override
-	public void addFile(
-			long companyId, long repositoryId, String fileName, byte[] bytes)
-		throws PortalException {
-
-		addFile(
-			DLStoreRequest.builder(
-				companyId, repositoryId, fileName
-			).validateFileExtension(
-				true
-			).build(),
-			bytes);
-	}
-
-	@Override
-	public void addFile(
-			long companyId, long repositoryId, String fileName, File file)
-		throws PortalException {
-
-		addFile(
-			DLStoreRequest.builder(
-				companyId, repositoryId, fileName
-			).validateFileExtension(
-				true
-			).build(),
-			file);
-	}
-
-	@Override
-	public void addFile(
-			long companyId, long repositoryId, String fileName,
-			InputStream inputStream)
-		throws PortalException {
-
-		addFile(
-			DLStoreRequest.builder(
-				companyId, repositoryId, fileName
-			).validateFileExtension(
-				true
-			).build(),
-			inputStream);
-	}
-
-	@Override
 	public void copyFileVersion(
 			long companyId, long repositoryId, String fileName,
 			String fromVersionLabel, String toVersionLabel)
@@ -405,7 +317,7 @@ public class DLStoreImpl implements DLStore {
 			dlStoreRequest.getSourceFileName(),
 			dlStoreRequest.isValidateFileExtension());
 
-		DLValidatorUtil.validateVersionLabel(dlStoreRequest.getVersionLabel());
+		_validateVersionLabel(dlStoreRequest.getVersionLabel());
 
 		if (PropsValues.DL_STORE_ANTIVIRUS_ENABLED) {
 			AntivirusScannerUtil.scan(file);
@@ -432,12 +344,11 @@ public class DLStoreImpl implements DLStore {
 			dlStoreRequest.getSourceFileName(),
 			dlStoreRequest.isValidateFileExtension());
 
+		_validateVersionLabel(dlStoreRequest.getVersionLabel());
+
 		if (inputStream1 instanceof ByteArrayFileInputStream) {
 			ByteArrayFileInputStream byteArrayFileInputStream =
 				(ByteArrayFileInputStream)inputStream1;
-
-			DLValidatorUtil.validateVersionLabel(
-				dlStoreRequest.getVersionLabel());
 
 			if (PropsValues.DL_STORE_ANTIVIRUS_ENABLED) {
 				AntivirusScannerUtil.scan(byteArrayFileInputStream.getFile());
@@ -450,8 +361,6 @@ public class DLStoreImpl implements DLStore {
 
 			return;
 		}
-
-		DLValidatorUtil.validateVersionLabel(dlStoreRequest.getVersionLabel());
 
 		if (PropsValues.DL_STORE_ANTIVIRUS_ENABLED &&
 			AntivirusScannerUtil.isActive()) {
@@ -674,7 +583,7 @@ public class DLStoreImpl implements DLStore {
 
 		validate(fileName, validateFileExtension);
 
-		DLValidatorUtil.validateVersionLabel(versionLabel);
+		_validateVersionLabel(versionLabel);
 	}
 
 	protected void validate(
@@ -686,7 +595,7 @@ public class DLStoreImpl implements DLStore {
 			fileName, fileExtension, sourceFileName, validateFileExtension,
 			file);
 
-		DLValidatorUtil.validateVersionLabel(versionLabel);
+		_validateVersionLabel(versionLabel);
 	}
 
 	protected void validate(
@@ -698,6 +607,12 @@ public class DLStoreImpl implements DLStore {
 		validate(
 			fileName, fileExtension, sourceFileName, validateFileExtension,
 			inputStream);
+
+		_validateVersionLabel(versionLabel);
+	}
+
+	private void _validateVersionLabel(String versionLabel)
+		throws PortalException {
 
 		DLValidatorUtil.validateVersionLabel(versionLabel);
 	}

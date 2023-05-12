@@ -158,7 +158,9 @@ public class OAuth2AuthorizationLocalServiceUtil {
 		return getService().createPersistedModel(primaryKeyObj);
 	}
 
-	public static void deleteExpiredOAuth2Authorizations() {
+	public static void deleteExpiredOAuth2Authorizations()
+		throws PortalException {
+
 		getService().deleteExpiredOAuth2Authorizations();
 	}
 

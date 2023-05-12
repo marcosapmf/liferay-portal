@@ -14,11 +14,12 @@
 
 package com.liferay.commerce.notification.test;
 
+import com.liferay.account.constants.AccountConstants;
+import com.liferay.account.model.AccountEntry;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
-import com.liferay.commerce.account.constants.CommerceAccountConstants;
-import com.liferay.commerce.account.model.CommerceAccount;
 import com.liferay.commerce.account.test.util.CommerceAccountTestUtil;
 import com.liferay.commerce.constants.CommerceOrderConstants;
+import com.liferay.commerce.constants.CommerceOrderPaymentConstants;
 import com.liferay.commerce.constants.CommerceShipmentConstants;
 import com.liferay.commerce.currency.model.CommerceCurrency;
 import com.liferay.commerce.currency.test.util.CommerceCurrencyTestUtil;
@@ -101,15 +102,15 @@ public class CommerceOrderStatusNotificationTest {
 		_commerceChannel = CommerceTestUtil.addCommerceChannel(
 			_group.getGroupId(), _commerceCurrency.getCode());
 
-		_commerceAccount = CommerceAccountTestUtil.addBusinessCommerceAccount(
+		_accountEntry = CommerceAccountTestUtil.addBusinessAccountEntry(
 			_user.getUserId(), RandomTestUtil.randomString(),
 			RandomTestUtil.randomString() + "@liferay.com",
 			RandomTestUtil.randomString(), _serviceContext);
 
-		CommerceAccountTestUtil.addCommerceAccountGroupAndAccountRel(
+		CommerceAccountTestUtil.addAccountGroupAndAccountRel(
 			_user.getCompanyId(), RandomTestUtil.randomString(),
-			CommerceAccountConstants.ACCOUNT_GROUP_TYPE_STATIC,
-			_commerceAccount.getCommerceAccountId(), _serviceContext);
+			AccountConstants.ACCOUNT_GROUP_TYPE_STATIC,
+			_accountEntry.getAccountEntryId(), _serviceContext);
 
 		_addCommerceNotificationTemplates();
 	}
@@ -146,7 +147,7 @@ public class CommerceOrderStatusNotificationTest {
 			_commerceOrder.getCommerceOrderId());
 
 		Assert.assertEquals(
-			CommerceOrderConstants.PAYMENT_STATUS_PAID,
+			CommerceOrderPaymentConstants.STATUS_COMPLETED,
 			_commerceOrder.getPaymentStatus());
 		Assert.assertEquals(
 			CommerceOrderConstants.ORDER_STATUS_PENDING,
@@ -305,7 +306,7 @@ public class CommerceOrderStatusNotificationTest {
 
 	private static User _user;
 
-	private CommerceAccount _commerceAccount;
+	private AccountEntry _accountEntry;
 	private CommerceChannel _commerceChannel;
 	private CommerceCurrency _commerceCurrency;
 

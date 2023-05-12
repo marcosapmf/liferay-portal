@@ -15,6 +15,7 @@
 package com.liferay.data.engine.rest.resource.exception;
 
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.exception.PortalException;
 
 import java.util.Locale;
 import java.util.Set;
@@ -24,7 +25,7 @@ import java.util.regex.Pattern;
 /**
  * @author Leonardo Barros
  */
-public class DataDefinitionValidationException extends RuntimeException {
+public class DataDefinitionValidationException extends PortalException {
 
 	public DataDefinitionValidationException() {
 	}
@@ -58,6 +59,28 @@ public class DataDefinitionValidationException extends RuntimeException {
 		}
 
 		private final Set<String> _duplicatedFieldNames;
+
+	}
+
+	public static class MustNotDuplicateFieldReference
+		extends DataDefinitionValidationException {
+
+		public MustNotDuplicateFieldReference(
+			Set<String> duplicatedFieldReferences) {
+
+			super(
+				String.format(
+					"Field references %s were defined more than once",
+					duplicatedFieldReferences));
+
+			_duplicatedFieldReferences = duplicatedFieldReferences;
+		}
+
+		public Set<String> getDuplicatedFieldReferences() {
+			return _duplicatedFieldReferences;
+		}
+
+		private final Set<String> _duplicatedFieldReferences;
 
 	}
 

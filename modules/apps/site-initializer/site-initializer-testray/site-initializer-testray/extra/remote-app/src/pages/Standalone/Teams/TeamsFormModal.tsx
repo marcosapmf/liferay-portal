@@ -18,6 +18,7 @@ import {useForm} from 'react-hook-form';
 import Form from '../../../components/Form';
 import DualListBox, {Boxes} from '../../../components/Form/DualListBox';
 import Modal from '../../../components/Modal';
+import SearchBuilder from '../../../core/SearchBuilder';
 import {withVisibleContent} from '../../../hoc/withVisibleContent';
 import {useFetch} from '../../../hooks/useFetch';
 import {FormModalOptions} from '../../../hooks/useFormModal';
@@ -29,7 +30,6 @@ import {
 	testrayComponentImpl,
 	testrayTeamImpl,
 } from '../../../services/rest';
-import {SearchBuilder} from '../../../util/search';
 
 type TeamForm = typeof yupSchema.team.__outputType;
 
@@ -59,21 +59,25 @@ const SelectComponents: React.FC<SelectComponentsProps> = ({
 	const {data: unassigned, isValidating} = useFetch<
 		APIResponse<TestrayComponent>
 	>('/components', {
-		filter: new SearchBuilder()
-			.eq('projectId', projectId)
-			.and()
-			.eq('teamId', testrayComponentImpl.UNASSIGNED_TEAM_ID)
-			.build(),
+		params: {
+			filter: new SearchBuilder()
+				.eq('projectId', projectId)
+				.and()
+				.eq('teamId', testrayComponentImpl.UNASSIGNED_TEAM_ID)
+				.build(),
+		},
 	});
 
 	const {data: current} = useFetch<APIResponse<TestrayComponent>>(
 		teamId && !isValidating ? '/components' : null,
 		{
-			filter: new SearchBuilder()
-				.eq('projectId', projectId)
-				.and()
-				.eq('teamId', teamId)
-				.build(),
+			params: {
+				filter: new SearchBuilder()
+					.eq('projectId', projectId)
+					.and()
+					.eq('teamId', teamId)
+					.build(),
+			},
 		}
 	);
 
@@ -98,6 +102,7 @@ const SelectComponents: React.FC<SelectComponentsProps> = ({
 		/>
 	);
 };
+
 export type State = Boxes<{teamId: number}>;
 
 const TeamFormModal: React.FC<TeamProps> = ({
@@ -106,7 +111,7 @@ const TeamFormModal: React.FC<TeamProps> = ({
 }) => {
 	const [state, setState] = useState<State>([]);
 	const {
-		formState: {errors},
+		formState: {errors, isSubmitting},
 		handleSubmit,
 		register,
 	} = useForm<TeamForm>({
@@ -114,7 +119,7 @@ const TeamFormModal: React.FC<TeamProps> = ({
 		resolver: yupResolver(yupSchema.team),
 	});
 
-	const _onSubmit = (teamForm: TeamForm) => {
+	const _onSubmit = (teamForm: TeamForm) =>
 		onSubmit(
 			{id: teamForm.id, name: teamForm.name, projectId},
 			{
@@ -130,7 +135,6 @@ const TeamFormModal: React.FC<TeamProps> = ({
 			)
 			.then(onSave)
 			.catch(onError);
-	};
 
 	return (
 		<Modal
@@ -138,6 +142,7 @@ const TeamFormModal: React.FC<TeamProps> = ({
 				<Form.Footer
 					onClose={onClose}
 					onSubmit={handleSubmit(_onSubmit)}
+					primaryButtonProps={{loading: isSubmitting}}
 				/>
 			}
 			observer={observer}

@@ -15,7 +15,7 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-6912. Bulk delete countries"
-	@priority = "3"
+	@priority = 3
 	test BulkDeleteCountries {
 		property portal.acceptance = "false";
 		property test.name.skip.portal.instance = "CPCommerceSettings#BulkDeleteCountries";
@@ -63,6 +63,7 @@ definition {
 		}
 	}
 
+	@priority = 5
 	test CreateNewAvailabilityEstimate {
 		property portal.acceptance = "true";
 
@@ -90,9 +91,9 @@ definition {
 		Click(locator1 = "Button#PLUS");
 
 		CommerceEntry.addNewCountriesEntry(
-			entryIsoNumber = "020",
+			entryIsoNumber = 020,
 			entryIsoThreeLetters = "TCO",
-			entryIsoTwoLetters = "54",
+			entryIsoTwoLetters = 54,
 			entryName = "Test Country");
 
 		Button.clickSave();
@@ -116,6 +117,7 @@ definition {
 			locator1 = "CommerceNavigation#ANY_ENTRY_NAME");
 	}
 
+	@priority = 5
 	test CreateNewMeasurementUnits {
 		property portal.acceptance = "true";
 
@@ -142,9 +144,10 @@ definition {
 		AssertElementPresent(locator1 = "Message#SUCCESS");
 	}
 
+	@priority = 5
 	test ViewInstanceCurrenciesAvailable {
 		property environment.acceptance = "true";
-		property operating.system.types = "alpine,amazonlinux,centos,debian,fedora,orcllinux,osx,redhat,solaris,suse,ubuntu,windows";
+		property operating.system.types = "alpine,amazonlinux,centos,debian,fedora,orcllinux,osx,redhat,rockylinux,solaris,suse,ubuntu,windows";
 		property portal.acceptance = "true";
 
 		CommerceNavigator.gotoPortlet(

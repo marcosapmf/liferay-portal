@@ -208,25 +208,27 @@ public class DDMFormInstanceLocalServiceImpl
 	@Override
 	public DDMFormInstance copyFormInstance(
 			long userId, long groupId, Map<Locale, String> nameMap,
-			DDMFormInstance ddmFormInstance,
+			DDMFormInstance sourceDDMFormInstance,
 			DDMFormValues settingsDDMFormValues, ServiceContext serviceContext)
 		throws PortalException {
 
-		DDMStructure ddmStructure = ddmFormInstance.getStructure();
+		DDMStructure sourceDDMStructure = sourceDDMFormInstance.getStructure();
 
 		serviceContext.setAttribute("addResources", Boolean.FALSE);
 
-		DDMFormInstance newDDMFormInstance = addFormInstance(
-			userId, groupId, nameMap, ddmFormInstance.getDescriptionMap(),
-			ddmStructure.getDDMForm(), ddmStructure.getDDMFormLayout(),
-			settingsDDMFormValues, serviceContext);
+		DDMFormInstance targetDDMFormInstance = addFormInstance(
+			userId, groupId, nameMap, sourceDDMFormInstance.getDescriptionMap(),
+			sourceDDMStructure.getDDMForm(),
+			sourceDDMStructure.getDDMFormLayout(), settingsDDMFormValues,
+			serviceContext);
 
 		_resourceLocalService.copyModelResources(
-			ddmFormInstance.getCompanyId(), DDMFormInstance.class.getName(),
-			ddmFormInstance.getFormInstanceId(),
-			newDDMFormInstance.getFormInstanceId());
+			sourceDDMFormInstance.getCompanyId(),
+			DDMFormInstance.class.getName(),
+			sourceDDMFormInstance.getFormInstanceId(),
+			targetDDMFormInstance.getFormInstanceId());
 
-		return newDDMFormInstance;
+		return targetDDMFormInstance;
 	}
 
 	@Override
@@ -260,7 +262,7 @@ public class DDMFormInstanceLocalServiceImpl
 			ddmFormInstance.getFormInstanceId(), 0);
 
 		// See LPS-97208 and
-		// DDMFormInstanceRecordSearchTest#testBasicSearchWithDefaultUser.
+		// DDMFormInstanceRecordSearchTest#testBasicSearchWithGuestUser.
 
 		deleteDDMFormInstance(ddmFormInstance);
 	}
@@ -693,12 +695,14 @@ public class DDMFormInstanceLocalServiceImpl
 			!workflowDefinition.equals("no-workflow")) {
 
 			KaleoDefinition kaleoDefinition =
-				_kaleoDefinitionLocalService.getKaleoDefinition(
+				_kaleoDefinitionLocalService.fetchKaleoDefinition(
 					workflowDefinition, serviceContext);
 
-			latestWorkflowDefinition =
-				workflowDefinition + StringPool.AT +
-					kaleoDefinition.getVersion();
+			if (kaleoDefinition != null) {
+				latestWorkflowDefinition =
+					workflowDefinition + StringPool.AT +
+						kaleoDefinition.getVersion();
+			}
 		}
 
 		_workflowDefinitionLinkLocalService.updateWorkflowDefinitionLink(

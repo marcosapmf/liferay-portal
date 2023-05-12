@@ -23,21 +23,21 @@ import {TEXT_EMBEDDING_PROVIDER_TYPES} from './constants';
  * This can be found on: System Settings > Search Experiences > Semantic Search
  */
 function TestConfigurationButton({
-	assetEntryClassNames,
+	accessToken,
 	availableTextEmbeddingProviders,
-	cacheTimeout,
+	basicAuthPassword,
+	basicAuthUsername,
+	disabled,
 	embeddingVectorDimensions,
 	errors,
-	huggingFaceAccessToken,
+	hostAddress,
 	languageIds,
 	maxCharacterCount,
 	model,
+	modelClassNames,
 	modelTimeout,
 	textEmbeddingProvider,
 	textTruncationStrategy,
-	txtaiHostAddress,
-	txtaiPassword,
-	txtaiUsername,
 }) {
 	const [loading, setLoading] = useState(false);
 	const [testResultsMessage, setTestResultsMessage] = useState({}); // {message, type}
@@ -48,23 +48,22 @@ function TestConfigurationButton({
 	useEffect(() => {
 		setTestResultsMessage({});
 	}, [
-		assetEntryClassNames,
-		cacheTimeout,
+		accessToken,
+		basicAuthPassword,
+		basicAuthUsername,
 		embeddingVectorDimensions,
-		huggingFaceAccessToken,
+		hostAddress,
 		languageIds,
 		maxCharacterCount,
 		model,
+		modelClassNames,
 		modelTimeout,
 		textEmbeddingProvider,
 		textTruncationStrategy,
-		txtaiHostAddress,
-		txtaiPassword,
-		txtaiUsername,
 	]);
 
 	/**
-	 * Used for the `/text-embedding/validate-configuration` endpoint
+	 * Used for the `/text-embeddings/validate-provider-configuration` endpoint
 	 * to conditionally send the appropriate data according to the user-selected
 	 * text embedding provider type.
 	 * @returns {object}
@@ -75,17 +74,27 @@ function TestConfigurationButton({
 			TEXT_EMBEDDING_PROVIDER_TYPES.HUGGING_FACE_INFERENCE_API
 		) {
 			return {
-				huggingFaceAccessToken,
+				accessToken,
 				model,
 				modelTimeout,
 			};
 		}
 
+		if (
+			textEmbeddingProvider ===
+			TEXT_EMBEDDING_PROVIDER_TYPES.HUGGING_FACE_INFERENCE_ENDPOINT
+		) {
+			return {
+				accessToken,
+				hostAddress,
+			};
+		}
+
 		if (textEmbeddingProvider === TEXT_EMBEDDING_PROVIDER_TYPES.TXTAI) {
 			return {
-				txtaiHostAddress,
-				txtaiPassword,
-				txtaiUsername,
+				basicAuthPassword,
+				basicAuthUsername,
+				hostAddress,
 			};
 		}
 
@@ -95,33 +104,19 @@ function TestConfigurationButton({
 	const _handleTestConfigurationButtonClick = () => {
 		setLoading(true);
 
-		// Organizing fetch body property groups by how they appear in the UI.
-
-		const generalSettings = {
-			cacheTimeout,
-			textEmbeddingsEnabled: true, // Always set as `true`. LPS-167506
-		};
-
-		const generalTransformerSettings = {
-			embeddingVectorDimensions,
-			textEmbeddingProvider,
-		};
-
-		const indexingSettings = {
-			assetEntryClassNames,
-			languageIds,
-			maxCharacterCount,
-			textTruncationStrategy,
-		};
-
 		fetch(
-			'/o/search-experiences-rest/v1.0/text-embedding/validate-configuration',
+			'/o/search-experiences-rest/v1.0/text-embeddings/validate-provider-configuration',
 			{
 				body: JSON.stringify({
-					...generalSettings,
-					...generalTransformerSettings,
-					..._getTextEmbeddingProviderSettings(),
-					...indexingSettings,
+					attributes: {
+						maxCharacterCount,
+						textTruncationStrategy,
+						..._getTextEmbeddingProviderSettings(),
+					},
+					embeddingVectorDimensions,
+					languageIds,
+					modelClassNames,
+					providerName: textEmbeddingProvider,
 				}),
 				headers: new Headers({
 					'Accept': 'application/json',
@@ -269,14 +264,24 @@ function TestConfigurationButton({
 			TEXT_EMBEDDING_PROVIDER_TYPES.HUGGING_FACE_INFERENCE_API
 		) {
 			return (
-				errors.huggingFaceAccessToken ||
-				errors.model ||
-				errors.modelTimeout
+				errors?.attributes?.accessToken ||
+				errors?.attributes?.model ||
+				errors?.attributes?.modelTimeout
+			);
+		}
+
+		if (
+			textEmbeddingProvider ===
+			TEXT_EMBEDDING_PROVIDER_TYPES.HUGGING_FACE_INFERENCE_ENDPOINT
+		) {
+			return (
+				errors?.attributes?.accessToken ||
+				errors?.attributes?.hostAddress
 			);
 		}
 
 		if (textEmbeddingProvider === TEXT_EMBEDDING_PROVIDER_TYPES.TXTAI) {
-			return errors.txtaiHostAddress;
+			return errors?.attributes?.hostAddress;
 		}
 
 		return false;
@@ -286,10 +291,14 @@ function TestConfigurationButton({
 		<div className="test-configuration-button-root">
 			<ClayTooltipProvider>
 				<ClayButton
-					aria-disabled={loading || isMissingRequiredFields()}
+					aria-disabled={
+						loading || isMissingRequiredFields() || disabled
+					}
 					aria-label={Liferay.Language.get('test-configuration')}
 					className={
-						loading || isMissingRequiredFields() ? 'disabled' : ''
+						loading || isMissingRequiredFields() || disabled
+							? 'disabled'
+							: ''
 					}
 					displayType="secondary"
 					onClick={_handleTestConfigurationButtonClick}

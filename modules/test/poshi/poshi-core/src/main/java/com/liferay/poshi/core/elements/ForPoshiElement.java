@@ -16,13 +16,14 @@ package com.liferay.poshi.core.elements;
 
 import com.liferay.poshi.core.script.PoshiScriptParserException;
 import com.liferay.poshi.core.util.Dom4JUtil;
-import com.liferay.poshi.core.util.StringUtil;
 
 import java.io.IOException;
 
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import org.apache.commons.lang.StringUtils;
 
 import org.dom4j.Attribute;
 import org.dom4j.Element;
@@ -82,15 +83,27 @@ public class ForPoshiElement extends PoshiElement {
 
 			String value = matcher.group(3);
 
+			if (value.startsWith("\"") && value.endsWith("\"")) {
+				value = getDoubleQuotedContent(value);
+			}
+
 			if (value.contains("\"")) {
-				value = StringUtil.replace(value, "\"", "");
+				int escapedQuoteCount = StringUtils.countMatches(value, "\\\"");
+				int quoteCount = StringUtils.countMatches(value, "\"");
+
+				if (escapedQuoteCount != quoteCount) {
+					throw new PoshiScriptParserException(
+						"Unescaped quotes in list value: " + value, poshiScript,
+						(PoshiElement)getParent());
+				}
 			}
 
 			addAttribute(matcher.group(2), value);
 		}
 		else {
-			throw new RuntimeException(
-				"Invalid parameter syntax:\n" + parentheticalContent);
+			throw new PoshiScriptParserException(
+				"Invalid parameter syntax: " + parentheticalContent,
+				poshiScript, (PoshiElement)getParent());
 		}
 
 		String blockContent = getBlockContent(poshiScript);

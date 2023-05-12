@@ -28,6 +28,7 @@ import {
 } from './types';
 
 type TState = {
+	creationLanguageId: Liferay.Language.Locale;
 	enableCategorization: boolean;
 	isViewOnly: boolean;
 	objectFieldTypes: ObjectFieldType[];
@@ -40,6 +41,7 @@ type TState = {
 type TAction =
 	| {
 			payload: {
+				creationLanguageId: Liferay.Language.Locale;
 				enableCategorization: boolean;
 				objectLayout: TObjectLayout;
 				objectRelationships: TObjectRelationship[];
@@ -156,6 +158,7 @@ const layoutReducer = (state: TState, action: TAction) => {
 	switch (action.type) {
 		case TYPES.ADD_OBJECT_LAYOUT: {
 			const {
+				creationLanguageId,
 				enableCategorization,
 				objectLayout,
 				objectRelationships,
@@ -163,6 +166,7 @@ const layoutReducer = (state: TState, action: TAction) => {
 
 			return {
 				...state,
+				creationLanguageId,
 				enableCategorization,
 				objectLayout,
 				objectRelationships,
@@ -231,8 +235,12 @@ const layoutReducer = (state: TState, action: TAction) => {
 				(box) => box.type !== 'regular'
 			);
 
+			const hasCategorizationBox = !!objectLayoutBoxes.find(
+				(layoutBox) => layoutBox.type === 'categorization'
+			);
+
 			if (
-				type === 'regular' ||
+				(type === 'regular' && hasCategorizationBox) ||
 				(type === 'categorization' && frameworkIndex >= 0)
 			) {
 				objectLayoutBoxes.splice(frameworkIndex, 0, newBox);

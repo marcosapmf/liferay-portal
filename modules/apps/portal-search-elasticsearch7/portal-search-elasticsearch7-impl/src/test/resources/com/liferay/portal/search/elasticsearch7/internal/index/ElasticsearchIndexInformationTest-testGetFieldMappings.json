@@ -1578,6 +1578,11 @@
 					"store": true,
 					"type": "date"
 				},
+				"reviewDate": {
+					"format": "yyyyMMddHHmmss",
+					"store": true,
+					"type": "date"
+				},
 				"rightOrganizationId": {
 					"store": true,
 					"type": "keyword"
@@ -1608,6 +1613,11 @@
 					"type": "keyword"
 				},
 				"screenName": {
+					"fields": {
+						"text": {
+							"type": "text"
+						}
+					},
 					"store": true,
 					"type": "keyword"
 				},
@@ -1685,6 +1695,10 @@
 				"version": {
 					"store": true,
 					"type": "keyword"
+				},
+				"viewCount": {
+					"store": true,
+					"type": "long"
 				},
 				"visible": {
 					"store": true,

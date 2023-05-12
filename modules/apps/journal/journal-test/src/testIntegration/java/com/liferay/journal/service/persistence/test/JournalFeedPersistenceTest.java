@@ -149,7 +149,7 @@ public class JournalFeedPersistenceTest {
 
 		newJournalFeed.setDescription(RandomTestUtil.randomString());
 
-		newJournalFeed.setDDMStructureKey(RandomTestUtil.randomString());
+		newJournalFeed.setDDMStructureId(RandomTestUtil.nextLong());
 
 		newJournalFeed.setDDMTemplateKey(RandomTestUtil.randomString());
 
@@ -211,8 +211,8 @@ public class JournalFeedPersistenceTest {
 			existingJournalFeed.getDescription(),
 			newJournalFeed.getDescription());
 		Assert.assertEquals(
-			existingJournalFeed.getDDMStructureKey(),
-			newJournalFeed.getDDMStructureKey());
+			existingJournalFeed.getDDMStructureId(),
+			newJournalFeed.getDDMStructureId());
 		Assert.assertEquals(
 			existingJournalFeed.getDDMTemplateKey(),
 			newJournalFeed.getDDMTemplateKey());
@@ -324,12 +324,12 @@ public class JournalFeedPersistenceTest {
 			"JournalFeed", "mvccVersion", true, "ctCollectionId", true, "uuid",
 			true, "id", true, "groupId", true, "companyId", true, "userId",
 			true, "userName", true, "createDate", true, "modifiedDate", true,
-			"feedId", true, "name", true, "description", true,
-			"DDMStructureKey", true, "DDMTemplateKey", true,
-			"DDMRendererTemplateKey", true, "delta", true, "orderByCol", true,
-			"orderByType", true, "targetLayoutFriendlyUrl", true,
-			"targetPortletId", true, "contentField", true, "feedFormat", true,
-			"feedVersion", true, "lastPublishDate", true);
+			"feedId", true, "name", true, "description", true, "DDMStructureId",
+			true, "DDMTemplateKey", true, "DDMRendererTemplateKey", true,
+			"delta", true, "orderByCol", true, "orderByType", true,
+			"targetLayoutFriendlyUrl", true, "targetPortletId", true,
+			"contentField", true, "feedFormat", true, "feedVersion", true,
+			"lastPublishDate", true);
 	}
 
 	@Test
@@ -638,7 +638,7 @@ public class JournalFeedPersistenceTest {
 
 		journalFeed.setDescription(RandomTestUtil.randomString());
 
-		journalFeed.setDDMStructureKey(RandomTestUtil.randomString());
+		journalFeed.setDDMStructureId(RandomTestUtil.nextLong());
 
 		journalFeed.setDDMTemplateKey(RandomTestUtil.randomString());
 

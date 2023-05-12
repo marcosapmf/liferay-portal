@@ -9,20 +9,20 @@ definition {
 	setUp {
 		SignIn.signIn();
 
-		var portalURL = PropsUtil.get("portal.url");
+		var portalURL = JSONCompany.getPortalURL();
 
 		SearchAdministration.executeReindex();
 	}
 
 	@description = "This is a use case for LPS-52392."
-	@priority = "5"
+	@priority = 5
 	test AddDataDefinitionAfterUpgrade621021 {
 		property data.archive.type = "data-archive-portal";
 		property database.types = "db2";
 		property portal.upstream = "quarantine";
 		property portal.version = "6.2.10.21";
 
-		Upgrade.addDataDefinitionWithDB2(site = "Guest");
+		ValidateDataEngineUpgrade.addDataDefinitionWithDB2(site = "Guest");
 	}
 
 }

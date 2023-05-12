@@ -113,9 +113,7 @@ public class SegmentsExperienceUtil {
 
 		List<SegmentsExperience> segmentsExperiences =
 			SegmentsExperienceServiceUtil.getSegmentsExperiences(
-				themeDisplay.getScopeGroupId(),
-				PortalUtil.getClassNameId(Layout.class.getName()),
-				themeDisplay.getPlid(), true);
+				themeDisplay.getScopeGroupId(), themeDisplay.getPlid(), true);
 
 		for (SegmentsExperience segmentsExperience : segmentsExperiences) {
 			availableSegmentsExperiences.put(
@@ -380,7 +378,7 @@ public class SegmentsExperienceUtil {
 			newFragmentEntryLink.setSegmentsExperienceId(
 				targetSegmentsExperienceId);
 
-			String newNamespace = fragmentEntryLink.getNamespace();
+			String newNamespace = StringUtil.randomId();
 
 			newFragmentEntryLink.setEditableValues(
 				_getNewEditableValues(

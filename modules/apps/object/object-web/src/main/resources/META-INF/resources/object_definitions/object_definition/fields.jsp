@@ -46,6 +46,8 @@ renderResponse.setTitle(objectDefinition.getLabel(locale, true));
 			HashMapBuilder.<String, Object>put(
 				"apiURL", objectDefinitionsFieldsDisplayContext.getAPIURL()
 			).put(
+				"creationLanguageId", objectDefinition.getDefaultLanguageId()
+			).put(
 				"forbiddenChars", PropsUtil.getArray(PropsKeys.DL_CHAR_BLACKLIST)
 			).put(
 				"forbiddenLastChars", objectDefinitionsFieldsDisplayContext.getForbiddenLastCharacters()
@@ -67,7 +69,7 @@ renderResponse.setTitle(objectDefinition.getLabel(locale, true));
 		module="js/components/ExpressionBuilderModal"
 		props='<%=
 			HashMapBuilder.<String, Object>put(
-				"sidebarElements", objectDefinitionsFieldsDisplayContext.getObjectFieldCodeEditorElements()
+				"sidebarElements", objectDefinitionsFieldsDisplayContext.getObjectFieldCodeEditorElements(ObjectFieldConstants.BUSINESS_TYPE_FORMULA)
 			).build()
 		%>'
 	/>

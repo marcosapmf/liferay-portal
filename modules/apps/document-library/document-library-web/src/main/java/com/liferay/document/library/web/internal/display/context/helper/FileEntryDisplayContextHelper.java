@@ -33,10 +33,9 @@ public class FileEntryDisplayContextHelper {
 		PermissionChecker permissionChecker, FileEntry fileEntry) {
 
 		_permissionChecker = permissionChecker;
-
 		_fileEntry = fileEntry;
 
-		if (_fileEntry == null) {
+		if (fileEntry == null) {
 			_setValuesForNullFileEntry();
 		}
 	}
@@ -62,6 +61,15 @@ public class FileEntryDisplayContextHelper {
 		}
 
 		return _hasDeletePermission;
+	}
+
+	public boolean hasDownloadPermission() throws PortalException {
+		if (_hasDownloadPermission == null) {
+			_hasDownloadPermission = DLFileEntryPermission.contains(
+				_permissionChecker, _fileEntry, ActionKeys.DOWNLOAD);
+		}
+
+		return _hasDownloadPermission;
 	}
 
 	public boolean hasExportImportPermission() throws PortalException {
@@ -107,15 +115,6 @@ public class FileEntryDisplayContextHelper {
 		}
 
 		return _hasUpdatePermission;
-	}
-
-	public boolean hasViewPermission() throws PortalException {
-		if (_hasViewPermission == null) {
-			_hasViewPermission = DLFileEntryPermission.contains(
-				_permissionChecker, _fileEntry, ActionKeys.VIEW);
-		}
-
-		return _hasViewPermission;
 	}
 
 	public boolean isCancelCheckoutDocumentActionAvailable()
@@ -185,7 +184,11 @@ public class FileEntryDisplayContextHelper {
 	}
 
 	public boolean isDownloadActionAvailable() throws PortalException {
-		return hasViewPermission();
+		if ((_fileEntry.getSize() > 0) && hasDownloadPermission()) {
+			return true;
+		}
+
+		return false;
 	}
 
 	public boolean isEditActionAvailable() throws PortalException {
@@ -248,12 +251,12 @@ public class FileEntryDisplayContextHelper {
 		_checkedOut = false;
 		_dlFileEntry = true;
 		_hasDeletePermission = false;
+		_hasDownloadPermission = false;
 		_hasExportImportPermission = false;
 		_hasLock = false;
 		_hasOverrideCheckoutPermission = false;
 		_hasPermissionsPermission = true;
 		_hasUpdatePermission = true;
-		_hasViewPermission = false;
 		_supportsLocking = false;
 	}
 
@@ -261,12 +264,12 @@ public class FileEntryDisplayContextHelper {
 	private Boolean _dlFileEntry;
 	private final FileEntry _fileEntry;
 	private Boolean _hasDeletePermission;
+	private Boolean _hasDownloadPermission;
 	private Boolean _hasExportImportPermission;
 	private Boolean _hasLock;
 	private Boolean _hasOverrideCheckoutPermission;
 	private Boolean _hasPermissionsPermission;
 	private Boolean _hasUpdatePermission;
-	private Boolean _hasViewPermission;
 	private final PermissionChecker _permissionChecker;
 	private Boolean _supportsLocking;
 

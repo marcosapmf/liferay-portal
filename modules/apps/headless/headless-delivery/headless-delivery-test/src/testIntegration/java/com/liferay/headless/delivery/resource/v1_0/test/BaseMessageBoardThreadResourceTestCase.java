@@ -32,6 +32,7 @@ import com.liferay.headless.delivery.client.permission.Permission;
 import com.liferay.headless.delivery.client.resource.v1_0.MessageBoardThreadResource;
 import com.liferay.headless.delivery.client.serdes.v1_0.MessageBoardThreadSerDes;
 import com.liferay.petra.function.UnsafeTriConsumer;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.json.JSONArray;
@@ -73,8 +74,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.annotation.Generated;
 
@@ -249,7 +248,10 @@ public abstract class BaseMessageBoardThreadResourceTestCase {
 			assertEquals(
 				Arrays.asList(irrelevantMessageBoardThread),
 				(List<MessageBoardThread>)page.getItems());
-			assertValid(page);
+			assertValid(
+				page,
+				testGetMessageBoardSectionMessageBoardThreadsPage_getExpectedActions(
+					irrelevantMessageBoardSectionId));
 		}
 
 		MessageBoardThread messageBoardThread1 =
@@ -271,13 +273,37 @@ public abstract class BaseMessageBoardThreadResourceTestCase {
 		assertEqualsIgnoringOrder(
 			Arrays.asList(messageBoardThread1, messageBoardThread2),
 			(List<MessageBoardThread>)page.getItems());
-		assertValid(page);
+		assertValid(
+			page,
+			testGetMessageBoardSectionMessageBoardThreadsPage_getExpectedActions(
+				messageBoardSectionId));
 
 		messageBoardThreadResource.deleteMessageBoardThread(
 			messageBoardThread1.getId());
 
 		messageBoardThreadResource.deleteMessageBoardThread(
 			messageBoardThread2.getId());
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetMessageBoardSectionMessageBoardThreadsPage_getExpectedActions(
+				Long messageBoardSectionId)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		Map createBatchAction = new HashMap<>();
+		createBatchAction.put("method", "POST");
+		createBatchAction.put(
+			"href",
+			"http://localhost:8080/o/headless-delivery/v1.0/message-board-sections/{messageBoardSectionId}/message-board-threads/batch".
+				replace(
+					"{messageBoardSectionId}",
+					String.valueOf(messageBoardSectionId)));
+
+		expectedActions.put("createBatch", createBatchAction);
+
+		return expectedActions;
 	}
 
 	@Test
@@ -673,13 +699,23 @@ public abstract class BaseMessageBoardThreadResourceTestCase {
 			messageBoardThread1, (List<MessageBoardThread>)page.getItems());
 		assertContains(
 			messageBoardThread2, (List<MessageBoardThread>)page.getItems());
-		assertValid(page);
+		assertValid(
+			page, testGetMessageBoardThreadsRankedPage_getExpectedActions());
 
 		messageBoardThreadResource.deleteMessageBoardThread(
 			messageBoardThread1.getId());
 
 		messageBoardThreadResource.deleteMessageBoardThread(
 			messageBoardThread2.getId());
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetMessageBoardThreadsRankedPage_getExpectedActions()
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
 	}
 
 	@Test
@@ -1280,7 +1316,10 @@ public abstract class BaseMessageBoardThreadResourceTestCase {
 			assertEquals(
 				Arrays.asList(irrelevantMessageBoardThread),
 				(List<MessageBoardThread>)page.getItems());
-			assertValid(page);
+			assertValid(
+				page,
+				testGetSiteMessageBoardThreadsPage_getExpectedActions(
+					irrelevantSiteId));
 		}
 
 		MessageBoardThread messageBoardThread1 =
@@ -1299,13 +1338,33 @@ public abstract class BaseMessageBoardThreadResourceTestCase {
 		assertEqualsIgnoringOrder(
 			Arrays.asList(messageBoardThread1, messageBoardThread2),
 			(List<MessageBoardThread>)page.getItems());
-		assertValid(page);
+		assertValid(
+			page,
+			testGetSiteMessageBoardThreadsPage_getExpectedActions(siteId));
 
 		messageBoardThreadResource.deleteMessageBoardThread(
 			messageBoardThread1.getId());
 
 		messageBoardThreadResource.deleteMessageBoardThread(
 			messageBoardThread2.getId());
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetSiteMessageBoardThreadsPage_getExpectedActions(Long siteId)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		Map createBatchAction = new HashMap<>();
+		createBatchAction.put("method", "POST");
+		createBatchAction.put(
+			"href",
+			"http://localhost:8080/o/headless-delivery/v1.0/sites/{siteId}/message-board-threads/batch".
+				replace("{siteId}", String.valueOf(siteId)));
+
+		expectedActions.put("createBatch", createBatchAction);
+
+		return expectedActions;
 	}
 
 	@Test
@@ -1722,11 +1781,19 @@ public abstract class BaseMessageBoardThreadResourceTestCase {
 		MessageBoardThread getMessageBoardThread =
 			messageBoardThreadResource.
 				getSiteMessageBoardThreadByFriendlyUrlPath(
-					postMessageBoardThread.getSiteId(),
+					testGetSiteMessageBoardThreadByFriendlyUrlPath_getSiteId(
+						postMessageBoardThread),
 					postMessageBoardThread.getFriendlyUrlPath());
 
 		assertEquals(postMessageBoardThread, getMessageBoardThread);
 		assertValid(getMessageBoardThread);
+	}
+
+	protected Long testGetSiteMessageBoardThreadByFriendlyUrlPath_getSiteId(
+			MessageBoardThread messageBoardThread)
+		throws Exception {
+
+		return messageBoardThread.getSiteId();
 	}
 
 	protected MessageBoardThread
@@ -1757,8 +1824,9 @@ public abstract class BaseMessageBoardThreadResourceTestCase {
 										put(
 											"siteKey",
 											"\"" +
-												messageBoardThread.getSiteId() +
-													"\"");
+												testGraphQLGetSiteMessageBoardThreadByFriendlyUrlPath_getSiteId(
+													messageBoardThread) + "\"");
+
 										put(
 											"friendlyUrlPath",
 											"\"" +
@@ -1770,6 +1838,14 @@ public abstract class BaseMessageBoardThreadResourceTestCase {
 								getGraphQLFields())),
 						"JSONObject/data",
 						"Object/messageBoardThreadByFriendlyUrlPath"))));
+	}
+
+	protected Long
+			testGraphQLGetSiteMessageBoardThreadByFriendlyUrlPath_getSiteId(
+				MessageBoardThread messageBoardThread)
+		throws Exception {
+
+		return messageBoardThread.getSiteId();
 	}
 
 	@Test
@@ -2395,6 +2471,13 @@ public abstract class BaseMessageBoardThreadResourceTestCase {
 	}
 
 	protected void assertValid(Page<MessageBoardThread> page) {
+		assertValid(page, Collections.emptyMap());
+	}
+
+	protected void assertValid(
+		Page<MessageBoardThread> page,
+		Map<String, Map<String, String>> expectedActions) {
+
 		boolean valid = false;
 
 		java.util.Collection<MessageBoardThread> messageBoardThreads =
@@ -2410,6 +2493,20 @@ public abstract class BaseMessageBoardThreadResourceTestCase {
 		}
 
 		Assert.assertTrue(valid);
+
+		Map<String, Map<String, String>> actions = page.getActions();
+
+		for (String key : expectedActions.keySet()) {
+			Map action = actions.get(key);
+
+			Assert.assertNotNull(key + " does not contain an action", action);
+
+			Map expectedAction = expectedActions.get(key);
+
+			Assert.assertEquals(
+				expectedAction.get("method"), action.get("method"));
+			Assert.assertEquals(expectedAction.get("href"), action.get("href"));
+		}
 	}
 
 	protected void assertValid(Rating rating) {
@@ -3040,14 +3137,16 @@ public abstract class BaseMessageBoardThreadResourceTestCase {
 	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
 		throws Exception {
 
-		Stream<java.lang.reflect.Field> stream = Stream.of(
-			ReflectionUtil.getDeclaredFields(clazz));
+		return TransformUtil.transform(
+			ReflectionUtil.getDeclaredFields(clazz),
+			field -> {
+				if (field.isSynthetic()) {
+					return null;
+				}
 
-		return stream.filter(
-			field -> !field.isSynthetic()
-		).toArray(
-			java.lang.reflect.Field[]::new
-		);
+				return field;
+			},
+			java.lang.reflect.Field.class);
 	}
 
 	protected java.util.Collection<EntityField> getEntityFields()
@@ -3064,6 +3163,10 @@ public abstract class BaseMessageBoardThreadResourceTestCase {
 		EntityModel entityModel = entityModelResource.getEntityModel(
 			new MultivaluedHashMap());
 
+		if (entityModel == null) {
+			return Collections.emptyList();
+		}
+
 		Map<String, EntityField> entityFieldsMap =
 			entityModel.getEntityFieldsMap();
 
@@ -3073,18 +3176,18 @@ public abstract class BaseMessageBoardThreadResourceTestCase {
 	protected List<EntityField> getEntityFields(EntityField.Type type)
 		throws Exception {
 
-		java.util.Collection<EntityField> entityFields = getEntityFields();
+		return TransformUtil.transform(
+			getEntityFields(),
+			entityField -> {
+				if (!Objects.equals(entityField.getType(), type) ||
+					ArrayUtil.contains(
+						getIgnoredEntityFieldNames(), entityField.getName())) {
 
-		Stream<EntityField> stream = entityFields.stream();
+					return null;
+				}
 
-		return stream.filter(
-			entityField ->
-				Objects.equals(entityField.getType(), type) &&
-				!ArrayUtil.contains(
-					getIgnoredEntityFieldNames(), entityField.getName())
-		).collect(
-			Collectors.toList()
-		);
+				return entityField;
+			});
 	}
 
 	protected String getFilterString(

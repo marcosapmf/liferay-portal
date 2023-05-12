@@ -24,8 +24,10 @@ import com.liferay.portal.catapult.PortalCatapult;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.service.CompanyLocalService;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 
+import java.util.List;
 import java.util.Map;
 
 import org.osgi.service.component.annotations.Activate;
@@ -63,8 +65,28 @@ public class FunctionObjectActionExecutorImpl implements ObjectActionExecutor {
 		return _key;
 	}
 
+	@Override
+	public boolean isAllowedCompany(long companyId) {
+		if (_companyId == companyId) {
+			return true;
+		}
+
+		return false;
+	}
+
+	@Override
+	public boolean isAllowedObjectDefinition(String objectDefinitionName) {
+		if (_allowedObjectDefinitionNames.isEmpty()) {
+			return true;
+		}
+
+		return _allowedObjectDefinitionNames.contains(objectDefinitionName);
+	}
+
 	@Activate
 	protected void activate(Map<String, Object> properties) throws Exception {
+		_allowedObjectDefinitionNames = StringUtil.asList(
+			properties.get("allowedObjectDefinitionNames"));
 		_companyId = ConfigurationFactoryUtil.getCompanyId(
 			_companyLocalService, properties);
 		_functionObjectActionExecutorImplConfiguration =
@@ -76,6 +98,7 @@ public class FunctionObjectActionExecutorImpl implements ObjectActionExecutor {
 			ConfigurationFactoryUtil.getExternalReferenceCode(properties));
 	}
 
+	private List<String> _allowedObjectDefinitionNames;
 	private long _companyId;
 
 	@Reference

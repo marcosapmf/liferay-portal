@@ -47,7 +47,8 @@ public class LayoutUtilityPageEntryServiceImpl
 	public LayoutUtilityPageEntry addLayoutUtilityPageEntry(
 			String externalReferenceCode, long groupId, long plid,
 			long previewFileEntryId, boolean defaultLayoutUtilityPageEntry,
-			String name, String type, long masterLayoutPlid)
+			String name, String type, long masterLayoutPlid,
+			ServiceContext serviceContext)
 		throws PortalException {
 
 		_groupPermission.check(
@@ -57,27 +58,43 @@ public class LayoutUtilityPageEntryServiceImpl
 		return layoutUtilityPageEntryLocalService.addLayoutUtilityPageEntry(
 			externalReferenceCode, getUserId(), groupId, plid,
 			previewFileEntryId, defaultLayoutUtilityPageEntry, name, type,
-			masterLayoutPlid);
+			masterLayoutPlid, serviceContext);
 	}
 
 	@Override
 	public LayoutUtilityPageEntry copyLayoutUtilityPageEntry(
-			long groupId, long layoutUtilityPageEntryId,
+			long groupId, long sourceLayoutUtilityPageEntryId,
 			ServiceContext serviceContext)
-		throws PortalException {
+		throws Exception {
 
 		_groupPermission.check(
 			getPermissionChecker(), groupId,
 			LayoutUtilityPageActionKeys.ADD_LAYOUT_UTILITY_PAGE_ENTRY);
 
 		return layoutUtilityPageEntryLocalService.copyLayoutUtilityPageEntry(
-			getUserId(), groupId, layoutUtilityPageEntryId, serviceContext);
+			getUserId(), groupId, sourceLayoutUtilityPageEntryId,
+			serviceContext);
 	}
 
 	@Override
 	public LayoutUtilityPageEntry deleteLayoutUtilityPageEntry(
 			long layoutUtilityPageEntryId)
 		throws PortalException {
+
+		LayoutUtilityPageEntry layoutUtilityPageEntry =
+			layoutUtilityPageEntryLocalService.getLayoutUtilityPageEntry(
+				layoutUtilityPageEntryId);
+
+		_layoutUtilityPageEntryModelResourcePermission.check(
+			getPermissionChecker(), layoutUtilityPageEntryId,
+			ActionKeys.DELETE);
+
+		if (layoutUtilityPageEntry.isDefaultLayoutUtilityPageEntry()) {
+			_groupPermission.check(
+				getPermissionChecker(), layoutUtilityPageEntry.getGroupId(),
+				LayoutUtilityPageActionKeys.
+					ASSIGN_DEFAULT_LAYOUT_UTILITY_PAGE_ENTRY);
+		}
 
 		return layoutUtilityPageEntryLocalService.deleteLayoutUtilityPageEntry(
 			layoutUtilityPageEntryId);
@@ -137,8 +154,49 @@ public class LayoutUtilityPageEntryServiceImpl
 			long layoutUtilityPageEntryId)
 		throws PortalException {
 
+		LayoutUtilityPageEntry layoutUtilityPageEntry =
+			layoutUtilityPageEntryLocalService.getLayoutUtilityPageEntry(
+				layoutUtilityPageEntryId);
+
+		_groupPermission.check(
+			getPermissionChecker(), layoutUtilityPageEntry.getGroupId(),
+			LayoutUtilityPageActionKeys.
+				ASSIGN_DEFAULT_LAYOUT_UTILITY_PAGE_ENTRY);
+
+		_layoutUtilityPageEntryModelResourcePermission.check(
+			getPermissionChecker(), layoutUtilityPageEntryId,
+			ActionKeys.UPDATE);
+
 		return layoutUtilityPageEntryLocalService.
 			setDefaultLayoutUtilityPageEntry(layoutUtilityPageEntryId);
+	}
+
+	@Override
+	public LayoutUtilityPageEntry unsetDefaultLayoutUtilityPageEntry(
+			long layoutUtilityPageEntryId)
+		throws PortalException {
+
+		LayoutUtilityPageEntry layoutUtilityPageEntry =
+			layoutUtilityPageEntryLocalService.getLayoutUtilityPageEntry(
+				layoutUtilityPageEntryId);
+
+		_groupPermission.check(
+			getPermissionChecker(), layoutUtilityPageEntry.getGroupId(),
+			LayoutUtilityPageActionKeys.
+				ASSIGN_DEFAULT_LAYOUT_UTILITY_PAGE_ENTRY);
+
+		_layoutUtilityPageEntryModelResourcePermission.check(
+			getPermissionChecker(), layoutUtilityPageEntryId,
+			ActionKeys.UPDATE);
+
+		if (!layoutUtilityPageEntry.isDefaultLayoutUtilityPageEntry()) {
+			return layoutUtilityPageEntry;
+		}
+
+		layoutUtilityPageEntry.setDefaultLayoutUtilityPageEntry(false);
+
+		return layoutUtilityPageEntryLocalService.updateLayoutUtilityPageEntry(
+			layoutUtilityPageEntry);
 	}
 
 	@Override

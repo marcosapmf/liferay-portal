@@ -1,14 +1,21 @@
-<div class="search-total-label">
-	<#if searchContainer.getTotal() == 1>
-		${languageUtil.format(locale, "x-result-for-x", [searchContainer.getTotal(), "<strong>" + htmlUtil.escape(searchResultsPortletDisplayContext.getKeywords()) + "</strong>"], false)}
-	<#else>
-		${languageUtil.format(locale, "x-results-for-x", [searchContainer.getTotal(), "<strong>" + htmlUtil.escape(searchResultsPortletDisplayContext.getKeywords()) + "</strong>"], false)}
-	</#if>
-</div>
+<#if !entries?has_content>
+	<div class="sheet">
+		<@liferay_frontend["empty-result-message"]
+			description='${languageUtil.format(locale, "no-results-were-found-that-matched-the-keywords-x",	"<strong>" + htmlUtil.escape(searchResultsPortletDisplayContext.getKeywords()) + "</strong>", false)}'
+			title='${languageUtil.format(request, "no-results-were-found", false)}'
+		/>
+	</div>
+<#else>
+	<div class="c-mb-4 c-mt-4 search-total-label">
+		<#if searchContainer.getTotal() == 1>
+			${languageUtil.format(locale, "x-result-for-x", [searchContainer.getTotal(), "<strong>" + htmlUtil.escape(searchResultsPortletDisplayContext.getKeywords()) + "</strong>"], false)}
+		<#else>
+			${languageUtil.format(locale, "x-results-for-x", [searchContainer.getTotal(), "<strong>" + htmlUtil.escape(searchResultsPortletDisplayContext.getKeywords()) + "</strong>"], false)}
+		</#if>
+	</div>
 
-<div class="display-card">
-	<ul class="card-page">
-		<#if entries?has_content>
+	<div class="display-card">
+		<ul class="card-page">
 			<#list entries as entry>
 				<li class="card-page-item card-page-item-asset">
 					<div class="card card-type-asset file-card">
@@ -43,7 +50,7 @@
 										</h3>
 
 										<#if entry.isCreatorVisible()>
-											<p class="card-subtitle">
+											<p class="card-subtitle text-2">
 												<span class="text-truncate-inline">
 													<span class="text-truncate">
 														${htmlUtil.escape(entry.getCreatorUserName())}
@@ -53,7 +60,7 @@
 										</#if>
 
 										<#if entry.isCreationDateVisible()>
-											<p class="card-subtitle">
+											<p class="card-subtitle text-2">
 												<span class="text-truncate-inline">
 													<span class="text-truncate">
 														${entry.getCreationDateString()}
@@ -63,7 +70,7 @@
 										</#if>
 
 										<#if entry.isModelResourceVisible()>
-											<p class="card-subtitle">
+											<p class="card-subtitle text-2">
 												<span class="text-truncate-inline">
 													<span class="text-truncate">
 														${entry.getModelResource()}
@@ -73,7 +80,7 @@
 										</#if>
 
 										<#if entry.isContentVisible()>
-											<p class="card-description">
+											<p class="c-mt-1 card-description text-2">
 												${entry.getContent()}
 											</p>
 										</#if>
@@ -84,6 +91,14 @@
 					</div>
 				</li>
 			</#list>
-		</#if>
-	</ul>
-</div>
+		</ul>
+	</div>
+
+	<@liferay_aui.form useNamespace=false>
+		<@liferay_ui["search-paginator"]
+			id="${namespace + 'searchContainerTag'}"
+			markupView="lexicon"
+			searchContainer=searchContainer
+		/>
+	</@liferay_aui.form>
+</#if>

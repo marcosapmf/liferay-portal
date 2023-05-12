@@ -14,9 +14,9 @@
 
 package com.liferay.commerce.context;
 
+import com.liferay.account.model.AccountEntry;
 import com.liferay.commerce.account.configuration.CommerceAccountGroupServiceConfiguration;
 import com.liferay.commerce.account.constants.CommerceAccountConstants;
-import com.liferay.commerce.account.model.CommerceAccount;
 import com.liferay.commerce.account.util.CommerceAccountHelper;
 import com.liferay.commerce.currency.exception.NoSuchCurrencyException;
 import com.liferay.commerce.currency.model.CommerceCurrency;
@@ -85,6 +85,18 @@ public class BaseCommerceContextHttp implements CommerceContext {
 	}
 
 	@Override
+	public AccountEntry getAccountEntry() throws PortalException {
+		CommerceChannel commerceChannel = _fetchCommerceChannel();
+
+		if (commerceChannel == null) {
+			return _accountEntry;
+		}
+
+		return _commerceAccountHelper.getCurrentAccountEntry(
+			commerceChannel.getGroupId(), _httpServletRequest);
+	}
+
+	@Override
 	public String[] getAccountEntryAllowedTypes() throws PortalException {
 		if (_accountEntryAllowedTypes != null) {
 			return _accountEntryAllowedTypes;
@@ -97,34 +109,20 @@ public class BaseCommerceContextHttp implements CommerceContext {
 	}
 
 	@Override
-	public CommerceAccount getCommerceAccount() throws PortalException {
-		CommerceChannel commerceChannel = _fetchCommerceChannel();
-
-		if (commerceChannel == null) {
-			return _commerceAccount;
-		}
-
-		_commerceAccount = _commerceAccountHelper.getCurrentCommerceAccount(
-			commerceChannel.getGroupId(), _httpServletRequest);
-
-		return _commerceAccount;
-	}
-
-	@Override
 	public long[] getCommerceAccountGroupIds() throws PortalException {
 		if (_commerceAccountGroupIds != null) {
 			return _commerceAccountGroupIds.clone();
 		}
 
-		CommerceAccount commerceAccount = getCommerceAccount();
+		AccountEntry accountEntry = getAccountEntry();
 
-		if (commerceAccount == null) {
+		if (accountEntry == null) {
 			return new long[0];
 		}
 
 		_commerceAccountGroupIds =
 			_commerceAccountHelper.getCommerceAccountGroupIds(
-				commerceAccount.getCommerceAccountId());
+				accountEntry.getAccountEntryId());
 
 		return _commerceAccountGroupIds.clone();
 	}
@@ -163,14 +161,13 @@ public class BaseCommerceContextHttp implements CommerceContext {
 			commerceChannelId = commerceChannel.getCommerceChannelId();
 		}
 
-		CommerceAccount commerceAccount = getCommerceAccount();
+		AccountEntry accountEntry = getAccountEntry();
 
-		if (commerceAccount != null) {
+		if (accountEntry != null) {
 			CommerceChannelAccountEntryRel commerceChannelAccountEntryRel =
 				_commerceChannelAccountEntryRelLocalService.
 					fetchCommerceChannelAccountEntryRel(
-						commerceAccount.getCommerceAccountId(),
-						commerceChannelId,
+						accountEntry.getAccountEntryId(), commerceChannelId,
 						CommerceChannelAccountEntryRelConstants.TYPE_CURRENCY);
 
 			if (commerceChannelAccountEntryRel != null) {
@@ -201,11 +198,20 @@ public class BaseCommerceContextHttp implements CommerceContext {
 	}
 
 	@Override
-	public CommerceOrder getCommerceOrder() throws PortalException {
-		_commerceOrder = _commerceOrderHttpHelper.getCurrentCommerceOrder(
-			_httpServletRequest);
+	public CommerceOrder getCommerceOrder() {
+		try {
+			_commerceOrder = _commerceOrderHttpHelper.getCurrentCommerceOrder(
+				_httpServletRequest);
 
-		return _commerceOrder;
+			return _commerceOrder;
+		}
+		catch (PortalException portalException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(portalException);
+			}
+
+			return null;
+		}
 	}
 
 	@Override
@@ -265,8 +271,8 @@ public class BaseCommerceContextHttp implements CommerceContext {
 	private static final Log _log = LogFactoryUtil.getLog(
 		BaseCommerceContextHttp.class);
 
+	private AccountEntry _accountEntry;
 	private String[] _accountEntryAllowedTypes;
-	private CommerceAccount _commerceAccount;
 	private long[] _commerceAccountGroupIds;
 	private CommerceAccountGroupServiceConfiguration
 		_commerceAccountGroupServiceConfiguration;

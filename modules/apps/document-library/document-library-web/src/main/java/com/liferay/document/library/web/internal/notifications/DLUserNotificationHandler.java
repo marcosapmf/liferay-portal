@@ -20,12 +20,17 @@ import com.liferay.asset.kernel.model.AssetRendererFactory;
 import com.liferay.document.library.constants.DLPortletKeys;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.language.Language;
+import com.liferay.portal.kernel.model.UserNotificationEvent;
 import com.liferay.portal.kernel.notifications.BaseModelUserNotificationHandler;
 import com.liferay.portal.kernel.notifications.UserNotificationDefinition;
 import com.liferay.portal.kernel.notifications.UserNotificationHandler;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.util.HtmlUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Roberto Díaz
@@ -44,6 +49,7 @@ public class DLUserNotificationHandler
 	@Override
 	protected String getTitle(
 		JSONObject jsonObject, AssetRenderer<?> assetRenderer,
+		UserNotificationEvent userNotificationEvent,
 		ServiceContext serviceContext) {
 
 		String message = StringPool.BLANK;
@@ -66,12 +72,14 @@ public class DLUserNotificationHandler
 					UserNotificationDefinition.
 						NOTIFICATION_TYPE_EXPIRED_ENTRY) {
 
-			message = "x-x-has-expired";
+			return _getFormattedMessage(
+				serviceContext, "x-has-expired", typeName);
 		}
 		else if (notificationType ==
 					UserNotificationDefinition.NOTIFICATION_TYPE_REVIEW_ENTRY) {
 
-			message = "x-review-a-x";
+			return _getFormattedMessage(
+				serviceContext, "x-needs-review", typeName);
 		}
 		else if (notificationType ==
 					UserNotificationDefinition.NOTIFICATION_TYPE_UPDATE_ENTRY) {
@@ -82,5 +90,16 @@ public class DLUserNotificationHandler
 		return getFormattedMessage(
 			jsonObject, serviceContext, message, typeName);
 	}
+
+	private String _getFormattedMessage(
+		ServiceContext serviceContext, String message, String typeName) {
+
+		return _language.format(
+			serviceContext.getLocale(), message,
+			StringUtil.toLowerCase(HtmlUtil.escape(typeName)));
+	}
+
+	@Reference
+	private Language _language;
 
 }

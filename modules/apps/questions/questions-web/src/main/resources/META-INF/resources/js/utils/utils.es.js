@@ -12,7 +12,7 @@
  * details.
  */
 
-import {cancelDebounce, debounce} from 'frontend-js-web';
+import {cancelDebounce, debounce, openToast} from 'frontend-js-web';
 import {useRef} from 'react';
 
 import {client} from './client.es';
@@ -244,4 +244,39 @@ export function getContextLink(url) {
 	return {
 		headers: {Link: encodeURI(link)},
 	};
+}
+
+/**
+ * Assign the properties for error, used by graphql-hooks/APIError.
+ * @param {Object} error
+ * @param {Object} error.fetchError
+ * @param {string?} error.fetchError.message
+ * @param {Object[]} error.graphQLErrors
+ * @param {string} error.graphQLErrors[].message
+ * @param {Object} error.httpError
+ */
+
+export function processGraphQLError(error) {
+	const _error = {
+		message: error.message ?? '',
+		type: 'danger',
+	};
+
+	if (error.fetchError) {
+		_error.message = error.fetchError.message;
+	}
+
+	if (error.graphQLErrors) {
+		for (const graphQLError of error.graphQLErrors) {
+			_error.message += `${graphQLError.message} -`;
+		}
+	}
+
+	if (error.httpError) {
+		console.error('Forbidden ', error.httpError);
+
+		_error.message = Liferay.Language.get('an-unexpected-error-occurred');
+	}
+
+	openToast(_error);
 }

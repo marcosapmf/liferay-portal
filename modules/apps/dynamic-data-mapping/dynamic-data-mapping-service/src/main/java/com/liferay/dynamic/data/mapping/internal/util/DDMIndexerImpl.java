@@ -22,6 +22,7 @@ import com.liferay.dynamic.data.mapping.model.DDMFormFieldType;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.dynamic.data.mapping.model.LocalizedValue;
 import com.liferay.dynamic.data.mapping.service.DDMStructureLocalService;
+import com.liferay.dynamic.data.mapping.storage.DDMFormFieldValue;
 import com.liferay.dynamic.data.mapping.storage.DDMFormValues;
 import com.liferay.dynamic.data.mapping.storage.Field;
 import com.liferay.dynamic.data.mapping.storage.Fields;
@@ -361,7 +362,12 @@ public class DDMIndexerImpl implements DDMIndexer {
 
 		Fields fields = _toFields(ddmStructure, ddmFormValues);
 
-		for (Field field : fields) {
+		Map<String, List<DDMFormFieldValue>> ddmFormFieldValuesMap =
+			ddmFormValues.getDDMFormFieldValuesMap(true);
+
+		for (String key : ddmFormFieldValuesMap.keySet()) {
+			Field field = fields.get(key);
+
 			try {
 				String indexType = ddmStructure.getFieldProperty(
 					field.getName(), "indexType");
@@ -372,7 +378,9 @@ public class DDMIndexerImpl implements DDMIndexer {
 
 				Serializable value = field.getValue(locale);
 
-				if (Validator.isNull(value)) {
+				if ((value == null) ||
+					Validator.isBlank(String.valueOf(value))) {
+
 					continue;
 				}
 
@@ -400,6 +408,10 @@ public class DDMIndexerImpl implements DDMIndexer {
 						String valueString = _getSortableValue(
 							ddmStructure.getDDMFormField(field.getName()),
 							locale, values[i].toString());
+
+						if (Validator.isBlank(valueString)) {
+							continue;
+						}
 
 						_addFieldValue(sb, field.getType(), valueString);
 
@@ -810,7 +822,7 @@ public class DDMIndexerImpl implements DDMIndexer {
 	private String _getSortableValue(
 		DDMFormField ddmFormField, Locale locale, Serializable value) {
 
-		if (Validator.isNull(value)) {
+		if (value == null) {
 			return null;
 		}
 

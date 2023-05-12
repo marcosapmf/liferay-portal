@@ -62,7 +62,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 
 /**
  * @author Julio Camarero
@@ -83,13 +82,39 @@ public class ExpressionVisitorImpl implements ExpressionVisitor<Object> {
 	public Filter visitBinaryExpressionOperation(
 		BinaryExpression.Operation operation, Object left, Object right) {
 
-		Optional<Filter> filterOptional = _getFilterOptional(
-			operation, left, right, _locale);
+		Filter filter = null;
 
-		return filterOptional.orElseThrow(
-			() -> new UnsupportedOperationException(
+		if (Objects.equals(BinaryExpression.Operation.AND, operation)) {
+			filter = _getANDFilter((Filter)left, (Filter)right);
+		}
+		else if (Objects.equals(BinaryExpression.Operation.EQ, operation)) {
+			filter = _getEQFilter((EntityField)left, right, _locale);
+		}
+		else if (Objects.equals(BinaryExpression.Operation.GE, operation)) {
+			filter = _getGEFilter((EntityField)left, right, _locale);
+		}
+		else if (Objects.equals(BinaryExpression.Operation.GT, operation)) {
+			filter = _getGTFilter((EntityField)left, right, _locale);
+		}
+		else if (Objects.equals(BinaryExpression.Operation.LE, operation)) {
+			filter = _getLEFilter((EntityField)left, right, _locale);
+		}
+		else if (Objects.equals(BinaryExpression.Operation.LT, operation)) {
+			filter = _getLTFilter((EntityField)left, right, _locale);
+		}
+		else if (Objects.equals(BinaryExpression.Operation.NE, operation)) {
+			filter = _getNEFilter((EntityField)left, right, _locale);
+		}
+		else if (Objects.equals(BinaryExpression.Operation.OR, operation)) {
+			filter = _getORFilter((Filter)left, (Filter)right);
+		}
+		else {
+			throw new UnsupportedOperationException(
 				"Unsupported method visitBinaryExpressionOperation with " +
-					"operation " + operation));
+					"operation " + operation);
+		}
+
+		return filter;
 	}
 
 	@Override
@@ -319,43 +344,6 @@ public class ExpressionVisitorImpl implements ExpressionVisitor<Object> {
 				entityField.getFilterableName(locale),
 				fieldName -> new TermQueryImpl(
 					fieldName, entityField.getFilterableValue(fieldValue))));
-	}
-
-	private Optional<Filter> _getFilterOptional(
-		BinaryExpression.Operation operation, Object left, Object right,
-		Locale locale) {
-
-		Filter filter = null;
-
-		if (Objects.equals(BinaryExpression.Operation.AND, operation)) {
-			filter = _getANDFilter((Filter)left, (Filter)right);
-		}
-		else if (Objects.equals(BinaryExpression.Operation.EQ, operation)) {
-			filter = _getEQFilter((EntityField)left, right, locale);
-		}
-		else if (Objects.equals(BinaryExpression.Operation.GE, operation)) {
-			filter = _getGEFilter((EntityField)left, right, locale);
-		}
-		else if (Objects.equals(BinaryExpression.Operation.GT, operation)) {
-			filter = _getGTFilter((EntityField)left, right, locale);
-		}
-		else if (Objects.equals(BinaryExpression.Operation.LE, operation)) {
-			filter = _getLEFilter((EntityField)left, right, locale);
-		}
-		else if (Objects.equals(BinaryExpression.Operation.LT, operation)) {
-			filter = _getLTFilter((EntityField)left, right, locale);
-		}
-		else if (Objects.equals(BinaryExpression.Operation.NE, operation)) {
-			filter = _getNEFilter((EntityField)left, right, locale);
-		}
-		else if (Objects.equals(BinaryExpression.Operation.OR, operation)) {
-			filter = _getORFilter((Filter)left, (Filter)right);
-		}
-		else {
-			return Optional.empty();
-		}
-
-		return Optional.of(filter);
 	}
 
 	private Filter _getGEFilter(

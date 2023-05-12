@@ -2307,7 +2307,8 @@ public class CPTaxCategoryPersistenceImpl
 				if (ercCPTaxCategory != null) {
 					throw new DuplicateCPTaxCategoryExternalReferenceCodeException(
 						"Duplicate cp tax category with external reference code " +
-							cpTaxCategory.getExternalReferenceCode());
+							cpTaxCategory.getExternalReferenceCode() +
+								" and company " + cpTaxCategory.getCompanyId());
 				}
 			}
 			else {
@@ -2317,7 +2318,8 @@ public class CPTaxCategoryPersistenceImpl
 
 					throw new DuplicateCPTaxCategoryExternalReferenceCodeException(
 						"Duplicate cp tax category with external reference code " +
-							cpTaxCategory.getExternalReferenceCode());
+							cpTaxCategory.getExternalReferenceCode() +
+								" and company " + cpTaxCategory.getCompanyId());
 				}
 			}
 		}

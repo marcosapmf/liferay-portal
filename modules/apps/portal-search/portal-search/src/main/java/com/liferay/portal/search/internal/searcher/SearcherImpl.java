@@ -16,15 +16,20 @@ package com.liferay.portal.search.internal.searcher;
 
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMap;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMapFactory;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.search.Hits;
+import com.liferay.portal.kernel.search.HitsImpl;
 import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.search.IndexerRegistry;
 import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.search.SearchException;
 import com.liferay.portal.kernel.search.facet.faceted.searcher.FacetedSearcher;
 import com.liferay.portal.kernel.search.facet.faceted.searcher.FacetedSearcherManager;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ListUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.search.constants.SearchContextAttributes;
 import com.liferay.portal.search.internal.searcher.helper.IndexSearcherHelper;
 import com.liferay.portal.search.legacy.searcher.SearchResponseBuilderFactory;
 import com.liferay.portal.search.searcher.SearchRequest;
@@ -37,7 +42,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.function.Function;
-import java.util.stream.Stream;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.service.component.annotations.Activate;
@@ -76,14 +80,23 @@ public class SearcherImpl implements Searcher {
 		SearchRequestImpl searchRequestImpl = (SearchRequestImpl)searchRequest;
 
 		SearchResponseBuilder searchResponseBuilder =
-			searchResponseBuilderFactory.builder(
+			_searchResponseBuilderFactory.builder(
 				searchRequestImpl.getSearchContext());
 
-		_smartSearch(searchRequestImpl, searchResponseBuilder);
+		SearchContext searchContext = searchRequestImpl.getSearchContext();
+
+		if (Validator.isBlank(StringUtil.trim(searchContext.getKeywords())) &&
+			!GetterUtil.getBoolean(
+				searchContext.getAttribute(
+					SearchContextAttributes.ATTRIBUTE_KEY_EMPTY_SEARCH))) {
+
+			searchResponseBuilder.hits(new HitsImpl());
+		}
+		else {
+			_smartSearch(searchRequestImpl, searchResponseBuilder);
+		}
 
 		_federatedSearches(searchRequestImpl, searchResponseBuilder);
-
-		SearchContext searchContext = searchRequestImpl.getSearchContext();
 
 		String exceptionMessage = (String)searchContext.getAttribute(
 			"search.exception.message");
@@ -123,13 +136,7 @@ public class SearcherImpl implements Searcher {
 	protected FacetedSearcherManager facetedSearcherManager;
 
 	@Reference
-	protected IndexerRegistry indexerRegistry;
-
-	@Reference
 	protected IndexSearcherHelper indexSearcherHelper;
-
-	@Reference
-	protected SearchResponseBuilderFactory searchResponseBuilderFactory;
 
 	private void _federatedSearches(
 		SearchRequest searchRequest,
@@ -144,7 +151,7 @@ public class SearcherImpl implements Searcher {
 		}
 	}
 
-	private Stream<Function<SearchRequest, SearchRequest>> _getContributors(
+	private Collection<Function<SearchRequest, SearchRequest>> _getContributors(
 		SearchRequest searchRequest) {
 
 		List<String> contributors = searchRequest.getIncludeContributors();
@@ -161,9 +168,8 @@ public class SearcherImpl implements Searcher {
 			collection.addAll(_serviceTrackerMap.getService(contributor));
 		}
 
-		Stream<SearchRequestContributor> stream = collection.stream();
-
-		return stream.map(
+		return TransformUtil.transform(
+			collection,
 			searchRequestContributor -> searchRequestContributor::contribute);
 	}
 
@@ -256,7 +262,8 @@ public class SearcherImpl implements Searcher {
 		String singleIndexerClassName, SearchRequestImpl searchRequestImpl,
 		SearchResponseBuilder searchResponseBuilder) {
 
-		Indexer<?> indexer = indexerRegistry.getIndexer(singleIndexerClassName);
+		Indexer<?> indexer = _indexerRegistry.getIndexer(
+			singleIndexerClassName);
 
 		SearchContext searchContext = searchRequestImpl.getSearchContext();
 
@@ -285,15 +292,14 @@ public class SearcherImpl implements Searcher {
 		}
 	}
 
-	private <T> T _transform(T t, Stream<Function<T, T>> stream) {
-		return stream.reduce(
-			(beforeFunction, afterFunction) -> beforeFunction.andThen(
-				afterFunction)
-		).orElse(
-			Function.identity()
-		).apply(
-			t
-		);
+	private <T> T _transform(T t, Collection<Function<T, T>> collection) {
+		Function<T, T> function = Function.identity();
+
+		for (Function<T, T> curFunction : collection) {
+			function = function.andThen(curFunction);
+		}
+
+		return function.apply(t);
 	}
 
 	private SearchRequest _transformSearchRequest(SearchRequest searchRequest) {
@@ -311,6 +317,12 @@ public class SearcherImpl implements Searcher {
 
 		return new RuntimeException(searchException);
 	}
+
+	@Reference
+	private IndexerRegistry _indexerRegistry;
+
+	@Reference
+	private SearchResponseBuilderFactory _searchResponseBuilderFactory;
 
 	private ServiceTrackerMap<String, List<SearchRequestContributor>>
 		_serviceTrackerMap;

@@ -16,16 +16,18 @@ package com.liferay.object.web.internal.object.definitions.display.context;
 
 import com.liferay.frontend.data.set.model.FDSActionDropdownItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
+import com.liferay.notification.service.NotificationTemplateLocalService;
 import com.liferay.object.action.executor.ObjectActionExecutor;
 import com.liferay.object.action.executor.ObjectActionExecutorRegistry;
 import com.liferay.object.action.trigger.ObjectActionTrigger;
 import com.liferay.object.action.trigger.ObjectActionTriggerRegistry;
 import com.liferay.object.admin.rest.dto.v1_0.util.ObjectActionUtil;
 import com.liferay.object.constants.ObjectActionTriggerConstants;
+import com.liferay.object.constants.ObjectFieldConstants;
+import com.liferay.object.constants.ObjectWebKeys;
 import com.liferay.object.model.ObjectAction;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.service.ObjectDefinitionLocalService;
-import com.liferay.object.web.internal.constants.ObjectWebKeys;
 import com.liferay.object.web.internal.object.definitions.display.context.util.ObjectCodeEditorUtil;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.string.StringPool;
@@ -54,6 +56,7 @@ public class ObjectDefinitionsActionsDisplayContext
 
 	public ObjectDefinitionsActionsDisplayContext(
 		HttpServletRequest httpServletRequest, JSONFactory jsonFactory,
+		NotificationTemplateLocalService notificationTemplateLocalService,
 		ObjectActionExecutorRegistry objectActionExecutorRegistry,
 		ObjectActionTriggerRegistry objectActionTriggerRegistry,
 		ObjectDefinitionLocalService objectDefinitionLocalService,
@@ -63,6 +66,7 @@ public class ObjectDefinitionsActionsDisplayContext
 		super(httpServletRequest, objectDefinitionModelResourcePermission);
 
 		_jsonFactory = jsonFactory;
+		_notificationTemplateLocalService = notificationTemplateLocalService;
 		_objectActionExecutorRegistry = objectActionExecutorRegistry;
 		_objectActionTriggerRegistry = objectActionTriggerRegistry;
 		_objectDefinitionLocalService = objectDefinitionLocalService;
@@ -101,8 +105,10 @@ public class ObjectDefinitionsActionsDisplayContext
 
 	public List<Map<String, Object>> getObjectActionCodeEditorElements() {
 		return ObjectCodeEditorUtil.getCodeEditorElements(
-			false, true, true, objectRequestHelper.getLocale(),
-			getObjectDefinitionId());
+			true, true, objectRequestHelper.getLocale(),
+			getObjectDefinitionId(),
+			objectField -> !objectField.compareBusinessType(
+				ObjectFieldConstants.BUSINESS_TYPE_AGGREGATION));
 	}
 
 	public ObjectActionExecutor getObjectActionExecutor() {
@@ -116,8 +122,12 @@ public class ObjectDefinitionsActionsDisplayContext
 		JSONArray objectActionExecutorsJSONArray =
 			_jsonFactory.createJSONArray();
 
+		ObjectDefinition objectDefinition = getObjectDefinition();
+
 		for (ObjectActionExecutor objectActionExecutor :
-				_objectActionExecutorRegistry.getObjectActionExecutors()) {
+				_objectActionExecutorRegistry.getObjectActionExecutors(
+					objectDefinition.getCompanyId(),
+					objectDefinition.getName())) {
 
 			objectActionExecutorsJSONArray.put(
 				JSONUtil.put(
@@ -174,6 +184,7 @@ public class ObjectDefinitionsActionsDisplayContext
 		).put(
 			"parameters",
 			ObjectActionUtil.toParameters(
+				_notificationTemplateLocalService,
 				_objectDefinitionLocalService,
 				objectAction.getParametersUnicodeProperties())
 		);
@@ -192,7 +203,7 @@ public class ObjectDefinitionsActionsDisplayContext
 			if (Objects.equals(
 					objectActionTrigger.getKey(),
 					ObjectActionTriggerConstants.KEY_STANDALONE) &&
-				objectDefinition.isSystem()) {
+				objectDefinition.isUnmodifiableSystemObject()) {
 
 				continue;
 			}
@@ -271,6 +282,8 @@ public class ObjectDefinitionsActionsDisplayContext
 	}
 
 	private final JSONFactory _jsonFactory;
+	private final NotificationTemplateLocalService
+		_notificationTemplateLocalService;
 	private final ObjectActionExecutorRegistry _objectActionExecutorRegistry;
 	private final ObjectActionTriggerRegistry _objectActionTriggerRegistry;
 	private final ObjectDefinitionLocalService _objectDefinitionLocalService;

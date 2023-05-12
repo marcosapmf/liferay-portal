@@ -20,7 +20,6 @@
 
 <%@ taglib uri="http://liferay.com/tld/asset" prefix="liferay-asset" %><%@
 taglib uri="http://liferay.com/tld/aui" prefix="aui" %><%@
-taglib uri="http://liferay.com/tld/change-tracking" prefix="liferay-change-tracking" %><%@
 taglib uri="http://liferay.com/tld/clay" prefix="clay" %><%@
 taglib uri="http://liferay.com/tld/data-engine" prefix="liferay-data-engine" %><%@
 taglib uri="http://liferay.com/tld/expando" prefix="liferay-expando" %><%@
@@ -28,6 +27,7 @@ taglib uri="http://liferay.com/tld/friendly-url" prefix="liferay-friendly-url" %
 taglib uri="http://liferay.com/tld/frontend" prefix="liferay-frontend" %><%@
 taglib uri="http://liferay.com/tld/journal" prefix="liferay-journal" %><%@
 taglib uri="http://liferay.com/tld/layout" prefix="liferay-layout" %><%@
+taglib uri="http://liferay.com/tld/portal-workflow" prefix="liferay-portal-workflow" %><%@
 taglib uri="http://liferay.com/tld/portlet" prefix="liferay-portlet" %><%@
 taglib uri="http://liferay.com/tld/react" prefix="react" %><%@
 taglib uri="http://liferay.com/tld/site-navigation" prefix="liferay-site-navigation" %><%@
@@ -54,7 +54,6 @@ page import="com.liferay.dynamic.data.mapping.exception.RequiredTemplateExceptio
 page import="com.liferay.dynamic.data.mapping.exception.StorageFieldRequiredException" %><%@
 page import="com.liferay.dynamic.data.mapping.exception.StructureNameException" %><%@
 page import="com.liferay.dynamic.data.mapping.exception.TemplateNameException" %><%@
-page import="com.liferay.dynamic.data.mapping.exception.TemplateScriptException" %><%@
 page import="com.liferay.dynamic.data.mapping.exception.TemplateSmallImageContentException" %><%@
 page import="com.liferay.dynamic.data.mapping.exception.TemplateSmallImageNameException" %><%@
 page import="com.liferay.dynamic.data.mapping.exception.TemplateSmallImageSizeException" %><%@
@@ -75,7 +74,6 @@ page import="com.liferay.journal.constants.JournalArticleConstants" %><%@
 page import="com.liferay.journal.constants.JournalConstants" %><%@
 page import="com.liferay.journal.constants.JournalFeedConstants" %><%@
 page import="com.liferay.journal.constants.JournalFolderConstants" %><%@
-page import="com.liferay.journal.constants.JournalPortletKeys" %><%@
 page import="com.liferay.journal.constants.JournalWebKeys" %><%@
 page import="com.liferay.journal.exception.ArticleContentException" %><%@
 page import="com.liferay.journal.exception.ArticleContentSizeException" %><%@
@@ -114,6 +112,7 @@ page import="com.liferay.journal.web.internal.asset.model.JournalArticleAssetRen
 page import="com.liferay.journal.web.internal.configuration.JournalWebConfiguration" %><%@
 page import="com.liferay.journal.web.internal.constants.JournalWebConstants" %><%@
 page import="com.liferay.journal.web.internal.dao.search.JournalResultRowSplitter" %><%@
+page import="com.liferay.journal.web.internal.display.context.EditJournalFeedDisplayContext" %><%@
 page import="com.liferay.journal.web.internal.display.context.JournalArticleCommentsManagementToolbarDisplayContext" %><%@
 page import="com.liferay.journal.web.internal.display.context.JournalArticleVersionsManagementToolbarDisplayContext" %><%@
 page import="com.liferay.journal.web.internal.display.context.JournalDDMStructuresDisplayContext" %><%@
@@ -142,7 +141,6 @@ page import="com.liferay.journal.web.internal.frontend.taglib.clay.servlet.tagli
 page import="com.liferay.journal.web.internal.frontend.taglib.clay.servlet.taglib.JournalDDMTemplateVerticalCard" %><%@
 page import="com.liferay.journal.web.internal.frontend.taglib.clay.servlet.taglib.JournalFolderHorizontalCard" %><%@
 page import="com.liferay.journal.web.internal.portlet.JournalPortlet" %><%@
-page import="com.liferay.journal.web.internal.portlet.action.ActionUtil" %><%@
 page import="com.liferay.journal.web.internal.security.permission.resource.DDMStructurePermission" %><%@
 page import="com.liferay.journal.web.internal.security.permission.resource.DDMTemplatePermission" %><%@
 page import="com.liferay.journal.web.internal.security.permission.resource.JournalArticlePermission" %><%@
@@ -151,7 +149,6 @@ page import="com.liferay.journal.web.internal.security.permission.resource.Journ
 page import="com.liferay.journal.web.internal.security.permission.resource.JournalPermission" %><%@
 page import="com.liferay.journal.web.internal.servlet.taglib.util.DDMStructureActionDropdownItemsProvider" %><%@
 page import="com.liferay.journal.web.internal.servlet.taglib.util.JournalFeedActionDropdownItemsProvider" %><%@
-page import="com.liferay.journal.web.internal.util.JournalHelperUtil" %><%@
 page import="com.liferay.journal.web.internal.util.JournalPortletUtil" %><%@
 page import="com.liferay.journal.web.internal.util.JournalUtil" %><%@
 page import="com.liferay.petra.string.StringPool" %><%@
@@ -166,7 +163,6 @@ page import="com.liferay.portal.kernel.model.*" %><%@
 page import="com.liferay.portal.kernel.model.ModelHintsUtil" %><%@
 page import="com.liferay.portal.kernel.model.impl.*" %><%@
 page import="com.liferay.portal.kernel.portlet.LiferayWindowState" %><%@
-page import="com.liferay.portal.kernel.portlet.PortletURLFactoryUtil" %><%@
 page import="com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder" %><%@
 page import="com.liferay.portal.kernel.security.auth.PrincipalException" %><%@
 page import="com.liferay.portal.kernel.security.permission.ActionKeys" %><%@
@@ -189,7 +185,6 @@ page import="com.liferay.portal.kernel.util.LocaleUtil" %><%@
 page import="com.liferay.portal.kernel.util.MapUtil" %><%@
 page import="com.liferay.portal.kernel.util.ParamUtil" %><%@
 page import="com.liferay.portal.kernel.util.PortalUtil" %><%@
-page import="com.liferay.portal.kernel.util.PropsUtil" %><%@
 page import="com.liferay.portal.kernel.util.SetUtil" %><%@
 page import="com.liferay.portal.kernel.util.StringUtil" %><%@
 page import="com.liferay.portal.kernel.util.TextFormatter" %><%@
@@ -220,9 +215,7 @@ page import="java.util.Objects" %><%@
 page import="java.util.Set" %>
 
 <%@ page import="javax.portlet.ActionRequest" %><%@
-page import="javax.portlet.PortletRequest" %><%@
 page import="javax.portlet.PortletURL" %><%@
-page import="javax.portlet.ResourceURL" %><%@
 page import="javax.portlet.WindowState" %>
 
 <liferay-frontend:defineObjects />

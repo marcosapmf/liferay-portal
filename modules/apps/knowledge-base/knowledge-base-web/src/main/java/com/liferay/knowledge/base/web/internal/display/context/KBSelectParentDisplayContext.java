@@ -63,7 +63,7 @@ public class KBSelectParentDisplayContext {
 		_liferayPortletResponse = liferayPortletResponse;
 		_renderRequest = renderRequest;
 
-		_themeDisplay = (ThemeDisplay)_httpServletRequest.getAttribute(
+		_themeDisplay = (ThemeDisplay)httpServletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
 		_initParentData();
@@ -91,12 +91,11 @@ public class KBSelectParentDisplayContext {
 
 			return kbFolder.getName();
 		}
-		else {
-			KBArticle kbArticle = KBArticleServiceUtil.getLatestKBArticle(
-				resourcePrimKey, WorkflowConstants.STATUS_APPROVED);
 
-			return kbArticle.getTitle();
-		}
+		KBArticle kbArticle = KBArticleServiceUtil.getLatestKBArticle(
+			resourcePrimKey, WorkflowConstants.STATUS_APPROVED);
+
+		return kbArticle.getTitle();
 	}
 
 	public long getResourceClassNameId() {

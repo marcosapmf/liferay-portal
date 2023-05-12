@@ -27,6 +27,7 @@ import com.liferay.content.dashboard.item.action.exception.ContentDashboardItemV
 import com.liferay.content.dashboard.item.action.provider.ContentDashboardItemActionProvider;
 import com.liferay.content.dashboard.item.action.provider.ContentDashboardItemVersionActionProvider;
 import com.liferay.content.dashboard.item.type.ContentDashboardItemSubtype;
+import com.liferay.info.field.InfoFieldValue;
 import com.liferay.info.item.InfoItemClassDetails;
 import com.liferay.info.item.InfoItemFieldValues;
 import com.liferay.info.item.InfoItemReference;
@@ -35,6 +36,7 @@ import com.liferay.journal.constants.JournalPortletKeys;
 import com.liferay.journal.model.JournalArticle;
 import com.liferay.journal.service.JournalArticleService;
 import com.liferay.journal.util.comparator.ArticleVersionComparator;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -63,9 +65,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
-import java.util.Optional;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.portlet.PortletRequest;
 import javax.portlet.PortletResponse;
@@ -177,14 +176,10 @@ public class JournalArticleContentDashboardItem
 
 	@Override
 	public List<AssetCategory> getAssetCategories(long assetVocabularyId) {
-		Stream<AssetCategory> stream = _assetCategories.stream();
-
-		return stream.filter(
+		return ListUtil.filter(
+			_assetCategories,
 			assetCategory ->
-				assetCategory.getVocabularyId() == assetVocabularyId
-		).collect(
-			Collectors.toList()
-		);
+				assetCategory.getVocabularyId() == assetVocabularyId);
 	}
 
 	@Override
@@ -194,13 +189,9 @@ public class JournalArticleContentDashboardItem
 
 	@Override
 	public List<Locale> getAvailableLocales() {
-		return Stream.of(
-			_journalArticle.getAvailableLanguageIds()
-		).map(
-			LocaleUtil::fromLanguageId
-		).collect(
-			Collectors.toList()
-		);
+		return TransformUtil.transformToList(
+			_journalArticle.getAvailableLanguageIds(),
+			LocaleUtil::fromLanguageId);
 	}
 
 	@Override
@@ -208,22 +199,15 @@ public class JournalArticleContentDashboardItem
 		HttpServletRequest httpServletRequest,
 		ContentDashboardItemAction.Type... types) {
 
-		List<ContentDashboardItemActionProvider>
-			contentDashboardItemActionProviders =
-				_contentDashboardItemActionProviderRegistry.
-					getContentDashboardItemActionProviders(
-						JournalArticle.class.getName(), types);
-
-		Stream<ContentDashboardItemActionProvider> stream =
-			contentDashboardItemActionProviders.stream();
-
-		return stream.map(
+		return TransformUtil.transform(
+			_contentDashboardItemActionProviderRegistry.
+				getContentDashboardItemActionProviders(
+					JournalArticle.class.getName(), types),
 			contentDashboardItemActionProvider -> {
 				try {
-					return Optional.ofNullable(
-						contentDashboardItemActionProvider.
-							getContentDashboardItemAction(
-								_journalArticle, httpServletRequest));
+					return contentDashboardItemActionProvider.
+						getContentDashboardItemAction(
+							_journalArticle, httpServletRequest);
 				}
 				catch (ContentDashboardItemActionException
 							contentDashboardItemActionException) {
@@ -231,15 +215,8 @@ public class JournalArticleContentDashboardItem
 					_log.error(contentDashboardItemActionException);
 				}
 
-				return Optional.<ContentDashboardItemAction>empty();
-			}
-		).filter(
-			Optional::isPresent
-		).map(
-			Optional::get
-		).collect(
-			Collectors.toList()
-		);
+				return null;
+			});
 	}
 
 	@Override
@@ -271,51 +248,48 @@ public class JournalArticleContentDashboardItem
 					WorkflowConstants.getStatusLabel(
 						WorkflowConstants.STATUS_DRAFT)))) {
 
-			Optional<ContentDashboardItemActionProvider>
-				contentDashboardItemActionProviderOptional =
+			ContentDashboardItemActionProvider
+				contentDashboardItemActionProvider =
 					_contentDashboardItemActionProviderRegistry.
-						getContentDashboardItemActionProviderOptional(
+						getContentDashboardItemActionProvider(
 							JournalArticle.class.getName(),
 							ContentDashboardItemAction.Type.EDIT);
 
-			return contentDashboardItemActionProviderOptional.map(
-				contentDashboardItemActionProvider ->
-					_toContentDashboardItemAction(
-						contentDashboardItemActionProvider, httpServletRequest)
-			).orElse(
-				null
-			);
+			if (contentDashboardItemActionProvider == null) {
+				return null;
+			}
+
+			ContentDashboardItemAction contentDashboardItemAction =
+				_toContentDashboardItemAction(
+					contentDashboardItemActionProvider, httpServletRequest);
+
+			if (contentDashboardItemAction == null) {
+				return null;
+			}
+
+			return contentDashboardItemAction;
 		}
 
-		Optional<ContentDashboardItemActionProvider>
-			viewContentDashboardItemActionProviderOptional =
+		ContentDashboardItemActionProvider
+			viewContentDashboardItemActionProvider =
 				_contentDashboardItemActionProviderRegistry.
-					getContentDashboardItemActionProviderOptional(
+					getContentDashboardItemActionProvider(
 						JournalArticle.class.getName(),
 						ContentDashboardItemAction.Type.VIEW);
 
-		return viewContentDashboardItemActionProviderOptional.map(
-			contentDashboardItemActionProvider -> _toContentDashboardItemAction(
-				contentDashboardItemActionProvider, httpServletRequest)
-		).orElseGet(
-			() -> {
-				Optional<ContentDashboardItemActionProvider>
-					editContentDashboardItemActionProviderOptional =
-						_contentDashboardItemActionProviderRegistry.
-							getContentDashboardItemActionProviderOptional(
-								JournalArticle.class.getName(),
-								ContentDashboardItemAction.Type.EDIT);
+		if (viewContentDashboardItemActionProvider == null) {
+			return _getContentDashboardItemAction(httpServletRequest);
+		}
 
-				return editContentDashboardItemActionProviderOptional.map(
-					contentDashboardItemActionProvider ->
-						_toContentDashboardItemAction(
-							contentDashboardItemActionProvider,
-							httpServletRequest)
-				).orElse(
-					null
-				);
-			}
-		);
+		ContentDashboardItemAction contentDashboardItemAction =
+			_toContentDashboardItemAction(
+				viewContentDashboardItemActionProvider, httpServletRequest);
+
+		if (contentDashboardItemAction == null) {
+			return _getContentDashboardItemAction(httpServletRequest);
+		}
+
+		return contentDashboardItemAction;
 	}
 
 	@Override
@@ -330,6 +304,11 @@ public class JournalArticleContentDashboardItem
 	}
 
 	@Override
+	public long getId() {
+		return _journalArticle.getResourcePrimKey();
+	}
+
+	@Override
 	public InfoItemReference getInfoItemReference() {
 		return new InfoItemReference(
 			JournalArticle.class.getName(),
@@ -340,18 +319,27 @@ public class JournalArticleContentDashboardItem
 	public List<ContentDashboardItemVersion>
 		getLatestContentDashboardItemVersions(Locale locale) {
 
-		return Stream.of(
-			_toVersionOptional(_journalArticle, locale),
-			_toVersionOptional(_latestApprovedJournalArticle, locale)
-		).filter(
-			Optional::isPresent
-		).map(
-			Optional::get
-		).sorted(
-			Comparator.comparing(ContentDashboardItemVersion::getVersion)
-		).collect(
-			Collectors.toList()
-		);
+		List<ContentDashboardItemVersion> contentDashboardItemVersions =
+			new ArrayList<>();
+
+		ContentDashboardItemVersion contentDashboardItemVersion = _toVersion(
+			_journalArticle, locale);
+
+		if (contentDashboardItemVersion != null) {
+			contentDashboardItemVersions.add(contentDashboardItemVersion);
+		}
+
+		contentDashboardItemVersion = _toVersion(
+			_latestApprovedJournalArticle, locale);
+
+		if (contentDashboardItemVersion != null) {
+			contentDashboardItemVersions.add(contentDashboardItemVersion);
+		}
+
+		contentDashboardItemVersions.sort(
+			Comparator.comparing(ContentDashboardItemVersion::getVersion));
+
+		return contentDashboardItemVersions;
 	}
 
 	@Override
@@ -360,27 +348,30 @@ public class JournalArticleContentDashboardItem
 	}
 
 	@Override
-	public String getScopeName(Locale locale) {
-		return Optional.ofNullable(
-			_group
-		).map(
-			group -> {
-				try {
-					return Optional.ofNullable(
-						group.getDescriptiveName(locale)
-					).orElseGet(
-						() -> group.getName(locale)
-					);
-				}
-				catch (PortalException portalException) {
-					_log.error(portalException);
+	public Date getReviewDate() {
+		return _journalArticle.getReviewDate();
+	}
 
-					return group.getName(locale);
-				}
-			}
-		).orElse(
-			StringPool.BLANK
-		);
+	@Override
+	public String getScopeName(Locale locale) {
+		if (_group == null) {
+			return StringPool.BLANK;
+		}
+
+		String scopeName = null;
+
+		try {
+			scopeName = _group.getDescriptiveName(locale);
+		}
+		catch (PortalException portalException) {
+			_log.error(portalException);
+		}
+
+		if (scopeName == null) {
+			return _group.getName(locale);
+		}
+
+		return scopeName;
 	}
 
 	@Override
@@ -459,20 +450,43 @@ public class JournalArticleContentDashboardItem
 			return false;
 		}
 
-		Optional<ContentDashboardItemActionProvider>
-			contentDashboardItemActionProviderOptional =
-				_contentDashboardItemActionProviderRegistry.
-					getContentDashboardItemActionProviderOptional(
-						JournalArticle.class.getName(),
-						ContentDashboardItemAction.Type.VIEW);
+		ContentDashboardItemActionProvider contentDashboardItemActionProvider =
+			_contentDashboardItemActionProviderRegistry.
+				getContentDashboardItemActionProvider(
+					JournalArticle.class.getName(),
+					ContentDashboardItemAction.Type.VIEW);
 
-		return contentDashboardItemActionProviderOptional.map(
-			contentDashboardItemActionProvider ->
-				contentDashboardItemActionProvider.isShow(
-					_journalArticle, httpServletRequest)
-		).orElse(
-			false
-		);
+		if (contentDashboardItemActionProvider == null) {
+			return false;
+		}
+
+		return contentDashboardItemActionProvider.isShow(
+			_journalArticle, httpServletRequest);
+	}
+
+	private ContentDashboardItemAction _getContentDashboardItemAction(
+		HttpServletRequest httpServletRequest) {
+
+		ContentDashboardItemActionProvider
+			editContentDashboardItemActionProvider =
+				_contentDashboardItemActionProviderRegistry.
+					getContentDashboardItemActionProvider(
+						JournalArticle.class.getName(),
+						ContentDashboardItemAction.Type.EDIT);
+
+		if (editContentDashboardItemActionProvider == null) {
+			return null;
+		}
+
+		ContentDashboardItemAction contentDashboardItemAction =
+			_toContentDashboardItemAction(
+				editContentDashboardItemActionProvider, httpServletRequest);
+
+		if (contentDashboardItemAction == null) {
+			return null;
+		}
+
+		return contentDashboardItemAction;
 	}
 
 	private List<ContentDashboardItemVersionAction>
@@ -536,13 +550,20 @@ public class JournalArticleContentDashboardItem
 			_infoItemFieldValuesProvider.getInfoItemFieldValues(
 				_journalArticle);
 
-		return Optional.ofNullable(
-			infoItemFieldValues.getInfoFieldValue(infoFieldName)
-		).map(
-			infoFieldValue -> infoFieldValue.getValue(locale)
-		).orElse(
-			StringPool.BLANK
-		).toString();
+		InfoFieldValue<Object> infoFieldValue =
+			infoItemFieldValues.getInfoFieldValue(infoFieldName);
+
+		if (infoFieldValue == null) {
+			return StringPool.BLANK;
+		}
+
+		Object value = infoFieldValue.getValue(locale);
+
+		if (value == null) {
+			return StringPool.BLANK;
+		}
+
+		return value.toString();
 	}
 
 	private ContentDashboardItemAction _toContentDashboardItemAction(
@@ -563,23 +584,21 @@ public class JournalArticleContentDashboardItem
 		}
 	}
 
-	private Optional<ContentDashboardItemVersion> _toVersionOptional(
+	private ContentDashboardItemVersion _toVersion(
 		JournalArticle journalArticle, Locale locale) {
 
-		return Optional.ofNullable(
-			journalArticle
-		).map(
-			curJournalArticle -> new ContentDashboardItemVersion(
-				null, null, curJournalArticle.getCreateDate(),
-				_language.get(
-					locale,
-					WorkflowConstants.getStatusLabel(
-						curJournalArticle.getStatus())),
-				null,
-				WorkflowConstants.getStatusStyle(curJournalArticle.getStatus()),
-				curJournalArticle.getUserName(),
-				String.valueOf(curJournalArticle.getVersion()))
-		);
+		if (journalArticle == null) {
+			return null;
+		}
+
+		return new ContentDashboardItemVersion(
+			null, null, journalArticle.getCreateDate(),
+			_language.get(
+				locale,
+				WorkflowConstants.getStatusLabel(journalArticle.getStatus())),
+			null, WorkflowConstants.getStatusStyle(journalArticle.getStatus()),
+			journalArticle.getUserName(),
+			String.valueOf(journalArticle.getVersion()));
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

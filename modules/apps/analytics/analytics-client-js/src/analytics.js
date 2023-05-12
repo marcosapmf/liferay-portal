@@ -12,7 +12,7 @@
  * details.
  */
 
-import uuidv4 from 'uuid/v4';
+import {v4 as uuidv4} from 'uuid';
 
 import middlewares from './middlewares/defaults';
 import defaultPlugins from './plugins/defaults';
@@ -38,7 +38,7 @@ import {
 import {getContexts, setContexts} from './utils/contexts';
 import {normalizeEvent} from './utils/events';
 import hash from './utils/hash';
-import {getItem, setItem} from './utils/storage';
+import {getItem, removeItem, setItem} from './utils/storage';
 import {upgradeStorage} from './utils/storage_version';
 import {isValidEvent} from './utils/validators';
 
@@ -412,7 +412,7 @@ class Analytics {
 		setItem(STORAGE_KEY_USER_ID, userId);
 		this._setCookie(STORAGE_KEY_USER_ID, userId);
 
-		localStorage.removeItem(STORAGE_KEY_IDENTITY);
+		removeItem(STORAGE_KEY_IDENTITY);
 
 		return userId;
 	}

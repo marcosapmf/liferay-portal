@@ -33,7 +33,7 @@ public class LiferayBuildLoggerInstallerTask extends Task {
 		Project currentProject = getProject();
 
 		try {
-			synchronized(_listenersLockField.get(currentProject)) {
+			synchronized (_listenersLockField.get(currentProject)) {
 				for (BuildListener buildListener :
 						currentProject.getBuildListeners()) {
 
@@ -42,7 +42,7 @@ public class LiferayBuildLoggerInstallerTask extends Task {
 					}
 
 					boolean buildPerformanceLoggerEnabled =
-						isBuildPerformanceLoggerEnabled();
+						_isBuildPerformanceLoggerEnabled();
 
 					currentProject.removeBuildListener(buildListener);
 
@@ -56,14 +56,14 @@ public class LiferayBuildLoggerInstallerTask extends Task {
 				}
 			}
 		}
-		catch (IllegalAccessException iae) {
+		catch (IllegalAccessException illegalAccessException) {
 			throw new BuildException(
 				"Unable to access listenersLock field of " + currentProject,
-				iae);
+				illegalAccessException);
 		}
 	}
 
-	private boolean isBuildPerformanceLoggerEnabled() {
+	private boolean _isBuildPerformanceLoggerEnabled() {
 		Project project = getProject();
 
 		String buildPerformanceLoggerEnabled = project.getProperty(
@@ -87,8 +87,8 @@ public class LiferayBuildLoggerInstallerTask extends Task {
 
 			_listenersLockField.setAccessible(true);
 		}
-		catch (ReflectiveOperationException roe) {
-			throw new ExceptionInInitializerError(roe);
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new ExceptionInInitializerError(reflectiveOperationException);
 		}
 	}
 

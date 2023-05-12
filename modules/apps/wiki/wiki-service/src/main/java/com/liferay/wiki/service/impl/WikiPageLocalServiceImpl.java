@@ -28,6 +28,7 @@ import com.liferay.expando.kernel.service.ExpandoRowLocalService;
 import com.liferay.expando.kernel.util.ExpandoBridgeUtil;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMap;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMapFactory;
+import com.liferay.petra.sql.dsl.DSLQueryFactoryUtil;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
@@ -35,6 +36,7 @@ import com.liferay.portal.aop.AopService;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.kernel.cache.MultiVMPool;
 import com.liferay.portal.kernel.cache.PortalCache;
+import com.liferay.portal.kernel.change.tracking.CTCollectionThreadLocal;
 import com.liferay.portal.kernel.comment.CommentManager;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -125,6 +127,7 @@ import com.liferay.wiki.model.WikiNode;
 import com.liferay.wiki.model.WikiPage;
 import com.liferay.wiki.model.WikiPageDisplay;
 import com.liferay.wiki.model.WikiPageResource;
+import com.liferay.wiki.model.WikiPageTable;
 import com.liferay.wiki.model.impl.WikiPageDisplayImpl;
 import com.liferay.wiki.model.impl.WikiPageImpl;
 import com.liferay.wiki.processor.WikiPageRenameContentProcessor;
@@ -1007,16 +1010,25 @@ public class WikiPageLocalServiceImpl extends WikiPageLocalServiceBaseImpl {
 
 		stopWatch.start();
 
-		String key = _encodeKey(nodeId, title, viewPageURL.toString());
+		WikiPageDisplay pageDisplay = null;
 
-		WikiPageDisplay pageDisplay = (WikiPageDisplay)_portalCache.get(key);
+		if (CTCollectionThreadLocal.isProductionMode()) {
+			String key = _encodeKey(nodeId, title, viewPageURL.toString());
 
-		if (pageDisplay == null) {
+			pageDisplay = (WikiPageDisplay)_portalCache.get(key);
+
+			if (pageDisplay == null) {
+				pageDisplay = getPageDisplay(
+					nodeId, title, viewPageURL, editPageURLSupplier.get(),
+					attachmentURLPrefix);
+
+				_portalCache.put(key, pageDisplay);
+			}
+		}
+		else {
 			pageDisplay = getPageDisplay(
 				nodeId, title, viewPageURL, editPageURLSupplier.get(),
 				attachmentURLPrefix);
-
-			_portalCache.put(key, pageDisplay);
 		}
 
 		if (_log.isDebugEnabled()) {
@@ -1412,6 +1424,28 @@ public class WikiPageLocalServiceImpl extends WikiPageLocalServiceBaseImpl {
 
 		return wikiPagePersistence.findByN_S(
 			nodeId, status, start, end, new PageCreateDateComparator(false));
+	}
+
+	@Override
+	public List<WikiPage> getPages(
+		long groupId, long nodeId, int status, long statusByUserId) {
+
+		return dslQuery(
+			DSLQueryFactoryUtil.select(
+				WikiPageTable.INSTANCE
+			).from(
+				WikiPageTable.INSTANCE
+			).where(
+				WikiPageTable.INSTANCE.groupId.eq(
+					groupId
+				).and(
+					WikiPageTable.INSTANCE.nodeId.eq(nodeId)
+				).and(
+					WikiPageTable.INSTANCE.status.eq(status)
+				).and(
+					WikiPageTable.INSTANCE.statusByUserId.eq(statusByUserId)
+				)
+			));
 	}
 
 	@Override

@@ -23,7 +23,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
-import java.util.stream.Stream;
 
 import javax.annotation.Generated;
 
@@ -245,6 +244,20 @@ public class PlacedOrderItemSerDes {
 			sb.append(placedOrderItem.getQuantity());
 		}
 
+		if (placedOrderItem.getReplacedSku() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"replacedSku\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(placedOrderItem.getReplacedSku()));
+
+			sb.append("\"");
+		}
+
 		if (placedOrderItem.getSettings() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -311,6 +324,32 @@ public class PlacedOrderItemSerDes {
 			sb.append("\"valid\": ");
 
 			sb.append(placedOrderItem.getValid());
+		}
+
+		if (placedOrderItem.getVirtualItemURLs() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"virtualItemURLs\": ");
+
+			sb.append("[");
+
+			for (int i = 0; i < placedOrderItem.getVirtualItemURLs().length;
+				 i++) {
+
+				sb.append("\"");
+
+				sb.append(_escape(placedOrderItem.getVirtualItemURLs()[i]));
+
+				sb.append("\"");
+
+				if ((i + 1) < placedOrderItem.getVirtualItemURLs().length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
 		}
 
 		sb.append("}");
@@ -438,6 +477,15 @@ public class PlacedOrderItemSerDes {
 			map.put("quantity", String.valueOf(placedOrderItem.getQuantity()));
 		}
 
+		if (placedOrderItem.getReplacedSku() == null) {
+			map.put("replacedSku", null);
+		}
+		else {
+			map.put(
+				"replacedSku",
+				String.valueOf(placedOrderItem.getReplacedSku()));
+		}
+
 		if (placedOrderItem.getSettings() == null) {
 			map.put("settings", null);
 		}
@@ -481,6 +529,15 @@ public class PlacedOrderItemSerDes {
 		}
 		else {
 			map.put("valid", String.valueOf(placedOrderItem.getValid()));
+		}
+
+		if (placedOrderItem.getVirtualItemURLs() == null) {
+			map.put("virtualItemURLs", null);
+		}
+		else {
+			map.put(
+				"virtualItemURLs",
+				String.valueOf(placedOrderItem.getVirtualItemURLs()));
 		}
 
 		return map;
@@ -551,28 +608,39 @@ public class PlacedOrderItemSerDes {
 						jsonParserFieldName, "placedOrderItemShipments")) {
 
 				if (jsonParserFieldValue != null) {
+					Object[] jsonParserFieldValues =
+						(Object[])jsonParserFieldValue;
+
+					PlacedOrderItemShipment[] placedOrderItemShipmentsArray =
+						new PlacedOrderItemShipment
+							[jsonParserFieldValues.length];
+
+					for (int i = 0; i < placedOrderItemShipmentsArray.length;
+						 i++) {
+
+						placedOrderItemShipmentsArray[i] =
+							PlacedOrderItemShipmentSerDes.toDTO(
+								(String)jsonParserFieldValues[i]);
+					}
+
 					placedOrderItem.setPlacedOrderItemShipments(
-						Stream.of(
-							toStrings((Object[])jsonParserFieldValue)
-						).map(
-							object -> PlacedOrderItemShipmentSerDes.toDTO(
-								(String)object)
-						).toArray(
-							size -> new PlacedOrderItemShipment[size]
-						));
+						placedOrderItemShipmentsArray);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "placedOrderItems")) {
 				if (jsonParserFieldValue != null) {
-					placedOrderItem.setPlacedOrderItems(
-						Stream.of(
-							toStrings((Object[])jsonParserFieldValue)
-						).map(
-							object -> PlacedOrderItemSerDes.toDTO(
-								(String)object)
-						).toArray(
-							size -> new PlacedOrderItem[size]
-						));
+					Object[] jsonParserFieldValues =
+						(Object[])jsonParserFieldValue;
+
+					PlacedOrderItem[] placedOrderItemsArray =
+						new PlacedOrderItem[jsonParserFieldValues.length];
+
+					for (int i = 0; i < placedOrderItemsArray.length; i++) {
+						placedOrderItemsArray[i] = PlacedOrderItemSerDes.toDTO(
+							(String)jsonParserFieldValues[i]);
+					}
+
+					placedOrderItem.setPlacedOrderItems(placedOrderItemsArray);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "price")) {
@@ -598,6 +666,12 @@ public class PlacedOrderItemSerDes {
 				if (jsonParserFieldValue != null) {
 					placedOrderItem.setQuantity(
 						Integer.valueOf((String)jsonParserFieldValue));
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "replacedSku")) {
+				if (jsonParserFieldValue != null) {
+					placedOrderItem.setReplacedSku(
+						(String)jsonParserFieldValue);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "settings")) {
@@ -631,6 +705,12 @@ public class PlacedOrderItemSerDes {
 			else if (Objects.equals(jsonParserFieldName, "valid")) {
 				if (jsonParserFieldValue != null) {
 					placedOrderItem.setValid((Boolean)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "virtualItemURLs")) {
+				if (jsonParserFieldValue != null) {
+					placedOrderItem.setVirtualItemURLs(
+						toStrings((Object[])jsonParserFieldValue));
 				}
 			}
 		}

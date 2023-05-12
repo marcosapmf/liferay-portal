@@ -12,10 +12,11 @@
  * details.
  */
 
-import Container from '../../components/Layout/Container';
-import ListView from '../../components/ListView';
-import {useHeader} from '../../hooks';
-import i18n from '../../i18n';
+import Container from '~/components/Layout/Container';
+import ListView from '~/components/ListView';
+import {useHeader} from '~/hooks';
+import i18n from '~/i18n';
+
 import useProjectActions from './useProjectActions';
 
 type ProjectsProps = {
@@ -52,11 +53,13 @@ const Projects: React.FC<ProjectsProps> = ({PageContainer = Container}) => {
 						{
 							clickable: true,
 							key: 'name',
+							size: 'lg',
 							sorteable: true,
 							value: i18n.translate('project'),
 						},
 						{
 							key: 'description',
+							size: 'lg',
 							value: i18n.translate('description'),
 						},
 					],

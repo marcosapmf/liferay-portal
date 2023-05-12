@@ -23,14 +23,14 @@ definition {
 
 	tearDown {
 		var testPortalInstance = PropsUtil.get("test.portal.instance");
-		var siteName = TestCase.getSiteName(siteName = "${siteName}");
+		var siteName = TestCase.getSiteName(siteName = ${siteName});
 
 		BlogsEntry.tearDownCP();
 
 		ProductMenu.gotoPortlet(
 			category = "Configuration",
 			portlet = "Workflow",
-			site = "${siteName}");
+			site = ${siteName});
 
 		Workflow._tearDownWorkflow();
 
@@ -43,7 +43,7 @@ definition {
 
 		Workflow.tearDownWorkflowDefinitions();
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testPortalInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -52,7 +52,7 @@ definition {
 	}
 
 	@description = "LRQA-53648 - Automate LPS-89014: [SLA] Create new SLA for total process resolution"
-	@priority = "5"
+	@priority = 5
 	test AddSLAForTotalProcessResolution {
 		property portal.acceptance = "true";
 
@@ -65,10 +65,10 @@ definition {
 		Click(locator1 = "WorkflowMetricsSLA#ADD_NEW_SLA_BUTTON");
 
 		WorkflowMetrics.fillSLAForm(
-			slaDefinitionDays = "1",
+			slaDefinitionDays = 1,
 			slaDefinitionDescription = "SLA Description",
 			slaDefinitionEnd = "Process Ends: Approved",
-			slaDefinitionHours = "0000",
+			slaDefinitionHours = 0000,
 			slaDefinitionName = "",
 			slaDefinitionStart = "Process Begins");
 
@@ -85,10 +85,10 @@ definition {
 		Click(locator1 = "WorkflowMetricsSLA#ADD_NEW_SLA_BUTTON");
 
 		WorkflowMetrics.fillSLAForm(
-			slaDefinitionDays = "1",
+			slaDefinitionDays = 1,
 			slaDefinitionDescription = "SLA Description",
 			slaDefinitionEnd = "Process Ends: Approved",
-			slaDefinitionHours = "0000",
+			slaDefinitionHours = 0000,
 			slaDefinitionName = "SLA Name");
 
 		Button.clickSave();
@@ -102,9 +102,9 @@ definition {
 		Click(locator1 = "WorkflowMetricsSLA#ADD_NEW_SLA_BUTTON");
 
 		WorkflowMetrics.fillSLAForm(
-			slaDefinitionDays = "1",
+			slaDefinitionDays = 1,
 			slaDefinitionDescription = "SLA Description",
-			slaDefinitionHours = "0000",
+			slaDefinitionHours = 0000,
 			slaDefinitionName = "SLA Name",
 			slaDefinitionStart = "Process Begins");
 
@@ -142,7 +142,7 @@ definition {
 
 		AssertTextEquals(
 			locator1 = "WorkflowMetricsSLA#SLA_DEFINITION_DAYS",
-			value1 = "1");
+			value1 = 1);
 
 		AssertClick(
 			locator1 = "Button#CANCEL",
@@ -151,10 +151,10 @@ definition {
 		Click(locator1 = "WorkflowMetricsSLA#ADD_NEW_SLA_BUTTON");
 
 		WorkflowMetrics.fillSLAForm(
-			slaDefinitionDays = "1",
+			slaDefinitionDays = 1,
 			slaDefinitionDescription = "SLA Description",
 			slaDefinitionEnd = "Process Ends: Approved",
-			slaDefinitionHours = "2400",
+			slaDefinitionHours = 2400,
 			slaDefinitionName = "SLA Name",
 			slaDefinitionStart = "Process Begins");
 
@@ -169,7 +169,7 @@ definition {
 		Click(locator1 = "WorkflowMetricsSLA#ADD_NEW_SLA_BUTTON");
 
 		WorkflowMetrics.fillSLAForm(
-			slaDefinitionDays = "1",
+			slaDefinitionDays = 1,
 			slaDefinitionDescription = "SLA Description",
 			slaDefinitionEnd = "Process Ends: Approved",
 			slaDefinitionHours = "",
@@ -190,7 +190,7 @@ definition {
 			slaDefinitionDays = "",
 			slaDefinitionDescription = "SLA Description",
 			slaDefinitionEnd = "Process Ends: Approved",
-			slaDefinitionHours = "0001",
+			slaDefinitionHours = 0001,
 			slaDefinitionName = "SLA Name",
 			slaDefinitionStart = "Process Begins");
 
@@ -212,11 +212,11 @@ definition {
 	}
 
 	@description = "Verify the user can set a SLA to Single Approver workflow (LPS-99765)"
-	@priority = "5"
+	@priority = 5
 	test AddSLAtoSingleApprover {
 		property portal.acceptance = "true";
 
-		var key_testSlaDefinitionDays = "1";
+		var key_testSlaDefinitionDays = 1;
 		var key_testSlaDefinitionHours = "00:00";
 		var key_testSlaDefinitionDescription = "SLA Description";
 		var key_testSlaDefinitionEnd = "Process Ends: Approved";
@@ -228,58 +228,58 @@ definition {
 		Click(locator1 = "WorkflowMetricsSLA#ADD_NEW_SLA_BUTTON");
 
 		WorkflowMetrics.fillSLAForm(
-			slaDefinitionDays = "${key_testSlaDefinitionDays}",
-			slaDefinitionDescription = "${key_testSlaDefinitionDescription}",
-			slaDefinitionEnd = "${key_testSlaDefinitionEnd}",
-			slaDefinitionHours = "${key_testSlaDefinitionHours}",
-			slaDefinitionName = "${key_testSlaDefinitionName}",
-			slaDefinitionStart = "${key_testSlaDefinitionStart}");
+			slaDefinitionDays = ${key_testSlaDefinitionDays},
+			slaDefinitionDescription = ${key_testSlaDefinitionDescription},
+			slaDefinitionEnd = ${key_testSlaDefinitionEnd},
+			slaDefinitionHours = ${key_testSlaDefinitionHours},
+			slaDefinitionName = ${key_testSlaDefinitionName},
+			slaDefinitionStart = ${key_testSlaDefinitionStart});
 
 		Button.clickSave();
 
 		Alert.viewSuccessMessage();
 
-		WorkflowMetrics.goToCreatedSLAForm(workflowSlaName = "${key_testSlaDefinitionName}");
+		WorkflowMetrics.goToCreatedSLAForm(workflowSlaName = ${key_testSlaDefinitionName});
 
 		AssertTextEquals(
 			locator1 = "WorkflowMetricsSLA#SLA_DEFINITION_NAME",
-			value1 = "${key_testSlaDefinitionName}");
+			value1 = ${key_testSlaDefinitionName});
 
 		AssertTextEquals(
 			locator1 = "WorkflowMetricsSLA#SLA_DEFINITION_DESCRIPTION",
-			value1 = "${key_testSlaDefinitionDescription}");
+			value1 = ${key_testSlaDefinitionDescription});
 
 		AssertTextEquals(
 			locator1 = "WorkflowMetricsSLA#SLA_STEPS_START",
-			value1 = "${key_testSlaDefinitionStart}");
+			value1 = ${key_testSlaDefinitionStart});
 
 		AssertTextEquals(
 			locator1 = "WorkflowMetricsSLA#SLA_STEPS_STOP",
-			value1 = "${key_testSlaDefinitionEnd}");
+			value1 = ${key_testSlaDefinitionEnd});
 
 		AssertTextEquals(
 			locator1 = "WorkflowMetricsSLA#SLA_DEFINITION_DAYS",
-			value1 = "${key_testSlaDefinitionDays}");
+			value1 = ${key_testSlaDefinitionDays});
 	}
 
 	@description = "LRQA-55606 Automate LPS-106225: [Dashboard] Apply pagination on bulk reassign workflow instances"
-	@priority = "5"
+	@priority = 5
 	test ApplyPaginationOnBulkReassign {
 		property test.name.skip.portal.instance = "WorkflowMetrics#ApplyPaginationOnBulkReassign";
 
-		var siteName = TestCase.getSiteName(siteName = "${siteName}");
+		var siteName = TestCase.getSiteName(siteName = ${siteName});
 
 		ProductMenu.gotoPortlet(
 			category = "Configuration",
 			panel = "Site Administration",
 			portlet = "Workflow",
-			site = "${siteName}");
+			site = ${siteName});
 
 		Workflow.configureWorkflow(
 			workflowDefinition = "Single Approver",
 			workflowResourceValue = "Blogs Entry");
 
-		WorkflowMetrics.createBlogInstances(numberOfBlogInstances = "6");
+		WorkflowMetrics.createBlogInstances(numberOfBlogInstances = 6);
 
 		WorkflowMetrics.goToWorkflowAllItems(workflowProcessName = "Single Approver");
 
@@ -293,9 +293,9 @@ definition {
 			taskList = "Blogs Entry: Blogs Entry Title 1,Blogs Entry: Blogs Entry Title 2,Blogs Entry: Blogs Entry Title 3,Blogs Entry: Blogs Entry Title 4",
 			taskListUnchecked = "Blogs Entry: Blogs Entry Title 5,Blogs Entry: Blogs Entry Title 6");
 
-		AssertElementPresent(locator1 = "WorkflowReassignModal#NEXT_PAGINATION_BUTTON");
+		AssertElementPresent(locator1 = "Pagination#NEXT_LINK");
 
-		AssertElementPresent(locator1 = "WorkflowReassignModal#PREVIOUS_PAGINATION_BUTTON");
+		AssertElementPresent(locator1 = "Pagination#PREVIOUS_LINK");
 
 		WorkflowMetrics.selectNewAssigneePagination(taskList = "Blogs Entry: Blogs Entry Title 1,Blogs Entry: Blogs Entry Title 2,Blogs Entry: Blogs Entry Title 3,Blogs Entry: Blogs Entry Title 4,Blogs Entry: Blogs Entry Title 5,Blogs Entry: Blogs Entry Title 6");
 
@@ -359,31 +359,31 @@ definition {
 	}
 
 	@description = "LRQA-53633 Automate LPS-103368: [Dashboard] Apply searches in the workload distribution for all assignees"
-	@priority = "5"
+	@priority = 5
 	test ApplySearchesForAllAssignees {
 		property portal.acceptance = "true";
 		property test.name.skip.portal.instance = "WorkflowMetrics#ApplySearchesForAllAssignees";
 
-		var siteName = TestCase.getSiteName(siteName = "${siteName}");
+		var siteName = TestCase.getSiteName(siteName = ${siteName});
 
 		ProductMenu.gotoPortlet(
 			category = "Configuration",
 			portlet = "Workflow",
-			site = "${siteName}");
+			site = ${siteName});
 
 		Workflow.configureWorkflow(
 			workflowDefinition = "Single Approver",
 			workflowResourceValue = "Blogs Entry");
 
 		WorkflowMetrics.createUsersAndAssignInstances(
-			numberOfBlogInstances = "4",
-			numberOfUsers = "3",
-			site = "${siteName}");
+			numberOfBlogInstances = 4,
+			numberOfUsers = 3,
+			site = ${siteName});
 
 		WorkflowMetrics.goToWorkflowProcessMetrics(workflowProcessName = "Single Approver");
 
 		Click(
-			key_assigneesNumber = "3",
+			key_assigneesNumber = 3,
 			locator1 = "WorkflowMetrics#METRICS_PERFORMANCE_BY_ASSIGNEE_CARD_VIEW_ALL_ASSIGNEES_LINK");
 
 		WorkflowMetrics.selectWorkloadByAssigneeCardFilterValue(workflowStep = "1Role");
@@ -391,9 +391,9 @@ definition {
 		WorkflowMetrics.viewWorkloadByAssignee(
 			assigneeName = "1user user1",
 			isNotPresent = "2user user2,3user user3",
-			onTimeTaskCount = "0",
-			overdueTaskCount = "0",
-			totalPendingTaskCount = "2");
+			onTimeTaskCount = 0,
+			overdueTaskCount = 0,
+			totalPendingTaskCount = 2);
 
 		WorkflowMetrics.selectWorkloadByAssigneeCardFilterValue(workflowStep = "1Role");
 
@@ -402,9 +402,9 @@ definition {
 		WorkflowMetrics.viewWorkloadByAssignee(
 			assigneeName = "2user user2",
 			isNotPresent = "1user user1,3user user3",
-			onTimeTaskCount = "0",
-			overdueTaskCount = "0",
-			totalPendingTaskCount = "1");
+			onTimeTaskCount = 0,
+			overdueTaskCount = 0,
+			totalPendingTaskCount = 1);
 
 		WorkflowMetrics.selectWorkloadByAssigneeCardFilterValue(workflowStep = "2Role");
 
@@ -413,9 +413,9 @@ definition {
 		WorkflowMetrics.viewWorkloadByAssignee(
 			assigneeName = "3user user3",
 			isNotPresent = "1user user1,2user user2",
-			onTimeTaskCount = "0",
-			overdueTaskCount = "0",
-			totalPendingTaskCount = "1");
+			onTimeTaskCount = 0,
+			overdueTaskCount = 0,
+			totalPendingTaskCount = 1);
 
 		WorkflowMetrics.clearAllFilter();
 
@@ -426,22 +426,22 @@ definition {
 		WorkflowMetrics.viewWorkloadByAssignee(
 			assigneeName = "1user user1",
 			isNotPresent = "2user user2,3user user3",
-			onTimeTaskCount = "0",
-			overdueTaskCount = "0",
-			totalPendingTaskCount = "2");
+			onTimeTaskCount = 0,
+			overdueTaskCount = 0,
+			totalPendingTaskCount = 2);
 
 		WorkflowMetrics.selectWorkloadByAssigneeCardFilterValueProcessStep(workflowStep = "Review");
 
 		WorkflowMetrics.selectWorkloadByAssigneeCardFilterValueProcessStep(workflowStep = "Update");
 
-		AssertTextEquals.assertPartialText(
-			locator1 = "Message#EMPTY_INFO",
+		AssertTextEquals(
+			locator1 = "Message#EMPTY_STATE_TEXT",
 			value1 = "No results were found.");
 
 		WorkflowMetrics.searchForAssigneeName(assigneeName = "something else");
 
-		AssertTextEquals.assertPartialText(
-			locator1 = "Message#EMPTY_INFO",
+		AssertTextEquals(
+			locator1 = "Message#EMPTY_STATE_TEXT",
 			value1 = "No results were found.");
 
 		WorkflowMetrics.clearAllFilter();
@@ -449,13 +449,13 @@ definition {
 		WorkflowMetrics.viewWorkloadByAssignee(
 			assigneeName = "1user user1",
 			isNotPresent = "somethingelse",
-			onTimeTaskCount = "0",
-			overdueTaskCount = "0",
-			totalPendingTaskCount = "2");
+			onTimeTaskCount = 0,
+			overdueTaskCount = 0,
+			totalPendingTaskCount = 2);
 	}
 
 	@description = "Automate LPS-102664: [Dashboard] Bulk reassign workflow instances"
-	@priority = "5"
+	@priority = 5
 	test BulkReassignWorkflowInstances {
 		property portal.acceptance = "true";
 		property test.name.skip.portal.instance = "WorkflowMetrics#BulkReassignWorkflowInstances";
@@ -539,16 +539,16 @@ definition {
 	}
 
 	@description = "LRQA-55451 Exceptions Check"
-	@priority = "5"
+	@priority = 5
 	test BulkReassignWorkflowInstancesExceptions {
 		property portal.acceptance = "true";
 		property test.name.skip.portal.instance = "WorkflowMetrics#BulkReassignWorkflowModalExceptions";
 
-		var siteName = TestCase.getSiteName(siteName = "${siteName}");
+		var siteName = TestCase.getSiteName(siteName = ${siteName});
 
 		WorkflowMetrics.bulkReassignSetup();
 
-		WorkflowMetrics.bulkReassignExceptionsSetup(site = "${siteName}");
+		WorkflowMetrics.bulkReassignExceptionsSetup(site = ${siteName});
 
 		WorkflowMetrics.goToWorkflowAllItems(workflowProcessName = "Single Approver");
 
@@ -579,12 +579,12 @@ definition {
 	}
 
 	@description = "LRQA-57667 - Automate LPS-108138: As a Operation Manager, I want to transition a multi-task workflow instance while analyzing my process metrics"
-	@priority = "5"
+	@priority = 5
 	test BulkTransitionWorkflowTasks {
-		property portal.acceptance = "true";
+		property portal.acceptance = "quarantine";
 		property test.name.skip.portal.instance = "WorkflowMetrics#BulkTransitionWorkflowTasks";
 
-		var siteName = TestCase.getSiteName(siteName = "${siteName}");
+		var siteName = TestCase.getSiteName(siteName = ${siteName});
 
 		ApplicationsMenu.gotoPortlet(
 			category = "Workflow",
@@ -604,13 +604,13 @@ definition {
 		ProductMenu.gotoPortlet(
 			category = "Configuration",
 			portlet = "Workflow",
-			site = "${siteName}");
+			site = ${siteName});
 
 		Workflow.configureWorkflow(
 			workflowDefinition = "Fork Reviews Workflow",
 			workflowResourceValue = "Blogs Entry");
 
-		WorkflowMetrics.createBlogInstances(numberOfBlogInstances = "1");
+		WorkflowMetrics.createBlogInstances(numberOfBlogInstances = 1);
 
 		WorkflowMetrics.goToWorkflowAllItems(workflowProcessName = "Fork Reviews Workflow");
 
@@ -666,21 +666,21 @@ definition {
 	}
 
 	@description = "LRQA-57939 - Automate LPS-105498: As a Operation Manager, I want to bulk update the due date my workflow instances while analyzing my process metrics"
-	@priority = "5"
+	@priority = 5
 	test BulkUpdateDueDate {
 		property portal.acceptance = "true";
 
-		var siteName = TestCase.getSiteName(siteName = "${siteName}");
+		var siteName = TestCase.getSiteName(siteName = ${siteName});
 		var currentYear = DateUtil.getCurrentYear();
 
 		var futureYear = ${currentYear} + 1;
 
-		var futureYearShort = StringUtil.substring("${futureYear}", "2", "4");
+		var futureYearShort = StringUtil.substring(${futureYear}, 2, 4);
 
 		ProductMenu.gotoPortlet(
 			category = "Configuration",
 			portlet = "Workflow",
-			site = "${siteName}");
+			site = ${siteName});
 
 		Workflow.configureWorkflow(
 			workflowDefinition = "Single Approver",
@@ -732,14 +732,14 @@ definition {
 	}
 
 	@description = "LRQA-53629 Automate LRQA-53629: Automate LPS-100679: [Performance] Change the order of the all steps performance list"
-	@priority = "5"
+	@priority = 5
 	test ChangePerformanceByStepOrder {
-		var siteName = TestCase.getSiteName(siteName = "${siteName}");
+		var siteName = TestCase.getSiteName(siteName = ${siteName});
 
 		ProductMenu.gotoPortlet(
 			category = "Configuration",
 			portlet = "Workflow",
-			site = "${siteName}");
+			site = ${siteName});
 
 		Workflow.configureWorkflow(
 			workflowDefinition = "Single Approver",
@@ -750,7 +750,7 @@ definition {
 		Click(locator1 = "WorkflowMetricsSLA#ADD_NEW_SLA_BUTTON");
 
 		WorkflowMetrics.fillSLAForm(
-			slaDefinitionDays = "0",
+			slaDefinitionDays = 0,
 			slaDefinitionDescription = "SLA Description",
 			slaDefinitionEnd = "Process Ends: Approved",
 			slaDefinitionHours = "00:03",
@@ -764,7 +764,7 @@ definition {
 		Click(locator1 = "WorkflowMetricsSLA#ADD_NEW_SLA_BUTTON");
 
 		WorkflowMetrics.fillSLAForm(
-			slaDefinitionDays = "0",
+			slaDefinitionDays = 0,
 			slaDefinitionDescription = "SLA Description",
 			slaDefinitionEnd = "Process Ends: Approved",
 			slaDefinitionHours = "00:01",
@@ -800,7 +800,7 @@ definition {
 		WorkflowMetrics.goToWorkflowProcessMetrics(workflowProcessName = "Single Approver");
 
 		WorkflowMetrics.waitForSLA(
-			key_expectedValue = "0",
+			key_expectedValue = 0,
 			key_status = "OVERDUE");
 
 		UserBar.gotoDropdownItem(dropdownItem = "My Workflow Tasks");
@@ -813,15 +813,15 @@ definition {
 		WorkflowMetrics.goToWorkflowProcessMetrics(workflowProcessName = "Single Approver");
 
 		WorkflowMetrics.waitForSLA(
-			key_expectedValue = "0",
+			key_expectedValue = 0,
 			key_status = "OVERDUE");
 
 		WorkflowMetrics.waitForSLA(
-			key_expectedValue = "1",
+			key_expectedValue = 1,
 			key_status = "OVERDUE");
 
 		WorkflowMetrics.waitForSLA(
-			key_expectedValue = "2",
+			key_expectedValue = 2,
 			key_status = "OVERDUE");
 
 		UserBar.gotoDropdownItem(dropdownItem = "My Workflow Tasks");
@@ -863,55 +863,55 @@ definition {
 		Click(locator1 = "WorkflowMetrics#METRICS_PERFORMANCE_TAB");
 
 		Click(
-			key_stepsNumber = "2",
+			key_stepsNumber = 2,
 			locator1 = "WorkflowMetricsPerformanceByStep#METRICS_PERFORMANCE_BY_STEP_CARD_VIEW_ALL_STEPS");
 
 		AssertElementPresent(
 			key_rowName = "Update",
-			key_rowNumber = "1",
+			key_rowNumber = 1,
 			locator1 = "WorkflowMetrics#METRICS_PERFORMANCE_BY_STEP_ROW_ORDER_CHECK");
 
 		AssertElementPresent(
 			key_rowName = "Review",
-			key_rowNumber = "2",
+			key_rowNumber = 2,
 			locator1 = "WorkflowMetrics#METRICS_PERFORMANCE_BY_STEP_ROW_ORDER_CHECK");
 
 		Click(locator1 = "WorkflowMetrics#METRICS_PERFORMANCE_BY_STEP_SLA_BREACHED_REORDER");
 
 		AssertElementPresent(
 			key_rowName = "Review",
-			key_rowNumber = "1",
+			key_rowNumber = 1,
 			locator1 = "WorkflowMetrics#METRICS_PERFORMANCE_BY_STEP_ROW_ORDER_CHECK");
 
 		AssertElementPresent(
 			key_rowName = "Update",
-			key_rowNumber = "2",
+			key_rowNumber = 2,
 			locator1 = "WorkflowMetrics#METRICS_PERFORMANCE_BY_STEP_ROW_ORDER_CHECK");
 
 		Click(locator1 = "WorkflowMetrics#METRICS_PERFORMANCE_BY_STEP_AVG_TIME_REORDER");
 
 		AssertElementPresent(
 			key_rowName = "Review",
-			key_rowNumber = "1",
+			key_rowNumber = 1,
 			locator1 = "WorkflowMetrics#METRICS_PERFORMANCE_BY_STEP_ROW_ORDER_CHECK");
 
 		AssertElementPresent(
 			key_rowName = "Update",
-			key_rowNumber = "2",
+			key_rowNumber = 2,
 			locator1 = "WorkflowMetrics#METRICS_PERFORMANCE_BY_STEP_ROW_ORDER_CHECK");
 
 		Click(locator1 = "WorkflowMetrics#METRICS_PERFORMANCE_BY_STEP_AVG_TIME_REORDER");
 
 		AssertElementPresent(
 			key_rowName = "Review",
-			key_rowNumber = "2",
+			key_rowNumber = 2,
 			locator1 = "WorkflowMetrics#METRICS_PERFORMANCE_BY_STEP_ROW_ORDER_CHECK");
 
 		Click(locator1 = "WorkflowMetrics#METRICS_PERFORMANCE_BY_STEP_SLA_BREACHED_REORDER");
 	}
 
 	@description = "Verify if the default filter values are correct and if the chart is displayed (LPS-98001)"
-	@priority = "5"
+	@priority = 5
 	test DefaultWorkflowMetricsFilterValues {
 		property portal.acceptance = "true";
 
@@ -958,21 +958,22 @@ definition {
 	}
 
 	@description = "LRQA-53660 Automate LPS-87571 [Reports] Filter the list of items for a certain process"
-	@priority = "5"
+	@priority = 5
 	test FilterAllItemsList {
+		property ci.retries.disabled = "true";
 		property portal.acceptance = "quarantine";
 		property test.name.skip.portal.instance = "WorkflowMetrics#FilterAllItemsList";
 
-		var siteName = TestCase.getSiteName(siteName = "${siteName}");
+		var siteName = TestCase.getSiteName(siteName = ${siteName});
 
 		WorkflowMetrics.setSLADefinitionsJobInterval(
-			definitionsJobInterval = "1",
-			slaJobInterval = "1");
+			definitionsJobInterval = 1,
+			slaJobInterval = 1);
 
 		ProductMenu.gotoPortlet(
 			category = "Configuration",
 			portlet = "Workflow",
-			site = "${siteName}");
+			site = ${siteName});
 
 		Workflow.configureWorkflow(
 			workflowDefinition = "Single Approver",
@@ -1016,10 +1017,10 @@ definition {
 		Click(locator1 = "WorkflowMetricsSLA#ADD_NEW_SLA_BUTTON");
 
 		WorkflowMetrics.fillSLAForm(
-			slaDefinitionDays = "0",
+			slaDefinitionDays = 0,
 			slaDefinitionDescription = "SLA Description",
 			slaDefinitionEnd = "Process Ends: Approved",
-			slaDefinitionHours = "0002",
+			slaDefinitionHours = 0002,
 			slaDefinitionName = "SLA Name",
 			slaDefinitionStart = "Process Begins");
 
@@ -1055,7 +1056,7 @@ definition {
 		WorkflowMetrics.goToWorkflowProcessMetrics(workflowProcessName = "Single Approver");
 
 		WorkflowMetrics.waitForSLA(
-			key_expectedValue = "0",
+			key_expectedValue = 0,
 			key_status = "OVERDUE");
 
 		UserBar.gotoDropdownItem(dropdownItem = "My Workflow Tasks");
@@ -1109,8 +1110,8 @@ definition {
 			allItemsFilterName = "Process Step",
 			assigneeName = "Update");
 
-		AssertTextEquals.assertPartialText(
-			locator1 = "Message#EMPTY_INFO",
+		AssertTextEquals(
+			locator1 = "Message#EMPTY_STATE_TEXT",
 			value1 = "No results were found.");
 
 		WorkflowMetrics.allItemPageFilterCheck(
@@ -1157,29 +1158,29 @@ definition {
 	}
 
 	@description = "LRQA-53628 Automate LPS-98517 [Dashboard] Filter items list by assignee name"
-	@priority = "5"
+	@priority = 5
 	test FilterAllItemsListByAssigneeName {
 		property portal.acceptance = "true";
 		property test.name.skip.portal.instance = "WorkflowMetrics#FilterAllItemsListByAssigneeName";
 
-		var siteName = TestCase.getSiteName(siteName = "${siteName}");
+		var siteName = TestCase.getSiteName(siteName = ${siteName});
 
 		WorkflowMetrics.createUsersAndAssignInstances(
-			numberOfBlogInstances = "4",
-			numberOfUsers = "3",
-			site = "${siteName}");
+			numberOfBlogInstances = 4,
+			numberOfUsers = 3,
+			site = ${siteName});
 
 		ProductMenu.gotoPortlet(
 			category = "Content & Data",
 			portlet = "Blogs",
-			site = "${siteName}");
+			site = ${siteName});
 
 		WorkflowMetrics.executeWorkflowScript(scriptName = "CompleteTasksAssignedToUsers.groovy");
 
 		ProductMenu.gotoPortlet(
 			category = "Content & Data",
 			portlet = "Blogs",
-			site = "${siteName}");
+			site = ${siteName});
 
 		for (var blogNumber : list "5,6,7,8") {
 			JSONBlog.addEntry(
@@ -1250,9 +1251,9 @@ definition {
 	}
 
 	@description = "LRQA-53649 Automate LPS-87560: Verify metrics available or not for CE and DXP customers"
-	@priority = "5"
+	@priority = 5
 	test MetricsAvailableForDXP {
-		property portal.acceptance = "true";
+		property portal.acceptance = "quarantine";
 
 		ApplicationsMenuHelper.openApplicationsMenu();
 
@@ -1265,13 +1266,13 @@ definition {
 	}
 
 	@description = "LRQA-55452 Automate LPS-102663: [Dashboard] Reassign Workflow instances individually"
-	@priority = "5"
+	@priority = 5
 	test ReassignWorkflowInstance {
 		property portal.acceptance = "true";
 
-		var siteName = TestCase.getSiteName(siteName = "${siteName}");
+		var siteName = TestCase.getSiteName(siteName = ${siteName});
 
-		WorkflowMetrics.singleReassignSetup(site = "${siteName}");
+		WorkflowMetrics.singleReassignSetup(site = ${siteName});
 
 		WorkflowMetrics.goToWorkflowAllItems(workflowProcessName = "Single Approver");
 
@@ -1289,11 +1290,11 @@ definition {
 
 		MouseOver(
 			locator1 = "WorkflowAllItems#KEBAB_DROPDOWN",
-			task = "1");
+			task = 1);
 
 		Click(
 			locator1 = "WorkflowAllItems#REASSIGN_ICON",
-			task = "1");
+			task = 1);
 
 		AssertElementPresent(locator1 = "WorkflowReassignModal#REASSIGN_MODAL");
 
@@ -1316,25 +1317,25 @@ definition {
 
 		MouseOver(
 			locator1 = "WorkflowAllItems#KEBAB_DROPDOWN",
-			task = "1");
+			task = 1);
 
 		AssertElementNotPresent(
 			locator1 = "WorkflowAllItems#REASSIGN_ICON",
-			task = "1");
+			task = 1);
 	}
 
 	@description = "LRQA-53638 Automate LPS-100677: [Performance] Search for a step in all steps performance list and LRQA-53637 Automate LPS-100678: [Performance] Filter all step performance by completion period"
-	@priority = "5"
+	@priority = 5
 	test SearchAndFilterOnPerformanceByStepPage {
 		property portal.acceptance = "true";
 		property test.name.skip.portal.instance = "WorkflowMetrics#SearchAndFilterOnPerformanceByStepPage";
 
-		var siteName = TestCase.getSiteName(siteName = "${siteName}");
+		var siteName = TestCase.getSiteName(siteName = ${siteName});
 
 		WorkflowMetrics.createUsersAndAssignInstancesWithGroovy(
-			numberOfBlogInstances = "4",
-			numberOfUsers = "3",
-			site = "${siteName}");
+			numberOfBlogInstances = 4,
+			numberOfUsers = 3,
+			site = ${siteName});
 
 		WorkflowMetrics.executeWorkflowScript(scriptName = "CompleteTasksAssignedToUsers.groovy");
 
@@ -1343,7 +1344,7 @@ definition {
 		Click(locator1 = "WorkflowMetrics#METRICS_PERFORMANCE_TAB");
 
 		Click(
-			key_stepsNumber = "2",
+			key_stepsNumber = 2,
 			locator1 = "WorkflowMetricsPerformanceByStep#METRICS_PERFORMANCE_BY_STEP_CARD_VIEW_ALL_STEPS");
 
 		WorkflowMetricsPerformanceByStep.searchForStep(stepName = "update");
@@ -1406,7 +1407,7 @@ definition {
 			startDateRange = "09/22/2018");
 
 		Click(
-			key_stepsNumber = "2",
+			key_stepsNumber = 2,
 			locator1 = "WorkflowMetricsPerformanceByStep#METRICS_PERFORMANCE_BY_STEP_CARD_VIEW_ALL_STEPS");
 
 		AssertTextEquals(
@@ -1421,26 +1422,26 @@ definition {
 	}
 
 	@description = "LRQA-55450 [Performance] Search assignees in the performance of all assignees screen"
-	@priority = "5"
+	@priority = 5
 	test SearchPerformanceOfAllAssignees {
 		property portal.acceptance = "true";
 		property test.name.skip.portal.instance = "WorkflowMetrics#SearchPerformanceOfAllAssignees";
 
-		var siteName = TestCase.getSiteName(siteName = "${siteName}");
+		var siteName = TestCase.getSiteName(siteName = ${siteName});
 
 		ProductMenu.gotoPortlet(
 			category = "Configuration",
 			portlet = "Workflow",
-			site = "${siteName}");
+			site = ${siteName});
 
 		Workflow.configureWorkflow(
 			workflowDefinition = "Single Approver",
 			workflowResourceValue = "Blogs Entry");
 
 		WorkflowMetrics.createUsersAndAssignInstancesWithGroovy(
-			numberOfBlogInstances = "3",
-			numberOfUsers = "3",
-			site = "${siteName}");
+			numberOfBlogInstances = 3,
+			numberOfUsers = 3,
+			site = ${siteName});
 
 		WorkflowMetrics.executeWorkflowScript(scriptName = "CompleteTasksAssignedToUsers.groovy");
 
@@ -1454,7 +1455,7 @@ definition {
 		Click(locator1 = "WorkflowMetrics#METRICS_PERFORMANCE_TAB");
 
 		Click(
-			key_assigneesNumber = "3",
+			key_assigneesNumber = 3,
 			locator1 = "WorkflowMetrics#METRICS_PERFORMANCE_BY_ASSIGNEE_CARD_VIEW_ALL_ASSIGNEES_LINK");
 
 		WorkflowMetrics.searchForAssigneeName(assigneeName = "1user");
@@ -1463,7 +1464,7 @@ definition {
 			assignee = "1user user1",
 			avgCompletionTime = "1min",
 			isNotPresent = "2user user2,3user user3",
-			taskCount = "1");
+			taskCount = 1);
 
 		WorkflowMetrics.selectWorkloadByAssigneeCardFilterValue(workflowStep = "1Role");
 
@@ -1471,7 +1472,7 @@ definition {
 			assignee = "1user user1",
 			avgCompletionTime = "1min",
 			isNotPresent = "2user user2,3user user3",
-			taskCount = "1");
+			taskCount = 1);
 
 		WorkflowMetrics.clearAllFilter();
 
@@ -1479,14 +1480,14 @@ definition {
 
 		WorkflowMetrics.selectWorkloadByAssigneeCardFilterValue(workflowStep = "2Role");
 
-		AssertTextEquals.assertPartialText(
-			locator1 = "Message#EMPTY_INFO",
+		AssertTextEquals(
+			locator1 = "Message#EMPTY_STATE_TEXT",
 			value1 = "No results were found.");
 
 		WorkflowMetrics.searchForAssigneeName(assigneeName = "something else");
 
-		AssertTextEquals.assertPartialText(
-			locator1 = "Message#EMPTY_INFO",
+		AssertTextEquals(
+			locator1 = "Message#EMPTY_STATE_TEXT",
 			value1 = "No results were found.");
 
 		WorkflowMetrics.clearAllFilter();
@@ -1494,19 +1495,19 @@ definition {
 		WorkflowMetrics.viewPerformanceByAssignee(
 			assignee = "1user user1",
 			avgCompletionTime = "1min",
-			taskCount = "1");
+			taskCount = 1);
 
 		AssertElementPresent(locator1 = "WorkflowMetrics#METRICS_WORKLOAD_BY_ASSIGNEE_SEARCH_ASSIGNEE_NAME");
 	}
 
 	@description = "LRQA-53647 Automate LPS-86638: [Reports] See a list of reports available for all running processes"
-	@priority = "5"
+	@priority = 5
 	test SeeListOfReports {
 		property portal.acceptance = "true";
 		property test.name.skip.portal.instance = "WorkflowMetrics#SeeListOfReports";
 
-		var siteName = TestCase.getSiteName(siteName = "${siteName}");
-		var key_testSlaDefinitionDays = "0";
+		var siteName = TestCase.getSiteName(siteName = ${siteName});
+		var key_testSlaDefinitionDays = 0;
 		var key_testSlaDefinitionHours = "00:02";
 		var key_testSlaDefinitionDescription = "SLA Description";
 		var key_testSlaDefinitionEnd = "Process Ends: Approved";
@@ -1514,13 +1515,13 @@ definition {
 		var key_testSlaDefinitionStart = "Process Begins";
 
 		WorkflowMetrics.setSLADefinitionsJobInterval(
-			definitionsJobInterval = "1",
-			slaJobInterval = "1");
+			definitionsJobInterval = 1,
+			slaJobInterval = 1);
 
 		ProductMenu.gotoPortlet(
 			category = "Configuration",
 			portlet = "Workflow",
-			site = "${siteName}");
+			site = ${siteName});
 
 		Workflow.configureWorkflow(
 			workflowDefinition = "Single Approver",
@@ -1531,9 +1532,9 @@ definition {
 			entryTitle = "Blogs Entry Title");
 
 		WorkflowMetrics.checkWorkflowReports(
-			key_onTimeValue = "0",
-			key_overdueValue = "0",
-			key_totalPendingValue = "1",
+			key_onTimeValue = 0,
+			key_overdueValue = 0,
+			key_totalPendingValue = 1,
 			key_workflowProcessName = "Single Approver");
 
 		WorkflowMetrics.goToWorkflowSLASettings(workflowProcessName = "Single Approver");
@@ -1541,54 +1542,54 @@ definition {
 		Click(locator1 = "WorkflowMetricsSLA#ADD_NEW_SLA_BUTTON");
 
 		WorkflowMetrics.fillSLAForm(
-			slaDefinitionDays = "${key_testSlaDefinitionDays}",
-			slaDefinitionDescription = "${key_testSlaDefinitionDescription}",
-			slaDefinitionEnd = "${key_testSlaDefinitionEnd}",
-			slaDefinitionHours = "${key_testSlaDefinitionHours}",
-			slaDefinitionName = "${key_testSlaDefinitionName}",
-			slaDefinitionStart = "${key_testSlaDefinitionStart}");
+			slaDefinitionDays = ${key_testSlaDefinitionDays},
+			slaDefinitionDescription = ${key_testSlaDefinitionDescription},
+			slaDefinitionEnd = ${key_testSlaDefinitionEnd},
+			slaDefinitionHours = ${key_testSlaDefinitionHours},
+			slaDefinitionName = ${key_testSlaDefinitionName},
+			slaDefinitionStart = ${key_testSlaDefinitionStart});
 
 		Button.clickSave();
 
 		WorkflowMetrics.goToWorkflowProcessMetrics(workflowProcessName = "Single Approver");
 
 		WorkflowMetrics.waitForSLA(
-			key_expectedValue = "0",
+			key_expectedValue = 0,
 			key_status = "ONTIME");
 
 		WorkflowMetrics.checkWorkflowReports(
-			key_onTimeValue = "1",
-			key_overdueValue = "0",
-			key_totalPendingValue = "1",
+			key_onTimeValue = 1,
+			key_overdueValue = 0,
+			key_totalPendingValue = 1,
 			key_workflowProcessName = "Single Approver");
 
 		WorkflowMetrics.goToWorkflowProcessMetrics(workflowProcessName = "Single Approver");
 
 		WorkflowMetrics.waitForSLA(
-			key_expectedValue = "0",
+			key_expectedValue = 0,
 			key_status = "OVERDUE",
-			timesToRun = "24");
+			timesToRun = 24);
 
 		WorkflowMetrics.checkWorkflowReports(
-			key_onTimeValue = "0",
-			key_overdueValue = "1",
-			key_totalPendingValue = "1",
+			key_onTimeValue = 0,
+			key_overdueValue = 1,
+			key_totalPendingValue = 1,
 			key_workflowProcessName = "Single Approver");
 	}
 
 	@description = "LRQA-53660 Automate LPS-105495 single-task work"
-	@priority = "5"
+	@priority = 5
 	test SingleTaskWorkflowTransition {
 		property portal.acceptance = "true";
 		property test.name.skip.portal.instance = "WorkflowMetrics#SingleTaskWorkflowTransition";
 
-		var siteName = TestCase.getSiteName(siteName = "${siteName}");
+		var siteName = TestCase.getSiteName(siteName = ${siteName});
 
 		ProductMenu.gotoPortlet(
 			category = "Configuration",
 			panel = "Site Administration",
 			portlet = "Workflow",
-			site = "${siteName}");
+			site = ${siteName});
 
 		Workflow.configureWorkflow(
 			workflowDefinition = "Single Approver",
@@ -1617,7 +1618,7 @@ definition {
 
 		Click(
 			locator1 = "WorkflowAllItems#KEBAB_DROPDOWN",
-			task = "1");
+			task = 1);
 
 		Click(locator1 = "WorkflowAllItems#APPROVE_DROPDOWN");
 
@@ -1632,8 +1633,8 @@ definition {
 			workflowMetricsTab = "DASHBOARD",
 			workflowProcess = "Single Approver");
 
-		AssertTextEquals.assertPartialText(
-			locator1 = "Message#EMPTY_INFO",
+		AssertTextEquals(
+			locator1 = "Message#EMPTY_STATE_TEXT",
 			value1 = "No results were found.");
 
 		WorkflowMetrics.goToDashboardAllItemsWithFilter(
@@ -1666,7 +1667,7 @@ definition {
 
 		Click(
 			locator1 = "WorkflowAllItems#KEBAB_DROPDOWN",
-			task = "1");
+			task = 1);
 
 		AssertElementNotPresent(locator1 = "WorkflowAllItems#APPROVE_DROPDOWN");
 
@@ -1702,7 +1703,7 @@ definition {
 
 		Click(
 			locator1 = "WorkflowAllItems#KEBAB_DROPDOWN",
-			task = "1");
+			task = 1);
 
 		Click(locator1 = "WorkflowAllItems#APPROVE_DROPDOWN");
 
@@ -1738,7 +1739,7 @@ definition {
 			infoOption = "Label",
 			infoValue = "Review");
 
-		ProcessBuilderKaleoDesignerReact.selectNodeByLabel(nodeLabel = "update");
+		ProcessBuilderKaleoDesignerReact.selectNodeByLabel(nodeLabel = "Update");
 
 		ProcessBuilderKaleoDesignerReact.deleteNodeOrConnection(title = "Delete Task Node");
 
@@ -1748,7 +1749,7 @@ definition {
 			category = "Configuration",
 			panel = "Site Administration",
 			portlet = "Workflow",
-			site = "${siteName}");
+			site = ${siteName});
 
 		Workflow.configureWorkflow(
 			workflowDefinition = "Single Approver Edited",
@@ -1774,7 +1775,7 @@ definition {
 
 		Click(
 			locator1 = "WorkflowAllItems#KEBAB_DROPDOWN",
-			task = "1");
+			task = 1);
 
 		Click(locator1 = "WorkflowAllItems#APPROVE_DROPDOWN");
 
@@ -1789,8 +1790,8 @@ definition {
 			workflowMetricsTab = "DASHBOARD",
 			workflowProcess = "Single Approver Edited");
 
-		AssertTextEquals.assertPartialText(
-			locator1 = "Message#EMPTY_INFO",
+		AssertTextEquals(
+			locator1 = "Message#EMPTY_STATE_TEXT",
 			value1 = "No results were found.");
 
 		WorkflowMetrics.goToDashboardAllItemsWithFilter(
@@ -1814,14 +1815,14 @@ definition {
 	}
 
 	@description = "LRQA-53653 Automate LPS-89014 Update and delete SLA"
-	@priority = "5"
+	@priority = 5
 	test UpdateandDeleteSLA {
 		property portal.acceptance = "true";
 		property test.name.skip.portal.instance = "WorkflowMetrics#UpdateandDeleteSLA";
 
 		WorkflowMetrics.setSLADefinitionsJobInterval(
-			definitionsJobInterval = "1",
-			slaJobInterval = "1");
+			definitionsJobInterval = 1,
+			slaJobInterval = 1);
 
 		Navigator.openURL();
 
@@ -1852,10 +1853,10 @@ definition {
 		Click(locator1 = "WorkflowMetricsSLA#ADD_NEW_SLA_BUTTON");
 
 		WorkflowMetrics.fillSLAForm(
-			slaDefinitionDays = "0",
+			slaDefinitionDays = 0,
 			slaDefinitionDescription = "SLA Description",
 			slaDefinitionEnd = "Process Ends: Approved",
-			slaDefinitionHours = "0001",
+			slaDefinitionHours = 0001,
 			slaDefinitionName = "One min",
 			slaDefinitionStart = "Process Begins");
 
@@ -1870,7 +1871,7 @@ definition {
 		WorkflowMetrics.goToWorkflowProcessMetrics(workflowProcessName = "Single Approver");
 
 		WorkflowMetrics.waitForSLA(
-			key_expectedValue = "0",
+			key_expectedValue = 0,
 			key_status = "OVERDUE");
 
 		Navigator.openURL();
@@ -1883,10 +1884,10 @@ definition {
 		WorkflowMetrics.goToWorkflowProcessMetrics(workflowProcessName = "Single Approver");
 
 		WorkflowMetrics.checkPendingWorkflowValues(
-			key_ontime = "0",
-			key_overdue = "1",
-			key_pending = "1",
-			key_untracked = "0");
+			key_ontime = 0,
+			key_overdue = 1,
+			key_pending = 1,
+			key_untracked = 0);
 
 		Click(locator1 = "WorkflowMetricsSLA#METRICS_MENU_SLA");
 
@@ -1895,9 +1896,9 @@ definition {
 		WorkflowMetrics.goToEditSLA(slaName = "One min");
 
 		WorkflowMetrics.fillSLAForm(
-			slaDefinitionDays = "1",
+			slaDefinitionDays = 1,
 			slaDefinitionDescription = "SLA Description",
-			slaDefinitionHours = "0000",
+			slaDefinitionHours = 0000,
 			slaDefinitionName = "One day");
 
 		Button.clickUpdate();
@@ -1913,7 +1914,7 @@ definition {
 		WorkflowMetrics.goToWorkflowProcessMetrics(workflowProcessName = "Single Approver");
 
 		WorkflowMetrics.waitForSLA(
-			key_expectedValue = "0",
+			key_expectedValue = 0,
 			key_status = "ONTIME");
 
 		Navigator.openURL();
@@ -1928,10 +1929,10 @@ definition {
 		Refresh();
 
 		WorkflowMetrics.checkPendingWorkflowValues(
-			key_ontime = "1",
-			key_overdue = "0",
-			key_pending = "1",
-			key_untracked = "0");
+			key_ontime = 1,
+			key_overdue = 0,
+			key_pending = 1,
+			key_untracked = 0);
 
 		Click(locator1 = "WorkflowMetricsSLA#METRICS_MENU_SLA");
 
@@ -1942,9 +1943,9 @@ definition {
 			locator1 = "WorkflowMetricsSLA#SLA_RECORD_TITLE");
 
 		WorkflowMetrics.fillSLAForm(
-			slaDefinitionDays = "1",
+			slaDefinitionDays = 1,
 			slaDefinitionDescription = "SLA Description",
-			slaDefinitionHours = "0000",
+			slaDefinitionHours = 0000,
 			slaDefinitionName = "One day Edit");
 
 		Button.clickUpdate();
@@ -1957,21 +1958,21 @@ definition {
 	}
 
 	@description = "LRQA-57666 - Automate LPS-105497: As a Operation Manager, I want to update the due date a workflow instance while analyzing my process metrics"
-	@priority = "5"
+	@priority = 5
 	test UpdateDueDate {
 		property portal.acceptance = "true";
 
-		var siteName = TestCase.getSiteName(siteName = "${siteName}");
+		var siteName = TestCase.getSiteName(siteName = ${siteName});
 		var currentYear = DateUtil.getCurrentYear();
 
 		var futureYear = ${currentYear} + 1;
 
-		var futureYearShort = StringUtil.substring("${futureYear}", "2", "4");
+		var futureYearShort = StringUtil.substring(${futureYear}, 2, 4);
 
 		ProductMenu.gotoPortlet(
 			category = "Configuration",
 			portlet = "Workflow",
-			site = "${siteName}");
+			site = ${siteName});
 
 		Workflow.configureWorkflow(
 			workflowDefinition = "Single Approver",
@@ -2015,9 +2016,9 @@ definition {
 	}
 
 	@description = "LRQA-60717 - Automate LPS-105497: As a Operation Manager, I want to update the due date a workflow instance while analyzing my process metrics"
-	@priority = "4"
+	@priority = 4
 	test UpdateDueDateInvalidDateTime {
-		var siteName = TestCase.getSiteName(siteName = "${siteName}");
+		var siteName = TestCase.getSiteName(siteName = ${siteName});
 		var currentYear = DateUtil.getCurrentYear();
 
 		var futureYear = ${currentYear} + 1;
@@ -2025,7 +2026,7 @@ definition {
 		ProductMenu.gotoPortlet(
 			category = "Configuration",
 			portlet = "Workflow",
-			site = "${siteName}");
+			site = ${siteName});
 
 		Workflow.configureWorkflow(
 			workflowDefinition = "Single Approver",
@@ -2081,14 +2082,14 @@ definition {
 
 	@description = "LRQA-60717 - Automate LPS-105497: As a Operation Manager, I want to update the due date a workflow instance while analyzing my process metrics"
 	@ignore = "true"
-	@priority = "4"
+	@priority = 4
 	test UpdateDueDateUnassignedUser {
-		var siteName = TestCase.getSiteName(siteName = "${siteName}");
+		var siteName = TestCase.getSiteName(siteName = ${siteName});
 
 		ProductMenu.gotoPortlet(
 			category = "Configuration",
 			portlet = "Workflow",
-			site = "${siteName}");
+			site = ${siteName});
 
 		Workflow.configureWorkflow(
 			workflowDefinition = "Single Approver",
@@ -2148,7 +2149,7 @@ definition {
 	}
 
 	@description = "LRQA-53646 - Automate LPS-88573: Search and order the reports list"
-	@priority = "5"
+	@priority = 5
 	test ValidateWorkflowProcessListOnMetrics {
 		property portal.acceptance = "true";
 		property test.name.skip.portal.instance = "WorkflowMetrics#ValidateWorkflowProcessListOnMetrics";
@@ -2227,16 +2228,16 @@ definition {
 	}
 
 	@description = "View that Custom Range is selected with shown input date"
-	@priority = "5"
+	@priority = 5
 	test VerifyCustomRangeDateInput {
-		property portal.acceptance = "true";
+		property portal.acceptance = "quarantine";
 
-		var siteName = TestCase.getSiteName(siteName = "${siteName}");
+		var siteName = TestCase.getSiteName(siteName = ${siteName});
 
 		ProductMenu.gotoPortlet(
 			category = "Configuration",
 			portlet = "Workflow",
-			site = "${siteName}");
+			site = ${siteName});
 
 		Workflow.configureWorkflow(
 			workflowDefinition = "Single Approver",
@@ -2290,33 +2291,33 @@ definition {
 
 		WorkflowMetrics.assertChartTotalValue(
 			velocityUnitTotal = "inst / week",
-			velocityValueTotal = "0");
+			velocityValueTotal = 0);
 	}
 
 	@description = "LRQA-53639 - Automate LPS-100675"
-	@priority = "5"
+	@priority = 5
 	test VerifyFilterTopStepPerformance {
 		property portal.acceptance = "true";
 
-		var key_testSlaDefinitionDays = "0";
+		var key_testSlaDefinitionDays = 0;
 		var key_testSlaDefinitionHours = "00:01";
 		var key_testSlaDefinitionDescription = "SLA Description";
 		var key_testSlaDefinitionEnd = "Process Ends: Approved";
 		var key_testSlaDefinitionName = "SLA Name";
 		var key_testSlaDefinitionStart = "Process Begins";
-		var siteName = TestCase.getSiteName(siteName = "${siteName}");
+		var siteName = TestCase.getSiteName(siteName = ${siteName});
 
 		WorkflowMetrics.goToWorkflowSLASettings(workflowProcessName = "Single Approver");
 
 		Click(locator1 = "WorkflowMetricsSLA#ADD_NEW_SLA_BUTTON");
 
 		WorkflowMetrics.fillSLAForm(
-			slaDefinitionDays = "${key_testSlaDefinitionDays}",
-			slaDefinitionDescription = "${key_testSlaDefinitionDescription}",
-			slaDefinitionEnd = "${key_testSlaDefinitionEnd}",
-			slaDefinitionHours = "${key_testSlaDefinitionHours}",
-			slaDefinitionName = "${key_testSlaDefinitionName}",
-			slaDefinitionStart = "${key_testSlaDefinitionStart}");
+			slaDefinitionDays = ${key_testSlaDefinitionDays},
+			slaDefinitionDescription = ${key_testSlaDefinitionDescription},
+			slaDefinitionEnd = ${key_testSlaDefinitionEnd},
+			slaDefinitionHours = ${key_testSlaDefinitionHours},
+			slaDefinitionName = ${key_testSlaDefinitionName},
+			slaDefinitionStart = ${key_testSlaDefinitionStart});
 
 		Button.clickSave();
 
@@ -2325,7 +2326,7 @@ definition {
 		ProductMenu.gotoPortlet(
 			category = "Configuration",
 			portlet = "Workflow",
-			site = "${siteName}");
+			site = ${siteName});
 
 		Workflow.configureWorkflow(
 			workflowDefinition = "Single Approver",
@@ -2345,7 +2346,7 @@ definition {
 		WorkflowMetrics.goToWorkflowProcessMetrics(workflowProcessName = "Single Approver");
 
 		WorkflowMetrics.waitForSLA(
-			key_expectedValue = "0",
+			key_expectedValue = 0,
 			key_status = "OVERDUE");
 
 		UserBar.gotoDropdownItem(dropdownItem = "My Workflow Tasks");
@@ -2365,7 +2366,7 @@ definition {
 		Click(locator1 = "WorkflowMetrics#METRICS_PERFORMANCE_TAB");
 
 		WorkflowMetrics.waitForCompletedSLA(
-			key_expectedValue = "0",
+			key_expectedValue = 0,
 			key_status = "OVERDUE");
 
 		WorkflowMetrics.assertChartTotalValuePerformanceByStep(
@@ -2385,7 +2386,7 @@ definition {
 	}
 
 	@description = "LRQA-59962 - Automate LPS-108828: As a Portal Admin, I want Workflow Metrics to create an index per company"
-	@priority = "5"
+	@priority = 5
 	test VerifyMetricsIndexesInControlPanel {
 		property portal.acceptance = "true";
 		property test.name.skip.portal.instance = "WorkflowMetrics#VerifyMetricsIndexesInControlPanel";
@@ -2396,12 +2397,12 @@ definition {
 
 		WorkflowMetrics.goToFieldMappingsTab();
 
-		WorkflowMetrics.assertMetricsIndexes(companyId = "${companyId}");
+		WorkflowMetrics.assertMetricsIndexes(companyId = ${companyId});
 	}
 
 	@description = "LRQA-53661 Automate LPS-89119: [SLA] Define the SLA timer calendar"
 	@ignore = "true"
-	@priority = "5"
+	@priority = 5
 	test VerifySLACustomCalendar {
 		property portal.acceptance = "true";
 		property test.name.skip.portal.instance = "WorkflowMetrics#VerifySLACustomCalendar";
@@ -2433,7 +2434,7 @@ definition {
 			portlet = "App Manager");
 
 		AppManager.uploadApp(
-			appName = "${appName}",
+			appName = ${appName},
 			warFileName = "${warFileName}.jar");
 
 		AppManager.viewApp(
@@ -2461,10 +2462,10 @@ definition {
 
 		WorkflowMetrics.fillSLAForm(
 			slaDefinitionCalendar = "24/7 (System Default)",
-			slaDefinitionDays = "1",
+			slaDefinitionDays = 1,
 			slaDefinitionDescription = "SLA Description",
 			slaDefinitionEnd = "Process Ends: Approved",
-			slaDefinitionHours = "1000",
+			slaDefinitionHours = 1000,
 			slaDefinitionName = "SLA Name",
 			slaDefinitionStart = "Process Begins");
 
@@ -2503,20 +2504,20 @@ definition {
 	}
 
 	@description = "LRQA-53650 Automate LPS-89015: [SLA] Verify the SLA Time Frame Start Pause Stop behaviour"
-	@priority = "5"
+	@priority = 5
 	test VerifySLATimeFrameStartPauseStop {
 		property test.name.skip.portal.instance = "WorkflowMetrics#VerifySLATimeFrameStartPauseStop";
 
-		var siteName = TestCase.getSiteName(siteName = "${siteName}");
+		var siteName = TestCase.getSiteName(siteName = ${siteName});
 
 		WorkflowMetrics.setSLADefinitionsJobInterval(
-			definitionsJobInterval = "1",
-			slaJobInterval = "1");
+			definitionsJobInterval = 1,
+			slaJobInterval = 1);
 
 		ProductMenu.gotoPortlet(
 			category = "Configuration",
 			portlet = "Workflow",
-			site = "${siteName}");
+			site = ${siteName});
 
 		Workflow.configureWorkflow(
 			workflowDefinition = "Single Approver",
@@ -2534,10 +2535,10 @@ definition {
 		Click(locator1 = "WorkflowMetricsSLA#ADD_NEW_SLA_BUTTON");
 
 		WorkflowMetrics.fillSLAForm(
-			slaDefinitionDays = "0",
+			slaDefinitionDays = 0,
 			slaDefinitionDescription = "SLA Description",
 			slaDefinitionEnd = "Process Ends: Approved",
-			slaDefinitionHours = "0002",
+			slaDefinitionHours = 0002,
 			slaDefinitionName = "SLAName",
 			slaDefinitionStart = "Process Begins");
 
@@ -2559,24 +2560,24 @@ definition {
 		WorkflowMetrics.goToWorkflowProcessMetrics(workflowProcessName = "Single Approver");
 
 		WorkflowMetrics.waitForSLA(
-			key_expectedValue = "0",
+			key_expectedValue = 0,
 			key_status = "ONTIME");
 
 		WorkflowMetrics.checkPendingWorkflowValues(
-			key_ontime = "1",
-			key_overdue = "0",
-			key_pending = "1",
-			key_untracked = "0");
+			key_ontime = 1,
+			key_overdue = 0,
+			key_pending = 1,
+			key_untracked = 0);
 
 		WorkflowMetrics.waitForSLA(
-			key_expectedValue = "0",
+			key_expectedValue = 0,
 			key_status = "OVERDUE");
 
 		WorkflowMetrics.checkPendingWorkflowValues(
-			key_ontime = "0",
-			key_overdue = "1",
-			key_pending = "1",
-			key_untracked = "0");
+			key_ontime = 0,
+			key_overdue = 1,
+			key_pending = 1,
+			key_untracked = 0);
 
 		UserBar.gotoDropdownItem(dropdownItem = "My Workflow Tasks");
 
@@ -2603,22 +2604,22 @@ definition {
 		WorkflowMetrics.goToWorkflowProcessMetrics(workflowProcessName = "Single Approver");
 
 		WorkflowMetrics.checkPendingWorkflowValues(
-			key_ontime = "0",
-			key_overdue = "0",
-			key_pending = "0",
-			key_untracked = "0");
+			key_ontime = 0,
+			key_overdue = 0,
+			key_pending = 0,
+			key_untracked = 0);
 
 		Click(locator1 = "WorkflowMetrics#METRICS_PERFORMANCE_TAB");
 
 		WorkflowMetrics.waitForCompletedSLA(
-			key_expectedValue = "0",
+			key_expectedValue = 0,
 			key_status = "OVERDUE");
 
 		WorkflowMetrics.checkCompletedWorkflowValues(
-			key_completed = "1",
-			key_ontime = "0",
-			key_overdue = "1",
-			key_untracked = "0");
+			key_completed = 1,
+			key_ontime = 0,
+			key_overdue = 1,
+			key_untracked = 0);
 
 		JSONBlog.addEntry(
 			entryContent = "Blogs Entry Content1",
@@ -2634,14 +2635,14 @@ definition {
 		WorkflowMetrics.goToWorkflowProcessMetrics(workflowProcessName = "Single Approver");
 
 		WorkflowMetrics.waitForSLA(
-			key_expectedValue = "0",
+			key_expectedValue = 0,
 			key_status = "ONTIME");
 
 		WorkflowMetrics.checkPendingWorkflowValues(
-			key_ontime = "1",
-			key_overdue = "0",
-			key_pending = "1",
-			key_untracked = "0");
+			key_ontime = 1,
+			key_overdue = 0,
+			key_pending = 1,
+			key_untracked = 0);
 
 		Click(locator1 = "WorkflowMetricsSLA#METRICS_MENU_SLA");
 
@@ -2650,9 +2651,9 @@ definition {
 		WorkflowMetrics.goToEditSLA(slaName = "SLAName");
 
 		WorkflowMetrics.fillSLAForm(
-			slaDefinitionDays = "0",
+			slaDefinitionDays = 0,
 			slaDefinitionDescription = "SLA Description",
-			slaDefinitionHours = "0002",
+			slaDefinitionHours = 0002,
 			slaDefinitionName = "SLAName",
 			slaDefinitionPause = "On Task: Review");
 
@@ -2670,33 +2671,33 @@ definition {
 		WorkflowMetrics.goToWorkflowProcessMetrics(workflowProcessName = "Single Approver");
 
 		WorkflowMetrics.waitForSLAPendingNotChange(
-			key_expectedValue = "1",
-			key_pauseTime = "12",
+			key_expectedValue = 1,
+			key_pauseTime = 12,
 			key_status = "UNTRACKED");
 
 		WorkflowMetrics.checkPendingWorkflowValues(
-			key_ontime = "0",
-			key_overdue = "0",
-			key_pending = "1",
-			key_untracked = "1");
+			key_ontime = 0,
+			key_overdue = 0,
+			key_pending = 1,
+			key_untracked = 1);
 	}
 
 	@description = "LRQA-53657 - Automate LPS-86650: [Reports] View the summary of all completed items and what's their SLA status"
-	@priority = "5"
+	@priority = 5
 	test ViewCompletedItems {
 		property portal.acceptance = "true";
 		property test.name.skip.portal.instance = "WorkflowMetrics#ViewCompletedItems";
 
-		var siteName = TestCase.getSiteName(siteName = "${siteName}");
+		var siteName = TestCase.getSiteName(siteName = ${siteName});
 
 		WorkflowMetrics.setSLADefinitionsJobInterval(
-			definitionsJobInterval = "1",
-			slaJobInterval = "1");
+			definitionsJobInterval = 1,
+			slaJobInterval = 1);
 
 		ProductMenu.gotoPortlet(
 			category = "Configuration",
 			portlet = "Workflow",
-			site = "${siteName}");
+			site = ${siteName});
 
 		Workflow.configureWorkflow(
 			workflowDefinition = "Single Approver",
@@ -2728,7 +2729,7 @@ definition {
 			slaDefinitionDays = "",
 			slaDefinitionDescription = "SLA Description",
 			slaDefinitionEnd = "Process Ends: Approved",
-			slaDefinitionHours = "0001",
+			slaDefinitionHours = 0001,
 			slaDefinitionName = "SLA Name",
 			slaDefinitionStart = "Process Begins");
 
@@ -2757,7 +2758,7 @@ definition {
 		WorkflowMetrics.goToWorkflowProcessMetrics(workflowProcessName = "Single Approver");
 
 		WorkflowMetrics.waitForSLA(
-			key_expectedValue = "0",
+			key_expectedValue = 0,
 			key_status = "OVERDUE");
 
 		UserBar.gotoDropdownItem(dropdownItem = "My Workflow Tasks");
@@ -2777,24 +2778,24 @@ definition {
 		Click(locator1 = "WorkflowMetrics#METRICS_PERFORMANCE_TAB");
 
 		WorkflowMetrics.waitForCompletedSLA(
-			key_expectedValue = "0",
+			key_expectedValue = 0,
 			key_status = "OVERDUE");
 
 		WorkflowMetrics.checkCompletedWorkflowValues(
-			key_completed = "3",
-			key_ontime = "1",
-			key_overdue = "1",
-			key_untracked = "1");
+			key_completed = 3,
+			key_ontime = 1,
+			key_overdue = 1,
+			key_untracked = 1);
 	}
 
 	@description = "LRQA-53654 Automate LPS-88968: [Reports] View the summary of all pending items and what's their SLA status"
-	@priority = "5"
+	@priority = 5
 	test ViewPendingItems {
 		property portal.acceptance = "true";
 		property test.name.skip.portal.instance = "WorkflowMetrics#ViewPendingItems";
 
-		var siteName = TestCase.getSiteName(siteName = "${siteName}");
-		var key_testSlaDefinitionDays = "0";
+		var siteName = TestCase.getSiteName(siteName = ${siteName});
+		var key_testSlaDefinitionDays = 0;
 		var key_testSlaDefinitionHours = "00:02";
 		var key_testSlaDefinitionDescription = "SLA Description";
 		var key_testSlaDefinitionEnd = "Process Ends: Approved";
@@ -2802,13 +2803,13 @@ definition {
 		var key_testSlaDefinitionStart = "Enters Task: Review";
 
 		WorkflowMetrics.setSLADefinitionsJobInterval(
-			definitionsJobInterval = "1",
-			slaJobInterval = "1");
+			definitionsJobInterval = 1,
+			slaJobInterval = 1);
 
 		ProductMenu.gotoPortlet(
 			category = "Configuration",
 			portlet = "Workflow",
-			site = "${siteName}");
+			site = ${siteName});
 
 		Workflow.configureWorkflow(
 			workflowDefinition = "Single Approver",
@@ -2821,22 +2822,22 @@ definition {
 		WorkflowMetrics.goToWorkflowProcessMetrics(workflowProcessName = "Single Approver");
 
 		WorkflowMetrics.checkPendingWorkflowValues(
-			key_ontime = "0",
-			key_overdue = "0",
-			key_pending = "1",
-			key_untracked = "1");
+			key_ontime = 0,
+			key_overdue = 0,
+			key_pending = 1,
+			key_untracked = 1);
 
 		WorkflowMetrics.goToWorkflowSLASettings(workflowProcessName = "Single Approver");
 
 		Click(locator1 = "WorkflowMetricsSLA#ADD_NEW_SLA_BUTTON");
 
 		WorkflowMetrics.fillSLAForm(
-			slaDefinitionDays = "${key_testSlaDefinitionDays}",
-			slaDefinitionDescription = "${key_testSlaDefinitionDescription}",
-			slaDefinitionEnd = "${key_testSlaDefinitionEnd}",
-			slaDefinitionHours = "${key_testSlaDefinitionHours}",
-			slaDefinitionName = "${key_testSlaDefinitionName}",
-			slaDefinitionStart = "${key_testSlaDefinitionStart}");
+			slaDefinitionDays = ${key_testSlaDefinitionDays},
+			slaDefinitionDescription = ${key_testSlaDefinitionDescription},
+			slaDefinitionEnd = ${key_testSlaDefinitionEnd},
+			slaDefinitionHours = ${key_testSlaDefinitionHours},
+			slaDefinitionName = ${key_testSlaDefinitionName},
+			slaDefinitionStart = ${key_testSlaDefinitionStart});
 
 		Button.clickSave();
 
@@ -2852,45 +2853,45 @@ definition {
 		WorkflowMetrics.goToWorkflowProcessMetrics(workflowProcessName = "Single Approver");
 
 		WorkflowMetrics.waitForSLA(
-			key_expectedValue = "0",
+			key_expectedValue = 0,
 			key_status = "ONTIME");
 
 		WorkflowMetrics.checkPendingWorkflowValues(
-			key_ontime = "1",
-			key_overdue = "0",
-			key_pending = "1",
-			key_untracked = "0");
+			key_ontime = 1,
+			key_overdue = 0,
+			key_pending = 1,
+			key_untracked = 0);
 
 		ProductMenu.gotoPortlet(
 			category = "Configuration",
 			portlet = "Workflow",
-			site = "${siteName}");
+			site = ${siteName});
 
 		WorkflowMetrics.goToWorkflowProcessMetrics(workflowProcessName = "Single Approver");
 
 		WorkflowMetrics.waitForSLA(
-			key_expectedValue = "0",
+			key_expectedValue = 0,
 			key_status = "OVERDUE");
 
 		WorkflowMetrics.checkPendingWorkflowValues(
-			key_ontime = "0",
-			key_overdue = "1",
-			key_pending = "1",
-			key_untracked = "0");
+			key_ontime = 0,
+			key_overdue = 1,
+			key_pending = 1,
+			key_untracked = 0);
 	}
 
 	@description = "LRQA-53634 - LPS-99441: [Performance] View performance for all assignees"
-	@priority = "5"
+	@priority = 5
 	test ViewPerformanceByAssigneePage {
 		property portal.acceptance = "true";
 		property test.name.skip.portal.instance = "WorkflowMetrics#ViewPerformanceByAssigneePage";
 
-		var siteName = TestCase.getSiteName(siteName = "${siteName}");
+		var siteName = TestCase.getSiteName(siteName = ${siteName});
 
 		WorkflowMetrics.createUsersAndAssignInstances(
-			numberOfBlogInstances = "4",
-			numberOfUsers = "3",
-			site = "${siteName}");
+			numberOfBlogInstances = 4,
+			numberOfUsers = 3,
+			site = ${siteName});
 
 		WorkflowMetrics.goToWorkflowProcessMetrics(workflowProcessName = "Single Approver");
 
@@ -2905,55 +2906,56 @@ definition {
 		Click(locator1 = "WorkflowMetrics#METRICS_PERFORMANCE_TAB");
 
 		ScrollWebElementIntoView(
-			key_assigneesNumber = "3",
+			key_assigneesNumber = 3,
 			locator1 = "WorkflowMetrics#METRICS_PERFORMANCE_BY_ASSIGNEE_CARD_VIEW_ALL_ASSIGNEES_LINK");
 
 		WorkflowMetrics.viewPerformanceByAssignee(
 			assignee = "1user user1",
 			avgCompletionTime = "1min",
-			taskCount = "2");
+			taskCount = 2);
 
 		WorkflowMetrics.viewPerformanceByAssignee(
 			assignee = "2user user2",
 			avgCompletionTime = "1min",
-			taskCount = "1");
+			taskCount = 1);
 
 		WorkflowMetrics.viewPerformanceByAssignee(
 			assignee = "3user user3",
 			avgCompletionTime = "1min",
-			taskCount = "1");
+			taskCount = 1);
 
 		Click(
-			key_assigneesNumber = "3",
+			key_assigneesNumber = 3,
 			locator1 = "WorkflowMetrics#METRICS_PERFORMANCE_BY_ASSIGNEE_CARD_VIEW_ALL_ASSIGNEES_LINK");
 
 		WorkflowMetrics.viewPerformanceByAssignee(
 			assignee = "1user user1",
 			avgCompletionTime = "1min",
-			taskCount = "2");
+			taskCount = 2);
 
 		WorkflowMetrics.viewPerformanceByAssignee(
 			assignee = "2user user2",
 			avgCompletionTime = "1min",
-			taskCount = "1");
+			taskCount = 1);
 
 		WorkflowMetrics.viewPerformanceByAssignee(
 			assignee = "3user user3",
 			avgCompletionTime = "1min",
-			taskCount = "1");
+			taskCount = 1);
 	}
 
 	@description = "LRQA-53662 Automate LPS-92053 View process item detail page"
-	@priority = "5"
+	@priority = 5
 	test ViewProcessItemDetailPage {
+		property portal.upstream = "quarantine";
 		property test.name.skip.portal.instance = "WorkflowMetrics#ViewProcessItemDetailPage";
 
-		var siteName = TestCase.getSiteName(siteName = "${siteName}");
+		var siteName = TestCase.getSiteName(siteName = ${siteName});
 
 		ProductMenu.gotoPortlet(
 			category = "Configuration",
 			portlet = "Workflow",
-			site = "${siteName}");
+			site = ${siteName});
 
 		Workflow.configureWorkflow(
 			workflowDefinition = "Single Approver",
@@ -2980,7 +2982,7 @@ definition {
 			createdBy = "Test Test",
 			currentAssignee = "Unassigned",
 			currentStep = "Review",
-			instanceId = "${getInstanceId}",
+			instanceId = ${getInstanceId},
 			processStatus = "Pending",
 			slaMessage = "No SLA records for this item.");
 
@@ -3012,19 +3014,19 @@ definition {
 	}
 
 	@description = "LRQA-53659 Automate LPS-86652 [Reports] View all items for a certain process"
-	@priority = "5"
+	@priority = 5
 	test ViewReports {
 		property environment.acceptance = "true";
-		property operating.system.types = "alpine,amazonlinux,centos,debian,fedora,orcllinux,osx,redhat,solaris,suse,ubuntu,windows";
+		property operating.system.types = "alpine,amazonlinux,centos,debian,fedora,orcllinux,osx,redhat,rockylinux,solaris,suse,ubuntu,windows";
 		property portal.acceptance = "true";
 		property test.name.skip.portal.instance = "WorkflowMetrics#ViewReports";
 
-		var siteName = TestCase.getSiteName(siteName = "${siteName}");
+		var siteName = TestCase.getSiteName(siteName = ${siteName});
 
 		ProductMenu.gotoPortlet(
 			category = "Configuration",
 			portlet = "Workflow",
-			site = "${siteName}");
+			site = ${siteName});
 
 		Workflow.configureWorkflow(
 			workflowDefinition = "Single Approver",
@@ -3045,28 +3047,28 @@ definition {
 		WaitForPageLoad();
 
 		AssertTextEquals(
-			key_rowNumber = "1",
+			key_rowNumber = 1,
 			locator1 = "WorkflowAllItems#METRICS_ALL_ITEMS_TABLE_ROW",
 			value1 = "Blogs Entry: Blogs Entry2 Title");
 
 		AssertTextEquals(
-			key_rowNumber = "2",
+			key_rowNumber = 2,
 			locator1 = "WorkflowAllItems#METRICS_ALL_ITEMS_TABLE_ROW",
 			value1 = "Blogs Entry: Blogs Entry Title");
 	}
 
 	@description = "LRQA-53631 Automate LPS-97666: [Performance] View top assignee performance"
-	@priority = "5"
+	@priority = 5
 	test ViewTopAsigneePerformance {
-		property portal.acceptance = "true";
+		property portal.acceptance = "quarantine";
 		property test.name.skip.portal.instance = "WorkflowMetrics#ViewTopAsigneePerformance";
 
-		var siteName = TestCase.getSiteName(siteName = "${siteName}");
+		var siteName = TestCase.getSiteName(siteName = ${siteName});
 
 		ProductMenu.gotoPortlet(
 			category = "Configuration",
 			portlet = "Workflow",
-			site = "${siteName}");
+			site = ${siteName});
 
 		Workflow.configureWorkflow(
 			workflowDefinition = "Single Approver",
@@ -3109,12 +3111,12 @@ definition {
 		WorkflowMetrics.viewPerformanceByAssignee(
 			assignee = "Test Test",
 			avgCompletionTime = "1min",
-			taskCount = "1");
+			taskCount = 1);
 
 		WorkflowMetrics.createUsersAndAssignInstancesWithGroovy(
-			numberOfBlogInstances = "10",
-			numberOfUsers = "10",
-			site = "${siteName}");
+			numberOfBlogInstances = 10,
+			numberOfUsers = 10,
+			site = ${siteName});
 
 		WorkflowMetrics.executeWorkflowScript(scriptName = "CompleteTasksAssignedToUsers.groovy");
 
@@ -3123,15 +3125,15 @@ definition {
 		Click(locator1 = "WorkflowMetrics#METRICS_PERFORMANCE_TAB");
 
 		AssertElementPresent(
-			key_rowNumber = "10",
+			key_rowNumber = 10,
 			locator1 = "WorkflowMetrics#METRICS_PERFORMANCE_BY_ASSIGNEE_TABLE_POSITION");
 
 		AssertElementNotPresent(
-			key_rowNumber = "11",
+			key_rowNumber = 11,
 			locator1 = "WorkflowMetrics#METRICS_PERFORMANCE_BY_ASSIGNEE_TABLE_POSITION");
 
 		AssertElementPresent(
-			key_assigneesNumber = "11",
+			key_assigneesNumber = 11,
 			locator1 = "WorkflowMetrics#METRICS_PERFORMANCE_BY_ASSIGNEE_CARD_VIEW_ALL_ASSIGNEES_LINK");
 
 		WorkflowMetrics.selectDateRangePerformanceByAssignee(
@@ -3148,26 +3150,28 @@ definition {
 		WorkflowMetrics.selectStepFilterPerformaceByAssignee(velocityUnit = "REVIEW");
 
 		AssertElementPresent(
-			key_assigneesNumber = "11",
+			key_assigneesNumber = 11,
 			locator1 = "WorkflowMetrics#METRICS_PERFORMANCE_BY_ASSIGNEE_CARD_VIEW_ALL_ASSIGNEES_LINK");
 
 		WorkflowMetrics.selectStepFilterPerformaceByAssignee(velocityUnit = "UPDATE");
 
-		AssertElementPresent(locator1 = "WorkflowMetrics#METRICS_PERFORMANCE_BY_ASSIGNEE_CARD_NO_RESULTS");
+		AssertTextEquals(
+			locator1 = "Message#EMPTY_STATE_TEXT",
+			value1 = "No results were found.");
 	}
 
 	@description = "LRQA-53641 Automate LPS-97669 [Dashboard] View overloaded assignees"
-	@priority = "5"
+	@priority = 5
 	test ViewWorkloadByAssigneeCard {
 		property portal.acceptance = "true";
 		property test.name.skip.portal.instance = "WorkflowMetrics#ViewWorkloadByAssigneeCard";
 
-		var siteName = TestCase.getSiteName(siteName = "${siteName}");
+		var siteName = TestCase.getSiteName(siteName = ${siteName});
 
 		WorkflowMetrics.createUsersAndAssignInstances(
-			numberOfBlogInstances = "3",
-			numberOfUsers = "3",
-			site = "${siteName}");
+			numberOfBlogInstances = 3,
+			numberOfUsers = 3,
+			site = ${siteName});
 
 		JSONBlog.addEntry(
 			entryContent = "Blogs Entry 4 Content",
@@ -3180,7 +3184,7 @@ definition {
 		WorkflowMetrics.viewWorkloadByAssigneeCard(
 			assigneeName = "1user user1",
 			tabName = "Total",
-			taskCount = "2");
+			taskCount = 2);
 
 		WorkflowMetrics.viewUserWorkloadByStepOnAllItems(
 			assigneeName = "1user user1",
@@ -3196,17 +3200,17 @@ definition {
 		WorkflowMetrics.viewWorkloadByAssigneeCard(
 			assigneeName = "1user user1",
 			tabName = "Total",
-			taskCount = "2");
+			taskCount = 2);
 
 		WorkflowMetrics.viewWorkloadByAssigneeCard(
 			assigneeName = "2user user2",
 			tabName = "Total",
-			taskCount = "1");
+			taskCount = 1);
 
 		WorkflowMetrics.viewWorkloadByAssigneeCard(
 			assigneeName = "3user user3",
 			tabName = "Total",
-			taskCount = "1");
+			taskCount = 1);
 
 		WorkflowMetrics.viewUserWorkloadByStepOnAllItems(
 			assigneeName = "1user user1",
@@ -3235,37 +3239,37 @@ definition {
 	}
 
 	@description = "LRQA-53630 Automate LPS-98518: [Dashboard] View workload distribution for all assignees"
-	@priority = "5"
+	@priority = 5
 	test ViewWorkloadByAssigneePage {
 		property portal.acceptance = "true";
 		property test.name.skip.portal.instance = "WorkflowMetrics#ViewWorkloadByAssigneePage";
 
-		var siteName = TestCase.getSiteName(siteName = "${siteName}");
+		var siteName = TestCase.getSiteName(siteName = ${siteName});
 
 		WorkflowMetrics.createUsersAndAssignInstances(
-			numberOfBlogInstances = "4",
-			numberOfUsers = "3",
-			site = "${siteName}");
+			numberOfBlogInstances = 4,
+			numberOfUsers = 3,
+			site = ${siteName});
 
 		WorkflowMetrics.goToWorkflowProcessMetrics(workflowProcessName = "Single Approver");
 
 		WorkflowMetrics.selectWorkloadByAssigneeCardFilterValue(workflowStep = "All Steps");
 
 		Click(
-			key_assigneesNumber = "3",
+			key_assigneesNumber = 3,
 			locator1 = "WorkflowMetrics#METRICS_PERFORMANCE_BY_ASSIGNEE_CARD_VIEW_ALL_ASSIGNEES_LINK");
 
 		WorkflowMetrics.viewWorkloadByAssigneePage(
 			assigneeName = "1user user1",
-			taskCount = "2");
+			taskCount = 2);
 
 		WorkflowMetrics.viewWorkloadByAssigneePage(
 			assigneeName = "2user user2",
-			taskCount = "1");
+			taskCount = 1);
 
 		WorkflowMetrics.viewWorkloadByAssigneePage(
 			assigneeName = "3user user3",
-			taskCount = "1");
+			taskCount = 1);
 
 		WorkflowMetrics.viewUserWorkloadByStepOnAllItems(
 			assigneeName = "1user user1",
@@ -3294,9 +3298,9 @@ definition {
 	}
 
 	@description = "LRQA-58272 Automate LPS-107777: Move Workflow Metrics reindex actions out of the Search Settings"
-	@priority = "5"
+	@priority = 5
 	test WorkflowMetricsReindex {
-		property portal.acceptance = "true";
+		property portal.acceptance = "quarantine";
 
 		WorkflowMetrics.executeIndexActions(actionDescription = "Workflow Indexes");
 

@@ -14,7 +14,7 @@
 
 package com.liferay.layout.content.page.editor.web.internal.model.listener;
 
-import com.liferay.layout.content.page.editor.web.internal.util.ContentUtil;
+import com.liferay.layout.content.page.editor.web.internal.util.ContentManager;
 import com.liferay.layout.display.page.LayoutDisplayPageObjectProvider;
 import com.liferay.layout.model.LayoutClassedModelUsage;
 import com.liferay.layout.page.template.model.LayoutPageTemplateStructure;
@@ -60,12 +60,12 @@ public class LayoutPageTemplateStructureRelModelListener
 		_layoutClassedModelUsageLocalService.deleteLayoutClassedModelUsages(
 			String.valueOf(
 				layoutPageTemplateStructure.getLayoutPageTemplateStructureId()),
-			_portal.getClassNameId(LayoutPageTemplateStructure.class),
+			_getLayoutPageTemplateStructureClassNameId(),
 			layoutPageTemplateStructure.getPlid());
 
 		Set<LayoutDisplayPageObjectProvider<?>>
 			layoutDisplayPageObjectProviders =
-				ContentUtil.getLayoutMappedLayoutDisplayPageObjectProviders(
+				_contentManager.getLayoutMappedLayoutDisplayPageObjectProviders(
 					layoutPageTemplateStructureRel.getData());
 
 		for (LayoutDisplayPageObjectProvider<?>
@@ -80,8 +80,7 @@ public class LayoutPageTemplateStructureRelModelListener
 						String.valueOf(
 							layoutPageTemplateStructure.
 								getLayoutPageTemplateStructureId()),
-						_portal.getClassNameId(
-							LayoutPageTemplateStructure.class),
+						_getLayoutPageTemplateStructureClassNameId(),
 						layoutPageTemplateStructure.getPlid());
 
 			if (layoutClassedModelUsage != null) {
@@ -102,10 +101,24 @@ public class LayoutPageTemplateStructureRelModelListener
 				String.valueOf(
 					layoutPageTemplateStructure.
 						getLayoutPageTemplateStructureId()),
-				_portal.getClassNameId(LayoutPageTemplateStructure.class),
+				_getLayoutPageTemplateStructureClassNameId(),
 				layoutPageTemplateStructure.getPlid(), serviceContext);
 		}
 	}
+
+	private long _getLayoutPageTemplateStructureClassNameId() {
+		if (_layoutPageTemplateStructureNameId != null) {
+			return _layoutPageTemplateStructureNameId;
+		}
+
+		_layoutPageTemplateStructureNameId = _portal.getClassNameId(
+			LayoutPageTemplateStructure.class.getName());
+
+		return _layoutPageTemplateStructureNameId;
+	}
+
+	@Reference
+	private ContentManager _contentManager;
 
 	@Reference
 	private LayoutClassedModelUsageLocalService
@@ -114,6 +127,8 @@ public class LayoutPageTemplateStructureRelModelListener
 	@Reference
 	private LayoutPageTemplateStructureLocalService
 		_layoutPageTemplateStructureLocalService;
+
+	private Long _layoutPageTemplateStructureNameId;
 
 	@Reference
 	private Portal _portal;

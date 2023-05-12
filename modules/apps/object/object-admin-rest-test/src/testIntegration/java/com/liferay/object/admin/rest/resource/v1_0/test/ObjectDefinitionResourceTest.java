@@ -17,6 +17,7 @@ package com.liferay.object.admin.rest.resource.v1_0.test;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.object.admin.rest.client.dto.v1_0.ObjectDefinition;
 import com.liferay.object.admin.rest.client.dto.v1_0.ObjectField;
+import com.liferay.object.admin.rest.client.dto.v1_0.Status;
 import com.liferay.object.admin.rest.client.pagination.Page;
 import com.liferay.object.admin.rest.client.problem.Problem;
 import com.liferay.object.admin.rest.client.serdes.v1_0.ObjectDefinitionSerDes;
@@ -25,17 +26,21 @@ import com.liferay.object.constants.ObjectDefinitionConstants;
 import com.liferay.object.exception.NoSuchObjectDefinitionException;
 import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
-import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.TextFormatter;
+import com.liferay.portal.kernel.workflow.WorkflowConstants;
+import com.liferay.portal.language.LanguageResources;
+import com.liferay.portal.test.rule.FeatureFlags;
 import com.liferay.portal.test.rule.Inject;
-import com.liferay.portal.util.PropsUtil;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -50,6 +55,7 @@ import org.junit.runner.RunWith;
 /**
  * @author Javier Gamarra
  */
+@FeatureFlags({"LPS-146755", "LPS-167253"})
 @RunWith(Arquillian.class)
 public class ObjectDefinitionResourceTest
 	extends BaseObjectDefinitionResourceTestCase {
@@ -198,8 +204,41 @@ public class ObjectDefinitionResourceTest
 					objectDefinitionsJSONObject.getString("items"))));
 	}
 
+	@Override
 	@Test
-	public void testPutObjectDefinitionWithStorageType() throws Exception {
+	public void testPostObjectDefinition() throws Exception {
+		super.testPostObjectDefinition();
+
+		ObjectDefinition randomObjectDefinition = randomObjectDefinition();
+
+		Status status = new Status() {
+			{
+				code = WorkflowConstants.STATUS_APPROVED;
+				label = WorkflowConstants.getStatusLabel(
+					WorkflowConstants.STATUS_APPROVED);
+				label_i18n = _language.get(
+					LanguageResources.getResourceBundle(
+						LocaleUtil.getDefault()),
+					WorkflowConstants.getStatusLabel(
+						WorkflowConstants.STATUS_APPROVED));
+			}
+		};
+
+		randomObjectDefinition.setStatus(status);
+
+		ObjectDefinition postObjectDefinition =
+			testPostObjectDefinition_addObjectDefinition(
+				randomObjectDefinition);
+
+		assertEquals(postObjectDefinition, randomObjectDefinition);
+		assertValid(postObjectDefinition);
+	}
+
+	@Override
+	@Test
+	public void testPutObjectDefinition() throws Exception {
+		super.testPutObjectDefinition();
+
 		ObjectDefinition postObjectDefinition =
 			testPutObjectDefinition_addObjectDefinition();
 
@@ -226,7 +265,7 @@ public class ObjectDefinitionResourceTest
 
 	@Override
 	protected String[] getAdditionalAssertFieldNames() {
-		return new String[] {"name"};
+		return new String[] {"name", "status"};
 	}
 
 	@Override
@@ -244,6 +283,12 @@ public class ObjectDefinitionResourceTest
 		objectDefinition.setLabel(
 			Collections.singletonMap(
 				"en_US", "O" + objectDefinition.getName()));
+		objectDefinition.setEnableLocalization(true);
+
+		if (!FeatureFlagManagerUtil.isEnabled("LPS-167253")) {
+			objectDefinition.setModifiable((Boolean)null);
+		}
+
 		objectDefinition.setName("O" + objectDefinition.getName());
 		objectDefinition.setPluralLabel(
 			Collections.singletonMap(
@@ -257,6 +302,7 @@ public class ObjectDefinitionResourceTest
 						indexed = false;
 						indexedAsKeyword = false;
 						label = Collections.singletonMap("en_US", "Column");
+						localized = !objectDefinition.getSystem();
 						name = StringUtil.randomId();
 						required = false;
 						system = false;
@@ -264,8 +310,21 @@ public class ObjectDefinitionResourceTest
 				}
 			});
 		objectDefinition.setScope(ObjectDefinitionConstants.SCOPE_COMPANY);
+		objectDefinition.setStatus(
+			new Status() {
+				{
+					code = WorkflowConstants.STATUS_DRAFT;
+					label = WorkflowConstants.getStatusLabel(
+						WorkflowConstants.STATUS_DRAFT);
+					label_i18n = _language.get(
+						LanguageResources.getResourceBundle(
+							LocaleUtil.getDefault()),
+						WorkflowConstants.getStatusLabel(
+							WorkflowConstants.STATUS_DRAFT));
+				}
+			});
 
-		if (!GetterUtil.getBoolean(PropsUtil.get("feature.flag.LPS-135430"))) {
+		if (!FeatureFlagManagerUtil.isEnabled("LPS-135430")) {
 			objectDefinition.setStorageType(StringPool.BLANK);
 		}
 
@@ -359,6 +418,9 @@ public class ObjectDefinitionResourceTest
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		ObjectDefinitionResourceTest.class);
+
+	@Inject
+	private Language _language;
 
 	private ObjectDefinition _objectDefinition;
 

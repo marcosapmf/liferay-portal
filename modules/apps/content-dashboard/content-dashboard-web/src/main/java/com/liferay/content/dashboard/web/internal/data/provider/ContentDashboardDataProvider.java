@@ -21,6 +21,7 @@ import com.liferay.content.dashboard.web.internal.model.AssetCategoryMetric;
 import com.liferay.content.dashboard.web.internal.model.AssetVocabularyMetric;
 import com.liferay.content.dashboard.web.internal.search.request.ContentDashboardSearchContextBuilder;
 import com.liferay.content.dashboard.web.internal.searcher.ContentDashboardSearchRequestBuilderFactory;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.ListUtil;
@@ -42,13 +43,13 @@ import com.liferay.portal.search.searcher.Searcher;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * @author David Arques
@@ -93,14 +94,15 @@ public class ContentDashboardDataProvider {
 	private Map<String, String> _getAssetCategoryTitlesMap(
 		AssetVocabulary assetVocabulary, Locale locale) {
 
-		List<AssetCategory> categories = assetVocabulary.getCategories();
+		Map<String, String> assetCategoryTitlesMap = new HashMap<>();
 
-		Stream<AssetCategory> stream = categories.stream();
+		for (AssetCategory assetCategory : assetVocabulary.getCategories()) {
+			assetCategoryTitlesMap.put(
+				String.valueOf(assetCategory.getCategoryId()),
+				assetCategory.getTitle(locale));
+		}
 
-		return stream.collect(
-			Collectors.toMap(
-				entry -> String.valueOf(entry.getCategoryId()),
-				entry -> entry.getTitle(locale)));
+		return assetCategoryTitlesMap;
 	}
 
 	private String _getAssetVocabularyField(AssetVocabulary assetVocabulary) {
@@ -125,8 +127,7 @@ public class ContentDashboardDataProvider {
 			_getBuckets(
 				_getTermsAggregation(
 					assetVocabulary, assetCategoryTitlesMap.keySet(),
-					"categories"),
-				"categories"));
+					"categories")));
 	}
 
 	private AssetVocabularyMetric _getAssetVocabularyMetric(
@@ -213,22 +214,22 @@ public class ContentDashboardDataProvider {
 				assetCategoryTitlesMap, assetVocabulary, buckets);
 		}
 
-		Stream<AssetCategoryMetric> stream = childAssetCategoryMetrics.stream();
+		Set<String> keys = new HashSet<>();
+
+		for (AssetCategoryMetric assetCategoryMetric :
+				childAssetCategoryMetrics) {
+
+			keys.add(assetCategoryMetric.getKey());
+		}
 
 		List<AssetCategoryMetric> assetCategoryMetrics =
 			_toAssetCategoryMetrics(
-				assetCategoryTitlesMap, buckets,
-				stream.map(
-					AssetCategoryMetric::getKey
-				).collect(
-					Collectors.toSet()
-				),
+				assetCategoryTitlesMap, buckets, keys,
 				childAssetCategoryTitlesMap, childAssetVocabulary,
 				_getChildNoneAssetCategoryMetricCounts(
 					(FilterAggregationResult)
 						searchResponse.getAggregationResult(
-							"childNoneCategory")),
-				"childCategories");
+							"childNoneCategory")));
 
 		FilterAggregationResult filterAggregationResult =
 			(FilterAggregationResult)searchResponse.getAggregationResult(
@@ -246,9 +247,7 @@ public class ContentDashboardDataProvider {
 			assetVocabulary.getTitle(_locale), assetCategoryMetrics);
 	}
 
-	private Collection<Bucket> _getBuckets(
-		TermsAggregation termsAggregation, String termsAggregationName) {
-
+	private Collection<Bucket> _getBuckets(TermsAggregation termsAggregation) {
 		SearchResponse searchResponse = _searcher.search(
 			_searchRequestBuilder.addAggregation(
 				termsAggregation
@@ -258,7 +257,7 @@ public class ContentDashboardDataProvider {
 
 		TermsAggregationResult termsAggregationResult =
 			(TermsAggregationResult)searchResponse.getAggregationResult(
-				termsAggregationName);
+				"categories");
 
 		return termsAggregationResult.getBuckets();
 	}
@@ -270,17 +269,19 @@ public class ContentDashboardDataProvider {
 			return Collections.emptyMap();
 		}
 
+		Map<String, Long> childNoneAssetCategoryMetricCounts = new HashMap<>();
+
 		TermsAggregationResult termsAggregationResult =
 			(TermsAggregationResult)
 				filterAggregationResult.getChildAggregationResult(
 					"childCategories");
 
-		Collection<Bucket> buckets = termsAggregationResult.getBuckets();
+		for (Bucket bucket : termsAggregationResult.getBuckets()) {
+			childNoneAssetCategoryMetricCounts.put(
+				bucket.getKey(), bucket.getDocCount());
+		}
 
-		Stream<Bucket> stream = buckets.stream();
-
-		return stream.collect(
-			Collectors.toMap(Bucket::getKey, Bucket::getDocCount));
+		return childNoneAssetCategoryMetricCounts;
 	}
 
 	private BooleanQuery _getFilterBooleanQuery(
@@ -364,16 +365,14 @@ public class ContentDashboardDataProvider {
 		Set<String> childAssetCategoryMetricKeys,
 		Map<String, String> childAssetCategoryTitlesMap,
 		AssetVocabulary childAssetVocabulary,
-		Map<String, Long> childNoneAssetCategoryMetricCounts,
-		String termsAggregationName) {
+		Map<String, Long> childNoneAssetCategoryMetricCounts) {
 
-		Stream<Bucket> stream = buckets.stream();
-
-		return stream.map(
+		return TransformUtil.transform(
+			buckets,
 			bucket -> {
 				TermsAggregationResult termsAggregationResult =
 					(TermsAggregationResult)bucket.getChildAggregationResult(
-						termsAggregationName);
+						"childCategories");
 
 				return new AssetCategoryMetric(
 					_toAssetVocabularyMetric(
@@ -385,29 +384,22 @@ public class ContentDashboardDataProvider {
 					bucket.getKey(),
 					assetCategoryTitlesMap.get(bucket.getKey()),
 					bucket.getDocCount());
-			}
-		).collect(
-			Collectors.toList()
-		);
+			});
 	}
 
 	private AssetVocabularyMetric _toAssetVocabularyMetric(
 		Map<String, String> assetCategoryTitlesMap,
 		AssetVocabulary assetVocabulary, Collection<Bucket> buckets) {
 
-		Stream<Bucket> stream = buckets.stream();
-
 		return new AssetVocabularyMetric(
 			String.valueOf(assetVocabulary.getVocabularyId()),
 			assetVocabulary.getTitle(_locale),
-			stream.map(
+			TransformUtil.transform(
+				buckets,
 				bucket -> new AssetCategoryMetric(
 					bucket.getKey(),
 					assetCategoryTitlesMap.get(bucket.getKey()),
-					bucket.getDocCount())
-			).collect(
-				Collectors.toList()
-			));
+					bucket.getDocCount())));
 	}
 
 	private AssetVocabularyMetric _toAssetVocabularyMetric(
@@ -416,17 +408,21 @@ public class ContentDashboardDataProvider {
 		Set<String> childAssetCategoryMetricKeys,
 		Long noneAssetCategoryMetricCount) {
 
-		Stream<Bucket> stream = buckets.stream();
+		List<AssetCategoryMetric> assetCategoryMetrics =
+			TransformUtil.transform(
+				buckets,
+				bucket -> {
+					if (!childAssetCategoryMetricKeys.contains(
+							bucket.getKey())) {
 
-		List<AssetCategoryMetric> assetCategoryMetrics = stream.filter(
-			bucket -> childAssetCategoryMetricKeys.contains(bucket.getKey())
-		).map(
-			bucket -> new AssetCategoryMetric(
-				bucket.getKey(), assetCategoryTitlesMap.get(bucket.getKey()),
-				bucket.getDocCount())
-		).collect(
-			Collectors.toList()
-		);
+						return null;
+					}
+
+					return new AssetCategoryMetric(
+						bucket.getKey(),
+						assetCategoryTitlesMap.get(bucket.getKey()),
+						bucket.getDocCount());
+				});
 
 		if (noneAssetCategoryMetricCount != null) {
 			assetCategoryMetrics.add(

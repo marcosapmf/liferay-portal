@@ -3100,7 +3100,8 @@ public class CPOptionValuePersistenceImpl
 				if (ercCPOptionValue != null) {
 					throw new DuplicateCPOptionValueExternalReferenceCodeException(
 						"Duplicate cp option value with external reference code " +
-							cpOptionValue.getExternalReferenceCode());
+							cpOptionValue.getExternalReferenceCode() +
+								" and company " + cpOptionValue.getCompanyId());
 				}
 			}
 			else {
@@ -3110,7 +3111,8 @@ public class CPOptionValuePersistenceImpl
 
 					throw new DuplicateCPOptionValueExternalReferenceCodeException(
 						"Duplicate cp option value with external reference code " +
-							cpOptionValue.getExternalReferenceCode());
+							cpOptionValue.getExternalReferenceCode() +
+								" and company " + cpOptionValue.getCompanyId());
 				}
 			}
 		}

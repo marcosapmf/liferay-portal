@@ -17,6 +17,7 @@ import React, {useCallback} from 'react';
 import PRMForm from '../../../../../../../../common/components/PRMForm';
 import PRMFormik from '../../../../../../../../common/components/PRMFormik';
 import ResumeCard from '../../../../../../../../common/components/ResumeCard';
+import LiferayPicklist from '../../../../../../../../common/interfaces/liferayPicklist';
 import MDFRequestBudget from '../../../../../../../../common/interfaces/mdfRequestBudget';
 import getIntlNumberFormat from '../../../../../../../../common/utils/getIntlNumberFormat';
 import getPicklistOptions from '../../../../../../../../common/utils/getPicklistOptions';
@@ -26,6 +27,7 @@ import getNewBudget from './utils/getNewBudget';
 interface IProps {
 	arrayHelpers: ArrayHelpers;
 	budgets: MDFRequestBudget[];
+	currency: LiferayPicklist;
 	currentActivityIndex: number;
 	expenseEntries: React.OptionHTMLAttributes<HTMLOptionElement>[];
 	setFieldValue: (
@@ -38,6 +40,7 @@ interface IProps {
 const BudgetBreakdownSection = ({
 	arrayHelpers,
 	budgets = [],
+	currency,
 	currentActivityIndex,
 	expenseEntries,
 	setFieldValue,
@@ -72,49 +75,63 @@ const BudgetBreakdownSection = ({
 		)
 	);
 
+	const onRemove = (index: number) =>
+		setFieldValue(
+			`activities[${currentActivityIndex}].budgets[${index}].removed`,
+			true
+		);
+
 	return (
 		<PRMForm.Section
 			subtitle="Add all the expenses that best match with your Activity to add your Total  MDF Requested Amount"
 			title="Budget Breakdown"
 		>
 			<div>
-				{budgets.map((_, index) => (
-					<div className="align-items-center d-flex" key={index}>
-						<PRMForm.Group className="mr-4">
-							<PRMFormik.Field
-								component={PRMForm.Select}
-								label="Expense"
-								name={`activities[${currentActivityIndex}].budgets[${index}].expense`}
-								onChange={(
-									event: React.ChangeEvent<HTMLInputElement>
-								) => onExpenseSelected(event, index)}
-								options={expensesOptions}
-								required
-							/>
+				{budgets.map(
+					({removed}, index) =>
+						!removed && (
+							<div
+								className="align-items-center d-flex"
+								key={index}
+							>
+								<PRMForm.Group className="mr-4">
+									<PRMFormik.Field
+										component={PRMForm.Select}
+										label="Expense"
+										name={`activities[${currentActivityIndex}].budgets[${index}].expense`}
+										onChange={(
+											event: React.ChangeEvent<
+												HTMLInputElement
+											>
+										) => onExpenseSelected(event, index)}
+										options={expensesOptions}
+										required
+									/>
 
-							<PRMFormik.Field
-								component={PRMForm.InputCurrency}
-								label="Budget"
-								name={`activities[${currentActivityIndex}].budgets[${index}].cost`}
-								onAccept={(value: number) =>
-									setFieldValue(
-										`activities[${currentActivityIndex}].budgets[${index}].cost`,
-										value
-									)
-								}
-								required
-							/>
-						</PRMForm.Group>
+									<PRMFormik.Field
+										component={PRMForm.InputCurrency}
+										label="Budget"
+										name={`activities[${currentActivityIndex}].budgets[${index}].cost`}
+										onAccept={(value: number) =>
+											setFieldValue(
+												`activities[${currentActivityIndex}].budgets[${index}].cost`,
+												value
+											)
+										}
+										required
+									/>
+								</PRMForm.Group>
 
-						<ClayButtonWithIcon
-							className="mt-2"
-							displayType="secondary"
-							onClick={() => arrayHelpers.remove(index)}
-							small
-							symbol="hr"
-						/>
-					</div>
-				))}
+								<ClayButtonWithIcon
+									className="mt-2"
+									displayType="secondary"
+									onClick={() => onRemove(index)}
+									small
+									symbol="hr"
+								/>
+							</div>
+						)
+				)}
 
 				<Button
 					className="align-items-center d-flex"
@@ -132,7 +149,9 @@ const BudgetBreakdownSection = ({
 			<div className="my-3">
 				<ResumeCard
 					leftContent="Total cost"
-					rightContent={getIntlNumberFormat().format(budgetsAmount)}
+					rightContent={getIntlNumberFormat(currency).format(
+						budgetsAmount
+					)}
 				/>
 
 				<ResumeCard

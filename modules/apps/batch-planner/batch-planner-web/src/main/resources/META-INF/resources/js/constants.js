@@ -23,6 +23,35 @@ export const HEADERS = new Headers({
 	'Accept-Language': Liferay.ThemeDisplay.getBCP47LanguageId(),
 });
 
+export const CREATE_STRATEGIES = [
+	{
+		default: false,
+		label: Liferay.Language.get('only-add-new-records'),
+		name: 'INSERT',
+	},
+	{
+		default: false,
+		label: Liferay.Language.get('only-update-records'),
+		name: 'UPDATE',
+	},
+	{
+		default: true,
+		label: Liferay.Language.get('add-or-update-records'),
+		name: 'UPSERT',
+	},
+];
+export const UPDATE_STRATEGIES = [
+	{
+		default: false,
+		label: Liferay.Language.get('update-changed-record-fields'),
+		name: 'PARTIAL_UPDATE',
+	},
+	{
+		default: true,
+		label: Liferay.Language.get('overwrite-records'),
+		name: 'UPDATE',
+	},
+];
 export const HEADLESS_BATCH_PLANNER_URL = '/o/batch-planner/v1.0';
 export const HEADLESS_BATCH_ENGINE_URL = '/o/headless-batch-engine/v1.0';
 export const JSON_FORMAT = 'json';
@@ -35,6 +64,7 @@ export const PROCESS_FAILED = 'FAILED';
 export const PROCESS_STARTED = 'STARTED';
 
 export const SCHEMA_SELECTED_EVENT = 'ie-schema-selected';
+export const IMPORT_STRATEGY_SELECTED_EVENT = 'ie-import-strategy-selected';
 export const TEMPLATE_CREATED_EVENT = 'ie-template-created';
 export const TEMPLATE_SELECTED_EVENT = 'ie-template-selected';
 export const TEMPLATE_SOILED_EVENT = 'ie-template-soiled';

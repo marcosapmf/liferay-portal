@@ -86,6 +86,17 @@ ModifiedFacetPortletInstanceConfiguration modifiedFacetPortletInstanceConfigurat
 					persistState="<%= true %>"
 					title="last-modified"
 				>
+					<c:if test="<%= !modifiedFacetDisplayContext.isNothingSelected() %>">
+						<clay:button
+							cssClass="btn-unstyled c-mb-4 facet-clear-btn"
+							displayType="link"
+							id='<%= liferayPortletResponse.getNamespace() + "facetModifiedClear" %>'
+							onClick="Liferay.Search.FacetUtil.clearSelections(event);"
+						>
+							<strong><liferay-ui:message key="clear" /></strong>
+						</clay:button>
+					</c:if>
+
 					<ul class="list-unstyled modified">
 
 						<%
@@ -95,12 +106,21 @@ ModifiedFacetPortletInstanceConfiguration modifiedFacetPortletInstanceConfigurat
 							<li class="facet-value">
 								<a href="<%= HtmlUtil.escapeHREF(bucketDisplayContext.getFilterValue()) %>">
 									<span class="term-name <%= bucketDisplayContext.isSelected() ? "facet-term-selected" : "facet-term-unselected" %>">
-										<liferay-ui:message key="<%= HtmlUtil.escape(bucketDisplayContext.getBucketText()) %>" />
+										<c:choose>
+											<c:when test="<%= bucketDisplayContext.isSelected() %>">
+												<strong><liferay-ui:message key="<%= HtmlUtil.escape(bucketDisplayContext.getBucketText()) %>" /></strong>
+											</c:when>
+											<c:otherwise>
+												<liferay-ui:message key="<%= HtmlUtil.escape(bucketDisplayContext.getBucketText()) %>" />
+											</c:otherwise>
+										</c:choose>
 									</span>
 
-									<small class="term-count">
-										(<%= bucketDisplayContext.getFrequency() %>)
-									</small>
+									<c:if test="<%= bucketDisplayContext.isFrequencyVisible() %>">
+										<small class="term-count">
+											(<%= bucketDisplayContext.getFrequency() %>)
+										</small>
+									</c:if>
 								</a>
 							</li>
 
@@ -110,7 +130,16 @@ ModifiedFacetPortletInstanceConfiguration modifiedFacetPortletInstanceConfigurat
 
 						<li class="facet-value">
 							<a href="<%= HtmlUtil.escapeHREF(customRangeBucketDisplayContext.getFilterValue()) %>" id="<portlet:namespace /><%= customRangeBucketDisplayContext.getBucketText() %>-toggleLink">
-								<span class="term-name <%= customRangeBucketDisplayContext.isSelected() ? "facet-term-selected" : "facet-term-unselected" %>"><liferay-ui:message key="<%= HtmlUtil.escape(customRangeBucketDisplayContext.getBucketText()) %>" />&hellip;</span>
+								<span class="term-name <%= customRangeBucketDisplayContext.isSelected() ? "facet-term-selected" : "facet-term-unselected" %>">
+									<c:choose>
+										<c:when test="<%= customRangeBucketDisplayContext.isSelected() %>">
+											<strong><liferay-ui:message key="<%= HtmlUtil.escape(customRangeBucketDisplayContext.getBucketText()) %>" />&hellip;</strong>
+										</c:when>
+										<c:otherwise>
+											<liferay-ui:message key="<%= HtmlUtil.escape(customRangeBucketDisplayContext.getBucketText()) %>" />&hellip;
+										</c:otherwise>
+									</c:choose>
+								</span>
 
 								<c:if test="<%= customRangeBucketDisplayContext.isSelected() %>">
 									<small class="term-count">
@@ -160,13 +189,16 @@ ModifiedFacetPortletInstanceConfiguration modifiedFacetPortletInstanceConfigurat
 								</aui:field-wrapper>
 							</clay:col>
 
-							<aui:button cssClass="modified-facet-custom-range-filter-button" disabled="<%= modifiedFacetCalendarDisplayContext.isRangeBackwards() %>" name="searchCustomRangeButton" value="search" />
+							<clay:button
+								cssClass="modified-facet-custom-range-filter-button"
+								disabled="<%= modifiedFacetCalendarDisplayContext.isRangeBackwards() %>"
+								displayType="secondary"
+								id='<%= liferayPortletResponse.getNamespace() + "searchCustomRangeButton" %>'
+								label="search"
+								name='<%= liferayPortletResponse.getNamespace() + "searchCustomRangeButton" %>'
+							/>
 						</li>
 					</ul>
-
-					<c:if test="<%= !modifiedFacetDisplayContext.isNothingSelected() %>">
-						<aui:button cssClass="btn-link btn-unstyled facet-clear-btn" onClick="Liferay.Search.FacetUtil.clearSelections(event);" value="clear" />
-					</c:if>
 				</liferay-ui:panel>
 			</liferay-ui:panel-container>
 		</liferay-ddm:template-renderer>

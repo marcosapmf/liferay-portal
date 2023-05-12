@@ -1,6 +1,7 @@
 @component-name = "portal-staging"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Export/Import Framework";
@@ -14,7 +15,7 @@ definition {
 	tearDown {
 		var testPortalInstance = PropsUtil.get("test.portal.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testPortalInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -22,7 +23,7 @@ definition {
 		}
 	}
 
-	@priority = "4"
+	@priority = 4
 	test Import6210buildNumber {
 		LAR.importSiteCP(
 			cannotImport = "true",

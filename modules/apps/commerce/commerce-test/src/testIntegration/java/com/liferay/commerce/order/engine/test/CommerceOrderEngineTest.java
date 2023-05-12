@@ -14,8 +14,8 @@
 
 package com.liferay.commerce.order.engine.test;
 
+import com.liferay.account.model.AccountEntry;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
-import com.liferay.commerce.account.model.CommerceAccount;
 import com.liferay.commerce.account.test.util.CommerceAccountTestUtil;
 import com.liferay.commerce.constants.CommerceOrderConstants;
 import com.liferay.commerce.constants.CommerceShipmentConstants;
@@ -68,6 +68,7 @@ import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
@@ -76,8 +77,6 @@ import java.math.BigDecimal;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.frutilla.FrutillaRule;
 
@@ -129,7 +128,7 @@ public class CommerceOrderEngineTest {
 			CommerceChannelConstants.CHANNEL_TYPE_SITE, null,
 			_commerceCurrency.getCode(), _serviceContext);
 
-		_commerceAccount = CommerceAccountTestUtil.addBusinessCommerceAccount(
+		_accountEntry = CommerceAccountTestUtil.addBusinessAccountEntry(
 			_user.getUserId(), RandomTestUtil.randomString(),
 			RandomTestUtil.randomString() + "@liferay.com",
 			RandomTestUtil.randomString(), new long[] {_user.getUserId()}, null,
@@ -137,7 +136,7 @@ public class CommerceOrderEngineTest {
 
 		_commerceOrder = CommerceTestUtil.addB2BCommerceOrder(
 			_group.getGroupId(), _user.getUserId(),
-			_commerceAccount.getCommerceAccountId(),
+			_accountEntry.getAccountEntryId(),
 			_commerceCurrency.getCommerceCurrencyId());
 
 		_commerceOrder = CommerceTestUtil.addCheckoutDetailsToCommerceOrder(
@@ -149,8 +148,8 @@ public class CommerceOrderEngineTest {
 			_commerceOrder.getCommerceOrderId(), _serviceContext);
 
 		_commerceContext = new TestCommerceContext(
-			_commerceCurrency, _commerceChannel, _user, _group,
-			_commerceOrder.getCommerceAccount(), _commerceOrder);
+			_commerceOrder.getAccountEntry(), _commerceCurrency,
+			_commerceChannel, _user, _group, _commerceOrder);
 	}
 
 	@After
@@ -505,17 +504,12 @@ public class CommerceOrderEngineTest {
 			openCommerceOrderStatus.getKey(), OpenCommerceOrderStatusImpl.KEY);
 		Assert.assertTrue(openCommerceOrderStatus.isComplete(_commerceOrder));
 
-		List<CommerceOrderStatus> nextCommerceOrderStatuses =
-			_commerceOrderEngine.getNextCommerceOrderStatuses(_commerceOrder);
-
-		Stream<CommerceOrderStatus> stream = nextCommerceOrderStatuses.stream();
-
 		List<CommerceOrderStatus> inProgressCommerceOrderStatuses =
-			stream.filter(
-				entry -> entry.getKey() == InProgressCommerceOrderStatusImpl.KEY
-			).collect(
-				Collectors.toList()
-			);
+			ListUtil.filter(
+				_commerceOrderEngine.getNextCommerceOrderStatuses(
+					_commerceOrder),
+				entry ->
+					entry.getKey() == InProgressCommerceOrderStatusImpl.KEY);
 
 		Assert.assertEquals(
 			inProgressCommerceOrderStatuses.toString(), 1,
@@ -1005,19 +999,12 @@ public class CommerceOrderEngineTest {
 			PendingCommerceOrderStatusImpl.KEY,
 			_commerceOrder.getOrderStatus());
 
-		List<CommerceOrderStatus> nextCommerceOrderStatuses =
-			_commerceOrderEngine.getNextCommerceOrderStatuses(_commerceOrder);
-
-		Stream<CommerceOrderStatus> stream = nextCommerceOrderStatuses.stream();
-
-		List<CommerceOrderStatus> inProgressCommerceOrderStatuses =
-			stream.filter(
-				entry -> entry.getPriority() == -1
-			).collect(
-				Collectors.toList()
-			);
-
-		Assert.assertFalse(inProgressCommerceOrderStatuses.isEmpty());
+		Assert.assertTrue(
+			ListUtil.exists(
+				_commerceOrderEngine.getNextCommerceOrderStatuses(
+					_commerceOrder),
+				commerceOrderStatus ->
+					commerceOrderStatus.getPriority() == -1));
 	}
 
 	@Test
@@ -1044,19 +1031,12 @@ public class CommerceOrderEngineTest {
 		Assert.assertEquals(
 			openCommerceOrderStatus.getKey(), OpenCommerceOrderStatusImpl.KEY);
 
-		List<CommerceOrderStatus> nextCommerceOrderStatuses =
-			_commerceOrderEngine.getNextCommerceOrderStatuses(_commerceOrder);
+		for (CommerceOrderStatus commerceOrderStatus :
+				_commerceOrderEngine.getNextCommerceOrderStatuses(
+					_commerceOrder)) {
 
-		Stream<CommerceOrderStatus> stream = nextCommerceOrderStatuses.stream();
-
-		List<CommerceOrderStatus> inProgressCommerceOrderStatuses =
-			stream.filter(
-				entry -> entry.getPriority() == -1
-			).collect(
-				Collectors.toList()
-			);
-
-		Assert.assertTrue(inProgressCommerceOrderStatuses.isEmpty());
+			Assert.assertNotEquals(-1, commerceOrderStatus.getPriority());
+		}
 	}
 
 	@Test
@@ -1099,7 +1079,7 @@ public class CommerceOrderEngineTest {
 
 	private static User _user;
 
-	private CommerceAccount _commerceAccount;
+	private AccountEntry _accountEntry;
 
 	@DeleteAfterTestRun
 	private CommerceChannel _commerceChannel;

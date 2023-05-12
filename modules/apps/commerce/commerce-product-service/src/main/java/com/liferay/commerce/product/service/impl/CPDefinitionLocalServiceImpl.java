@@ -14,12 +14,12 @@
 
 package com.liferay.commerce.product.service.impl;
 
+import com.liferay.account.model.AccountGroupRel;
+import com.liferay.account.service.AccountGroupRelLocalService;
 import com.liferay.asset.kernel.model.AssetEntry;
 import com.liferay.asset.kernel.model.AssetLinkConstants;
 import com.liferay.asset.kernel.service.AssetEntryLocalService;
 import com.liferay.asset.kernel.service.AssetLinkLocalService;
-import com.liferay.commerce.account.model.CommerceAccountGroupRel;
-import com.liferay.commerce.account.service.CommerceAccountGroupRelLocalService;
 import com.liferay.commerce.price.list.constants.CommercePriceListConstants;
 import com.liferay.commerce.price.list.model.CommercePriceEntry;
 import com.liferay.commerce.price.list.model.CommercePriceList;
@@ -28,13 +28,16 @@ import com.liferay.commerce.price.list.service.CommercePriceListLocalService;
 import com.liferay.commerce.product.configuration.CProductVersionConfiguration;
 import com.liferay.commerce.product.constants.CPAttachmentFileEntryConstants;
 import com.liferay.commerce.product.constants.CPField;
+import com.liferay.commerce.product.exception.CPDefinitionDeliveryMaxSubscriptionCyclesException;
 import com.liferay.commerce.product.exception.CPDefinitionDisplayDateException;
 import com.liferay.commerce.product.exception.CPDefinitionExpirationDateException;
 import com.liferay.commerce.product.exception.CPDefinitionIgnoreSKUCombinationsException;
+import com.liferay.commerce.product.exception.CPDefinitionMaxSubscriptionCyclesException;
 import com.liferay.commerce.product.exception.CPDefinitionMetaDescriptionException;
 import com.liferay.commerce.product.exception.CPDefinitionMetaKeywordsException;
 import com.liferay.commerce.product.exception.CPDefinitionMetaTitleException;
 import com.liferay.commerce.product.exception.CPDefinitionProductTypeNameException;
+import com.liferay.commerce.product.exception.CPDefinitionSubscriptionLengthException;
 import com.liferay.commerce.product.model.CPAttachmentFileEntry;
 import com.liferay.commerce.product.model.CPDefinition;
 import com.liferay.commerce.product.model.CPDefinitionLink;
@@ -71,6 +74,8 @@ import com.liferay.commerce.product.service.persistence.CProductPersistence;
 import com.liferay.commerce.product.type.CPType;
 import com.liferay.commerce.product.type.CPTypeRegistry;
 import com.liferay.commerce.product.type.virtual.constants.VirtualCPTypeConstants;
+import com.liferay.commerce.product.util.CPSubscriptionType;
+import com.liferay.commerce.product.util.CPSubscriptionTypeRegistry;
 import com.liferay.commerce.product.util.CPVersionContributor;
 import com.liferay.commerce.product.util.CPVersionContributorRegistryUtil;
 import com.liferay.commerce.product.util.comparator.CPDefinitionVersionComparator;
@@ -81,6 +86,7 @@ import com.liferay.expando.kernel.service.ExpandoRowLocalService;
 import com.liferay.friendly.url.model.FriendlyURLEntry;
 import com.liferay.friendly.url.model.FriendlyURLEntryLocalization;
 import com.liferay.friendly.url.service.FriendlyURLEntryLocalService;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.aop.AopService;
@@ -151,11 +157,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.LongStream;
-import java.util.stream.Stream;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -229,6 +231,18 @@ public class CPDefinitionLocalServiceImpl
 		_validate(
 			groupId, ddmStructureKey, metaTitleMap, metaDescriptionMap,
 			metaKeywordsMap, displayDate, expirationDate, productTypeName);
+		_validateSubscriptionLength(subscriptionLength, "length");
+		_validateSubscriptionCycles(
+			maxSubscriptionCycles, "subscriptionCycles");
+		_validateSubscriptionTypeSettingsUnicodeProperties(
+			subscriptionType, subscriptionTypeSettingsUnicodeProperties);
+		_validateSubscriptionLength(
+			deliverySubscriptionLength, "deliverySubscriptionLength");
+		_validateSubscriptionCycles(
+			deliveryMaxSubscriptionCycles, "deliverySubscriptionCycles");
+		_validateDeliverySubscriptionTypeSettingsUnicodeProperties(
+			deliverySubscriptionType,
+			deliverySubscriptionTypeSettingsUnicodeProperties);
 
 		long cpDefinitionId = counterLocalService.increment();
 
@@ -272,14 +286,14 @@ public class CPDefinitionLocalServiceImpl
 		cpDefinition.setSubscriptionEnabled(subscriptionEnabled);
 		cpDefinition.setSubscriptionLength(subscriptionLength);
 		cpDefinition.setSubscriptionType(subscriptionType);
-		cpDefinition.setSubscriptionTypeSettingsProperties(
+		cpDefinition.setSubscriptionTypeSettingsUnicodeProperties(
 			subscriptionTypeSettingsUnicodeProperties);
 		cpDefinition.setMaxSubscriptionCycles(maxSubscriptionCycles);
 		cpDefinition.setDeliverySubscriptionEnabled(
 			deliverySubscriptionEnabled);
 		cpDefinition.setDeliverySubscriptionLength(deliverySubscriptionLength);
 		cpDefinition.setDeliverySubscriptionType(deliverySubscriptionType);
-		cpDefinition.setDeliverySubscriptionTypeSettingsProperties(
+		cpDefinition.setDeliverySubscriptionTypeSettingsUnicodeProperties(
 			deliverySubscriptionTypeSettingsUnicodeProperties);
 		cpDefinition.setDeliveryMaxSubscriptionCycles(
 			deliveryMaxSubscriptionCycles);
@@ -583,7 +597,7 @@ public class CPDefinitionLocalServiceImpl
 
 		newCPDefinition.setCProductId(newCProduct.getCProductId());
 
-		_cProductPersistence.update(newCProduct);
+		newCProduct = _cProductPersistence.update(newCProduct);
 
 		newCPDefinition.setStatus(WorkflowConstants.STATUS_DRAFT);
 
@@ -608,6 +622,8 @@ public class CPDefinitionLocalServiceImpl
 			cpDefinitionLocalizationPersistence.findByCPDefinitionId(
 				cpDefinitionId);
 
+		Map<Locale, String> newNameMap = new HashMap<>();
+
 		for (CPDefinitionLocalization cpDefinitionLocalization :
 				cpDefinitionLocalizations) {
 
@@ -628,9 +644,26 @@ public class CPDefinitionLocalServiceImpl
 						"copy-of-x", newCPDefinitionLocalization.getName()));
 			}
 
-			cpDefinitionLocalizationPersistence.update(
-				newCPDefinitionLocalization);
+			newCPDefinitionLocalization =
+				cpDefinitionLocalizationPersistence.update(
+					newCPDefinitionLocalization);
+
+			newNameMap.put(
+				LocaleUtil.fromLanguageId(
+					newCPDefinitionLocalization.getLanguageId()),
+				newCPDefinitionLocalization.getName());
 		}
+
+		Group companyGroup = _groupLocalService.getCompanyGroup(
+			newCPDefinition.getCompanyId());
+
+		Map<String, String> newURLTitleMap = _getUniqueUrlTitles(
+			newCPDefinition, newNameMap);
+
+		_friendlyURLEntryLocalService.addFriendlyURLEntry(
+			companyGroup.getGroupId(),
+			_classNameLocalService.getClassNameId(CProduct.class),
+			newCProduct.getCProductId(), newURLTitleMap, serviceContext);
 
 		List<CPAttachmentFileEntry> cpAttachmentFileEntries =
 			_cpAttachmentFileEntryPersistence.findByC_C(
@@ -784,12 +817,9 @@ public class CPDefinitionLocalServiceImpl
 			newCPInstance.setCPDefinitionId(newCPDefinitionId);
 			newCPInstance.setCPInstanceUuid(_portalUUID.generate());
 
-			List<CPInstanceOptionValueRel> cpInstanceOptionValueRels =
-				_cpInstanceOptionValueRelPersistence.findByCPInstanceId(
-					cpInstance.getCPInstanceId());
-
 			for (CPInstanceOptionValueRel cpInstanceOptionValueRel :
-					cpInstanceOptionValueRels) {
+					_cpInstanceOptionValueRelPersistence.findByCPInstanceId(
+						cpInstance.getCPInstanceId())) {
 
 				CPInstanceOptionValueRel newCPInstanceOptionValueRel =
 					(CPInstanceOptionValueRel)cpInstanceOptionValueRel.clone();
@@ -804,19 +834,14 @@ public class CPDefinitionLocalServiceImpl
 					_cpDefinitionOptionRelPersistence.findByPrimaryKey(
 						cpInstanceOptionValueRel.getCPDefinitionOptionRelId());
 
-				Stream<CPDefinitionOptionRel> cpDefinitionOptionRelStream =
-					newCPDefinitionOptionRels.stream();
+				for (CPDefinitionOptionRel newCPDefinitionOptionRel :
+						newCPDefinitionOptionRels) {
 
-				Optional<CPDefinitionOptionRel> cpDefinitionOptionRelOptional =
-					cpDefinitionOptionRelStream.filter(
-						curCPDefinitionOptionRel ->
-							cpDefinitionOptionRel.getCPOptionId() ==
-								curCPDefinitionOptionRel.getCPOptionId()
-					).findFirst();
+					if (cpDefinitionOptionRel.getCPOptionId() !=
+							newCPDefinitionOptionRel.getCPOptionId()) {
 
-				if (cpDefinitionOptionRelOptional.isPresent()) {
-					CPDefinitionOptionRel newCPDefinitionOptionRel =
-						cpDefinitionOptionRelOptional.get();
+						continue;
+					}
 
 					long cpDefinitionOptionRelId =
 						newCPDefinitionOptionRel.getCPDefinitionOptionRelId();
@@ -824,33 +849,26 @@ public class CPDefinitionLocalServiceImpl
 					newCPInstanceOptionValueRel.setCPDefinitionOptionRelId(
 						cpDefinitionOptionRelId);
 
-					List<CPDefinitionOptionValueRel>
-						cpDefinitionOptionValueRels =
+					for (CPDefinitionOptionValueRel cpDefinitionOptionValueRel :
 							cpDefinitionOptionRel.
-								getCPDefinitionOptionValueRels();
+								getCPDefinitionOptionValueRels()) {
 
-					Stream<CPDefinitionOptionValueRel>
-						cpDefinitionOptionValueRelsStream =
-							cpDefinitionOptionValueRels.stream();
+						if (cpDefinitionOptionRelId !=
+								cpDefinitionOptionValueRel.
+									getCPDefinitionOptionRelId()) {
 
-					Optional<CPDefinitionOptionValueRel>
-						cpDefinitionOptionValueRelOptional =
-							cpDefinitionOptionValueRelsStream.filter(
-								curCPDefinitionOptionValueRel ->
-									cpDefinitionOptionRelId ==
-										curCPDefinitionOptionValueRel.
-											getCPDefinitionOptionRelId()
-							).findFirst();
-
-					if (cpDefinitionOptionValueRelOptional.isPresent()) {
-						CPDefinitionOptionValueRel cpDefinitionOptionValueRel =
-							cpDefinitionOptionValueRelOptional.get();
+							continue;
+						}
 
 						newCPInstanceOptionValueRel.
 							setCPInstanceOptionValueRelId(
 								cpDefinitionOptionValueRel.
 									getCPDefinitionOptionValueRelId());
+
+						break;
 					}
+
+					break;
 				}
 
 				_cpInstanceOptionValueRelLocalService.
@@ -880,17 +898,15 @@ public class CPDefinitionLocalServiceImpl
 				commerceChannelRel.getCommerceChannelId(), serviceContext);
 		}
 
-		for (CommerceAccountGroupRel commerceAccountGroupRel :
-				_commerceAccountGroupRelLocalService.
-					getCommerceAccountGroupRels(
-						originalCPDefinition.getModelClassName(),
-						originalCPDefinition.getCPDefinitionId(),
-						QueryUtil.ALL_POS, QueryUtil.ALL_POS, null)) {
+		for (AccountGroupRel accountGroupRel :
+				_accountGroupRelLocalService.getAccountGroupRels(
+					originalCPDefinition.getModelClassName(),
+					originalCPDefinition.getCPDefinitionId(), QueryUtil.ALL_POS,
+					QueryUtil.ALL_POS, null)) {
 
-			_commerceAccountGroupRelLocalService.addCommerceAccountGroupRel(
-				newCPDefinition.getModelClassName(), newCPDefinitionId,
-				commerceAccountGroupRel.getCommerceAccountGroupId(),
-				serviceContext);
+			_accountGroupRelLocalService.addAccountGroupRel(
+				accountGroupRel.getAccountGroupId(),
+				newCPDefinition.getModelClassName(), newCPDefinitionId);
 		}
 
 		List<CPVersionContributor> cpVersionContributors =
@@ -906,21 +922,21 @@ public class CPDefinitionLocalServiceImpl
 	}
 
 	@Override
-	public CPDefinition copyCPDefinition(long cpDefinitionId)
+	public CPDefinition copyCPDefinition(long sourceCPDefinitionId)
 		throws PortalException {
 
-		CPDefinition cpDefinition = cpDefinitionLocalService.getCPDefinition(
-			cpDefinitionId);
+		CPDefinition sourceCPDefinition =
+			cpDefinitionLocalService.getCPDefinition(sourceCPDefinitionId);
 
 		return cpDefinitionLocalService.copyCPDefinition(
-			cpDefinitionId, cpDefinition.getGroupId(),
+			sourceCPDefinitionId, sourceCPDefinition.getGroupId(),
 			WorkflowConstants.STATUS_DRAFT);
 	}
 
 	@Indexable(type = IndexableType.REINDEX)
 	@Override
 	public CPDefinition copyCPDefinition(
-			long cpDefinitionId, long groupId, int status)
+			long sourceCPDefinitionId, long groupId, int status)
 		throws PortalException {
 
 		ServiceContext serviceContext =
@@ -928,35 +944,35 @@ public class CPDefinitionLocalServiceImpl
 
 		User user = _userLocalService.getUser(serviceContext.getUserId());
 
-		CPDefinition originalCPDefinition =
-			cpDefinitionLocalService.getCPDefinition(cpDefinitionId);
+		CPDefinition sourceCPDefinition =
+			cpDefinitionLocalService.getCPDefinition(sourceCPDefinitionId);
 
-		CPDefinition newCPDefinition =
-			(CPDefinition)originalCPDefinition.clone();
+		CPDefinition targetCPDefinition =
+			(CPDefinition)sourceCPDefinition.clone();
 
-		newCPDefinition.setUuid(_portalUUID.generate());
+		targetCPDefinition.setUuid(_portalUUID.generate());
 
 		long newCPDefinitionId = counterLocalService.increment();
 
-		newCPDefinition.setCPDefinitionId(newCPDefinitionId);
+		targetCPDefinition.setCPDefinitionId(newCPDefinitionId);
 
-		newCPDefinition.setGroupId(groupId);
-		newCPDefinition.setUserId(user.getUserId());
-		newCPDefinition.setUserName(user.getFullName());
+		targetCPDefinition.setGroupId(groupId);
+		targetCPDefinition.setUserId(user.getUserId());
+		targetCPDefinition.setUserName(user.getFullName());
 
-		CProduct originalCProduct = originalCPDefinition.getCProduct();
+		CProduct sourceCProduct = sourceCPDefinition.getCProduct();
 
 		if (cpDefinitionLocalService.isVersionable(
-				originalCProduct.getPublishedCPDefinitionId())) {
+				sourceCProduct.getPublishedCPDefinitionId())) {
 
-			newCPDefinition.setVersion(
+			targetCPDefinition.setVersion(
 				_cProductLocalService.increment(
-					originalCPDefinition.getCProductId()));
+					sourceCPDefinition.getCProductId()));
 
 			if (status == WorkflowConstants.STATUS_APPROVED) {
 				CPDefinition publishedCPDefinition =
 					cpDefinitionLocalService.getCPDefinition(
-						originalCProduct.getPublishedCPDefinitionId());
+						sourceCProduct.getPublishedCPDefinitionId());
 
 				publishedCPDefinition.setPublished(false);
 
@@ -965,7 +981,7 @@ public class CPDefinitionLocalServiceImpl
 
 				_cProductLocalService.updatePublishedCPDefinitionId(
 					publishedCPDefinition.getCProductId(),
-					newCPDefinition.getCPDefinitionId());
+					targetCPDefinition.getCPDefinitionId());
 
 				long cProductId = publishedCPDefinition.getCProductId();
 
@@ -979,15 +995,15 @@ public class CPDefinitionLocalServiceImpl
 			}
 		}
 
-		newCPDefinition.setStatus(status);
+		targetCPDefinition.setStatus(status);
 
-		newCPDefinition = cpDefinitionPersistence.update(newCPDefinition);
+		targetCPDefinition = cpDefinitionPersistence.update(targetCPDefinition);
 
 		long cpDefinitionClassNameId = _classNameLocalService.getClassNameId(
 			CPDefinition.class);
 
 		AssetEntry assetEntry = _assetEntryLocalService.fetchEntry(
-			cpDefinitionClassNameId, cpDefinitionId);
+			cpDefinitionClassNameId, sourceCPDefinitionId);
 
 		if (assetEntry != null) {
 			AssetEntry newAssetEntry = (AssetEntry)assetEntry.clone();
@@ -1000,7 +1016,7 @@ public class CPDefinitionLocalServiceImpl
 
 		List<CPDefinitionLocalization> cpDefinitionLocalizations =
 			cpDefinitionLocalizationPersistence.findByCPDefinitionId(
-				cpDefinitionId);
+				sourceCPDefinitionId);
 
 		for (CPDefinitionLocalization cpDefinitionLocalization :
 				cpDefinitionLocalizations) {
@@ -1012,8 +1028,8 @@ public class CPDefinitionLocalServiceImpl
 				counterLocalService.increment());
 			newCPDefinitionLocalization.setCPDefinitionId(newCPDefinitionId);
 
-			if (originalCPDefinition.getCProductId() !=
-					newCPDefinition.getCProductId()) {
+			if (sourceCPDefinition.getCProductId() !=
+					targetCPDefinition.getCProductId()) {
 
 				newCPDefinitionLocalization.setName(
 					_language.format(
@@ -1028,7 +1044,7 @@ public class CPDefinitionLocalServiceImpl
 
 		List<CPAttachmentFileEntry> cpAttachmentFileEntries =
 			_cpAttachmentFileEntryPersistence.findByC_C(
-				cpDefinitionClassNameId, cpDefinitionId);
+				cpDefinitionClassNameId, sourceCPDefinitionId);
 
 		for (CPAttachmentFileEntry cpAttachmentFileEntry :
 				cpAttachmentFileEntries) {
@@ -1051,7 +1067,8 @@ public class CPDefinitionLocalServiceImpl
 		}
 
 		List<CPDefinitionLink> cpDefinitionLinks =
-			_cpDefinitionLinkPersistence.findByCPDefinitionId(cpDefinitionId);
+			_cpDefinitionLinkPersistence.findByCPDefinitionId(
+				sourceCPDefinitionId);
 
 		for (CPDefinitionLink cpDefinitionLink : cpDefinitionLinks) {
 			CPDefinitionLink newCPDefinitionLink =
@@ -1067,7 +1084,7 @@ public class CPDefinitionLocalServiceImpl
 
 		List<CPDefinitionOptionRel> cpDefinitionOptionRels =
 			_cpDefinitionOptionRelPersistence.findByCPDefinitionId(
-				cpDefinitionId);
+				sourceCPDefinitionId);
 
 		List<CPDefinitionOptionRel> newCPDefinitionOptionRels = new ArrayList<>(
 			cpDefinitionOptionRels.size());
@@ -1117,12 +1134,12 @@ public class CPDefinitionLocalServiceImpl
 			_reindexCPDefinitionOptionValueRels(newCPDefinitionOptionRel);
 		}
 
-		_reindexCPDefinitionOptionRels(newCPDefinition);
+		_reindexCPDefinitionOptionRels(targetCPDefinition);
 
 		List<CPDefinitionSpecificationOptionValue>
 			cpDefinitionSpecificationOptionValues =
 				_cpDefinitionSpecificationOptionValuePersistence.
-					findByCPDefinitionId(cpDefinitionId);
+					findByCPDefinitionId(sourceCPDefinitionId);
 
 		for (CPDefinitionSpecificationOptionValue
 				cpDefinitionSpecificationOptionValue :
@@ -1147,7 +1164,7 @@ public class CPDefinitionLocalServiceImpl
 
 		List<CPDisplayLayout> cpDisplayLayouts =
 			_cpDisplayLayoutPersistence.findByC_C(
-				cpDefinitionClassNameId, cpDefinitionId);
+				cpDefinitionClassNameId, sourceCPDefinitionId);
 
 		for (CPDisplayLayout cpDisplayLayout : cpDisplayLayouts) {
 			CPDisplayLayout newCPDisplayLayout =
@@ -1162,7 +1179,7 @@ public class CPDefinitionLocalServiceImpl
 		}
 
 		List<CPInstance> cpInstances =
-			_cpInstancePersistence.findByCPDefinitionId(cpDefinitionId);
+			_cpInstancePersistence.findByCPDefinitionId(sourceCPDefinitionId);
 
 		for (CPInstance cpInstance : cpInstances) {
 			CPInstance newCPInstance = (CPInstance)cpInstance.clone();
@@ -1178,12 +1195,9 @@ public class CPDefinitionLocalServiceImpl
 			newCPInstance.setCPDefinitionId(newCPDefinitionId);
 			newCPInstance.setCPInstanceUuid(cpInstance.getCPInstanceUuid());
 
-			List<CPInstanceOptionValueRel> cpInstanceOptionValueRels =
-				_cpInstanceOptionValueRelPersistence.findByCPInstanceId(
-					cpInstance.getCPInstanceId());
-
 			for (CPInstanceOptionValueRel cpInstanceOptionValueRel :
-					cpInstanceOptionValueRels) {
+					_cpInstanceOptionValueRelPersistence.findByCPInstanceId(
+						cpInstance.getCPInstanceId())) {
 
 				CPInstanceOptionValueRel newCPInstanceOptionValueRel =
 					(CPInstanceOptionValueRel)cpInstanceOptionValueRel.clone();
@@ -1198,19 +1212,14 @@ public class CPDefinitionLocalServiceImpl
 					_cpDefinitionOptionRelPersistence.findByPrimaryKey(
 						cpInstanceOptionValueRel.getCPDefinitionOptionRelId());
 
-				Stream<CPDefinitionOptionRel> cpDefinitionOptionRelStream =
-					newCPDefinitionOptionRels.stream();
+				for (CPDefinitionOptionRel newCPDefinitionOptionRel :
+						newCPDefinitionOptionRels) {
 
-				Optional<CPDefinitionOptionRel> cpDefinitionOptionRelOptional =
-					cpDefinitionOptionRelStream.filter(
-						curCPDefinitionOptionRel ->
-							cpDefinitionOptionRel.getCPOptionId() ==
-								curCPDefinitionOptionRel.getCPOptionId()
-					).findFirst();
+					if (cpDefinitionOptionRel.getCPOptionId() !=
+							newCPDefinitionOptionRel.getCPOptionId()) {
 
-				if (cpDefinitionOptionRelOptional.isPresent()) {
-					CPDefinitionOptionRel newCPDefinitionOptionRel =
-						cpDefinitionOptionRelOptional.get();
+						continue;
+					}
 
 					long cpDefinitionOptionRelId =
 						newCPDefinitionOptionRel.getCPDefinitionOptionRelId();
@@ -1218,33 +1227,26 @@ public class CPDefinitionLocalServiceImpl
 					newCPInstanceOptionValueRel.setCPDefinitionOptionRelId(
 						cpDefinitionOptionRelId);
 
-					List<CPDefinitionOptionValueRel>
-						cpDefinitionOptionValueRels =
+					for (CPDefinitionOptionValueRel cpDefinitionOptionValueRel :
 							cpDefinitionOptionRel.
-								getCPDefinitionOptionValueRels();
+								getCPDefinitionOptionValueRels()) {
 
-					Stream<CPDefinitionOptionValueRel>
-						cpDefinitionOptionValueRelsStream =
-							cpDefinitionOptionValueRels.stream();
+						if (cpDefinitionOptionRelId !=
+								cpDefinitionOptionValueRel.
+									getCPDefinitionOptionRelId()) {
 
-					Optional<CPDefinitionOptionValueRel>
-						cpDefinitionOptionValueRelOptional =
-							cpDefinitionOptionValueRelsStream.filter(
-								curCPDefinitionOptionValueRel ->
-									cpDefinitionOptionRelId ==
-										curCPDefinitionOptionValueRel.
-											getCPDefinitionOptionRelId()
-							).findFirst();
-
-					if (cpDefinitionOptionValueRelOptional.isPresent()) {
-						CPDefinitionOptionValueRel cpDefinitionOptionValueRel =
-							cpDefinitionOptionValueRelOptional.get();
+							continue;
+						}
 
 						newCPInstanceOptionValueRel.
 							setCPInstanceOptionValueRelId(
 								cpDefinitionOptionValueRel.
 									getCPDefinitionOptionValueRelId());
+
+						break;
 					}
+
+					break;
 				}
 
 				_cpInstanceOptionValueRelLocalService.
@@ -1256,26 +1258,24 @@ public class CPDefinitionLocalServiceImpl
 
 		for (CommerceChannelRel commerceChannelRel :
 				_commerceChannelRelLocalService.getCommerceChannelRels(
-					originalCPDefinition.getModelClassName(),
-					originalCPDefinition.getCPDefinitionId(), QueryUtil.ALL_POS,
+					sourceCPDefinition.getModelClassName(),
+					sourceCPDefinition.getCPDefinitionId(), QueryUtil.ALL_POS,
 					QueryUtil.ALL_POS, null)) {
 
 			_commerceChannelRelLocalService.addCommerceChannelRel(
-				newCPDefinition.getModelClassName(), newCPDefinitionId,
+				targetCPDefinition.getModelClassName(), newCPDefinitionId,
 				commerceChannelRel.getCommerceChannelId(), serviceContext);
 		}
 
-		for (CommerceAccountGroupRel commerceAccountGroupRel :
-				_commerceAccountGroupRelLocalService.
-					getCommerceAccountGroupRels(
-						originalCPDefinition.getModelClassName(),
-						originalCPDefinition.getCPDefinitionId(),
-						QueryUtil.ALL_POS, QueryUtil.ALL_POS, null)) {
+		for (AccountGroupRel accountGroupRel :
+				_accountGroupRelLocalService.getAccountGroupRels(
+					sourceCPDefinition.getModelClassName(),
+					sourceCPDefinition.getCPDefinitionId(), QueryUtil.ALL_POS,
+					QueryUtil.ALL_POS, null)) {
 
-			_commerceAccountGroupRelLocalService.addCommerceAccountGroupRel(
-				newCPDefinition.getModelClassName(), newCPDefinitionId,
-				commerceAccountGroupRel.getCommerceAccountGroupId(),
-				serviceContext);
+			_accountGroupRelLocalService.addAccountGroupRel(
+				accountGroupRel.getAccountGroupId(),
+				targetCPDefinition.getModelClassName(), newCPDefinitionId);
 		}
 
 		List<CPVersionContributor> cpVersionContributors =
@@ -1284,10 +1284,11 @@ public class CPDefinitionLocalServiceImpl
 		for (CPVersionContributor cpVersionContributor :
 				cpVersionContributors) {
 
-			cpVersionContributor.onUpdate(cpDefinitionId, newCPDefinitionId);
+			cpVersionContributor.onUpdate(
+				sourceCPDefinitionId, newCPDefinitionId);
 		}
 
-		return newCPDefinition;
+		return targetCPDefinition;
 	}
 
 	@Override
@@ -1341,17 +1342,12 @@ public class CPDefinitionLocalServiceImpl
 						cProduct.getCProductId(), 0);
 				}
 				else {
-					Stream<CPDefinition> cpDefinitionsStream =
-						cpDefinitions.stream();
-
 					List<CPDefinition> lastApprovedCPDefinitions =
-						cpDefinitionsStream.filter(
+						ListUtil.filter(
+							cpDefinitions,
 							curCPDefinition ->
 								curCPDefinition.getCPDefinitionId() !=
-									cpDefinition.getCPDefinitionId()
-						).collect(
-							Collectors.toList()
-						);
+									cpDefinition.getCPDefinitionId());
 
 					if (ListUtil.isEmpty(lastApprovedCPDefinitions)) {
 						_cProductLocalService.updatePublishedCPDefinitionId(
@@ -1833,28 +1829,40 @@ public class CPDefinitionLocalServiceImpl
 
 				String[] values = ArrayUtil.toStringArray(entry.getValue());
 
+				if (fieldName.equals("assetCategoryIds")) {
+					searchContext.setAssetCategoryIds(
+						TransformUtil.transformToLongArray(
+							Arrays.asList(values), GetterUtil::getLong));
+				}
+
+				searchContext.setAttribute(fieldName, StringUtil.merge(values));
+
 				MultiValueFacet multiValueFacet = new MultiValueFacet(
 					searchContext);
 
 				multiValueFacet.setFieldName(fieldName);
 				multiValueFacet.setValues(values);
 
-				searchContext.setAttribute(fieldName, StringUtil.merge(values));
-
-				if (fieldName.equals("assetCategoryIds")) {
-					Stream<String> stream = Arrays.stream(values);
-
-					LongStream longStream = stream.mapToLong(
-						GetterUtil::getLong);
-
-					searchContext.setAssetCategoryIds(longStream.toArray());
-				}
-
 				facets.add(multiValueFacet);
 			}
 		}
 
 		return facets;
+	}
+
+	@Override
+	public String getLayoutPageTemplateEntryUuid(
+		long groupId, long cpDefinitionId) {
+
+		CPDisplayLayout cpDisplayLayout =
+			_cpDisplayLayoutLocalService.fetchCPDisplayLayout(
+				groupId, CPDefinition.class, cpDefinitionId);
+
+		if (cpDisplayLayout == null) {
+			return null;
+		}
+
+		return cpDisplayLayout.getLayoutPageTemplateEntryUuid();
 	}
 
 	@Override
@@ -2568,6 +2576,36 @@ public class CPDefinitionLocalServiceImpl
 			long deliveryMaxSubscriptionCycles)
 		throws PortalException {
 
+		if (!subscriptionEnabled) {
+			subscriptionLength = 1;
+			subscriptionType = null;
+			subscriptionTypeSettingsUnicodeProperties = null;
+			maxSubscriptionCycles = 0L;
+		}
+		else {
+			_validateSubscriptionLength(subscriptionLength, "length");
+			_validateSubscriptionCycles(
+				maxSubscriptionCycles, "subscriptionCycles");
+			_validateSubscriptionTypeSettingsUnicodeProperties(
+				subscriptionType, subscriptionTypeSettingsUnicodeProperties);
+		}
+
+		if (!deliverySubscriptionEnabled) {
+			deliverySubscriptionLength = 1;
+			deliverySubscriptionType = null;
+			deliverySubscriptionTypeSettingsUnicodeProperties = null;
+			deliveryMaxSubscriptionCycles = 0L;
+		}
+		else {
+			_validateSubscriptionLength(
+				deliverySubscriptionLength, "deliverySubscriptionLength");
+			_validateSubscriptionCycles(
+				deliveryMaxSubscriptionCycles, "deliverySubscriptionCycles");
+			_validateDeliverySubscriptionTypeSettingsUnicodeProperties(
+				deliverySubscriptionType,
+				deliverySubscriptionTypeSettingsUnicodeProperties);
+		}
+
 		CPDefinition cpDefinition = cpDefinitionPersistence.findByPrimaryKey(
 			cpDefinitionId);
 
@@ -2579,14 +2617,14 @@ public class CPDefinitionLocalServiceImpl
 		cpDefinition.setSubscriptionEnabled(subscriptionEnabled);
 		cpDefinition.setSubscriptionLength(subscriptionLength);
 		cpDefinition.setSubscriptionType(subscriptionType);
-		cpDefinition.setSubscriptionTypeSettingsProperties(
+		cpDefinition.setSubscriptionTypeSettingsUnicodeProperties(
 			subscriptionTypeSettingsUnicodeProperties);
 		cpDefinition.setMaxSubscriptionCycles(maxSubscriptionCycles);
 		cpDefinition.setDeliverySubscriptionEnabled(
 			deliverySubscriptionEnabled);
 		cpDefinition.setDeliverySubscriptionLength(deliverySubscriptionLength);
 		cpDefinition.setDeliverySubscriptionType(deliverySubscriptionType);
-		cpDefinition.setDeliverySubscriptionTypeSettingsProperties(
+		cpDefinition.setDeliverySubscriptionTypeSettingsUnicodeProperties(
 			deliverySubscriptionTypeSettingsUnicodeProperties);
 		cpDefinition.setDeliveryMaxSubscriptionCycles(
 			deliveryMaxSubscriptionCycles);
@@ -2744,13 +2782,13 @@ public class CPDefinitionLocalServiceImpl
 
 			cpDefinitionLocalization.setCompanyId(companyId);
 			cpDefinitionLocalization.setCPDefinitionId(cpDefinitionId);
+			cpDefinitionLocalization.setLanguageId(languageId);
 			cpDefinitionLocalization.setName(name);
 			cpDefinitionLocalization.setShortDescription(shortDescription);
 			cpDefinitionLocalization.setDescription(description);
 			cpDefinitionLocalization.setMetaTitle(metaTitle);
 			cpDefinitionLocalization.setMetaDescription(metaDescription);
 			cpDefinitionLocalization.setMetaKeywords(metaKeywords);
-			cpDefinitionLocalization.setLanguageId(languageId);
 		}
 		else {
 			cpDefinitionLocalization.setName(name);
@@ -3170,6 +3208,78 @@ public class CPDefinitionLocalServiceImpl
 		}
 	}
 
+	private UnicodeProperties
+			_validateDeliverySubscriptionTypeSettingsUnicodeProperties(
+				String deliverySubscriptionType,
+				UnicodeProperties
+					deliverySubscriptionTypeSettingsUnicodeProperties)
+		throws PortalException {
+
+		CPSubscriptionType deliveryCPSubscriptionType =
+			_cpSubscriptionTypeRegistry.getCPSubscriptionType(
+				deliverySubscriptionType);
+
+		if (deliveryCPSubscriptionType != null) {
+			return deliveryCPSubscriptionType.
+				getDeliverySubscriptionTypeSettingsUnicodeProperties(
+					deliverySubscriptionTypeSettingsUnicodeProperties);
+		}
+
+		return null;
+	}
+
+	private void _validateSubscriptionCycles(
+			long subscriptionCycles, String subscriptionCyclesKey)
+		throws PortalException {
+
+		if ((subscriptionCycles < 0) &&
+			subscriptionCyclesKey.equals("subscriptionCycles")) {
+
+			throw new CPDefinitionMaxSubscriptionCyclesException(
+				StringBundler.concat(
+					"Invalid ", subscriptionCyclesKey, " ",
+					subscriptionCycles));
+		}
+		else if ((subscriptionCycles < 0) &&
+				 subscriptionCyclesKey.equals("deliverySubscriptionCycles")) {
+
+			throw new CPDefinitionDeliveryMaxSubscriptionCyclesException(
+				StringBundler.concat(
+					"Invalid ", subscriptionCyclesKey, " ",
+					subscriptionCycles));
+		}
+	}
+
+	private void _validateSubscriptionLength(
+			int subscriptionLength, String subscriptionLengthKey)
+		throws PortalException {
+
+		if (subscriptionLength < 1) {
+			throw new CPDefinitionSubscriptionLengthException(
+				StringBundler.concat(
+					"Invalid ", subscriptionLengthKey, " ",
+					subscriptionLength));
+		}
+	}
+
+	private UnicodeProperties
+			_validateSubscriptionTypeSettingsUnicodeProperties(
+				String subscriptionType,
+				UnicodeProperties subscriptionTypeSettingsUnicodeProperties)
+		throws PortalException {
+
+		CPSubscriptionType cpSubscriptionType =
+			_cpSubscriptionTypeRegistry.getCPSubscriptionType(subscriptionType);
+
+		if (cpSubscriptionType != null) {
+			return cpSubscriptionType.
+				getSubscriptionTypeSettingsUnicodeProperties(
+					subscriptionTypeSettingsUnicodeProperties);
+		}
+
+		return null;
+	}
+
 	private static final String[] _SELECTED_FIELD_NAMES = {
 		Field.ENTRY_CLASS_PK, Field.COMPANY_ID, Field.GROUP_ID, Field.UID
 	};
@@ -3191,6 +3301,9 @@ public class CPDefinitionLocalServiceImpl
 				"_commercePriceListLocalService", true);
 
 	@Reference
+	private AccountGroupRelLocalService _accountGroupRelLocalService;
+
+	@Reference
 	private AssetEntryLocalService _assetEntryLocalService;
 
 	@Reference
@@ -3198,10 +3311,6 @@ public class CPDefinitionLocalServiceImpl
 
 	@Reference
 	private ClassNameLocalService _classNameLocalService;
-
-	@Reference
-	private CommerceAccountGroupRelLocalService
-		_commerceAccountGroupRelLocalService;
 
 	@Reference
 	private CommerceChannelRelLocalService _commerceChannelRelLocalService;
@@ -3263,6 +3372,9 @@ public class CPDefinitionLocalServiceImpl
 
 	@Reference
 	private CProductPersistence _cProductPersistence;
+
+	@Reference
+	private CPSubscriptionTypeRegistry _cpSubscriptionTypeRegistry;
 
 	@Reference
 	private CPTypeRegistry _cpTypeRegistry;

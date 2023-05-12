@@ -147,7 +147,9 @@ public class DLExportImportPortletPreferencesProcessor
 		if (!_exportImportHelper.isExportPortletData(portletDataContext) ||
 			(selectedRepositoryId != portletDataContext.getGroupId())) {
 
-			if (ExportImportThreadLocal.isStagingInProcess()) {
+			if (ExportImportThreadLocal.isStagingInProcess() &&
+				(selectedRepositoryId > 0)) {
+
 				_saveStagingPreferencesMapping(
 					selectedRepositoryId, null, portletDataContext);
 			}
@@ -590,9 +592,10 @@ public class DLExportImportPortletPreferencesProcessor
 	@Reference
 	private DLAppLocalService _dlAppLocalService;
 
-	@Reference
-	private DLCommentsAndRatingsExporterImporterCapability
-		_dlCommentsAndRatingsExporterImporterCapability;
+	@Reference(
+		target = "(component.name=com.liferay.document.library.web.internal.exportimport.portlet.preferences.processor.DLCommentsAndRatingsExporterImporterCapability)"
+	)
+	private Capability _dlCommentsAndRatingsExporterImporterCapability;
 
 	@Reference
 	private DLFolderLocalService _dlFolderLocalService;

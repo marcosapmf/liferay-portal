@@ -171,6 +171,13 @@ public class ObjectRelationshipLocalServiceUtil {
 		getService().deleteObjectRelationships(objectDefinitionId1);
 	}
 
+	public static void deleteObjectRelationships(
+			long objectDefinitionId1, boolean reverse)
+		throws PortalException {
+
+		getService().deleteObjectRelationships(objectDefinitionId1, reverse);
+	}
+
 	/**
 	 * @throws PortalException
 	 */
@@ -273,12 +280,19 @@ public class ObjectRelationshipLocalServiceUtil {
 	}
 
 	public static ObjectRelationship
-			fetchObjectRelationshipByObjectDefinitionId(
-				long objectDefinitionId, String name)
-		throws Exception {
+		fetchObjectRelationshipByObjectDefinitionId(
+			long objectDefinitionId, String name) {
 
 		return getService().fetchObjectRelationshipByObjectDefinitionId(
 			objectDefinitionId, name);
+	}
+
+	public static ObjectRelationship
+		fetchObjectRelationshipByObjectDefinitionId1(
+			long objectDefinitionId1, String name) {
+
+		return getService().fetchObjectRelationshipByObjectDefinitionId1(
+			objectDefinitionId1, name);
 	}
 
 	public static ObjectRelationship fetchObjectRelationshipByObjectFieldId2(
@@ -358,11 +372,11 @@ public class ObjectRelationshipLocalServiceUtil {
 	}
 
 	public static ObjectRelationship getObjectRelationshipByObjectDefinitionId(
-			long objectDefinitionId, String objectRelationshipName)
+			long objectDefinitionId, String name)
 		throws Exception {
 
 		return getService().getObjectRelationshipByObjectDefinitionId(
-			objectDefinitionId, objectRelationshipName);
+			objectDefinitionId, name);
 	}
 
 	/**
@@ -431,6 +445,13 @@ public class ObjectRelationshipLocalServiceUtil {
 			objectDefinitionId1, deletionType, reverse);
 	}
 
+	public static List<ObjectRelationship>
+		getObjectRelationshipsByObjectDefinitionId2(long objectDefinitionId2) {
+
+		return getService().getObjectRelationshipsByObjectDefinitionId2(
+			objectDefinitionId2);
+	}
+
 	/**
 	 * Returns the number of object relationships.
 	 *
@@ -456,6 +477,15 @@ public class ObjectRelationshipLocalServiceUtil {
 		throws PortalException {
 
 		return getService().getPersistedModel(primaryKeyObj);
+	}
+
+	public static void
+		registerObjectRelationshipsRelatedInfoCollectionProviders(
+			com.liferay.object.model.ObjectDefinition objectDefinition1,
+			ObjectDefinitionLocalService objectDefinitionLocalService) {
+
+		getService().registerObjectRelationshipsRelatedInfoCollectionProviders(
+			objectDefinition1, objectDefinitionLocalService);
 	}
 
 	public static ObjectRelationship updateObjectRelationship(

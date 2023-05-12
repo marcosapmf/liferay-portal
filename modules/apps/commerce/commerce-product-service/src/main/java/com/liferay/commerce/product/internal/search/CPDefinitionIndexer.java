@@ -14,9 +14,9 @@
 
 package com.liferay.commerce.product.internal.search;
 
-import com.liferay.commerce.account.constants.CommerceAccountConstants;
-import com.liferay.commerce.account.model.CommerceAccountGroupRel;
-import com.liferay.commerce.account.service.CommerceAccountGroupRelService;
+import com.liferay.account.constants.AccountConstants;
+import com.liferay.account.model.AccountGroupRel;
+import com.liferay.account.service.AccountGroupRelLocalService;
 import com.liferay.commerce.media.CommerceMediaResolver;
 import com.liferay.commerce.price.list.constants.CommercePriceListConstants;
 import com.liferay.commerce.price.list.model.CommercePriceEntry;
@@ -35,7 +35,6 @@ import com.liferay.commerce.product.model.CPSpecificationOption;
 import com.liferay.commerce.product.model.CProduct;
 import com.liferay.commerce.product.model.CommerceCatalog;
 import com.liferay.commerce.product.model.CommerceChannel;
-import com.liferay.commerce.product.model.CommerceChannelRel;
 import com.liferay.commerce.product.service.CPDefinitionLinkLocalService;
 import com.liferay.commerce.product.service.CPDefinitionLocalService;
 import com.liferay.commerce.product.service.CPInstanceLocalService;
@@ -44,6 +43,7 @@ import com.liferay.commerce.product.service.CommerceChannelRelLocalService;
 import com.liferay.commerce.util.CommerceBigDecimalUtil;
 import com.liferay.friendly.url.model.FriendlyURLEntry;
 import com.liferay.friendly.url.service.FriendlyURLEntryLocalService;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
@@ -92,7 +92,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Stream;
 
 import javax.portlet.PortletRequest;
 import javax.portlet.PortletResponse;
@@ -246,57 +245,52 @@ public class CPDefinitionIndexer extends BaseIndexer<CPDefinition> {
 			contextBooleanFilter.add(
 				commerceChannelBooleanFilter, BooleanClauseOccur.MUST);
 
-			long[] commerceAccountGroupIds = GetterUtil.getLongValues(
+			long[] accountGroupIds = GetterUtil.getLongValues(
 				searchContext.getAttribute("commerceAccountGroupIds"), null);
 
-			BooleanFilter commerceAccountGroupsBooleanFilter =
+			BooleanFilter accountGroupsBooleanFilter = new BooleanFilter();
+
+			BooleanFilter accountGroupsFilterEnableBooleanFilter =
 				new BooleanFilter();
 
-			BooleanFilter commerceAccountGroupsFilterEnableBooleanFilter =
-				new BooleanFilter();
-
-			commerceAccountGroupsFilterEnableBooleanFilter.addTerm(
+			accountGroupsFilterEnableBooleanFilter.addTerm(
 				CPField.ACCOUNT_GROUP_FILTER_ENABLED, Boolean.TRUE.toString(),
 				BooleanClauseOccur.MUST);
 
-			if ((commerceAccountGroupIds != null) &&
-				(commerceAccountGroupIds.length > 0)) {
-
-				BooleanFilter commerceAccountGroupIdsBooleanFilter =
+			if ((accountGroupIds != null) && (accountGroupIds.length > 0)) {
+				BooleanFilter accountGroupIdsBooleanFilter =
 					new BooleanFilter();
 
-				for (long commerceAccountGroupId : commerceAccountGroupIds) {
+				for (long accountGroupId : accountGroupIds) {
 					Filter termFilter = new TermFilter(
 						"commerceAccountGroupIds",
-						String.valueOf(commerceAccountGroupId));
+						String.valueOf(accountGroupId));
 
-					commerceAccountGroupIdsBooleanFilter.add(
+					accountGroupIdsBooleanFilter.add(
 						termFilter, BooleanClauseOccur.SHOULD);
 				}
 
-				commerceAccountGroupsFilterEnableBooleanFilter.add(
-					commerceAccountGroupIdsBooleanFilter,
-					BooleanClauseOccur.MUST);
+				accountGroupsFilterEnableBooleanFilter.add(
+					accountGroupIdsBooleanFilter, BooleanClauseOccur.MUST);
 			}
 			else {
-				commerceAccountGroupsFilterEnableBooleanFilter.addTerm(
+				accountGroupsFilterEnableBooleanFilter.addTerm(
 					"commerceAccountGroupIds", "-1", BooleanClauseOccur.MUST);
 			}
 
-			commerceAccountGroupsBooleanFilter.add(
-				commerceAccountGroupsFilterEnableBooleanFilter,
+			accountGroupsBooleanFilter.add(
+				accountGroupsFilterEnableBooleanFilter,
 				BooleanClauseOccur.SHOULD);
-			commerceAccountGroupsBooleanFilter.addTerm(
+			accountGroupsBooleanFilter.addTerm(
 				CPField.ACCOUNT_GROUP_FILTER_ENABLED, Boolean.FALSE.toString(),
 				BooleanClauseOccur.SHOULD);
 
-			boolean ignoreCommerceAccountGroup = GetterUtil.getBoolean(
+			boolean ignoreAccountGroup = GetterUtil.getBoolean(
 				attributes.get("ignoreCommerceAccountGroup"));
 
-			if (!ignoreCommerceAccountGroup) {
+			if (!ignoreAccountGroup) {
 				contextBooleanFilter.add(
-					commerceAccountGroupsBooleanFilter,
-					BooleanClauseOccur.MUST);
+					accountGroupsBooleanFilter, BooleanClauseOccur.MUST);
 			}
 		}
 		else {
@@ -324,22 +318,22 @@ public class CPDefinitionIndexer extends BaseIndexer<CPDefinition> {
 			SearchContext searchContext)
 		throws Exception {
 
+		addSearchTerm(
+			searchQuery, searchContext, CPField.EXTERNAL_REFERENCE_CODE, false);
+		addSearchLocalizedTerm(
+			searchQuery, searchContext, CPField.SHORT_DESCRIPTION, false);
+		addSearchTerm(searchQuery, searchContext, CPField.SKUS, false);
+		addSearchLocalizedTerm(
+			searchQuery, searchContext, CPField.SPECIFICATION_VALUES_NAMES,
+			false);
 		addSearchLocalizedTerm(
 			searchQuery, searchContext, Field.CONTENT, false);
 		addSearchLocalizedTerm(
 			searchQuery, searchContext, Field.DESCRIPTION, false);
-		addSearchLocalizedTerm(
-			searchQuery, searchContext, CPField.SHORT_DESCRIPTION, false);
 		addSearchTerm(searchQuery, searchContext, Field.ENTRY_CLASS_PK, false);
 		addSearchTerm(searchQuery, searchContext, Field.NAME, false);
 		addSearchLocalizedTerm(searchQuery, searchContext, Field.NAME, false);
-		addSearchTerm(searchQuery, searchContext, CPField.SKUS, false);
-		addSearchTerm(
-			searchQuery, searchContext, CPField.EXTERNAL_REFERENCE_CODE, false);
 		addSearchTerm(searchQuery, searchContext, Field.USER_NAME, false);
-		addSearchLocalizedTerm(
-			searchQuery, searchContext, CPField.SPECIFICATION_VALUES_NAMES,
-			false);
 
 		LinkedHashMap<String, Object> params =
 			(LinkedHashMap<String, Object>)searchContext.getAttribute("params");
@@ -404,10 +398,6 @@ public class CPDefinitionIndexer extends BaseIndexer<CPDefinition> {
 		String cpDefinitionDefaultLanguageId =
 			_localization.getDefaultLanguageId(cpDefinition.getName());
 
-		List<String> languageIds =
-			_cpDefinitionLocalService.getCPDefinitionLocalizationLanguageIds(
-				cpDefinition.getCPDefinitionId());
-
 		long classNameId = _classNameLocalService.getClassNameId(
 			CProduct.class);
 
@@ -426,6 +416,149 @@ public class CPDefinitionIndexer extends BaseIndexer<CPDefinition> {
 				_log.debug(exception);
 			}
 		}
+
+		document.addKeyword(
+			CPField.ACCOUNT_GROUP_FILTER_ENABLED,
+			cpDefinition.isAccountGroupFilterEnabled());
+
+		BigDecimal basePrice = _getBasePrice(cpDefinition.getCPInstances());
+
+		if (basePrice != null) {
+			document.addNumber(CPField.BASE_PRICE, basePrice);
+		}
+
+		document.addKeyword(
+			CPField.CHANNEL_FILTER_ENABLED,
+			cpDefinition.isChannelFilterEnabled());
+		document.addNumber(
+			CPField.COMMERCE_CHANNEL_GROUP_IDS,
+			TransformUtil.transformToLongArray(
+				_commerceChannelRelLocalService.getCommerceChannelRels(
+					cpDefinition.getModelClassName(),
+					cpDefinition.getCPDefinitionId(), QueryUtil.ALL_POS,
+					QueryUtil.ALL_POS, null),
+				commerceChannelRel -> {
+					CommerceChannel commerceChannel =
+						commerceChannelRel.getCommerceChannel();
+
+					return commerceChannel.getGroupId();
+				}));
+
+		long cpAttachmentFileEntryId = 0;
+
+		CPAttachmentFileEntry cpAttachmentFileEntry =
+			_cpDefinitionLocalService.getDefaultImageCPAttachmentFileEntry(
+				cpDefinition.getCPDefinitionId());
+
+		if (cpAttachmentFileEntry != null) {
+			document.addNumber(
+				CPField.DEFAULT_IMAGE_FILE_ENTRY_ID,
+				cpAttachmentFileEntry.getFileEntryId());
+
+			cpAttachmentFileEntryId =
+				cpAttachmentFileEntry.getCPAttachmentFileEntryId();
+		}
+
+		if (cpAttachmentFileEntryId == 0) {
+			document.addKeyword(
+				CPField.DEFAULT_IMAGE_FILE_URL,
+				_commerceMediaResolver.getDefaultURL(
+					cpDefinition.getGroupId()));
+		}
+		else {
+			document.addKeyword(
+				CPField.DEFAULT_IMAGE_FILE_URL,
+				_commerceMediaResolver.getURL(
+					AccountConstants.ACCOUNT_ENTRY_ID_GUEST,
+					cpAttachmentFileEntryId, false, false, false));
+		}
+
+		document.addNumber(CPField.DEPTH, cpDefinition.getDepth());
+		document.addDateSortable(
+			CPField.DISPLAY_DATE, cpDefinition.getDisplayDate());
+
+		CProduct cProduct = cpDefinition.getCProduct();
+
+		document.addKeyword(
+			CPField.EXTERNAL_REFERENCE_CODE,
+			cProduct.getExternalReferenceCode());
+
+		document.addNumber(CPField.HEIGHT, cpDefinition.getHeight());
+		document.addKeyword(
+			CPField.IS_IGNORE_SKU_COMBINATIONS,
+			cpDefinition.isIgnoreSKUCombinations());
+		document.addText(
+			CPField.META_DESCRIPTION,
+			cpDefinition.getMetaDescription(cpDefinitionDefaultLanguageId));
+		document.addText(
+			CPField.META_KEYWORDS,
+			cpDefinition.getMetaKeywords(cpDefinitionDefaultLanguageId));
+		document.addText(
+			CPField.META_TITLE,
+			cpDefinition.getMetaTitle(cpDefinitionDefaultLanguageId));
+
+		List<CPDefinitionOptionRel> cpDefinitionOptionRels =
+			cpDefinition.getCPDefinitionOptionRels();
+
+		document.addNumber(
+			CPField.OPTION_IDS,
+			TransformUtil.transformToArray(
+				_getCPOptions(cpDefinitionOptionRels), CPOption::getCPOptionId,
+				Long.class));
+		document.addText(
+			CPField.OPTION_NAMES,
+			TransformUtil.transformToArray(
+				_getCPOptions(cpDefinitionOptionRels), CPOption::getKey,
+				String.class));
+
+		document.addKeyword(CPField.PRODUCT_ID, cpDefinition.getCProductId());
+		document.addKeyword(
+			CPField.PRODUCT_TYPE_NAME, cpDefinition.getProductTypeName());
+		document.addKeyword(CPField.PUBLISHED, cpDefinition.isPublished());
+		document.addText(
+			CPField.SHORT_DESCRIPTION,
+			cpDefinition.getShortDescription(cpDefinitionDefaultLanguageId));
+
+		List<CPDefinitionSpecificationOptionValue>
+			cpDefinitionSpecificationOptionValues =
+				_getFilteredCPDefinitionSpecificationOptionValues(
+					cpDefinition.getCPDefinitionSpecificationOptionValues());
+
+		document.addNumber(
+			CPField.SPECIFICATION_IDS,
+			TransformUtil.transformToArray(
+				cpDefinitionSpecificationOptionValues,
+				CPDefinitionSpecificationOptionValue::
+					getCPSpecificationOptionId,
+				Long.class));
+		document.addText(
+			CPField.SPECIFICATION_NAMES,
+			TransformUtil.transformToArray(
+				cpDefinitionSpecificationOptionValues,
+				CPDefinitionSpecificationOptionValue ->
+					_getCPSpecificationOptionKey(
+						CPDefinitionSpecificationOptionValue.
+							getCPSpecificationOption()),
+				String.class));
+		document.addText(
+			CPField.SPECIFICATION_VALUES_NAMES,
+			TransformUtil.transformToArray(
+				_getFilteredCPDefinitionSpecificationOptionValues(
+					cpDefinitionSpecificationOptionValues),
+				CPDefinitionSpecificationOptionValue ->
+					CPDefinitionSpecificationOptionValue.getValue(
+						cpDefinitionDefaultLanguageId),
+				String.class));
+
+		document.addText(
+			CPField.SKUS,
+			_cpInstanceLocalService.getSKUs(cpDefinition.getCPDefinitionId()));
+		document.addKeyword(
+			CPField.SUBSCRIPTION_ENABLED, cpDefinition.isSubscriptionEnabled());
+
+		List<String> languageIds =
+			_cpDefinitionLocalService.getCPDefinitionLocalizationLanguageIds(
+				cpDefinition.getCPDefinitionId());
 
 		for (String languageId : languageIds) {
 			String description = cpDefinition.getDescription(languageId);
@@ -453,6 +586,7 @@ public class CPDefinitionIndexer extends BaseIndexer<CPDefinition> {
 				_localization.getLocalizedName(
 					CPField.SHORT_DESCRIPTION, languageId),
 				shortDescription);
+			document.addText(Field.CONTENT, description);
 			document.addText(
 				_localization.getLocalizedName(Field.DESCRIPTION, languageId),
 				description);
@@ -461,69 +595,33 @@ public class CPDefinitionIndexer extends BaseIndexer<CPDefinition> {
 			document.addText(
 				_localization.getLocalizedName(Field.URL, languageId),
 				urlTitle);
-
-			document.addText(Field.CONTENT, description);
 		}
 
-		document.addText(
-			CPField.META_DESCRIPTION,
-			cpDefinition.getMetaDescription(cpDefinitionDefaultLanguageId));
-		document.addText(
-			CPField.META_KEYWORDS,
-			cpDefinition.getMetaKeywords(cpDefinitionDefaultLanguageId));
-		document.addText(
-			CPField.META_TITLE,
-			cpDefinition.getMetaTitle(cpDefinitionDefaultLanguageId));
-		document.addText(
-			Field.NAME, cpDefinition.getName(cpDefinitionDefaultLanguageId));
-		document.addText(
-			CPField.SHORT_DESCRIPTION,
-			cpDefinition.getShortDescription(cpDefinitionDefaultLanguageId));
 		document.addText(
 			Field.DESCRIPTION,
 			cpDefinition.getDescription(cpDefinitionDefaultLanguageId));
+		document.addKeyword(Field.HIDDEN, _isHidden(cpDefinition, cProduct));
+		document.addText(
+			Field.NAME, cpDefinition.getName(cpDefinitionDefaultLanguageId));
 		document.addText(
 			Field.URL,
 			languageIdToUrlTitleMap.get(cpDefinitionDefaultLanguageId));
-		document.addText("defaultLanguageId", cpDefinitionDefaultLanguageId);
-
-		List<Long> commerceChannelGroupIds = new ArrayList<>();
-
-		for (CommerceChannelRel commerceChannelRel :
-				_commerceChannelRelLocalService.getCommerceChannelRels(
-					cpDefinition.getModelClassName(),
-					cpDefinition.getCPDefinitionId(), QueryUtil.ALL_POS,
-					QueryUtil.ALL_POS, null)) {
-
-			CommerceChannel commerceChannel =
-				commerceChannelRel.getCommerceChannel();
-
-			commerceChannelGroupIds.add(commerceChannel.getGroupId());
-		}
 
 		document.addNumber(
-			CPField.COMMERCE_CHANNEL_GROUP_IDS,
-			ArrayUtil.toLongArray(commerceChannelGroupIds));
+			"commerceAccountGroupIds",
+			TransformUtil.transformToLongArray(
+				_accountGroupRelLocalService.getAccountGroupRels(
+					CPDefinition.class.getName(),
+					cpDefinition.getCPDefinitionId(), QueryUtil.ALL_POS,
+					QueryUtil.ALL_POS, null),
+				AccountGroupRel::getAccountGroupId));
 
-		List<CommerceAccountGroupRel> commerceAccountGroupRels =
-			_commerceAccountGroupRelService.getCommerceAccountGroupRels(
-				CPDefinition.class.getName(), cpDefinition.getCPDefinitionId(),
-				QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
+		CommerceCatalog commerceCatalog = cpDefinition.getCommerceCatalog();
 
-		Stream<CommerceAccountGroupRel> stream =
-			commerceAccountGroupRels.stream();
+		document.addKeyword(
+			"commerceCatalogId", commerceCatalog.getCommerceCatalogId());
 
-		long[] commerceAccountGroupIds = stream.mapToLong(
-			CommerceAccountGroupRel::getCommerceAccountGroupId
-		).toArray();
-
-		document.addNumber("commerceAccountGroupIds", commerceAccountGroupIds);
-
-		List<String> optionNames = new ArrayList<>();
-		List<Long> optionIds = new ArrayList<>();
-
-		List<CPDefinitionOptionRel> cpDefinitionOptionRels =
-			cpDefinition.getCPDefinitionOptionRels();
+		document.addText("defaultLanguageId", cpDefinitionDefaultLanguageId);
 
 		for (CPDefinitionOptionRel cpDefinitionOptionRel :
 				cpDefinitionOptionRels) {
@@ -533,9 +631,6 @@ public class CPDefinitionIndexer extends BaseIndexer<CPDefinition> {
 			}
 
 			CPOption cpOption = cpDefinitionOptionRel.getCPOption();
-
-			optionNames.add(cpOption.getKey());
-			optionIds.add(cpOption.getCPOptionId());
 
 			List<CPDefinitionOptionValueRel> cpDefinitionOptionValueRels =
 				cpDefinitionOptionRel.getCPDefinitionOptionValueRels();
@@ -579,49 +674,6 @@ public class CPDefinitionIndexer extends BaseIndexer<CPDefinition> {
 				ArrayUtil.toStringArray(optionValueIds));
 		}
 
-		document.addKeyword(
-			CPField.PRODUCT_TYPE_NAME, cpDefinition.getProductTypeName());
-		document.addKeyword(CPField.PUBLISHED, cpDefinition.isPublished());
-		document.addKeyword(
-			CPField.SUBSCRIPTION_ENABLED, cpDefinition.isSubscriptionEnabled());
-		document.addDateSortable(
-			CPField.DISPLAY_DATE, cpDefinition.getDisplayDate());
-
-		document.addNumber(CPField.DEPTH, cpDefinition.getDepth());
-		document.addNumber(CPField.HEIGHT, cpDefinition.getHeight());
-
-		CProduct cProduct = cpDefinition.getCProduct();
-
-		document.addKeyword(
-			CPField.EXTERNAL_REFERENCE_CODE,
-			cProduct.getExternalReferenceCode());
-
-		document.addKeyword(
-			CPField.ACCOUNT_GROUP_FILTER_ENABLED,
-			cpDefinition.isAccountGroupFilterEnabled());
-		document.addKeyword(
-			CPField.CHANNEL_FILTER_ENABLED,
-			cpDefinition.isChannelFilterEnabled());
-		document.addKeyword(
-			CPField.IS_IGNORE_SKU_COMBINATIONS,
-			cpDefinition.isIgnoreSKUCombinations());
-		document.addKeyword(CPField.PRODUCT_ID, cpDefinition.getCProductId());
-		document.addText(
-			CPField.OPTION_NAMES, ArrayUtil.toStringArray(optionNames));
-		document.addNumber(
-			CPField.OPTION_IDS, ArrayUtil.toLongArray(optionIds));
-		document.addText(
-			CPField.SKUS,
-			_cpInstanceLocalService.getSKUs(cpDefinition.getCPDefinitionId()));
-
-		List<String> specificationOptionNames = new ArrayList<>();
-		List<Long> specificationOptionIds = new ArrayList<>();
-		List<String> specificationOptionValuesNames = new ArrayList<>();
-
-		List<CPDefinitionSpecificationOptionValue>
-			cpDefinitionSpecificationOptionValues =
-				cpDefinition.getCPDefinitionSpecificationOptionValues();
-
 		for (CPDefinitionSpecificationOptionValue
 				cpDefinitionSpecificationOptionValue :
 					cpDefinitionSpecificationOptionValues) {
@@ -629,19 +681,9 @@ public class CPDefinitionIndexer extends BaseIndexer<CPDefinition> {
 			CPSpecificationOption cpSpecificationOption =
 				cpDefinitionSpecificationOptionValue.getCPSpecificationOption();
 
-			if (!cpSpecificationOption.isFacetable()) {
-				continue;
-			}
-
-			specificationOptionNames.add(cpSpecificationOption.getKey());
-			specificationOptionIds.add(
-				cpSpecificationOption.getCPSpecificationOptionId());
-
 			String specificationOptionValue =
 				cpDefinitionSpecificationOptionValue.getValue(
 					cpDefinitionDefaultLanguageId);
-
-			specificationOptionValuesNames.add(specificationOptionValue);
 
 			Set<Locale> availableLocales = _language.getAvailableLocales(
 				cpDefinitionSpecificationOptionValue.getGroupId());
@@ -735,16 +777,6 @@ public class CPDefinitionIndexer extends BaseIndexer<CPDefinition> {
 			}
 		}
 
-		document.addText(
-			CPField.SPECIFICATION_NAMES,
-			ArrayUtil.toStringArray(specificationOptionNames));
-		document.addNumber(
-			CPField.SPECIFICATION_IDS,
-			ArrayUtil.toLongArray(specificationOptionIds));
-		document.addText(
-			CPField.SPECIFICATION_VALUES_NAMES,
-			ArrayUtil.toStringArray(specificationOptionValuesNames));
-
 		List<String> types = _cpDefinitionLinkTypeRegistry.getTypes();
 
 		for (String type : types) {
@@ -756,112 +788,6 @@ public class CPDefinitionIndexer extends BaseIndexer<CPDefinition> {
 				cProduct.getCProductId(), type);
 
 			document.addKeyword(type, linkedProductIds);
-		}
-
-		long cpAttachmentFileEntryId = 0;
-
-		CPAttachmentFileEntry cpAttachmentFileEntry =
-			_cpDefinitionLocalService.getDefaultImageCPAttachmentFileEntry(
-				cpDefinition.getCPDefinitionId());
-
-		if (cpAttachmentFileEntry != null) {
-			document.addNumber(
-				CPField.DEFAULT_IMAGE_FILE_ENTRY_ID,
-				cpAttachmentFileEntry.getFileEntryId());
-
-			cpAttachmentFileEntryId =
-				cpAttachmentFileEntry.getCPAttachmentFileEntryId();
-		}
-
-		if (cpAttachmentFileEntryId == 0) {
-			document.addKeyword(
-				CPField.DEFAULT_IMAGE_FILE_URL,
-				_commerceMediaResolver.getDefaultURL(
-					cpDefinition.getGroupId()));
-		}
-		else {
-			document.addKeyword(
-				CPField.DEFAULT_IMAGE_FILE_URL,
-				_commerceMediaResolver.getURL(
-					CommerceAccountConstants.ACCOUNT_ID_GUEST,
-					cpAttachmentFileEntryId, false, false, false));
-		}
-
-		if ((cpDefinition.getCPDefinitionId() !=
-				cProduct.getPublishedCPDefinitionId()) &&
-			_cpDefinitionLocalService.isVersionable(
-				cpDefinition.getCPDefinitionId())) {
-
-			document.addKeyword(Field.HIDDEN, true);
-		}
-		else {
-			document.addKeyword(Field.HIDDEN, false);
-		}
-
-		CommerceCatalog commerceCatalog = cpDefinition.getCommerceCatalog();
-
-		document.addKeyword(
-			"commerceCatalogId", commerceCatalog.getCommerceCatalogId());
-
-		List<CPInstance> cpInstances = cpDefinition.getCPInstances();
-
-		if (cpInstances.size() == 1) {
-			CPInstance cpInstance = cpInstances.get(0);
-
-			BigDecimal price = cpInstance.getPrice();
-			BigDecimal promoPrice = cpInstance.getPromoPrice();
-
-			if ((promoPrice.compareTo(BigDecimal.ZERO) > 0) &&
-				CommerceBigDecimalUtil.lt(promoPrice, price)) {
-
-				document.addNumber(CPField.BASE_PRICE, promoPrice);
-			}
-			else {
-				document.addNumber(CPField.BASE_PRICE, price);
-			}
-		}
-		else if (!cpInstances.isEmpty()) {
-			CPInstance firstCPInstance = cpInstances.get(0);
-
-			CommercePriceEntry commercePriceEntry =
-				_commercePriceEntryLocalService.
-					getInstanceBaseCommercePriceEntry(
-						firstCPInstance.getCPInstanceUuid(),
-						CommercePriceListConstants.TYPE_PRICE_LIST);
-
-			BigDecimal lowestPrice = BigDecimal.ZERO;
-
-			if (commercePriceEntry != null) {
-				lowestPrice = commercePriceEntry.getPrice();
-			}
-
-			for (CPInstance cpInstance : cpInstances) {
-				commercePriceEntry =
-					_commercePriceEntryLocalService.
-						getInstanceBaseCommercePriceEntry(
-							cpInstance.getCPInstanceUuid(),
-							CommercePriceListConstants.TYPE_PRICE_LIST);
-
-				if (commercePriceEntry == null) {
-					continue;
-				}
-
-				BigDecimal price = commercePriceEntry.getPrice();
-
-				BigDecimal promoPrice = cpInstance.getPromoPrice();
-
-				if ((promoPrice.compareTo(BigDecimal.ZERO) > 0) &&
-					CommerceBigDecimalUtil.lt(promoPrice, price)) {
-
-					price = promoPrice;
-				}
-
-				if (CommerceBigDecimalUtil.lt(price, lowestPrice)) {
-					lowestPrice = price;
-				}
-			}
-
-			document.addNumber(CPField.BASE_PRICE, lowestPrice);
 		}
 
 		_expandoBridgeIndexer.addAttributes(
@@ -915,6 +841,118 @@ public class CPDefinitionIndexer extends BaseIndexer<CPDefinition> {
 		contextBooleanFilter.add(termsFilter, BooleanClauseOccur.MUST);
 	}
 
+	private BigDecimal _getBasePrice(List<CPInstance> cpInstances) {
+		if (cpInstances.size() == 1) {
+			CPInstance cpInstance = cpInstances.get(0);
+
+			BigDecimal price = cpInstance.getPrice();
+			BigDecimal promoPrice = cpInstance.getPromoPrice();
+
+			if ((promoPrice.compareTo(BigDecimal.ZERO) > 0) &&
+				CommerceBigDecimalUtil.lt(promoPrice, price)) {
+
+				return promoPrice;
+			}
+
+			return price;
+		}
+		else if (!cpInstances.isEmpty()) {
+			BigDecimal lowestPrice = BigDecimal.ZERO;
+
+			CommercePriceEntry commercePriceEntry = null;
+
+			for (CPInstance cpInstance : cpInstances) {
+				if (!cpInstance.isApproved()) {
+					continue;
+				}
+
+				commercePriceEntry =
+					_commercePriceEntryLocalService.
+						getInstanceBaseCommercePriceEntry(
+							cpInstance.getCPInstanceUuid(),
+							CommercePriceListConstants.TYPE_PRICE_LIST);
+
+				if (commercePriceEntry == null) {
+					continue;
+				}
+
+				BigDecimal price = commercePriceEntry.getPrice();
+
+				if (lowestPrice.compareTo(BigDecimal.ZERO) == 0) {
+					lowestPrice = price;
+				}
+
+				BigDecimal promoPrice = cpInstance.getPromoPrice();
+
+				if ((promoPrice.compareTo(BigDecimal.ZERO) > 0) &&
+					CommerceBigDecimalUtil.lt(promoPrice, price)) {
+
+					price = promoPrice;
+				}
+
+				if (CommerceBigDecimalUtil.lt(price, lowestPrice)) {
+					lowestPrice = price;
+				}
+			}
+
+			return lowestPrice;
+		}
+
+		return null;
+	}
+
+	private List<CPOption> _getCPOptions(
+			List<CPDefinitionOptionRel> cpDefinitionOptionRels)
+		throws Exception {
+
+		List<CPOption> cpOptions = new ArrayList<>();
+
+		for (CPDefinitionOptionRel cpDefinitionOptionRel :
+				cpDefinitionOptionRels) {
+
+			if (!cpDefinitionOptionRel.isFacetable()) {
+				continue;
+			}
+
+			cpOptions.add(cpDefinitionOptionRel.getCPOption());
+		}
+
+		return cpOptions;
+	}
+
+	private String _getCPSpecificationOptionKey(
+		CPSpecificationOption cpSpecificationOption) {
+
+		return cpSpecificationOption.getKey();
+	}
+
+	private List<CPDefinitionSpecificationOptionValue>
+			_getFilteredCPDefinitionSpecificationOptionValues(
+				List<CPDefinitionSpecificationOptionValue>
+					cpDefinitionSpecificationOptionValues)
+		throws Exception {
+
+		List<CPDefinitionSpecificationOptionValue>
+			filteredCPDefinitionSpecificationOptionValues = new ArrayList<>();
+
+		for (CPDefinitionSpecificationOptionValue
+				cpDefinitionSpecificationOptionValue :
+					cpDefinitionSpecificationOptionValues) {
+
+			CPSpecificationOption cpSpecificationOption =
+				cpDefinitionSpecificationOptionValue.getCPSpecificationOption();
+
+			if (!cpSpecificationOption.isFacetable()) {
+				continue;
+			}
+
+			filteredCPDefinitionSpecificationOptionValues.add(
+				cpDefinitionSpecificationOptionValue);
+		}
+
+		return filteredCPDefinitionSpecificationOptionValues;
+	}
+
 	private String[] _getReverseCPDefinitionIds(long cProductId, String type) {
 		List<CPDefinitionLink> cpDefinitionLinks =
 			_cpDefinitionLinkLocalService.getReverseCPDefinitionLinks(
@@ -934,20 +972,23 @@ public class CPDefinitionIndexer extends BaseIndexer<CPDefinition> {
 	}
 
 	private long[] _getUserCommerceCatalogIds(SearchContext searchContext) {
-		List<CommerceCatalog> commerceCatalogs =
+		return TransformUtil.transformToLongArray(
 			_commerceCatalogService.getCommerceCatalogs(
 				searchContext.getCompanyId(), QueryUtil.ALL_POS,
-				QueryUtil.ALL_POS);
+				QueryUtil.ALL_POS),
+			CommerceCatalog::getCommerceCatalogId);
+	}
 
-		if (commerceCatalogs.isEmpty()) {
-			return new long[0];
+	private boolean _isHidden(CPDefinition cpDefinition, CProduct cProduct) {
+		if ((cpDefinition.getCPDefinitionId() !=
+				cProduct.getPublishedCPDefinitionId()) &&
+			_cpDefinitionLocalService.isVersionable(
+				cpDefinition.getCPDefinitionId())) {
+
+			return true;
 		}
 
-		Stream<CommerceCatalog> stream = commerceCatalogs.stream();
-
-		return stream.mapToLong(
-			commerceCatalog -> commerceCatalog.getCommerceCatalogId()
-		).toArray();
+		return false;
 	}
 
 	private void _reindexCPDefinitions(long companyId) throws Exception {
@@ -978,10 +1019,10 @@ public class CPDefinitionIndexer extends BaseIndexer<CPDefinition> {
 		CPDefinitionIndexer.class);
 
 	@Reference
-	private ClassNameLocalService _classNameLocalService;
+	private AccountGroupRelLocalService _accountGroupRelLocalService;
 
 	@Reference
-	private CommerceAccountGroupRelService _commerceAccountGroupRelService;
+	private ClassNameLocalService _classNameLocalService;
 
 	@Reference
 	private CommerceCatalogService _commerceCatalogService;

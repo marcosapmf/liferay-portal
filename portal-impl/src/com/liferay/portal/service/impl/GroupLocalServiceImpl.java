@@ -386,7 +386,30 @@ public class GroupLocalServiceImpl extends GroupLocalServiceBaseImpl {
 			friendlyURL);
 
 		if (staging) {
-			groupKey = groupKey.concat("-staging");
+			int groupKeyMaxLength = ModelHintsUtil.getMaxLength(
+				Group.class.getName(), "groupKey");
+			String stagingGroupKeySuffix = "-staging";
+
+			if (groupKey.length() <=
+					(groupKeyMaxLength - stagingGroupKeySuffix.length())) {
+
+				groupKey = groupKey.concat(stagingGroupKeySuffix);
+			}
+			else {
+				int counter = 1;
+
+				groupKey = _getGroupKey(
+					counter, groupKey, groupKeyMaxLength,
+					stagingGroupKeySuffix);
+
+				while (fetchGroup(user.getCompanyId(), groupKey) != null) {
+					counter++;
+
+					groupKey = _getGroupKey(
+						counter, groupKey, groupKeyMaxLength,
+						stagingGroupKeySuffix);
+				}
+			}
 
 			for (Map.Entry<Locale, String> entry : nameMap.entrySet()) {
 				String name = entry.getValue();
@@ -468,7 +491,7 @@ public class GroupLocalServiceImpl extends GroupLocalServiceBaseImpl {
 		group.setActive(active);
 
 		if ((serviceContext != null) && (classNameId == groupClassNameId) &&
-			!user.isDefaultUser()) {
+			!user.isGuestUser()) {
 
 			group.setExpandoBridgeAttributes(serviceContext);
 		}
@@ -487,7 +510,7 @@ public class GroupLocalServiceImpl extends GroupLocalServiceBaseImpl {
 			group.getCompanyId(), 0, 0, Group.class.getName(),
 			group.getGroupId(), false, false, false);
 
-		if ((classNameId == groupClassNameId) && !user.isDefaultUser()) {
+		if ((classNameId == groupClassNameId) && !user.isGuestUser()) {
 
 			// Site roles
 
@@ -692,7 +715,7 @@ public class GroupLocalServiceImpl extends GroupLocalServiceBaseImpl {
 
 		if (count == 0) {
 			groupLocalService.addGroup(
-				_userLocalService.getDefaultUserId(companyId),
+				_userLocalService.getGuestUserId(companyId),
 				GroupConstants.DEFAULT_PARENT_GROUP_ID, Company.class.getName(),
 				companyId, GroupConstants.DEFAULT_LIVE_GROUP_ID,
 				getLocalizationMap(GroupConstants.GLOBAL), null, 0, true,
@@ -742,7 +765,7 @@ public class GroupLocalServiceImpl extends GroupLocalServiceBaseImpl {
 				companyIdHexString.concat(group.getGroupKey()), group);
 		}
 
-		long defaultUserId = _userLocalService.getDefaultUserId(companyId);
+		long guestUserId = _userLocalService.getGuestUserId(companyId);
 
 		for (String groupKey : systemGroups) {
 			String groupCacheKey = companyIdHexString.concat(groupKey);
@@ -771,7 +794,7 @@ public class GroupLocalServiceImpl extends GroupLocalServiceBaseImpl {
 				}
 				else if (groupKey.equals(GroupConstants.USER_PERSONAL_SITE)) {
 					className = UserPersonalSite.class.getName();
-					classPK = defaultUserId;
+					classPK = guestUserId;
 					type = GroupConstants.TYPE_SITE_PRIVATE;
 					friendlyURL =
 						GroupConstants.USER_PERSONAL_SITE_FRIENDLY_URL;
@@ -779,7 +802,7 @@ public class GroupLocalServiceImpl extends GroupLocalServiceBaseImpl {
 				}
 
 				group = groupLocalService.addGroup(
-					defaultUserId, GroupConstants.DEFAULT_PARENT_GROUP_ID,
+					guestUserId, GroupConstants.DEFAULT_PARENT_GROUP_ID,
 					className, classPK, GroupConstants.DEFAULT_LIVE_GROUP_ID,
 					getLocalizationMap(groupKey), null, type, true,
 					GroupConstants.DEFAULT_MEMBERSHIP_RESTRICTION, friendlyURL,
@@ -1429,7 +1452,7 @@ public class GroupLocalServiceImpl extends GroupLocalServiceBaseImpl {
 		return groupPersistence.fetchByC_C_C(
 			companyId,
 			_classNameLocalService.getClassNameId(UserPersonalSite.class),
-			_userLocalService.getDefaultUserId(companyId));
+			_userLocalService.getGuestUserId(companyId));
 	}
 
 	@Override
@@ -2299,7 +2322,7 @@ public class GroupLocalServiceImpl extends GroupLocalServiceBaseImpl {
 		return groupPersistence.findByC_C_C(
 			companyId,
 			_classNameLocalService.getClassNameId(UserPersonalSite.class),
-			_userLocalService.getDefaultUserId(companyId));
+			_userLocalService.getGuestUserId(companyId));
 	}
 
 	@Override
@@ -3803,7 +3826,7 @@ public class GroupLocalServiceImpl extends GroupLocalServiceBaseImpl {
 		}
 
 		if (user == null) {
-			user = _userLocalService.getDefaultUser(group.getCompanyId());
+			user = _userLocalService.getGuestUser(group.getCompanyId());
 		}
 
 		updateAsset(
@@ -3976,7 +3999,7 @@ public class GroupLocalServiceImpl extends GroupLocalServiceBaseImpl {
 	}
 
 	protected void addControlPanelLayouts(Group group) throws PortalException {
-		long defaultUserId = _userLocalService.getDefaultUserId(
+		long guestUserId = _userLocalService.getGuestUserId(
 			group.getCompanyId());
 
 		String friendlyURL = getFriendlyURL(
@@ -3988,7 +4011,7 @@ public class GroupLocalServiceImpl extends GroupLocalServiceBaseImpl {
 			"layout.instanceable.allowed", Boolean.TRUE);
 
 		_layoutLocalService.addLayout(
-			defaultUserId, group.getGroupId(), true,
+			guestUserId, group.getGroupId(), true,
 			LayoutConstants.DEFAULT_PARENT_LAYOUT_ID,
 			PropsValues.CONTROL_PANEL_LAYOUT_NAME, StringPool.BLANK,
 			StringPool.BLANK, LayoutConstants.TYPE_CONTROL_PANEL, false,
@@ -4006,13 +4029,12 @@ public class GroupLocalServiceImpl extends GroupLocalServiceBaseImpl {
 	protected void addDefaultGuestPublicLayoutsByLAR(Group group, File larFile)
 		throws PortalException {
 
-		User defaultUser = _userLocalService.getDefaultUser(
-			group.getCompanyId());
+		User guestUser = _userLocalService.getGuestUser(group.getCompanyId());
 
 		Map<String, Serializable> importLayoutSettingsMap =
 			ExportImportConfigurationSettingsMapFactoryUtil.
 				buildImportLayoutSettingsMap(
-					defaultUser, group.getGroupId(), false, null,
+					guestUser, group.getGroupId(), false, null,
 					HashMapBuilder.put(
 						PortletDataHandlerKeys.PERMISSIONS,
 						new String[] {Boolean.TRUE.toString()}
@@ -4030,7 +4052,7 @@ public class GroupLocalServiceImpl extends GroupLocalServiceBaseImpl {
 		ExportImportConfiguration exportImportConfiguration =
 			_exportImportConfigurationLocalService.
 				addDraftExportImportConfiguration(
-					defaultUser.getUserId(),
+					guestUser.getUserId(),
 					ExportImportConfigurationConstants.TYPE_IMPORT_LAYOUT,
 					importLayoutSettingsMap);
 
@@ -5259,6 +5281,19 @@ public class GroupLocalServiceImpl extends GroupLocalServiceBaseImpl {
 		}
 
 		return filteredGroups;
+	}
+
+	private String _getGroupKey(
+		int counter, String groupKey, int groupKeyMaxLength,
+		String stagingGroupKeySuffix) {
+
+		String suffix = counter + stagingGroupKeySuffix;
+
+		groupKey = groupKey.substring(0, groupKeyMaxLength - suffix.length());
+
+		groupKey = groupKey.concat(suffix);
+
+		return groupKey;
 	}
 
 	private Map<Locale, String> _normalizeNameMap(Map<Locale, String> nameMap) {

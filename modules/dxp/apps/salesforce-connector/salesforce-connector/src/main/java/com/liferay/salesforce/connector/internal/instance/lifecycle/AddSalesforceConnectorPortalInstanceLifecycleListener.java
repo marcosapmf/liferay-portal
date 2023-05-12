@@ -38,7 +38,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Igor Beslic
  */
 @Component(
-	immediate = true, property = "service.ranking:Integer=100",
+	property = "service.ranking:Integer=100",
 	service = PortalInstanceLifecycleListener.class
 )
 public class AddSalesforceConnectorPortalInstanceLifecycleListener
@@ -79,7 +79,7 @@ public class AddSalesforceConnectorPortalInstanceLifecycleListener
 			TalendArchiveParserUtil.updateUnicodeProperties(
 				fileInputStream, unicodeProperties);
 
-			long userId = _userLocalService.getDefaultUserId(
+			long userId = _userLocalService.getGuestUserId(
 				company.getCompanyId());
 
 			dispatchTrigger = _dispatchTriggerLocalService.addDispatchTrigger(

@@ -33,6 +33,7 @@ import com.liferay.portal.kernel.service.UserLocalService;
 
 import java.lang.reflect.Field;
 
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
@@ -57,22 +58,19 @@ public class DLVideoExternalShortcutPortalInstanceLifecycleListener
 						_userLocalService);
 
 			dlVideoExternalShortcutDLFileEntryTypeHelper.
-				addDLVideoExternalShortcutDLFileEntryType();
+				addDLVideoExternalShortcutDLFileEntryType(true);
 		}
 		catch (PortalException portalException) {
 			throw new ModelListenerException(portalException);
 		}
 	}
 
-	@Reference(unbind = "-")
-	protected void setDDMStructureManager(
-			DDMStructureManager ddmStructureManager)
-		throws Exception {
-
+	@Activate
+	protected void activate() throws Exception {
 		Field field = ReflectionUtil.getDeclaredField(
 			DDMStructureManagerUtil.class, "_ddmStructureManager");
 
-		field.set(null, ddmStructureManager);
+		field.set(null, _ddmStructureManager);
 	}
 
 	@Reference
@@ -80,6 +78,9 @@ public class DLVideoExternalShortcutPortalInstanceLifecycleListener
 
 	@Reference
 	private DDMStructureLocalService _ddmStructureLocalService;
+
+	@Reference
+	private DDMStructureManager _ddmStructureManager;
 
 	@Reference(
 		target = "(model.class.name=com.liferay.document.library.kernel.model.DLFileEntryMetadata)"

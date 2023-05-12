@@ -7541,7 +7541,8 @@ public class COREntryPersistenceImpl
 				if (ercCOREntry != null) {
 					throw new DuplicateCOREntryExternalReferenceCodeException(
 						"Duplicate cor entry with external reference code " +
-							corEntry.getExternalReferenceCode());
+							corEntry.getExternalReferenceCode() +
+								" and company " + corEntry.getCompanyId());
 				}
 			}
 			else {
@@ -7550,7 +7551,8 @@ public class COREntryPersistenceImpl
 
 					throw new DuplicateCOREntryExternalReferenceCodeException(
 						"Duplicate cor entry with external reference code " +
-							corEntry.getExternalReferenceCode());
+							corEntry.getExternalReferenceCode() +
+								" and company " + corEntry.getCompanyId());
 				}
 			}
 		}

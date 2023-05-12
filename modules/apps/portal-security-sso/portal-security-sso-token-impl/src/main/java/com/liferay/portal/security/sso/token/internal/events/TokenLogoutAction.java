@@ -36,7 +36,6 @@ import javax.servlet.http.HttpServletResponse;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
@@ -64,8 +63,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Michael C. Han
  */
 @Component(
-	configurationPid = "com.liferay.portal.security.sso.token.internal.configuration.TokenConfiguration",
-	configurationPolicy = ConfigurationPolicy.OPTIONAL,
+	configurationPid = "com.liferay.portal.security.sso.token.configuration.TokenConfiguration",
 	property = "key=logout.events.post", service = LifecycleAction.class
 )
 public class TokenLogoutAction extends Action {
@@ -76,19 +74,19 @@ public class TokenLogoutAction extends Action {
 		HttpServletResponse httpServletResponse) {
 
 		try {
-			TokenConfiguration tokenCompanyServiceSettings =
+			TokenConfiguration tokenConfiguration =
 				_configurationProvider.getConfiguration(
 					TokenConfiguration.class,
 					new CompanyServiceSettingsLocator(
 						_portal.getCompanyId(httpServletRequest),
 						TokenConstants.SERVICE_NAME));
 
-			if (!tokenCompanyServiceSettings.enabled()) {
+			if (!tokenConfiguration.enabled()) {
 				return;
 			}
 
 			String[] authenticationCookies =
-				tokenCompanyServiceSettings.authenticationCookies();
+				tokenConfiguration.authenticationCookies();
 
 			if (ArrayUtil.isNotEmpty(authenticationCookies)) {
 				LogoutProcessor cookieLogoutProcessor =
@@ -101,8 +99,7 @@ public class TokenLogoutAction extends Action {
 				}
 			}
 
-			String logoutRedirectURL =
-				tokenCompanyServiceSettings.logoutRedirectURL();
+			String logoutRedirectURL = tokenConfiguration.logoutRedirectURL();
 
 			if (Validator.isNotNull(logoutRedirectURL)) {
 				LogoutProcessor redirectLogoutProcessor =

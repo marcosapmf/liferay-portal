@@ -10,23 +10,21 @@
  */
 
 import MDFRequestDTO from '../../../interfaces/dto/mdfRequestDTO';
-import LiferayPicklist from '../../../interfaces/liferayPicklist';
 import MDFRequest from '../../../interfaces/mdfRequest';
 
-export function getMDFRequestFromDTO(
-	mdfRequest: MDFRequestDTO,
-	requestUpdateStatus: LiferayPicklist
-): MDFRequest {
+export function getMDFRequestFromDTO(mdfRequest: MDFRequestDTO): MDFRequest {
 	return {
 		...mdfRequest,
 		activities:
 			mdfRequest.mdfReqToActs?.map((activityItem) => {
 				const {
 					actToBgts,
+					activityStatus,
 					endDate,
+					externalReferenceCode,
 					id,
 					mdfRequestAmount,
-					mdfRequestExternalReferenceCodeSF,
+					mdfRequestExternalReferenceCode,
 					name,
 					r_accToActs_accountEntryId,
 					r_mdfReqToActs_c_mdfRequestId,
@@ -40,16 +38,21 @@ export function getMDFRequestFromDTO(
 				return {
 					activityDescription: {
 						...activityDescription,
+						assetsLiferayRequired: String(
+							activityItem.assetsLiferayRequired
+						),
 						leadFollowUpStrategies: activityItem.leadFollowUpStrategies?.split(
-							'; '
+							', '
 						),
 						leadGenerated: String(activityItem.leadGenerated),
 					},
+					activityStatus,
 					budgets: actToBgts || [],
 					endDate: endDate?.split('T')[0],
+					externalReferenceCode,
 					id,
 					mdfRequestAmount,
-					mdfRequestExternalReferenceCodeSF,
+					mdfRequestExternalReferenceCode,
 					mdfRequestId: r_mdfReqToActs_c_mdfRequestId,
 					name,
 					r_accToActs_accountEntryId,
@@ -62,11 +65,17 @@ export function getMDFRequestFromDTO(
 			}) || [],
 		additionalOption: mdfRequest.additionalOption,
 		company: mdfRequest.r_accToMDFReqs_accountEntry,
-		liferayBusinessSalesGoals: mdfRequest.liferayBusinessSalesGoals?.split(
-			'; '
-		),
-		mdfRequestStatus: requestUpdateStatus,
-		targetAudienceRoles: mdfRequest.targetAudienceRoles?.split('; '),
-		targetMarkets: mdfRequest.targetMarkets?.split('; '),
+		liferayBusinessSalesGoals: mdfRequest.liferayBusinessSalesGoals
+			?.split('; ')
+			.filter((request) => request !== ''),
+		liferayBusinessSalesGoalsOther:
+			mdfRequest.liferayBusinessSalesGoalsOther,
+		mdfRequestStatus: mdfRequest.mdfRequestStatus,
+		targetAudienceRoles: mdfRequest.targetAudienceRoles
+			?.split('; ')
+			.filter((request) => request !== ''),
+		targetMarkets: mdfRequest.targetMarkets
+			?.split('; ')
+			.filter((request) => request !== ''),
 	};
 }

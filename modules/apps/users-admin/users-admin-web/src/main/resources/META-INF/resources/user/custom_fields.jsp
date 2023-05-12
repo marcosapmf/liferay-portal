@@ -42,21 +42,22 @@ User selUser = (User)request.getAttribute(UsersAdminWebKeys.SELECTED_USER);
 			}
 			%>
 
-			<liferay-ui:icon
-				cssClass="modify-link"
-				label="<%= true %>"
-				linkCssClass="btn btn-secondary btn-sm"
-				message='<%= hasVisibleAttributes ? "manage" : "add" %>'
-				method="get"
-				url='<%=
+			<clay:link
+				aria-label='<%= hasVisibleAttributes ? LanguageUtil.format(request, "manage-x", "custom-fields") : LanguageUtil.format(request, "add-x", "custom-fields") %>'
+				cssClass="btn btn-secondary btn-sm modify-link"
+				displayType="null"
+				href='<%=
 					PortletURLBuilder.create(
 						PortletProviderUtil.getPortletURL(request, ExpandoColumn.class.getName(), action)
 					).setRedirect(
 						currentURL
 					).setParameter(
+						"backTitle", LanguageUtil.format(request, "go-to-x", LanguageUtil.get(request, "add-user"), false)
+					).setParameter(
 						"modelResource", User.class.getName()
 					).buildString()
 				%>'
+				label='<%= hasVisibleAttributes ? "manage" : "add" %>'
 			/>
 		</clay:content-col>
 	</c:if>

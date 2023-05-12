@@ -69,10 +69,10 @@ import com.liferay.portal.kernel.xml.Element;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Stream;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -147,10 +147,10 @@ public class DDMStructureStagedModelDataHandler
 			"structure-key", structure.getStructureKey()
 		).build();
 
-		long defaultUserId = 0;
+		long guestUserId = 0;
 
 		try {
-			defaultUserId = _userLocalService.getDefaultUserId(
+			guestUserId = _userLocalService.getGuestUserId(
 				structure.getCompanyId());
 		}
 		catch (Exception exception) {
@@ -163,7 +163,7 @@ public class DDMStructureStagedModelDataHandler
 
 		referenceAttributes.put(
 			"preloaded",
-			String.valueOf(_isPreloadedStructure(defaultUserId, structure)));
+			String.valueOf(_isPreloadedStructure(guestUserId, structure)));
 
 		return referenceAttributes;
 	}
@@ -248,7 +248,7 @@ public class DDMStructureStagedModelDataHandler
 		}
 
 		if (_isPreloadedStructure(
-				_userLocalService.getDefaultUserId(structure.getCompanyId()),
+				_userLocalService.getGuestUserId(structure.getCompanyId()),
 				structure)) {
 
 			structureElement.addAttribute("preloaded", "true");
@@ -788,9 +788,9 @@ public class DDMStructureStagedModelDataHandler
 	}
 
 	private boolean _isPreloadedStructure(
-		long defaultUserId, DDMStructure structure) {
+		long guestUserId, DDMStructure structure) {
 
-		if (defaultUserId == structure.getUserId()) {
+		if (guestUserId == structure.getUserId()) {
 			return true;
 		}
 
@@ -807,7 +807,7 @@ public class DDMStructureStagedModelDataHandler
 		}
 
 		if ((ddmStructureVersion != null) &&
-			(defaultUserId == ddmStructureVersion.getUserId())) {
+			(guestUserId == ddmStructureVersion.getUserId())) {
 
 			return true;
 		}
@@ -836,27 +836,24 @@ public class DDMStructureStagedModelDataHandler
 	private void _updateDDMFormFieldsPredefinedValues(
 		DDMForm ddmForm, long groupId, long sourceId) {
 
-		List<DDMFormField> ddmFormFields = ddmForm.getDDMFormFields();
+		for (DDMFormField ddmFormField : ddmForm.getDDMFormFields()) {
+			LocalizedValue localizedValue = ddmFormField.getPredefinedValue();
 
-		Stream<DDMFormField> stream = ddmFormFields.stream();
+			Map<Locale, String> values = localizedValue.getValues();
 
-		stream.map(
-			DDMFormField::getPredefinedValue
-		).map(
-			LocalizedValue::getValues
-		).map(
-			Map::entrySet
-		).flatMap(
-			entries -> entries.stream()
-		).filter(
-			entry -> StringUtil.contains(
-				entry.getValue(), String.valueOf(sourceId))
-		).forEach(
-			entry -> entry.setValue(
-				StringUtil.replace(
-					entry.getValue(), String.valueOf(sourceId),
-					String.valueOf(groupId)))
-		);
+			for (Map.Entry<Locale, String> entry : values.entrySet()) {
+				if (!StringUtil.contains(
+						entry.getValue(), String.valueOf(sourceId))) {
+
+					continue;
+				}
+
+				entry.setValue(
+					StringUtil.replace(
+						entry.getValue(), String.valueOf(sourceId),
+						String.valueOf(groupId)));
+			}
+		}
 	}
 
 	private static final String _DDM_DATA_PROVIDER_INSTANCE_IDS =

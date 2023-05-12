@@ -84,6 +84,10 @@ DLViewDisplayContext dlViewDisplayContext = new DLViewDisplayContext(dlAdminDisp
 				).put(
 					"openViewMoreFileEntryTypesURL", dlViewDisplayContext.getViewMoreFileEntryTypesURL()
 				).put(
+					"selectAssetTagsURL", dlViewDisplayContext.getSelectAssetTagsURL()
+				).put(
+					"selectExtensionURL", dlViewDisplayContext.getSelectExtensionURL()
+				).put(
 					"selectFileEntryTypeURL", dlViewDisplayContext.getSelectFileEntryTypeURL()
 				).put(
 					"selectFolderURL", dlViewDisplayContext.getSelectFolderURL()
@@ -128,6 +132,7 @@ DLViewDisplayContext dlViewDisplayContext = new DLViewDisplayContext(dlAdminDisp
 				<liferay-frontend:sidebar-panel
 					resourceURL="<%= dlViewDisplayContext.getSidebarPanelURL() %>"
 					searchContainerId="entries"
+					title='<%= LanguageUtil.get(request, "info-panel") %>'
 				>
 					<liferay-util:include page="/document_library/info_panel.jsp" servletContext="<%= application %>" />
 				</liferay-frontend:sidebar-panel>
@@ -168,6 +173,19 @@ DLViewDisplayContext dlViewDisplayContext = new DLViewDisplayContext(dlAdminDisp
 						<liferay-ui:error exception="<%= FileEntryLockException.MustBeUnlocked.class %>" message="you-cannot-perform-this-operation-on-checked-out-documents-.please-check-it-in-or-cancel-the-checkout-first" />
 						<liferay-ui:error exception="<%= FileEntryLockException.MustOwnLock.class %>" message="you-can-only-checkin-documents-you-have-checked-out-yourself" />
 						<liferay-ui:error key="externalServiceFailed" message="you-cannot-access-external-service-because-you-are-not-allowed-to-or-it-is-unavailable" />
+
+						<c:if test='<%= SessionErrors.contains(renderRequest, "googleDriveFileMissing") %>'>
+							<aui:script>
+								Liferay.Util.openToast({
+									message: '<liferay-ui:message key="the-google-drive-file-was-missing" />',
+									title: Liferay.Language.get('warning'),
+									toastProps: {
+										autoClose: 5000,
+									},
+									type: 'warning',
+								});
+							</aui:script>
+						</c:if>
 
 						<c:choose>
 							<c:when test="<%= dlViewDisplayContext.isSearch() %>">

@@ -51,6 +51,11 @@ public class OpenGraphSettingsUtil {
 				description_i18n = LocalizedMapUtil.getI18nMap(
 					dtoConverterContext.isAcceptAllLanguages(),
 					layoutSEOEntry.getOpenGraphDescriptionMap());
+				imageAlt = layoutSEOEntry.getOpenGraphImageAlt(
+					dtoConverterContext.getLocale());
+				imageAlt_i18n = LocalizedMapUtil.getI18nMap(
+					dtoConverterContext.isAcceptAllLanguages(),
+					layoutSEOEntry.getOpenGraphImageAltMap());
 				title = layoutSEOEntry.getOpenGraphTitle(
 					dtoConverterContext.getLocale());
 				title_i18n = LocalizedMapUtil.getI18nMap(
@@ -71,7 +76,7 @@ public class OpenGraphSettingsUtil {
 							"openGraphSettings.contentFieldValue.image",
 							dlAppService.getFileEntry(
 								openGraphImageFileEntryId),
-							dtoConverterContext.getUriInfoOptional());
+							dtoConverterContext.getUriInfo());
 					});
 			}
 		};

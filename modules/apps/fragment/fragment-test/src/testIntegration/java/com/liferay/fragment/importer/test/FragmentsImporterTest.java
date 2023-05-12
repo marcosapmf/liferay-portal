@@ -25,6 +25,7 @@ import com.liferay.fragment.model.FragmentEntry;
 import com.liferay.fragment.service.FragmentCollectionLocalService;
 import com.liferay.fragment.service.FragmentEntryLocalService;
 import com.liferay.fragment.util.comparator.FragmentEntryCreateDateComparator;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.json.JSONArray;
@@ -44,15 +45,15 @@ import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.StringUtil;
-import com.liferay.portal.kernel.util.UnicodePropertiesBuilder;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.zip.ZipWriter;
 import com.liferay.portal.kernel.zip.ZipWriterFactoryUtil;
+import com.liferay.portal.test.rule.FeatureFlags;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
-import com.liferay.portal.util.PropsUtil;
 
 import java.io.File;
 
@@ -64,8 +65,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -218,13 +217,9 @@ public class FragmentsImporterTest {
 		Assert.assertFalse(fragmentEntries.isEmpty());
 	}
 
+	@FeatureFlags("LPS-158675")
 	@Test
 	public void testImportFragmentsWithFolderResources() throws Exception {
-		PropsUtil.addProperties(
-			UnicodePropertiesBuilder.setProperty(
-				"feature.flag.LPS-158675", "true"
-			).build());
-
 		File fileWithFolderResources = _generateZipFileWithFolderResources();
 
 		ServiceContextThreadLocal.pushServiceContext(
@@ -265,11 +260,6 @@ public class FragmentsImporterTest {
 		Assert.assertEquals("image2.png", fileEntry.getTitle());
 
 		FileUtil.delete(fileWithFolderResources);
-
-		PropsUtil.addProperties(
-			UnicodePropertiesBuilder.setProperty(
-				"feature.flag.LPS-158675", "false"
-			).build());
 	}
 
 	@Test
@@ -291,17 +281,10 @@ public class FragmentsImporterTest {
 
 		FragmentCollection fragmentCollection = fragmentCollections.get(0);
 
-		List<FragmentEntry> fragmentEntries =
+		List<String> fragmentEntryNames = TransformUtil.transform(
 			_fragmentEntryLocalService.getFragmentEntries(
-				fragmentCollection.getFragmentCollectionId());
-
-		Stream<FragmentEntry> stream = fragmentEntries.stream();
-
-		List<String> fragmentEntryNames = stream.map(
-			fragmentEntry -> fragmentEntry.getFragmentEntryKey()
-		).collect(
-			Collectors.toList()
-		);
+				fragmentCollection.getFragmentCollectionId()),
+			FragmentEntry::getFragmentEntryKey);
 
 		Assert.assertTrue(fragmentEntryNames.contains("resource"));
 	}
@@ -335,18 +318,11 @@ public class FragmentsImporterTest {
 
 		FragmentCollection fragmentCollection = fragmentCollections.get(0);
 
-		List<FragmentEntry> fragmentEntries =
+		List<FragmentEntry> filteredFragmentEntries = ListUtil.filter(
 			_fragmentEntryLocalService.getFragmentEntries(
-				fragmentCollection.getFragmentCollectionId());
-
-		Stream<FragmentEntry> stream = fragmentEntries.stream();
-
-		List<FragmentEntry> filteredFragmentEntries = stream.filter(
+				fragmentCollection.getFragmentCollectionId()),
 			fragmentEntry -> Objects.equals(
-				fragmentEntry.getName(), "Fragment With Icon")
-		).collect(
-			Collectors.toList()
-		);
+				fragmentEntry.getName(), "Fragment With Icon"));
 
 		Assert.assertEquals(
 			filteredFragmentEntries.toString(), 1,
@@ -376,18 +352,12 @@ public class FragmentsImporterTest {
 
 		FragmentCollection fragmentCollection = fragmentCollections.get(0);
 
-		List<FragmentEntry> fragmentEntries =
+		List<FragmentEntry> filteredFragmentEntries = ListUtil.filter(
 			_fragmentEntryLocalService.getFragmentEntries(
-				fragmentCollection.getFragmentCollectionId());
-
-		Stream<FragmentEntry> stream = fragmentEntries.stream();
-
-		List<FragmentEntry> filteredFragmentEntries = stream.filter(
+				fragmentCollection.getFragmentCollectionId()),
 			fragmentEntry -> Objects.equals(
-				fragmentEntry.getName(), "Fragment With Invalid Configuration")
-		).collect(
-			Collectors.toList()
-		);
+				fragmentEntry.getName(),
+				"Fragment With Invalid Configuration"));
 
 		Assert.assertEquals(
 			filteredFragmentEntries.toString(), 1,
@@ -417,18 +387,11 @@ public class FragmentsImporterTest {
 
 		FragmentCollection fragmentCollection = fragmentCollections.get(0);
 
-		List<FragmentEntry> fragmentEntries =
+		List<FragmentEntry> filteredFragmentEntries = ListUtil.filter(
 			_fragmentEntryLocalService.getFragmentEntries(
-				fragmentCollection.getFragmentCollectionId());
-
-		Stream<FragmentEntry> stream = fragmentEntries.stream();
-
-		List<FragmentEntry> filteredFragmentEntries = stream.filter(
+				fragmentCollection.getFragmentCollectionId()),
 			fragmentEntry -> Objects.equals(
-				fragmentEntry.getName(), "Fragment With Invalid HTML")
-		).collect(
-			Collectors.toList()
-		);
+				fragmentEntry.getName(), "Fragment With Invalid HTML"));
 
 		Assert.assertEquals(
 			filteredFragmentEntries.toString(), 1,
@@ -468,18 +431,11 @@ public class FragmentsImporterTest {
 
 		FragmentCollection fragmentCollection = fragmentCollections.get(0);
 
-		List<FragmentEntry> fragmentEntries =
+		List<FragmentEntry> filteredFragmentEntries = ListUtil.filter(
 			_fragmentEntryLocalService.getFragmentEntries(
-				fragmentCollection.getFragmentCollectionId());
-
-		Stream<FragmentEntry> stream = fragmentEntries.stream();
-
-		List<FragmentEntry> filteredFragmentEntries = stream.filter(
+				fragmentCollection.getFragmentCollectionId()),
 			fragmentEntry -> Objects.equals(
-				fragmentEntry.getName(), "Input Fragment With Type Options")
-		).collect(
-			Collectors.toList()
-		);
+				fragmentEntry.getName(), "Input Fragment With Type Options"));
 
 		Assert.assertEquals(
 			filteredFragmentEntries.toString(), 1,
@@ -510,21 +466,14 @@ public class FragmentsImporterTest {
 			ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
 
 		try {
-			List<FragmentsImporterResultEntry> fragmentsImporterResultEntries =
-				_fragmentsImporter.importFragmentEntries(
-					_user.getUserId(), _group.getGroupId(), 0, _file, false);
-
-			Stream<FragmentsImporterResultEntry> stream =
-				fragmentsImporterResultEntries.stream();
-
 			List<FragmentsImporterResultEntry>
-				filteredFragmentsImporterResultEntries = stream.filter(
+				filteredFragmentsImporterResultEntries = ListUtil.filter(
+					_fragmentsImporter.importFragmentEntries(
+						_user.getUserId(), _group.getGroupId(), 0, _file,
+						false),
 					fragmentsImporterResultEntry -> Objects.equals(
 						fragmentsImporterResultEntry.getName(),
-						"React Fragment With Invalid Configuration")
-				).collect(
-					Collectors.toList()
-				);
+						"React Fragment With Invalid Configuration"));
 
 			Assert.assertEquals(
 				filteredFragmentsImporterResultEntries.toString(), 1,
@@ -648,19 +597,12 @@ public class FragmentsImporterTest {
 
 		FragmentCollection fragmentCollection = fragmentCollections.get(0);
 
-		List<FragmentEntry> fragmentEntries =
+		List<FragmentEntry> actualFragmentEntries = ListUtil.filter(
 			_fragmentEntryLocalService.getFragmentEntries(
-				fragmentCollection.getFragmentCollectionId());
-
-		Stream<FragmentEntry> stream = fragmentEntries.stream();
+				fragmentCollection.getFragmentCollectionId()),
+			fragmentEntry -> fragmentEntry.getType() == type);
 
 		List<String> expectedFragmentsEntries = _fragmentEntryTypes.get(type);
-
-		List<FragmentEntry> actualFragmentEntries = stream.filter(
-			fragmentEntry -> fragmentEntry.getType() == type
-		).collect(
-			Collectors.toList()
-		);
 
 		Assert.assertEquals(
 			actualFragmentEntries.toString(), expectedFragmentsEntries.size(),

@@ -19,7 +19,6 @@ import com.liferay.commerce.product.model.CPOption;
 import com.liferay.commerce.product.service.CPOptionService;
 import com.liferay.headless.commerce.admin.catalog.dto.v1_0.Option;
 import com.liferay.headless.commerce.admin.catalog.dto.v1_0.OptionValue;
-import com.liferay.headless.commerce.admin.catalog.internal.dto.v1_0.converter.OptionDTOConverter;
 import com.liferay.headless.commerce.admin.catalog.internal.odata.entity.v1_0.OptionEntityModel;
 import com.liferay.headless.commerce.admin.catalog.resource.v1_0.OptionResource;
 import com.liferay.headless.commerce.admin.catalog.resource.v1_0.OptionValueResource;
@@ -35,6 +34,7 @@ import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.odata.entity.EntityModel;
+import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterRegistry;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.pagination.Page;
@@ -194,6 +194,7 @@ public class OptionResourceImpl extends BaseOptionResourceImpl {
 		}
 
 		_optionValueResource.setContextAcceptLanguage(contextAcceptLanguage);
+		_optionValueResource.setContextUriInfo(contextUriInfo);
 
 		for (OptionValue optionValue : optionValues) {
 			_optionValueResource.postOptionIdOptionValue(
@@ -261,8 +262,10 @@ public class OptionResourceImpl extends BaseOptionResourceImpl {
 	@Reference
 	private DTOConverterRegistry _dtoConverterRegistry;
 
-	@Reference
-	private OptionDTOConverter _optionDTOConverter;
+	@Reference(
+		target = "(component.name=com.liferay.headless.commerce.admin.catalog.internal.dto.v1_0.converter.OptionDTOConverter)"
+	)
+	private DTOConverter<CPOption, Option> _optionDTOConverter;
 
 	@Reference
 	private OptionValueResource _optionValueResource;

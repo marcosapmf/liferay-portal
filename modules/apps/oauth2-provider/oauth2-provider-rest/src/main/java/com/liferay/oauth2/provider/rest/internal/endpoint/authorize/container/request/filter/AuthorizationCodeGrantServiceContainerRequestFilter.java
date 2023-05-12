@@ -15,6 +15,7 @@
 package com.liferay.oauth2.provider.rest.internal.endpoint.authorize.container.request.filter;
 
 import com.liferay.oauth2.provider.model.OAuth2Application;
+import com.liferay.oauth2.provider.redirect.OAuth2RedirectURIInterpolator;
 import com.liferay.oauth2.provider.rest.internal.endpoint.authorize.configuration.AuthorizeScreenConfiguration;
 import com.liferay.oauth2.provider.service.OAuth2ApplicationLocalService;
 import com.liferay.petra.reflect.ReflectionUtil;
@@ -100,12 +101,12 @@ public class AuthorizationCodeGrantServiceContainerRequestFilter
 		try {
 			boolean guestAuthorized = false;
 
-			if (user.isDefaultUser() && !Validator.isBlank(clientId)) {
+			if (user.isGuestUser() && !Validator.isBlank(clientId)) {
 				guestAuthorized = _containsOAuth2ApplicationViewPermission(
 					oAuth2Application, user);
 			}
 
-			if (!user.isDefaultUser() || guestAuthorized) {
+			if (!user.isGuestUser() || guestAuthorized) {
 				long userId = user.getUserId();
 
 				containerRequestContext.setSecurityContext(
@@ -205,7 +206,10 @@ public class AuthorizationCodeGrantServiceContainerRequestFilter
 
 		StringBundler sb = new StringBundler(5);
 
-		List<String> redirectURIsList = oAuth2Application.getRedirectURIsList();
+		List<String> redirectURIsList =
+			OAuth2RedirectURIInterpolator.interpolateRedirectURIsList(
+				_httpServletRequest, oAuth2Application.getRedirectURIsList(),
+				_portal);
 
 		sb.append(redirectURIsList.get(0));
 
@@ -273,7 +277,7 @@ public class AuthorizationCodeGrantServiceContainerRequestFilter
 			User user = _portal.getUser(_httpServletRequest);
 
 			if (user == null) {
-				user = _userLocalService.getDefaultUser(
+				user = _userLocalService.getGuestUser(
 					_portal.getCompanyId(_httpServletRequest));
 			}
 
@@ -292,7 +296,7 @@ public class AuthorizationCodeGrantServiceContainerRequestFilter
 		String prompt = ParamUtil.getString(_httpServletRequest, "prompt");
 
 		if (oAuth2Application.isTrustedApplication() &&
-			Objects.equals("none", prompt)) {
+			Objects.equals(prompt, "none")) {
 
 			return true;
 		}

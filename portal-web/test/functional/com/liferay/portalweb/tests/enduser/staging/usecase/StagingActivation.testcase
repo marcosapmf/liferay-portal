@@ -1,6 +1,7 @@
 @component-name = "portal-staging"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Staging";
@@ -10,13 +11,13 @@ definition {
 
 		User.firstLoginPG();
 
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 	}
 
 	tearDown {
 		var testPortalInstance = PropsUtil.get("test.portal.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testPortalInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -25,8 +26,10 @@ definition {
 	}
 
 	@description = "Check the publication summary that is published via local staging."
-	@priority = "4"
+	@priority = 4
 	test CheckPublicationSummaryLocal {
+		property test.name.skip.portal.instance = "StagingActivation#CheckPublicationSummaryLocal";
+
 		task ("Given: Add a new page on site and enable local staging") {
 			JSONLayout.addPublicLayout(
 				groupName = "Site Name",
@@ -66,7 +69,7 @@ definition {
 	}
 
 	@description = "Check the publication summary that is published via remote staging."
-	@priority = "4"
+	@priority = 4
 	test CheckPublicationSummaryRemote {
 		property app.server.bundles.size = "1";
 		property custom.properties = "tunneling.servlet.shared.secret=1234567890123456${line.separator}auth.verifier.TunnelAuthVerifier.hosts.allowed=";
@@ -78,7 +81,7 @@ definition {
 		task ("Given: Enable remote staging and add a new page on site") {
 			Staging.remoteStagingSetUpViaJson(
 				groupName = "Site Name",
-				remotePort = "9080");
+				remotePort = 9080);
 
 			JSONLayout.addPublicLayout(
 				groupName = "Site Name",
@@ -105,9 +108,10 @@ definition {
 	}
 
 	@description = "Verify that the recycle bin of the site is automatically emptied before turning on local staging."
-	@priority = "4"
+	@priority = 4
 	test DeleteRecycleBinOnStagingActivation {
 		property portal.acceptance = "true";
+		property test.name.skip.portal.instance = "StagingActivation#DeleteRecycleBinOnStagingActivation";
 
 		task ("Given: Add a web content entry") {
 			WebContentNavigator.openWebContentAdmin(siteURLKey = "site-name");

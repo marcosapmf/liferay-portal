@@ -12,9 +12,14 @@
  * details.
  */
 
-import {invalidateRequired, useForm} from '@liferay/object-js-components-web';
+import {
+	REQUIRED_MSG,
+	invalidateRequired,
+	useForm,
+} from '@liferay/object-js-components-web';
 import {sub} from 'frontend-js-web';
 
+import {defaultLanguageId} from '../../utils/constants';
 import {normalizeFieldSettings} from '../../utils/fieldSettings';
 import {ObjectFieldErrors} from './ObjectFieldFormBase';
 
@@ -25,9 +30,6 @@ interface IUseObjectFieldForm {
 	initialValues: Partial<ObjectField>;
 	onSubmit: (field: ObjectField) => void;
 }
-
-const defaultLanguageId = Liferay.ThemeDisplay.getDefaultLanguageId();
-const REQUIRED_MSG = Liferay.Language.get('required');
 
 export function useObjectFieldForm({
 	forbiddenChars,
@@ -131,7 +133,9 @@ export function useObjectFieldForm({
 			if (!settings.maximumFileSize && settings.maximumFileSize !== 0) {
 				errors.maximumFileSize = REQUIRED_MSG;
 			}
-			else if (settings.maximumFileSize > uploadRequestSizeLimit) {
+			else if (
+				(settings.maximumFileSize as number) > uploadRequestSizeLimit
+			) {
 				errors.maximumFileSize = sub(
 					Liferay.Language.get(
 						'file-size-is-larger-than-the-allowed-overall-maximum-upload-request-size-x-mb'
@@ -139,7 +143,7 @@ export function useObjectFieldForm({
 					uploadRequestSizeLimit
 				);
 			}
-			else if (settings.maximumFileSize < 0) {
+			else if ((settings.maximumFileSize as number) < 0) {
 				errors.maximumFileSize = sub(
 					Liferay.Language.get(
 						'only-integers-greater-than-or-equal-to-x-are-allowed'
@@ -185,8 +189,30 @@ export function useObjectFieldForm({
 				errors.listTypeDefinitionId = REQUIRED_MSG;
 			}
 
-			if (field.state && !field.defaultValue) {
-				errors.defaultValue = REQUIRED_MSG;
+			const thereIsDefaultValueType = field.objectFieldSettings?.some(
+				(setting) =>
+					setting.name === 'defaultValueType' && setting.value
+			);
+
+			const thereIsDefaultValue = field.objectFieldSettings?.some(
+				(setting) => setting.name === 'defaultValue' && setting.value
+			);
+			if (Liferay.FeatureFlags['LPS-163716']) {
+				if (!field.id) {
+					if (field.state && !thereIsDefaultValue) {
+						errors.defaultValue = REQUIRED_MSG;
+					}
+				}
+				else {
+					if (thereIsDefaultValueType && !thereIsDefaultValue) {
+						errors.defaultValue = REQUIRED_MSG;
+					}
+				}
+			}
+			else {
+				if (field.state && !field.defaultValue) {
+					errors.defaultValue = REQUIRED_MSG;
+				}
 			}
 		}
 

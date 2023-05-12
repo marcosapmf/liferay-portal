@@ -29,6 +29,7 @@ import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.ModelListenerException;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.search.BaseModelSearchResult;
+import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.test.rule.DataGuard;
 import com.liferay.portal.kernel.test.util.CompanyTestUtil;
@@ -72,7 +73,7 @@ public class AccountGroupLocalServiceTest {
 	public void testAccountGroupName() throws Exception {
 		try {
 			_accountGroupLocalService.addAccountGroup(
-				TestPropsValues.getUserId(), null, "");
+				TestPropsValues.getUserId(), null, "", new ServiceContext());
 
 			Assert.fail();
 		}
@@ -86,7 +87,7 @@ public class AccountGroupLocalServiceTest {
 
 		try {
 			_accountGroupLocalService.updateAccountGroup(
-				accountGroup.getUserId(), null, "");
+				accountGroup.getUserId(), null, "", new ServiceContext());
 
 			Assert.fail();
 		}
@@ -255,7 +256,7 @@ public class AccountGroupLocalServiceTest {
 
 			_accountGroupLocalService.updateAccountGroup(
 				accountGroup.getAccountGroupId(), RandomTestUtil.randomString(),
-				RandomTestUtil.randomString());
+				RandomTestUtil.randomString(), new ServiceContext());
 		}
 		catch (ModelListenerException modelListenerException) {
 			Assert.assertTrue(

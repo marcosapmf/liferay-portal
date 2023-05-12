@@ -1,4 +1,3 @@
-/* eslint-disable no-undef */
 /**
  * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
  *
@@ -9,28 +8,3 @@
  * permissions and limitations under the License, including but not limited to
  * distribution rights of the Software.
  */
-
-const siteURL = Liferay.ThemeDisplay.getLayoutRelativeURL()
-	.split('/')
-	.slice(0, 3)
-	.join('/');
-
-const buttonMDFRequest = fragmentElement.querySelector('#mdf-request');
-const buttonMDFClaim = fragmentElement.querySelector('#mdf-claim');
-
-if (buttonMDFRequest) {
-	buttonMDFRequest.onclick = () =>
-		Liferay.Util.navigate(`${siteURL}/marketing/mdf-requests`);
-}
-
-if (buttonMDFClaim) {
-	buttonMDFClaim.onclick = () =>
-		Liferay.Util.navigate(`${siteURL}/marketing/mdf-claim`);
-}
-
-if (Liferay.currentURL.includes('claim')) {
-	buttonMDFClaim.classList.toggle('active');
-}
-else if (Liferay.currentURL.includes('request')) {
-	buttonMDFRequest.classList.toggle('active');
-}

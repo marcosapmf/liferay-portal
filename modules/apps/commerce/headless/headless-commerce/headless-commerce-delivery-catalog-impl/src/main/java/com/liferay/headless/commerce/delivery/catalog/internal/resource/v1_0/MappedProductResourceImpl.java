@@ -14,9 +14,9 @@
 
 package com.liferay.headless.commerce.delivery.catalog.internal.resource.v1_0;
 
+import com.liferay.account.model.AccountEntry;
+import com.liferay.account.service.AccountEntryLocalService;
 import com.liferay.commerce.account.exception.NoSuchAccountException;
-import com.liferay.commerce.account.model.CommerceAccount;
-import com.liferay.commerce.account.service.CommerceAccountLocalService;
 import com.liferay.commerce.account.util.CommerceAccountHelper;
 import com.liferay.commerce.context.CommerceContext;
 import com.liferay.commerce.context.CommerceContextFactory;
@@ -29,14 +29,15 @@ import com.liferay.commerce.product.service.CPDefinitionLocalService;
 import com.liferay.commerce.product.service.CommerceChannelLocalService;
 import com.liferay.commerce.shop.by.diagram.model.CSDiagramEntry;
 import com.liferay.headless.commerce.delivery.catalog.dto.v1_0.MappedProduct;
-import com.liferay.headless.commerce.delivery.catalog.internal.dto.v1_0.converter.MappedProductDTOConverter;
 import com.liferay.headless.commerce.delivery.catalog.internal.dto.v1_0.converter.MappedProductDTOConverterContext;
+import com.liferay.headless.commerce.delivery.catalog.internal.dto.v1_0.converter.constants.DTOConverterConstants;
 import com.liferay.headless.commerce.delivery.catalog.resource.v1_0.MappedProductResource;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.portal.vulcan.util.SearchUtil;
@@ -104,12 +105,12 @@ public class MappedProductResourceImpl extends BaseMappedProductResourceImpl {
 					contextUser.getUserId(), commerceChannel.getGroupId());
 
 			if (commerceAccountIds.length == 0) {
-				CommerceAccount commerceAccount =
-					_commerceAccountLocalService.getGuestCommerceAccount(
-						contextUser.getCompanyId());
+				AccountEntry accountEntry =
+					_accountEntryLocalService.getGuestAccountEntry(
+						contextCompany.getCompanyId());
 
 				commerceAccountIds = new long[] {
-					commerceAccount.getCommerceAccountId()
+					accountEntry.getAccountEntryId()
 				};
 			}
 
@@ -158,10 +159,10 @@ public class MappedProductResourceImpl extends BaseMappedProductResourceImpl {
 	}
 
 	@Reference
-	private CommerceAccountHelper _commerceAccountHelper;
+	private AccountEntryLocalService _accountEntryLocalService;
 
 	@Reference
-	private CommerceAccountLocalService _commerceAccountLocalService;
+	private CommerceAccountHelper _commerceAccountHelper;
 
 	@Reference
 	private CommerceChannelLocalService _commerceChannelLocalService;
@@ -175,7 +176,8 @@ public class MappedProductResourceImpl extends BaseMappedProductResourceImpl {
 	@Reference
 	private CPDefinitionLocalService _cpDefinitionLocalService;
 
-	@Reference
-	private MappedProductDTOConverter _mappedProductDTOConverter;
+	@Reference(target = DTOConverterConstants.MAPPED_PRODUCT_DTO_CONVERTER)
+	private DTOConverter<CSDiagramEntry, MappedProduct>
+		_mappedProductDTOConverter;
 
 }

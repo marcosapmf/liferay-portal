@@ -27,9 +27,8 @@ import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.object.service.ObjectEntryLocalServiceUtil;
 import com.liferay.object.service.ObjectFieldLocalService;
 import com.liferay.object.service.ObjectRelationshipLocalServiceUtil;
-import com.liferay.object.system.SystemObjectDefinitionMetadata;
-import com.liferay.object.system.SystemObjectDefinitionMetadataRegistry;
-import com.liferay.object.util.LocalizedMapUtil;
+import com.liferay.object.system.SystemObjectDefinitionManager;
+import com.liferay.object.system.SystemObjectDefinitionManagerRegistry;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
@@ -37,15 +36,14 @@ import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.StringUtil;
-import com.liferay.portal.kernel.util.UnicodePropertiesBuilder;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
-import com.liferay.portal.util.PropsUtil;
 import com.liferay.portal.vulcan.extension.ExtensionProvider;
 import com.liferay.portal.vulcan.extension.PropertyDefinition;
 import com.liferay.portal.vulcan.fields.NestedFieldsContext;
 import com.liferay.portal.vulcan.fields.NestedFieldsContextThreadLocal;
+import com.liferay.portal.vulcan.util.LocalizedMapUtil;
 
 import java.io.Serializable;
 
@@ -54,10 +52,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -76,22 +72,6 @@ public class ObjectRelationshipExtensionProviderTest {
 			new LiferayIntegrationTestRule(),
 			PermissionCheckerMethodTestRule.INSTANCE);
 
-	@BeforeClass
-	public static void setUpClass() throws Exception {
-		PropsUtil.addProperties(
-			UnicodePropertiesBuilder.setProperty(
-				"feature.flag.LPS-162964", "true"
-			).build());
-	}
-
-	@AfterClass
-	public static void tearDownClass() throws Exception {
-		PropsUtil.addProperties(
-			UnicodePropertiesBuilder.setProperty(
-				"feature.flag.LPS-162964", "false"
-			).build());
-	}
-
 	@Before
 	public void setUp() throws Exception {
 		_objectDefinition = _publishObjectDefinition(
@@ -102,13 +82,13 @@ public class ObjectRelationshipExtensionProviderTest {
 
 		_objectEntry = _addObjectEntry(_OBJECT_FIELD_VALUE);
 
-		_userSystemObjectDefinitionMetadata =
-			_systemObjectDefinitionMetadataRegistry.
-				getSystemObjectDefinitionMetadata("User");
+		_userSystemObjectDefinitionManager =
+			_systemObjectDefinitionManagerRegistry.
+				getSystemObjectDefinitionManager("User");
 
 		ObjectDefinition userSystemObjectDefinition =
 			_objectDefinitionLocalService.fetchSystemObjectDefinition(
-				_userSystemObjectDefinitionMetadata.getName());
+				_userSystemObjectDefinitionManager.getName());
 
 		_user = TestPropsValues.getUser();
 
@@ -127,6 +107,9 @@ public class ObjectRelationshipExtensionProviderTest {
 				_objectRelationship.getObjectRelationshipId(),
 				_objectEntry.getPrimaryKey(), _user.getUserId(),
 				ServiceContextTestUtil.getServiceContext());
+
+		_originalNestedFieldsContext =
+			NestedFieldsContextThreadLocal.getNestedFieldsContext();
 	}
 
 	@After
@@ -141,6 +124,9 @@ public class ObjectRelationshipExtensionProviderTest {
 
 		_objectDefinitionLocalService.deleteObjectDefinition(
 			_objectDefinition.getObjectDefinitionId());
+
+		NestedFieldsContextThreadLocal.setNestedFieldsContext(
+			_originalNestedFieldsContext);
 	}
 
 	@Test
@@ -151,15 +137,26 @@ public class ObjectRelationshipExtensionProviderTest {
 			}
 		};
 
+		NestedFieldsContextThreadLocal.setNestedFieldsContext(null);
+
 		Map<String, Serializable> extendedProperties =
 			_extensionProvider.getExtendedProperties(
 				TestPropsValues.getCompanyId(), UserAccount.class.getName(),
 				userAccount);
 
+		Assert.assertNull(extendedProperties);
+
+		NestedFieldsContextThreadLocal.setNestedFieldsContext(
+			_getNestedFieldsContext(RandomTestUtil.randomString()));
+
+		extendedProperties = _extensionProvider.getExtendedProperties(
+			TestPropsValues.getCompanyId(), UserAccount.class.getName(),
+			userAccount);
+
 		Assert.assertTrue(extendedProperties.isEmpty());
 
 		NestedFieldsContextThreadLocal.setNestedFieldsContext(
-			_getNestedFieldsContext());
+			_getNestedFieldsContext(_objectRelationship.getName()));
 
 		extendedProperties = _extensionProvider.getExtendedProperties(
 			TestPropsValues.getCompanyId(), UserAccount.class.getName(),
@@ -196,9 +193,6 @@ public class ObjectRelationshipExtensionProviderTest {
 	public void testIsApplicableExtension() throws Exception {
 		Assert.assertFalse(
 			_extensionProvider.isApplicableExtension(
-				TestPropsValues.getCompanyId(), null));
-		Assert.assertFalse(
-			_extensionProvider.isApplicableExtension(
 				TestPropsValues.getCompanyId(),
 				com.liferay.object.rest.dto.v1_0.ObjectEntry.class.getName() +
 					"#" + _objectDefinition.getName()));
@@ -219,10 +213,12 @@ public class ObjectRelationshipExtensionProviderTest {
 			ServiceContextTestUtil.getServiceContext());
 	}
 
-	private NestedFieldsContext _getNestedFieldsContext() {
+	private NestedFieldsContext _getNestedFieldsContext(
+		String nestedFieldName) {
+
 		return new NestedFieldsContext(
-			Collections.singletonList(_objectRelationship.getName()), null,
-			null, null, null);
+			1, Collections.singletonList(nestedFieldName), null, null, null,
+			null);
 	}
 
 	private ObjectDefinition _publishObjectDefinition(
@@ -231,7 +227,7 @@ public class ObjectRelationshipExtensionProviderTest {
 
 		ObjectDefinition objectDefinition =
 			_objectDefinitionLocalService.addCustomObjectDefinition(
-				TestPropsValues.getUserId(), false,
+				TestPropsValues.getUserId(), false, false,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				"A" + RandomTestUtil.randomString(), null, null,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
@@ -261,12 +257,13 @@ public class ObjectRelationshipExtensionProviderTest {
 	private ObjectDefinition _objectDefinition;
 	private ObjectEntry _objectEntry;
 	private ObjectRelationship _objectRelationship;
+	private NestedFieldsContext _originalNestedFieldsContext;
 
 	@Inject
-	private SystemObjectDefinitionMetadataRegistry
-		_systemObjectDefinitionMetadataRegistry;
+	private SystemObjectDefinitionManagerRegistry
+		_systemObjectDefinitionManagerRegistry;
 
 	private User _user;
-	private SystemObjectDefinitionMetadata _userSystemObjectDefinitionMetadata;
+	private SystemObjectDefinitionManager _userSystemObjectDefinitionManager;
 
 }

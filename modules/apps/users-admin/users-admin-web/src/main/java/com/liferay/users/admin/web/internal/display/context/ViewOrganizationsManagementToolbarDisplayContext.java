@@ -19,7 +19,6 @@ import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuilder;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.ViewTypeItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.ViewTypeItemList;
-import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -30,6 +29,7 @@ import com.liferay.portal.kernel.model.Organization;
 import com.liferay.portal.kernel.model.OrganizationConstants;
 import com.liferay.portal.kernel.portlet.PortletURLUtil;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
+import com.liferay.portal.kernel.portlet.url.builder.ResourceURLBuilder;
 import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.search.IndexerRegistryUtil;
 import com.liferay.portal.kernel.search.SortFactoryUtil;
@@ -37,9 +37,11 @@ import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.service.OrganizationLocalServiceUtil;
 import com.liferay.portal.kernel.service.permission.PortalPermissionUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portlet.usersadmin.search.OrganizationSearch;
 import com.liferay.portlet.usersadmin.search.OrganizationSearchTerms;
@@ -69,17 +71,43 @@ public class ViewOrganizationsManagementToolbarDisplayContext {
 		_renderResponse = renderResponse;
 		_displayStyle = displayStyle;
 
-		_currentURL = PortletURLUtil.getCurrent(
-			_renderRequest, _renderResponse);
+		_currentURL = PortletURLUtil.getCurrent(renderRequest, renderResponse);
 	}
 
 	public List<DropdownItem> getActionDropdownItems() {
+		String getActiveUsersURL = ResourceURLBuilder.createResourceURL(
+			_renderResponse
+		).setParameter(
+			"className", Organization.class.getName()
+		).setParameter(
+			"status", String.valueOf(WorkflowConstants.STATUS_APPROVED)
+		).setResourceID(
+			"/users_admin/get_users_count"
+		).buildString();
+		String getInactiveUsersURL = ResourceURLBuilder.createResourceURL(
+			_renderResponse
+		).setParameter(
+			"className", Organization.class.getName()
+		).setParameter(
+			"status", String.valueOf(WorkflowConstants.STATUS_INACTIVE)
+		).setResourceID(
+			"/users_admin/get_users_count"
+		).buildString();
+
 		return DropdownItemListBuilder.add(
 			dropdownItem -> {
-				dropdownItem.setHref(
-					StringBundler.concat(
-						"javascript:", _renderResponse.getNamespace(),
-						"deleteOrganizations();"));
+				dropdownItem.putData(Constants.CMD, Constants.DELETE);
+				dropdownItem.putData("action", "deleteOrganizations");
+				dropdownItem.putData(
+					"deleteOrganizationURL",
+					PortletURLBuilder.createActionURL(
+						_renderResponse
+					).setActionName(
+						"/users_admin/edit_organization"
+					).buildString());
+				dropdownItem.putData("getActiveUsersURL", getActiveUsersURL);
+				dropdownItem.putData(
+					"getInactiveUsersURL", getInactiveUsersURL);
 				dropdownItem.setIcon("times-circle");
 				dropdownItem.setLabel(
 					LanguageUtil.get(_httpServletRequest, "delete"));
@@ -110,8 +138,9 @@ public class ViewOrganizationsManagementToolbarDisplayContext {
 								"/users_admin/edit_organization", "type",
 								organizationType);
 							dropdownItem.setLabel(
-								LanguageUtil.get(
-									_httpServletRequest, organizationType));
+								LanguageUtil.format(
+									_httpServletRequest, "add-x",
+									organizationType));
 						});
 				}
 			}

@@ -79,35 +79,148 @@ public abstract class BaseSourceProcessorTestCase {
 		return sourceFormatterArgs;
 	}
 
-	protected void test(String fileName) throws Exception {
-		test(fileName, new String[0]);
-	}
-
-	protected void test(String fileName, String expectedErrorMessage)
+	protected void test(
+			SourceProcessorTestParameters sourceProcessorTestParameters)
 		throws Exception {
 
-		test(fileName, new String[] {expectedErrorMessage});
+		File newFile = _generateTempFile(
+			sourceProcessorTestParameters.getFileName());
+
+		for (String dependentFileName :
+				sourceProcessorTestParameters.getDependentFileNames()) {
+
+			_generateTempFile(dependentFileName);
+		}
+
+		SourceFormatterArgs sourceFormatterArgs = getSourceFormatterArgs();
+
+		sourceFormatterArgs.setFileNames(
+			Collections.singletonList(newFile.getAbsolutePath()));
+
+		SourceFormatter sourceFormatter = new SourceFormatter(
+			sourceFormatterArgs);
+
+		sourceFormatter.format();
+
+		List<String> modifiedFileNames = sourceFormatter.getModifiedFileNames();
+
+		if (modifiedFileNames.isEmpty()) {
+			throw new IllegalArgumentException(
+				"The file name " + newFile.getAbsolutePath() +
+					" does not end with a valid extension");
+		}
+
+		List<SourceFormatterMessage> sourceFormatterMessages =
+			ListUtil.fromCollection(
+				sourceFormatter.getSourceFormatterMessages());
+
+		List<String> expectedMessages =
+			sourceProcessorTestParameters.getExpectedMessages();
+
+		if (!(sourceFormatterMessages.isEmpty() &&
+			  expectedMessages.isEmpty())) {
+
+			Assert.assertEquals(
+				sourceFormatterMessages.toString(), expectedMessages.size(),
+				sourceFormatterMessages.size());
+
+			for (int i = 0; i < sourceFormatterMessages.size(); i++) {
+				SourceFormatterMessage sourceFormatterMessage =
+					sourceFormatterMessages.get(i);
+
+				Assert.assertEquals(
+					expectedMessages.get(i),
+					sourceFormatterMessage.getMessage());
+
+				int lineNumber = sourceFormatterMessage.getLineNumber();
+
+				if (lineNumber > -1) {
+					List<Integer> lineNumbers =
+						sourceProcessorTestParameters.getLineNumbers();
+
+					Assert.assertEquals(
+						String.valueOf(lineNumbers.get(i)),
+						String.valueOf(lineNumber));
+				}
+
+				String absolutePath = StringUtil.replace(
+					newFile.getAbsolutePath(), CharPool.BACK_SLASH,
+					CharPool.SLASH);
+
+				Assert.assertEquals(
+					absolutePath, sourceFormatterMessage.getFileName());
+			}
+		}
+		else {
+			String actualFormattedContent = FileUtil.read(
+				new File(modifiedFileNames.get(0)));
+
+			String expectedFileName =
+				sourceProcessorTestParameters.getExpectedFileName();
+
+			if (expectedFileName != null) {
+				actualFormattedContent = FileUtil.read(
+					new File(
+						_temporaryFolder,
+						StringUtil.replace(expectedFileName, ".test", ".")));
+
+				expectedFileName = StringBundler.concat(
+					_DIR_NAME, "/expected/", expectedFileName);
+			}
+			else {
+				expectedFileName = StringBundler.concat(
+					_DIR_NAME, "/expected/",
+					sourceProcessorTestParameters.getFileName());
+			}
+
+			URL expectedURL = classLoader.getResource(expectedFileName);
+
+			if (expectedURL == null) {
+				throw new FileNotFoundException(expectedFileName);
+			}
+
+			String expectedFormattedContent = IOUtils.toString(
+				expectedURL, StringPool.UTF8);
+
+			expectedFormattedContent = StringUtil.replace(
+				expectedFormattedContent, StringPool.RETURN_NEW_LINE,
+				StringPool.NEW_LINE);
+
+			Assert.assertEquals(
+				expectedFormattedContent, actualFormattedContent);
+		}
 	}
 
-	protected void test(
-			String fileName, String expectedErrorMessage, int lineNumber)
+	protected void test(String fileName) throws Exception {
+		test(SourceProcessorTestParameters.create(fileName));
+	}
+
+	protected void test(String fileName, String expectedMessage)
 		throws Exception {
 
 		test(
-			fileName, new String[] {expectedErrorMessage},
-			new Integer[] {lineNumber});
+			SourceProcessorTestParameters.create(
+				fileName
+			).addExpectedMessage(
+				expectedMessage, -1
+			));
 	}
 
-	protected void test(String fileName, String[] expectedErrorMessages)
+	protected void test(String fileName, String expectedMessage, int lineNumber)
 		throws Exception {
 
-		test(fileName, expectedErrorMessages, null);
+		test(
+			SourceProcessorTestParameters.create(
+				fileName
+			).addExpectedMessage(
+				expectedMessage, lineNumber
+			));
 	}
 
-	protected void test(
-			String fileName, String[] expectedMessages, Integer[] lineNumbers)
-		throws Exception {
+	protected final ClassLoader classLoader =
+		BaseSourceProcessorTestCase.class.getClassLoader();
 
+	private File _generateTempFile(String fileName) throws Exception {
 		int pos = fileName.lastIndexOf(CharPool.PERIOD);
 
 		if (pos == -1) {
@@ -141,85 +254,8 @@ public abstract class BaseSourceProcessorTestCase {
 			FileUtils.copyInputStreamToFile(inputStream, newFile);
 		}
 
-		SourceFormatterArgs sourceFormatterArgs = getSourceFormatterArgs();
-
-		sourceFormatterArgs.setFileNames(
-			Collections.singletonList(newFile.getAbsolutePath()));
-
-		SourceFormatter sourceFormatter = new SourceFormatter(
-			sourceFormatterArgs);
-
-		sourceFormatter.format();
-
-		List<String> modifiedFileNames = sourceFormatter.getModifiedFileNames();
-
-		if (modifiedFileNames.isEmpty()) {
-			throw new IllegalArgumentException(
-				"The file name " + newFile.getAbsolutePath() +
-					" does not end with a valid extension");
-		}
-
-		List<SourceFormatterMessage> sourceFormatterMessages =
-			ListUtil.fromCollection(
-				sourceFormatter.getSourceFormatterMessages());
-
-		if (!sourceFormatterMessages.isEmpty() ||
-			(expectedMessages.length > 0)) {
-
-			Assert.assertEquals(
-				sourceFormatterMessages.toString(), expectedMessages.length,
-				sourceFormatterMessages.size());
-
-			for (int i = 0; i < sourceFormatterMessages.size(); i++) {
-				SourceFormatterMessage sourceFormatterMessage =
-					sourceFormatterMessages.get(i);
-
-				Assert.assertEquals(
-					expectedMessages[i], sourceFormatterMessage.getMessage());
-
-				int lineNumber = sourceFormatterMessage.getLineNumber();
-
-				if (lineNumber > -1) {
-					Assert.assertEquals(
-						String.valueOf(lineNumbers[i]),
-						String.valueOf(lineNumber));
-				}
-
-				String absolutePath = StringUtil.replace(
-					newFile.getAbsolutePath(), CharPool.BACK_SLASH,
-					CharPool.SLASH);
-
-				Assert.assertEquals(
-					absolutePath, sourceFormatterMessage.getFileName());
-			}
-		}
-		else {
-			String actualFormattedContent = FileUtil.read(
-				new File(modifiedFileNames.get(0)));
-
-			String expectedFileName = StringBundler.concat(
-				_DIR_NAME, "/expected/", fileName, ".", originalExtension);
-
-			URL expectedURL = classLoader.getResource(expectedFileName);
-
-			if (expectedURL == null) {
-				throw new FileNotFoundException(expectedFileName);
-			}
-
-			String expectedFormattedContent = IOUtils.toString(
-				expectedURL, StringPool.UTF8);
-
-			expectedFormattedContent = StringUtil.replace(
-				expectedFormattedContent, StringPool.RETURN_NEW_LINE,
-				StringPool.NEW_LINE);
-
-			Assert.assertEquals(
-				expectedFormattedContent, actualFormattedContent);
-		}
+		return newFile;
 	}
-
-	protected final ClassLoader classLoader =
-		BaseSourceProcessorTestCase.class.getClassLoader();
 
 	private static final String _DIR_NAME =
 		"com/liferay/source/formatter/dependencies";

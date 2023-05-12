@@ -591,6 +591,11 @@ public class PortletWrapper
 		return model.getFriendlyURLMapping();
 	}
 
+	@Override
+	public String getFriendlyURLMapping(boolean lookUpFriendlyURLMapper) {
+		return model.getFriendlyURLMapping(lookUpFriendlyURLMapper);
+	}
+
 	/**
 	 * Returns the class loader resource path to the friendly URL routes of the
 	 * portlet.

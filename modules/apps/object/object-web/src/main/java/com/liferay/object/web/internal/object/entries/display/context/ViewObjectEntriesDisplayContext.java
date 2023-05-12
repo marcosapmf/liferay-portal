@@ -22,6 +22,7 @@ import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenu;
 import com.liferay.object.constants.ObjectActionKeys;
 import com.liferay.object.constants.ObjectActionTriggerConstants;
 import com.liferay.object.constants.ObjectRelationshipConstants;
+import com.liferay.object.constants.ObjectWebKeys;
 import com.liferay.object.model.ObjectAction;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectField;
@@ -31,7 +32,6 @@ import com.liferay.object.scope.ObjectScopeProvider;
 import com.liferay.object.service.ObjectActionLocalService;
 import com.liferay.object.service.ObjectFieldLocalService;
 import com.liferay.object.service.ObjectViewLocalService;
-import com.liferay.object.web.internal.constants.ObjectWebKeys;
 import com.liferay.object.web.internal.display.context.helper.ObjectRequestHelper;
 import com.liferay.object.web.internal.object.entries.frontend.data.set.filter.factory.ObjectFieldFDSFilterFactory;
 import com.liferay.object.web.internal.object.entries.frontend.data.set.filter.factory.ObjectFieldFDSFilterFactoryRegistry;
@@ -53,10 +53,10 @@ import com.liferay.portal.kernel.util.Validator;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import java.util.Set;
 
 import javax.portlet.ActionRequest;
 import javax.portlet.PortletException;
@@ -146,7 +146,8 @@ public class ViewObjectEntriesDisplayContext {
 			new FDSActionDropdownItem(
 				LanguageUtil.get(
 					_objectRequestHelper.getRequest(),
-					"are-you-sure-you-want-to-delete-this-entry"),
+					"it-may-affect-many-records-are-you-sure-you-want-to-" +
+						"delete-this-entry"),
 				_apiURL + "/by-external-reference-code/{externalReferenceCode}",
 				"trash", "delete",
 				LanguageUtil.get(_objectRequestHelper.getRequest(), "delete"),
@@ -289,29 +290,29 @@ public class ViewObjectEntriesDisplayContext {
 	}
 
 	private String _getNestedFieldsQueryString() {
-		List<ObjectField> objectFields =
-			_objectFieldLocalService.getObjectFields(
-				_objectDefinition.getObjectDefinitionId());
+		Set<String> strings = new LinkedHashSet<>();
 
-		Stream<ObjectField> stream = objectFields.stream();
+		for (ObjectField objectField :
+				_objectFieldLocalService.getObjectFields(
+					_objectDefinition.getObjectDefinitionId())) {
 
-		String queryString = stream.filter(
-			objectField -> Objects.equals(
-				objectField.getRelationshipType(),
-				ObjectRelationshipConstants.TYPE_ONE_TO_MANY)
-		).map(
-			objectField -> {
-				String fieldName = objectField.getName();
+			if (!Objects.equals(
+					ObjectRelationshipConstants.TYPE_ONE_TO_MANY,
+					objectField.getRelationshipType())) {
 
-				return StringUtil.replaceLast(
+				continue;
+			}
+
+			String fieldName = objectField.getName();
+
+			strings.add(
+				StringUtil.replaceLast(
 					fieldName.substring(
 						fieldName.lastIndexOf(StringPool.UNDERLINE) + 1),
-					"Id", "");
-			}
-		).distinct(
-		).collect(
-			Collectors.joining(StringPool.COMMA)
-		);
+					"Id", ""));
+		}
+
+		String queryString = StringUtil.merge(strings, StringPool.COMMA);
 
 		if (Validator.isNull(queryString)) {
 			return StringPool.BLANK;

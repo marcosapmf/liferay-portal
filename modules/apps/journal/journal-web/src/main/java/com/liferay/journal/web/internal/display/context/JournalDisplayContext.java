@@ -37,6 +37,7 @@ import com.liferay.journal.service.JournalArticleLocalServiceUtil;
 import com.liferay.journal.service.JournalArticleServiceUtil;
 import com.liferay.journal.service.JournalFolderLocalServiceUtil;
 import com.liferay.journal.service.JournalFolderServiceUtil;
+import com.liferay.journal.util.JournalHelper;
 import com.liferay.journal.util.comparator.FolderArticleArticleIdComparator;
 import com.liferay.journal.util.comparator.FolderArticleDisplayDateComparator;
 import com.liferay.journal.util.comparator.FolderArticleModifiedDateComparator;
@@ -103,6 +104,7 @@ import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
+import com.liferay.portal.search.searcher.SearchResponse;
 import com.liferay.trash.TrashHelper;
 
 import java.io.Serializable;
@@ -148,7 +150,11 @@ public class JournalDisplayContext {
 		return journalDisplayContext;
 	}
 
-	public String[] getAddMenuFavItems() throws PortalException {
+	public String getAbsolutePath(long folderId) throws PortalException {
+		return _journalHelper.getAbsolutePath(_liferayPortletRequest, folderId);
+	}
+
+	public long[] getAddMenuFavItems() throws PortalException {
 		if (_addMenuFavItems != null) {
 			return _addMenuFavItems;
 		}
@@ -157,29 +163,30 @@ public class JournalDisplayContext {
 			PortletPreferencesFactoryUtil.getPortalPreferences(
 				_httpServletRequest);
 
-		List<String> addMenuFavItemsList = new ArrayList<>();
+		List<Long> addMenuFavItemsList = new ArrayList<>();
 
 		String[] addMenuFavItems = portalPreferences.getValues(
 			JournalPortletKeys.JOURNAL,
 			JournalPortletUtil.getAddMenuFavItemKey(
-				_liferayPortletRequest, _liferayPortletResponse),
+				_journalHelper, _liferayPortletRequest),
 			new String[0]);
 
 		for (DDMStructure ddmStructure : getDDMStructures()) {
 			if (ArrayUtil.contains(
-					addMenuFavItems, ddmStructure.getStructureKey())) {
+					addMenuFavItems,
+					String.valueOf(ddmStructure.getStructureId()))) {
 
-				addMenuFavItemsList.add(ddmStructure.getStructureKey());
+				addMenuFavItemsList.add(ddmStructure.getStructureId());
 			}
 		}
 
-		_addMenuFavItems = ArrayUtil.toStringArray(addMenuFavItemsList);
+		_addMenuFavItems = ArrayUtil.toLongArray(addMenuFavItemsList);
 
 		return _addMenuFavItems;
 	}
 
 	public int getAddMenuFavItemsLength() throws PortalException {
-		String[] addMenuFavItems = getAddMenuFavItems();
+		long[] addMenuFavItems = getAddMenuFavItems();
 
 		return addMenuFavItems.length;
 	}
@@ -409,15 +416,15 @@ public class JournalDisplayContext {
 			_trashHelper.isTrashEnabled(_themeDisplay.getScopeGroupId()));
 	}
 
-	public String getDDMStructureKey() {
-		if (_ddmStructureKey != null) {
-			return _ddmStructureKey;
+	public long getDDMStructureId() {
+		if (_ddmStructureId != null) {
+			return _ddmStructureId;
 		}
 
-		_ddmStructureKey = ParamUtil.getString(
-			_httpServletRequest, "ddmStructureKey");
+		_ddmStructureId = ParamUtil.getLong(
+			_httpServletRequest, "ddmStructureId");
 
-		return _ddmStructureKey;
+		return _ddmStructureId;
 	}
 
 	public String getDDMStructureName() {
@@ -428,14 +435,12 @@ public class JournalDisplayContext {
 		_ddmStructureName = LanguageUtil.get(
 			_httpServletRequest, "basic-web-content");
 
-		if (Validator.isNull(getDDMStructureKey())) {
+		if (getDDMStructureId() <= 0) {
 			return _ddmStructureName;
 		}
 
 		DDMStructure ddmStructure = DDMStructureLocalServiceUtil.fetchStructure(
-			_themeDisplay.getSiteGroupId(),
-			PortalUtil.getClassNameId(JournalArticle.class),
-			getDDMStructureKey(), true);
+			getDDMStructureId());
 
 		if (ddmStructure != null) {
 			_ddmStructureName = ddmStructure.getName(_themeDisplay.getLocale());
@@ -817,7 +822,8 @@ public class JournalDisplayContext {
 		portletURL.setParameter("folderId", String.valueOf(getFolderId()));
 
 		if (isNavigationStructure()) {
-			portletURL.setParameter("ddmStructureKey", getDDMStructureKey());
+			portletURL.setParameter(
+				"ddmStructureId", String.valueOf(getDDMStructureId()));
 		}
 
 		String status = ParamUtil.getString(_httpServletRequest, "status");
@@ -1089,12 +1095,14 @@ public class JournalDisplayContext {
 
 		_itemSelector = (ItemSelector)httpServletRequest.getAttribute(
 			ItemSelector.class.getName());
+		_journalHelper = (JournalHelper)httpServletRequest.getAttribute(
+			JournalHelper.class.getName());
 		_journalWebConfiguration =
-			(JournalWebConfiguration)_httpServletRequest.getAttribute(
+			(JournalWebConfiguration)httpServletRequest.getAttribute(
 				JournalWebConfiguration.class.getName());
 		_portalPreferences = PortletPreferencesFactoryUtil.getPortalPreferences(
-			_httpServletRequest);
-		_themeDisplay = (ThemeDisplay)_httpServletRequest.getAttribute(
+			httpServletRequest);
+		_themeDisplay = (ThemeDisplay)httpServletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 	}
 
@@ -1154,19 +1162,19 @@ public class JournalDisplayContext {
 			return _articleSearchContainer;
 		}
 
-		if (Validator.isNotNull(getDDMStructureKey())) {
+		if (getDDMStructureId() > 0) {
 			articleSearchContainer.setResultsAndTotal(
 				() -> JournalArticleServiceUtil.getArticlesByStructureId(
 					_themeDisplay.getScopeGroupId(), getFolderId(),
 					JournalArticleConstants.CLASS_NAME_ID_DEFAULT,
-					getDDMStructureKey(), getStatus(),
+					getDDMStructureId(), getStatus(),
 					articleSearchContainer.getStart(),
 					articleSearchContainer.getEnd(),
 					articleSearchContainer.getOrderByComparator()),
 				JournalArticleServiceUtil.getArticlesCountByStructureId(
 					_themeDisplay.getScopeGroupId(), getFolderId(),
 					JournalArticleConstants.CLASS_NAME_ID_DEFAULT,
-					getDDMStructureKey(), getStatus()));
+					getDDMStructureId(), getStatus()));
 			articleSearchContainer.setRowChecker(_getEntriesChecker());
 
 			if (!BrowserSnifferUtil.isMobile(_httpServletRequest)) {
@@ -1191,7 +1199,7 @@ public class JournalDisplayContext {
 		articleAndFolderSearchContainer.setOrderByType(getOrderByType());
 
 		if (isSearch()) {
-			List<Object> results =
+			SearchResponse searchResponse =
 				JournalSearcherUtil.searchJournalArticleAndFolders(
 					searchContext -> _populateSearchContext(
 						articleAndFolderSearchContainer.getStart(),
@@ -1199,7 +1207,9 @@ public class JournalDisplayContext {
 						false));
 
 			articleAndFolderSearchContainer.setResultsAndTotal(
-				() -> results, results.size());
+				() -> JournalSearcherUtil.transformJournalArticleAndFolders(
+					searchResponse.getDocuments71()),
+				searchResponse.getTotalHits());
 
 			articleAndFolderSearchContainer.setRowChecker(_getEntriesChecker());
 
@@ -1419,23 +1429,24 @@ public class JournalDisplayContext {
 				getOrderByCol(), getOrderByType()));
 		articleVersionsSearchContainer.setOrderByType(getOrderByType());
 
-		List<JournalArticle> results =
+		SearchResponse searchResponse =
 			JournalSearcherUtil.searchJournalArticles(
-				true,
 				searchContext -> _populateSearchContext(
 					articleVersionsSearchContainer.getStart(),
 					articleVersionsSearchContainer.getEnd(), searchContext,
 					true));
 
 		articleVersionsSearchContainer.setResultsAndTotal(
-			() -> results, results.size());
+			() -> JournalSearcherUtil.transformJournalArticles(
+				searchResponse.getDocuments71(), true),
+			searchResponse.getTotalHits());
 
 		_articleVersionsSearchContainer = articleVersionsSearchContainer;
 
 		return _articleVersionsSearchContainer;
 	}
 
-	private SearchContext _populateSearchContext(
+	private void _populateSearchContext(
 		int start, int end, SearchContext searchContext, boolean showVersions) {
 
 		searchContext.setAndSearch(false);
@@ -1449,7 +1460,6 @@ public class JournalDisplayContext {
 		attributes.put(Field.DESCRIPTION, getKeywords());
 		attributes.put(Field.STATUS, getStatus());
 		attributes.put(Field.TITLE, getKeywords());
-		attributes.put("ddmStructureKey", getDDMStructureKey());
 		attributes.put("head", !showVersions);
 		attributes.put("latest", !showVersions);
 		attributes.put(
@@ -1462,6 +1472,13 @@ public class JournalDisplayContext {
 		attributes.put("showNonindexable", !showVersions);
 
 		searchContext.setAttributes(attributes);
+
+		long ddmStructureId = ParamUtil.getLong(
+			_httpServletRequest, "ddmStructureId");
+
+		if (ddmStructureId > 0) {
+			searchContext.setClassTypeIds(new long[] {ddmStructureId});
+		}
 
 		searchContext.setCompanyId(_themeDisplay.getCompanyId());
 		searchContext.setEnd(end);
@@ -1482,11 +1499,9 @@ public class JournalDisplayContext {
 		}
 
 		searchContext.setStart(start);
-
-		return searchContext;
 	}
 
-	private String[] _addMenuFavItems;
+	private long[] _addMenuFavItems;
 	private JournalArticle _article;
 	private JournalArticleDisplay _articleDisplay;
 	private SearchContainer<?> _articleSearchContainer;
@@ -1495,7 +1510,7 @@ public class JournalDisplayContext {
 	private SearchContainer<JournalArticle> _articleVersionsSearchContainer;
 	private final AssetDisplayPageFriendlyURLProvider
 		_assetDisplayPageFriendlyURLProvider;
-	private String _ddmStructureKey;
+	private Long _ddmStructureId;
 	private String _ddmStructureName;
 	private List<DDMStructure> _ddmStructures;
 	private String _displayStyle;
@@ -1503,6 +1518,7 @@ public class JournalDisplayContext {
 	private Long _folderId;
 	private final HttpServletRequest _httpServletRequest;
 	private final ItemSelector _itemSelector;
+	private final JournalHelper _journalHelper;
 	private final JournalWebConfiguration _journalWebConfiguration;
 	private String _keywords;
 	private final LiferayPortletRequest _liferayPortletRequest;

@@ -68,12 +68,21 @@ public class MFASystemConfigurationUserNotificationHandler
 					"administrator");
 		}
 
-		String title = _language.get(
-			serviceContext.getLocale(), "multi-factor-authentication");
-
 		return StringUtil.replace(
 			getBodyTemplate(), new String[] {"[$BODY$]", "[$TITLE$]"},
-			new String[] {body, title});
+			new String[] {
+				body, getTitle(userNotificationEvent, serviceContext)
+			});
+	}
+
+	@Override
+	protected String getTitle(
+			UserNotificationEvent userNotificationEvent,
+			ServiceContext serviceContext)
+		throws Exception {
+
+		return _language.get(
+			serviceContext.getLocale(), "multi-factor-authentication");
 	}
 
 	@Reference

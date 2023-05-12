@@ -14,16 +14,17 @@
 
 import {Text} from '@clayui/core';
 import {
-	API,
 	Card,
+	FormError,
 	InputLocalized,
 	RichTextLocalized,
 	SingleSelect,
 } from '@liferay/object-js-components-web';
-import React, {useEffect, useState} from 'react';
+import React from 'react';
 
+import {DefinitionOfTerms} from '../DefinitionOfTermsContainer/DefinitionOfTerms';
+import {GeneralTerms} from '../DefinitionOfTermsContainer/GeneralTerms';
 import {Attachments} from './Attachments';
-import {DefinitionOfTerms} from './DefinitionOfTerms';
 import {FreeMarkerTemplateEditor} from './FreeMarkerTemplateEditor';
 
 const EDITOR_TYPES = [
@@ -44,6 +45,8 @@ interface EditorType extends LabelValueObject {
 interface ContentContainerProps {
 	baseResourceURL: string;
 	editorConfig: object;
+	errors: FormError<NotificationTemplate>;
+	objectDefinitions: ObjectDefinition[];
 	selectedLocale: Locale;
 	setSelectedLocale: React.Dispatch<
 		React.SetStateAction<Liferay.Language.Locale>
@@ -55,25 +58,13 @@ interface ContentContainerProps {
 export default function ContentContainer({
 	baseResourceURL,
 	editorConfig,
+	errors,
+	objectDefinitions,
 	selectedLocale,
 	setSelectedLocale,
 	setValues,
 	values,
 }: ContentContainerProps) {
-	const [objectDefinitions, setObjectDefinitions] = useState<
-		ObjectDefinition[]
-	>([]);
-
-	useEffect(() => {
-		const makeFetch = async () => {
-			const objectDefinitionsItems = await API.getObjectDefinitions();
-
-			setObjectDefinitions(objectDefinitionsItems);
-		};
-
-		makeFetch();
-	}, []);
-
 	return (
 		<Card title={Liferay.Language.get('content')}>
 			<Text as="span" color="secondary">
@@ -86,6 +77,7 @@ export default function ContentContainer({
 				{...(values.type === 'userNotification' && {
 					component: 'textarea',
 				})}
+				error={errors.subject}
 				label={Liferay.Language.get('subject')}
 				name="subject"
 				onChange={(translation) => {
@@ -95,6 +87,7 @@ export default function ContentContainer({
 					});
 				}}
 				placeholder=""
+				required
 				selectedLocale={selectedLocale}
 				translations={values.subject}
 			/>
@@ -156,10 +149,16 @@ export default function ContentContainer({
 				</>
 			)}
 
-			<DefinitionOfTerms
-				baseResourceURL={baseResourceURL}
-				objectDefinitions={objectDefinitions}
-			/>
+			{!Liferay.FeatureFlags['LPS-165849'] && (
+				<>
+					<DefinitionOfTerms
+						baseResourceURL={baseResourceURL}
+						objectDefinitions={objectDefinitions}
+					/>
+
+					<GeneralTerms baseResourceURL={baseResourceURL} />
+				</>
+			)}
 
 			{values.type === 'email' && (
 				<Attachments setValues={setValues} values={values} />

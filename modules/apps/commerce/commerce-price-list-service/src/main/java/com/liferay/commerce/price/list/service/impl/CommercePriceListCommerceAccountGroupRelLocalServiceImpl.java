@@ -14,6 +14,7 @@
 
 package com.liferay.commerce.price.list.service.impl;
 
+import com.liferay.commerce.price.list.exception.DuplicateCommercePriceListCommerceAccountGroupRelException;
 import com.liferay.commerce.price.list.model.CommercePriceList;
 import com.liferay.commerce.price.list.model.CommercePriceListCommerceAccountGroupRel;
 import com.liferay.commerce.price.list.service.base.CommercePriceListCommerceAccountGroupRelLocalServiceBaseImpl;
@@ -52,23 +53,31 @@ public class CommercePriceListCommerceAccountGroupRelLocalServiceImpl
 				ServiceContext serviceContext)
 		throws PortalException {
 
-		User user = _userLocalService.getUser(userId);
-
-		long commercePriceListCommerceAccountGroupRelId =
-			counterLocalService.increment();
-
 		CommercePriceListCommerceAccountGroupRel
 			commercePriceListCommerceAccountGroupRel =
-				commercePriceListCommerceAccountGroupRelPersistence.create(
-					commercePriceListCommerceAccountGroupRelId);
+				commercePriceListCommerceAccountGroupRelPersistence.
+					fetchByCAGI_CPI(
+						commercePriceListId, commerceAccountGroupId);
+
+		if (commercePriceListCommerceAccountGroupRel != null) {
+			throw new DuplicateCommercePriceListCommerceAccountGroupRelException();
+		}
+
+		commercePriceListCommerceAccountGroupRel =
+			commercePriceListCommerceAccountGroupRelPersistence.create(
+				counterLocalService.increment());
 
 		commercePriceListCommerceAccountGroupRel.setUuid(
 			serviceContext.getUuid());
+
+		User user = _userLocalService.getUser(userId);
+
 		commercePriceListCommerceAccountGroupRel.setCompanyId(
 			user.getCompanyId());
 		commercePriceListCommerceAccountGroupRel.setUserId(user.getUserId());
 		commercePriceListCommerceAccountGroupRel.setUserName(
 			user.getFullName());
+
 		commercePriceListCommerceAccountGroupRel.setCommercePriceListId(
 			commercePriceListId);
 		commercePriceListCommerceAccountGroupRel.setCommerceAccountGroupId(

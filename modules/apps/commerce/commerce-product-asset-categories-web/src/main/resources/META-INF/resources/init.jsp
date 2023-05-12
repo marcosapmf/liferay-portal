@@ -28,9 +28,9 @@ taglib uri="http://liferay.com/tld/item-selector" prefix="liferay-item-selector"
 taglib uri="http://liferay.com/tld/theme" prefix="liferay-theme" %><%@
 taglib uri="http://liferay.com/tld/ui" prefix="liferay-ui" %>
 
-<%@ page import="com.liferay.asset.kernel.exception.NoSuchCategoryException" %><%@
+<%@ page import="com.liferay.account.constants.AccountConstants" %><%@
+page import="com.liferay.asset.kernel.exception.NoSuchCategoryException" %><%@
 page import="com.liferay.asset.kernel.model.AssetCategory" %><%@
-page import="com.liferay.commerce.account.constants.CommerceAccountConstants" %><%@
 page import="com.liferay.commerce.media.CommerceMediaResolverUtil" %><%@
 page import="com.liferay.commerce.product.asset.categories.web.internal.constants.CommerceProductAssetCategoriesFDSNames" %><%@
 page import="com.liferay.commerce.product.asset.categories.web.internal.display.context.CategoryCPAttachmentFileEntriesDisplayContext" %><%@
@@ -40,11 +40,10 @@ page import="com.liferay.commerce.product.asset.categories.web.internal.servlet.
 page import="com.liferay.commerce.product.constants.CPAttachmentFileEntryConstants" %><%@
 page import="com.liferay.commerce.product.exception.CPAttachmentFileEntryExpirationDateException" %><%@
 page import="com.liferay.commerce.product.exception.CPDisplayLayoutEntryException" %><%@
-page import="com.liferay.commerce.product.exception.CPDisplayLayoutLayoutUuidException" %><%@
+page import="com.liferay.commerce.product.exception.CPDisplayLayoutEntryUuidException" %><%@
 page import="com.liferay.commerce.product.exception.NoSuchCPAttachmentFileEntryException" %><%@
 page import="com.liferay.commerce.product.model.CPAttachmentFileEntry" %><%@
 page import="com.liferay.commerce.product.model.CPDisplayLayout" %><%@
-page import="com.liferay.commerce.product.model.CommerceChannel" %><%@
 page import="com.liferay.document.library.kernel.exception.NoSuchFileEntryException" %><%@
 page import="com.liferay.petra.string.StringPool" %><%@
 page import="com.liferay.portal.kernel.bean.BeanParamUtil" %><%@
@@ -53,7 +52,6 @@ page import="com.liferay.portal.kernel.language.LanguageUtil" %><%@
 page import="com.liferay.portal.kernel.model.Layout" %><%@
 page import="com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder" %><%@
 page import="com.liferay.portal.kernel.repository.model.FileEntry" %><%@
-page import="com.liferay.portal.kernel.service.LayoutLocalServiceUtil" %><%@
 page import="com.liferay.portal.kernel.service.WorkflowDefinitionLinkLocalServiceUtil" %><%@
 page import="com.liferay.portal.kernel.util.Constants" %><%@
 page import="com.liferay.portal.kernel.util.HashMapBuilder" %><%@

@@ -9,7 +9,10 @@
  * distribution rights of the Software.
  */
 
+import Role from './role';
+
 export default interface LiferayAccountBrief {
 	id?: number;
 	name?: string;
+	roleBriefs?: Role[];
 }

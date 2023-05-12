@@ -42,8 +42,11 @@ const SortableListItem = ({
 	const [, drop] = useDrop({
 		accept: ItemTypes.SORTABLE_LIST_ITEM,
 
-		drop: () => {
-			handleSavePriority();
+		drop: (item) => {
+			handleSavePriority({
+				itemIndex: item.index,
+				itemName: sortableListItem.name,
+			});
 		},
 
 		hover: (item, monitor) => {
@@ -95,7 +98,7 @@ const SortableListItem = ({
 	return (
 		<ClayList.Item
 			active={sortableListItem.active}
-			className="align-items-center justify-content-start sortable-list-item"
+			className="align-items-center justify-content-start mb-1 sortable-list-item"
 			flex
 			id={`sortableListItem-id-${sortableListItem.assetListEntrySegmentsEntryRelId}`}
 			onMouseEnter={handleOnMouseEnter}
@@ -103,7 +106,7 @@ const SortableListItem = ({
 			ref={ref}
 			style={getDndStyles({isDragging, isItemBeingDragged})}
 		>
-			<ClayList.ItemField className="sortable-list-item__drag-icon">
+			<ClayList.ItemField className="pl-0 sortable-list-item__drag-icon">
 				{showDragIcon && <ClayIcon symbol="drag" />}
 			</ClayList.ItemField>
 

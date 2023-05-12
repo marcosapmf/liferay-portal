@@ -25,6 +25,7 @@ import com.liferay.portal.odata.filter.ExpressionConvert;
 import com.liferay.portal.odata.filter.FilterParserProvider;
 import com.liferay.portal.odata.sort.SortParserProvider;
 import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
+import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineExportTaskResource;
 import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineImportTaskResource;
 import com.liferay.portal.vulcan.multipart.MultipartBody;
 import com.liferay.portal.vulcan.pagination.Page;
@@ -61,6 +62,12 @@ public interface KnowledgeBaseAttachmentResource {
 				Long knowledgeBaseArticleId)
 		throws Exception;
 
+	public Response
+			postKnowledgeBaseArticleKnowledgeBaseAttachmentsPageExportBatch(
+				Long knowledgeBaseArticleId, String callbackURL,
+				String contentType, String fieldNames)
+		throws Exception;
+
 	public KnowledgeBaseAttachment
 			postKnowledgeBaseArticleKnowledgeBaseAttachment(
 				Long knowledgeBaseArticleId, MultipartBody multipartBody)
@@ -80,6 +87,24 @@ public interface KnowledgeBaseAttachmentResource {
 
 	public KnowledgeBaseAttachment getKnowledgeBaseAttachment(
 			Long knowledgeBaseAttachmentId)
+		throws Exception;
+
+	public KnowledgeBaseAttachment
+			getSiteKnowledgeBaseArticleByExternalReferenceCodeKnowledgeBaseArticleExternalReferenceCodeKnowledgeBaseAttachmentByExternalReferenceCode(
+				Long siteId, String knowledgeBaseArticleExternalReferenceCode,
+				String externalReferenceCode)
+		throws Exception;
+
+	public KnowledgeBaseAttachment
+			postSiteKnowledgeBaseArticleByExternalReferenceCodeKnowledgeBaseArticleExternalReferenceCodeKnowledgeBaseAttachmentByExternalReferenceCode(
+				Long siteId, String knowledgeBaseArticleExternalReferenceCode,
+				String externalReferenceCode, MultipartBody multipartBody)
+		throws Exception;
+
+	public KnowledgeBaseAttachment
+			putSiteKnowledgeBaseArticleByExternalReferenceCodeKnowledgeBaseArticleExternalReferenceCodeKnowledgeBaseAttachmentByExternalReferenceCode(
+				Long siteId, String knowledgeBaseArticleExternalReferenceCode,
+				String externalReferenceCode, MultipartBody multipartBody)
 		throws Exception;
 
 	public default void setContextAcceptLanguage(
@@ -120,6 +145,10 @@ public interface KnowledgeBaseAttachmentResource {
 	public void setRoleLocalService(RoleLocalService roleLocalService);
 
 	public void setSortParserProvider(SortParserProvider sortParserProvider);
+
+	public void setVulcanBatchEngineExportTaskResource(
+		VulcanBatchEngineExportTaskResource
+			vulcanBatchEngineExportTaskResource);
 
 	public void setVulcanBatchEngineImportTaskResource(
 		VulcanBatchEngineImportTaskResource

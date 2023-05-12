@@ -131,14 +131,6 @@ public class PortalUtil {
 		_portal.addPageTitle(title, httpServletRequest);
 	}
 
-	public static boolean addPortalInetSocketAddressEventListener(
-		PortalInetSocketAddressEventListener
-			portalInetSocketAddressEventListener) {
-
-		return _portal.addPortalInetSocketAddressEventListener(
-			portalInetSocketAddressEventListener);
-	}
-
 	/**
 	 * Adds an entry to the portlet breadcrumbs for the page in the request.
 	 *
@@ -363,6 +355,15 @@ public class PortalUtil {
 		throws PortalException {
 
 		return _portal.getAlternateURLs(canonicalURL, themeDisplay, layout);
+	}
+
+	public static Map<Locale, String> getAlternateURLs(
+			String canonicalURL, ThemeDisplay themeDisplay, Layout layout,
+			Set<Locale> availableLocales)
+		throws PortalException {
+
+		return _portal.getAlternateURLs(
+			canonicalURL, themeDisplay, layout, availableLocales);
 	}
 
 	public static long[] getAncestorSiteGroupIds(long groupId) {
@@ -882,15 +883,6 @@ public class PortalUtil {
 			expandoBridge, portletRequest);
 	}
 
-	public static Map<String, Serializable> getExpandoBridgeAttributes(
-			ExpandoBridge expandoBridge,
-			UploadPortletRequest uploadPortletRequest)
-		throws PortalException {
-
-		return _portal.getExpandoBridgeAttributes(
-			expandoBridge, uploadPortletRequest);
-	}
-
 	public static Serializable getExpandoValue(
 			HttpServletRequest httpServletRequest, String name, int type,
 			String displayType)
@@ -906,15 +898,6 @@ public class PortalUtil {
 		throws PortalException {
 
 		return _portal.getExpandoValue(portletRequest, name, type, displayType);
-	}
-
-	public static Serializable getExpandoValue(
-			UploadPortletRequest uploadPortletRequest, String name, int type,
-			String displayType)
-		throws PortalException {
-
-		return _portal.getExpandoValue(
-			uploadPortletRequest, name, type, displayType);
 	}
 
 	public static String getFirstPageLayoutTypes(
@@ -1279,12 +1262,6 @@ public class PortalUtil {
 
 	public static Portal getPortal() {
 		return _portal;
-	}
-
-	public static PortalInetSocketAddressEventListener[]
-		getPortalInetSocketAddressEventListeners() {
-
-		return _portal.getPortalInetSocketAddressEventListeners();
 	}
 
 	public static InetAddress getPortalLocalInetAddress(boolean secure) {
@@ -1689,11 +1666,10 @@ public class PortalUtil {
 
 	public static UploadServletRequest getUploadServletRequest(
 		HttpServletRequest httpServletRequest, int fileSizeThreshold,
-		String location, long maxRequestSize, long maxFileSize) {
+		String location) {
 
 		return _portal.getUploadServletRequest(
-			httpServletRequest, fileSizeThreshold, location, maxRequestSize,
-			maxFileSize);
+			httpServletRequest, fileSizeThreshold, location);
 	}
 
 	public static Date getUptime() {
@@ -1955,14 +1931,6 @@ public class PortalUtil {
 
 	public static boolean isValidResourceId(String resourceId) {
 		return _portal.isValidResourceId(resourceId);
-	}
-
-	public static boolean removePortalEventListener(
-		PortalInetSocketAddressEventListener
-			portalInetSocketAddressEventListener) {
-
-		return _portal.removePortalInetSocketAddressEventListener(
-			portalInetSocketAddressEventListener);
 	}
 
 	public static void resetCDNHosts() {

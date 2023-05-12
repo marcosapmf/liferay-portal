@@ -14,10 +14,13 @@
 
 import {
 	FormError,
+	REQUIRED_MSG,
 	invalidateRequired,
 	useForm,
 } from '@liferay/object-js-components-web';
 import {ChangeEventHandler} from 'react';
+
+import {defaultLanguageId} from '../../utils/constants';
 
 interface IUseObjectValidationForm {
 	initialValues: Partial<ObjectValidation>;
@@ -33,9 +36,6 @@ export interface TabProps {
 	setValues: (values: Partial<ObjectValidation>) => void;
 	values: Partial<ObjectValidation>;
 }
-
-const defaultLanguageId = Liferay.ThemeDisplay.getDefaultLanguageId();
-const REQUIRED_MSG = Liferay.Language.get('required');
 
 export function useObjectValidationForm({
 	initialValues,

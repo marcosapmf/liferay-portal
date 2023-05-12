@@ -22,9 +22,9 @@ type sort = {
 	[keys: string]: boolean;
 };
 
-type TableRowContentType = {[keys: string]: string};
+export type TableRowContentType = {[keys: string]: any};
 
-type TableHeaders = {
+export type TableHeaders = {
 	bold?: boolean;
 	centered?: boolean;
 	clickable?: boolean;
@@ -41,7 +41,7 @@ type TableHeaders = {
 
 type TableProps = {
 	actions: ActionObject[];
-	data: {[keys: string]: string}[];
+	data: {[keys: string]: string | boolean}[];
 	headers: TableHeaders[];
 	onClickRules?: (
 		item: TableHeaders,
@@ -149,7 +149,7 @@ const Table: React.FC<TableProps> = ({
 							<Cell
 								className={classnames('border-top-0', {
 									'ray-row-table-danger':
-										rowContent.isRedLine === 'true',
+										rowContent.isRedLine === true,
 								})}
 								key={index}
 							>
@@ -162,15 +162,17 @@ const Table: React.FC<TableProps> = ({
 								>
 									{item.type === 'hasBubble' && (
 										<div
-											className={`${rowContent[
-												item.key
-											].toLowerCase()} flex-shrink-0 mr-2 rounded-circle status-color`}
+											className={`${rowContent[item.key]
+												.toString()
+												.toLowerCase()} flex-shrink-0 mr-2 rounded-circle status-color`}
 										></div>
 									)}
 
 									<span
 										className={classnames('', {
-											'cursor-pointer': !!item.clickable,
+											'cursor-pointer':
+												!!item.clickable &&
+												rowContent.isClickable === true,
 											'font-weight-bolder': !!item.bold,
 											'text-danger font-weight-bolder':
 												Number(rowContent[item.key]) <
@@ -193,12 +195,12 @@ const Table: React.FC<TableProps> = ({
 							<Cell
 								className={classnames('border-top-0', {
 									'ray-row-table-danger':
-										rowContent.isRedLine === 'true',
+										rowContent.isRedLine === true,
 								})}
 							>
 								<SettingsButton
 									actions={actions}
-									identifier={rowContent.key}
+									identifier={rowContent.key.toString()}
 								/>
 							</Cell>
 						)}

@@ -79,6 +79,8 @@ public class ServletDataImpl implements ServletData {
 			_assigneeResourceComponentServiceObjects);
 		Mutation.setAssigneeMetricResourceComponentServiceObjects(
 			_assigneeMetricResourceComponentServiceObjects);
+		Mutation.setCalendarResourceComponentServiceObjects(
+			_calendarResourceComponentServiceObjects);
 		Mutation.setIndexResourceComponentServiceObjects(
 			_indexResourceComponentServiceObjects);
 		Mutation.setInstanceResourceComponentServiceObjects(
@@ -87,10 +89,20 @@ public class ServletDataImpl implements ServletData {
 			_nodeResourceComponentServiceObjects);
 		Mutation.setProcessResourceComponentServiceObjects(
 			_processResourceComponentServiceObjects);
+		Mutation.setProcessMetricResourceComponentServiceObjects(
+			_processMetricResourceComponentServiceObjects);
+		Mutation.setProcessVersionResourceComponentServiceObjects(
+			_processVersionResourceComponentServiceObjects);
+		Mutation.setReindexStatusResourceComponentServiceObjects(
+			_reindexStatusResourceComponentServiceObjects);
+		Mutation.setRoleResourceComponentServiceObjects(
+			_roleResourceComponentServiceObjects);
 		Mutation.setSLAResourceComponentServiceObjects(
 			_slaResourceComponentServiceObjects);
 		Mutation.setTaskResourceComponentServiceObjects(
 			_taskResourceComponentServiceObjects);
+		Mutation.setTimeRangeResourceComponentServiceObjects(
+			_timeRangeResourceComponentServiceObjects);
 
 		Query.setCalendarResourceComponentServiceObjects(
 			_calendarResourceComponentServiceObjects);
@@ -169,6 +181,16 @@ public class ServletDataImpl implements ServletData {
 							AssigneeMetricResourceImpl.class,
 							"postProcessAssigneeMetricsPage"));
 					put(
+						"mutation#createCalendarsPageExportBatch",
+						new ObjectValuePair<>(
+							CalendarResourceImpl.class,
+							"postCalendarsPageExportBatch"));
+					put(
+						"mutation#createIndexesPageExportBatch",
+						new ObjectValuePair<>(
+							IndexResourceImpl.class,
+							"postIndexesPageExportBatch"));
+					put(
 						"mutation#patchIndexRefresh",
 						new ObjectValuePair<>(
 							IndexResourceImpl.class, "patchIndexRefresh"));
@@ -176,6 +198,11 @@ public class ServletDataImpl implements ServletData {
 						"mutation#patchIndexReindex",
 						new ObjectValuePair<>(
 							IndexResourceImpl.class, "patchIndexReindex"));
+					put(
+						"mutation#createProcessInstancesPageExportBatch",
+						new ObjectValuePair<>(
+							InstanceResourceImpl.class,
+							"postProcessInstancesPageExportBatch"));
 					put(
 						"mutation#createProcessInstance",
 						new ObjectValuePair<>(
@@ -200,6 +227,11 @@ public class ServletDataImpl implements ServletData {
 						new ObjectValuePair<>(
 							InstanceResourceImpl.class,
 							"patchProcessInstanceComplete"));
+					put(
+						"mutation#createProcessNodesPageExportBatch",
+						new ObjectValuePair<>(
+							NodeResourceImpl.class,
+							"postProcessNodesPageExportBatch"));
 					put(
 						"mutation#createProcessNode",
 						new ObjectValuePair<>(
@@ -237,6 +269,31 @@ public class ServletDataImpl implements ServletData {
 						new ObjectValuePair<>(
 							ProcessResourceImpl.class, "putProcessBatch"));
 					put(
+						"mutation#createProcessMetricsPageExportBatch",
+						new ObjectValuePair<>(
+							ProcessMetricResourceImpl.class,
+							"postProcessMetricsPageExportBatch"));
+					put(
+						"mutation#createProcessProcessVersionsPageExportBatch",
+						new ObjectValuePair<>(
+							ProcessVersionResourceImpl.class,
+							"postProcessProcessVersionsPageExportBatch"));
+					put(
+						"mutation#createReindexStatusesPageExportBatch",
+						new ObjectValuePair<>(
+							ReindexStatusResourceImpl.class,
+							"postReindexStatusesPageExportBatch"));
+					put(
+						"mutation#createProcessRolesPageExportBatch",
+						new ObjectValuePair<>(
+							RoleResourceImpl.class,
+							"postProcessRolesPageExportBatch"));
+					put(
+						"mutation#createProcessSLAsPageExportBatch",
+						new ObjectValuePair<>(
+							SLAResourceImpl.class,
+							"postProcessSLAsPageExportBatch"));
+					put(
 						"mutation#createProcessSLA",
 						new ObjectValuePair<>(
 							SLAResourceImpl.class, "postProcessSLA"));
@@ -259,6 +316,11 @@ public class ServletDataImpl implements ServletData {
 						"mutation#updateSLABatch",
 						new ObjectValuePair<>(
 							SLAResourceImpl.class, "putSLABatch"));
+					put(
+						"mutation#createProcessTasksPageExportBatch",
+						new ObjectValuePair<>(
+							TaskResourceImpl.class,
+							"postProcessTasksPageExportBatch"));
 					put(
 						"mutation#createProcessTask",
 						new ObjectValuePair<>(
@@ -284,6 +346,11 @@ public class ServletDataImpl implements ServletData {
 						"mutation#createTasksPage",
 						new ObjectValuePair<>(
 							TaskResourceImpl.class, "postTasksPage"));
+					put(
+						"mutation#createTimeRangesPageExportBatch",
+						new ObjectValuePair<>(
+							TimeRangeResourceImpl.class,
+							"postTimeRangesPageExportBatch"));
 
 					put(
 						"query#calendars",
@@ -372,6 +439,65 @@ public class ServletDataImpl implements ServletData {
 						"query#timeRanges",
 						new ObjectValuePair<>(
 							TimeRangeResourceImpl.class, "getTimeRangesPage"));
+
+					put(
+						"query#Process.instance",
+						new ObjectValuePair<>(
+							InstanceResourceImpl.class, "getProcessInstance"));
+					put(
+						"query#TaskBulkSelection.process",
+						new ObjectValuePair<>(
+							ProcessResourceImpl.class, "getProcess"));
+					put(
+						"query#Process.nodes",
+						new ObjectValuePair<>(
+							NodeResourceImpl.class, "getProcessNodesPage"));
+					put(
+						"query#Process.lastSLAResult",
+						new ObjectValuePair<>(
+							SLAResultResourceImpl.class,
+							"getProcessLastSLAResult"));
+					put(
+						"query#Process.histogramMetric",
+						new ObjectValuePair<>(
+							HistogramMetricResourceImpl.class,
+							"getProcessHistogramMetric"));
+					put(
+						"query#Process.tasks",
+						new ObjectValuePair<>(
+							TaskResourceImpl.class, "getProcessTasksPage"));
+					put(
+						"query#Process.sLAs",
+						new ObjectValuePair<>(
+							SLAResourceImpl.class, "getProcessSLAsPage"));
+					put(
+						"query#Process.roles",
+						new ObjectValuePair<>(
+							RoleResourceImpl.class, "getProcessRolesPage"));
+					put(
+						"query#Process.metric",
+						new ObjectValuePair<>(
+							ProcessMetricResourceImpl.class,
+							"getProcessMetric"));
+					put(
+						"query#Process.task",
+						new ObjectValuePair<>(
+							TaskResourceImpl.class, "getProcessTask"));
+					put(
+						"query#Process.processVersions",
+						new ObjectValuePair<>(
+							ProcessVersionResourceImpl.class,
+							"getProcessProcessVersionsPage"));
+					put(
+						"query#Process.nodeMetrics",
+						new ObjectValuePair<>(
+							NodeMetricResourceImpl.class,
+							"getProcessNodeMetricsPage"));
+					put(
+						"query#Process.instances",
+						new ObjectValuePair<>(
+							InstanceResourceImpl.class,
+							"getProcessInstancesPage"));
 				}
 			};
 
@@ -382,6 +508,10 @@ public class ServletDataImpl implements ServletData {
 	@Reference(scope = ReferenceScope.PROTOTYPE_REQUIRED)
 	private ComponentServiceObjects<AssigneeMetricResource>
 		_assigneeMetricResourceComponentServiceObjects;
+
+	@Reference(scope = ReferenceScope.PROTOTYPE_REQUIRED)
+	private ComponentServiceObjects<CalendarResource>
+		_calendarResourceComponentServiceObjects;
 
 	@Reference(scope = ReferenceScope.PROTOTYPE_REQUIRED)
 	private ComponentServiceObjects<IndexResource>
@@ -400,26 +530,6 @@ public class ServletDataImpl implements ServletData {
 		_processResourceComponentServiceObjects;
 
 	@Reference(scope = ReferenceScope.PROTOTYPE_REQUIRED)
-	private ComponentServiceObjects<SLAResource>
-		_slaResourceComponentServiceObjects;
-
-	@Reference(scope = ReferenceScope.PROTOTYPE_REQUIRED)
-	private ComponentServiceObjects<TaskResource>
-		_taskResourceComponentServiceObjects;
-
-	@Reference(scope = ReferenceScope.PROTOTYPE_REQUIRED)
-	private ComponentServiceObjects<CalendarResource>
-		_calendarResourceComponentServiceObjects;
-
-	@Reference(scope = ReferenceScope.PROTOTYPE_REQUIRED)
-	private ComponentServiceObjects<HistogramMetricResource>
-		_histogramMetricResourceComponentServiceObjects;
-
-	@Reference(scope = ReferenceScope.PROTOTYPE_REQUIRED)
-	private ComponentServiceObjects<NodeMetricResource>
-		_nodeMetricResourceComponentServiceObjects;
-
-	@Reference(scope = ReferenceScope.PROTOTYPE_REQUIRED)
 	private ComponentServiceObjects<ProcessMetricResource>
 		_processMetricResourceComponentServiceObjects;
 
@@ -436,11 +546,27 @@ public class ServletDataImpl implements ServletData {
 		_roleResourceComponentServiceObjects;
 
 	@Reference(scope = ReferenceScope.PROTOTYPE_REQUIRED)
-	private ComponentServiceObjects<SLAResultResource>
-		_slaResultResourceComponentServiceObjects;
+	private ComponentServiceObjects<SLAResource>
+		_slaResourceComponentServiceObjects;
+
+	@Reference(scope = ReferenceScope.PROTOTYPE_REQUIRED)
+	private ComponentServiceObjects<TaskResource>
+		_taskResourceComponentServiceObjects;
 
 	@Reference(scope = ReferenceScope.PROTOTYPE_REQUIRED)
 	private ComponentServiceObjects<TimeRangeResource>
 		_timeRangeResourceComponentServiceObjects;
+
+	@Reference(scope = ReferenceScope.PROTOTYPE_REQUIRED)
+	private ComponentServiceObjects<HistogramMetricResource>
+		_histogramMetricResourceComponentServiceObjects;
+
+	@Reference(scope = ReferenceScope.PROTOTYPE_REQUIRED)
+	private ComponentServiceObjects<NodeMetricResource>
+		_nodeMetricResourceComponentServiceObjects;
+
+	@Reference(scope = ReferenceScope.PROTOTYPE_REQUIRED)
+	private ComponentServiceObjects<SLAResultResource>
+		_slaResultResourceComponentServiceObjects;
 
 }

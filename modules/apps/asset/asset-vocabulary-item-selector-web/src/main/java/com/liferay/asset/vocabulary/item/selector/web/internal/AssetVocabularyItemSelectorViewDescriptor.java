@@ -61,7 +61,7 @@ public class AssetVocabularyItemSelectorViewDescriptor
 		_httpServletRequest = httpServletRequest;
 		_portletURL = portletURL;
 
-		_themeDisplay = (ThemeDisplay)_httpServletRequest.getAttribute(
+		_themeDisplay = (ThemeDisplay)httpServletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 	}
 
@@ -107,6 +107,11 @@ public class AssetVocabularyItemSelectorViewDescriptor
 		}
 
 		return searchContainer;
+	}
+
+	@Override
+	public boolean isMultipleSelection() {
+		return _assetVocabularyItemSelectorCriterion.isMultiSelection();
 	}
 
 	@Override

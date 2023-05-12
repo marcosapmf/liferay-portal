@@ -83,7 +83,7 @@ public class PasswordModifiedFilter extends BasePortalFilter {
 		try {
 			User user = PortalUtil.getUser(httpServletRequest);
 
-			if ((user == null) || user.isDefaultUser() ||
+			if ((user == null) || user.isGuestUser() ||
 				!_isValidRealUserId(httpSession, user)) {
 
 				return false;
@@ -92,6 +92,16 @@ public class PasswordModifiedFilter extends BasePortalFilter {
 			Date passwordModifiedDate = user.getPasswordModifiedDate();
 
 			if (passwordModifiedDate == null) {
+				return false;
+			}
+
+			Long sessionPasswordModifiedTime = (Long)httpSession.getAttribute(
+				WebKeys.USER_PASSWORD_MODIFIED_TIME);
+
+			if ((sessionPasswordModifiedTime != null) &&
+				(sessionPasswordModifiedTime >=
+					passwordModifiedDate.getTime())) {
+
 				return false;
 			}
 

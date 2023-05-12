@@ -1,17 +1,107 @@
 definition {
 
-	macro addPRMSite {
+	macro addSite {
+		var siteTemplateName = "Liferay OSB Site Initializer Partner Portal";
+		var siteName = "Partner Portal";
+
 		Site.openSitesAdmin();
 
-		TeamExtranet.addSiteTemplateCP(
-			siteName = "Partner Portal",
-			siteTemplateName = "Liferay OSB Site Initializer Partner Portal");
+		if (IsElementPresent(key_tableEntry = "Partner Portal", locator1 = "LexiconTable#TABLE_ENTRY")) {
+			PRMUtils.tearDown();
+
+			Site.openSitesAdmin();
+		}
+
+		LexiconEntry.gotoAdd();
+
+		LexiconCard.clickCard(card = ${siteTemplateName});
+
+		SelectFrame(locator1 = "IFrame#MODAL_BODY");
+
+		PortletEntry.inputName(name = ${siteName});
+
+		Button.clickAdd();
+
+		SelectFrameTop();
+
+		Alert.viewSuccessMessage();
+
+		WaitForElementPresent(
+			key_itemName = "Site Configuration",
+			locator1 = "ListGroupItem#ITEM_TEXT");
+
+		Click(
+			key_itemName = "Site Configuration",
+			locator1 = "ListGroupItem#ITEM_TEXT");
 	}
 
 	macro assertPageTitle {
 		AssertElementPresent(
-			key_title = "${pageTitle}",
+			key_title = ${pageTitle},
 			locator1 = "Header#H1_TITLE");
+	}
+
+	macro checkDownloadedFile {
+		var testDependenciesDir = PropsUtil.get("output.dir.name");
+
+		var fileExists = FileUtil.exists("${testDependenciesDir}/${fileName}");
+	}
+
+	macro connectWithSalesforce {
+		var salesforceLoginURL = PropsUtil.get("site.initializer.partner.portal.login.url");
+		var salesforceConsumerKey = PropsUtil.get("site.initializer.partner.portal.consumer.key");
+		var salesforceConsumerSecret = PropsUtil.get("site.initializer.partner.portal.consumer.secret");
+		var salesforceUsername = PropsUtil.get("site.initializer.partner.portal.username");
+		var salesforcePassword = PropsUtil.get("site.initializer.partner.portal.password");
+
+		ApplicationsMenu.gotoPortlet(
+			category = "Configuration",
+			panel = "Control Panel",
+			portlet = "Instance Settings");
+
+		SystemSettings.gotoConfiguration(
+			configurationCategory = "Third Party",
+			configurationName = "Salesforce Integration",
+			configurationScope = "Punch Out");
+
+		Navigator.gotoNavTab(navTab = "Salesforce Integration");
+
+		if (IsTextEqual(key_fieldName = "loginURL", locator1 = "PRMUtils#SALESFORCE_FIELD", value1 = ${salesforceLoginURL})) {
+			Button.clickSubmitButton();
+
+			Alert.viewSuccessMessage();
+
+			Navigator.openURL();
+		}
+		else {
+			Type(
+				key_fieldName = "loginURL",
+				locator1 = "PRMUtils#SALESFORCE_FIELD",
+				value1 = ${salesforceLoginURL});
+
+			Type(
+				key_fieldName = "consumerKey",
+				locator1 = "PRMUtils#SALESFORCE_FIELD",
+				value1 = ${salesforceConsumerKey});
+
+			Type(
+				key_fieldName = "consumerSecret",
+				locator1 = "PRMUtils#SALESFORCE_FIELD",
+				value1 = ${salesforceConsumerSecret});
+
+			Type(
+				key_fieldName = "username",
+				locator1 = "PRMUtils#SALESFORCE_FIELD",
+				value1 = ${salesforceUsername});
+
+			Type(
+				locator1 = "PRMUtils#SALESFORCE_PASSWORD_FIELD",
+				value1 = ${salesforcePassword});
+
+			Button.clickSubmitButton();
+
+			Alert.viewSuccessMessage();
+		}
 	}
 
 	@summary = "Define object permission to a role"
@@ -19,16 +109,16 @@ definition {
 		ApplicationsMenu.gotoPortlet(
 			category = "Object",
 			panel = "Control Panel",
-			portlet = "${objectName}");
+			portlet = ${objectName});
 
-		ObjectCustomViews.gotoPermissions(entryName = "${itemName}");
+		ObjectCustomViews.gotoPermissions(entryName = ${itemName});
 
-		var roleName = StringUtil.lowerCase("${roleName}");
-		var permissionName = StringUtil.upperCase("${permissionName}");
+		var roleName = StringUtil.lowerCase(${roleName});
+		var permissionName = StringUtil.upperCase(${permissionName});
 
 		Click.javaScriptClick(
-			key_permissionName = "${permissionName}",
-			key_roleName = "${roleName}",
+			key_permissionName = ${permissionName},
+			key_roleName = ${roleName},
 			locator1 = "ObjectCustomViews#SELECT_ANY_PERMISSIONS");
 
 		Button.clickSave();
@@ -42,26 +132,73 @@ definition {
 
 		echo("curl = ${curl}");
 
-		com.liferay.poshi.runner.util.JSONCurlUtil.get("${curl}");
+		com.liferay.poshi.runner.util.JSONCurlUtil.get(${curl});
+	}
+
+	@summary = "Go to Folder"
+	macro gotoFolder {
+		var key_dmFolderName = ${folderName};
+
+		SelectFrame(locator1 = "DocumentsAndMedia#CARD_FOLDER");
+
+		AssertClick(
+			locator1 = "DocumentsAndMedia#DESCRIPTIVE_LIST_FOLDER_TITLE",
+			value1 = ${folderName});
 	}
 
 	macro gotoPRM {
 		Navigator.openSiteURL(siteName = "Partner Portal");
 
+		while ((IsElementPresent(fragmentName = "paragraph", id = "element-text", index = 1, locator1 = "Fragment#CONTRIBUTED_FRAGMENT_TEXT")) && (maxIterations = "10")) {
+			Refresh();
+		}
+
 		if (IsElementPresent(locator1 = "PRMUtils#SIGN_IN")) {
 			Click(locator1 = "PRMUtils#SIGN_IN");
 		}
+
+		WaitForPageLoad();
 	}
 
 	@summary = "Publish an object"
 	macro publishObject {
 		ObjectAdmin.openObjectAdmin();
 
-		ObjectPortlet.selectCustomObject(label = "${objectName}");
+		ObjectPortlet.selectCustomObject(label = ${objectName});
 
 		CreateObject.selectPanelCategoryKey(panelCategoryKey = "Control Panel > Object");
 
 		CreateObject.saveObject();
+	}
+
+	macro tearDown {
+		Navigator.openURL();
+
+		User.logoutAndLoginPG(
+			userLoginEmailAddress = "test@liferay.com",
+			userLoginFullName = "Test Test");
+
+		Site.openSitesAdmin();
+
+		if (IsElementPresent(key_tableEntry = "Partner Portal", locator1 = "LexiconTable#TABLE_ENTRY")) {
+			Site.openSitesAdmin();
+
+			PortletEntry.selectAll();
+
+			Click(locator1 = "Icon#SITES_VERTICAL_ELLIPSIS");
+
+			MenuItem.clickNoError(menuItem = "Delete");
+
+			Click(locator1 = "Button#MODAL_DELETE");
+
+			Alert.viewSuccessMessage();
+		}
+
+		Account.openAccountsAdmin();
+
+		if (IsElementPresent(key_tableEntry = "Company Name", locator1 = "LexiconTable#TABLE_ENTRY")) {
+			Account.tearDownCP();
+		}
 	}
 
 }

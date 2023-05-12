@@ -13,11 +13,13 @@
  */
 
 import {useCallback, useContext} from 'react';
+import {useSearchParams} from 'react-router-dom';
 
 import {RunId, TestrayContext, TestrayTypes} from '../context/TestrayContext';
 
 const useRuns = () => {
 	const [{compareRuns}, dispatch] = useContext(TestrayContext);
+	const [searchParams] = useSearchParams();
 
 	const setRunA = useCallback(
 		(runA: RunId) =>
@@ -31,17 +33,10 @@ const useRuns = () => {
 		[dispatch]
 	);
 
-	const setRunId = useCallback(
-		(runId: RunId) =>
-			dispatch({payload: runId, type: TestrayTypes.SET_RUN_ID}),
-		[dispatch]
-	);
-
 	return {
-		compareRuns,
+		compareRuns: {...compareRuns, runId: Number(searchParams.get('runId'))},
 		setRunA,
 		setRunB,
-		setRunId,
 	};
 };
 

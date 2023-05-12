@@ -27,7 +27,6 @@ import com.liferay.object.model.ObjectEntry;
 import com.liferay.object.related.models.ObjectRelatedModelsProvider;
 import com.liferay.object.related.models.ObjectRelatedModelsProviderRegistry;
 import com.liferay.object.rest.manager.v1_0.ObjectEntryManager;
-import com.liferay.object.scope.ObjectScopeProviderRegistry;
 import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.object.service.ObjectEntryLocalService;
 import com.liferay.petra.function.transform.TransformUtil;
@@ -82,7 +81,6 @@ public class ObjectEntryItemSelectorView
 		ObjectEntryLocalService objectEntryLocalService,
 		ObjectEntryManager objectEntryManager,
 		ObjectRelatedModelsProviderRegistry objectRelatedModelsProviderRegistry,
-		ObjectScopeProviderRegistry objectScopeProviderRegistry,
 		Portal portal) {
 
 		_infoPermissionProvider = infoPermissionProvider;
@@ -94,7 +92,6 @@ public class ObjectEntryItemSelectorView
 		_objectEntryManager = objectEntryManager;
 		_objectRelatedModelsProviderRegistry =
 			objectRelatedModelsProviderRegistry;
-		_objectScopeProviderRegistry = objectScopeProviderRegistry;
 		_portal = portal;
 	}
 
@@ -149,7 +146,8 @@ public class ObjectEntryItemSelectorView
 			servletRequest, servletResponse, infoItemItemSelectorCriterion,
 			portletURL, itemSelectedEventName, search,
 			new ObjectItemSelectorViewDescriptor(
-				(HttpServletRequest)servletRequest, _objectDefinition,
+				(HttpServletRequest)servletRequest,
+				infoItemItemSelectorCriterion, _objectDefinition,
 				_objectEntryManager, _objectRelatedModelsProviderRegistry,
 				portletURL));
 	}
@@ -171,7 +169,6 @@ public class ObjectEntryItemSelectorView
 	private final ObjectEntryManager _objectEntryManager;
 	private final ObjectRelatedModelsProviderRegistry
 		_objectRelatedModelsProviderRegistry;
-	private final ObjectScopeProviderRegistry _objectScopeProviderRegistry;
 	private final Portal _portal;
 
 	private class ObjectEntryItemDescriptor
@@ -265,6 +262,7 @@ public class ObjectEntryItemSelectorView
 
 		public ObjectItemSelectorViewDescriptor(
 			HttpServletRequest httpServletRequest,
+			InfoItemItemSelectorCriterion infoItemItemSelectorCriterion,
 			ObjectDefinition objectDefinition,
 			ObjectEntryManager objectEntryManager,
 			ObjectRelatedModelsProviderRegistry
@@ -272,15 +270,16 @@ public class ObjectEntryItemSelectorView
 			PortletURL portletURL) {
 
 			_httpServletRequest = httpServletRequest;
+			_infoItemItemSelectorCriterion = infoItemItemSelectorCriterion;
 			_objectDefinition = objectDefinition;
 			_objectEntryManager = objectEntryManager;
 			_objectRelatedModelsProviderRegistry =
 				objectRelatedModelsProviderRegistry;
 			_portletURL = portletURL;
 
-			_portletRequest = (PortletRequest)_httpServletRequest.getAttribute(
+			_portletRequest = (PortletRequest)httpServletRequest.getAttribute(
 				JavaConstants.JAVAX_PORTLET_REQUEST);
-			_themeDisplay = (ThemeDisplay)_httpServletRequest.getAttribute(
+			_themeDisplay = (ThemeDisplay)httpServletRequest.getAttribute(
 				WebKeys.THEME_DISPLAY);
 		}
 
@@ -324,6 +323,11 @@ public class ObjectEntryItemSelectorView
 			return searchContainer;
 		}
 
+		@Override
+		public boolean isMultipleSelection() {
+			return _infoItemItemSelectorCriterion.isMultiSelection();
+		}
+
 		private DTOConverterContext _getDTOConverterContext() {
 			return new DefaultDTOConverterContext(
 				false, null, null, _httpServletRequest, null,
@@ -354,6 +358,7 @@ public class ObjectEntryItemSelectorView
 				_objectRelatedModelsProviderRegistry.
 					getObjectRelatedModelsProvider(
 						_objectDefinition.getClassName(),
+						_objectDefinition.getCompanyId(),
 						ParamUtil.getString(
 							_portletRequest, "objectRelationshipType"));
 
@@ -378,6 +383,8 @@ public class ObjectEntryItemSelectorView
 		}
 
 		private final HttpServletRequest _httpServletRequest;
+		private final InfoItemItemSelectorCriterion
+			_infoItemItemSelectorCriterion;
 		private final ObjectDefinition _objectDefinition;
 		private final ObjectEntryManager _objectEntryManager;
 		private final ObjectRelatedModelsProviderRegistry

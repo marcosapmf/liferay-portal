@@ -73,14 +73,14 @@ public class ConfigurationModel implements ExtendedObjectClassDefinition {
 
 		_configurationOverrideProperties =
 			ConfigurationOverridePropertiesUtil.getOverrideProperties(
-				_extendedObjectClassDefinition.getID());
+				extendedObjectClassDefinition.getID());
 
 		if (_configurationOverrideProperties == null) {
 			_configurationOverrideProperties = Collections.emptyMap();
 		}
 
 		_extensionAttributes =
-			_extendedObjectClassDefinition.getExtensionAttributes(
+			extendedObjectClassDefinition.getExtensionAttributes(
 				com.liferay.portal.configuration.metatype.annotations.
 					ExtendedObjectClassDefinition.XML_NAMESPACE);
 	}
@@ -177,6 +177,10 @@ public class ConfigurationModel implements ExtendedObjectClassDefinition {
 	}
 
 	public String getFactoryPid() {
+		if (_factoryPid != null) {
+			return _factoryPid;
+		}
+
 		if (_extendedObjectClassDefinition instanceof ConfigurationModel) {
 			ConfigurationModel configurationModel =
 				(ConfigurationModel)_extendedObjectClassDefinition;
@@ -276,7 +280,8 @@ public class ConfigurationModel implements ExtendedObjectClassDefinition {
 			return false;
 		}
 
-		Dictionary<String, Object> properties = _configuration.getProperties();
+		Dictionary<String, Object> properties =
+			_configuration.getProcessedProperties(null);
 
 		if (properties == null) {
 			return false;
@@ -366,6 +371,10 @@ public class ConfigurationModel implements ExtendedObjectClassDefinition {
 		return _isScope(Scope.SYSTEM);
 	}
 
+	public void setFactoryPid(String factoryPid) {
+		_factoryPid = factoryPid;
+	}
+
 	private String _getLabelAttributeValue() {
 		String factoryInstanceLabelAttribute = getLabelAttribute();
 
@@ -401,5 +410,6 @@ public class ConfigurationModel implements ExtendedObjectClassDefinition {
 	private final ExtendedObjectClassDefinition _extendedObjectClassDefinition;
 	private final Map<String, String> _extensionAttributes;
 	private final boolean _factory;
+	private String _factoryPid;
 
 }

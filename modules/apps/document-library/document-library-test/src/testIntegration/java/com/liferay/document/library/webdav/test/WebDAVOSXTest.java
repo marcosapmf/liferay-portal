@@ -23,16 +23,17 @@ import com.liferay.document.library.kernel.model.DLVersionNumberIncrease;
 import com.liferay.document.library.kernel.service.DLAppLocalService;
 import com.liferay.document.library.kernel.service.DLFileEntryMetadataLocalService;
 import com.liferay.document.library.kernel.service.DLFileEntryTypeLocalService;
+import com.liferay.document.library.util.DLFileEntryTypeUtil;
 import com.liferay.dynamic.data.mapping.kernel.DDMForm;
 import com.liferay.dynamic.data.mapping.kernel.DDMFormField;
 import com.liferay.dynamic.data.mapping.kernel.DDMFormFieldOptions;
 import com.liferay.dynamic.data.mapping.kernel.DDMFormValues;
-import com.liferay.dynamic.data.mapping.kernel.DDMStructure;
 import com.liferay.dynamic.data.mapping.kernel.DDMStructureManager;
 import com.liferay.dynamic.data.mapping.kernel.DDMStructureManagerUtil;
 import com.liferay.dynamic.data.mapping.kernel.LocalizedValue;
-import com.liferay.dynamic.data.mapping.kernel.StorageEngineManager;
-import com.liferay.dynamic.data.mapping.kernel.StorageEngineManagerUtil;
+import com.liferay.dynamic.data.mapping.model.DDMStructure;
+import com.liferay.dynamic.data.mapping.storage.DDMStorageEngineManager;
+import com.liferay.dynamic.data.mapping.util.DDMBeanTranslatorUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.repository.model.FileEntry;
@@ -684,7 +685,8 @@ public class WebDAVOSXTest extends BaseWebDAVTestCase {
 				TestPropsValues.getGroupId(),
 				DLFolderConstants.DEFAULT_PARENT_FOLDER_ID, getFolderName());
 
-			DDMStructure ddmStructure = addDDMStructure(group);
+			com.liferay.dynamic.data.mapping.kernel.DDMStructure ddmStructure =
+				addDDMStructure(group);
 
 			ServiceContext serviceContext =
 				ServiceContextTestUtil.getServiceContext(
@@ -726,7 +728,8 @@ public class WebDAVOSXTest extends BaseWebDAVTestCase {
 				finalDLFileEntryModel.getDLFileEntryType();
 
 			List<DDMStructure> ddmStructures =
-				finalDLFileEntryModelDLFileEntryType.getDDMStructures();
+				DLFileEntryTypeUtil.getDDMStructures(
+					finalDLFileEntryModelDLFileEntryType);
 
 			for (DDMStructure structure : ddmStructures) {
 				String structureKey = structure.getStructureKey();
@@ -742,12 +745,14 @@ public class WebDAVOSXTest extends BaseWebDAVTestCase {
 						structure.getStructureId(),
 						fileVersion.getFileVersionId());
 
-				DDMFormValues finalDDMFormValues =
-					StorageEngineManagerUtil.getDDMFormValues(
-						fileEntryMetadata.getDDMStorageId());
+				com.liferay.dynamic.data.mapping.storage.DDMFormValues
+					finalDDMFormValues =
+						_ddmStorageEngineManager.getDDMFormValues(
+							fileEntryMetadata.getDDMStorageId());
 
 				Assert.assertTrue(
-					expectedDDDMFormValues.equals(finalDDMFormValues));
+					expectedDDDMFormValues.equals(
+						DDMBeanTranslatorUtil.translate(finalDDMFormValues)));
 			}
 		}
 		finally {
@@ -771,7 +776,8 @@ public class WebDAVOSXTest extends BaseWebDAVTestCase {
 				TestPropsValues.getGroupId(),
 				DLFolderConstants.DEFAULT_PARENT_FOLDER_ID, getFolderName());
 
-			DDMStructure ddmStructure = addDDMStructure(group);
+			com.liferay.dynamic.data.mapping.kernel.DDMStructure ddmStructure =
+				addDDMStructure(group);
 
 			ServiceContext serviceContext =
 				ServiceContextTestUtil.getServiceContext(
@@ -813,7 +819,8 @@ public class WebDAVOSXTest extends BaseWebDAVTestCase {
 				finalDLFileEntryModel.getDLFileEntryType();
 
 			Assert.assertTrue(
-				ListUtil.isNotEmpty(finalFileEntryType.getDDMStructures()));
+				ListUtil.isNotEmpty(
+					DLFileEntryTypeUtil.getDDMStructures(finalFileEntryType)));
 
 			Assert.assertEquals(
 				initialDLFileEntryType.getFileEntryTypeId(),
@@ -840,7 +847,10 @@ public class WebDAVOSXTest extends BaseWebDAVTestCase {
 		return ddmForm;
 	}
 
-	protected DDMStructure addDDMStructure(Group group) throws Exception {
+	protected com.liferay.dynamic.data.mapping.kernel.DDMStructure
+			addDDMStructure(Group group)
+		throws Exception {
+
 		DDMForm ddmForm = createDDMForm();
 
 		DDMFormField ddmFormField = createLocalizableTextDDMFormField("Text");
@@ -863,7 +873,7 @@ public class WebDAVOSXTest extends BaseWebDAVTestCase {
 			TestPropsValues.getUserId(), group.getGroupId(), null,
 			PortalUtil.getClassNameId(DLFileEntryMetadata.class.getName()),
 			null, nameMap, null, ddmForm,
-			StorageEngineManager.STORAGE_TYPE_DEFAULT,
+			DDMStorageEngineManager.STORAGE_TYPE_DEFAULT,
 			DDMStructureManager.STRUCTURE_TYPE_DEFAULT, serviceContext);
 	}
 
@@ -976,6 +986,9 @@ public class WebDAVOSXTest extends BaseWebDAVTestCase {
 	private static byte[] _testDeltaBytes;
 	private static byte[] _testFileBytes;
 	private static byte[] _testMetaBytes;
+
+	@Inject
+	private DDMStorageEngineManager _ddmStorageEngineManager;
 
 	@Inject
 	private DLAppLocalService _dlAppLocalService;

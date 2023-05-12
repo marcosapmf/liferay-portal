@@ -812,10 +812,18 @@ public class SubscriptionSender implements Serializable {
 	protected void populateNotificationEventJSONObject(
 		JSONObject notificationEventJSONObject) {
 
+		String command = null;
+
+		if (serviceContext != null) {
+			command = serviceContext.getCommand();
+		}
+
 		notificationEventJSONObject.put(
 			"className", _className
 		).put(
 			"classPK", _classPK
+		).put(
+			"command", command
 		).put(
 			"context", _context
 		).put(
@@ -1077,13 +1085,13 @@ public class SubscriptionSender implements Serializable {
 		mailTemplateContextBuilder.put("[$FROM_ADDRESS$]", from.getAddress());
 		mailTemplateContextBuilder.put(
 			"[$FROM_NAME$]",
-			HtmlUtil.escape(
+			new EscapableObject<>(
 				GetterUtil.getString(from.getPersonal(), from.getAddress())));
 		mailTemplateContextBuilder.put(
-			"[$TO_ADDRESS$]", HtmlUtil.escape(to.getAddress()));
+			"[$TO_ADDRESS$]", new EscapableObject<>(to.getAddress()));
 		mailTemplateContextBuilder.put(
 			"[$TO_NAME$]",
-			HtmlUtil.escape(
+			new EscapableObject<>(
 				GetterUtil.getString(to.getPersonal(), to.getAddress())));
 
 		MailTemplateContext mailTemplateContext =

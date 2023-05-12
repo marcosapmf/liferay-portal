@@ -12,7 +12,7 @@ Here are some of the types of changes documented in this file:
 * Execution requirements: Java version, J2EE Version, browser versions, etc.
 * Deprecations or end of support: For example, warning that a certain feature or API will be dropped in an upcoming version.
 
-*This document has been reviewed through the breaking change entry at commit `62dc43e1cc4c4b81ef5bcae459dbc0cbeff9f1fe`.*
+*This document has been reviewed through the breaking change entry at commit `525b211de2d94caa9c0131a15080cf76908c9209`.*
 
 Each change must have a brief descriptive title and contain the following information:
 
@@ -1115,9 +1115,9 @@ This change was made to address vulnerabilities in outdated libraries that are n
 
 ### What changed?
 
-The Elasticsearch type mapping of localized sortable `*_<languageId>_sortable` and nested `ddmFieldArray.ddmFieldValueText_<languageId>_String_sortable` fields were changed from `keyword` to `icu_collation_keyword`
+The Elasticsearch type mapping of localized sortable `*_<languageId>_sortable` and nested `ddmFieldArray.ddmFieldValueText_<languageId>_String_sortable` fields were changed from `keyword` to `icu_collation_keyword`.
 
-These fields' indexed information is now stored in an encoded format. For example, the `entity title` text is now stored as `MkRQOlBaBFA6UEAyARABEAA=`
+These fields' indexed information is now stored in an encoded format. For example, the `entity title` text is now stored as `MkRQOlBaBFA6UEAyARABEAA=`.
 
 This new `icu_collation_keyword` type allows sorting using the correct collation rules of each language. For more information see <https://www.elastic.co/guide/en/elasticsearch/plugins/7.17/analysis-icu-collation-keyword-field.html>.
 
@@ -1255,3 +1255,105 @@ Replace usages of `<aui:container>` with `<clay:container>`.
 ### Why was this change made?
 
 The tag `<aui:container>` was deprecated in a previous version.
+
+---------------------------------------
+
+## Removed Properties for Tika Configuration and Text Extraction
+
+- **Date:** 2022-Dec-13
+- **JIRA Ticket:** [LPS-147938](https://issues.liferay.com/browse/LPS-147938) and [LPS-169760](https://issues.liferay.com/browse/LPS-169760)
+
+### What changed?
+
+The Tika library was extracted from Liferay's core to the `com.liferay.portal.tika` module, changing the way it must be configured. The system property `tika.config` was removed, as were the portal properties `text.extraction.fork.process.enabled` and `text.extraction.fork.process.mime.types`. The Tika library and text extraction are no longer configurable through properties files.
+
+As part of the extraction to a module, the removed properties are added to the module's configuration interface and are configurable using System Settings or a `.config` configuration file.
+
+### Who is affected?
+
+This affects anyone using the removed system or portal properties.
+
+### How should I update my code?
+
+No code changes are necessary.
+
+Configure the same properties in System Settings &rarr; Infrastructure &rarr; Tika Configuration.
+
+### Why was this change made?
+
+These configuration changes were made because the Tika library was extracted to the `com.liferay.portal.tika` module.
+
+---------------------------------------
+
+## Moved CTSQLModeThreadLocal to portal-kernel and Changed Package
+
+- **Date:** 2023-Apr-11
+- **JIRA Ticket:** [LPS-181233](https://issues.liferay.com/browse/LPS-181233)
+
+### What changed?
+
+The `CTSQLModeThreadLocal` class was moved from the `portal-impl` module into the `portal-kernel` module. Consequently, its package was changed from `com.liferay.portal.change.tracking.sql` to `com.liferay.portal.kernel.change.tracking.sql` to be consistent with the `portal-kernel` module's package naming scheme for the change tracking classes.
+
+### Who is affected?
+
+This affects anyone calling the `CTSQLModeThreadLocal` class from their code.
+
+### How should I update my code?
+
+1. Declare a dependency on the `portal-kernel` module.
+
+1. Modify `import` statements for the `CTSQLModeThreadLocal` class to use the new package:
+
+	```
+	import com.liferay.portal.kernel.change.tracking.sql.CTSQLModeThreadLocal;
+	```
+
+### Why was this change made?
+
+To resolve [LPS-181233](https://issues.liferay.com/browse/LPS-181233), the value of the `CTSQLModeThreadLocal` must be set from the `portal-kernel` module. Moving the class into the `portal-kernel` module allows it to be referenced as required.
+
+---------------------------------------
+
+## Remove Log4j1 compatibility
+
+- **Date:** 2023-May-9
+- **JIRA Ticket:** [LPS-181002](https://issues.liferay.com/browse/LPS-181002)
+
+### What changed?
+
+Log4j1 config format support is removed.
+
+### Who is affected?
+
+Code that's using Log4j1 config format's config files.
+
+### How should I update my code?
+
+Use Log4j2 strict XML format.
+
+### Why was this change made?
+
+Portal has been using Log4j2. After this change, all log4j config files will use log4j2 config format.
+
+---------------------------------------
+
+## Remove verifyDB function from Server Administration
+
+- **Date:** 2023-May-10
+- **JIRA Ticket:** [LPS-184192](https://issues.liferay.com/browse/LPS-184192)
+
+### What changed?
+
+The verifyDB() method was removed from ServiceComponentLocalService. The "Verify database tables of all plugins." function was removed from "Server Administration" -> "Verification Actions"
+
+### Who is affected?
+
+This affects anyone calling the `ServiceComponentLocalService.verifyDB()` method from their code and using the UI function.
+
+### How should I update my code?
+
+Remove usage of `ServiceComponentLocalService.verifyDB()`
+
+### Why was this change made?
+
+Upgrade framework manages all modules' tables and Release record creation. This verifyDB function does not do anything.

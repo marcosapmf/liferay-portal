@@ -15,20 +15,16 @@
 package com.liferay.account.admin.web.internal.security.permission.resource;
 
 import com.liferay.account.model.AccountEntry;
+import com.liferay.osgi.util.service.Snapshot;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Reference;
-import org.osgi.service.component.annotations.ReferencePolicyOption;
-
 /**
  * @author Pei-Jung Lan
  */
-@Component(service = {})
 public class AccountEntryPermission {
 
 	public static boolean contains(
@@ -36,7 +32,10 @@ public class AccountEntryPermission {
 		String actionId) {
 
 		try {
-			return _accountEntryModelResourcePermission.contains(
+			ModelResourcePermission<AccountEntry> modelResourcePermission =
+				_accountEntryModelResourcePermissionSnapshot.get();
+
+			return modelResourcePermission.contains(
 				permissionChecker, accountEntry, actionId);
 		}
 		catch (PortalException portalException) {
@@ -53,7 +52,10 @@ public class AccountEntryPermission {
 		String actionId) {
 
 		try {
-			return _accountEntryModelResourcePermission.contains(
+			ModelResourcePermission<AccountEntry> modelResourcePermission =
+				_accountEntryModelResourcePermissionSnapshot.get();
+
+			return modelResourcePermission.contains(
 				permissionChecker, accountEntryId, actionId);
 		}
 		catch (PortalException portalException) {
@@ -65,21 +67,17 @@ public class AccountEntryPermission {
 		return false;
 	}
 
-	@Reference(
-		policyOption = ReferencePolicyOption.GREEDY,
-		target = "(model.class.name=com.liferay.account.model.AccountEntry)",
-		unbind = "-"
-	)
-	protected void setModelResourcePermission(
+	protected void unsetModelResourcePermission(
 		ModelResourcePermission<AccountEntry> modelResourcePermission) {
-
-		_accountEntryModelResourcePermission = modelResourcePermission;
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		AccountEntryPermission.class);
 
-	private static ModelResourcePermission<AccountEntry>
-		_accountEntryModelResourcePermission;
+	private static final Snapshot<ModelResourcePermission<AccountEntry>>
+		_accountEntryModelResourcePermissionSnapshot = new Snapshot<>(
+			AccountEntryPermission.class,
+			Snapshot.cast(ModelResourcePermission.class),
+			"(model.class.name=com.liferay.account.model.AccountEntry)", true);
 
 }

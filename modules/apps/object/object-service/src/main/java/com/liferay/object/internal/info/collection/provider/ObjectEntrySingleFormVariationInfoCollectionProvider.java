@@ -73,7 +73,6 @@ import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.search.IndexerRegistryUtil;
 import com.liferay.portal.kernel.search.QueryConfig;
 import com.liferay.portal.kernel.search.SearchContext;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.search.generic.BooleanQueryImpl;
 import com.liferay.portal.kernel.search.generic.NestedQuery;
 import com.liferay.portal.kernel.search.generic.TermQueryImpl;
@@ -85,6 +84,7 @@ import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ListUtil;
+import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
@@ -141,9 +141,10 @@ public class ObjectEntrySingleFormVariationInfoCollectionProvider
 		CollectionQuery collectionQuery) {
 
 		try {
-			if (_objectDefinition.isDefaultStorageType()) {
-				return _getCollectionInfoPageByDefaultStorageType(
-					collectionQuery);
+			if (!_objectDefinition.isAccountEntryRestricted() &&
+				_objectDefinition.isDefaultStorageType()) {
+
+				return _getCollectionInfoPageByIndexer(collectionQuery);
 			}
 
 			return _getCollectionInfoPageByObjectEntryManager(collectionQuery);
@@ -210,6 +211,9 @@ public class ObjectEntrySingleFormVariationInfoCollectionProvider
 								_getOptions(objectField)
 							).labelInfoLocalizedValue(
 								InfoLocalizedValue.<String>builder(
+								).defaultLocale(
+									LocaleUtil.fromLanguageId(
+										objectField.getDefaultLanguageId())
 								).values(
 									objectField.getLabelMap()
 								).build()
@@ -403,7 +407,7 @@ public class ObjectEntrySingleFormVariationInfoCollectionProvider
 		};
 	}
 
-	private InfoPage<ObjectEntry> _getCollectionInfoPageByDefaultStorageType(
+	private InfoPage<ObjectEntry> _getCollectionInfoPageByIndexer(
 			CollectionQuery collectionQuery)
 		throws Exception {
 
@@ -439,8 +443,6 @@ public class ObjectEntrySingleFormVariationInfoCollectionProvider
 
 		Group scopeGroup = themeDisplay.getScopeGroup();
 
-		Pagination pagination = collectionQuery.getPagination();
-
 		Page<com.liferay.object.rest.dto.v1_0.ObjectEntry> objectEntriesPage =
 			objectEntryManager.getObjectEntries(
 				themeDisplay.getCompanyId(), _objectDefinition,
@@ -448,10 +450,9 @@ public class ObjectEntrySingleFormVariationInfoCollectionProvider
 				new DefaultDTOConverterContext(
 					false, null, null, null, null, themeDisplay.getLocale(),
 					null, themeDisplay.getUser()),
-				(Filter)null,
-				com.liferay.portal.vulcan.pagination.Pagination.of(
-					1, pagination.getEnd()),
-				null, null);
+				_getFilterString(collectionQuery),
+				_getPagination(collectionQuery.getPagination()),
+				_getSearch(collectionQuery), null);
 
 		List<com.liferay.object.rest.dto.v1_0.ObjectEntry> objectEntries =
 			new ArrayList<>(objectEntriesPage.getItems());
@@ -479,6 +480,53 @@ public class ObjectEntrySingleFormVariationInfoCollectionProvider
 		}
 
 		return "";
+	}
+
+	private String _getFilterString(CollectionQuery collectionQuery) {
+		Map<String, String[]> configuration =
+			collectionQuery.getConfiguration();
+
+		if (configuration == null) {
+			return null;
+		}
+
+		StringBundler sb = new StringBundler();
+
+		List<ObjectField> objectFields =
+			_objectFieldLocalService.getObjectFields(
+				_objectDefinition.getObjectDefinitionId());
+
+		for (Map.Entry<String, String[]> entry : configuration.entrySet()) {
+			if (Validator.isNull(entry.getValue()[0])) {
+				continue;
+			}
+
+			ObjectField objectField = _getObjectField(
+				entry.getKey(), objectFields);
+
+			if (objectField == null) {
+				continue;
+			}
+
+			sb.append(entry.getKey());
+			sb.append(" eq ");
+
+			if (Objects.equals(
+					objectField.getBusinessType(),
+					ObjectFieldConstants.BUSINESS_TYPE_BOOLEAN)) {
+
+				sb.append(entry.getValue()[0]);
+			}
+			else {
+				sb.append(StringPool.APOSTROPHE);
+				sb.append(entry.getValue()[0]);
+				sb.append(StringPool.APOSTROPHE);
+			}
+
+			sb.append(" and ");
+		}
+
+		return StringUtil.removeLast(sb.toString(), " and ");
 	}
 
 	private long _getGroupId() throws Exception {
@@ -670,6 +718,32 @@ public class ObjectEntrySingleFormVariationInfoCollectionProvider
 		return options;
 	}
 
+	private com.liferay.portal.vulcan.pagination.Pagination _getPagination(
+		Pagination pagination) {
+
+		int page = 1;
+
+		int pageSize = pagination.getEnd() - pagination.getStart();
+
+		if (pageSize > 0) {
+			page = pagination.getEnd() / pageSize;
+		}
+
+		return com.liferay.portal.vulcan.pagination.Pagination.of(
+			page, pageSize);
+	}
+
+	private String _getSearch(CollectionQuery collectionQuery) {
+		KeywordsInfoFilter keywordsInfoFilter = collectionQuery.getInfoFilter(
+			KeywordsInfoFilter.class);
+
+		if (keywordsInfoFilter != null) {
+			return keywordsInfoFilter.getKeywords();
+		}
+
+		return null;
+	}
+
 	private boolean _hasCategorizationObjectLayoutBox() {
 		ObjectLayout objectLayout = null;
 
@@ -710,6 +784,7 @@ public class ObjectEntrySingleFormVariationInfoCollectionProvider
 
 		serviceBuilderObjectEntry.setExternalReferenceCode(
 			objectEntry.getExternalReferenceCode());
+		serviceBuilderObjectEntry.setObjectEntryId(objectEntry.getId());
 		serviceBuilderObjectEntry.setObjectDefinitionId(objectDefinitionId);
 
 		return serviceBuilderObjectEntry;

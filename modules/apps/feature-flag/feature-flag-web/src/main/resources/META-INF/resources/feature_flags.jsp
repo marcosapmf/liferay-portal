@@ -67,12 +67,18 @@ String displayStyle = featureFlagsDisplayContext.getDisplayStyle();
 							>
 								<h5>
 									<strong><%= featureFlagDisplay.getTitle() %>
-									</strong>
+									</strong><span class="text-muted"> (<%= featureFlagDisplay.getKey() %>)</span>
 								</h5>
 
 								<h6 class="text-default">
 									<%= featureFlagDisplay.getDescription() %>
 								</h6>
+
+								<c:if test="<%= !ArrayUtil.isEmpty(featureFlagDisplay.getDependencyKeys()) %>">
+									<h6>
+										<liferay-ui:message arguments="<%= StringUtil.merge(featureFlagDisplay.getDependencyKeys(), StringPool.COMMA_AND_SPACE) %>" key="dependencies-x" />
+									</h6>
+								</c:if>
 							</liferay-ui:search-container-column-text>
 						</c:otherwise>
 					</c:choose>

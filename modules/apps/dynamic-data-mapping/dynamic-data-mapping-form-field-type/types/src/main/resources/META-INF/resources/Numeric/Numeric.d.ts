@@ -26,6 +26,8 @@ interface IProps {
 	dataType: NumericDataType;
 	decimalPlaces: number;
 	defaultLanguageId: Locale;
+	errorMessage?: string;
+	focused: boolean;
 	id: string;
 	inputMask?: boolean;
 	inputMaskFormat?: string;
@@ -38,8 +40,11 @@ interface IProps {
 	placeholder?: string;
 	predefinedValue?: string;
 	readOnly: boolean;
+	required?: boolean;
 	settingsContext?: any;
 	symbols: ISymbols;
+	tip?: string;
+	valid?: boolean;
 	value?: string;
 }
 declare type NumericDataType = 'integer' | 'double';

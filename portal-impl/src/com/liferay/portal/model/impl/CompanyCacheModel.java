@@ -76,7 +76,7 @@ public class CompanyCacheModel
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(43);
+		StringBundler sb = new StringBundler(47);
 
 		sb.append("{mvccVersion=");
 		sb.append(mvccVersion);
@@ -120,6 +120,10 @@ public class CompanyCacheModel
 		sb.append(type);
 		sb.append(", size=");
 		sb.append(size);
+		sb.append(", indexNameCurrent=");
+		sb.append(indexNameCurrent);
+		sb.append(", indexNameNext=");
+		sb.append(indexNameNext);
 		sb.append("}");
 
 		return sb.toString();
@@ -242,6 +246,20 @@ public class CompanyCacheModel
 			companyImpl.setSize(size);
 		}
 
+		if (indexNameCurrent == null) {
+			companyImpl.setIndexNameCurrent("");
+		}
+		else {
+			companyImpl.setIndexNameCurrent(indexNameCurrent);
+		}
+
+		if (indexNameNext == null) {
+			companyImpl.setIndexNameNext("");
+		}
+		else {
+			companyImpl.setIndexNameNext(indexNameNext);
+		}
+
 		companyImpl.resetOriginalValues();
 
 		companyImpl.setCompanySecurityBag(_companySecurityBag);
@@ -281,6 +299,8 @@ public class CompanyCacheModel
 		industry = objectInput.readUTF();
 		type = objectInput.readUTF();
 		size = objectInput.readUTF();
+		indexNameCurrent = objectInput.readUTF();
+		indexNameNext = objectInput.readUTF();
 
 		_companySecurityBag =
 			(CompanyImpl.CompanySecurityBag)objectInput.readObject();
@@ -395,6 +415,20 @@ public class CompanyCacheModel
 			objectOutput.writeUTF(size);
 		}
 
+		if (indexNameCurrent == null) {
+			objectOutput.writeUTF("");
+		}
+		else {
+			objectOutput.writeUTF(indexNameCurrent);
+		}
+
+		if (indexNameNext == null) {
+			objectOutput.writeUTF("");
+		}
+		else {
+			objectOutput.writeUTF(indexNameNext);
+		}
+
 		objectOutput.writeObject(_companySecurityBag);
 		objectOutput.writeObject(_virtualHostname);
 	}
@@ -420,6 +454,8 @@ public class CompanyCacheModel
 	public String industry;
 	public String type;
 	public String size;
+	public String indexNameCurrent;
+	public String indexNameNext;
 	public CompanyImpl.CompanySecurityBag _companySecurityBag;
 	public String _virtualHostname;
 

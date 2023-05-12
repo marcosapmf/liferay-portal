@@ -32,7 +32,7 @@ import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactoryUtil;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.upload.UploadServletRequestConfigurationHelperUtil;
+import com.liferay.portal.kernel.upload.configuration.UploadServletRequestConfigurationProviderUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 
@@ -116,6 +116,22 @@ public class BasicFragmentEntryActionDropdownItemsProvider {
 					).add(
 						() ->
 							hasManageFragmentEntriesPermission &&
+							!_fragmentEntry.isCacheable() &&
+							!_fragmentEntry.isReadOnly() &&
+							!_fragmentEntry.isTypeInput() &&
+							!_fragmentEntry.isTypeReact(),
+						_getMarkAsCacheableActionUnsafeConsumer()
+					).add(
+						() ->
+							hasManageFragmentEntriesPermission &&
+							_fragmentEntry.isCacheable() &&
+							!_fragmentEntry.isReadOnly() &&
+							!_fragmentEntry.isTypeInput() &&
+							!_fragmentEntry.isTypeReact(),
+						_getUnmarkAsCacheableActionUnsafeConsumer()
+					).add(
+						() ->
+							hasManageFragmentEntriesPermission &&
 							!_fragmentEntry.isReadOnly() &&
 							(_fragmentEntry.getGroupId() ==
 								_themeDisplay.getCompanyGroupId()),
@@ -185,15 +201,6 @@ public class BasicFragmentEntryActionDropdownItemsProvider {
 			dropdownItem.putData(
 				"fragmentEntryId",
 				String.valueOf(_fragmentEntry.getFragmentEntryId()));
-			dropdownItem.putData(
-				"selectFragmentCollectionURL",
-				PortletURLBuilder.createRenderURL(
-					_renderResponse
-				).setMVCRenderCommandName(
-					"/fragment/select_fragment_collection"
-				).setWindowState(
-					LiferayWindowState.POP_UP
-				).buildString());
 			dropdownItem.setIcon("copy");
 			dropdownItem.setLabel(
 				LanguageUtil.get(_httpServletRequest, "make-a-copy"));
@@ -327,7 +334,7 @@ public class BasicFragmentEntryActionDropdownItemsProvider {
 			).extensions(
 				_fragmentPortletConfiguration.thumbnailExtensions()
 			).maxFileSize(
-				UploadServletRequestConfigurationHelperUtil.getMaxSize()
+				UploadServletRequestConfigurationProviderUtil.getMaxSize()
 			).portletId(
 				FragmentPortletKeys.FRAGMENT
 			).repositoryName(
@@ -351,6 +358,27 @@ public class BasicFragmentEntryActionDropdownItemsProvider {
 		).setParameter(
 			"fragmentEntryId", _fragmentEntry.getFragmentEntryId()
 		).buildString();
+	}
+
+	private UnsafeConsumer<DropdownItem, Exception>
+		_getMarkAsCacheableActionUnsafeConsumer() {
+
+		return dropdownItem -> {
+			dropdownItem.putData("action", "markAsCacheableFragmentEntry");
+			dropdownItem.putData(
+				"markAsCacheableFragmentEntryURL",
+				PortletURLBuilder.createActionURL(
+					_renderResponse
+				).setActionName(
+					"/fragment/mark_as_cacheable_fragment_entry"
+				).setRedirect(
+					_themeDisplay.getURLCurrent()
+				).setParameter(
+					"fragmentEntryId", _fragmentEntry.getFragmentEntryId()
+				).buildString());
+			dropdownItem.setLabel(
+				LanguageUtil.get(_httpServletRequest, "mark-as-cacheable"));
+		};
 	}
 
 	private UnsafeConsumer<DropdownItem, Exception>
@@ -409,6 +437,27 @@ public class BasicFragmentEntryActionDropdownItemsProvider {
 				).buildString());
 			dropdownItem.setLabel(
 				LanguageUtil.get(_httpServletRequest, "rename"));
+		};
+	}
+
+	private UnsafeConsumer<DropdownItem, Exception>
+		_getUnmarkAsCacheableActionUnsafeConsumer() {
+
+		return dropdownItem -> {
+			dropdownItem.putData("action", "unmarkAsCacheableFragmentEntry");
+			dropdownItem.putData(
+				"unmarkAsCacheableFragmentEntryURL",
+				PortletURLBuilder.createActionURL(
+					_renderResponse
+				).setActionName(
+					"/fragment/unmark_as_cacheable_fragment_entry"
+				).setRedirect(
+					_themeDisplay.getURLCurrent()
+				).setParameter(
+					"fragmentEntryId", _fragmentEntry.getFragmentEntryId()
+				).buildString());
+			dropdownItem.setLabel(
+				LanguageUtil.get(_httpServletRequest, "unmark-as-cacheable"));
 		};
 	}
 

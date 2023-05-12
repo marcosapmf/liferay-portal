@@ -9,8 +9,10 @@
  * distribution rights of the Software.
  */
 
+import LiferayPicklist from '../liferayPicklist';
 import MDFRequestActivity from '../mdfRequestActivity';
 import MDFRequestActivityDescription from '../mdfRequestActivityDescription';
+import MDFClaimActivityDTO from './mdfClaimActivityDTO';
 import MDFRequestBudgetDTO from './mdfRequestBudgetDTO';
 
 type MDFRequestActivityDTO = Omit<
@@ -19,11 +21,14 @@ type MDFRequestActivityDTO = Omit<
 > &
 	Omit<MDFRequestActivityDescription, 'leadFollowUpStrategies'> & {
 		actToBgts?: MDFRequestBudgetDTO[];
-		externalReferenceCodeSF?: string;
+		actToMDFClmActs?: MDFClaimActivityDTO[];
+		currency?: LiferayPicklist;
+		externalReferenceCode?: string;
 		leadFollowUpStrategies?: string;
-		mdfRequestExternalReferenceCodeSF?: string;
+		mdfRequestExternalReferenceCode?: string;
 		r_accToActs_accountEntryId?: number;
 		r_mdfReqToActs_c_mdfRequestId?: number;
+		selected?: boolean;
 	};
 
 export default MDFRequestActivityDTO;

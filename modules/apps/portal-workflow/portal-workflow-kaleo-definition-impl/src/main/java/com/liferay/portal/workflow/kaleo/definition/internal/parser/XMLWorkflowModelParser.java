@@ -18,6 +18,7 @@ import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowDefinitionFileException;
 import com.liferay.portal.kernel.workflow.WorkflowException;
@@ -43,6 +44,7 @@ import com.liferay.portal.workflow.kaleo.definition.NotificationReceptionType;
 import com.liferay.portal.workflow.kaleo.definition.ResourceActionAssignment;
 import com.liferay.portal.workflow.kaleo.definition.RoleAssignment;
 import com.liferay.portal.workflow.kaleo.definition.RoleRecipient;
+import com.liferay.portal.workflow.kaleo.definition.ScriptAction;
 import com.liferay.portal.workflow.kaleo.definition.ScriptAssignment;
 import com.liferay.portal.workflow.kaleo.definition.ScriptRecipient;
 import com.liferay.portal.workflow.kaleo.definition.State;
@@ -51,6 +53,7 @@ import com.liferay.portal.workflow.kaleo.definition.TaskForm;
 import com.liferay.portal.workflow.kaleo.definition.TaskFormReference;
 import com.liferay.portal.workflow.kaleo.definition.Timer;
 import com.liferay.portal.workflow.kaleo.definition.Transition;
+import com.liferay.portal.workflow.kaleo.definition.UpdateStatusAction;
 import com.liferay.portal.workflow.kaleo.definition.UserAssignment;
 import com.liferay.portal.workflow.kaleo.definition.UserRecipient;
 import com.liferay.portal.workflow.kaleo.definition.parser.WorkflowModelParser;
@@ -116,7 +119,8 @@ public class XMLWorkflowModelParser implements WorkflowModelParser {
 		Element rootElement = document.getRootElement();
 
 		String name = rootElement.elementTextTrim("name");
-		String description = rootElement.elementTextTrim("description");
+		String description = StringUtil.trim(
+			rootElement.elementText("description"));
 		int version = GetterUtil.getInteger(
 			rootElement.elementTextTrim("version"));
 
@@ -190,22 +194,34 @@ public class XMLWorkflowModelParser implements WorkflowModelParser {
 
 		for (Element actionElement : actionElements) {
 			String name = actionElement.elementTextTrim("name");
-			String description = actionElement.elementTextTrim("description");
+			String description = StringUtil.trim(
+				actionElement.elementText("description"));
 			String executionType = actionElement.elementTextTrim(
 				"execution-type");
-			String script = actionElement.elementText("script");
-			String scriptLanguage = actionElement.elementTextTrim(
-				"script-language");
-			String scriptRequiredContexts = actionElement.elementTextTrim(
-				"script-required-contexts");
 			int priority = GetterUtil.getInteger(
 				actionElement.elementTextTrim("priority"));
 
-			Action action = new Action(
-				name, description, executionType, script, scriptLanguage,
-				scriptRequiredContexts, priority);
+			if (actionElement.element("script") != null) {
+				String script = StringUtil.trim(
+					actionElement.elementText("script"));
+				String scriptLanguage = actionElement.elementTextTrim(
+					"script-language");
+				String scriptRequiredContexts = actionElement.elementTextTrim(
+					"script-required-contexts");
 
-			actions.add(action);
+				actions.add(
+					new ScriptAction(
+						name, description, executionType, script,
+						scriptLanguage, scriptRequiredContexts, priority));
+			}
+			else if (actionElement.element("status") != null) {
+				actions.add(
+					new UpdateStatusAction(
+						name, description, executionType,
+						GetterUtil.getInteger(
+							actionElement.elementText("status")),
+						priority));
+			}
 		}
 
 		actionAware.setActions(actions);
@@ -293,7 +309,8 @@ public class XMLWorkflowModelParser implements WorkflowModelParser {
 			"scripted-assignment");
 
 		for (Element scriptedAssignmentElement : scriptedAssignmentElements) {
-			String script = scriptedAssignmentElement.elementText("script");
+			String script = StringUtil.trim(
+				scriptedAssignmentElement.elementText("script"));
 			String scriptLanguage = scriptedAssignmentElement.elementTextTrim(
 				"script-language");
 			String scriptRequiredContexts =
@@ -330,7 +347,8 @@ public class XMLWorkflowModelParser implements WorkflowModelParser {
 		throws Exception {
 
 		String name = conditionElement.elementTextTrim("name");
-		String description = conditionElement.elementTextTrim("description");
+		String description = StringUtil.trim(
+			conditionElement.elementText("description"));
 		String script = conditionElement.elementText("script");
 		String scriptLanguage = conditionElement.elementTextTrim(
 			"script-language");
@@ -370,7 +388,8 @@ public class XMLWorkflowModelParser implements WorkflowModelParser {
 
 	private Fork _parseFork(Element forkElement) throws Exception {
 		String name = forkElement.elementTextTrim("name");
-		String description = forkElement.elementTextTrim("description");
+		String description = StringUtil.trim(
+			forkElement.elementText("description"));
 
 		Fork fork = new Fork(name, description);
 
@@ -391,7 +410,8 @@ public class XMLWorkflowModelParser implements WorkflowModelParser {
 
 	private Join _parseJoin(Element joinElement) throws Exception {
 		String name = joinElement.elementTextTrim("name");
-		String description = joinElement.elementTextTrim("description");
+		String description = StringUtil.trim(
+			joinElement.elementText("description"));
 
 		Join join = new Join(name, description);
 
@@ -412,7 +432,8 @@ public class XMLWorkflowModelParser implements WorkflowModelParser {
 
 	private JoinXor _parseJoinXor(Element joinXorElement) throws Exception {
 		String name = joinXorElement.elementTextTrim("name");
-		String description = joinXorElement.elementTextTrim("description");
+		String description = StringUtil.trim(
+			joinXorElement.elementText("description"));
 
 		JoinXor joinXor = new JoinXor(name, description);
 
@@ -461,11 +482,12 @@ public class XMLWorkflowModelParser implements WorkflowModelParser {
 
 		for (Element notificationElement : notificationElements) {
 			String name = notificationElement.elementTextTrim("name");
-			String description = notificationElement.elementTextTrim(
-				"description");
+			String description = StringUtil.trim(
+				notificationElement.elementText("description"));
 			String executionType = notificationElement.elementTextTrim(
 				"execution-type");
-			String template = notificationElement.elementTextTrim("template");
+			String template = StringUtil.trim(
+				notificationElement.elementText("template"));
 			String templateLanguage = notificationElement.elementTextTrim(
 				"template-language");
 
@@ -610,7 +632,8 @@ public class XMLWorkflowModelParser implements WorkflowModelParser {
 
 	private State _parseState(Element stateElement) throws Exception {
 		String name = stateElement.elementTextTrim("name");
-		String description = stateElement.elementTextTrim("description");
+		String description = StringUtil.trim(
+			stateElement.elementText("description"));
 		boolean initial = GetterUtil.getBoolean(
 			stateElement.elementTextTrim("initial"));
 
@@ -633,7 +656,8 @@ public class XMLWorkflowModelParser implements WorkflowModelParser {
 
 	private Task _parseTask(Element taskElement) throws Exception {
 		String name = taskElement.elementTextTrim("name");
-		String description = taskElement.elementTextTrim("description");
+		String description = StringUtil.trim(
+			taskElement.elementText("description"));
 
 		Task task = new Task(name, description);
 
@@ -681,7 +705,8 @@ public class XMLWorkflowModelParser implements WorkflowModelParser {
 
 			TaskForm taskForm = new TaskForm(name, priority);
 
-			String description = taskFormElement.elementTextTrim("description");
+			String description = StringUtil.trim(
+				taskFormElement.elementText("description"));
 
 			if (Validator.isNotNull(description)) {
 				taskForm.setDescription(description);
@@ -780,7 +805,8 @@ public class XMLWorkflowModelParser implements WorkflowModelParser {
 		throws Exception {
 
 		String name = timerElement.elementTextTrim("name");
-		String description = timerElement.elementTextTrim("description");
+		String description = StringUtil.trim(
+			timerElement.elementText("description"));
 		boolean blocking = GetterUtil.getBoolean(
 			timerElement.elementTextTrim("blocking"), !taskTimer);
 

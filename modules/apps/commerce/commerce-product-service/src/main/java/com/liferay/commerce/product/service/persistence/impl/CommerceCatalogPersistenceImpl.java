@@ -4528,7 +4528,9 @@ public class CommerceCatalogPersistenceImpl
 				if (ercCommerceCatalog != null) {
 					throw new DuplicateCommerceCatalogExternalReferenceCodeException(
 						"Duplicate commerce catalog with external reference code " +
-							commerceCatalog.getExternalReferenceCode());
+							commerceCatalog.getExternalReferenceCode() +
+								" and company " +
+									commerceCatalog.getCompanyId());
 				}
 			}
 			else {
@@ -4538,7 +4540,9 @@ public class CommerceCatalogPersistenceImpl
 
 					throw new DuplicateCommerceCatalogExternalReferenceCodeException(
 						"Duplicate commerce catalog with external reference code " +
-							commerceCatalog.getExternalReferenceCode());
+							commerceCatalog.getExternalReferenceCode() +
+								" and company " +
+									commerceCatalog.getCompanyId());
 				}
 			}
 		}

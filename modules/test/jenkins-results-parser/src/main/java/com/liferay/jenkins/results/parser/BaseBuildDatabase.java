@@ -180,7 +180,15 @@ public abstract class BaseBuildDatabase implements BuildDatabase {
 	public boolean hasJob(String key) {
 		JSONObject jobsJSONObject = _jsonObject.getJSONObject("jobs");
 
-		return jobsJSONObject.has(key);
+		if (jobsJSONObject.has(key)) {
+			JSONObject jobJSONObject = jobsJSONObject.getJSONObject(key);
+
+			if ((jobJSONObject != null) && !jobJSONObject.isEmpty()) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	@Override
@@ -446,8 +454,11 @@ public abstract class BaseBuildDatabase implements BuildDatabase {
 		for (String propertyName : properties.stringPropertyNames()) {
 			JSONObject jsonObject = new JSONObject();
 
-			jsonObject.put("name", propertyName);
-			jsonObject.put("value", properties.getProperty(propertyName));
+			jsonObject.put(
+				"name", propertyName
+			).put(
+				"value", properties.getProperty(propertyName)
+			);
 
 			jsonArray.put(i, jsonObject);
 

@@ -22,6 +22,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
@@ -54,6 +55,7 @@ import java.text.DateFormat;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -61,8 +63,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.annotation.Generated;
 
@@ -221,7 +221,10 @@ public abstract class BaseTaskResourceTestCase {
 
 			assertEquals(
 				Arrays.asList(irrelevantTask), (List<Task>)page.getItems());
-			assertValid(page);
+			assertValid(
+				page,
+				testGetProcessTasksPage_getExpectedActions(
+					irrelevantProcessId));
 		}
 
 		Task task1 = testGetProcessTasksPage_addTask(processId, randomTask());
@@ -234,7 +237,26 @@ public abstract class BaseTaskResourceTestCase {
 
 		assertEqualsIgnoringOrder(
 			Arrays.asList(task1, task2), (List<Task>)page.getItems());
-		assertValid(page);
+		assertValid(
+			page, testGetProcessTasksPage_getExpectedActions(processId));
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetProcessTasksPage_getExpectedActions(Long processId)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		Map createBatchAction = new HashMap<>();
+		createBatchAction.put("method", "POST");
+		createBatchAction.put(
+			"href",
+			"http://localhost:8080/o/portal-workflow-metrics/v1.0/processes/{processId}/tasks/batch".
+				replace("{processId}", String.valueOf(processId)));
+
+		expectedActions.put("createBatch", createBatchAction);
+
+		return expectedActions;
 	}
 
 	protected Task testGetProcessTasksPage_addTask(Long processId, Task task)
@@ -277,16 +299,23 @@ public abstract class BaseTaskResourceTestCase {
 		assertHttpResponseStatusCode(
 			204,
 			taskResource.deleteProcessTaskHttpResponse(
-				task.getProcessId(), task.getId()));
+				testDeleteProcessTask_getProcessId(task), task.getId()));
 
 		assertHttpResponseStatusCode(
 			404,
 			taskResource.getProcessTaskHttpResponse(
-				task.getProcessId(), task.getId()));
+				testDeleteProcessTask_getProcessId(task), task.getId()));
 
 		assertHttpResponseStatusCode(
 			404,
-			taskResource.getProcessTaskHttpResponse(task.getProcessId(), 0L));
+			taskResource.getProcessTaskHttpResponse(
+				testDeleteProcessTask_getProcessId(task), 0L));
+	}
+
+	protected Long testDeleteProcessTask_getProcessId(Task task)
+		throws Exception {
+
+		return task.getProcessId();
 	}
 
 	protected Task testDeleteProcessTask_addTask() throws Exception {
@@ -299,10 +328,14 @@ public abstract class BaseTaskResourceTestCase {
 		Task postTask = testGetProcessTask_addTask();
 
 		Task getTask = taskResource.getProcessTask(
-			postTask.getProcessId(), postTask.getId());
+			testGetProcessTask_getProcessId(postTask), postTask.getId());
 
 		assertEquals(postTask, getTask);
 		assertValid(getTask);
+	}
+
+	protected Long testGetProcessTask_getProcessId(Task task) throws Exception {
+		return task.getProcessId();
 	}
 
 	protected Task testGetProcessTask_addTask() throws Exception {
@@ -324,12 +357,22 @@ public abstract class BaseTaskResourceTestCase {
 								"processTask",
 								new HashMap<String, Object>() {
 									{
-										put("processId", task.getProcessId());
+										put(
+											"processId",
+											testGraphQLGetProcessTask_getProcessId(
+												task));
+
 										put("taskId", task.getId());
 									}
 								},
 								getGraphQLFields())),
 						"JSONObject/data", "Object/processTask"))));
+	}
+
+	protected Long testGraphQLGetProcessTask_getProcessId(Task task)
+		throws Exception {
+
+		return task.getProcessId();
 	}
 
 	@Test
@@ -631,6 +674,12 @@ public abstract class BaseTaskResourceTestCase {
 	}
 
 	protected void assertValid(Page<Task> page) {
+		assertValid(page, Collections.emptyMap());
+	}
+
+	protected void assertValid(
+		Page<Task> page, Map<String, Map<String, String>> expectedActions) {
+
 		boolean valid = false;
 
 		java.util.Collection<Task> tasks = page.getItems();
@@ -645,6 +694,20 @@ public abstract class BaseTaskResourceTestCase {
 		}
 
 		Assert.assertTrue(valid);
+
+		Map<String, Map<String, String>> actions = page.getActions();
+
+		for (String key : expectedActions.keySet()) {
+			Map action = actions.get(key);
+
+			Assert.assertNotNull(key + " does not contain an action", action);
+
+			Map expectedAction = expectedActions.get(key);
+
+			Assert.assertEquals(
+				expectedAction.get("method"), action.get("method"));
+			Assert.assertEquals(expectedAction.get("href"), action.get("href"));
+		}
 	}
 
 	protected String[] getAdditionalAssertFieldNames() {
@@ -945,14 +1008,16 @@ public abstract class BaseTaskResourceTestCase {
 	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
 		throws Exception {
 
-		Stream<java.lang.reflect.Field> stream = Stream.of(
-			ReflectionUtil.getDeclaredFields(clazz));
+		return TransformUtil.transform(
+			ReflectionUtil.getDeclaredFields(clazz),
+			field -> {
+				if (field.isSynthetic()) {
+					return null;
+				}
 
-		return stream.filter(
-			field -> !field.isSynthetic()
-		).toArray(
-			java.lang.reflect.Field[]::new
-		);
+				return field;
+			},
+			java.lang.reflect.Field.class);
 	}
 
 	protected java.util.Collection<EntityField> getEntityFields()
@@ -969,6 +1034,10 @@ public abstract class BaseTaskResourceTestCase {
 		EntityModel entityModel = entityModelResource.getEntityModel(
 			new MultivaluedHashMap());
 
+		if (entityModel == null) {
+			return Collections.emptyList();
+		}
+
 		Map<String, EntityField> entityFieldsMap =
 			entityModel.getEntityFieldsMap();
 
@@ -978,18 +1047,18 @@ public abstract class BaseTaskResourceTestCase {
 	protected List<EntityField> getEntityFields(EntityField.Type type)
 		throws Exception {
 
-		java.util.Collection<EntityField> entityFields = getEntityFields();
+		return TransformUtil.transform(
+			getEntityFields(),
+			entityField -> {
+				if (!Objects.equals(entityField.getType(), type) ||
+					ArrayUtil.contains(
+						getIgnoredEntityFieldNames(), entityField.getName())) {
 
-		Stream<EntityField> stream = entityFields.stream();
+					return null;
+				}
 
-		return stream.filter(
-			entityField ->
-				Objects.equals(entityField.getType(), type) &&
-				!ArrayUtil.contains(
-					getIgnoredEntityFieldNames(), entityField.getName())
-		).collect(
-			Collectors.toList()
-		);
+				return entityField;
+			});
 	}
 
 	protected String getFilterString(

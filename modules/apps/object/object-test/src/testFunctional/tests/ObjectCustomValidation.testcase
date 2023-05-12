@@ -16,14 +16,16 @@ definition {
 
 		var testPortalInstance = PropsUtil.get("test.portal.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testPortalInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 	}
 
 	@description = "LPS-144474 - Verify that, when adding a new entry in the Object, the user only is able to submit the entry successfully if it passes for all validations from that Object"
-	@priority = "4"
-	test CanAddEntryWhenPassesForAllValidations {
+	@priority = 4
+	test CanAddEntry {
+		property test.name.skip.portal.instance = "ObjectCustomValidation#CanAddEntryWhenPassesForAllValidations";
+
 		ObjectAdmin.addObjectViaAPI(
 			labelName = "Custom Object 153556",
 			objectName = "CustomObject153556",
@@ -71,8 +73,10 @@ definition {
 	}
 
 	@description = "LPS-144474 - Verify that, when updating an existing validation, this validation must only affect the entries added after the validation update"
-	@priority = "4"
+	@priority = 4
 	test CanAffectOnlyEntriesAddedWhenUpdateValidationWithEntries {
+		property test.name.skip.portal.instance = "ObjectCustomValidation#CanAffectOnlyEntriesAddedWhenUpdateValidationWithEntries";
+
 		ObjectAdmin.addObjectViaAPI(
 			labelName = "Custom Object 153559",
 			objectName = "CustomObject153559",
@@ -145,8 +149,10 @@ definition {
 	}
 
 	@description = "LPS-144474 - Verify that, when updating an existing validation, this validation must only affect the entries updated after the validation update"
-	@priority = "4"
+	@priority = 4
 	test CanAffectOnlyEntriesUpdateWhenUpdateValidationWithEntries {
+		property test.name.skip.portal.instance = "ObjectCustomValidation#CanAffectOnlyEntriesUpdateWhenUpdateValidationWithEntries";
+
 		ObjectAdmin.addObjectViaAPI(
 			labelName = "Custom Object 153560",
 			objectName = "CustomObject153560",
@@ -225,9 +231,11 @@ definition {
 	}
 
 	@description = "LPS-147651 - Verify that the user can define and use a expression with 'Concat' to text fields"
-	@priority = "4"
+	@priority = 4
 	test CanDefineExpressionConcat {
 		task ("Create Custom Object and some Custom Fields") {
+			property test.name.skip.portal.instance = "ObjectCustomValidation#CanDefineExpressionConcat";
+
 			ObjectAdmin.addObjectViaAPI(
 				labelName = "Custom Object 156694",
 				objectName = "CustomObject156694",
@@ -330,8 +338,10 @@ definition {
 	}
 
 	@description = "LPS-147651 - Verify that the user can define and use a expression with condiotinal logic (equals) to integer, boolean, and text fields"
-	@priority = "4"
+	@priority = 4
 	test CanDefineExpressionConditionalLogic {
+		property test.name.skip.portal.instance = "ObjectCustomValidation#CanDefineExpressionConditionalLogic";
+
 		task ("Create Custom Object and Custom Fields Text") {
 			ObjectAdmin.addObjectViaAPI(
 				labelName = "Custom Object 156703A",
@@ -341,7 +351,7 @@ definition {
 			for (var fieldsName : list "Food,Category") {
 				ObjectAdmin.addObjectFieldViaAPI(
 					fieldBusinessType = "Text",
-					fieldLabelName = "${fieldsName}",
+					fieldLabelName = ${fieldsName},
 					fieldName = "custom${fieldsName}",
 					fieldType = "String",
 					isRequired = "false",
@@ -426,7 +436,7 @@ definition {
 			for (var fieldsBoolean : list "Shoes,Mark") {
 				ObjectAdmin.addObjectFieldViaAPI(
 					fieldBusinessType = "Boolean",
-					fieldLabelName = "${fieldsBoolean}",
+					fieldLabelName = ${fieldsBoolean},
 					fieldName = "custom${fieldsBoolean}",
 					fieldType = "Boolean",
 					isRequired = "false",
@@ -515,7 +525,7 @@ definition {
 			for (var fieldsInteger : list "Validate,IsHundred") {
 				ObjectAdmin.addObjectFieldViaAPI(
 					fieldBusinessType = "Integer",
-					fieldLabelName = "${fieldsInteger}",
+					fieldLabelName = ${fieldsInteger},
 					fieldName = "custom${fieldsInteger}",
 					fieldType = "Integer",
 					isRequired = "false",
@@ -558,11 +568,11 @@ definition {
 
 			ObjectPortlet.typeCustomField(
 				customField = "IsHundred",
-				entry = "4321");
+				entry = 4321);
 
 			ObjectPortlet.typeCustomField(
 				customField = "Validate",
-				entry = "100");
+				entry = 100);
 
 			Button.clickSave();
 
@@ -576,26 +586,28 @@ definition {
 
 			ObjectPortlet.typeCustomField(
 				customField = "IsHundred",
-				entry = "1234");
+				entry = 1234);
 
 			ObjectPortlet.typeCustomField(
 				customField = "Validate",
-				entry = "100");
+				entry = 100);
 
 			PortletEntry.save();
 
 			ObjectAdmin.goToCustomObject(objectName = "CustomObject156703C");
 
-			ObjectPortlet.viewEntry(entry = "1234");
+			ObjectPortlet.viewEntry(entry = 1234);
 
-			ObjectPortlet.assertEntryNotPresent(entry = "4321");
+			ObjectPortlet.assertEntryNotPresent(entry = 4321);
 		}
 	}
 
 	@description = "LPS-147651 - Verify that the user can define and use a expression with 'Contains' and 'Does Not Contains' to text fields and integer fields"
-	@priority = "4"
+	@priority = 4
 	test CanDefineExpressionContainsAndDoesNotContain {
 		task ("Create Custom Object and Custom Fields") {
+			property test.name.skip.portal.instance = "ObjectCustomValidation#CanDefineExpressionContainsAndDoesNotContain";
+
 			ObjectAdmin.addObjectViaAPI(
 				labelName = "Custom Object 156688",
 				objectName = "CustomObject156688",
@@ -689,7 +701,7 @@ definition {
 
 			ObjectPortlet.addCustomFieldEntryViaUI(
 				customField = "Custom Integer",
-				entry = "2004",
+				entry = 2004,
 				invalidEntry = "true");
 
 			AssertTextEquals.assertPartialText(
@@ -700,20 +712,22 @@ definition {
 
 			ObjectPortlet.addCustomFieldEntryViaUI(
 				customField = "Custom Integer",
-				entry = "2022");
+				entry = 2022);
 
 			ObjectAdmin.goToCustomObject(objectName = "CustomObject156688");
 
-			ObjectPortlet.viewEntry(entry = "2022");
+			ObjectPortlet.viewEntry(entry = 2022);
 
-			ObjectPortlet.assertEntryNotPresent(entry = "2004");
+			ObjectPortlet.assertEntryNotPresent(entry = 2004);
 		}
 	}
 
 	@description = "LPS-147651 - Verify that the user can define and use a expression with 'Future Dates' and 'Past Dates' to date fields"
-	@priority = "4"
+	@priority = 4
 	test CanDefineExpressionFutureDatesAndPastDates {
 		task ("Create Custom Object and Custom Field") {
+			property test.name.skip.portal.instance = "ObjectCustomValidation#CanDefineExpressionFutureDatesAndPastDates";
+
 			ObjectAdmin.addObjectViaAPI(
 				labelName = "Custom Object 156701",
 				objectName = "CustomObject156701",
@@ -818,9 +832,11 @@ definition {
 	}
 
 	@description = "LPS-147651 - Verify that the user can define and use a expression with 'Is an Email' to text fields"
-	@priority = "4"
+	@priority = 4
 	test CanDefineExpressionIsAnEmail {
 		task ("Create Custom Object and Custom Field") {
+			property test.name.skip.portal.instance = "ObjectCustomValidation#CanDefineExpressionIsAnEmail";
+
 			ObjectAdmin.addObjectViaAPI(
 				labelName = "Custom Object 156690",
 				objectName = "CustomObject156690",
@@ -887,9 +903,11 @@ definition {
 	}
 
 	@description = "LPS-147651 - Verify that the user can define and use a expression with 'Is Integer' to integer fields and 'Is Decimal' to decimal fields"
-	@priority = "4"
+	@priority = 4
 	test CanDefineExpressionIsDecimalOrIsInteger {
 		task ("Create Custom Object and Custom Field") {
+			property test.name.skip.portal.instance = "ObjectCustomValidation#CanDefineExpressionIsDecimalOrIsInteger";
+
 			ObjectAdmin.addObjectViaAPI(
 				labelName = "Custom Object 156698",
 				objectName = "CustomObject156698",
@@ -945,11 +963,11 @@ definition {
 
 			Navigator.gotoBack();
 
-			ObjectAdmin.addObjectStringFieldEntryViaUI(entryValue = "123");
+			ObjectAdmin.addObjectStringFieldEntryViaUI(entryValue = 123);
 
 			ObjectAdmin.goToCustomObject(objectName = "CustomObject156698");
 
-			ObjectPortlet.viewEntry(entry = "123");
+			ObjectPortlet.viewEntry(entry = 123);
 
 			ObjectPortlet.assertEntryNotPresent(entry = "1.23");
 		}
@@ -994,9 +1012,11 @@ definition {
 	}
 
 	@description = "LPS-147651 - Verify that the user can define and use a expression with 'Is Empty' to text fields"
-	@priority = "4"
+	@priority = 4
 	test CanDefineExpressionIsEmpty {
 		task ("Create Custom Object and Custom Field") {
+			property test.name.skip.portal.instance = "ObjectCustomValidation#CanDefineExpressionIsEmpty";
+
 			ObjectAdmin.addObjectViaAPI(
 				labelName = "Custom Object 156695",
 				objectName = "CustomObject156695",
@@ -1065,8 +1085,10 @@ definition {
 	}
 
 	@description = "LPS-147651 - Verify that the user can define and use a expression with 'Is Equal To' and 'Is Not Equal To' text fields and integer fields"
-	@priority = "4"
+	@priority = 4
 	test CanDefineExpressionIsEqualToAndIsNotEqualTo {
+		property test.name.skip.portal.instance = "ObjectCustomValidation#CanDefineExpressionIsEqualToAndIsNotEqualTo";
+
 		task ("Create Custom Object and Custom Field") {
 			ObjectAdmin.addObjectViaAPI(
 				labelName = "Custom Object 156693",
@@ -1115,7 +1137,7 @@ definition {
 
 			ObjectPortlet.addCustomFieldEntryViaUI(
 				customField = "Custom Integer",
-				entry = "54321",
+				entry = 54321,
 				invalidEntry = "true");
 
 			AssertTextEquals.assertPartialText(
@@ -1126,13 +1148,13 @@ definition {
 
 			ObjectPortlet.addCustomFieldEntryViaUI(
 				customField = "Custom Integer",
-				entry = "12345");
+				entry = 12345);
 
 			ObjectAdmin.goToCustomObject(objectName = "CustomObject156693");
 
-			ObjectPortlet.viewEntry(entry = "12345");
+			ObjectPortlet.viewEntry(entry = 12345);
 
-			ObjectPortlet.assertEntryNotPresent(entry = "54321");
+			ObjectPortlet.assertEntryNotPresent(entry = 54321);
 		}
 
 		task ("Edit a Custom Validation using an expression 'is Not Equal To'") {
@@ -1156,7 +1178,7 @@ definition {
 
 			ObjectPortlet.addCustomFieldEntryViaUI(
 				customField = "Custom Integer",
-				entry = "13579",
+				entry = 13579,
 				invalidEntry = "true");
 
 			AssertTextEquals.assertPartialText(
@@ -1167,18 +1189,18 @@ definition {
 
 			ObjectPortlet.addCustomFieldEntryViaUI(
 				customField = "Custom Integer",
-				entry = "24680");
+				entry = 24680);
 
 			ObjectAdmin.goToCustomObject(objectName = "CustomObject156693");
 
-			ObjectPortlet.viewEntry(entry = "24680");
+			ObjectPortlet.viewEntry(entry = 24680);
 
-			ObjectPortlet.assertEntryNotPresent(entry = "13579");
+			ObjectPortlet.assertEntryNotPresent(entry = 13579);
 		}
 	}
 
 	@description = "LPS-147651 - Verify that the user can define and use a expression with 'Is Greater Than Or Equal To' to integer fields"
-	@priority = "4"
+	@priority = 4
 	test CanDefineExpressionIsGreaterThanOrEqualTo {
 		property test.name.skip.portal.instance = "ObjectCustomValidation#CanDefineExpressionIsGreaterThanOrEqualTo";
 
@@ -1230,7 +1252,7 @@ definition {
 
 			ObjectPortlet.addCustomFieldEntryViaUI(
 				customField = "Custom Integer",
-				entry = "4999",
+				entry = 4999,
 				invalidEntry = "true");
 
 			AssertTextEquals.assertPartialText(
@@ -1241,27 +1263,29 @@ definition {
 
 			ObjectPortlet.addCustomFieldEntryViaUI(
 				customField = "Custom Integer",
-				entry = "5000");
+				entry = 5000);
 
 			Navigator.gotoBack();
 
 			ObjectPortlet.addCustomFieldEntryViaUI(
 				customField = "Custom Integer",
-				entry = "5001");
+				entry = 5001);
 
 			ObjectAdmin.goToCustomObject(objectName = "CustomObject156696");
 
-			ObjectPortlet.viewEntry(entry = "5000");
+			ObjectPortlet.viewEntry(entry = 5000);
 
-			ObjectPortlet.viewEntry(entry = "5001");
+			ObjectPortlet.viewEntry(entry = 5001);
 
-			ObjectPortlet.assertEntryNotPresent(entry = "4999");
+			ObjectPortlet.assertEntryNotPresent(entry = 4999);
 		}
 	}
 
 	@description = "LPS-147651 - Verify that the user can define and use a expression with 'Is Less Than Or Equal To' to integer fields"
-	@priority = "4"
+	@priority = 4
 	test CanDefineExpressionIsLessThanOrEqualTo {
+		property test.name.skip.portal.instance = "ObjectCustomValidation#CanDefineExpressionIsLessThanOrEqualTo";
+
 		task ("Create Custom Object and Custom Field") {
 			ObjectAdmin.addObjectViaAPI(
 				labelName = "Custom Object 156697",
@@ -1310,7 +1334,7 @@ definition {
 
 			ObjectPortlet.addCustomFieldEntryViaUI(
 				customField = "Custom Integer",
-				entry = "5001",
+				entry = 5001,
 				invalidEntry = "true");
 
 			AssertTextEquals.assertPartialText(
@@ -1321,27 +1345,29 @@ definition {
 
 			ObjectPortlet.addCustomFieldEntryViaUI(
 				customField = "Custom Integer",
-				entry = "5000");
+				entry = 5000);
 
 			Navigator.gotoBack();
 
 			ObjectPortlet.addCustomFieldEntryViaUI(
 				customField = "Custom Integer",
-				entry = "4999");
+				entry = 4999);
 
 			ObjectAdmin.goToCustomObject(objectName = "CustomObject156697");
 
-			ObjectPortlet.viewEntry(entry = "5000");
+			ObjectPortlet.viewEntry(entry = 5000);
 
-			ObjectPortlet.viewEntry(entry = "4999");
+			ObjectPortlet.viewEntry(entry = 4999);
 
-			ObjectPortlet.assertEntryNotPresent(entry = "5001");
+			ObjectPortlet.assertEntryNotPresent(entry = 5001);
 		}
 	}
 
 	@description = "LPS-147651 - Verify that the user can define and use a expression with 'Is a Url' to text fields"
-	@priority = "4"
+	@priority = 4
 	test CanDefineExpressionIsUrl {
+		property test.name.skip.portal.instance = "ObjectCustomValidation#CanDefineExpressionIsUrl";
+
 		task ("Create Custom Object and Custom Field") {
 			ObjectAdmin.addObjectViaAPI(
 				labelName = "Custom Object 156689",
@@ -1409,8 +1435,10 @@ definition {
 	}
 
 	@description = "LPS-147651 - Verify that the user can define and use a expression with 'Match' (reGex expression) to text fields"
-	@priority = "4"
+	@priority = 4
 	test CanDefineExpressionMatch {
+		property test.name.skip.portal.instance = "ObjectCustomValidation#CanDefineExpressionMatch";
+
 		task ("Create Custom Object and Custom Field") {
 			ObjectAdmin.addObjectViaAPI(
 				labelName = "Custom Object 156692",
@@ -1478,8 +1506,10 @@ definition {
 	}
 
 	@description = "LPS-147651 - Verify that the user can define and use a expression with math operators to integer fields"
-	@priority = "4"
+	@priority = 4
 	test CanDefineExpressionOperators {
+		property test.name.skip.portal.instance = "ObjectCustomValidation#CanDefineExpressionOperators";
+
 		task ("Create Custom Object and some Custom Fields") {
 			ObjectAdmin.addObjectViaAPI(
 				labelName = "Custom Object 156700",
@@ -1532,15 +1562,15 @@ definition {
 
 			ObjectPortlet.typeCustomField(
 				customField = "Custom Integer A",
-				entry = "1100");
+				entry = 1100);
 
 			ObjectPortlet.typeCustomField(
 				customField = "Custom Integer B",
-				entry = "800");
+				entry = 800);
 
 			ObjectPortlet.typeCustomField(
 				customField = "Custom Integer C",
-				entry = "400");
+				entry = 400);
 
 			Button.clickSave();
 
@@ -1554,23 +1584,23 @@ definition {
 
 			ObjectPortlet.typeCustomField(
 				customField = "Custom Integer A",
-				entry = "5500");
+				entry = 5500);
 
 			ObjectPortlet.typeCustomField(
 				customField = "Custom Integer B",
-				entry = "2250");
+				entry = 2250);
 
 			ObjectPortlet.typeCustomField(
 				customField = "Custom Integer C",
-				entry = "3250");
+				entry = 3250);
 
 			PortletEntry.save();
 
 			ObjectAdmin.goToCustomObject(objectName = "CustomObject156700");
 
-			ObjectPortlet.viewEntry(entry = "5500");
+			ObjectPortlet.viewEntry(entry = 5500);
 
-			ObjectPortlet.assertEntryNotPresent(entry = "1100");
+			ObjectPortlet.assertEntryNotPresent(entry = 1100);
 		}
 
 		task ("Edit a Custom Validation using an expression that contains operation 'minus'") {
@@ -1596,15 +1626,15 @@ definition {
 
 			ObjectPortlet.typeCustomField(
 				customField = "Custom Integer A",
-				entry = "2000");
+				entry = 2000);
 
 			ObjectPortlet.typeCustomField(
 				customField = "Custom Integer B",
-				entry = "2500");
+				entry = 2500);
 
 			ObjectPortlet.typeCustomField(
 				customField = "Custom Integer C",
-				entry = "1000");
+				entry = 1000);
 
 			Button.clickSave();
 
@@ -1618,23 +1648,23 @@ definition {
 
 			ObjectPortlet.typeCustomField(
 				customField = "Custom Integer A",
-				entry = "6500");
+				entry = 6500);
 
 			ObjectPortlet.typeCustomField(
 				customField = "Custom Integer B",
-				entry = "7250");
+				entry = 7250);
 
 			ObjectPortlet.typeCustomField(
 				customField = "Custom Integer C",
-				entry = "750");
+				entry = 750);
 
 			PortletEntry.save();
 
 			ObjectAdmin.goToCustomObject(objectName = "CustomObject156700");
 
-			ObjectPortlet.viewEntry(entry = "6500");
+			ObjectPortlet.viewEntry(entry = 6500);
 
-			ObjectPortlet.assertEntryNotPresent(entry = "2000");
+			ObjectPortlet.assertEntryNotPresent(entry = 2000);
 		}
 
 		task ("Edit a Custom Validation using an expression that contains operation 'time'") {
@@ -1660,15 +1690,15 @@ definition {
 
 			ObjectPortlet.typeCustomField(
 				customField = "Custom Integer A",
-				entry = "3000");
+				entry = 3000);
 
 			ObjectPortlet.typeCustomField(
 				customField = "Custom Integer B",
-				entry = "2000");
+				entry = 2000);
 
 			ObjectPortlet.typeCustomField(
 				customField = "Custom Integer C",
-				entry = "2");
+				entry = 2);
 
 			Button.clickSave();
 
@@ -1682,23 +1712,23 @@ definition {
 
 			ObjectPortlet.typeCustomField(
 				customField = "Custom Integer A",
-				entry = "7500");
+				entry = 7500);
 
 			ObjectPortlet.typeCustomField(
 				customField = "Custom Integer B",
-				entry = "3750");
+				entry = 3750);
 
 			ObjectPortlet.typeCustomField(
 				customField = "Custom Integer C",
-				entry = "2");
+				entry = 2);
 
 			PortletEntry.save();
 
 			ObjectAdmin.goToCustomObject(objectName = "CustomObject156700");
 
-			ObjectPortlet.viewEntry(entry = "7500");
+			ObjectPortlet.viewEntry(entry = 7500);
 
-			ObjectPortlet.assertEntryNotPresent(entry = "3000");
+			ObjectPortlet.assertEntryNotPresent(entry = 3000);
 		}
 
 		task ("Edit a Custom Validation using an expression that contains operation 'divided by'") {
@@ -1724,15 +1754,15 @@ definition {
 
 			ObjectPortlet.typeCustomField(
 				customField = "Custom Integer A",
-				entry = "4000");
+				entry = 4000);
 
 			ObjectPortlet.typeCustomField(
 				customField = "Custom Integer B",
-				entry = "5000");
+				entry = 5000);
 
 			ObjectPortlet.typeCustomField(
 				customField = "Custom Integer C",
-				entry = "2");
+				entry = 2);
 
 			Button.clickSave();
 
@@ -1746,29 +1776,31 @@ definition {
 
 			ObjectPortlet.typeCustomField(
 				customField = "Custom Integer A",
-				entry = "8500");
+				entry = 8500);
 
 			ObjectPortlet.typeCustomField(
 				customField = "Custom Integer B",
-				entry = "17000");
+				entry = 17000);
 
 			ObjectPortlet.typeCustomField(
 				customField = "Custom Integer C",
-				entry = "2");
+				entry = 2);
 
 			PortletEntry.save();
 
 			ObjectAdmin.goToCustomObject(objectName = "CustomObject156700");
 
-			ObjectPortlet.viewEntry(entry = "8500");
+			ObjectPortlet.viewEntry(entry = 8500);
 
-			ObjectPortlet.assertEntryNotPresent(entry = "4000");
+			ObjectPortlet.assertEntryNotPresent(entry = 4000);
 		}
 	}
 
 	@description = "LPS-147651 - Verify that the user can define and use a expression with 'Range' (Future Dates and Past Dates) to date fields"
-	@priority = "4"
+	@priority = 4
 	test CanDefineExpressionRange {
+		property test.name.skip.portal.instance = "ObjectCustomValidation#CanDefineExpressionRange";
+
 		task ("Create Custom Object and Custom Field") {
 			ObjectAdmin.addObjectViaAPI(
 				labelName = "Custom Object 156702",
@@ -1848,9 +1880,11 @@ definition {
 	}
 
 	@description = "LPS-147651 - Verify that the user can define and use a expression with 'Sum' to integer fields"
-	@priority = "4"
+	@priority = 4
 	test CanDefineExpressionSum {
 		task ("Create Custom Object and some Custom Fields") {
+			property test.name.skip.portal.instance = "ObjectCustomValidation#CanDefineExpressionSum";
+
 			ObjectAdmin.addObjectViaAPI(
 				labelName = "Custom Object 156699",
 				objectName = "CustomObject156699",
@@ -1902,19 +1936,19 @@ definition {
 
 			ObjectPortlet.typeCustomField(
 				customField = "Custom Integer A",
-				entry = "10001");
+				entry = 10001);
 
 			ObjectPortlet.typeCustomField(
 				customField = "Custom Integer B",
-				entry = "3001");
+				entry = 3001);
 
 			ObjectPortlet.typeCustomField(
 				customField = "Custom Integer C",
-				entry = "4000");
+				entry = 4000);
 
 			ObjectPortlet.typeCustomField(
 				customField = "Custom Integer D",
-				entry = "5000");
+				entry = 5000);
 
 			Button.clickSave();
 
@@ -1928,33 +1962,35 @@ definition {
 
 			ObjectPortlet.typeCustomField(
 				customField = "Custom Integer A",
-				entry = "10002");
+				entry = 10002);
 
 			ObjectPortlet.typeCustomField(
 				customField = "Custom Integer B",
-				entry = "2002");
+				entry = 2002);
 
 			ObjectPortlet.typeCustomField(
 				customField = "Custom Integer C",
-				entry = "3000");
+				entry = 3000);
 
 			ObjectPortlet.typeCustomField(
 				customField = "Custom Integer D",
-				entry = "4000");
+				entry = 4000);
 
 			PortletEntry.save();
 
 			ObjectAdmin.goToCustomObject(objectName = "CustomObject156699");
 
-			ObjectPortlet.viewEntry(entry = "10002");
+			ObjectPortlet.viewEntry(entry = 10002);
 
-			ObjectPortlet.assertEntryNotPresent(entry = "10001");
+			ObjectPortlet.assertEntryNotPresent(entry = 10001);
 		}
 	}
 
 	@description = "LPS-144474 - Verify that, when adding validations using Groovy, the validation is not active by default"
-	@priority = "4"
+	@priority = 4
 	test CannotActiveByDefaultWhenAddValidationsGroovy {
+		property test.name.skip.portal.instance = "ObjectCustomValidation#CannotActiveByDefaultWhenAddValidationsGroovy";
+
 		ObjectAdmin.addObjectViaAPI(
 			labelName = "Custom Object 153551",
 			objectName = "CustomObject153551",
@@ -1978,9 +2014,66 @@ definition {
 			validationType = "Groovy");
 	}
 
+	@description = "LPS-144474 - Verify that the user, when modeling an Object, is able to add validations using Groovy"
+	@priority = 4
+	test CanPreventEntryCreationViaGroovy {
+		property test.name.skip.portal.instance = "ObjectCustomValidation#CanUserAddValidationsGroovy";
+
+		ObjectAdmin.addObjectViaAPI(
+			labelName = "Custom Object 153550",
+			objectName = "CustomObject153550",
+			pluralLabelName = "Custom Objects 153550");
+
+		ObjectAdmin.addObjectFieldViaAPI(
+			fieldBusinessType = "Text",
+			fieldLabelName = "Custom Field",
+			fieldName = "customField",
+			fieldType = "String",
+			isRequired = "false",
+			objectName = "CustomObject153550");
+
+		ObjectAdmin.publishObjectViaAPI(objectName = "CustomObject153550");
+
+		ObjectAdmin.openObjectAdmin();
+
+		ObjectPortlet.selectCustomObject(label = "Custom Object 153550");
+
+		ObjectAdmin.goToValidationsTab();
+
+		ObjectCustomValidation.addObjectValidation(
+			validationName = "Custom Validation",
+			validationType = "Groovy");
+
+		ObjectCustomValidation.gotoCustomValidation(validationName = "Custom Validation");
+
+		ObjectCustomValidation.activeValidation();
+
+		ObjectCustomValidation.gotoTab(tabName = "Conditions");
+
+		ObjectCustomValidation.insertScriptOnValidation(scriptValidation = "invalidFields = (customField == 'Decline Entry')");
+
+		ObjectCustomValidation.addErrorMessage(errorMessage = "This entry is not possible.");
+
+		PortletEntry.save();
+
+		ObjectAdmin.goToCustomObject(objectName = "CustomObject153550");
+
+		ObjectPortlet.addSingleFieldEntryViaUI(
+			entry = "Decline Entry",
+			invalidEntry = "true");
+
+		Alert.viewErrorMessage(errorMessage = "This entry is not possible.");
+
+		ObjectAdmin.goToCustomObject(objectName = "CustomObject153550");
+
+		ObjectPortlet.assertEntryNotPresent(entry = "Decline Entry");
+	}
+
 	@description = "LPS-144474 - Verify that, when editing an entry in an Object, the user only is able to update the entry successfully if it passes for all validations from that Object"
-	@priority = "4"
+	@priority = 4
 	test CanUpdateWhenPassesForAllValidations {
+		property test.name.skip.portal.instance = "ObjectCustomValidation#CanUpdateWhenPassesForAllValidations";
+
 		ObjectAdmin.addObjectViaAPI(
 			labelName = "Custom Object 153558",
 			objectName = "CustomObject153558",
@@ -2042,63 +2135,12 @@ definition {
 		ObjectPortlet.viewEntry(entry = "Update Entry");
 	}
 
-	@description = "LPS-144474 - Verify that the user, when modeling an Object, is able to add validations using Groovy"
-	@priority = "4"
-	test CanUserAddValidationsGroovy {
-		ObjectAdmin.addObjectViaAPI(
-			labelName = "Custom Object 153550",
-			objectName = "CustomObject153550",
-			pluralLabelName = "Custom Objects 153550");
-
-		ObjectAdmin.addObjectFieldViaAPI(
-			fieldBusinessType = "Text",
-			fieldLabelName = "Custom Field",
-			fieldName = "customField",
-			fieldType = "String",
-			isRequired = "false",
-			objectName = "CustomObject153550");
-
-		ObjectAdmin.publishObjectViaAPI(objectName = "CustomObject153550");
-
-		ObjectAdmin.openObjectAdmin();
-
-		ObjectPortlet.selectCustomObject(label = "Custom Object 153550");
-
-		ObjectAdmin.goToValidationsTab();
-
-		ObjectCustomValidation.addObjectValidation(
-			validationName = "Custom Validation",
-			validationType = "Groovy");
-
-		ObjectCustomValidation.gotoCustomValidation(validationName = "Custom Validation");
-
-		ObjectCustomValidation.activeValidation();
-
-		ObjectCustomValidation.gotoTab(tabName = "Conditions");
-
-		ObjectCustomValidation.insertScriptOnValidation(scriptValidation = "invalidFields = (customField == 'Decline Entry')");
-
-		ObjectCustomValidation.addErrorMessage(errorMessage = "This entry is not possible.");
-
-		PortletEntry.save();
-
-		for (var entryTitle : list "Entry Test,Decline Entry") {
-			ObjectAdmin.addObjectSingleFieldEntryViaAPI(
-				fieldName = "customField",
-				objectName = "CustomObject153550",
-				value = "${entryTitle}");
-		}
-
-		ObjectAdmin.goToCustomObject(objectName = "CustomObject153550");
-
-		ObjectPortlet.viewEntry(entry = "Entry Test");
-
-		ObjectPortlet.assertEntryNotPresent(entry = "Decline Entry");
-	}
-
 	@description = "LPS-144474 - Verify that, when managing an Object validation, the user is able to define if that validation is active or not"
-	@priority = "4"
+	@priority = 4
 	test CanUserDefineValidationActiveOrInactive {
+		property ci.retries.disabled = "true";
+		property test.name.skip.portal.instance = "ObjectCustomValidation#CanUserDefineValidationActiveOrInactive";
+
 		ObjectAdmin.addObjectViaAPI(
 			labelName = "Custom Object 153552",
 			objectName = "CustomObject153552",
@@ -2146,11 +2188,11 @@ definition {
 		ObjectAdmin.addObjectSingleFieldEntryViaAPI(
 			fieldName = "customField",
 			objectName = "CustomObject153552",
-			value = "10");
+			value = 10);
 
 		ObjectAdmin.goToCustomObject(objectName = "CustomObject153552");
 
-		ObjectPortlet.assertEntryNotPresent(entry = "10");
+		ObjectPortlet.assertEntryNotPresent(entry = 10);
 
 		ObjectAdmin.openObjectAdmin();
 
@@ -2174,16 +2216,18 @@ definition {
 		ObjectAdmin.addObjectSingleFieldEntryViaAPI(
 			fieldName = "customField",
 			objectName = "CustomObject153552",
-			value = "10");
+			value = 10);
 
 		ObjectAdmin.goToCustomObject(objectName = "CustomObject153552");
 
-		ObjectPortlet.viewEntry(entry = "10");
+		ObjectPortlet.viewEntry(entry = 10);
 	}
 
 	@description = "LPS-144474 - Verify that, when managing an Object validation, the user can see Basic Info tab"
-	@priority = "4"
+	@priority = 4
 	test CanUserSeeBasicInfoTab {
+		property test.name.skip.portal.instance = "ObjectCustomValidation#CanUserSeeBasicInfoTab";
+
 		ObjectAdmin.addObjectViaAPI(
 			labelName = "Custom Object 153553",
 			objectName = "CustomObject153553",
@@ -2201,16 +2245,22 @@ definition {
 
 		ObjectCustomValidation.gotoCustomValidation(validationName = "Custom Validation");
 
-		ObjectCustomValidation.viewActiveTabOnCustomValidation(activeTab = "Basic Info");
+		AssertElementPresent(
+			key_activeTab = "Basic Info",
+			locator1 = "ObjectCustomValidation#VIEW_ACTIVE_TAB_ON_CUSTOM_VALIDATION");
 
 		for (var cardsName : list "Basic Info,Trigger Event") {
-			ObjectCustomValidation.viewCardsOnCustomValidation(cardName = "${cardsName}");
+			AssertElementPresent.assertVisible(
+				key_title = ${cardsName},
+				locator1 = "Header#H3_TITLE");
 		}
 	}
 
 	@description = "LPS-144474 - Verify that, when managing an Object validation, the user can see Conditions tab"
-	@priority = "4"
+	@priority = 4
 	test CanUserSeeConditionsTab {
+		property test.name.skip.portal.instance = "ObjectCustomValidation#CanUserSeeConditionsTab";
+
 		ObjectAdmin.addObjectViaAPI(
 			labelName = "Custom Object 153554",
 			objectName = "CustomObject153554",
@@ -2230,16 +2280,22 @@ definition {
 
 		ObjectCustomValidation.gotoTab(tabName = "Conditions");
 
-		ObjectCustomValidation.viewActiveTabOnCustomValidation(activeTab = "Conditions");
+		AssertElementPresent(
+			key_activeTab = "Conditions",
+			locator1 = "ObjectCustomValidation#VIEW_ACTIVE_TAB_ON_CUSTOM_VALIDATION");
 
 		for (var cardsName : list "Groovy,Error Message") {
-			ObjectCustomValidation.viewCardsOnCustomValidation(cardName = "${cardsName}");
+			AssertElementPresent.assertVisible(
+				key_title = ${cardsName},
+				locator1 = "Header#H3_TITLE");
 		}
 	}
 
 	@description = "LPS-152735 - Verify that it's possible to validate Expression Builder syntax when creating Actions"
-	@priority = "4"
+	@priority = 4
 	test CanValidateExpressionBuilderAction {
+		property test.name.skip.portal.instance = "ObjectCustomValidation#CanValidateExpressionBuilderAction";
+
 		task ("Create Custom Object") {
 			ObjectAdmin.addObjectViaAPI(
 				labelName = "Custom Object 161913",
@@ -2280,8 +2336,10 @@ definition {
 	}
 
 	@description = "LPS-152735 - Verify that it's possible to validate Expression Builder syntax when creating a Scheduled Action"
-	@priority = "4"
+	@priority = 4
 	test CanValidateExpressionBuilderScheduledAction {
+		property test.name.skip.portal.instance = "ObjectCustomValidation#CanValidateExpressionBuilderScheduledAction";
+
 		task ("Create Custom Object and Custom Field") {
 			ObjectAdmin.addObjectViaAPI(
 				labelName = "Custom Object 161915",
@@ -2334,8 +2392,10 @@ definition {
 	}
 
 	@description = "LPS-152735 - Verify that it's possible to validate Groovy syntax when creating Actions"
-	@priority = "4"
+	@priority = 4
 	test CanValidateGroovyAction {
+		property test.name.skip.portal.instance = "ObjectCustomValidation#CanValidateGroovyAction";
+
 		task ("Create Custom Object and Custom Field") {
 			ObjectAdmin.addObjectViaAPI(
 				labelName = "Custom Object 161912",
@@ -2375,7 +2435,7 @@ definition {
 		task ("Assert that there is Custom Action") {
 			ObjectAdmin.assertObjectActions(
 				actionActive = "Yes",
-				actionName = "CustomAction",
+				actionLabel = "Custom Action",
 				status = "Never Ran");
 		}
 
@@ -2386,7 +2446,7 @@ definition {
 
 			ObjectPortlet.typeCustomField(
 				customField = "Custom Integer",
-				entry = "123456789");
+				entry = 123456789);
 
 			PortletEntry.save();
 		}
@@ -2400,14 +2460,16 @@ definition {
 
 			ObjectAdmin.assertObjectActions(
 				actionActive = "Yes",
-				actionName = "CustomAction",
+				actionLabel = "Custom Action",
 				status = "Success");
 		}
 	}
 
 	@description = "LPS-152735 - Verify that it's possible to validate Groovy syntax when creating a Scheduled Action"
-	@priority = "4"
+	@priority = 4
 	test CanValidateGroovyScheduledAction {
+		property test.name.skip.portal.instance = "ObjectCustomValidation#CanValidateGroovyScheduledAction";
+
 		task ("Create Custom Object") {
 			ObjectAdmin.addObjectViaAPI(
 				labelName = "Custom Object 161914",
@@ -2446,9 +2508,10 @@ definition {
 	}
 
 	@description = "LPS-151671 - Verify that it's possible to use data validations with expression builder on System Objects"
-	@priority = "5"
+	@priority = 5
 	test CanValidateSystemObjectWithExpressionBuilder {
 		property portal.acceptance = "true";
+		property test.name.skip.portal.instance = "ObjectCustomValidation#CanValidateSystemObjectWithExpressionBuilder";
 
 		task ("Go to Objects, select System Object User and click on validations tab") {
 			ObjectAdmin.openObjectAdmin();
@@ -2469,7 +2532,7 @@ definition {
 
 			ObjectCustomValidation.gotoTab(tabName = "Conditions");
 
-			ObjectCustomValidation.insertScriptOnValidation(scriptValidation = "firstName == 'Approved'");
+			ObjectCustomValidation.insertScriptOnValidation(scriptValidation = "givenName == 'Userfn'");
 
 			ObjectCustomValidation.addErrorMessage(errorMessage = "This entry is not possible.");
 
@@ -2510,15 +2573,23 @@ definition {
 
 			User.openUsersAdmin();
 
-			AssertElementNotPresent(
+			UserNavigator.gotoUser(userScreenName = "usersn");
+
+			AssertElementPresent(
 				locator1 = "UsersAndOrganizationsEditUser#DETAILS_FIRST_NAME_FIELD",
-				value1 = "Userfn Userln");
+				value1 = "Userfn");
+
+			AssertElementPresent(
+				locator1 = "UsersAndOrganizationsEditUser#DETAILS_LAST_NAME_FIELD",
+				value1 = "Userln");
 		}
 	}
 
 	@description = "LPS-144474 - Verify that, when there is no Validations added, the empty state view is displayed"
-	@priority = "4"
+	@priority = 4
 	test CanViewDefaultViewWhenEmptyValidation {
+		property test.name.skip.portal.instance = "ObjectCustomValidation#CanViewDefaultViewWhenEmptyValidation";
+
 		ObjectAdmin.addObjectViaAPI(
 			labelName = "Custom Object 153547",
 			objectName = "CustomObject153547",
@@ -2530,12 +2601,16 @@ definition {
 
 		ObjectAdmin.goToValidationsTab();
 
-		ObjectAdmin.assertNoResultsWereFound();
+		AssertTextEquals(
+			locator1 = "Message#EMPTY_STATE_INFO",
+			value1 = "No Results Found");
 	}
 
 	@description = "LPS-144474 - Verify that the default placeholder from the LocalizedInput has been changed"
-	@priority = "4"
+	@priority = 4
 	test CanViewLocalizedInputChanged {
+		property test.name.skip.portal.instance = "ObjectCustomValidation#CanViewLocalizedInputChanged";
+
 		ObjectAdmin.addObjectViaAPI(
 			labelName = "Custom Object 153549",
 			objectName = "CustomObject153549",
@@ -2584,8 +2659,10 @@ definition {
 	}
 
 	@description = "LPS-144474 - Verify that, when adding a new entry in the Object, if it do not passes all validations from that Object, an alert is displayed in the lower left corner of the screen"
-	@priority = "4"
+	@priority = 4
 	test CanViewMessageErrorWhenDontPassesForAllValidations {
+		property test.name.skip.portal.instance = "ObjectCustomValidation#CanViewMessageErrorWhenDontPassesForAllValidations";
+
 		ObjectAdmin.addObjectViaAPI(
 			labelName = "Custom Object 153546",
 			objectName = "CustomObject153546",
@@ -2635,8 +2712,10 @@ definition {
 	}
 
 	@description = "LPS-144474 - Verify that the message 'There was an unexpected error in fields validation. Please contact support' is displayed when the goovy sintax is incorrect"
-	@priority = "4"
+	@priority = 4
 	test CanViewSpecificErrorWhenGroovySintaxIsIncorrect {
+		property test.name.skip.portal.instance = "ObjectCustomValidation#CanViewSpecificErrorWhenGroovySintaxIsIncorrect";
+
 		task ("Create a Custom Object and a Custom Field") {
 			ObjectAdmin.addObjectViaAPI(
 				labelName = "Custom Object 153561",
@@ -2686,9 +2765,10 @@ definition {
 	}
 
 	@description = "LPS-144474 - Verify that the Validation tab is available"
-	@priority = "5"
+	@priority = 5
 	test CanViewValidationTab {
 		property portal.acceptance = "true";
+		property test.name.skip.portal.instance = "ObjectCustomValidation#CanViewValidationTab";
 
 		ObjectAdmin.addObjectViaAPI(
 			labelName = "Custom Object 153546",
@@ -2705,8 +2785,10 @@ definition {
 	}
 
 	@description = "LPS-144474 - Verify that, when managing an Object validation, the Error Message field is required"
-	@priority = "4"
+	@priority = 4
 	test ErrorMessageFieldIsRequired {
+		property test.name.skip.portal.instance = "ObjectCustomValidation#ErrorMessageFieldIsRequired";
+
 		ObjectAdmin.addObjectViaAPI(
 			labelName = "Custom Object 153555",
 			objectName = "CustomObject153555",
@@ -2730,12 +2812,16 @@ definition {
 
 		Button.clickSave();
 
-		ObjectAdmin.assertRequiredErrorPresent();
+		AssertTextEquals.assertPartialText(
+			locator1 = "TextInput#REQUIRED_ALERT",
+			value1 = "Required");
 	}
 
 	@description = "LPS-144474 - Verify that, when adding a New Validation, the Label field is required"
-	@priority = "4"
+	@priority = 4
 	test LabelFieldIsRequiredOnValidation {
+		property test.name.skip.portal.instance = "ObjectCustomValidation#LabelFieldIsRequiredOnValidation";
+
 		ObjectAdmin.addObjectViaAPI(
 			labelName = "Custom Object 153548",
 			objectName = "CustomObject153548",
@@ -2751,7 +2837,13 @@ definition {
 			validationName = "",
 			validationType = "Groovy");
 
-		ObjectAdmin.assertRequiredErrorPresent();
+		AssertTextEquals.assertPartialText(
+			locator1 = "TextInput#REQUIRED_ALERT",
+			value1 = "Required");
+
+		Click(
+			key_modalTitle = "New Validation",
+			locator1 = "Button#CLOSE_MODAL");
 
 		ObjectCustomValidation.addObjectValidation(
 			validationName = "Custom Validation",
@@ -2763,7 +2855,9 @@ definition {
 
 		Button.clickSave();
 
-		ObjectAdmin.assertRequiredErrorPresent();
+		AssertTextEquals.assertPartialText(
+			locator1 = "TextInput#REQUIRED_ALERT",
+			value1 = "Required");
 	}
 
 }

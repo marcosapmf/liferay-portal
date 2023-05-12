@@ -33,12 +33,10 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
-import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.stream.Stream;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -181,20 +179,16 @@ public abstract class BaseDDMFormFieldTypeSettingsTestCase {
 			ReflectionTestUtil.invoke(
 				actualDDMFormLayoutRelatedObject, methodName, null);
 
-		Stream<Object> stream = actualDDMFormLayoutRelatedObjects.stream();
-
-		stream.forEachOrdered(
+		actualDDMFormLayoutRelatedObjects.forEach(
 			function.apply(expectedDDMFormLayoutRelatedObjects));
 
 		Assert.assertEquals(
 			expectedDDMFormLayoutRelatedObjects.toString(), 0,
 			expectedDDMFormLayoutRelatedObjects.size());
 
-		Optional.ofNullable(
-			runnable
-		).ifPresent(
-			Runnable::run
-		);
+		if (runnable != null) {
+			runnable.run();
+		}
 	}
 
 	private Function<List<Object>, Consumer<Object>>

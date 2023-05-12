@@ -78,7 +78,7 @@ public class EditRolePermissionsSummaryDisplayContext {
 		_roleDisplayContext = roleDisplayContext;
 		_servletContext = servletContext;
 
-		_themeDisplay = (ThemeDisplay)_httpServletRequest.getAttribute(
+		_themeDisplay = (ThemeDisplay)httpServletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 	}
 
@@ -146,8 +146,8 @@ public class EditRolePermissionsSummaryDisplayContext {
 				{
 					setCompanyId(_themeDisplay.getCompanyId());
 					setName(permission.getName());
-					setScope(permission.getScope());
 					setPrimKey(permission.getPrimKey());
+					setScope(permission.getScope());
 				}
 			};
 

@@ -298,7 +298,7 @@ export default function () {
 					</div>
 
 					<ClaySelect
-						className="sm total-premium-due-select"
+						className="border-0 sm total-premium-due-select"
 						onChange={({target}) => {
 							setSelectedFilterDate(target.value);
 						}}
@@ -316,40 +316,44 @@ export default function () {
 				</div>
 
 				<div
-					className="d-flex total-premium-due-bar"
+					className="align-items-center d-flex flex-grow-1 justify-content-center total-premium-due-bar"
 					id="total-premium-due-bar"
 				>
-					{isLoading && (
+					{isLoading && !!sumPolicies ? (
 						<BarChart
 							barRatio={0}
 							barWidth={10}
 							colors={colors}
 							dataColumns={dataChart}
 							format
-							height={275}
+							height={200}
 							labelColumns={labelChart}
 							labelRef={labelRef}
 							titleTotal={false}
 							width={chartWidth}
 						/>
-					)}
-				</div>
-			</div>
-
-			<hr className="mx-3 my-1" />
-
-			{isLoading && (
-				<div className="d-flex h6 justify-content-center py-2">
-					Total:
-					{sumPolicies ? (
-						<span className="h6 px-1">
-							{handleValueFormatter(sumPolicies)}
-						</span>
 					) : (
-						<i>&nbsp;No data</i>
+						<div className="align-items-center d-flex flex-grow-1 justify-content-center">
+							<span className="h6">No Data</span>
+						</div>
 					)}
 				</div>
-			)}
+
+				<hr className="mx-3 my-1" />
+
+				{isLoading && (
+					<div className="d-flex h6 justify-content-center py-2">
+						Total:
+						{sumPolicies ? (
+							<span className="h6 px-1">
+								{handleValueFormatter(sumPolicies)}
+							</span>
+						) : (
+							<i>&nbsp;No data 2</i>
+						)}
+					</div>
+				)}
+			</div>
 		</ClayIconProvider>
 	);
 }

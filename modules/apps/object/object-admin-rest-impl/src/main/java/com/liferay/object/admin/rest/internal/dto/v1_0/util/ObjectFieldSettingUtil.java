@@ -14,36 +14,86 @@
 
 package com.liferay.object.admin.rest.internal.dto.v1_0.util;
 
+import com.liferay.object.admin.rest.dto.v1_0.ObjectField;
 import com.liferay.object.admin.rest.dto.v1_0.ObjectFieldSetting;
 import com.liferay.object.admin.rest.dto.v1_0.ObjectStateFlow;
-import com.liferay.object.admin.rest.dto.v1_0.util.ObjectStateFlowUtil;
-import com.liferay.object.constants.ObjectFieldConstants;
 import com.liferay.object.constants.ObjectFieldSettingConstants;
-import com.liferay.object.filter.util.ObjectFilterUtil;
+import com.liferay.object.field.setting.builder.ObjectFieldSettingBuilder;
+import com.liferay.object.model.ObjectFieldSettingModel;
 import com.liferay.object.model.ObjectFilter;
 import com.liferay.object.service.ObjectFieldSettingLocalService;
 import com.liferay.object.service.ObjectFilterLocalService;
-import com.liferay.object.service.ObjectStateFlowLocalServiceUtil;
+import com.liferay.petra.function.transform.TransformUtil;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONUtil;
-import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ListUtil;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 /**
  * @author Carolina Barbosa
  */
 public class ObjectFieldSettingUtil {
 
-	public static com.liferay.object.model.ObjectFieldSetting
-			toObjectFieldSetting(
-				String businessType, long listTypeDefinitionId,
+	public static List<com.liferay.object.model.ObjectFieldSetting>
+		toObjectFieldSettings(
+			long listTypeDefinitionId, ObjectField objectField,
+			ObjectFieldSettingLocalService objectFieldSettingLocalService,
+			ObjectFilterLocalService objectFilterLocalService) {
+
+		List<com.liferay.object.model.ObjectFieldSetting> objectFieldSettings =
+			TransformUtil.transformToList(
+				objectField.getObjectFieldSettings(),
+				objectFieldSetting -> _toObjectFieldSetting(
+					listTypeDefinitionId, objectFieldSetting,
+					objectFieldSettingLocalService, objectFilterLocalService));
+
+		List<String> objectFieldSettingNames = ListUtil.toList(
+			objectFieldSettings, ObjectFieldSettingModel::getName);
+
+		if (!FeatureFlagManagerUtil.isEnabled("LPS-163716") &&
+			(objectFieldSettingNames.contains(
+				ObjectFieldSettingConstants.NAME_DEFAULT_VALUE) ||
+			 objectFieldSettingNames.contains(
+				 ObjectFieldSettingConstants.NAME_DEFAULT_VALUE_TYPE))) {
+
+			throw new UnsupportedOperationException();
+		}
+
+		if (objectFieldSettingNames.contains(
+				ObjectFieldSettingConstants.NAME_DEFAULT_VALUE) ||
+			Validator.isNull(objectField.getDefaultValue())) {
+
+			return objectFieldSettings;
+		}
+
+		objectFieldSettings.add(
+			new ObjectFieldSettingBuilder(
+			).name(
+				ObjectFieldSettingConstants.NAME_DEFAULT_VALUE
+			).value(
+				objectField.getDefaultValue()
+			).build());
+		objectFieldSettings.add(
+			new ObjectFieldSettingBuilder(
+			).name(
+				ObjectFieldSettingConstants.NAME_DEFAULT_VALUE_TYPE
+			).value(
+				ObjectFieldSettingConstants.VALUE_INPUT_AS_VALUE
+			).build());
+
+		return objectFieldSettings;
+	}
+
+	private static com.liferay.object.model.ObjectFieldSetting
+			_toObjectFieldSetting(
+				long listTypeDefinitionId,
 				ObjectFieldSetting objectFieldSetting,
 				ObjectFieldSettingLocalService objectFieldSettingLocalService,
 				ObjectFilterLocalService objectFilterLocalService)
@@ -55,26 +105,20 @@ public class ObjectFieldSettingUtil {
 
 		serviceBuilderObjectFieldSetting.setName(objectFieldSetting.getName());
 
-		if (Objects.equals(
-				ObjectFieldSettingConstants.NAME_STATE_FLOW,
-				objectFieldSetting.getName())) {
+		if (serviceBuilderObjectFieldSetting.compareName(
+				ObjectFieldSettingConstants.NAME_STATE_FLOW)) {
 
 			serviceBuilderObjectFieldSetting.setObjectStateFlow(
-				com.liferay.object.admin.rest.internal.dto.v1_0.util.
-					ObjectStateFlowUtil.toObjectStateFlow(
-						listTypeDefinitionId,
-						ObjectMapperUtil.readValue(
-							ObjectStateFlow.class,
-							objectFieldSetting.getValue())));
+				ObjectStateFlowUtil.toObjectStateFlow(
+					listTypeDefinitionId,
+					ObjectMapperUtil.readValue(
+						ObjectStateFlow.class, objectFieldSetting.getValue())));
 		}
 
 		serviceBuilderObjectFieldSetting.setValue(
 			String.valueOf(objectFieldSetting.getValue()));
 
-		if (Objects.equals(
-				businessType, ObjectFieldConstants.BUSINESS_TYPE_AGGREGATION) &&
-			Objects.equals(
-				objectFieldSetting.getName(),
+		if (serviceBuilderObjectFieldSetting.compareName(
 				ObjectFieldSettingConstants.NAME_FILTERS)) {
 
 			List<ObjectFilter> objectFilters = new ArrayList<>();
@@ -116,46 +160,6 @@ public class ObjectFieldSettingUtil {
 		}
 
 		return serviceBuilderObjectFieldSetting;
-	}
-
-	public static ObjectFieldSetting toObjectFieldSetting(
-		String businessType,
-		com.liferay.object.model.ObjectFieldSetting
-			serviceBuilderObjectFieldSetting) {
-
-		if (serviceBuilderObjectFieldSetting == null) {
-			return null;
-		}
-
-		ObjectFieldSetting objectFieldSetting = new ObjectFieldSetting() {
-			{
-				name = serviceBuilderObjectFieldSetting.getName();
-				value = serviceBuilderObjectFieldSetting.getValue();
-			}
-		};
-
-		if (Objects.equals(
-				businessType, ObjectFieldConstants.BUSINESS_TYPE_AGGREGATION) &&
-			Objects.equals(
-				objectFieldSetting.getName(),
-				ObjectFieldSettingConstants.NAME_FILTERS)) {
-
-			objectFieldSetting.setValue(
-				ObjectFilterUtil.getObjectFiltersJSONArray(
-					serviceBuilderObjectFieldSetting.getObjectFilters()));
-		}
-		else if (Objects.equals(
-					ObjectFieldSettingConstants.NAME_STATE_FLOW,
-					objectFieldSetting.getName())) {
-
-			objectFieldSetting.setValue(
-				ObjectStateFlowUtil.toObjectStateFlow(
-					ObjectStateFlowLocalServiceUtil.fetchObjectStateFlow(
-						GetterUtil.getLong(
-							serviceBuilderObjectFieldSetting.getValue()))));
-		}
-
-		return objectFieldSetting;
 	}
 
 }

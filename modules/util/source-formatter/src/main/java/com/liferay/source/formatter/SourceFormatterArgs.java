@@ -31,6 +31,8 @@ public class SourceFormatterArgs {
 
 	public static final String BASE_DIR_NAME = "./";
 
+	public static final boolean CHECK_VULNERABILITIES = false;
+
 	public static final int COMMIT_COUNT = 0;
 
 	public static final boolean FAIL_ON_AUTO_FIX = false;
@@ -49,6 +51,8 @@ public class SourceFormatterArgs {
 
 	public static final boolean INCLUDE_SUBREPOSITORIES = false;
 
+	public static final boolean JAVA_PARSER_ENABLED = true;
+
 	public static final int MAX_DIR_LEVEL = ToolsUtil.PORTAL_MAX_DIR_LEVEL;
 
 	public static final int MAX_LINE_LENGTH = 80;
@@ -63,6 +67,8 @@ public class SourceFormatterArgs {
 	public static final int PROCESSOR_THREAD_COUNT = 5;
 
 	public static final boolean SHOW_DEBUG_INFORMATION = false;
+
+	public static final boolean USE_CI_GITHUB_ACCESS_TOKEN = false;
 
 	public static final boolean VALIDATE_COMMIT_MESSAGES = false;
 
@@ -139,6 +145,10 @@ public class SourceFormatterArgs {
 		return _autoFix;
 	}
 
+	public boolean isCheckVulnerabilities() {
+		return _checkVulnerabilities;
+	}
+
 	public boolean isFailOnAutoFix() {
 		return _failOnAutoFix;
 	}
@@ -167,12 +177,20 @@ public class SourceFormatterArgs {
 		return _includeSubrepositories;
 	}
 
+	public boolean isJavaParserEnabled() {
+		return _javaParserEnabled;
+	}
+
 	public boolean isPrintErrors() {
 		return _printErrors;
 	}
 
 	public boolean isShowDebugInformation() {
 		return _showDebugInformation;
+	}
+
+	public boolean isUseCiGithubAccessToken() {
+		return _useCiGithubAccessToken;
 	}
 
 	public boolean isValidateCommitMessages() {
@@ -201,6 +219,10 @@ public class SourceFormatterArgs {
 
 	public void setCheckNames(List<String> checkNames) {
 		_checkNames = checkNames;
+	}
+
+	public void setCheckVulnerabilities(boolean checkVulnerabilities) {
+		_checkVulnerabilities = checkVulnerabilities;
 	}
 
 	public void setCommitCount(int commitCount) {
@@ -256,6 +278,10 @@ public class SourceFormatterArgs {
 		_includeSubrepositories = includeSubrepositories;
 	}
 
+	public void setJavaParserEnabled(boolean javaParserEnabled) {
+		_javaParserEnabled = javaParserEnabled;
+	}
+
 	public void setMaxDirLevel(int maxDirLevel) {
 		_maxDirLevel = maxDirLevel;
 	}
@@ -290,6 +316,10 @@ public class SourceFormatterArgs {
 		_sourceFormatterProperties = sourceFormatterProperties;
 	}
 
+	public void setUseCiGithubAccessToken(boolean useCiGithubAccessToken) {
+		_useCiGithubAccessToken = useCiGithubAccessToken;
+	}
+
 	public void setValidateCommitMessages(boolean validateCommitMessages) {
 		_validateCommitMessages = validateCommitMessages;
 	}
@@ -298,6 +328,7 @@ public class SourceFormatterArgs {
 	private String _baseDirName = BASE_DIR_NAME;
 	private List<String> _checkCategoryNames = new ArrayList<>();
 	private List<String> _checkNames = new ArrayList<>();
+	private boolean _checkVulnerabilities = CHECK_VULNERABILITIES;
 	private int _commitCount = COMMIT_COUNT;
 	private boolean _failOnAutoFix = FAIL_ON_AUTO_FIX;
 	private boolean _failOnHasWarning = FAIL_ON_HAS_WARNING;
@@ -309,6 +340,7 @@ public class SourceFormatterArgs {
 	private String _gitWorkingBranchName = GIT_WORKING_BRANCH_NAME;
 	private boolean _includeGeneratedFiles = INCLUDE_GENERATED_FILES;
 	private boolean _includeSubrepositories = INCLUDE_SUBREPOSITORIES;
+	private boolean _javaParserEnabled = JAVA_PARSER_ENABLED;
 	private int _maxDirLevel = MAX_DIR_LEVEL;
 	private int _maxLineLength = MAX_LINE_LENGTH;
 	private String _outputFileName = OUTPUT_FILE_NAME;
@@ -318,6 +350,7 @@ public class SourceFormatterArgs {
 	private boolean _showDebugInformation = SHOW_DEBUG_INFORMATION;
 	private List<String> _skipCheckNames = new ArrayList<>();
 	private List<String> _sourceFormatterProperties = new ArrayList<>();
+	private boolean _useCiGithubAccessToken = USE_CI_GITHUB_ACCESS_TOKEN;
 	private boolean _validateCommitMessages = VALIDATE_COMMIT_MESSAGES;
 
 }

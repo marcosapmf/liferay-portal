@@ -16,20 +16,37 @@ import {ClayButtonWithIcon} from '@clayui/button';
 import ClayDropDown, {Align} from '@clayui/drop-down';
 import React, {useState} from 'react';
 import {useNavigate} from 'react-router-dom';
+import {Dropdown} from '~/atoms';
+import {BuildStatuses} from '~/util/statuses';
 
 import Form from '../../../../components/Form';
 import Tooltip from '../../../../components/Tooltip';
-import {Dropdown} from '../../../../context/HeaderContext';
+import SearchBuilder from '../../../../core/SearchBuilder';
 import useDebounce from '../../../../hooks/useDebounce';
 import {useFetch} from '../../../../hooks/useFetch';
 import i18n from '../../../../i18n';
 import {APIResponse, TestrayBuild} from '../../../../services/rest';
 import {testrayBuildImpl} from '../../../../services/rest/TestrayBuild';
-import {SearchBuilder} from '../../../../util/search';
 
 type BuildAddButtonProps = {
 	routineId: string;
 };
+
+const dropDownItems: Dropdown = [
+	{
+		items: [
+			{
+				label: i18n.translate('new-build'),
+				path: './create',
+			},
+			{
+				label: i18n.sub('new-x', 'template'),
+				path: './create/template/true',
+			},
+		],
+		title: i18n.translate('create'),
+	},
+];
 
 const BuildAddButton: React.FC<BuildAddButtonProps> = ({routineId}) => {
 	const navigate = useNavigate();
@@ -45,7 +62,7 @@ const BuildAddButton: React.FC<BuildAddButtonProps> = ({routineId}) => {
 		.and()
 		.eq('template', true)
 		.and()
-		.eq('active', true)
+		.eq('dueStatus', BuildStatuses.ACTIVATED)
 		.and();
 
 	const totalFilter = baseFilter.build();
@@ -54,35 +71,25 @@ const BuildAddButton: React.FC<BuildAddButtonProps> = ({routineId}) => {
 
 	const {data: buildResponseWithSearch} = useFetch<APIResponse<TestrayBuild>>(
 		testrayBuildImpl.resource,
-		{filter: searchFilter}
+		{
+			params: {
+				filter: searchFilter,
+			},
+		}
 	);
 
 	const {data: buildResponse} = useFetch<APIResponse<TestrayBuild>>(
 		testrayBuildImpl.resource,
 		{
-			fields: 'id',
-			filter: totalFilter,
+			params: {
+				fields: 'id',
+				filter: totalFilter,
+			},
 		}
 	);
 
 	const buildTemplates = buildResponseWithSearch?.items || [];
 	const templatesCount = buildResponse?.totalCount || 0;
-
-	const dropDownItems: Dropdown = [
-		{
-			items: [
-				{
-					label: i18n.translate('new-build'),
-					path: './create',
-				},
-				{
-					label: i18n.sub('new-x', 'template'),
-					path: './create/template/true',
-				},
-			],
-			title: i18n.translate('create'),
-		},
-	];
 
 	return (
 		<ClayDropDown
@@ -91,7 +98,7 @@ const BuildAddButton: React.FC<BuildAddButtonProps> = ({routineId}) => {
 			onActiveChange={setActive}
 			trigger={
 				<div>
-					<Tooltip position="down" title={i18n.translate('manage')}>
+					<Tooltip position="bottom" title={i18n.translate('manage')}>
 						<div className="testray-sidebar-item">
 							<ClayButtonWithIcon
 								aria-label={i18n.translate('manage')}
@@ -116,7 +123,7 @@ const BuildAddButton: React.FC<BuildAddButtonProps> = ({routineId}) => {
 									}}
 								>
 									<div className="align-items-center d-flex testray-sidebar-item text-dark">
-										<span className="ml-1 testray-sidebar-text">
+										<span className="ml-1 tr-sidebar__text">
 											{label}
 										</span>
 									</div>

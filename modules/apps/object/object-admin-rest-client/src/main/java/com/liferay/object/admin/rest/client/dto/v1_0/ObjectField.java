@@ -307,6 +307,27 @@ public class ObjectField implements Cloneable, Serializable {
 
 	protected Long listTypeDefinitionId;
 
+	public Boolean getLocalized() {
+		return localized;
+	}
+
+	public void setLocalized(Boolean localized) {
+		this.localized = localized;
+	}
+
+	public void setLocalized(
+		UnsafeSupplier<Boolean, Exception> localizedUnsafeSupplier) {
+
+		try {
+			localized = localizedUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Boolean localized;
+
 	public String getName() {
 		return name;
 	}
@@ -505,10 +526,11 @@ public class ObjectField implements Cloneable, Serializable {
 
 		AGGREGATION("Aggregation"), ATTACHMENT("Attachment"),
 		BOOLEAN("Boolean"), DATE("Date"), DECIMAL("Decimal"),
-		FORMULA("Formula"), INTEGER("Integer"), LONG_INTEGER("LongInteger"),
-		LONG_TEXT("LongText"), MULTISELECT_PICKLIST("MultiselectPicklist"),
-		PICKLIST("Picklist"), PRECISION_DECIMAL("PrecisionDecimal"),
-		RELATIONSHIP("Relationship"), RICH_TEXT("RichText"), TEXT("Text");
+		ENCRYPTED("Encrypted"), FORMULA("Formula"), INTEGER("Integer"),
+		LONG_INTEGER("LongInteger"), LONG_TEXT("LongText"),
+		MULTISELECT_PICKLIST("MultiselectPicklist"), PICKLIST("Picklist"),
+		PRECISION_DECIMAL("PrecisionDecimal"), RELATIONSHIP("Relationship"),
+		RICH_TEXT("RichText"), TEXT("Text");
 
 		public static BusinessType create(String value) {
 			for (BusinessType businessType : values()) {

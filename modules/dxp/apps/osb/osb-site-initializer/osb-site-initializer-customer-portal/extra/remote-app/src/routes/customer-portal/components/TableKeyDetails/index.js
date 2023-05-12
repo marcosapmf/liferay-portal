@@ -12,8 +12,11 @@
 import ClayIcon from '@clayui/icon';
 import classNames from 'classnames';
 import {useEffect, useState} from 'react';
+
 import i18n from '../../../../common/I18n';
-import getCurrentEndDate from '../../../../common/utils/getCurrentEndDate';
+import {DXPIcon} from '../../../../common/icons/navigation-menu';
+import {FORMAT_DATE_TYPES} from '../../../../common/utils/constants';
+import getDateCustomFormat from '../../../../common/utils/getDateCustomFormat';
 import {
 	getFormatedProductName,
 	getProductDescription,
@@ -25,15 +28,10 @@ import {
 const HOST_NAME = i18n.translate('host-name');
 const IP_ADDRESSES = i18n.translate('ip-addresses');
 const MAC_ADDRESSES = i18n.translate('mac-addresses');
-const SUBSCRIPTION_IMAGE_FILE = 'dxp_icon.svg';
 
 const NO_EXPIRATION_DATE = 100;
 
-const TableKeyDetails = ({
-	activationKeys,
-	liferayWebDAV,
-	setValueToCopyToClipboard,
-}) => {
+const TableKeyDetails = ({activationKeys, setValueToCopyToClipboard}) => {
 	const [actionToCopy, setActionToCopy] = useState('');
 	const instanceSizeFormated = activationKeys.sizing?.slice(7, 8);
 
@@ -52,7 +50,10 @@ const TableKeyDetails = ({
 		new Date(activationKeys.expirationDate) >=
 		new Date(unlimitedLicenseDate)
 			? 'Does Not Expire'
-			: getCurrentEndDate(activationKeys.expirationDate);
+			: getDateCustomFormat(
+					activationKeys.expirationDate,
+					FORMAT_DATE_TYPES.day2DMonthSYearN
+			  );
 
 	useEffect(() => {
 		if (actionToCopy) {
@@ -110,10 +111,7 @@ const TableKeyDetails = ({
 				<div className="row">
 					<div className="col-2">
 						<p className="align-items-center bg-brand-primary-lighten-5 cp-key-details-paragraph d-flex px-3 py-2 rounded">
-							<img
-								className="mr-2"
-								src={`${liferayWebDAV}/assets/navigation-menu/${SUBSCRIPTION_IMAGE_FILE}`}
-							/>
+							<DXPIcon className="mr-2" />
 
 							{getFormatedProductName(
 								activationKeys?.productName
@@ -206,7 +204,10 @@ const TableKeyDetails = ({
 
 					<div className="col-3">
 						<p className="bg-neutral-1 cp-key-details-paragraph px-3 py-2 rounded">
-							{getCurrentEndDate(activationKeys.createDate)}
+							{getDateCustomFormat(
+								activationKeys.createDate,
+								FORMAT_DATE_TYPES.day2DMonthSYearN
+							)}
 						</p>
 					</div>
 				</div>

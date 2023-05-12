@@ -36,6 +36,7 @@ const validateDocument = {
 		message:
 			'Unsupported File Format, upload a valid format *csv *xlsx *xls',
 		types: [
+			'application/vnd.ms-excel',
 			'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
 			'text/csv',
 		],
@@ -60,28 +61,45 @@ const claimSchema = object({
 												validateDocument.fileSize
 													.message,
 												(invoice) => {
-													return invoice
-														? Math.ceil(
-																invoice.size /
-																	1000
-														  ) <=
-																validateDocument
-																	.fileSize
-																	.maxSize
-														: false;
+													if (
+														invoice &&
+														!invoice.id
+													) {
+														return invoice
+															? Math.ceil(
+																	invoice.size /
+																		1000
+															  ) <=
+																	validateDocument
+																		.fileSize
+																		.maxSize
+															: false;
+													}
+
+													return true;
 												}
 											)
+											.required()
 											.test(
 												'fileType',
 												validateDocument.imageDocument
 													.message,
-												(invoice) =>
-													invoice
-														? validateDocument.imageDocument.types.includes(
-																invoice.type
-														  )
-														: false
-											),
+												(invoice) => {
+													if (
+														invoice &&
+														!invoice.id
+													) {
+														return invoice
+															? validateDocument.imageDocument.types.includes(
+																	invoice.type
+															  )
+															: false;
+													}
+
+													return true;
+												}
+											)
+											.required(),
 								}),
 								invoiceAmount: number().when('selected', {
 									is: (selected: boolean) => selected,
@@ -100,37 +118,55 @@ const claimSchema = object({
 														testContext.parent
 															.requestAmount
 													)
-											),
+											)
+											.required(),
 								}),
-
 								requestAmount: number(),
 							})
 						),
 				}),
-
-				listQualifiedLeads: mixed().when('selected', {
+				listOfQualifiedLeads: mixed().when('selected', {
 					is: (selected: boolean) => selected,
 					then: (schema) =>
 						schema
 							.test(
 								'fileSize',
 								validateDocument.fileSize.message,
-								(listQualifiedLeads) =>
-									listQualifiedLeads
-										? Math.ceil(
-												listQualifiedLeads.size / 1000
-										  ) <= validateDocument.fileSize.maxSize
-										: false
+								(listOfQualifiedLeads) => {
+									if (
+										listOfQualifiedLeads &&
+										!listOfQualifiedLeads.id
+									) {
+										return listOfQualifiedLeads
+											? Math.ceil(
+													listOfQualifiedLeads.size /
+														1000
+											  ) <=
+													validateDocument.fileSize
+														.maxSize
+											: false;
+									}
+
+									return true;
+								}
 							)
 							.test(
 								'fileType',
 								validateDocument.listOfLeadsDocuments.message,
-								(listQualifiedLeads) =>
-									listQualifiedLeads
-										? validateDocument.listOfLeadsDocuments.types.includes(
-												listQualifiedLeads.type
-										  )
-										: false
+								(listOfQualifiedLeads) => {
+									if (
+										listOfQualifiedLeads &&
+										!listOfQualifiedLeads.id
+									) {
+										return listOfQualifiedLeads
+											? validateDocument.listOfLeadsDocuments.types.includes(
+													listOfQualifiedLeads.type
+											  )
+											: false;
+									}
+
+									return true;
+								}
 							),
 				}),
 				metrics: string().max(
@@ -159,6 +195,24 @@ const claimSchema = object({
 				)
 		)
 		.test(
+			'selectedActivityNeedsAtLeastOneBudget',
+			'Need at least one budget per activity selected',
+			(activities) => {
+				return Boolean(
+					!activities
+						?.map((activity) => {
+							return activity.selected
+								? activity.selected &&
+										activity?.budgets?.some(
+											(budget) => budget.selected
+										)
+								: true;
+						})
+						.includes(false)
+				);
+			}
+		)
+		.test(
 			'needMoreThanOneBudgetInvoice',
 			'Need at least one budget invoice added',
 			(activities) =>
@@ -176,21 +230,31 @@ const claimSchema = object({
 		.test(
 			'fileSize',
 			validateDocument.fileSize.message,
-			(reimbursementInvoice) =>
-				reimbursementInvoice
-					? Math.ceil(reimbursementInvoice.size / 1000) <=
-					  validateDocument.fileSize.maxSize
-					: false
+			(reimbursementInvoice) => {
+				if (reimbursementInvoice && !reimbursementInvoice.id) {
+					return reimbursementInvoice
+						? Math.ceil(reimbursementInvoice.size / 1000) <=
+								validateDocument.fileSize.maxSize
+						: false;
+				}
+
+				return true;
+			}
 		)
 		.test(
 			'fileType',
 			validateDocument.imageDocument.message,
-			(reimbursementInvoice) =>
-				reimbursementInvoice
-					? validateDocument.imageDocument.types.includes(
-							reimbursementInvoice.type
-					  )
-					: false
+			(reimbursementInvoice) => {
+				if (reimbursementInvoice && !reimbursementInvoice.id) {
+					return reimbursementInvoice
+						? validateDocument.imageDocument.types.includes(
+								reimbursementInvoice.type
+						  )
+						: false;
+				}
+
+				return true;
+			}
 		),
 	totalClaimAmount: number()
 		.moreThan(0, 'Need be bigger than 0')
@@ -200,7 +264,7 @@ const claimSchema = object({
 			'Total Claim Amount cannot be greater than Total MDF Requested Amount',
 			(totalClaimAmount, testContext) =>
 				Number(totalClaimAmount) <=
-				Number(testContext.parent.totalrequestedAmount)
+				Number(testContext.parent.totalMDFRequestedAmount)
 		),
 });
 

@@ -24,17 +24,14 @@ import com.liferay.petra.reflect.GenericUtil;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Stream;
 
+import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
-import org.osgi.service.component.annotations.Activate;
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Deactivate;
+import org.osgi.framework.FrameworkUtil;
 
 /**
  * @author Adolfo Pérez
  */
-@Component(service = {})
 public class DLItemSelectorCriterionCreationMenuRestrictionUtil {
 
 	public static Set<String> getAllowedCreationMenuUIItemKeys(
@@ -51,19 +48,35 @@ public class DLItemSelectorCriterionCreationMenuRestrictionUtil {
 			return null;
 		}
 
-		Stream<DLItemSelectorCriterionCreationMenuRestriction> stream =
-			dlItemSelectorCriterionCreationMenuRestrictions.stream();
+		Set<String> allowedCreationMenuUIItemKeys = new HashSet<>();
 
-		return stream.map(
-			DLItemSelectorCriterionCreationMenuRestriction::
-				getAllowedCreationMenuUIItemKeys
-		).collect(
-			HashSet::new, Set::addAll, Set::addAll
-		);
+		for (DLItemSelectorCriterionCreationMenuRestriction
+				dlItemSelectorCriterionCreationMenuRestriction :
+					dlItemSelectorCriterionCreationMenuRestrictions) {
+
+			allowedCreationMenuUIItemKeys.addAll(
+				dlItemSelectorCriterionCreationMenuRestriction.
+					getAllowedCreationMenuUIItemKeys());
+		}
+
+		return allowedCreationMenuUIItemKeys;
 	}
 
-	@Activate
-	protected void activate(BundleContext bundleContext) {
+	private static final ServiceTrackerMap
+		<String, List<DLItemSelectorCriterionCreationMenuRestriction>>
+			_serviceTrackerMap;
+
+	static {
+		Bundle bundle = FrameworkUtil.getBundle(
+			DLItemSelectorCriterionCreationMenuRestrictionUtil.class);
+
+		BundleContext bundleContext = bundle.getBundleContext();
+
+		PropertyServiceReferenceMapper
+			<String, DLItemSelectorCriterionCreationMenuRestriction>
+				propertyServiceReferenceMapper =
+					new PropertyServiceReferenceMapper<>("model.class.name");
+
 		_serviceTrackerMap = ServiceTrackerMapFactory.openMultiValueMap(
 			bundleContext, DLItemSelectorCriterionCreationMenuRestriction.class,
 			null,
@@ -72,7 +85,7 @@ public class DLItemSelectorCriterionCreationMenuRestrictionUtil {
 					"model.class.name");
 
 				if (modelClassName != null) {
-					_propertyServiceReferenceMapper.map(
+					propertyServiceReferenceMapper.map(
 						serviceReference, emitter);
 
 					return;
@@ -88,19 +101,5 @@ public class DLItemSelectorCriterionCreationMenuRestrictionUtil {
 				}
 			});
 	}
-
-	@Deactivate
-	protected void deactivate() {
-		_serviceTrackerMap.close();
-	}
-
-	private static ServiceTrackerMap
-		<String, List<DLItemSelectorCriterionCreationMenuRestriction>>
-			_serviceTrackerMap;
-
-	private final PropertyServiceReferenceMapper
-		<String, DLItemSelectorCriterionCreationMenuRestriction>
-			_propertyServiceReferenceMapper =
-				new PropertyServiceReferenceMapper<>("model.class.name");
 
 }

@@ -18,6 +18,7 @@ import com.liferay.commerce.product.content.search.web.internal.util.CPSpecifica
 import com.liferay.commerce.product.model.CPSpecificationOption;
 import com.liferay.commerce.product.service.CPSpecificationOptionLocalService;
 import com.liferay.portal.kernel.search.facet.Facet;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 
 import java.io.Serializable;
@@ -67,6 +68,12 @@ public class CPSpecificationOptionsSearchFacetDisplayContext
 		getTermDisplayContexts() {
 
 		return _cpSpecificationOptionsSearchFacetTermDisplayContext;
+	}
+
+	public boolean isShowClear() {
+		return ListUtil.exists(
+			_cpSpecificationOptionsSearchFacetTermDisplayContext,
+			CPSpecificationOptionsSearchFacetTermDisplayContext::isSelected);
 	}
 
 	public void setCpSpecificationOptionLocalService(

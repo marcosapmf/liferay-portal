@@ -82,6 +82,9 @@ public class UpdateGlobalPublicationsConfigurationMVCActionCommand
 		boolean enableSandboxOnly = ParamUtil.getBoolean(
 			actionRequest, "enableSandboxOnly",
 			ctSettingsConfiguration.sandboxEnabled());
+		boolean enableUnapprovedChanges = ParamUtil.getBoolean(
+			actionRequest, "enableUnapprovedChanges",
+			ctSettingsConfiguration.unapprovedChangesAllowed());
 
 		try {
 			_portletPermission.check(
@@ -89,7 +92,10 @@ public class UpdateGlobalPublicationsConfigurationMVCActionCommand
 				ActionKeys.CONFIGURATION);
 
 			_ctSettingsConfigurationHelper.save(
-				companyId, enablePublications, enableSandboxOnly);
+				companyId,
+				ctSettingsConfiguration.defaultCTCollectionTemplateId(),
+				ctSettingsConfiguration.defaultSandboxCTCollectionTemplateId(),
+				enablePublications, enableSandboxOnly, enableUnapprovedChanges);
 		}
 		catch (ConfigurationException configurationException) {
 			Throwable throwable = configurationException.getCause();
@@ -112,7 +118,7 @@ public class UpdateGlobalPublicationsConfigurationMVCActionCommand
 		hideDefaultSuccessMessage(actionRequest);
 
 		SessionMessages.add(
-			_portal.getHttpServletRequest(actionRequest), "requestProcessed",
+			actionRequest, "requestProcessed",
 			_language.get(
 				themeDisplay.getLocale(), "the-configuration-has-been-saved"));
 

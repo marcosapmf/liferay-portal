@@ -50,6 +50,7 @@ import com.liferay.portal.kernel.language.constants.LanguageConstants;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.service.GroupLocalService;
+import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.HtmlParser;
@@ -59,6 +60,7 @@ import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.kernel.util.WebKeys;
 
 import java.math.BigDecimal;
 
@@ -70,6 +72,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+
+import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Marcellus Tavares
@@ -148,8 +152,32 @@ public class DDMFormFieldTemplateContextFactory {
 		ddmFormFieldRenderingContext.setProperties(ddmFormFieldTemplateContext);
 		ddmFormFieldRenderingContext.setProperty(
 			"changedProperties", changedProperties);
-		ddmFormFieldRenderingContext.setProperty(
-			"groupId", _ddmFormRenderingContext.getGroupId());
+
+		Long ddmFormInstanceRecordId = _ddmFormRenderingContext.getProperty(
+			"ddmFormInstanceRecordId");
+
+		if ((ddmFormInstanceRecordId != null) &&
+			(ddmFormInstanceRecordId > 0)) {
+
+			ddmFormFieldRenderingContext.setProperty(
+				"ddmFormInstanceRecordId", ddmFormInstanceRecordId);
+		}
+
+		long groupId = _ddmFormRenderingContext.getGroupId();
+
+		if (groupId == 0) {
+			HttpServletRequest httpServletRequest =
+				ddmFormFieldRenderingContext.getHttpServletRequest();
+
+			ThemeDisplay themeDisplay =
+				(ThemeDisplay)httpServletRequest.getAttribute(
+					WebKeys.THEME_DISPLAY);
+
+			groupId = themeDisplay.getScopeGroupId();
+		}
+
+		ddmFormFieldRenderingContext.setProperty("groupId", groupId);
+
 		ddmFormFieldRenderingContext.setReturnFullContext(
 			_ddmFormRenderingContext.isReturnFullContext());
 		ddmFormFieldRenderingContext.setViewMode(

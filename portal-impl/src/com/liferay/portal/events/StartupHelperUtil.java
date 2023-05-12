@@ -18,7 +18,9 @@ import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.jdbc.DataAccess;
 import com.liferay.portal.kernel.exception.ResourceActionsException;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogContextRegistryUtil;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.patcher.PatcherUtil;
 import com.liferay.portal.kernel.security.permission.ResourceActionsUtil;
@@ -26,14 +28,14 @@ import com.liferay.portal.kernel.service.ResourceActionLocalServiceUtil;
 import com.liferay.portal.kernel.upgrade.UpgradeException;
 import com.liferay.portal.kernel.upgrade.UpgradeProcess;
 import com.liferay.portal.kernel.upgrade.util.UpgradeProcessUtil;
-import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LoggingTimer;
 import com.liferay.portal.kernel.util.PortalClassLoaderUtil;
-import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.version.Version;
+import com.liferay.portal.tools.DBUpgrader;
 import com.liferay.portal.upgrade.PortalUpgradeProcess;
+import com.liferay.portal.upgrade.log.UpgradeLogContext;
 import com.liferay.portal.util.PropsValues;
 
 import java.sql.Connection;
@@ -89,7 +91,7 @@ public class StartupHelperUtil {
 		}
 	}
 
-	public static void setDbNew(boolean dbNew) {
+	public static void setDBNew(boolean dbNew) {
 		_dbNew = dbNew;
 	}
 
@@ -99,12 +101,27 @@ public class StartupHelperUtil {
 
 	public static void setUpgrading(boolean upgrading) {
 		_upgrading = upgrading;
+
+		if (_upgrading) {
+			if (PropsValues.UPGRADE_LOG_CONTEXT_ENABLED) {
+				LogContextRegistryUtil.registerLogContext(
+					UpgradeLogContext.getInstance());
+			}
+
+			DBUpgrader.startUpgradeLogAppender();
+		}
+		else {
+			DBUpgrader.stopUpgradeLogAppender();
+
+			LogContextRegistryUtil.unregisterLogContext(
+				UpgradeLogContext.getInstance());
+		}
 	}
 
 	public static void upgradeProcess(int buildNumber) throws UpgradeException {
 		List<String> upgradeProcessClassNames = new ArrayList<>();
 
-		if (GetterUtil.getBoolean(PropsUtil.get("feature.flag.LPS-157670"))) {
+		if (FeatureFlagManagerUtil.isEnabled("LPS-157670")) {
 			Collections.addAll(
 				upgradeProcessClassNames,
 				"com.liferay.portal.upgrade.UpgradeProcess_6_1_1",
@@ -168,7 +185,7 @@ public class StartupHelperUtil {
 	private static final Log _log = LogFactoryUtil.getLog(
 		StartupHelperUtil.class);
 
-	private static boolean _dbNew;
+	private static volatile boolean _dbNew;
 	private static boolean _startupFinished;
 	private static boolean _upgraded;
 	private static boolean _upgrading;

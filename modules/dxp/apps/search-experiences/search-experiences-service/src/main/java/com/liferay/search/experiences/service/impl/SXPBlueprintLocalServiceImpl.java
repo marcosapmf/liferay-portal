@@ -24,12 +24,9 @@ import com.liferay.portal.kernel.search.IndexableType;
 import com.liferay.portal.kernel.service.ResourceLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalService;
-import com.liferay.portal.kernel.service.WorkflowInstanceLinkLocalService;
 import com.liferay.portal.kernel.systemevent.SystemEvent;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
-import com.liferay.portal.kernel.workflow.WorkflowHandlerRegistryUtil;
-import com.liferay.search.experiences.exception.DuplicateSXPBlueprintExternalReferenceCodeException;
 import com.liferay.search.experiences.exception.SXPBlueprintTitleException;
 import com.liferay.search.experiences.model.SXPBlueprint;
 import com.liferay.search.experiences.service.base.SXPBlueprintLocalServiceBaseImpl;
@@ -63,17 +60,15 @@ public class SXPBlueprintLocalServiceImpl
 			ServiceContext serviceContext)
 		throws PortalException {
 
-		User user = _userLocalService.getUser(userId);
-
-		_validateExternalReferenceCode(
-			user.getCompanyId(), externalReferenceCode);
-
 		_validate(titleMap, serviceContext);
 
 		SXPBlueprint sxpBlueprint = sxpBlueprintPersistence.create(
 			counterLocalService.increment());
 
 		sxpBlueprint.setExternalReferenceCode(externalReferenceCode);
+
+		User user = _userLocalService.getUser(userId);
+
 		sxpBlueprint.setCompanyId(user.getCompanyId());
 		sxpBlueprint.setUserId(user.getUserId());
 		sxpBlueprint.setUserName(user.getFullName());
@@ -87,15 +82,13 @@ public class SXPBlueprintLocalServiceImpl
 			String.format(
 				"%.1f",
 				GetterUtil.getFloat(sxpBlueprint.getVersion(), 0.9F) + 0.1));
-		sxpBlueprint.setStatus(WorkflowConstants.STATUS_DRAFT);
+		sxpBlueprint.setStatus(WorkflowConstants.STATUS_APPROVED);
 		sxpBlueprint.setStatusByUserId(user.getUserId());
 		sxpBlueprint.setStatusDate(serviceContext.getModifiedDate(null));
 
 		sxpBlueprint = sxpBlueprintPersistence.update(sxpBlueprint);
 
 		_resourceLocalService.addModelResources(sxpBlueprint, serviceContext);
-
-		_startWorkflowInstance(userId, sxpBlueprint, serviceContext);
 
 		return sxpBlueprint;
 	}
@@ -134,10 +127,6 @@ public class SXPBlueprintLocalServiceImpl
 
 		_resourceLocalService.deleteResource(
 			sxpBlueprint, ResourceConstants.SCOPE_INDIVIDUAL);
-
-		_workflowInstanceLinkLocalService.deleteWorkflowInstanceLinks(
-			sxpBlueprint.getCompanyId(), 0, SXPBlueprint.class.getName(),
-			sxpBlueprint.getSXPBlueprintId());
 
 		return sxpBlueprint;
 	}
@@ -199,17 +188,6 @@ public class SXPBlueprintLocalServiceImpl
 		return updateSXPBlueprint(sxpBlueprint);
 	}
 
-	private void _startWorkflowInstance(
-			long userId, SXPBlueprint sxpBlueprint,
-			ServiceContext serviceContext)
-		throws PortalException {
-
-		WorkflowHandlerRegistryUtil.startWorkflowInstance(
-			sxpBlueprint.getCompanyId(), 0, userId,
-			SXPBlueprint.class.getName(), sxpBlueprint.getSXPBlueprintId(),
-			sxpBlueprint, serviceContext);
-	}
-
 	private void _validate(
 			Map<Locale, String> titleMap, ServiceContext serviceContext)
 		throws SXPBlueprintTitleException {
@@ -226,18 +204,6 @@ public class SXPBlueprintLocalServiceImpl
 		_sxpBlueprintValidator.validate(titleMap);
 	}
 
-	private void _validateExternalReferenceCode(
-			long companyId, String externalReferenceCode)
-		throws PortalException {
-
-		SXPBlueprint sxpBlueprint = fetchSXPBlueprintByExternalReferenceCode(
-			externalReferenceCode, companyId);
-
-		if (sxpBlueprint != null) {
-			throw new DuplicateSXPBlueprintExternalReferenceCodeException();
-		}
-	}
-
 	@Reference
 	private ResourceLocalService _resourceLocalService;
 
@@ -246,8 +212,5 @@ public class SXPBlueprintLocalServiceImpl
 
 	@Reference
 	private UserLocalService _userLocalService;
-
-	@Reference
-	private WorkflowInstanceLinkLocalService _workflowInstanceLinkLocalService;
 
 }

@@ -15,7 +15,7 @@
 package com.liferay.object.web.internal.list.type.display.context;
 
 import com.liferay.list.type.model.ListTypeDefinition;
-import com.liferay.object.web.internal.constants.ObjectWebKeys;
+import com.liferay.object.constants.ObjectWebKeys;
 import com.liferay.object.web.internal.display.context.helper.ObjectRequestHelper;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.security.permission.ActionKeys;

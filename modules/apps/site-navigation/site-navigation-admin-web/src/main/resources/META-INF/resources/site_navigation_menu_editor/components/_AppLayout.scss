@@ -24,6 +24,7 @@ $sidebarWidth: 320px;
 
 	&-content {
 		padding-right: 0;
+		position: relative;
 		transition: padding-right ease 0.5s;
 		will-change: padding-right;
 
@@ -35,10 +36,6 @@ $sidebarWidth: 320px;
 
 		.rtl & {
 			transition: padding-left ease 0.5s;
-		}
-
-		.taglib-empty-result-message {
-			padding: 80px 16px 16px;
 		}
 	}
 
@@ -64,8 +61,6 @@ $sidebarWidth: 320px;
 		}
 
 		.rtl & {
-			transform: translateX(-$sidebarWidth);
-
 			&--visible {
 				transform: translateX(0);
 			}

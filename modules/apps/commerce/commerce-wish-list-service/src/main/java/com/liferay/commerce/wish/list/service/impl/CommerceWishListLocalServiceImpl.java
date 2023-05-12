@@ -22,6 +22,7 @@ import com.liferay.commerce.wish.list.model.CommerceWishListItem;
 import com.liferay.commerce.wish.list.service.CommerceWishListItemLocalService;
 import com.liferay.commerce.wish.list.service.base.CommerceWishListLocalServiceBaseImpl;
 import com.liferay.portal.aop.AopService;
+import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.kernel.cache.thread.local.ThreadLocalCachable;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -36,8 +37,10 @@ import com.liferay.portal.kernel.util.Validator;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
@@ -45,6 +48,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Andrea Di Giorgi
  */
 @Component(
+	configurationPid = "com.liferay.commerce.wish.list.internal.configuration.CommerceWishListConfiguration",
 	property = "model.class.name=com.liferay.commerce.wish.list.model.CommerceWishList",
 	service = AopService.class
 )
@@ -59,7 +63,7 @@ public class CommerceWishListLocalServiceImpl
 		User user = _userLocalService.getUser(serviceContext.getUserId());
 		long groupId = serviceContext.getScopeGroupId();
 
-		if (user.isDefaultUser()) {
+		if (user.isGuestUser()) {
 			_validateGuestWishLists();
 		}
 
@@ -199,7 +203,7 @@ public class CommerceWishListLocalServiceImpl
 		serviceContext.setScopeGroupId(groupId);
 		serviceContext.setUserId(user.getUserId());
 
-		if (user.isDefaultUser()) {
+		if (user.isGuestUser()) {
 			return guestCommerceWishList;
 		}
 
@@ -245,6 +249,12 @@ public class CommerceWishListLocalServiceImpl
 		commerceWishList.setDefaultWishList(defaultWishList);
 
 		return commerceWishListPersistence.update(commerceWishList);
+	}
+
+	@Activate
+	protected void activate(Map<String, Object> properties) {
+		_commerceWishListConfiguration = ConfigurableUtil.createConfigurable(
+			CommerceWishListConfiguration.class, properties);
 	}
 
 	private void _mergeCommerceWishList(
@@ -336,7 +346,6 @@ public class CommerceWishListLocalServiceImpl
 		}
 	}
 
-	@Reference
 	private CommerceWishListConfiguration _commerceWishListConfiguration;
 
 	@Reference

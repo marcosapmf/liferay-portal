@@ -21,7 +21,6 @@ import com.liferay.headless.common.spi.odata.entity.EntityFieldsUtil;
 import com.liferay.headless.common.spi.service.context.ServiceContextRequestUtil;
 import com.liferay.headless.delivery.dto.v1_0.MessageBoardSection;
 import com.liferay.headless.delivery.dto.v1_0.util.CustomFieldsUtil;
-import com.liferay.headless.delivery.internal.dto.v1_0.converter.MessageBoardSectionDTOConverter;
 import com.liferay.headless.delivery.internal.odata.entity.v1_0.MessageBoardSectionEntityModel;
 import com.liferay.headless.delivery.resource.v1_0.MessageBoardSectionResource;
 import com.liferay.headless.delivery.search.aggregation.AggregationUtil;
@@ -31,6 +30,7 @@ import com.liferay.message.boards.constants.MBConstants;
 import com.liferay.message.boards.model.MBCategory;
 import com.liferay.message.boards.service.MBCategoryService;
 import com.liferay.petra.function.UnsafeConsumer;
+import com.liferay.portal.kernel.change.tracking.CTAware;
 import com.liferay.portal.kernel.search.BooleanClauseOccur;
 import com.liferay.portal.kernel.search.BooleanQuery;
 import com.liferay.portal.kernel.search.Field;
@@ -50,6 +50,7 @@ import com.liferay.portal.search.query.Queries;
 import com.liferay.portal.search.searcher.SearchRequestBuilder;
 import com.liferay.portal.search.sort.Sorts;
 import com.liferay.portal.vulcan.aggregation.Aggregation;
+import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterRegistry;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.pagination.Page;
@@ -75,6 +76,7 @@ import org.osgi.service.component.annotations.ServiceScope;
 	properties = "OSGI-INF/liferay/rest/v1_0/message-board-section.properties",
 	scope = ServiceScope.PROTOTYPE, service = MessageBoardSectionResource.class
 )
+@CTAware
 public class MessageBoardSectionResourceImpl
 	extends BaseMessageBoardSectionResourceImpl {
 
@@ -402,8 +404,11 @@ public class MessageBoardSectionResourceImpl
 	@Reference
 	private MBCategoryService _mbCategoryService;
 
-	@Reference
-	private MessageBoardSectionDTOConverter _messageBoardSectionDTOConverter;
+	@Reference(
+		target = "(component.name=com.liferay.headless.delivery.internal.dto.v1_0.converter.MessageBoardSectionDTOConverter)"
+	)
+	private DTOConverter<MBCategory, MessageBoardSection>
+		_messageBoardSectionDTOConverter;
 
 	@Reference
 	private Portal _portal;

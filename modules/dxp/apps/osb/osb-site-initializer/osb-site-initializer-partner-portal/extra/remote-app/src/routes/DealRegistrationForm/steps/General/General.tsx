@@ -30,26 +30,39 @@ const General = ({
 	onCancel,
 	onContinue,
 }: PRMFormikPageProps & DealRegistrationStepProps) => {
-	const {isValid, setFieldValue, values, ...formikHelpers} = useFormikContext<
-		DealRegistration
-	>();
+	const {
+		dirty,
+		isValid,
+		setFieldValue,
+		values,
+		...formikHelpers
+	} = useFormikContext<DealRegistration>();
 
-	const {companiesEntries, fieldEntries} = useDynamicFieldEntries();
-
-	const {data: mdfActivities} = useGetMDFActivity(values.partnerAccount.id);
-
-	const {companyOptions, onCompanySelected} = useCompanyOptions(
-		companiesEntries,
+	const {companiesEntries, fieldEntries} = useDynamicFieldEntries(
 		useCallback(
-			(country, company, accountExternalReferenceCodeSF) => {
-				setFieldValue('partnerAccount', company);
-				setFieldValue(
-					'accountExternalReferenceCodeSF',
-					accountExternalReferenceCodeSF
-				);
+			(firstName, lastName) => {
+				setFieldValue('partnerFirstName', firstName);
+				setFieldValue('partnerLastName', lastName);
 			},
 			[setFieldValue]
 		)
+	);
+	const {data: mdfActivities} = useGetMDFActivity(values.partnerAccount.id);
+
+	const {companyOptions, onCompanySelected} = useCompanyOptions(
+		useCallback(
+			(_, company, currency, accountExternalReferenceCode) => {
+				setFieldValue('partnerAccount', company);
+				setFieldValue('currency', currency);
+				setFieldValue(
+					'accountExternalReferenceCode',
+					accountExternalReferenceCode
+				);
+			},
+			[setFieldValue]
+		),
+		companiesEntries,
+		fieldEntries[LiferayPicklistName.CURRENCIES]
 	);
 
 	const {mdfActivitiesOptions, onMDFActivitySelected} = useMDFActivityOptions(
@@ -69,6 +82,20 @@ const General = ({
 		fieldEntries[LiferayPicklistName.COUNTRIES],
 		(selected) => setFieldValue('prospect.country', selected)
 	);
+
+	const {
+		onSelected: onCurrencySelected,
+		options: currencyOptions,
+	} = getPicklistOptions(
+		fieldEntries[LiferayPicklistName.CURRENCIES],
+		(selected) => setFieldValue('currency', selected)
+	);
+
+	const companyCurrencies =
+		currencyOptions &&
+		currencyOptions.filter(
+			(currency) => currency.value === values.currency.key
+		);
 
 	const {
 		onSelected: onIndustrySelected,
@@ -121,6 +148,15 @@ const General = ({
 						name="mdfActivityAssociated"
 						onChange={onMDFActivitySelected}
 						options={mdfActivitiesOptions}
+					/>
+
+					<PRMFormik.Field
+						component={PRMForm.Select}
+						label="Currency"
+						name="currency"
+						onChange={onCurrencySelected}
+						options={companyCurrencies}
+						required
 					/>
 				</PRMForm.Group>
 			</PRMForm.Section>
@@ -321,7 +357,7 @@ const General = ({
 
 				<div className="d-flex justify-content-between px-2 px-md-0">
 					<Button
-						disabled={!isValid}
+						disabled={!isValid || !dirty}
 						onClick={() =>
 							onContinue?.(formikHelpers, StepType.REVIEW)
 						}

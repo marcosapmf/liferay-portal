@@ -14,23 +14,20 @@
 
 import {Outlet} from 'react-router-dom';
 
-import HeaderContextProvider from '../../context/HeaderContext';
 import Sidebar from '../Sidebar';
 import Header from './Header';
 
 const Layout = () => (
-	<main className="testray-main">
-		<div className="testray-body">
+	<main className="tr-main">
+		<div className="tr-main__body">
 			<Sidebar />
 
-			<div className="testray-page">
-				<HeaderContextProvider>
-					<Header />
+			<div className="tr-main__body__page">
+				<Header />
 
-					<section className="testray-content">
-						<Outlet />
-					</section>
-				</HeaderContextProvider>
+				<section className="tr-main__body__page__content">
+					<Outlet />
+				</section>
 			</div>
 		</div>
 	</main>

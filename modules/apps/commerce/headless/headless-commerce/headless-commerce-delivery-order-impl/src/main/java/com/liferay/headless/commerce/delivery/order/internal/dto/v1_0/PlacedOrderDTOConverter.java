@@ -15,6 +15,7 @@
 package com.liferay.headless.commerce.delivery.order.internal.dto.v1_0;
 
 import com.liferay.commerce.constants.CommerceOrderConstants;
+import com.liferay.commerce.constants.CommerceOrderPaymentConstants;
 import com.liferay.commerce.currency.model.CommerceCurrency;
 import com.liferay.commerce.currency.model.CommerceMoney;
 import com.liferay.commerce.currency.util.CommercePriceFormatter;
@@ -54,7 +55,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = "dto.class.name=com.liferay.headless.commerce.delivery.order.dto.v1_0.PlacedOrder",
-	service = {DTOConverter.class, PlacedOrderDTOConverter.class}
+	service = DTOConverter.class
 )
 public class PlacedOrderDTOConverter
 	implements DTOConverter<CommerceOrder, PlacedOrder> {
@@ -95,12 +96,12 @@ public class PlacedOrderDTOConverter
 			WorkflowConstants.getStatusLabel(commerceOrder.getStatus()));
 
 		String commerceOrderPaymentStatusLabel =
-			CommerceOrderConstants.getPaymentStatusLabel(
+			CommerceOrderPaymentConstants.getOrderPaymentStatusLabel(
 				commerceOrder.getPaymentStatus());
 
 		String commerceOrderPaymentStatusLabelI18n = _language.get(
 			resourceBundle,
-			CommerceOrderConstants.getPaymentStatusLabel(
+			CommerceOrderPaymentConstants.getOrderPaymentStatusLabel(
 				commerceOrder.getPaymentStatus()));
 
 		PlacedOrder placedOrder = new PlacedOrder() {
@@ -135,6 +136,12 @@ public class PlacedOrderDTOConverter
 					commerceOrder.getShippingAddressId();
 				printedNote = commerceOrder.getPrintedNote();
 				purchaseOrderNumber = commerceOrder.getPurchaseOrderNumber();
+				shippingOption = commerceOrder.getShippingOptionName();
+				status = commerceOrderWorkflowStatusLabel;
+				summary = _getSummary(commerceOrder, locale);
+				workflowStatusInfo = _toStatus(
+					commerceOrder.getStatus(), commerceOrderWorkflowStatusLabel,
+					commerceOrderWorkflowStatusLabelI18n);
 
 				setShippingMethod(
 					() -> {
@@ -147,12 +154,6 @@ public class PlacedOrderDTOConverter
 
 						return commerceShippingMethod.getEngineKey();
 					});
-				shippingOption = commerceOrder.getShippingOptionName();
-				status = commerceOrderWorkflowStatusLabel;
-				summary = _getSummary(commerceOrder, locale);
-				workflowStatusInfo = _toStatus(
-					commerceOrder.getStatus(), commerceOrderWorkflowStatusLabel,
-					commerceOrderWorkflowStatusLabelI18n);
 			}
 		};
 

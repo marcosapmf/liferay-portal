@@ -85,6 +85,9 @@ public class FormNavigatorConstants {
 
 	public static final String FORM_NAVIGATOR_ID_LAYOUT = "layout.form";
 
+	public static final String FORM_NAVIGATOR_ID_LAYOUT_DESIGN =
+		"layout.design.form";
+
 	public static final String FORM_NAVIGATOR_ID_LAYOUT_SET = "layout.set.form";
 
 	public static final String FORM_NAVIGATOR_ID_ORGANIZATIONS =
@@ -97,5 +100,11 @@ public class FormNavigatorConstants {
 	public static final String FORM_NAVIGATOR_ID_SITES = "sites.form";
 
 	public static final String FORM_NAVIGATOR_ID_USERS = "users.form";
+
+	public enum FormNavigatorType {
+
+		DEFAULT, SHEET_SECTIONS
+
+	}
 
 }

@@ -26,8 +26,17 @@ import com.liferay.document.library.kernel.service.DLFileEntryServiceUtil;
 import com.liferay.document.library.kernel.service.DLFileVersionLocalServiceUtil;
 import com.liferay.document.library.kernel.service.DLFolderLocalServiceUtil;
 import com.liferay.document.library.kernel.util.DLUtil;
+import com.liferay.petra.io.StreamUtil;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.model.ResourceConstants;
+import com.liferay.portal.kernel.model.Role;
+import com.liferay.portal.kernel.model.role.RoleConstants;
+import com.liferay.portal.kernel.security.auth.PrincipalException;
+import com.liferay.portal.kernel.security.permission.ActionKeys;
+import com.liferay.portal.kernel.service.ResourcePermissionLocalServiceUtil;
+import com.liferay.portal.kernel.service.RoleLocalServiceUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
@@ -35,13 +44,17 @@ import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
+import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
+import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
+import com.liferay.ratings.kernel.service.RatingsEntryLocalService;
 
 import java.io.ByteArrayInputStream;
 import java.io.Serializable;
 
+import java.util.Arrays;
 import java.util.HashMap;
 
 import org.junit.Assert;
@@ -77,7 +90,7 @@ public class DLFileEntryServiceTest {
 			ServiceContextTestUtil.getServiceContext(_group.getGroupId());
 
 		DLFolder folder = DLFolderLocalServiceUtil.addFolder(
-			TestPropsValues.getUserId(), _group.getGroupId(),
+			null, TestPropsValues.getUserId(), _group.getGroupId(),
 			_group.getGroupId(), false,
 			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
 			RandomTestUtil.randomString(), RandomTestUtil.randomString(), false,
@@ -86,7 +99,7 @@ public class DLFileEntryServiceTest {
 		DLFileEntry dlFileEntry = addDLFileEntry(folder.getFolderId(), true);
 
 		DLFolder destFolder = DLFolderLocalServiceUtil.addFolder(
-			TestPropsValues.getUserId(), _group.getGroupId(),
+			null, TestPropsValues.getUserId(), _group.getGroupId(),
 			_group.getGroupId(), false,
 			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
 			RandomTestUtil.randomString(), RandomTestUtil.randomString(), false,
@@ -106,7 +119,7 @@ public class DLFileEntryServiceTest {
 			ServiceContextTestUtil.getServiceContext(_group.getGroupId());
 
 		DLFolder folder = DLFolderLocalServiceUtil.addFolder(
-			TestPropsValues.getUserId(), _group.getGroupId(),
+			null, TestPropsValues.getUserId(), _group.getGroupId(),
 			_group.getGroupId(), false,
 			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
 			RandomTestUtil.randomString(), RandomTestUtil.randomString(), false,
@@ -131,7 +144,7 @@ public class DLFileEntryServiceTest {
 			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID, true);
 
 		DLFolder destFolder = DLFolderLocalServiceUtil.addFolder(
-			TestPropsValues.getUserId(), _group.getGroupId(),
+			null, TestPropsValues.getUserId(), _group.getGroupId(),
 			_group.getGroupId(), false,
 			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
 			RandomTestUtil.randomString(), RandomTestUtil.randomString(), false,
@@ -151,7 +164,7 @@ public class DLFileEntryServiceTest {
 			ServiceContextTestUtil.getServiceContext(_group.getGroupId());
 
 		DLFolder folder = DLFolderLocalServiceUtil.addFolder(
-			TestPropsValues.getUserId(), _group.getGroupId(),
+			null, TestPropsValues.getUserId(), _group.getGroupId(),
 			_group.getGroupId(), false,
 			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
 			RandomTestUtil.randomString(), RandomTestUtil.randomString(), false,
@@ -160,7 +173,7 @@ public class DLFileEntryServiceTest {
 		DLFileEntry dlFileEntry = addDLFileEntry(folder.getFolderId(), false);
 
 		DLFolder destFolder = DLFolderLocalServiceUtil.addFolder(
-			TestPropsValues.getUserId(), _group.getGroupId(),
+			null, TestPropsValues.getUserId(), _group.getGroupId(),
 			_group.getGroupId(), false,
 			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
 			RandomTestUtil.randomString(), RandomTestUtil.randomString(), false,
@@ -180,7 +193,7 @@ public class DLFileEntryServiceTest {
 			ServiceContextTestUtil.getServiceContext(_group.getGroupId());
 
 		DLFolder folder = DLFolderLocalServiceUtil.addFolder(
-			TestPropsValues.getUserId(), _group.getGroupId(),
+			null, TestPropsValues.getUserId(), _group.getGroupId(),
 			_group.getGroupId(), false,
 			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
 			RandomTestUtil.randomString(), RandomTestUtil.randomString(), false,
@@ -205,7 +218,7 @@ public class DLFileEntryServiceTest {
 			ServiceContextTestUtil.getServiceContext(_group.getGroupId());
 
 		DLFolder destFolder = DLFolderLocalServiceUtil.addFolder(
-			TestPropsValues.getUserId(), _group.getGroupId(),
+			null, TestPropsValues.getUserId(), _group.getGroupId(),
 			_group.getGroupId(), false,
 			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
 			RandomTestUtil.randomString(), RandomTestUtil.randomString(), false,
@@ -215,6 +228,103 @@ public class DLFileEntryServiceTest {
 			_group.getGroupId(), _group.getGroupId(),
 			dlFileEntry.getFileEntryId(), destFolder.getFolderId(),
 			serviceContext);
+	}
+
+	@Test
+	public void testGetFileAsStreamWithDefaultPermissions() throws Exception {
+		DLFileEntry dlFileEntry = addDLFileEntry(
+			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID, false);
+
+		StreamUtil.cleanUp(
+			DLFileEntryServiceUtil.getFileAsStream(
+				dlFileEntry.getFileEntryId(), dlFileEntry.getVersion()));
+
+		UserTestUtil.setUser(
+			UserTestUtil.addGroupUser(_group, RoleConstants.SITE_MEMBER));
+
+		StreamUtil.cleanUp(
+			DLFileEntryServiceUtil.getFileAsStream(
+				dlFileEntry.getFileEntryId(), dlFileEntry.getVersion()));
+
+		UserTestUtil.setUser(
+			UserTestUtil.addGroupUser(_group, RoleConstants.GUEST));
+
+		StreamUtil.cleanUp(
+			DLFileEntryServiceUtil.getFileAsStream(
+				dlFileEntry.getFileEntryId(), dlFileEntry.getVersion()));
+	}
+
+	@Test(expected = PrincipalException.class)
+	public void testGetFileAsStreamWithNoDownloadPermission() throws Exception {
+		UserTestUtil.setUser(
+			UserTestUtil.addGroupUser(_group, RoleConstants.SITE_MEMBER));
+
+		DLFileEntry dlFileEntry = addDLFileEntry(
+			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID, false);
+
+		_removeResourcePermission(
+			dlFileEntry.getFileEntryId(), RoleConstants.OWNER,
+			ActionKeys.DOWNLOAD);
+		_removeResourcePermission(
+			dlFileEntry.getFileEntryId(), RoleConstants.SITE_MEMBER,
+			ActionKeys.DOWNLOAD);
+		_removeResourcePermission(
+			dlFileEntry.getFileEntryId(), RoleConstants.GUEST,
+			ActionKeys.DOWNLOAD);
+
+		StreamUtil.cleanUp(
+			DLFileEntryServiceUtil.getFileAsStream(
+				dlFileEntry.getFileEntryId(), dlFileEntry.getVersion()));
+	}
+
+	@Test
+	public void testGetFileEntriesByRating() throws Exception {
+		DLFileEntry dlFileEntry1 = addDLFileEntry(
+			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID, false);
+		DLFileEntry dlFileEntry2 = addDLFileEntry(
+			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID, false);
+		DLFileEntry dlFileEntry3 = addDLFileEntry(
+			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID, false);
+
+		_ratingsEntryLocalService.updateEntry(
+			TestPropsValues.getUserId(), DLFileEntry.class.getName(),
+			dlFileEntry1.getFileEntryId(), 1.0,
+			ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
+
+		_ratingsEntryLocalService.updateEntry(
+			TestPropsValues.getUserId(), DLFileEntry.class.getName(),
+			dlFileEntry2.getFileEntryId(), 1.0,
+			ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
+
+		_ratingsEntryLocalService.updateEntry(
+			TestPropsValues.getUserId(), DLFileEntry.class.getName(),
+			dlFileEntry3.getFileEntryId(), 0.5,
+			ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
+
+		Assert.assertEquals(
+			2,
+			DLFileEntryServiceUtil.getFileEntriesCount(
+				_group.getGroupId(), 1.0));
+		Assert.assertEquals(
+			Arrays.asList(dlFileEntry2, dlFileEntry1),
+			DLFileEntryServiceUtil.getFileEntries(
+				_group.getGroupId(), 1.0, QueryUtil.ALL_POS,
+				QueryUtil.ALL_POS));
+
+		_ratingsEntryLocalService.updateEntry(
+			TestPropsValues.getUserId(), DLFileEntry.class.getName(),
+			dlFileEntry1.getFileEntryId(), 1.0,
+			ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
+
+		Assert.assertEquals(
+			2,
+			DLFileEntryServiceUtil.getFileEntriesCount(
+				_group.getGroupId(), 1.0));
+		Assert.assertEquals(
+			Arrays.asList(dlFileEntry1, dlFileEntry2),
+			DLFileEntryServiceUtil.getFileEntries(
+				_group.getGroupId(), 1.0, QueryUtil.ALL_POS,
+				QueryUtil.ALL_POS));
 	}
 
 	@Test
@@ -350,10 +460,26 @@ public class DLFileEntryServiceTest {
 			new HashMap<String, Serializable>());
 	}
 
+	private void _removeResourcePermission(
+			long fileEntryId, String roleName, String actionId)
+		throws Exception {
+
+		Role guestRole = RoleLocalServiceUtil.getRole(
+			_group.getCompanyId(), roleName);
+
+		ResourcePermissionLocalServiceUtil.removeResourcePermission(
+			_group.getCompanyId(), DLFileEntry.class.getName(),
+			ResourceConstants.SCOPE_INDIVIDUAL, String.valueOf(fileEntryId),
+			guestRole.getRoleId(), actionId);
+	}
+
 	private static final String _CONTENT =
 		"Content: Enterprise. Open Source. For Life.";
 
 	@DeleteAfterTestRun
 	private Group _group;
+
+	@Inject
+	private RatingsEntryLocalService _ratingsEntryLocalService;
 
 }

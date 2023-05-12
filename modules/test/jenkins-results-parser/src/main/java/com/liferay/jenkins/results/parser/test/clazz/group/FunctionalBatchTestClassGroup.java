@@ -85,8 +85,11 @@ public class FunctionalBatchTestClassGroup extends BatchTestClassGroup {
 	}
 
 	public List<File> getTestBaseDirs() {
-		PortalGitWorkingDirectory portalGitWorkingDirectory =
-			getPortalGitWorkingDirectory();
+		String testBaseDirPath = _getTestBaseDirPath();
+
+		if (!JenkinsResultsParserUtil.isNullOrEmpty(testBaseDirPath)) {
+			return Arrays.asList(new File(testBaseDirPath));
+		}
 
 		return Arrays.asList(
 			new File(
@@ -117,6 +120,21 @@ public class FunctionalBatchTestClassGroup extends BatchTestClassGroup {
 		}
 
 		return testClasses;
+	}
+
+	public String getWorkspaceName() {
+		JobProperty jobProperty = getJobProperty(
+			"test.workspace.name", testSuiteName, batchName);
+
+		if ((jobProperty == null) ||
+			JenkinsResultsParserUtil.isNullOrEmpty(jobProperty.getValue())) {
+
+			return null;
+		}
+
+		recordJobProperty(jobProperty);
+
+		return jobProperty.getValue();
 	}
 
 	protected FunctionalBatchTestClassGroup(
@@ -229,6 +247,15 @@ public class FunctionalBatchTestClassGroup extends BatchTestClassGroup {
 					new File(
 						portalWorkingDirectory,
 						"portal-web/poshi-ext.properties"));
+
+				File poshiPropertiesFile = new File(
+					testBaseDirPath, "poshi.properties");
+
+				if (poshiPropertiesFile.exists()) {
+					properties = JenkinsResultsParserUtil.getProperties(
+						poshiPropertiesFile,
+						new File(testBaseDirPath, "poshi-ext.properties"));
+				}
 
 				if (!JenkinsResultsParserUtil.isNullOrEmpty(testBaseDirPath)) {
 					properties.setProperty(
@@ -422,6 +449,44 @@ public class FunctionalBatchTestClassGroup extends BatchTestClassGroup {
 		}
 
 		return concatedPQL;
+	}
+
+	private String _getTestBaseDirPath() {
+		JobProperty jobProperty = getJobProperty(
+			"test.base.dir", testSuiteName, batchName);
+
+		if ((jobProperty == null) ||
+			JenkinsResultsParserUtil.isNullOrEmpty(jobProperty.getValue())) {
+
+			String workspaceName = getWorkspaceName();
+
+			if (JenkinsResultsParserUtil.isNullOrEmpty(workspaceName)) {
+				return null;
+			}
+
+			File testBaseDir = new File(
+				portalGitWorkingDirectory.getWorkingDirectory(),
+				JenkinsResultsParserUtil.combine(
+					"workspaces/", workspaceName, "/poshi"));
+
+			if (!testBaseDir.exists()) {
+				return null;
+			}
+
+			return JenkinsResultsParserUtil.getCanonicalPath(testBaseDir);
+		}
+
+		File testBaseDir = new File(
+			portalGitWorkingDirectory.getWorkingDirectory(),
+			jobProperty.getValue());
+
+		if (!testBaseDir.exists()) {
+			return null;
+		}
+
+		recordJobProperty(jobProperty);
+
+		return JenkinsResultsParserUtil.getCanonicalPath(testBaseDir);
 	}
 
 	private String _getTestBatchRunPropertyQuery(File testBaseDir) {

@@ -109,8 +109,6 @@ public class ObjectFieldCacheModel
 		sb.append(dbTableName);
 		sb.append(", dbType=");
 		sb.append(dbType);
-		sb.append(", defaultValue=");
-		sb.append(defaultValue);
 		sb.append(", indexed=");
 		sb.append(indexed);
 		sb.append(", indexedAsKeyword=");
@@ -119,6 +117,8 @@ public class ObjectFieldCacheModel
 		sb.append(indexedLanguageId);
 		sb.append(", label=");
 		sb.append(label);
+		sb.append(", localized=");
+		sb.append(localized);
 		sb.append(", name=");
 		sb.append(name);
 		sb.append(", relationshipType=");
@@ -210,13 +210,6 @@ public class ObjectFieldCacheModel
 			objectFieldImpl.setDBType(dbType);
 		}
 
-		if (defaultValue == null) {
-			objectFieldImpl.setDefaultValue("");
-		}
-		else {
-			objectFieldImpl.setDefaultValue(defaultValue);
-		}
-
 		objectFieldImpl.setIndexed(indexed);
 		objectFieldImpl.setIndexedAsKeyword(indexedAsKeyword);
 
@@ -233,6 +226,8 @@ public class ObjectFieldCacheModel
 		else {
 			objectFieldImpl.setLabel(label);
 		}
+
+		objectFieldImpl.setLocalized(localized);
 
 		if (name == null) {
 			objectFieldImpl.setName("");
@@ -279,13 +274,14 @@ public class ObjectFieldCacheModel
 		dbColumnName = objectInput.readUTF();
 		dbTableName = objectInput.readUTF();
 		dbType = objectInput.readUTF();
-		defaultValue = objectInput.readUTF();
 
 		indexed = objectInput.readBoolean();
 
 		indexedAsKeyword = objectInput.readBoolean();
 		indexedLanguageId = objectInput.readUTF();
 		label = objectInput.readUTF();
+
+		localized = objectInput.readBoolean();
 		name = objectInput.readUTF();
 		relationshipType = objectInput.readUTF();
 
@@ -362,13 +358,6 @@ public class ObjectFieldCacheModel
 			objectOutput.writeUTF(dbType);
 		}
 
-		if (defaultValue == null) {
-			objectOutput.writeUTF("");
-		}
-		else {
-			objectOutput.writeUTF(defaultValue);
-		}
-
 		objectOutput.writeBoolean(indexed);
 
 		objectOutput.writeBoolean(indexedAsKeyword);
@@ -386,6 +375,8 @@ public class ObjectFieldCacheModel
 		else {
 			objectOutput.writeUTF(label);
 		}
+
+		objectOutput.writeBoolean(localized);
 
 		if (name == null) {
 			objectOutput.writeUTF("");
@@ -423,11 +414,11 @@ public class ObjectFieldCacheModel
 	public String dbColumnName;
 	public String dbTableName;
 	public String dbType;
-	public String defaultValue;
 	public boolean indexed;
 	public boolean indexedAsKeyword;
 	public String indexedLanguageId;
 	public String label;
+	public boolean localized;
 	public String name;
 	public String relationshipType;
 	public boolean required;

@@ -14,9 +14,8 @@
 
 package com.liferay.commerce.order.content.web.internal.portlet.action;
 
+import com.liferay.account.exception.NoSuchEntryException;
 import com.liferay.account.model.AccountEntry;
-import com.liferay.commerce.account.exception.NoSuchAccountException;
-import com.liferay.commerce.account.model.CommerceAccount;
 import com.liferay.commerce.account.util.CommerceAccountHelper;
 import com.liferay.commerce.constants.CommerceAddressConstants;
 import com.liferay.commerce.constants.CommerceOrderConstants;
@@ -169,7 +168,7 @@ public class EditCommerceOrderMVCActionCommand extends BaseMVCActionCommand {
 			}
 		}
 		catch (Exception exception) {
-			if (exception instanceof NoSuchAccountException ||
+			if (exception instanceof NoSuchEntryException ||
 				exception instanceof NoSuchOrderException ||
 				exception instanceof PrincipalException) {
 
@@ -262,10 +261,10 @@ public class EditCommerceOrderMVCActionCommand extends BaseMVCActionCommand {
 			(CommerceContext)actionRequest.getAttribute(
 				CommerceWebKeys.COMMERCE_CONTEXT);
 
-		CommerceAccount commerceAccount = commerceContext.getCommerceAccount();
+		AccountEntry accountEntry = commerceContext.getAccountEntry();
 
-		if (commerceAccount == null) {
-			throw new NoSuchAccountException();
+		if (accountEntry == null) {
+			throw new NoSuchEntryException();
 		}
 
 		ThemeDisplay themeDisplay = (ThemeDisplay)actionRequest.getAttribute(
@@ -308,7 +307,7 @@ public class EditCommerceOrderMVCActionCommand extends BaseMVCActionCommand {
 
 		try {
 			return _commerceOrderService.addCommerceOrder(
-				commerceChannelGroupId, commerceAccount.getCommerceAccountId(),
+				commerceChannelGroupId, accountEntry.getAccountEntryId(),
 				commerceCurrencyId, commerceOrderTypeId);
 		}
 		catch (Exception exception) {

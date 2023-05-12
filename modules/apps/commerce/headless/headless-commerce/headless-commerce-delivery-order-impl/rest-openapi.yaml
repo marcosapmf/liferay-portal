@@ -296,6 +296,9 @@ components:
                     format: int32
                     readOnly: true
                     type: integer
+                replacedSku:
+                    readOnly: true
+                    type: string
                 settings:
                     $ref: "#/components/schemas/Settings"
                     readOnly: true
@@ -316,6 +319,11 @@ components:
                 valid:
                     readOnly: true
                     type: boolean
+                virtualItemURLs:
+                    items:
+                        type: string
+                    readOnly: true
+                    type: array
             type: object
         PlacedOrderItemShipment:
             properties:
@@ -594,7 +602,7 @@ components:
 info:
     description:
         "Headless Delivery Commerce Order API. A Java client JAR is available for use with the group ID 'com.liferay',
-        artifact ID 'com.liferay.headless.commerce.delivery.order.client', and version '1.0.4'."
+        artifact ID 'com.liferay.headless.commerce.delivery.order.client', and version '1.0.8'."
     license:
         name: Apache 2.0
         url: http://www.apache.org/licenses/LICENSE-2.0.html

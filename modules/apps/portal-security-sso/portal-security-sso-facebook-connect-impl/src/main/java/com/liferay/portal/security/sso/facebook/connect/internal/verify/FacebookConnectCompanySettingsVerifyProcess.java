@@ -16,6 +16,7 @@ package com.liferay.portal.security.sso.facebook.connect.internal.verify;
 
 import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.settings.SettingsFactory;
+import com.liferay.portal.kernel.settings.SettingsLocatorHelper;
 import com.liferay.portal.kernel.util.PrefsProps;
 import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.Validator;
@@ -34,10 +35,7 @@ import org.osgi.service.component.annotations.Reference;
 /**
  * @author Stian Sigvartsen
  */
-@Component(
-	property = "verify.process.name=com.liferay.portal.security.sso.facebook.connect",
-	service = VerifyProcess.class
-)
+@Component(service = VerifyProcess.class)
 public class FacebookConnectCompanySettingsVerifyProcess
 	extends BaseCompanySettingsVerifyProcess {
 
@@ -113,6 +111,11 @@ public class FacebookConnectCompanySettingsVerifyProcess
 		return FacebookConnectConstants.SERVICE_NAME;
 	}
 
+	@Override
+	protected SettingsLocatorHelper getSettingsLocatorHelper() {
+		return _settingsLocatorHelper;
+	}
+
 	private String _upgradeLegacyRedirectURI(String legacyRedirectURI) {
 		if (Validator.isNull(legacyRedirectURI)) {
 			return legacyRedirectURI;
@@ -131,5 +134,8 @@ public class FacebookConnectCompanySettingsVerifyProcess
 
 	@Reference
 	private SettingsFactory _settingsFactory;
+
+	@Reference
+	private SettingsLocatorHelper _settingsLocatorHelper;
 
 }

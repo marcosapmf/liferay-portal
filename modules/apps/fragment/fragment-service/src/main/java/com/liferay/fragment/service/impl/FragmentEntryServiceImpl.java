@@ -66,7 +66,7 @@ public class FragmentEntryServiceImpl extends FragmentEntryServiceBaseImpl {
 
 	@Override
 	public FragmentEntry copyFragmentEntry(
-			long groupId, long fragmentEntryId, long fragmentCollectionId,
+			long groupId, long sourceFragmentEntryId, long fragmentCollectionId,
 			ServiceContext serviceContext)
 		throws PortalException {
 
@@ -75,7 +75,7 @@ public class FragmentEntryServiceImpl extends FragmentEntryServiceBaseImpl {
 			FragmentActionKeys.MANAGE_FRAGMENT_ENTRIES);
 
 		return fragmentEntryLocalService.copyFragmentEntry(
-			getUserId(), groupId, fragmentEntryId, fragmentCollectionId,
+			getUserId(), groupId, sourceFragmentEntryId, fragmentCollectionId,
 			serviceContext);
 	}
 
@@ -410,6 +410,22 @@ public class FragmentEntryServiceImpl extends FragmentEntryServiceBaseImpl {
 			FragmentActionKeys.MANAGE_FRAGMENT_ENTRIES);
 
 		return fragmentEntryLocalService.updateFragmentEntry(fragmentEntry);
+	}
+
+	@Override
+	public FragmentEntry updateFragmentEntry(
+			long fragmentEntryId, boolean cacheable)
+		throws PortalException {
+
+		FragmentEntry fragmentEntry =
+			fragmentEntryLocalService.getFragmentEntry(fragmentEntryId);
+
+		_portletResourcePermission.check(
+			getPermissionChecker(), fragmentEntry.getGroupId(),
+			FragmentActionKeys.MANAGE_FRAGMENT_ENTRIES);
+
+		return fragmentEntryLocalService.updateFragmentEntry(
+			fragmentEntryId, cacheable);
 	}
 
 	@Override

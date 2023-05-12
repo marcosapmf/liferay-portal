@@ -30,7 +30,6 @@ type SidebarItemProps = {
 
 const SidebarItem: React.FC<SidebarItemProps> = ({
 	active,
-	className,
 	expanded,
 	icon,
 	label,
@@ -41,38 +40,36 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
 		: ({children, ...props}: any) => <div {...props}>{children}</div>;
 
 	return (
-		<Tooltip
-			position="right"
-			title={expanded ? undefined : i18n.translate(label)}
+		<LinkComponent
+			className={classNames('tr-sidebar__content__list__item', {
+				'tr-sidebar__content__list__item--active': active,
+			})}
+			to={path as string}
 		>
-			<LinkComponent
-				className={classNames(
-					'cursor-pointer testray-sidebar-item',
-					{
-						active,
-						'testray-sidebar-item-expand': expanded,
-						'testray-sidebar-item-normal': !expanded,
-					},
-					className
-				)}
-				to={path as string}
+			<Tooltip
+				className="align-items-center d-flex"
+				position="right"
+				title={expanded ? undefined : i18n.translate(label)}
 			>
 				<TestrayIcons
-					className="testray-icon"
+					className="tr-sidebar__content__list__item__icon"
 					fill={active ? 'white' : '#8b8db2'}
 					size={35}
 					symbol={icon}
 				/>
 
 				<span
-					className={classNames('ml-1 testray-sidebar-text', {
-						'testray-sidebar-text-expanded': expanded,
-					})}
+					className={classNames(
+						'tr-sidebar__content__list__item__text',
+						{
+							'tr-sidebar__content__list__item__text--expanded': expanded,
+						}
+					)}
 				>
 					{label}
 				</span>
-			</LinkComponent>
-		</Tooltip>
+			</Tooltip>
+		</LinkComponent>
 	);
 };
 

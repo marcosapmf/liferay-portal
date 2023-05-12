@@ -24,6 +24,8 @@ import com.liferay.layout.display.page.constants.LayoutDisplayPageWebKeys;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.cookies.CookiesManagerUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.GroupConstants;
@@ -35,11 +37,14 @@ import com.liferay.portal.kernel.model.Organization;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.portlet.PortletProvider;
 import com.liferay.portal.kernel.portlet.PortletProviderUtil;
+import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.service.LayoutLocalServiceUtil;
+import com.liferay.portal.kernel.service.LayoutServiceUtil;
 import com.liferay.portal.kernel.service.LayoutSetLocalServiceUtil;
 import com.liferay.portal.kernel.service.OrganizationLocalServiceUtil;
 import com.liferay.portal.kernel.service.UserLocalServiceUtil;
+import com.liferay.portal.kernel.service.permission.GroupPermissionUtil;
 import com.liferay.portal.kernel.servlet.taglib.ui.BreadcrumbEntry;
 import com.liferay.portal.kernel.theme.PortletDisplay;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
@@ -273,7 +278,7 @@ public class BreadcrumbUtil {
 
 		Group group = layoutSet.getGroup();
 
-		if (group.isControlPanel()) {
+		if (group.isControlPanel() || group.isDepot()) {
 			return;
 		}
 
@@ -286,38 +291,48 @@ public class BreadcrumbUtil {
 			}
 		}
 
+		if (_isGuestGroup(group)) {
+			return;
+		}
+
+		BreadcrumbEntry breadcrumbEntry = new BreadcrumbEntry();
+
+		breadcrumbEntry.setTitle(
+			group.getDescriptiveName(themeDisplay.getLocale()));
+
 		int layoutsPageCount = 0;
 
 		if (layoutSet.isPrivateLayout()) {
-			layoutsPageCount = group.getPrivateLayoutsPageCount();
+			layoutsPageCount = LayoutServiceUtil.getLayoutsCount(
+				group.getGroupId(), true);
 		}
 		else {
-			layoutsPageCount = group.getPublicLayoutsPageCount();
+			layoutsPageCount = LayoutServiceUtil.getLayoutsCount(
+				group.getGroupId(), false);
 		}
 
-		if ((layoutsPageCount > 0) && !_isGuestGroup(group)) {
-			BreadcrumbEntry breadcrumbEntry = new BreadcrumbEntry();
-
-			breadcrumbEntry.setTitle(
-				group.getDescriptiveName(themeDisplay.getLocale()));
-
-			if (group.isActive()) {
-				String layoutSetFriendlyURL =
-					PortalUtil.getLayoutSetFriendlyURL(layoutSet, themeDisplay);
-
-				if (themeDisplay.isAddSessionIdToURL()) {
-					layoutSetFriendlyURL = PortalUtil.getURLWithSessionId(
-						layoutSetFriendlyURL, themeDisplay.getSessionId());
-				}
-
-				breadcrumbEntry.setURL(layoutSetFriendlyURL);
-			}
-			else {
-				breadcrumbEntry.setBrowsable(false);
-			}
-
+		if (layoutsPageCount <= 0) {
 			breadcrumbEntries.add(breadcrumbEntry);
+
+			return;
 		}
+
+		if (group.isActive() && _hasViewPermissions(group, themeDisplay)) {
+			String layoutSetFriendlyURL = PortalUtil.getLayoutSetFriendlyURL(
+				layoutSet, themeDisplay);
+
+			if (themeDisplay.isAddSessionIdToURL()) {
+				layoutSetFriendlyURL = PortalUtil.getURLWithSessionId(
+					layoutSetFriendlyURL, themeDisplay.getSessionId());
+			}
+
+			breadcrumbEntry.setURL(layoutSetFriendlyURL);
+		}
+		else {
+			breadcrumbEntry.setBrowsable(false);
+		}
+
+		breadcrumbEntries.add(breadcrumbEntry);
 	}
 
 	private static void _addLayoutBreadcrumbEntries(
@@ -432,7 +447,7 @@ public class BreadcrumbUtil {
 			Group parentGroup = group.getParentGroup();
 
 			if (parentGroup != null) {
-				return LayoutSetLocalServiceUtil.getLayoutSet(
+				return LayoutSetLocalServiceUtil.fetchLayoutSet(
 					parentGroup.getGroupId(), layoutSet.isPrivateLayout());
 			}
 		}
@@ -448,12 +463,34 @@ public class BreadcrumbUtil {
 
 				Group parentGroup = organization.getGroup();
 
-				return LayoutSetLocalServiceUtil.getLayoutSet(
+				return LayoutSetLocalServiceUtil.fetchLayoutSet(
 					parentGroup.getGroupId(), layoutSet.isPrivateLayout());
 			}
 		}
 
 		return null;
+	}
+
+	private static boolean _hasViewPermissions(
+		Group group, ThemeDisplay themeDisplay) {
+
+		try {
+			if (GroupPermissionUtil.contains(
+					themeDisplay.getPermissionChecker(), group,
+					ActionKeys.VIEW)) {
+
+				return true;
+			}
+
+			return false;
+		}
+		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
+
+			return false;
+		}
 	}
 
 	private static boolean _isGuestGroup(Group group) {
@@ -475,5 +512,7 @@ public class BreadcrumbUtil {
 
 		return false;
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(BreadcrumbUtil.class);
 
 }

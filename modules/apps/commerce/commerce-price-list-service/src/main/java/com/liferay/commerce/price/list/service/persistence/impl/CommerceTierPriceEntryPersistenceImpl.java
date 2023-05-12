@@ -5475,7 +5475,9 @@ public class CommerceTierPriceEntryPersistenceImpl
 				if (ercCommerceTierPriceEntry != null) {
 					throw new DuplicateCommerceTierPriceEntryExternalReferenceCodeException(
 						"Duplicate commerce tier price entry with external reference code " +
-							commerceTierPriceEntry.getExternalReferenceCode());
+							commerceTierPriceEntry.getExternalReferenceCode() +
+								" and company " +
+									commerceTierPriceEntry.getCompanyId());
 				}
 			}
 			else {
@@ -5486,7 +5488,9 @@ public class CommerceTierPriceEntryPersistenceImpl
 
 					throw new DuplicateCommerceTierPriceEntryExternalReferenceCodeException(
 						"Duplicate commerce tier price entry with external reference code " +
-							commerceTierPriceEntry.getExternalReferenceCode());
+							commerceTierPriceEntry.getExternalReferenceCode() +
+								" and company " +
+									commerceTierPriceEntry.getCompanyId());
 				}
 			}
 		}

@@ -18,7 +18,6 @@ import com.liferay.asset.kernel.AssetRendererFactoryRegistryUtil;
 import com.liferay.asset.kernel.model.AssetCategory;
 import com.liferay.asset.kernel.model.AssetEntry;
 import com.liferay.asset.kernel.model.AssetRendererFactory;
-import com.liferay.asset.kernel.service.AssetCategoryLocalService;
 import com.liferay.asset.kernel.service.persistence.AssetEntryQuery;
 import com.liferay.asset.util.AssetHelper;
 import com.liferay.asset.util.comparator.AssetRendererFactoryTypeNameComparator;
@@ -26,17 +25,13 @@ import com.liferay.info.collection.provider.CollectionQuery;
 import com.liferay.info.collection.provider.ConfigurableInfoCollectionProvider;
 import com.liferay.info.collection.provider.RelatedInfoItemCollectionProvider;
 import com.liferay.info.field.InfoField;
-import com.liferay.info.field.InfoFieldSet;
 import com.liferay.info.field.type.SelectInfoFieldType;
-import com.liferay.info.field.type.TextInfoFieldType;
 import com.liferay.info.form.InfoForm;
 import com.liferay.info.localized.InfoLocalizedValue;
 import com.liferay.info.localized.bundle.ModelResourceLocalizedValue;
-import com.liferay.info.localized.bundle.ResourceBundleInfoLocalizedValue;
 import com.liferay.info.pagination.InfoPage;
 import com.liferay.info.pagination.Pagination;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -50,12 +45,10 @@ import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ArrayUtil;
-import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.Portal;
-import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
@@ -66,7 +59,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Objects;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -127,72 +119,9 @@ public class AssetEntriesWithSameAssetCategoryRelatedInfoItemCollectionProvider
 
 	@Override
 	public InfoForm getConfigurationInfoForm() {
-		if (!GetterUtil.getBoolean(PropsUtil.get("feature.flag.LPS-166275"))) {
-			return InfoForm.builder(
-			).infoFieldSetEntry(
-				_getItemTypesInfoField()
-			).build();
-		}
-
 		return InfoForm.builder(
 		).infoFieldSetEntry(
-			InfoFieldSet.builder(
-			).infoFieldSetEntry(
-				_getItemTypesInfoField()
-			).labelInfoLocalizedValue(
-				InfoLocalizedValue.localize(getClass(), "filter")
-			).name(
-				"filter"
-			).build()
-		).infoFieldSetEntry(
-			InfoFieldSet.builder(
-			).infoFieldSetEntry(
-				InfoField.builder(
-				).infoFieldType(
-					SelectInfoFieldType.INSTANCE
-				).namespace(
-					StringPool.BLANK
-				).name(
-					"assetCategoryRule"
-				).attribute(
-					SelectInfoFieldType.OPTIONS,
-					ListUtil.fromArray(
-						new SelectInfoFieldType.Option(
-							new ResourceBundleInfoLocalizedValue(
-								getClass(), "not-selected"),
-							StringPool.BLANK),
-						new SelectInfoFieldType.Option(
-							new ResourceBundleInfoLocalizedValue(
-								getClass(),
-								"any-category-of-the-same-vocabulary"),
-							"anyAssetCategoryOfTheSameVocabulary"),
-						new SelectInfoFieldType.Option(
-							new ResourceBundleInfoLocalizedValue(
-								getClass(), "a-specific-category"),
-							"specificAssetCategory"))
-				).labelInfoLocalizedValue(
-					InfoLocalizedValue.localize(getClass(), "and-contains")
-				).localizable(
-					true
-				).build()
-			).infoFieldSetEntry(
-				InfoField.builder(
-				).infoFieldType(
-					TextInfoFieldType.INSTANCE
-				).namespace(
-					StringPool.BLANK
-				).name(
-					"specificAssetCategoryId"
-				).labelInfoLocalizedValue(
-					InfoLocalizedValue.localize(getClass(), "category")
-				).localizable(
-					false
-				).build()
-			).labelInfoLocalizedValue(
-				InfoLocalizedValue.localize(getClass(), "advanced-rule")
-			).name(
-				"advanced-rule"
-			).build()
+			_getItemTypesInfoField()
 		).build();
 	}
 
@@ -213,55 +142,6 @@ public class AssetEntriesWithSameAssetCategoryRelatedInfoItemCollectionProvider
 
 		assetEntryQuery.setAllCategoryIds(
 			new long[] {assetCategory.getCategoryId()});
-
-		Map<String, String[]> configuration =
-			collectionQuery.getConfiguration();
-
-		String assetCategoryRule = StringPool.BLANK;
-		long specificAssetCategoryId = 0;
-
-		if (GetterUtil.getBoolean(PropsUtil.get("feature.flag.LPS-166275")) &&
-			(configuration != null) &&
-			!ArrayUtil.isEmpty(configuration.get("assetCategoryRule"))) {
-
-			String[] assetCategoryRules = configuration.get(
-				"assetCategoryRule");
-
-			assetCategoryRule = assetCategoryRules[0];
-
-			if (Objects.equals(assetCategoryRule, "specificAssetCategory") &&
-				!ArrayUtil.isEmpty(
-					configuration.get("specificAssetCategoryId"))) {
-
-				String[] specificAssetCategoryIds = configuration.get(
-					"specificAssetCategoryId");
-
-				specificAssetCategoryId = GetterUtil.getLong(
-					specificAssetCategoryIds[0]);
-			}
-		}
-
-		if (Objects.equals(
-				assetCategoryRule, "anyAssetCategoryOfTheSameVocabulary")) {
-
-			assetEntryQuery.setAnyCategoryIds(
-				ArrayUtil.filter(
-					ArrayUtil.toArray(
-						ListUtil.toArray(
-							_assetCategoryLocalService.getVocabularyCategories(
-								assetCategory.getVocabularyId(),
-								QueryUtil.ALL_POS, QueryUtil.ALL_POS, null),
-							AssetCategory.CATEGORY_ID_ACCESSOR)),
-					categoryId -> categoryId != assetCategory.getCategoryId()));
-		}
-		else if ((specificAssetCategoryId > 0) &&
-				 (specificAssetCategoryId != assetCategory.getCategoryId())) {
-
-			assetEntryQuery.setAllCategoryIds(
-				new long[] {
-					assetCategory.getCategoryId(), specificAssetCategoryId
-				});
-		}
 
 		assetEntryQuery.setClassNameIds(_getClassNameIds(collectionQuery));
 		assetEntryQuery.setEnablePermissions(true);
@@ -313,19 +193,8 @@ public class AssetEntriesWithSameAssetCategoryRelatedInfoItemCollectionProvider
 		ServiceContext serviceContext =
 			ServiceContextThreadLocal.getServiceContext();
 
-		return ArrayUtil.filter(
-			AssetRendererFactoryRegistryUtil.getClassNameIds(
-				serviceContext.getCompanyId(), true),
-			classNameId -> {
-				Indexer<?> indexer = IndexerRegistryUtil.getIndexer(
-					_portal.getClassName(classNameId));
-
-				if (indexer == null) {
-					return false;
-				}
-
-				return true;
-			});
+		return AssetRendererFactoryRegistryUtil.getIndexableClassNameIds(
+			serviceContext.getCompanyId(), true);
 	}
 
 	private InfoField _getItemTypesInfoField() {
@@ -343,8 +212,7 @@ public class AssetEntriesWithSameAssetCategoryRelatedInfoItemCollectionProvider
 				}
 
 				Indexer<?> indexer = IndexerRegistryUtil.getIndexer(
-					_portal.getClassName(
-						assetRendererFactory.getClassNameId()));
+					assetRendererFactory.getClassName());
 
 				if (indexer == null) {
 					return false;
@@ -400,8 +268,6 @@ public class AssetEntriesWithSameAssetCategoryRelatedInfoItemCollectionProvider
 				Field.STATUS, WorkflowConstants.STATUS_APPROVED
 			).put(
 				"head", true
-			).put(
-				"latest", true
 			).build(),
 			serviceContext.getCompanyId(), null, themeDisplay.getLayout(), null,
 			serviceContext.getScopeGroupId(), null, serviceContext.getUserId());
@@ -410,9 +276,6 @@ public class AssetEntriesWithSameAssetCategoryRelatedInfoItemCollectionProvider
 	private static final Log _log = LogFactoryUtil.getLog(
 		AssetEntriesWithSameAssetCategoryRelatedInfoItemCollectionProvider.
 			class);
-
-	@Reference
-	private AssetCategoryLocalService _assetCategoryLocalService;
 
 	@Reference
 	private AssetHelper _assetHelper;

@@ -16,6 +16,7 @@ import ClayForm from '@clayui/form';
 import {
 	API,
 	ManagementToolbar,
+	REQUIRED_MSG,
 	invalidateRequired,
 	openToast,
 	useForm,
@@ -28,6 +29,7 @@ import {defaultLanguageId} from '../util/constants';
 import './EditNotificationTemplate.scss';
 import {BasicInfoContainer} from './BasicInfoContainer/BasicInfoContainer';
 import ContentContainer from './ContentContainer/ContentContainer';
+import DefinitionOfTermsContainer from './DefinitionOfTermsContainer/DefinitionOfTermsContainer';
 import {SettingsContainer} from './SettingsContainer/SettingsContainer';
 
 const HEADERS = new Headers({
@@ -71,6 +73,10 @@ export default function EditNotificationTemplate({
 
 	const [isSubmitted, setIsSubmitted] = useState(false);
 
+	const [objectDefinitions, setObjectDefinitions] = useState<
+		ObjectDefinition[]
+	>([]);
+
 	const [selectedLocale, setSelectedLocale] = useState<Locale>(
 		Liferay.ThemeDisplay.getDefaultLanguageId
 	);
@@ -81,20 +87,24 @@ export default function EditNotificationTemplate({
 		const errors: NotificationTemplateError = {};
 
 		if (!values.name) {
-			errors.name = Liferay.Language.get('required');
+			errors.name = REQUIRED_MSG;
+		}
+
+		if (!values.subject[defaultLanguageId]) {
+			errors.subject = Liferay.Language.get('required');
 		}
 
 		if (notificationTemplateType === 'email' || values.type === 'email') {
 			if (!values.recipients[0].from) {
-				errors.from = Liferay.Language.get('required');
+				errors.from = REQUIRED_MSG;
 			}
 
 			if (!values.recipients[0].fromName[defaultLanguageId]) {
-				errors.fromName = Liferay.Language.get('required');
+				errors.fromName = REQUIRED_MSG;
 			}
 
 			if (!values.recipients[0].to[defaultLanguageId]) {
-				errors.to = Liferay.Language.get('required');
+				errors.to = REQUIRED_MSG;
 			}
 		}
 
@@ -129,9 +139,13 @@ export default function EditNotificationTemplate({
 
 			window.location.assign(document.referrer);
 		}
-		else if (response.status === 404) {
+		else if (response.status === 400) {
+			const {title} = (await response.json()) as {
+				title: string;
+			};
+
 			openToast({
-				message: Liferay.Language.get('an-error-occurred'),
+				message: title,
 				type: 'danger',
 			});
 		}
@@ -236,6 +250,9 @@ export default function EditNotificationTemplate({
 					Liferay.Language.get('untitled-notification-template')
 				);
 			}
+			const objectDefinitionsItems = await API.getObjectDefinitions();
+
+			setObjectDefinitions(objectDefinitionsItems);
 		};
 
 		makeFetch();
@@ -304,11 +321,20 @@ export default function EditNotificationTemplate({
 					<ContentContainer
 						baseResourceURL={baseResourceURL}
 						editorConfig={editorConfig}
+						errors={errors}
+						objectDefinitions={objectDefinitions}
 						selectedLocale={selectedLocale}
 						setSelectedLocale={setSelectedLocale}
 						setValues={setValues}
 						values={values}
 					/>
+
+					{Liferay.FeatureFlags['LPS-165849'] && (
+						<DefinitionOfTermsContainer
+							baseResourceURL={baseResourceURL}
+							objectDefinitions={objectDefinitions}
+						/>
+					)}
 				</div>
 			</div>
 		</ClayForm>

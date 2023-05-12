@@ -28,8 +28,8 @@ import com.liferay.object.scope.ObjectScopeProvider;
 import com.liferay.object.scope.ObjectScopeProviderRegistry;
 import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.object.service.ObjectFieldLocalService;
-import com.liferay.object.system.SystemObjectDefinitionMetadata;
-import com.liferay.object.system.SystemObjectDefinitionMetadataRegistry;
+import com.liferay.object.system.SystemObjectDefinitionManager;
+import com.liferay.object.system.SystemObjectDefinitionManagerRegistry;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONArray;
@@ -54,10 +54,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = "ddm.form.field.type.name=" + ObjectDDMFormFieldTypeConstants.OBJECT_RELATIONSHIP,
-	service = {
-		DDMFormFieldTemplateContextContributor.class,
-		ObjectRelationshipDDMFormFieldTemplateContextContributor.class
-	}
+	service = DDMFormFieldTemplateContextContributor.class
 )
 public class ObjectRelationshipDDMFormFieldTemplateContextContributor
 	implements DDMFormFieldTemplateContextContributor {
@@ -231,15 +228,15 @@ public class ObjectRelationshipDDMFormFieldTemplateContextContributor
 	private String _getValueKey(DDMFormField ddmFormField) {
 		ObjectDefinition objectDefinition = _getObjectDefinition(ddmFormField);
 
-		SystemObjectDefinitionMetadata systemObjectDefinitionMetadata =
-			_systemObjectDefinitionMetadataRegistry.
-				getSystemObjectDefinitionMetadata(objectDefinition.getName());
+		SystemObjectDefinitionManager systemObjectDefinitionManager =
+			_systemObjectDefinitionManagerRegistry.
+				getSystemObjectDefinitionManager(objectDefinition.getName());
 
-		if (systemObjectDefinitionMetadata == null) {
+		if (systemObjectDefinitionManager == null) {
 			return "id";
 		}
 
-		return systemObjectDefinitionMetadata.getRESTDTOIdPropertyName();
+		return systemObjectDefinitionManager.getRESTDTOIdPropertyName();
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(
@@ -264,7 +261,7 @@ public class ObjectRelationshipDDMFormFieldTemplateContextContributor
 	private RESTContextPathResolverRegistry _restContextPathResolverRegistry;
 
 	@Reference
-	private SystemObjectDefinitionMetadataRegistry
-		_systemObjectDefinitionMetadataRegistry;
+	private SystemObjectDefinitionManagerRegistry
+		_systemObjectDefinitionManagerRegistry;
 
 }

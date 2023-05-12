@@ -1,4 +1,5 @@
 import com.liferay.gradle.util.FileUtil
+import com.liferay.gradle.util.GradleUtil
 import com.liferay.gradle.util.copy.StripPathSegmentsAction
 
 import de.undercouch.gradle.tasks.download.Download
@@ -9,8 +10,10 @@ apply plugin: "org.ysb33r.gradletest"
 task copyBundle(type: Copy)
 task copyDistBundleZipPluginsSdk(type: Copy)
 task copyGradleTestDependencies(type: Copy)
+task copyGradleTestProjects(type: Copy)
 task copyHotFixZip(type: Copy)
 task copyRepo(type: Copy)
+task copyWorkspacesSamples
 task downloadBundle(type: Download)
 task downloadHotFixZip(type: Download)
 task downloadPluginsSdk(type: Download)
@@ -83,28 +86,61 @@ copyGradleTestDependencies {
 	into gradleTestDependenciesDir
 }
 
+copyGradleTestProjects {
+	ext {
+		autoClean = false
+	}
+
+	from("src/gradleTest/flexibleLayoutWildcard") {
+		include "modules/**"
+		include "themes/**"
+		include "wars/**"
+	}
+
+	into "src/gradleTest/excludePatterns"
+}
+
 copyRepo {
 	from "src/gradleTest/repo"
 	into new File(buildDir, "gradleTest/repo")
 }
 
+copyWorkspacesSamples {
+	doLast {
+		[
+			"sample-custom-element-1",
+			"sample-iframe-1",
+			"sample-theme-css-1",
+			"sample-theme-favicon",
+		].each {
+			String sampleName ->
+
+			copy {
+				from new File(GradleUtil.getRootDir(project.getRootProject(), "portal-impl"), "workspaces/liferay-sample-workspace/client-extensions/liferay-${sampleName}")
+				into "src/gradleTest/clientExtensionSamples/${sampleName}"
+			}
+		}
+	}
+}
+
 dependencies {
 	compile group: "com.bmuschko", name: "gradle-docker-plugin", version: "6.7.0"
-	compile group: "com.fasterxml.jackson.dataformat", name: "jackson-dataformat-yaml", version: "2.13.3"
+	compile group: "com.fasterxml.jackson.dataformat", name: "jackson-dataformat-yaml", version: "2.10.3"
 	compile group: "com.github.docker-java", name: "docker-java", version: "3.2.8"
 	compile group: 'com.google.code.gson', name: 'gson', version: '2.9.0'
 	compile group: "com.liferay", name: "com.liferay.ant.bnd", version: "3.2.9"
-	compile(group: "com.liferay", name: "com.liferay.gradle.plugins", version: "14.0.60") {
+	compile(group: "com.liferay", name: "com.liferay.gradle.plugins", version: "14.0.128") {
 		exclude group: "biz.aQute.bnd", module: "biz.aQute.bnd"
 	}
-	compile(group: "com.liferay", name: "com.liferay.gradle.plugins.css.builder", version: "5.0.5") {
+	compile(group: "com.liferay", name: "com.liferay.gradle.plugins.css.builder", version: "5.0.7") {
 		exclude group: "biz.aQute.bnd", module: "biz.aQute.bnd"
 	}
-	compile(group: "com.liferay", name: "com.liferay.gradle.plugins.poshi.runner", version: "3.0.59") {
+	compile(group: "com.liferay", name: "com.liferay.gradle.plugins.poshi.runner", version: "3.0.68") {
 		exclude group: "biz.aQute.bnd", module: "biz.aQute.bnd"
 	}
-	compile group: "com.liferay", name: "com.liferay.gradle.plugins.target.platform", version: "3.0.4"
-	compile(group: "com.liferay", name: "com.liferay.gradle.plugins.theme.builder", version: "2.0.21") {
+	compile group: "com.liferay", name: "com.liferay.gradle.plugins.source.formatter", version: "5.2.21"
+	compile group: "com.liferay", name: "com.liferay.gradle.plugins.target.platform", version: "3.0.10"
+	compile(group: "com.liferay", name: "com.liferay.gradle.plugins.theme.builder", version: "2.0.23") {
 		exclude group: "biz.aQute.bnd", module: "biz.aQute.bnd"
 	}
 	compile group: "com.liferay", name: "com.liferay.petra.lang", version: "5.1.2"
@@ -163,8 +199,10 @@ gradleTest {
 	dependsOn copyBundle
 	dependsOn copyDistBundleZipPluginsSdk
 	dependsOn copyGradleTestDependencies
+	dependsOn copyGradleTestProjects
 	dependsOn copyHotFixZip
 	dependsOn copyRepo
+	dependsOn copyWorkspacesSamples
 	dependsOn jar
 
 	deprecationMessagesAreFailures = false
@@ -182,4 +220,9 @@ liferayOSGi {
 
 processResources {
 	from downloadProductInfo
+}
+
+updateFileVersions {
+	match(/name: "com\.liferay\.gradle\.plugins\.workspace", version: "(\d.+)"/, "../../../workspaces/liferay-sample-workspace/settings.gradle")
+	match(/name: "com\.liferay\.gradle\.plugins\.workspace", version: "(\d.+)"/, "../../../workspaces/refresh_liferay_sample_workspace.sh")
 }

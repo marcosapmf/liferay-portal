@@ -33,6 +33,7 @@ import com.liferay.info.item.renderer.InfoItemTemplatedRenderer;
 import com.liferay.layout.display.page.LayoutDisplayPageProvider;
 import com.liferay.layout.display.page.constants.LayoutDisplayPageWebKeys;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.Language;
@@ -95,6 +96,59 @@ public class ContentObjectFragmentRenderer implements FragmentRenderer {
 	@Override
 	public String getLabel(Locale locale) {
 		return _language.get(locale, "content-display");
+	}
+
+	@Override
+	public boolean hasViewPermission(
+		FragmentRendererContext fragmentRendererContext,
+		HttpServletRequest httpServletRequest) {
+
+		if (!FeatureFlagManagerUtil.isEnabled("LPS-169923")) {
+			return true;
+		}
+
+		JSONObject jsonObject = _getFieldValueJSONObject(
+			fragmentRendererContext);
+
+		InfoItemReference infoItemReference =
+			fragmentRendererContext.getContextInfoItemReference();
+
+		if ((infoItemReference == null) &&
+			((jsonObject == null) || (jsonObject.length() == 0))) {
+
+			return true;
+		}
+
+		String className = StringPool.BLANK;
+		Object displayObject = null;
+
+		if (jsonObject != null) {
+			className = jsonObject.getString("className");
+
+			displayObject = _getDisplayObject(
+				className, jsonObject.getLong("classPK"), infoItemReference);
+		}
+		else {
+			displayObject = _getInfoItem(infoItemReference);
+		}
+
+		if (displayObject == null) {
+			return true;
+		}
+
+		Tuple tuple = _getTuple(
+			className, displayObject.getClass(), fragmentRendererContext);
+
+		InfoItemRenderer<Object> infoItemRenderer =
+			(InfoItemRenderer<Object>)tuple.getObject(0);
+
+		if ((infoItemRenderer == null) ||
+			_hasPermission(httpServletRequest, className, displayObject)) {
+
+			return true;
+		}
+
+		return false;
 	}
 
 	@Override
@@ -163,9 +217,19 @@ public class ContentObjectFragmentRenderer implements FragmentRenderer {
 		}
 
 		if (!_hasPermission(httpServletRequest, className, displayObject)) {
-			FragmentRendererUtil.printPortletMessageInfo(
-				httpServletRequest, httpServletResponse,
-				"you-do-not-have-permission-to-access-the-requested-resource");
+			if (!FeatureFlagManagerUtil.isEnabled("LPS-169923")) {
+				FragmentRendererUtil.printPortletMessageInfo(
+					httpServletRequest, httpServletResponse,
+					"you-do-not-have-permission-to-access-the-requested-" +
+						"resource");
+
+				return;
+			}
+
+			if (FragmentRendererUtil.isEditMode(httpServletRequest)) {
+				FragmentRendererUtil.printRestrictedContentMessage(
+					httpServletRequest, httpServletResponse);
+			}
 
 			return;
 		}

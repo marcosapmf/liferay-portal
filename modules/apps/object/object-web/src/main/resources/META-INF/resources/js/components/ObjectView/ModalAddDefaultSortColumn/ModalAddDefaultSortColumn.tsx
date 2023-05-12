@@ -72,13 +72,14 @@ export function ModalAddDefaultSortColumn({
 
 	useEffect(() => {
 		const newAvailableViewColumns = objectViewColumns.filter(
-			(objectViewColumn) =>
-				!objectViewColumn.defaultSort &&
-				objectViewColumn.objectFieldBusinessType !== 'Aggregation' &&
-				objectViewColumn.objectFieldBusinessType !== 'Attachment' &&
-				objectViewColumn.objectFieldBusinessType !== 'Formula' &&
-				objectViewColumn.objectFieldBusinessType !== 'Relationship' &&
-				objectViewColumn.objectFieldBusinessType !== 'RichText'
+			({defaultSort, objectFieldBusinessType}) =>
+				!defaultSort &&
+				objectFieldBusinessType !== 'Aggregation' &&
+				objectFieldBusinessType !== 'Attachment' &&
+				objectFieldBusinessType !== 'Encrypted' &&
+				objectFieldBusinessType !== 'Formula' &&
+				objectFieldBusinessType !== 'Relationship' &&
+				objectFieldBusinessType !== 'RichText'
 		);
 
 		setAvailableViewColumns(newAvailableViewColumns);
@@ -140,6 +141,7 @@ export function ModalAddDefaultSortColumn({
 				<ClayModal.Body>
 					{!isEditingSort && (
 						<AutoComplete<TObjectViewColumn>
+							creationLanguageId={creationLanguageId}
 							emptyStateMessage={Liferay.Language.get(
 								'there-are-no-columns-added-in-this-view-yet'
 							)}

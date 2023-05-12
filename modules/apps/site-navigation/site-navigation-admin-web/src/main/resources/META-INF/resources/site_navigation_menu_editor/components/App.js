@@ -19,11 +19,12 @@ import {HTML5Backend} from 'react-dnd-html5-backend';
 import {SIDEBAR_PANEL_IDS} from '../constants/sidebarPanelIds';
 import {ConstantsProvider} from '../contexts/ConstantsContext';
 import {ItemsProvider, useItems} from '../contexts/ItemsContext';
+import {KeyboardDndProvider} from '../contexts/KeyboardDndContext';
 import {SelectedMenuItemIdProvider} from '../contexts/SelectedMenuItemIdContext';
 import {SidebarPanelIdProvider} from '../contexts/SidebarPanelIdContext';
+import decorateAddSiteNavigationMenuItemOptions from '../utils/decorateAddSiteNavigationMenuItemOptions';
 import {DragDropProvider} from '../utils/useDragAndDrop';
 import {AppLayout} from './AppLayout';
-import DragPreview from './DragPreview';
 import {EmptyState} from './EmptyState';
 import {Menu} from './Menu';
 import {MenuItemSettingsPanel} from './MenuItemSettingsPanel';
@@ -42,21 +43,33 @@ const SIDEBAR_PANELS = [
 ];
 
 export function App(props) {
-	const {siteNavigationMenuItems} = props;
+	const {
+		addSiteNavigationMenuItemOptions,
+		portletNamespace,
+		siteNavigationMenuItems,
+	} = props;
 
 	return (
 		<DndProvider backend={HTML5Backend}>
-			<ConstantsProvider constants={props}>
+			<ConstantsProvider
+				constants={{
+					...props,
+					addSiteNavigationMenuItemOptions: decorateAddSiteNavigationMenuItemOptions(
+						{addSiteNavigationMenuItemOptions, portletNamespace}
+					),
+					portletNamespace,
+				}}
+			>
 				<ItemsProvider initialItems={siteNavigationMenuItems}>
-					<DragPreview />
-
-					<DragDropProvider>
-						<SelectedMenuItemIdProvider>
-							<SidebarPanelIdProvider>
-								<AppLayoutWrapper />
-							</SidebarPanelIdProvider>
-						</SelectedMenuItemIdProvider>
-					</DragDropProvider>
+					<KeyboardDndProvider>
+						<DragDropProvider>
+							<SelectedMenuItemIdProvider>
+								<SidebarPanelIdProvider>
+									<AppLayoutWrapper />
+								</SidebarPanelIdProvider>
+							</SelectedMenuItemIdProvider>
+						</DragDropProvider>
+					</KeyboardDndProvider>
 				</ItemsProvider>
 			</ConstantsProvider>
 		</DndProvider>

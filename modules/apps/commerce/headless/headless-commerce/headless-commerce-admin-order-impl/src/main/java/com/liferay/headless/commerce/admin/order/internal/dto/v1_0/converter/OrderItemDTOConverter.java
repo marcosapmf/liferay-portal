@@ -14,17 +14,24 @@
 
 package com.liferay.headless.commerce.admin.order.internal.dto.v1_0.converter;
 
+import com.liferay.commerce.media.CommerceMediaResolver;
 import com.liferay.commerce.model.CommerceOrder;
 import com.liferay.commerce.model.CommerceOrderItem;
 import com.liferay.commerce.product.model.CPInstance;
 import com.liferay.commerce.product.model.CPMeasurementUnit;
 import com.liferay.commerce.product.service.CPMeasurementUnitService;
+import com.liferay.commerce.product.type.virtual.order.model.CommerceVirtualOrderItem;
+import com.liferay.commerce.product.type.virtual.order.service.CommerceVirtualOrderItemService;
 import com.liferay.commerce.service.CommerceOrderItemService;
 import com.liferay.commerce.util.CommerceOrderItemQuantityFormatter;
 import com.liferay.headless.commerce.admin.order.dto.v1_0.OrderItem;
 import com.liferay.headless.commerce.admin.order.internal.dto.v1_0.util.CustomFieldsUtil;
 import com.liferay.headless.commerce.core.util.LanguageUtils;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterContext;
 
@@ -36,7 +43,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = "dto.class.name=com.liferay.commerce.model.CommerceOrderItem",
-	service = {DTOConverter.class, OrderItemDTOConverter.class}
+	service = DTOConverter.class
 )
 public class OrderItemDTOConverter
 	implements DTOConverter<CommerceOrderItem, OrderItem> {
@@ -114,6 +121,8 @@ public class OrderItemDTOConverter
 				promoPriceWithTaxAmount =
 					commerceOrderItem.getPromoPriceWithTaxAmount();
 				quantity = commerceOrderItem.getQuantity();
+				replacedSku = commerceOrderItem.getReplacedSku();
+				replacedSkuId = commerceOrderItem.getReplacedCPInstanceId();
 				requestedDeliveryDate =
 					commerceOrderItem.getRequestedDeliveryDate();
 				shippedQuantity = commerceOrderItem.getShippedQuantity();
@@ -139,6 +148,39 @@ public class OrderItemDTOConverter
 
 						return cpMeasurementUnit.getKey();
 					});
+				setVirtualItemURLs(
+					() -> {
+						try {
+							CommerceVirtualOrderItem commerceVirtualOrderItem =
+								_commerceVirtualOrderItemService.
+									fetchCommerceVirtualOrderItemByCommerceOrderItemId(
+										commerceOrderItem.
+											getCommerceOrderItemId());
+
+							if (commerceVirtualOrderItem == null) {
+								return null;
+							}
+
+							String url = commerceVirtualOrderItem.getUrl();
+
+							if (Validator.isBlank(url)) {
+								url =
+									_commerceMediaResolver.
+										getDownloadVirtualOrderItemURL(
+											commerceVirtualOrderItem.
+												getCommerceVirtualOrderItemId());
+							}
+
+							return new String[] {url};
+						}
+						catch (PortalException portalException) {
+							if (_log.isDebugEnabled()) {
+								_log.debug(portalException);
+							}
+
+							return null;
+						}
+					});
 			}
 		};
 	}
@@ -159,12 +201,21 @@ public class OrderItemDTOConverter
 		return cpInstance.getCPInstanceId();
 	}
 
+	private static final Log _log = LogFactoryUtil.getLog(
+		OrderItemDTOConverter.class);
+
+	@Reference
+	private CommerceMediaResolver _commerceMediaResolver;
+
 	@Reference
 	private CommerceOrderItemQuantityFormatter
 		_commerceOrderItemQuantityFormatter;
 
 	@Reference
 	private CommerceOrderItemService _commerceOrderItemService;
+
+	@Reference
+	private CommerceVirtualOrderItemService _commerceVirtualOrderItemService;
 
 	@Reference
 	private CPMeasurementUnitService _cpMeasurementUnitService;

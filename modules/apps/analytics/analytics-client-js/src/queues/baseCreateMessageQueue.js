@@ -12,7 +12,7 @@
  * details.
  */
 
-import uuidv4 from 'uuid/v4';
+import {v4 as uuidv4} from 'uuid';
 
 import {getContexts} from '../utils/contexts';
 import {removeDups} from '../utils/events';
@@ -56,13 +56,12 @@ class BaseCreateMessageQueue extends BaseQueue {
 		const filteredResults = results.filter(
 			(message) => message && message.value && message.value.events
 		);
-
 		const updatedItems = removeDups(filteredResults, items);
+
 		setItem(this.name, updatedItems);
 
-		if (filteredResults.length === results.length) {
-			this.analyticsInstance.resetContext();
-		}
+		this.analyticsInstance.resetContext();
+		this.reset();
 	}
 
 	/**

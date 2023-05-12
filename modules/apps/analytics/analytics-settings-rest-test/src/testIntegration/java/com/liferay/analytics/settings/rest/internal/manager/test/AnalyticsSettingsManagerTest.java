@@ -18,20 +18,26 @@ import com.liferay.analytics.settings.configuration.AnalyticsConfiguration;
 import com.liferay.analytics.settings.rest.manager.AnalyticsSettingsManager;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.configuration.test.util.CompanyConfigurationTemporarySwapper;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.GroupConstants;
 import com.liferay.portal.kernel.service.GroupLocalService;
+import com.liferay.portal.kernel.settings.SettingsFactoryUtil;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
+import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.HashMapDictionary;
+import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 import com.liferay.portal.search.test.util.IdempotentRetryAssert;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 
 import java.util.Arrays;
+import java.util.Dictionary;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.After;
@@ -84,22 +90,43 @@ public class AnalyticsSettingsManagerTest {
 			Arrays.toString(emptyCommerceChannelIds), 0,
 			emptyCommerceChannelIds.length);
 
-		_analyticsSettingsManager.updateCompanyConfiguration(
-			TestPropsValues.getCompanyId(),
-			HashMapBuilder.<String, Object>put(
-				"syncedCommerceChannelIds",
-				_analyticsSettingsManager.updateCommerceChannelIds(
-					_analyticsChannelId1, TestPropsValues.getCompanyId(),
-					new Long[] {_commerceChannelGroup1.getClassPK()})
-			).build());
+		String[] updateCommerceChannelIds =
+			_analyticsSettingsManager.updateCommerceChannelIds(
+				_analyticsChannelId1, TestPropsValues.getCompanyId(),
+				new Long[] {_commerceChannelGroup1.getClassPK()});
+
+		Assert.assertArrayEquals(
+			Arrays.toString(updateCommerceChannelIds),
+			ArrayUtil.sortedUnique(updateCommerceChannelIds),
+			ArrayUtil.sortedUnique(
+				new String[] {
+					String.valueOf(_commerceChannelGroup1.getClassPK())
+				}));
 
 		_analyticsSettingsManager.updateCompanyConfiguration(
 			TestPropsValues.getCompanyId(),
 			HashMapBuilder.<String, Object>put(
-				"syncedCommerceChannelIds",
-				_analyticsSettingsManager.updateCommerceChannelIds(
-					_analyticsChannelId2, TestPropsValues.getCompanyId(),
-					new Long[] {_commerceChannelGroup2.getClassPK()})
+				"syncedCommerceChannelIds", updateCommerceChannelIds
+			).build());
+
+		updateCommerceChannelIds =
+			_analyticsSettingsManager.updateCommerceChannelIds(
+				_analyticsChannelId2, TestPropsValues.getCompanyId(),
+				new Long[] {_commerceChannelGroup2.getClassPK()});
+
+		Assert.assertArrayEquals(
+			Arrays.toString(updateCommerceChannelIds),
+			ArrayUtil.sortedUnique(updateCommerceChannelIds),
+			ArrayUtil.sortedUnique(
+				new String[] {
+					String.valueOf(_commerceChannelGroup1.getClassPK()),
+					String.valueOf(_commerceChannelGroup2.getClassPK())
+				}));
+
+		_analyticsSettingsManager.updateCompanyConfiguration(
+			TestPropsValues.getCompanyId(),
+			HashMapBuilder.<String, Object>put(
+				"syncedCommerceChannelIds", updateCommerceChannelIds
 			).build());
 
 		IdempotentRetryAssert.retryAssert(
@@ -116,16 +143,27 @@ public class AnalyticsSettingsManagerTest {
 				return null;
 			});
 
+		updateCommerceChannelIds =
+			_analyticsSettingsManager.updateCommerceChannelIds(
+				_analyticsChannelId1, TestPropsValues.getCompanyId(),
+				new Long[] {
+					_commerceChannelGroup1.getClassPK(),
+					_commerceChannelGroup2.getClassPK()
+				});
+
+		Assert.assertArrayEquals(
+			Arrays.toString(updateCommerceChannelIds),
+			ArrayUtil.sortedUnique(updateCommerceChannelIds),
+			ArrayUtil.sortedUnique(
+				new String[] {
+					String.valueOf(_commerceChannelGroup1.getClassPK()),
+					String.valueOf(_commerceChannelGroup2.getClassPK())
+				}));
+
 		_analyticsSettingsManager.updateCompanyConfiguration(
 			TestPropsValues.getCompanyId(),
 			HashMapBuilder.<String, Object>put(
-				"syncedCommerceChannelIds",
-				_analyticsSettingsManager.updateCommerceChannelIds(
-					_analyticsChannelId1, TestPropsValues.getCompanyId(),
-					new Long[] {
-						_commerceChannelGroup1.getClassPK(),
-						_commerceChannelGroup2.getClassPK()
-					})
+				"syncedCommerceChannelIds", updateCommerceChannelIds
 			).build());
 
 		IdempotentRetryAssert.retryAssert(
@@ -142,13 +180,23 @@ public class AnalyticsSettingsManagerTest {
 				return null;
 			});
 
+		updateCommerceChannelIds =
+			_analyticsSettingsManager.updateCommerceChannelIds(
+				_analyticsChannelId1, TestPropsValues.getCompanyId(),
+				new Long[] {_commerceChannelGroup1.getClassPK()});
+
+		Assert.assertArrayEquals(
+			Arrays.toString(updateCommerceChannelIds),
+			ArrayUtil.sortedUnique(updateCommerceChannelIds),
+			ArrayUtil.sortedUnique(
+				new String[] {
+					String.valueOf(_commerceChannelGroup1.getClassPK())
+				}));
+
 		_analyticsSettingsManager.updateCompanyConfiguration(
 			TestPropsValues.getCompanyId(),
 			HashMapBuilder.<String, Object>put(
-				"syncedCommerceChannelIds",
-				_analyticsSettingsManager.updateCommerceChannelIds(
-					_analyticsChannelId1, TestPropsValues.getCompanyId(),
-					new Long[] {_commerceChannelGroup1.getClassPK()})
+				"syncedCommerceChannelIds", updateCommerceChannelIds
 			).build());
 
 		IdempotentRetryAssert.retryAssert(
@@ -177,22 +225,39 @@ public class AnalyticsSettingsManagerTest {
 		Assert.assertEquals(
 			Arrays.toString(emptySiteIds), 0, emptySiteIds.length);
 
-		_analyticsSettingsManager.updateCompanyConfiguration(
-			TestPropsValues.getCompanyId(),
-			HashMapBuilder.<String, Object>put(
-				"syncedGroupIds",
-				_analyticsSettingsManager.updateSiteIds(
-					_analyticsChannelId1, TestPropsValues.getCompanyId(),
-					new Long[] {_siteGroup1.getGroupId()})
-			).build());
+		String[] updateSiteIds = _analyticsSettingsManager.updateSiteIds(
+			_analyticsChannelId1, TestPropsValues.getCompanyId(),
+			new Long[] {_siteGroup1.getGroupId()});
+
+		Assert.assertArrayEquals(
+			Arrays.toString(updateSiteIds),
+			ArrayUtil.sortedUnique(updateSiteIds),
+			ArrayUtil.sortedUnique(
+				new String[] {String.valueOf(_siteGroup1.getGroupId())}));
 
 		_analyticsSettingsManager.updateCompanyConfiguration(
 			TestPropsValues.getCompanyId(),
 			HashMapBuilder.<String, Object>put(
-				"syncedGroupIds",
-				_analyticsSettingsManager.updateSiteIds(
-					_analyticsChannelId2, TestPropsValues.getCompanyId(),
-					new Long[] {_siteGroup2.getGroupId()})
+				"syncedGroupIds", updateSiteIds
+			).build());
+
+		updateSiteIds = _analyticsSettingsManager.updateSiteIds(
+			_analyticsChannelId2, TestPropsValues.getCompanyId(),
+			new Long[] {_siteGroup2.getGroupId()});
+
+		Assert.assertArrayEquals(
+			Arrays.toString(updateSiteIds),
+			ArrayUtil.sortedUnique(updateSiteIds),
+			ArrayUtil.sortedUnique(
+				new String[] {
+					String.valueOf(_siteGroup1.getGroupId()),
+					String.valueOf(_siteGroup2.getGroupId())
+				}));
+
+		_analyticsSettingsManager.updateCompanyConfiguration(
+			TestPropsValues.getCompanyId(),
+			HashMapBuilder.<String, Object>put(
+				"syncedGroupIds", updateSiteIds
 			).build());
 
 		IdempotentRetryAssert.retryAssert(
@@ -207,15 +272,23 @@ public class AnalyticsSettingsManagerTest {
 				return null;
 			});
 
+		updateSiteIds = _analyticsSettingsManager.updateSiteIds(
+			_analyticsChannelId1, TestPropsValues.getCompanyId(),
+			new Long[] {_siteGroup1.getGroupId(), _siteGroup2.getGroupId()});
+
+		Assert.assertArrayEquals(
+			Arrays.toString(updateSiteIds),
+			ArrayUtil.sortedUnique(updateSiteIds),
+			ArrayUtil.sortedUnique(
+				new String[] {
+					String.valueOf(_siteGroup1.getGroupId()),
+					String.valueOf(_siteGroup2.getGroupId())
+				}));
+
 		_analyticsSettingsManager.updateCompanyConfiguration(
 			TestPropsValues.getCompanyId(),
 			HashMapBuilder.<String, Object>put(
-				"syncedGroupIds",
-				_analyticsSettingsManager.updateSiteIds(
-					_analyticsChannelId1, TestPropsValues.getCompanyId(),
-					new Long[] {
-						_siteGroup1.getGroupId(), _siteGroup2.getGroupId()
-					})
+				"syncedGroupIds", updateSiteIds
 			).build());
 
 		IdempotentRetryAssert.retryAssert(
@@ -230,13 +303,20 @@ public class AnalyticsSettingsManagerTest {
 				return null;
 			});
 
+		updateSiteIds = _analyticsSettingsManager.updateSiteIds(
+			_analyticsChannelId1, TestPropsValues.getCompanyId(),
+			new Long[] {_siteGroup1.getGroupId()});
+
+		Assert.assertArrayEquals(
+			Arrays.toString(updateSiteIds),
+			ArrayUtil.sortedUnique(updateSiteIds),
+			ArrayUtil.sortedUnique(
+				new String[] {String.valueOf(_siteGroup1.getGroupId())}));
+
 		_analyticsSettingsManager.updateCompanyConfiguration(
 			TestPropsValues.getCompanyId(),
 			HashMapBuilder.<String, Object>put(
-				"syncedGroupIds",
-				_analyticsSettingsManager.updateSiteIds(
-					_analyticsChannelId1, TestPropsValues.getCompanyId(),
-					new Long[] {_siteGroup1.getGroupId()})
+				"syncedGroupIds", updateSiteIds
 			).build());
 
 		IdempotentRetryAssert.retryAssert(
@@ -251,6 +331,90 @@ public class AnalyticsSettingsManagerTest {
 
 				return null;
 			});
+	}
+
+	@Test
+	public void testIsSiteIdSynced() throws Exception {
+		try (CompanyConfigurationTemporarySwapper
+				companyConfigurationTemporarySwapper =
+					new CompanyConfigurationTemporarySwapper(
+						TestPropsValues.getCompanyId(),
+						AnalyticsConfiguration.class.getName(),
+						HashMapDictionaryBuilder.<String, Object>put(
+							"liferayAnalyticsDataSourceId",
+							RandomTestUtil.nextLong()
+						).put(
+							"liferayAnalyticsEnableAllGroupIds", true
+						).put(
+							"liferayAnalyticsFaroBackendSecuritySignature",
+							RandomTestUtil.randomString()
+						).put(
+							"liferayAnalyticsFaroBackendURL",
+							RandomTestUtil.randomString()
+						).build(),
+						SettingsFactoryUtil.getSettingsFactory())) {
+
+			Assert.assertTrue(
+				_analyticsSettingsManager.isSiteIdSynced(
+					TestPropsValues.getCompanyId(), _siteGroup1.getGroupId()));
+		}
+	}
+
+	@Test
+	public void testIsSiteIdSyncedWithNullLiferayAnalyticsDataSourceId()
+		throws Exception {
+
+		Dictionary<String, Object> dictionary = new HashMapDictionary();
+
+		dictionary.put("liferayAnalyticsDataSourceId", null);
+
+		try (CompanyConfigurationTemporarySwapper
+				companyConfigurationTemporarySwapper =
+					new CompanyConfigurationTemporarySwapper(
+						TestPropsValues.getCompanyId(),
+						AnalyticsConfiguration.class.getName(), dictionary,
+						SettingsFactoryUtil.getSettingsFactory())) {
+
+			Assert.assertFalse(
+				_analyticsSettingsManager.isSiteIdSynced(
+					TestPropsValues.getCompanyId(), _siteGroup1.getGroupId()));
+		}
+	}
+
+	@Test
+	public void testIsSiteIdSyncedWithSyncedGroupId() throws Exception {
+		try (CompanyConfigurationTemporarySwapper
+				companyConfigurationTemporarySwapper =
+					new CompanyConfigurationTemporarySwapper(
+						TestPropsValues.getCompanyId(),
+						AnalyticsConfiguration.class.getName(),
+						HashMapDictionaryBuilder.<String, Object>put(
+							"liferayAnalyticsDataSourceId",
+							RandomTestUtil.nextLong()
+						).put(
+							"liferayAnalyticsFaroBackendSecuritySignature",
+							RandomTestUtil.randomString()
+						).put(
+							"liferayAnalyticsFaroBackendURL",
+							RandomTestUtil.randomString()
+						).put(
+							"syncedGroupIds",
+							new String[] {
+								String.valueOf(_siteGroup1.getGroupId())
+							}
+						).build(),
+						SettingsFactoryUtil.getSettingsFactory())) {
+
+			Assert.assertTrue(
+				_analyticsSettingsManager.isSiteIdSynced(
+					TestPropsValues.getCompanyId(), _siteGroup1.getGroupId()));
+		}
+	}
+
+	@Test
+	public void testIsSiteIdSyncedWithUnsyncedGroupId() throws Exception {
+		_analyticsSettingsManager.isSiteIdSynced(
+			TestPropsValues.getCompanyId(), _siteGroup1.getGroupId());
 	}
 
 	@Test

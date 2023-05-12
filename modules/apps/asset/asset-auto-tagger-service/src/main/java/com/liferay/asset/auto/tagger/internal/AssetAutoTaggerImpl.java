@@ -47,7 +47,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Alejandro Tardín
  */
 @Component(
-	configurationPid = "com.liferay.asset.auto.tagger.internal.configuration.AssetAutoTaggerConfiguration",
+	configurationPid = "com.liferay.asset.auto.tagger.configuration.AssetAutoTaggerConfiguration",
 	service = AopService.class
 )
 public class AssetAutoTaggerImpl implements AopService, AssetAutoTagger {
@@ -178,9 +178,19 @@ public class AssetAutoTaggerImpl implements AopService, AssetAutoTagger {
 		Indexer<Object> indexer = _indexerRegistry.getIndexer(
 			assetEntry.getClassName());
 
-		if (indexer != null) {
-			indexer.reindex(assetEntry.getClassName(), assetEntry.getClassPK());
+		if (indexer == null) {
+			return;
 		}
+
+		AssetRenderer<?> assetRenderer = assetEntry.getAssetRenderer();
+
+		if (assetRenderer == null) {
+			indexer.reindex(assetEntry.getClassName(), assetEntry.getClassPK());
+
+			return;
+		}
+
+		indexer.reindex(assetRenderer.getAssetObject());
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

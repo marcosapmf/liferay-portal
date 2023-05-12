@@ -23,7 +23,6 @@ import com.liferay.object.field.util.ObjectFieldUtil;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.object.service.ObjectEntryLocalService;
-import com.liferay.object.util.LocalizedMapUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.User;
@@ -34,6 +33,7 @@ import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.portal.vulcan.util.LocalizedMapUtil;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -117,7 +117,7 @@ public class FDSSamplePortlet extends MVCPortlet {
 
 		objectDefinition =
 			_objectDefinitionLocalService.addCustomObjectDefinition(
-				user.getUserId(), false,
+				user.getUserId(), false, false,
 				LocalizedMapUtil.getLocalizedMap("Frontend Data Set Sample"),
 				"FDSSample", "100", null,
 				LocalizedMapUtil.getLocalizedMap("Frontend Data Set Samples"),

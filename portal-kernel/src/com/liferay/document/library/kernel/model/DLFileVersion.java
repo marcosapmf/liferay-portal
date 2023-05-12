@@ -67,6 +67,11 @@ public interface DLFileVersion
 	public java.io.InputStream getContentStream(boolean incrementCounter)
 		throws com.liferay.portal.kernel.exception.PortalException;
 
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
+	 DLFileEntryTypeUtil#getDDMStructures(DLFileEntryType)}
+	 */
+	@Deprecated
 	public java.util.List<com.liferay.dynamic.data.mapping.kernel.DDMStructure>
 			getDDMStructures()
 		throws com.liferay.portal.kernel.exception.PortalException;
@@ -86,6 +91,8 @@ public interface DLFileVersion
 		throws com.liferay.portal.kernel.exception.PortalException;
 
 	public String getIcon();
+
+	public String getStoreFileName();
 
 	public void setExtraSettingsProperties(
 		com.liferay.portal.kernel.util.UnicodeProperties

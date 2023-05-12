@@ -17,6 +17,7 @@ package com.liferay.object.model.impl;
 import com.liferay.object.constants.ObjectDefinitionConstants;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.TextFormatter;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
@@ -48,7 +49,7 @@ public class ObjectDefinitionImpl extends ObjectDefinitionBaseImpl {
 
 	@Override
 	public String getExtensionDBTableName() {
-		if (isSystem()) {
+		if (isUnmodifiableSystemObject()) {
 			String extensionDBTableName = getDBTableName();
 
 			if (extensionDBTableName.endsWith("_")) {
@@ -78,7 +79,7 @@ public class ObjectDefinitionImpl extends ObjectDefinitionBaseImpl {
 
 	@Override
 	public String getPortletId() {
-		if (isSystem()) {
+		if (isUnmodifiableSystemObject()) {
 			throw new UnsupportedOperationException();
 		}
 
@@ -88,7 +89,7 @@ public class ObjectDefinitionImpl extends ObjectDefinitionBaseImpl {
 
 	@Override
 	public String getResourceName() {
-		if (isSystem()) {
+		if (isUnmodifiableSystemObject()) {
 			throw new UnsupportedOperationException();
 		}
 
@@ -97,7 +98,7 @@ public class ObjectDefinitionImpl extends ObjectDefinitionBaseImpl {
 
 	@Override
 	public String getRESTContextPath() {
-		if (isSystem()) {
+		if (isUnmodifiableSystemObject()) {
 			throw new UnsupportedOperationException();
 		}
 
@@ -129,6 +130,19 @@ public class ObjectDefinitionImpl extends ObjectDefinitionBaseImpl {
 		}
 
 		return false;
+	}
+
+	@Override
+	public boolean isUnmodifiableSystemObject() {
+		if (FeatureFlagManagerUtil.isEnabled("LPS-167253")) {
+			if (!isModifiable() && isSystem()) {
+				return true;
+			}
+
+			return false;
+		}
+
+		return isSystem();
 	}
 
 }

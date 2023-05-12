@@ -21,8 +21,8 @@ import com.liferay.frontend.taglib.clay.servlet.taglib.util.NavigationItem;
 import com.liferay.info.collection.provider.InfoCollectionProvider;
 import com.liferay.info.item.InfoItemServiceRegistry;
 import com.liferay.info.item.provider.InfoItemFormProvider;
+import com.liferay.info.search.InfoSearchClassMapperRegistryUtil;
 import com.liferay.layout.admin.constants.LayoutAdminPortletKeys;
-import com.liferay.layout.admin.web.internal.info.search.InfoSearchClassMapperRegistryUtil;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
@@ -65,8 +65,8 @@ public class SelectLayoutCollectionDisplayContext {
 		_liferayPortletResponse = liferayPortletResponse;
 
 		_httpServletRequest = PortalUtil.getHttpServletRequest(
-			_liferayPortletRequest);
-		_themeDisplay = (ThemeDisplay)_liferayPortletRequest.getAttribute(
+			liferayPortletRequest);
+		_themeDisplay = (ThemeDisplay)liferayPortletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
 		_groupDisplayContextHelper = new GroupDisplayContextHelper(

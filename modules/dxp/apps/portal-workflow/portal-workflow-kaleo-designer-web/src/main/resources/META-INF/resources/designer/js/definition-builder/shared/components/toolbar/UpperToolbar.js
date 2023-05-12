@@ -16,6 +16,7 @@ import {ClayInput} from '@clayui/form';
 import ClayLayout from '@clayui/layout';
 import ClayToolbar from '@clayui/toolbar';
 import {TranslationAdminSelector} from 'frontend-js-components-web';
+import {localStorage} from 'frontend-js-web';
 import PropTypes from 'prop-types';
 import React, {useContext, useEffect, useRef, useState} from 'react';
 import {isEdge, isNode} from 'react-flow-renderer';
@@ -96,7 +97,7 @@ export default function UpperToolbar({
 	const errorTitle = () => {
 		if (blockingErrors.errorType === 'duplicated') {
 			return Liferay.Language.get(
-				'you-have-the-same-id-in-two-nodes'
+				'you-have-the-same-name-in-two-nodes'
 			).slice(0, -1);
 		}
 		else if (blockingErrors.errorType === 'emptyField') {
@@ -127,7 +128,10 @@ export default function UpperToolbar({
 				const deserializeUtil = new DeserializeUtil();
 				const xmlDefinition = currentEditor.getData();
 
-				deserializeUtil.updateXMLDefinition(xmlDefinition);
+				deserializeUtil.updateXMLDefinition(
+					encodeURIComponent(xmlDefinition)
+				);
+
 				const metadata = deserializeUtil.getMetadata();
 
 				currentName = metadata.name;
@@ -217,7 +221,11 @@ export default function UpperToolbar({
 						setDefinitionId(name);
 						setVersion(parseInt(version, 10));
 						if (version === '1') {
-							localStorage.setItem('firstPublished', true);
+							localStorage.setItem(
+								'firstPublished',
+								true,
+								localStorage.TYPES.FUNCTIONAL
+							);
 							redirectToSavedDefinition(name, version);
 						}
 						else {
@@ -252,7 +260,11 @@ export default function UpperToolbar({
 						setDefinitionId(name);
 						setVersion(parseInt(version, 10));
 						if (version === '1') {
-							localStorage.setItem('firstSaved', true);
+							localStorage.setItem(
+								'firstSaved',
+								true,
+								localStorage.TYPES.FUNCTIONAL
+							);
 							redirectToSavedDefinition(name, version);
 						}
 						else {
@@ -318,11 +330,16 @@ export default function UpperToolbar({
 	}, [definitionTitle, elements]);
 
 	useEffect(() => {
-		if (localStorage.getItem('firstSaved')) {
+		if (localStorage.getItem('firstSaved', localStorage.TYPES.FUNCTIONAL)) {
 			setAlert(Liferay.Language.get('workflow-saved'), 'success', true);
 			localStorage.removeItem('firstSaved');
 		}
-		else if (localStorage.getItem('firstPublished')) {
+		else if (
+			localStorage.getItem(
+				'firstPublished',
+				localStorage.TYPES.FUNCTIONAL
+			)
+		) {
 			setAlert(
 				Liferay.Language.get('workflow-published-successfully'),
 				'success',

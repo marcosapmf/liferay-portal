@@ -63,8 +63,7 @@ public class DefaultCommentTreeDisplayContext
 			!_isCommentPending()) {
 
 			publishButtonLabel = LanguageUtil.get(
-				_discussionRequestHelper.getRequest(),
-				"submit-for-publication");
+				_discussionRequestHelper.getRequest(), "submit-for-workflow");
 		}
 
 		return publishButtonLabel;
@@ -214,7 +213,7 @@ public class DefaultCommentTreeDisplayContext
 
 		if ((_discussionComment != null) &&
 			(_discussionComment.getUserId() == user.getUserId()) &&
-			!user.isDefaultUser()) {
+			!user.isGuestUser()) {
 
 			return true;
 		}

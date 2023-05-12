@@ -414,6 +414,8 @@ public interface Portlet extends PersistedModel, PortletModel {
 	 */
 	public String getFriendlyURLMapping();
 
+	public String getFriendlyURLMapping(boolean lookUpFriendlyURLMapper);
+
 	/**
 	 * Returns the class loader resource path to the friendly URL routes of the
 	 * portlet.

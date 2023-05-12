@@ -144,6 +144,11 @@
 	<td></td>
 </tr>
 <tr>
+	<td>SELECT_TYPE_PROVIDER</td>
+	<td>//button[@class="dropdown-item"]//span[contains(.,'${key_type}')]</td>
+	<td></td>
+</tr>
+<tr>
 	<td>FILTER_SEARCH_BUTTON</td>
 	<td>//div[@class='dropdown-menu show']//*[@type='button']//*[contains(@class,'lexicon-icon-search')]</td>
 	<td></td>
@@ -185,7 +190,7 @@
 </tr>
 <tr>
 	<td>REMOVE_FILTER</td>
-	<td>//span[contains(@class,'label dropdown-toggle') and contains(.,'${key_filter}')]//button[@class='filter-resume-close close']</td>
+	<td>//div[contains(@class,"btn") and contains(.,'${key_filter}')]//button[@title="Remove Filter"]</td>
 	<td></td>
 </tr>
 <tr>
@@ -234,6 +239,16 @@
 <tr>
 	<td>HEADER_ROW</td>
 	<td>xpath=(//div[contains(@class, "dnd-tr")])[1]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>OPEN_DROPDOWN_MENU</td>
+	<td>//label[contains(.,'${key_label}')]//following-sibling::div//button[contains(@class,'dropdown-toggle')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>DROPDOWN_LIST</td>
+	<td>//ul[contains(@class,'list-unstyled')][@role='listbox']//li</td>
 	<td></td>
 </tr>
 </tbody>

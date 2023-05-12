@@ -376,6 +376,19 @@ public class LayoutLocalServiceWrapper
 			description, type, hidden, friendlyURL, serviceContext);
 	}
 
+	@Override
+	public Layout copyLayout(
+			long userId, long groupId, boolean privateLayout,
+			java.util.Map<java.util.Locale, String> nameMap, boolean hidden,
+			boolean system, boolean copyPermissions, long sourcePlid,
+			ServiceContext serviceContext)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _layoutLocalService.copyLayout(
+			userId, groupId, privateLayout, nameMap, hidden, system,
+			copyPermissions, sourcePlid, serviceContext);
+	}
+
 	/**
 	 * Creates a new layout with the primary key. Does not add the layout to the database.
 	 *
@@ -1383,6 +1396,14 @@ public class LayoutLocalServiceWrapper
 	@Override
 	public int getLayoutsCount(long groupId, boolean privateLayout) {
 		return _layoutLocalService.getLayoutsCount(groupId, privateLayout);
+	}
+
+	@Override
+	public int getLayoutsCount(
+		long groupId, boolean privateLayout, long parentLayoutId) {
+
+		return _layoutLocalService.getLayoutsCount(
+			groupId, privateLayout, parentLayoutId);
 	}
 
 	@Override

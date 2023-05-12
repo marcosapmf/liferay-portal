@@ -15,19 +15,19 @@
 package com.liferay.object.internal.item.selector;
 
 import com.liferay.info.item.selector.InfoItemSelectorView;
+import com.liferay.item.selector.ItemSelector;
 import com.liferay.item.selector.ItemSelectorReturnType;
 import com.liferay.item.selector.ItemSelectorView;
 import com.liferay.item.selector.ItemSelectorViewDescriptor;
 import com.liferay.item.selector.ItemSelectorViewDescriptorRenderer;
 import com.liferay.item.selector.criteria.InfoItemItemSelectorReturnType;
 import com.liferay.item.selector.criteria.info.item.criterion.InfoItemItemSelectorCriterion;
+import com.liferay.layout.content.page.editor.constants.ContentPageEditorPortletKeys;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectField;
 import com.liferay.object.related.models.ObjectRelatedModelsProvider;
 import com.liferay.object.related.models.ObjectRelatedModelsProviderRegistry;
-import com.liferay.object.service.ObjectEntryLocalService;
 import com.liferay.object.service.ObjectFieldLocalService;
-import com.liferay.object.system.SystemObjectDefinitionMetadata;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
@@ -36,10 +36,12 @@ import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.BaseModel;
+import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 
@@ -69,24 +71,22 @@ public class SystemObjectEntryItemSelectorView
 			   ItemSelectorView<InfoItemItemSelectorCriterion> {
 
 	public SystemObjectEntryItemSelectorView(
+		ItemSelector itemSelector,
 		ItemSelectorViewDescriptorRenderer<InfoItemItemSelectorCriterion>
 			itemSelectorViewDescriptorRenderer,
 		ObjectDefinition objectDefinition,
-		ObjectEntryLocalService objectEntryLocalService,
 		ObjectFieldLocalService objectFieldLocalService,
 		ObjectRelatedModelsProviderRegistry objectRelatedModelsProviderRegistry,
-		Portal portal,
-		SystemObjectDefinitionMetadata systemObjectDefinitionMetadata) {
+		Portal portal) {
 
+		_itemSelector = itemSelector;
 		_itemSelectorViewDescriptorRenderer =
 			itemSelectorViewDescriptorRenderer;
 		_objectDefinition = objectDefinition;
-		_objectEntryLocalService = objectEntryLocalService;
 		_objectFieldLocalService = objectFieldLocalService;
 		_objectRelatedModelsProviderRegistry =
 			objectRelatedModelsProviderRegistry;
 		_portal = portal;
-		_systemObjectDefinitionMetadata = systemObjectDefinitionMetadata;
 	}
 
 	@Override
@@ -112,6 +112,25 @@ public class SystemObjectEntryItemSelectorView
 	}
 
 	@Override
+	public boolean isVisible(
+		InfoItemItemSelectorCriterion itemSelectorCriterion,
+		ThemeDisplay themeDisplay) {
+
+		if (StringUtil.equals(
+				_itemSelector.getItemSelectedEventName(
+					themeDisplay.getURLCurrent()),
+				StringBundler.concat(
+					"_",
+					ContentPageEditorPortletKeys.CONTENT_PAGE_EDITOR_PORTLET,
+					"_selectInfoItem"))) {
+
+			return false;
+		}
+
+		return true;
+	}
+
+	@Override
 	public void renderHTML(
 			ServletRequest servletRequest, ServletResponse servletResponse,
 			InfoItemItemSelectorCriterion infoItemItemSelectorCriterion,
@@ -122,9 +141,9 @@ public class SystemObjectEntryItemSelectorView
 			servletRequest, servletResponse, infoItemItemSelectorCriterion,
 			portletURL, itemSelectedEventName, search,
 			new SystemObjectItemSelectorViewDescriptor(
-				(HttpServletRequest)servletRequest, _objectDefinition,
-				_objectEntryLocalService, _objectRelatedModelsProviderRegistry,
-				portletURL));
+				(HttpServletRequest)servletRequest,
+				infoItemItemSelectorCriterion, _objectDefinition,
+				_objectRelatedModelsProviderRegistry, portletURL));
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(
@@ -134,16 +153,14 @@ public class SystemObjectEntryItemSelectorView
 		_supportedItemSelectorReturnTypes = Collections.singletonList(
 			new InfoItemItemSelectorReturnType());
 
+	private final ItemSelector _itemSelector;
 	private final ItemSelectorViewDescriptorRenderer
 		<InfoItemItemSelectorCriterion> _itemSelectorViewDescriptorRenderer;
 	private final ObjectDefinition _objectDefinition;
-	private final ObjectEntryLocalService _objectEntryLocalService;
 	private final ObjectFieldLocalService _objectFieldLocalService;
 	private final ObjectRelatedModelsProviderRegistry
 		_objectRelatedModelsProviderRegistry;
 	private final Portal _portal;
-	private final SystemObjectDefinitionMetadata
-		_systemObjectDefinitionMetadata;
 
 	private class SystemObjectEntryItemDescriptor
 		implements ItemSelectorViewDescriptor.ItemDescriptor {
@@ -241,22 +258,22 @@ public class SystemObjectEntryItemSelectorView
 
 		public SystemObjectItemSelectorViewDescriptor(
 			HttpServletRequest httpServletRequest,
+			InfoItemItemSelectorCriterion infoItemItemSelectorCriterion,
 			ObjectDefinition objectDefinition,
-			ObjectEntryLocalService objectEntryLocalService,
 			ObjectRelatedModelsProviderRegistry
 				objectRelatedModelsProviderRegistry,
 			PortletURL portletURL) {
 
 			_httpServletRequest = httpServletRequest;
+			_infoItemItemSelectorCriterion = infoItemItemSelectorCriterion;
 			_objectDefinition = objectDefinition;
-			_objectEntryLocalService = objectEntryLocalService;
 			_objectRelatedModelsProviderRegistry =
 				objectRelatedModelsProviderRegistry;
 			_portletURL = portletURL;
 
-			_portletRequest = (PortletRequest)_httpServletRequest.getAttribute(
+			_portletRequest = (PortletRequest)httpServletRequest.getAttribute(
 				JavaConstants.JAVAX_PORTLET_REQUEST);
-			_themeDisplay = (ThemeDisplay)_httpServletRequest.getAttribute(
+			_themeDisplay = (ThemeDisplay)httpServletRequest.getAttribute(
 				WebKeys.THEME_DISPLAY);
 		}
 
@@ -299,6 +316,7 @@ public class SystemObjectEntryItemSelectorView
 					_objectRelatedModelsProviderRegistry.
 						getObjectRelatedModelsProvider(
 							_objectDefinition.getClassName(),
+							CompanyThreadLocal.getCompanyId(),
 							objectRelationshipType);
 
 				List<BaseModel<?>> baseModels =
@@ -319,9 +337,15 @@ public class SystemObjectEntryItemSelectorView
 			return searchContainer;
 		}
 
+		@Override
+		public boolean isMultipleSelection() {
+			return _infoItemItemSelectorCriterion.isMultiSelection();
+		}
+
 		private final HttpServletRequest _httpServletRequest;
+		private final InfoItemItemSelectorCriterion
+			_infoItemItemSelectorCriterion;
 		private final ObjectDefinition _objectDefinition;
-		private final ObjectEntryLocalService _objectEntryLocalService;
 		private final ObjectRelatedModelsProviderRegistry
 			_objectRelatedModelsProviderRegistry;
 		private final PortletRequest _portletRequest;

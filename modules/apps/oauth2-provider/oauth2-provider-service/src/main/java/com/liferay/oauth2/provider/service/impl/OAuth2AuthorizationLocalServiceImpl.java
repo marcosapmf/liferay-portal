@@ -21,7 +21,8 @@ import com.liferay.oauth2.provider.model.OAuth2ScopeGrant;
 import com.liferay.oauth2.provider.service.base.OAuth2AuthorizationLocalServiceBaseImpl;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
-import com.liferay.portal.kernel.dao.orm.QueryUtil;
+import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
+import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.util.OrderByComparator;
@@ -105,19 +106,35 @@ public class OAuth2AuthorizationLocalServiceImpl
 	}
 
 	@Override
-	public void deleteExpiredOAuth2Authorizations() {
-		Date purgeDate = new Date();
+	public void deleteExpiredOAuth2Authorizations() throws PortalException {
+		ActionableDynamicQuery actionableDynamicQuery =
+			oAuth2AuthorizationLocalService.getActionableDynamicQuery();
 
-		purgeDate.setTime(
-			purgeDate.getTime() -
-				_expiredAuthorizationsAfterlifeDurationMillis);
+		actionableDynamicQuery.setAddCriteriaMethod(
+			dynamicQuery -> {
+				Date date = new Date(
+					System.currentTimeMillis() -
+						_expiredAuthorizationsAfterlifeDurationMillis);
 
-		for (OAuth2Authorization oAuth2Authorization :
-				oAuth2AuthorizationFinder.findByPurgeDate(
-					purgeDate, QueryUtil.ALL_POS, QueryUtil.ALL_POS)) {
+				dynamicQuery.add(
+					RestrictionsFactoryUtil.and(
+						RestrictionsFactoryUtil.lt(
+							"accessTokenExpirationDate", date),
+						RestrictionsFactoryUtil.or(
+							RestrictionsFactoryUtil.and(
+								RestrictionsFactoryUtil.isNotNull(
+									"refreshTokenExpirationDate"),
+								RestrictionsFactoryUtil.lt(
+									"refreshTokenExpirationDate", date)),
+							RestrictionsFactoryUtil.isNull(
+								"refreshTokenExpirationDate"))));
+			});
+		actionableDynamicQuery.setPerformActionMethod(
+			(OAuth2Authorization oAuth2Authorization) ->
+				oAuth2AuthorizationLocalService.deleteOAuth2Authorization(
+					oAuth2Authorization));
 
-			oAuth2AuthorizationPersistence.remove(oAuth2Authorization);
-		}
+		actionableDynamicQuery.performActions();
 	}
 
 	@Override

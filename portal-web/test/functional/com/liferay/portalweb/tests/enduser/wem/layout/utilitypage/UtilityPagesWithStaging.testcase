@@ -1,10 +1,9 @@
 @component-name = "portal-wcm"
 definition {
 
-	property custom.properties = "feature.flag.LPS-162765=true";
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property testray.main.component.name = "Content Pages";
+	property testray.main.component.name = "Utility Pages";
 
 	setUp {
 		task ("Set up instance and sign in") {
@@ -14,7 +13,7 @@ definition {
 		}
 
 		task ("Add a site") {
-			JSONGroup.addGroup(groupName = "Test Site Name");
+			HeadlessSite.addSite(siteName = "Test Site Name");
 		}
 
 		task ("Enable local live") {
@@ -28,7 +27,7 @@ definition {
 	tearDown {
 		var testPortalInstance = PropsUtil.get("test.portal.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testPortalInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -37,7 +36,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-162765. The page designer could use the 404 error type of utility page in staging and live site."
-	@priority = "4"
+	@priority = 4
 	test Apply404ErrorUtilityPage {
 		task ("Given a page designer has a 404 error utility page and a static page") {
 			PagesAdmin.openPagesAdmin(siteURLKey = "test-site-name-staging");
@@ -60,6 +59,8 @@ definition {
 			PagesAdmin.gotoUtilityPageEllipsisMenuItem(
 				menuItem = "Mark as Default",
 				pageName = "404 Error Utility Page");
+
+			Confirm();
 
 			Alert.viewSuccessMessage();
 

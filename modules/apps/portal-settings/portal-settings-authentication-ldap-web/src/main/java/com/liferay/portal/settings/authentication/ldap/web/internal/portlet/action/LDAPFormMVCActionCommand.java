@@ -25,6 +25,7 @@ import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.security.ldap.authenticator.configuration.LDAPAuthConfiguration;
@@ -37,7 +38,6 @@ import com.liferay.portal.settings.authentication.ldap.web.internal.portlet.cons
 
 import java.util.Dictionary;
 import java.util.List;
-import java.util.stream.Stream;
 
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
@@ -183,38 +183,34 @@ public class LDAPFormMVCActionCommand extends BaseFormMVCActionCommand {
 			return;
 		}
 
-		String[] orderedLdapServerIds = orderedLdapServerIdsString.split(",");
-
 		List<Dictionary<String, Object>> dictionaries =
 			_ldapServerConfigurationProvider.getConfigurationsProperties(
 				companyId);
 
+		String[] orderedLdapServerIds = StringUtil.split(
+			orderedLdapServerIdsString, ",");
+
 		for (int i = 0; i < orderedLdapServerIds.length; i++) {
-			int authServerPriority = i;
 			long ldapServerId = GetterUtil.getLong(orderedLdapServerIds[i]);
 
-			Stream<Dictionary<String, Object>> stream = dictionaries.stream();
+			for (Dictionary<String, Object> dictionary : dictionaries) {
+				long dictionaryLDAPServerId = GetterUtil.getLong(
+					dictionary.get(LDAPConstants.LDAP_SERVER_ID));
 
-			stream.filter(
-				dictionary -> {
-					long dictionaryLDAPServerId = GetterUtil.getLong(
-						dictionary.get(LDAPConstants.LDAP_SERVER_ID));
-
-					return dictionaryLDAPServerId == ldapServerId;
+				if (dictionaryLDAPServerId != ldapServerId) {
+					continue;
 				}
-			).findFirst(
-			).ifPresent(
-				dictionary -> {
-					dictionary.put(
-						LDAPConstants.AUTH_SERVER_PRIORITY, authServerPriority);
 
-					_ldapServerConfigurationProvider.updateProperties(
-						companyId,
-						GetterUtil.getLong(
-							dictionary.get(LDAPConstants.LDAP_SERVER_ID)),
-						dictionary);
-				}
-			);
+				dictionary.put(LDAPConstants.AUTH_SERVER_PRIORITY, i);
+
+				_ldapServerConfigurationProvider.updateProperties(
+					companyId,
+					GetterUtil.getLong(
+						dictionary.get(LDAPConstants.LDAP_SERVER_ID)),
+					dictionary);
+
+				break;
+			}
 		}
 	}
 

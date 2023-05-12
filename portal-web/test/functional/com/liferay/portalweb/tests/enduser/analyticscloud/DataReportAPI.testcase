@@ -1,0 +1,384 @@
+@component-name = "portal-analytics-cloud"
+definition {
+
+	property analytics.cloud.release = "true";
+	property analytics.cloud.upstream = "true";
+	property custom.properties = "jsonws.web.service.paths.excludes=";
+	property portal.release = "false";
+	property portal.upstream = "true";
+	property property.group = "analytics.cloud.profile";
+	property testray.main.component.name = "Analytics Cloud";
+
+	setUp {
+		task ("Copy the token from AC") {
+			ACUtils.launchAC();
+		}
+
+		task ("Navigation to custom events tab") {
+			ACNavigation.goToSettings();
+
+			ACSettings.goToApis();
+		}
+	}
+
+	tearDown {
+		var testPortalInstance = PropsUtil.get("test.portal.instance");
+
+		ACUtils.launchAC();
+
+		ACNavigation.goToSettings();
+
+		ACSettings.goToApis();
+
+		ACUtils.clickAnyButton(button = "Revoke");
+
+		ACUtils.clickAnyButton(button = "Continue");
+
+		if (${testPortalInstance} == "true") {
+			PortalInstances.tearDownCP();
+		}
+	}
+
+	@description = "Feature ID: LRAC-8103 | Automation ID: LRAC-11502 | Test Summary: Assert the user is able to query data using Analytics Cloud API"
+	@priority = 3
+	test CreateQueryDataWithAnalyticsCloudAPI {
+		var typeList = "blogs,documents-and-media,forms,individuals,pages,segments,web-contents";
+
+		task ("Get the token value") {
+			var token = ACApi.getTokenValue();
+		}
+
+		task ("Create a query data using analytics cloud API") {
+			ACApi.createDataReport(token = ${token});
+		}
+
+		task ("Check the list of endpoints that are available for querying in the API") {
+			ACApi.viewApiResponseForRootEndpoint(typeList = ${typeList});
+		}
+	}
+
+	@description = "Feature ID: LRAC-12919 | Automation ID: LRAC-13511 | Test Summary: Check that an error message appears when using an invalid type in the endpoint"
+	@priority = 2
+	test RequestShowErrorMessageWhenUseInvalidType {
+		var typeList = "accounts,acqa";
+		var message = "The \"type\" query parameter must be either blogs, documents-and-media, forms, individuals, pages, segments, or web-contents.";
+		var analyticsCloudURL = PropsUtil.get("analytics.cloud.url");
+
+		task ("Get the token value") {
+			var token = ACApi.getTokenValue();
+		}
+
+		for (var type : list ${typeList}) {
+			task ("Create a data report using analytics cloud API with invalid type") {
+				var curl = '''
+					${analyticsCloudURL}/api/reports/${type} -H "Authorization: Bearer ${token}"
+				''';
+
+				var apiResponse = JSONCurlUtil.get(${curl}, "$");
+			}
+
+			task ("Check if the API response is correct for the error case") {
+				ACApi.viewApiResponseForError(message = ${message});
+			}
+		}
+	}
+
+	@description = "Feature ID: LRAC-12919 | Automation ID: LRAC-13479 | Test Summary: Check that you can access data from all existing blogs"
+	@priority = 4
+	test RequestToAccessDataForAllBlogs {
+		var blogsTitleList = "Blog AC Title 1,Blog AC Title 2";
+		var type = "blogs";
+		var range = "rangeKey";
+		var rangeValue = 0;
+
+		task ("Copy the token value for the API") {
+			var token = ACApi.getTokenValue();
+		}
+
+		task ("Take the token from Analytics Cloud") {
+			ACSettings.takeTokenFromAnalyticsCloud();
+		}
+
+		task ("Go to DXP and create a site and two blogs and then connect Analytics Cloud to DXP") {
+			TestCase.setUpPortalInstance();
+
+			ACUtils.launchDXP();
+
+			ACUtils.addSiteAndPage();
+
+			for (var blogTitle : list ${blogsTitleList}) {
+				ACUtils.createBlogsAndAddToPage(entryTitle = ${blogTitle});
+			}
+
+			ACDXPSettings.connectDXPtoAnalyticsCloud(siteName = "Site Name");
+		}
+
+		task ("Visit the two blogs") {
+			ACUtils.navigateToSitePage(
+				actionType = "View Blog",
+				documentTitleList = "Blog AC Title 1,Blog AC Title 2",
+				pageName = "AC Page",
+				siteName = "Site Name");
+
+			ACUtils.closeAllSessionsAndWait();
+		}
+
+		task ("Create a data report using analytics cloud API with the type blogs") {
+			ACApi.createDataReport(
+				filter = ${range},
+				filterValue = ${rangeValue},
+				token = ${token},
+				type = ${type});
+		}
+
+		task ("Assert the two created blogs are present in the response") {
+			ACApi.assertApiResponse(
+				apiDataResponse = ${apiResponse},
+				expectedList = ${blogsTitleList});
+		}
+	}
+
+	@description = "Feature ID: LRAC-12919 | Automation ID: LRAC-13491 | Test Summary: Check that you can access the data of all individuals in the workspace"
+	@priority = 4
+	test RequestToAccessDataForAllIndividuals {
+		var type = "individuals";
+		var userNameList = "ac,bq";
+		var emailList = "ac@liferay.com,bq@liferay.com";
+
+		task ("Copy the token value for the API and copy the token for the AC and DXP connection") {
+			var token = ACApi.getTokenValue();
+
+			ACSettings.takeTokenFromAnalyticsCloud();
+		}
+
+		task ("Take the token from Analytics Cloud") {
+			TestCase.setUpPortalInstance();
+
+			ACUtils.launchDXP();
+
+			ACUtils.addSiteAndPage();
+		}
+
+		task ("Add 2 users") {
+			for (var name : list ${usernameList}) {
+				JSONUser.addUser(
+					userEmailAddress = "${name}@liferay.com",
+					userFirstName = ${name},
+					userLastName = ${name},
+					userScreenName = ${name});
+
+				JSONUser.setFirstPassword(
+					agreeToTermsAndAnswerReminderQuery = "true",
+					requireReset = "false",
+					userEmailAddress = "${name}@liferay.com");
+			}
+		}
+
+		task ("Connect AC and DXP") {
+			ACDXPSettings.connectDXPtoAnalyticsCloud(siteName = "Site Name");
+		}
+
+		task ("Visit the site page") {
+			ACUtils.navigateToSitePageWithUser(
+				emailList = ${emailList},
+				pageName = "AC Page",
+				siteName = "Site Name");
+		}
+
+		task ("Create a data report using analytics cloud API with the type individuals") {
+			ACApi.createDataReport(
+				token = ${token},
+				type = ${type});
+		}
+
+		task ("Assert the two individuals are present in the API response") {
+			ACApi.assertApiResponse(
+				apiDataResponse = ${apiResponse},
+				expectedList = ${userNameList});
+		}
+	}
+
+	@description = "Feature ID: LRAC-12919 | Automation ID: LRAC-13503 | Test Summary: Check if you can access data for a specific blog"
+	@priority = 3
+	test RequestToAccessDataForSpecificBlog {
+		var blogsTitleList = "Blog AC Title 1,Blog AC Title 2";
+		var type = "blogs";
+		var range = "rangeKey";
+		var rangeValue = 0;
+
+		task ("Copy the token value for the API") {
+			var token = ACApi.getTokenValue();
+		}
+
+		task ("Take the token from Analytics Cloud") {
+			ACSettings.takeTokenFromAnalyticsCloud();
+		}
+
+		task ("Go to DXP and create a site and two blogs and then connect Analytics Cloud to DXP") {
+			TestCase.setUpPortalInstance();
+
+			ACUtils.launchDXP();
+
+			ACUtils.addSiteAndPage();
+
+			for (var blogTitle : list ${blogsTitleList}) {
+				ACUtils.createBlogsAndAddToPage(entryTitle = ${blogTitle});
+			}
+
+			ACDXPSettings.connectDXPtoAnalyticsCloud(siteName = "Site Name");
+		}
+
+		task ("Visit the two blogs") {
+			ACUtils.navigateToSitePage(
+				actionType = "View Blog",
+				documentTitleList = "Blog AC Title 1,Blog AC Title 2",
+				pageName = "AC Page",
+				siteName = "Site Name");
+
+			ACUtils.closeAllSessionsAndWait();
+		}
+
+		task ("Create a data report using analytics cloud API with the type blogs") {
+			ACApi.createDataReport(
+				filter = ${range},
+				filterValue = ${rangeValue},
+				token = ${token},
+				type = ${type});
+		}
+
+		task ("Assert the total items of the response is 2 (because we have just 2 blogs)") {
+			var totalValue = ACApi.searchApiResponse(
+				apiDataResponse = ${apiResponse},
+				jsonQuery = "total");
+
+			TestUtils.assertEquals(
+				actual = ${totalValue},
+				expected = 2);
+		}
+
+		task ("Get the id of the blog in the first position of the response") {
+			var blogId = ACApi.searchApiResponse(
+				apiDataResponse = ${apiResponse},
+				jsonQuery = "id",
+				resultPosition = 0);
+		}
+
+		task ("Create a data report using analytics API for the specific blog chosen") {
+			ACApi.createIndividualOrAssetDataReport(
+				id = ${blogId},
+				token = ${token},
+				type = ${type});
+		}
+
+		task ("Assert that there's only one result in the response") {
+			var searchedValue = ACApi.searchApiResponse(
+				apiDataResponse = ${apiIndividualOrAssetResponse},
+				jsonQuery = "total");
+
+			TestUtils.assertEquals(
+				actual = ${searchedValue},
+				expected = "");
+		}
+
+		task ("Assert that the result matches with the blog id") {
+			ACApi.assertApiResponse(
+				apiDataResponse = ${apiIndividualOrAssetResponse},
+				expectedList = ${blogId});
+		}
+	}
+
+	@description = "Feature ID: LRAC-12919 | Automation ID: LRAC-13492 | Test Summary: Check that you can access the activities of a specific individual"
+	@priority = 3
+	test RequestToAccessDataForSpecificIndividual {
+		var type = "individuals";
+		var usernameList = "analytics,cloud";
+		var emailList = "analytics@liferay.com,cloud@liferay.com";
+
+		task ("Copy the token value for the API and copy the token for the AC and DXP connection") {
+			var token = ACApi.getTokenValue();
+
+			ACSettings.takeTokenFromAnalyticsCloud();
+		}
+
+		task ("Take the token from Analytics Cloud") {
+			TestCase.setUpPortalInstance();
+
+			ACUtils.launchDXP();
+
+			ACUtils.addSiteAndPage();
+		}
+
+		task ("Add 2 users") {
+			for (var name : list ${usernameList}) {
+				JSONUser.addUser(
+					userEmailAddress = "${name}@liferay.com",
+					userFirstName = ${name},
+					userLastName = ${name},
+					userScreenName = ${name});
+
+				JSONUser.setFirstPassword(
+					agreeToTermsAndAnswerReminderQuery = "true",
+					requireReset = "false",
+					userEmailAddress = "${name}@liferay.com");
+			}
+		}
+
+		task ("Connect AC and DXP") {
+			ACDXPSettings.connectDXPtoAnalyticsCloud(siteName = "Site Name");
+		}
+
+		task ("Visit the site page") {
+			ACUtils.navigateToSitePageWithUser(
+				emailList = ${emailList},
+				pageName = "AC Page",
+				siteName = "Site Name");
+		}
+
+		task ("Create a data report using analytics cloud API with the type individuals") {
+			ACApi.createDataReport(
+				token = ${token},
+				type = ${type});
+		}
+
+		task ("Assert the total of the response is two, because we have only two individuals") {
+			var oldTotalValue = ACApi.searchApiResponse(
+				apiDataResponse = ${apiResponse},
+				jsonQuery = "total");
+
+			TestUtils.assertEquals(
+				actual = ${oldTotalValue},
+				expected = 2);
+		}
+
+		task ("Get the id of the first individual") {
+			var individualId = ACApi.searchApiResponse(
+				apiDataResponse = ${apiResponse},
+				jsonQuery = "id",
+				resultPosition = 0);
+		}
+
+		task ("Create a new report for the specific individual") {
+			ACApi.createIndividualOrAssetDataReport(
+				id = ${individualId},
+				token = ${token},
+				type = ${type});
+		}
+
+		task ("Assert that there is only one result in the response (the individual that is being searched)") {
+			var currentTotalValue = ACApi.searchApiResponse(
+				apiDataResponse = ${apiIndividualOrAssetResponse},
+				jsonQuery = "total");
+
+			TestUtils.assertEquals(
+				actual = ${currentTotalValue},
+				expected = "");
+		}
+
+		task ("Assert that the id of the individual is present in the response") {
+			ACApi.assertApiResponse(
+				apiDataResponse = ${apiIndividualOrAssetResponse},
+				expectedList = ${individualId});
+		}
+	}
+
+}

@@ -166,8 +166,13 @@ public class ObjectDefinitionPersistenceTest {
 
 		newObjectDefinition.setEnableComments(RandomTestUtil.randomBoolean());
 
+		newObjectDefinition.setEnableLocalization(
+			RandomTestUtil.randomBoolean());
+
 		newObjectDefinition.setEnableObjectEntryHistory(
 			RandomTestUtil.randomBoolean());
+
+		newObjectDefinition.setModifiable(RandomTestUtil.randomBoolean());
 
 		newObjectDefinition.setName(RandomTestUtil.randomString());
 
@@ -256,8 +261,14 @@ public class ObjectDefinitionPersistenceTest {
 			existingObjectDefinition.isEnableComments(),
 			newObjectDefinition.isEnableComments());
 		Assert.assertEquals(
+			existingObjectDefinition.isEnableLocalization(),
+			newObjectDefinition.isEnableLocalization());
+		Assert.assertEquals(
 			existingObjectDefinition.isEnableObjectEntryHistory(),
 			newObjectDefinition.isEnableObjectEntryHistory());
+		Assert.assertEquals(
+			existingObjectDefinition.isModifiable(),
+			newObjectDefinition.isModifiable());
 		Assert.assertEquals(
 			existingObjectDefinition.getName(), newObjectDefinition.getName());
 		Assert.assertEquals(
@@ -385,6 +396,17 @@ public class ObjectDefinitionPersistenceTest {
 	}
 
 	@Test
+	public void testCountByC_A_M_S() throws Exception {
+		_persistence.countByC_A_M_S(
+			RandomTestUtil.nextLong(), RandomTestUtil.randomBoolean(),
+			RandomTestUtil.randomBoolean(), RandomTestUtil.nextInt());
+
+		_persistence.countByC_A_M_S(
+			0L, RandomTestUtil.randomBoolean(), RandomTestUtil.randomBoolean(),
+			0);
+	}
+
+	@Test
 	public void testCountByC_A_S_S() throws Exception {
 		_persistence.countByC_A_S_S(
 			RandomTestUtil.nextLong(), RandomTestUtil.randomBoolean(),
@@ -436,8 +458,9 @@ public class ObjectDefinitionPersistenceTest {
 			true, "descriptionObjectFieldId", true, "titleObjectFieldId", true,
 			"accountEntryRestricted", true, "active", true, "dbTableName", true,
 			"label", true, "className", true, "enableCategorization", true,
-			"enableComments", true, "enableObjectEntryHistory", true, "name",
-			true, "panelAppOrder", true, "panelCategoryKey", true,
+			"enableComments", true, "enableLocalization", true,
+			"enableObjectEntryHistory", true, "modifiable", true, "name", true,
+			"panelAppOrder", true, "panelCategoryKey", true,
 			"pkObjectFieldDBColumnName", true, "pkObjectFieldName", true,
 			"pluralLabel", true, "portlet", true, "scope", true, "storageType",
 			true, "system", true, "version", true, "status", true);
@@ -791,8 +814,12 @@ public class ObjectDefinitionPersistenceTest {
 
 		objectDefinition.setEnableComments(RandomTestUtil.randomBoolean());
 
+		objectDefinition.setEnableLocalization(RandomTestUtil.randomBoolean());
+
 		objectDefinition.setEnableObjectEntryHistory(
 			RandomTestUtil.randomBoolean());
+
+		objectDefinition.setModifiable(RandomTestUtil.randomBoolean());
 
 		objectDefinition.setName(RandomTestUtil.randomString());
 

@@ -364,6 +364,8 @@
 		<column name="promoPrice" type="BigDecimal" />
 		<column name="promoPriceWithTaxAmount" type="BigDecimal" />
 		<column name="quantity" type="int" />
+		<column name="replacedCPInstanceId" type="long" />
+		<column name="replacedSku" type="String" />
 		<column name="requestedDeliveryDate" type="Date" />
 		<column name="shipSeparately" type="boolean" />
 		<column name="shippable" type="boolean" />
@@ -933,6 +935,7 @@
 		<exception>CommerceOrderPurchaseOrderNumber</exception>
 		<exception>CommerceOrderRequestedDeliveryDate</exception>
 		<exception>CommerceOrderShippingAddress</exception>
+		<exception>CommerceOrderShippingAndBilling</exception>
 		<exception>CommerceOrderShippingMethod</exception>
 		<exception>CommerceOrderStatus</exception>
 		<exception>CommerceOrderTypeDisplayDate</exception>
@@ -952,6 +955,9 @@
 		<exception>CommerceSubscriptionEntryStartDate</exception>
 		<exception>CommerceSubscriptionEntrySubscriptionStatus</exception>
 		<exception>CommerceSubscriptionType</exception>
+		<exception>CPDefinitionInventoryMaxOrderQuantity</exception>
+		<exception>CPDefinitionInventoryMinOrderQuantity</exception>
+		<exception>CPDefinitionInventoryMultipleOrderQuantity</exception>
 		<exception>DuplicateCommerceOrderNote</exception>
 		<exception>DuplicateCommerceOrderTypeRel</exception>
 		<exception>DuplicateCommerceShipment</exception>

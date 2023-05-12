@@ -28,15 +28,12 @@ import java.util.Map;
 import java.util.ResourceBundle;
 
 import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Kevin Tan
  */
 @Component(
-	configurationPid = "com.liferay.portal.search.web.internal.custom.filter.configuration.CustomFilterWebTemplateConfiguration",
-	configurationPolicy = ConfigurationPolicy.OPTIONAL,
 	property = "javax.portlet.name=" + CustomFilterPortletKeys.CUSTOM_FILTER,
 	service = TemplateHandler.class
 )

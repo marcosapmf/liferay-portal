@@ -13,6 +13,7 @@
  */
 
 import ClayButton from '@clayui/button';
+import ClayIcon from '@clayui/icon';
 import ClayTable from '@clayui/table';
 import classNames from 'classnames';
 import {openSelectionModal, openToast} from 'frontend-js-web';
@@ -145,17 +146,20 @@ export default function GlobalCSSCETsConfiguration({
 				/>
 			))}
 
-			<h3 className="sheet-subtitle">
-				{Liferay.Language.get('css-client-extensions')}
-			</h3>
+			<p className="text-secondary">
+				{Liferay.Language.get(
+					'extend-this-page-css-with-client-extensions.-they-will-be-loaded-after-the-theme-css-and-after-master-extensions'
+				)}
+			</p>
 
 			<ClayButton
 				className="mb-3"
 				displayType="secondary"
 				onClick={handleClick}
-				small
 				type="button"
 			>
+				<ClayIcon className="mr-2" symbol="plus" />
+
 				{Liferay.Language.get('add-css-client-extensions')}
 			</ClayButton>
 

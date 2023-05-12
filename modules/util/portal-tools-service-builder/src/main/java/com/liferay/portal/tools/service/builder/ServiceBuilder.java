@@ -14,6 +14,7 @@
 
 package com.liferay.portal.tools.service.builder;
 
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.io.unsync.UnsyncBufferedReader;
 import com.liferay.petra.io.unsync.UnsyncStringReader;
 import com.liferay.petra.io.unsync.UnsyncStringWriter;
@@ -118,7 +119,6 @@ import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Stream;
 
 import org.dom4j.Attribute;
 import org.dom4j.Document;
@@ -2485,7 +2485,7 @@ public class ServiceBuilder {
 											entityColumn.getType());
 									}
 
-									if (Objects.equals("CLOB", sqlType)) {
+									if (Objects.equals(sqlType, "CLOB")) {
 										return "Clob";
 									}
 
@@ -4786,6 +4786,7 @@ public class ServiceBuilder {
 		OutputFormat outputFormat = new OutputFormat(StringPool.TAB, true);
 
 		outputFormat.setOmitEncoding(true);
+		outputFormat.setPadText(true);
 		outputFormat.setTrimText(true);
 
 		XMLWriter xmlWriter = new XMLWriter(
@@ -4809,8 +4810,12 @@ public class ServiceBuilder {
 
 		xmlWriter.write(saxReader.read(new XMLSafeReader(xml)));
 
-		xml = StringUtil.trim(
+		xml = StringUtil.trimTrailing(
 			unsyncByteArrayOutputStream.toString(StringPool.UTF8));
+
+		while (xml.contains(" \n")) {
+			xml = StringUtil.replace(xml, " \n", "\n");
+		}
 
 		xml = StringUtil.replace(xml, "\"/>", "\" />");
 
@@ -5874,32 +5879,40 @@ public class ServiceBuilder {
 			return false;
 		}
 
-		boolean hasCompanyId = Stream.of(
-			columnElements.toArray(new Element[0])
-		).map(
-			columnElement -> columnElement.attributeValue("name")
-		).anyMatch(
-			columnName -> columnName.equals("companyId")
-		);
+		boolean hasCompanyId = false;
+
+		for (Element columnElement : columnElements) {
+			String columnName = columnElement.attributeValue("name");
+
+			if (columnName.equals("companyId")) {
+				hasCompanyId = true;
+
+				break;
+			}
+		}
 
 		if (!hasCompanyId) {
 			return false;
 		}
 
-		String[] finderColumnNames = Stream.of(
-			finderColumnElements.toArray(new Element[0])
-		).map(
-			finderColumnElement -> finderColumnElement.attributeValue("name")
-		).filter(
-			finderColumnName ->
-				finderColumnName.endsWith("Id") ||
-				finderColumnName.endsWith("PK")
-		).toArray(
-			String[]::new
-		);
+		List<String> finderColumnNames = TransformUtil.transform(
+			finderColumnElements,
+			finderColumnElement -> {
+				String finderColumnName = finderColumnElement.attributeValue(
+					"name");
 
-		if ((finderColumnNames.length == 1) &&
-			finderColumnNames[0].equals("classNameId")) {
+				if ((finderColumnName == null) ||
+					(!finderColumnName.endsWith("Id") &&
+					 !finderColumnName.endsWith("PK"))) {
+
+					return null;
+				}
+
+				return finderColumnName;
+			});
+
+		if ((finderColumnNames.size() == 1) &&
+			Objects.equals(finderColumnNames.get(0), "classNameId")) {
 
 			return true;
 		}
@@ -6940,7 +6953,7 @@ public class ServiceBuilder {
 
 			EntityColumn pkEntityColumn = pkEntityColumns.get(0);
 
-			if (!Objects.equals("long", pkEntityColumn.getType())) {
+			if (!Objects.equals(pkEntityColumn.getType(), "long")) {
 				throw new ServiceBuilderException(
 					"Primary key must be of type long to enable change " +
 						"tracking for " + entityName);
@@ -7396,7 +7409,7 @@ public class ServiceBuilder {
 
 		EntityColumn pkEntityColumn = pkEntityColumns.get(0);
 
-		if (!Objects.equals("long", pkEntityColumn.getType())) {
+		if (!Objects.equals(pkEntityColumn.getType(), "long")) {
 			throw new IllegalArgumentException(
 				"Must have long primary key to create versioned entity");
 		}

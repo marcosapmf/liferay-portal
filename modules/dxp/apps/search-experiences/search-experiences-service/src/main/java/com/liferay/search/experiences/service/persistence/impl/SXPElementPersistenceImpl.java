@@ -6294,7 +6294,8 @@ public class SXPElementPersistenceImpl
 				if (ercSXPElement != null) {
 					throw new DuplicateSXPElementExternalReferenceCodeException(
 						"Duplicate sxp element with external reference code " +
-							sxpElement.getExternalReferenceCode());
+							sxpElement.getExternalReferenceCode() +
+								" and company " + sxpElement.getCompanyId());
 				}
 			}
 			else {
@@ -6304,7 +6305,8 @@ public class SXPElementPersistenceImpl
 
 					throw new DuplicateSXPElementExternalReferenceCodeException(
 						"Duplicate sxp element with external reference code " +
-							sxpElement.getExternalReferenceCode());
+							sxpElement.getExternalReferenceCode() +
+								" and company " + sxpElement.getCompanyId());
 				}
 			}
 		}

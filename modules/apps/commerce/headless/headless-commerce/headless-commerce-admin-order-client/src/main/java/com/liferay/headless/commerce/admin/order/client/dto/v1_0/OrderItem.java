@@ -693,6 +693,48 @@ public class OrderItem implements Cloneable, Serializable {
 
 	protected Integer quantity;
 
+	public String getReplacedSku() {
+		return replacedSku;
+	}
+
+	public void setReplacedSku(String replacedSku) {
+		this.replacedSku = replacedSku;
+	}
+
+	public void setReplacedSku(
+		UnsafeSupplier<String, Exception> replacedSkuUnsafeSupplier) {
+
+		try {
+			replacedSku = replacedSkuUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String replacedSku;
+
+	public Long getReplacedSkuId() {
+		return replacedSkuId;
+	}
+
+	public void setReplacedSkuId(Long replacedSkuId) {
+		this.replacedSkuId = replacedSkuId;
+	}
+
+	public void setReplacedSkuId(
+		UnsafeSupplier<Long, Exception> replacedSkuIdUnsafeSupplier) {
+
+		try {
+			replacedSkuId = replacedSkuIdUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Long replacedSkuId;
+
 	public Date getRequestedDeliveryDate() {
 		return requestedDeliveryDate;
 	}
@@ -923,6 +965,27 @@ public class OrderItem implements Cloneable, Serializable {
 	}
 
 	protected BigDecimal unitPriceWithTaxAmount;
+
+	public String[] getVirtualItemURLs() {
+		return virtualItemURLs;
+	}
+
+	public void setVirtualItemURLs(String[] virtualItemURLs) {
+		this.virtualItemURLs = virtualItemURLs;
+	}
+
+	public void setVirtualItemURLs(
+		UnsafeSupplier<String[], Exception> virtualItemURLsUnsafeSupplier) {
+
+		try {
+			virtualItemURLs = virtualItemURLsUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String[] virtualItemURLs;
 
 	@Override
 	public OrderItem clone() throws CloneNotSupportedException {

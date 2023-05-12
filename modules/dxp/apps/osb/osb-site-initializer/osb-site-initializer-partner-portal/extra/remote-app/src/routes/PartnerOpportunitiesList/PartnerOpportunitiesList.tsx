@@ -43,6 +43,7 @@ interface IProps {
 		items: PartnerOpportunitiesItem[]
 	) => PartnerOpportunitiesItem[];
 	name: string;
+	newButtonDeal?: boolean;
 	sort: string;
 }
 
@@ -51,6 +52,7 @@ const PartnerOpportunitiesList = ({
 	getDates,
 	getFilteredItems,
 	name,
+	newButtonDeal,
 	sort,
 }: IProps) => {
 	const {filters, filtersTerm, onFilter} = useFilters();
@@ -70,11 +72,19 @@ const PartnerOpportunitiesList = ({
 		filtersTerm,
 		sort
 	);
-
+	const {totalCount: totalPagination} = data;
 	const filteredData = data.items && getFilteredItems(data.items);
 
 	const siteURL = useLiferayNavigate();
 	const columns = [
+		{
+			columnKey: PartnerOpportunitiesColumnKey.PARTNER_ACCOUNT_NAME,
+			label: 'Partner Account Name',
+		},
+		{
+			columnKey: PartnerOpportunitiesColumnKey.PARTNER_NAME,
+			label: 'Partner Name',
+		},
 		{
 			columnKey: PartnerOpportunitiesColumnKey.ACCOUNT_NAME,
 			label: 'Account Name',
@@ -137,16 +147,14 @@ const PartnerOpportunitiesList = ({
 			return (
 				<div className="mt-3">
 					<Table<PartnerOpportunitiesItem>
-						borderless
 						columns={columns}
 						customClickOnRow={handleCustomClickOnRow}
-						responsive
 						rows={items}
 					/>
 
 					<ClayPaginationBarWithBasicItems
 						{...pagination}
-						totalItems={totalCount}
+						totalItems={totalPagination as number}
 					/>
 				</div>
 			);
@@ -195,16 +203,18 @@ const PartnerOpportunitiesList = ({
 						</CSVLink>
 					)}
 
-					<ClayButton
-						className="mb-2 mb-lg-0 mr-2"
-						onClick={() =>
-							Liferay.Util.navigate(
-								`${siteURL}/${PRMPageRoute.CREATE_DEAL_REGISTRATION}`
-							)
-						}
-					>
-						Register New Deal
-					</ClayButton>
+					{newButtonDeal && (
+						<ClayButton
+							className="mb-2 mb-lg-0 mr-2"
+							onClick={() =>
+								Liferay.Util.navigate(
+									`${siteURL}/${PRMPageRoute.CREATE_DEAL_REGISTRATION}`
+								)
+							}
+						>
+							Register New Deal
+						</ClayButton>
+					)}
 				</div>
 			</TableHeader>
 

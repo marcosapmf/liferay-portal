@@ -28,7 +28,6 @@ import com.liferay.journal.model.JournalArticle;
 import com.liferay.journal.model.JournalArticleLocalizationTable;
 import com.liferay.journal.model.JournalArticleResourceTable;
 import com.liferay.journal.model.JournalArticleTable;
-import com.liferay.journal.model.JournalContentSearchTable;
 import com.liferay.journal.model.JournalFolderTable;
 import com.liferay.journal.service.persistence.JournalArticlePersistence;
 import com.liferay.portal.kernel.model.ClassNameTable;
@@ -52,9 +51,6 @@ public class JournalArticleTableReferenceDefinition
 			childTableReferenceInfoBuilder) {
 
 		childTableReferenceInfoBuilder.singleColumnReference(
-			JournalArticleTable.INSTANCE.articleId,
-			JournalContentSearchTable.INSTANCE.articleId
-		).singleColumnReference(
 			JournalArticleTable.INSTANCE.resourcePrimKey,
 			JournalArticleResourceTable.INSTANCE.resourcePrimKey
 		).referenceInnerJoin(
@@ -132,8 +128,8 @@ public class JournalArticleTableReferenceDefinition
 				DDMStructureTable.INSTANCE
 			).innerJoinON(
 				JournalArticleTable.INSTANCE,
-				JournalArticleTable.INSTANCE.DDMStructureKey.eq(
-					DDMStructureTable.INSTANCE.structureKey
+				JournalArticleTable.INSTANCE.DDMStructureId.eq(
+					DDMStructureTable.INSTANCE.structureId
 				).and(
 					JournalArticleTable.INSTANCE.companyId.eq(
 						DDMStructureTable.INSTANCE.companyId)

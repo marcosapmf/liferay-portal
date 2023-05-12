@@ -24,6 +24,7 @@ import com.liferay.headless.commerce.admin.catalog.client.serdes.v1_0.OptionValu
 import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -72,12 +73,11 @@ public interface OptionValueResource {
 	public HttpInvoker.HttpResponse deleteOptionValueHttpResponse(Long id)
 		throws Exception;
 
-	public void deleteOptionValueBatch(
-			Long id, String callbackURL, Object object)
+	public void deleteOptionValueBatch(String callbackURL, Object object)
 		throws Exception;
 
 	public HttpInvoker.HttpResponse deleteOptionValueBatchHttpResponse(
-			Long id, String callbackURL, Object object)
+			String callbackURL, Object object)
 		throws Exception;
 
 	public OptionValue getOptionValue(Long id) throws Exception;
@@ -127,12 +127,11 @@ public interface OptionValueResource {
 			Long id, OptionValue optionValue)
 		throws Exception;
 
-	public void postOptionIdOptionValueBatch(
-			Long id, String callbackURL, Object object)
+	public void postOptionIdOptionValueBatch(String callbackURL, Object object)
 		throws Exception;
 
 	public HttpInvoker.HttpResponse postOptionIdOptionValueBatchHttpResponse(
-			Long id, String callbackURL, Object object)
+			String callbackURL, Object object)
 		throws Exception;
 
 	public static class Builder {
@@ -144,6 +143,10 @@ public interface OptionValueResource {
 			return this;
 		}
 
+		public Builder bearerToken(String token) {
+			return header("Authorization", "Bearer " + token);
+		}
+
 		public OptionValueResource build() {
 			return new OptionValueResourceImpl(this);
 		}
@@ -152,6 +155,28 @@ public interface OptionValueResource {
 			_contextPath = contextPath;
 
 			return this;
+		}
+
+		public Builder endpoint(String address, String scheme) {
+			String[] addressParts = address.split(":");
+
+			String host = addressParts[0];
+
+			int port = 443;
+
+			if (addressParts.length > 1) {
+				String portString = addressParts[1];
+
+				try {
+					port = Integer.parseInt(portString);
+				}
+				catch (NumberFormatException numberFormatException) {
+					throw new IllegalArgumentException(
+						"Unable to parse port from " + portString);
+				}
+			}
+
+			return endpoint(host, port, scheme);
 		}
 
 		public Builder endpoint(String host, int port, String scheme) {
@@ -235,7 +260,29 @@ public interface OptionValueResource {
 					"HTTP response status code: " +
 						httpResponse.getStatusCode());
 
-				throw new Problem.ProblemException(Problem.toDTO(content));
+				Problem.ProblemException problemException = null;
+
+				if (Objects.equals(
+						httpResponse.getContentType(), "application/json")) {
+
+					problemException = new Problem.ProblemException(
+						Problem.toDTO(content));
+				}
+				else {
+					_logger.log(
+						Level.WARNING,
+						"Unable to process content type: " +
+							httpResponse.getContentType());
+
+					Problem problem = new Problem();
+
+					problem.setStatus(
+						String.valueOf(httpResponse.getStatusCode()));
+
+					problemException = new Problem.ProblemException(problem);
+				}
+
+				throw problemException;
 			}
 			else {
 				_logger.fine("HTTP response content: " + content);
@@ -308,7 +355,29 @@ public interface OptionValueResource {
 					"HTTP response status code: " +
 						httpResponse.getStatusCode());
 
-				throw new Problem.ProblemException(Problem.toDTO(content));
+				Problem.ProblemException problemException = null;
+
+				if (Objects.equals(
+						httpResponse.getContentType(), "application/json")) {
+
+					problemException = new Problem.ProblemException(
+						Problem.toDTO(content));
+				}
+				else {
+					_logger.log(
+						Level.WARNING,
+						"Unable to process content type: " +
+							httpResponse.getContentType());
+
+					Problem problem = new Problem();
+
+					problem.setStatus(
+						String.valueOf(httpResponse.getStatusCode()));
+
+					problemException = new Problem.ProblemException(problem);
+				}
+
+				throw problemException;
 			}
 			else {
 				_logger.fine("HTTP response content: " + content);
@@ -392,7 +461,29 @@ public interface OptionValueResource {
 					"HTTP response status code: " +
 						httpResponse.getStatusCode());
 
-				throw new Problem.ProblemException(Problem.toDTO(content));
+				Problem.ProblemException problemException = null;
+
+				if (Objects.equals(
+						httpResponse.getContentType(), "application/json")) {
+
+					problemException = new Problem.ProblemException(
+						Problem.toDTO(content));
+				}
+				else {
+					_logger.log(
+						Level.WARNING,
+						"Unable to process content type: " +
+							httpResponse.getContentType());
+
+					Problem problem = new Problem();
+
+					problem.setStatus(
+						String.valueOf(httpResponse.getStatusCode()));
+
+					problemException = new Problem.ProblemException(problem);
+				}
+
+				throw problemException;
 			}
 			else {
 				_logger.fine("HTTP response content: " + content);
@@ -463,7 +554,29 @@ public interface OptionValueResource {
 					"HTTP response status code: " +
 						httpResponse.getStatusCode());
 
-				throw new Problem.ProblemException(Problem.toDTO(content));
+				Problem.ProblemException problemException = null;
+
+				if (Objects.equals(
+						httpResponse.getContentType(), "application/json")) {
+
+					problemException = new Problem.ProblemException(
+						Problem.toDTO(content));
+				}
+				else {
+					_logger.log(
+						Level.WARNING,
+						"Unable to process content type: " +
+							httpResponse.getContentType());
+
+					Problem problem = new Problem();
+
+					problem.setStatus(
+						String.valueOf(httpResponse.getStatusCode()));
+
+					problemException = new Problem.ProblemException(problem);
+				}
+
+				throw problemException;
 			}
 			else {
 				_logger.fine("HTTP response content: " + content);
@@ -512,12 +625,11 @@ public interface OptionValueResource {
 			return httpInvoker.invoke();
 		}
 
-		public void deleteOptionValueBatch(
-				Long id, String callbackURL, Object object)
+		public void deleteOptionValueBatch(String callbackURL, Object object)
 			throws Exception {
 
 			HttpInvoker.HttpResponse httpResponse =
-				deleteOptionValueBatchHttpResponse(id, callbackURL, object);
+				deleteOptionValueBatchHttpResponse(callbackURL, object);
 
 			String content = httpResponse.getContent();
 
@@ -533,7 +645,29 @@ public interface OptionValueResource {
 					"HTTP response status code: " +
 						httpResponse.getStatusCode());
 
-				throw new Problem.ProblemException(Problem.toDTO(content));
+				Problem.ProblemException problemException = null;
+
+				if (Objects.equals(
+						httpResponse.getContentType(), "application/json")) {
+
+					problemException = new Problem.ProblemException(
+						Problem.toDTO(content));
+				}
+				else {
+					_logger.log(
+						Level.WARNING,
+						"Unable to process content type: " +
+							httpResponse.getContentType());
+
+					Problem problem = new Problem();
+
+					problem.setStatus(
+						String.valueOf(httpResponse.getStatusCode()));
+
+					problemException = new Problem.ProblemException(problem);
+				}
+
+				throw problemException;
 			}
 			else {
 				_logger.fine("HTTP response content: " + content);
@@ -546,7 +680,7 @@ public interface OptionValueResource {
 		}
 
 		public HttpInvoker.HttpResponse deleteOptionValueBatchHttpResponse(
-				Long id, String callbackURL, Object object)
+				String callbackURL, Object object)
 			throws Exception {
 
 			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
@@ -582,8 +716,6 @@ public interface OptionValueResource {
 					_builder._port + _builder._contextPath +
 						"/o/headless-commerce-admin-catalog/v1.0/optionValues/batch");
 
-			httpInvoker.path("id", id);
-
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
 
@@ -608,7 +740,29 @@ public interface OptionValueResource {
 					"HTTP response status code: " +
 						httpResponse.getStatusCode());
 
-				throw new Problem.ProblemException(Problem.toDTO(content));
+				Problem.ProblemException problemException = null;
+
+				if (Objects.equals(
+						httpResponse.getContentType(), "application/json")) {
+
+					problemException = new Problem.ProblemException(
+						Problem.toDTO(content));
+				}
+				else {
+					_logger.log(
+						Level.WARNING,
+						"Unable to process content type: " +
+							httpResponse.getContentType());
+
+					Problem problem = new Problem();
+
+					problem.setStatus(
+						String.valueOf(httpResponse.getStatusCode()));
+
+					problemException = new Problem.ProblemException(problem);
+				}
+
+				throw problemException;
 			}
 			else {
 				_logger.fine("HTTP response content: " + content);
@@ -688,7 +842,29 @@ public interface OptionValueResource {
 					"HTTP response status code: " +
 						httpResponse.getStatusCode());
 
-				throw new Problem.ProblemException(Problem.toDTO(content));
+				Problem.ProblemException problemException = null;
+
+				if (Objects.equals(
+						httpResponse.getContentType(), "application/json")) {
+
+					problemException = new Problem.ProblemException(
+						Problem.toDTO(content));
+				}
+				else {
+					_logger.log(
+						Level.WARNING,
+						"Unable to process content type: " +
+							httpResponse.getContentType());
+
+					Problem problem = new Problem();
+
+					problem.setStatus(
+						String.valueOf(httpResponse.getStatusCode()));
+
+					problemException = new Problem.ProblemException(problem);
+				}
+
+				throw problemException;
 			}
 			else {
 				_logger.fine("HTTP response content: " + content);
@@ -764,7 +940,29 @@ public interface OptionValueResource {
 					"HTTP response status code: " +
 						httpResponse.getStatusCode());
 
-				throw new Problem.ProblemException(Problem.toDTO(content));
+				Problem.ProblemException problemException = null;
+
+				if (Objects.equals(
+						httpResponse.getContentType(), "application/json")) {
+
+					problemException = new Problem.ProblemException(
+						Problem.toDTO(content));
+				}
+				else {
+					_logger.log(
+						Level.WARNING,
+						"Unable to process content type: " +
+							httpResponse.getContentType());
+
+					Problem problem = new Problem();
+
+					problem.setStatus(
+						String.valueOf(httpResponse.getStatusCode()));
+
+					problemException = new Problem.ProblemException(problem);
+				}
+
+				throw problemException;
 			}
 			else {
 				_logger.fine("HTTP response content: " + content);
@@ -864,7 +1062,29 @@ public interface OptionValueResource {
 					"HTTP response status code: " +
 						httpResponse.getStatusCode());
 
-				throw new Problem.ProblemException(Problem.toDTO(content));
+				Problem.ProblemException problemException = null;
+
+				if (Objects.equals(
+						httpResponse.getContentType(), "application/json")) {
+
+					problemException = new Problem.ProblemException(
+						Problem.toDTO(content));
+				}
+				else {
+					_logger.log(
+						Level.WARNING,
+						"Unable to process content type: " +
+							httpResponse.getContentType());
+
+					Problem problem = new Problem();
+
+					problem.setStatus(
+						String.valueOf(httpResponse.getStatusCode()));
+
+					problemException = new Problem.ProblemException(problem);
+				}
+
+				throw problemException;
 			}
 			else {
 				_logger.fine("HTTP response content: " + content);
@@ -951,7 +1171,29 @@ public interface OptionValueResource {
 					"HTTP response status code: " +
 						httpResponse.getStatusCode());
 
-				throw new Problem.ProblemException(Problem.toDTO(content));
+				Problem.ProblemException problemException = null;
+
+				if (Objects.equals(
+						httpResponse.getContentType(), "application/json")) {
+
+					problemException = new Problem.ProblemException(
+						Problem.toDTO(content));
+				}
+				else {
+					_logger.log(
+						Level.WARNING,
+						"Unable to process content type: " +
+							httpResponse.getContentType());
+
+					Problem problem = new Problem();
+
+					problem.setStatus(
+						String.valueOf(httpResponse.getStatusCode()));
+
+					problemException = new Problem.ProblemException(problem);
+				}
+
+				throw problemException;
 			}
 			else {
 				_logger.fine("HTTP response content: " + content);
@@ -1049,7 +1291,29 @@ public interface OptionValueResource {
 					"HTTP response status code: " +
 						httpResponse.getStatusCode());
 
-				throw new Problem.ProblemException(Problem.toDTO(content));
+				Problem.ProblemException problemException = null;
+
+				if (Objects.equals(
+						httpResponse.getContentType(), "application/json")) {
+
+					problemException = new Problem.ProblemException(
+						Problem.toDTO(content));
+				}
+				else {
+					_logger.log(
+						Level.WARNING,
+						"Unable to process content type: " +
+							httpResponse.getContentType());
+
+					Problem problem = new Problem();
+
+					problem.setStatus(
+						String.valueOf(httpResponse.getStatusCode()));
+
+					problemException = new Problem.ProblemException(problem);
+				}
+
+				throw problemException;
 			}
 			else {
 				_logger.fine("HTTP response content: " + content);
@@ -1113,12 +1377,11 @@ public interface OptionValueResource {
 		}
 
 		public void postOptionIdOptionValueBatch(
-				Long id, String callbackURL, Object object)
+				String callbackURL, Object object)
 			throws Exception {
 
 			HttpInvoker.HttpResponse httpResponse =
-				postOptionIdOptionValueBatchHttpResponse(
-					id, callbackURL, object);
+				postOptionIdOptionValueBatchHttpResponse(callbackURL, object);
 
 			String content = httpResponse.getContent();
 
@@ -1134,7 +1397,29 @@ public interface OptionValueResource {
 					"HTTP response status code: " +
 						httpResponse.getStatusCode());
 
-				throw new Problem.ProblemException(Problem.toDTO(content));
+				Problem.ProblemException problemException = null;
+
+				if (Objects.equals(
+						httpResponse.getContentType(), "application/json")) {
+
+					problemException = new Problem.ProblemException(
+						Problem.toDTO(content));
+				}
+				else {
+					_logger.log(
+						Level.WARNING,
+						"Unable to process content type: " +
+							httpResponse.getContentType());
+
+					Problem problem = new Problem();
+
+					problem.setStatus(
+						String.valueOf(httpResponse.getStatusCode()));
+
+					problemException = new Problem.ProblemException(problem);
+				}
+
+				throw problemException;
 			}
 			else {
 				_logger.fine("HTTP response content: " + content);
@@ -1148,7 +1433,7 @@ public interface OptionValueResource {
 
 		public HttpInvoker.HttpResponse
 				postOptionIdOptionValueBatchHttpResponse(
-					Long id, String callbackURL, Object object)
+					String callbackURL, Object object)
 			throws Exception {
 
 			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
@@ -1183,8 +1468,6 @@ public interface OptionValueResource {
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port + _builder._contextPath +
 						"/o/headless-commerce-admin-catalog/v1.0/options/optionValues/batch");
-
-			httpInvoker.path("id", id);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);

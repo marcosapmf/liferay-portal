@@ -24,11 +24,11 @@ import com.liferay.object.field.filter.parser.ObjectFieldFilterContributorRegist
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.object.service.ObjectFieldLocalService;
-import com.liferay.object.util.LocalizedMapUtil;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterContext;
+import com.liferay.portal.vulcan.util.LocalizedMapUtil;
 
 import java.util.Locale;
 
@@ -40,7 +40,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = "dto.class.name=com.liferay.object.model.ObjectView",
-	service = {DTOConverter.class, ObjectViewDTOConverter.class}
+	service = DTOConverter.class
 )
 public class ObjectViewDTOConverter
 	implements DTOConverter<com.liferay.object.model.ObjectView, ObjectView> {

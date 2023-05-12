@@ -1,18 +1,105 @@
 @import 'atlas-variables';
 
 .site_navigation_menu_editor_MenuItem {
-	margin-bottom: 1.5rem;
+	box-sizing: content-box;
+	padding-left: calc(
+		var(--nesting-margin) * (var(--nesting-level) - 1) * 1px
+	);
 	width: 40ch;
 
-	&--selected {
-		& .card,
-		& .label.label-secondary {
-			background: $primary-l3;
+	&:focus,
+	&:focus-within,
+	&:hover,
+	&.active {
+		outline: none;
+
+		.card {
+			box-shadow: 0 0 0 2px $primary-l1;
+		}
+
+		.delete-item-button,
+		.menu-item-options-button,
+		.site_navigation_menu_editor_MenuItem-add-button {
+			opacity: 1;
+		}
+	}
+
+	&-add-button {
+		opacity: 0;
+
+		&:focus {
+			opacity: 1;
+		}
+	}
+
+	&-add-button-dropdown {
+		right: 50%;
+
+		&.bottom-button {
+			bottom: 0;
+			transform: translate(50%, 50%);
+		}
+
+		.lexicon-icon {
+			font-size: 0.75rem;
+		}
+
+		&.top-button {
+			top: 0;
+			transform: translate(50%, -50%);
+		}
+
+		&:focus {
+			opacity: 1;
+		}
+	}
+
+	.delete-item-button {
+		opacity: 0;
+
+		&:focus {
+			opacity: 1;
+		}
+	}
+
+	.menu-item-options-button {
+		opacity: 0;
+
+		&:focus {
+			opacity: 1;
 		}
 	}
 
 	&.dragging {
 		opacity: 0.4;
+	}
+
+	&.is-over-top::before,
+	&.is-over::after {
+		border-top: 4px solid $primary-l1;
+		content: '';
+		display: block;
+		margin-top: 8px;
+		padding-bottom: 16px;
+		width: 100%;
+	}
+
+	&.is-over::after {
+		transform: translateX(
+			calc(
+				var(--nesting-margin) *
+					(var(--nesting-level) - var(--over-nesting-level)) * -1px
+			)
+		);
+
+		[dir='rtl'] & {
+			transform: translateX(
+				calc(
+					var(--nesting-margin) *
+						(var(--nesting-level) - var(--over-nesting-level)) * 1px
+				)
+			);
+		}
 	}
 
 	.card-row {

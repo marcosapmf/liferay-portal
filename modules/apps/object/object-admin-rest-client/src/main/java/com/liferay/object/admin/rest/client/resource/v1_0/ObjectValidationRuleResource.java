@@ -24,6 +24,7 @@ import com.liferay.object.admin.rest.client.serdes.v1_0.ObjectValidationRuleSerD
 import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -41,6 +42,30 @@ public interface ObjectValidationRuleResource {
 	}
 
 	public Page<ObjectValidationRule>
+			getObjectDefinitionByExternalReferenceCodeObjectValidationRulesPage(
+				String externalReferenceCode, String search,
+				Pagination pagination)
+		throws Exception;
+
+	public HttpInvoker.HttpResponse
+			getObjectDefinitionByExternalReferenceCodeObjectValidationRulesPageHttpResponse(
+				String externalReferenceCode, String search,
+				Pagination pagination)
+		throws Exception;
+
+	public ObjectValidationRule
+			postObjectDefinitionByExternalReferenceCodeObjectValidationRule(
+				String externalReferenceCode,
+				ObjectValidationRule objectValidationRule)
+		throws Exception;
+
+	public HttpInvoker.HttpResponse
+			postObjectDefinitionByExternalReferenceCodeObjectValidationRuleHttpResponse(
+				String externalReferenceCode,
+				ObjectValidationRule objectValidationRule)
+		throws Exception;
+
+	public Page<ObjectValidationRule>
 			getObjectDefinitionObjectValidationRulesPage(
 				Long objectDefinitionId, String search, Pagination pagination)
 		throws Exception;
@@ -48,6 +73,17 @@ public interface ObjectValidationRuleResource {
 	public HttpInvoker.HttpResponse
 			getObjectDefinitionObjectValidationRulesPageHttpResponse(
 				Long objectDefinitionId, String search, Pagination pagination)
+		throws Exception;
+
+	public void postObjectDefinitionObjectValidationRulesPageExportBatch(
+			Long objectDefinitionId, String search, String callbackURL,
+			String contentType, String fieldNames)
+		throws Exception;
+
+	public HttpInvoker.HttpResponse
+			postObjectDefinitionObjectValidationRulesPageExportBatchHttpResponse(
+				Long objectDefinitionId, String search, String callbackURL,
+				String contentType, String fieldNames)
 		throws Exception;
 
 	public ObjectValidationRule postObjectDefinitionObjectValidationRule(
@@ -128,6 +164,10 @@ public interface ObjectValidationRuleResource {
 			return this;
 		}
 
+		public Builder bearerToken(String token) {
+			return header("Authorization", "Bearer " + token);
+		}
+
 		public ObjectValidationRuleResource build() {
 			return new ObjectValidationRuleResourceImpl(this);
 		}
@@ -136,6 +176,28 @@ public interface ObjectValidationRuleResource {
 			_contextPath = contextPath;
 
 			return this;
+		}
+
+		public Builder endpoint(String address, String scheme) {
+			String[] addressParts = address.split(":");
+
+			String host = addressParts[0];
+
+			int port = 443;
+
+			if (addressParts.length > 1) {
+				String portString = addressParts[1];
+
+				try {
+					port = Integer.parseInt(portString);
+				}
+				catch (NumberFormatException numberFormatException) {
+					throw new IllegalArgumentException(
+						"Unable to parse port from " + portString);
+				}
+			}
+
+			return endpoint(host, port, scheme);
 		}
 
 		public Builder endpoint(String host, int port, String scheme) {
@@ -199,6 +261,238 @@ public interface ObjectValidationRuleResource {
 		implements ObjectValidationRuleResource {
 
 		public Page<ObjectValidationRule>
+				getObjectDefinitionByExternalReferenceCodeObjectValidationRulesPage(
+					String externalReferenceCode, String search,
+					Pagination pagination)
+			throws Exception {
+
+			HttpInvoker.HttpResponse httpResponse =
+				getObjectDefinitionByExternalReferenceCodeObjectValidationRulesPageHttpResponse(
+					externalReferenceCode, search, pagination);
+
+			String content = httpResponse.getContent();
+
+			if ((httpResponse.getStatusCode() / 100) != 2) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response content: " + content);
+				_logger.log(
+					Level.WARNING,
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.log(
+					Level.WARNING,
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+
+				Problem.ProblemException problemException = null;
+
+				if (Objects.equals(
+						httpResponse.getContentType(), "application/json")) {
+
+					problemException = new Problem.ProblemException(
+						Problem.toDTO(content));
+				}
+				else {
+					_logger.log(
+						Level.WARNING,
+						"Unable to process content type: " +
+							httpResponse.getContentType());
+
+					Problem problem = new Problem();
+
+					problem.setStatus(
+						String.valueOf(httpResponse.getStatusCode()));
+
+					problemException = new Problem.ProblemException(problem);
+				}
+
+				throw problemException;
+			}
+			else {
+				_logger.fine("HTTP response content: " + content);
+				_logger.fine(
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.fine(
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+			}
+
+			try {
+				return Page.of(content, ObjectValidationRuleSerDes::toDTO);
+			}
+			catch (Exception e) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response: " + content, e);
+
+				throw new Problem.ProblemException(Problem.toDTO(content));
+			}
+		}
+
+		public HttpInvoker.HttpResponse
+				getObjectDefinitionByExternalReferenceCodeObjectValidationRulesPageHttpResponse(
+					String externalReferenceCode, String search,
+					Pagination pagination)
+			throws Exception {
+
+			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
+
+			if (_builder._locale != null) {
+				httpInvoker.header(
+					"Accept-Language", _builder._locale.toLanguageTag());
+			}
+
+			for (Map.Entry<String, String> entry :
+					_builder._headers.entrySet()) {
+
+				httpInvoker.header(entry.getKey(), entry.getValue());
+			}
+
+			for (Map.Entry<String, String> entry :
+					_builder._parameters.entrySet()) {
+
+				httpInvoker.parameter(entry.getKey(), entry.getValue());
+			}
+
+			httpInvoker.httpMethod(HttpInvoker.HttpMethod.GET);
+
+			if (search != null) {
+				httpInvoker.parameter("search", String.valueOf(search));
+			}
+
+			if (pagination != null) {
+				httpInvoker.parameter(
+					"page", String.valueOf(pagination.getPage()));
+				httpInvoker.parameter(
+					"pageSize", String.valueOf(pagination.getPageSize()));
+			}
+
+			httpInvoker.path(
+				_builder._scheme + "://" + _builder._host + ":" +
+					_builder._port + _builder._contextPath +
+						"/o/object-admin/v1.0/object-definitions/by-external-reference-code/{externalReferenceCode}/object-validation-rules");
+
+			httpInvoker.path("externalReferenceCode", externalReferenceCode);
+
+			httpInvoker.userNameAndPassword(
+				_builder._login + ":" + _builder._password);
+
+			return httpInvoker.invoke();
+		}
+
+		public ObjectValidationRule
+				postObjectDefinitionByExternalReferenceCodeObjectValidationRule(
+					String externalReferenceCode,
+					ObjectValidationRule objectValidationRule)
+			throws Exception {
+
+			HttpInvoker.HttpResponse httpResponse =
+				postObjectDefinitionByExternalReferenceCodeObjectValidationRuleHttpResponse(
+					externalReferenceCode, objectValidationRule);
+
+			String content = httpResponse.getContent();
+
+			if ((httpResponse.getStatusCode() / 100) != 2) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response content: " + content);
+				_logger.log(
+					Level.WARNING,
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.log(
+					Level.WARNING,
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+
+				Problem.ProblemException problemException = null;
+
+				if (Objects.equals(
+						httpResponse.getContentType(), "application/json")) {
+
+					problemException = new Problem.ProblemException(
+						Problem.toDTO(content));
+				}
+				else {
+					_logger.log(
+						Level.WARNING,
+						"Unable to process content type: " +
+							httpResponse.getContentType());
+
+					Problem problem = new Problem();
+
+					problem.setStatus(
+						String.valueOf(httpResponse.getStatusCode()));
+
+					problemException = new Problem.ProblemException(problem);
+				}
+
+				throw problemException;
+			}
+			else {
+				_logger.fine("HTTP response content: " + content);
+				_logger.fine(
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.fine(
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+			}
+
+			try {
+				return ObjectValidationRuleSerDes.toDTO(content);
+			}
+			catch (Exception e) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response: " + content, e);
+
+				throw new Problem.ProblemException(Problem.toDTO(content));
+			}
+		}
+
+		public HttpInvoker.HttpResponse
+				postObjectDefinitionByExternalReferenceCodeObjectValidationRuleHttpResponse(
+					String externalReferenceCode,
+					ObjectValidationRule objectValidationRule)
+			throws Exception {
+
+			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
+
+			httpInvoker.body(
+				objectValidationRule.toString(), "application/json");
+
+			if (_builder._locale != null) {
+				httpInvoker.header(
+					"Accept-Language", _builder._locale.toLanguageTag());
+			}
+
+			for (Map.Entry<String, String> entry :
+					_builder._headers.entrySet()) {
+
+				httpInvoker.header(entry.getKey(), entry.getValue());
+			}
+
+			for (Map.Entry<String, String> entry :
+					_builder._parameters.entrySet()) {
+
+				httpInvoker.parameter(entry.getKey(), entry.getValue());
+			}
+
+			httpInvoker.httpMethod(HttpInvoker.HttpMethod.POST);
+
+			httpInvoker.path(
+				_builder._scheme + "://" + _builder._host + ":" +
+					_builder._port + _builder._contextPath +
+						"/o/object-admin/v1.0/object-definitions/by-external-reference-code/{externalReferenceCode}/object-validation-rules");
+
+			httpInvoker.path("externalReferenceCode", externalReferenceCode);
+
+			httpInvoker.userNameAndPassword(
+				_builder._login + ":" + _builder._password);
+
+			return httpInvoker.invoke();
+		}
+
+		public Page<ObjectValidationRule>
 				getObjectDefinitionObjectValidationRulesPage(
 					Long objectDefinitionId, String search,
 					Pagination pagination)
@@ -222,7 +516,29 @@ public interface ObjectValidationRuleResource {
 					"HTTP response status code: " +
 						httpResponse.getStatusCode());
 
-				throw new Problem.ProblemException(Problem.toDTO(content));
+				Problem.ProblemException problemException = null;
+
+				if (Objects.equals(
+						httpResponse.getContentType(), "application/json")) {
+
+					problemException = new Problem.ProblemException(
+						Problem.toDTO(content));
+				}
+				else {
+					_logger.log(
+						Level.WARNING,
+						"Unable to process content type: " +
+							httpResponse.getContentType());
+
+					Problem problem = new Problem();
+
+					problem.setStatus(
+						String.valueOf(httpResponse.getStatusCode()));
+
+					problemException = new Problem.ProblemException(problem);
+				}
+
+				throw problemException;
 			}
 			else {
 				_logger.fine("HTTP response content: " + content);
@@ -296,6 +612,122 @@ public interface ObjectValidationRuleResource {
 			return httpInvoker.invoke();
 		}
 
+		public void postObjectDefinitionObjectValidationRulesPageExportBatch(
+				Long objectDefinitionId, String search, String callbackURL,
+				String contentType, String fieldNames)
+			throws Exception {
+
+			HttpInvoker.HttpResponse httpResponse =
+				postObjectDefinitionObjectValidationRulesPageExportBatchHttpResponse(
+					objectDefinitionId, search, callbackURL, contentType,
+					fieldNames);
+
+			String content = httpResponse.getContent();
+
+			if ((httpResponse.getStatusCode() / 100) != 2) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response content: " + content);
+				_logger.log(
+					Level.WARNING,
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.log(
+					Level.WARNING,
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+
+				Problem.ProblemException problemException = null;
+
+				if (Objects.equals(
+						httpResponse.getContentType(), "application/json")) {
+
+					problemException = new Problem.ProblemException(
+						Problem.toDTO(content));
+				}
+				else {
+					_logger.log(
+						Level.WARNING,
+						"Unable to process content type: " +
+							httpResponse.getContentType());
+
+					Problem problem = new Problem();
+
+					problem.setStatus(
+						String.valueOf(httpResponse.getStatusCode()));
+
+					problemException = new Problem.ProblemException(problem);
+				}
+
+				throw problemException;
+			}
+			else {
+				_logger.fine("HTTP response content: " + content);
+				_logger.fine(
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.fine(
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+			}
+		}
+
+		public HttpInvoker.HttpResponse
+				postObjectDefinitionObjectValidationRulesPageExportBatchHttpResponse(
+					Long objectDefinitionId, String search, String callbackURL,
+					String contentType, String fieldNames)
+			throws Exception {
+
+			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
+
+			if (_builder._locale != null) {
+				httpInvoker.header(
+					"Accept-Language", _builder._locale.toLanguageTag());
+			}
+
+			for (Map.Entry<String, String> entry :
+					_builder._headers.entrySet()) {
+
+				httpInvoker.header(entry.getKey(), entry.getValue());
+			}
+
+			for (Map.Entry<String, String> entry :
+					_builder._parameters.entrySet()) {
+
+				httpInvoker.parameter(entry.getKey(), entry.getValue());
+			}
+
+			httpInvoker.httpMethod(HttpInvoker.HttpMethod.POST);
+
+			if (search != null) {
+				httpInvoker.parameter("search", String.valueOf(search));
+			}
+
+			if (callbackURL != null) {
+				httpInvoker.parameter(
+					"callbackURL", String.valueOf(callbackURL));
+			}
+
+			if (contentType != null) {
+				httpInvoker.parameter(
+					"contentType", String.valueOf(contentType));
+			}
+
+			if (fieldNames != null) {
+				httpInvoker.parameter("fieldNames", String.valueOf(fieldNames));
+			}
+
+			httpInvoker.path(
+				_builder._scheme + "://" + _builder._host + ":" +
+					_builder._port + _builder._contextPath +
+						"/o/object-admin/v1.0/object-definitions/{objectDefinitionId}/object-validation-rules/export-batch");
+
+			httpInvoker.path("objectDefinitionId", objectDefinitionId);
+
+			httpInvoker.userNameAndPassword(
+				_builder._login + ":" + _builder._password);
+
+			return httpInvoker.invoke();
+		}
+
 		public ObjectValidationRule postObjectDefinitionObjectValidationRule(
 				Long objectDefinitionId,
 				ObjectValidationRule objectValidationRule)
@@ -319,7 +751,29 @@ public interface ObjectValidationRuleResource {
 					"HTTP response status code: " +
 						httpResponse.getStatusCode());
 
-				throw new Problem.ProblemException(Problem.toDTO(content));
+				Problem.ProblemException problemException = null;
+
+				if (Objects.equals(
+						httpResponse.getContentType(), "application/json")) {
+
+					problemException = new Problem.ProblemException(
+						Problem.toDTO(content));
+				}
+				else {
+					_logger.log(
+						Level.WARNING,
+						"Unable to process content type: " +
+							httpResponse.getContentType());
+
+					Problem problem = new Problem();
+
+					problem.setStatus(
+						String.valueOf(httpResponse.getStatusCode()));
+
+					problemException = new Problem.ProblemException(problem);
+				}
+
+				throw problemException;
 			}
 			else {
 				_logger.fine("HTTP response content: " + content);
@@ -407,7 +861,29 @@ public interface ObjectValidationRuleResource {
 					"HTTP response status code: " +
 						httpResponse.getStatusCode());
 
-				throw new Problem.ProblemException(Problem.toDTO(content));
+				Problem.ProblemException problemException = null;
+
+				if (Objects.equals(
+						httpResponse.getContentType(), "application/json")) {
+
+					problemException = new Problem.ProblemException(
+						Problem.toDTO(content));
+				}
+				else {
+					_logger.log(
+						Level.WARNING,
+						"Unable to process content type: " +
+							httpResponse.getContentType());
+
+					Problem problem = new Problem();
+
+					problem.setStatus(
+						String.valueOf(httpResponse.getStatusCode()));
+
+					problemException = new Problem.ProblemException(problem);
+				}
+
+				throw problemException;
 			}
 			else {
 				_logger.fine("HTTP response content: " + content);
@@ -485,7 +961,29 @@ public interface ObjectValidationRuleResource {
 					"HTTP response status code: " +
 						httpResponse.getStatusCode());
 
-				throw new Problem.ProblemException(Problem.toDTO(content));
+				Problem.ProblemException problemException = null;
+
+				if (Objects.equals(
+						httpResponse.getContentType(), "application/json")) {
+
+					problemException = new Problem.ProblemException(
+						Problem.toDTO(content));
+				}
+				else {
+					_logger.log(
+						Level.WARNING,
+						"Unable to process content type: " +
+							httpResponse.getContentType());
+
+					Problem problem = new Problem();
+
+					problem.setStatus(
+						String.valueOf(httpResponse.getStatusCode()));
+
+					problemException = new Problem.ProblemException(problem);
+				}
+
+				throw problemException;
 			}
 			else {
 				_logger.fine("HTTP response content: " + content);
@@ -568,7 +1066,29 @@ public interface ObjectValidationRuleResource {
 					"HTTP response status code: " +
 						httpResponse.getStatusCode());
 
-				throw new Problem.ProblemException(Problem.toDTO(content));
+				Problem.ProblemException problemException = null;
+
+				if (Objects.equals(
+						httpResponse.getContentType(), "application/json")) {
+
+					problemException = new Problem.ProblemException(
+						Problem.toDTO(content));
+				}
+				else {
+					_logger.log(
+						Level.WARNING,
+						"Unable to process content type: " +
+							httpResponse.getContentType());
+
+					Problem problem = new Problem();
+
+					problem.setStatus(
+						String.valueOf(httpResponse.getStatusCode()));
+
+					problemException = new Problem.ProblemException(problem);
+				}
+
+				throw problemException;
 			}
 			else {
 				_logger.fine("HTTP response content: " + content);
@@ -645,7 +1165,29 @@ public interface ObjectValidationRuleResource {
 					"HTTP response status code: " +
 						httpResponse.getStatusCode());
 
-				throw new Problem.ProblemException(Problem.toDTO(content));
+				Problem.ProblemException problemException = null;
+
+				if (Objects.equals(
+						httpResponse.getContentType(), "application/json")) {
+
+					problemException = new Problem.ProblemException(
+						Problem.toDTO(content));
+				}
+				else {
+					_logger.log(
+						Level.WARNING,
+						"Unable to process content type: " +
+							httpResponse.getContentType());
+
+					Problem problem = new Problem();
+
+					problem.setStatus(
+						String.valueOf(httpResponse.getStatusCode()));
+
+					problemException = new Problem.ProblemException(problem);
+				}
+
+				throw problemException;
 			}
 			else {
 				_logger.fine("HTTP response content: " + content);
@@ -729,7 +1271,29 @@ public interface ObjectValidationRuleResource {
 					"HTTP response status code: " +
 						httpResponse.getStatusCode());
 
-				throw new Problem.ProblemException(Problem.toDTO(content));
+				Problem.ProblemException problemException = null;
+
+				if (Objects.equals(
+						httpResponse.getContentType(), "application/json")) {
+
+					problemException = new Problem.ProblemException(
+						Problem.toDTO(content));
+				}
+				else {
+					_logger.log(
+						Level.WARNING,
+						"Unable to process content type: " +
+							httpResponse.getContentType());
+
+					Problem problem = new Problem();
+
+					problem.setStatus(
+						String.valueOf(httpResponse.getStatusCode()));
+
+					problemException = new Problem.ProblemException(problem);
+				}
+
+				throw problemException;
 			}
 			else {
 				_logger.fine("HTTP response content: " + content);
@@ -817,7 +1381,29 @@ public interface ObjectValidationRuleResource {
 					"HTTP response status code: " +
 						httpResponse.getStatusCode());
 
-				throw new Problem.ProblemException(Problem.toDTO(content));
+				Problem.ProblemException problemException = null;
+
+				if (Objects.equals(
+						httpResponse.getContentType(), "application/json")) {
+
+					problemException = new Problem.ProblemException(
+						Problem.toDTO(content));
+				}
+				else {
+					_logger.log(
+						Level.WARNING,
+						"Unable to process content type: " +
+							httpResponse.getContentType());
+
+					Problem problem = new Problem();
+
+					problem.setStatus(
+						String.valueOf(httpResponse.getStatusCode()));
+
+					problemException = new Problem.ProblemException(problem);
+				}
+
+				throw problemException;
 			}
 			else {
 				_logger.fine("HTTP response content: " + content);
@@ -903,7 +1489,29 @@ public interface ObjectValidationRuleResource {
 					"HTTP response status code: " +
 						httpResponse.getStatusCode());
 
-				throw new Problem.ProblemException(Problem.toDTO(content));
+				Problem.ProblemException problemException = null;
+
+				if (Objects.equals(
+						httpResponse.getContentType(), "application/json")) {
+
+					problemException = new Problem.ProblemException(
+						Problem.toDTO(content));
+				}
+				else {
+					_logger.log(
+						Level.WARNING,
+						"Unable to process content type: " +
+							httpResponse.getContentType());
+
+					Problem problem = new Problem();
+
+					problem.setStatus(
+						String.valueOf(httpResponse.getStatusCode()));
+
+					problemException = new Problem.ProblemException(problem);
+				}
+
+				throw problemException;
 			}
 			else {
 				_logger.fine("HTTP response content: " + content);

@@ -123,11 +123,7 @@ import org.osgi.service.component.annotations.ReferencePolicyOption;
  * @author Daniel Kocsis
  * @author Máté Thurzó
  */
-@Component(
-	service = {
-		JournalArticleStagedModelDataHandler.class, StagedModelDataHandler.class
-	}
-)
+@Component(service = StagedModelDataHandler.class)
 public class JournalArticleStagedModelDataHandler
 	extends BaseStagedModelDataHandler<JournalArticle> {
 
@@ -273,10 +269,10 @@ public class JournalArticleStagedModelDataHandler
 			"article-resource-uuid", articleResourceUuid
 		).build();
 
-		long defaultUserId = 0;
+		long guestUserId = 0;
 
 		try {
-			defaultUserId = _userLocalService.getDefaultUserId(
+			guestUserId = _userLocalService.getGuestUserId(
 				article.getCompanyId());
 		}
 		catch (Exception exception) {
@@ -287,7 +283,7 @@ public class JournalArticleStagedModelDataHandler
 			return referenceAttributes;
 		}
 
-		boolean preloaded = _isPreloadedArticle(defaultUserId, article);
+		boolean preloaded = _isPreloadedArticle(guestUserId, article);
 
 		referenceAttributes.put("preloaded", String.valueOf(preloaded));
 
@@ -409,8 +405,7 @@ public class JournalArticleStagedModelDataHandler
 		}
 
 		DDMStructure ddmStructure = _ddmStructureLocalService.getStructure(
-			article.getGroupId(), _portal.getClassNameId(JournalArticle.class),
-			article.getDDMStructureKey(), true);
+			article.getDDMStructureId());
 
 		StagedModelDataHandlerUtil.exportReferenceStagedModel(
 			portletDataContext, article, ddmStructure,
@@ -510,7 +505,7 @@ public class JournalArticleStagedModelDataHandler
 			content);
 
 		if (_isPreloadedArticle(
-				_userLocalService.getDefaultUserId(article.getCompanyId()),
+				_userLocalService.getGuestUserId(article.getCompanyId()),
 				article)) {
 
 			articleElement.addAttribute("preloaded", "true");
@@ -744,29 +739,23 @@ public class JournalArticleStagedModelDataHandler
 			}
 		}
 
-		Map<String, String> ddmStructureKeys =
-			(Map<String, String>)portletDataContext.getNewPrimaryKeysMap(
-				DDMStructure.class + ".ddmStructureKey");
+		long classPK = 0;
 
-		String parentDDMStructureKey = MapUtil.getString(
-			ddmStructureKeys, article.getDDMStructureKey(),
-			article.getDDMStructureKey());
+		Map<Long, Long> ddmStructureIds =
+			(Map<Long, Long>)portletDataContext.getNewPrimaryKeysMap(
+				DDMStructure.class);
 
-		long ddmStructureId = 0;
+		if (article.getClassNameId() !=
+				JournalArticleConstants.CLASS_NAME_ID_DEFAULT) {
 
-		if (article.getClassNameId() != 0) {
-			Map<String, Long> ddmStructureIds =
-				(Map<String, Long>)portletDataContext.getNewPrimaryKeysMap(
-					DDMStructure.class);
-
-			ddmStructureId = ddmStructureIds.get(article.getClassPK());
+			classPK = ddmStructureIds.get(article.getClassPK());
 		}
 
 		Map<String, String> ddmTemplateKeys =
 			(Map<String, String>)portletDataContext.getNewPrimaryKeysMap(
 				DDMTemplate.class + ".ddmTemplateKey");
 
-		String parentDDMTemplateKey = MapUtil.getString(
+		String ddmTemplateKey = MapUtil.getString(
 			ddmTemplateKeys, article.getDDMTemplateKey(),
 			article.getDDMTemplateKey());
 
@@ -801,6 +790,10 @@ public class JournalArticleStagedModelDataHandler
 					}
 				}
 			}
+
+			long ddmStructureId = MapUtil.getLong(
+				ddmStructureIds, article.getDDMStructureId(),
+				article.getDDMStructureId());
 
 			JournalArticle latestArticle =
 				_journalArticleLocalService.fetchLatestArticle(
@@ -924,13 +917,13 @@ public class JournalArticleStagedModelDataHandler
 					importedArticle = _journalArticleLocalService.addArticle(
 						externalReferenceCode, userId,
 						portletDataContext.getScopeGroupId(), folderId,
-						article.getClassNameId(), ddmStructureId, articleId,
+						article.getClassNameId(), classPK, articleId,
 						autoArticleId, article.getVersion(),
 						article.getTitleMap(), article.getDescriptionMap(),
-						friendlyURLMap, content, parentDDMStructureKey,
-						parentDDMTemplateKey, article.getLayoutUuid(),
-						displayDateMonth, displayDateDay, displayDateYear,
-						displayDateHour, displayDateMinute, expirationDateMonth,
+						friendlyURLMap, content, ddmStructureId, ddmTemplateKey,
+						article.getLayoutUuid(), displayDateMonth,
+						displayDateDay, displayDateYear, displayDateHour,
+						displayDateMinute, expirationDateMonth,
 						expirationDateDay, expirationDateYear,
 						expirationDateHour, expirationDateMinute, neverExpire,
 						reviewDateMonth, reviewDateDay, reviewDateYear,
@@ -944,10 +937,10 @@ public class JournalArticleStagedModelDataHandler
 						userId, existingArticle.getGroupId(), folderId,
 						existingArticle.getArticleId(), article.getVersion(),
 						article.getTitleMap(), article.getDescriptionMap(),
-						friendlyURLMap, content, parentDDMStructureKey,
-						parentDDMTemplateKey, article.getLayoutUuid(),
-						displayDateMonth, displayDateDay, displayDateYear,
-						displayDateHour, displayDateMinute, expirationDateMonth,
+						friendlyURLMap, content, ddmTemplateKey,
+						article.getLayoutUuid(), displayDateMonth,
+						displayDateDay, displayDateYear, displayDateHour,
+						displayDateMinute, expirationDateMonth,
 						expirationDateDay, expirationDateYear,
 						expirationDateHour, expirationDateMinute, neverExpire,
 						reviewDateMonth, reviewDateDay, reviewDateYear,
@@ -968,6 +961,11 @@ public class JournalArticleStagedModelDataHandler
 				}
 			}
 			else {
+				if (Validator.isNull(newArticleId)) {
+					articleId = StringPool.BLANK;
+					autoArticleId = true;
+				}
+
 				JournalArticle existingArticle =
 					_journalArticleLocalService.fetchArticle(
 						portletDataContext.getScopeGroupId(), articleId,
@@ -977,13 +975,13 @@ public class JournalArticleStagedModelDataHandler
 					importedArticle = _journalArticleLocalService.addArticle(
 						externalReferenceCode, userId,
 						portletDataContext.getScopeGroupId(), folderId,
-						article.getClassNameId(), ddmStructureId, articleId,
+						article.getClassNameId(), classPK, articleId,
 						autoArticleId, article.getVersion(),
 						article.getTitleMap(), article.getDescriptionMap(),
-						friendlyURLMap, content, parentDDMStructureKey,
-						parentDDMTemplateKey, article.getLayoutUuid(),
-						displayDateMonth, displayDateDay, displayDateYear,
-						displayDateHour, displayDateMinute, expirationDateMonth,
+						friendlyURLMap, content, ddmStructureId, ddmTemplateKey,
+						article.getLayoutUuid(), displayDateMonth,
+						displayDateDay, displayDateYear, displayDateHour,
+						displayDateMinute, expirationDateMonth,
 						expirationDateDay, expirationDateYear,
 						expirationDateHour, expirationDateMinute, neverExpire,
 						reviewDateMonth, reviewDateDay, reviewDateYear,
@@ -997,10 +995,9 @@ public class JournalArticleStagedModelDataHandler
 						userId, portletDataContext.getScopeGroupId(), folderId,
 						articleId, article.getVersion(), article.getTitleMap(),
 						article.getDescriptionMap(), friendlyURLMap, content,
-						parentDDMStructureKey, parentDDMTemplateKey,
-						article.getLayoutUuid(), displayDateMonth,
-						displayDateDay, displayDateYear, displayDateHour,
-						displayDateMinute, expirationDateMonth,
+						ddmTemplateKey, article.getLayoutUuid(),
+						displayDateMonth, displayDateDay, displayDateYear,
+						displayDateHour, displayDateMinute, expirationDateMonth,
 						expirationDateDay, expirationDateYear,
 						expirationDateHour, expirationDateMinute, neverExpire,
 						reviewDateMonth, reviewDateDay, reviewDateYear,
@@ -1047,16 +1044,16 @@ public class JournalArticleStagedModelDataHandler
 					userId, importedArticle.getGroupId(), folderId,
 					importedArticle.getArticleId(), article.getVersion(),
 					article.getTitleMap(), article.getDescriptionMap(),
-					friendlyURLMap, replacedContent, parentDDMStructureKey,
-					parentDDMTemplateKey, article.getLayoutUuid(),
-					displayDateMonth, displayDateDay, displayDateYear,
-					displayDateHour, displayDateMinute, expirationDateMonth,
-					expirationDateDay, expirationDateYear, expirationDateHour,
-					expirationDateMinute, neverExpire, reviewDateMonth,
-					reviewDateDay, reviewDateYear, reviewDateHour,
-					reviewDateMinute, neverReview, article.isIndexable(),
-					article.isSmallImage(), article.getSmallImageURL(),
-					smallFile, null, articleURL, serviceContext);
+					friendlyURLMap, replacedContent, ddmTemplateKey,
+					article.getLayoutUuid(), displayDateMonth, displayDateDay,
+					displayDateYear, displayDateHour, displayDateMinute,
+					expirationDateMonth, expirationDateDay, expirationDateYear,
+					expirationDateHour, expirationDateMinute, neverExpire,
+					reviewDateMonth, reviewDateDay, reviewDateYear,
+					reviewDateHour, reviewDateMinute, neverReview,
+					article.isIndexable(), article.isSmallImage(),
+					article.getSmallImageURL(), smallFile, null, articleURL,
+					serviceContext);
 			}
 
 			_journalArticleLocalService.updateAsset(
@@ -1477,9 +1474,9 @@ public class JournalArticleStagedModelDataHandler
 	}
 
 	private boolean _isPreloadedArticle(
-		long defaultUserId, JournalArticle article) {
+		long guestUserId, JournalArticle article) {
 
-		if (defaultUserId == article.getUserId()) {
+		if (guestUserId == article.getUserId()) {
 			return true;
 		}
 
@@ -1488,7 +1485,7 @@ public class JournalArticleStagedModelDataHandler
 			JournalArticleConstants.VERSION_DEFAULT);
 
 		if ((firstArticle != null) &&
-			(defaultUserId == firstArticle.getUserId())) {
+			(guestUserId == firstArticle.getUserId())) {
 
 			return true;
 		}

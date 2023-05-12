@@ -28,7 +28,7 @@ const FactorCategoryFormModal: React.FC<FormModalComponent> = ({
 	modal: {modalState, observer, onClose, onError, onSave, onSubmit},
 }) => {
 	const {
-		formState: {errors},
+		formState: {errors, isSubmitting},
 		handleSubmit,
 		register,
 	} = useForm<FactorCategoryForm>({
@@ -50,6 +50,7 @@ const FactorCategoryFormModal: React.FC<FormModalComponent> = ({
 				<Form.Footer
 					onClose={onClose}
 					onSubmit={handleSubmit(_onSubmit)}
+					primaryButtonProps={{loading: isSubmitting}}
 				/>
 			}
 			observer={observer}

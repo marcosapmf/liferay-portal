@@ -14,41 +14,28 @@
 
 package com.liferay.frontend.taglib.clay.internal.servlet;
 
-import com.liferay.portal.kernel.util.Portal;
+import com.liferay.osgi.util.service.Snapshot;
 
 import javax.servlet.ServletContext;
-
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Chema Balsas
  */
-@Component(service = {})
 public class ServletContextUtil {
 
 	public static String getContextPath() {
-		return _servletContext.getContextPath();
+		ServletContext servletContext = getServletContext();
+
+		return servletContext.getContextPath();
 	}
 
 	public static ServletContext getServletContext() {
-		return _servletContext;
+		return _servletContextSnapshot.get();
 	}
 
-	@Reference(unbind = "-")
-	protected void setPortal(Portal portal) {
-		_portal = portal;
-	}
-
-	@Reference(
-		target = "(osgi.web.symbolicname=com.liferay.frontend.taglib.clay)",
-		unbind = "-"
-	)
-	protected void setServletContext(ServletContext servletContext) {
-		_servletContext = servletContext;
-	}
-
-	private static Portal _portal;
-	private static ServletContext _servletContext;
+	private static final Snapshot<ServletContext> _servletContextSnapshot =
+		new Snapshot<>(
+			ServletContextUtil.class, ServletContext.class,
+			"(osgi.web.symbolicname=com.liferay.frontend.taglib.clay)");
 
 }

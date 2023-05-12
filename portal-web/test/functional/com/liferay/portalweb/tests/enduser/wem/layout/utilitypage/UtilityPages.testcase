@@ -1,10 +1,9 @@
 @component-name = "portal-wcm"
 definition {
 
-	property custom.properties = "feature.flag.LPS-162765=true";
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property testray.main.component.name = "Content Pages";
+	property testray.main.component.name = "Utility Pages";
 
 	setUp {
 		task ("Set up instance and sign in") {
@@ -14,14 +13,14 @@ definition {
 		}
 
 		task ("Add a site") {
-			JSONGroup.addGroup(groupName = "Test Site Name");
+			HeadlessSite.addSite(siteName = "Test Site Name");
 		}
 	}
 
 	tearDown {
 		var testPortalInstance = PropsUtil.get("test.portal.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testPortalInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -30,8 +29,10 @@ definition {
 	}
 
 	@description = "This is a test for LPS-162765. The page designer could add a 404 error type of utility page."
-	@priority = "5"
+	@priority = 5
 	test Add404ErrorUtilityPage {
+		property portal.acceptance = "true";
+
 		task ("Given a page designer navigates to the Pages admin") {
 			PagesAdmin.openPagesAdmin(siteURLKey = "test-site-name");
 		}
@@ -88,12 +89,15 @@ definition {
 		}
 
 		task ("Then the page designer sees the default 404 page") {
-			AssertTextPresent(value1 = "The requested resource could not be found.");
+			ContentPages.viewFragmentText(
+				fragmentName = "heading",
+				id = "element-text",
+				text = "Page Not Found");
 		}
 	}
 
 	@description = "This is a test for LPS-162765. The page designer could change the default utility page."
-	@priority = "4"
+	@priority = 4
 	test ChangeDefault404ErrorUtilityPage {
 		task ("Given a page designer has 404 error utility pages and static pages") {
 			JSONLayout.addPublicLayout(
@@ -126,12 +130,12 @@ definition {
 
 			PageEditor.addFragment(
 				collectionName = "Basic Components",
-				fragmentName = "Button");
+				fragmentName = "Heading");
 
 			PageEditor.editFragmentText(
-				fragmentName = "Button",
-				id = "link",
-				text = "Resource Not Found");
+				fragmentName = "Heading",
+				id = "element-text",
+				text = 404);
 
 			PageEditor.publish();
 		}
@@ -140,6 +144,8 @@ definition {
 			PagesAdmin.gotoUtilityPageEllipsisMenuItem(
 				menuItem = "Mark as Default",
 				pageName = "First 404 Error Utility Page");
+
+			Confirm();
 
 			Alert.viewSuccessMessage();
 		}
@@ -175,15 +181,220 @@ definition {
 				siteName = "Test Site Name");
 
 			ContentPages.viewFragmentText(
-				fragmentName = "button",
-				id = "link",
+				fragmentName = "heading",
+				id = "element-text",
+				text = 404);
+		}
+	}
+
+	@description = "This is a test for LPS-162765. The page designer could change thumbnail of a 404 error type of utility page."
+	@priority = 4
+	test ChangeThumbnailOf404ErrorUtilityPage {
+		task ("Given a page designer has a 404 error utility page") {
+			PagesAdmin.openPagesAdmin(siteURLKey = "test-site-name");
+
+			Navigator.gotoNavTab(navTab = "Utility Pages");
+
+			PagesAdmin.addUtilityPage(pageName = "404 Error Utility Page");
+
+			PageEditor.addFragment(
+				collectionName = "Basic Components",
+				fragmentName = "Heading");
+
+			PageEditor.editFragmentText(
+				fragmentName = "Heading",
+				id = "element-text",
 				text = "Resource Not Found");
+
+			PageEditor.publish();
+		}
+
+		task ("When the page designer changes the thumbnail of utility page") {
+			PagesAdmin.gotoUtilityPageEllipsisMenuItem(
+				menuItem = "Change Thumbnail",
+				pageName = "404 Error Utility Page");
+
+			SelectFrame(locator1 = "IFrame#MODAL_BODY");
+
+			UploadDependencyFile.uploadFile(fileName = "Document_1.jpg");
+
+			Button.clickAdd();
+		}
+
+		task ("Then the page designer sees the new thumbnail of utility page") {
+			LexiconCard.viewCardThumbnail(card = "404 Error Utility Page");
+		}
+	}
+
+	@description = "This is a test for LPS-162765. The page designer could make a copy of a 404 error type of utility page."
+	@priority = 4
+	test Copy404ErrorUtilityPage {
+		task ("Given a page designer has a 404 error utility page") {
+			PagesAdmin.openPagesAdmin(siteURLKey = "test-site-name");
+
+			Navigator.gotoNavTab(navTab = "Utility Pages");
+
+			PagesAdmin.addUtilityPage(pageName = "404 Error Utility Page");
+
+			PageEditor.addFragment(
+				collectionName = "Basic Components",
+				fragmentName = "Heading");
+
+			PageEditor.editFragmentText(
+				fragmentName = "Heading",
+				id = "element-text",
+				text = "Resource Not Found");
+
+			PageEditor.publish();
+		}
+
+		task ("When the page designer copies the 404 error utility page") {
+			PagesAdmin.gotoUtilityPageEllipsisMenuItem(
+				menuItem = "Make a Copy",
+				pageName = "404 Error Utility Page");
+
+			Alert.viewSuccessMessage();
+		}
+
+		task ("Then the page designer sees the copy of utility page") {
+			LexiconCard.viewCardPresent(card = "404 Error Utility Page");
+
+			LexiconCard.viewCardPresent(card = "404 Error Utility Page (Copy)");
+
+			LexiconCard.viewCardLabel(
+				card = "404 Error Utility Page (Copy)",
+				cardLabel = "Draft");
+
+			PagesAdmin.gotoUtilityPageEllipsisMenuItem(
+				menuItem = "Edit",
+				pageName = "404 Error Utility Page (Copy)");
+
+			PageEditor.viewFragmentEditableText(
+				editableText = "Resource Not Found",
+				fragmentName = "Heading",
+				id = "element-text");
+		}
+	}
+
+	@description = "This is a test for LPS-162765. The page designer could edit a 404 error type of utility page."
+	@priority = 5
+	test Edit404ErrorUtilityPage {
+		property portal.acceptance = "true";
+
+		task ("Given a page designer has a 404 error utility page") {
+			PagesAdmin.openPagesAdmin(siteURLKey = "test-site-name");
+
+			Navigator.gotoNavTab(navTab = "Utility Pages");
+
+			PagesAdmin.addUtilityPage(pageName = "404 Error Utility Page");
+
+			PageEditor.addFragment(
+				collectionName = "Basic Components",
+				fragmentName = "Heading");
+
+			PageEditor.editFragmentText(
+				fragmentName = "Heading",
+				id = "element-text",
+				text = "Resource Not Found");
+
+			PageEditor.publish();
+		}
+
+		task ("When the page designer makes some changes on the 404 error utility page") {
+			PagesAdmin.gotoUtilityPageEllipsisMenuItem(
+				menuItem = "Edit",
+				pageName = "404 Error Utility Page");
+
+			PageEditor.addFragment(
+				collectionName = "Basic Components",
+				fragmentName = "Paragraph",
+				targetFragmentName = "Heading");
+
+			PageEditor.editFragmentText(
+				fragmentName = "Paragraph",
+				id = "element-text",
+				text = "Status Code: 404");
+		}
+
+		task ("Then the page designer sees the changes persisted") {
+			PagesAdmin.openPagesAdmin(siteURLKey = "test-site-name");
+
+			Navigator.gotoNavTab(navTab = "Utility Pages");
+
+			LexiconCard.viewCardLabel(
+				card = "404 Error Utility Page",
+				cardLabel = "Draft");
+
+			PagesAdmin.gotoUtilityPageEllipsisMenuItem(
+				menuItem = "Edit",
+				pageName = "404 Error Utility Page");
+
+			PageEditor.viewFragmentEditableText(
+				editableText = "Resource Not Found",
+				fragmentName = "Heading",
+				id = "element-text");
+
+			PageEditor.viewFragmentEditableText(
+				editableText = "Status Code: 404",
+				fragmentName = "Paragraph",
+				id = "element-text");
+		}
+	}
+
+	@description = "This is a test for LPS-162766. The page designer can edit the default 404 error utility page."
+	@priority = 3
+	test EditDefault404ErrorUtilityPage {
+		task ("Given a page designer navigates to the Pages admin") {
+			PagesAdmin.openPagesAdmin(siteURLKey = "test-site-name");
+
+			Navigator.gotoNavTab(navTab = "Utility Pages");
+		}
+
+		task ("When the page designer edits the default 404 error utility page") {
+			PagesAdmin.gotoUtilityPageEllipsisMenuItem(
+				menuItem = "Edit",
+				pageName = "404 Error");
+
+			PageEditor.assertFragmentSidebarLoaded();
+
+			PageEditor.editFragmentText(
+				fragmentName = "Heading",
+				id = "element-text",
+				text = "Resource Not Found");
+
+			PageEditor.editFragmentText(
+				fragmentName = "Paragraph",
+				id = "element-text",
+				text = "Status Code: 404");
+
+			PageEditor.publish();
+		}
+
+		task ("Then the page designer sees the changes persisted") {
+			JSONLayout.addPublicLayout(
+				groupName = "Test Site Name",
+				layoutName = "Test Page Name");
+
+			Navigator.openSitePage(
+				pageName = "Non Exist Page",
+				siteName = "Test Site Name");
+
+			ContentPages.viewFragmentText(
+				fragmentName = "heading",
+				id = "element-text",
+				text = "Resource Not Found");
+
+			ContentPages.viewFragmentText(
+				fragmentName = "paragraph",
+				id = "element-text",
+				text = "Status Code: 404");
 		}
 	}
 
 	@description = "This is a test for LPS-162765. The page designer could mark a 404 error type of utility page as default."
-	@priority = "5"
+	@priority = 5
 	test Mark404ErrorUtilityPageAsDefault {
+		property portal.acceptance = "true";
 		property test.name.skip.portal.instance = "UtilityPages#Mark404ErrorUtilityPageAsDefault";
 
 		task ("Given a page designer has a 404 error utility page before enabling private pages") {
@@ -209,6 +420,8 @@ definition {
 			PagesAdmin.gotoUtilityPageEllipsisMenuItem(
 				menuItem = "Mark as Default",
 				pageName = "404 Error Utility Page");
+
+			Confirm();
 
 			Alert.viewSuccessMessage();
 		}
@@ -276,6 +489,209 @@ definition {
 				fragmentName = "heading",
 				id = "element-text",
 				text = "Resource Not Found");
+		}
+	}
+
+	@description = "This is a test for LPS-162765. The page designer could preview a 404 error type of utility page."
+	@priority = 5
+	test Preview404ErrorUtilityPage {
+		property portal.acceptance = "true";
+
+		task ("Given a page designer has a draft 404 error utility page") {
+			PagesAdmin.openPagesAdmin(siteURLKey = "test-site-name");
+
+			Navigator.gotoNavTab(navTab = "Utility Pages");
+
+			PagesAdmin.addUtilityPage(pageName = "404 Error Utility Page");
+
+			PageEditor.addFragment(
+				collectionName = "Basic Components",
+				fragmentName = "Heading");
+
+			PageEditor.editFragmentText(
+				fragmentName = "Heading",
+				id = "element-text",
+				text = "Resource Not Found");
+		}
+
+		task ("When the page designer navigates to the Pages admin") {
+			PagesAdmin.openPagesAdmin(siteURLKey = "test-site-name");
+		}
+
+		task ("Then the page designer could preview the draft utility page") {
+			Navigator.gotoNavTab(navTab = "Utility Pages");
+
+			PagesAdmin.gotoUtilityPageEllipsisMenuItem(
+				menuItem = "Preview",
+				pageName = "404 Error Utility Page");
+
+			SelectWindow.selectPopUp(locator1 = "null");
+
+			ContentPages.viewFragmentText(
+				fragmentName = "heading",
+				id = "element-text",
+				text = "Resource Not Found");
+
+			Close.closeWindow();
+		}
+
+		task ("When the page designer publishes the utility page") {
+			PagesAdmin.openPagesAdmin(siteURLKey = "test-site-name");
+
+			Navigator.gotoNavTab(navTab = "Utility Pages");
+
+			PagesAdmin.gotoUtilityPageEllipsisMenuItem(
+				menuItem = "Edit",
+				pageName = "404 Error Utility Page");
+
+			PageEditor.publish();
+		}
+
+		task ("Then the page designer could preview the published utility page") {
+			PagesAdmin.gotoUtilityPageEllipsisMenuItem(
+				menuItem = "Preview",
+				pageName = "404 Error Utility Page");
+
+			SelectWindow.selectPopUp(locator1 = "null");
+
+			ContentPages.viewFragmentText(
+				fragmentName = "heading",
+				id = "element-text",
+				text = "Resource Not Found");
+
+			Close.closeWindow();
+		}
+
+		task ("When the page designer makes some changes on the utility page") {
+			PagesAdmin.openPagesAdmin(siteURLKey = "test-site-name");
+
+			Navigator.gotoNavTab(navTab = "Utility Pages");
+
+			PagesAdmin.gotoUtilityPageEllipsisMenuItem(
+				menuItem = "Edit",
+				pageName = "404 Error Utility Page");
+
+			PageEditor.addFragment(
+				collectionName = "Basic Components",
+				fragmentName = "Paragraph",
+				targetFragmentName = "Heading");
+
+			PageEditor.editFragmentText(
+				fragmentName = "Paragraph",
+				id = "element-text",
+				text = "Status Code: 404");
+		}
+
+		task ("Then the page designer could preview the latest draft of utility page") {
+			PagesAdmin.openPagesAdmin(siteURLKey = "test-site-name");
+
+			Navigator.gotoNavTab(navTab = "Utility Pages");
+
+			PagesAdmin.gotoUtilityPageEllipsisMenuItem(
+				menuItem = "Preview",
+				pageName = "404 Error Utility Page");
+
+			SelectWindow.selectPopUp(locator1 = "null");
+
+			ContentPages.viewFragmentText(
+				fragmentName = "heading",
+				id = "element-text",
+				text = "Resource Not Found");
+
+			ContentPages.viewFragmentText(
+				fragmentName = "paragraph",
+				id = "element-text",
+				text = "Status Code: 404");
+		}
+	}
+
+	@description = "This is a test for LPS-162765. The page designer could rename a 404 error type of utility page."
+	@priority = 4
+	test Rename404ErrorUtilityPage {
+		task ("Given a page designer has a 404 error utility page") {
+			PagesAdmin.openPagesAdmin(siteURLKey = "test-site-name");
+
+			Navigator.gotoNavTab(navTab = "Utility Pages");
+
+			PagesAdmin.addUtilityPage(pageName = "404 Error Utility Page");
+
+			PageEditor.addFragment(
+				collectionName = "Basic Components",
+				fragmentName = "Heading");
+
+			PageEditor.editFragmentText(
+				fragmentName = "Heading",
+				id = "element-text",
+				text = "Resource Not Found");
+
+			PageEditor.publish();
+		}
+
+		task ("When the page designer renames the 404 error utility page") {
+			PagesAdmin.gotoUtilityPageEllipsisMenuItem(
+				menuItem = "Rename",
+				pageName = "404 Error Utility Page");
+
+			PortletEntry.inputName(name = "New 404 Error Utility Page");
+
+			PortletEntry.save();
+		}
+
+		task ("Then the page designer sees the new name of utility page") {
+			LexiconCard.viewCardPresent(card = "New 404 Error Utility Page");
+		}
+	}
+
+	@description = "This is a test for LPS-162767. The page designer could unmark a 404 error type of utility page as default."
+	@priority = 4
+	test Unmark404ErrorUtilityPageAsDefault {
+		task ("Given a page designer has a default 404 error utility page and a static page") {
+			PagesAdmin.openPagesAdmin(siteURLKey = "test-site-name");
+
+			Navigator.gotoNavTab(navTab = "Utility Pages");
+
+			PagesAdmin.addUtilityPage(pageName = "404 Error Utility Page");
+
+			PageEditor.addFragment(
+				collectionName = "Basic Components",
+				fragmentName = "Heading");
+
+			PageEditor.editFragmentText(
+				fragmentName = "Heading",
+				id = "element-text",
+				text = "Resource Not Found");
+
+			PageEditor.publish();
+
+			PagesAdmin.gotoUtilityPageEllipsisMenuItem(
+				menuItem = "Mark as Default",
+				pageName = "404 Error Utility Page");
+
+			Confirm();
+
+			Alert.viewSuccessMessage();
+
+			JSONLayout.addPublicLayout(
+				groupName = "Test Site Name",
+				layoutName = "Test Page Name");
+		}
+
+		task ("When the page designer unmarks the 404 error utility page as default") {
+			PagesAdmin.gotoUtilityPageEllipsisMenuItem(
+				menuItem = "Unmark as Default",
+				pageName = "404 Error Utility Page");
+
+			Confirm();
+
+			Alert.viewSuccessMessage();
+		}
+
+		task ("Then the page designer can see the default 404 page") {
+			Navigator.openSitePage(
+				pageName = "Non Exist Page",
+				siteName = "Test Site Name");
+
+			AssertTextPresent(value1 = "The requested resource could not be found.");
 		}
 	}
 

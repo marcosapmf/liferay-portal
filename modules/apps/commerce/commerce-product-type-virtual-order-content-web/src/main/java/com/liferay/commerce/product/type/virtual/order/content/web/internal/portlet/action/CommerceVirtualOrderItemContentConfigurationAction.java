@@ -17,8 +17,9 @@ package com.liferay.commerce.product.type.virtual.order.content.web.internal.por
 import com.liferay.commerce.product.service.CommerceChannelLocalService;
 import com.liferay.commerce.product.type.virtual.order.constants.CommerceVirtualOrderPortletKeys;
 import com.liferay.commerce.product.type.virtual.order.content.web.internal.display.context.CommerceVirtualOrderItemContentDisplayContext;
+import com.liferay.commerce.product.type.virtual.order.content.web.internal.security.resource.permission.CommerceVirtualOrderItemPermission;
 import com.liferay.commerce.product.type.virtual.order.service.CommerceVirtualOrderItemLocalService;
-import com.liferay.commerce.product.type.virtual.service.CPDefinitionVirtualSettingService;
+import com.liferay.commerce.product.type.virtual.service.CPDefinitionVirtualSettingLocalService;
 import com.liferay.commerce.product.util.CPDefinitionHelper;
 import com.liferay.commerce.product.util.CPInstanceHelper;
 import com.liferay.portal.kernel.log.Log;
@@ -29,7 +30,6 @@ import com.liferay.portal.kernel.util.WebKeys;
 
 import javax.portlet.PortletConfig;
 
-import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -63,7 +63,9 @@ public class CommerceVirtualOrderItemContentConfigurationAction
 					new CommerceVirtualOrderItemContentDisplayContext(
 						_commerceChannelLocalService,
 						_commerceVirtualOrderItemLocalService,
-						_cpDefinitionHelper, _cpDefinitionVirtualSettingService,
+						_commerceVirtualOrderItemPermission,
+						_cpDefinitionHelper,
+						_cpDefinitionVirtualSettingLocalService,
 						_cpInstanceHelper, httpServletRequest);
 
 			httpServletRequest.setAttribute(
@@ -77,15 +79,6 @@ public class CommerceVirtualOrderItemContentConfigurationAction
 		super.include(portletConfig, httpServletRequest, httpServletResponse);
 	}
 
-	@Override
-	@Reference(
-		target = "(osgi.web.symbolicname=com.liferay.commerce.product.type.virtual.order.content.web)",
-		unbind = "-"
-	)
-	public void setServletContext(ServletContext servletContext) {
-		super.setServletContext(servletContext);
-	}
-
 	private static final Log _log = LogFactoryUtil.getLog(
 		CommerceVirtualOrderItemContentConfigurationAction.class);
 
@@ -97,11 +90,15 @@ public class CommerceVirtualOrderItemContentConfigurationAction
 		_commerceVirtualOrderItemLocalService;
 
 	@Reference
+	private CommerceVirtualOrderItemPermission
+		_commerceVirtualOrderItemPermission;
+
+	@Reference
 	private CPDefinitionHelper _cpDefinitionHelper;
 
 	@Reference
-	private CPDefinitionVirtualSettingService
-		_cpDefinitionVirtualSettingService;
+	private CPDefinitionVirtualSettingLocalService
+		_cpDefinitionVirtualSettingLocalService;
 
 	@Reference
 	private CPInstanceHelper _cpInstanceHelper;

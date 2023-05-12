@@ -140,10 +140,6 @@ public interface CompanyLocalService
 	 * @param mx the company's mail domain
 	 * @return the company with the web domain and mail domain
 	 */
-	@Transactional(
-		isolation = Isolation.PORTAL,
-		rollbackFor = {PortalException.class, SystemException.class}
-	)
 	public Company checkCompany(String webId, String mx) throws PortalException;
 
 	/**
@@ -577,6 +573,13 @@ public interface CompanyLocalService
 
 	@Async
 	public void updateDisplayGroupNames(long companyId) throws PortalException;
+
+	public Company updateIndexNameNext(long companyId, String indexNameNext)
+		throws PortalException;
+
+	public Company updateIndexNames(
+			long companyId, String indexNameCurrent, String indexNameNext)
+		throws PortalException;
 
 	/**
 	 * Updates the company's logo.

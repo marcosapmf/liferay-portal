@@ -22,9 +22,13 @@ import com.liferay.announcements.kernel.service.AnnouncementsDeliveryLocalServic
 import com.liferay.captcha.util.CaptchaUtil;
 import com.liferay.headless.admin.user.dto.v1_0.Account;
 import com.liferay.headless.admin.user.dto.v1_0.AccountBrief;
+import com.liferay.headless.admin.user.dto.v1_0.EmailAddress;
 import com.liferay.headless.admin.user.dto.v1_0.OrganizationBrief;
+import com.liferay.headless.admin.user.dto.v1_0.Phone;
+import com.liferay.headless.admin.user.dto.v1_0.PostalAddress;
 import com.liferay.headless.admin.user.dto.v1_0.UserAccount;
 import com.liferay.headless.admin.user.dto.v1_0.UserAccountContactInformation;
+import com.liferay.headless.admin.user.dto.v1_0.WebUrl;
 import com.liferay.headless.admin.user.internal.dto.v1_0.converter.AccountResourceDTOConverter;
 import com.liferay.headless.admin.user.internal.dto.v1_0.converter.OrganizationResourceDTOConverter;
 import com.liferay.headless.admin.user.internal.dto.v1_0.converter.UserResourceDTOConverter;
@@ -49,11 +53,9 @@ import com.liferay.portal.kernel.exception.UserPasswordException;
 import com.liferay.portal.kernel.model.Address;
 import com.liferay.portal.kernel.model.CompanyConstants;
 import com.liferay.portal.kernel.model.Contact;
-import com.liferay.portal.kernel.model.EmailAddress;
 import com.liferay.portal.kernel.model.ListTypeConstants;
 import com.liferay.portal.kernel.model.Organization;
 import com.liferay.portal.kernel.model.PasswordPolicy;
-import com.liferay.portal.kernel.model.Phone;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.Website;
 import com.liferay.portal.kernel.search.BooleanClauseOccur;
@@ -64,7 +66,6 @@ import com.liferay.portal.kernel.search.filter.BooleanFilter;
 import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.search.filter.TermFilter;
 import com.liferay.portal.kernel.security.auth.Authenticator;
-import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.security.auth.session.AuthenticatedSessionManager;
 import com.liferay.portal.kernel.security.auth.session.AuthenticatedSessionManagerUtil;
 import com.liferay.portal.kernel.security.ldap.LDAPSettingsUtil;
@@ -79,6 +80,7 @@ import com.liferay.portal.kernel.service.ServiceContextFactory;
 import com.liferay.portal.kernel.service.UserGroupRoleLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.service.UserService;
+import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.CalendarFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
@@ -94,26 +96,25 @@ import com.liferay.portal.vulcan.dto.converter.DTOConverterRegistry;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.fields.NestedField;
 import com.liferay.portal.vulcan.fields.NestedFieldSupport;
+import com.liferay.portal.vulcan.multipart.MultipartBody;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.portal.vulcan.util.SearchUtil;
 import com.liferay.users.admin.kernel.util.UsersAdmin;
 
-import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
-import java.util.stream.LongStream;
-import java.util.stream.Stream;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -136,11 +137,11 @@ public class UserAccountResourceImpl
 	public void
 			deleteAccountByExternalReferenceCodeUserAccountByExternalReferenceCode(
 				String accountExternalReferenceCode,
-				String userAccountExternalReferenceCode)
+				String externalReferenceCode)
 		throws Exception {
 
 		User user = _userLocalService.getUserByExternalReferenceCode(
-			userAccountExternalReferenceCode, contextCompany.getCompanyId());
+			externalReferenceCode, contextCompany.getCompanyId());
 
 		_accountEntryUserRelService.deleteAccountEntryUserRelByEmailAddress(
 			_accountResourceDTOConverter.getAccountEntryId(
@@ -237,6 +238,7 @@ public class UserAccountResourceImpl
 							"EmailAddress",
 						"getAccountUserAccountsByExternalReferenceCodePage",
 						"getAccountUserAccountsPage", "postAccountUserAccount",
+						"postAccountUserAccountBatch",
 						"postAccountUserAccountByEmailAddress",
 						"postAccountUserAccountByExternalReferenceCode",
 						"postAccountUserAccountByExternalReferenceCodeBy" +
@@ -356,13 +358,6 @@ public class UserAccountResourceImpl
 			String search, Filter filter, Pagination pagination, Sort[] sorts)
 		throws Exception {
 
-		PermissionChecker permissionChecker =
-			PermissionThreadLocal.getPermissionChecker();
-
-		if (!permissionChecker.isCompanyAdmin(contextCompany.getCompanyId())) {
-			throw new PrincipalException.MustBeCompanyAdmin(permissionChecker);
-		}
-
 		return _getUserAccountsPage(
 			HashMapBuilder.<String, Map<String, String>>putAll(
 				_getCompanyScopeActions(
@@ -392,11 +387,11 @@ public class UserAccountResourceImpl
 	public void
 			postAccountByExternalReferenceCodeUserAccountByExternalReferenceCode(
 				String accountExternalReferenceCode,
-				String userAccountExternalReferenceCode)
+				String externalReferenceCode)
 		throws Exception {
 
 		User user = _userLocalService.getUserByExternalReferenceCode(
-			userAccountExternalReferenceCode, contextCompany.getCompanyId());
+			externalReferenceCode, contextCompany.getCompanyId());
 
 		_accountEntryUserRelService.addAccountEntryUserRelByEmailAddress(
 			_accountResourceDTOConverter.getAccountEntryId(
@@ -595,7 +590,7 @@ public class UserAccountResourceImpl
 				userAccount.getCustomFields(),
 				contextAcceptLanguage.getPreferredLocale()));
 
-		if (contextUser.isDefaultUser()) {
+		if (contextUser.isGuestUser()) {
 			if (_captchaSettings.isCreateAccountCaptchaEnabled()) {
 				CaptchaUtil.check(contextHttpServletRequest);
 			}
@@ -667,6 +662,19 @@ public class UserAccountResourceImpl
 	}
 
 	@Override
+	public Response postUserAccountImage(
+			Long userAccountId, MultipartBody multipartBody)
+		throws Exception {
+
+		_userService.updatePortrait(
+			userAccountId, multipartBody.getBinaryFileAsBytes("image"));
+
+		Response.ResponseBuilder responseBuilder = Response.noContent();
+
+		return responseBuilder.build();
+	}
+
+	@Override
 	public UserAccount putUserAccount(
 			Long userAccountId, UserAccount userAccount)
 		throws Exception {
@@ -708,12 +716,11 @@ public class UserAccountResourceImpl
 			userAccount.getOrganizationBriefs();
 
 		if (organizationBriefs != null) {
-			Stream<OrganizationBrief> stream = Arrays.stream(
-				organizationBriefs);
+			Long[] ids = transform(
+				organizationBriefs,
+				organizationBrief -> organizationBrief.getId(), Long.class);
 
-			LongStream longStream = stream.mapToLong(OrganizationBrief::getId);
-
-			organizationIds = longStream.toArray();
+			organizationIds = ArrayUtil.toArray(ids);
 		}
 
 		_updatePassword(
@@ -831,59 +838,63 @@ public class UserAccountResourceImpl
 				existingUserAccountContactInformation =
 					existingUserAccount.getUserAccountContactInformation();
 
-			Optional.ofNullable(
-				userAccountContactInformation.getEmailAddresses()
-			).ifPresent(
-				existingUserAccountContactInformation::setEmailAddresses
-			);
-			Optional.ofNullable(
-				userAccountContactInformation.getFacebook()
-			).ifPresent(
-				existingUserAccountContactInformation::setFacebook
-			);
-			Optional.ofNullable(
-				userAccountContactInformation.getJabber()
-			).ifPresent(
-				existingUserAccountContactInformation::setJabber
-			);
-			Optional.ofNullable(
-				userAccountContactInformation.getPostalAddresses()
-			).ifPresent(
-				existingUserAccountContactInformation::setPostalAddresses
-			);
-			Optional.ofNullable(
-				userAccountContactInformation.getSkype()
-			).ifPresent(
-				existingUserAccountContactInformation::setSkype
-			);
-			Optional.ofNullable(
-				userAccountContactInformation.getSms()
-			).ifPresent(
-				existingUserAccountContactInformation::setSms
-			);
-			Optional.ofNullable(
-				userAccountContactInformation.getTelephones()
-			).ifPresent(
-				existingUserAccountContactInformation::setTelephones
-			);
-			Optional.ofNullable(
-				userAccountContactInformation.getTwitter()
-			).ifPresent(
-				existingUserAccountContactInformation::setTwitter
-			);
-			Optional.ofNullable(
-				userAccountContactInformation.getWebUrls()
-			).ifPresent(
-				existingUserAccountContactInformation::setWebUrls
-			);
-		}
+			EmailAddress[] emailAddresses =
+				userAccountContactInformation.getEmailAddresses();
 
-		if (userAccount.getCustomFields() != null) {
-			Optional.ofNullable(
-				userAccount.getCustomFields()
-			).ifPresent(
-				existingUserAccount::setCustomFields
-			);
+			if (emailAddresses != null) {
+				existingUserAccountContactInformation.setEmailAddresses(
+					emailAddresses);
+			}
+
+			String facebook = userAccountContactInformation.getFacebook();
+
+			if (facebook != null) {
+				existingUserAccountContactInformation.setFacebook(facebook);
+			}
+
+			String jabber = userAccountContactInformation.getJabber();
+
+			if (jabber != null) {
+				existingUserAccountContactInformation.setJabber(jabber);
+			}
+
+			PostalAddress[] postalAddresses =
+				userAccountContactInformation.getPostalAddresses();
+
+			if (postalAddresses != null) {
+				existingUserAccountContactInformation.setPostalAddresses(
+					postalAddresses);
+			}
+
+			String skype = userAccountContactInformation.getSkype();
+
+			if (skype != null) {
+				existingUserAccountContactInformation.setSkype(skype);
+			}
+
+			String sms = userAccountContactInformation.getSms();
+
+			if (sms != null) {
+				existingUserAccountContactInformation.setSms(sms);
+			}
+
+			Phone[] telephones = userAccountContactInformation.getTelephones();
+
+			if (telephones != null) {
+				existingUserAccountContactInformation.setTelephones(telephones);
+			}
+
+			String twitter = userAccountContactInformation.getTwitter();
+
+			if (twitter != null) {
+				existingUserAccountContactInformation.setTwitter(twitter);
+			}
+
+			WebUrl[] webUrls = userAccountContactInformation.getWebUrls();
+
+			if (webUrls != null) {
+				existingUserAccountContactInformation.setWebUrls(webUrls);
+			}
 		}
 	}
 
@@ -928,22 +939,28 @@ public class UserAccountResourceImpl
 	}
 
 	private List<Address> _getAddresses(UserAccount userAccount) {
-		return Optional.ofNullable(
-			userAccount.getUserAccountContactInformation()
-		).map(
-			UserAccountContactInformation::getPostalAddresses
-		).map(
-			postalAddresses -> ListUtil.filter(
-				transformToList(
-					postalAddresses,
-					_postalAddress ->
-						ServiceBuilderAddressUtil.toServiceBuilderAddress(
-							contextCompany.getCompanyId(), _postalAddress,
-							ListTypeConstants.CONTACT_ADDRESS)),
-				Objects::nonNull)
-		).orElse(
-			Collections.emptyList()
-		);
+		UserAccountContactInformation userAccountContactInformation =
+			userAccount.getUserAccountContactInformation();
+
+		if (userAccountContactInformation == null) {
+			return Collections.emptyList();
+		}
+
+		PostalAddress[] postalAddresses =
+			userAccountContactInformation.getPostalAddresses();
+
+		if (postalAddresses == null) {
+			return Collections.emptyList();
+		}
+
+		return ListUtil.filter(
+			transformToList(
+				postalAddresses,
+				_postalAddress ->
+					ServiceBuilderAddressUtil.toServiceBuilderAddress(
+						contextCompany.getCompanyId(), _postalAddress,
+						ListTypeConstants.CONTACT_ADDRESS)),
+			Objects::nonNull);
 	}
 
 	private int _getBirthdayDay(UserAccount userAccount) {
@@ -962,19 +979,17 @@ public class UserAccountResourceImpl
 	private int _getCalendarFieldValue(
 		UserAccount userAccount, int calendarField, int defaultValue) {
 
-		return Optional.ofNullable(
-			userAccount.getBirthDate()
-		).map(
-			date -> {
-				Calendar calendar = CalendarFactoryUtil.getCalendar();
+		Date date = userAccount.getBirthDate();
 
-				calendar.setTime(date);
+		if (date == null) {
+			return defaultValue;
+		}
 
-				return calendar.get(calendarField);
-			}
-		).orElse(
-			defaultValue
-		);
+		Calendar calendar = CalendarFactoryUtil.getCalendar();
+
+		calendar.setTime(date);
+
+		return calendar.get(calendarField);
 	}
 
 	private Map<String, Map<String, String>> _getCompanyScopeActions(
@@ -1041,64 +1056,75 @@ public class UserAccountResourceImpl
 	}
 
 	private long _getPrefixId(UserAccount userAccount) {
-		return Optional.ofNullable(
-			userAccount.getHonorificPrefix()
-		).map(
-			prefix -> ServiceBuilderListTypeUtil.getServiceBuilderListTypeId(
-				ListTypeConstants.CONTACT_PREFIX, prefix)
-		).orElse(
-			0L
-		);
+		String prefix = userAccount.getHonorificPrefix();
+
+		if (prefix == null) {
+			return 0;
+		}
+
+		return ServiceBuilderListTypeUtil.getServiceBuilderListTypeId(
+			ListTypeConstants.CONTACT_PREFIX, prefix);
 	}
 
-	private List<EmailAddress> _getServiceBuilderEmailAddresses(
-		UserAccount userAccount) {
+	private List<com.liferay.portal.kernel.model.EmailAddress>
+		_getServiceBuilderEmailAddresses(UserAccount userAccount) {
 
-		return Optional.ofNullable(
-			userAccount.getUserAccountContactInformation()
-		).map(
-			UserAccountContactInformation::getEmailAddresses
-		).map(
-			emailAddresses -> ListUtil.filter(
-				transformToList(
-					emailAddresses,
-					emailAddress ->
-						ServiceBuilderEmailAddressUtil.
-							toServiceBuilderEmailAddress(
-								emailAddress,
-								ListTypeConstants.CONTACT_EMAIL_ADDRESS)),
-				Objects::nonNull)
-		).orElse(
-			Collections.emptyList()
-		);
+		UserAccountContactInformation userAccountContactInformation =
+			userAccount.getUserAccountContactInformation();
+
+		if (userAccountContactInformation == null) {
+			return Collections.emptyList();
+		}
+
+		EmailAddress[] emailAddresses =
+			userAccountContactInformation.getEmailAddresses();
+
+		if (emailAddresses == null) {
+			return Collections.emptyList();
+		}
+
+		return ListUtil.filter(
+			transformToList(
+				emailAddresses,
+				emailAddress ->
+					ServiceBuilderEmailAddressUtil.toServiceBuilderEmailAddress(
+						emailAddress, ListTypeConstants.CONTACT_EMAIL_ADDRESS)),
+			Objects::nonNull);
 	}
 
-	private List<Phone> _getServiceBuilderPhones(UserAccount userAccount) {
-		return Optional.ofNullable(
-			userAccount.getUserAccountContactInformation()
-		).map(
-			UserAccountContactInformation::getTelephones
-		).map(
-			telephones -> ListUtil.filter(
-				transformToList(
-					telephones,
-					telephone -> ServiceBuilderPhoneUtil.toServiceBuilderPhone(
-						telephone, ListTypeConstants.CONTACT_PHONE)),
-				Objects::nonNull)
-		).orElse(
-			Collections.emptyList()
-		);
+	private List<com.liferay.portal.kernel.model.Phone>
+		_getServiceBuilderPhones(UserAccount userAccount) {
+
+		UserAccountContactInformation userAccountContactInformation =
+			userAccount.getUserAccountContactInformation();
+
+		if (userAccountContactInformation == null) {
+			return Collections.emptyList();
+		}
+
+		Phone[] phones = userAccountContactInformation.getTelephones();
+
+		if (phones == null) {
+			return Collections.emptyList();
+		}
+
+		return ListUtil.filter(
+			transformToList(
+				phones,
+				telephone -> ServiceBuilderPhoneUtil.toServiceBuilderPhone(
+					telephone, ListTypeConstants.CONTACT_PHONE)),
+			Objects::nonNull);
 	}
 
 	private long _getSuffixId(UserAccount userAccount) {
-		return Optional.ofNullable(
-			userAccount.getHonorificSuffix()
-		).map(
-			prefix -> ServiceBuilderListTypeUtil.getServiceBuilderListTypeId(
-				ListTypeConstants.CONTACT_SUFFIX, prefix)
-		).orElse(
-			0L
-		);
+		String honorificSuffix = userAccount.getHonorificSuffix();
+
+		if (honorificSuffix == null) {
+			return 0;
+		}
+
+		return ServiceBuilderListTypeUtil.getServiceBuilderListTypeId(
+			ListTypeConstants.CONTACT_SUFFIX, honorificSuffix);
 	}
 
 	private Page<UserAccount> _getUserAccountsPage(
@@ -1121,20 +1147,25 @@ public class UserAccountResourceImpl
 	}
 
 	private List<Website> _getWebsites(UserAccount userAccount) {
-		return Optional.ofNullable(
-			userAccount.getUserAccountContactInformation()
-		).map(
-			UserAccountContactInformation::getWebUrls
-		).map(
-			webUrls -> ListUtil.filter(
-				transformToList(
-					webUrls,
-					webUrl -> ServiceBuilderWebsiteUtil.toServiceBuilderWebsite(
-						ListTypeConstants.CONTACT_WEBSITE, webUrl)),
-				Objects::nonNull)
-		).orElse(
-			Collections.emptyList()
-		);
+		UserAccountContactInformation userAccountContactInformation =
+			userAccount.getUserAccountContactInformation();
+
+		if (userAccountContactInformation == null) {
+			return Collections.emptyList();
+		}
+
+		WebUrl[] webUrls = userAccountContactInformation.getWebUrls();
+
+		if (webUrls == null) {
+			return Collections.emptyList();
+		}
+
+		return ListUtil.filter(
+			transformToList(
+				webUrls,
+				webUrl -> ServiceBuilderWebsiteUtil.toServiceBuilderWebsite(
+					ListTypeConstants.CONTACT_WEBSITE, webUrl)),
+			Objects::nonNull);
 	}
 
 	private boolean _isPasswordResetRequired(User user) throws Exception {

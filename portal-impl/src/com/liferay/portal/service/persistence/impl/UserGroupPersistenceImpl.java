@@ -6403,7 +6403,8 @@ public class UserGroupPersistenceImpl
 				if (ercUserGroup != null) {
 					throw new DuplicateUserGroupExternalReferenceCodeException(
 						"Duplicate user group with external reference code " +
-							userGroup.getExternalReferenceCode());
+							userGroup.getExternalReferenceCode() +
+								" and company " + userGroup.getCompanyId());
 				}
 			}
 			else {
@@ -6413,7 +6414,8 @@ public class UserGroupPersistenceImpl
 
 					throw new DuplicateUserGroupExternalReferenceCodeException(
 						"Duplicate user group with external reference code " +
-							userGroup.getExternalReferenceCode());
+							userGroup.getExternalReferenceCode() +
+								" and company " + userGroup.getCompanyId());
 				}
 			}
 		}

@@ -19,6 +19,7 @@ import com.liferay.blogs.model.BlogsEntry;
 import com.liferay.blogs.service.BlogsEntryLocalService;
 import com.liferay.blogs.test.util.search.BlogsEntryBlueprint.BlogsEntryBlueprintBuilder;
 import com.liferay.blogs.test.util.search.BlogsEntrySearchFixture;
+import com.liferay.dynamic.data.mapping.service.DDMStructureLocalService;
 import com.liferay.journal.model.JournalArticle;
 import com.liferay.journal.service.JournalArticleLocalService;
 import com.liferay.journal.test.util.search.JournalArticleBlueprintBuilder;
@@ -30,7 +31,6 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.role.RoleConstants;
-import com.liferay.portal.kernel.search.BaseIndexer;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.search.SearchEngine;
@@ -44,6 +44,7 @@ import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.search.filter.ComplexQueryPartBuilderFactory;
 import com.liferay.portal.search.query.Queries;
 import com.liferay.portal.search.searcher.SearchRequestBuilder;
@@ -101,8 +102,8 @@ public class IndexerClausesPermissionTest {
 		Group group = groupSearchFixture.addGroup(new GroupBlueprint());
 
 		JournalArticleSearchFixture journalArticleSearchFixture =
-			new JournalArticleSearchFixture(journalArticleLocalService);
-
+			new JournalArticleSearchFixture(
+				ddmStructureLocalService, journalArticleLocalService, portal);
 		UserSearchFixture userSearchFixture = new UserSearchFixture();
 
 		_blogsEntries = blogsEntrySearchFixture.getBlogsEntries();
@@ -117,8 +118,10 @@ public class IndexerClausesPermissionTest {
 	}
 
 	@Test
-	public void testBaseIndexer() throws Exception {
-		Assert.assertTrue(journalArticleIndexer instanceof BaseIndexer);
+	public void testDefaultIndexer1() throws Exception {
+		Assert.assertEquals(
+			"class com.liferay.portal.search.internal.indexer.DefaultIndexer",
+			String.valueOf(journalArticleIndexer.getClass()));
 
 		addJournalArticle(_user1, "Gamma Article");
 
@@ -143,7 +146,7 @@ public class IndexerClausesPermissionTest {
 	}
 
 	@Test
-	public void testDefaultIndexer() throws Exception {
+	public void testDefaultIndexer2() throws Exception {
 		Assert.assertEquals(
 			"class com.liferay.portal.search.internal.indexer.DefaultIndexer",
 			String.valueOf(blogsEntryIndexer.getClass()));
@@ -341,6 +344,12 @@ public class IndexerClausesPermissionTest {
 			searchContext -> searchContext.setUserId(user.getUserId()));
 	}
 
+	@Inject
+	protected static DDMStructureLocalService ddmStructureLocalService;
+
+	@Inject
+	protected static Portal portal;
+
 	@Inject(filter = "indexer.class.name=com.liferay.blogs.model.BlogsEntry")
 	protected Indexer<BlogsEntry> blogsEntryIndexer;
 
@@ -350,7 +359,9 @@ public class IndexerClausesPermissionTest {
 	@Inject
 	protected ComplexQueryPartBuilderFactory complexQueryPartBuilderFactory;
 
-	@Inject(filter = "component.name=*.JournalArticleIndexer")
+	@Inject(
+		filter = "indexer.class.name=com.liferay.journal.model.JournalArticle"
+	)
 	protected Indexer<JournalArticle> journalArticleIndexer;
 
 	@Inject

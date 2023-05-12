@@ -14,8 +14,7 @@
 
 package com.liferay.commerce.test.util.context;
 
-import com.liferay.commerce.account.service.CommerceAccountLocalService;
-import com.liferay.commerce.account.service.CommerceAccountService;
+import com.liferay.account.service.AccountEntryLocalService;
 import com.liferay.commerce.account.util.CommerceAccountHelper;
 import com.liferay.commerce.context.CommerceContext;
 import com.liferay.commerce.context.CommerceContextFactory;
@@ -36,7 +35,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Alec Sloan
  */
 @Component(
-	immediate = true, property = "service.ranking:Integer=1",
+	property = "service.ranking:Integer=1",
 	service = CommerceContextFactory.class
 )
 public class TestCustomCommerceContextFactory
@@ -58,21 +57,17 @@ public class TestCustomCommerceContextFactory
 
 		return new TestCustomCommerceContext(
 			companyId, commerceChannelGroupId, orderId, commerceAccountId,
-			_commerceAccountHelper, _commerceAccountLocalService,
-			_commerceAccountService,
+			_accountEntryLocalService, _commerceAccountHelper,
 			_commerceChannelAccountEntryRelLocalService,
 			_commerceChannelLocalService, _commerceCurrencyLocalService,
 			_commerceOrderService, _configurationProvider);
 	}
 
 	@Reference
+	private AccountEntryLocalService _accountEntryLocalService;
+
+	@Reference
 	private CommerceAccountHelper _commerceAccountHelper;
-
-	@Reference
-	private CommerceAccountLocalService _commerceAccountLocalService;
-
-	@Reference
-	private CommerceAccountService _commerceAccountService;
 
 	@Reference
 	private CommerceChannelAccountEntryRelLocalService

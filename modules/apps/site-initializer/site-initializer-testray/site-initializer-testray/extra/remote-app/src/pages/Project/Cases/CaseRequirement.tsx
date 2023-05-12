@@ -18,21 +18,25 @@ import {useOutletContext} from 'react-router-dom';
 import Button from '../../../components/Button';
 import Container from '../../../components/Layout/Container';
 import ListView from '../../../components/ListView';
+import SearchBuilder from '../../../core/SearchBuilder';
 import i18n from '../../../i18n';
 import {
 	TestrayCase,
+	TestrayProject,
 	TestrayRequirementCase,
 	testrayCaseRequirementsImpl,
 } from '../../../services/rest';
-import {searchUtil} from '../../../util/search';
 import CaseRequirementLinkModal from './CaseRequirementLinkModal';
 import useCaseRequirementActions from './useCaseRequirementActions';
 
 const CaseRequirement = () => {
 	const {
-		projectId,
 		testrayCase,
-	}: {projectId: number; testrayCase: TestrayCase} = useOutletContext();
+		testrayProject,
+	}: {
+		testrayCase: TestrayCase;
+		testrayProject: TestrayProject;
+	} = useOutletContext();
 
 	const {formModal} = useCaseRequirementActions({caseId: testrayCase.id});
 
@@ -51,6 +55,7 @@ const CaseRequirement = () => {
 							{i18n.translate('link-requirements')}
 						</Button>
 					),
+					filterSchema: 'caseRequirements',
 					title: i18n.translate('requirements'),
 				}}
 				resource={testrayCaseRequirementsImpl.resource}
@@ -130,23 +135,21 @@ const CaseRequirement = () => {
 						},
 					],
 					navigateTo: ({requirement}: TestrayRequirementCase) =>
-						`/project/${projectId}/requirements/${requirement?.id}`,
+						`/project/${testrayProject.id}/requirements/${requirement?.id}`,
 				}}
 				transformData={(response) =>
 					testrayCaseRequirementsImpl.transformDataFromList(response)
 				}
 				variables={{
-					filter: searchUtil.eq('caseId', testrayCase.id),
+					filter: SearchBuilder.eq('caseId', testrayCase.id),
 				}}
 			>
-				{(response) => {
-					return (
-						<CaseRequirementLinkModal
-							items={response?.items}
-							modal={formModal}
-						/>
-					);
-				}}
+				{(response) => (
+					<CaseRequirementLinkModal
+						items={response?.items}
+						modal={formModal}
+					/>
+				)}
 			</ListView>
 		</Container>
 	);

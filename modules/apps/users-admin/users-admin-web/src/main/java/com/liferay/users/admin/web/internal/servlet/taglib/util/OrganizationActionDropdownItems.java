@@ -18,7 +18,6 @@ import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemList;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuilder;
 import com.liferay.petra.function.UnsafeConsumer;
-import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.model.Group;
@@ -29,14 +28,17 @@ import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.portlet.PortletProvider;
 import com.liferay.portal.kernel.portlet.PortletProviderUtil;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
+import com.liferay.portal.kernel.portlet.url.builder.ResourceURLBuilder;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.service.permission.GroupPermissionUtil;
 import com.liferay.portal.kernel.service.permission.OrganizationPermissionUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
 import java.util.Collections;
 import java.util.List;
@@ -59,7 +61,7 @@ public class OrganizationActionDropdownItems {
 		_renderResponse = renderResponse;
 
 		_httpServletRequest = PortalUtil.getHttpServletRequest(renderRequest);
-		_organizationGroup = _organization.getGroup();
+		_organizationGroup = organization.getGroup();
 
 		_themeDisplay = (ThemeDisplay)_httpServletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
@@ -224,12 +226,42 @@ public class OrganizationActionDropdownItems {
 	private UnsafeConsumer<DropdownItem, Exception>
 		_getDeleteActionUnsafeConsumer() {
 
+		String getActiveUsersURL = ResourceURLBuilder.createResourceURL(
+			_renderResponse
+		).setParameter(
+			"className", Organization.class.getName()
+		).setParameter(
+			"status", String.valueOf(WorkflowConstants.STATUS_APPROVED)
+		).setResourceID(
+			"/users_admin/get_users_count"
+		).buildString();
+		String getInactiveUsersURL = ResourceURLBuilder.createResourceURL(
+			_renderResponse
+		).setParameter(
+			"className", Organization.class.getName()
+		).setParameter(
+			"status", String.valueOf(WorkflowConstants.STATUS_INACTIVE)
+		).setResourceID(
+			"/users_admin/get_users_count"
+		).buildString();
+
 		return dropdownItem -> {
-			dropdownItem.setHref(
-				StringBundler.concat(
-					"javascript:", _renderResponse.getNamespace(),
-					"deleteOrganization(", _organization.getOrganizationId(),
-					");"));
+			dropdownItem.putData(Constants.CMD, Constants.DELETE);
+			dropdownItem.putData("action", "deleteOrganization");
+			dropdownItem.putData(
+				"deleteOrganizationURL",
+				PortletURLBuilder.createActionURL(
+					_renderResponse
+				).setActionName(
+					"/users_admin/edit_organization"
+				).setCMD(
+					Constants.DELETE
+				).buildString());
+			dropdownItem.putData("getActiveUsersURL", getActiveUsersURL);
+			dropdownItem.putData("getInactiveUsersURL", getInactiveUsersURL);
+			dropdownItem.putData(
+				"organizationId",
+				String.valueOf(_organization.getOrganizationId()));
 			dropdownItem.setLabel(
 				LanguageUtil.get(_httpServletRequest, "delete"));
 		};

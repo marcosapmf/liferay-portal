@@ -14,8 +14,8 @@
 
 package com.liferay.commerce.shipment.web.internal.display.context;
 
-import com.liferay.commerce.account.model.CommerceAccount;
-import com.liferay.commerce.account.service.CommerceAccountServiceUtil;
+import com.liferay.account.model.AccountEntry;
+import com.liferay.account.service.AccountEntryServiceUtil;
 import com.liferay.commerce.address.CommerceAddressFormatter;
 import com.liferay.commerce.constants.CommerceOrderConstants;
 import com.liferay.commerce.constants.CommercePortletKeys;
@@ -39,6 +39,7 @@ import com.liferay.commerce.service.CommerceShippingMethodService;
 import com.liferay.commerce.shipment.web.internal.portlet.action.helper.ActionHelper;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenu;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
@@ -67,7 +68,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
-import java.util.stream.Stream;
 
 import javax.portlet.PortletRequest;
 import javax.portlet.PortletURL;
@@ -108,44 +108,29 @@ public class CommerceShipmentDisplayContext
 		_regionService = regionService;
 	}
 
-	public List<CommerceAccount> getCommerceAccountsWithShippableOrders()
+	public List<AccountEntry> getCommerceAccountsWithShippableOrders()
 		throws PortalException {
 
-		List<CommerceOrder> commerceOrders = getCommerceOrders();
-
-		Stream<CommerceOrder> stream = commerceOrders.stream();
-
-		long[] commerceAccountIds = stream.mapToLong(
-			CommerceOrder::getCommerceAccountId
-		).toArray();
-
-		commerceAccountIds = ArrayUtil.unique(commerceAccountIds);
-
-		List<CommerceAccount> commerceAccounts = new ArrayList<>();
-
-		for (long commerceAccountId : commerceAccountIds) {
-			commerceAccounts.add(
-				CommerceAccountServiceUtil.getCommerceAccount(
-					commerceAccountId));
-		}
-
-		return commerceAccounts;
+		return TransformUtil.transformToList(
+			ArrayUtil.unique(
+				TransformUtil.transformToLongArray(
+					getCommerceOrders(), CommerceOrder::getCommerceAccountId)),
+			AccountEntryServiceUtil::getAccountEntry);
 	}
 
 	public String getCommerceAccountThumbnailURL(
-		CommerceAccount commerceAccount, String pathImage) {
+		AccountEntry accountEntry, String pathImage) {
 
 		StringBundler sb = new StringBundler(5);
 
 		sb.append(pathImage);
 		sb.append("/organization_logo?img_id=");
-		sb.append(commerceAccount.getLogoId());
+		sb.append(accountEntry.getLogoId());
 
-		if (commerceAccount.getLogoId() > 0) {
+		if (accountEntry.getLogoId() > 0) {
 			sb.append("&t=");
 			sb.append(
-				WebServerServletTokenUtil.getToken(
-					commerceAccount.getLogoId()));
+				WebServerServletTokenUtil.getToken(accountEntry.getLogoId()));
 		}
 
 		return sb.toString();
@@ -489,7 +474,8 @@ public class CommerceShipmentDisplayContext
 		searchContext.setCompanyId(cpRequestHelper.getCompanyId());
 		searchContext.setEnd(QueryUtil.ALL_POS);
 
-		long[] commerceChannelGroupIds = _getCommerceChannelGroupIds();
+		long[] commerceChannelGroupIds = TransformUtil.transformToLongArray(
+			getCommerceChannels(), CommerceChannel::getGroupId);
 
 		if ((commerceChannelGroupIds != null) &&
 			(commerceChannelGroupIds.length > 0)) {
@@ -505,16 +491,6 @@ public class CommerceShipmentDisplayContext
 		queryConfig.setScoreEnabled(false);
 
 		return searchContext;
-	}
-
-	private long[] _getCommerceChannelGroupIds() throws PortalException {
-		List<CommerceChannel> commerceChannels = getCommerceChannels();
-
-		Stream<CommerceChannel> stream = commerceChannels.stream();
-
-		return stream.mapToLong(
-			CommerceChannel::getGroupId
-		).toArray();
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

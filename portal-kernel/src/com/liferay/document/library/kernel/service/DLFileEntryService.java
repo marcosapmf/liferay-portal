@@ -97,8 +97,8 @@ public interface DLFileEntryService extends BaseService {
 		throws PortalException;
 
 	public DLFileEntry copyFileEntry(
-			long groupId, long repositoryId, long fileEntryId,
-			long destFolderId, ServiceContext serviceContext)
+			long groupId, long repositoryId, long sourceFileEntryId,
+			long targetFolderId, ServiceContext serviceContext)
 		throws PortalException;
 
 	public void deleteFileEntry(long fileEntryId) throws PortalException;
@@ -133,6 +133,11 @@ public interface DLFileEntryService extends BaseService {
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<DLFileEntry> getFileEntries(
+			long groupId, double score, int start, int end)
+		throws PortalException;
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<DLFileEntry> getFileEntries(
 			long groupId, long folderId, int status, int start, int end,
 			OrderByComparator<DLFileEntry> orderByComparator)
 		throws PortalException;
@@ -160,6 +165,10 @@ public interface DLFileEntryService extends BaseService {
 	public List<DLFileEntry> getFileEntries(
 			long groupId, long folderId, String[] mimeTypes, int start, int end,
 			OrderByComparator<DLFileEntry> orderByComparator)
+		throws PortalException;
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int getFileEntriesCount(long groupId, double score)
 		throws PortalException;
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)

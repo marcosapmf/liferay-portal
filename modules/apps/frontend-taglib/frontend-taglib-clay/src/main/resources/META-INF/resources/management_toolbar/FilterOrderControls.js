@@ -70,6 +70,9 @@ const FilterOrderControls = ({
 						)}
 						trigger={
 							<ClayButton
+								aria-label={Liferay.Language.get(
+									'filter-and-order'
+								)}
 								className={classNames('nav-link', {
 									'ml-2 mr-2': showDesignImprovements,
 								})}
@@ -212,6 +215,7 @@ const FilterOrderControls = ({
 						disabled={disabled}
 						displayType="unstyled"
 						href={sortingURL}
+						role="button"
 						symbol={classNames({
 							'order-list-down': sortingOrder === 'desc',
 							'order-list-up':

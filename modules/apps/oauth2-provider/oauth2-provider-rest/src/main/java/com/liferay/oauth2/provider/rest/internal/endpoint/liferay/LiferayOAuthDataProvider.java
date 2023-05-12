@@ -20,7 +20,7 @@ import com.liferay.oauth2.provider.constants.OAuth2ProviderConstants;
 import com.liferay.oauth2.provider.model.OAuth2Application;
 import com.liferay.oauth2.provider.model.OAuth2ApplicationScopeAliases;
 import com.liferay.oauth2.provider.model.OAuth2Authorization;
-import com.liferay.oauth2.provider.model.OAuth2ScopeGrant;
+import com.liferay.oauth2.provider.redirect.OAuth2RedirectURIInterpolator;
 import com.liferay.oauth2.provider.rest.internal.configuration.OAuth2AuthorizationServerConfiguration;
 import com.liferay.oauth2.provider.rest.internal.endpoint.authorize.configuration.OAuth2AuthorizationFlowConfiguration;
 import com.liferay.oauth2.provider.rest.internal.endpoint.constants.OAuth2ProviderRESTEndpointConstants;
@@ -32,6 +32,8 @@ import com.liferay.oauth2.provider.service.OAuth2ApplicationLocalService;
 import com.liferay.oauth2.provider.service.OAuth2ApplicationScopeAliasesLocalService;
 import com.liferay.oauth2.provider.service.OAuth2AuthorizationLocalService;
 import com.liferay.oauth2.provider.service.OAuth2ScopeGrantLocalService;
+import com.liferay.petra.concurrent.DCLSingleton;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
@@ -66,10 +68,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -350,7 +349,7 @@ public class LiferayOAuthDataProvider
 	}
 
 	public Client getClient(OAuth2Application oAuth2Application) {
-		return _populateClient(oAuth2Application);
+		return _populateClient(oAuth2Application, getMessageContext());
 	}
 
 	@Override
@@ -387,6 +386,12 @@ public class LiferayOAuthDataProvider
 		}
 
 		return null;
+	}
+
+	@Override
+	public OAuthJoseJwtProducer getJwtAccessTokenProducer() {
+		return _oAuthJoseJwtProducerDCLSingleton.getSingleton(
+			this::_createJwtAccessTokenProducer);
 	}
 
 	public OAuth2Authorization getOAuth2Authorization(
@@ -470,8 +475,8 @@ public class LiferayOAuthDataProvider
 			long lifetime = expires - issuedAt;
 
 			RefreshToken refreshToken = new RefreshToken(
-				_populateClient(oAuth2Application), refreshTokenKey, lifetime,
-				issuedAt);
+				_populateClient(oAuth2Application, getMessageContext()),
+				refreshTokenKey, lifetime, issuedAt);
 
 			refreshToken.setAccessTokens(
 				Collections.singletonList(
@@ -685,6 +690,13 @@ public class LiferayOAuthDataProvider
 	@Activate
 	@SuppressWarnings("unchecked")
 	protected void activate(Map<String, Object> properties) {
+		Collections.addAll(
+			_refreshTokenIncompatibleGrants, Constants.JWT_BEARER_GRANT,
+			Constants.JWT_BEARER_GRANT,
+			HttpUtils.urlEncode(
+				OAuthConstants.CLIENT_CREDENTIALS_GRANT,
+				StandardCharsets.UTF_8.name()));
+
 		_oAuth2AuthorizationFlowConfiguration =
 			ConfigurableUtil.createConfigurable(
 				OAuth2AuthorizationFlowConfiguration.class, properties);
@@ -833,7 +845,7 @@ public class LiferayOAuthDataProvider
 
 		messageContext.put(OAuthConstants.CLIENT_ID, clientId);
 
-		return _populateClient(oAuth2Application);
+		return _populateClient(oAuth2Application, messageContext);
 	}
 
 	@Override
@@ -952,6 +964,18 @@ public class LiferayOAuthDataProvider
 		}
 	}
 
+	private OAuthJoseJwtProducer _createJwtAccessTokenProducer() {
+		OAuthJoseJwtProducer oAuthJoseJwtProducer = new OAuthJoseJwtProducer();
+
+		oAuthJoseJwtProducer.setSignatureProvider(
+			JwsUtils.getSignatureProvider(
+				JwkUtils.readJwkKey(
+					_oAuth2AuthorizationServerConfiguration.
+						jwtAccessTokenSigningJSONWebKey())));
+
+		return oAuthJoseJwtProducer;
+	}
+
 	private ServerAccessToken _createOpaqueServerAccessToken(
 		List<String> audiences, Client client, String clientCodeVerifier,
 		String grantCode, String grantType, String nonce,
@@ -1027,40 +1051,44 @@ public class LiferayOAuthDataProvider
 	private Collection<LiferayOAuth2Scope> _getLiferayOAuth2Scopes(
 		long oAuth2ApplicationScopeAliasesId, List<String> scopeAliases) {
 
-		Collection<OAuth2ScopeGrant> oAuth2ScopeGrants =
-			_oAuth2ScopeGrantLocalService.getOAuth2ScopeGrants(
-				oAuth2ApplicationScopeAliasesId, QueryUtil.ALL_POS,
-				QueryUtil.ALL_POS, null);
-
-		Stream<OAuth2ScopeGrant> stream = oAuth2ScopeGrants.stream();
-
 		OAuth2ApplicationScopeAliases oAuth2ApplicationScopeAliases =
 			_oAuth2ApplicationScopeAliasesLocalService.
 				fetchOAuth2ApplicationScopeAliases(
 					oAuth2ApplicationScopeAliasesId);
 
-		Collection<LiferayOAuth2Scope> liferayOAuth2Scopes = new ArrayList<>();
-
-		if (oAuth2ApplicationScopeAliases != null) {
-			liferayOAuth2Scopes = _scopeLocator.getLiferayOAuth2Scopes(
-				oAuth2ApplicationScopeAliases.getCompanyId());
+		if (oAuth2ApplicationScopeAliases == null) {
+			return Collections.emptyList();
 		}
 
-		return stream.filter(
-			oAuth2ScopeGrant -> !Collections.disjoint(
-				oAuth2ScopeGrant.getScopeAliasesList(), scopeAliases)
-		).map(
-			oAuth2ScopeGrant -> _scopeLocator.getLiferayOAuth2Scope(
-				oAuth2ScopeGrant.getCompanyId(),
-				oAuth2ScopeGrant.getApplicationName(),
-				oAuth2ScopeGrant.getScope())
-		).filter(
-			Objects::nonNull
-		).filter(
-			liferayOAuth2Scopes::contains
-		).collect(
-			Collectors.toList()
-		);
+		return TransformUtil.transform(
+			_oAuth2ScopeGrantLocalService.getOAuth2ScopeGrants(
+				oAuth2ApplicationScopeAliasesId, QueryUtil.ALL_POS,
+				QueryUtil.ALL_POS, null),
+			oAuth2ScopeGrant -> {
+				if (Collections.disjoint(
+						oAuth2ScopeGrant.getScopeAliasesList(), scopeAliases)) {
+
+					return null;
+				}
+
+				LiferayOAuth2Scope liferayOAuth2Scope =
+					_scopeLocator.getLiferayOAuth2Scope(
+						oAuth2ScopeGrant.getCompanyId(),
+						oAuth2ScopeGrant.getApplicationName(),
+						oAuth2ScopeGrant.getScope());
+
+				Collection<LiferayOAuth2Scope> liferayOAuth2Scopes =
+					_scopeLocator.getLiferayOAuth2Scopes(
+						oAuth2ApplicationScopeAliases.getCompanyId());
+
+				if ((liferayOAuth2Scope == null) ||
+					!liferayOAuth2Scopes.contains(liferayOAuth2Scope)) {
+
+					return null;
+				}
+
+				return liferayOAuth2Scope;
+			});
 	}
 
 	private String _getRemoteIP() {
@@ -1106,8 +1134,6 @@ public class LiferayOAuthDataProvider
 	private void _init() {
 		setGrantLifetime(
 			_oAuth2AuthorizationFlowConfiguration.authorizationCodeGrantTTL());
-
-		_setJwtAccessTokenProducer();
 
 		setUseJwtFormatForAccessTokens(
 			_oAuth2AuthorizationServerConfiguration.issueJWTAccessToken());
@@ -1174,7 +1200,9 @@ public class LiferayOAuthDataProvider
 		return serverAccessToken;
 	}
 
-	private Client _populateClient(OAuth2Application oAuth2Application) {
+	private Client _populateClient(
+		OAuth2Application oAuth2Application, MessageContext messageContext) {
+
 		String clientSecret = oAuth2Application.getClientSecret();
 
 		if (Validator.isBlank(clientSecret)) {
@@ -1257,7 +1285,10 @@ public class LiferayOAuthDataProvider
 					oAuth2Application.getOAuth2ApplicationScopeAliasesId()));
 		}
 
-		client.setRedirectUris(oAuth2Application.getRedirectURIsList());
+		client.setRedirectUris(
+			OAuth2RedirectURIInterpolator.interpolateRedirectURIsList(
+				messageContext.getHttpServletRequest(),
+				oAuth2Application.getRedirectURIsList(), _portal));
 		client.setSubject(
 			_populateUserSubject(
 				oAuth2Application.getCompanyId(),
@@ -1308,18 +1339,6 @@ public class LiferayOAuthDataProvider
 			String.valueOf(companyId));
 
 		return userSubject;
-	}
-
-	private void _setJwtAccessTokenProducer() {
-		OAuthJoseJwtProducer oAuthJoseJwtProducer = new OAuthJoseJwtProducer();
-
-		oAuthJoseJwtProducer.setSignatureProvider(
-			JwsUtils.getSignatureProvider(
-				JwkUtils.readJwkKey(
-					_oAuth2AuthorizationServerConfiguration.
-						jwtAccessTokenSigningJSONWebKey())));
-
-		super.setJwtAccessTokenProducer(oAuthJoseJwtProducer);
 	}
 
 	private long _toCXFTime(Date dateCreated) {
@@ -1414,13 +1433,7 @@ public class LiferayOAuthDataProvider
 		LiferayOAuthDataProvider.class);
 
 	private static final Set<String> _refreshTokenIncompatibleGrants =
-		Stream.of(
-			OAuthConstants.CLIENT_CREDENTIALS_GRANT, Constants.JWT_BEARER_GRANT,
-			HttpUtils.urlEncode(
-				Constants.JWT_BEARER_GRANT, StandardCharsets.UTF_8.name())
-		).collect(
-			Collectors.toCollection(HashSet::new)
-		);
+		new HashSet<>();
 
 	@Reference(
 		policy = ReferencePolicy.DYNAMIC,
@@ -1453,6 +1466,9 @@ public class LiferayOAuthDataProvider
 
 	@Reference
 	private OAuth2ScopeGrantLocalService _oAuth2ScopeGrantLocalService;
+
+	private final DCLSingleton<OAuthJoseJwtProducer>
+		_oAuthJoseJwtProducerDCLSingleton = new DCLSingleton<>();
 
 	@Reference
 	private Portal _portal;

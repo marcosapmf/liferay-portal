@@ -35,7 +35,7 @@ const CaseTypeFormModal: React.FC<CaseTypeProps> = ({
 	modal: {modalState, observer, onClose, onError, onSave, onSubmit},
 }) => {
 	const {
-		formState: {errors},
+		formState: {errors, isSubmitting},
 		handleSubmit,
 		register,
 	} = useForm<CaseTypeForm>({
@@ -66,6 +66,7 @@ const CaseTypeFormModal: React.FC<CaseTypeProps> = ({
 				<Form.Footer
 					onClose={onClose}
 					onSubmit={handleSubmit(_onSubmit)}
+					primaryButtonProps={{loading: isSubmitting}}
 				/>
 			}
 			observer={observer}

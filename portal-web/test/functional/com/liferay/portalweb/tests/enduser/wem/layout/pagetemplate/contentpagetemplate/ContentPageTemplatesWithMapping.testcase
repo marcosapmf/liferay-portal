@@ -10,7 +10,7 @@ definition {
 
 		User.firstLoginPG();
 
-		JSONGroup.addGroup(groupName = "Test Site Name");
+		HeadlessSite.addSite(siteName = "Test Site Name");
 
 		JSONLayoutpagetemplate.addLayoutPageTemplateCollection(
 			groupName = "Test Site Name",
@@ -27,7 +27,7 @@ definition {
 	tearDown {
 		var testPortalInstance = PropsUtil.get("test.portal.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testPortalInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -36,8 +36,10 @@ definition {
 	}
 
 	@description = "This is a test for LPS-98031. Map manual URL to image fragment."
-	@priority = "4"
+	@priority = 4
 	test MapManualURLToImageFragment {
+		property ci.retries.disabled = "true";
+
 		task ("Add an Image fragment to content page template") {
 			PageTemplatesAdmin.openPageTemplatesAdmin(siteURLKey = "test-site-name");
 
@@ -110,7 +112,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-98031. Map manual URL to link fragment."
-	@priority = "5"
+	@priority = 5
 	test MapManualURLToLinkFragment {
 		property portal.acceptance = "true";
 
@@ -155,8 +157,10 @@ definition {
 	}
 
 	@description = "This is a test for LPS-98031. Map manual URL to text fragment."
-	@priority = "4"
+	@priority = 4
 	test MapManualURLToTextFragment {
+		property ci.retries.disabled = "true";
+
 		task ("Add a Heading fragment to content page template") {
 			PageTemplatesAdmin.openPageTemplatesAdmin(siteURLKey = "test-site-name");
 
@@ -224,7 +228,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-98031. Map web content field with URL to image editable field."
-	@priority = "2"
+	@priority = 2
 	test MapWebContentFieldWithURLToImageFragment {
 		task ("Add a web content structure with a Text field") {
 			WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
@@ -322,7 +326,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-98031. Map web content field with URL to link editable field."
-	@priority = "2"
+	@priority = 2
 	test MapWebContentFieldWithURLToLinkFragment {
 		task ("Add a web content structure with a Text field") {
 			WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
@@ -420,7 +424,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-98031. Map web content field with URL to text editable field."
-	@priority = "2"
+	@priority = 2
 	test MapWebContentFieldWithURLToTextFragment {
 		task ("Add a web content structure with a Text field") {
 			WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
@@ -518,8 +522,10 @@ definition {
 	}
 
 	@description = "This is a test for LPS-98030. Can map the editable background image of a fragment to an existing image content in a content page template."
-	@priority = "3"
+	@priority = 3
 	test MapWebContentImageToBackgroundImageOfBannerCenter {
+		property timeout.explicit.wait = "10";
+
 		task ("Add a web content structure with an Image field") {
 			WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
 

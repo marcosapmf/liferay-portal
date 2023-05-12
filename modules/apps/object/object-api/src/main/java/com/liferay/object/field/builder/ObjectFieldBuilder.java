@@ -55,12 +55,6 @@ public class ObjectFieldBuilder {
 		return this;
 	}
 
-	public ObjectFieldBuilder defaultValue(String defaultValue) {
-		objectField.setDefaultValue(defaultValue);
-
-		return this;
-	}
-
 	public ObjectFieldBuilder externalReferenceCode(
 		String externalReferenceCode) {
 
@@ -95,6 +89,12 @@ public class ObjectFieldBuilder {
 
 	public ObjectFieldBuilder listTypeDefinitionId(long listTypeDefinitionId) {
 		objectField.setListTypeDefinitionId(listTypeDefinitionId);
+
+		return this;
+	}
+
+	public ObjectFieldBuilder localized(boolean localized) {
+		objectField.setLocalized(localized);
 
 		return this;
 	}

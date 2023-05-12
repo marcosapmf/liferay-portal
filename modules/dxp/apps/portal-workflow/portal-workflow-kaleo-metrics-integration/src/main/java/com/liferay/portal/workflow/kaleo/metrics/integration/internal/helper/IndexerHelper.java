@@ -19,6 +19,7 @@ import com.liferay.asset.kernel.model.AssetEntry;
 import com.liferay.asset.kernel.model.AssetRenderer;
 import com.liferay.asset.kernel.model.AssetRendererFactory;
 import com.liferay.asset.kernel.service.AssetEntryLocalService;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -63,8 +64,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -169,15 +168,9 @@ public class IndexerHelper {
 
 			if (kaleoDefinitionVersions != null) {
 				return builder.versions(
-					Stream.of(
-						kaleoDefinitionVersions
-					).flatMap(
-						List::stream
-					).map(
-						KaleoDefinitionVersion::getVersion
-					).toArray(
-						String[]::new
-					)
+					TransformUtil.transformToArray(
+						kaleoDefinitionVersions,
+						KaleoDefinitionVersion::getVersion, String.class)
 				).build();
 			}
 		}
@@ -398,10 +391,8 @@ public class IndexerHelper {
 	public List<Assignment> toAssignments(
 		List<KaleoTaskAssignmentInstance> kaleoTaskAssignmentInstances) {
 
-		List<Assignment> assignments = new ArrayList<>();
-
 		if (ListUtil.isEmpty(kaleoTaskAssignmentInstances)) {
-			return assignments;
+			return Collections.emptyList();
 		}
 
 		KaleoTaskAssignmentInstance firstKaleoTaskAssignmentInstance =
@@ -414,29 +405,27 @@ public class IndexerHelper {
 			User user = _userLocalService.fetchUser(
 				firstKaleoTaskAssignmentInstance.getAssigneeClassPK());
 
-			assignments.add(
+			return Collections.singletonList(
 				new UserAssignment(
 					firstKaleoTaskAssignmentInstance.getAssigneeClassPK(),
 					user.getFullName()));
 		}
-		else {
-			Stream.of(
-				kaleoTaskAssignmentInstances
-			).flatMap(
-				List::stream
-			).collect(
-				Collectors.groupingBy(
-					KaleoTaskAssignmentInstance::getAssigneeClassPK,
-					Collectors.mapping(
-						KaleoTaskAssignmentInstance::getGroupId,
-						Collectors.toList()))
-			).forEach(
-				(assignmentId, assignmentGroupIds) -> assignments.add(
-					new RoleAssignment(assignmentId, assignmentGroupIds))
-			);
+
+		Map<Long, List<Long>> assigneeClassPKGroupIds = new HashMap<>();
+
+		for (KaleoTaskAssignmentInstance kaleoTaskAssignmentInstance :
+				kaleoTaskAssignmentInstances) {
+
+			List<Long> groupIds = assigneeClassPKGroupIds.computeIfAbsent(
+				kaleoTaskAssignmentInstance.getAssigneeClassPK(),
+				key -> new ArrayList<>());
+
+			groupIds.add(kaleoTaskAssignmentInstance.getGroupId());
 		}
 
-		return assignments;
+		return TransformUtil.transform(
+			assigneeClassPKGroupIds.entrySet(),
+			entry -> new RoleAssignment(entry.getKey(), entry.getValue()));
 	}
 
 	private AssetRenderer<?> _getAssetRenderer(String className, long classPK) {

@@ -58,11 +58,23 @@ public interface ObjectEntryManager {
 		throws Exception;
 
 	public void deleteObjectEntry(
-			ObjectDefinition objectDefinition, long objectEntryId)
+			long companyId, DTOConverterContext dtoConverterContext,
+			String externalReferenceCode, ObjectDefinition objectDefinition,
+			String scopeKey)
 		throws Exception;
 
 	public void deleteObjectEntry(
-			String externalReferenceCode, long companyId,
+			ObjectDefinition objectDefinition, long objectEntryId)
+		throws Exception;
+
+	public void executeObjectAction(
+			DTOConverterContext dtoConverterContext, String objectActionName,
+			ObjectDefinition objectDefinition, long objectEntryId)
+		throws Exception;
+
+	public void executeObjectAction(
+			long companyId, DTOConverterContext dtoConverterContext,
+			String externalReferenceCode, String objectActionName,
 			ObjectDefinition objectDefinition, String scopeKey)
 		throws Exception;
 
@@ -97,9 +109,9 @@ public interface ObjectEntryManager {
 		throws Exception;
 
 	public ObjectEntry getObjectEntry(
-			DTOConverterContext dtoConverterContext,
-			String externalReferenceCode, long companyId,
-			ObjectDefinition objectDefinition, String scopeKey)
+			long companyId, DTOConverterContext dtoConverterContext,
+			String externalReferenceCode, ObjectDefinition objectDefinition,
+			String scopeKey)
 		throws Exception;
 
 	public Page<ObjectEntry> getObjectEntryRelatedObjectEntries(

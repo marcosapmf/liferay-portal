@@ -152,8 +152,6 @@ public class ObjectFieldPersistenceTest {
 
 		newObjectField.setDBType(RandomTestUtil.randomString());
 
-		newObjectField.setDefaultValue(RandomTestUtil.randomString());
-
 		newObjectField.setIndexed(RandomTestUtil.randomBoolean());
 
 		newObjectField.setIndexedAsKeyword(RandomTestUtil.randomBoolean());
@@ -161,6 +159,8 @@ public class ObjectFieldPersistenceTest {
 		newObjectField.setIndexedLanguageId(RandomTestUtil.randomString());
 
 		newObjectField.setLabel(RandomTestUtil.randomString());
+
+		newObjectField.setLocalized(RandomTestUtil.randomBoolean());
 
 		newObjectField.setName(RandomTestUtil.randomString());
 
@@ -218,9 +218,6 @@ public class ObjectFieldPersistenceTest {
 		Assert.assertEquals(
 			existingObjectField.getDBType(), newObjectField.getDBType());
 		Assert.assertEquals(
-			existingObjectField.getDefaultValue(),
-			newObjectField.getDefaultValue());
-		Assert.assertEquals(
 			existingObjectField.isIndexed(), newObjectField.isIndexed());
 		Assert.assertEquals(
 			existingObjectField.isIndexedAsKeyword(),
@@ -230,6 +227,8 @@ public class ObjectFieldPersistenceTest {
 			newObjectField.getIndexedLanguageId());
 		Assert.assertEquals(
 			existingObjectField.getLabel(), newObjectField.getLabel());
+		Assert.assertEquals(
+			existingObjectField.isLocalized(), newObjectField.isLocalized());
 		Assert.assertEquals(
 			existingObjectField.getName(), newObjectField.getName());
 		Assert.assertEquals(
@@ -301,6 +300,14 @@ public class ObjectFieldPersistenceTest {
 	}
 
 	@Test
+	public void testCountByODI_L() throws Exception {
+		_persistence.countByODI_L(
+			RandomTestUtil.nextLong(), RandomTestUtil.randomBoolean());
+
+		_persistence.countByODI_L(0L, RandomTestUtil.randomBoolean());
+	}
+
+	@Test
 	public void testCountByODI_N() throws Exception {
 		_persistence.countByODI_N(RandomTestUtil.nextLong(), "");
 
@@ -369,9 +376,9 @@ public class ObjectFieldPersistenceTest {
 			true, "userId", true, "userName", true, "createDate", true,
 			"modifiedDate", true, "listTypeDefinitionId", true,
 			"objectDefinitionId", true, "businessType", true, "dbColumnName",
-			true, "dbTableName", true, "dbType", true, "defaultValue", true,
-			"indexed", true, "indexedAsKeyword", true, "indexedLanguageId",
-			true, "label", true, "name", true, "relationshipType", true,
+			true, "dbTableName", true, "dbType", true, "indexed", true,
+			"indexedAsKeyword", true, "indexedLanguageId", true, "label", true,
+			"localized", true, "name", true, "relationshipType", true,
 			"required", true, "state", true, "system", true);
 	}
 
@@ -696,8 +703,6 @@ public class ObjectFieldPersistenceTest {
 
 		objectField.setDBType(RandomTestUtil.randomString());
 
-		objectField.setDefaultValue(RandomTestUtil.randomString());
-
 		objectField.setIndexed(RandomTestUtil.randomBoolean());
 
 		objectField.setIndexedAsKeyword(RandomTestUtil.randomBoolean());
@@ -705,6 +710,8 @@ public class ObjectFieldPersistenceTest {
 		objectField.setIndexedLanguageId(RandomTestUtil.randomString());
 
 		objectField.setLabel(RandomTestUtil.randomString());
+
+		objectField.setLocalized(RandomTestUtil.randomBoolean());
 
 		objectField.setName(RandomTestUtil.randomString());
 

@@ -44,10 +44,10 @@ import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.systemevent.SystemEvent;
 import com.liferay.portal.kernel.util.Validator;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Stream;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -406,21 +406,21 @@ public class CommerceQualifierEntryLocalServiceImpl
 			);
 		}
 
-		String[] allowedTargetKeys = Stream.of(
-			sourceCommerceQualifierMetadata.getAllowedTargetKeysArray()
-		).flatMap(
-			Stream::of
-		).toArray(
-			String[]::new
-		);
+		List<String> allowedTargetKeysList = new ArrayList<>();
 
-		if (allowedTargetKeys.length == 0) {
+		for (String[] allowedTargetKeys :
+				sourceCommerceQualifierMetadata.getAllowedTargetKeysArray()) {
+
+			Collections.addAll(allowedTargetKeysList, allowedTargetKeys);
+		}
+
+		if (allowedTargetKeysList.isEmpty()) {
 			return joinStep.where(predicate);
 		}
 
 		Predicate subpredicate = null;
 
-		for (String allowedTargetKey : allowedTargetKeys) {
+		for (String allowedTargetKey : allowedTargetKeysList) {
 			CommerceQualifierEntryTable aliasCommerceQualifierEntryTable =
 				_commerceQualifierHelper.getAliasCommerceQualifierEntryTable(
 					sourceCommerceQualifierMetadata.getKey(), allowedTargetKey);

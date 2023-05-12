@@ -21,7 +21,7 @@
 </c:if>
 
 <c:choose>
-	<c:when test="<%= Validator.isNotNull(escapedHREF) %>">
+	<c:when test='<%= Validator.isNotNull(escapedHREF) && !type.equals("cancel") %>'>
 		<a
 			class="<%= AUIUtil.buildCss(AUIUtil.BUTTON_PREFIX, disabled, false, false, cssClass) %>"
 			href="<%= escapedHREF %>"
@@ -30,6 +30,8 @@
 			<c:if test="<%= Validator.isNotNull(onClick) %>">
 				onClick="<%= onClick %>"
 			</c:if>
+
+			role="button"
 
 			<%= AUIUtil.buildData(data) %>
 			<%= InlineUtil.buildDynamicAttributes(dynamicAttributes) %>
@@ -49,9 +51,14 @@
 				name="<%= namespace %><%= name %>"
 			</c:if>
 
-			<c:if test="<%= Validator.isNotNull(onClick) %>">
-				onClick="<%= onClick %>"
-			</c:if>
+			<c:choose>
+				<c:when test="<%= Validator.isNotNull(onClick) %>">
+					onClick="<%= onClick %>"
+				</c:when>
+				<c:when test="<%= Validator.isNotNull(escapedHREF) %>">
+					onClick="Liferay.Util.navigate('<%= escapedHREF %>')"
+				</c:when>
+			</c:choose>
 
 			type="<%= type.equals("cancel") ? "button" : type %>"
 
@@ -83,7 +90,7 @@
 </c:choose>
 
 <c:if test="<%= dropdown %>">
-	<button aria-expanded="false" class="btn btn-primary dropdown-toggle <%= cssClass %>" data-toggle="liferay-dropdown" <%= disabled ? "disabled" : StringPool.BLANK %> id="<%= id %>Toggle" type="button">
+	<button aria-expanded="false" aria-haspopup="true" class="btn btn-primary dropdown-toggle <%= cssClass %>" data-toggle="liferay-dropdown" <%= disabled ? "disabled" : StringPool.BLANK %> id="<%= id %>Toggle" type="button">
 		<span class="caret"></span>
 
 		<span class="sr-only"><liferay-ui:message key="toggle-dropdown" /></span>

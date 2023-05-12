@@ -52,7 +52,7 @@ import org.osgi.util.tracker.BundleTrackerCustomizer;
  * @author Carlos Sierra Andrés
  * @author Miguel Pastor
  */
-@Component(immediate = true, service = {})
+@Component(service = {})
 public class ConfiguratorExtender implements BundleTrackerCustomizer<Bundle> {
 
 	@Override
@@ -102,7 +102,7 @@ public class ConfiguratorExtender implements BundleTrackerCustomizer<Bundle> {
 	@Activate
 	protected void activate(BundleContext bundleContext) {
 		_bundleTracker = new BundleTracker<>(
-			bundleContext, Bundle.ACTIVE | Bundle.STARTING, this);
+			bundleContext, Bundle.ACTIVE, this);
 
 		_bundleTracker.open();
 	}

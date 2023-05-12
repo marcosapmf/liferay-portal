@@ -12,36 +12,21 @@
  * details.
  */
 
+import Rest from '../../core/Rest';
 import yupSchema from '../../schema/yup';
-import {searchUtil} from '../../util/search';
-import Rest from './Rest';
 import {TestrayIssue} from './types';
 
 type Issue = typeof yupSchema.issue.__outputType;
 
 class TestrayIssuesImpl extends Rest<Issue, TestrayIssue> {
+	public DELIMITER = '_';
+
 	constructor() {
 		super({
-			adapter: ({id, name}) => ({
-				id,
+			adapter: ({name}) => ({
 				name,
 			}),
 			uri: 'issues',
-		});
-	}
-
-	public async createIfNotExist(name: string) {
-		const response = await this.getAll({
-			filter: searchUtil.eq('name', name),
-		});
-
-		if ((response?.totalCount ?? 0) > 0) {
-			return response?.items[0];
-		}
-
-		return this.create({
-			id: undefined,
-			name,
 		});
 	}
 }

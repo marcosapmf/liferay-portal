@@ -17,8 +17,7 @@
 <%@ include file="/init.jsp" %>
 
 <%@ taglib uri="http://liferay.com/tld/frontend" prefix="liferay-frontend" %><%@
-taglib uri="http://liferay.com/tld/portlet" prefix="liferay-portlet" %><%@
-taglib uri="http://liferay.com/tld/theme" prefix="liferay-theme" %>
+taglib uri="http://liferay.com/tld/portlet" prefix="liferay-portlet" %>
 
 <%@ page import="com.liferay.petra.string.StringPool" %><%@
 page import="com.liferay.portal.kernel.bean.BeanParamUtil" %><%@
@@ -47,11 +46,7 @@ page import="com.liferay.portal.workflow.web.internal.search.WorkflowDefinitionS
 
 <%@ page import="java.text.Format" %>
 
-<%@ page import="javax.portlet.WindowState" %>
-
 <liferay-frontend:defineObjects />
-
-<liferay-theme:defineObjects />
 
 <%
 WorkflowDefinitionDisplayContext workflowDefinitionDisplayContext = (WorkflowDefinitionDisplayContext)renderRequest.getAttribute(WorkflowWebKeys.WORKFLOW_DEFINITION_DISPLAY_CONTEXT);

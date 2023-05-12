@@ -16,9 +16,15 @@ import ClayButton from '@clayui/button';
 import ClayForm from '@clayui/form';
 import ClayModal from '@clayui/modal';
 import {Observer} from '@clayui/modal/lib/types';
-import {FormError, Input, useForm} from '@liferay/object-js-components-web';
+import {
+	FormError,
+	Input,
+	REQUIRED_MSG,
+	useForm,
+} from '@liferay/object-js-components-web';
 import React from 'react';
 
+import {defaultLanguageId} from '../../../utils/constants';
 import {TYPES, useLayoutContext} from '../objectLayoutContext';
 
 type TInitialValues = {
@@ -46,7 +52,7 @@ export function ModalAddObjectLayoutBox({
 		dispatch({
 			payload: {
 				name: {
-					[Liferay.ThemeDisplay.getDefaultLanguageId()]: values.name,
+					[defaultLanguageId]: values.name,
 				},
 				tabIndex,
 				type: 'regular',
@@ -61,7 +67,7 @@ export function ModalAddObjectLayoutBox({
 		const errors: FormError<TInitialValues> = {};
 
 		if (!values.name) {
-			errors.name = Liferay.Language.get('required');
+			errors.name = REQUIRED_MSG;
 		}
 
 		return errors;

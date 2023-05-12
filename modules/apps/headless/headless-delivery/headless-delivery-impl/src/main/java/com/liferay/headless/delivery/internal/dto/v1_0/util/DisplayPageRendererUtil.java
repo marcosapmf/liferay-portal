@@ -46,8 +46,6 @@ import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterContext;
 import com.liferay.portal.vulcan.util.JaxRsLinkUtil;
 
-import java.util.Optional;
-
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -73,14 +71,11 @@ public class DisplayPageRendererUtil {
 		LayoutPageTemplateEntryService layoutPageTemplateEntryService,
 		String methodName) {
 
-		Optional<UriInfo> uriInfoOptional =
-			dtoConverterContext.getUriInfoOptional();
+		UriInfo uriInfo = dtoConverterContext.getUriInfo();
 
-		if (!uriInfoOptional.isPresent()) {
+		if (uriInfo == null) {
 			return null;
 		}
-
-		UriInfo uriInfo = uriInfoOptional.get();
 
 		return TransformUtil.transformToArray(
 			layoutPageTemplateEntryService.getLayoutPageTemplateEntries(
@@ -102,17 +97,8 @@ public class DisplayPageRendererUtil {
 
 					setRenderedContentValue(
 						() -> {
-							if (!uriInfoOptional.map(
-									UriInfo::getQueryParameters
-								).map(
-									parameters -> parameters.getFirst(
-										"nestedFields")
-								).map(
-									fields -> fields.contains(
-										"renderedContentValue")
-								).orElse(
-									false
-								)) {
+							if (!dtoConverterContext.containsNestedFieldsValue(
+									"renderedContentValue")) {
 
 								return null;
 							}

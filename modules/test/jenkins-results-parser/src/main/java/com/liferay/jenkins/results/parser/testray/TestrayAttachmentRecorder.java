@@ -95,10 +95,9 @@ public class TestrayAttachmentRecorder {
 
 		_build = build;
 
-		BuildDatabase buildDatabase = BuildDatabaseUtil.getBuildDatabase(
-			_build);
+		BuildDatabase buildDatabase = BuildDatabaseUtil.getBuildDatabase(build);
 
-		String jobVariant = _build.getParameterValue("JOB_VARIANT");
+		String jobVariant = build.getParameterValue("JOB_VARIANT");
 
 		if (jobVariant == null) {
 			jobVariant = "";
@@ -677,6 +676,16 @@ public class TestrayAttachmentRecorder {
 
 			if (testResultsDir.exists()) {
 				testResultsDirs.add(testResultsDir);
+			}
+
+			File workspaceTestResultsDir = new File(
+				portalGitWorkingDirectory.getWorkingDirectory(),
+				JenkinsResultsParserUtil.combine(
+					"workspaces/", System.getenv("TEST_WORKSPACE_NAME"),
+					"/poshi/test-results"));
+
+			if (workspaceTestResultsDir.exists()) {
+				testResultsDirs.add(workspaceTestResultsDir);
 			}
 		}
 

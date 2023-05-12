@@ -23,8 +23,8 @@ import com.liferay.object.model.ObjectRelationship;
 import com.liferay.object.service.ObjectDefinitionService;
 import com.liferay.object.service.ObjectFieldService;
 import com.liferay.object.system.JaxRsApplicationDescriptor;
-import com.liferay.object.system.SystemObjectDefinitionMetadata;
-import com.liferay.object.system.SystemObjectDefinitionMetadataRegistry;
+import com.liferay.object.system.SystemObjectDefinitionManager;
+import com.liferay.object.system.SystemObjectDefinitionManagerRegistry;
 import com.liferay.object.web.internal.configuration.activator.FFOneToOneRelationshipConfigurationActivator;
 import com.liferay.object.web.internal.display.context.helper.ObjectRequestHelper;
 import com.liferay.petra.function.UnsafeConsumer;
@@ -58,8 +58,8 @@ public class ObjectDefinitionsRelationshipsDisplayContext
 			objectDefinitionModelResourcePermission,
 		ObjectDefinitionService objectDefinitionService,
 		ObjectFieldService objectFieldService,
-		SystemObjectDefinitionMetadataRegistry
-			systemObjectDefinitionMetadataRegistry) {
+		SystemObjectDefinitionManagerRegistry
+			systemObjectDefinitionManagerRegistry) {
 
 		super(httpServletRequest, objectDefinitionModelResourcePermission);
 
@@ -69,8 +69,8 @@ public class ObjectDefinitionsRelationshipsDisplayContext
 			objectDefinitionModelResourcePermission;
 		_objectDefinitionService = objectDefinitionService;
 		_objectFieldService = objectFieldService;
-		_systemObjectDefinitionMetadataRegistry =
-			systemObjectDefinitionMetadataRegistry;
+		_systemObjectDefinitionManagerRegistry =
+			systemObjectDefinitionManagerRegistry;
 
 		_objectRequestHelper = new ObjectRequestHelper(httpServletRequest);
 	}
@@ -189,20 +189,20 @@ public class ObjectDefinitionsRelationshipsDisplayContext
 	}
 
 	public String getRESTContextPath(ObjectDefinition objectDefinition) {
-		if (!objectDefinition.isSystem()) {
+		if (!objectDefinition.isUnmodifiableSystemObject()) {
 			return objectDefinition.getRESTContextPath();
 		}
 
-		SystemObjectDefinitionMetadata systemObjectDefinitionMetadata =
-			_systemObjectDefinitionMetadataRegistry.
-				getSystemObjectDefinitionMetadata(objectDefinition.getName());
+		SystemObjectDefinitionManager systemObjectDefinitionManager =
+			_systemObjectDefinitionManagerRegistry.
+				getSystemObjectDefinitionManager(objectDefinition.getName());
 
-		if (systemObjectDefinitionMetadata == null) {
+		if (systemObjectDefinitionManager == null) {
 			return StringPool.BLANK;
 		}
 
 		JaxRsApplicationDescriptor jaxRsApplicationDescriptor =
-			systemObjectDefinitionMetadata.getJaxRsApplicationDescriptor();
+			systemObjectDefinitionManager.getJaxRsApplicationDescriptor();
 
 		return jaxRsApplicationDescriptor.getRESTContextPath();
 	}
@@ -247,7 +247,7 @@ public class ObjectDefinitionsRelationshipsDisplayContext
 	private final ObjectDefinitionService _objectDefinitionService;
 	private final ObjectFieldService _objectFieldService;
 	private final ObjectRequestHelper _objectRequestHelper;
-	private final SystemObjectDefinitionMetadataRegistry
-		_systemObjectDefinitionMetadataRegistry;
+	private final SystemObjectDefinitionManagerRegistry
+		_systemObjectDefinitionManagerRegistry;
 
 }

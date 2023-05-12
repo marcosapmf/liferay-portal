@@ -15,12 +15,12 @@
 package com.liferay.commerce.internal.messaging;
 
 import com.liferay.commerce.constants.CommerceOrderConstants;
+import com.liferay.commerce.inventory.model.CommerceInventoryBookedQuantity;
 import com.liferay.commerce.inventory.service.CommerceInventoryBookedQuantityLocalService;
 import com.liferay.commerce.inventory.type.constants.CommerceInventoryAuditTypeConstants;
 import com.liferay.commerce.model.CommerceOrder;
 import com.liferay.commerce.model.CommerceOrderItem;
 import com.liferay.commerce.service.CommerceOrderLocalService;
-import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.messaging.BaseMessageListener;
 import com.liferay.portal.kernel.messaging.DestinationNames;
@@ -44,8 +44,7 @@ public class CommerceOrderStatusMessageListener extends BaseMessageListener {
 
 	@Override
 	protected void doReceive(Message message) throws Exception {
-		JSONObject jsonObject = _jsonFactory.createJSONObject(
-			String.valueOf(message.getPayload()));
+		JSONObject jsonObject = (JSONObject)message.getPayload();
 
 		long commerceOrderId = jsonObject.getLong("commerceOrderId");
 
@@ -61,23 +60,36 @@ public class CommerceOrderStatusMessageListener extends BaseMessageListener {
 		for (CommerceOrderItem commerceOrderItem :
 				commerceOrder.getCommerceOrderItems()) {
 
-			if (CommerceOrderConstants.ORDER_STATUS_CANCELLED == orderStatus) {
-				User currentUser = _userService.getCurrentUser();
+			if ((CommerceOrderConstants.ORDER_STATUS_CANCELLED !=
+					orderStatus) ||
+				(commerceOrderItem.getBookedQuantityId() <= 0)) {
 
-				_commerceInventoryBookedQuantityLocalService.
-					restockCommerceInventoryBookedQuantity(
-						currentUser.getUserId(),
-						commerceOrderItem.getBookedQuantityId(),
-						HashMapBuilder.put(
-							CommerceInventoryAuditTypeConstants.ORDER_ID,
-							String.valueOf(
-								commerceOrderItem.getCommerceOrderId())
-						).put(
-							CommerceInventoryAuditTypeConstants.ORDER_ITEM_ID,
-							String.valueOf(
-								commerceOrderItem.getCommerceOrderItemId())
-						).build());
+				continue;
 			}
+
+			CommerceInventoryBookedQuantity commerceInventoryBookedQuantity =
+				_commerceInventoryBookedQuantityLocalService.
+					fetchCommerceInventoryBookedQuantity(
+						commerceOrderItem.getBookedQuantityId());
+
+			if (commerceInventoryBookedQuantity == null) {
+				continue;
+			}
+
+			User currentUser = _userService.getCurrentUser();
+
+			_commerceInventoryBookedQuantityLocalService.
+				restockCommerceInventoryBookedQuantity(
+					currentUser.getUserId(),
+					commerceOrderItem.getBookedQuantityId(),
+					HashMapBuilder.put(
+						CommerceInventoryAuditTypeConstants.ORDER_ID,
+						String.valueOf(commerceOrderItem.getCommerceOrderId())
+					).put(
+						CommerceInventoryAuditTypeConstants.ORDER_ITEM_ID,
+						String.valueOf(
+							commerceOrderItem.getCommerceOrderItemId())
+					).build());
 		}
 	}
 
@@ -87,9 +99,6 @@ public class CommerceOrderStatusMessageListener extends BaseMessageListener {
 
 	@Reference
 	private CommerceOrderLocalService _commerceOrderLocalService;
-
-	@Reference
-	private JSONFactory _jsonFactory;
 
 	@Reference
 	private UserService _userService;

@@ -19,19 +19,17 @@ import {
 	useOutletContext,
 	useParams,
 } from 'react-router-dom';
+import PageRenderer from '~/components/PageRenderer';
 
 import {useFetch} from '../../../../hooks/useFetch';
 import useHeader from '../../../../hooks/useHeader';
 import i18n from '../../../../i18n';
 import {
-	APIResponse,
+	TestrayBuild,
 	TestrayProject,
 	TestrayRoutine,
-	TestrayTask,
 	testrayBuildImpl,
-	testrayTaskImpl,
 } from '../../../../services/rest';
-import BuildAlertBar from './BuildAlertBar';
 import BuildOverview from './BuildOverview';
 import useBuildActions from './useBuildActions';
 
@@ -50,34 +48,17 @@ const BuildOutlet: React.FC<BuildOutletProps> = ({ignorePaths}) => {
 	const {pathname} = useLocation();
 	const {testrayProject, testrayRoutine}: OutletContext = useOutletContext();
 
-	const {data: testrayBuild, mutate: mutateBuild} = useFetch(
-		testrayBuildImpl.getResource(buildId as string),
-		{
-			transformData: (response) =>
-				testrayBuildImpl.transformData(response),
-		}
-	);
+	const {data: testrayBuild, error, loading, mutate: mutateBuild} = useFetch<
+		TestrayBuild
+	>(testrayBuildImpl.getResource(buildId as string), {
+		transformData: (response) => testrayBuildImpl.transformData(response),
+	});
 
 	const hasOtherParams = !!Object.values(otherParams).length;
 
 	const {setHeaderActions, setHeading, setTabs} = useHeader({
 		shouldUpdate: !hasOtherParams,
-		timeout: 200,
 	});
-
-	const {data: testrayTasksData} = useFetch<APIResponse<TestrayTask>>(
-		testrayTaskImpl.resource,
-		{
-			transformData: (response) =>
-				testrayTaskImpl.transformDataFromList(response),
-		}
-	);
-
-	const testrayTasks = testrayTasksData?.items || [];
-
-	const testrayTask = testrayTasks.find(
-		(testrayTask) => testrayTask?.build?.id === Number(buildId)
-	);
 
 	const isCurrentPathIgnored = ignorePaths.some((ignorePath) =>
 		pathname.includes(ignorePath)
@@ -109,7 +90,7 @@ const BuildOutlet: React.FC<BuildOutletProps> = ({ignorePaths}) => {
 				},
 			]);
 		}
-	}, [setHeading, testrayProject, testrayRoutine, testrayBuild]);
+	}, [pathname, setHeading, testrayBuild, testrayProject, testrayRoutine]);
 
 	useEffect(() => {
 		if (!isCurrentPathIgnored) {
@@ -143,24 +124,16 @@ const BuildOutlet: React.FC<BuildOutletProps> = ({ignorePaths}) => {
 		}
 	}, [basePath, isCurrentPathIgnored, pathname, setTabs]);
 
-	if (testrayBuild) {
-		return (
+	return (
+		<PageRenderer error={error} loading={loading}>
 			<>
-				{!isCurrentPathIgnored && (
-					<>
-						{testrayTask && (
-							<BuildAlertBar testrayTask={testrayTask} />
-						)}
-
-						<BuildOverview
-							testrayBuild={testrayBuild}
-							testrayTask={testrayTask}
-						/>
-					</>
+				{!isCurrentPathIgnored && testrayBuild && (
+					<BuildOverview testrayBuild={testrayBuild} />
 				)}
 
 				<Outlet
 					context={{
+						actions: testrayBuild?.actions,
 						mutateBuild,
 						testrayBuild,
 						testrayProject,
@@ -168,10 +141,8 @@ const BuildOutlet: React.FC<BuildOutletProps> = ({ignorePaths}) => {
 					}}
 				/>
 			</>
-		);
-	}
-
-	return null;
+		</PageRenderer>
+	);
 };
 
 export default BuildOutlet;

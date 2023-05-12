@@ -14,8 +14,8 @@
 
 package com.liferay.friendly.url.internal.servlet;
 
-import com.liferay.friendly.url.internal.configuration.FriendlyURLRedirectionConfiguration;
-import com.liferay.friendly.url.internal.configuration.admin.service.FriendlyURLRedirectionManagedServiceFactory;
+import com.liferay.friendly.url.configuration.FriendlyURLRedirectionConfiguration;
+import com.liferay.friendly.url.configuration.FriendlyURLRedirectionConfigurationProvider;
 import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
@@ -78,6 +78,7 @@ import com.liferay.site.service.SiteFriendlyURLLocalService;
 
 import java.io.IOException;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -238,7 +239,7 @@ public class FriendlyURLServlet extends HttpServlet {
 					throw new LayoutPermissionException();
 				}
 
-				if (user.isDefaultUser() && layout.isSystem() &&
+				if (user.isGuestUser() && layout.isSystem() &&
 					Objects.equals(
 						layout.getFriendlyURL(),
 						PropsValues.CONTROL_PANEL_LAYOUT_FRIENDLY_URL)) {
@@ -427,6 +428,10 @@ public class FriendlyURLServlet extends HttpServlet {
 
 				actualURL = HttpComponentsUtil.setParameter(
 					actualURL, "doAsUserId", encDoAsUserId);
+
+				params = new HashMap<>(params);
+
+				params.remove("doAsUserId");
 			}
 			catch (EncryptorException encryptorException) {
 				if (_log.isDebugEnabled()) {
@@ -678,8 +683,8 @@ public class FriendlyURLServlet extends HttpServlet {
 	protected FriendlyURLNormalizer friendlyURLNormalizer;
 
 	@Reference
-	protected FriendlyURLRedirectionManagedServiceFactory
-		friendlyURLRedirectionManagedServiceFactory;
+	protected FriendlyURLRedirectionConfigurationProvider
+		friendlyURLRedirectionConfigurationProvider;
 
 	@Reference
 	protected GroupLocalService groupLocalService;
@@ -766,6 +771,15 @@ public class FriendlyURLServlet extends HttpServlet {
 		return alternativeSiteFriendlyURL;
 	}
 
+	private String _getFriendlyURLRedirectionType(long companyId) {
+		FriendlyURLRedirectionConfiguration
+			friendlyURLRedirectionConfiguration =
+				friendlyURLRedirectionConfigurationProvider.
+					getCompanyFriendlyURLRedirectionConfiguration(companyId);
+
+		return friendlyURLRedirectionConfiguration.redirectionType();
+	}
+
 	private Group _getGroup(String path, String friendlyURL, long companyId)
 		throws NoSuchGroupException {
 
@@ -847,7 +861,8 @@ public class FriendlyURLServlet extends HttpServlet {
 
 		RedirectProvider.Redirect redirect = redirectProvider.getRedirect(
 			groupId, _normalizeFriendlyURL(layoutFriendlyURL),
-			_normalizeFriendlyURL(originalHttpServletRequest.getRequestURI()));
+			_normalizeFriendlyURL(originalHttpServletRequest.getRequestURI()),
+			httpServletRequest.getHeader(HttpHeaders.USER_AGENT));
 
 		if (redirect == null) {
 			return null;
@@ -885,7 +900,7 @@ public class FriendlyURLServlet extends HttpServlet {
 		User user = portal.getUser(httpServletRequest);
 
 		if (user == null) {
-			user = userLocalService.getDefaultUser(
+			user = userLocalService.getGuestUser(
 				portal.getCompanyId(httpServletRequest));
 		}
 
@@ -907,14 +922,8 @@ public class FriendlyURLServlet extends HttpServlet {
 	}
 
 	private boolean _isPermanentRedirect(long companyId) {
-		FriendlyURLRedirectionConfiguration
-			friendlyURLRedirectionConfiguration =
-				friendlyURLRedirectionManagedServiceFactory.
-					getCompanyFriendlyURLConfiguration(companyId);
-
 		if (Objects.equals(
-				friendlyURLRedirectionConfiguration.redirectionType(),
-				"permanent")) {
+				_getFriendlyURLRedirectionType(companyId), "permanent")) {
 
 			return true;
 		}

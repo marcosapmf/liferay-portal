@@ -14,6 +14,8 @@
 
 package com.liferay.segments.web.internal.display.context;
 
+import com.liferay.analytics.settings.configuration.AnalyticsConfiguration;
+import com.liferay.analytics.settings.rest.manager.AnalyticsSettingsManager;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenu;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenuBuilder;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
@@ -46,9 +48,10 @@ import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
-import com.liferay.portal.kernel.util.PrefsProps;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.roles.admin.role.type.contributor.RoleTypeContributor;
+import com.liferay.roles.admin.role.type.contributor.provider.RoleTypeContributorProvider;
 import com.liferay.roles.item.selector.RoleItemSelectorCriterion;
 import com.liferay.segments.configuration.provider.SegmentsConfigurationProvider;
 import com.liferay.segments.constants.SegmentsActionKeys;
@@ -56,7 +59,6 @@ import com.liferay.segments.constants.SegmentsEntryConstants;
 import com.liferay.segments.constants.SegmentsPortletKeys;
 import com.liferay.segments.model.SegmentsEntry;
 import com.liferay.segments.service.SegmentsEntryService;
-import com.liferay.segments.web.internal.constants.SegmentsWebKeys;
 import com.liferay.segments.web.internal.security.permission.resource.SegmentsEntryPermission;
 import com.liferay.segments.web.internal.security.permission.resource.SegmentsResourcePermission;
 import com.liferay.segments.web.internal.util.comparator.SegmentsEntryModifiedDateComparator;
@@ -79,18 +81,22 @@ import javax.servlet.http.HttpServletRequest;
 public class SegmentsDisplayContext {
 
 	public SegmentsDisplayContext(
-		GroupLocalService groupLocalService, Language language, Portal portal,
-		PrefsProps prefsProps, RenderRequest renderRequest,
+		AnalyticsSettingsManager analyticsSettingsManager,
+		GroupLocalService groupLocalService, ItemSelector itemSelector,
+		Language language, Portal portal, RenderRequest renderRequest,
 		RenderResponse renderResponse,
+		RoleTypeContributorProvider roleTypeContributorProvider,
 		SegmentsConfigurationProvider segmentsConfigurationProvider,
 		SegmentsEntryService segmentsEntryService) {
 
+		_analyticsSettingsManager = analyticsSettingsManager;
 		_groupLocalService = groupLocalService;
+		_itemSelector = itemSelector;
 		_language = language;
 		_portal = portal;
-		_prefsProps = prefsProps;
 		_renderRequest = renderRequest;
 		_renderResponse = renderResponse;
+		_roleTypeContributorProvider = roleTypeContributorProvider;
 		_segmentsConfigurationProvider = segmentsConfigurationProvider;
 		_segmentsEntryService = segmentsEntryService;
 
@@ -120,10 +126,6 @@ public class SegmentsDisplayContext {
 		return HashMapBuilder.<String, Object>put(
 			"itemSelectorURL",
 			() -> {
-				ItemSelector itemSelector =
-					(ItemSelector)_httpServletRequest.getAttribute(
-						SegmentsWebKeys.ITEM_SELECTOR);
-
 				RoleItemSelectorCriterion roleItemSelectorCriterion =
 					new RoleItemSelectorCriterion(RoleConstants.TYPE_SITE);
 
@@ -132,10 +134,9 @@ public class SegmentsDisplayContext {
 				roleItemSelectorCriterion.setDesiredItemSelectorReturnTypes(
 					new UUIDItemSelectorReturnType());
 				roleItemSelectorCriterion.setExcludedRoleNames(
-					(String[])_httpServletRequest.getAttribute(
-						SegmentsWebKeys.EXCLUDED_ROLE_NAMES));
+					_getExcludedRoleNames());
 
-				PortletURL portletURL = itemSelector.getItemSelectorURL(
+				PortletURL portletURL = _itemSelector.getItemSelectorURL(
 					RequestBackedPortletURLFactoryUtil.create(_renderRequest),
 					(String)_httpServletRequest.getAttribute(
 						"view.jsp-eventName"),
@@ -146,16 +147,6 @@ public class SegmentsDisplayContext {
 		).put(
 			"segmentsEntryId", segmentsEntry.getSegmentsEntryId()
 		).build();
-	}
-
-	public String getAssignUserRolesLinkCss(SegmentsEntry segmentsEntry) {
-		StringBuilder sb = new StringBuilder(_ASSIGN_USER_ROLES_LINK_CSS);
-
-		if (!isRoleSegmentationEnabled(segmentsEntry.getCompanyId())) {
-			sb.append(" action disabled");
-		}
-
-		return sb.toString();
 	}
 
 	public String getAvailableActions(SegmentsEntry segmentsEntry)
@@ -187,7 +178,7 @@ public class SegmentsDisplayContext {
 					"/segments/edit_segments_entry", "type",
 					User.class.getName());
 				dropdownItem.setLabel(
-					_language.get(_httpServletRequest, "user-segment"));
+					_language.get(_httpServletRequest, "add-new-user-segment"));
 			}
 		).build();
 	}
@@ -294,6 +285,18 @@ public class SegmentsDisplayContext {
 		).buildString();
 	}
 
+	public String getScopeName(SegmentsEntry segmentsEntry) {
+		if (_themeDisplay.getCompanyGroupId() == segmentsEntry.getGroupId()) {
+			return _language.get(_themeDisplay.getLocale(), "global");
+		}
+
+		if (segmentsEntry.getGroupId() == _themeDisplay.getScopeGroupId()) {
+			return _language.get(_themeDisplay.getLocale(), "current-site");
+		}
+
+		return _language.get(_themeDisplay.getLocale(), "parent-site");
+	}
+
 	public String getSearchActionURL() {
 		return String.valueOf(_getPortletURL());
 	}
@@ -305,7 +308,7 @@ public class SegmentsDisplayContext {
 			return _searchContainer;
 		}
 
-		SearchContainer<SegmentsEntry> searchContainer = new SearchContainer(
+		SearchContainer<SegmentsEntry> searchContainer = new SearchContainer<>(
 			_renderRequest, _getPortletURL(), null, "there-are-no-segments");
 
 		searchContainer.setId("segmentsEntries");
@@ -353,23 +356,30 @@ public class SegmentsDisplayContext {
 		return StringPool.BLANK;
 	}
 
-	public String getSegmentsEntryURL(SegmentsEntry segmentsEntry) {
+	public String getSegmentsEntryURL(SegmentsEntry segmentsEntry)
+		throws ConfigurationException {
+
 		if (segmentsEntry == null) {
 			return StringPool.BLANK;
 		}
 
 		if (Objects.equals(
 				segmentsEntry.getSource(),
-				SegmentsEntryConstants.SOURCE_ASAH_FARO_BACKEND)) {
+				SegmentsEntryConstants.SOURCE_ASAH_FARO_BACKEND) &&
+			Validator.isNull(segmentsEntry.getCriteria())) {
 
-			String asahFaroURL = _prefsProps.getString(
-				segmentsEntry.getCompanyId(), "liferayAnalyticsURL");
+			AnalyticsConfiguration analyticsConfiguration =
+				_analyticsSettingsManager.getAnalyticsConfiguration(
+					segmentsEntry.getCompanyId());
 
-			if (Validator.isNull(asahFaroURL)) {
+			String liferayAnalyticsURL =
+				analyticsConfiguration.liferayAnalyticsURL();
+
+			if (Validator.isNull(liferayAnalyticsURL)) {
 				return StringPool.BLANK;
 			}
 
-			return asahFaroURL + "/contacts/segments/" +
+			return liferayAnalyticsURL + "/contacts/segments/" +
 				segmentsEntry.getSegmentsEntryKey();
 		}
 
@@ -389,7 +399,8 @@ public class SegmentsDisplayContext {
 	public String getSegmentsEntryURLTarget(SegmentsEntry segmentsEntry) {
 		if (Objects.equals(
 				segmentsEntry.getSource(),
-				SegmentsEntryConstants.SOURCE_ASAH_FARO_BACKEND)) {
+				SegmentsEntryConstants.SOURCE_ASAH_FARO_BACKEND) &&
+			Validator.isNull(segmentsEntry.getCriteria())) {
 
 			return "_blank";
 		}
@@ -412,14 +423,8 @@ public class SegmentsDisplayContext {
 		return searchContainer.getTotal();
 	}
 
-	public boolean isAsahEnabled(long companyId) {
-		if (Validator.isNotNull(
-				_prefsProps.getString(companyId, "liferayAnalyticsURL"))) {
-
-			return true;
-		}
-
-		return false;
+	public boolean isAsahEnabled(long companyId) throws Exception {
+		return _analyticsSettingsManager.isAnalyticsEnabled(companyId);
 	}
 
 	public boolean isDisabledManagementBar() throws PortalException {
@@ -541,6 +546,18 @@ public class SegmentsDisplayContext {
 		}
 
 		return false;
+	}
+
+	private String[] _getExcludedRoleNames() {
+		RoleTypeContributor roleTypeContributor =
+			_roleTypeContributorProvider.getRoleTypeContributor(
+				RoleConstants.TYPE_SITE);
+
+		if (roleTypeContributor != null) {
+			return roleTypeContributor.getExcludedRoleNames();
+		}
+
+		return new String[0];
 	}
 
 	private List<DropdownItem> _getFilterNavigationDropdownItems() {
@@ -680,24 +697,23 @@ public class SegmentsDisplayContext {
 		return false;
 	}
 
-	private static final String _ASSIGN_USER_ROLES_LINK_CSS =
-		"assign-site-roles-link dropdown-item";
-
 	private static final Log _log = LogFactoryUtil.getLog(
 		SegmentsDisplayContext.class);
 
+	private final AnalyticsSettingsManager _analyticsSettingsManager;
 	private String _displayStyle;
 	private final GroupLocalService _groupLocalService;
 	private final HttpServletRequest _httpServletRequest;
+	private final ItemSelector _itemSelector;
 	private String _keywords;
 	private final Language _language;
 	private String _orderByCol;
 	private String _orderByType;
 	private final PermissionChecker _permissionChecker;
 	private final Portal _portal;
-	private final PrefsProps _prefsProps;
 	private final RenderRequest _renderRequest;
 	private final RenderResponse _renderResponse;
+	private final RoleTypeContributorProvider _roleTypeContributorProvider;
 	private SearchContainer<SegmentsEntry> _searchContainer;
 	private final SegmentsConfigurationProvider _segmentsConfigurationProvider;
 	private final SegmentsEntryService _segmentsEntryService;

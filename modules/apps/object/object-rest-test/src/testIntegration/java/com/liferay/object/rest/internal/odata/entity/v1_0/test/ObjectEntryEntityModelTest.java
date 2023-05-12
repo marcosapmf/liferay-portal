@@ -21,14 +21,11 @@ import com.liferay.object.constants.ObjectRelationshipConstants;
 import com.liferay.object.field.builder.ObjectFieldBuilder;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectField;
-import com.liferay.object.model.ObjectFieldSetting;
 import com.liferay.object.model.ObjectRelationship;
 import com.liferay.object.rest.dto.v1_0.ObjectEntry;
 import com.liferay.object.rest.resource.v1_0.ObjectEntryResource;
 import com.liferay.object.service.ObjectDefinitionLocalService;
-import com.liferay.object.service.ObjectFieldSettingLocalService;
 import com.liferay.object.service.ObjectRelationshipLocalService;
-import com.liferay.object.util.LocalizedMapUtil;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMap;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMapFactory;
 import com.liferay.petra.string.StringPool;
@@ -39,15 +36,18 @@ import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.odata.entity.CollectionEntityField;
+import com.liferay.portal.odata.entity.ComplexEntityField;
 import com.liferay.portal.odata.entity.DateTimeEntityField;
 import com.liferay.portal.odata.entity.EntityField;
 import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.odata.entity.IdEntityField;
 import com.liferay.portal.odata.entity.IntegerEntityField;
 import com.liferay.portal.odata.entity.StringEntityField;
+import com.liferay.portal.test.rule.FeatureFlags;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
+import com.liferay.portal.vulcan.util.LocalizedMapUtil;
 
 import java.lang.reflect.Method;
 
@@ -57,7 +57,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -72,6 +71,7 @@ import org.osgi.framework.FrameworkUtil;
 /**
  * @author Feliphe Marinho
  */
+@FeatureFlags("LPS-154672")
 @RunWith(Arquillian.class)
 public class ObjectEntryEntityModelTest {
 
@@ -100,21 +100,6 @@ public class ObjectEntryEntityModelTest {
 		String value = "A" + RandomTestUtil.randomString();
 
 		List<ObjectField> customObjectFields = Arrays.asList(
-			new ObjectFieldBuilder(
-			).businessType(
-				ObjectFieldConstants.BUSINESS_TYPE_ATTACHMENT
-			).dbType(
-				ObjectFieldConstants.DB_TYPE_LONG
-			).name(
-				"a" + RandomTestUtil.randomString()
-			).objectFieldSettings(
-				Arrays.asList(
-					_createObjectFieldSetting("acceptedFileExtensions", "txt"),
-					_createObjectFieldSetting("fileSource", "userComputer"),
-					_createObjectFieldSetting("maximumFileSize", "100"))
-			).labelMap(
-				LocalizedMapUtil.getLocalizedMap(value)
-			).build(),
 			_createObjectField(ObjectFieldConstants.DB_TYPE_BIG_DECIMAL),
 			_createObjectField(ObjectFieldConstants.DB_TYPE_BOOLEAN),
 			_createObjectField(ObjectFieldConstants.DB_TYPE_CLOB),
@@ -156,6 +141,11 @@ public class ObjectEntryEntityModelTest {
 			).put(
 				"id", new IdEntityField("id", locale -> "id", String::valueOf)
 			).put(
+				"keywords",
+				new CollectionEntityField(
+					new StringEntityField(
+						"keywords", locale -> "assetTagNames.raw"))
+			).put(
 				"objectDefinitionId",
 				new IntegerEntityField(
 					"objectDefinitionId", locale -> "objectDefinitionId")
@@ -166,6 +156,11 @@ public class ObjectEntryEntityModelTest {
 				"status",
 				new CollectionEntityField(
 					new IntegerEntityField("status", locale -> Field.STATUS))
+			).put(
+				"taxonomyCategoryIds",
+				new CollectionEntityField(
+					new IntegerEntityField(
+						"taxonomyCategoryIds", locale -> "assetCategoryIds"))
 			).put(
 				"userId",
 				new IntegerEntityField("userId", locale -> Field.USER_ID)
@@ -234,18 +229,6 @@ public class ObjectEntryEntityModelTest {
 		).build();
 	}
 
-	private ObjectFieldSetting _createObjectFieldSetting(
-		String name, String value) {
-
-		ObjectFieldSetting objectFieldSetting =
-			_objectFieldSettingLocalService.createObjectFieldSetting(0L);
-
-		objectFieldSetting.setName(name);
-		objectFieldSetting.setValue(value);
-
-		return objectFieldSetting;
-	}
-
 	private Map<String, EntityField> _getExpectedEntityFieldsMap(
 		List<ObjectField> customObjectFields,
 		ObjectRelationship objectRelationship,
@@ -291,6 +274,11 @@ public class ObjectEntryEntityModelTest {
 			new IdEntityField(
 				expectedRelatedObjectDefinitionIdObjectFieldName,
 				locale -> expectedObjectFieldName, String::valueOf));
+
+		expectedEntityFieldsMap.put(
+			objectRelationship.getName(),
+			new ComplexEntityField(
+				objectRelationship.getName(), Collections.emptyList()));
 
 		return expectedEntityFieldsMap;
 	}
@@ -338,7 +326,7 @@ public class ObjectEntryEntityModelTest {
 
 		ObjectDefinition objectDefinition =
 			_objectDefinitionLocalService.addCustomObjectDefinition(
-				TestPropsValues.getUserId(), false,
+				TestPropsValues.getUserId(), false, false,
 				LocalizedMapUtil.getLocalizedMap(objectDefinitionName),
 				objectDefinitionName, null, null,
 				LocalizedMapUtil.getLocalizedMap(objectDefinitionName),
@@ -356,14 +344,6 @@ public class ObjectEntryEntityModelTest {
 	}
 
 	private EntityField _toExpectedEntityField(ObjectField objectField) {
-		if (Objects.equals(
-				ObjectFieldConstants.BUSINESS_TYPE_ATTACHMENT,
-				objectField.getBusinessType())) {
-
-			return new StringEntityField(
-				objectField.getName(), locale -> objectField.getName());
-		}
-
 		return new EntityField(
 			objectField.getName(),
 			_objectFieldDBTypeEntityFieldTypeMap.get(objectField.getDBType()),
@@ -394,9 +374,6 @@ public class ObjectEntryEntityModelTest {
 	private ObjectDefinitionLocalService _objectDefinitionLocalService;
 
 	private final List<ObjectDefinition> _objectDefinitions = new ArrayList<>();
-
-	@Inject
-	private ObjectFieldSettingLocalService _objectFieldSettingLocalService;
 
 	@Inject
 	private ObjectRelationshipLocalService _objectRelationshipLocalService;

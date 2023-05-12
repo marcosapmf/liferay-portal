@@ -23,16 +23,16 @@ import com.liferay.frontend.taglib.clay.servlet.taglib.util.LabelItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.ViewTypeItem;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
-import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
-import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.taglib.util.TagResourceBundleUtil;
 
 import java.util.HashMap;
@@ -167,6 +167,10 @@ public class ManagementToolbarTag extends BaseContainerTag {
 		}
 
 		return _itemsTotal;
+	}
+
+	public String getItemsType() {
+		return _itemsType;
 	}
 
 	public ManagementToolbarDisplayContext
@@ -472,6 +476,10 @@ public class ManagementToolbarTag extends BaseContainerTag {
 		_itemsTotal = itemsTotal;
 	}
 
+	public void setItemsType(String itemsType) {
+		_itemsType = itemsType;
+	}
+
 	public void setManagementToolbarDisplayContext(
 		ManagementToolbarDisplayContext managementToolbarDisplayContext) {
 
@@ -602,6 +610,7 @@ public class ManagementToolbarTag extends BaseContainerTag {
 		_filterLabelItems = null;
 		_infoPanelId = null;
 		_itemsTotal = null;
+		_itemsType = "items";
 		_managementToolbarDisplayContext = null;
 		_namespace = null;
 		_orderDropdownItems = null;
@@ -652,6 +661,7 @@ public class ManagementToolbarTag extends BaseContainerTag {
 		props.put("initialSelectAllButtonVisible", isShowSelectAllButton());
 		props.put("initialSelectedItems", getSelectedItems());
 		props.put("itemsTotal", getItemsTotal());
+		props.put("itemsType", _getLocalizedItemsType());
 		props.put("orderDropdownItems", getOrderDropdownItems());
 
 		String searchActionURL = getSearchActionURL();
@@ -678,7 +688,7 @@ public class ManagementToolbarTag extends BaseContainerTag {
 		props.put("showCreationMenu", isShowCreationMenu());
 		props.put(
 			"showDesignImprovementsFF",
-			GetterUtil.getBoolean(PropsUtil.get("feature.flag.LPS-144527")));
+			FeatureFlagManagerUtil.isEnabled("LPS-144527"));
 		props.put("showInfoButton", isShowInfoButton());
 		props.put("showResultsBar", isShowResultsBar());
 		props.put("showSearch", isShowSearch());
@@ -707,8 +717,8 @@ public class ManagementToolbarTag extends BaseContainerTag {
 	protected int processStartTag() throws Exception {
 		super.processStartTag();
 
-		Boolean showDesignImprovementsFF = GetterUtil.getBoolean(
-			PropsUtil.get("feature.flag.LPS-144527"));
+		Boolean showDesignImprovementsFF = FeatureFlagManagerUtil.isEnabled(
+			"LPS-144527");
 
 		JspWriter jspWriter = pageContext.getOut();
 
@@ -726,7 +736,13 @@ public class ManagementToolbarTag extends BaseContainerTag {
 		jspWriter.write("\"><div class=\"container-fluid");
 		jspWriter.write(" container-fluid-max-xl\"><ul class=\"navbar-nav\">");
 
+		ResourceBundle resourceBundle = TagResourceBundleUtil.getResourceBundle(
+			pageContext);
+
 		Boolean disabled = isDisabled();
+		Integer itemsTotal = getItemsTotal();
+		String localizedItemsType = _getLocalizedItemsType();
+		Integer selectedItems = getSelectedItems();
 
 		if (isSelectable()) {
 			jspWriter.write("<li class=\"nav-item\"><div class=\"");
@@ -740,35 +756,50 @@ public class ManagementToolbarTag extends BaseContainerTag {
 				jspWriter.write(" disabled");
 			}
 
-			jspWriter.write(" class=\"custom-control-input\" type=\"checkbox");
+			jspWriter.write(" aria-label=\"");
+
+			if (active) {
+				jspWriter.write(
+					LanguageUtil.format(
+						resourceBundle,
+						"clear-selection.-there-are-currently-x-of-x-x-" +
+							"selected",
+						new Object[] {
+							selectedItems, itemsTotal, localizedItemsType
+						}));
+			}
+			else {
+				jspWriter.write(
+					LanguageUtil.format(
+						resourceBundle, "select-all-x-on-the-page",
+						new Object[] {localizedItemsType}));
+			}
+
+			jspWriter.write(
+				"\" class=\"custom-control-input\" type=\"checkbox");
 			jspWriter.write("\" /><span class=\"custom-control-label\">");
 			jspWriter.write("</span></label></div></li>");
 		}
 
 		IconTag iconTag;
 
-		ResourceBundle resourceBundle = TagResourceBundleUtil.getResourceBundle(
-			pageContext);
-
 		if (active) {
-			Integer itemsTotal = getItemsTotal();
-			Integer selectedItems = getSelectedItems();
-
 			jspWriter.write("<li class=\"nav-item\"><span class=\"navbar-text");
 			jspWriter.write("\">");
+
+			String selectedItemslabel = LanguageUtil.format(
+				resourceBundle, "x-of-x-x-selected",
+				new Object[] {selectedItems, itemsTotal, localizedItemsType});
 
 			if (itemsTotal == selectedItems) {
 				jspWriter.write(
 					LanguageUtil.get(resourceBundle, "all-selected"));
+				jspWriter.write(" (");
+				jspWriter.write(selectedItemslabel);
+				jspWriter.write(")");
 			}
 			else {
-				jspWriter.write(
-					LanguageUtil.format(
-						resourceBundle, "x-of-x",
-						new Object[] {selectedItems, itemsTotal}));
-
-				jspWriter.write(StringPool.SPACE);
-				jspWriter.write(LanguageUtil.get(resourceBundle, "selected"));
+				jspWriter.write(selectedItemslabel);
 			}
 
 			jspWriter.write("</span></li>");
@@ -1281,6 +1312,18 @@ public class ManagementToolbarTag extends BaseContainerTag {
 		return SKIP_BODY;
 	}
 
+	private String _getLocalizedItemsType() {
+		String itemsType = getItemsType();
+
+		if (Validator.isNotNull(itemsType)) {
+			return LanguageUtil.get(
+				TagResourceBundleUtil.getResourceBundle(pageContext),
+				itemsType);
+		}
+
+		return itemsType;
+	}
+
 	private Map<String, List<String>> _getParamsMap(String url) {
 		Map<String, List<String>> searchData = new HashMap<>();
 
@@ -1373,6 +1416,7 @@ public class ManagementToolbarTag extends BaseContainerTag {
 	private List<LabelItem> _filterLabelItems;
 	private String _infoPanelId;
 	private Integer _itemsTotal;
+	private String _itemsType = "items";
 	private ManagementToolbarDisplayContext _managementToolbarDisplayContext;
 	private String _namespace;
 	private List<DropdownItem> _orderDropdownItems;

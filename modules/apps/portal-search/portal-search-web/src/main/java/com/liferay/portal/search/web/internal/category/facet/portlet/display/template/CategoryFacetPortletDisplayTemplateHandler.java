@@ -31,15 +31,12 @@ import java.util.Locale;
 import java.util.Map;
 
 import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Kevin Tan
  */
 @Component(
-	configurationPid = "com.liferay.portal.search.web.internal.category.facet.configuration.SearchFacetsWebTemplateConfiguration",
-	configurationPolicy = ConfigurationPolicy.OPTIONAL,
 	property = "javax.portlet.name=" + CategoryFacetPortletKeys.CATEGORY_FACET,
 	service = TemplateHandler.class
 )

@@ -14,8 +14,6 @@
 
 package com.liferay.portal.search.web.internal.search.results.portlet;
 
-import java.util.Optional;
-
 /**
  * @author Lino Alves
  */
@@ -44,13 +42,9 @@ public interface SearchResultsPortletPreferences {
 
 	public static final String PREFERENCE_KEY_VIEW_IN_CONTEXT = "viewInContext";
 
-	public Optional<String> getFederatedSearchKeyOptional();
+	public String getFederatedSearchKey();
 
-	public String getFederatedSearchKeyString();
-
-	public Optional<String> getFieldsToDisplayOptional();
-
-	public String getFieldsToDisplayString();
+	public String getFieldsToDisplay();
 
 	public int getPaginationDelta();
 

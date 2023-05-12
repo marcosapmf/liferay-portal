@@ -144,9 +144,22 @@ const NotificationsInfo = ({
 		selectedItem.data.notifications?.recipients?.[notificationIndex]
 			?.length !== 0
 	) {
-		recipientTypeHolder = getRecipientType(
-			selectedItem.data.notifications?.recipients?.[notificationIndex]
-		);
+		if (
+			!selectedItem.data.notifications?.recipients?.[
+				notificationIndex
+			]?.[0]
+		) {
+			recipientTypeHolder = getRecipientType(
+				selectedItem.data.notifications?.recipients?.[notificationIndex]
+			);
+		}
+		else {
+			recipientTypeHolder = getRecipientType(
+				selectedItem.data.notifications?.recipients?.[
+					notificationIndex
+				][0]
+			);
+		}
 	}
 	else {
 		recipientTypeHolder = 'assetCreator';
@@ -324,6 +337,16 @@ const NotificationsInfo = ({
 
 				if (recipientType === 'assetCreator') {
 					recipientDetails = {assignmentType: ['user']};
+
+					if (
+						selectedItem.data.notifications.recipients[
+							notificationIndex
+						]
+					) {
+						delete selectedItem.data.notifications?.recipients?.[
+							notificationIndex
+						].emailAddress;
+					}
 				}
 				else if (recipientType === 'taskAssignees') {
 					recipientDetails = {assignmentType: ['taskAssignees']};
@@ -365,14 +388,16 @@ const NotificationsInfo = ({
 
 		const recipients =
 			selectedItem.data.notifications &&
-			selectedItem.data.notifications.recipients[notificationIndex];
+			(selectedItem.data.notifications.recipients[notificationIndex][0] ||
+				selectedItem.data.notifications.recipients[notificationIndex]);
 
 		if (recipients && recipientType === 'roleType') {
-			for (let i = 0; i < recipients.roleName.length; i++) {
+			for (let i = 0; i < recipients.roleType.length; i++) {
 				sectionsData.push({
 					autoCreate: recipients.autoCreate?.[i],
 					identifier: `${Date.now()}-${i}`,
-					roleName: recipients.roleName[i],
+					roleKey: recipients.roleKey[i],
+					roleName: recipients.roleName?.[i],
 					roleType: recipients.roleType[i],
 				});
 			}
@@ -580,7 +605,6 @@ const NotificationsInfo = ({
 									notificationIndex={notificationIndex}
 									sectionsLength={internalSections.length}
 									setSections={setInternalSections}
-									showSelectScriptLanguage
 									updateSelectedItem={
 										scriptedRecipientUpdateSelectedItem
 									}

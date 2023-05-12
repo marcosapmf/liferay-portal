@@ -1,6 +1,7 @@
 @component-name = "portal-document-library-store"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property test.assert.warning.exceptions = "true";
@@ -11,13 +12,13 @@ definition {
 
 		User.firstLoginPG();
 
-		JSONGroup.addGroup(groupName = "Test Site Name");
+		HeadlessSite.addSite(siteName = "Test Site Name");
 	}
 
 	tearDown {
 		var testPortalInstance = PropsUtil.get("test.portal.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testPortalInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -27,7 +28,7 @@ definition {
 		}
 	}
 
-	@priority = "5"
+	@priority = 5
 	@refactorneeded
 	test AdvancedFileSystemStoreSmoke {
 		property custom.properties = "dl.store.impl=com.liferay.portal.store.file.system.AdvancedFileSystemStore";
@@ -50,7 +51,7 @@ definition {
 		RecycleBin.emptyCP();
 	}
 
-	@priority = "5"
+	@priority = 5
 	@refactorneeded
 	test DBStoreSmoke {
 		property custom.properties = "dl.store.impl=com.liferay.portal.store.db.DBStore";
@@ -75,7 +76,7 @@ definition {
 		RecycleBin.emptyCP();
 	}
 
-	@priority = "5"
+	@priority = 5
 	@refactorneeded
 	test FileSystemStoreSmoke {
 		property custom.properties = "dl.store.impl=com.liferay.portal.store.file.system.FileSystemStore";
@@ -98,13 +99,13 @@ definition {
 		RecycleBin.emptyCP();
 	}
 
-	@priority = "3"
+	@priority = 3
 	@refactorneeded
 	test ImportDocumentWithDBStore {
 		property custom.properties = "dl.store.impl=com.liferay.portal.store.db.DBStore";
 		property test.assert.warning.exceptions = "false";
 
-		JSONGroup.addGroup(groupName = "Test Site Name 1");
+		HeadlessSite.addSite(siteName = "Test Site Name 1");
 
 		JSONDocument.addFileWithUploadedFile(
 			dmDocumentDescription = "DM Document Description",

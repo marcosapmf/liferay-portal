@@ -57,6 +57,7 @@ import com.liferay.dynamic.data.mapping.util.DDMFormFactory;
 import com.liferay.dynamic.data.mapping.util.DDMFormLayoutFactory;
 import com.liferay.frontend.js.loader.modules.extender.npm.NPMResolver;
 import com.liferay.petra.function.UnsafeConsumer;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONException;
@@ -68,6 +69,7 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleThreadLocal;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.MapUtil;
@@ -80,17 +82,13 @@ import com.liferay.portal.kernel.util.Validator;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -357,6 +355,8 @@ public class DataLayoutTaglibUtil {
 		}
 
 		try {
+			Set<Locale> availableLocales = new HashSet<>();
+
 			DataDefinition dataDefinition = null;
 
 			if (Validator.isNotNull(dataDefinitionId)) {
@@ -371,13 +371,11 @@ public class DataLayoutTaglibUtil {
 					dataLayout.getDataDefinitionId(), httpServletRequest);
 			}
 
-			return Stream.of(
-				dataDefinition.getAvailableLanguageIds()
-			).map(
-				LocaleUtil::fromLanguageId
-			).collect(
-				Collectors.toSet()
-			);
+			for (String languageId : dataDefinition.getAvailableLanguageIds()) {
+				availableLocales.add(LocaleUtil.fromLanguageId(languageId));
+			}
+
+			return availableLocales;
 		}
 		catch (Exception exception) {
 			if (_log.isDebugEnabled()) {
@@ -546,16 +544,11 @@ public class DataLayoutTaglibUtil {
 			}
 
 			for (JSONObject jsonObject : (Iterable<JSONObject>)jsonArray) {
-				String[] fieldTypeScopes = StringUtil.split(
-					jsonObject.getString("scope"));
+				if (ListUtil.exists(
+						Arrays.asList(
+							StringUtil.split(jsonObject.getString("scope"))),
+						scopes::contains)) {
 
-				boolean anyMatch = Stream.of(
-					fieldTypeScopes
-				).anyMatch(
-					scope -> scopes.contains(scope)
-				);
-
-				if (anyMatch) {
 					fieldTypesJSONArray.put(jsonObject);
 
 					if (searchableFieldsDisabled) {
@@ -601,18 +594,17 @@ public class DataLayoutTaglibUtil {
 	}
 
 	private String _resolveFieldTypesModules() {
-		Set<String> ddmFormFieldTypeNames =
-			_ddmFormFieldTypeServicesRegistry.getDDMFormFieldTypeNames();
+		return StringUtil.merge(
+			TransformUtil.transform(
+				_ddmFormFieldTypeServicesRegistry.getDDMFormFieldTypeNames(),
+				name -> {
+					if (!_dataLayoutTaglibUtil._hasJavascriptModule(name)) {
+						return null;
+					}
 
-		Stream<String> stream = ddmFormFieldTypeNames.stream();
-
-		return stream.filter(
-			_dataLayoutTaglibUtil::_hasJavascriptModule
-		).map(
-			_dataLayoutTaglibUtil::_resolveFieldTypeModule
-		).collect(
-			Collectors.joining(StringPool.COMMA)
-		);
+					return _dataLayoutTaglibUtil._resolveFieldTypeModule(name);
+				}),
+			StringPool.COMMA);
 	}
 
 	private String _resolveModuleName(DDMFormFieldType ddmFormFieldType) {
@@ -628,39 +620,32 @@ public class DataLayoutTaglibUtil {
 	}
 
 	private void _setFieldIndexTypeNone(JSONObject jsonObject) {
-		_stream(
-			"rows",
-			rowJSONObject -> _stream(
-				"fields", null, _stream(rowJSONObject.getJSONArray("columns"))),
-			_stream(jsonObject.getJSONArray("pages"))
-		).filter(
-			fieldJSONObject -> Objects.equals(
-				fieldJSONObject.getString("fieldName"), "indexType")
-		).findFirst(
-		).ifPresent(
-			fieldJSONObject -> fieldJSONObject.put("value", "none")
-		);
-	}
+		for (JSONObject pageJSONObject :
+				(Iterable<JSONObject>)jsonObject.getJSONArray("pages")) {
 
-	private Stream<JSONObject> _stream(JSONArray jsonArray) {
-		return StreamSupport.stream(jsonArray.spliterator(), true);
-	}
+			for (JSONObject rowJSONObject :
+					(Iterable<JSONObject>)pageJSONObject.getJSONArray("rows")) {
 
-	private Stream<JSONObject> _stream(
-		String key, Function<JSONObject, Stream<JSONObject>> function,
-		Stream<JSONObject> stream) {
+				for (JSONObject columnJSONObject :
+						(Iterable<JSONObject>)rowJSONObject.getJSONArray(
+							"columns")) {
 
-		return stream.flatMap(
-			jsonObject -> {
-				Stream<JSONObject> nestedStream = _stream(
-					jsonObject.getJSONArray(key));
+					for (JSONObject fieldJSONObject :
+							(Iterable<JSONObject>)columnJSONObject.getJSONArray(
+								"fields")) {
 
-				if (function == null) {
-					return nestedStream;
+						if (Objects.equals(
+								fieldJSONObject.getString("fieldName"),
+								"indexType")) {
+
+							fieldJSONObject.put("value", "none");
+
+							return;
+						}
+					}
 				}
-
-				return nestedStream.flatMap(function);
-			});
+			}
+		}
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(
@@ -876,13 +861,12 @@ public class DataLayoutTaglibUtil {
 			if (Objects.equals(
 					ddmFormFieldTypeSetting.getDataType(), "ddm-options")) {
 
+				if (propertyValue == null) {
+					propertyValue = new DDMFormFieldOptions();
+				}
+
 				return _createDDMFormFieldValue(
-					availableLocales,
-					Optional.ofNullable(
-						(DDMFormFieldOptions)propertyValue
-					).orElse(
-						new DDMFormFieldOptions()
-					));
+					availableLocales, (DDMFormFieldOptions)propertyValue);
 			}
 
 			if (Objects.equals(
@@ -1043,31 +1027,22 @@ public class DataLayoutTaglibUtil {
 		private List<Map<String, Object>> _getNestedFields(
 			Map<String, Object> field) {
 
-			List<Map<String, Object>> nestedFields =
+			List<Map<String, Object>> nestedFields = new ArrayList<>();
+
+			List<Map<String, Object>> fieldNestedFields =
 				(List<Map<String, Object>>)field.get("nestedFields");
 
-			if (nestedFields != null) {
-				Stream<Map<String, Object>> stream = nestedFields.stream();
-
-				return stream.flatMap(
-					this::_getNestedFieldsStream
-				).collect(
-					Collectors.toList()
-				);
+			if (fieldNestedFields == null) {
+				return nestedFields;
 			}
 
-			return new ArrayList<>();
-		}
+			for (Map<String, Object> nestedField : fieldNestedFields) {
+				nestedFields.add(nestedField);
 
-		private Stream<Map<String, Object>> _getNestedFieldsStream(
-			Map<String, Object> field) {
+				nestedFields.addAll(_getNestedFields(nestedField));
+			}
 
-			List<Map<String, Object>> nestedFieldsList = new ArrayList<>(
-				Arrays.asList(field));
-
-			nestedFieldsList.addAll(_getNestedFields(field));
-
-			return nestedFieldsList.stream();
+			return nestedFields;
 		}
 
 		private boolean _isFieldSet(Map<String, Object> field) {

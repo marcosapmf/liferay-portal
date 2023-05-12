@@ -15,7 +15,7 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-6231. Discount lifecycle"
-	@priority = "3"
+	@priority = 5
 	test AddEditAndDeleteDiscountEntry {
 		property portal.acceptance = "true";
 		property test.name.skip.portal.instance = "CPCommerceDiscounts#AddEditAndDeleteDiscountEntry";
@@ -48,7 +48,7 @@ definition {
 
 		CommerceEntry.addNewDiscountsEntry(
 			channelsEligibility = "Minium Portal",
-			discountAmount = "25",
+			discountAmount = 25,
 			discountName = "Test Discount",
 			discountTarget = "Products",
 			discountType = "Percentage");
@@ -70,7 +70,7 @@ definition {
 		CommerceAcceleratorsInitializer.gotoMiniumProductDetailsPage(productName = "U-Joint");
 
 		CommerceAcceleratorsInitializer.viewDiscountedProductDetailsPage(
-			discountPercentage = "25",
+			discountPercentage = 25,
 			productDiscountedPrice = "18.00",
 			productListPrice = "24.00");
 
@@ -100,7 +100,7 @@ definition {
 
 		Type(
 			locator1 = "CommerceEntry#DISCOUNT_AMOUNT",
-			value1 = "10");
+			value1 = 10);
 
 		Button.clickPublish();
 
@@ -115,7 +115,7 @@ definition {
 		CommerceAcceleratorsInitializer.gotoMiniumProductDetailsPage(productName = "U-Joint");
 
 		CommerceAcceleratorsInitializer.viewDiscountedProductDetailsPage(
-			discountPercentage = "10",
+			discountPercentage = 10,
 			productDiscountedPrice = "21.60",
 			productListPrice = "24.00");
 
@@ -148,16 +148,16 @@ definition {
 
 	@description = "This is a test for COMMERCE-6232. Discount Rules lifecycle"
 	@ignore = "true"
-	@priority = "3"
+	@priority = 3
 	test AddEditAndRemoveDiscountRule {
-		property portal.acceptance = "false";
 
 		// TODO COMMERCE-6232 AddEditAndRemoveDiscountRule Pending Implementation
 
 	}
 
+	@priority = 5
 	test AssertDiscountIsAppliedToChannel {
-		property portal.acceptance = "false";
+		property portal.acceptance = "true";
 		property portal.upstream = "true";
 
 		CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
@@ -186,7 +186,7 @@ definition {
 
 		CommerceEntry.addNewDiscountsEntry(
 			channelsEligibility = "Minium Portal",
-			discountAmount = "25",
+			discountAmount = 25,
 			discountName = "Test Discount",
 			discountTarget = "Products",
 			discountType = "Percentage");
@@ -208,7 +208,7 @@ definition {
 		CommerceAcceleratorsInitializer.gotoMiniumProductDetailsPage(productName = "U-Joint");
 
 		CommerceAcceleratorsInitializer.viewDiscountedProductDetailsPage(
-			discountPercentage = "25",
+			discountPercentage = 25,
 			productDiscountedPrice = "18.00",
 			productListPrice = "24.00");
 
@@ -228,7 +228,7 @@ definition {
 	}
 
 	@description = "COMMERCE-9787 | Apply a discount with eligibility only to account groups that are eligible"
-	@priority = "4"
+	@priority = 5
 	test CanApplySpecificAccountGroupCouponCodeDiscount {
 		property custom.properties = "jsonws.web.service.paths.excludes=${line.separator}company.security.strangers.verify=false";
 		property portal.acceptance = "true";
@@ -283,8 +283,8 @@ definition {
 				active = "true",
 				couponCode = "FREESHIPPING",
 				level = "L1",
-				maximumDiscountAmount = "100",
-				percentageLevel1 = "100",
+				maximumDiscountAmount = 100,
+				percentageLevel1 = 100,
 				target = "shipping",
 				title = "Free Shipping Discount",
 				useCouponCode = "true",
@@ -315,7 +315,7 @@ definition {
 		task ("And a new order is created") {
 			FrontStore.addInitializerProductToCart(
 				productName = "U-Joint",
-				productQuantity = "1");
+				productQuantity = 1);
 		}
 
 		task ("Then the coupon code is successfully applied") {
@@ -330,7 +330,7 @@ definition {
 
 		task ("And on the Order Summary, the discount is shown applied to the shipping") {
 			CommerceCheckout.initializersCheckout(
-				deliveryDiscountPercentage = "100",
+				deliveryDiscountPercentage = 100,
 				deliveryDiscountValue = "15.00",
 				deliveryValue = "$ 15.00",
 				newAddressAddress = "Test Address",
@@ -339,8 +339,8 @@ definition {
 				newAddressName = "Address Name",
 				newAddressZipCode = "Test Zip Code",
 				productName = "U-Joint",
-				productQuantity = "1",
-				productUnitPrice = "24",
+				productQuantity = 1,
+				productUnitPrice = 24,
 				shippingMethod = "Standard");
 		}
 
@@ -353,7 +353,7 @@ definition {
 		task ("And a new order is created") {
 			FrontStore.addInitializerProductToCart(
 				productName = "U-Joint",
-				productQuantity = "1");
+				productQuantity = 1);
 		}
 
 		task ("Then an error is thrown when the coupon code is applied") {
@@ -365,8 +365,54 @@ definition {
 		}
 	}
 
+	@description = "This is a test for COMMERCE-10663. Single Approver workflow for Commerce Discounts is triggered once the user clicks on 'Submit for Workflow'"
+	@priority = 3
+	test CanAssertCommerceDiscountSingleApproverWorkflowIsApplied {
+		property portal.acceptance = "false";
+
+		task ("Given Single Approver workflow is set for Commerce Discount") {
+			Workflow.openWorkflowProcessBuilderConfiguration();
+
+			Workflow.configureWorkflow(
+				workflowDefinition = "Single Approver",
+				workflowResourceValue = "Commerce Discount");
+		}
+
+		task ("When a new discount is created") {
+			CommerceNavigator.gotoPortlet(
+				category = "Pricing",
+				portlet = "Discounts");
+
+			Click(locator1 = "Button#PLUS");
+
+			CommerceEntry.addNewDiscountsEntry(
+				discountName = "Test Discount",
+				discountTarget = "Products",
+				discountType = "Percentage",
+				publish = "false");
+		}
+
+		task ("Then the discount status is Draft") {
+			AssertElementPresent(
+				key_status = "Draft",
+				locator1 = "CommerceEntry#WORKFLOW_STATUS");
+		}
+
+		task ("When the user submits the discount for publication") {
+			Click(
+				key_text = "Submit for Workflow",
+				locator1 = "Button#ANY");
+		}
+
+		task ("Then status for the discount is changed to PENDING") {
+			AssertElementPresent(
+				key_status = "Pending",
+				locator1 = "CommerceEntry#WORKFLOW_STATUS");
+		}
+	}
+
 	@description = "COMMERCE-9789 | Apply coupon code discount to not eligible account group and assert the coupon is not applicable"
-	@priority = "4"
+	@priority = 5
 	test CanAssertNotEligibleAccountGroupCouponCodeDiscountNotApplied {
 		property custom.properties = "jsonws.web.service.paths.excludes=${line.separator}company.security.strangers.verify=false";
 		property portal.acceptance = "true";
@@ -392,7 +438,7 @@ definition {
 
 		task ("And 2 account groups are created") {
 			for (var accountGroupName : list "AG1,AG2") {
-				JSONAccountGroup.addAccountGroup(accountGroupName = "${accountGroupName}");
+				JSONAccountGroup.addAccountGroup(accountGroupName = ${accountGroupName});
 			}
 		}
 
@@ -413,8 +459,8 @@ definition {
 				active = "true",
 				couponCode = "FREESHIPPING",
 				level = "L1",
-				maximumDiscountAmount = "100",
-				percentageLevel1 = "100",
+				maximumDiscountAmount = 100,
+				percentageLevel1 = 100,
 				target = "shipping",
 				title = "Free Shipping Discount",
 				useCouponCode = "true",
@@ -445,7 +491,7 @@ definition {
 		task ("And a new order is created") {
 			FrontStore.addInitializerProductToCart(
 				productName = "U-Joint",
-				productQuantity = "1");
+				productQuantity = 1);
 		}
 
 		task ("Then an error is thrown when the coupon code is applied") {
@@ -457,8 +503,124 @@ definition {
 		}
 	}
 
+	@description = "This is a test case for COMMERCE-10819. User with Discount Manager role can access Discounts from Control Panel"
+	@priority = 3
+	test CanDiscountManagerAccessDiscountsPanel {
+		property custom.properties = "jsonws.web.service.paths.excludes=${line.separator}company.security.strangers.verify=false";
+		property portal.acceptance = "false";
+
+		task ("Given a Minium site") {
+			CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
+		}
+
+		task ("And a user with Discount Manager role is created") {
+			JSONUser.addUserWithRole(
+				roleTitle = "Discount Manager",
+				userEmailAddress = "discount.manager@liferay.com",
+				userFirstName = "Discount",
+				userLastName = "Manager",
+				userScreenName = "discount.manager");
+		}
+
+		task ("When Discount Manager logs in") {
+			User.logoutAndLoginPG(
+				userLoginEmailAddress = "discount.manager@liferay.com",
+				userLoginFullName = "Discount Manager");
+		}
+
+		task ("Then Discounts panel is shown") {
+			CommerceNavigator.gotoPortlet(
+				category = "Pricing",
+				portlet = "Discounts");
+
+			AssertTextEquals(
+				locator1 = "ControlMenu#HEADING",
+				value1 = "Discounts");
+		}
+	}
+
+	@description = "This is a test for COMMERCE-10053. An error message shows up when the eligibility element is already linked"
+	@priority = 3
+	test CannotSelectDiscountEligibilitiesTwice {
+		property portal.acceptance = "false";
+
+		task ("Given a Minium site is created") {
+			CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
+		}
+
+		task ("And a business account is created") {
+			JSONAccountEntry.addAccountEntry(
+				accountEntryName = "Commerce Account",
+				accountEntryType = "Business");
+		}
+
+		task ("And an order type is created") {
+			CommerceJSONOrdersAPI._addOrderType(
+				active = "true",
+				orderTypeName = "Order Type Test");
+		}
+
+		task ("And a discount is created") {
+			CommerceJSONDiscountsAPI._addDiscount(
+				active = "true",
+				level = "L1",
+				percentageLevel1 = 20,
+				target = "products",
+				title = "Test Discount",
+				usePercentage = "true");
+		}
+
+		task ("When the admin navigates to the discount's entry") {
+			ApplicationsMenu.gotoPortlet(
+				category = "Pricing",
+				panel = "Commerce",
+				portlet = "Discounts");
+
+			CommerceNavigator.gotoEntry(entryName = "Test Discount");
+		}
+
+		task ("And sets the eligibilities for the discount") {
+			Navigator.gotoNavTab(navTab = "Eligibility");
+
+			CommerceEntry.setEntryEligibility(
+				accountsEligibility = "Commerce Account",
+				channelsEligibility = "Minium Portal",
+				orderTypesEligibility = "Order Type Test");
+		}
+
+		task ("And sets again the same eligibility for channel") {
+			CommerceEntry.setEntryEligibility(
+				channelsEligibility = "Minium Portal",
+				unpublish = "true");
+		}
+
+		task ("Then an error message shows up") {
+			Alert.viewErrorMessage(errorMessage = "The channel relation already exists.");
+		}
+
+		task ("When the admin sets again the same eligibility for account") {
+			CommerceEntry.setEntryEligibility(
+				accountsEligibility = "Commerce Account",
+				unpublish = "true");
+		}
+
+		task ("Then an error message shows up") {
+			Alert.viewErrorMessage(errorMessage = "The account relation already exists.");
+		}
+
+		task ("When the admin sets again the same eligibility for order type") {
+			CommerceEntry.setEntryEligibility(
+				orderTypesEligibility = "Order Type Test",
+				unpublish = "true");
+		}
+
+		task ("Then an error message shows up") {
+			Alert.viewErrorMessage(errorMessage = "The order type relation already exists.");
+		}
+	}
+
 	@description = "This is a test for COMMERCE-9592."
-	@priority = "3"
+	@priority = 5
 	test CanViewErrorNotificationWhenApplyingCouponCodeToWrongProduct {
 		property custom.properties = "jsonws.web.service.paths.excludes=${line.separator}company.security.strangers.verify=false";
 		property portal.acceptance = "true";
@@ -488,7 +650,7 @@ definition {
 			Click(locator1 = "Button#PLUS");
 
 			CommerceEntry.addNewDiscountsEntry(
-				discountAmount = "10",
+				discountAmount = 10,
 				discountName = "Test Discount",
 				discountTarget = "Products",
 				discountType = "Percentage");
@@ -533,7 +695,7 @@ definition {
 
 			FrontStore.addInitializerProductToCart(
 				productName = "ABS Sensor",
-				productQuantity = "1");
+				productQuantity = 1);
 		}
 
 		task ("And the buyer navigates to checkout, applying the coupon code") {
@@ -581,7 +743,7 @@ definition {
 
 			FrontStore.addInitializerProductToCart(
 				productName = "U-Joint",
-				productQuantity = "1");
+				productQuantity = 1);
 		}
 
 		task ("And applies the same coupon code") {
@@ -628,11 +790,11 @@ definition {
 		Click(locator1 = "Button#PLUS");
 
 		CommerceEntry.addNewDiscountsEntry(
-			discountAmount = "15",
+			discountAmount = 15,
 			discountName = "Test Discount",
 			discountTarget = "Products",
 			discountType = "Percentage",
-			maximumDiscountAmount = "10");
+			maximumDiscountAmount = 10);
 
 		CommerceEntry.gotoMenuTab(menuTab = "Eligibility");
 
@@ -656,7 +818,7 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-6230. Discount coupon code limitations"
-	@priority = "3"
+	@priority = 3
 	test LimitCouponCodeUsability {
 		property portal.acceptance = "false";
 
@@ -685,7 +847,7 @@ definition {
 		Click(locator1 = "Button#PLUS");
 
 		CommerceEntry.addNewDiscountsEntry(
-			discountAmount = "10",
+			discountAmount = 10,
 			discountName = "Test Discount",
 			discountTarget = "Products",
 			discountType = "Percentage");
@@ -706,12 +868,12 @@ definition {
 		Type(
 			key_fieldLabel = "Maximum Total Uses",
 			locator1 = "TextInput#GENERIC_TEXT_INPUT",
-			value1 = "2");
+			value1 = 2);
 
 		Type(
 			key_fieldLabel = "Maximum Uses Per Account",
 			locator1 = "TextInput#GENERIC_TEXT_INPUT",
-			value1 = "1");
+			value1 = 1);
 
 		Button.clickPublish();
 
@@ -719,22 +881,11 @@ definition {
 
 		FrontStore.addInitializerProductToCart(
 			productName = "U-Joint",
-			productQuantity = "1");
+			productQuantity = 1);
 
 		CommerceCheckout.gotoCheckout();
 
-		Click(locator1 = "Icon#PLUS");
-
-		Type(
-			key_text = "Search",
-			locator1 = "TextInput#ANY",
-			value1 = "Coupon Code Entry");
-
-		MouseOver(
-			categoryName = "Coupon Code Entry",
-			locator1 = "ContentDashboard#CATEGORY_NAME_ELEMENT");
-
-		Click(locator1 = "Button#PLUS");
+		CommerceAcceleratorsInitializer.addPortlet(portletName = "Coupon Code Entry");
 
 		Type(
 			locator1 = "TextInput#DISCOUNT",
@@ -801,7 +952,7 @@ definition {
 
 		FrontStore.addInitializerProductToCart(
 			productName = "U-Joint",
-			productQuantity = "1");
+			productQuantity = 1);
 
 		CommerceCheckout.gotoCheckout();
 
@@ -870,7 +1021,7 @@ definition {
 
 		FrontStore.addInitializerProductToCart(
 			productName = "U-Joint",
-			productQuantity = "1");
+			productQuantity = 1);
 
 		CommerceCheckout.gotoCheckout();
 
@@ -888,9 +1039,9 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-6229. Discount coupon code validators"
-	@priority = "3"
+	@priority = 5
 	test ViewCouponCodeNotAppliedToNotQualifiedAccount {
-		property portal.acceptance = "false";
+		property portal.acceptance = "true";
 
 		// TODO Review
 
@@ -913,7 +1064,7 @@ definition {
 		Click(locator1 = "Button#PLUS");
 
 		CommerceEntry.addNewDiscountsEntry(
-			discountAmount = "10",
+			discountAmount = 10,
 			discountName = "Test Discount",
 			discountTarget = "Total",
 			discountType = "Percentage");
@@ -955,24 +1106,13 @@ definition {
 
 		FrontStore.addInitializerProductToCart(
 			productName = "U-Joint",
-			productQuantity = "1");
+			productQuantity = 1);
 
 		CommerceNavigator.gotoMiniCart();
 
 		Button.click(button = "Submit");
 
-		Click(locator1 = "Icon#PLUS");
-
-		Type(
-			key_text = "Search",
-			locator1 = "TextInput#ANY",
-			value1 = "Coupon Code Entry");
-
-		Click(
-			categoryName = "Coupon Code Entry",
-			locator1 = "ContentDashboard#CATEGORY_NAME_ELEMENT");
-
-		Click(locator1 = "Button#PLUS");
+		CommerceAcceleratorsInitializer.addPortlet(portletName = "Coupon Code Entry");
 
 		Type(
 			key_titleName = "Coupon Code",
@@ -993,7 +1133,7 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-6233. Discount expiration"
-	@priority = "3"
+	@priority = 3
 	test ViewExpiredDiscountEntry {
 		property portal.acceptance = "false";
 		property test.name.skip.portal.instance = "CPCommerceDiscounts#ViewExpiredDiscountEntry";
@@ -1016,7 +1156,7 @@ definition {
 		Type(
 			key_text = "Check Interval",
 			locator1 = "TextInput#ANY",
-			value1 = "1");
+			value1 = 1);
 
 		Button.clickSave();
 
@@ -1036,17 +1176,17 @@ definition {
 
 		var timeString = selenium.getElementValue("TextInput#EXPIRATION_DATE_TIME");
 
-		var ampm = RegexUtil.replace("${timeString}", "([0-9]*):([0-9]*) ([A-Z]*)", "3");
-		var hours = RegexUtil.replace("${timeString}", "([0-9]*):([0-9]*) ([A-Z]*)", "1");
-		var minutes = RegexUtil.replace("${timeString}", "([0-9]*):([0-9]*) ([A-Z]*)", "2");
+		var ampm = RegexUtil.replace(${timeString}, "([0-9]*):([0-9]*) ([A-Z]*)", 3);
+		var hours = RegexUtil.replace(${timeString}, "([0-9]*):([0-9]*) ([A-Z]*)", 1);
+		var minutes = RegexUtil.replace(${timeString}, "([0-9]*):([0-9]*) ([A-Z]*)", 2);
 
-		if ("${minutes}" == "58") {
-			var minutes = "00";
+		if (${minutes} == 58) {
+			var minutes = 00;
 
-			if ("${hours}" == "12") {
-				var hours = "01";
+			if (${hours} == 12) {
+				var hours = 01;
 
-				if ("${ampm}" == "PM") {
+				if (${ampm} == "PM") {
 					var ampm = "AM";
 				}
 				else {
@@ -1057,13 +1197,13 @@ definition {
 				var hours = ${hours} + 1;
 			}
 		}
-		else if ("${minutes}" == "59") {
-			var minutes = "01";
+		else if (${minutes} == 59) {
+			var minutes = 01;
 
-			if ("${hours}" == "12") {
-				var hours = "01";
+			if (${hours} == 12) {
+				var hours = 01;
 
-				if ("${ampm}" == "PM") {
+				if (${ampm} == "PM") {
 					var ampm = "AM";
 				}
 				else {
@@ -1093,7 +1233,7 @@ definition {
 
 			// We need this pause for waiting for the Discount to expire
 
-			Pause(locator1 = "7000");
+			Pause(locator1 = 7000);
 
 			Refresh();
 		}

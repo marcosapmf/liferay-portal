@@ -19,7 +19,7 @@ import com.liferay.portal.kernel.model.Release;
 import com.liferay.portal.kernel.service.ReleaseLocalService;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
-import com.liferay.portal.kernel.upgrade.DummyUpgradeStep;
+import com.liferay.portal.kernel.upgrade.UpgradeProcess;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.upgrade.registry.UpgradeStepRegistrator;
@@ -61,6 +61,8 @@ public class AutoUpgradeProcessTest {
 			PropsValues.class, "UPGRADE_DATABASE_AUTO_RUN",
 			_originalUpgradeDatabaseAutoRun);
 
+		_upgradeProcessRun = false;
+
 		if (_serviceRegistration != null) {
 			_serviceRegistration.unregister();
 		}
@@ -74,28 +76,68 @@ public class AutoUpgradeProcessTest {
 	}
 
 	@Test
-	public void testNewUpgradeProcessWhenAutoUpgradeDisabled()
+	public void testInitializationWhenAutoUpgradeDisabled() throws Exception {
+		ReflectionTestUtil.setFieldValue(
+			PropsValues.class, "UPGRADE_DATABASE_AUTO_RUN", false);
+
+		Assert.assertEquals(
+			"2.0.0", _registerNewUpgradeProcess().getSchemaVersion());
+
+		Assert.assertFalse(_upgradeProcessRun);
+	}
+
+	@Test
+	public void testNoninitializationWhenAutoUpgradeDisabledAndPortalNotUpgraded()
 		throws Exception {
+
+		Object upgradeStepRegistratorTracker = ReflectionTestUtil.getFieldValue(
+			_upgradeExecutor, "_upgradeStepRegistratorTracker");
+
+		boolean originalPortalUpgraded = ReflectionTestUtil.getAndSetFieldValue(
+			upgradeStepRegistratorTracker, "_portalUpgraded", false);
+
+		try {
+			ReflectionTestUtil.setFieldValue(
+				PropsValues.class, "UPGRADE_DATABASE_AUTO_RUN", false);
+
+			Assert.assertNull(_registerNewUpgradeProcess());
+		}
+		finally {
+			ReflectionTestUtil.setFieldValue(
+				upgradeStepRegistratorTracker, "_portalUpgraded",
+				originalPortalUpgraded);
+		}
+	}
+
+	@Test
+	public void testNonupgradeProcessWhenAutoUpgradeDisabled()
+		throws Exception {
+
+		_releaseLocalService.addRelease(_SERVLET_CONTEXT_NAME, "1.0.0");
 
 		ReflectionTestUtil.setFieldValue(
 			PropsValues.class, "UPGRADE_DATABASE_AUTO_RUN", false);
 
 		Assert.assertEquals(
 			"1.0.0", _registerNewUpgradeProcess().getSchemaVersion());
+
+		Assert.assertFalse(_upgradeProcessRun);
 	}
 
 	@Test
-	public void testNewUpgradeProcessWhenAutoUpgradeEnabled() throws Exception {
+	public void testUpgradeProcessWhenAutoUpgradeEnabled() throws Exception {
+		_releaseLocalService.addRelease(_SERVLET_CONTEXT_NAME, "1.0.0");
+
 		ReflectionTestUtil.setFieldValue(
 			PropsValues.class, "UPGRADE_DATABASE_AUTO_RUN", true);
 
 		Assert.assertEquals(
 			"2.0.0", _registerNewUpgradeProcess().getSchemaVersion());
+
+		Assert.assertTrue(_upgradeProcessRun);
 	}
 
 	private Release _registerNewUpgradeProcess() throws Exception {
-		_releaseLocalService.addRelease(_SERVLET_CONTEXT_NAME, "1.0.0");
-
 		Bundle bundle = FrameworkUtil.getBundle(AutoUpgradeProcessTest.class);
 
 		BundleContext bundleContext = bundle.getBundleContext();
@@ -115,7 +157,15 @@ public class AutoUpgradeProcessTest {
 	@Inject
 	private static ReleaseLocalService _releaseLocalService;
 
+	private static boolean _upgradeProcessRun;
+
 	private ServiceRegistration<UpgradeStepRegistrator> _serviceRegistration;
+
+	@Inject(
+		filter = "component.name=com.liferay.portal.upgrade.internal.executor.UpgradeExecutor",
+		type = Inject.NoType.class
+	)
+	private Object _upgradeExecutor;
 
 	private static class TestUpgradeStepRegistrator
 		implements UpgradeStepRegistrator {
@@ -124,7 +174,16 @@ public class AutoUpgradeProcessTest {
 		public void register(Registry registry) {
 			registry.registerInitialization();
 
-			registry.register("1.0.0", "2.0.0", new DummyUpgradeStep());
+			registry.register(
+				"1.0.0", "2.0.0",
+				new UpgradeProcess() {
+
+					@Override
+					protected void doUpgrade() throws Exception {
+						_upgradeProcessRun = true;
+					}
+
+				});
 		}
 
 	}

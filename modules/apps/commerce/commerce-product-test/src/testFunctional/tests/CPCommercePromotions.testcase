@@ -15,7 +15,7 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-8569. Verify multiple Price Entries can be set in the same Promotion for the same SKU"
-	@priority = "3"
+	@priority = 5
 	test AllowMultiplePriceEntriesInTheSamePromotion {
 		property custom.properties = "jsonws.web.service.paths.excludes=${line.separator}company.security.strangers.verify=false";
 		property osgi.module.configuration.file.names = "com.liferay.commerce.price.list.configuration.CommercePriceEntryConfiguration.config";
@@ -57,7 +57,7 @@ definition {
 			CommerceEntry.gotoMenuTab(menuTab = "Entries");
 
 			CommerceJSONPriceListsAndPromotionsAPI._addPromotionEntry(
-				entryPrice = "20",
+				entryPrice = 20,
 				productSKU = "MIN55861",
 				promotionName = "Test Promotion");
 
@@ -67,26 +67,26 @@ definition {
 
 			SelectFrame.selectFrameNoLoading(locator1 = "CommerceEntry#IFRAME_SIDE_PANEL");
 
-			CommerceEntry.setExpirationTime(minutesToExpire = "2");
+			CommerceEntry.setExpirationTime(minutesToExpire = 2);
 
 			Button.clickSave();
 		}
 
 		task ("And given a Test Promotion entry for U-Joint that is set to publish in 3 minutes") {
 			CommerceJSONPriceListsAndPromotionsAPI._addPromotionEntry(
-				entryPrice = "10",
+				entryPrice = 10,
 				productSKU = "MIN55861",
 				promotionName = "Test Promotion");
 
 			Refresh();
 
 			Click(
-				key_rowNumber = "2",
+				key_rowNumber = 2,
 				locator1 = "CommerceNavigation#ENTRY_NAME_N");
 
 			SelectFrame.selectFrameNoLoading(locator1 = "CommerceEntry#IFRAME_SIDE_PANEL");
 
-			CommerceEntry.setPublishTime(minutesToPublish = "3");
+			CommerceEntry.setPublishTime(minutesToPublish = 3);
 
 			Button.clickSave();
 		}
@@ -114,7 +114,7 @@ definition {
 
 				// We need this pause for waiting for the first Promo Price to expire
 
-				Pause(locator1 = "5000");
+				Pause(locator1 = 5000);
 
 				Refresh();
 			}
@@ -132,7 +132,7 @@ definition {
 
 				// We need this pause for waiting for the Promo Price to expire
 
-				Pause(locator1 = "5000");
+				Pause(locator1 = 5000);
 
 				Refresh();
 			}
@@ -143,6 +143,80 @@ definition {
 				basePrice = "24.00",
 				productName = "U-Joint",
 				promoPrice = "10.00");
+		}
+	}
+
+	@description = "This is a test for COMMERCE-10053. An error message shows up when the eligibility element is already linked"
+	@priority = 3
+	test CannotSelectPromotionEligibilitiesTwice {
+		property portal.acceptance = "false";
+
+		task ("Given a Minium site is created") {
+			CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
+		}
+
+		task ("And a business account is created") {
+			JSONAccountEntry.addAccountEntry(
+				accountEntryName = "Commerce Account",
+				accountEntryType = "Business");
+		}
+
+		task ("And an order type is created") {
+			CommerceJSONOrdersAPI._addOrderType(
+				active = "true",
+				orderTypeName = "Order Type Test");
+		}
+
+		task ("And a promotion is created") {
+			CommerceJSONPriceListsAndPromotionsAPI._addPromotion(
+				catalogName = "Minium",
+				currencyCode = "USD",
+				promotionName = "Test Promotion");
+		}
+
+		task ("When the admin navigates to the promotion's entry") {
+			CommercePromotions.openPromotionsAdmin();
+
+			CommerceNavigator.gotoEntry(entryName = "Test Promotion");
+		}
+
+		task ("And sets the eligibilities for the promotion") {
+			CommerceEntry.gotoMenuTab(menuTab = "Eligibility");
+
+			CommerceEntry.setEntryEligibility(
+				accountsEligibility = "Commerce Account",
+				channelsEligibility = "Minium Portal",
+				orderTypesEligibility = "Order Type Test");
+		}
+
+		task ("And sets again the same eligibility for channel") {
+			CommerceEntry.setEntryEligibility(
+				channelsEligibility = "Minium Portal",
+				unpublish = "true");
+		}
+
+		task ("Then an error message shows up") {
+			Alert.viewErrorMessage(errorMessage = "The channel relation already exists.");
+		}
+
+		task ("When the admin sets again the same eligibility for account") {
+			CommerceEntry.setEntryEligibility(
+				accountsEligibility = "Commerce Account",
+				unpublish = "true");
+		}
+
+		task ("Then an error message shows up") {
+			Alert.viewErrorMessage(errorMessage = "The account relation already exists.");
+		}
+
+		task ("When the admin sets again the same eligibility for order type") {
+			CommerceEntry.setEntryEligibility(
+				orderTypesEligibility = "Order Type Test",
+				unpublish = "true");
+		}
+
+		task ("Then an error message shows up") {
+			Alert.viewErrorMessage(errorMessage = "The order type relation already exists.");
 		}
 	}
 

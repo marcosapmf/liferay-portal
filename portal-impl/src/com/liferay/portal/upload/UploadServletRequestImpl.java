@@ -21,7 +21,7 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.upload.FileItem;
 import com.liferay.portal.kernel.upload.UploadException;
 import com.liferay.portal.kernel.upload.UploadServletRequest;
-import com.liferay.portal.kernel.upload.UploadServletRequestConfigurationHelperUtil;
+import com.liferay.portal.kernel.upload.configuration.UploadServletRequestConfigurationProviderUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
@@ -60,12 +60,12 @@ public class UploadServletRequestImpl
 	extends HttpServletRequestWrapper implements UploadServletRequest {
 
 	public UploadServletRequestImpl(HttpServletRequest httpServletRequest) {
-		this(httpServletRequest, 0, null, 0, 0);
+		this(httpServletRequest, 0, null);
 	}
 
 	public UploadServletRequestImpl(
 		HttpServletRequest httpServletRequest, int fileSizeThreshold,
-		String location, long maxRequestSize, long maxFileSize) {
+		String location) {
 
 		super(httpServletRequest);
 
@@ -83,23 +83,14 @@ public class UploadServletRequestImpl
 				httpServletRequest);
 
 			long uploadServletRequestImplMaxSize =
-				UploadServletRequestConfigurationHelperUtil.getMaxSize();
-
-			if (maxRequestSize <= 0) {
-				maxRequestSize = uploadServletRequestImplMaxSize;
-			}
-
-			if (maxFileSize <= 0) {
-				maxFileSize = uploadServletRequestImplMaxSize;
-			}
+				UploadServletRequestConfigurationProviderUtil.getMaxSize();
 
 			location = GetterUtil.getString(
 				location,
-				UploadServletRequestConfigurationHelperUtil.getTempDir());
+				UploadServletRequestConfigurationProviderUtil.getTempDir());
 
 			List<FileItem> fileItemsList = _servletFileUpload.parseRequest(
-				liferayServletRequest, maxRequestSize, maxFileSize, location,
-				fileSizeThreshold);
+				liferayServletRequest, location, fileSizeThreshold);
 
 			liferayServletRequest.setFinishedReadingOriginalStream(true);
 

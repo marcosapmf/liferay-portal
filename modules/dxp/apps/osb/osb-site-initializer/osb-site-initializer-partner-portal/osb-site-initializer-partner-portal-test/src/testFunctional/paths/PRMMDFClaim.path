@@ -1,0 +1,66 @@
+<html>
+<head>
+<title>PRMMDFClaim</title>
+</head>
+
+<body>
+<table border="1" cellpadding="1" cellspacing="1">
+<thead>
+<tr><td rowspan="1" colspan="3">PRMMDFClaim</td></tr>
+</thead>
+
+<tbody>
+<tr>
+	<td>UPLOAD_FIELD</td>
+	<td>//input[@name='${key_fieldName}']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>CLAIM_ID_INDEX</td>
+	<td>xpath=(//tbody//th//*[contains(.,'Request-')])[${key_index}]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>CLAIM_ID_DETAIL_PAGE_INDEX</td>
+	<td>xpath=(//div[contains(@class,'claims-list')]//div[contains(text(),'Claim ')])[${key_index}]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>EDIT_BUTTON</td>
+	<td>//div[contains(@class,'edit-button-mdf-claim')]//a[@id='edit-button-manager'] | //div[contains(@class,'edit-button-mdf-claim')]//a[@id='edit-button-user']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>CLAIM_TYPE</td>
+	<td>//div[contains(@class,'claims-list')]//div[contains(text(),'Type: ')][contains(.,'${key_claimType}')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>VIEW_CLAIM_BUTTON</td>
+	<td>//div[contains(@class,'claims-list')]//div[contains(text(),'Claim ')][contains(.,'${key_claimId}')]//following-sibling::div/*[contains(text(),'View')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>CHECKBOX_OPTIONS</td>
+	<td>//div[contains(@class,'show')]//label[contains(.,'${checkboxName}')]//input[@type='checkbox']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>APPLY_BUTTON</td>
+	<td>//div[contains(@class,'drilldown-current')]//button[contains(@class,'btn-sm btn-primary') and contains(text(),'Apply')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>ACTIVITY_NAME</td>
+	<td>//*[text()='${key_activityName}']//ancestor::button[contains(@data-target,'mdfClaimActivitiesPanel')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>ATTACHMENT_NAME</td>
+	<td>//button[contains(@data-target,'mdfClaimActivitiesPanel')]//*[text()='Activity Name']//following::div[contains(@id,'mdfClaimActivitiesPanel')]//table//*[text()='Budget Breakdown']//following::div/*[text()='${key_attachmentName}']</td>
+	<td></td>
+</tr>
+</tbody>
+</table>
+</body>
+</html>

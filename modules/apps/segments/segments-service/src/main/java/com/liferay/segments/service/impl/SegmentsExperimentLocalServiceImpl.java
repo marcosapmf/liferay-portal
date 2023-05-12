@@ -65,7 +65,6 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Stream;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -435,10 +434,9 @@ public class SegmentsExperimentLocalServiceImpl
 		SegmentsExperience variantSegmentsExperience) {
 
 		SegmentsExperience segmentsExperience =
-			_segmentsExperiencePersistence.fetchByG_C_C_Last(
+			_segmentsExperiencePersistence.fetchByG_P_Last(
 				controlSegmentsExperience.getGroupId(),
-				controlSegmentsExperience.getClassNameId(),
-				controlSegmentsExperience.getClassPK(), null);
+				controlSegmentsExperience.getPlid(), null);
 
 		int controlSegmentsExperiencePriority =
 			controlSegmentsExperience.getPriority();
@@ -654,17 +652,17 @@ public class SegmentsExperimentLocalServiceImpl
 	private void _validateSplit(Map<Long, Double> segmentsExperienceIdSplitMap)
 		throws PortalException {
 
+		double segmentsExperienceIdSplitsSum = 0;
+
 		Collection<Double> segmentsExperienceIdSplitsValues =
 			segmentsExperienceIdSplitMap.values();
 
-		Stream<Double> segmentsExperienceIdSplitsStream =
-			segmentsExperienceIdSplitsValues.stream();
+		for (Double segmentsExperienceIdSplitsValue :
+				segmentsExperienceIdSplitsValues) {
 
-		double segmentsExperienceIdSplitsSum =
-			segmentsExperienceIdSplitsStream.mapToDouble(
-				segmentsExperienceIdSplit -> BigDecimalUtil.scale(
-					segmentsExperienceIdSplit, 2, RoundingMode.HALF_DOWN)
-			).sum();
+			segmentsExperienceIdSplitsSum += BigDecimalUtil.scale(
+				segmentsExperienceIdSplitsValue, 2, RoundingMode.HALF_DOWN);
+		}
 
 		if (segmentsExperienceIdSplitsSum != 1) {
 			throw new SegmentsExperimentRelSplitException(

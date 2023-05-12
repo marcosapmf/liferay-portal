@@ -26,6 +26,7 @@ CQLKeywordCheck | .cql | Checks that Cassandra keywords are upper case. |
 [CompanyIterationCheck](check/company_iteration_check.markdown#companyiterationcheck) | .java, .jsp, .jspf, .jspx, .tag, .tpl or .vm | Checks that `CompanyLocalService.forEachCompany` or `CompanyLocalService.forEachCompanyId` is used when iterating over companies |
 CompatClassImportsCheck | .java, .jsp, .jspf, .jspx, .tag, .tpl or .vm | Checks that classes are imported from `compat` modules, when possible. |
 ComponentAnnotationCheck | .java | Performs several checks on classes with @Component annotation. |
+[ComponentExposureCheck](check/component_exposure_check.markdown#componentexposurecheck) | .java | Avoid exposing static component. |
 ConsumerTypeAnnotationCheck | .java | Performs several checks on classes with @ConsumerType annotation. |
 DTOEnumCreationCheck | .java | Checks the creation of DTO enum. |
 DeprecatedAPICheck | .java | Finds calls to deprecated classes, constructors, fields or methods. |
@@ -45,15 +46,16 @@ GradleProvidedDependenciesCheck | .gradle | Validates the scope of dependencies 
 [GradleRequiredDependenciesCheck](check/gradle_required_dependencies_check.markdown#gradlerequireddependenciescheck) | .gradle | Validates the dependencies in `/required-dependencies/required-dependencies/build.gradle`. |
 GradleTestDependencyVersionCheck | .gradle | Checks the version for dependencies in gradle build files. |
 IllegalImportsCheck | .java, .jsp, .jspf, .jspx, .tag, .tpl or .vm | Finds cases of incorrect use of certain classes. |
+IllegalTaglibsCheck | .ftl, .jsp, .jspf, .jspx, .tag, .tpl or .vm | Finds cases of incorrect use of certain taglibs. |
 [IncorrectFileLocationCheck](check/incorrect_file_location_check.markdown#incorrectfilelocationcheck) | | Checks that `/src/*/java/` only contains `.java` files. |
 IncorrectFilePathCheck | | Checks that file path contains illegal characters. |
 JSCompatibilityCheck | | Checks for JavaScript compatibility. |
 [JSLodashDependencyCheck](check/js_lodash_dependency_check.markdown#jslodashdependencycheck) | .js or .jsx | Finds incorrect use of `AUI._`. |
-[JSONDeprecatedPackagesCheck](check/json_deprecated_packages_check.markdown#jsondeprecatedpackagescheck) | .ipynb, .json, .jsont or .npmbridgerc | Finds incorrect use of deprecated packages in `package.json` files. |
-JSONPackageJSONBNDVersionCheck | .ipynb, .json, .jsont or .npmbridgerc | Checks the version for dependencies in `package.json` files. |
-JSONPackageJSONCheck | .ipynb, .json, .jsont or .npmbridgerc | Checks content of `package.json` files. |
-JSONPackageJSONDependencyVersionCheck | .ipynb, .json, .jsont or .npmbridgerc | Checks the version for dependencies in `package.json` files. |
-[JSONValidationCheck](check/json_validation_check.markdown#jsonvalidationcheck) | .ipynb, .json, .jsont or .npmbridgerc | Validates content of `.json` files. |
+[JSONDeprecatedPackagesCheck](check/json_deprecated_packages_check.markdown#jsondeprecatedpackagescheck) | .ipynb, .json or .npmbridgerc | Finds incorrect use of deprecated packages in `package.json` files. |
+JSONPackageJSONBNDVersionCheck | .ipynb, .json or .npmbridgerc | Checks the version for dependencies in `package.json` files. |
+JSONPackageJSONCheck | .ipynb, .json or .npmbridgerc | Checks content of `package.json` files. |
+JSONPackageJSONDependencyVersionCheck | .ipynb, .json or .npmbridgerc | Checks the version for dependencies in `package.json` files. |
+[JSONValidationCheck](check/json_validation_check.markdown#jsonvalidationcheck) | .ipynb, .json or .npmbridgerc | Validates content of `.json` files. |
 [JSPArrowFunctionCheck](check/jsp_arrow_function_check.markdown#jsparrowfunctioncheck) | .jsp, .jspf, .jspx, .tag, .tpl or .vm | Checks that there are no array functions. |
 JSPGetStaticResourceURLCheck | .jsp, .jspf, .jspx, .tag, .tpl or .vm | Checks calls to `PortalUtil.getStaticResourceURL` and `getContextPath` without `getPathProxy`. |
 [JSPIllegalSyntaxCheck](check/jsp_illegal_syntax_check.markdown#jspillegalsyntaxcheck) | .jsp, .jspf, .jspx, .tag, .tpl or .vm | Finds incorrect use of `System.out.print`, `console.log` or `debugger.*` in `.jsp` files. |
@@ -82,6 +84,7 @@ JavaComponentAnnotationsCheck | .java | Performs several checks on classes with 
 JavaDeprecatedKernelClassesCheck | .java | Finds calls to deprecated classes `com.liferay.portal.kernel.util.CharPool` and `com.liferay.portal.kernel.util.StringPool`. |
 [JavaFinderCacheCheck](check/java_finder_cache_check.markdown#javafindercachecheck) | .java | Checks that the method `BasePersistenceImpl.fetchByPrimaryKey` is overridden, when using `FinderPath`. |
 JavaFinderImplCustomSQLCheck | .java | Checks that hardcoded SQL values in `*FinderImpl` classes match the SQL in the `.xml` file in the `custom-sql` directory. |
+JavaGetFeatureFlagCheck | .java | Checks that `FeatureFlagManagerUtil.isEnabled` should be used (instead of `PropsUtil.get` in `GetterUtil.getBoolean`). |
 JavaIgnoreAnnotationCheck | .java | Finds methods with `@Ignore` annotation in test classes. |
 [JavaIndexableCheck](check/java_indexable_check.markdown#javaindexablecheck) | .java | Checks that the type gets returned when using annotation `@Indexable`. |
 JavaInterfaceCheck | .java | Checks that `interface` is not `static`. |
@@ -96,18 +99,21 @@ JavaMissingOverrideCheck | .java | Finds missing @Override annotations. |
 JavaMissingXMLPublicIdsCheck | .java | Finds missing public IDs for check XML files. |
 JavaModifiedServiceMethodCheck | .java | Finds missing empty lines before `removedService` or `addingService` calls. |
 JavaModuleClassGetResourceCallCheck | .java | Checks that dependencies files are located in the correct directory. |
-[JavaModuleComponentCheck](check/java_module_component_check.markdown#javamodulecomponentcheck) | .java | Checks for use of `@Component` in `-api` or `-spi` modules. |
+[JavaModuleComponentCheck](check/java_module_component_check.markdown#javamodulecomponentcheck) | .java | Performs several checks on classes with or without `@Component` annotation. |
 [JavaModuleExposureCheck](check/java_module_exposure_check.markdown#javamoduleexposurecheck) | .java | Checks for exposure of `SPI` types in `API`. |
 JavaModuleIllegalImportsCheck | .java | Finds cases of incorrect use of certain classes in modules. |
 JavaModuleInternalImportsCheck | .java | Finds cases where a module imports an `internal` class from another class. |
 JavaModuleJavaxPortletInitParamTemplatePathCheck | .java | Validates the value of `javax.portlet.init-param.template-path`. |
 JavaModuleServiceReferenceCheck | .java | Finds cases where `@BeanReference` annotation should be used instead of `@ServiceReference` annotation. |
 [JavaModuleTestCheck](check/java_module_test_check.markdown#javamoduletestcheck) | .java | Checks package names in tests. |
+JavaModuleUniqueVerifyProcessCheck | .java | Checks that a module can not have more than 1 verify process class (class extends VerifyProcess). |
+JavaNewProblemInstantiationParametersCheck | .java | Finds cases where `new Problem` can be simplified. |
 [JavaOSGiReferenceCheck](check/java_osgi_reference_check.markdown#javaosgireferencecheck) | .java | Performs several checks on classes with `@Component` annotation. |
 [JavaPackagePathCheck](check/java_package_path_check.markdown#javapackagepathcheck) | .java | Checks that the package name matches the file location. |
 [JavaProcessCallableCheck](check/java_process_callable_check.markdown#javaprocesscallablecheck) | .java | Checks that a class implementing `ProcessCallable` assigns a `serialVersionUID`. |
 JavaProviderTypeAnnotationCheck | .java | Performs several checks on classes with `@ProviderType` annotation. |
 JavaRedundantConstructorCheck | .java | Finds unnecessary empty constructor. |
+JavaReferenceAnnotationsCheck | .java | Performs several checks on classes with `@Reference` annotations. |
 JavaReleaseInfoCheck | .java | Validates information in `ReleaseInfo.java`. |
 [JavaResultSetCheck](check/java_result_set_check.markdown#javaresultsetcheck) | .java | Checks for correct use `java.sql.ResultSet.getInt(int)`. |
 [JavaSeeAnnotationCheck](check/java_see_annotation_check.markdown#javaseeannotationcheck) | .java | Checks for nested annotations inside `@see`. |
@@ -135,6 +141,7 @@ JavaVerifyUpgradeConnectionCheck | .java | Finds cases where `DataAccess.getConn
 LFRBuildContentCheck | .lfrbuild-* | Finds `.lfrbuild*` files that are not empty. |
 LPS42924Check | .java | Finds cases where `PortalUtil.getClassName*` (instead of calling `classNameLocalService` directly). |
 LanguageKeysCheck | .java, .js or .jsx | Finds missing language keys in `Language.properties`. |
+LibraryVulnerabilitiesCheck | .gradle, .gradle, .gradle, .gradle, .json, .json, .properties, .properties, .xml or .xml | Checks the introduction of libraries and third party components with known vulnerabilities |
 LocaleUtilCheck | .java, .jsp, .jspf, .jspx, .tag, .tpl or .vm | Finds cases where `com.liferay.portal.kernel.util.LocaleUtil` should be used (instead of `java.util.Locale`). |
 LogParametersCheck | .java, .jsp, .jspf, .jspx, .tag, .tpl or .vm | Validates the values of parameters passed to `_log.*` calls. |
 [MissingDeprecatedCheck](https://checkstyle.sourceforge.io/config_annotation.html#MissingDeprecated) | .java | Verifies that the annotation @Deprecated and the Javadoc tag @deprecated are both present when either of them is present. |
@@ -167,8 +174,10 @@ ReferenceAnnotationCheck | .java | Performs several checks on classes with @Refe
 [RequireThisCheck](https://checkstyle.sourceforge.io/config_coding.html#RequireThis) | .java | Checks that references to instance variables and methods of the present object are explicitly of the form 'this.varName' or 'this.methodName(args)' and that those references don't rely on the default behavior when 'this.' is absent. |
 [ResourceBundleCheck](check/resource_bundle_check.markdown#resourcebundlecheck) | .java, .jsp, .jspf, .jspx, .tag, .tpl or .vm | Checks that there are no calls to `java.util.ResourceBundle.getBundle`. |
 ResourceImplCheck | .java | Performs several checks on `*ResourceImpl` classes (except `Base*ResourceImpl` classes). |
+ResourcePermissionCheck | .java | Performs several checks on `*ResourcePermission` classes. |
 [SQLLongNamesCheck](check/sql_long_names_check.markdown#sqllongnamescheck) | .sql | Checks for table and column names that exceed 30 characters. |
 SelfReferenceCheck | .java | Finds cases of unnecessary reference to its own class. |
+[ServiceComponentRuntimeCheck](check/service_component_runtime_check.markdown#servicecomponentruntimecheck) | .java | Checks `ServiceComponentRuntime` usage in test classes. |
 [ServiceProxyFactoryCheck](check/service_proxy_factory_check.markdown#serviceproxyfactorycheck) | .java | Finds incorrect parameter in method call. |
 [StaticBlockCheck](check/static_block_check.markdown#staticblockcheck) | .java | Performs several checks on static blocks. |
 SystemEventCheck | .java | Finds missing or redundant usage of @SystemEvent for delete events. |
@@ -178,19 +187,19 @@ TransactionalTestRuleCheck | .java | Finds usage of `TransactionalTestRule` in `
 UnparameterizedClassCheck | .java, .jsp, .jspf, .jspx, .tag, .tpl or .vm | Finds `Class` instantiation without generic type. |
 UnwrappedVariableInfoCheck | .java | Finds cases where the variable should be wrapped into an inner class in order to defer array elements initialization. |
 ValidatorIsNullCheck | .java, .jsp, .jspf, .jspx, .tag, .tpl or .vm | Ensures that only variable of type `Long`, `Serializable` or `String` is passed to method `com.liferay.portal.kernel.util.Validator.isNull`. |
-XMLBuildFileCheck | .action, .function, .jrxml, .macro, .pom, .project, .properties, .svg, .testcase, .toggle, .tpl, .wsdl, .xml or .xsd | Performs several checks on `build.xml`. |
-XMLCDATACheck | .action, .function, .jrxml, .macro, .pom, .project, .properties, .svg, .testcase, .toggle, .tpl, .wsdl, .xml or .xsd | Performs several checks on `CDATA` inside `xml`. |
-XMLCheckstyleFileCheck | .action, .function, .jrxml, .macro, .pom, .project, .properties, .svg, .testcase, .toggle, .tpl, .wsdl, .xml or .xsd | Performs several checks on `checkstyle.xml` file. |
-XMLLookAndFeelCompatibilityVersionCheck | .action, .function, .jrxml, .macro, .pom, .project, .properties, .svg, .testcase, .toggle, .tpl, .wsdl, .xml or .xsd | Finds missing attribute `version` in `compatibility` element in `*--look-and-feel.xml` file. |
-XMLPortletFileCheck | .action, .function, .jrxml, .macro, .pom, .project, .properties, .svg, .testcase, .toggle, .tpl, .wsdl, .xml or .xsd | Performs several checks on `portlet.xml` file. |
-XMLPoshiFileCheck | .action, .function, .jrxml, .macro, .pom, .project, .properties, .svg, .testcase, .toggle, .tpl, .wsdl, .xml or .xsd | Performs several checks on poshi files. |
-XMLProjectElementCheck | .action, .function, .jrxml, .macro, .pom, .project, .properties, .svg, .testcase, .toggle, .tpl, .wsdl, .xml or .xsd | Checks the project name in `.pom` file. |
-XMLServiceAutoImportDefaultReferencesCheck | .action, .function, .jrxml, .macro, .pom, .project, .properties, .svg, .testcase, .toggle, .tpl, .wsdl, .xml or .xsd | Checks that the `auto-import-default-references` in `service.xml` does not equal `false`. |
-[XMLServiceEntityNameCheck](check/xml_service_entity_name_check.markdown#xmlserviceentitynamecheck) | .action, .function, .jrxml, .macro, .pom, .project, .properties, .svg, .testcase, .toggle, .tpl, .wsdl, .xml or .xsd | Checks that the `entity name` in `service.xml` does not equal the `package name`. |
-XMLServiceFileCheck | .action, .function, .jrxml, .macro, .pom, .project, .properties, .svg, .testcase, .toggle, .tpl, .wsdl, .xml or .xsd | Performs several checks on `service.xml` file. |
-[XMLServiceFinderNameCheck](check/xml_service_finder_name_check.markdown#xmlservicefindernamecheck) | .action, .function, .jrxml, .macro, .pom, .project, .properties, .svg, .testcase, .toggle, .tpl, .wsdl, .xml or .xsd | Checks that the `finder name` in `service.xml`. |
-XMLServiceReferenceCheck | .action, .function, .jrxml, .macro, .pom, .project, .properties, .svg, .testcase, .toggle, .tpl, .wsdl, .xml or .xsd | Checks for unused references in `service.xml` file. |
-XMLSourcechecksFileCheck | .action, .function, .jrxml, .macro, .pom, .project, .properties, .svg, .testcase, .toggle, .tpl, .wsdl, .xml or .xsd | Performs several checks on `sourcechecks.xml` file. |
-XMLSuppressionsFileCheck | .action, .function, .jrxml, .macro, .pom, .project, .properties, .svg, .testcase, .toggle, .tpl, .wsdl, .xml or .xsd | Performs several checks on `source-formatter-suppressions.xml` file. |
-XMLTagAttributesCheck | .action, .function, .html, .jrxml, .macro, .path, .pom, .project, .properties, .svg, .testcase, .toggle, .tpl, .wsdl, .xml or .xsd | Performs several checks on tag attributes. |
-XMLWebFileCheck | .action, .function, .jrxml, .macro, .pom, .project, .properties, .svg, .testcase, .toggle, .tpl, .wsdl, .xml or .xsd | Performs several checks on `web.xml` file. |
+XMLBuildFileCheck | .action, .function, .jelly, .jrxml, .macro, .pom, .project, .properties, .svg, .testcase, .toggle, .tpl, .wsdl, .xml or .xsd | Performs several checks on `build.xml`. |
+XMLCDATACheck | .action, .function, .jelly, .jrxml, .macro, .pom, .project, .properties, .svg, .testcase, .toggle, .tpl, .wsdl, .xml or .xsd | Performs several checks on `CDATA` inside `xml`. |
+XMLCheckstyleFileCheck | .action, .function, .jelly, .jrxml, .macro, .pom, .project, .properties, .svg, .testcase, .toggle, .tpl, .wsdl, .xml or .xsd | Performs several checks on `checkstyle.xml` file. |
+XMLLookAndFeelCompatibilityVersionCheck | .action, .function, .jelly, .jrxml, .macro, .pom, .project, .properties, .svg, .testcase, .toggle, .tpl, .wsdl, .xml or .xsd | Finds missing attribute `version` in `compatibility` element in `*--look-and-feel.xml` file. |
+XMLPortletFileCheck | .action, .function, .jelly, .jrxml, .macro, .pom, .project, .properties, .svg, .testcase, .toggle, .tpl, .wsdl, .xml or .xsd | Performs several checks on `portlet.xml` file. |
+XMLPoshiFileCheck | .action, .function, .jelly, .jrxml, .macro, .pom, .project, .properties, .svg, .testcase, .toggle, .tpl, .wsdl, .xml or .xsd | Performs several checks on poshi files. |
+XMLProjectElementCheck | .action, .function, .jelly, .jrxml, .macro, .pom, .project, .properties, .svg, .testcase, .toggle, .tpl, .wsdl, .xml or .xsd | Checks the project name in `.pom` file. |
+XMLServiceAutoImportDefaultReferencesCheck | .action, .function, .jelly, .jrxml, .macro, .pom, .project, .properties, .svg, .testcase, .toggle, .tpl, .wsdl, .xml or .xsd | Checks that the `auto-import-default-references` in `service.xml` does not equal `false`. |
+[XMLServiceEntityNameCheck](check/xml_service_entity_name_check.markdown#xmlserviceentitynamecheck) | .action, .function, .jelly, .jrxml, .macro, .pom, .project, .properties, .svg, .testcase, .toggle, .tpl, .wsdl, .xml or .xsd | Checks that the `entity name` in `service.xml` does not equal the `package name`. |
+XMLServiceFileCheck | .action, .function, .jelly, .jrxml, .macro, .pom, .project, .properties, .svg, .testcase, .toggle, .tpl, .wsdl, .xml or .xsd | Performs several checks on `service.xml` file. |
+[XMLServiceFinderNameCheck](check/xml_service_finder_name_check.markdown#xmlservicefindernamecheck) | .action, .function, .jelly, .jrxml, .macro, .pom, .project, .properties, .svg, .testcase, .toggle, .tpl, .wsdl, .xml or .xsd | Checks that the `finder name` in `service.xml`. |
+XMLServiceReferenceCheck | .action, .function, .jelly, .jrxml, .macro, .pom, .project, .properties, .svg, .testcase, .toggle, .tpl, .wsdl, .xml or .xsd | Checks for unused references in `service.xml` file. |
+XMLSourcechecksFileCheck | .action, .function, .jelly, .jrxml, .macro, .pom, .project, .properties, .svg, .testcase, .toggle, .tpl, .wsdl, .xml or .xsd | Performs several checks on `sourcechecks.xml` file. |
+XMLSuppressionsFileCheck | .action, .function, .jelly, .jrxml, .macro, .pom, .project, .properties, .svg, .testcase, .toggle, .tpl, .wsdl, .xml or .xsd | Performs several checks on `source-formatter-suppressions.xml` file. |
+XMLTagAttributesCheck | .action, .function, .html, .jelly, .jrxml, .macro, .path, .pom, .project, .properties, .svg, .testcase, .toggle, .tpl, .wsdl, .xml or .xsd | Performs several checks on tag attributes. |
+XMLWebFileCheck | .action, .function, .jelly, .jrxml, .macro, .pom, .project, .properties, .svg, .testcase, .toggle, .tpl, .wsdl, .xml or .xsd | Performs several checks on `web.xml` file. |

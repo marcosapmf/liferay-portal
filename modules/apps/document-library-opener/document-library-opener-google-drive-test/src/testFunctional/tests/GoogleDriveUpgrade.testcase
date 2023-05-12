@@ -18,28 +18,28 @@ definition {
 		SearchAdministration.executeReindex();
 	}
 
-	@priority = "5"
+	@priority = 5
 	test ViewGoogleDriveArchive72101 {
 		property data.archive.type = "data-archive-googledrive";
 		property portal.version = "7.2.10.1";
 		property test.name.skip.portal.instance = "GoogleDriveUpgrade#ViewGoogleDriveArchive72101";
 		property test.run.environment = "EE";
 
-		Upgrade.viewAndEditGoogleDriveDocuments();
+		ValidateOnlineEditingUpgrade.viewAndEditGoogleDriveDocuments();
 
-		Upgrade.viewAndDeleteGoogleDriveDocuments();
+		ValidateOnlineEditingUpgrade.viewAndDeleteGoogleDriveDocuments();
 	}
 
-	@priority = "5"
+	@priority = 5
 	test ViewGoogleDriveArchive73101 {
 		property data.archive.type = "data-archive-googledrive";
 		property portal.version = "7.3.10.1";
 		property test.name.skip.portal.instance = "GoogleDriveUpgrade#ViewGoogleDriveArchive73101";
 		property test.run.environment = "EE";
 
-		Upgrade.viewAndEditGoogleDriveDocuments();
+		ValidateOnlineEditingUpgrade.viewAndEditGoogleDriveDocuments();
 
-		Upgrade.viewAndDeleteGoogleDriveDocuments();
+		ValidateOnlineEditingUpgrade.viewAndDeleteGoogleDriveDocuments();
 	}
 
 }

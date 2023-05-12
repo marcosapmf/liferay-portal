@@ -34,7 +34,7 @@ const ProductVersionFormModal: React.FC<ProductVersionProps> = ({
 	projectId,
 }) => {
 	const {
-		formState: {errors},
+		formState: {errors, isSubmitting},
 		handleSubmit,
 		register,
 	} = useForm<ProductVersionForm>({
@@ -42,7 +42,7 @@ const ProductVersionFormModal: React.FC<ProductVersionProps> = ({
 		resolver: yupResolver(yupSchema.productVersion),
 	});
 
-	const _onSubmit = (productVersionForm: ProductVersionForm) => {
+	const _onSubmit = (productVersionForm: ProductVersionForm) =>
 		onSubmit(
 			{
 				id: productVersionForm.id,
@@ -57,7 +57,6 @@ const ProductVersionFormModal: React.FC<ProductVersionProps> = ({
 		)
 			.then(onSave)
 			.catch(onError);
-	};
 
 	return (
 		<Modal
@@ -65,6 +64,7 @@ const ProductVersionFormModal: React.FC<ProductVersionProps> = ({
 				<Form.Footer
 					onClose={onClose}
 					onSubmit={handleSubmit(_onSubmit)}
+					primaryButtonProps={{loading: isSubmitting}}
 				/>
 			}
 			observer={observer}

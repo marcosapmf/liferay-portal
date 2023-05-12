@@ -81,12 +81,25 @@ public interface CTCollectionLocalService
 	@Indexable(type = IndexableType.REINDEX)
 	public CTCollection addCTCollection(CTCollection ctCollection);
 
+	@Indexable(type = IndexableType.REINDEX)
 	public CTCollection addCTCollection(
 			long companyId, long userId, String name, String description)
 		throws PortalException;
 
 	public Map<Long, List<ConflictInfo>> checkConflicts(
 			CTCollection ctCollection)
+		throws PortalException;
+
+	public Map<Long, List<ConflictInfo>> checkConflicts(
+			long companyId, List<CTEntry> ctEntries, long fromCTCollectionId,
+			String fromCTCollectionName, long toCTCollectionId,
+			String toCTCollectionName)
+		throws PortalException;
+
+	public Map<Long, List<ConflictInfo>> checkConflicts(
+			long companyId, long[] ctEntryIds, long fromCTCollectionId,
+			String fromCTCollectionName, long toCTCollectionId,
+			String toCTCollectionName)
 		throws PortalException;
 
 	/**
@@ -303,6 +316,10 @@ public interface CTCollectionLocalService
 		throws PortalException;
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<CTEntry> getRelatedCTEntries(
+		long ctCollectionId, long[] ctEntryIds);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public boolean hasUnapprovedChanges(long ctCollectionId)
 		throws SQLException;
 
@@ -327,6 +344,7 @@ public interface CTCollectionLocalService
 	@Indexable(type = IndexableType.REINDEX)
 	public CTCollection updateCTCollection(CTCollection ctCollection);
 
+	@Indexable(type = IndexableType.REINDEX)
 	public CTCollection updateCTCollection(
 			long userId, long ctCollectionId, String name, String description)
 		throws PortalException;

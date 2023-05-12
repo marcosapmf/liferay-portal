@@ -752,6 +752,25 @@ public class CompanyLocalServiceWrapper
 		_companyLocalService.updateDisplayGroupNames(companyId);
 	}
 
+	@Override
+	public com.liferay.portal.kernel.model.Company updateIndexNameNext(
+			long companyId, java.lang.String indexNameNext)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _companyLocalService.updateIndexNameNext(
+			companyId, indexNameNext);
+	}
+
+	@Override
+	public com.liferay.portal.kernel.model.Company updateIndexNames(
+			long companyId, java.lang.String indexNameCurrent,
+			java.lang.String indexNameNext)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _companyLocalService.updateIndexNames(
+			companyId, indexNameCurrent, indexNameNext);
+	}
+
 	/**
 	 * Updates the company's logo.
 	 *

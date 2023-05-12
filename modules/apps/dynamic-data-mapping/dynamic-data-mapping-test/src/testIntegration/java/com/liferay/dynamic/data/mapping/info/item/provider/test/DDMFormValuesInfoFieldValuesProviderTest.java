@@ -21,7 +21,6 @@ import com.liferay.dynamic.data.mapping.info.item.provider.DDMFormValuesInfoFiel
 import com.liferay.dynamic.data.mapping.model.DDMFormField;
 import com.liferay.dynamic.data.mapping.model.DDMFormFieldOptions;
 import com.liferay.dynamic.data.mapping.model.LocalizedValue;
-import com.liferay.dynamic.data.mapping.util.DDMBeanTranslator;
 import com.liferay.dynamic.data.mapping.util.DDMFormValuesToFieldsConverter;
 import com.liferay.info.field.InfoField;
 import com.liferay.info.field.InfoFieldValue;
@@ -254,9 +253,7 @@ public class DDMFormValuesInfoFieldValuesProviderTest {
 
 		List<InfoFieldValue<InfoLocalizedValue<Object>>> infoFieldValues =
 			_ddmFormValuesInfoFieldValuesProvider.getInfoFieldValues(
-				journalArticle,
-				_ddmBeanTranslator.translate(
-					journalArticle.getDDMFormValues()));
+				journalArticle, journalArticle.getDDMFormValues());
 
 		Assert.assertEquals(
 			infoFieldValues.toString(), 1, infoFieldValues.size());
@@ -275,8 +272,7 @@ public class DDMFormValuesInfoFieldValuesProviderTest {
 	private DDMFormField _createDDMFormField(
 		boolean multiple, Map<String, String> optionsMap, String type) {
 
-		DDMFormField ddmFormField = new DDMFormField(
-			RandomTestUtil.randomString(10), type);
+		DDMFormField ddmFormField = new DDMFormField("name", type);
 
 		ddmFormField.setDataType("text");
 		ddmFormField.setIndexType("text");
@@ -306,9 +302,6 @@ public class DDMFormValuesInfoFieldValuesProviderTest {
 
 	@Inject
 	private DataDefinitionResource.Factory _dataDefinitionResourceFactory;
-
-	@Inject
-	private DDMBeanTranslator _ddmBeanTranslator;
 
 	@Inject
 	private DDMFormValuesInfoFieldValuesProvider

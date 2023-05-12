@@ -33,10 +33,9 @@ import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.object.service.ObjectFieldLocalService;
 import com.liferay.object.service.ObjectFieldSettingLocalService;
 import com.liferay.object.service.ObjectRelationshipLocalService;
-import com.liferay.object.service.test.system.TestSystemObjectDefinitionMetadata;
+import com.liferay.object.service.test.system.TestSystemObjectDefinitionManager;
 import com.liferay.object.service.test.util.ObjectDefinitionTestUtil;
-import com.liferay.object.system.SystemObjectDefinitionMetadata;
-import com.liferay.object.util.LocalizedMapUtil;
+import com.liferay.object.system.SystemObjectDefinitionManager;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.db.DBInspector;
@@ -49,6 +48,7 @@ import com.liferay.portal.kernel.util.HashMapDictionary;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.vulcan.util.LocalizedMapUtil;
 
 import java.sql.Connection;
 
@@ -390,13 +390,14 @@ public class ObjectRelationshipLocalServiceTest {
 		throws Exception {
 
 		ObjectDefinition systemObjectDefinition =
-			_objectDefinitionLocalService.addSystemObjectDefinition(
+			ObjectDefinitionTestUtil.addUnmodifiableSystemObjectDefinition(
 				TestPropsValues.getUserId(), RandomTestUtil.randomString(),
 				null,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				"A" + RandomTestUtil.randomString(), null, null,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				ObjectDefinitionConstants.SCOPE_COMPANY, null, 1,
+				_objectDefinitionLocalService,
 				Arrays.asList(
 					ObjectFieldUtil.createObjectField(
 						ObjectFieldConstants.BUSINESS_TYPE_TEXT,
@@ -409,8 +410,8 @@ public class ObjectRelationshipLocalServiceTest {
 		BundleContext bundleContext = bundle.getBundleContext();
 
 		bundleContext.registerService(
-			SystemObjectDefinitionMetadata.class,
-			new TestSystemObjectDefinitionMetadata(
+			SystemObjectDefinitionManager.class,
+			new TestSystemObjectDefinitionManager(
 				systemObjectDefinition.getModelClass(),
 				systemObjectDefinition.getName(), restContextPath),
 			new HashMapDictionary<>());

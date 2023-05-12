@@ -15,6 +15,8 @@
 package com.liferay.knowledge.base.service.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.asset.kernel.model.AssetEntry;
+import com.liferay.asset.kernel.service.AssetEntryLocalService;
 import com.liferay.asset.kernel.service.AssetEntryLocalServiceUtil;
 import com.liferay.knowledge.base.constants.KBArticleConstants;
 import com.liferay.knowledge.base.constants.KBFolderConstants;
@@ -53,6 +55,8 @@ import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
+import com.liferay.portal.test.log.LogCapture;
+import com.liferay.portal.test.log.LoggerTestUtil;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.ratings.kernel.service.RatingsEntryLocalServiceUtil;
@@ -221,6 +225,53 @@ public class KBArticleLocalServiceTest {
 			_serviceContext);
 	}
 
+	@Test
+	public void testAddDraftKBArticleUpdatesAssetEntry() throws Exception {
+		_serviceContext.setWorkflowAction(WorkflowConstants.ACTION_PUBLISH);
+
+		KBArticle kbArticle = _kbArticleLocalService.addKBArticle(
+			null, _user.getUserId(), _kbFolderClassNameId,
+			KBFolderConstants.DEFAULT_PARENT_FOLDER_ID,
+			StringUtil.randomString(), StringUtil.randomString(),
+			StringUtil.randomString(), StringUtil.randomString(), null, null,
+			null, null, null, _serviceContext);
+
+		Assert.assertNotNull(
+			_assetEntryLocalService.getEntry(
+				KBArticle.class.getName(), kbArticle.getResourcePrimKey()));
+
+		_serviceContext.setWorkflowAction(WorkflowConstants.ACTION_SAVE_DRAFT);
+
+		KBArticle draftKBArticle = _kbArticleLocalService.updateKBArticle(
+			_user.getUserId(), kbArticle.getResourcePrimKey(),
+			StringUtil.randomString(), StringUtil.randomString(),
+			StringUtil.randomString(), null, null, null, null, null, null,
+			_serviceContext);
+
+		Assert.assertNotNull(
+			_assetEntryLocalService.getEntry(
+				KBArticle.class.getName(), draftKBArticle.getKbArticleId()));
+
+		Assert.assertNotNull(
+			_assetEntryLocalService.getEntry(
+				KBArticle.class.getName(), kbArticle.getResourcePrimKey()));
+
+		_serviceContext.setWorkflowAction(WorkflowConstants.ACTION_PUBLISH);
+
+		kbArticle = _kbArticleLocalService.updateKBArticle(
+			_user.getUserId(), kbArticle.getResourcePrimKey(),
+			StringUtil.randomString(), StringUtil.randomString(),
+			StringUtil.randomString(), null, null, null, null, null, null,
+			_serviceContext);
+
+		Assert.assertNull(
+			_assetEntryLocalService.fetchEntry(
+				KBArticle.class.getName(), draftKBArticle.getKbArticleId()));
+		Assert.assertNotNull(
+			_assetEntryLocalService.getEntry(
+				KBArticle.class.getName(), kbArticle.getResourcePrimKey()));
+	}
+
 	@Test(expected = KBArticleExpirationDateException.class)
 	public void testAddKBArticleInvalidExpirationDateException()
 		throws Exception {
@@ -270,7 +321,7 @@ public class KBArticleLocalServiceTest {
 	}
 
 	@Test
-	public void testAddKBArticleUpdateExpirationReviewDate() throws Exception {
+	public void testAddKBArticleUpdatesExpirationReviewDate() throws Exception {
 		_serviceContext.setWorkflowAction(WorkflowConstants.ACTION_PUBLISH);
 
 		Date expirationDate = DateUtils.addDays(RandomTestUtil.nextDate(), 1);
@@ -359,7 +410,11 @@ public class KBArticleLocalServiceTest {
 	public void testAddKBArticleWithCustomHTML() throws Exception {
 		String name = PrincipalThreadLocal.getName();
 
-		try {
+		try (LogCapture logCapture = LoggerTestUtil.configureLog4JLogger(
+				"com.liferay.portal.security.antisamy.internal." +
+					"AntiSamySanitizerImpl",
+				LoggerTestUtil.WARN)) {
+
 			PrincipalThreadLocal.setName(TestPropsValues.getUserId());
 
 			String content =
@@ -828,6 +883,27 @@ public class KBArticleLocalServiceTest {
 	}
 
 	@Test
+	public void testDraftKBArticleDoesNotExpire() throws Exception {
+		_serviceContext.setWorkflowAction(WorkflowConstants.ACTION_SAVE_DRAFT);
+
+		KBArticle kbArticle = _kbArticleLocalService.addKBArticle(
+			null, _user.getUserId(), _kbFolderClassNameId,
+			KBFolderConstants.DEFAULT_PARENT_FOLDER_ID,
+			StringUtil.randomString(), StringUtil.randomString(),
+			StringUtil.randomString(), StringUtil.randomString(), null, null,
+			null, null, null, _serviceContext);
+
+		Assert.assertEquals(
+			WorkflowConstants.STATUS_DRAFT, kbArticle.getStatus());
+
+		kbArticle = _kbArticleLocalService.expireKBArticle(
+			_user.getUserId(), kbArticle.getResourcePrimKey(), _serviceContext);
+
+		Assert.assertEquals(
+			WorkflowConstants.STATUS_DRAFT, kbArticle.getStatus());
+	}
+
+	@Test
 	public void testGetAllDescendantKBArticles() throws Exception {
 		KBArticle parentKBArticle = _kbArticleLocalService.addKBArticle(
 			null, _user.getUserId(), _kbFolderClassNameId,
@@ -1227,6 +1303,82 @@ public class KBArticleLocalServiceTest {
 		Assert.assertNull(latestKBArticle.getReviewDate());
 	}
 
+	@Test
+	public void testUpdateKBArticleExpirationDateUpdatesStatus()
+		throws Exception {
+
+		_serviceContext.setWorkflowAction(WorkflowConstants.ACTION_PUBLISH);
+
+		Date expirationDate = DateUtils.addDays(RandomTestUtil.nextDate(), 1);
+
+		KBArticle kbArticle = _kbArticleLocalService.addKBArticle(
+			null, _user.getUserId(), _kbFolderClassNameId,
+			KBFolderConstants.DEFAULT_PARENT_FOLDER_ID,
+			StringUtil.randomString(), StringUtil.randomString(),
+			StringUtil.randomString(), StringUtil.randomString(), null, null,
+			expirationDate, null, null, _serviceContext);
+
+		Assert.assertEquals(
+			WorkflowConstants.STATUS_APPROVED, kbArticle.getStatus());
+
+		kbArticle = _kbArticleLocalService.expireKBArticle(
+			_user.getUserId(), kbArticle.getResourcePrimKey(), _serviceContext);
+
+		Assert.assertEquals(
+			WorkflowConstants.STATUS_EXPIRED, kbArticle.getStatus());
+
+		expirationDate = DateUtils.addDays(RandomTestUtil.nextDate(), 2);
+
+		kbArticle = _kbArticleLocalService.updateKBArticle(
+			_user.getUserId(), kbArticle.getResourcePrimKey(),
+			StringUtil.randomString(), StringUtil.randomString(),
+			StringUtil.randomString(), null, null, expirationDate, null, null,
+			null, _serviceContext);
+
+		Assert.assertEquals(
+			WorkflowConstants.STATUS_APPROVED, kbArticle.getStatus());
+	}
+
+	@Test
+	public void testUpdateKBArticleUpdatesAssetEntry() throws Exception {
+		_serviceContext.setWorkflowAction(WorkflowConstants.ACTION_PUBLISH);
+
+		KBArticle kbArticle = _kbArticleLocalService.addKBArticle(
+			null, _user.getUserId(), _kbFolderClassNameId,
+			KBFolderConstants.DEFAULT_PARENT_FOLDER_ID,
+			StringUtil.randomString(), StringUtil.randomString(),
+			StringUtil.randomString(), StringUtil.randomString(), null, null,
+			null, null, null, _serviceContext);
+
+		AssetEntry assetEntry = _assetEntryLocalService.getEntry(
+			KBArticle.class.getName(), kbArticle.getResourcePrimKey());
+
+		Assert.assertNull(assetEntry.getExpirationDate());
+
+		kbArticle = _kbArticleLocalService.expireKBArticle(
+			_user.getUserId(), kbArticle.getResourcePrimKey(), _serviceContext);
+
+		assetEntry = _assetEntryLocalService.getEntry(
+			KBArticle.class.getName(), kbArticle.getResourcePrimKey());
+
+		Assert.assertEquals(
+			kbArticle.getExpirationDate(), assetEntry.getExpirationDate());
+		Assert.assertFalse(assetEntry.isVisible());
+
+		kbArticle = _kbArticleLocalService.updateKBArticle(
+			_user.getUserId(), kbArticle.getResourcePrimKey(),
+			StringUtil.randomString(), StringUtil.randomString(),
+			StringUtil.randomString(), null, null, null, null, null, null,
+			_serviceContext);
+
+		assetEntry = _assetEntryLocalService.getEntry(
+			KBArticle.class.getName(), kbArticle.getResourcePrimKey());
+
+		Assert.assertNull(assetEntry.getExpirationDate());
+		Assert.assertEquals(kbArticle.getTitle(), assetEntry.getTitle());
+		Assert.assertTrue(assetEntry.isVisible());
+	}
+
 	protected void importMarkdownArticles() throws PortalException {
 		Class<?> clazz = getClass();
 
@@ -1254,6 +1406,9 @@ public class KBArticleLocalServiceTest {
 
 	private static final Pattern _targetBlankPattern = Pattern.compile(
 		".*target=\"_blank\".*");
+
+	@Inject
+	private AssetEntryLocalService _assetEntryLocalService;
 
 	@DeleteAfterTestRun
 	private Group _group;

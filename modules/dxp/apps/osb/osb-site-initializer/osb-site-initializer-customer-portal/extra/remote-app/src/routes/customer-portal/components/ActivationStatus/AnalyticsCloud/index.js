@@ -17,6 +17,7 @@ import React, {useEffect, useState} from 'react';
 import i18n from '../../../../../common/I18n';
 import {Button, ButtonDropDown} from '../../../../../common/components';
 import {useAppPropertiesContext} from '../../../../../common/contexts/AppPropertiesContext';
+import {AnalyticsIcon} from '../../../../../common/icons/navigation-menu';
 import {
 	getAccountSubscriptionGroups,
 	getCommerceOrderItems,
@@ -32,6 +33,7 @@ import {
 	STATUS_TAG_TYPES,
 	STATUS_TAG_TYPE_NAMES,
 } from '../../../utils/constants';
+import PopoverIcon from '../DXPCloud/components/PopoverIcon';
 import ActivationStatusLayout from '../Layout';
 import AnalyticsCloudStatusModal from './AnalyticsCloudStatusModal';
 
@@ -41,7 +43,7 @@ const ActivationStatusAnalyticsCloud = ({
 	userAccount,
 }) => {
 	const [, dispatch] = useCustomerPortal();
-	const {client, liferayWebDAV} = useAppPropertiesContext();
+	const {client} = useAppPropertiesContext();
 	const [activationStatusDate, setActivationStatusDate] = useState('');
 	const [isVisible, setIsVisible] = useState(false);
 	const [visible, setVisible] = useState(false);
@@ -96,16 +98,23 @@ const ActivationStatusAnalyticsCloud = ({
 	const currentActivationStatus = {
 		[STATUS_TAG_TYPE_NAMES.active]: {
 			buttonLink: project?.acWorkspaceGroupId && (
-				<a
-					className="font-weight-semi-bold m-0 p-0 text-brand-primary text-paragraph"
-					href={`https://analytics.liferay.com/workspace/${project?.acWorkspaceGroupId}/sites`}
-					rel="noopener noreferrer"
-					target="_blank"
-				>
-					{i18n.translate('go-to-workspace')}
+				<>
+					<PopoverIcon
+						symbol="question-circle-full"
+						title="link-only-accessible-to-current-product-users-permissions-and-roles-are-managed-separately-within-each-product"
+					/>
 
-					<ClayIcon className="ml-1" symbol="order-arrow-right" />
-				</a>
+					<a
+						className="font-weight-semi-bold m-0 p-0 text-brand-primary text-paragraph"
+						href={`https://analytics.liferay.com/workspace/${project?.acWorkspaceGroupId}/sites`}
+						rel="noopener noreferrer"
+						target="_blank"
+					>
+						{i18n.translate('go-to-workspace')}
+
+						<ClayIcon className="ml-1" symbol="order-arrow-right" />
+					</a>
+				</>
 			),
 			id: STATUS_TAG_TYPES.active,
 			subtitle: i18n.translate(
@@ -229,7 +238,7 @@ const ActivationStatusAnalyticsCloud = ({
 			<ActivationStatusLayout
 				activationStatus={activationStatus}
 				activationStatusDate={activationStatusDate}
-				iconPath={`${liferayWebDAV}/assets/navigation-menu/analytics_icon.svg`}
+				iconPath={AnalyticsIcon}
 				project={project}
 				subscriptionGroupActivationStatus={
 					subscriptionGroupActivationStatus

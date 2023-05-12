@@ -59,10 +59,10 @@ public class DocumentToSynonymSetTranslatorImplTest
 	public void testTranslateWithSearchHit() {
 		SearchHits searchHits = setUpSearchHits("car,automobile");
 
-		List<SearchHit> searchHitList = searchHits.getSearchHits();
+		List<SearchHit> searchHitsList = searchHits.getSearchHits();
 
 		SynonymSet synonymSet = _documentToSynonymSetTranslatorImpl.translate(
-			searchHitList.get(0));
+			searchHitsList.get(0));
 
 		Assert.assertEquals("car,automobile", synonymSet.getSynonyms());
 		Assert.assertEquals("id", synonymSet.getSynonymSetDocumentId());

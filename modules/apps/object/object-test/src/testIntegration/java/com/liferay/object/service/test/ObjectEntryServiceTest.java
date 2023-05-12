@@ -31,7 +31,6 @@ import com.liferay.object.service.ObjectEntryLocalService;
 import com.liferay.object.service.ObjectEntryService;
 import com.liferay.object.service.ObjectRelationshipLocalService;
 import com.liferay.object.service.test.util.ObjectDefinitionTestUtil;
-import com.liferay.object.util.LocalizedMapUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.model.ResourceConstants;
 import com.liferay.portal.kernel.model.Role;
@@ -58,6 +57,7 @@ import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.vulcan.util.LocalizedMapUtil;
 
 import java.io.Serializable;
 
@@ -88,7 +88,7 @@ public class ObjectEntryServiceTest {
 	@Before
 	public void setUp() throws Exception {
 		_adminUser = TestPropsValues.getUser();
-		_defaultUser = _userLocalService.getDefaultUser(
+		_guestUser = _userLocalService.getGuestUser(
 			TestPropsValues.getCompanyId());
 
 		_objectDefinition = ObjectDefinitionTestUtil.addObjectDefinition(
@@ -131,7 +131,7 @@ public class ObjectEntryServiceTest {
 				ServiceContextTestUtil.getServiceContext(
 					TestPropsValues.getGroupId(), _adminUser.getUserId())));
 
-		_setUser(_defaultUser);
+		_setUser(_guestUser);
 
 		_assertPrincipalException(ObjectActionKeys.ADD_OBJECT_ENTRY, null);
 
@@ -139,7 +139,7 @@ public class ObjectEntryServiceTest {
 
 		_assertPrincipalException(ObjectActionKeys.ADD_OBJECT_ENTRY, null);
 
-		_setUser(_defaultUser);
+		_setUser(_guestUser);
 
 		Role guestRole = _roleLocalService.getRole(
 			TestPropsValues.getCompanyId(), RoleConstants.GUEST);
@@ -157,7 +157,7 @@ public class ObjectEntryServiceTest {
 					"firstName", RandomStringUtils.randomAlphabetic(5)
 				).build(),
 				ServiceContextTestUtil.getServiceContext(
-					TestPropsValues.getGroupId(), _defaultUser.getUserId())));
+					TestPropsValues.getGroupId(), _guestUser.getUserId())));
 
 		_setUser(_user);
 
@@ -168,7 +168,7 @@ public class ObjectEntryServiceTest {
 					"firstName", RandomStringUtils.randomAlphabetic(5)
 				).build(),
 				ServiceContextTestUtil.getServiceContext(
-					TestPropsValues.getGroupId(), _defaultUser.getUserId())));
+					TestPropsValues.getGroupId(), _guestUser.getUserId())));
 	}
 
 	@Test
@@ -211,13 +211,13 @@ public class ObjectEntryServiceTest {
 
 		_assertPrincipalException(ActionKeys.VIEW, adminObjectEntry);
 
-		_setUser(_defaultUser);
+		_setUser(_guestUser);
 
 		_assertPrincipalException(ActionKeys.VIEW, adminObjectEntry);
 
-		ObjectEntry defaultUserObjectEntry = _addObjectEntry(_defaultUser);
+		ObjectEntry guestUserObjectEntry = _addObjectEntry(_guestUser);
 
-		_assertPrincipalException(ActionKeys.VIEW, defaultUserObjectEntry);
+		_assertPrincipalException(ActionKeys.VIEW, guestUserObjectEntry);
 
 		Role guestRole = _roleLocalService.getRole(
 			TestPropsValues.getCompanyId(), RoleConstants.GUEST);
@@ -403,7 +403,7 @@ public class ObjectEntryServiceTest {
 	private AccountEntryUserRelLocalService _accountEntryUserRelLocalService;
 
 	private User _adminUser;
-	private User _defaultUser;
+	private User _guestUser;
 
 	@DeleteAfterTestRun
 	private ObjectDefinition _objectDefinition;

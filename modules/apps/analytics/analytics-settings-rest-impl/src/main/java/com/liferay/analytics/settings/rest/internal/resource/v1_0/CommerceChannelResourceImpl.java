@@ -17,22 +17,22 @@ package com.liferay.analytics.settings.rest.internal.resource.v1_0;
 import com.liferay.analytics.settings.rest.dto.v1_0.CommerceChannel;
 import com.liferay.analytics.settings.rest.internal.client.AnalyticsCloudClient;
 import com.liferay.analytics.settings.rest.internal.client.model.AnalyticsChannel;
-import com.liferay.analytics.settings.rest.internal.dto.v1_0.converter.CommerceChannelDTOConverter;
 import com.liferay.analytics.settings.rest.internal.dto.v1_0.converter.CommerceChannelDTOConverterContext;
 import com.liferay.analytics.settings.rest.internal.util.SortUtil;
 import com.liferay.analytics.settings.rest.resource.v1_0.CommerceChannelResource;
+import com.liferay.portal.kernel.dao.orm.QueryUtil;
+import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.service.GroupService;
 import com.liferay.portal.kernel.util.LinkedHashMapBuilder;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 
-import java.util.Collection;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
@@ -54,19 +54,18 @@ public class CommerceChannelResourceImpl
 			String keywords, Pagination pagination, Sort[] sorts)
 		throws Exception {
 
+		Map<Long, String> analyticsChannelsMap = new HashMap<>();
+
 		com.liferay.analytics.settings.rest.internal.client.pagination.Page
-			<AnalyticsChannel> analyticsChannelsPage =
+			<AnalyticsChannel> page =
 				_analyticsCloudClient.getAnalyticsChannelsPage(
-					contextCompany.getCompanyId(), null, 0, 100, null);
+					contextCompany.getCompanyId(), null, 0, QueryUtil.ALL_POS,
+					null);
 
-		Collection<AnalyticsChannel> analyticsChannels =
-			analyticsChannelsPage.getItems();
-
-		Stream<AnalyticsChannel> stream = analyticsChannels.stream();
-
-		Map<Long, String> analyticsChannelsMap = stream.collect(
-			Collectors.toMap(
-				AnalyticsChannel::getId, AnalyticsChannel::getName));
+		for (AnalyticsChannel analyticsChannel : page.getItems()) {
+			analyticsChannelsMap.put(
+				analyticsChannel.getId(), analyticsChannel.getName());
+		}
 
 		return Page.of(
 			transform(
@@ -74,7 +73,8 @@ public class CommerceChannelResourceImpl
 					contextCompany.getCompanyId(), _classNameIds, keywords,
 					_getParams(), pagination.getStartPosition(),
 					pagination.getEndPosition(),
-					SortUtil.getIgnoreCaseOrderByComparator(sorts)),
+					SortUtil.getIgnoreCaseOrderByComparator(
+						contextAcceptLanguage.getPreferredLocale(), sorts)),
 				group -> _commerceChannelDTOConverter.toDTO(
 					new CommerceChannelDTOConverterContext(
 						group.getGroupId(),
@@ -106,8 +106,10 @@ public class CommerceChannelResourceImpl
 
 	private long[] _classNameIds;
 
-	@Reference
-	private CommerceChannelDTOConverter _commerceChannelDTOConverter;
+	@Reference(
+		target = "(component.name=com.liferay.analytics.settings.rest.internal.dto.v1_0.converter.CommerceChannelDTOConverter)"
+	)
+	private DTOConverter<Group, CommerceChannel> _commerceChannelDTOConverter;
 
 	@Reference
 	private GroupService _groupService;

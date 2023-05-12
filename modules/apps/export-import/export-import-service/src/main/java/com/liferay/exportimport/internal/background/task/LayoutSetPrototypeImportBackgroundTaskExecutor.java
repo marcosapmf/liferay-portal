@@ -14,6 +14,8 @@
 
 package com.liferay.exportimport.internal.background.task;
 
+import com.liferay.exportimport.kernel.background.task.BackgroundTaskExecutorNames;
+import com.liferay.exportimport.kernel.lar.ExportImportThreadLocal;
 import com.liferay.exportimport.kernel.model.ExportImportConfiguration;
 import com.liferay.exportimport.kernel.service.ExportImportLocalService;
 import com.liferay.exportimport.kernel.staging.MergeLayoutPrototypesThreadLocal;
@@ -76,110 +78,119 @@ public class LayoutSetPrototypeImportBackgroundTaskExecutor
 	public BackgroundTaskResult execute(BackgroundTask backgroundTask)
 		throws Exception {
 
-		if (isCancelPropagationImportTask()) {
-			List<BackgroundTask> newBackgroundTasks =
-				_backgroundTaskManager.getBackgroundTasks(
-					backgroundTask.getGroupId(),
-					LayoutSetPrototypeImportBackgroundTaskExecutor.class.
-						getName(),
-					BackgroundTaskConstants.STATUS_NEW);
+		ExportImportThreadLocal.setLayoutImportInProcess(true);
 
-			List<BackgroundTask> queuedBackgroundTasks =
-				_backgroundTaskManager.getBackgroundTasks(
-					backgroundTask.getGroupId(),
-					LayoutSetPrototypeImportBackgroundTaskExecutor.class.
-						getName(),
-					BackgroundTaskConstants.STATUS_QUEUED);
+		try {
+			if (isCancelPropagationImportTask()) {
+				List<BackgroundTask> newBackgroundTasks =
+					_backgroundTaskManager.getBackgroundTasks(
+						backgroundTask.getGroupId(),
+						LayoutSetPrototypeImportBackgroundTaskExecutor.class.
+							getName(),
+						BackgroundTaskConstants.STATUS_NEW);
 
-			if (!newBackgroundTasks.isEmpty() ||
-				!queuedBackgroundTasks.isEmpty()) {
+				List<BackgroundTask> queuedBackgroundTasks =
+					_backgroundTaskManager.getBackgroundTasks(
+						backgroundTask.getGroupId(),
+						LayoutSetPrototypeImportBackgroundTaskExecutor.class.
+							getName(),
+						BackgroundTaskConstants.STATUS_QUEUED);
 
-				if (_log.isDebugEnabled()) {
-					StringBundler sb = new StringBundler(7);
+				if (!newBackgroundTasks.isEmpty() ||
+					!queuedBackgroundTasks.isEmpty()) {
 
-					sb.append("Cancelling background task ");
-					sb.append(backgroundTask.getBackgroundTaskId());
-					sb.append(", found ");
-					sb.append(newBackgroundTasks.size());
-					sb.append(" new and ");
-					sb.append(queuedBackgroundTasks.size());
-					sb.append(" queued tasks");
+					if (_log.isDebugEnabled()) {
+						StringBundler sb = new StringBundler(7);
 
-					_log.debug(sb.toString());
+						sb.append("Cancelling background task ");
+						sb.append(backgroundTask.getBackgroundTaskId());
+						sb.append(", found ");
+						sb.append(newBackgroundTasks.size());
+						sb.append(" new and ");
+						sb.append(queuedBackgroundTasks.size());
+						sb.append(" queued tasks");
+
+						_log.debug(sb.toString());
+					}
+
+					return new BackgroundTaskResult(
+						BackgroundTaskConstants.STATUS_CANCELLED);
 				}
-
-				return new BackgroundTaskResult(
-					BackgroundTaskConstants.STATUS_CANCELLED);
 			}
+
+			ExportImportConfiguration exportImportConfiguration =
+				getExportImportConfiguration(backgroundTask);
+
+			List<FileEntry> attachmentsFileEntries =
+				backgroundTask.getAttachmentsFileEntries();
+
+			File file = null;
+
+			for (FileEntry attachmentsFileEntry : attachmentsFileEntries) {
+				try {
+					file = _file.createTempFile("lar");
+
+					_file.write(file, attachmentsFileEntry.getContentStream());
+
+					TransactionInvokerUtil.invoke(
+						transactionConfig,
+						new LayoutImportCallable(
+							exportImportConfiguration, file));
+				}
+				catch (Throwable throwable) {
+					Map<String, Serializable> settingsMap =
+						exportImportConfiguration.getSettingsMap();
+
+					Map<String, String[]> parameterMap =
+						(Map<String, String[]>)settingsMap.get("parameterMap");
+
+					long layoutSetPrototypeId = MapUtil.getLong(
+						parameterMap, "layoutSetPrototypeId");
+
+					LayoutSetPrototype layoutSetPrototype =
+						_layoutSetPrototypeLocalService.getLayoutSetPrototype(
+							layoutSetPrototypeId);
+
+					LayoutSet layoutSetPrototypeLayoutSet =
+						layoutSetPrototype.getLayoutSet();
+
+					UnicodeProperties
+						layoutSetPrototypeSettingsUnicodeProperties =
+							layoutSetPrototypeLayoutSet.getSettingsProperties();
+
+					int mergeFailCount = GetterUtil.getInteger(
+						layoutSetPrototypeSettingsUnicodeProperties.getProperty(
+							Sites.MERGE_FAIL_COUNT));
+
+					mergeFailCount++;
+
+					layoutSetPrototypeSettingsUnicodeProperties.setProperty(
+						Sites.MERGE_FAIL_COUNT, String.valueOf(mergeFailCount));
+
+					_layoutSetLocalService.updateLayoutSet(
+						layoutSetPrototypeLayoutSet);
+
+					_log.error(
+						StringBundler.concat(
+							"Merge fail count increased to ", mergeFailCount,
+							" for layout set prototype ",
+							layoutSetPrototype.getLayoutSetPrototypeId()),
+						throwable);
+
+					throw new SystemException(throwable);
+				}
+				finally {
+					MergeLayoutPrototypesThreadLocal.setInProgress(false);
+
+					_file.delete(file);
+				}
+			}
+
+			return BackgroundTaskResult.SUCCESS;
 		}
-
-		ExportImportConfiguration exportImportConfiguration =
-			getExportImportConfiguration(backgroundTask);
-
-		List<FileEntry> attachmentsFileEntries =
-			backgroundTask.getAttachmentsFileEntries();
-
-		File file = null;
-
-		for (FileEntry attachmentsFileEntry : attachmentsFileEntries) {
-			try {
-				file = _file.createTempFile("lar");
-
-				_file.write(file, attachmentsFileEntry.getContentStream());
-
-				TransactionInvokerUtil.invoke(
-					transactionConfig,
-					new LayoutImportCallable(exportImportConfiguration, file));
-			}
-			catch (Throwable throwable) {
-				Map<String, Serializable> settingsMap =
-					exportImportConfiguration.getSettingsMap();
-
-				Map<String, String[]> parameterMap =
-					(Map<String, String[]>)settingsMap.get("parameterMap");
-
-				long layoutSetPrototypeId = MapUtil.getLong(
-					parameterMap, "layoutSetPrototypeId");
-
-				LayoutSetPrototype layoutSetPrototype =
-					_layoutSetPrototypeLocalService.getLayoutSetPrototype(
-						layoutSetPrototypeId);
-
-				LayoutSet layoutSetPrototypeLayoutSet =
-					layoutSetPrototype.getLayoutSet();
-
-				UnicodeProperties layoutSetPrototypeSettingsUnicodeProperties =
-					layoutSetPrototypeLayoutSet.getSettingsProperties();
-
-				int mergeFailCount = GetterUtil.getInteger(
-					layoutSetPrototypeSettingsUnicodeProperties.getProperty(
-						Sites.MERGE_FAIL_COUNT));
-
-				mergeFailCount++;
-
-				layoutSetPrototypeSettingsUnicodeProperties.setProperty(
-					Sites.MERGE_FAIL_COUNT, String.valueOf(mergeFailCount));
-
-				_layoutSetLocalService.updateLayoutSet(
-					layoutSetPrototypeLayoutSet);
-
-				_log.error(
-					StringBundler.concat(
-						"Merge fail count increased to ", mergeFailCount,
-						" for layout set prototype ",
-						layoutSetPrototype.getLayoutSetPrototypeId()),
-					throwable);
-
-				throw new SystemException(throwable);
-			}
-			finally {
-				MergeLayoutPrototypesThreadLocal.setInProgress(false);
-
-				_file.delete(file);
-			}
+		finally {
+			ExportImportThreadLocal.setLayoutValidationInProcess(false);
 		}
-
-		return BackgroundTaskResult.SUCCESS;
 	}
 
 	@Activate
@@ -275,6 +286,8 @@ public class LayoutSetPrototypeImportBackgroundTaskExecutor
 		@Override
 		public Void call() throws PortalException {
 			try {
+				_cleanUpPreviousBackgroundTasks();
+
 				MergeLayoutPrototypesThreadLocal.setInProgress(true);
 
 				_exportImportLocalService.importLayoutsDataDeletions(
@@ -287,6 +300,38 @@ public class LayoutSetPrototypeImportBackgroundTaskExecutor
 			}
 			finally {
 				MergeLayoutPrototypesThreadLocal.setInProgress(false);
+			}
+		}
+
+		private void _cleanUpPreviousBackgroundTasks() {
+			try {
+				List<BackgroundTask> backgroundTasks =
+					_backgroundTaskManager.getBackgroundTasks(
+						_exportImportConfiguration.getGroupId(),
+						BackgroundTaskExecutorNames.
+							LAYOUT_SET_PROTOTYPE_IMPORT_BACKGROUND_TASK_EXECUTOR);
+
+				for (BackgroundTask backgroundTask : backgroundTasks) {
+					int status = backgroundTask.getStatus();
+
+					if ((status ==
+							BackgroundTaskConstants.STATUS_IN_PROGRESS) ||
+						(status == BackgroundTaskConstants.STATUS_NEW) ||
+						(status == BackgroundTaskConstants.STATUS_QUEUED)) {
+
+						continue;
+					}
+
+					_backgroundTaskManager.deleteBackgroundTask(
+						backgroundTask.getBackgroundTaskId());
+				}
+			}
+			catch (PortalException portalException) {
+				if (_log.isWarnEnabled()) {
+					_log.warn(
+						"Unable to clean up previous background tasks",
+						portalException);
+				}
 			}
 		}
 

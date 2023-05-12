@@ -24,6 +24,7 @@ import com.liferay.headless.commerce.admin.pricing.client.serdes.v1_0.DiscountPr
 import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -45,12 +46,11 @@ public interface DiscountProductResource {
 	public HttpInvoker.HttpResponse deleteDiscountProductHttpResponse(Long id)
 		throws Exception;
 
-	public void deleteDiscountProductBatch(
-			Long id, String callbackURL, Object object)
+	public void deleteDiscountProductBatch(String callbackURL, Object object)
 		throws Exception;
 
 	public HttpInvoker.HttpResponse deleteDiscountProductBatchHttpResponse(
-			Long id, String callbackURL, Object object)
+			String callbackURL, Object object)
 		throws Exception;
 
 	public Page<DiscountProduct>
@@ -90,12 +90,12 @@ public interface DiscountProductResource {
 		throws Exception;
 
 	public void postDiscountIdDiscountProductBatch(
-			Long id, String callbackURL, Object object)
+			String callbackURL, Object object)
 		throws Exception;
 
 	public HttpInvoker.HttpResponse
 			postDiscountIdDiscountProductBatchHttpResponse(
-				Long id, String callbackURL, Object object)
+				String callbackURL, Object object)
 		throws Exception;
 
 	public static class Builder {
@@ -107,6 +107,10 @@ public interface DiscountProductResource {
 			return this;
 		}
 
+		public Builder bearerToken(String token) {
+			return header("Authorization", "Bearer " + token);
+		}
+
 		public DiscountProductResource build() {
 			return new DiscountProductResourceImpl(this);
 		}
@@ -115,6 +119,28 @@ public interface DiscountProductResource {
 			_contextPath = contextPath;
 
 			return this;
+		}
+
+		public Builder endpoint(String address, String scheme) {
+			String[] addressParts = address.split(":");
+
+			String host = addressParts[0];
+
+			int port = 443;
+
+			if (addressParts.length > 1) {
+				String portString = addressParts[1];
+
+				try {
+					port = Integer.parseInt(portString);
+				}
+				catch (NumberFormatException numberFormatException) {
+					throw new IllegalArgumentException(
+						"Unable to parse port from " + portString);
+				}
+			}
+
+			return endpoint(host, port, scheme);
 		}
 
 		public Builder endpoint(String host, int port, String scheme) {
@@ -195,7 +221,29 @@ public interface DiscountProductResource {
 					"HTTP response status code: " +
 						httpResponse.getStatusCode());
 
-				throw new Problem.ProblemException(Problem.toDTO(content));
+				Problem.ProblemException problemException = null;
+
+				if (Objects.equals(
+						httpResponse.getContentType(), "application/json")) {
+
+					problemException = new Problem.ProblemException(
+						Problem.toDTO(content));
+				}
+				else {
+					_logger.log(
+						Level.WARNING,
+						"Unable to process content type: " +
+							httpResponse.getContentType());
+
+					Problem problem = new Problem();
+
+					problem.setStatus(
+						String.valueOf(httpResponse.getStatusCode()));
+
+					problemException = new Problem.ProblemException(problem);
+				}
+
+				throw problemException;
 			}
 			else {
 				_logger.fine("HTTP response content: " + content);
@@ -246,11 +294,11 @@ public interface DiscountProductResource {
 		}
 
 		public void deleteDiscountProductBatch(
-				Long id, String callbackURL, Object object)
+				String callbackURL, Object object)
 			throws Exception {
 
 			HttpInvoker.HttpResponse httpResponse =
-				deleteDiscountProductBatchHttpResponse(id, callbackURL, object);
+				deleteDiscountProductBatchHttpResponse(callbackURL, object);
 
 			String content = httpResponse.getContent();
 
@@ -266,7 +314,29 @@ public interface DiscountProductResource {
 					"HTTP response status code: " +
 						httpResponse.getStatusCode());
 
-				throw new Problem.ProblemException(Problem.toDTO(content));
+				Problem.ProblemException problemException = null;
+
+				if (Objects.equals(
+						httpResponse.getContentType(), "application/json")) {
+
+					problemException = new Problem.ProblemException(
+						Problem.toDTO(content));
+				}
+				else {
+					_logger.log(
+						Level.WARNING,
+						"Unable to process content type: " +
+							httpResponse.getContentType());
+
+					Problem problem = new Problem();
+
+					problem.setStatus(
+						String.valueOf(httpResponse.getStatusCode()));
+
+					problemException = new Problem.ProblemException(problem);
+				}
+
+				throw problemException;
 			}
 			else {
 				_logger.fine("HTTP response content: " + content);
@@ -279,7 +349,7 @@ public interface DiscountProductResource {
 		}
 
 		public HttpInvoker.HttpResponse deleteDiscountProductBatchHttpResponse(
-				Long id, String callbackURL, Object object)
+				String callbackURL, Object object)
 			throws Exception {
 
 			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
@@ -315,8 +385,6 @@ public interface DiscountProductResource {
 					_builder._port + _builder._contextPath +
 						"/o/headless-commerce-admin-pricing/v1.0/discountProducts/batch");
 
-			httpInvoker.path("id", id);
-
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
 
@@ -346,7 +414,29 @@ public interface DiscountProductResource {
 					"HTTP response status code: " +
 						httpResponse.getStatusCode());
 
-				throw new Problem.ProblemException(Problem.toDTO(content));
+				Problem.ProblemException problemException = null;
+
+				if (Objects.equals(
+						httpResponse.getContentType(), "application/json")) {
+
+					problemException = new Problem.ProblemException(
+						Problem.toDTO(content));
+				}
+				else {
+					_logger.log(
+						Level.WARNING,
+						"Unable to process content type: " +
+							httpResponse.getContentType());
+
+					Problem problem = new Problem();
+
+					problem.setStatus(
+						String.valueOf(httpResponse.getStatusCode()));
+
+					problemException = new Problem.ProblemException(problem);
+				}
+
+				throw problemException;
 			}
 			else {
 				_logger.fine("HTTP response content: " + content);
@@ -439,7 +529,29 @@ public interface DiscountProductResource {
 					"HTTP response status code: " +
 						httpResponse.getStatusCode());
 
-				throw new Problem.ProblemException(Problem.toDTO(content));
+				Problem.ProblemException problemException = null;
+
+				if (Objects.equals(
+						httpResponse.getContentType(), "application/json")) {
+
+					problemException = new Problem.ProblemException(
+						Problem.toDTO(content));
+				}
+				else {
+					_logger.log(
+						Level.WARNING,
+						"Unable to process content type: " +
+							httpResponse.getContentType());
+
+					Problem problem = new Problem();
+
+					problem.setStatus(
+						String.valueOf(httpResponse.getStatusCode()));
+
+					problemException = new Problem.ProblemException(problem);
+				}
+
+				throw problemException;
 			}
 			else {
 				_logger.fine("HTTP response content: " + content);
@@ -525,7 +637,29 @@ public interface DiscountProductResource {
 					"HTTP response status code: " +
 						httpResponse.getStatusCode());
 
-				throw new Problem.ProblemException(Problem.toDTO(content));
+				Problem.ProblemException problemException = null;
+
+				if (Objects.equals(
+						httpResponse.getContentType(), "application/json")) {
+
+					problemException = new Problem.ProblemException(
+						Problem.toDTO(content));
+				}
+				else {
+					_logger.log(
+						Level.WARNING,
+						"Unable to process content type: " +
+							httpResponse.getContentType());
+
+					Problem problem = new Problem();
+
+					problem.setStatus(
+						String.valueOf(httpResponse.getStatusCode()));
+
+					problemException = new Problem.ProblemException(problem);
+				}
+
+				throw problemException;
 			}
 			else {
 				_logger.fine("HTTP response content: " + content);
@@ -615,7 +749,29 @@ public interface DiscountProductResource {
 					"HTTP response status code: " +
 						httpResponse.getStatusCode());
 
-				throw new Problem.ProblemException(Problem.toDTO(content));
+				Problem.ProblemException problemException = null;
+
+				if (Objects.equals(
+						httpResponse.getContentType(), "application/json")) {
+
+					problemException = new Problem.ProblemException(
+						Problem.toDTO(content));
+				}
+				else {
+					_logger.log(
+						Level.WARNING,
+						"Unable to process content type: " +
+							httpResponse.getContentType());
+
+					Problem problem = new Problem();
+
+					problem.setStatus(
+						String.valueOf(httpResponse.getStatusCode()));
+
+					problemException = new Problem.ProblemException(problem);
+				}
+
+				throw problemException;
 			}
 			else {
 				_logger.fine("HTTP response content: " + content);
@@ -680,12 +836,12 @@ public interface DiscountProductResource {
 		}
 
 		public void postDiscountIdDiscountProductBatch(
-				Long id, String callbackURL, Object object)
+				String callbackURL, Object object)
 			throws Exception {
 
 			HttpInvoker.HttpResponse httpResponse =
 				postDiscountIdDiscountProductBatchHttpResponse(
-					id, callbackURL, object);
+					callbackURL, object);
 
 			String content = httpResponse.getContent();
 
@@ -701,7 +857,29 @@ public interface DiscountProductResource {
 					"HTTP response status code: " +
 						httpResponse.getStatusCode());
 
-				throw new Problem.ProblemException(Problem.toDTO(content));
+				Problem.ProblemException problemException = null;
+
+				if (Objects.equals(
+						httpResponse.getContentType(), "application/json")) {
+
+					problemException = new Problem.ProblemException(
+						Problem.toDTO(content));
+				}
+				else {
+					_logger.log(
+						Level.WARNING,
+						"Unable to process content type: " +
+							httpResponse.getContentType());
+
+					Problem problem = new Problem();
+
+					problem.setStatus(
+						String.valueOf(httpResponse.getStatusCode()));
+
+					problemException = new Problem.ProblemException(problem);
+				}
+
+				throw problemException;
 			}
 			else {
 				_logger.fine("HTTP response content: " + content);
@@ -715,7 +893,7 @@ public interface DiscountProductResource {
 
 		public HttpInvoker.HttpResponse
 				postDiscountIdDiscountProductBatchHttpResponse(
-					Long id, String callbackURL, Object object)
+					String callbackURL, Object object)
 			throws Exception {
 
 			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
@@ -750,8 +928,6 @@ public interface DiscountProductResource {
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port + _builder._contextPath +
 						"/o/headless-commerce-admin-pricing/v1.0/discounts/discountProducts/batch");
-
-			httpInvoker.path("id", id);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);

@@ -47,6 +47,7 @@ import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.GroupConstants;
 import com.liferay.portal.kernel.model.Ticket;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.model.UserConstants;
 import com.liferay.portal.kernel.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.portlet.PortletURLFactoryUtil;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
@@ -58,7 +59,7 @@ import com.liferay.portal.kernel.service.TicketLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.settings.LocalizedValuesMap;
 import com.liferay.portal.kernel.util.ArrayUtil;
-import com.liferay.portal.kernel.util.HtmlUtil;
+import com.liferay.portal.kernel.util.EscapableObject;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -175,8 +176,9 @@ public class AccountEntryUserRelLocalServiceImpl
 			creatorUserId, companyId, autoPassword, password1, password2,
 			autoScreenName, screenName, emailAddress, locale, firstName,
 			middleName, lastName, prefixListTypeId, suffixListTypeId, male,
-			birthdayMonth, birthdayDay, birthdayYear, jobTitle, groupIds,
-			organizationIds, roleIds, userGroupIds, sendEmail, serviceContext);
+			birthdayMonth, birthdayDay, birthdayYear, jobTitle,
+			UserConstants.TYPE_REGULAR, groupIds, organizationIds, roleIds,
+			userGroupIds, sendEmail, serviceContext);
 
 		return accountEntryUserRelLocalService.addAccountEntryUserRel(
 			accountEntryId, user.getUserId());
@@ -222,8 +224,8 @@ public class AccountEntryUserRelLocalServiceImpl
 				StringPool.BLANK, StringPool.BLANK, true, StringPool.BLANK,
 				emailAddress, serviceContext.getLocale(), emailAddress,
 				StringPool.BLANK, emailAddress, 0, 0, true, 1, 1, 1970,
-				StringPool.BLANK, groupIds, null, null, null, true,
-				serviceContext);
+				StringPool.BLANK, UserConstants.TYPE_REGULAR, groupIds, null,
+				null, null, true, serviceContext);
 
 			user.setExternalReferenceCode(userExternalReferenceCode);
 
@@ -555,12 +557,13 @@ public class AccountEntryUserRelLocalServiceImpl
 				_accountEntryLocalService.getAccountEntry(accountEntryId);
 
 			mailTemplateContextBuilder.put(
-				"[$ACCOUNT_NAME$]", HtmlUtil.escape(accountEntry.getName()));
+				"[$ACCOUNT_NAME$]",
+				new EscapableObject<>(accountEntry.getName()));
 
 			mailTemplateContextBuilder.put("[$CREATE_ACCOUNT_URL$]", url);
 			mailTemplateContextBuilder.put(
 				"[$INVITE_SENDER_NAME$]",
-				HtmlUtil.escape(inviter.getFullName()));
+				new EscapableObject<>(inviter.getFullName()));
 
 			MailTemplateContext mailTemplateContext =
 				mailTemplateContextBuilder.build();

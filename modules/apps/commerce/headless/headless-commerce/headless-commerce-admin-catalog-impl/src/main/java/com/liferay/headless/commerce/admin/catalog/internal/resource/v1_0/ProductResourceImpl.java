@@ -14,19 +14,26 @@
 
 package com.liferay.headless.commerce.admin.catalog.internal.resource.v1_0;
 
+import com.liferay.account.model.AccountGroup;
+import com.liferay.account.service.AccountGroupRelLocalService;
+import com.liferay.account.service.AccountGroupRelService;
+import com.liferay.account.service.AccountGroupService;
 import com.liferay.asset.kernel.model.AssetTag;
 import com.liferay.asset.kernel.service.AssetCategoryLocalService;
 import com.liferay.asset.kernel.service.AssetTagService;
-import com.liferay.commerce.account.model.CommerceAccountGroup;
 import com.liferay.commerce.account.service.CommerceAccountGroupRelService;
 import com.liferay.commerce.account.service.CommerceAccountGroupService;
+import com.liferay.commerce.price.list.service.CommercePriceEntryLocalService;
+import com.liferay.commerce.price.list.service.CommercePriceListLocalService;
 import com.liferay.commerce.product.configuration.CProductVersionConfiguration;
 import com.liferay.commerce.product.constants.CPAttachmentFileEntryConstants;
+import com.liferay.commerce.product.exception.CPDefinitionProductTypeNameException;
 import com.liferay.commerce.product.exception.NoSuchCPDefinitionException;
 import com.liferay.commerce.product.exception.NoSuchCatalogException;
 import com.liferay.commerce.product.model.CPAttachmentFileEntry;
 import com.liferay.commerce.product.model.CPDefinition;
 import com.liferay.commerce.product.model.CPDefinitionOptionRel;
+import com.liferay.commerce.product.model.CPInstance;
 import com.liferay.commerce.product.model.CProduct;
 import com.liferay.commerce.product.model.CommerceCatalog;
 import com.liferay.commerce.product.model.CommerceChannel;
@@ -45,6 +52,8 @@ import com.liferay.commerce.product.service.CommerceChannelRelService;
 import com.liferay.commerce.product.service.CommerceChannelService;
 import com.liferay.commerce.product.type.CPType;
 import com.liferay.commerce.product.type.CPTypeRegistry;
+import com.liferay.commerce.product.type.virtual.constants.VirtualCPTypeConstants;
+import com.liferay.commerce.product.type.virtual.service.CPDefinitionVirtualSettingService;
 import com.liferay.commerce.service.CPDefinitionInventoryService;
 import com.liferay.commerce.shop.by.diagram.constants.CSDiagramCPTypeConstants;
 import com.liferay.commerce.shop.by.diagram.service.CSDiagramEntryService;
@@ -67,9 +76,9 @@ import com.liferay.headless.commerce.admin.catalog.dto.v1_0.ProductShippingConfi
 import com.liferay.headless.commerce.admin.catalog.dto.v1_0.ProductSpecification;
 import com.liferay.headless.commerce.admin.catalog.dto.v1_0.ProductSubscriptionConfiguration;
 import com.liferay.headless.commerce.admin.catalog.dto.v1_0.ProductTaxConfiguration;
+import com.liferay.headless.commerce.admin.catalog.dto.v1_0.ProductVirtualSettings;
 import com.liferay.headless.commerce.admin.catalog.dto.v1_0.RelatedProduct;
 import com.liferay.headless.commerce.admin.catalog.dto.v1_0.Sku;
-import com.liferay.headless.commerce.admin.catalog.internal.dto.v1_0.converter.ProductDTOConverter;
 import com.liferay.headless.commerce.admin.catalog.internal.dto.v1_0.util.CustomFieldsUtil;
 import com.liferay.headless.commerce.admin.catalog.internal.helper.v1_0.ProductHelper;
 import com.liferay.headless.commerce.admin.catalog.internal.odata.entity.v1_0.ProductEntityModel;
@@ -85,6 +94,7 @@ import com.liferay.headless.commerce.admin.catalog.internal.util.v1_0.ProductSpe
 import com.liferay.headless.commerce.admin.catalog.internal.util.v1_0.ProductSubscriptionConfigurationUtil;
 import com.liferay.headless.commerce.admin.catalog.internal.util.v1_0.ProductTaxConfigurationUtil;
 import com.liferay.headless.commerce.admin.catalog.internal.util.v1_0.ProductUtil;
+import com.liferay.headless.commerce.admin.catalog.internal.util.v1_0.ProductVirtualSettingsUtil;
 import com.liferay.headless.commerce.admin.catalog.internal.util.v1_0.RelatedProductUtil;
 import com.liferay.headless.commerce.admin.catalog.internal.util.v1_0.SkuUtil;
 import com.liferay.headless.commerce.admin.catalog.resource.v1_0.ProductResource;
@@ -106,7 +116,6 @@ import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermi
 import com.liferay.portal.kernel.service.ClassNameLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.settings.SystemSettingsLocator;
-import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.CalendarFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
@@ -115,6 +124,7 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.search.expando.ExpandoBridgeIndexer;
+import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterRegistry;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.pagination.Page;
@@ -123,16 +133,14 @@ import com.liferay.upload.UniqueFileNameProvider;
 
 import java.io.Serializable;
 
-import java.util.ArrayList;
+import java.math.BigDecimal;
+
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
@@ -467,24 +475,20 @@ public class ProductResourceImpl extends BaseProductResourceImpl {
 
 		serviceContext.setAssetTagNames(assetTagNames);
 
-		Map<String, Serializable> expandoBridgeAttributes =
-			_getExpandoBridgeAttributes(product);
-
-		if (expandoBridgeAttributes != null) {
-			serviceContext.setExpandoBridgeAttributes(expandoBridgeAttributes);
-		}
+		serviceContext.setExpandoBridgeAttributes(
+			_getExpandoBridgeAttributes(product));
 
 		DateConfig displayDateConfig = DateConfig.toDisplayDateConfig(
 			product.getDisplayDate(), serviceContext.getTimeZone());
 		DateConfig expirationDateConfig = DateConfig.toExpirationDateConfig(
 			product.getExpirationDate(), serviceContext.getTimeZone());
 
-		ProductShippingConfiguration shippingConfiguration =
+		ProductShippingConfiguration productShippingConfiguration =
 			_getProductShippingConfiguration(product);
-		ProductSubscriptionConfiguration subscriptionConfiguration =
+		ProductSubscriptionConfiguration productSubscriptionConfiguration =
 			_getProductSubscriptionConfiguration(product);
-		ProductTaxConfiguration taxConfiguration = _getProductTaxConfiguration(
-			product);
+		ProductTaxConfiguration productTaxConfiguration =
+			_getProductTaxConfiguration(product);
 
 		CPDefinition cpDefinition =
 			_cpDefinitionService.
@@ -495,16 +499,9 @@ public class ProductResourceImpl extends BaseProductResourceImpl {
 		Category[] categories = product.getCategories();
 
 		if (categories != null) {
-			List<Long> assetCategoryIds = new ArrayList<>();
-
-			for (Category category : categories) {
-				if (category.getId() != null) {
-					assetCategoryIds.add(category.getId());
-				}
-			}
-
 			serviceContext.setAssetCategoryIds(
-				ArrayUtil.toLongArray(assetCategoryIds));
+				transformToLongArray(
+					Arrays.asList(categories), Category::getId));
 		}
 		else if (cpDefinition != null) {
 			serviceContext.setAssetCategoryIds(
@@ -584,31 +581,35 @@ public class ProductResourceImpl extends BaseProductResourceImpl {
 			LanguageUtils.getLocalizedMap(metaDescriptionMap),
 			LanguageUtils.getLocalizedMap(metaKeywordsMap),
 			product.getProductType(), ignoreSKUCombinations,
-			GetterUtil.getBoolean(shippingConfiguration.getShippable(), true),
 			GetterUtil.getBoolean(
-				shippingConfiguration.getFreeShipping(), true),
+				productShippingConfiguration.getShippable(), true),
 			GetterUtil.getBoolean(
-				shippingConfiguration.getShippingSeparately(), true),
-			GetterUtil.getDouble(shippingConfiguration.getShippingExtraPrice()),
-			GetterUtil.getDouble(shippingConfiguration.getWidth()),
-			GetterUtil.getDouble(shippingConfiguration.getHeight()),
-			GetterUtil.getDouble(shippingConfiguration.getDepth()),
-			GetterUtil.getDouble(shippingConfiguration.getWeight()),
-			GetterUtil.getLong(taxConfiguration.getId()),
-			ProductUtil.isTaxExempt(null, taxConfiguration), false, null, true,
-			displayDateConfig.getMonth(), displayDateConfig.getDay(),
+				productShippingConfiguration.getFreeShipping(), true),
+			GetterUtil.getBoolean(
+				productShippingConfiguration.getShippingSeparately(), true),
+			GetterUtil.getDouble(
+				productShippingConfiguration.getShippingExtraPrice()),
+			GetterUtil.getDouble(productShippingConfiguration.getWidth()),
+			GetterUtil.getDouble(productShippingConfiguration.getHeight()),
+			GetterUtil.getDouble(productShippingConfiguration.getDepth()),
+			GetterUtil.getDouble(productShippingConfiguration.getWeight()),
+			GetterUtil.getLong(productTaxConfiguration.getId()),
+			ProductUtil.isTaxExempt(null, productTaxConfiguration), false, null,
+			true, displayDateConfig.getMonth(), displayDateConfig.getDay(),
 			displayDateConfig.getYear(), displayDateConfig.getHour(),
 			displayDateConfig.getMinute(), expirationDateConfig.getMonth(),
 			expirationDateConfig.getDay(), expirationDateConfig.getYear(),
 			expirationDateConfig.getHour(), expirationDateConfig.getMinute(),
 			GetterUtil.getBoolean(product.getNeverExpire(), true),
 			product.getDefaultSku(),
-			GetterUtil.getBoolean(subscriptionConfiguration.getEnable()),
-			GetterUtil.getInteger(subscriptionConfiguration.getLength(), 1),
+			GetterUtil.getBoolean(productSubscriptionConfiguration.getEnable()),
+			GetterUtil.getInteger(
+				productSubscriptionConfiguration.getLength(), 1),
 			GetterUtil.getString(
-				subscriptionConfiguration.getSubscriptionTypeAsString()),
+				productSubscriptionConfiguration.getSubscriptionTypeAsString()),
 			null,
-			GetterUtil.getLong(subscriptionConfiguration.getNumberOfLength()),
+			GetterUtil.getLong(
+				productSubscriptionConfiguration.getNumberOfLength()),
 			productStatus, serviceContext);
 
 		if ((product.getActive() != null) && !product.getActive()) {
@@ -654,19 +655,6 @@ public class ProductResourceImpl extends BaseProductResourceImpl {
 		).build();
 	}
 
-	private String[] _getAssetTags(CPDefinition cpDefinition) {
-		List<AssetTag> assetEntryAssetTags = _assetTagService.getTags(
-			cpDefinition.getModelClassName(), cpDefinition.getCPDefinitionId());
-
-		Stream<AssetTag> stream = assetEntryAssetTags.stream();
-
-		return stream.map(
-			AssetTag::getName
-		).toArray(
-			String[]::new
-		);
-	}
-
 	private CPDefinition _getCPDefinition(
 			CPDefinition cpDefinition, ServiceContext serviceContext)
 		throws Exception {
@@ -682,14 +670,11 @@ public class ProductResourceImpl extends BaseProductResourceImpl {
 						CProductVersionConfiguration.class.getName()));
 
 			if (cProductVersionConfiguration.enabled()) {
-				List<CPDefinition> cProductCPDefinitions =
-					_cpDefinitionService.getCProductCPDefinitions(
-						cpDefinition.getCProductId(),
-						WorkflowConstants.STATUS_DRAFT, QueryUtil.ALL_POS,
-						QueryUtil.ALL_POS);
-
 				for (CPDefinition cProductCPDefinition :
-						cProductCPDefinitions) {
+						_cpDefinitionService.getCProductCPDefinitions(
+							cpDefinition.getCProductId(),
+							WorkflowConstants.STATUS_DRAFT, QueryUtil.ALL_POS,
+							QueryUtil.ALL_POS)) {
 
 					_cpDefinitionService.updateStatus(
 						cProductCPDefinition.getCPDefinitionId(),
@@ -724,14 +709,20 @@ public class ProductResourceImpl extends BaseProductResourceImpl {
 			contextAcceptLanguage.getPreferredLocale());
 	}
 
+	private Map<String, Serializable> _getExpandoBridgeAttributes(Sku sku) {
+		return CustomFieldsUtil.toMap(
+			CPInstance.class.getName(), contextCompany.getCompanyId(),
+			sku.getCustomFields(), contextAcceptLanguage.getPreferredLocale());
+	}
+
 	private ProductShippingConfiguration _getProductShippingConfiguration(
 		Product product) {
 
-		ProductShippingConfiguration shippingConfiguration =
+		ProductShippingConfiguration productShippingConfiguration =
 			product.getShippingConfiguration();
 
-		if (shippingConfiguration != null) {
-			return shippingConfiguration;
+		if (productShippingConfiguration != null) {
+			return productShippingConfiguration;
 		}
 
 		return new ProductShippingConfiguration();
@@ -740,11 +731,11 @@ public class ProductResourceImpl extends BaseProductResourceImpl {
 	private ProductSubscriptionConfiguration
 		_getProductSubscriptionConfiguration(Product product) {
 
-		ProductSubscriptionConfiguration subscriptionConfiguration =
+		ProductSubscriptionConfiguration productSubscriptionConfiguration =
 			product.getSubscriptionConfiguration();
 
-		if (subscriptionConfiguration != null) {
-			return subscriptionConfiguration;
+		if (productSubscriptionConfiguration != null) {
+			return productSubscriptionConfiguration;
 		}
 
 		return new ProductSubscriptionConfiguration();
@@ -753,11 +744,11 @@ public class ProductResourceImpl extends BaseProductResourceImpl {
 	private ProductTaxConfiguration _getProductTaxConfiguration(
 		Product product) {
 
-		ProductTaxConfiguration taxConfiguration =
+		ProductTaxConfiguration productTaxConfiguration =
 			product.getTaxConfiguration();
 
-		if (taxConfiguration != null) {
-			return taxConfiguration;
+		if (productTaxConfiguration != null) {
+			return productTaxConfiguration;
 		}
 
 		return new ProductTaxConfiguration();
@@ -902,8 +893,25 @@ public class ProductResourceImpl extends BaseProductResourceImpl {
 
 		if (skus != null) {
 			for (Sku sku : skus) {
-				SkuUtil.addOrUpdateCPInstance(
-					_cpInstanceService, sku, cpDefinition, serviceContext);
+				serviceContext.setExpandoBridgeAttributes(
+					_getExpandoBridgeAttributes(sku));
+
+				CPInstance cpInstance = SkuUtil.addOrUpdateCPInstance(
+					_cpInstanceService, sku, cpDefinition,
+					_cpDefinitionOptionRelService,
+					_cpDefinitionOptionValueRelService, serviceContext);
+
+				serviceContext.setExpandoBridgeAttributes(null);
+
+				SkuUtil.updateCommercePriceEntries(
+					_commercePriceEntryLocalService,
+					_commercePriceListLocalService, _configurationProvider,
+					cpInstance,
+					(BigDecimal)GetterUtil.get(
+						sku.getPrice(), cpInstance.getPrice()),
+					(BigDecimal)GetterUtil.get(
+						sku.getPromoPrice(), cpInstance.getPromoPrice()),
+					serviceContext);
 			}
 		}
 
@@ -913,16 +921,13 @@ public class ProductResourceImpl extends BaseProductResourceImpl {
 
 		if (images != null) {
 			for (Attachment attachment : images) {
-				Map<String, Serializable> expandoBridgeAttributes =
-					_getExpandoBridgeAttributes(attachment);
-
-				if (expandoBridgeAttributes != null) {
-					serviceContext.setExpandoBridgeAttributes(
-						expandoBridgeAttributes);
-				}
+				serviceContext.setExpandoBridgeAttributes(
+					_getExpandoBridgeAttributes(attachment));
 
 				AttachmentUtil.addOrUpdateCPAttachmentFileEntry(
 					cpDefinition.getGroupId(), _cpAttachmentFileEntryService,
+					_cpDefinitionOptionRelService,
+					_cpDefinitionOptionValueRelService, _cpOptionService,
 					_uniqueFileNameProvider, attachment,
 					_classNameLocalService.getClassNameId(
 						cpDefinition.getModelClassName()),
@@ -937,16 +942,13 @@ public class ProductResourceImpl extends BaseProductResourceImpl {
 
 		if (attachments != null) {
 			for (Attachment attachment : attachments) {
-				Map<String, Serializable> expandoBridgeAttributes =
-					_getExpandoBridgeAttributes(attachment);
-
-				if (expandoBridgeAttributes != null) {
-					serviceContext.setExpandoBridgeAttributes(
-						expandoBridgeAttributes);
-				}
+				serviceContext.setExpandoBridgeAttributes(
+					_getExpandoBridgeAttributes(attachment));
 
 				AttachmentUtil.addOrUpdateCPAttachmentFileEntry(
 					cpDefinition.getGroupId(), _cpAttachmentFileEntryService,
+					_cpDefinitionOptionRelService,
+					_cpDefinitionOptionValueRelService, _cpOptionService,
 					_uniqueFileNameProvider, attachment,
 					_classNameLocalService.getClassNameId(
 						cpDefinition.getModelClassName()),
@@ -969,48 +971,42 @@ public class ProductResourceImpl extends BaseProductResourceImpl {
 			_commerceChannelRelService.deleteCommerceChannelRels(
 				CPDefinition.class.getName(), cpDefinition.getCPDefinitionId());
 
-			Stream<ProductChannel> stream = Arrays.stream(productChannels);
+			for (ProductChannel productChannel : productChannels) {
+				if (productChannel.getExternalReferenceCode() == null) {
+					Long commerceChannelId = productChannel.getChannelId();
 
-			List<Long> channelIds = stream.map(
-				productChannel -> {
-					if (productChannel.getExternalReferenceCode() == null) {
-						return productChannel.getChannelId();
+					if (commerceChannelId != null) {
+						_commerceChannelRelService.addCommerceChannelRel(
+							CPDefinition.class.getName(),
+							cpDefinition.getCPDefinitionId(), commerceChannelId,
+							serviceContext);
 					}
 
-					CommerceChannel commerceChannel = null;
-
-					try {
-						commerceChannel =
-							_commerceChannelService.
-								fetchByExternalReferenceCode(
-									productChannel.getExternalReferenceCode(),
-									contextCompany.getCompanyId());
-					}
-					catch (PortalException portalException) {
-						if (_log.isDebugEnabled()) {
-							_log.debug(portalException);
-						}
-					}
-
-					if (commerceChannel == null) {
-						return null;
-					}
-
-					return commerceChannel.getCommerceChannelId();
+					continue;
 				}
-			).collect(
-				Collectors.toList()
-			);
 
-			for (Long commerceChannelId : channelIds) {
-				if (commerceChannelId == null) {
+				CommerceChannel commerceChannel = null;
+
+				try {
+					commerceChannel =
+						_commerceChannelService.fetchByExternalReferenceCode(
+							productChannel.getExternalReferenceCode(),
+							contextCompany.getCompanyId());
+				}
+				catch (PortalException portalException) {
+					if (_log.isDebugEnabled()) {
+						_log.debug(portalException);
+					}
+				}
+
+				if (commerceChannel == null) {
 					continue;
 				}
 
 				_commerceChannelRelService.addCommerceChannelRel(
 					CPDefinition.class.getName(),
-					cpDefinition.getCPDefinitionId(), commerceChannelId,
-					serviceContext);
+					cpDefinition.getCPDefinitionId(),
+					commerceChannel.getCommerceChannelId(), serviceContext);
 			}
 		}
 
@@ -1026,106 +1022,128 @@ public class ProductResourceImpl extends BaseProductResourceImpl {
 			product.getProductAccountGroups();
 
 		if (productAccountGroups != null) {
-			_commerceAccountGroupRelService.deleteCommerceAccountGroupRels(
-				CPDefinition.class.getName(), cpDefinition.getCPDefinitionId());
+			_accountGroupRelLocalService.deleteAccountGroupRels(
+				CPDefinition.class.getName(),
+				new long[] {cpDefinition.getCPDefinitionId()});
 
-			Stream<ProductAccountGroup> productAccountGroupStream =
-				Arrays.stream(productAccountGroups);
+			for (ProductAccountGroup productAccountGroup :
+					productAccountGroups) {
 
-			List<Long> accountGroupIds = productAccountGroupStream.map(
-				productAccountGroup -> {
-					if (productAccountGroup.getExternalReferenceCode() ==
-							null) {
+				String externalReferenceCode =
+					productAccountGroup.getExternalReferenceCode();
 
-						return productAccountGroup.getAccountGroupId();
+				if (externalReferenceCode == null) {
+					Long accountGroupId =
+						productAccountGroup.getAccountGroupId();
+
+					if (accountGroupId != null) {
+						_accountGroupRelService.addAccountGroupRel(
+							accountGroupId, CPDefinition.class.getName(),
+							cpDefinition.getCPDefinitionId());
 					}
 
-					CommerceAccountGroup commerceAccountGroup = null;
-
-					try {
-						commerceAccountGroup =
-							_commerceAccountGroupService.
-								fetchByExternalReferenceCode(
-									contextCompany.getCompanyId(),
-									productAccountGroup.
-										getExternalReferenceCode());
-					}
-					catch (PortalException portalException) {
-						if (_log.isDebugEnabled()) {
-							_log.debug(portalException);
-						}
-					}
-
-					if (commerceAccountGroup == null) {
-						return null;
-					}
-
-					return commerceAccountGroup.getCommerceAccountGroupId();
-				}
-			).collect(
-				Collectors.toList()
-			);
-
-			for (Long accountGroupId : accountGroupIds) {
-				if (accountGroupId == null) {
 					continue;
 				}
 
-				_commerceAccountGroupRelService.addCommerceAccountGroupRel(
+				AccountGroup accountGroup = null;
+
+				try {
+					accountGroup =
+						_accountGroupService.
+							fetchAccountGroupByExternalReferenceCode(
+								productAccountGroup.getExternalReferenceCode(),
+								contextCompany.getCompanyId());
+				}
+				catch (PortalException portalException) {
+					if (_log.isDebugEnabled()) {
+						_log.debug(portalException);
+					}
+				}
+
+				if (accountGroup == null) {
+					continue;
+				}
+
+				_accountGroupRelService.addAccountGroupRel(
+					accountGroup.getAccountGroupId(),
 					CPDefinition.class.getName(),
-					cpDefinition.getCPDefinitionId(), accountGroupId,
-					serviceContext);
+					cpDefinition.getCPDefinitionId());
 			}
 		}
-
-		// Diagram
 
 		CPType cpType = _cpTypeRegistry.getCPType(
 			cpDefinition.getProductTypeName());
 
-		if ((cpType != null) &&
-			CSDiagramCPTypeConstants.NAME.equals(cpType.getName())) {
+		if (cpType == null) {
+			return cpDefinition;
+		}
 
-			Diagram diagram = product.getDiagram();
+		// Diagram
 
-			if (diagram != null) {
-				DiagramUtil.addOrUpdateCSDiagramSetting(
-					contextCompany.getCompanyId(),
-					_cpAttachmentFileEntryService,
-					cpDefinition.getCPDefinitionId(), _csDiagramSettingService,
-					diagram, cpDefinition.getGroupId(),
-					contextAcceptLanguage.getPreferredLocale(),
-					_serviceContextHelper, _uniqueFileNameProvider);
-			}
+		Diagram diagram = product.getDiagram();
+		MappedProduct[] mappedProducts = product.getMappedProducts();
+		Pin[] pins = product.getPins();
 
-			MappedProduct[] mappedProducts = product.getMappedProducts();
-
-			if (mappedProducts != null) {
-				_csDiagramEntryService.deleteCSDiagramEntries(
-					cpDefinition.getCPDefinitionId());
-
-				for (MappedProduct mappedProduct : mappedProducts) {
-					MappedProductUtil.addOrUpdateCSDiagramEntry(
+		if ((diagram != null) || (mappedProducts != null) || (pins != null)) {
+			if (CSDiagramCPTypeConstants.NAME.equals(cpType.getName())) {
+				if (diagram != null) {
+					DiagramUtil.addOrUpdateCSDiagramSetting(
 						contextCompany.getCompanyId(),
-						cpDefinition.getCPDefinitionId(), _cpDefinitionService,
-						_cpInstanceService, _csDiagramEntryService,
+						_cpAttachmentFileEntryService,
+						cpDefinition.getCPDefinitionId(),
+						_cpDefinitionOptionRelService,
+						_cpDefinitionOptionValueRelService, _cpOptionService,
+						_csDiagramSettingService, diagram,
 						cpDefinition.getGroupId(),
 						contextAcceptLanguage.getPreferredLocale(),
-						mappedProduct, _serviceContextHelper);
+						_serviceContextHelper, _uniqueFileNameProvider);
+				}
+
+				if (mappedProducts != null) {
+					_csDiagramEntryService.deleteCSDiagramEntries(
+						cpDefinition.getCPDefinitionId());
+
+					for (MappedProduct mappedProduct : mappedProducts) {
+						MappedProductUtil.addOrUpdateCSDiagramEntry(
+							contextCompany.getCompanyId(),
+							cpDefinition.getCPDefinitionId(),
+							_cpDefinitionService, _cpInstanceService,
+							_csDiagramEntryService, cpDefinition.getGroupId(),
+							contextAcceptLanguage.getPreferredLocale(),
+							mappedProduct, _serviceContextHelper);
+					}
+				}
+
+				if (pins != null) {
+					_csDiagramPinService.deleteCSDiagramPins(
+						cpDefinition.getCPDefinitionId());
+
+					for (Pin pin : pins) {
+						PinUtil.addOrUpdateCSDiagramPin(
+							cpDefinition.getCPDefinitionId(),
+							_csDiagramPinService, pin);
+					}
 				}
 			}
+			else {
+				throw new CPDefinitionProductTypeNameException();
+			}
+		}
 
-			Pin[] pins = product.getPins();
+		// Virtual
 
-			if (pins != null) {
-				_csDiagramPinService.deleteCSDiagramPins(
-					cpDefinition.getCPDefinitionId());
+		ProductVirtualSettings productVirtualSettings =
+			product.getProductVirtualSettings();
 
-				for (Pin pin : pins) {
-					PinUtil.addOrUpdateCSDiagramPin(
-						cpDefinition.getCPDefinitionId(), _csDiagramPinService,
-						pin);
-				}
+		if (productVirtualSettings != null) {
+			if (VirtualCPTypeConstants.NAME.equals(cpType.getName())) {
+				ProductVirtualSettingsUtil.addOrUpdateProductVirtualSettings(
+					cpDefinition, productVirtualSettings,
+					_cpDefinitionVirtualSettingService, _uniqueFileNameProvider,
+					serviceContext);
+			}
+			else {
+				throw new CPDefinitionProductTypeNameException();
 			}
 		}
 
@@ -1148,20 +1166,20 @@ public class ProductResourceImpl extends BaseProductResourceImpl {
 
 		cpDefinition = _getCPDefinition(cpDefinition, serviceContext);
 
-		String[] assetTags = product.getTags();
+		String[] assetTagNames = product.getTags();
 
-		if (product.getTags() == null) {
-			assetTags = _getAssetTags(cpDefinition);
+		if (assetTagNames == null) {
+			assetTagNames = transformToArray(
+				_assetTagService.getTags(
+					cpDefinition.getModelClassName(),
+					cpDefinition.getCPDefinitionId()),
+				AssetTag::getName, String.class);
 		}
 
-		serviceContext.setAssetTagNames(assetTags);
+		serviceContext.setAssetTagNames(assetTagNames);
 
-		Map<String, Serializable> expandoBridgeAttributes =
-			_getExpandoBridgeAttributes(product);
-
-		if (expandoBridgeAttributes != null) {
-			serviceContext.setExpandoBridgeAttributes(expandoBridgeAttributes);
-		}
+		serviceContext.setExpandoBridgeAttributes(
+			_getExpandoBridgeAttributes(product));
 
 		Calendar displayCalendar = CalendarFactoryUtil.getCalendar(
 			serviceContext.getTimeZone());
@@ -1184,16 +1202,9 @@ public class ProductResourceImpl extends BaseProductResourceImpl {
 					cpDefinition.getCPDefinitionId()));
 		}
 		else {
-			List<Long> assetCategoryIds = new ArrayList<>();
-
-			for (Category category : categories) {
-				if (category.getId() != null) {
-					assetCategoryIds.add(category.getId());
-				}
-			}
-
 			serviceContext.setAssetCategoryIds(
-				ArrayUtil.toLongArray(assetCategoryIds));
+				transformToLongArray(
+					Arrays.asList(categories), Category::getId));
 		}
 
 		Map<String, String> nameMap = product.getName();
@@ -1287,6 +1298,15 @@ public class ProductResourceImpl extends BaseProductResourceImpl {
 		ProductResourceImpl.class);
 
 	@Reference
+	private AccountGroupRelLocalService _accountGroupRelLocalService;
+
+	@Reference
+	private AccountGroupRelService _accountGroupRelService;
+
+	@Reference
+	private AccountGroupService _accountGroupService;
+
+	@Reference
 	private AssetCategoryLocalService _assetCategoryLocalService;
 
 	@Reference
@@ -1309,6 +1329,12 @@ public class ProductResourceImpl extends BaseProductResourceImpl {
 
 	@Reference
 	private CommerceChannelService _commerceChannelService;
+
+	@Reference
+	private CommercePriceEntryLocalService _commercePriceEntryLocalService;
+
+	@Reference
+	private CommercePriceListLocalService _commercePriceListLocalService;
 
 	@Reference
 	private ConfigurationProvider _configurationProvider;
@@ -1341,6 +1367,10 @@ public class ProductResourceImpl extends BaseProductResourceImpl {
 	@Reference
 	private CPDefinitionSpecificationOptionValueService
 		_cpDefinitionSpecificationOptionValueService;
+
+	@Reference
+	private CPDefinitionVirtualSettingService
+		_cpDefinitionVirtualSettingService;
 
 	@Reference
 	private CPInstanceService _cpInstanceService;
@@ -1381,8 +1411,10 @@ public class ProductResourceImpl extends BaseProductResourceImpl {
 	@Reference
 	private Portal _portal;
 
-	@Reference
-	private ProductDTOConverter _productDTOConverter;
+	@Reference(
+		target = "(component.name=com.liferay.headless.commerce.admin.catalog.internal.dto.v1_0.converter.ProductDTOConverter)"
+	)
+	private DTOConverter<CPDefinition, Product> _productDTOConverter;
 
 	@Reference
 	private ProductHelper _productHelper;

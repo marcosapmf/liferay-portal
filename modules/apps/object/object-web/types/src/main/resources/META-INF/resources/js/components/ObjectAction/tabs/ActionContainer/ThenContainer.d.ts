@@ -19,18 +19,17 @@ import './ThenContainer.scss';
 import {ActionError} from '../..';
 interface ThenContainerProps {
 	errors: ActionError;
-	isValidField: ({
-		businessType,
-		objectFieldSettings,
-		system,
-	}: ObjectField) => boolean;
+	isValidField: (
+		{businessType, name, objectFieldSettings, system}: ObjectField,
+		isObjectActionSystem?: boolean
+	) => boolean;
 	newObjectActionExecutors: CustomItem<string>[];
 	objectActionExecutors: CustomItem[];
 	objectDefinitionExternalReferenceCode: string;
 	objectDefinitionId: number;
 	objectDefinitionsRelationshipsURL: string;
+	setAddObjectEntryDefinitions: (values: AddObjectEntryDefinitions[]) => void;
 	setCurrentObjectDefinitionFields: (values: ObjectField[]) => void;
-	setRelationships: (values: ObjectDefinitionsRelationship[]) => void;
 	setValues: (values: Partial<ObjectAction>) => void;
 	systemObject: boolean;
 	updateParameters: (value: string) => Promise<void>;
@@ -44,8 +43,8 @@ export declare function ThenContainer({
 	objectDefinitionExternalReferenceCode,
 	objectDefinitionId,
 	objectDefinitionsRelationshipsURL,
+	setAddObjectEntryDefinitions,
 	setCurrentObjectDefinitionFields,
-	setRelationships,
 	setValues,
 	systemObject,
 	updateParameters,

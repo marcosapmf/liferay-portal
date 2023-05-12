@@ -116,8 +116,8 @@ public class SearchBarPrecedenceHelper {
 			_getSearchBarPortletPreferences(portletId, themeDisplay);
 
 		if (!Objects.equals(
-				searchBarPortletPreferences1.getFederatedSearchKeyString(),
-				searchBarPortletPreferences2.getFederatedSearchKeyString())) {
+				searchBarPortletPreferences1.getFederatedSearchKey(),
+				searchBarPortletPreferences2.getFederatedSearchKey())) {
 
 			return false;
 		}
@@ -142,7 +142,9 @@ public class SearchBarPrecedenceHelper {
 		}
 
 		return new SearchBarPortletPreferencesImpl(
-			_portletPreferencesLookup.fetchPreferences(portlet, themeDisplay));
+			Optional.ofNullable(
+				_portletPreferencesLookup.fetchPreferences(
+					portlet, themeDisplay)));
 	}
 
 	private SearchBarPortletPreferences _getSearchBarPortletPreferences(

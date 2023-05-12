@@ -136,6 +136,15 @@ public class BNDDefinitionKeysCheck extends BaseDefinitionKeysCheck {
 				return -definition1.compareTo(definition2);
 			}
 
+			String definitionKey1 = StringUtil.extractFirst(
+				definition1, StringPool.COLON);
+			String definitionKey2 = StringUtil.extractFirst(
+				definition2, StringPool.COLON);
+
+			if ((definitionKey1 != null) && (definitionKey2 != null)) {
+				return definitionKey1.compareTo(definitionKey2);
+			}
+
 			return definition1.compareTo(definition2);
 		}
 

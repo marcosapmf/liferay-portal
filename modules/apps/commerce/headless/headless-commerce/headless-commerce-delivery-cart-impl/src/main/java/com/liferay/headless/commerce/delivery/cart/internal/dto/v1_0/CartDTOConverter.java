@@ -15,6 +15,7 @@
 package com.liferay.headless.commerce.delivery.cart.internal.dto.v1_0;
 
 import com.liferay.commerce.constants.CommerceOrderConstants;
+import com.liferay.commerce.constants.CommerceOrderPaymentConstants;
 import com.liferay.commerce.currency.model.CommerceCurrency;
 import com.liferay.commerce.currency.model.CommerceMoney;
 import com.liferay.commerce.currency.util.CommercePriceFormatter;
@@ -53,7 +54,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = "dto.class.name=com.liferay.headless.commerce.delivery.cart.dto.v1_0.Cart",
-	service = {CartDTOConverter.class, DTOConverter.class}
+	service = DTOConverter.class
 )
 public class CartDTOConverter implements DTOConverter<CommerceOrder, Cart> {
 
@@ -93,12 +94,12 @@ public class CartDTOConverter implements DTOConverter<CommerceOrder, Cart> {
 			WorkflowConstants.getStatusLabel(commerceOrder.getStatus()));
 
 		String commerceOrderPaymentStatusLabel =
-			CommerceOrderConstants.getPaymentStatusLabel(
+			CommerceOrderPaymentConstants.getOrderPaymentStatusLabel(
 				commerceOrder.getPaymentStatus());
 
 		String commerceOrderPaymentStatusLabelI18n = _language.get(
 			resourceBundle,
-			CommerceOrderConstants.getPaymentStatusLabel(
+			CommerceOrderPaymentConstants.getOrderPaymentStatusLabel(
 				commerceOrder.getPaymentStatus()));
 
 		Cart cart = new Cart() {

@@ -15,9 +15,13 @@
 package com.liferay.fragment.internal.processor;
 
 import com.liferay.fragment.model.FragmentEntryLink;
+import com.liferay.fragment.processor.CSSFragmentEntryProcessor;
+import com.liferay.fragment.processor.DocumentFragmentEntryProcessor;
+import com.liferay.fragment.processor.FragmentEntryAutocompleteContributor;
 import com.liferay.fragment.processor.FragmentEntryProcessor;
 import com.liferay.fragment.processor.FragmentEntryProcessorContext;
 import com.liferay.fragment.processor.FragmentEntryProcessorRegistry;
+import com.liferay.fragment.processor.FragmentEntryValidator;
 import com.liferay.osgi.service.tracker.collections.list.ServiceTrackerList;
 import com.liferay.osgi.service.tracker.collections.list.ServiceTrackerListFactory;
 import com.liferay.osgi.service.tracker.collections.map.PropertyServiceReferenceComparator;
@@ -27,10 +31,15 @@ import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
+import com.liferay.portal.kernel.util.LocaleUtil;
 
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.service.component.annotations.Activate;
@@ -49,11 +58,13 @@ public class FragmentEntryProcessorRegistryImpl
 	public JSONArray getAvailableTagsJSONArray() {
 		JSONArray jsonArray = _jsonFactory.createJSONArray();
 
-		for (FragmentEntryProcessor fragmentEntryProcessor :
-				_serviceTrackerList) {
+		for (FragmentEntryAutocompleteContributor
+				fragmentEntryAutocompleteContributor :
+					_fragmentEntryAutocompleteContributors) {
 
 			JSONArray availableTagsJSONArray =
-				fragmentEntryProcessor.getAvailableTagsJSONArray();
+				fragmentEntryAutocompleteContributor.
+					getAvailableTagsJSONArray();
 
 			if (availableTagsJSONArray == null) {
 				continue;
@@ -72,7 +83,7 @@ public class FragmentEntryProcessorRegistryImpl
 		JSONArray jsonArray = _jsonFactory.createJSONArray();
 
 		for (FragmentEntryProcessor fragmentEntryProcessor :
-				_serviceTrackerList) {
+				_fragmentEntryProcessors) {
 
 			JSONArray dataAttributesJSONArray =
 				fragmentEntryProcessor.getDataAttributesJSONArray();
@@ -96,7 +107,7 @@ public class FragmentEntryProcessorRegistryImpl
 		JSONObject jsonObject = _jsonFactory.createJSONObject();
 
 		for (FragmentEntryProcessor fragmentEntryProcessor :
-				_serviceTrackerList) {
+				_fragmentEntryProcessors) {
 
 			JSONObject defaultEditableValuesJSONObject =
 				fragmentEntryProcessor.getDefaultEditableValuesJSONObject(
@@ -123,10 +134,10 @@ public class FragmentEntryProcessorRegistryImpl
 
 		String css = fragmentEntryLink.getCss();
 
-		for (FragmentEntryProcessor fragmentEntryProcessor :
-				_serviceTrackerList) {
+		for (CSSFragmentEntryProcessor cssFragmentEntryProcessor :
+				_cssFragmentEntryProcessors) {
 
-			css = fragmentEntryProcessor.processFragmentEntryLinkCSS(
+			css = cssFragmentEntryProcessor.processFragmentEntryLinkCSS(
 				fragmentEntryLink, css, fragmentEntryProcessorContext);
 		}
 
@@ -142,13 +153,24 @@ public class FragmentEntryProcessorRegistryImpl
 		String html = fragmentEntryLink.getHtml();
 
 		for (FragmentEntryProcessor fragmentEntryProcessor :
-				_serviceTrackerList) {
+				_fragmentEntryProcessors) {
 
 			html = fragmentEntryProcessor.processFragmentEntryLinkHTML(
 				fragmentEntryLink, html, fragmentEntryProcessorContext);
 		}
 
-		return html;
+		Document document = _getDocument(html);
+
+		for (DocumentFragmentEntryProcessor documentFragmentEntryProcessor :
+				_documentFragmentEntryProcessors) {
+
+			documentFragmentEntryProcessor.processFragmentEntryLinkHTML(
+				fragmentEntryLink, document, fragmentEntryProcessorContext);
+		}
+
+		Element bodyElement = document.body();
+
+		return bodyElement.html();
 	}
 
 	@Override
@@ -165,11 +187,11 @@ public class FragmentEntryProcessorRegistryImpl
 			return;
 		}
 
-		for (FragmentEntryProcessor fragmentEntryProcessor :
-				_serviceTrackerList) {
+		for (FragmentEntryValidator fragmentEntryValidator :
+				_fragmentEntryValidators) {
 
-			fragmentEntryProcessor.validateFragmentEntryHTML(
-				html, configuration);
+			fragmentEntryValidator.validateFragmentEntryHTML(
+				html, configuration, LocaleUtil.getDefault());
 		}
 
 		validHTMLs.add(html);
@@ -177,8 +199,28 @@ public class FragmentEntryProcessorRegistryImpl
 
 	@Activate
 	protected void activate(BundleContext bundleContext) {
-		_serviceTrackerList = ServiceTrackerListFactory.open(
+		_cssFragmentEntryProcessors = ServiceTrackerListFactory.open(
+			bundleContext, CSSFragmentEntryProcessor.class,
+			Collections.reverseOrder(
+				new PropertyServiceReferenceComparator<>(
+					"fragment.entry.processor.priority")));
+		_documentFragmentEntryProcessors = ServiceTrackerListFactory.open(
+			bundleContext, DocumentFragmentEntryProcessor.class,
+			Collections.reverseOrder(
+				new PropertyServiceReferenceComparator<>(
+					"fragment.entry.processor.priority")));
+		_fragmentEntryAutocompleteContributors = ServiceTrackerListFactory.open(
+			bundleContext, FragmentEntryAutocompleteContributor.class,
+			Collections.reverseOrder(
+				new PropertyServiceReferenceComparator<>(
+					"fragment.entry.processor.priority")));
+		_fragmentEntryProcessors = ServiceTrackerListFactory.open(
 			bundleContext, FragmentEntryProcessor.class,
+			Collections.reverseOrder(
+				new PropertyServiceReferenceComparator<>(
+					"fragment.entry.processor.priority")));
+		_fragmentEntryValidators = ServiceTrackerListFactory.open(
+			bundleContext, FragmentEntryValidator.class,
 			Collections.reverseOrder(
 				new PropertyServiceReferenceComparator<>(
 					"fragment.entry.processor.priority")));
@@ -186,7 +228,23 @@ public class FragmentEntryProcessorRegistryImpl
 
 	@Deactivate
 	protected void deactivate() {
-		_serviceTrackerList.close();
+		_cssFragmentEntryProcessors.close();
+		_documentFragmentEntryProcessors.close();
+		_fragmentEntryAutocompleteContributors.close();
+		_fragmentEntryProcessors.close();
+		_fragmentEntryValidators.close();
+	}
+
+	private Document _getDocument(String html) {
+		Document document = Jsoup.parseBodyFragment(html);
+
+		Document.OutputSettings outputSettings = new Document.OutputSettings();
+
+		outputSettings.prettyPrint(false);
+
+		document.outputSettings(outputSettings);
+
+		return document;
 	}
 
 	private static final ThreadLocal<Set<String>> _validHTMLsThreadLocal =
@@ -195,9 +253,16 @@ public class FragmentEntryProcessorRegistryImpl
 				"._validHTMLsThreadLocal",
 			HashSet::new);
 
+	private ServiceTrackerList<CSSFragmentEntryProcessor>
+		_cssFragmentEntryProcessors;
+	private ServiceTrackerList<DocumentFragmentEntryProcessor>
+		_documentFragmentEntryProcessors;
+	private ServiceTrackerList<FragmentEntryAutocompleteContributor>
+		_fragmentEntryAutocompleteContributors;
+	private ServiceTrackerList<FragmentEntryProcessor> _fragmentEntryProcessors;
+	private ServiceTrackerList<FragmentEntryValidator> _fragmentEntryValidators;
+
 	@Reference
 	private JSONFactory _jsonFactory;
-
-	private ServiceTrackerList<FragmentEntryProcessor> _serviceTrackerList;
 
 }

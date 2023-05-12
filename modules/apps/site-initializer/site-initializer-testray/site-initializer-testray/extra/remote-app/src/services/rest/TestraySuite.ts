@@ -13,15 +13,15 @@
  */
 
 import TestrayError from '../../TestrayError';
+import Rest from '../../core/Rest';
+import SearchBuilder from '../../core/SearchBuilder';
 import i18n from '../../i18n';
 import yupSchema from '../../schema/yup';
-import {SearchBuilder} from '../../util/search';
-import Rest from './Rest';
 import {APIResponse, TestraySuite} from './types';
 
 type Suite = typeof yupSchema.suite.__outputType & {projectId: number};
 
-class TestraySuiteRest extends Rest<Suite, TestraySuite> {
+class TestraySuiteImpl extends Rest<Suite, TestraySuite> {
 	constructor() {
 		super({
 			adapter: ({
@@ -76,4 +76,6 @@ class TestraySuiteRest extends Rest<Suite, TestraySuite> {
 	}
 }
 
-export const testraySuiteRest = new TestraySuiteRest();
+const testraySuiteImpl = new TestraySuiteImpl();
+
+export {testraySuiteImpl};

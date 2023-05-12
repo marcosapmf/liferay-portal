@@ -32,12 +32,7 @@ import org.osgi.service.component.annotations.Reference;
 /**
  * @author Alessio Antonio Rendina
  */
-@Component(
-	service = {
-		CPDefinitionSpecificationOptionValueInfoItemRenderer.class,
-		InfoItemRenderer.class
-	}
-)
+@Component(service = InfoItemRenderer.class)
 public class CPDefinitionSpecificationOptionValueInfoItemRenderer
 	implements InfoItemRenderer<CPDefinitionSpecificationOptionValue> {
 
@@ -58,14 +53,14 @@ public class CPDefinitionSpecificationOptionValueInfoItemRenderer
 		}
 
 		try {
-			httpServletRequest.setAttribute(
-				CPWebKeys.CP_DEFINITION_SPECIFICATION_OPTION_VALUE,
-				cpDefinitionSpecificationOptionValue);
-
 			RequestDispatcher requestDispatcher =
 				_servletContext.getRequestDispatcher(
 					"/info/item/renderer" +
 						"/cp_definition_specification_option_value/page.jsp");
+
+			httpServletRequest.setAttribute(
+				CPWebKeys.CP_DEFINITION_SPECIFICATION_OPTION_VALUE,
+				cpDefinitionSpecificationOptionValue);
 
 			requestDispatcher.include(httpServletRequest, httpServletResponse);
 		}

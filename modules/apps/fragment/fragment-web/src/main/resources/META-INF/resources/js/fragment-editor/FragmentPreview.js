@@ -22,6 +22,8 @@ import classNames from 'classnames';
 import {cancelDebounce, debounce, fetch} from 'frontend-js-web';
 import React, {useCallback, useEffect, useRef, useState} from 'react';
 
+import createFile from './createFile';
+
 /**
  * Defined ratios for preview sizing.
  */
@@ -34,11 +36,11 @@ const SIZE_RATIOS = {
 		height: '',
 		width: '',
 	},
-	'mobile-portrait': {
+	'portrait-phone': {
 		height: 16,
 		width: 10,
 	},
-	'tablet-portrait': {
+	'tablet': {
 		height: 3,
 		width: 4,
 	},
@@ -47,12 +49,14 @@ const SIZE_RATIOS = {
 /**
  * Available preview sizes in order.
  */
-const PREVIEW_SIZES = [
-	'desktop',
-	'tablet-portrait',
-	'mobile-portrait',
-	'full-size',
-];
+const PREVIEW_SIZES = ['desktop', 'tablet', 'portrait-phone', 'full-size'];
+
+const PREVIEW_SIZES_LABELS = {
+	'desktop': Liferay.Language.get('desktop'),
+	'full-size': Liferay.Language.get('full-size'),
+	'portrait-phone': Liferay.Language.get('portrait-phone'),
+	'tablet': Liferay.Language.get('tablet'),
+};
 
 const stopEventPropagation = (event) => {
 	event.preventDefault();
@@ -85,9 +89,9 @@ const FragmentPreview = ({
 				const formData = new FormData();
 
 				formData.append(`${namespace}configuration`, configuration);
-				formData.append(`${namespace}css`, btoa(css));
-				formData.append(`${namespace}html`, btoa(html));
-				formData.append(`${namespace}js`, btoa(js));
+				formData.append(`${namespace}css`, createFile('css', css));
+				formData.append(`${namespace}html`, createFile('html', html));
+				formData.append(`${namespace}js`, createFile('js', js));
 
 				fetch(urls.render, {
 					body: formData,
@@ -165,6 +169,7 @@ const FragmentPreview = ({
 			<div className="btn-group fragment-preview__toolbar">
 				{PREVIEW_SIZES.map((previewSize) => (
 					<ClayButtonWithIcon
+						aria-label={PREVIEW_SIZES_LABELS[previewSize]}
 						borderless={true}
 						className={classNames({
 							active: currentPreviewSize === previewSize,
@@ -174,6 +179,7 @@ const FragmentPreview = ({
 						onClick={() => setCurrentPreviewSize(previewSize)}
 						size="sm"
 						symbol={previewSize}
+						title={PREVIEW_SIZES_LABELS[previewSize]}
 					/>
 				))}
 			</div>

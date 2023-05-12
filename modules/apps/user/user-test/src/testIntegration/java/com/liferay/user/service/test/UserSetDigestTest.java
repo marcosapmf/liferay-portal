@@ -22,6 +22,7 @@ import com.liferay.portal.kernel.exception.UserEmailAddressException;
 import com.liferay.portal.kernel.exception.UserScreenNameException;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.model.UserConstants;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
@@ -35,6 +36,7 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import java.util.Calendar;
 import java.util.Locale;
 
+import org.junit.Assert;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -79,20 +81,33 @@ public class UserSetDigestTest {
 		user.setScreenName(RandomTestUtil.randomString());
 		user.setEmailAddress(_generateRandomEmailAddress());
 
-		user.setDigest(user.getDigest(RandomTestUtil.randomString()));
+		String digest = user.getDigest(RandomTestUtil.randomString());
+
+		Assert.assertNotNull(digest);
+
+		user.setDigest(digest);
+
+		Assert.assertEquals(digest, user.getDigest());
 	}
 
-	@Test(expected = IllegalStateException.class)
+	@Test
 	public void testSetDigestBeforePrerequisites() throws Exception {
 		User user = _userLocalService.createUser(RandomTestUtil.nextLong());
 
 		user.setDigest(user.getDigest(RandomTestUtil.randomString()));
 
+		Assert.assertNull(
+			"User digest should be null if screen name and/or email address " +
+				"is not set",
+			user.getDigest());
+
 		user.setScreenName(RandomTestUtil.randomString());
 		user.setEmailAddress(_generateRandomEmailAddress());
+
+		Assert.assertNotNull(user.getDigest());
 	}
 
-	@Test(expected = IllegalStateException.class)
+	@Test
 	public void testSetEmailAndDigestBeforeScreenName() throws Exception {
 		User user = _userLocalService.createUser(RandomTestUtil.nextLong());
 
@@ -100,10 +115,16 @@ public class UserSetDigestTest {
 
 		user.setDigest(user.getDigest(RandomTestUtil.randomString()));
 
+		Assert.assertNull(
+			"User digest should be null if screen name is not set",
+			user.getDigest());
+
 		user.setScreenName(RandomTestUtil.randomString());
+
+		Assert.assertNotNull(user.getDigest());
 	}
 
-	@Test(expected = IllegalStateException.class)
+	@Test
 	public void testSetScreenNameAndDigestBeforeEmailAddress()
 		throws Exception {
 
@@ -113,7 +134,13 @@ public class UserSetDigestTest {
 
 		user.setDigest(user.getDigest(RandomTestUtil.randomString()));
 
+		Assert.assertNull(
+			"User digest should be null if email address is not set",
+			user.getDigest());
+
 		user.setEmailAddress(_generateRandomEmailAddress());
+
+		Assert.assertNotNull(user.getDigest());
 	}
 
 	private String _generateRandomEmailAddress() {
@@ -160,9 +187,9 @@ public class UserSetDigestTest {
 			creatorUserId, companyId, autoPassword, password1, password2,
 			autoScreenName, screenName, emailAddress, locale, firstName,
 			middleName, lastName, prefixListTypeId, suffixListTypeId, male,
-			birthdayMonth, birthdayDay, birthdayYear, jobTitle, groupIds,
-			organizationIds, roleIds, userGroupIds, sendEmail,
-			new ServiceContext());
+			birthdayMonth, birthdayDay, birthdayYear, jobTitle,
+			UserConstants.TYPE_REGULAR, groupIds, organizationIds, roleIds,
+			userGroupIds, sendEmail, new ServiceContext());
 	}
 
 	@Inject

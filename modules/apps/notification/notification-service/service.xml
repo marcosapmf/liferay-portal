@@ -170,12 +170,15 @@
 		</finder>
 	</entity>
 	<exceptions>
+		<exception>NotificationQueueEntryStatus</exception>
 		<exception>NotificationRecipientSettingValue</exception>
 		<exception>NotificationTemplateAttachmentObjectFieldId</exception>
+		<exception>NotificationTemplateDescription</exception>
 		<exception>NotificationTemplateEditorType</exception>
 		<exception>NotificationTemplateFrom</exception>
 		<exception>NotificationTemplateName</exception>
 		<exception>NotificationTemplateObjectDefinitionId</exception>
+		<exception>NotificationTemplateSubject</exception>
 		<exception>NotificationTemplateType</exception>
 	</exceptions>
 </service-builder>

@@ -15,12 +15,12 @@
 package com.liferay.layout.seo.service.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
-import com.liferay.dynamic.data.mapping.kernel.DDMFormFieldValue;
-import com.liferay.dynamic.data.mapping.kernel.DDMFormValues;
-import com.liferay.dynamic.data.mapping.kernel.StorageEngineManagerUtil;
-import com.liferay.dynamic.data.mapping.kernel.Value;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
+import com.liferay.dynamic.data.mapping.model.Value;
 import com.liferay.dynamic.data.mapping.service.DDMStructureLocalService;
+import com.liferay.dynamic.data.mapping.storage.DDMFormFieldValue;
+import com.liferay.dynamic.data.mapping.storage.DDMFormValues;
+import com.liferay.dynamic.data.mapping.storage.DDMStorageEngineManager;
 import com.liferay.dynamic.data.mapping.util.DDM;
 import com.liferay.layout.seo.model.LayoutSEOEntry;
 import com.liferay.layout.seo.service.LayoutSEOEntryLocalService;
@@ -153,7 +153,7 @@ public class LayoutSEOEntryLocalServiceTest {
 				true, Collections.singletonMap(LocaleUtil.US, "title"),
 				serviceContext);
 
-		DDMFormValues ddmFormValues = StorageEngineManagerUtil.getDDMFormValues(
+		DDMFormValues ddmFormValues = _ddmStorageEngineManager.getDDMFormValues(
 			layoutSEOEntry.getDDMStorageId());
 
 		Assert.assertNotNull(ddmFormValues);
@@ -367,6 +367,9 @@ public class LayoutSEOEntryLocalServiceTest {
 
 	@Inject
 	private DDM _ddm;
+
+	@Inject
+	private DDMStorageEngineManager _ddmStorageEngineManager;
 
 	@Inject
 	private DDMStructureLocalService _ddmStructureLocalService;

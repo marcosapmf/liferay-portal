@@ -17,12 +17,13 @@ export function normalizeFieldSettings(
 ) {
 	const settings: {
 		[key in ObjectFieldSettingName]?:
-			| string
-			| number
-			| boolean
+			| LocalizedValue<string>
 			| NameValueObject[]
 			| ObjectFieldFilterSetting[]
-			| ObjectFieldPicklistSetting;
+			| ObjectFieldPicklistSetting
+			| boolean
+			| number
+			| string;
 	} = {};
 
 	objectFieldSettings?.forEach(({name, value}) => {
@@ -30,6 +31,15 @@ export function normalizeFieldSettings(
 	});
 
 	return settings;
+}
+
+export function removeFieldSettings(
+	settingsToRemove: ObjectFieldSettingName[],
+	values: Partial<ObjectField>
+): ObjectFieldSetting[] {
+	return values.objectFieldSettings!.filter(
+		(setting) => !settingsToRemove.includes(setting.name)
+	);
 }
 
 export function updateFieldSettings(

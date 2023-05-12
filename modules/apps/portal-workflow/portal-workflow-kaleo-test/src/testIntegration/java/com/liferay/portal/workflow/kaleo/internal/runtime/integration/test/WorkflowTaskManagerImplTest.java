@@ -150,7 +150,7 @@ public class WorkflowTaskManagerImplTest extends BaseWorkflowManagerTestCase {
 	public static void setUpClass() throws Exception {
 		_company = CompanyTestUtil.addCompany();
 
-		PortalInstances.initCompany(_company.getWebId());
+		PortalInstances.initCompany(_company);
 
 		_companyAdminUser = UserTestUtil.addCompanyAdminUser(_company);
 
@@ -645,51 +645,6 @@ public class WorkflowTaskManagerImplTest extends BaseWorkflowManagerTestCase {
 	}
 
 	@Test
-	public void testApproveScriptAssignmentOrganizationAndSiteReviewer()
-		throws Exception {
-
-		Organization organization = _createOrganization(true);
-
-		User organizationReviewerUser = _createUser(
-			_ORGANIZATION_CONTENT_REVIEWER, organization.getGroup());
-
-		_organizationLocalService.addUserOrganization(
-			organizationReviewerUser.getUserId(), organization);
-
-		User siteAdministratorUser = _createUser(
-			RoleConstants.SITE_ADMINISTRATOR);
-
-		_organizationLocalService.addUserOrganization(
-			siteAdministratorUser.getUserId(), organization);
-
-		_serviceContext = ServiceContextTestUtil.getServiceContext(
-			organization.getGroupId());
-
-		_activateWorkflow(
-			organization.getGroupId(), BlogsEntry.class.getName(), 0, 0,
-			_SCRIPTED_SINGLE_APPROVER, 1);
-
-		BlogsEntry blogsEntry = _addBlogsEntry(siteAdministratorUser);
-
-		_assignWorkflowTaskToUser(
-			organizationReviewerUser, organizationReviewerUser);
-
-		_completeWorkflowTask(organizationReviewerUser, Constants.APPROVE);
-
-		blogsEntry = _blogsEntryLocalService.getBlogsEntry(
-			blogsEntry.getEntryId());
-
-		Assert.assertEquals(
-			WorkflowConstants.STATUS_APPROVED, blogsEntry.getStatus());
-
-		_deactivateWorkflow(
-			organization.getGroupId(), BlogsEntry.class.getName(), 0, 0);
-
-		_serviceContext = ServiceContextTestUtil.getServiceContext(
-			_group.getGroupId());
-	}
-
-	@Test
 	public void testApproveSiteMember() throws Exception {
 		_activateWorkflow(
 			JournalFolder.class.getName(),
@@ -962,6 +917,114 @@ public class WorkflowTaskManagerImplTest extends BaseWorkflowManagerTestCase {
 			_adminUser.getUserId(), workflowTask.getAssigneeUserId());
 
 		_deactivateWorkflow(BlogsEntry.class.getName(), 0, 0);
+	}
+
+	@Test
+	public void testScriptedAssignment() throws Exception {
+
+		// Roles Scripted Assignment
+
+		Organization organization = _createOrganization(true);
+
+		User organizationReviewerUser = _createUser(
+			_ORGANIZATION_CONTENT_REVIEWER, organization.getGroup());
+
+		_organizationLocalService.addUserOrganization(
+			organizationReviewerUser.getUserId(), organization);
+
+		User siteAdministratorUser = _createUser(
+			RoleConstants.SITE_ADMINISTRATOR);
+
+		_organizationLocalService.addUserOrganization(
+			siteAdministratorUser.getUserId(), organization);
+
+		_serviceContext = ServiceContextTestUtil.getServiceContext(
+			organization.getGroupId());
+
+		_activateWorkflow(
+			organization.getGroupId(), BlogsEntry.class.getName(), 0, 0,
+			_SCRIPTED_SINGLE_APPROVER_1, 1);
+
+		BlogsEntry blogsEntry = _addBlogsEntry(siteAdministratorUser);
+
+		_assignWorkflowTaskToUser(
+			organizationReviewerUser, organizationReviewerUser);
+
+		_completeWorkflowTask(organizationReviewerUser, Constants.APPROVE);
+
+		blogsEntry = _blogsEntryLocalService.getBlogsEntry(
+			blogsEntry.getEntryId());
+
+		Assert.assertEquals(
+			WorkflowConstants.STATUS_APPROVED, blogsEntry.getStatus());
+
+		_deactivateWorkflow(
+			organization.getGroupId(), BlogsEntry.class.getName(), 0, 0);
+
+		_serviceContext = ServiceContextTestUtil.getServiceContext(
+			_group.getGroupId());
+
+		// User Scripted Assignment
+
+		_activateWorkflow(
+			0, BlogsEntry.class.getName(), 0, 0, _SCRIPTED_SINGLE_APPROVER_2,
+			1);
+
+		User user1 = UserTestUtil.addUser(
+			_company.getCompanyId(), _companyAdminUser.getUserId(),
+			StringPool.BLANK, "user1@liferay.com",
+			RandomTestUtil.randomString(
+				NumericStringRandomizerBumper.INSTANCE,
+				UniqueStringRandomizerBumper.INSTANCE),
+			LocaleUtil.getDefault(), RandomTestUtil.randomString(),
+			RandomTestUtil.randomString(), null,
+			ServiceContextTestUtil.getServiceContext());
+
+		blogsEntry = _addBlogsEntry(user1);
+
+		_completeWorkflowTask(user1, Constants.APPROVE);
+
+		blogsEntry = _blogsEntryLocalService.getBlogsEntry(
+			blogsEntry.getEntryId());
+
+		Assert.assertEquals(
+			WorkflowConstants.STATUS_APPROVED, blogsEntry.getStatus());
+
+		_deactivateWorkflow(0, BlogsEntry.class.getName(), 0, 0);
+
+		// Users Scripted Assignment
+
+		_activateWorkflow(
+			0, BlogsEntry.class.getName(), 0, 0, _SCRIPTED_SINGLE_APPROVER_2,
+			1);
+
+		User user2 = UserTestUtil.addUser(
+			_company.getCompanyId(), _companyAdminUser.getUserId(),
+			StringPool.BLANK, "user2@liferay.com",
+			RandomTestUtil.randomString(
+				NumericStringRandomizerBumper.INSTANCE,
+				UniqueStringRandomizerBumper.INSTANCE),
+			LocaleUtil.getDefault(), RandomTestUtil.randomString(),
+			RandomTestUtil.randomString(), null,
+			ServiceContextTestUtil.getServiceContext());
+
+		_activateWorkflow(
+			0, BlogsEntry.class.getName(), 0, 0, _SCRIPTED_SINGLE_APPROVER_3,
+			1);
+
+		blogsEntry = _addBlogsEntry(user2);
+
+		_assignWorkflowTaskToUser(user1, user2);
+
+		_completeWorkflowTask(user2, Constants.APPROVE);
+
+		blogsEntry = _blogsEntryLocalService.getBlogsEntry(
+			blogsEntry.getEntryId());
+
+		Assert.assertEquals(
+			WorkflowConstants.STATUS_APPROVED, blogsEntry.getStatus());
+
+		_deactivateWorkflow(0, BlogsEntry.class.getName(), 0, 0);
 	}
 
 	@Test
@@ -1330,7 +1393,7 @@ public class WorkflowTaskManagerImplTest extends BaseWorkflowManagerTestCase {
 
 	private Folder _addFolder() throws Exception {
 		return _dlAppService.addFolder(
-			_group.getGroupId(), 0, RandomTestUtil.randomString(),
+			null, _group.getGroupId(), 0, RandomTestUtil.randomString(),
 			RandomTestUtil.randomString(), _serviceContext);
 	}
 
@@ -1361,7 +1424,7 @@ public class WorkflowTaskManagerImplTest extends BaseWorkflowManagerTestCase {
 
 		return _journalArticleLocalService.addArticle(
 			null, _adminUser.getUserId(), _group.getGroupId(), folderId,
-			titleMap, descriptionMap, content, ddmStructure.getStructureKey(),
+			titleMap, descriptionMap, content, ddmStructure.getStructureId(),
 			ddmTemplate.getTemplateKey(), _serviceContext);
 	}
 
@@ -1547,22 +1610,22 @@ public class WorkflowTaskManagerImplTest extends BaseWorkflowManagerTestCase {
 			StringUtil.randomString(), site);
 	}
 
-	private void _createScriptedAssignmentWorkflow() throws Exception {
+	private void _createScriptedAssignmentWorkflow(String fileName, String name)
+		throws Exception {
+
 		try {
 			_workflowDefinitionManager.getWorkflowDefinition(
-				_adminUser.getCompanyId(), _SCRIPTED_SINGLE_APPROVER, 1);
+				_adminUser.getCompanyId(), name, 1);
 		}
 		catch (WorkflowException workflowException) {
 			if (_log.isDebugEnabled()) {
 				_log.debug(workflowException);
 			}
 
-			String content = _read(
-				"single-approver-scripted-assignment-workflow-definition.xml");
+			String content = _read(fileName);
 
 			_workflowDefinitionManager.deployWorkflowDefinition(
-				_adminUser.getCompanyId(), _adminUser.getUserId(),
-				_SCRIPTED_SINGLE_APPROVER, _SCRIPTED_SINGLE_APPROVER,
+				_adminUser.getCompanyId(), _adminUser.getUserId(), name, name,
 				content.getBytes());
 		}
 	}
@@ -1827,7 +1890,15 @@ public class WorkflowTaskManagerImplTest extends BaseWorkflowManagerTestCase {
 
 	private void _setUpWorkflow() throws Exception {
 		_createJoinXorWorkflow();
-		_createScriptedAssignmentWorkflow();
+		_createScriptedAssignmentWorkflow(
+			"single-approver-scripted-assignment-1-workflow-definition.xml",
+			_SCRIPTED_SINGLE_APPROVER_1);
+		_createScriptedAssignmentWorkflow(
+			"single-approver-scripted-assignment-2-workflow-definition.xml",
+			_SCRIPTED_SINGLE_APPROVER_2);
+		_createScriptedAssignmentWorkflow(
+			"single-approver-scripted-assignment-3-workflow-definition.xml",
+			_SCRIPTED_SINGLE_APPROVER_3);
 		_createSiteMemberWorkflow();
 	}
 
@@ -1892,8 +1963,14 @@ public class WorkflowTaskManagerImplTest extends BaseWorkflowManagerTestCase {
 
 	private static final String _REVIEW = "review";
 
-	private static final String _SCRIPTED_SINGLE_APPROVER =
-		"Scripted Single Approver";
+	private static final String _SCRIPTED_SINGLE_APPROVER_1 =
+		"Scripted Single Approver 1";
+
+	private static final String _SCRIPTED_SINGLE_APPROVER_2 =
+		"Scripted Single Approver 2";
+
+	private static final String _SCRIPTED_SINGLE_APPROVER_3 =
+		"Scripted Single Approver 3";
 
 	private static final String _SITE_MEMBER_SINGLE_APPROVER =
 		"Site Member Single Approver";

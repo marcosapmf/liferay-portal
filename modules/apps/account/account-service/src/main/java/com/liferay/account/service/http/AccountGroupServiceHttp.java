@@ -52,7 +52,8 @@ public class AccountGroupServiceHttp {
 
 	public static com.liferay.account.model.AccountGroup addAccountGroup(
 			HttpPrincipal httpPrincipal, long userId, String description,
-			String name)
+			String name,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		try {
@@ -61,7 +62,7 @@ public class AccountGroupServiceHttp {
 				_addAccountGroupParameterTypes0);
 
 			MethodHandler methodHandler = new MethodHandler(
-				methodKey, userId, description, name);
+				methodKey, userId, description, name, serviceContext);
 
 			Object returnObj = null;
 
@@ -167,6 +168,174 @@ public class AccountGroupServiceHttp {
 		}
 	}
 
+	public static com.liferay.account.model.AccountGroup
+			fetchAccountGroupByExternalReferenceCode(
+				HttpPrincipal httpPrincipal, String externalReferenceCode,
+				long companyId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		try {
+			MethodKey methodKey = new MethodKey(
+				AccountGroupServiceUtil.class,
+				"fetchAccountGroupByExternalReferenceCode",
+				_fetchAccountGroupByExternalReferenceCodeParameterTypes3);
+
+			MethodHandler methodHandler = new MethodHandler(
+				methodKey, externalReferenceCode, companyId);
+
+			Object returnObj = null;
+
+			try {
+				returnObj = TunnelUtil.invoke(httpPrincipal, methodHandler);
+			}
+			catch (Exception exception) {
+				if (exception instanceof
+						com.liferay.portal.kernel.exception.PortalException) {
+
+					throw (com.liferay.portal.kernel.exception.PortalException)
+						exception;
+				}
+
+				throw new com.liferay.portal.kernel.exception.SystemException(
+					exception);
+			}
+
+			return (com.liferay.account.model.AccountGroup)returnObj;
+		}
+		catch (com.liferay.portal.kernel.exception.SystemException
+					systemException) {
+
+			_log.error(systemException, systemException);
+
+			throw systemException;
+		}
+	}
+
+	public static com.liferay.account.model.AccountGroup getAccountGroup(
+			HttpPrincipal httpPrincipal, long accountGroupId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		try {
+			MethodKey methodKey = new MethodKey(
+				AccountGroupServiceUtil.class, "getAccountGroup",
+				_getAccountGroupParameterTypes4);
+
+			MethodHandler methodHandler = new MethodHandler(
+				methodKey, accountGroupId);
+
+			Object returnObj = null;
+
+			try {
+				returnObj = TunnelUtil.invoke(httpPrincipal, methodHandler);
+			}
+			catch (Exception exception) {
+				if (exception instanceof
+						com.liferay.portal.kernel.exception.PortalException) {
+
+					throw (com.liferay.portal.kernel.exception.PortalException)
+						exception;
+				}
+
+				throw new com.liferay.portal.kernel.exception.SystemException(
+					exception);
+			}
+
+			return (com.liferay.account.model.AccountGroup)returnObj;
+		}
+		catch (com.liferay.portal.kernel.exception.SystemException
+					systemException) {
+
+			_log.error(systemException, systemException);
+
+			throw systemException;
+		}
+	}
+
+	public static java.util.List<com.liferay.account.model.AccountGroup>
+			getAccountGroupsByAccountEntryId(
+				HttpPrincipal httpPrincipal, long accountEntryId, int start,
+				int end)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		try {
+			MethodKey methodKey = new MethodKey(
+				AccountGroupServiceUtil.class,
+				"getAccountGroupsByAccountEntryId",
+				_getAccountGroupsByAccountEntryIdParameterTypes5);
+
+			MethodHandler methodHandler = new MethodHandler(
+				methodKey, accountEntryId, start, end);
+
+			Object returnObj = null;
+
+			try {
+				returnObj = TunnelUtil.invoke(httpPrincipal, methodHandler);
+			}
+			catch (Exception exception) {
+				if (exception instanceof
+						com.liferay.portal.kernel.exception.PortalException) {
+
+					throw (com.liferay.portal.kernel.exception.PortalException)
+						exception;
+				}
+
+				throw new com.liferay.portal.kernel.exception.SystemException(
+					exception);
+			}
+
+			return (java.util.List<com.liferay.account.model.AccountGroup>)
+				returnObj;
+		}
+		catch (com.liferay.portal.kernel.exception.SystemException
+					systemException) {
+
+			_log.error(systemException, systemException);
+
+			throw systemException;
+		}
+	}
+
+	public static int getAccountGroupsCountByAccountEntryId(
+			HttpPrincipal httpPrincipal, long accountEntryId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		try {
+			MethodKey methodKey = new MethodKey(
+				AccountGroupServiceUtil.class,
+				"getAccountGroupsCountByAccountEntryId",
+				_getAccountGroupsCountByAccountEntryIdParameterTypes6);
+
+			MethodHandler methodHandler = new MethodHandler(
+				methodKey, accountEntryId);
+
+			Object returnObj = null;
+
+			try {
+				returnObj = TunnelUtil.invoke(httpPrincipal, methodHandler);
+			}
+			catch (Exception exception) {
+				if (exception instanceof
+						com.liferay.portal.kernel.exception.PortalException) {
+
+					throw (com.liferay.portal.kernel.exception.PortalException)
+						exception;
+				}
+
+				throw new com.liferay.portal.kernel.exception.SystemException(
+					exception);
+			}
+
+			return ((Integer)returnObj).intValue();
+		}
+		catch (com.liferay.portal.kernel.exception.SystemException
+					systemException) {
+
+			_log.error(systemException, systemException);
+
+			throw systemException;
+		}
+	}
+
 	public static com.liferay.portal.kernel.search.BaseModelSearchResult
 		<com.liferay.account.model.AccountGroup> searchAccountGroups(
 				HttpPrincipal httpPrincipal, long companyId, String keywords,
@@ -178,7 +347,7 @@ public class AccountGroupServiceHttp {
 		try {
 			MethodKey methodKey = new MethodKey(
 				AccountGroupServiceUtil.class, "searchAccountGroups",
-				_searchAccountGroupsParameterTypes3);
+				_searchAccountGroupsParameterTypes7);
 
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, companyId, keywords, start, end, orderByComparator);
@@ -214,16 +383,17 @@ public class AccountGroupServiceHttp {
 
 	public static com.liferay.account.model.AccountGroup updateAccountGroup(
 			HttpPrincipal httpPrincipal, long accountGroupId,
-			String description, String name)
+			String description, String name,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		try {
 			MethodKey methodKey = new MethodKey(
 				AccountGroupServiceUtil.class, "updateAccountGroup",
-				_updateAccountGroupParameterTypes4);
+				_updateAccountGroupParameterTypes8);
 
 			MethodHandler methodHandler = new MethodHandler(
-				methodKey, accountGroupId, description, name);
+				methodKey, accountGroupId, description, name, serviceContext);
 
 			Object returnObj = null;
 
@@ -262,7 +432,7 @@ public class AccountGroupServiceHttp {
 		try {
 			MethodKey methodKey = new MethodKey(
 				AccountGroupServiceUtil.class, "updateExternalReferenceCode",
-				_updateExternalReferenceCodeParameterTypes5);
+				_updateExternalReferenceCodeParameterTypes9);
 
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, accountGroupId, externalReferenceCode);
@@ -299,20 +469,40 @@ public class AccountGroupServiceHttp {
 		AccountGroupServiceHttp.class);
 
 	private static final Class<?>[] _addAccountGroupParameterTypes0 =
-		new Class[] {long.class, String.class, String.class};
+		new Class[] {
+			long.class, String.class, String.class,
+			com.liferay.portal.kernel.service.ServiceContext.class
+		};
 	private static final Class<?>[] _deleteAccountGroupParameterTypes1 =
 		new Class[] {long.class};
 	private static final Class<?>[] _deleteAccountGroupsParameterTypes2 =
 		new Class[] {long[].class};
-	private static final Class<?>[] _searchAccountGroupsParameterTypes3 =
+	private static final Class<?>[]
+		_fetchAccountGroupByExternalReferenceCodeParameterTypes3 = new Class[] {
+			String.class, long.class
+		};
+	private static final Class<?>[] _getAccountGroupParameterTypes4 =
+		new Class[] {long.class};
+	private static final Class<?>[]
+		_getAccountGroupsByAccountEntryIdParameterTypes5 = new Class[] {
+			long.class, int.class, int.class
+		};
+	private static final Class<?>[]
+		_getAccountGroupsCountByAccountEntryIdParameterTypes6 = new Class[] {
+			long.class
+		};
+	private static final Class<?>[] _searchAccountGroupsParameterTypes7 =
 		new Class[] {
 			long.class, String.class, int.class, int.class,
 			com.liferay.portal.kernel.util.OrderByComparator.class
 		};
-	private static final Class<?>[] _updateAccountGroupParameterTypes4 =
-		new Class[] {long.class, String.class, String.class};
+	private static final Class<?>[] _updateAccountGroupParameterTypes8 =
+		new Class[] {
+			long.class, String.class, String.class,
+			com.liferay.portal.kernel.service.ServiceContext.class
+		};
 	private static final Class<?>[]
-		_updateExternalReferenceCodeParameterTypes5 = new Class[] {
+		_updateExternalReferenceCodeParameterTypes9 = new Class[] {
 			long.class, String.class
 		};
 

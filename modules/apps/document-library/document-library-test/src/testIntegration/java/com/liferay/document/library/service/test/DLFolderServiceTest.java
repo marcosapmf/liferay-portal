@@ -51,8 +51,10 @@ import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
+import com.liferay.ratings.kernel.service.RatingsEntryLocalService;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Assert;
@@ -80,8 +82,9 @@ public class DLFolderServiceTest {
 		_group = GroupTestUtil.addGroup();
 
 		_parentFolder = _dlAppService.addFolder(
-			_group.getGroupId(), DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
-			"Test Folder", RandomTestUtil.randomString(),
+			null, _group.getGroupId(),
+			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID, "Test Folder",
+			RandomTestUtil.randomString(),
 			ServiceContextTestUtil.getServiceContext(
 				_group.getGroupId(), TestPropsValues.getUserId()));
 
@@ -95,6 +98,49 @@ public class DLFolderServiceTest {
 			ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
 
 		_alternativeGroup = GroupTestUtil.addGroup();
+	}
+
+	@Test
+	public void testGetFoldersByRating() throws Exception {
+		DLFolder dlFolder1 = _addDLFolder();
+		DLFolder dlFolder2 = _addDLFolder();
+		DLFolder dlFolder3 = _addDLFolder();
+
+		_ratingsEntryLocalService.updateEntry(
+			TestPropsValues.getUserId(), DLFolder.class.getName(),
+			dlFolder1.getFolderId(), 1.0,
+			ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
+
+		_ratingsEntryLocalService.updateEntry(
+			TestPropsValues.getUserId(), DLFolder.class.getName(),
+			dlFolder2.getFolderId(), 1.0,
+			ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
+
+		_ratingsEntryLocalService.updateEntry(
+			TestPropsValues.getUserId(), DLFolder.class.getName(),
+			dlFolder3.getFolderId(), 0.5,
+			ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
+
+		Assert.assertEquals(
+			2, _dlFolderService.getFoldersCount(_group.getGroupId(), 1.0));
+		Assert.assertEquals(
+			Arrays.asList(dlFolder2, dlFolder1),
+			_dlFolderService.getFolders(
+				_group.getGroupId(), 1.0, QueryUtil.ALL_POS,
+				QueryUtil.ALL_POS));
+
+		_ratingsEntryLocalService.updateEntry(
+			TestPropsValues.getUserId(), DLFolder.class.getName(),
+			dlFolder1.getFolderId(), 1.0,
+			ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
+
+		Assert.assertEquals(
+			2, _dlFolderService.getFoldersCount(_group.getGroupId(), 1.0));
+		Assert.assertEquals(
+			Arrays.asList(dlFolder1, dlFolder2),
+			_dlFolderService.getFolders(
+				_group.getGroupId(), 1.0, QueryUtil.ALL_POS,
+				QueryUtil.ALL_POS));
 	}
 
 	@Test
@@ -201,7 +247,7 @@ public class DLFolderServiceTest {
 		expectedFileEntries.add(fileEntry);
 
 		Folder folder = _dlAppService.addFolder(
-			_group.getGroupId(), _parentFolder.getFolderId(),
+			null, _group.getGroupId(), _parentFolder.getFolderId(),
 			StringUtil.randomString(), RandomTestUtil.randomString(),
 			ServiceContextTestUtil.getServiceContext(
 				_group.getGroupId(), TestPropsValues.getUserId()));
@@ -315,8 +361,9 @@ public class DLFolderServiceTest {
 			fileEntry3.getFileEntryId(), 4);
 
 		Folder hiddenFolder = _dlAppService.addFolder(
-			_group.getGroupId(), DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
-			"Hidden Folder", RandomTestUtil.randomString(),
+			null, _group.getGroupId(),
+			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID, "Hidden Folder",
+			RandomTestUtil.randomString(),
 			ServiceContextTestUtil.getServiceContext(
 				_group.getGroupId(), TestPropsValues.getUserId()));
 
@@ -455,6 +502,14 @@ public class DLFolderServiceTest {
 		}
 	}
 
+	private DLFolder _addDLFolder() throws Exception {
+		return _dlFolderService.addFolder(
+			null, _group.getGroupId(), _group.getGroupId(), false,
+			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
+			StringUtil.randomString(), StringPool.BLANK,
+			ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
+	}
+
 	@Inject
 	private static ClassNameLocalService _classNameLocalService;
 
@@ -483,5 +538,8 @@ public class DLFolderServiceTest {
 	private Group _group;
 
 	private Folder _parentFolder;
+
+	@Inject
+	private RatingsEntryLocalService _ratingsEntryLocalService;
 
 }

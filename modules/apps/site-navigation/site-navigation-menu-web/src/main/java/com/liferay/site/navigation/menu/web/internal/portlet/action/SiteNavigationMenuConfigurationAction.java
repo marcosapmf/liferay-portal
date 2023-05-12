@@ -37,7 +37,6 @@ import javax.portlet.PortletRequest;
 import javax.portlet.RenderRequest;
 import javax.portlet.RenderResponse;
 
-import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -95,15 +94,6 @@ public class SiteNavigationMenuConfigurationAction
 	}
 
 	@Override
-	@Reference(
-		target = "(osgi.web.symbolicname=com.liferay.site.navigation.menu.web)",
-		unbind = "-"
-	)
-	public void setServletContext(ServletContext servletContext) {
-		super.setServletContext(servletContext);
-	}
-
-	@Override
 	protected void doDispatch(
 			RenderRequest renderRequest, RenderResponse renderResponse)
 		throws IOException, PortletException {
@@ -114,16 +104,10 @@ public class SiteNavigationMenuConfigurationAction
 		super.doDispatch(renderRequest, renderResponse);
 	}
 
-	@Reference(unbind = "-")
-	protected void setPortletDisplayTemplate(
-		PortletDisplayTemplate portletDisplayTemplate) {
-
-		_portletDisplayTemplate = portletDisplayTemplate;
-	}
-
 	@Reference
 	private ItemSelector _itemSelector;
 
+	@Reference
 	private PortletDisplayTemplate _portletDisplayTemplate;
 
 	@Reference

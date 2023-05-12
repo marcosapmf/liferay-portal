@@ -21,14 +21,17 @@ import com.liferay.object.action.engine.ObjectActionEngine;
 import com.liferay.object.action.executor.ObjectActionExecutor;
 import com.liferay.object.action.executor.ObjectActionExecutorRegistry;
 import com.liferay.object.constants.ObjectActionConstants;
+import com.liferay.object.constants.ObjectActionTriggerConstants;
+import com.liferay.object.entry.util.ObjectEntryThreadLocal;
 import com.liferay.object.internal.action.util.ObjectActionThreadLocal;
 import com.liferay.object.internal.action.util.ObjectEntryVariablesUtil;
-import com.liferay.object.internal.entry.util.ObjectEntryThreadLocal;
+import com.liferay.object.internal.dynamic.data.mapping.expression.ObjectEntryDDMExpressionFieldAccessor;
+import com.liferay.object.internal.dynamic.data.mapping.expression.ObjectEntryDDMExpressionParameterAccessor;
 import com.liferay.object.model.ObjectAction;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.service.ObjectActionLocalService;
 import com.liferay.object.service.ObjectDefinitionLocalService;
-import com.liferay.object.system.SystemObjectDefinitionMetadataRegistry;
+import com.liferay.object.system.SystemObjectDefinitionManagerRegistry;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -38,6 +41,9 @@ import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.PermissionCheckerFactory;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.service.UserLocalService;
+import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.SetUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterRegistry;
 
@@ -71,11 +77,18 @@ public class ObjectActionEngineImpl implements ObjectActionEngine {
 			objectDefinition, payloadJSONObject,
 			_userLocalService.getUser(userId));
 
-		_executeObjectAction(
-			objectAction, objectDefinition, payloadJSONObject, userId,
-			ObjectEntryVariablesUtil.getActionVariables(
-				_dtoConverterRegistry, objectDefinition, payloadJSONObject,
-				_systemObjectDefinitionMetadataRegistry));
+		try {
+			ObjectEntryThreadLocal.setSkipObjectEntryResourcePermission(true);
+
+			_executeObjectAction(
+				objectAction, objectDefinition, payloadJSONObject, userId,
+				ObjectEntryVariablesUtil.getVariables(
+					_dtoConverterRegistry, objectDefinition, payloadJSONObject,
+					_systemObjectDefinitionManagerRegistry));
+		}
+		finally {
+			ObjectEntryThreadLocal.setSkipObjectEntryResourcePermission(false);
+		}
 	}
 
 	@Override
@@ -114,9 +127,9 @@ public class ObjectActionEngineImpl implements ObjectActionEngine {
 			_updatePayloadJSONObject(objectDefinition, payloadJSONObject, user);
 
 			Map<String, Object> variables =
-				ObjectEntryVariablesUtil.getActionVariables(
+				ObjectEntryVariablesUtil.getVariables(
 					_dtoConverterRegistry, objectDefinition, payloadJSONObject,
-					_systemObjectDefinitionMetadataRegistry);
+					_systemObjectDefinitionManagerRegistry);
 
 			for (ObjectAction objectAction :
 					_objectActionLocalService.getObjectActions(
@@ -152,9 +165,16 @@ public class ObjectActionEngineImpl implements ObjectActionEngine {
 			_ddmExpressionFactory.createExpression(
 				CreateExpressionRequest.Builder.newBuilder(
 					conditionExpression
+				).withDDMExpressionFieldAccessor(
+					new ObjectEntryDDMExpressionFieldAccessor(
+						(Map<String, Object>)variables.get("baseModel"))
+				).withDDMExpressionParameterAccessor(
+					new ObjectEntryDDMExpressionParameterAccessor(
+						(Map<String, Object>)variables.get("originalBaseModel"))
 				).build());
 
-		ddmExpression.setVariables(variables);
+		ddmExpression.setVariables(
+			(Map<String, Object>)variables.get("baseModel"));
 
 		return ddmExpression.evaluate();
 	}
@@ -165,22 +185,50 @@ public class ObjectActionEngineImpl implements ObjectActionEngine {
 			Map<String, Object> variables)
 		throws Exception {
 
-		Set<Long> objectActionIds =
-			ObjectActionThreadLocal.getObjectActionIds();
+		Map<Long, Set<Long>> objectEntryIdsMap =
+			ObjectActionThreadLocal.getObjectEntryIdsMap();
+
+		if (!StringUtil.equals(
+				objectAction.getObjectActionTriggerKey(),
+				ObjectActionTriggerConstants.KEY_ON_AFTER_UPDATE) &&
+			objectEntryIdsMap.containsKey(objectAction.getObjectActionId())) {
+
+			return;
+		}
+
+		long objectEntryId = _getObjectEntryId(
+			objectDefinition, payloadJSONObject);
+
+		if (StringUtil.equals(
+				objectAction.getObjectActionTriggerKey(),
+				ObjectActionTriggerConstants.KEY_ON_AFTER_UPDATE)) {
+
+			Set<Long> objectEntryIds = objectEntryIdsMap.get(
+				objectAction.getObjectActionId());
+
+			if (SetUtil.isNotEmpty(objectEntryIds) &&
+				objectEntryIds.contains(objectEntryId)) {
+
+				return;
+			}
+		}
 
 		try {
-			if (objectActionIds.contains(objectAction.getObjectActionId()) ||
-				!_evaluateConditionExpression(
+			if (!_evaluateConditionExpression(
 					objectAction.getConditionExpression(), variables)) {
 
 				return;
 			}
 
-			objectActionIds.add(objectAction.getObjectActionId());
+			ObjectActionThreadLocal.addObjectEntryId(
+				objectAction.getObjectActionId(), objectEntryId);
 
 			ObjectActionExecutor objectActionExecutor =
 				_objectActionExecutorRegistry.getObjectActionExecutor(
 					objectAction.getObjectActionExecutorKey());
+
+			objectActionExecutor.validate(
+				objectDefinition.getCompanyId(), objectDefinition.getName());
 
 			objectActionExecutor.execute(
 				objectDefinition.getCompanyId(),
@@ -198,6 +246,24 @@ public class ObjectActionEngineImpl implements ObjectActionEngine {
 
 			throw exception;
 		}
+	}
+
+	private long _getObjectEntryId(
+		ObjectDefinition objectDefinition, JSONObject payloadJSONObject) {
+
+		if (objectDefinition.isUnmodifiableSystemObject()) {
+			Map<String, Object> map =
+				(Map<String, Object>)payloadJSONObject.get(
+					"model" + objectDefinition.getName());
+
+			return (long)map.get(objectDefinition.getPKObjectFieldName());
+		}
+
+		Map<String, Object> map = (Map<String, Object>)payloadJSONObject.get(
+			"objectEntry");
+
+		return GetterUtil.getLong(
+			map.get("id"), (long)map.get("objectEntryId"));
 	}
 
 	private void _updatePayloadJSONObject(
@@ -239,8 +305,8 @@ public class ObjectActionEngineImpl implements ObjectActionEngine {
 	private PermissionCheckerFactory _permissionCheckerFactory;
 
 	@Reference
-	private SystemObjectDefinitionMetadataRegistry
-		_systemObjectDefinitionMetadataRegistry;
+	private SystemObjectDefinitionManagerRegistry
+		_systemObjectDefinitionManagerRegistry;
 
 	@Reference
 	private UserLocalService _userLocalService;

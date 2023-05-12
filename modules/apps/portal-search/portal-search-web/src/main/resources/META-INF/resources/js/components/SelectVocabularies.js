@@ -230,7 +230,7 @@ function VocabularyTree({
 			)}
 		</TreeView>
 	) : (
-		<span className="text-3 text-secondary">
+		<span className="c-mb-0 sheet-text text-3">
 			{Liferay.Language.get(
 				'an-error-has-occurred-and-we-were-unable-to-load-the-results'
 			)}
@@ -280,7 +280,7 @@ function SelectVocabularies({
 				Promise.all(
 					siteBriefs.map((site) =>
 						fetch(
-							`/o/headless-admin-taxonomy/v1.0/sites/${site.id}/taxonomy-vocabularies`,
+							`/o/headless-admin-taxonomy/v1.0/sites/${site.id}/taxonomy-vocabularies?page=0&pageSize=0`,
 							CONFIGURATION
 						).then((response) => response.json())
 					)
@@ -343,13 +343,14 @@ function SelectVocabularies({
 				}
 			/>
 
-			<div className="select-vocabularies-helptext text-3">
+			<div className="c-mb-3 c-mt-2 sheet-text text-3">
 				{Liferay.Language.get(
 					'select-vocabularies-configuration-description'
 				)}
 
 				{!disabled && (
 					<LearnMessage
+						className="c-ml-1"
 						learnMessages={learnMessages}
 						resourceKey="tag-and-category-facet"
 					/>

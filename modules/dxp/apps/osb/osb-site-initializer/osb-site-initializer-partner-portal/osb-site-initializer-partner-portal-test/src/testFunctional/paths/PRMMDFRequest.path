@@ -35,6 +35,91 @@
 	<td>//*[contains(@class,'lexicon-icon-plus')]//ancestor::button[contains(text(),'${key_buttonText}')]</td>
 	<td></td>
 </tr>
+<tr>
+	<td>ERROR_MESSAGE</td>
+	<td>//div[contains(@class, 'error')]//div[(text()='${key_errorMessage}')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>CLAIM_MESSAGE</td>
+	<td>//div[contains(@class,'claims-list')]//h6[contains(normalize-space(),'${key_claimMessage}')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>DROPDOWN_OPTIONS</td>
+	<td>//div[contains (@class,'dropdown-menu') and contains(@class,'show')]//button//span[text()='${key_filterOption}']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>REQUEST_ID</td>
+	<td>//thead//th/*[text()='Name']//ancestor::table//tbody//th//span[text()='${key_campaignName}']//ancestor::tr//th[1]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>STATUS_BUTTON</td>
+	<td>//div[@Class='status-buttons']//button[contains(text(),'${key_statusButton}')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>TEXT_BUTTON</td>
+	<td>//button[contains(@class,'collapse-icon')]//*[contains(.,'${key_textButton}')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>SUMMARY_FIELD</td>
+	<td>//th//span[@class='text-truncate'][text()='${key_fieldName}']//ancestor::tr//th//span[@class='text-truncate'][contains(text(),'${key_fieldValue}')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>DETAIL_FIELD</td>
+	<td>//td/*[contains(text(),'${key_fieldName}')]//ancestor::tr//*[contains(text(),'${key_nameValue}')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>APPLY_BUTTON</td>
+	<td>//div[contains(@class,'drilldown-current')]//button[contains(@class,'btn-sm btn-primary') and contains(text(),'Apply')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>FILTER_TYPE</td>
+	<td>//div[contains (@class,'dropdown-menu') and contains(@class,'show')]//button/span[text()='${key_partnerOptions}']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>FILTER_CHECKBOX</td>
+	<td>//div[contains(@class,'drilldown-current')]//label[contains(.,'${checkboxName}')]//input[@type='checkbox']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>STATUS_INFO</td>
+	<td>//div[contains(@class,'mdf-request-manager-status')]//p[contains(text(), '${key_value}')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>REQUESTED_AMOUT_FIELD</td>
+	<td>//div[contains(@class,'total-mdf-request-amount')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>EDIT_ACTIVITY_BUTTON</td>
+	<td>//button[contains(@class,'btn-monospaced')]/*[name()='svg'][contains(@class,'icon-pencil')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>EDIT_MDF_BUTTON</td>
+	<td>//div[contains(@class,'edit-button-mdf-request')]//button[@id='edit-button-${key_roleName}']/div[contains(.,'Edit')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>ACTIVITY_TOTAL_COST</td>
+	<td>//*[@route='mdf-request-form']//div[contains(@class,'text-paragraph') and contains(text(),'Total cost')]//following-sibling::div</td>
+	<td></td>
+</tr>
+<tr>
+	<td>REMOVE_ICON_INDEX</td>
+	<td>xpath=(//*[*[name()='svg'][contains(@class,'lexicon-icon-hr')]]/*)[${key_index}]</td>
+	<td></td>
+</tr>
 </tbody>
 </table>
 </body>

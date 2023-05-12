@@ -1,10 +1,10 @@
-@component-name = "portal-headless"
+@component-name = "portal-wcm"
 @disable-webdriver = "true"
 definition {
 
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property testray.main.component.name = "Headless";
+	property testray.main.component.name = "Echo Headless";
 
 	setUp {
 		TestCase.setUpPortalInstance();
@@ -14,9 +14,7 @@ definition {
 		task ("Given a content structure is created in an asset library") {
 			JSONDepot.addDepot(depotName = "Test Depot Name");
 
-			var assetLibraryId = JSONGroupAPI._getDepotIdByName(depotName = "Test Depot Name");
-
-			WebContentNavigator.openWebContentStructuresAdminInAssetLibrary(depotId = "${assetLibraryId}");
+			WebContentNavigator.openWebContentStructuresAdmin(depotName = "Test Depot Name");
 
 			WebContentStructures.addCP(structureName = "content-structure");
 
@@ -29,7 +27,7 @@ definition {
 
 		task ("And Given a structured content folder is created with POST request in the asset library") {
 			HeadlessWebcontentFolderAPI.createStructuredContentFolderInAssetLibrary(
-				assetLibraryId = "${assetLibraryId}",
+				depotName = "Test Depot Name",
 				name = "Test Folder",
 				setUpGlobalFolderId = "true");
 		}
@@ -38,7 +36,7 @@ definition {
 	tearDown {
 		var testPortalInstance = PropsUtil.get("test.portal.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testPortalInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -46,7 +44,7 @@ definition {
 		}
 	}
 
-	@priority = "4"
+	@priority = 4
 	test CanReturnAssetLibraryStructuredContentFolderIdWithGetStructuredContentByVersion {
 		property portal.acceptance = "true";
 
@@ -55,32 +53,32 @@ definition {
 
 			var response = HeadlessWebcontentAPI.createStructuredContent(
 				data = "<p>My content</p>",
-				ddmStructureId = "${ddmStructureId}",
+				ddmStructureId = ${ddmStructureId},
 				externalReferenceCode = "erc",
 				label = "Text",
 				name = "Text",
-				structuredContentFolderId = "${staticStructuredContentFolderId}",
+				structuredContentFolderId = ${staticStructuredContentFolderId},
 				title = "Web Content Title");
 		}
 
 		task ("When I retrieve the structured content by version with GET request and structuredContentId") {
-			var structuredContentId = JSONUtil.getWithJSONPath("${response}", "$.id");
+			var structuredContentId = JSONPathUtil.getIdValue(response = ${response});
 
 			var response = HeadlessWebcontentAPI.versionStructureContent(
-				structuredContentId = "${structuredContentId}",
+				structuredContentId = ${structuredContentId},
 				versionvalue = "1.0");
 		}
 
 		task ("Then I can see structuredContentFolderId in the response equals to the id of the folder where the structured content is stored") {
-			var actualStructuredContentFolderId = JSONUtil.getWithJSONPath("${response}", "$.structuredContentFolderId");
+			var actualStructuredContentFolderId = JSONUtil.getWithJSONPath(${response}, "$.structuredContentFolderId");
 
 			TestUtils.assertEquals(
-				actual = "${actualStructuredContentFolderId}",
-				expected = "${staticStructuredContentFolderId}");
+				actual = ${actualStructuredContentFolderId},
+				expected = ${staticStructuredContentFolderId});
 		}
 	}
 
-	@priority = "4"
+	@priority = 4
 	test CanReturnAssetLibraryStructuredContentFolderIdWithGetStructuredContentVersion {
 		property portal.acceptance = "true";
 
@@ -89,41 +87,39 @@ definition {
 
 			var response = HeadlessWebcontentAPI.createStructuredContent(
 				data = "<p>My content</p>",
-				ddmStructureId = "${ddmStructureId}",
+				ddmStructureId = ${ddmStructureId},
 				externalReferenceCode = "erc",
 				label = "Text",
 				name = "Text",
-				structuredContentFolderId = "${staticStructuredContentFolderId}",
+				structuredContentFolderId = ${staticStructuredContentFolderId},
 				title = "Web Content Title");
 		}
 
 		task ("When I retrieve the structured content version with GET request and structuredContentId") {
-			var structuredContentId = JSONUtil.getWithJSONPath("${response}", "$.id");
+			var structuredContentId = JSONPathUtil.getIdValue(response = ${response});
 
-			var response = HeadlessWebcontentAPI.versionStructureContent(structuredContentId = "${structuredContentId}");
+			var response = HeadlessWebcontentAPI.versionStructureContent(structuredContentId = ${structuredContentId});
 		}
 
 		task ("Then I can see structuredContentFolderId in the response equals to the id of the folder where the structured content is stored") {
-			var actualStructuredContentFolderId = JSONUtil.getWithJSONPath("${response}", "$.items..structuredContentFolderId");
+			var actualStructuredContentFolderId = JSONUtil.getWithJSONPath(${response}, "$.items..structuredContentFolderId");
 
 			TestUtils.assertEquals(
-				actual = "${actualStructuredContentFolderId}",
-				expected = "${staticStructuredContentFolderId}");
+				actual = ${actualStructuredContentFolderId},
+				expected = ${staticStructuredContentFolderId});
 		}
 	}
 
-	@priority = "4"
+	@priority = 4
 	test CanReturnUpdatedAssetLibraryStructuredContentFolderIdWithGetStructuredContentVersion {
 		property portal.acceptance = "true";
 
 		task ("And Given another structured content folder is created with POST request in the asset library") {
-			var assetLibraryId = JSONGroupAPI._getDepotIdByName(depotName = "Test Depot Name");
-
 			var response = HeadlessWebcontentFolderAPI.createStructuredContentFolderInAssetLibrary(
-				assetLibraryId = "${assetLibraryId}",
+				depotName = "Test Depot Name",
 				name = "Second Folder");
 
-			var idOfSecondStructuredContentFolder = JSONUtil.getWithJSONPath("${response}", "$.id");
+			var idOfSecondStructuredContentFolder = JSONPathUtil.getIdValue(response = ${response});
 		}
 
 		task ("And Given a structured content is created in a folder with POST request") {
@@ -131,18 +127,18 @@ definition {
 
 			var response = HeadlessWebcontentAPI.createStructuredContent(
 				data = "<p>My content</p>",
-				ddmStructureId = "${ddmStructureId}",
+				ddmStructureId = ${ddmStructureId},
 				externalReferenceCode = "erc",
 				label = "Text",
 				name = "Text",
-				structuredContentFolderId = "${staticStructuredContentFolderId}",
+				structuredContentFolderId = ${staticStructuredContentFolderId},
 				title = "Web Content Title");
 		}
 
 		task ("And Given the structured content is moved into another folder through UI") {
-			Navigator.openWithAppendToBaseURL(
-				baseURL = "${baseURL}",
-				urlAppend = "group/asset-library-${assetLibraryId}/~/control_panel/manage?p_p_id=com_liferay_journal_web_portlet_JournalPortlet&_com_liferay_journal_web_portlet_JournalPortlet_folderId=${staticStructuredContentFolderId}");
+			WebContentNavigator.openFolderInWebContentAdmin(
+				depotName = "Test Depot Name",
+				folderId = ${staticStructuredContentFolderId});
 
 			WebContent.moveToFolderCP(
 				folderName = "Second Folder",
@@ -150,17 +146,17 @@ definition {
 		}
 
 		task ("When I retrieve the structured content version with GET request and structuredContentId") {
-			var structuredContentId = JSONUtil.getWithJSONPath("${response}", "$.id");
+			var structuredContentId = JSONPathUtil.getIdValue(response = ${response});
 
-			var response = HeadlessWebcontentAPI.versionStructureContent(structuredContentId = "${structuredContentId}");
+			var response = HeadlessWebcontentAPI.versionStructureContent(structuredContentId = ${structuredContentId});
 		}
 
 		task ("Then I can see structuredContentFolderId in the response equals to the id of the folder where the structured content is stored") {
-			var actualStructuredContentFolderId = JSONUtil.getWithJSONPath("${response}", "$.items..structuredContentFolderId");
+			var actualStructuredContentFolderId = JSONUtil.getWithJSONPath(${response}, "$.items..structuredContentFolderId");
 
 			TestUtils.assertEquals(
-				actual = "${actualStructuredContentFolderId}",
-				expected = "${idOfSecondStructuredContentFolder}");
+				actual = ${actualStructuredContentFolderId},
+				expected = ${idOfSecondStructuredContentFolder});
 		}
 	}
 

@@ -1,0 +1,191 @@
+definition {
+
+	macro assertDataSetEntry {
+		for (var key_dataSetName : list ${key_dataSetNameList}) {
+			AssertElementPresent(
+				key_itemName = ${key_dataSetName},
+				locator1 = "FrontendDataSetAdmin#TABLE_CELL");
+		}
+	}
+
+	macro assertDataSetView {
+		for (var key_dataSetViewName : list ${key_dataSetViewNameList}) {
+			AssertElementPresent(
+				entryName = ${key_dataSetViewName},
+				locator1 = "FrontendDataSetAdmin#DATA_SET_VIEW_ENTRY_NAME");
+		}
+	}
+
+	macro assertDataSetViewDescription {
+		for (var key_dataSetViewDescription : list ${key_dataSetViewDescriptionList}) {
+			AssertElementPresent(
+				key_description = ${key_dataSetViewDescription},
+				locator1 = "FrontendDataSetAdmin#DATA_SET_VIEW_DESCRIPTION");
+		}
+	}
+
+	macro changePagination {
+		Click(locator1 = "FrontendDataSetAdmin#ITEMS_PER_PAGE_SELECT");
+
+		MenuItem.click(menuItem = ${itemsPerPage});
+	}
+
+	macro createDataSet {
+		if (isSet(key_name)) {
+			var key_datasetNameList = ${key_name};
+		}
+
+		for (var key_datasetName : list ${key_datasetNameList}) {
+			LexiconEntry.gotoAdd();
+
+			Type(
+				locator1 = "TextInput#NAME",
+				value1 = ${key_datasetName});
+
+			FrontendDataSetAdmin.selectProvider(key_type = ${key_type});
+
+			PortletEntry.save();
+		}
+	}
+
+	macro createDatasetEntryViaAPI {
+		if (${restApplication} == "/c/fdsentries") {
+			var restSchema = "FDSEntry";
+			var restEndpoint = "/";
+		}
+
+		JSONFrontendDatasetEntries._createDatasetEntry(
+			datasetName = ${datasetName},
+			restApplication = ${restApplication},
+			restEndpoint = ${restEndpoint},
+			restSchema = ${restSchema});
+	}
+
+	macro createDataSetView {
+		if (isSet(key_name)) {
+			var key_dataSetViewNameList = ${key_name};
+		}
+
+		for (var key_dataSetViewName : list ${key_dataSetViewNameList}) {
+			LexiconEntry.gotoAdd();
+
+			Type(
+				locator1 = "TextInput#NAME",
+				value1 = ${key_dataSetViewName});
+
+			Type(
+				locator1 = "FrontendDataSetAdmin#NEW_DATA_SET_VIEW_DESCRIPTION",
+				value1 = ${description});
+
+			PortletEntry.save();
+		}
+	}
+
+	macro createFDSViewViaAPI {
+		JSONFrontendDatasetEntries._createFDSViewViaAPI(
+			datasetName = ${datasetName},
+			dataSetViewDescription = ${dataSetViewDescription},
+			dataSetViewName = ${dataSetViewName});
+	}
+
+	macro deleteAllDatasetEntries {
+		JSONFrontendDatasetEntries._deleteFDSEntry();
+
+		FrontendDataSetAdmin.goToDatasetAdminPage();
+
+		AssertElementPresent(
+			locator1 = "Message#EMPTY_STATE_INFO",
+			value1 = "No Results Found");
+	}
+
+	macro deleteDataSet {
+		Click(
+			key_entry = ${entry},
+			locator1 = "ObjectPortlet#ENTRY_KEBAB_MENU");
+
+		ClickNoError(locator1 = "ObjectPortlet#DELETE_ENTRY_BUTTON");
+
+		AssertElementPresent(
+			key_modalText = "Deleting a dataset is an action that cannot be reversed. The content will be deleted and some dataset fragments may not be displayed.",
+			locator1 = "FrontendDataSetAdmin#DELETE_DATA_SET_MODAL_BODY");
+
+		Button.clickDelete();
+	}
+
+	macro deleteDataSetView {
+		Click(
+			key_name = ${viewName},
+			locator1 = "FrontendDataSetAdmin#DATA_SET_VIEW_ENTRY_KEBAB_MENU");
+
+		ClickNoError(locator1 = "ObjectPortlet#DELETE_ENTRY_BUTTON");
+
+		AssertElementPresent(
+			key_modalText = "Deleting a dataset view is an action that cannot be reversed. The content will be deleted and some dataset fragments may not be displayed.",
+			locator1 = "FrontendDataSetAdmin#DELETE_DATA_SET_MODAL_BODY");
+
+		Button.clickDelete();
+	}
+
+	macro editView {
+		Click(
+			key_name = ${key_oldName},
+			locator1 = "FrontendDataSetAdmin#DATA_SET_VIEW_ENTRY_KEBAB_MENU");
+
+		MenuItem.click(menuItem = "View");
+
+		Type(
+			key_type = "Name",
+			locator1 = "FrontendDataSetAdmin#EDIT_DATA_SET_VIEW",
+			value1 = ${key_newName});
+
+		Type(
+			key_type = "Description",
+			locator1 = "FrontendDataSetAdmin#EDIT_DATA_SET_VIEW",
+			value1 = ${key_newDescription});
+
+		PortletEntry.save();
+
+		Navigator.gotoBack();
+	}
+
+	macro goToDatasetAdminPage {
+		Navigator.openWithAppendToBaseURL(urlAppend = "group/control_panel/manage?p_p_id=com_liferay_frontend_data_set_views_web_internal_portlet_FDSViewsPortlet");
+	}
+
+	macro goToDatasetViewAdminPage {
+		var datasetEntryId = JSONFrontendDatasetEntries._getDatasetEntryIdByName(datasetName = ${datasetName});
+
+		Navigator.openWithAppendToBaseURL(urlAppend = "group/control_panel/manage?p_p_id=com_liferay_frontend_data_set_views_web_internal_portlet_FDSViewsPortlet&p_p_lifecycle=0&_com_liferay_frontend_data_set_views_web_internal_portlet_FDSViewsPortlet_mvcPath=%2Ffds_views.jsp&_com_liferay_frontend_data_set_views_web_internal_portlet_FDSViewsPortlet_fdsEntryId=${datasetEntryId}");
+	}
+
+	macro goToViews {
+		Click(
+			key_entry = ${dataSetName},
+			locator1 = "ObjectPortlet#ENTRY_KEBAB_MENU");
+
+		Click(locator1 = "FrontendDataSetAdmin#VIEW_ENTRY_BUTTON");
+	}
+
+	macro searchProvider {
+		var searchTerm = ${key_provider};
+
+		Click(
+			dropdownLabel = "Choose an Option",
+			locator1 = "ObjectField#ANY_DROPDOWN_LABEL");
+
+		Type(
+			locator1 = "MenuItem#SEARCH_FIELD",
+			value1 = ${searchTerm});
+	}
+
+	macro selectProvider {
+		Click(
+			dropdownLabel = "Choose an Option",
+			locator1 = "ObjectField#ANY_DROPDOWN_LABEL");
+
+		Click(
+			locator1 = "FrontendDataSet#SELECT_TYPE_PROVIDER",
+			value1 = ${key_type});
+	}
+
+}

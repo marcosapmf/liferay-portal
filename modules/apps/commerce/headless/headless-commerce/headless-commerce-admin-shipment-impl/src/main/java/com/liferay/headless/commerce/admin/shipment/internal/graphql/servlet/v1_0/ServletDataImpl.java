@@ -97,6 +97,11 @@ public class ServletDataImpl implements ServletData {
 			new HashMap<String, ObjectValuePair<Class<?>, String>>() {
 				{
 					put(
+						"mutation#createShipmentsPageExportBatch",
+						new ObjectValuePair<>(
+							ShipmentResourceImpl.class,
+							"postShipmentsPageExportBatch"));
+					put(
 						"mutation#createShipment",
 						new ObjectValuePair<>(
 							ShipmentResourceImpl.class, "postShipment"));
@@ -249,6 +254,36 @@ public class ServletDataImpl implements ServletData {
 						new ObjectValuePair<>(
 							ShippingAddressResourceImpl.class,
 							"getShipmentShippingAddress"));
+
+					put(
+						"query#Shipment.byExternalReferenceCodeItem",
+						new ObjectValuePair<>(
+							ShipmentItemResourceImpl.class,
+							"getShipmentByExternalReferenceCodeItem"));
+					put(
+						"query#Shipment.byExternalReferenceCodeItems",
+						new ObjectValuePair<>(
+							ShipmentItemResourceImpl.class,
+							"getShipmentByExternalReferenceCodeItemsPage"));
+					put(
+						"query#Shipment.byExternalReferenceCodeShippingAddress",
+						new ObjectValuePair<>(
+							ShippingAddressResourceImpl.class,
+							"getShipmentByExternalReferenceCodeShippingAddress"));
+					put(
+						"query#ShipmentItem.shipment",
+						new ObjectValuePair<>(
+							ShipmentResourceImpl.class, "getShipment"));
+					put(
+						"query#ShipmentItem.shipmentByExternalReferenceCode",
+						new ObjectValuePair<>(
+							ShipmentResourceImpl.class,
+							"getShipmentByExternalReferenceCode"));
+					put(
+						"query#Shipment.items",
+						new ObjectValuePair<>(
+							ShipmentItemResourceImpl.class,
+							"getShipmentItemsPage"));
 				}
 			};
 

@@ -31,6 +31,7 @@ import com.liferay.headless.delivery.client.pagination.Page;
 import com.liferay.headless.delivery.client.pagination.Pagination;
 import com.liferay.headless.delivery.client.resource.v1_0.ContentSetElementResource;
 import com.liferay.headless.delivery.client.serdes.v1_0.ContentSetElementSerDes;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
@@ -68,8 +69,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.annotation.Generated;
 
@@ -248,7 +247,10 @@ public abstract class BaseContentSetElementResourceTestCase {
 			assertEquals(
 				Arrays.asList(irrelevantContentSetElement),
 				(List<ContentSetElement>)page.getItems());
-			assertValid(page);
+			assertValid(
+				page,
+				testGetAssetLibraryContentSetByKeyContentSetElementsPage_getExpectedActions(
+					irrelevantAssetLibraryId, irrelevantKey));
 		}
 
 		ContentSetElement contentSetElement1 =
@@ -269,7 +271,20 @@ public abstract class BaseContentSetElementResourceTestCase {
 		assertEqualsIgnoringOrder(
 			Arrays.asList(contentSetElement1, contentSetElement2),
 			(List<ContentSetElement>)page.getItems());
-		assertValid(page);
+		assertValid(
+			page,
+			testGetAssetLibraryContentSetByKeyContentSetElementsPage_getExpectedActions(
+				assetLibraryId, key));
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetAssetLibraryContentSetByKeyContentSetElementsPage_getExpectedActions(
+				Long assetLibraryId, String key)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
 	}
 
 	@Test
@@ -404,7 +419,10 @@ public abstract class BaseContentSetElementResourceTestCase {
 			assertEquals(
 				Arrays.asList(irrelevantContentSetElement),
 				(List<ContentSetElement>)page.getItems());
-			assertValid(page);
+			assertValid(
+				page,
+				testGetAssetLibraryContentSetByUuidContentSetElementsPage_getExpectedActions(
+					irrelevantAssetLibraryId, irrelevantUuid));
 		}
 
 		ContentSetElement contentSetElement1 =
@@ -425,7 +443,20 @@ public abstract class BaseContentSetElementResourceTestCase {
 		assertEqualsIgnoringOrder(
 			Arrays.asList(contentSetElement1, contentSetElement2),
 			(List<ContentSetElement>)page.getItems());
-		assertValid(page);
+		assertValid(
+			page,
+			testGetAssetLibraryContentSetByUuidContentSetElementsPage_getExpectedActions(
+				assetLibraryId, uuid));
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetAssetLibraryContentSetByUuidContentSetElementsPage_getExpectedActions(
+				Long assetLibraryId, String uuid)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
 	}
 
 	@Test
@@ -551,7 +582,10 @@ public abstract class BaseContentSetElementResourceTestCase {
 			assertEquals(
 				Arrays.asList(irrelevantContentSetElement),
 				(List<ContentSetElement>)page.getItems());
-			assertValid(page);
+			assertValid(
+				page,
+				testGetContentSetContentSetElementsPage_getExpectedActions(
+					irrelevantContentSetId));
 		}
 
 		ContentSetElement contentSetElement1 =
@@ -570,7 +604,20 @@ public abstract class BaseContentSetElementResourceTestCase {
 		assertEqualsIgnoringOrder(
 			Arrays.asList(contentSetElement1, contentSetElement2),
 			(List<ContentSetElement>)page.getItems());
-		assertValid(page);
+		assertValid(
+			page,
+			testGetContentSetContentSetElementsPage_getExpectedActions(
+				contentSetId));
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetContentSetContentSetElementsPage_getExpectedActions(
+				Long contentSetId)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
 	}
 
 	@Test
@@ -682,7 +729,10 @@ public abstract class BaseContentSetElementResourceTestCase {
 			assertEquals(
 				Arrays.asList(irrelevantContentSetElement),
 				(List<ContentSetElement>)page.getItems());
-			assertValid(page);
+			assertValid(
+				page,
+				testGetSiteContentSetByKeyContentSetElementsPage_getExpectedActions(
+					irrelevantSiteId, irrelevantKey));
 		}
 
 		ContentSetElement contentSetElement1 =
@@ -703,7 +753,20 @@ public abstract class BaseContentSetElementResourceTestCase {
 		assertEqualsIgnoringOrder(
 			Arrays.asList(contentSetElement1, contentSetElement2),
 			(List<ContentSetElement>)page.getItems());
-		assertValid(page);
+		assertValid(
+			page,
+			testGetSiteContentSetByKeyContentSetElementsPage_getExpectedActions(
+				siteId, key));
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetSiteContentSetByKeyContentSetElementsPage_getExpectedActions(
+				Long siteId, String key)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
 	}
 
 	@Test
@@ -833,7 +896,10 @@ public abstract class BaseContentSetElementResourceTestCase {
 			assertEquals(
 				Arrays.asList(irrelevantContentSetElement),
 				(List<ContentSetElement>)page.getItems());
-			assertValid(page);
+			assertValid(
+				page,
+				testGetSiteContentSetByUuidContentSetElementsPage_getExpectedActions(
+					irrelevantSiteId, irrelevantUuid));
 		}
 
 		ContentSetElement contentSetElement1 =
@@ -854,7 +920,20 @@ public abstract class BaseContentSetElementResourceTestCase {
 		assertEqualsIgnoringOrder(
 			Arrays.asList(contentSetElement1, contentSetElement2),
 			(List<ContentSetElement>)page.getItems());
-		assertValid(page);
+		assertValid(
+			page,
+			testGetSiteContentSetByUuidContentSetElementsPage_getExpectedActions(
+				siteId, uuid));
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetSiteContentSetByUuidContentSetElementsPage_getExpectedActions(
+				Long siteId, String uuid)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
 	}
 
 	@Test
@@ -1085,6 +1164,13 @@ public abstract class BaseContentSetElementResourceTestCase {
 	}
 
 	protected void assertValid(Page<ContentSetElement> page) {
+		assertValid(page, Collections.emptyMap());
+	}
+
+	protected void assertValid(
+		Page<ContentSetElement> page,
+		Map<String, Map<String, String>> expectedActions) {
+
 		boolean valid = false;
 
 		java.util.Collection<ContentSetElement> contentSetElements =
@@ -1100,6 +1186,20 @@ public abstract class BaseContentSetElementResourceTestCase {
 		}
 
 		Assert.assertTrue(valid);
+
+		Map<String, Map<String, String>> actions = page.getActions();
+
+		for (String key : expectedActions.keySet()) {
+			Map action = actions.get(key);
+
+			Assert.assertNotNull(key + " does not contain an action", action);
+
+			Map expectedAction = expectedActions.get(key);
+
+			Assert.assertEquals(
+				expectedAction.get("method"), action.get("method"));
+			Assert.assertEquals(expectedAction.get("href"), action.get("href"));
+		}
 	}
 
 	protected String[] getAdditionalAssertFieldNames() {
@@ -1263,14 +1363,16 @@ public abstract class BaseContentSetElementResourceTestCase {
 	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
 		throws Exception {
 
-		Stream<java.lang.reflect.Field> stream = Stream.of(
-			ReflectionUtil.getDeclaredFields(clazz));
+		return TransformUtil.transform(
+			ReflectionUtil.getDeclaredFields(clazz),
+			field -> {
+				if (field.isSynthetic()) {
+					return null;
+				}
 
-		return stream.filter(
-			field -> !field.isSynthetic()
-		).toArray(
-			java.lang.reflect.Field[]::new
-		);
+				return field;
+			},
+			java.lang.reflect.Field.class);
 	}
 
 	protected java.util.Collection<EntityField> getEntityFields()
@@ -1287,6 +1389,10 @@ public abstract class BaseContentSetElementResourceTestCase {
 		EntityModel entityModel = entityModelResource.getEntityModel(
 			new MultivaluedHashMap());
 
+		if (entityModel == null) {
+			return Collections.emptyList();
+		}
+
 		Map<String, EntityField> entityFieldsMap =
 			entityModel.getEntityFieldsMap();
 
@@ -1296,18 +1402,18 @@ public abstract class BaseContentSetElementResourceTestCase {
 	protected List<EntityField> getEntityFields(EntityField.Type type)
 		throws Exception {
 
-		java.util.Collection<EntityField> entityFields = getEntityFields();
+		return TransformUtil.transform(
+			getEntityFields(),
+			entityField -> {
+				if (!Objects.equals(entityField.getType(), type) ||
+					ArrayUtil.contains(
+						getIgnoredEntityFieldNames(), entityField.getName())) {
 
-		Stream<EntityField> stream = entityFields.stream();
+					return null;
+				}
 
-		return stream.filter(
-			entityField ->
-				Objects.equals(entityField.getType(), type) &&
-				!ArrayUtil.contains(
-					getIgnoredEntityFieldNames(), entityField.getName())
-		).collect(
-			Collectors.toList()
-		);
+				return entityField;
+			});
 	}
 
 	protected String getFilterString(

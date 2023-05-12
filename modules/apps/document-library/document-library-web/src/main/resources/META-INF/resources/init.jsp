@@ -132,7 +132,6 @@ page import="com.liferay.document.library.web.internal.util.DLBreadcrumbUtil" %>
 page import="com.liferay.document.library.web.internal.util.DLSubscriptionUtil" %><%@
 page import="com.liferay.document.library.web.internal.util.DLWebComponentProvider" %><%@
 page import="com.liferay.document.library.web.internal.util.IGUtil" %><%@
-page import="com.liferay.dynamic.data.mapping.kernel.DDMStructure" %><%@
 page import="com.liferay.dynamic.data.mapping.kernel.DDMStructureManager" %><%@
 page import="com.liferay.dynamic.data.mapping.kernel.DDMStructureManagerUtil" %><%@
 page import="com.liferay.dynamic.data.mapping.kernel.NoSuchStructureException" %><%@
@@ -140,6 +139,7 @@ page import="com.liferay.dynamic.data.mapping.kernel.StorageFieldRequiredExcepti
 page import="com.liferay.dynamic.data.mapping.kernel.StructureDefinitionException" %><%@
 page import="com.liferay.dynamic.data.mapping.kernel.StructureDuplicateElementException" %><%@
 page import="com.liferay.dynamic.data.mapping.kernel.StructureNameException" %><%@
+page import="com.liferay.dynamic.data.mapping.model.DDMStructure" %><%@
 page import="com.liferay.dynamic.data.mapping.service.DDMStorageLinkLocalServiceUtil" %><%@
 page import="com.liferay.dynamic.data.mapping.service.DDMStructureLocalServiceUtil" %><%@
 page import="com.liferay.dynamic.data.mapping.storage.DDMFormValues" %><%@
@@ -176,7 +176,6 @@ page import="com.liferay.portal.kernel.service.GroupLocalServiceUtil" %><%@
 page import="com.liferay.portal.kernel.service.PortletLocalServiceUtil" %><%@
 page import="com.liferay.portal.kernel.service.PortletPreferencesLocalServiceUtil" %><%@
 page import="com.liferay.portal.kernel.service.UserLocalServiceUtil" %><%@
-page import="com.liferay.portal.kernel.servlet.taglib.ui.MenuItem" %><%@
 page import="com.liferay.portal.kernel.theme.ThemeDisplay" %><%@
 page import="com.liferay.portal.kernel.upload.FileItem" %><%@
 page import="com.liferay.portal.kernel.upload.LiferayFileItemException" %><%@
@@ -223,8 +222,7 @@ page import="java.util.List" %><%@
 page import="java.util.Map" %><%@
 page import="java.util.Objects" %>
 
-<%@ page import="javax.portlet.PortletURL" %><%@
-page import="javax.portlet.WindowState" %>
+<%@ page import="javax.portlet.PortletURL" %>
 
 <liferay-frontend:defineObjects />
 
@@ -235,10 +233,8 @@ page import="javax.portlet.WindowState" %>
 <%
 DLTrashHelper dlTrashHelper = (DLTrashHelper)request.getAttribute(DLWebKeys.DOCUMENT_LIBRARY_TRASH_HELPER);
 
-DLWebComponentProvider dlWebComponentProvider = DLWebComponentProvider.getDLWebComponentProvider();
-
-DLDisplayContextProvider dlDisplayContextProvider = dlWebComponentProvider.getDLDisplayContextProvider();
-IGDisplayContextProvider igDisplayContextProvider = dlWebComponentProvider.getIGDisplayContextProvider();
+DLDisplayContextProvider dlDisplayContextProvider = DLWebComponentProvider.getDLDisplayContextProvider();
+IGDisplayContextProvider igDisplayContextProvider = DLWebComponentProvider.getIGDisplayContextProvider();
 
 Format dateFormatDate = FastDateFormatFactoryUtil.getDate(locale, timeZone);
 Format dateFormatDateTime = FastDateFormatFactoryUtil.getDateTime(locale, timeZone);

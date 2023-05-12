@@ -42,7 +42,7 @@ public class GroupTableReferenceDefinitionTest
 
 	@Override
 	protected CTModel<?> addCTModel() throws Exception {
-		return GroupTestUtil.addGroup(group.getGroupId());
+		return GroupTestUtil.addGroup();
 	}
 
 }

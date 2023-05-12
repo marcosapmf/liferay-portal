@@ -14,19 +14,17 @@
 
 package com.liferay.portal.language;
 
-import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMap;
-import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMapFactory;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.module.util.SystemBundleUtil;
 import com.liferay.portal.kernel.resource.bundle.ResourceBundleLoader;
 import com.liferay.portal.kernel.resource.bundle.ResourceBundleLoaderUtil;
-import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.ServiceProxyFactory;
 import com.liferay.portal.kernel.util.SetUtil;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -38,8 +36,10 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.InvalidSyntaxException;
+import org.osgi.framework.ServiceEvent;
+import org.osgi.framework.ServiceListener;
 import org.osgi.framework.ServiceReference;
-import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
 /**
  * @author Shuyang Zhou
@@ -68,13 +68,11 @@ public class LanguageResources {
 			return overrideValue;
 		}
 
-		String value = null;
+		MapHolder mapHolder = _getMapHolder(locale);
 
-		Map<String, String> languageMap = _serviceTrackerMap.getService(locale);
+		Map<String, String> languageMap = mapHolder.getMap();
 
-		if (languageMap != null) {
-			value = languageMap.get(key);
-		}
+		String value = languageMap.get(key);
 
 		if (value == null) {
 			return getMessage(getSuperLocale(locale), key);
@@ -116,7 +114,30 @@ public class LanguageResources {
 	}
 
 	public void destroy() {
-		_serviceTrackerMap.close();
+		for (MapHolder mapHolder : _mapHolders.values()) {
+			mapHolder.close();
+		}
+
+		_mapHolders.clear();
+	}
+
+	private static MapHolder _getMapHolder(Locale locale) {
+		MapHolder mapHolder = _mapHolders.get(locale);
+
+		if (mapHolder == null) {
+			mapHolder = new MapHolder(locale);
+
+			MapHolder previousMapHolder = _mapHolders.putIfAbsent(
+				locale, mapHolder);
+
+			if (previousMapHolder != null) {
+				mapHolder.close();
+
+				mapHolder = previousMapHolder;
+			}
+		}
+
+		return mapHolder;
 	}
 
 	private static String _getOverrideValue(String key, Locale locale) {
@@ -196,83 +217,27 @@ public class LanguageResources {
 	}
 
 	private static final Locale _blankLocale = new Locale(StringPool.BLANK);
+	private static final BundleContext _bundleContext =
+		SystemBundleUtil.getBundleContext();
 	private static volatile LanguageOverrideProvider _languageOverrideProvider =
 		ServiceProxyFactory.newServiceTrackedInstance(
 			LanguageOverrideProvider.class, LanguageResources.class,
 			"_languageOverrideProvider", false, true);
+	private static final Map<Locale, MapHolder> _mapHolders =
+		new ConcurrentHashMap<>();
 	private static final Locale _nullLocale = new Locale(StringPool.BLANK);
-	private static final ServiceTrackerMap<Locale, Map<String, String>>
-		_serviceTrackerMap;
 	private static final Map<Locale, Locale> _superLocales =
 		new ConcurrentHashMap<>();
-
-	static {
-		BundleContext bundleContext = SystemBundleUtil.getBundleContext();
-
-		_serviceTrackerMap = ServiceTrackerMapFactory.openSingleValueMap(
-			bundleContext, ResourceBundle.class,
-			"(&(!(javax.portlet.name=*))(language.id=*))",
-			(serviceReference, emitter) -> {
-				String languageId = GetterUtil.getString(
-					serviceReference.getProperty("language.id"));
-
-				emitter.emit(LocaleUtil.fromLanguageId(languageId, false));
-			},
-			new ServiceTrackerCustomizer
-				<ResourceBundle, Map<String, String>>() {
-
-				@Override
-				public Map<String, String> addingService(
-					ServiceReference<ResourceBundle> serviceReference) {
-
-					ResourceBundle resourceBundle = bundleContext.getService(
-						serviceReference);
-
-					Map<String, String> languageMap = new HashMap<>();
-
-					Enumeration<String> enumeration = resourceBundle.getKeys();
-
-					while (enumeration.hasMoreElements()) {
-						String key = enumeration.nextElement();
-
-						String value = ResourceBundleUtil.getString(
-							resourceBundle, key);
-
-						languageMap.put(key, value);
-					}
-
-					return languageMap;
-				}
-
-				@Override
-				public void modifiedService(
-					ServiceReference<ResourceBundle> serviceReference,
-					Map<String, String> map) {
-				}
-
-				@Override
-				public void removedService(
-					ServiceReference<ResourceBundle> serviceReference,
-					Map<String, String> map) {
-
-					bundleContext.ungetService(serviceReference);
-				}
-
-			});
-	}
 
 	private static class LanguageResourcesBundle extends ResourceBundle {
 
 		@Override
 		public Enumeration<String> getKeys() {
-			Set<String> keySet = Collections.emptySet();
+			MapHolder mapHolder = _getMapHolder(_locale);
 
-			Map<String, String> languageMap = _serviceTrackerMap.getService(
-				_locale);
+			Map<String, String> languageMap = mapHolder.getMap();
 
-			if (languageMap != null) {
-				keySet = languageMap.keySet();
-			}
+			Set<String> keySet = languageMap.keySet();
 
 			keySet = _getSetWithOverrideKeys(keySet, _locale);
 
@@ -296,26 +261,20 @@ public class LanguageResources {
 				return overrideValue;
 			}
 
-			Map<String, String> languageMap = _serviceTrackerMap.getService(
-				_locale);
+			MapHolder mapHolder = _getMapHolder(_locale);
 
-			if (languageMap == null) {
-				return null;
-			}
+			Map<String, String> languageMap = mapHolder.getMap();
 
 			return languageMap.get(key);
 		}
 
 		@Override
 		protected Set<String> handleKeySet() {
-			Set<String> keySet = Collections.emptySet();
+			MapHolder mapHolder = _getMapHolder(_locale);
 
-			Map<String, String> languageMap = _serviceTrackerMap.getService(
-				_locale);
+			Map<String, String> languageMap = mapHolder.getMap();
 
-			if (languageMap != null) {
-				keySet = languageMap.keySet();
-			}
+			Set<String> keySet = languageMap.keySet();
 
 			return _getSetWithOverrideKeys(keySet, _locale);
 		}
@@ -331,6 +290,84 @@ public class LanguageResources {
 		}
 
 		private final Locale _locale;
+
+	}
+
+	private static class MapHolder {
+
+		public void close() {
+			for (ServiceReference<ResourceBundle> serviceReference :
+					_serviceReferences) {
+
+				_bundleContext.ungetService(serviceReference);
+			}
+		}
+
+		public Map<String, String> getMap() {
+			return _map;
+		}
+
+		private MapHolder(Locale locale) {
+			try {
+				_serviceReferences = _bundleContext.getServiceReferences(
+					ResourceBundle.class,
+					"(&(!(javax.portlet.name=*))(language.id=" +
+						LocaleUtil.toLanguageId(locale) + "))");
+			}
+			catch (InvalidSyntaxException invalidSyntaxException) {
+				throw new RuntimeException(invalidSyntaxException);
+			}
+
+			for (ServiceReference<ResourceBundle> serviceReference :
+					_serviceReferences) {
+
+				ResourceBundle resourceBundle = _bundleContext.getService(
+					serviceReference);
+
+				Enumeration<String> enumeration = resourceBundle.getKeys();
+
+				while (enumeration.hasMoreElements()) {
+					String key = enumeration.nextElement();
+
+					_map.putIfAbsent(
+						key, ResourceBundleUtil.getString(resourceBundle, key));
+				}
+			}
+		}
+
+		private final Map<String, String> _map = new HashMap<>();
+		private final Collection<ServiceReference<ResourceBundle>>
+			_serviceReferences;
+
+		static {
+			try {
+				_bundleContext.addServiceListener(
+					new ServiceListener() {
+
+						@Override
+						public void serviceChanged(ServiceEvent serviceEvent) {
+							ServiceReference<?> serviceReference =
+								serviceEvent.getServiceReference();
+
+							MapHolder mapHolder = _mapHolders.remove(
+								LocaleUtil.fromLanguageId(
+									String.valueOf(
+										serviceReference.getProperty(
+											"language.id")),
+									false));
+
+							if (mapHolder != null) {
+								mapHolder.close();
+							}
+						}
+
+					},
+					"(&(!(javax.portlet.name=*))(language.id=*))");
+			}
+			catch (InvalidSyntaxException invalidSyntaxException) {
+				throw new ExceptionInInitializerError(invalidSyntaxException);
+			}
+		}
 
 	}
 

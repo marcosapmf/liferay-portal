@@ -25,6 +25,7 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.CompanyConstants;
 import com.liferay.portal.kernel.util.GetterUtil;
 
+import java.util.List;
 import java.util.Map;
 
 import javax.ws.rs.core.MultivaluedMap;
@@ -57,6 +58,14 @@ import org.osgi.service.component.annotations.Reference;
 )
 public class LiferayJWTBearerGrantHandler extends BaseAccessTokenGrantHandler {
 
+	@Override
+	public List<String> getSupportedGrantTypes() {
+		AccessTokenGrantHandler accessTokenGrantHandler =
+			_getAccessTokenGrantHandler();
+
+		return accessTokenGrantHandler.getSupportedGrantTypes();
+	}
+
 	@Activate
 	protected void activate(Map<String, Object> properties) {
 		_oAuth2ProviderConfiguration = ConfigurableUtil.createConfigurable(
@@ -64,13 +73,13 @@ public class LiferayJWTBearerGrantHandler extends BaseAccessTokenGrantHandler {
 	}
 
 	@Override
-	protected AccessTokenGrantHandler getAccessTokenGrantHandler() {
-		CustomJWTBearerGrantHandler customJWTBearerGrantHandler =
-			new CustomJWTBearerGrantHandler();
+	protected ServerAccessToken doCreateAccessToken(
+		Client client, MultivaluedMap<String, String> params) {
 
-		customJWTBearerGrantHandler.setDataProvider(_liferayOAuthDataProvider);
+		AccessTokenGrantHandler accessTokenGrantHandler =
+			_getAccessTokenGrantHandler();
 
-		return customJWTBearerGrantHandler;
+		return accessTokenGrantHandler.createAccessToken(client, params);
 	}
 
 	@Override
@@ -89,6 +98,15 @@ public class LiferayJWTBearerGrantHandler extends BaseAccessTokenGrantHandler {
 	@Override
 	protected boolean isGrantHandlerEnabled() {
 		return _oAuth2ProviderConfiguration.allowJWTBearerGrant();
+	}
+
+	private AccessTokenGrantHandler _getAccessTokenGrantHandler() {
+		CustomJWTBearerGrantHandler customJWTBearerGrantHandler =
+			new CustomJWTBearerGrantHandler();
+
+		customJWTBearerGrantHandler.setDataProvider(_liferayOAuthDataProvider);
+
+		return customJWTBearerGrantHandler;
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

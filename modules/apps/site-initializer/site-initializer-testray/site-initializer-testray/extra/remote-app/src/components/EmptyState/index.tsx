@@ -12,8 +12,10 @@
  * details.
  */
 
-import EmptyState, {EmptyStateProps} from './EmptyState';
+import EmptyState, {EmptyStateProps, States} from './EmptyState';
 
 export type {EmptyStateProps};
+
+export {States};
 
 export default EmptyState;

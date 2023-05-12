@@ -64,10 +64,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = "model.class.name=com.liferay.dynamic.data.mapping.storage.DDMFormValues",
-	service = {
-		DDMFormValuesExportImportContentProcessor.class,
-		ExportImportContentProcessor.class
-	}
+	service = ExportImportContentProcessor.class
 )
 public class DDMFormValuesExportImportContentProcessor
 	implements ExportImportContentProcessor<DDMFormValues> {
@@ -661,6 +658,10 @@ public class DDMFormValuesExportImportContentProcessor
 						_log.debug("Unable to parse JSON", jsonException);
 					}
 
+					continue;
+				}
+
+				if (jsonObject.length() == 0) {
 					continue;
 				}
 

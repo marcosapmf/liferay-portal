@@ -437,9 +437,12 @@ public class WikiListPagesDisplayContext {
 								searchContainer.getOrderByCol(),
 								searchContainer.getOrderByType())),
 						curPage -> {
-							if (!permissionChecker.isContentReviewer(
+							boolean contentReviewer =
+								permissionChecker.isContentReviewer(
 									_wikiRequestHelper.getCompanyId(),
-									_wikiRequestHelper.getScopeGroupId()) &&
+									_wikiRequestHelper.getScopeGroupId());
+
+							if (!contentReviewer &&
 								!WikiPagePermission.contains(
 									permissionChecker, curPage,
 									ActionKeys.UPDATE)) {
@@ -464,7 +467,10 @@ public class WikiListPagesDisplayContext {
 
 							if ((lastPage != null) &&
 								(curPage.getVersion() <
-									lastPage.getVersion())) {
+									lastPage.getVersion()) &&
+								(contentReviewer ||
+								 (lastPage.getStatusByUserId() ==
+									 permissionChecker.getUserId()))) {
 
 								return lastPage;
 							}
@@ -513,6 +519,10 @@ public class WikiListPagesDisplayContext {
 		else if (navigation.equals("draft-pages") ||
 				 navigation.equals("pending-pages")) {
 
+			if (!themeDisplay.isSignedIn()) {
+				return;
+			}
+
 			long draftUserId = themeDisplay.getUserId();
 
 			PermissionChecker permissionChecker =
@@ -535,14 +545,22 @@ public class WikiListPagesDisplayContext {
 
 			int wikiPageStatus = status;
 
-			searchContainer.setResultsAndTotal(
-				() -> WikiPageServiceUtil.getPages(
-					themeDisplay.getScopeGroupId(), wikiPageDraftUserId,
-					_wikiNode.getNodeId(), wikiPageStatus,
-					searchContainer.getStart(), searchContainer.getEnd()),
-				WikiPageServiceUtil.getPagesCount(
-					themeDisplay.getScopeGroupId(), wikiPageDraftUserId,
-					_wikiNode.getNodeId(), wikiPageStatus));
+			if (wikiPageDraftUserId == 0) {
+				searchContainer.setResultsAndTotal(
+					() -> WikiPageServiceUtil.getPages(
+						themeDisplay.getScopeGroupId(), wikiPageDraftUserId,
+						_wikiNode.getNodeId(), wikiPageStatus,
+						searchContainer.getStart(), searchContainer.getEnd()),
+					WikiPageServiceUtil.getPagesCount(
+						themeDisplay.getScopeGroupId(), wikiPageDraftUserId,
+						_wikiNode.getNodeId(), wikiPageStatus));
+			}
+			else {
+				searchContainer.setResultsAndTotal(
+					WikiPageLocalServiceUtil.getPages(
+						themeDisplay.getScopeGroupId(), _wikiNode.getNodeId(),
+						wikiPageStatus, wikiPageDraftUserId));
+			}
 		}
 		else if (navigation.equals("frontpage")) {
 			WikiWebComponentProvider wikiWebComponentProvider =
@@ -559,12 +577,20 @@ public class WikiListPagesDisplayContext {
 				1);
 		}
 		else if (navigation.equals("history")) {
-			searchContainer.setResultsAndTotal(
-				() -> WikiPageLocalServiceUtil.getPages(
-					page.getNodeId(), page.getTitle(), QueryUtil.ALL_POS,
-					QueryUtil.ALL_POS, new PageVersionComparator()),
-				WikiPageLocalServiceUtil.getPagesCount(
-					page.getNodeId(), page.getTitle()));
+			if (_hasViewPendingStatusPermission(page)) {
+				searchContainer.setResultsAndTotal(
+					() -> WikiPageLocalServiceUtil.getPages(
+						page.getNodeId(), page.getTitle(), QueryUtil.ALL_POS,
+						QueryUtil.ALL_POS, new PageVersionComparator()),
+					WikiPageLocalServiceUtil.getPagesCount(
+						page.getNodeId(), page.getTitle()));
+			}
+			else {
+				searchContainer.setResultsAndTotal(
+					WikiPageLocalServiceUtil.getPages(
+						page.getResourcePrimKey(), page.getNodeId(),
+						WorkflowConstants.STATUS_APPROVED));
+			}
 		}
 		else if (navigation.equals("incoming-links")) {
 			searchContainer.setResultsAndTotal(
@@ -615,6 +641,32 @@ public class WikiListPagesDisplayContext {
 		}
 
 		return true;
+	}
+
+	private boolean _hasViewPendingStatusPermission(WikiPage wikiPage)
+		throws PortalException {
+
+		PermissionChecker permissionChecker =
+			_wikiRequestHelper.getPermissionChecker();
+
+		if (permissionChecker.isContentReviewer(
+				_wikiRequestHelper.getCompanyId(),
+				_wikiRequestHelper.getScopeGroupId())) {
+
+			return true;
+		}
+
+		WikiPage lastWikiPage = WikiPageLocalServiceUtil.getPage(
+			wikiPage.getResourcePrimKey(), false);
+
+		if ((wikiPage.getVersion() >= lastWikiPage.getVersion()) ||
+			(permissionChecker.getUserId() ==
+				lastWikiPage.getStatusByUserId())) {
+
+			return true;
+		}
+
+		return false;
 	}
 
 	private boolean _isCopyPasteEnabled(WikiPage wikiPage)

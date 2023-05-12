@@ -26,9 +26,16 @@ boolean editable = PrefsParamUtil.getBoolean(PortletPreferencesFactoryUtil.getPo
 boolean formView = PrefsParamUtil.getBoolean(PortletPreferencesFactoryUtil.getPortletSetup(renderRequest), renderRequest, "formView", false);
 long formDDMTemplateId = PrefsParamUtil.getLong(PortletPreferencesFactoryUtil.getPortletSetup(renderRequest), renderRequest, "formDDMTemplateId");
 long recordSetId = PrefsParamUtil.getLong(PortletPreferencesFactoryUtil.getPortletSetup(renderRequest), renderRequest, "recordSetId");
+String scopeType = PrefsParamUtil.getString(PortletPreferencesFactoryUtil.getPortletSetup(renderRequest), renderRequest, "lfrScopeType");
 boolean spreadsheet = PrefsParamUtil.getBoolean(PortletPreferencesFactoryUtil.getPortletSetup(renderRequest), renderRequest, "spreadsheet");
 
 Group scopeGroup = themeDisplay.getScopeGroup();
+
+if (scopeType.equals("company")) {
+	scopeGroup = GroupLocalServiceUtil.getGroup(themeDisplay.getCompanyGroupId());
+
+	scopeGroupId = scopeGroup.getGroupId();
+}
 
 if (scopeGroup.isStagingGroup() && !scopeGroup.isInStagingPortlet(DDLPortletKeys.DYNAMIC_DATA_LISTS)) {
 	scopeGroupId = scopeGroup.getLiveGroupId();
@@ -75,7 +82,6 @@ String orderByType = ParamUtil.getString(request, "orderByType", "asc");
 								>
 									<div class="form-search input-append">
 										<liferay-ui:input-search
-											autoFocus="<%= true %>"
 											placeholder='<%= LanguageUtil.get(request, "keywords") %>'
 										/>
 									</div>

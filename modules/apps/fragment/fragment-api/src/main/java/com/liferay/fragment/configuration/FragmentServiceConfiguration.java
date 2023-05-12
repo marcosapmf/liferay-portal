@@ -24,7 +24,7 @@ import org.osgi.annotation.versioning.ProviderType;
  * @author Pavel Savinov
  */
 @ExtendedObjectClassDefinition(
-	category = "page-fragments",
+	category = "page-fragments", generateUI = false,
 	scope = ExtendedObjectClassDefinition.Scope.COMPANY
 )
 @Meta.OCD(
@@ -40,5 +40,13 @@ public interface FragmentServiceConfiguration {
 		name = "propagate-fragment-changes-automatically", required = false
 	)
 	public boolean propagateChanges();
+
+	@Meta.AD(
+		deflt = "true",
+		description = "propagate-contributed-fragment-changes-automatically-description",
+		name = "propagate-contributed-fragment-changes-automatically",
+		required = false
+	)
+	public boolean propagateContributedFragmentChanges();
 
 }

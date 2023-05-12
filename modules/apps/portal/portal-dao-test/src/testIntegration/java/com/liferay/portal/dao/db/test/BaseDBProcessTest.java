@@ -34,12 +34,12 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.IntStream;
 
 import org.junit.After;
 import org.junit.AfterClass;
@@ -92,7 +92,7 @@ public class BaseDBProcessTest extends BaseDBProcess {
 
 	@After
 	public void tearDown() throws Exception {
-		runSQL("drop table " + _TABLE_NAME);
+		runSQL("DROP_TABLE_IF_EXISTS(" + _TABLE_NAME + ")");
 	}
 
 	@Test
@@ -172,11 +172,11 @@ public class BaseDBProcessTest extends BaseDBProcess {
 	}
 
 	@Test
-	public void testAlterColumnNameNonexistedColumn() throws Exception {
+	public void testAlterColumnNameNonexistentColumn() throws Exception {
 		try {
 			alterColumnName(
-				_TABLE_NAME, "nonexistedColumn",
-				"newNonexistedColumn LONG null");
+				_TABLE_NAME, "nonexistentColumn",
+				"newNonexistentColumn LONG null");
 
 			Assert.fail();
 		}
@@ -184,7 +184,7 @@ public class BaseDBProcessTest extends BaseDBProcess {
 		}
 
 		Assert.assertFalse(
-			_dbInspector.hasColumn(_TABLE_NAME, "nonexistedColumn"));
+			_dbInspector.hasColumn(_TABLE_NAME, "nonexistentColumn"));
 	}
 
 	@Test
@@ -211,6 +211,22 @@ public class BaseDBProcessTest extends BaseDBProcess {
 		Assert.assertTrue(
 			_dbInspector.hasColumnType(
 				_TABLE_NAME, "notNilColumn", "VARCHAR(200) not null"));
+	}
+
+	@Test
+	public void testAlterColumnTypeChangeToDefaultNotNull() throws Exception {
+		try {
+			alterColumnType(
+				_TABLE_NAME, "nilColumn", "LONG default 2 not null");
+
+			Assert.fail();
+		}
+		catch (SQLException sqlException) {
+		}
+
+		Assert.assertFalse(
+			_dbInspector.hasColumnType(
+				_TABLE_NAME, "nilColumn", "LONG default 2 not null"));
 	}
 
 	@Test
@@ -266,9 +282,9 @@ public class BaseDBProcessTest extends BaseDBProcess {
 	}
 
 	@Test
-	public void testAlterColumnTypeNonexistedColumn() throws Exception {
+	public void testAlterColumnTypeNonexistentColumn() throws Exception {
 		try {
-			alterColumnType(_TABLE_NAME, "nonexistedColumn", "TEXT not null");
+			alterColumnType(_TABLE_NAME, "nonexistentColumn", "TEXT not null");
 
 			Assert.fail();
 		}
@@ -277,7 +293,7 @@ public class BaseDBProcessTest extends BaseDBProcess {
 
 		Assert.assertFalse(
 			_dbInspector.hasColumnType(
-				_TABLE_NAME, "nonexistedColumn", "TEXT not null"));
+				_TABLE_NAME, "nonexistentColumn", "TEXT not null"));
 	}
 
 	@Test
@@ -405,8 +421,20 @@ public class BaseDBProcessTest extends BaseDBProcess {
 	}
 
 	@Test
-	public void testAlterTableDropNonexistedColumn() throws Exception {
-		alterTableDropColumn(_TABLE_NAME, "nonexistedColumn");
+	public void testAlterTableDropNonexistentColumn() throws Exception {
+		alterTableDropColumn(_TABLE_NAME, "nonexistentColumn");
+	}
+
+	@Test
+	public void testDropNonexistentTable() throws Exception {
+		dropTable("nonexistentTable");
+	}
+
+	@Test
+	public void testDropTable() throws Exception {
+		dropTable(_TABLE_NAME);
+
+		Assert.assertFalse(_dbInspector.hasTable(_TABLE_NAME));
 	}
 
 	@Test
@@ -454,16 +482,15 @@ public class BaseDBProcessTest extends BaseDBProcess {
 
 	@Test
 	public void testProcessConcurrentlyWithList() throws Exception {
-		Integer[] values = IntStream.rangeClosed(
-			1, _PROCESS_CONCURRENTLY_COUNT
-		).boxed(
-		).toArray(
-			Integer[]::new
-		);
+		List<Integer> values = new ArrayList<>();
+
+		for (int i = 1; i <= _PROCESS_CONCURRENTLY_COUNT; i++) {
+			values.add(i);
+		}
 
 		_validateProcessConcurrently(
 			threadIds -> processConcurrently(
-				values,
+				values.toArray(new Integer[0]),
 				value -> {
 					Thread currentThread = Thread.currentThread();
 

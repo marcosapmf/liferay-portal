@@ -16,9 +16,9 @@ package com.liferay.portal.vulcan.internal.graphql.validation;
 
 import com.liferay.portal.kernel.util.ObjectValuePair;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.vulcan.graphql.annotation.GraphQLTypeExtension;
 import com.liferay.portal.vulcan.graphql.servlet.ServletData;
 import com.liferay.portal.vulcan.graphql.validation.GraphQLRequestContext;
-import com.liferay.portal.vulcan.internal.graphql.servlet.ServletDataAdapter;
 
 import java.lang.reflect.Method;
 
@@ -67,14 +67,27 @@ public class ServletDataRequestContext implements GraphQLRequestContext {
 	}
 
 	@Override
-	public boolean isValidationRequired() {
-		if ((_servletData == null) ||
-			(_servletData instanceof ServletDataAdapter)) {
+	public boolean isJaxRsResourceInvocation() {
+		return _servletData.isJaxRsResourceInvocation();
+	}
 
-			return false;
+	private String _getMethodName(Method method) {
+		Class<?> declaringClass = method.getDeclaringClass();
+
+		if (declaringClass == null) {
+			return method.getName();
 		}
 
-		return true;
+		GraphQLTypeExtension graphQLTypeExtension =
+			declaringClass.getAnnotation(GraphQLTypeExtension.class);
+
+		if (graphQLTypeExtension == null) {
+			return method.getName();
+		}
+
+		Class<?> value = graphQLTypeExtension.value();
+
+		return value.getSimpleName() + "." + method.getName();
 	}
 
 	private String _getNamespace(ServletData servletData) {
@@ -97,7 +110,7 @@ public class ServletDataRequestContext implements GraphQLRequestContext {
 
 		ObjectValuePair<Class<?>, String> resourceMethodObjectValuePair =
 			servletData.getResourceMethodObjectValuePair(
-				method.getName(), mutation);
+				_getMethodName(method), mutation);
 
 		if (resourceMethodObjectValuePair == null) {
 			return null;
@@ -115,7 +128,7 @@ public class ServletDataRequestContext implements GraphQLRequestContext {
 
 		ObjectValuePair<Class<?>, String> resourceMethodObjectValuePair =
 			servletData.getResourceMethodObjectValuePair(
-				method.getName(), mutation);
+				_getMethodName(method), mutation);
 
 		if (resourceMethodObjectValuePair == null) {
 			return null;

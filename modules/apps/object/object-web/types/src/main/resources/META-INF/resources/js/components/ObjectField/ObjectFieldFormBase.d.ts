@@ -15,13 +15,14 @@
 import {FormError} from '@liferay/object-js-components-web';
 import {ChangeEventHandler, ReactNode} from 'react';
 import './ObjectFieldFormBase.scss';
-interface IProps {
+interface ObjectFieldFormBaseProps {
 	children?: ReactNode;
-	creationLanguageId?: Locale;
+	creationLanguageId2?: Liferay.Language.Locale;
 	disabled?: boolean;
 	editingField?: boolean;
 	errors: ObjectFieldErrors;
 	handleChange: ChangeEventHandler<HTMLInputElement>;
+	objectDefinition?: ObjectDefinition;
 	objectDefinitionExternalReferenceCode: string;
 	objectField: Partial<ObjectField>;
 	objectFieldTypes: ObjectFieldType[];
@@ -41,11 +42,12 @@ export declare type ObjectFieldErrors = FormError<
 >;
 export default function ObjectFieldFormBase({
 	children,
-	creationLanguageId,
+	creationLanguageId2,
 	disabled,
 	editingField,
 	errors,
 	handleChange,
+	objectDefinition,
 	objectDefinitionExternalReferenceCode,
 	objectField: values,
 	objectFieldTypes,
@@ -54,5 +56,5 @@ export default function ObjectFieldFormBase({
 	onAggregationFilterChange,
 	onRelationshipChange,
 	setValues,
-}: IProps): JSX.Element;
+}: ObjectFieldFormBaseProps): JSX.Element;
 export {};

@@ -448,10 +448,7 @@ public class SXPBlueprintSearchResultTest {
 			_addAssetCategory("Promoted", _user)
 		).build();
 
-		User guestUser = _userLocalService.getDefaultUser(
-			_group.getCompanyId());
-
-		_setCurrentUser(guestUser);
+		_setCurrentUser(_userLocalService.getGuestUser(_group.getCompanyId()));
 
 		_updateElementInstancesJSON(
 			new Object[] {
@@ -1185,10 +1182,7 @@ public class SXPBlueprintSearchResultTest {
 
 		_assertSearchIgnoreRelevance("[Guest Users, Non-Guest Users]");
 
-		User guestUser = _userLocalService.getDefaultUser(
-			_group.getCompanyId());
-
-		_setCurrentUser(guestUser);
+		_setCurrentUser(_userLocalService.getGuestUser(_group.getCompanyId()));
 
 		_assertSearchIgnoreRelevance("[Guest Users]");
 
@@ -2233,7 +2227,7 @@ public class SXPBlueprintSearchResultTest {
 		DocumentsAssert.assertValues(
 			message, searchResponse.getDocuments(), "title_en_US", expected);
 
-		if (!Objects.equals("{}", _sxpBlueprint.getElementInstancesJSON())) {
+		if (!Objects.equals(_sxpBlueprint.getElementInstancesJSON(), "{}")) {
 			searchResponse = _getSearchResponsePreview(
 				searchRequestBuilderConsumer);
 
@@ -2258,7 +2252,7 @@ public class SXPBlueprintSearchResultTest {
 			searchResponse.getRequestString(), searchResponse.getDocuments(),
 			"title_en_US", expected);
 
-		if (!Objects.equals("{}", _sxpBlueprint.getElementInstancesJSON())) {
+		if (!Objects.equals(_sxpBlueprint.getElementInstancesJSON(), "{}")) {
 			searchResponse = _getSearchResponsePreview(
 				searchRequestBuilderConsumer);
 
@@ -2336,6 +2330,8 @@ public class SXPBlueprintSearchResultTest {
 			_searchRequestBuilderFactory.builder(
 			).companyId(
 				TestPropsValues.getCompanyId()
+			).emptySearchEnabled(
+				true
 			).queryString(
 				_keywords
 			).withSearchContext(
@@ -2367,6 +2363,8 @@ public class SXPBlueprintSearchResultTest {
 			_searchRequestBuilderFactory.builder(
 			).companyId(
 				TestPropsValues.getCompanyId()
+			).emptySearchEnabled(
+				true
 			).queryString(
 				_keywords
 			).withSearchContext(

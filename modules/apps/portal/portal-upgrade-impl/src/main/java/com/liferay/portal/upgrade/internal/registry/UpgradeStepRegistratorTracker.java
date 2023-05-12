@@ -18,8 +18,7 @@ import com.liferay.osgi.util.ServiceTrackerFactory;
 import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.portal.kernel.configuration.Configuration;
 import com.liferay.portal.kernel.configuration.ConfigurationFactoryUtil;
-import com.liferay.portal.kernel.dao.db.DBContext;
-import com.liferay.portal.kernel.dao.db.DBProcessContext;
+import com.liferay.portal.kernel.dao.jdbc.DataAccess;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Release;
@@ -28,11 +27,14 @@ import com.liferay.portal.kernel.upgrade.UpgradeException;
 import com.liferay.portal.kernel.upgrade.UpgradeStep;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
+import com.liferay.portal.upgrade.PortalUpgradeProcess;
 import com.liferay.portal.upgrade.internal.executor.UpgradeExecutor;
+import com.liferay.portal.upgrade.log.UpgradeLogContext;
 import com.liferay.portal.upgrade.registry.UpgradeStepRegistrator;
 import com.liferay.portal.util.PropsValues;
 
-import java.io.OutputStream;
+import java.sql.Connection;
+import java.sql.SQLException;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -60,6 +62,14 @@ public class UpgradeStepRegistratorTracker {
 		_bundleContext = bundleContext;
 		_releaseLocalService = releaseLocalService;
 		_upgradeExecutor = upgradeExecutor;
+
+		try (Connection connection = DataAccess.getConnection()) {
+			_portalUpgraded = PortalUpgradeProcess.isInLatestSchemaVersion(
+				connection);
+		}
+		catch (SQLException sqlException) {
+			throw new RuntimeException(sqlException);
+		}
 	}
 
 	public void close() {
@@ -74,26 +84,17 @@ public class UpgradeStepRegistratorTracker {
 				bundleSymbolicName);
 
 			if (releaseUpgradeSteps != null) {
-				DBProcessContext dbProcessContext = new DBProcessContext() {
-
-					@Override
-					public DBContext getDBContext() {
-						return new DBContext();
-					}
-
-					@Override
-					public OutputStream getOutputStream() {
-						return null;
-					}
-
-				};
-
 				for (UpgradeStep releaseUpgradeStep : releaseUpgradeSteps) {
 					try {
-						releaseUpgradeStep.upgrade(dbProcessContext);
+						UpgradeLogContext.setContext(bundleSymbolicName);
+
+						releaseUpgradeStep.upgrade();
 					}
 					catch (UpgradeException upgradeException) {
 						_log.error(upgradeException);
+					}
+					finally {
+						UpgradeLogContext.clearContext();
 					}
 				}
 
@@ -114,6 +115,7 @@ public class UpgradeStepRegistratorTracker {
 		UpgradeStepRegistratorTracker.class);
 
 	private final BundleContext _bundleContext;
+	private final boolean _portalUpgraded;
 	private final ReleaseLocalService _releaseLocalService;
 	private final Map<String, List<UpgradeStep>> _releaseUpgradeStepsMap =
 		new HashMap<>();
@@ -172,7 +174,7 @@ public class UpgradeStepRegistratorTracker {
 			}
 
 			List<UpgradeInfo> upgradeInfos =
-				upgradeStepRegistry.getUpgradeInfos();
+				upgradeStepRegistry.getUpgradeInfos(_portalUpgraded);
 
 			if (PropsValues.UPGRADE_DATABASE_AUTO_RUN ||
 				(_releaseLocalService.fetchRelease(bundleSymbolicName) ==

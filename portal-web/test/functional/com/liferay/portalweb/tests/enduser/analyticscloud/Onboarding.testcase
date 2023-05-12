@@ -23,15 +23,17 @@ definition {
 	tearDown {
 		var testPortalInstance = PropsUtil.get("test.portal.instance");
 
-		ACUtils.tearDownAC();
+		// It is not possible to delete properties and data source after LRAC-13389. This functionality should return after LRAC-8040
 
-		if ("${testPortalInstance}" == "true") {
+		//ACUtils.tearDownAC();
+
+		if (${testPortalInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 	}
 
 	@description = "Feature ID: LRAC-8720 | Automation ID: LRAC-10622 | Test Summary: Modal is displayed on first access to a new workspace"
-	@priority = "5"
+	@priority = 5
 	test ModalDisplayedWhenFirstAccessToWorkspace {
 		property test.name.skip.portal.instance = "Onboarding#ModalDisplayedWhenFirstAccessToWorkspace";
 
@@ -59,7 +61,7 @@ definition {
 			}
 
 			task ("Check fix pack versions") {
-				for (var key_version : list "${supportedFPVersionList}") {
+				for (var key_version : list ${supportedFPVersionList}) {
 					AssertElementPresent(locator1 = "ACSettings#FIX_PACK_DROPDOWN");
 				}
 			}
@@ -72,9 +74,9 @@ definition {
 		task ("Click on 'click here' and check if a new tab with connection documentation appears") {
 			ACUtils.clickGenericHyperlink(hyperlinkText = "Click here");
 
-			SelectWindow(locator1 = "title=Connecting Liferay DXP to Analytics Cloud — Liferay Learn");
+			SelectWindow(locator1 = "title=Connecting Liferay DXP to Analytics Cloud - Liferay Learn");
 
-			ACUtils.viewGenericText(textValueList = "Documentation,Connecting Liferay DXP to Analytics Cloud");
+			ACUtils.viewGenericText(textValueList = "Connecting Liferay DXP to Analytics Cloud");
 		}
 
 		task ("Switch to the AC tab") {
@@ -115,7 +117,7 @@ definition {
 			}
 
 			task ("Check fix pack versions") {
-				for (var key_version : list "${supportedFPVersionList}") {
+				for (var key_version : list ${supportedFPVersionList}) {
 					AssertElementPresent(locator1 = "ACSettings#FIX_PACK_DROPDOWN");
 				}
 			}
@@ -132,9 +134,9 @@ definition {
 		task ("Click on 'click here' and check if a new tab with connection documentation appears") {
 			ACUtils.clickGenericHyperlink(hyperlinkText = "Click here");
 
-			SelectWindow(locator1 = "title=Connecting Liferay DXP to Analytics Cloud — Liferay Learn");
+			SelectWindow(locator1 = "title=Connecting Liferay DXP to Analytics Cloud - Liferay Learn");
 
-			ACUtils.viewGenericText(textValueList = "Documentation,Connecting Liferay DXP to Analytics Cloud");
+			ACUtils.viewGenericText(textValueList = "Connecting Liferay DXP to Analytics Cloud");
 		}
 	}
 

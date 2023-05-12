@@ -406,7 +406,7 @@ public class PortletImpl extends PortletBaseImpl {
 			getPortletName(), getDisplayName(), getPortletClass(),
 			getConfigurationActionClass(), getIndexerClasses(),
 			getOpenSearchClass(), getSchedulerEntries(), getPortletURLClass(),
-			getFriendlyURLMapperClass(), getFriendlyURLMapping(),
+			getFriendlyURLMapperClass(), _friendlyURLMapping,
 			getFriendlyURLRoutes(), getURLEncoderClass(),
 			getPortletDataHandlerClass(), getStagedModelDataHandlerClasses(),
 			getTemplateHandlerClass(), getPortletConfigurationListenerClass(),
@@ -927,18 +927,27 @@ public class PortletImpl extends PortletBaseImpl {
 	 */
 	@Override
 	public String getFriendlyURLMapping() {
+		return getFriendlyURLMapping(true);
+	}
+
+	@Override
+	public String getFriendlyURLMapping(boolean lookUpFriendlyURLMapper) {
 		if (Validator.isNotNull(_friendlyURLMapping)) {
 			return _friendlyURLMapping;
 		}
 
-		FriendlyURLMapper friendlyURLMapperInstance =
-			getFriendlyURLMapperInstance();
+		if (lookUpFriendlyURLMapper) {
+			FriendlyURLMapper friendlyURLMapperInstance =
+				getFriendlyURLMapperInstance();
 
-		if (friendlyURLMapperInstance == null) {
-			return null;
+			if (friendlyURLMapperInstance == null) {
+				return null;
+			}
+
+			return friendlyURLMapperInstance.getMapping();
 		}
 
-		return friendlyURLMapperInstance.getMapping();
+		return null;
 	}
 
 	/**

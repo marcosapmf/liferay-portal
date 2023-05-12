@@ -89,7 +89,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 
 import javax.ws.rs.BadRequestException;
@@ -250,13 +249,9 @@ public class StructuredContentResourceImpl
 
 		return Page.of(
 			transform(
-				_journalArticleService.search(
-					journalArticle.getCompanyId(), journalArticle.getGroupId(),
-					Collections.singletonList(journalArticle.getFolderId()),
-					journalArticle.getClassNameId(),
-					journalArticle.getArticleId(), null, null, null, null,
-					(String)null, null, null, null, null,
-					WorkflowConstants.STATUS_APPROVED, true, QueryUtil.ALL_POS,
+				_journalArticleService.getArticlesByArticleId(
+					journalArticle.getGroupId(), journalArticle.getArticleId(),
+					WorkflowConstants.STATUS_APPROVED, QueryUtil.ALL_POS,
 					QueryUtil.ALL_POS, null),
 				this::_toExtensionStructuredContent));
 	}
@@ -305,11 +300,11 @@ public class StructuredContentResourceImpl
 				contextHttpServletRequest,
 				structuredContent.getViewableByAsString());
 
-		Optional.ofNullable(
-			structuredContent.getPriority()
-		).ifPresent(
-			serviceContext::setAssetPriority
-		);
+		Double priority = structuredContent.getPriority();
+
+		if (priority != null) {
+			serviceContext.setAssetPriority(priority);
+		}
 
 		serviceContext.setWorkflowAction(WorkflowConstants.ACTION_SAVE_DRAFT);
 
@@ -327,9 +322,8 @@ public class StructuredContentResourceImpl
 						_getRootDDMFormFields(ddmStructure)),
 					_jsonDDMFormValuesSerializer, _ddmFormValuesValidator,
 					ddmStructure, _journalConverter),
-				ddmStructure.getStructureKey(),
-				_getDDMTemplateKey(ddmStructure), null,
-				localDateTime.getMonthValue() - 1,
+				ddmStructure.getStructureId(), _getDDMTemplateKey(ddmStructure),
+				null, localDateTime.getMonthValue() - 1,
 				localDateTime.getDayOfMonth(), localDateTime.getYear(),
 				localDateTime.getHour(), localDateTime.getMinute(), 0, 0, 0, 0,
 				0, true, 0, 0, 0, 0, 0, true, true, false, null, null, null,

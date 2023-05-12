@@ -32,10 +32,27 @@ import com.liferay.portal.configuration.metatype.annotations.ExtendedObjectClass
 )
 public interface CTSettingsConfiguration {
 
+	@Meta.AD(
+		deflt = "0", name = "default-ct-collection-template-id",
+		required = false
+	)
+	public long defaultCTCollectionTemplateId();
+
+	@Meta.AD(
+		deflt = "0", name = "default-sandbox-ct-collection-template-id",
+		required = false
+	)
+	public long defaultSandboxCTCollectionTemplateId();
+
 	@Meta.AD(deflt = "false", name = "enabled", required = false)
 	public boolean enabled();
 
 	@Meta.AD(deflt = "false", name = "sandbox-enabled", required = false)
 	public boolean sandboxEnabled();
+
+	@Meta.AD(
+		deflt = "false", name = "allow-unapproved-changes", required = false
+	)
+	public boolean unapprovedChangesAllowed();
 
 }

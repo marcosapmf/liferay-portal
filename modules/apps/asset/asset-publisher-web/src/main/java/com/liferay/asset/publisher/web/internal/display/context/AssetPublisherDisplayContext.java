@@ -93,8 +93,6 @@ import com.liferay.portal.kernel.portlet.PortletProviderUtil;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactoryUtil;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.repository.model.FileEntry;
-import com.liferay.portal.kernel.search.Indexer;
-import com.liferay.portal.kernel.search.IndexerRegistryUtil;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.service.LayoutLocalServiceUtil;
@@ -135,8 +133,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.portlet.PortletConfig;
 import javax.portlet.PortletPreferences;
@@ -209,7 +205,7 @@ public class AssetPublisherDisplayContext {
 			portletDisplay.getPortletInstanceConfiguration(
 				AssetPublisherPortletInstanceConfiguration.class);
 
-		_httpServletRequest = _portal.getHttpServletRequest(portletRequest);
+		_httpServletRequest = portal.getHttpServletRequest(portletRequest);
 	}
 
 	public AssetListEntry fetchAssetListEntry() throws PortalException {
@@ -368,8 +364,9 @@ public class AssetPublisherDisplayContext {
 
 			if (assetListEntry != null) {
 				assetEntries = _assetListAssetEntryProvider.getAssetEntries(
-					assetListEntry, _getSegmentsEntryIds(assetListEntry),
-					_getSegmentsAnonymousUserId());
+					assetListEntry, _getSegmentsEntryIds(assetListEntry), null,
+					null, StringPool.BLANK, _getSegmentsAnonymousUserId(),
+					QueryUtil.ALL_POS, QueryUtil.ALL_POS);
 			}
 			else {
 				if (Validator.isNull(getInfoListProviderKey())) {
@@ -667,10 +664,7 @@ public class AssetPublisherDisplayContext {
 					items.add(keyword);
 				}
 
-				Stream<String> stream = items.stream();
-
-				queryValues = stream.collect(
-					Collectors.joining(StringPool.SPACE));
+				queryValues = StringUtil.merge(items, StringPool.SPACE);
 
 				ruleJSONObject.put("selectedItems", queryValues);
 			}
@@ -722,15 +716,9 @@ public class AssetPublisherDisplayContext {
 			return _availableClassNameIds;
 		}
 
-		_availableClassNameIds = ArrayUtil.filter(
-			AssetRendererFactoryRegistryUtil.getClassNameIds(
-				_themeDisplay.getCompanyId(), true),
-			availableClassNameId -> {
-				Indexer<?> indexer = IndexerRegistryUtil.getIndexer(
-					_portal.getClassName(availableClassNameId));
-
-				return indexer != null;
-			});
+		_availableClassNameIds =
+			AssetRendererFactoryRegistryUtil.getIndexableClassNameIds(
+				_themeDisplay.getCompanyId(), true);
 
 		return _availableClassNameIds;
 	}
@@ -2295,12 +2283,13 @@ public class AssetPublisherDisplayContext {
 		assetEntryItemSelectorCriterion.setTypeSelection(
 			assetRendererFactory.getClassName());
 
-		return String.valueOf(
+		return PortletURLBuilder.create(
 			_itemSelector.getItemSelectorURL(
 				RequestBackedPortletURLFactoryUtil.create(_portletRequest),
 				scopeGroup, _themeDisplay.getScopeGroupId(),
 				_portletResponse.getNamespace() + "selectAsset",
-				assetEntryItemSelectorCriterion));
+				assetEntryItemSelectorCriterion)
+		).buildString();
 	}
 
 	private String _getSegmentsAnonymousUserId() {

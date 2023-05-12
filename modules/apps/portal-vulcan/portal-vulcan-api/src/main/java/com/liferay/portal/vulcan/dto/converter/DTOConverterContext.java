@@ -23,10 +23,10 @@ import java.io.Serializable;
 import java.util.Collections;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Optional;
 
 import javax.servlet.http.HttpServletRequest;
 
+import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.UriInfo;
 
 /**
@@ -34,6 +34,29 @@ import javax.ws.rs.core.UriInfo;
  * @author Víctor Galán
  */
 public interface DTOConverterContext {
+
+	public default boolean containsNestedFieldsValue(String key) {
+		UriInfo uriInfo = getUriInfo();
+
+		if (uriInfo == null) {
+			return false;
+		}
+
+		MultivaluedMap<String, String> parameters =
+			uriInfo.getQueryParameters();
+
+		if ((parameters == null) || parameters.isEmpty()) {
+			return false;
+		}
+
+		String fields = parameters.getFirst("nestedFields");
+
+		if (fields == null) {
+			return false;
+		}
+
+		return fields.contains(key);
+	}
 
 	public default Map<String, Map<String, String>> getActions() {
 		return Collections.emptyMap();
@@ -64,13 +87,7 @@ public interface DTOConverterContext {
 	}
 
 	public default UriInfo getUriInfo() {
-		Optional<UriInfo> uriInfoOptional = getUriInfoOptional();
-
-		return uriInfoOptional.orElse(null);
-	}
-
-	public default Optional<UriInfo> getUriInfoOptional() {
-		return Optional.empty();
+		return null;
 	}
 
 	public default User getUser() {

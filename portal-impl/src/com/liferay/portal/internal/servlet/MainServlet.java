@@ -18,6 +18,7 @@ import com.liferay.petra.io.StreamUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.events.EventsProcessorUtil;
+import com.liferay.portal.events.ShutdownHelperUtil;
 import com.liferay.portal.events.StartupAction;
 import com.liferay.portal.events.StartupHelperUtil;
 import com.liferay.portal.kernel.cache.thread.local.Lifecycle;
@@ -81,7 +82,6 @@ import com.liferay.portal.service.impl.LayoutTemplateLocalServiceImpl;
 import com.liferay.portal.servlet.EncryptedServletRequest;
 import com.liferay.portal.servlet.I18nServlet;
 import com.liferay.portal.servlet.filters.absoluteredirects.AbsoluteRedirectsResponse;
-import com.liferay.portal.servlet.filters.i18n.I18nFilter;
 import com.liferay.portal.setup.SetupWizardSampleDataUtil;
 import com.liferay.portal.struts.Action;
 import com.liferay.portal.struts.PortalRequestProcessor;
@@ -135,9 +135,7 @@ public class MainServlet extends HttpServlet {
 
 	@Override
 	public void destroy() {
-		if (_log.isDebugEnabled()) {
-			_log.debug("Destroy plugins");
-		}
+		ShutdownHelperUtil.setShutdown(true);
 
 		ListIterator<ServiceRegistration<?>> listIterator =
 			_serviceRegistrations.listIterator(_serviceRegistrations.size());
@@ -242,8 +240,8 @@ public class MainServlet extends HttpServlet {
 
 			String timeZoneID = timeZone.getID();
 
-			if (!Objects.equals("UTC", timeZoneID) &&
-				!Objects.equals("GMT", timeZoneID)) {
+			if (!Objects.equals(timeZoneID, "UTC") &&
+				!Objects.equals(timeZoneID, "GMT")) {
 
 				_log.warn(
 					StringBundler.concat(
@@ -404,13 +402,13 @@ public class MainServlet extends HttpServlet {
 		_registerPortalInitialized();
 
 		if ((_releaseManager != null) && _log.isWarnEnabled()) {
-			String message = _releaseManager.getStatusMessage(true);
+			String message = _releaseManager.getShortStatusMessage(true);
 
 			if (Validator.isNotNull(message)) {
 				_log.warn(message);
 			}
 			else if (_log.isInfoEnabled()) {
-				message = _releaseManager.getStatusMessage(false);
+				message = _releaseManager.getShortStatusMessage(false);
 
 				if (Validator.isNotNull(message)) {
 					_log.info(message);
@@ -464,7 +462,7 @@ public class MainServlet extends HttpServlet {
 		}
 
 		if (_log.isDebugEnabled()) {
-			_log.debug("Get company id");
+			_log.debug("Get company ID");
 		}
 
 		long companyId = PortalInstances.getCompanyId(httpServletRequest);
@@ -622,8 +620,6 @@ public class MainServlet extends HttpServlet {
 		Document document = UnsecureSAXReaderUtil.read(xml);
 
 		I18nServlet.setLanguageIds(document.getRootElement());
-
-		I18nFilter.setLanguageIds(I18nServlet.getLanguageIds());
 	}
 
 	private void _checkWebXml(String xml) throws DocumentException {
@@ -756,19 +752,23 @@ public class MainServlet extends HttpServlet {
 				0, true);
 		}
 
-		String[] webIds = PortalInstances.getWebIds();
-
-		for (String webId : webIds) {
-			boolean skipCheck = false;
-
-			if (StartupHelperUtil.isDBNew() &&
-				webId.equals(PropsValues.COMPANY_DEFAULT_WEB_ID)) {
-
-				skipCheck = true;
-			}
-
-			PortalInstances.initCompany(webId, skipCheck);
+		if (Validator.isNull(PropsValues.COMPANY_DEFAULT_WEB_ID)) {
+			throw new RuntimeException("Company default web ID is null");
 		}
+
+		CompanyLocalServiceUtil.forEachCompany(
+			company -> {
+				if (StartupHelperUtil.isDBNew() &&
+					Objects.equals(
+						PropsValues.COMPANY_DEFAULT_WEB_ID,
+						company.getWebId())) {
+
+					PortalInstances.initCompany(company, true);
+				}
+				else {
+					PortalInstances.initCompany(company, false);
+				}
+			});
 	}
 
 	private void _initLayoutTemplates(PluginPackage pluginPackage) {
@@ -978,7 +978,7 @@ public class MainServlet extends HttpServlet {
 
 		User user = UserLocalServiceUtil.getUserById(userId);
 
-		if (!user.isDefaultUser()) {
+		if (!user.isGuestUser()) {
 			EventsProcessorUtil.process(
 				PropsKeys.LOGIN_EVENTS_PRE, PropsValues.LOGIN_EVENTS_PRE,
 				httpServletRequest, httpServletResponse);
@@ -1005,7 +1005,7 @@ public class MainServlet extends HttpServlet {
 
 		httpSession.removeAttribute("j_remoteuser");
 
-		if (!user.isDefaultUser()) {
+		if (!user.isGuestUser()) {
 			EventsProcessorUtil.process(
 				PropsKeys.LOGIN_EVENTS_POST, PropsValues.LOGIN_EVENTS_POST,
 				httpServletRequest, httpServletResponse);
@@ -1149,7 +1149,10 @@ public class MainServlet extends HttpServlet {
 			HttpServletResponse httpServletResponse)
 		throws IOException, ServletException {
 
-		if ((userId > 0) ||
+		boolean blockLoginPrompt = GetterUtil.getBoolean(
+			httpServletRequest.getAttribute(WebKeys.BLOCK_LOGIN_PROMPT));
+
+		if (blockLoginPrompt || (userId > 0) ||
 			(ParamUtil.getInteger(httpServletRequest, "p_p_lifecycle") == 2)) {
 
 			PortalUtil.sendError(

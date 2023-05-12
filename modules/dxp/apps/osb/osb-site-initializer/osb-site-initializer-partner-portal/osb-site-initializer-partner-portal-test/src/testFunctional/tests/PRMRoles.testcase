@@ -18,33 +18,38 @@ definition {
 		}
 
 		task ("Create a new Partner Portal Site") {
-			PRMUtils.addPRMSite();
+			PRMUtils.addSite();
 		}
 	}
 
 	tearDown {
 		var testPortalInstance = PropsUtil.get("test.portal.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testPortalInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
-			JSONGroup.deleteGroupByName(groupName = "Partner Portal");
+			PRMUtils.tearDown();
 		}
 	}
 
 	@description = "Verify that new roles appear after create PRM site"
-	@priority = "5"
+	@priority = 5
 	test CheckCreatedRoles {
+		property solutions.acceptance = "true";
+		property test.name.skip.portal.instance = "PRMRoles#CheckCreatedRoles";
+
+		// Temporarily skip portal instances to get tests running for pending release. LRQA-80052
+
 		task ("When: I go to Roles Page in Control Panel") {
 			Role.openRolesAdmin();
 		}
 
 		task ("Then: I search for the PRM Roles and assert them") {
 			for (var searchTerm : list "Channel Account Manager,Channel General Manager,Channel Finance Manager,Channel Global Marketing Manager,Channel Regional Marketing Manager") {
-				Search.searchCP(searchTerm = "${searchTerm}");
+				Search.searchCP(searchTerm = ${searchTerm});
 
-				LexiconEntry.viewEntryName(rowEntry = "${searchTerm}");
+				LexiconEntry.viewEntryName(rowEntry = ${searchTerm});
 			}
 		}
 	}

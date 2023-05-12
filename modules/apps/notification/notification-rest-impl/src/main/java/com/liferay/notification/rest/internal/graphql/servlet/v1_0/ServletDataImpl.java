@@ -91,6 +91,11 @@ public class ServletDataImpl implements ServletData {
 			new HashMap<String, ObjectValuePair<Class<?>, String>>() {
 				{
 					put(
+						"mutation#createNotificationQueueEntriesPageExportBatch",
+						new ObjectValuePair<>(
+							NotificationQueueEntryResourceImpl.class,
+							"postNotificationQueueEntriesPageExportBatch"));
+					put(
 						"mutation#deleteNotificationQueueEntry",
 						new ObjectValuePair<>(
 							NotificationQueueEntryResourceImpl.class,
@@ -105,6 +110,11 @@ public class ServletDataImpl implements ServletData {
 						new ObjectValuePair<>(
 							NotificationQueueEntryResourceImpl.class,
 							"putNotificationQueueEntryResend"));
+					put(
+						"mutation#createNotificationTemplatesPageExportBatch",
+						new ObjectValuePair<>(
+							NotificationTemplateResourceImpl.class,
+							"postNotificationTemplatesPageExportBatch"));
 					put(
 						"mutation#createNotificationTemplate",
 						new ObjectValuePair<>(

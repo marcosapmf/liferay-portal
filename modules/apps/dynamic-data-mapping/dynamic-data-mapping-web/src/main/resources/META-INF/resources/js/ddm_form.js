@@ -672,10 +672,10 @@ AUI.add(
 					if (sourceLocale !== targetLocale) {
 						const test = 1.1;
 						const sourceDecimalSeparator = test
-							.toLocaleString(sourceLocale.replace('_', '-'))
+							.toLocaleString(sourceLocale.replaceAll('_', '-'))
 							.charAt(1);
 						const targetDecimalSeparator = test
-							.toLocaleString(targetLocale.replace('_', '-'))
+							.toLocaleString(targetLocale.replaceAll('_', '-'))
 							.charAt(1);
 
 						if (sourceDecimalSeparator !== targetDecimalSeparator) {
@@ -1291,6 +1291,15 @@ AUI.add(
 					if (dataType || fields.length) {
 						fieldJSON.value = instance.get('localizationMap');
 
+						if (
+							!Object.keys(fieldJSON.value).length &&
+							instance.getValue() !== null
+						) {
+							fieldJSON.value[
+								instance.getDefaultLocale()
+							] = instance.getValue();
+						}
+
 						if (instance.get('localizable')) {
 							const form = instance.getForm();
 
@@ -1659,9 +1668,7 @@ AUI.add(
 						'documentLibrarySelectorURL'
 					);
 
-					let retVal = instance.getDocumentLibraryURL(
-						'com.liferay.item.selector.criteria.file.criterion.FileItemSelectorCriterion'
-					);
+					let retVal = instance.getDocumentLibraryURL('file');
 
 					if (documentLibrarySelectorURL) {
 						retVal = documentLibrarySelectorURL;

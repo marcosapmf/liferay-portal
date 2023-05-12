@@ -29,9 +29,9 @@ import com.liferay.document.library.opener.service.DLOpenerFileEntryReferenceLoc
 import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.background.task.constants.BackgroundTaskContextMapConstants;
 import com.liferay.portal.kernel.backgroundtask.BackgroundTask;
 import com.liferay.portal.kernel.backgroundtask.BackgroundTaskManager;
+import com.liferay.portal.kernel.backgroundtask.constants.BackgroundTaskContextMapConstants;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.CompanyConstants;
 import com.liferay.portal.kernel.module.configuration.ConfigurationException;

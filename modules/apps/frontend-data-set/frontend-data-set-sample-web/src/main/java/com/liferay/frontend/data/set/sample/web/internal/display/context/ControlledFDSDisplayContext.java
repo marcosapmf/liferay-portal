@@ -16,7 +16,7 @@ package com.liferay.frontend.data.set.sample.web.internal.display.context;
 
 import com.liferay.frontend.data.set.sample.web.internal.constants.FDSSampleFDSNames;
 import com.liferay.frontend.data.set.sample.web.internal.model.UserEntry;
-import com.liferay.frontend.data.set.sample.web.internal.servlet.ServletContextUtil;
+import com.liferay.frontend.data.set.sample.web.internal.view.util.FDSViewSerializerUtil;
 import com.liferay.frontend.data.set.view.FDSViewSerializer;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.service.UserLocalServiceUtil;
@@ -43,8 +43,8 @@ public class ControlledFDSDisplayContext {
 
 		return TransformUtil.transform(
 			UserLocalServiceUtil.getUsers(
-				themeDisplay.getCompanyId(), false,
-				WorkflowConstants.STATUS_APPROVED, 0, 20, null),
+				themeDisplay.getCompanyId(), WorkflowConstants.STATUS_APPROVED,
+				0, 20, null),
 			user -> new UserEntry(
 				user.getEmailAddress(), user.getFirstName(), user.getUserId(),
 				user.getLastName()));
@@ -52,7 +52,7 @@ public class ControlledFDSDisplayContext {
 
 	public Object getViews() {
 		FDSViewSerializer fdsViewSerializer =
-			ServletContextUtil.getFDSViewSerializer();
+			FDSViewSerializerUtil.getFDSViewSerializer();
 
 		return fdsViewSerializer.serialize(
 			FDSSampleFDSNames.CONTROLLED,

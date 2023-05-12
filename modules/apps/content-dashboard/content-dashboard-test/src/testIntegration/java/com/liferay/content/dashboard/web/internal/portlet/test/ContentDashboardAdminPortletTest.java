@@ -67,10 +67,12 @@ import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Constants;
+import com.liferay.portal.kernel.util.DateUtil;
 import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.MimeTypesUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.test.rule.Inject;
@@ -86,7 +88,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-import java.util.stream.Stream;
 
 import javax.portlet.Portlet;
 import javax.portlet.PortletPreferences;
@@ -500,8 +501,14 @@ public class ContentDashboardAdminPortletTest {
 
 		JournalArticle journalArticle1 = JournalTestUtil.addArticle(
 			_user.getUserId(), _group.getGroupId(), 0);
+
 		JournalArticle journalArticle2 = JournalTestUtil.addArticle(
 			_user.getUserId(), _group.getGroupId(), 0);
+
+		journalArticle2.setModifiedDate(
+			DateUtil.newDate(System.currentTimeMillis() + Time.SECOND));
+
+		_journalArticleLocalService.updateJournalArticle(journalArticle2);
 
 		searchContainer = _getSearchContainer(
 			_getMockLiferayPortletRenderRequest());
@@ -544,13 +551,13 @@ public class ContentDashboardAdminPortletTest {
 
 		JournalArticle journalArticle1 = JournalTestUtil.addArticle(
 			_group.getGroupId(), 0,
-			JournalArticleConstants.CLASS_NAME_ID_DEFAULT, "title1",
+			JournalArticleConstants.CLASS_NAME_ID_DEFAULT, "0title1",
 			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
 			LocaleUtil.getSiteDefault(), false, false, serviceContext);
 
 		JournalArticle journalArticle2 = JournalTestUtil.addArticle(
 			_group.getGroupId(), 0,
-			JournalArticleConstants.CLASS_NAME_ID_DEFAULT, "title2",
+			JournalArticleConstants.CLASS_NAME_ID_DEFAULT, "0title2",
 			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
 			LocaleUtil.getSiteDefault(), false, false, serviceContext);
 
@@ -871,25 +878,10 @@ public class ContentDashboardAdminPortletTest {
 
 			List<Object> results = searchContainer.getResults();
 
-			Stream<Object> stream = results.stream();
-
-			Assert.assertTrue(
-				stream.anyMatch(
-					result -> Objects.equals(
-						journalArticle1.getTitle(LocaleUtil.US),
-						ReflectionTestUtil.invoke(
-							result, "getTitle", new Class<?>[] {Locale.class},
-							LocaleUtil.US))));
-
-			stream = results.stream();
-
-			Assert.assertTrue(
-				stream.anyMatch(
-					result -> Objects.equals(
-						journalArticle2.getTitle(LocaleUtil.US),
-						ReflectionTestUtil.invoke(
-							result, "getTitle", new Class<?>[] {Locale.class},
-							LocaleUtil.US))));
+			_assertContainsTitle(
+				results, journalArticle1.getTitle(LocaleUtil.US));
+			_assertContainsTitle(
+				results, journalArticle2.getTitle(LocaleUtil.US));
 		}
 		finally {
 			_userLocalService.deleteUser(user);
@@ -953,25 +945,8 @@ public class ContentDashboardAdminPortletTest {
 
 		List<Object> results = searchContainer.getResults();
 
-		Stream<Object> stream = results.stream();
-
-		Assert.assertTrue(
-			stream.anyMatch(
-				result -> Objects.equals(
-					journalArticle1.getTitle(LocaleUtil.US),
-					ReflectionTestUtil.invoke(
-						result, "getTitle", new Class<?>[] {Locale.class},
-						LocaleUtil.US))));
-
-		stream = results.stream();
-
-		Assert.assertTrue(
-			stream.anyMatch(
-				result -> Objects.equals(
-					journalArticle2.getTitle(LocaleUtil.US),
-					ReflectionTestUtil.invoke(
-						result, "getTitle", new Class<?>[] {Locale.class},
-						LocaleUtil.US))));
+		_assertContainsTitle(results, journalArticle1.getTitle(LocaleUtil.US));
+		_assertContainsTitle(results, journalArticle2.getTitle(LocaleUtil.US));
 	}
 
 	@Test
@@ -1204,25 +1179,8 @@ public class ContentDashboardAdminPortletTest {
 
 		List<Object> results = searchContainer.getResults();
 
-		Stream<Object> stream = results.stream();
-
-		Assert.assertTrue(
-			stream.anyMatch(
-				result -> Objects.equals(
-					journalArticle1.getTitle(LocaleUtil.US),
-					ReflectionTestUtil.invoke(
-						result, "getTitle", new Class<?>[] {Locale.class},
-						LocaleUtil.US))));
-
-		stream = results.stream();
-
-		Assert.assertTrue(
-			stream.anyMatch(
-				result -> Objects.equals(
-					journalArticle2.getTitle(LocaleUtil.US),
-					ReflectionTestUtil.invoke(
-						result, "getTitle", new Class<?>[] {Locale.class},
-						LocaleUtil.US))));
+		_assertContainsTitle(results, journalArticle1.getTitle(LocaleUtil.US));
+		_assertContainsTitle(results, journalArticle2.getTitle(LocaleUtil.US));
 	}
 
 	@Test
@@ -1596,6 +1554,25 @@ public class ContentDashboardAdminPortletTest {
 			ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
 	}
 
+	private void _assertContainsTitle(List<Object> results, String title) {
+		boolean containsTitle = false;
+
+		for (Object result : results) {
+			if (Objects.equals(
+					title,
+					ReflectionTestUtil.invoke(
+						result, "getTitle", new Class<?>[] {Locale.class},
+						LocaleUtil.US))) {
+
+				containsTitle = true;
+
+				break;
+			}
+		}
+
+		Assert.assertTrue(containsTitle);
+	}
+
 	private String _getAuditGraphTitle(
 			MockLiferayPortletRenderRequest mockLiferayPortletRenderRequest)
 		throws Exception {
@@ -1730,7 +1707,7 @@ public class ContentDashboardAdminPortletTest {
 		themeDisplay.setLocale(locale);
 		themeDisplay.setPermissionChecker(
 			PermissionThreadLocal.getPermissionChecker());
-		themeDisplay.setUser(_company.getDefaultUser());
+		themeDisplay.setUser(_company.getGuestUser());
 
 		return themeDisplay;
 	}

@@ -16,6 +16,7 @@ package com.liferay.portal.dao.init;
 
 import com.liferay.petra.io.StreamUtil;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.dao.jdbc.util.DynamicDataSource;
 import com.liferay.portal.db.partition.DBPartitionUtil;
 import com.liferay.portal.events.StartupHelperUtil;
 import com.liferay.portal.kernel.dao.db.DB;
@@ -54,23 +55,21 @@ public class DBInitUtil {
 		return _dataSource;
 	}
 
-	public static DataSource getReadDataSource() {
-		return _readDataSource;
-	}
-
-	public static DataSource getWriteDataSource() {
-		return _writeDataSource;
-	}
-
 	public static void init() throws Exception {
 		_readDataSource = _initDataSource("jdbc.read.");
 
 		_writeDataSource = _initDataSource("jdbc.write.");
 
-		_dataSource = _writeDataSource;
-
-		if ((_readDataSource == null) && (_writeDataSource == null)) {
+		if ((_readDataSource != null) && (_writeDataSource != null)) {
+			_dataSource = new DynamicDataSource(
+				_readDataSource, _writeDataSource);
+		}
+		else {
 			_dataSource = _initDataSource("jdbc.default.");
+		}
+
+		if (_dataSource == null) {
+			throw new IllegalStateException("Data source is null");
 		}
 
 		try (Connection connection = _dataSource.getConnection()) {
@@ -122,7 +121,7 @@ public class DBInitUtil {
 			if (!resultSet.next()) {
 				_addReleaseInfo(connection);
 
-				StartupHelperUtil.setDbNew(true);
+				_setDBNew();
 			}
 
 			return true;
@@ -153,22 +152,7 @@ public class DBInitUtil {
 
 		_addReleaseInfo(connection);
 
-		StartupHelperUtil.setDbNew(true);
-
-		ServiceLatch serviceLatch = SystemBundleUtil.newServiceLatch();
-
-		serviceLatch.waitFor(
-			DependencyManagerSync.class,
-			dependencyManagerSync -> dependencyManagerSync.registerSyncCallable(
-				() -> {
-					StartupHelperUtil.setDbNew(false);
-
-					return null;
-				}));
-
-		serviceLatch.openOn(
-			() -> {
-			});
+		_setDBNew();
 	}
 
 	private static boolean _hasDefaultReleaseWithTestString(
@@ -272,6 +256,25 @@ public class DBInitUtil {
 				classLoader.getResourceAsStream(
 					"com/liferay/portal/tools/sql/dependencies/".concat(path))),
 			false);
+	}
+
+	private static void _setDBNew() {
+		StartupHelperUtil.setDBNew(true);
+
+		ServiceLatch serviceLatch = SystemBundleUtil.newServiceLatch();
+
+		serviceLatch.waitFor(
+			DependencyManagerSync.class,
+			dependencyManagerSync -> dependencyManagerSync.registerSyncCallable(
+				() -> {
+					StartupHelperUtil.setDBNew(false);
+
+					return null;
+				}));
+
+		serviceLatch.openOn(
+			() -> {
+			});
 	}
 
 	private static void _setSupportsStringCaseSensitiveQuery(

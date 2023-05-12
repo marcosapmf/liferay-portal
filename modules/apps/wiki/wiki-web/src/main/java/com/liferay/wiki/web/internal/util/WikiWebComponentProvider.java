@@ -14,17 +14,22 @@
 
 package com.liferay.wiki.web.internal.util;
 
+import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.wiki.configuration.WikiGroupServiceConfiguration;
+
+import java.util.Map;
 
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
-import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Iván Zaera
  */
-@Component(service = {})
+@Component(
+	configurationPid = "com.liferay.wiki.configuration.WikiGroupServiceConfiguration",
+	service = {}
+)
 public class WikiWebComponentProvider {
 
 	public static WikiWebComponentProvider getWikiWebComponentProvider() {
@@ -36,20 +41,16 @@ public class WikiWebComponentProvider {
 	}
 
 	@Activate
-	protected void activate() {
+	protected void activate(Map<String, Object> properties) {
+		_wikiGroupServiceConfiguration = ConfigurableUtil.createConfigurable(
+			WikiGroupServiceConfiguration.class, properties);
+
 		_wikiWebComponentProvider = this;
 	}
 
 	@Deactivate
 	protected void deactivate() {
 		_wikiWebComponentProvider = null;
-	}
-
-	@Reference
-	protected void setWikiGroupServiceConfiguration(
-		WikiGroupServiceConfiguration wikiGroupServiceConfiguration) {
-
-		_wikiGroupServiceConfiguration = wikiGroupServiceConfiguration;
 	}
 
 	protected void unsetWikiGroupServiceConfiguration(

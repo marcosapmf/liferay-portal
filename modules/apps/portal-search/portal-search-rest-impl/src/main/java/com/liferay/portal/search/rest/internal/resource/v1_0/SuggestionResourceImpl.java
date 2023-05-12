@@ -29,7 +29,6 @@ import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.PortletLocalService;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.WebKeys;
@@ -194,13 +193,7 @@ public class SuggestionResourceImpl extends BaseSuggestionResourceImpl {
 			keywordsParameterName);
 		searchContext.setCompanyId(contextCompany.getCompanyId());
 
-		if (StringUtil.equals(scope, "everything")) {
-			searchContext.setGroupIds(
-				ArrayUtil.toLongArray(
-					groupLocalService.getGroupIds(
-						contextCompany.getCompanyId(), true)));
-		}
-		else {
+		if (!StringUtil.equals(scope, "everything")) {
 			searchContext.setGroupIds(new long[] {groupId});
 		}
 

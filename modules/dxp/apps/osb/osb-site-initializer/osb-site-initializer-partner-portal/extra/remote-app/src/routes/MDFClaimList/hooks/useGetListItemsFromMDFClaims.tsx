@@ -27,11 +27,17 @@ export default function useGetListItemsFromMDFClaims(
 	const listItems = useMemo(
 		() =>
 			swrResponse.data?.items.map((item) => ({
-				[MDFClaimColumnKey.REQUEST_ID]: String(item.id),
+				[MDFClaimColumnKey.REQUEST_ID]: String(
+					item.r_mdfReqToMDFClms_c_mdfRequestId
+				),
+				[MDFClaimColumnKey.CLAIM_ID]: String(item.id),
 				[MDFClaimColumnKey.PARTNER]: item.companyName,
 				[MDFClaimColumnKey.STATUS]: item.mdfClaimStatus.name,
 				[MDFClaimColumnKey.TYPE]: item.partial ? 'Partial' : 'Full',
-				...getMDFClaimAmountClaimedInfo(item.amountClaimed),
+				...getMDFClaimAmountClaimedInfo(
+					item.totalClaimAmount,
+					item.currency
+				),
 				[MDFClaimColumnKey.DATE_SUBMITTED]: getDateCustomFormat(
 					item.dateCreated as string,
 					customFormatDateOptions.SHORT_MONTH

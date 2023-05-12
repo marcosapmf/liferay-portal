@@ -9489,7 +9489,8 @@ public class OrganizationPersistenceImpl
 				if (ercOrganization != null) {
 					throw new DuplicateOrganizationExternalReferenceCodeException(
 						"Duplicate organization with external reference code " +
-							organization.getExternalReferenceCode());
+							organization.getExternalReferenceCode() +
+								" and company " + organization.getCompanyId());
 				}
 			}
 			else {
@@ -9499,7 +9500,8 @@ public class OrganizationPersistenceImpl
 
 					throw new DuplicateOrganizationExternalReferenceCodeException(
 						"Duplicate organization with external reference code " +
-							organization.getExternalReferenceCode());
+							organization.getExternalReferenceCode() +
+								" and company " + organization.getCompanyId());
 				}
 			}
 		}

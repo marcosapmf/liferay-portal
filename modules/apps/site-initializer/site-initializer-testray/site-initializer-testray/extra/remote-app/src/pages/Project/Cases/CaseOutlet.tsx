@@ -19,6 +19,7 @@ import {
 	useOutletContext,
 	useParams,
 } from 'react-router-dom';
+import PageRenderer from '~/components/PageRenderer';
 
 import {useFetch} from '../../../hooks/useFetch';
 import useHeader from '../../../hooks/useHeader';
@@ -26,7 +27,7 @@ import i18n from '../../../i18n';
 import {
 	TestrayCase,
 	TestrayProject,
-	testrayCaseRest,
+	testrayCaseImpl,
 } from '../../../services/rest';
 import {isIncludingFormPage} from '../../../util';
 import useCaseActions from './useCaseActions';
@@ -42,11 +43,11 @@ const CaseOutlet = () => {
 		testrayProject,
 	}: {testrayProject: TestrayProject} = useOutletContext();
 
-	const {data: testrayCase, mutate} = useFetch<TestrayCase>(
-		testrayCaseRest.getResource(caseId as string),
+	const {data: testrayCase, error, loading, mutate} = useFetch<TestrayCase>(
+		testrayCaseImpl.getResource(caseId as string),
 		{
 			transformData: (response) =>
-				testrayCaseRest.transformData(response),
+				testrayCaseImpl.transformData(response),
 		}
 	);
 
@@ -95,19 +96,18 @@ const CaseOutlet = () => {
 		}
 	}, [setHeading, testrayProject, testrayCase]);
 
-	if (testrayProject && testrayCase) {
-		return (
+	return (
+		<PageRenderer error={error} loading={loading}>
 			<Outlet
 				context={{
+					actions: testrayCase?.actions,
 					mutateTestrayCase: mutate,
 					testrayCase,
 					testrayProject,
 				}}
 			/>
-		);
-	}
-
-	return null;
+		</PageRenderer>
+	);
 };
 
 export default CaseOutlet;

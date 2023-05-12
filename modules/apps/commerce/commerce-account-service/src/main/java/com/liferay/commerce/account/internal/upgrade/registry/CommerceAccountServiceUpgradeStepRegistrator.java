@@ -126,8 +126,9 @@ public class CommerceAccountServiceUpgradeStepRegistrator
 
 		registry.register(
 			"7.0.0", "8.0.0",
-			new com.liferay.commerce.account.internal.upgrade.v8_0_0.
-				CommerceAccountUpgradeProcess());
+			UpgradeProcessFactory.dropTables(
+				"CommerceAccount", "CommerceAccountOrganizationRel",
+				"CommerceAccountUserRel"));
 
 		registry.register(
 			"8.0.0", "9.0.0",
@@ -189,6 +190,13 @@ public class CommerceAccountServiceUpgradeStepRegistrator
 		registry.register(
 			"10.1.0", "10.2.0",
 			new com.liferay.commerce.account.internal.upgrade.v10_2_0.
+				CommerceAccountRoleUpgradeProcess(
+					_companyLocalService, _resourceActionLocalService,
+					_resourcePermissionLocalService, _roleLocalService));
+
+		registry.register(
+			"10.2.0", "10.3.0",
+			new com.liferay.commerce.account.internal.upgrade.v10_3_0.
 				CommerceAccountRoleUpgradeProcess(
 					_companyLocalService, _resourceActionLocalService,
 					_resourcePermissionLocalService, _roleLocalService));

@@ -50,11 +50,15 @@ public class DDMFormInstanceUADHierarchyDeclaration
 		return new UADDisplay<?>[] {_ddmFormInstanceRecordUADDisplay};
 	}
 
-	@Reference
-	private DDMFormInstanceRecordUADDisplay _ddmFormInstanceRecordUADDisplay;
+	@Reference(
+		target = "(component.name=com.liferay.dynamic.data.mapping.uad.display.DDMFormInstanceRecordUADDisplay)"
+	)
+	private UADDisplay<?> _ddmFormInstanceRecordUADDisplay;
 
-	@Reference
-	private DDMFormInstanceUADDisplay _ddmFormInstanceUADDisplay;
+	@Reference(
+		target = "(component.name=com.liferay.dynamic.data.mapping.uad.display.DDMFormInstanceUADDisplay)"
+	)
+	private UADDisplay<?> _ddmFormInstanceUADDisplay;
 
 	@Reference
 	private Language _language;

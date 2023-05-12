@@ -14,19 +14,26 @@
 
 import {useOutletContext, useParams} from 'react-router-dom';
 
+import JiraLink from '../../../components/JiraLink';
 import Container from '../../../components/Layout/Container';
 import QATable from '../../../components/Table/QATable';
+import SearchBuilder from '../../../core/SearchBuilder';
+import useIssuesFound from '../../../hooks/data/useIssuesFound';
 import i18n from '../../../i18n';
 import {TestrayCase} from '../../../services/rest';
 import dayjs from '../../../util/date';
-import {searchUtil} from '../../../util/search';
 import CaseResultHistory from './CaseResultHistory';
 import useCaseActions from './useCaseActions';
 
+type CaseOutlet = {
+	testrayCase: TestrayCase;
+};
+
 const Case = () => {
-	const {caseId, projectId} = useParams();
-	const {testrayCase}: {testrayCase: TestrayCase} = useOutletContext();
 	const {actions} = useCaseActions();
+	const {projectId} = useParams();
+	const {testrayCase}: CaseOutlet = useOutletContext();
+	const issues = useIssuesFound({caseId: testrayCase.id});
 
 	return (
 		<>
@@ -69,7 +76,11 @@ const Case = () => {
 						},
 						{
 							title: i18n.translate('all-issues-found'),
-							value: '-',
+							value: issues.length ? (
+								<JiraLink issue={issues} />
+							) : (
+								'-'
+							),
 						},
 					]}
 				/>
@@ -79,7 +90,7 @@ const Case = () => {
 				<CaseResultHistory
 					listViewProps={{
 						variables: {
-							filter: searchUtil.eq('caseId', caseId as string),
+							filter: SearchBuilder.eq('caseId', testrayCase.id),
 						},
 					}}
 					tableProps={{

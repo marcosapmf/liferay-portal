@@ -23,9 +23,7 @@ import com.liferay.portal.kernel.security.access.control.AccessControlled;
 import com.liferay.portal.kernel.security.auth.AccessControlContext;
 import com.liferay.portal.kernel.security.auth.verifier.AuthVerifierResult;
 import com.liferay.portal.kernel.security.service.access.policy.ServiceAccessPolicy;
-import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ListUtil;
-import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.security.access.control.AccessControlAdvisor;
 import com.liferay.portal.security.access.control.AccessControlAdvisorImpl;
@@ -33,7 +31,6 @@ import com.liferay.portal.vulcan.graphql.validation.GraphQLRequestContext;
 import com.liferay.portal.vulcan.graphql.validation.GraphQLRequestContextValidator;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -64,18 +61,12 @@ public class OAuth2GraphQLRequestContextValidator
 	public void validate(GraphQLRequestContext graphQLRequestContext)
 		throws Exception {
 
-		if (!graphQLRequestContext.isValidationRequired()) {
+		if (!graphQLRequestContext.isJaxRsResourceInvocation()) {
 			return;
 		}
 
 		if (OAuth2ProviderScopeLiferayAccessControlContext.
 				isOAuth2AuthVerified()) {
-
-			if (!GetterUtil.getBoolean(
-					PropsUtil.get("feature.flag.LPS-158259"))) {
-
-				throw new ForbiddenException();
-			}
 
 			ServiceReference<?> serviceReference = _getServiceReference(
 				graphQLRequestContext.getApplicationName());
@@ -85,14 +76,11 @@ public class OAuth2GraphQLRequestContextValidator
 			_checkScope(graphQLRequestContext, serviceReference);
 		}
 
-		Method method = graphQLRequestContext.getResourceMethod();
+		_setServiceDepth();
 
-		if (method != null) {
-			_setServiceDepth();
-
-			_accessControlAdvisor.accept(
-				method, new Object[0], _NULL_ACCESS_CONTROLLED);
-		}
+		_accessControlAdvisor.accept(
+			graphQLRequestContext.getResourceMethod(), new Object[0],
+			_NULL_ACCESS_CONTROLLED);
 	}
 
 	@Activate
@@ -126,6 +114,10 @@ public class OAuth2GraphQLRequestContextValidator
 		_scopeContext.setCompanyId(graphQLRequestContext.getCompanyId());
 
 		try {
+			if (serviceReferences.isEmpty()) {
+				throw new ForbiddenException();
+			}
+
 			for (ServiceReference<ScopeLogic> serviceReference :
 					serviceReferences) {
 
@@ -141,6 +133,9 @@ public class OAuth2GraphQLRequestContextValidator
 					throw new ForbiddenException();
 				}
 			}
+		}
+		catch (Exception exception) {
+			throw new ForbiddenException(exception);
 		}
 		finally {
 			_scopeContext.setApplicationName(null);

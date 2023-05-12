@@ -116,6 +116,11 @@
 	<td></td>
 </tr>
 <tr>
+	<td>ANY_WITH_CLASS_AND_INDEX</td>
+	<td>xpath=(//button[contains(@class,'${key_class}')])[${key_index}]</td>
+	<td></td>
+</tr>
+<tr>
 	<td>ANY_WITH_COLOR</td>
 	<td>//*[contains(@class,'btn-${key_color}')][normalize-space(text())='${key_text}']</td>
 	<td></td>
@@ -127,7 +132,7 @@
 </tr>
 <tr>
 	<td>ANY_WITH_SPAN</td>
-	<td>//button/span[contains(.,'${key_text}')]</td>
+	<td>//button/span[contains(.,'${key_text}')] | //button[contains(@class, 'select-button')]/descendant::span[contains(text(), '${key_text}')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -233,6 +238,11 @@
 <tr>
 	<td>CHOOSE_THIS_FOLDER</td>
 	<td>//button[contains(.,'Choose This Folder')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>CLEAR</td>
+	<td>//button[@title='Clear']</td>
 	<td></td>
 </tr>
 <tr>
@@ -471,6 +481,16 @@
 	<td></td>
 </tr>
 <tr>
+	<td>IMAGE_CLEAR</td>
+	<td>//label[normalize-space(text())='${key_fieldLabel}']/following-sibling::div//button[contains(@id,'openGraphClearImageButton')] | //div[normalize-space(text())='${key_fieldLabel}']/../following-sibling::div//button[contains(@id,'openGraphClearImageButton')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>IMAGE_SELECTOR</td>
+	<td>//label[normalize-space(text())='${key_fieldLabel}']/following-sibling::div//button[contains(@id,'openGraphImageButton')] | //div[normalize-space(text())='${key_fieldLabel}']/../following-sibling::div//button[contains(@id,'openGraphImageButton')]</td>
+	<td></td>
+</tr>
+<tr>
 	<td>INFO</td>
 	<td>//a[contains(@class,'btn') and contains(.,'Info')]</td>
 	<td></td>
@@ -617,7 +637,7 @@
 </tr>
 <tr>
 	<td>PLUS</td>
-	<td>//a[contains(@class,'btn')][contains(@href,'new') or contains(@href,'redirect') or contains(@href,'mvc') or contains(@href,'javascript')][.//*[name()='svg'][contains(@class,'icon-plus')]][not(contains(@class,'borderless'))] | //button[not(contains(@class,'borderless'))][*[contains(@class,'icon-plus')]]</td>
+	<td>//a[contains(@class,'btn')][contains(@href,'new') or contains(@href,'redirect') or contains(@href,'mvc') or contains(@href,'javascript')][.//*[name()='svg'][contains(@class,'icon-plus')]][not(contains(@class,'borderless'))] | //button[not(contains(@class,'borderless'))][not(contains(@class,'btn-unstyled'))][*[contains(@class,'icon-plus')]]</td>
 	<td></td>
 </tr>
 <tr>
@@ -936,13 +956,13 @@
 	<td></td>
 </tr>
 <tr>
-	<td>SUBMIT_FOR_PUBLICATION</td>
-	<td>//button[contains(.,'Submit for Publication')]</td>
+	<td>SUBMIT_FOR_WORKFLOW</td>
+	<td>//button[contains(.,'Submit for Workflow')]</td>
 	<td></td>
 </tr>
 <tr>
-	<td>SUBMIT_FOR_PUBLICATION_DISABLED</td>
-	<td>//div[contains(@class,'btn-group-item')]//button[@disabled and contains(.,'Submit for Publication')]</td>
+	<td>SUBMIT_FOR_WORKFLOW_DISABLED</td>
+	<td>//div[contains(@class,'btn-group-item')]//button[@disabled and contains(.,'Submit for Workflow')]</td>
 	<td></td>
 </tr>
 <tr>

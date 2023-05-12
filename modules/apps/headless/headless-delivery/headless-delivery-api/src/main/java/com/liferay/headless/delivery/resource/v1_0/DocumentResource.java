@@ -26,6 +26,7 @@ import com.liferay.portal.odata.filter.ExpressionConvert;
 import com.liferay.portal.odata.filter.FilterParserProvider;
 import com.liferay.portal.odata.sort.SortParserProvider;
 import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
+import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineExportTaskResource;
 import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineImportTaskResource;
 import com.liferay.portal.vulcan.multipart.MultipartBody;
 import com.liferay.portal.vulcan.pagination.Page;
@@ -64,6 +65,11 @@ public interface DocumentResource {
 			Filter filter, Pagination pagination, Sort[] sorts)
 		throws Exception;
 
+	public Response postAssetLibraryDocumentsPageExportBatch(
+			Long assetLibraryId, String search, Filter filter, Sort[] sorts,
+			String callbackURL, String contentType, String fieldNames)
+		throws Exception;
+
 	public Document postAssetLibraryDocument(
 			Long assetLibraryId, MultipartBody multipartBody)
 		throws Exception;
@@ -97,10 +103,19 @@ public interface DocumentResource {
 				com.liferay.portal.vulcan.permission.Permission[] permissions)
 		throws Exception;
 
+	public Page<Document> getAssetLibraryDocumentsRatedByMePage(
+			Long assetLibraryId, Pagination pagination)
+		throws Exception;
+
 	public Page<Document> getDocumentFolderDocumentsPage(
 			Long documentFolderId, Boolean flatten, String search,
 			com.liferay.portal.vulcan.aggregation.Aggregation aggregation,
 			Filter filter, Pagination pagination, Sort[] sorts)
+		throws Exception;
+
+	public Response postDocumentFolderDocumentsPageExportBatch(
+			Long documentFolderId, String search, Filter filter, Sort[] sorts,
+			String callbackURL, String contentType, String fieldNames)
 		throws Exception;
 
 	public Document postDocumentFolderDocument(
@@ -159,6 +174,11 @@ public interface DocumentResource {
 			Filter filter, Pagination pagination, Sort[] sorts)
 		throws Exception;
 
+	public Response postSiteDocumentsPageExportBatch(
+			Long siteId, String search, Filter filter, Sort[] sorts,
+			String callbackURL, String contentType, String fieldNames)
+		throws Exception;
+
 	public Document postSiteDocument(Long siteId, MultipartBody multipartBody)
 		throws Exception;
 
@@ -188,6 +208,10 @@ public interface DocumentResource {
 			putSiteDocumentPermissionsPage(
 				Long siteId,
 				com.liferay.portal.vulcan.permission.Permission[] permissions)
+		throws Exception;
+
+	public Page<Document> getSiteDocumentsRatedByMePage(
+			Long siteId, Pagination pagination)
 		throws Exception;
 
 	public default void setContextAcceptLanguage(
@@ -228,6 +252,10 @@ public interface DocumentResource {
 	public void setRoleLocalService(RoleLocalService roleLocalService);
 
 	public void setSortParserProvider(SortParserProvider sortParserProvider);
+
+	public void setVulcanBatchEngineExportTaskResource(
+		VulcanBatchEngineExportTaskResource
+			vulcanBatchEngineExportTaskResource);
 
 	public void setVulcanBatchEngineImportTaskResource(
 		VulcanBatchEngineImportTaskResource

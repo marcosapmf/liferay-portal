@@ -248,8 +248,8 @@ public class ExportedMissingReferenceExportImportTest
 
 		ServiceTrackerList<PortletDataHandler> portletDataHandlerInstances =
 			ServiceTrackerListFactory.open(
-				bundle.getBundleContext(),
-				(Class<PortletDataHandler>)portletDataHandlerClass);
+				bundle.getBundleContext(), PortletDataHandler.class,
+				"(component.name=" + portletDataHandlerClass.getName() + ")");
 
 		Assert.assertEquals(
 			portletDataHandlerInstances.toString(), 1,
@@ -272,8 +272,8 @@ public class ExportedMissingReferenceExportImportTest
 
 		ServiceTrackerList<PortletDataHandler> portletDataHandlerInstances =
 			ServiceTrackerListFactory.open(
-				bundle.getBundleContext(),
-				(Class<PortletDataHandler>)portletDataHandlerClass);
+				bundle.getBundleContext(), PortletDataHandler.class,
+				"(component.name=" + portletDataHandlerClass.getName() + ")");
 
 		Iterator<PortletDataHandler> iterator =
 			portletDataHandlerInstances.iterator();
@@ -295,8 +295,12 @@ public class ExportedMissingReferenceExportImportTest
 		List<PortletDataHandler> oldDataHandlerInstances =
 			portletBag.getPortletDataHandlerInstances();
 
-		ReflectionTestUtil.setFieldValue(
-			portletBag, "_portletDataHandlerInstances",
+		Map<Class<?>, Object> serviceTrackerListMap =
+			ReflectionTestUtil.getFieldValue(
+				portletBag, "_serviceTrackerListMap");
+
+		serviceTrackerListMap.put(
+			PortletDataHandler.class,
 			new ServiceTrackerList<PortletDataHandler>() {
 
 				@Override
@@ -336,8 +340,8 @@ public class ExportedMissingReferenceExportImportTest
 
 		ServiceTrackerList<PortletDataHandler> portletDataHandlerInstances =
 			ServiceTrackerListFactory.open(
-				bundle.getBundleContext(),
-				(Class<PortletDataHandler>)portletDataHandlerClass);
+				bundle.getBundleContext(), PortletDataHandler.class,
+				"(component.name=" + portletDataHandlerClass.getName() + ")");
 
 		Assert.assertEquals(
 			portletDataHandlerInstances.toString(), 1,

@@ -112,7 +112,7 @@ public class MercanetServlet extends HttpServlet {
 
 			Map<String, String> parameterMap = _getResponseParameters(data);
 
-			if (Objects.equals("normal", type)) {
+			if (Objects.equals(type, "normal")) {
 				if (PortalSessionThreadLocal.getHttpSession() == null) {
 					PortalSessionThreadLocal.setHttpSession(
 						httpServletRequest.getSession());
@@ -141,7 +141,7 @@ public class MercanetServlet extends HttpServlet {
 				httpServletResponse.sendRedirect(redirect);
 			}
 
-			if (Objects.equals("automatic", type)) {
+			if (Objects.equals(type, "automatic")) {
 				String uuid = ParamUtil.getString(httpServletRequest, "uuid");
 				long groupId = ParamUtil.getLong(httpServletRequest, "groupId");
 
@@ -150,8 +150,9 @@ public class MercanetServlet extends HttpServlet {
 						uuid, groupId);
 
 				MercanetGroupServiceConfiguration
-					mercanetGroupServiceConfiguration = _getConfiguration(
-						commerceOrder.getGroupId());
+					mercanetGroupServiceConfiguration =
+						_getMercanetGroupServiceConfiguration(
+							commerceOrder.getGroupId());
 
 				String environment = StringUtil.toUpperCase(
 					mercanetGroupServiceConfiguration.environment());
@@ -201,7 +202,8 @@ public class MercanetServlet extends HttpServlet {
 		}
 	}
 
-	private MercanetGroupServiceConfiguration _getConfiguration(Long groupId)
+	private MercanetGroupServiceConfiguration
+			_getMercanetGroupServiceConfiguration(Long groupId)
 		throws ConfigurationException {
 
 		return _configurationProvider.getConfiguration(

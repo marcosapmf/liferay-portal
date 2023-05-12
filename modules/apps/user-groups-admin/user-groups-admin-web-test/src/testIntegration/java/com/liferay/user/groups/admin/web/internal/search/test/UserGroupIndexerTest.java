@@ -46,8 +46,6 @@ import com.liferay.users.admin.test.util.search.GroupSearchFixture;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -90,21 +88,22 @@ public class UserGroupIndexerTest {
 
 		long companyId = role.getCompanyId();
 
-		int count = userGroupLocalService.searchCount(
+		groupLocalService.addRoleGroup(role.getRoleId(), _group.getGroupId());
+
+		int originalUserGroupCount = userGroupLocalService.searchCount(
 			companyId, null, new LinkedHashMap<String, Object>());
 
 		String baseName = RandomTestUtil.randomString();
-		int i = 2;
 
-		List<UserGroup> userGroups = Stream.generate(
-			() -> addUserGroup(baseName)
-		).limit(
-			i
-		).collect(
-			Collectors.toList()
-		);
+		int newUserGroupCount = 2;
 
-		groupLocalService.addRoleGroup(role.getRoleId(), _group.getGroupId());
+		List<String> userGroupNames = new ArrayList<>();
+
+		for (int i = 0; i < newUserGroupCount; i++) {
+			UserGroup userGroup = addUserGroup(baseName);
+
+			userGroupNames.add(userGroup.getName());
+		}
 
 		SearchRequestBuilder searchRequestBuilder1 = _getSearchRequestBuilder(
 			companyId);
@@ -114,21 +113,23 @@ public class UserGroupIndexerTest {
 				baseName
 			).build());
 
-		Stream<UserGroup> stream = userGroups.stream();
-
 		DocumentsAssert.assertValuesIgnoreRelevance(
 			searchResponse1.getRequestString(), searchResponse1.getDocuments(),
-			Field.NAME, stream.map(UserGroup::getName));
+			Field.NAME, userGroupNames);
 
 		SearchRequestBuilder searchRequestBuilder2 = _getSearchRequestBuilder(
 			companyId);
 
 		SearchResponse searchResponse2 = searcher.search(
-			searchRequestBuilder2.size(
+			searchRequestBuilder2.emptySearchEnabled(
+				true
+			).size(
 				0
 			).build());
 
-		Assert.assertEquals(count + i, searchResponse2.getCount());
+		Assert.assertEquals(
+			originalUserGroupCount + newUserGroupCount,
+			searchResponse2.getCount());
 	}
 
 	@Rule

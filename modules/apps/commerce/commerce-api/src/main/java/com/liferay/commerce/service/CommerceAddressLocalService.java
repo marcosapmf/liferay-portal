@@ -85,7 +85,7 @@ public interface CommerceAddressLocalService extends BaseLocalService {
 		throws PortalException;
 
 	public CommerceAddress copyCommerceAddress(
-			long commerceAddressId, String className, long classPK,
+			long sourceCommerceAddressId, String className, long classPK,
 			ServiceContext serviceContext)
 		throws PortalException;
 
@@ -127,9 +127,17 @@ public interface CommerceAddressLocalService extends BaseLocalService {
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<CommerceAddress> getBillingCommerceAddresses(
+		long channelId, String className, long classPK, int start, int end);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<CommerceAddress> getBillingCommerceAddresses(
 			long companyId, String className, long classPK, String keywords,
 			int start, int end, Sort sort)
 		throws PortalException;
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int getBillingCommerceAddressesCount(
+		long channelId, String className, long classPK, int start, int end);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public int getBillingCommerceAddressesCount(
@@ -200,9 +208,17 @@ public interface CommerceAddressLocalService extends BaseLocalService {
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<CommerceAddress> getShippingCommerceAddresses(
+		long channelId, String className, long classPK, int start, int end);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<CommerceAddress> getShippingCommerceAddresses(
 			long companyId, String className, long classPK, String keywords,
 			int start, int end, Sort sort)
 		throws PortalException;
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int getShippingCommerceAddressesCount(
+		long channelId, String className, long classPK, int start, int end);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public int getShippingCommerceAddressesCount(

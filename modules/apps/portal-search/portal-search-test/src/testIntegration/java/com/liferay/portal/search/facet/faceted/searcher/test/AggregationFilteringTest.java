@@ -23,12 +23,14 @@ import com.liferay.document.library.kernel.model.DLFileEntry;
 import com.liferay.document.library.kernel.service.DLAppLocalService;
 import com.liferay.document.library.test.util.search.FileEntryBlueprint;
 import com.liferay.document.library.test.util.search.FileEntrySearchFixture;
+import com.liferay.dynamic.data.mapping.service.DDMStructureLocalService;
 import com.liferay.journal.model.JournalArticle;
 import com.liferay.journal.service.JournalArticleLocalService;
 import com.liferay.journal.test.util.search.JournalArticleBlueprint;
 import com.liferay.journal.test.util.search.JournalArticleContent;
 import com.liferay.journal.test.util.search.JournalArticleSearchFixture;
 import com.liferay.journal.test.util.search.JournalArticleTitle;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.User;
@@ -44,6 +46,7 @@ import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.search.facet.Facet;
 import com.liferay.portal.search.facet.site.SiteFacetFactory;
@@ -59,13 +62,10 @@ import com.liferay.users.admin.test.util.search.GroupBlueprint;
 import com.liferay.users.admin.test.util.search.GroupSearchFixture;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.junit.After;
 import org.junit.Before;
@@ -99,7 +99,8 @@ public class AggregationFilteringTest {
 		GroupSearchFixture groupSearchFixture = new GroupSearchFixture();
 
 		JournalArticleSearchFixture journalArticleSearchFixture =
-			new JournalArticleSearchFixture(journalArticleLocalService);
+			new JournalArticleSearchFixture(
+				ddmStructureLocalService, journalArticleLocalService, portal);
 
 		_blogsEntries = blogsEntrySearchFixture.getBlogsEntries();
 		_blogsEntrySearchFixture = blogsEntrySearchFixture;
@@ -277,37 +278,18 @@ public class AggregationFilteringTest {
 	public SearchTestRule searchTestRule = new SearchTestRule();
 
 	protected static String[] getClassNames(Class<?>... classes) {
-		Stream<Class<?>> stream = Arrays.stream(classes);
-
-		return stream.map(
-			Class::getName
-		).toArray(
-			String[]::new
-		);
+		return TransformUtil.transform(classes, Class::getName, String.class);
 	}
 
 	protected static String[] getGroupIdStrings(Group... groups) {
-		Stream<Group> stream = Arrays.stream(groups);
-
-		return stream.map(
-			Group::getGroupId
-		).map(
-			String::valueOf
-		).toArray(
-			String[]::new
-		);
+		return TransformUtil.transform(
+			groups, group -> String.valueOf(group.getGroupId()), String.class);
 	}
 
 	protected static String[] getUserFullNames(User... users) {
-		Stream<User> stream = Arrays.stream(users);
-
-		return stream.map(
-			User::getFullName
-		).map(
-			StringUtil::toLowerCase
-		).toArray(
-			String[]::new
-		);
+		return TransformUtil.transform(
+			users, user -> StringUtil.toLowerCase(user.getFullName()),
+			String.class);
 	}
 
 	protected static <K, V> Map<K, V> toMap(K key, V value) {
@@ -391,62 +373,46 @@ public class AggregationFilteringTest {
 
 		Hits hits = facetedSearcher.search(searchContext);
 
-		Set<Map.Entry<Group, Integer>> groupFrequenciesEntrySet =
-			expectations.groupFrequencies.entrySet();
+		Map<String, Integer> groupFrequenciesMap = new HashMap<>();
 
-		Stream<Map.Entry<Group, Integer>> groupFrequenciesEntryStream =
-			groupFrequenciesEntrySet.stream();
+		for (Map.Entry<Group, Integer> entry :
+				expectations.groupFrequencies.entrySet()) {
 
-		Map<String, Integer> groupFrequencies =
-			groupFrequenciesEntryStream.collect(
-				Collectors.toMap(
-					entry -> {
-						Group group = entry.getKey();
+			Group group = entry.getKey();
 
-						return String.valueOf(group.getGroupId());
-					},
-					Map.Entry::getValue));
+			groupFrequenciesMap.put(
+				String.valueOf(group.getGroupId()), entry.getValue());
+		}
 
 		FacetsAssert.assertFrequencies(
-			Field.GROUP_ID, searchContext, hits, groupFrequencies);
+			Field.GROUP_ID, searchContext, hits, groupFrequenciesMap);
 
-		Set<Map.Entry<Class<?>, Integer>> typeFrequenciesEntrySet =
-			expectations.typeFrequencies.entrySet();
+		Map<String, Integer> typeFrequenciesMap = new HashMap<>();
 
-		Stream<Map.Entry<Class<?>, Integer>> typeFrequenciesEntryStream =
-			typeFrequenciesEntrySet.stream();
+		for (Map.Entry<Class<?>, Integer> entry :
+				expectations.typeFrequencies.entrySet()) {
 
-		Map<String, Integer> typeFrequencies =
-			typeFrequenciesEntryStream.collect(
-				Collectors.toMap(
-					entry -> {
-						Class<?> clazz = entry.getKey();
+			Class<?> clazz = entry.getKey();
 
-						return clazz.getName();
-					},
-					Map.Entry::getValue));
+			typeFrequenciesMap.put(clazz.getName(), entry.getValue());
+		}
 
 		FacetsAssert.assertFrequencies(
-			Field.ENTRY_CLASS_NAME, searchContext, hits, typeFrequencies);
+			Field.ENTRY_CLASS_NAME, searchContext, hits, typeFrequenciesMap);
 
-		Set<Map.Entry<User, Integer>> userFrequenciesEntrySet =
-			expectations.userFrequencies.entrySet();
+		Map<String, Integer> userFrequenciesMap = new HashMap<>();
 
-		Stream<Map.Entry<User, Integer>> userFrequenciesEntryStream =
-			userFrequenciesEntrySet.stream();
+		for (Map.Entry<User, Integer> entry :
+				expectations.userFrequencies.entrySet()) {
 
-		Map<String, Integer> userFrequencies =
-			userFrequenciesEntryStream.collect(
-				Collectors.toMap(
-					entry -> {
-						User user = entry.getKey();
+			User user = entry.getKey();
 
-						return StringUtil.toLowerCase(user.getFullName());
-					},
-					Map.Entry::getValue));
+			userFrequenciesMap.put(
+				StringUtil.toLowerCase(user.getFullName()), entry.getValue());
+		}
 
 		FacetsAssert.assertFrequencies(
-			Field.USER_NAME, searchContext, hits, userFrequencies);
+			Field.USER_NAME, searchContext, hits, userFrequenciesMap);
 	}
 
 	protected Facet createSiteFacet(
@@ -481,15 +447,10 @@ public class AggregationFilteringTest {
 		SearchContext searchContext = new SearchContext();
 
 		searchContext.setCompanyId(TestPropsValues.getCompanyId());
+		searchContext.setGroupIds(
+			TransformUtil.transformToLongArray(_groups, Group::getGroupId));
 		searchContext.setKeywords(keywords);
 		searchContext.setUserId(TestPropsValues.getUserId());
-
-		Stream<Group> stream = _groups.stream();
-
-		searchContext.setGroupIds(
-			stream.mapToLong(
-				Group::getGroupId
-			).toArray());
 
 		return searchContext;
 	}
@@ -509,6 +470,12 @@ public class AggregationFilteringTest {
 		addJournalArticle(_group2, _user1, keyword);
 		addJournalArticle(_group1, _user3, keyword);
 	}
+
+	@Inject
+	protected static DDMStructureLocalService ddmStructureLocalService;
+
+	@Inject
+	protected static Portal portal;
 
 	@Inject
 	protected AssetEntriesFacetFactory assetEntriesFacetFactory;

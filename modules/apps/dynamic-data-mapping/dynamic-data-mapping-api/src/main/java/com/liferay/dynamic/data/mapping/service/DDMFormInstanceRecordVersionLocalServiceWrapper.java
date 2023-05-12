@@ -95,10 +95,12 @@ public class DDMFormInstanceRecordVersionLocalServiceWrapper
 	 *
 	 * @param ddmFormInstanceRecordVersion the ddm form instance record version
 	 * @return the ddm form instance record version that was removed
+	 * @throws PortalException
 	 */
 	@Override
 	public DDMFormInstanceRecordVersion deleteDDMFormInstanceRecordVersion(
-		DDMFormInstanceRecordVersion ddmFormInstanceRecordVersion) {
+			DDMFormInstanceRecordVersion ddmFormInstanceRecordVersion)
+		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _ddmFormInstanceRecordVersionLocalService.
 			deleteDDMFormInstanceRecordVersion(ddmFormInstanceRecordVersion);

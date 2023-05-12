@@ -63,6 +63,7 @@ import com.liferay.portal.kernel.search.IndexableType;
 import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.search.IndexerRegistryUtil;
 import com.liferay.portal.kernel.search.SearchContext;
+import com.liferay.portal.kernel.service.AddressLocalService;
 import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.OrganizationLocalService;
@@ -107,12 +108,10 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
-import java.util.stream.Stream;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -336,16 +335,22 @@ public class AccountEntryLocalServiceImpl
 
 		accountEntry = super.deleteAccountEntry(accountEntry);
 
-		// Group
-
-		_groupLocalService.deleteGroup(accountEntry.getAccountEntryGroup());
-
 		// Resources
 
 		_resourceLocalService.deleteResource(
 			accountEntry.getCompanyId(), AccountEntry.class.getName(),
 			ResourceConstants.SCOPE_INDIVIDUAL,
 			accountEntry.getAccountEntryId());
+
+		// Addresses
+
+		_addressLocalService.deleteAddresses(
+			accountEntry.getCompanyId(), AccountEntry.class.getName(),
+			accountEntry.getAccountEntryId());
+
+		// Group
+
+		_groupLocalService.deleteGroup(accountEntry.getAccountEntryGroup());
 
 		// Asset
 
@@ -455,19 +460,19 @@ public class AccountEntryLocalServiceImpl
 	public AccountEntry getGuestAccountEntry(long companyId)
 		throws PortalException {
 
-		User defaultUser = _userLocalService.getDefaultUser(companyId);
+		User guestUser = _userLocalService.getGuestUser(companyId);
 
 		AccountEntryImpl accountEntryImpl = new AccountEntryImpl();
 
 		accountEntryImpl.setAccountEntryId(
 			AccountConstants.ACCOUNT_ENTRY_ID_GUEST);
-		accountEntryImpl.setCompanyId(defaultUser.getCompanyId());
-		accountEntryImpl.setUserId(defaultUser.getUserId());
-		accountEntryImpl.setUserName(defaultUser.getFullName());
+		accountEntryImpl.setCompanyId(guestUser.getCompanyId());
+		accountEntryImpl.setUserId(guestUser.getUserId());
+		accountEntryImpl.setUserName(guestUser.getFullName());
 		accountEntryImpl.setParentAccountEntryId(
 			AccountConstants.PARENT_ACCOUNT_ENTRY_ID_DEFAULT);
-		accountEntryImpl.setEmailAddress(defaultUser.getEmailAddress());
-		accountEntryImpl.setName(defaultUser.getFullName());
+		accountEntryImpl.setEmailAddress(guestUser.getEmailAddress());
+		accountEntryImpl.setName(guestUser.getFullName());
 		accountEntryImpl.setType(AccountConstants.ACCOUNT_ENTRY_TYPE_GUEST);
 		accountEntryImpl.setStatus(WorkflowConstants.STATUS_APPROVED);
 
@@ -886,31 +891,23 @@ public class AccountEntryLocalServiceImpl
 	}
 
 	private Long[] _getOrganizationIds(long userId) {
-		List<Organization> organizations =
-			_organizationLocalService.getUserOrganizations(userId);
+		Set<Long> organizationIds = new HashSet<>();
 
-		ListIterator<Organization> listIterator = organizations.listIterator();
+		for (Organization organization :
+				_organizationLocalService.getUserOrganizations(userId)) {
 
-		while (listIterator.hasNext()) {
-			Organization organization = listIterator.next();
+			organizationIds.add(organization.getOrganizationId());
 
 			for (Organization curOrganization :
 					_organizationLocalService.getOrganizations(
 						organization.getCompanyId(),
 						organization.getTreePath() + "%")) {
 
-				listIterator.add(curOrganization);
+				organizationIds.add(curOrganization.getOrganizationId());
 			}
 		}
 
-		Stream<Organization> stream = organizations.stream();
-
-		return stream.map(
-			Organization::getOrganizationId
-		).distinct(
-		).toArray(
-			Long[]::new
-		);
+		return organizationIds.toArray(new Long[0]);
 	}
 
 	private GroupByStep _getOrganizationsAccountEntriesGroupByStep(
@@ -1253,6 +1250,9 @@ public class AccountEntryLocalServiceImpl
 	@Reference
 	private AccountEntryEmailAddressValidatorFactory
 		_accountEntryEmailAddressValidatorFactory;
+
+	@Reference
+	private AddressLocalService _addressLocalService;
 
 	@Reference
 	private AssetEntryLocalService _assetEntryLocalService;

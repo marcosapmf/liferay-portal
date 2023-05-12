@@ -109,6 +109,11 @@
 			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
+		<attribute>
+			<name>refreshOnRemove</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
 	</tag>
 	<tag>
 		<name>coupon-code</name>
@@ -119,6 +124,21 @@
 			<required>true</required>
 			<rtexprvalue>true</rtexprvalue>
 			<type>long</type>
+		</attribute>
+	</tag>
+	<tag>
+		<name>discontinued-label</name>
+		<tag-class>com.liferay.commerce.frontend.taglib.servlet.taglib.DiscontinuedLabelTag</tag-class>
+		<body-content>empty</body-content>
+		<attribute>
+			<name>CPCatalogEntry</name>
+			<required>true</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<name>namespace</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
 		</attribute>
 	</tag>
 	<tag>
@@ -357,6 +377,21 @@
 		</attribute>
 		<attribute>
 			<name>title</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+	</tag>
+	<tag>
+		<name>option-selector</name>
+		<tag-class>com.liferay.commerce.frontend.taglib.servlet.taglib.OptionSelectorTag</tag-class>
+		<body-content>empty</body-content>
+		<attribute>
+			<name>CPDefinitionId</name>
+			<required>true</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<name>namespace</name>
 			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>

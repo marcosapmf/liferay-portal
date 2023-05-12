@@ -16,6 +16,7 @@ import ClayButton from '@clayui/button';
 import ClayIcon from '@clayui/icon';
 import ClayManagementToolbar from '@clayui/management-toolbar';
 import {useModal} from '@clayui/modal';
+import classNames from 'classnames';
 import {navigate} from 'frontend-js-web';
 import React, {useState} from 'react';
 
@@ -30,6 +31,7 @@ interface ManagementToolbarProps {
 	badgeClassName?: string;
 	badgeLabel?: string;
 	className?: string;
+	enableBoxShadow?: boolean;
 	entityId: number;
 	externalReferenceCode: string;
 	externalReferenceCodeSaveURL: string;
@@ -51,6 +53,7 @@ export function ManagementToolbar({
 	badgeClassName,
 	badgeLabel,
 	className,
+	enableBoxShadow = true,
 	entityId,
 	externalReferenceCode: initialExternalReferenceCode,
 	externalReferenceCodeSaveURL,
@@ -75,10 +78,25 @@ export function ManagementToolbar({
 		onClose: () => setVisibleModal(false),
 	});
 
+	const [disabled, setDisabled] = useState(!hasPublishPermission);
+
+	const onPublish = () => {
+		onSubmit(false);
+
+		setDisabled(true);
+
+		setTimeout(() => {
+			setDisabled(false);
+		}, 1000);
+	};
+
 	return (
 		<>
 			<ClayManagementToolbar
-				className={`lfr__management-toolbar ${className}`}
+				className={classNames(
+					`lfr__management-toolbar ${className}`,
+					enableBoxShadow && 'lfr__management-toolbar--box-shadow'
+				)}
 			>
 				<ClayManagementToolbar.ItemList>
 					<div className="border-right ml-sm-2 mr-3 pr-3">
@@ -158,10 +176,10 @@ export function ManagementToolbar({
 
 							{isApproved !== undefined && !isApproved && (
 								<ClayButton
-									disabled={!hasPublishPermission}
+									disabled={!hasUpdatePermission || disabled}
 									id={`${portletNamespace}publish`}
 									name="publish"
-									onClick={() => onSubmit(false)}
+									onClick={() => onPublish()}
 								>
 									{Liferay.Language.get('publish')}
 								</ClayButton>

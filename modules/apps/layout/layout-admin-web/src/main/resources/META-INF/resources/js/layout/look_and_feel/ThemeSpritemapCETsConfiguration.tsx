@@ -12,6 +12,7 @@
  * details.
  */
 
+import ClayAlert from '@clayui/alert';
 import {ClayButtonWithIcon} from '@clayui/button';
 import ClayForm, {ClayInput} from '@clayui/form';
 import {openSelectionModal} from 'frontend-js-web';
@@ -46,6 +47,17 @@ export default function ThemeSpritemapCETsConfiguration({
 
 	return (
 		<>
+			<ClayAlert displayType="info" title={Liferay.Language.get('info')}>
+				{Liferay.Language.get(
+					'to-add-or-edit-the-existing-spritemap-simply-copy-paste-and-make-changes-as-needed-to-your-registered-extension'
+				)}
+			</ClayAlert>
+
+			<p className="text-secondary">
+				{Liferay.Language.get(
+					'use-this-client-extension-to-fully-replace-the-default-spritemap-contained-in-the-theme'
+				)}
+			</p>
 			<ClayInput
 				name={`${portletNamespace}themeSpritemapCETExternalReferenceCode`}
 				type="hidden"
@@ -59,7 +71,7 @@ export default function ThemeSpritemapCETsConfiguration({
 					{Liferay.Language.get('theme-spritemap-client-extension')}
 				</label>
 
-				<ClayInput.Group className="w-50" small>
+				<ClayInput.Group>
 					<ClayInput.GroupItem>
 						<ClayInput
 							id={`${portletNamespace}themeSpritemapExtensionNameInput`}
@@ -79,7 +91,6 @@ export default function ThemeSpritemapCETsConfiguration({
 									className="mr-2"
 									displayType="secondary"
 									onClick={onClick}
-									small
 									symbol="change"
 								/>
 
@@ -90,7 +101,6 @@ export default function ThemeSpritemapCETsConfiguration({
 										setExtensionName('');
 										setCETExternalReferenceCode('');
 									}}
-									small
 									symbol="trash"
 								/>
 							</>
@@ -99,7 +109,6 @@ export default function ThemeSpritemapCETsConfiguration({
 								aria-label={Liferay.Language.get('select')}
 								displayType="secondary"
 								onClick={onClick}
-								small
 								symbol="plus"
 							/>
 						)}

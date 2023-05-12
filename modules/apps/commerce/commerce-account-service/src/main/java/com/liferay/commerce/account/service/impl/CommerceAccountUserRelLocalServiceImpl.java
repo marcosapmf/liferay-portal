@@ -35,6 +35,7 @@ import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Role;
 import com.liferay.portal.kernel.model.RoleConstants;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.model.UserConstants;
 import com.liferay.portal.kernel.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
@@ -46,7 +47,6 @@ import com.liferay.portal.kernel.util.Validator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Stream;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -187,18 +187,12 @@ public class CommerceAccountUserRelLocalServiceImpl
 			roles.add(role);
 		}
 
-		Stream<Role> stream = roles.stream();
-
-		long[] roleIds = stream.mapToLong(
-			Role::getRoleId
-		).toArray();
-
-		List<CommerceAccountUserRel> commerceAccountUserRels =
-			commerceAccountUserRelLocalService.
-				getCommerceAccountUserRelsByCommerceAccountUserId(userId);
+		long[] roleIds = TransformUtil.transformToLongArray(
+			roles, Role::getRoleId);
 
 		for (CommerceAccountUserRel commerceAccountUserRel :
-				commerceAccountUserRels) {
+				commerceAccountUserRelLocalService.
+					getCommerceAccountUserRelsByCommerceAccountUserId(userId)) {
 
 			CommerceAccount commerceAccount =
 				CommerceAccountImpl.fromAccountEntry(
@@ -399,7 +393,7 @@ public class CommerceAccountUserRelLocalServiceImpl
 				StringPool.BLANK, StringPool.BLANK, true, StringPool.BLANK,
 				emailAddress, serviceContext.getLocale(), emailAddress,
 				StringPool.BLANK, emailAddress, 0, 0, true, 1, 1, 1970,
-				StringPool.BLANK,
+				StringPool.BLANK, UserConstants.TYPE_REGULAR,
 				new long[] {
 					group.getGroupId(), serviceContext.getScopeGroupId()
 				},

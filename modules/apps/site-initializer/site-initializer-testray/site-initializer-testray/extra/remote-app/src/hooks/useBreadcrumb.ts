@@ -14,13 +14,14 @@
 
 import {useCallback, useMemo, useRef, useState} from 'react';
 
+import SearchBuilder from '../core/SearchBuilder';
 import i18n from '../i18n';
 import {
 	APIResponse,
 	TestrayCaseResult,
+	TestrayRun,
 	testrayCaseResultImpl,
 } from '../services/rest';
-import {searchUtil} from '../util/search';
 import useDebounce from './useDebounce';
 import {useFetch} from './useFetch';
 
@@ -55,7 +56,7 @@ const getEntityUrlAndNormalizer = (
 	url: getResource(ids, search),
 });
 
-const useBreadcrumb = (entities: Entity[]) => {
+const useBreadcrumb = (entities: Entity[], {active}: {active: boolean}) => {
 	const inputRef = useRef<HTMLInputElement>(null);
 
 	const [breadCrumb, setBreadCrumb] = useState<BreadCrumb[]>([]);
@@ -73,6 +74,7 @@ const useBreadcrumb = (entities: Entity[]) => {
 	);
 
 	const {data} = useFetch<APIResponse<any>>(url, {
+		swrConfig: {shouldFetch: active},
 		transformData: transformer,
 	});
 
@@ -122,10 +124,10 @@ const defaultEntities: Entity[] = [
 		entity: 'projects',
 		getPage: ([projectId]) => `/project/${projectId}/routines`,
 		getResource: (_, search) =>
-			`/projects?filter=${searchUtil.contains(
+			`/projects?filter=${SearchBuilder.contains(
 				'name',
 				search
-			)}&pageSize=1000`,
+			)}&fields=id,name&pageSize=100`,
 		name: i18n.translate('project'),
 	},
 	{
@@ -133,10 +135,13 @@ const defaultEntities: Entity[] = [
 		getPage: ([projectId, routineId]) =>
 			`/project/${projectId}/routines/${routineId}`,
 		getResource: ([projectId], search) =>
-			`/routines?filter=${searchUtil.eq(
+			`/routines?filter=${SearchBuilder.eq(
 				'projectId',
 				projectId
-			)} and ${searchUtil.contains('name', search)}&pageSize=1000`,
+			)} and ${SearchBuilder.contains(
+				'name',
+				search
+			)}&fields=id,name&pageSize=50`,
 		name: i18n.translate('routine'),
 	},
 	{
@@ -144,21 +149,43 @@ const defaultEntities: Entity[] = [
 		getPage: ([projectId, routineId, buildId]) =>
 			`/project/${projectId}/routines/${routineId}/build/${buildId}`,
 		getResource: ([, routineId], search) =>
-			`/builds?filter=${searchUtil.eq(
-				'routineId',
-				routineId
-			)} and ${searchUtil.contains('name', search)}&pageSize=1000`,
+			`/builds?filter=${new SearchBuilder()
+				.eq('routineId', routineId)
+				.and()
+				.contains('name', search)
+				.build()}&fields=id,name&pageSize=100`,
 		name: i18n.translate('build'),
 	},
 	{
-		entity: 'caseresults',
-		getPage: ([projectId, routineId, buildId, caseResultsId]) =>
-			`/project/${projectId}/routines/${routineId}/build/${buildId}/case-result/${caseResultsId}`,
-		getResource: ([, , buildId]) =>
-			`/caseresults?filter=${searchUtil.eq(
-				'buildId',
+		entity: 'runs',
+		getPage: ([projectId, routineId, buildId, runId]) =>
+			`/project/${projectId}/routines/${routineId}/build/${buildId}?runId=${runId}`,
+		getResource: ([, , buildId], search) =>
+			`/runs?filter=${SearchBuilder.eq(
+				'r_buildToRuns_c_buildId',
 				buildId
-			)}&nestedFields=case,r_runToCaseResult_c_runId&pageSize=1000`,
+			)} ${search ? `and number eq ${search}` : ''} &fields=id,number`,
+		name: i18n.translate('run'),
+		transformer: (response: APIResponse<TestrayRun>) => ({
+			...response,
+			items: response.items.map(({id, number}) => ({
+				label: number,
+				value: id,
+			})),
+		}),
+	},
+	{
+		entity: 'caseresults',
+		getPage: ([projectId, routineId, buildId, , caseResultsId]) =>
+			`/project/${projectId}/routines/${routineId}/build/${buildId}/case-result/${caseResultsId}`,
+		getResource: ([, , buildId, runId], search) =>
+			`/caseresults?filter=${new SearchBuilder()
+				.eq('buildId', buildId)
+				.and()
+				.eq('r_runToCaseResult_c_runId', runId)
+				.and()
+				.contains('caseToCaseResult/name', search)
+				.build()}&nestedFields=case,r_runToCaseResult_c_runId&pageSize=20&fields=r_caseToCaseResult_c_case,id,run`,
 		name: i18n.translate('case-result'),
 		transformer: (response: APIResponse<TestrayCaseResult>) => {
 			const transformedResponse = testrayCaseResultImpl.transformDataFromList(

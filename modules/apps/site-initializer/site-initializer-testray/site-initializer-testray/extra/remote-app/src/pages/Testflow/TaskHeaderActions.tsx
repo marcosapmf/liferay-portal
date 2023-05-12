@@ -16,6 +16,7 @@ import ClayButton from '@clayui/button';
 import {useEffect, useState} from 'react';
 import {useNavigate, useOutletContext} from 'react-router-dom';
 import {KeyedMutator} from 'swr';
+import useMutate from '~/hooks/useMutate';
 
 import useFormModal from '../../hooks/useFormModal';
 import i18n from '../../i18n';
@@ -55,11 +56,14 @@ const TaskHeaderActions = () => {
 		revalidate: {revalidateTaskUser},
 	} = useOutletContext<OutletContext>();
 
+	const {mutatePartial: mutateTaskPartial} = useMutate(mutateTask);
+
 	const subTaskAllCompleted = testraySubtasks?.totalCount === 0;
 
 	const [modalType, setModalType] = useState<TestflowAssigUserType>(
 		'select-users'
 	);
+
 	const [userIds, setUsersId] = useState<number[]>([]);
 	const {modal} = useFormModal<number[]>({
 		onBeforeSave: (newUserIds, act) => {
@@ -124,7 +128,9 @@ const TaskHeaderActions = () => {
 									testrayTask
 								);
 
-								mutateTask(response);
+								mutateTaskPartial({
+									dueStatus: response.dueStatus,
+								});
 
 								await testrayTaskUsersImpl.assign(
 									response.id,
@@ -179,7 +185,9 @@ const TaskHeaderActions = () => {
 								: (task: TestrayTask) =>
 										testrayTaskImpl.abandon(task);
 
-							fn(testrayTask).then(mutateTask);
+							fn(testrayTask).then(({dueStatus}) =>
+								mutateTaskPartial({dueStatus})
+							);
 						}}
 					>
 						{i18n.translate(

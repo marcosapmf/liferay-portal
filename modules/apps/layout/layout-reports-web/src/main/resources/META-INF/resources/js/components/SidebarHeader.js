@@ -16,7 +16,6 @@ import {ClayButtonWithIcon} from '@clayui/button';
 import React, {useContext} from 'react';
 
 import {SET_SELECTED_ISSUE} from '../constants/actionTypes';
-import {ConstantsContext} from '../context/ConstantsContext';
 import {StoreDispatchContext, StoreStateContext} from '../context/StoreContext';
 import loadIssues from '../utils/loadIssues';
 
@@ -32,7 +31,6 @@ export default function SidebarHeader() {
 
 const DefaultSidebarHeader = () => {
 	const {data, languageId, loading} = useContext(StoreStateContext);
-	const {portletNamespace} = useContext(ConstantsContext);
 	const dispatch = useContext(StoreDispatchContext);
 
 	const showRefreshButton = data?.validConnection && !data?.privateLayout;
@@ -59,7 +57,6 @@ const DefaultSidebarHeader = () => {
 							loadIssues({
 								dispatch,
 								languageId,
-								portletNamespace,
 								url,
 							});
 						}}
@@ -87,7 +84,7 @@ const IssueDetailSidebarHeader = () => {
 		<div className="d-flex justify-content-between p-3 sidebar-header">
 			<div className="d-flex">
 				<ClayButtonWithIcon
-					className="component-action flex-shrink-0 mr-2 sidenav-back text-secondary"
+					className="align-items-start component-action flex-shrink-0 mr-2 sidenav-back text-secondary"
 					displayType="unstyled"
 					onClick={() => {
 						dispatch({

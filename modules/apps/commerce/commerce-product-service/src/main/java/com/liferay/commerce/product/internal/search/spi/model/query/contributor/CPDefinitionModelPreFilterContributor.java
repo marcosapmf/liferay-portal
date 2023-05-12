@@ -16,6 +16,7 @@ package com.liferay.commerce.product.internal.search.spi.model.query.contributor
 
 import com.liferay.commerce.product.model.CommerceCatalog;
 import com.liferay.commerce.product.service.CommerceCatalogService;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.search.BooleanClauseOccur;
 import com.liferay.portal.kernel.search.SearchContext;
@@ -25,9 +26,6 @@ import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.search.spi.model.query.contributor.ModelPreFilterContributor;
 import com.liferay.portal.search.spi.model.registrar.ModelSearchSettings;
-
-import java.util.List;
-import java.util.stream.Stream;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -73,20 +71,11 @@ public class CPDefinitionModelPreFilterContributor
 	}
 
 	private long[] _getCommerceCatalogIds(SearchContext searchContext) {
-		List<CommerceCatalog> commerceCatalogs =
+		return TransformUtil.transformToLongArray(
 			_commerceCatalogService.getCommerceCatalogs(
 				searchContext.getCompanyId(), QueryUtil.ALL_POS,
-				QueryUtil.ALL_POS);
-
-		if (commerceCatalogs.isEmpty()) {
-			return new long[0];
-		}
-
-		Stream<CommerceCatalog> stream = commerceCatalogs.stream();
-
-		return stream.mapToLong(
-			commerceCatalog -> commerceCatalog.getCommerceCatalogId()
-		).toArray();
+				QueryUtil.ALL_POS),
+			CommerceCatalog::getCommerceCatalogId);
 	}
 
 	private boolean _isIndexersSuppressed(SearchContext searchContext) {

@@ -22,22 +22,13 @@ export default function useDynamicFieldEntries() {
 		LiferayPicklistName.MDF_REQUEST_STATUS,
 	]);
 
-	const companiesEntries = useMemo(
-		() =>
-			userAccount?.accountBriefs.map((accountBrief) => ({
-				label: accountBrief.name,
-				value: accountBrief.id,
-			})) as React.OptionHTMLAttributes<HTMLOptionElement>[],
-		[userAccount?.accountBriefs]
-	);
-
 	const fieldEntries = useMemo(
 		() => getEntriesByListTypeDefinitions(listTypeDefinitions?.items),
 		[listTypeDefinitions?.items]
 	);
 
 	return {
-		companiesEntries,
 		fieldEntries,
+		userAccount,
 	};
 }

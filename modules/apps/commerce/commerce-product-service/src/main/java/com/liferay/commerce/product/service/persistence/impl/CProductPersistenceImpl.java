@@ -2547,7 +2547,8 @@ public class CProductPersistenceImpl
 				if (ercCProduct != null) {
 					throw new DuplicateCProductExternalReferenceCodeException(
 						"Duplicate c product with external reference code " +
-							cProduct.getExternalReferenceCode());
+							cProduct.getExternalReferenceCode() +
+								" and company " + cProduct.getCompanyId());
 				}
 			}
 			else {
@@ -2556,7 +2557,8 @@ public class CProductPersistenceImpl
 
 					throw new DuplicateCProductExternalReferenceCodeException(
 						"Duplicate c product with external reference code " +
-							cProduct.getExternalReferenceCode());
+							cProduct.getExternalReferenceCode() +
+								" and company " + cProduct.getCompanyId());
 				}
 			}
 		}

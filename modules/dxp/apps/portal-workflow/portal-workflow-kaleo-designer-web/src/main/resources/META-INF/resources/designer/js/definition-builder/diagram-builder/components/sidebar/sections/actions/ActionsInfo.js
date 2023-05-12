@@ -26,12 +26,17 @@ const ActionsInfo = ({
 	sectionsLength,
 	setSections,
 }) => {
-	const {functionActionExecutors, selectedItem, setSelectedItem} = useContext(
-		DiagramBuilderContext
-	);
+	const {
+		functionActionExecutors,
+		selectedItem,
+		setSelectedItem,
+		statuses,
+	} = useContext(DiagramBuilderContext);
 	const {actions} = selectedItem.data;
 
 	const [script, setScript] = useState(actions?.script?.[index] || '');
+
+	const [status, setStatus] = useState(actions?.status?.[index] || '');
 
 	const [description, setDescription] = useState(
 		actions?.description?.[index] || ''
@@ -59,6 +64,11 @@ const ActionsInfo = ({
 			type: 'script',
 			value: 'java',
 		},
+		{
+			label: Liferay.Language.get('update-status'),
+			type: 'status',
+			value: 'update-status',
+		},
 	];
 
 	if (functionActionExecutors?.length) {
@@ -75,8 +85,21 @@ const ActionsInfo = ({
 		actions?.scriptLanguage?.[index] || 'select-a-script-type'
 	);
 
+	let defaultActionType;
+
+	if (status) {
+		defaultActionType = actionTypeOptions.find(
+			(item) => item.value === 'update-status'
+		);
+	}
+	else {
+		defaultActionType = actionTypeOptions.find(
+			(item) => item.value === scriptLanguage
+		);
+	}
+
 	const [selectedActionType, setSelectedActionType] = useState(
-		actionTypeOptions.find((item) => item.value === scriptLanguage)
+		defaultActionType
 	);
 
 	if (
@@ -102,7 +125,9 @@ const ActionsInfo = ({
 				(prevSection) => prevSection.identifier !== identifier
 			);
 
-			updateSelectedItem(newSections);
+			if (name && executionType) {
+				updateSelectedItem(newSections);
+			}
 
 			return newSections;
 		});
@@ -113,7 +138,8 @@ const ActionsInfo = ({
 			item.name &&
 			(item.script ||
 				(selectedActionType?.type === 'functionActionExecutor' &&
-					item.script === '')) &&
+					item.script === '') ||
+				item.status) &&
 			item.executionType
 		) {
 			setSections((prev) => {
@@ -123,6 +149,7 @@ const ActionsInfo = ({
 					...updatedSection[index],
 					...item,
 				};
+
 				updateSelectedItem(updatedSection);
 
 				return updatedSection;
@@ -147,6 +174,7 @@ const ActionsInfo = ({
 						({scriptLanguage}) => scriptLanguage
 					),
 					sectionsData: values.map((values) => values),
+					status: values.map((status) => status.status),
 				},
 			},
 		}));
@@ -177,6 +205,9 @@ const ActionsInfo = ({
 				setScript={setScript}
 				setScriptLanguage={setScriptLanguage}
 				setSelectedActionType={setSelectedActionType}
+				setStatus={setStatus}
+				status={status}
+				statuses={statuses}
 				updateActionInfo={updateActionInfo}
 			/>
 

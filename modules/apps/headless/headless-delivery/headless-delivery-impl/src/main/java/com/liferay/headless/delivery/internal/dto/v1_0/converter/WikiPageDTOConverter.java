@@ -41,9 +41,6 @@ import com.liferay.wiki.service.WikiPageService;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
-
-import javax.ws.rs.core.UriInfo;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -53,7 +50,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = "dto.class.name=com.liferay.wiki.model.WikiPage",
-	service = {DTOConverter.class, WikiPageDTOConverter.class}
+	service = DTOConverter.class
 )
 public class WikiPageDTOConverter
 	implements DTOConverter<com.liferay.wiki.model.WikiPage, WikiPage> {
@@ -70,9 +67,6 @@ public class WikiPageDTOConverter
 		com.liferay.wiki.model.WikiPage wikiPage = _wikiPageService.getPage(
 			(Long)dtoConverterContext.getId());
 
-		Optional<UriInfo> uriInfoOptional =
-			dtoConverterContext.getUriInfoOptional();
-
 		return new WikiPage() {
 			{
 				actions = dtoConverterContext.getActions();
@@ -82,7 +76,7 @@ public class WikiPageDTOConverter
 						wikiPage.getResourcePrimKey()));
 				content = wikiPage.getContent();
 				creator = CreatorUtil.toCreator(
-					_portal, dtoConverterContext.getUriInfoOptional(),
+					_portal, dtoConverterContext.getUriInfo(),
 					_userLocalService.fetchUser(wikiPage.getUserId()));
 				customFields = CustomFieldsUtil.toCustomFields(
 					dtoConverterContext.isAcceptAllLanguages(),
@@ -124,7 +118,7 @@ public class WikiPageDTOConverter
 								dtoConverterContext.getHttpServletRequest(),
 								assetCategory.getCategoryId(),
 								dtoConverterContext.getLocale(),
-								uriInfoOptional.orElse(null),
+								dtoConverterContext.getUriInfo(),
 								dtoConverterContext.getUser())),
 					TaxonomyCategoryBrief.class);
 				wikiNodeId = wikiPage.getNodeId();

@@ -132,7 +132,7 @@ public interface OAuth2AuthorizationLocalService
 	public PersistedModel createPersistedModel(Serializable primaryKeyObj)
 		throws PortalException;
 
-	public void deleteExpiredOAuth2Authorizations();
+	public void deleteExpiredOAuth2Authorizations() throws PortalException;
 
 	/**
 	 * Deletes the o auth2 authorization with the primary key from the database. Also notifies the appropriate model listeners.

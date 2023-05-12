@@ -32,6 +32,8 @@ export declare function useObjectFieldForm({
 		ObjectField & {
 			function: unknown;
 			acceptedFileExtensions: unknown;
+			defaultValue: unknown;
+			defaultValueType: unknown;
 			fileSource: unknown;
 			filters: unknown;
 			maxLength: unknown;
@@ -47,6 +49,8 @@ export declare function useObjectFieldForm({
 			showFilesInDocumentsAndMedia: unknown;
 			stateFlow: unknown;
 			storageDLFolderPath: unknown;
+			uniqueValues: unknown;
+			uniqueValuesErrorMessage: unknown;
 		}
 	>;
 	handleChange: import('react').ChangeEventHandler<HTMLInputElement>;

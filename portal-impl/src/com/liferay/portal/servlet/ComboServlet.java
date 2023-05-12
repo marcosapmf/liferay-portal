@@ -33,7 +33,6 @@ import com.liferay.portal.kernel.servlet.HttpHeaders;
 import com.liferay.portal.kernel.servlet.RequestDispatcherUtil;
 import com.liferay.portal.kernel.servlet.ServletResponseUtil;
 import com.liferay.portal.kernel.util.ContentTypes;
-import com.liferay.portal.kernel.util.DigesterUtil;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HttpComponentsUtil;
@@ -144,7 +143,15 @@ public class ComboServlet extends HttpServlet {
 
 			name = HttpComponentsUtil.decodePath(name);
 
-			ServletContext servletContext = getServletContext();
+			String modulePortletId = StringPool.BLANK;
+
+			int index = name.indexOf(CharPool.COLON);
+
+			if (index > 0) {
+				modulePortletId = name.substring(0, index + 1);
+
+				name = name.substring(index + 1);
+			}
 
 			String pathProxy = PortalUtil.getPathProxy();
 
@@ -152,10 +159,17 @@ public class ComboServlet extends HttpServlet {
 				name = name.replaceFirst(pathProxy, StringPool.BLANK);
 			}
 
-			String contextPath = servletContext.getContextPath();
+			if (index < 0) {
+				ServletContext servletContext = getServletContext();
 
-			if (name.startsWith(contextPath)) {
-				name = name.replaceFirst(contextPath, StringPool.BLANK);
+				String contextPath = servletContext.getContextPath();
+
+				if (name.startsWith(contextPath)) {
+					name = name.replaceFirst(contextPath, StringPool.BLANK);
+				}
+			}
+			else {
+				name = modulePortletId.concat(name);
 			}
 
 			modulePathsSet.add(name);
@@ -441,19 +455,12 @@ public class ComboServlet extends HttpServlet {
 						stringFileContent);
 				}
 				else if (minifierType.equals("js")) {
-					Matcher matcher = _esModulePattern.matcher(
+					Matcher matcher = _importModulePattern.matcher(
 						stringFileContent);
 
 					if (matcher.matches()) {
 						stringFileContent =
 							matcher.group(1) + "../o/" + matcher.group(3);
-
-						String identifier =
-							StringPool.UNDERLINE +
-								DigesterUtil.digestHex(modulePath);
-
-						stringFileContent = stringFileContent.replaceAll(
-							"esModule", identifier);
 					}
 					else {
 						stringFileContent = MinifierUtil.minifyJavaScript(
@@ -599,12 +606,12 @@ public class ComboServlet extends HttpServlet {
 	private static final PortalCache<String, byte[][]> _bytesArrayPortalCache =
 		PortalCacheHelperUtil.getPortalCache(
 			PortalCacheManagerNames.SINGLE_VM, ComboServlet.class.getName());
-	private static final Pattern _esModulePattern = Pattern.compile(
-		"(import\\s*\\*\\s*as\\s*esModule\\s*from\\s*[\"'])((?:\\.\\./)+)(.*)",
-		Pattern.DOTALL);
 	private static final PortalCache<String, FileContentBag>
 		_fileContentBagPortalCache = PortalCacheHelperUtil.getPortalCache(
 			PortalCacheManagerNames.SINGLE_VM, FileContentBag.class.getName());
+	private static final Pattern _importModulePattern = Pattern.compile(
+		"(import\\s*\\*\\s*as\\s*\\w*\\s*from\\s*[\"'])((?:\\.\\./)+)(.*)",
+		Pattern.DOTALL);
 
 	private final Set<String> _protectedParameters = SetUtil.fromArray(
 		"browserId", "minifierType", "languageId", "t", "themeId", "zx");

@@ -10,8 +10,13 @@
  */
 
 import MDFClaimActivity from '../mdfClaimActivity';
+import MDFClaimActivityDocumentDTO from './mdfClaimActivityDocumentDTO';
+import MDFClaimBudgetDTO from './mdfClaimBudgetDTO';
+import MDFClaimDTO from './mdfClaimDTO';
 
 export default interface MDFClaimActivityDTO extends MDFClaimActivity {
-	r_actToMDFClmActs_c_activityId?: number;
-	r_mdfClmToMDFClmActs_c_mdfClaimId?: number;
+	mdfClmActToMDFActDocs?: MDFClaimActivityDocumentDTO[];
+	mdfClmActToMDFClmBgts?: MDFClaimBudgetDTO[];
+	r_accTomdfClmActs_accountEntryId?: number;
+	r_mdfClmToMDFClmActs_c_mdfClaim?: MDFClaimDTO;
 }

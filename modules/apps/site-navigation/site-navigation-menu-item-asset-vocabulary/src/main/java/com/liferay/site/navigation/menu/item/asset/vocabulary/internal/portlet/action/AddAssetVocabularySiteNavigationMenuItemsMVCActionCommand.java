@@ -26,6 +26,7 @@ import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextFactory;
+import com.liferay.portal.kernel.servlet.SessionMessages;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
@@ -33,7 +34,10 @@ import com.liferay.portal.kernel.util.UnicodePropertiesBuilder;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.site.navigation.admin.constants.SiteNavigationAdminPortletKeys;
 import com.liferay.site.navigation.menu.item.layout.constants.SiteNavigationMenuItemTypeConstants;
+import com.liferay.site.navigation.model.SiteNavigationMenuItem;
 import com.liferay.site.navigation.service.SiteNavigationMenuItemService;
+
+import java.util.Arrays;
 
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
@@ -82,26 +86,54 @@ public class AddAssetVocabularySiteNavigationMenuItemsMVCActionCommand
 					continue;
 				}
 
-				_siteNavigationMenuItemService.addSiteNavigationMenuItem(
-					themeDisplay.getScopeGroupId(), siteNavigationMenuId, 0,
-					SiteNavigationMenuItemTypeConstants.ASSET_VOCABULARY,
-					UnicodePropertiesBuilder.create(
-						true
-					).put(
-						"classPK",
-						assetVocabularyJSONObject.getString("assetVocabularyId")
-					).put(
-						"groupId",
-						assetVocabularyJSONObject.getString("groupId")
-					).put(
-						"title", assetVocabularyJSONObject.getString("title")
-					).put(
-						"type", "asset-vocabulary"
-					).put(
-						"uuid", assetVocabularyJSONObject.getString("uuid")
-					).buildString(),
-					serviceContext);
+				long parentSiteNavigationMenuItemId = ParamUtil.getLong(
+					actionRequest, "parentSiteNavigationMenuItemId");
+
+				SiteNavigationMenuItem siteNavigationMenuItem =
+					_siteNavigationMenuItemService.addSiteNavigationMenuItem(
+						themeDisplay.getScopeGroupId(), siteNavigationMenuId,
+						parentSiteNavigationMenuItemId,
+						SiteNavigationMenuItemTypeConstants.ASSET_VOCABULARY,
+						UnicodePropertiesBuilder.create(
+							true
+						).put(
+							"classPK",
+							assetVocabularyJSONObject.getString(
+								"assetVocabularyId")
+						).put(
+							"groupId",
+							assetVocabularyJSONObject.getString("groupId")
+						).put(
+							"title",
+							assetVocabularyJSONObject.getString("title")
+						).put(
+							"type", "asset-vocabulary"
+						).put(
+							"uuid", assetVocabularyJSONObject.getString("uuid")
+						).buildString(),
+						serviceContext);
+
+				int order = ParamUtil.getInteger(actionRequest, "order", -1);
+
+				if (order >= 0) {
+					_siteNavigationMenuItemService.updateSiteNavigationMenuItem(
+						siteNavigationMenuItem.getSiteNavigationMenuItemId(),
+						parentSiteNavigationMenuItemId, order + i);
+				}
 			}
+
+			String message = _language.format(
+				themeDisplay.getLocale(), "x-x-was-added-to-this-menu",
+				Arrays.asList(jsonArray.length(), "vocabulary"));
+
+			if (jsonArray.length() > 1) {
+				message = _language.format(
+					themeDisplay.getLocale(), "x-x-were-added-to-this-menu",
+					Arrays.asList(jsonArray.length(), "vocabularies"));
+			}
+
+			SessionMessages.add(
+				actionRequest, "siteNavigationMenuItemsAdded", message);
 		}
 		else {
 			if (_log.isDebugEnabled()) {

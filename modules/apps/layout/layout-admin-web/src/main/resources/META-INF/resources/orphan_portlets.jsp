@@ -42,26 +42,12 @@ renderResponse.setTitle(LanguageUtil.get(request, "orphan-widgets"));
 </portlet:actionURL>
 
 <aui:form action="<%= deleteOrphanPortletsURL %>" cssClass="container-fluid container-fluid-max-xl" name="fm">
-	<div class="alert alert-warning" role="alert">
-		<span class="alert-indicator">
-			<aui:icon image="warning-full" markupView="lexicon" />
-		</span>
-
-		<strong class="lead"><liferay-ui:message key="warning-colon" /></strong>
-
-		<c:choose>
-			<c:when test="<%= selLayout.isLayoutPrototypeLinkActive() %>">
-				<liferay-ui:message key="layout-inherits-from-a-prototype-widgets-cannot-be-manipulated" />
-			</c:when>
-			<c:otherwise>
-				<liferay-ui:message key="warning-preferences-of-selected-widgets-will-be-reset-or-deleted" />
-			</c:otherwise>
-		</c:choose>
-
-		<button aria-label="<%= LanguageUtil.get(request, "close") %>" class="close" data-dismiss="liferay-alert" type="button">
-			<aui:icon image="times" markupView="lexicon" />
-		</button>
-	</div>
+	<clay:alert
+		dismissible="<%= true %>"
+		displayType="warning"
+		message='<%= LanguageUtil.get(request, selLayout.isLayoutPrototypeLinkActive() ? "layout-inherits-from-a-prototype-widgets-cannot-be-manipulated" : "warning-preferences-of-selected-widgets-will-be-reset-or-deleted") %>'
+		symbol="warning-full"
+	/>
 
 	<liferay-ui:search-container
 		searchContainer="<%= orphanPortletsDisplayContext.getOrphanPortletsSearchContainer() %>"

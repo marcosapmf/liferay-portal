@@ -651,6 +651,7 @@
 
 		<column name="classNameId" type="long" />
 		<column name="classPK" type="long" />
+		<column name="layoutPageTemplateEntryUuid" type="String" />
 		<column name="layoutUuid" type="String" />
 
 		<!-- Finder methods -->
@@ -662,11 +663,23 @@
 			<finder-column name="groupId" />
 			<finder-column name="classNameId" />
 		</finder>
+		<finder name="G_LPTEU" return-type="Collection">
+			<finder-column name="groupId" />
+			<finder-column name="layoutPageTemplateEntryUuid" />
+		</finder>
 		<finder name="G_L" return-type="Collection">
 			<finder-column name="groupId" />
 			<finder-column name="layoutUuid" />
 		</finder>
 		<finder name="C_C" return-type="Collection">
+			<finder-column name="classNameId" />
+			<finder-column name="classPK" />
+		</finder>
+		<finder name="C_C_LPTEU" return-type="Collection" where="layoutPageTemplateEntryUuid IS NOT NULL">
+			<finder-column name="classNameId" />
+			<finder-column name="classPK" />
+		</finder>
+		<finder name="C_C_L" return-type="Collection" where="layoutUuid IS NOT NULL">
 			<finder-column name="classNameId" />
 			<finder-column name="classPK" />
 		</finder>
@@ -1125,9 +1138,12 @@
 		<exception>CPAttachmentFileEntryName</exception>
 		<exception>CPAttachmentFileEntryProtocol</exception>
 		<exception>CPAttachmentFileEntrySize</exception>
+		<exception>CPDefinitionDeliveryMaxSubscriptionCycles</exception>
+		<exception>CPDefinitionDeliverySubscriptionLength</exception>
 		<exception>CPDefinitionDisplayDate</exception>
 		<exception>CPDefinitionExpirationDate</exception>
 		<exception>CPDefinitionIgnoreSKUCombinations</exception>
+		<exception>CPDefinitionMaxSubscriptionCycles</exception>
 		<exception>CPDefinitionMetaDescription</exception>
 		<exception>CPDefinitionMetaKeywords</exception>
 		<exception>CPDefinitionMetaTitle</exception>
@@ -1139,8 +1155,10 @@
 		<exception>CPDefinitionOptionValueRelPrice</exception>
 		<exception>CPDefinitionOptionValueRelQuantity</exception>
 		<exception>CPDefinitionProductTypeName</exception>
+		<exception>CPDefinitionSubscriptionLength</exception>
 		<exception>CPDisplayLayoutEntry</exception>
-		<exception>CPDisplayLayoutLayoutUuid</exception>
+		<exception>CPDisplayLayoutEntryUuid</exception>
+		<exception>CPInstanceDeliverySubscriptionLength</exception>
 		<exception>CPInstanceDiscontinuedDate</exception>
 		<exception>CPInstanceDisplayDate</exception>
 		<exception>CPInstanceExpirationDate</exception>
@@ -1148,6 +1166,7 @@
 		<exception>CPInstanceMaxPriceValue</exception>
 		<exception>CPInstanceReplacementCPInstanceUuid</exception>
 		<exception>CPInstanceSku</exception>
+		<exception>CPInstanceSubscriptionLength</exception>
 		<exception>CPMeasurementUnitType</exception>
 		<exception>CPOptionCategoryKey</exception>
 		<exception>CPOptionKey</exception>

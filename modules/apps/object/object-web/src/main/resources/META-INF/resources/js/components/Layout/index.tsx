@@ -22,6 +22,7 @@ import {
 } from '@liferay/object-js-components-web';
 import React, {useEffect, useState} from 'react';
 
+import {defaultLanguageId} from '../../utils/constants';
 import {TabsVisitor} from '../../utils/visitor';
 import InfoScreen from './InfoScreen/InfoScreen';
 import LayoutScreen from './LayoutScreen/LayoutScreen';
@@ -36,8 +37,6 @@ import {
 	TObjectLayoutTab,
 	TObjectRelationship,
 } from './types';
-
-const defaultLanguageId = Liferay.ThemeDisplay.getDefaultLanguageId();
 
 const TABS = [
 	{
@@ -149,6 +148,7 @@ const Layout: React.FC<React.HTMLAttributes<HTMLElement>> = () => {
 
 			dispatch({
 				payload: {
+					creationLanguageId: objectDefinition.defaultLanguageId,
 					enableCategorization: objectDefinition.enableCategorization,
 					objectLayout,
 					objectRelationships: normalizeObjectRelationships({
@@ -225,8 +225,10 @@ const Layout: React.FC<React.HTMLAttributes<HTMLElement>> = () => {
 				),
 			});
 		}
-		catch ({message}) {
-			openToast({message: message as string, type: 'danger'});
+		catch (error: unknown) {
+			const {message} = error as Error;
+
+			openToast({message, type: 'danger'});
 		}
 	};
 

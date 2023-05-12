@@ -14,7 +14,7 @@
 
 package com.liferay.commerce.constants;
 
-import com.liferay.commerce.account.service.CommerceAccountService;
+import com.liferay.commerce.inventory.service.CommerceInventoryWarehouseItemService;
 import com.liferay.commerce.service.CommerceOrderItemService;
 import com.liferay.commerce.service.CommerceOrderService;
 import com.liferay.petra.string.StringBundler;
@@ -48,6 +48,14 @@ public class CommerceSAPConstants {
 		"com.liferay.headless.commerce.delivery.catalog.internal.resource." +
 			"v1_0.PinResourceImpl";
 
+	public static final String CLASS_NAME_COMMERCE_HEADLESS_PRODUCT_RESOURCE =
+		"com.liferay.headless.commerce.delivery.catalog.internal.resource." +
+			"v1_0.ProductResourceImpl";
+
+	public static final String CLASS_NAME_COMMERCE_HEADLESS_SKU_RESOURCE =
+		"com.liferay.headless.commerce.delivery.catalog.internal.resource." +
+			"v1_0.SkuResourceImpl";
+
 	public static final String CLASS_NAME_COMMERCE_SEARCH_RESOURCE =
 		"com.liferay.commerce.frontend.internal.search.CommerceSearchResource";
 
@@ -57,8 +65,8 @@ public class CommerceSAPConstants {
 		{
 			SAP_ENTRY_NAME,
 			StringBundler.concat(
-				CommerceAccountService.class.getName(), "#getCommerceAccount\n",
-				CommerceOrderItemService.class.getName(),
+				CommerceInventoryWarehouseItemService.class.getName(),
+				"#getStockQuantity\n", CommerceOrderItemService.class.getName(),
 				"#addOrUpdateCommerceOrderItem\n",
 				CommerceOrderItemService.class.getName(),
 				"#getCommerceOrderItem\n",
@@ -89,7 +97,10 @@ public class CommerceSAPConstants {
 				"#getChannelProductMappedProductsPage\n",
 				CLASS_NAME_COMMERCE_HEADLESS_PIN_RESOURCE,
 				"#getChannelProductPinsPage\n",
-				CLASS_NAME_COMMERCE_SEARCH_RESOURCE)
+				CLASS_NAME_COMMERCE_HEADLESS_PRODUCT_RESOURCE,
+				"#getChannelProductsPage\n",
+				CLASS_NAME_COMMERCE_HEADLESS_SKU_RESOURCE,
+				"#postChannelProductSku\n", CLASS_NAME_COMMERCE_SEARCH_RESOURCE)
 		}
 	};
 

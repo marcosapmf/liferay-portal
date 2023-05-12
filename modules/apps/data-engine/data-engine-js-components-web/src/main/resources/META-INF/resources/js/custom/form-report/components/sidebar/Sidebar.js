@@ -74,8 +74,10 @@ const SidebarContent = () => {
 
 						<li className="tbar-item">
 							<ClayButton
+								aria-label={Liferay.Language.get('close')}
 								className="close-sidebar"
 								displayType="secondary"
+								id={`${portletNamespace}close-sidebar`}
 								monospaced
 								onClick={() => toggleSidebar()}
 							>

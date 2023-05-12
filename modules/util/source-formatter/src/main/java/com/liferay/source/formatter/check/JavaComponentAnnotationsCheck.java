@@ -20,18 +20,24 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.NaturalOrderStringComparator;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.tools.GitUtil;
 import com.liferay.portal.tools.ToolsUtil;
+import com.liferay.source.formatter.SourceFormatterArgs;
+import com.liferay.source.formatter.check.util.BNDSourceUtil;
+import com.liferay.source.formatter.check.util.JavaSourceUtil;
 import com.liferay.source.formatter.check.util.SourceUtil;
 import com.liferay.source.formatter.parser.JavaClass;
 import com.liferay.source.formatter.parser.JavaMethod;
 import com.liferay.source.formatter.parser.JavaParameter;
 import com.liferay.source.formatter.parser.JavaSignature;
 import com.liferay.source.formatter.parser.JavaTerm;
+import com.liferay.source.formatter.processor.SourceProcessor;
 
-import java.io.IOException;
+import java.io.File;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -46,19 +52,10 @@ public class JavaComponentAnnotationsCheck extends JavaAnnotationsCheck {
 	}
 
 	@Override
-	protected String doProcess(
-			String fileName, String absolutePath, JavaTerm javaTerm,
-			String fileContent)
-		throws IOException {
-
-		return formatAnnotations(
-			fileName, absolutePath, (JavaClass)javaTerm, fileContent);
-	}
-
-	@Override
 	protected String formatAnnotation(
-		String fileName, String absolutePath, JavaClass javaClass,
-		String fileContent, String annotation, String indent) {
+			String fileName, String absolutePath, JavaClass javaClass,
+			String fileContent, String annotation, String indent)
+		throws Exception {
 
 		String trimmedAnnotation = StringUtil.trim(annotation);
 
@@ -75,6 +72,8 @@ public class JavaComponentAnnotationsCheck extends JavaAnnotationsCheck {
 
 			return annotation;
 		}
+
+		_checkImmediateAttribute(fileName, absolutePath, annotation);
 
 		annotation = _formatAnnotationParameterProperties(annotation);
 		annotation = _formatConfigurationAttributes(
@@ -148,6 +147,94 @@ public class JavaComponentAnnotationsCheck extends JavaAnnotationsCheck {
 		}
 
 		return newProperties + properties;
+	}
+
+	private void _checkHasMultipleServiceTypes(
+			String fileName, String absolutePath)
+		throws Exception {
+
+		SourceProcessor sourceProcessor = getSourceProcessor();
+
+		SourceFormatterArgs sourceFormatterArgs =
+			sourceProcessor.getSourceFormatterArgs();
+
+		if (!sourceFormatterArgs.isFormatCurrentBranch()) {
+			return;
+		}
+
+		List<String> allowedMultipleServicesClassNames = getAttributeValues(
+			_ALLOWED_MULTIPLE_SERVICE_TYPES_CLASS_NAMES_KEY, absolutePath);
+
+		for (String allowedMultipleServicesClassName :
+				allowedMultipleServicesClassNames) {
+
+			if (absolutePath.contains(allowedMultipleServicesClassName)) {
+				return;
+			}
+		}
+
+		String currentBranchFileDiff = GitUtil.getCurrentBranchFileDiff(
+			sourceFormatterArgs.getBaseDirName(),
+			sourceFormatterArgs.getGitWorkingBranchName(), absolutePath);
+
+		for (String currentBranchFileDiffBlock :
+				StringUtil.split(currentBranchFileDiff, "\n@@")) {
+
+			if (currentBranchFileDiffBlock.startsWith("diff") ||
+				!currentBranchFileDiffBlock.contains("@Component")) {
+
+				continue;
+			}
+
+			for (String line :
+					StringUtil.splitLines(currentBranchFileDiffBlock)) {
+
+				if (!line.startsWith(StringPool.PLUS)) {
+					continue;
+				}
+
+				if (line.contains("service = {") &&
+					!line.contains("service = {}")) {
+
+					addMessage(
+						fileName,
+						"@Component classes should only specify one service " +
+							"type in the 'service' attribute, see LPS-180838");
+
+					break;
+				}
+			}
+		}
+	}
+
+	private void _checkImmediateAttribute(
+		String fileName, String absolutePath, String annotation) {
+
+		if (absolutePath.contains("/modules/apps/archived/") ||
+			!isAttributeValue(_CHECK_IMMEDIATE_ATTRIBUTE_KEY, absolutePath)) {
+
+			return;
+		}
+
+		List<String> allowedImmediateAttributeClassNames = getAttributeValues(
+			_ALLOWED_IMMEDIATE_ATTRIBUTE_CLASS_NAMES_KEY, absolutePath);
+
+		for (String allowedImmediateAttributeClassName :
+				allowedImmediateAttributeClassNames) {
+
+			if (absolutePath.contains(allowedImmediateAttributeClassName)) {
+				return;
+			}
+		}
+
+		String immediateAttributeValue = getAnnotationAttributeValue(
+			annotation, "immediate");
+
+		if ((immediateAttributeValue != null) &&
+			immediateAttributeValue.equals("true")) {
+
+			addMessage(fileName, "Do not use 'immediate = true' in @Component");
+		}
 	}
 
 	private String _formatAnnotationParameterProperties(String annotation) {
@@ -225,8 +312,13 @@ public class JavaComponentAnnotationsCheck extends JavaAnnotationsCheck {
 		String fileName, String absolutePath, JavaClass javaClass,
 		String annotation) {
 
-		if (_getAttributeValue(annotation, "configurationPid") != null) {
-			return annotation;
+		String configurationPid = getAnnotationAttributeValue(
+			annotation, "configurationPid");
+
+		if (configurationPid != null) {
+			return _formatConfigurationPid(
+				fileName, absolutePath, javaClass, annotation,
+				configurationPid);
 		}
 
 		for (JavaMethod javaMethod :
@@ -256,7 +348,8 @@ public class JavaComponentAnnotationsCheck extends JavaAnnotationsCheck {
 
 		if (imports.contains(
 				"org.osgi.service.component.annotations.Modified") ||
-			(_getAttributeValue(annotation, "configurationPolicy ") != null)) {
+			(getAnnotationAttributeValue(annotation, "configurationPolicy ") !=
+				null)) {
 
 			return annotation;
 		}
@@ -277,6 +370,68 @@ public class JavaComponentAnnotationsCheck extends JavaAnnotationsCheck {
 
 		return _addAttribute(
 			annotation, "configurationPolicy", "ConfigurationPolicy.IGNORE");
+	}
+
+	private String _formatConfigurationPid(
+		String fileName, String absolutePath, JavaClass javaClass,
+		String annotation, String configurationPid) {
+
+		if (!isAttributeValue(
+				_CHECK_CONFIGURATION_PID_ATTRIBUTE_KEY, absolutePath)) {
+
+			return annotation;
+		}
+
+		List<String> configurationClasses = new ArrayList<>();
+
+		if (StringUtil.startsWith(configurationPid, '{')) {
+			configurationPid = configurationPid.substring(
+				1, configurationPid.length() - 1);
+
+			for (String configurationClass :
+					StringUtil.split(configurationPid, ", ")) {
+
+				configurationClasses.add(configurationClass);
+			}
+		}
+		else {
+			configurationClasses.add(configurationPid);
+		}
+
+		List<String> importNames = javaClass.getImportNames();
+
+		for (String configurationClass : configurationClasses) {
+			configurationClass = StringUtil.unquote(configurationClass);
+
+			if (!configurationClass.startsWith("com.liferay")) {
+				continue;
+			}
+
+			int pos = configurationClass.lastIndexOf(".scoped");
+
+			if (pos != -1) {
+				configurationClass = configurationClass.substring(0, pos);
+			}
+
+			if (importNames.contains(configurationClass)) {
+				continue;
+			}
+
+			File javaFile = JavaSourceUtil.getJavaFile(
+				configurationClass, _getRootDirName(absolutePath),
+				_getBundleSymbolicNamesMap(absolutePath));
+
+			if (javaFile == null) {
+				String message = StringBundler.concat(
+					"Remove '", configurationClass,
+					"' from 'configurationPid' as the configuration class ",
+					"does not exist");
+
+				addMessage(fileName, message);
+			}
+		}
+
+		return annotation;
 	}
 
 	private String _formatEnabledAttribute(
@@ -302,7 +457,7 @@ public class JavaComponentAnnotationsCheck extends JavaAnnotationsCheck {
 				continue;
 			}
 
-			String enabledAttributeValue = _getAttributeValue(
+			String enabledAttributeValue = getAnnotationAttributeValue(
 				annotation, "enabled");
 
 			if (enabledAttributeValue == null) {
@@ -356,7 +511,7 @@ public class JavaComponentAnnotationsCheck extends JavaAnnotationsCheck {
 			!absolutePath.contains("/modules/sdk/") &&
 			!newProperties.contains("\"javax.portlet.version=3.0\"")) {
 
-			String serviceAttributeValue = _getAttributeValue(
+			String serviceAttributeValue = getAnnotationAttributeValue(
 				annotation, "service");
 
 			if (serviceAttributeValue.startsWith(StringPool.OPEN_CURLY_BRACE) &&
@@ -379,13 +534,14 @@ public class JavaComponentAnnotationsCheck extends JavaAnnotationsCheck {
 	}
 
 	private String _formatServiceAttribute(
-		String fileName, String absolutePath, String className,
-		String annotation, List<String> implementedClassNames) {
+			String fileName, String absolutePath, String className,
+			String annotation, List<String> implementedClassNames)
+		throws Exception {
 
 		String expectedServiceAttributeValue =
 			_getExpectedServiceAttributeValue(implementedClassNames);
 
-		String serviceAttributeValue = _getAttributeValue(
+		String serviceAttributeValue = getAnnotationAttributeValue(
 			annotation, "service");
 
 		if (serviceAttributeValue == null) {
@@ -397,10 +553,8 @@ public class JavaComponentAnnotationsCheck extends JavaAnnotationsCheck {
 			_CHECK_MISMATCHED_SERVICE_ATTRIBUTE_KEY, absolutePath);
 		boolean checkSelfRegistration = isAttributeValue(
 			_CHECK_SELF_REGISTRATION_KEY, absolutePath);
-
-		if (!checkMismatchedServiceAttribute && !checkSelfRegistration) {
-			return annotation;
-		}
+		boolean checkHasMultipleServiceTypes = isAttributeValue(
+			_CHECK_HAS_MULTIPLE_SERVICE_TYPES_KEY, absolutePath);
 
 		if (checkMismatchedServiceAttribute &&
 			!serviceAttributeValue.equals(expectedServiceAttributeValue)) {
@@ -417,48 +571,22 @@ public class JavaComponentAnnotationsCheck extends JavaAnnotationsCheck {
 					"' in @Component 'service' attribute");
 		}
 
+		if (checkHasMultipleServiceTypes) {
+			_checkHasMultipleServiceTypes(fileName, absolutePath);
+		}
+
 		return annotation;
 	}
 
-	private String _getAttributeValue(String annotation, String attributeName) {
-		Pattern pattern = Pattern.compile("\\W" + attributeName + "\\s*=");
+	private synchronized Map<String, String> _getBundleSymbolicNamesMap(
+		String absolutePath) {
 
-		Matcher matcher = pattern.matcher(annotation);
-
-		if (!matcher.find()) {
-			return null;
+		if (_bundleSymbolicNamesMap == null) {
+			_bundleSymbolicNamesMap = BNDSourceUtil.getBundleSymbolicNamesMap(
+				_getRootDirName(absolutePath));
 		}
 
-		int start = matcher.end() + 1;
-
-		int end = start;
-
-		while (true) {
-			end = annotation.indexOf(CharPool.COMMA, end + 1);
-
-			if (end == -1) {
-				end = annotation.lastIndexOf(CharPool.CLOSE_PARENTHESIS);
-
-				break;
-			}
-
-			if (!ToolsUtil.isInsideQuotes(annotation, end) &&
-				(getLevel(annotation.substring(start, end), "{", "}") == 0)) {
-
-				break;
-			}
-		}
-
-		String attributeValue = StringUtil.trim(
-			annotation.substring(start, end));
-
-		if (!attributeValue.contains("\n")) {
-			return attributeValue;
-		}
-
-		return StringUtil.replace(
-			attributeValue, new String[] {"\t", ",\n", "\n"},
-			new String[] {"", ", ", ""});
+		return _bundleSymbolicNamesMap;
 	}
 
 	private String _getExpectedServiceAttributeValue(
@@ -512,8 +640,32 @@ public class JavaComponentAnnotationsCheck extends JavaAnnotationsCheck {
 		return javaMethods;
 	}
 
+	private synchronized String _getRootDirName(String absolutePath) {
+		if (_rootDirName == null) {
+			_rootDirName = SourceUtil.getRootDirName(absolutePath);
+		}
+
+		return _rootDirName;
+	}
+
+	private static final String _ALLOWED_IMMEDIATE_ATTRIBUTE_CLASS_NAMES_KEY =
+		"allowedImmediateAttributeClassNames";
+
+	private static final String
+		_ALLOWED_MULTIPLE_SERVICE_TYPES_CLASS_NAMES_KEY =
+			"allowedMultipleServiceTypesClassNames";
+
+	private static final String _CHECK_CONFIGURATION_PID_ATTRIBUTE_KEY =
+		"checkConfigurationPidAttribute";
+
 	private static final String _CHECK_CONFIGURATION_POLICY_ATTRIBUTE_KEY =
 		"checkConfigurationPolicyAttribute";
+
+	private static final String _CHECK_HAS_MULTIPLE_SERVICE_TYPES_KEY =
+		"checkHasMultipleServiceTypes";
+
+	private static final String _CHECK_IMMEDIATE_ATTRIBUTE_KEY =
+		"checkImmediateAttribute";
 
 	private static final String _CHECK_MISMATCHED_SERVICE_ATTRIBUTE_KEY =
 		"checkMismatchedServiceAttribute";
@@ -531,6 +683,9 @@ public class JavaComponentAnnotationsCheck extends JavaAnnotationsCheck {
 		Pattern.compile("\\s(\\w+) = \\{");
 	private static final Pattern _attributePattern = Pattern.compile(
 		"\\W(\\w+)\\s*=");
+
+	private Map<String, String> _bundleSymbolicNamesMap;
+	private String _rootDirName;
 
 	private class AnnotationParameterPropertyComparator
 		extends NaturalOrderStringComparator {

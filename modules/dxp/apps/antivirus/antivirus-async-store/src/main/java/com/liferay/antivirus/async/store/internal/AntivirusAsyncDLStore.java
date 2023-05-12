@@ -52,7 +52,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	configurationPid = "com.liferay.antivirus.async.store.configuration.AntivirusAsyncConfiguration",
-	configurationPolicy = ConfigurationPolicy.REQUIRE, immediate = true,
+	configurationPolicy = ConfigurationPolicy.REQUIRE,
 	property = "service.ranking:Integer=1000", service = DLStore.class
 )
 public class AntivirusAsyncDLStore implements DLStore {
@@ -149,76 +149,6 @@ public class AntivirusAsyncDLStore implements DLStore {
 				tempFile.delete();
 			}
 		}
-	}
-
-	@Override
-	public void addFile(
-			long companyId, long repositoryId, String fileName,
-			boolean validateFileExtension, byte[] bytes)
-		throws PortalException {
-
-		addFile(
-			DLStoreRequest.builder(
-				companyId, repositoryId, fileName
-			).validateFileExtension(
-				validateFileExtension
-			).build(),
-			bytes);
-	}
-
-	@Override
-	public void addFile(
-			long companyId, long repositoryId, String fileName,
-			boolean validateFileExtension, File file)
-		throws PortalException {
-
-		addFile(
-			DLStoreRequest.builder(
-				companyId, repositoryId, fileName
-			).validateFileExtension(
-				validateFileExtension
-			).build(),
-			file);
-	}
-
-	@Override
-	public void addFile(
-			long companyId, long repositoryId, String fileName,
-			boolean validateFileExtension, InputStream inputStream)
-		throws PortalException {
-
-		addFile(
-			DLStoreRequest.builder(
-				companyId, repositoryId, fileName
-			).validateFileExtension(
-				validateFileExtension
-			).build(),
-			inputStream);
-	}
-
-	@Override
-	public void addFile(
-			long companyId, long repositoryId, String fileName, byte[] bytes)
-		throws PortalException {
-
-		addFile(companyId, repositoryId, fileName, true, bytes);
-	}
-
-	@Override
-	public void addFile(
-			long companyId, long repositoryId, String fileName, File file)
-		throws PortalException {
-
-		addFile(companyId, repositoryId, fileName, true, file);
-	}
-
-	@Override
-	public void addFile(
-			long companyId, long repositoryId, String fileName,
-			InputStream inputStream)
-		throws PortalException {
-
-		addFile(companyId, repositoryId, fileName, true, inputStream);
 	}
 
 	@Override

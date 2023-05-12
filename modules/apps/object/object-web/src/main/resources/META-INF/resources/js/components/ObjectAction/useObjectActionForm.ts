@@ -14,22 +14,20 @@
 
 import {
 	API,
+	REQUIRED_MSG,
 	invalidateRequired,
 	openToast,
 	useForm,
 } from '@liferay/object-js-components-web';
 import {useEffect, useMemo, useState} from 'react';
 
+import {defaultLanguageId} from '../../utils/constants';
 import {ActionError} from './index';
 
 interface UseObjectActionFormProps {
 	initialValues: Partial<ObjectAction>;
 	onSubmit: (field: ObjectAction) => void;
 }
-
-const defaultLanguageId = Liferay.ThemeDisplay.getDefaultLanguageId();
-
-const REQUIRED_MSG = Liferay.Language.get('required');
 
 export function useObjectActionForm({
 	initialValues,

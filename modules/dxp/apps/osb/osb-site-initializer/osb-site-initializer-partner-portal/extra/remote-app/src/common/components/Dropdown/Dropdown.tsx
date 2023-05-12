@@ -12,7 +12,8 @@
 import ClayButton from '@clayui/button';
 import ClayDropDown from '@clayui/drop-down';
 import ClayIcon from '@clayui/icon';
-interface DropdownOption {
+
+export interface DropdownOption {
 	icon: string;
 	key: string;
 	label: string;
@@ -20,12 +21,14 @@ interface DropdownOption {
 }
 
 interface Props {
+	closeOnClick?: boolean;
 	onClick?: () => void;
 	options: DropdownOption[];
 }
 
-const DropDown = ({options}: Props) => (
+const DropDown = ({closeOnClick, options}: Props) => (
 	<ClayDropDown
+		closeOnClick={closeOnClick}
 		trigger={
 			<ClayButton displayType="unstyled">
 				<ClayIcon symbol="ellipsis-v"></ClayIcon>

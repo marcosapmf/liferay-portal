@@ -149,6 +149,11 @@ public interface FragmentEntryLinkLocalService
 	public void deleteFragmentEntryLinks(long[] fragmentEntryLinkIds)
 		throws PortalException;
 
+	public void deleteFragmentEntryLinksByFragmentEntryId(long fragmentEntryId);
+
+	public void deleteFragmentEntryLinksByFragmentEntryId(
+		long fragmentEntryId, boolean deleted);
+
 	public List<FragmentEntryLink>
 		deleteLayoutPageTemplateEntryFragmentEntryLinks(
 			long groupId, long plid);
@@ -341,11 +346,23 @@ public interface FragmentEntryLinkLocalService
 		long groupId, long classNameId, long classPK);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<FragmentEntryLink> getFragmentEntryLinks(
+		long companyId, String rendererKey);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<FragmentEntryLink> getFragmentEntryLinks(
+		long companyId, String[] rendererKeys);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<FragmentEntryLink> getFragmentEntryLinks(String rendererKey);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<FragmentEntryLink> getFragmentEntryLinksByFragmentEntryId(
 		long fragmentEntryId);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<FragmentEntryLink> getFragmentEntryLinksByFragmentEntryId(
+		long fragmentEntryId, boolean deleted);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<FragmentEntryLink> getFragmentEntryLinksByPlid(
@@ -400,6 +417,10 @@ public interface FragmentEntryLinkLocalService
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public int getFragmentEntryLinksCountByFragmentEntryId(
 		long fragmentEntryId);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int getFragmentEntryLinksCountByFragmentEntryId(
+		long fragmentEntryId, boolean deleted);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public int getFragmentEntryLinksCountByPlid(long groupId, long plid);

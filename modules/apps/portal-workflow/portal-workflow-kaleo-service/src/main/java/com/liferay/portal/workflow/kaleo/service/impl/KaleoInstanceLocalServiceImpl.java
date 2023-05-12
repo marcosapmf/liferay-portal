@@ -15,6 +15,7 @@
 package com.liferay.portal.workflow.kaleo.service.impl;
 
 import com.liferay.exportimport.kernel.staging.Staging;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.aop.AopService;
@@ -32,8 +33,11 @@ import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.search.IndexerRegistryUtil;
 import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.search.Sort;
+import com.liferay.portal.kernel.service.ExceptionRetryAcceptor;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalService;
+import com.liferay.portal.kernel.spring.aop.Property;
+import com.liferay.portal.kernel.spring.aop.Retry;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.OrderByComparator;
@@ -57,8 +61,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -86,7 +88,7 @@ public class KaleoInstanceLocalServiceImpl
 		User user = _userLocalService.fetchUser(serviceContext.getUserId());
 
 		if (user == null) {
-			user = _userLocalService.getDefaultUser(
+			user = _userLocalService.getGuestUser(
 				serviceContext.getCompanyId());
 		}
 
@@ -393,18 +395,10 @@ public class KaleoInstanceLocalServiceImpl
 			orderByComparator, serviceContext);
 
 		return new BaseModelSearchResult<>(
-			Stream.of(
-				hits.getDocs()
-			).map(
-				document -> GetterUtil.getLong(
-					document.get(Field.ENTRY_CLASS_PK))
-			).map(
-				kaleoInstancePersistence::fetchByPrimaryKey
-			).filter(
-				Objects::nonNull
-			).collect(
-				Collectors.toList()
-			),
+			(List<KaleoInstance>)TransformUtil.transformToList(
+				hits.getDocs(),
+				document -> kaleoInstancePersistence.fetchByPrimaryKey(
+					GetterUtil.getLong(document.get(Field.ENTRY_CLASS_PK)))),
 			hits.getLength());
 	}
 
@@ -439,13 +433,28 @@ public class KaleoInstanceLocalServiceImpl
 
 	@Indexable(type = IndexableType.REINDEX)
 	@Override
+	@Retry(
+		acceptor = ExceptionRetryAcceptor.class,
+		properties = {
+			@Property(
+				name = ExceptionRetryAcceptor.EXCEPTION_NAME,
+				value = "org.hibernate.StaleObjectStateException"
+			)
+		}
+	)
 	public KaleoInstance updateKaleoInstance(
-			long kaleoInstanceId, Map<String, Serializable> workflowContext,
-			ServiceContext serviceContext)
+			long kaleoInstanceId, Map<String, Serializable> workflowContext)
 		throws PortalException {
 
 		KaleoInstance kaleoInstance = kaleoInstancePersistence.findByPrimaryKey(
 			kaleoInstanceId);
+
+		if (Objects.equals(
+				WorkflowContextUtil.convert(workflowContext),
+				kaleoInstance.getWorkflowContext())) {
+
+			return kaleoInstance;
+		}
 
 		kaleoInstance.setWorkflowContext(
 			WorkflowContextUtil.convert(workflowContext));
@@ -495,9 +504,8 @@ public class KaleoInstanceLocalServiceImpl
 			return null;
 		}
 
-		return Stream.of(
-			orderByComparator.getOrderByFields()
-		).map(
+		return TransformUtil.transform(
+			orderByComparator.getOrderByFields(),
 			orderByFieldName -> {
 				String fieldName = _fieldNameOrderByCols.getOrDefault(
 					orderByFieldName, orderByFieldName);
@@ -514,10 +522,8 @@ public class KaleoInstanceLocalServiceImpl
 				}
 
 				return new Sort(fieldName, sortType, !ascending);
-			}
-		).toArray(
-			Sort[]::new
-		);
+			},
+			Sort.class);
 	}
 
 	private Hits _search(
@@ -602,17 +608,10 @@ public class KaleoInstanceLocalServiceImpl
 	}
 
 	private List<KaleoInstance> _toKaleoInstances(Hits hits) {
-		return Stream.of(
-			hits.getDocs()
-		).map(
-			document -> GetterUtil.getLong(document.get(Field.ENTRY_CLASS_PK))
-		).map(
-			kaleoInstancePersistence::fetchByPrimaryKey
-		).filter(
-			Objects::nonNull
-		).collect(
-			Collectors.toList()
-		);
+		return TransformUtil.transformToList(
+			hits.getDocs(),
+			document -> kaleoInstancePersistence.fetchByPrimaryKey(
+				GetterUtil.getLong(document.get(Field.ENTRY_CLASS_PK))));
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

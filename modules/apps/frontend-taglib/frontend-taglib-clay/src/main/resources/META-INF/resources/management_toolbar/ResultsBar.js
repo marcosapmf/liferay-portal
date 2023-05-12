@@ -22,9 +22,20 @@ const ResultsBar = ({
 	clearResultsURL,
 	filterLabelItems,
 	itemsTotal,
+	searchContainerId,
 	searchValue,
 }) => {
 	const resultsBarRef = useRef();
+
+	const searchContainerRef = useRef();
+
+	useEffect(() => {
+		Liferay.componentReady(searchContainerId).then((searchContainer) => {
+			searchContainerRef.current = searchContainer;
+		});
+
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, []);
 
 	useEffect(() => {
 		resultsBarRef.current?.focus();
@@ -37,9 +48,20 @@ const ResultsBar = ({
 					expand={!(filterLabelItems?.length > 0)}
 				>
 					<span
+						aria-label={sub(
+							itemsTotal === 1
+								? Liferay.Language.get('x-result-for-x')
+								: Liferay.Language.get('x-results-for-x'),
+							[
+								itemsTotal,
+								filterLabelItems
+									?.map((item) => item.label)
+									.join(', '),
+							]
+						)}
 						className="component-text text-truncate-inline"
 						ref={resultsBarRef}
-						tabIndex={0}
+						tabIndex={-1}
 					>
 						<span className="text-truncate">
 							{sub(
@@ -64,7 +86,14 @@ const ResultsBar = ({
 						<ClayLabel
 							className="component-label tbar-label"
 							closeButtonProps={{
+								['aria-label']: sub(
+									Liferay.Language.get('remove-x-filter'),
+									item.label
+								),
 								onClick: () => {
+									searchContainerRef.current?.fire(
+										'clearFilter'
+									);
 									navigate(item.data?.removeLabelURL);
 								},
 							}}
@@ -84,10 +113,18 @@ const ResultsBar = ({
 								? Liferay.Language.get('clear-x-result-for-x')
 								: Liferay.Language.get('clear-x-results-for-x'),
 							itemsTotal,
-							searchValue
+							searchValue !== null
+								? searchValue
+								: filterLabelItems?.map((item) => item.label)
 						)}
 						className="component-link tbar-link"
-						href={clearResultsURL}
+						onClick={(event) => {
+							event.preventDefault();
+
+							searchContainerRef.current?.fire('clearFilter');
+
+							navigate(clearResultsURL);
+						}}
 					>
 						{Liferay.Language.get('clear')}
 					</ClayLink>

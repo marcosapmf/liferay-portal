@@ -83,6 +83,10 @@ CPSpecificationOptionFacetsDisplayContext cpSpecificationOptionFacetsDisplayCont
 							persistState="<%= true %>"
 							title="<%= panelTitle %>"
 						>
+							<c:if test="<%= cpSpecificationOptionsSearchFacetDisplayContext.isShowClear() %>">
+								<aui:button cssClass="btn-link btn-unstyled facet-clear-btn" onClick="Liferay.Search.FacetUtil.clearSelections(event);" value="clear" />
+							</c:if>
+
 							<aui:fieldset>
 								<ul class="list-unstyled" data-qa-id="<%= panelTitle %>">
 
@@ -136,3 +140,5 @@ CPSpecificationOptionFacetsDisplayContext cpSpecificationOptionFacetsDisplayCont
 
 	</c:otherwise>
 </c:choose>
+
+<aui:script use="liferay-search-facet-util" />

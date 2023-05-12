@@ -118,9 +118,9 @@ public class GoogleJavaScriptMinifier implements JavaScriptMinifier {
 	private static final Set<String> _ignoredErrors = new HashSet<>(
 		Arrays.asList(
 			"JSC_BAD_JSDOC_ANNOTATION", "JSC_DUPLICATE_OBJECT_KEY",
-			"JSC_GOOG_MODULE_IN_NON_MODULE", "JSC_INVALID_PARAM",
-			"JSC_JSDOC_IN_BLOCK_COMMENT", "JSC_JSDOC_MISSING_BRACES_WARNING",
-			"JSC_MISPLACED_ANNOTATION"));
+			"JSC_GOOG_MODULE_IN_NON_MODULE", "JSC_INVALID_CLOSURE_CALL_ERROR",
+			"JSC_INVALID_PARAM", "JSC_JSDOC_IN_BLOCK_COMMENT",
+			"JSC_JSDOC_MISSING_BRACES_WARNING", "JSC_MISPLACED_ANNOTATION"));
 
 	private Method _clearThreadTraceMethod;
 
@@ -131,8 +131,9 @@ public class GoogleJavaScriptMinifier implements JavaScriptMinifier {
 			DiagnosticType diagnosticType = jsError.getType();
 
 			return String.format(
-				"(%s:%d): %s [%s]", jsError.sourceName, jsError.lineNumber,
-				jsError.description, diagnosticType.key);
+				"(%s:%d): %s [%s]", jsError.getSourceName(),
+				jsError.getLineno(), jsError.getDescription(),
+				diagnosticType.key);
 		}
 
 		@Override

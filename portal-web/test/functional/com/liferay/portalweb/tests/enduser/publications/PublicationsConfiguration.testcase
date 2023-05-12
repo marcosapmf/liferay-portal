@@ -1,7 +1,6 @@
 @component-name = "portal-publications"
 definition {
 
-	property database.types = "db2,hypersonic,mariadb,mysql,oracle,postgresql,sqlserver";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Publications";
@@ -15,13 +14,13 @@ definition {
 	tearDown {
 		var testPortalInstance = PropsUtil.get("test.portal.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testPortalInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 	}
 
 	@description = "This is a use case for LPS-163875. It shouldn't be possible to enable Publications is a remote live site."
-	@priority = "4"
+	@priority = 4
 	test CannotEnablePublicationsInRemoteLiveSite {
 		property app.server.bundles.size = "1";
 		property app.server.types = "tomcat";
@@ -39,7 +38,7 @@ definition {
 
 		Staging.remoteStagingSetUpViaJson(
 			groupName = "Site Name",
-			remotePort = "9080");
+			remotePort = 9080);
 
 		ApplicationsMenu.gotoPortlet(
 			category = "Publications",
@@ -71,16 +70,16 @@ definition {
 		Alert.viewErrorMessage(errorMessage = "Staging is enabled for at least one site or asset library in the current virtual instance. Publications and staging cannot be used together.");
 	}
 
-	@priority = "5"
+	@priority = 5
 	test CannotEnablePublicationsWhenStagingIsTurnedOn {
-		var siteName = TestCase.getSiteName(siteName = "${siteName}");
+		var siteName = TestCase.getSiteName(siteName = ${siteName});
 
 		ProductMenu.gotoPortlet(
 			category = "Publishing",
 			portlet = "Staging",
 			site = "Guest");
 
-		Staging.activateStagingCP(siteName = "${siteName}");
+		Staging.activateStagingCP(siteName = ${siteName});
 
 		ApplicationsMenu.gotoPortlet(
 			category = "Publications",
@@ -95,10 +94,10 @@ definition {
 	}
 
 	@description = "Publications test in a non-root portal context."
-	@priority = "4"
+	@priority = 4
 	test CreatePublicationsInNonRootContext {
 		property app.server.types = "tomcat";
-		property database.types = "hypersonic,mariadb,mysql,oracle,postgresql,sqlserver";
+		property database.types = "mysql";
 		property portal.context = "liferay";
 		property skip.clean-app-server-deploy-dir = "true";
 		property test.assert.warning.exceptions = "true";
@@ -134,7 +133,7 @@ definition {
 		Publications.viewPublicationPublished(publicationName = "Publication Name");
 	}
 
-	@priority = "5"
+	@priority = 5
 	test EnableDisablePublicationsAndSandboxViaInstanceSettings {
 		property custom.properties = "jsonws.web.service.paths.excludes=";
 
@@ -168,7 +167,7 @@ definition {
 		var sandboxedPublicationName = Publications.generateSandboxedPublicationName(userScreenName = "usersn");
 
 		Publications.viewSandboxedPublication(
-			sandboxedPublicationName = "${sandboxedPublicationName}",
+			sandboxedPublicationName = ${sandboxedPublicationName},
 			sandboxedUser = "true");
 
 		User.logoutAndLoginPG(
@@ -184,7 +183,7 @@ definition {
 		AssertElementNotPresent(locator1 = "Publications#PUBLICATIONS_INDICATOR_BUTTON");
 	}
 
-	@priority = "5"
+	@priority = 5
 	test EnableDisablePublicationsViaPublicationsAdmin {
 		property portal.acceptance = "true";
 
@@ -210,7 +209,7 @@ definition {
 		DMDocument.viewDefault();
 	}
 
-	@priority = "5"
+	@priority = 5
 	test EnablePublicationsAndGoToOverview {
 		Publications.enablePublications();
 
@@ -226,11 +225,11 @@ definition {
 		Click(locator1 = "Publications#PUBLICATIONS_INDICATOR_BUTTON");
 
 		for (var menuItem : list "Select a Publication,Create New Publication") {
-			MenuItem.viewPresent(menuItem = "${menuItem}");
+			MenuItem.viewPresent(menuItem = ${menuItem});
 		}
 
 		for (var menuItem : list "Review Changes,Schedule,Publish") {
-			MenuItem.viewNotPresent(menuItem = "${menuItem}");
+			MenuItem.viewNotPresent(menuItem = ${menuItem});
 		}
 
 		Navigator.openURL();

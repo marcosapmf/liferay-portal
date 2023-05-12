@@ -1,0 +1,17 @@
+{
+	"dependencies": {
+		"@clayui/drop-down": "3.94.0",
+		"@liferay/frontend-data-set-web": "*",
+		"classnames": "2.3.1",
+		"frontend-js-components-web": "*",
+		"frontend-js-web": "*"
+	},
+	"name": "@liferay/frontend-data-set-views-web",
+	"private": true,
+	"scripts": {
+		"build": "liferay-npm-scripts build",
+		"checkFormat": "liferay-npm-scripts check",
+		"format": "liferay-npm-scripts fix"
+	},
+	"version": "1.0.0"
+}

@@ -19,6 +19,7 @@ import com.liferay.dynamic.data.mapping.service.DDMTemplateServiceUtil;
 import com.liferay.dynamic.data.mapping.util.comparator.TemplateIdComparator;
 import com.liferay.dynamic.data.mapping.util.comparator.TemplateModifiedDateComparator;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.search.EmptyOnClickRowChecker;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
@@ -42,7 +43,6 @@ import com.liferay.template.web.internal.util.DDMTemplateActionDropdownItemsProv
 
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Stream;
 
 /**
  * @author Lourdes Fernández Besada
@@ -66,16 +66,10 @@ public class WidgetTemplatesTemplateDisplayContext
 			return _classNameIds;
 		}
 
-		List<TemplateHandler> templateHandlers =
-			_portletDisplayTemplate.getPortletDisplayTemplateHandlers();
-
-		Stream<TemplateHandler> templateHandlersStream =
-			templateHandlers.stream();
-
-		_classNameIds = templateHandlersStream.mapToLong(
+		_classNameIds = TransformUtil.transformToLongArray(
+			_portletDisplayTemplate.getPortletDisplayTemplateHandlers(),
 			templateHandler -> PortalUtil.getClassNameId(
-				templateHandler.getClassName())
-		).toArray();
+				templateHandler.getClassName()));
 
 		return _classNameIds;
 	}

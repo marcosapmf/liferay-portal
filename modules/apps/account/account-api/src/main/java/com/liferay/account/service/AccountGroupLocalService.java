@@ -31,6 +31,7 @@ import com.liferay.portal.kernel.search.Indexable;
 import com.liferay.portal.kernel.search.IndexableType;
 import com.liferay.portal.kernel.service.BaseLocalService;
 import com.liferay.portal.kernel.service.PersistedModelLocalService;
+import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.systemevent.SystemEvent;
 import com.liferay.portal.kernel.transaction.Isolation;
 import com.liferay.portal.kernel.transaction.Propagation;
@@ -83,7 +84,8 @@ public interface AccountGroupLocalService
 
 	@Indexable(type = IndexableType.REINDEX)
 	public AccountGroup addAccountGroup(
-			long userId, String description, String name)
+			long userId, String description, String name,
+			ServiceContext serviceContext)
 		throws PortalException;
 
 	public AccountGroup checkGuestAccountGroup(long companyId)
@@ -286,6 +288,10 @@ public interface AccountGroupLocalService
 		OrderByComparator<AccountGroup> orderByComparator);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<AccountGroup> getAccountGroupsByAccountEntryId(
+		long accountEntryId, int start, int end);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<AccountGroup> getAccountGroupsByAccountGroupId(
 		long[] accountGroupIds);
 
@@ -302,6 +308,9 @@ public interface AccountGroupLocalService
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public long getAccountGroupsCount(long companyId, String name);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int getAccountGroupsCountByAccountEntryId(long accountEntryId);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public ActionableDynamicQuery getActionableDynamicQuery();
@@ -359,7 +368,8 @@ public interface AccountGroupLocalService
 
 	@Indexable(type = IndexableType.REINDEX)
 	public AccountGroup updateAccountGroup(
-			long accountGroupId, String description, String name)
+			long accountGroupId, String description, String name,
+			ServiceContext serviceContext)
 		throws PortalException;
 
 	@Indexable(type = IndexableType.REINDEX)

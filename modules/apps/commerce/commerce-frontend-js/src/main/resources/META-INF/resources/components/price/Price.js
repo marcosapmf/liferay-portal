@@ -48,21 +48,14 @@ function Price({
 	const updatePrice = ({cpInstance}) =>
 		setActivePrice((currentPrice) => ({
 			...currentPrice,
-			...adaptLegacyPriceModel(cpInstance.prices),
+			...adaptLegacyPriceModel(cpInstance.price),
 		}));
 
 	useEffect(() => {
-		if (namespace) {
-			Liferay.on(`${namespace}${CP_INSTANCE_CHANGED}`, updatePrice);
-		}
+		Liferay.on(`${namespace}${CP_INSTANCE_CHANGED}`, updatePrice);
 
 		return () => {
-			if (namespace) {
-				Liferay.detach(
-					`${namespace}${CP_INSTANCE_CHANGED}`,
-					updatePrice
-				);
-			}
+			Liferay.detach(`${namespace}${CP_INSTANCE_CHANGED}`, updatePrice);
 		};
 	}, [namespace]);
 

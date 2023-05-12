@@ -117,8 +117,8 @@ public class JournalArticleCacheModel
 		sb.append(version);
 		sb.append(", urlTitle=");
 		sb.append(urlTitle);
-		sb.append(", DDMStructureKey=");
-		sb.append(DDMStructureKey);
+		sb.append(", DDMStructureId=");
+		sb.append(DDMStructureId);
 		sb.append(", DDMTemplateKey=");
 		sb.append(DDMTemplateKey);
 		sb.append(", defaultLanguageId=");
@@ -229,12 +229,7 @@ public class JournalArticleCacheModel
 			journalArticleImpl.setUrlTitle(urlTitle);
 		}
 
-		if (DDMStructureKey == null) {
-			journalArticleImpl.setDDMStructureKey("");
-		}
-		else {
-			journalArticleImpl.setDDMStructureKey(DDMStructureKey);
-		}
+		journalArticleImpl.setDDMStructureId(DDMStructureId);
 
 		if (DDMTemplateKey == null) {
 			journalArticleImpl.setDDMTemplateKey("");
@@ -349,7 +344,8 @@ public class JournalArticleCacheModel
 
 		version = objectInput.readDouble();
 		urlTitle = objectInput.readUTF();
-		DDMStructureKey = objectInput.readUTF();
+
+		DDMStructureId = objectInput.readLong();
 		DDMTemplateKey = objectInput.readUTF();
 		defaultLanguageId = objectInput.readUTF();
 		layoutUuid = objectInput.readUTF();
@@ -441,12 +437,7 @@ public class JournalArticleCacheModel
 			objectOutput.writeUTF(urlTitle);
 		}
 
-		if (DDMStructureKey == null) {
-			objectOutput.writeUTF("");
-		}
-		else {
-			objectOutput.writeUTF(DDMStructureKey);
-		}
+		objectOutput.writeLong(DDMStructureId);
 
 		if (DDMTemplateKey == null) {
 			objectOutput.writeUTF("");
@@ -521,7 +512,7 @@ public class JournalArticleCacheModel
 	public String articleId;
 	public double version;
 	public String urlTitle;
-	public String DDMStructureKey;
+	public long DDMStructureId;
 	public String DDMTemplateKey;
 	public String defaultLanguageId;
 	public String layoutUuid;

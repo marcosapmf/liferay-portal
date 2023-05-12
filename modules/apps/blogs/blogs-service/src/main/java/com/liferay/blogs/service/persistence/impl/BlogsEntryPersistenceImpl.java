@@ -21940,7 +21940,8 @@ public class BlogsEntryPersistenceImpl
 				if (ercBlogsEntry != null) {
 					throw new DuplicateBlogsEntryExternalReferenceCodeException(
 						"Duplicate blogs entry with external reference code " +
-							blogsEntry.getExternalReferenceCode());
+							blogsEntry.getExternalReferenceCode() +
+								" and group " + blogsEntry.getGroupId());
 				}
 			}
 			else {
@@ -21949,7 +21950,8 @@ public class BlogsEntryPersistenceImpl
 
 					throw new DuplicateBlogsEntryExternalReferenceCodeException(
 						"Duplicate blogs entry with external reference code " +
-							blogsEntry.getExternalReferenceCode());
+							blogsEntry.getExternalReferenceCode() +
+								" and group " + blogsEntry.getGroupId());
 				}
 			}
 		}

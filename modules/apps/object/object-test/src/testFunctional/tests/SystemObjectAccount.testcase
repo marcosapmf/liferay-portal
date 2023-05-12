@@ -16,13 +16,13 @@ definition {
 
 		var testPortalInstance = PropsUtil.get("test.portal.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testPortalInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 	}
 
 	@description = "LPS-151765 - Verify is possible to associate each types of Accounts with Custom Object (Bussiness, Guest and Person)"
-	@priority = "5"
+	@priority = 5
 	test CanAssociateAnyTypeOfAccount {
 		property portal.acceptance = "true";
 
@@ -75,7 +75,7 @@ definition {
 			Click(locator1 = "ObjectPortlet#SEARCH_RELATIONSHIP_ENTRY");
 
 			Click(
-				key_picklistOption = "${typeLabel}",
+				key_picklistOption = ${typeLabel},
 				locator1 = "ObjectAdmin#ENTRY_PICKLIST_OPTION");
 
 			PortletEntry.save();
@@ -86,12 +86,12 @@ definition {
 		ObjectAdmin.goToCustomObject(objectName = "CustomObject");
 
 		for (var typeLabel : list "business,person,guest") {
-			ObjectPortlet.viewEntry(entry = "${typeLabel}");
+			ObjectPortlet.viewEntry(entry = ${typeLabel});
 		}
 	}
 
 	@description = "LPS-151765 - Verify if is possible to create Custom Action on System Object Account"
-	@priority = "4"
+	@priority = 4
 	test CanCreateActionOnSystemAccount {
 		ObjectAdmin.openObjectAdmin();
 
@@ -108,11 +108,11 @@ definition {
 
 		ObjectAdmin.assertObjectActions(
 			actionActive = "Yes",
-			actionName = "ActionName");
+			actionLabel = "Action Label");
 	}
 
 	@description = "LPS-151765 - Verify if is possible to create Relationship one to many on System Object Account and to relate with the Custom Object"
-	@priority = "4"
+	@priority = 4
 	test CanCreateRelationshipRelatedWithCustomObject {
 		Account.openAccountsAdmin();
 
@@ -138,12 +138,14 @@ definition {
 
 		ObjectAdmin.gotoRelationshipsTab();
 
-		CreateObject.assertRelatedObject(relatedObject = "CustomObject");
+		AssertElementPresent(
+			key_relatedObject = "CustomObject",
+			locator1 = "CreateObject#VIEW_RELATED_OBJECT_ON_RELATIONSHIP_FIELD");
 	}
 
 	@description = "LPS-151765 - Verify if Cascade deletion type of Relationship One to Many can delete and you also will delete the child related entry (if you also have permissions for it)"
 	@ignore = "true"
-	@priority = "4"
+	@priority = 4
 	test CanDeleteRelationshipWhenDeletionTypeIsCascade {
 		Account.openAccountsAdmin();
 
@@ -192,7 +194,7 @@ definition {
 
 		ObjectAdmin.addTabFieldsOnLayout(
 			blockName = "Block 1",
-			columnsNumber = "1",
+			columnsNumber = 1,
 			fieldLabelName = "Custom Field",
 			tabName = "Field Tab");
 
@@ -229,7 +231,7 @@ definition {
 	}
 
 	@description = "LPS-151765 - Verify if is not possible to delete the fields on System Object Account"
-	@priority = "5"
+	@priority = 5
 	test CannotDeleteDefaultFields {
 		property portal.acceptance = "true";
 
@@ -241,7 +243,7 @@ definition {
 
 		for (var label : list "Name,Description,Type") {
 			AssertElementNotPresent(
-				key_value = "${label}",
+				key_value = ${label},
 				locator1 = "ObjectAdmin#BODY_VERTICAL_ELLIPSIS");
 
 			AssertElementNotPresent(locator1 = "ObjectPortlet#DELETE_ENTRY_BUTTON");
@@ -250,7 +252,7 @@ definition {
 
 	@description = "LPS-151765 - Verify it's not possible to delete an entry if the relationship is one to many with prevent deletion type"
 	@ignore = "true"
-	@priority = "4"
+	@priority = 4
 	test CannotDeleteEntryWhenDeletionTypeIsPrevent {
 		Account.openAccountsAdmin();
 
@@ -298,7 +300,7 @@ definition {
 
 		ObjectAdmin.addTabFieldsOnLayout(
 			blockName = "Block 1",
-			columnsNumber = "1",
+			columnsNumber = 1,
 			fieldLabelName = "Custom Field",
 			tabName = "Field Tab");
 
@@ -332,7 +334,7 @@ definition {
 
 	@description = "LPS-151765 - Verify if Disassociate deletion type of Relationship One to Many can delete normally and nothing happens with the child"
 	@ignore = "true"
-	@priority = "4"
+	@priority = 4
 	test CannotDeleteRelationshipWhenDeletionTypeIsDisassociate {
 		Account.openAccountsAdmin();
 
@@ -381,7 +383,7 @@ definition {
 
 		ObjectAdmin.addTabFieldsOnLayout(
 			blockName = "Block 1",
-			columnsNumber = "1",
+			columnsNumber = 1,
 			fieldLabelName = "Custom Field",
 			tabName = "Field Tab");
 
@@ -422,7 +424,7 @@ definition {
 	}
 
 	@description = "LPS-151765 - Verify if is not possible to edit default fields on System Object Account"
-	@priority = "5"
+	@priority = 5
 	test CannotEditDefaultFields {
 		property portal.acceptance = "true";
 
@@ -433,24 +435,24 @@ definition {
 		ObjectAdmin.goToFieldsTab();
 
 		for (var label : list "Name,Description,Type") {
-			ObjectAdmin.goToFieldsDetails(label = "${label}");
+			ObjectAdmin.goToFieldsDetails(label = ${label});
 
-			ObjectField.assertTypeDisabled();
+			AssertElementPresent(locator1 = "ObjectField#TYPE_FIELD_DISABLED");
 
-			ObjectField.assertNameDisabled();
+			AssertElementPresent(locator1 = "ObjectField#NAME_FIELD_DISABLED");
 
 			Refresh();
 		}
 	}
 
 	@description = "LPS-151765 - Verify if is possible a Custom User to view the System Object Account, if it to have permission"
-	@priority = "4"
+	@priority = 4
 	test CanUserViewSystemAccountWhenAllowed {
 		JSONRole.addRegularRole(roleTitle = "Regular Role");
 
 		for (var resourceAction : list "ACCESS_IN_CONTROL_PANEL,VIEW") {
 			Permissions.definePermissionViaJSONAPI(
-				resourceAction = "${resourceAction}",
+				resourceAction = ${resourceAction},
 				resourceName = "com_liferay_object_web_internal_object_definitions_portlet_ObjectDefinitionsPortlet",
 				roleTitle = "Regular Role");
 		}
@@ -476,17 +478,19 @@ definition {
 
 		ObjectAdmin.openObjectAdmin();
 
-		CreateObject.assertCustomObject(labelName = "Account");
+		AssertElementPresent(
+			key_labelName = "Account",
+			locator1 = "CreateObject#OBJECT_NAME");
 	}
 
 	@description = "LPS-151765 - Verify if is possible to choose by Description Field on entries, when Title Field is Description"
-	@priority = "4"
+	@priority = 4
 	test CanViewDescriptionOnFieldEntry {
 		JSONAccountEntry.addAccountEntry(
 			accountEntryDescription = "Test Business Account Description",
 			accountEntryName = "Test Business Account",
 			accountEntryType = "Business",
-			externalReferenceCode = "02");
+			externalReferenceCode = 02);
 
 		ObjectAdmin.addObjectViaAPI(
 			labelName = "Custom Object 153528",
@@ -524,7 +528,7 @@ definition {
 	}
 
 	@description = "LPS-151765 - Verify if there are the fields Name, Description and Type as default on System Object Account"
-	@priority = "5"
+	@priority = 5
 	test CanViewFieldsLabelByDefault {
 		property portal.acceptance = "true";
 
@@ -536,13 +540,13 @@ definition {
 
 		for (var label : list "Name,Description,Type") {
 			ObjectAdmin.assertObjectField(
-				fieldLabel = "${label}",
+				fieldLabel = ${label},
 				fieldType = "Text");
 		}
 	}
 
 	@description = "LPS-151765 - Verify if the fields Name and Type are mandatory on System Object Account"
-	@priority = "4"
+	@priority = 4
 	test CanViewNameAndTypeAsMandatoryFields {
 		ObjectAdmin.openObjectAdmin();
 
@@ -551,24 +555,26 @@ definition {
 		ObjectAdmin.goToFieldsTab();
 
 		for (var label : list "Name,Type") {
-			ObjectAdmin.goToFieldsDetails(label = "${label}");
+			ObjectAdmin.goToFieldsDetails(label = ${label});
 
-			ObjectField.assertType(fieldType = "Text");
+			AssertElementPresent(
+				locator1 = "ObjectField#TYPE_FIELD",
+				value1 = "Text");
 
-			ObjectField.assertMandatory();
+			AssertChecked.assertCheckedNotVisible(locator1 = "ObjectField#MANDATORY_TOGGLE");
 
 			Refresh();
 		}
 	}
 
 	@description = "LPS-151765 - Verify if is possible to choose by Name Field on entries, when Title Field is Name"
-	@priority = "4"
+	@priority = 4
 	test CanViewNameOnFieldEntry {
 		JSONAccountEntry.addAccountEntry(
 			accountEntryDescription = "Test Business Account Description",
 			accountEntryName = "Test Business Account",
 			accountEntryType = "Business",
-			externalReferenceCode = "01");
+			externalReferenceCode = 01);
 
 		ObjectAdmin.addObjectViaAPI(
 			labelName = "Custom Object 153527",
@@ -606,7 +612,7 @@ definition {
 	}
 
 	@description = "LPS-151765 - Verify if is possible to view the Relationship by Account on Custom Object Entries with Custom View"
-	@priority = "4"
+	@priority = 4
 	test CanViewRelationshipOnCustomObjectEntriesWithCustomView {
 		task ("Create new Account (via API") {
 			JSONAccountEntry.addAccountEntry(
@@ -680,13 +686,13 @@ definition {
 	}
 
 	@description = "LPS-151765 - Verify if is possible to choose by Type Field on entries, when Title Field is Type"
-	@priority = "4"
+	@priority = 4
 	test CanViewTypeOnFieldEntry {
 		JSONAccountEntry.addAccountEntry(
 			accountEntryDescription = "Test Business Account Description",
 			accountEntryName = "Test Business Account",
 			accountEntryType = "Business",
-			externalReferenceCode = "03");
+			externalReferenceCode = 03);
 
 		ObjectAdmin.addObjectViaAPI(
 			labelName = "Custom Object 153526",
@@ -724,7 +730,7 @@ definition {
 	}
 
 	@description = "LPS-151765 - Verify if is possible to edit Title Field the System Object Account"
-	@priority = "4"
+	@priority = 4
 	test EditTitleFieldOnSystemAccount {
 		ObjectAdmin.openObjectAdmin();
 
@@ -738,11 +744,13 @@ definition {
 
 		ObjectPortlet.selectSystemObject(label = "Account");
 
-		CreateObject.assertTitleFieldIsSelected(fieldLabel = "Type");
+		AssertElementPresent(
+			locator1 = "CreateObject#TITLE_FIELD",
+			value1 = "Type");
 	}
 
 	@description = "LPS-151765 - Verify if the Widget option is disable on System Object Account"
-	@priority = "4"
+	@priority = 4
 	test WidgetButtonDisabledByDefault {
 		ObjectAdmin.openObjectAdmin();
 

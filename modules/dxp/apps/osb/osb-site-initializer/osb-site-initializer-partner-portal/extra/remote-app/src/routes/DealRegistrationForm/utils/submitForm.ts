@@ -22,10 +22,29 @@ export default async function submitForm(
 	siteURL: string
 ) {
 	formikHelpers.setSubmitting(true);
+	formikHelpers.setStatus(true);
 
-	await createDealRegistrationProxyAPI(values);
+	try {
+		await createDealRegistrationProxyAPI(values);
 
-	Liferay.Util.navigate(
-		`${siteURL}/${PRMPageRoute.DEAL_REGISTRATION_LISTING}`
-	);
+		Liferay.Util.navigate(
+			`${siteURL}/${PRMPageRoute.DEAL_REGISTRATION_LISTING}`
+		);
+
+		Liferay.Util.openToast({
+			message: 'Deal successfully registered!',
+			title: 'Success',
+			type: 'success',
+		});
+	}
+	catch (error: unknown) {
+		formikHelpers.setSubmitting(false);
+		formikHelpers.setStatus(false);
+
+		Liferay.Util.openToast({
+			message: 'Deal can not be registered.',
+			title: 'Error',
+			type: 'danger',
+		});
+	}
 }

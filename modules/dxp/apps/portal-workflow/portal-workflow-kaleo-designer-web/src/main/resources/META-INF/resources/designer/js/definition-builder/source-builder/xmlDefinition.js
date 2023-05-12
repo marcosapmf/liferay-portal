@@ -88,6 +88,10 @@ XMLDefinition.prototype = {
 						key: 'scriptLanguage',
 						locator: 'script-language',
 					},
+					{
+						key: 'status',
+						locator: 'status',
+					},
 				],
 				resultListLocator: tagName || 'action',
 			},
@@ -362,7 +366,6 @@ XMLDefinition.prototype = {
 		const schema = {
 			resultFields: [
 				'description',
-				'id',
 				'initial',
 				{
 					key: 'labels',

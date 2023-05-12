@@ -18,13 +18,12 @@ import Container from '../../../components/Layout/Container';
 import ListView, {ListViewProps} from '../../../components/ListView';
 import {TableProps} from '../../../components/Table';
 import {ListViewContextProviderProps} from '../../../context/ListViewContext';
+import SearchBuilder from '../../../core/SearchBuilder';
 import {FormModal} from '../../../hooks/useFormModal';
 import i18n from '../../../i18n';
-import {filters} from '../../../schema/filter';
-import {testrayCaseRest} from '../../../services/rest';
+import {testrayCaseImpl} from '../../../services/rest';
 import {Action} from '../../../types';
 import dayjs from '../../../util/date';
-import {searchUtil} from '../../../util/search';
 import useCaseActions from './useCaseActions';
 
 type CaseListViewProps = {
@@ -54,10 +53,10 @@ const CaseListView: React.FC<CaseListViewProps> = ({
 			forceRefetch={formModal?.forceRefetch}
 			managementToolbarProps={{
 				addButton: () => navigate('create', {state: {back: pathname}}),
-				filterFields: filters.case as any,
+				filterSchema: 'cases',
 				title: i18n.translate('cases'),
 			}}
-			resource={testrayCaseRest.resource}
+			resource={testrayCaseImpl.resource}
 			tableProps={{
 				actions,
 				columns: [
@@ -100,13 +99,18 @@ const CaseListView: React.FC<CaseListViewProps> = ({
 						render: (component) => component?.name,
 						value: i18n.translate('component'),
 					},
+					{
+						key: 'description',
+						render: (description) => description,
+						value: i18n.translate('description'),
+					},
 					{key: 'issues', value: i18n.translate('issues')},
 				],
 				navigateTo: ({id}) => id?.toString(),
 				...tableProps,
 			}}
 			transformData={(response) =>
-				testrayCaseRest.transformDataFromList(response)
+				testrayCaseImpl.transformDataFromList(response)
 			}
 			variables={variables}
 			{...listViewProps}
@@ -129,13 +133,14 @@ const Cases = () => {
 							caseType: false,
 							dateCreated: false,
 							dateModified: false,
+							description: false,
 							issues: false,
 							team: false,
 						},
 					},
 				}}
 				variables={{
-					filter: searchUtil.eq('projectId', projectId as string),
+					filter: SearchBuilder.eq('projectId', projectId as string),
 				}}
 			/>
 		</Container>

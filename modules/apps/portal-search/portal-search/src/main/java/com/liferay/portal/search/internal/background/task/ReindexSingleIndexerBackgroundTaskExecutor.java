@@ -20,6 +20,7 @@ import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.backgroundtask.BackgroundTask;
 import com.liferay.portal.kernel.backgroundtask.BackgroundTaskExecutor;
 import com.liferay.portal.kernel.backgroundtask.constants.BackgroundTaskConstants;
+import com.liferay.portal.kernel.change.tracking.sql.CTSQLModeThreadLocal;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.CompanyConstants;
@@ -94,7 +95,8 @@ public class ReindexSingleIndexerBackgroundTaskExecutor
 	}
 
 	@Override
-	protected void reindex(String className, long[] companyIds)
+	protected void reindex(
+			String className, long[] companyIds, String executionMode)
 		throws Exception {
 
 		Indexer<?> indexer = indexerRegistry.getIndexer(className);
@@ -125,7 +127,13 @@ public class ReindexSingleIndexerBackgroundTaskExecutor
 						" for class name ", className));
 			}
 
+			CTSQLModeThreadLocal.CTSQLMode ctSQLMode =
+				CTSQLModeThreadLocal.getCTSQLMode();
+
 			try {
+				CTSQLModeThreadLocal.setCTSQLModeWithSafeCloseable(
+					CTSQLModeThreadLocal.CTSQLMode.CT_ALL);
+
 				searchEngine.initialize(companyId);
 
 				indexWriterHelper.deleteEntityDocuments(
@@ -137,6 +145,8 @@ public class ReindexSingleIndexerBackgroundTaskExecutor
 				_log.error(exception);
 			}
 			finally {
+				CTSQLModeThreadLocal.setCTSQLModeWithSafeCloseable(ctSQLMode);
+
 				reindexStatusMessageSender.sendStatusMessage(
 					ReindexBackgroundTaskConstants.SINGLE_END, companyId,
 					companyIds);

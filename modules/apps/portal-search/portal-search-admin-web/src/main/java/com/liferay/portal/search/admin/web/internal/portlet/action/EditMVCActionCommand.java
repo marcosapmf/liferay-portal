@@ -14,11 +14,9 @@
 
 package com.liferay.portal.search.admin.web.internal.portlet.action;
 
-import com.liferay.osgi.service.tracker.collections.map.ServiceReferenceMapperFactory;
-import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMap;
-import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMapFactory;
 import com.liferay.portal.instances.service.PortalInstancesLocalService;
 import com.liferay.portal.kernel.backgroundtask.constants.BackgroundTaskConstants;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.messaging.Destination;
 import com.liferay.portal.kernel.messaging.DestinationNames;
 import com.liferay.portal.kernel.messaging.MessageBus;
@@ -26,6 +24,7 @@ import com.liferay.portal.kernel.messaging.MessageListener;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.search.IndexWriterHelper;
+import com.liferay.portal.kernel.search.background.task.ReindexBackgroundTaskConstants;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.servlet.SessionErrors;
@@ -38,6 +37,7 @@ import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.uuid.PortalUUID;
 import com.liferay.portal.search.admin.web.internal.constants.SearchAdminPortletKeys;
+import com.liferay.portal.search.admin.web.internal.reindexer.IndexReindexerRegistry;
 import com.liferay.portal.search.admin.web.internal.util.DictionaryReindexer;
 import com.liferay.portal.search.spi.reindexer.IndexReindexer;
 
@@ -52,10 +52,7 @@ import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
 import javax.portlet.PortletSession;
 
-import org.osgi.framework.BundleContext;
-import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -112,29 +109,13 @@ public class EditMVCActionCommand extends BaseMVCActionCommand {
 			StringUtil.merge(
 				ParamUtil.getLongValues(actionRequest, "companyIds")));
 		redirect = HttpComponentsUtil.setParameter(
+			redirect, actionResponse.getNamespace() + "executionMode",
+			ParamUtil.getString(actionRequest, "executionMode"));
+		redirect = HttpComponentsUtil.setParameter(
 			redirect, actionResponse.getNamespace() + "scope",
 			ParamUtil.getString(actionRequest, "scope"));
 
 		sendRedirect(actionRequest, actionResponse, redirect);
-	}
-
-	@Activate
-	protected void activate(BundleContext bundleContext) {
-		_serviceTrackerMap = ServiceTrackerMapFactory.openSingleValueMap(
-			bundleContext, IndexReindexer.class, null,
-			ServiceReferenceMapperFactory.create(
-				bundleContext,
-				(indexReindexer, emitter) -> {
-					Class<? extends IndexReindexer> clazz =
-						indexReindexer.getClass();
-
-					emitter.emit(clazz.getName());
-				}));
-	}
-
-	@Deactivate
-	protected void deactivate() {
-		_serviceTrackerMap.close();
 	}
 
 	private void _reindex(ActionRequest actionRequest) throws Exception {
@@ -145,7 +126,14 @@ public class EditMVCActionCommand extends BaseMVCActionCommand {
 			actionRequest, "companyIds");
 
 		String className = ParamUtil.getString(actionRequest, "className");
+
 		Map<String, Serializable> taskContextMap = new HashMap<>();
+
+		if (FeatureFlagManagerUtil.isEnabled("LPS-177664")) {
+			taskContextMap.put(
+				ReindexBackgroundTaskConstants.EXECUTION_MODE,
+				ParamUtil.getString(actionRequest, "executionMode"));
+		}
 
 		if (!ParamUtil.getBoolean(actionRequest, "blocking")) {
 			_indexWriterHelper.reindex(
@@ -222,8 +210,8 @@ public class EditMVCActionCommand extends BaseMVCActionCommand {
 
 		String className = ParamUtil.getString(actionRequest, "className");
 
-		IndexReindexer indexReindexer = _serviceTrackerMap.getService(
-			className);
+		IndexReindexer indexReindexer =
+			_indexReindexerRegistry.getIndexReindexer(className);
 
 		indexReindexer.reindex(
 			ParamUtil.getLongValues(actionRequest, "companyIds"));
@@ -232,11 +220,16 @@ public class EditMVCActionCommand extends BaseMVCActionCommand {
 	private void _reindexIndexReindexers(ActionRequest actionRequest)
 		throws Exception {
 
-		for (IndexReindexer indexReindexer : _serviceTrackerMap.values()) {
+		for (IndexReindexer indexReindexer :
+				_indexReindexerRegistry.getIndexReindexers()) {
+
 			indexReindexer.reindex(
 				ParamUtil.getLongValues(actionRequest, "companyIds"));
 		}
 	}
+
+	@Reference
+	private IndexReindexerRegistry _indexReindexerRegistry;
 
 	@Reference
 	private IndexWriterHelper _indexWriterHelper;
@@ -249,7 +242,5 @@ public class EditMVCActionCommand extends BaseMVCActionCommand {
 
 	@Reference
 	private PortalUUID _portalUUID;
-
-	private ServiceTrackerMap<String, IndexReindexer> _serviceTrackerMap;
 
 }

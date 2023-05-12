@@ -22,8 +22,8 @@ import com.liferay.portal.events.EventsProcessorUtil;
 import com.liferay.portal.json.JSONObjectImpl;
 import com.liferay.portal.kernel.events.ActionException;
 import com.liferay.portal.kernel.json.JSONArray;
-import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.servlet.ServletResponseUtil;
@@ -36,8 +36,6 @@ import java.io.IOException;
 
 import java.util.Collections;
 import java.util.Map;
-import java.util.Set;
-import java.util.stream.Stream;
 
 import javax.servlet.Servlet;
 import javax.servlet.ServletException;
@@ -95,25 +93,22 @@ public class DDMFormFieldTypesServlet extends HttpServlet {
 			HttpServletResponse httpServletResponse)
 		throws IOException {
 
-		JSONArray fieldTypesJSONArray = _jsonFactory.createJSONArray();
-
-		Set<String> ddmFormFieldTypeNames =
-			_ddmFormFieldTypeServicesRegistry.getDDMFormFieldTypeNames();
-
-		Stream<String> stream = ddmFormFieldTypeNames.stream();
-
-		stream.map(
-			ddmFormFieldTypeName -> _getFieldTypeMetadataJSONObject(
-				ddmFormFieldTypeName, Collections.emptyMap())
-		).forEach(
-			fieldTypesJSONArray::put
-		);
-
 		httpServletResponse.setContentType(ContentTypes.APPLICATION_JSON);
 		httpServletResponse.setStatus(HttpServletResponse.SC_OK);
 
-		ServletResponseUtil.write(
-			httpServletResponse, fieldTypesJSONArray.toString());
+		JSONArray jsonArray = null;
+
+		try {
+			jsonArray = JSONUtil.toJSONArray(
+				_ddmFormFieldTypeServicesRegistry.getDDMFormFieldTypeNames(),
+				ddmFormFieldTypeName -> _getFieldTypeMetadataJSONObject(
+					ddmFormFieldTypeName, Collections.emptyMap()));
+		}
+		catch (Exception exception) {
+			throw new RuntimeException(exception);
+		}
+
+		ServletResponseUtil.write(httpServletResponse, jsonArray.toString());
 	}
 
 	@Reference
@@ -160,8 +155,5 @@ public class DDMFormFieldTypesServlet extends HttpServlet {
 
 	@Reference
 	private DDMFormFieldTypeServicesRegistry _ddmFormFieldTypeServicesRegistry;
-
-	@Reference
-	private JSONFactory _jsonFactory;
 
 }

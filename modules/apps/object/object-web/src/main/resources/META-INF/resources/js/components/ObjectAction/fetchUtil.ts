@@ -12,18 +12,13 @@
  * details.
  */
 
-import {ClaySelect} from '@clayui/form';
-import {API} from '@liferay/object-js-components-web';
+import {API, getLocalizableLabel} from '@liferay/object-js-components-web';
 
-export type ObjectsOptionsList = Array<
-	(
-		| React.ComponentProps<typeof ClaySelect.Option>
-		| React.ComponentProps<typeof ClaySelect.OptGroup>
-	) & {
-		options?: Array<React.ComponentProps<typeof ClaySelect.Option>>;
-		type?: 'group';
-	}
->;
+export type ObjectsOptionsList = {
+	label: string;
+	options: LabelValueObject[];
+	type: string;
+}[];
 
 function fillSelect(
 	label: string,
@@ -35,37 +30,37 @@ function fillSelect(
 	}
 }
 
-export async function fetchObjectDefinitions(
-	objectDefinitionsRelationshipsURL: string,
-	values: Partial<ObjectAction>,
-	setRelationships: (values: ObjectDefinitionsRelationship[]) => void,
-	setObjectOptions: (values: ObjectsOptionsList) => void
-) {
-	const relationships = await API.fetchJSON<ObjectDefinitionsRelationship[]>(
-		objectDefinitionsRelationshipsURL
-	);
+interface FetchObjectDefinitionsProps {
+	objectDefinitionsRelationshipsURL: string;
+	setAddObjectEntryDefinitions: (values: AddObjectEntryDefinitions[]) => void;
+	setObjectOptions: (values: ObjectsOptionsList) => void;
+	setSelectedObjectDefinition?: (value: string) => void;
+	values: Partial<ObjectAction>;
+}
+
+export async function fetchObjectDefinitions({
+	objectDefinitionsRelationshipsURL,
+	setAddObjectEntryDefinitions,
+	setObjectOptions,
+	setSelectedObjectDefinition,
+	values,
+}: FetchObjectDefinitionsProps) {
+	const addObjectEntryDefinitions = await API.fetchJSON<
+		AddObjectEntryDefinitions[]
+	>(objectDefinitionsRelationshipsURL);
 
 	const relatedObjects: LabelValueObject[] = [];
 	const unrelatedObjects: LabelValueObject[] = [];
 
-	relationships?.forEach((object) => {
-		const {externalReferenceCode, id, label} = object;
+	addObjectEntryDefinitions?.forEach((object) => {
+		const {externalReferenceCode, id, label, system} = object;
 
 		const target = object.related ? relatedObjects : unrelatedObjects;
 
-		target.push({label, value: `${externalReferenceCode},${id}`});
+		target.push({label, value: `${externalReferenceCode},${id},${system}`});
 	});
 
 	const objectsOptionsList: ObjectsOptionsList = [];
-
-	if (!values.parameters?.objectDefinitionExternalReferenceCode) {
-		objectsOptionsList.push({
-			disabled: true,
-			label: Liferay.Language.get('choose-an-object'),
-			selected: true,
-			value: '',
-		});
-	}
 
 	fillSelect(
 		Liferay.Language.get('related-objects'),
@@ -79,30 +74,50 @@ export async function fetchObjectDefinitions(
 		objectsOptionsList
 	);
 
+	const {
+		objectDefinitionExternalReferenceCode,
+	} = values.parameters as ObjectActionParameters;
+
+	if (setSelectedObjectDefinition && objectDefinitionExternalReferenceCode) {
+		const {
+			defaultLanguageId,
+			label,
+			name,
+		} = await API.getObjectDefinitionByExternalReferenceCode(
+			objectDefinitionExternalReferenceCode
+		);
+
+		setSelectedObjectDefinition(
+			getLocalizableLabel(defaultLanguageId, label, name)
+		);
+	}
+
 	setObjectOptions(objectsOptionsList);
-	setRelationships(relationships);
+	setAddObjectEntryDefinitions(addObjectEntryDefinitions);
 }
 
 export async function fetchObjectDefinitionFields(
 	objectDefinitionId: number,
 	objectDefinitionExternalReferenceCode: string,
+	systemObject: boolean,
 	values: Partial<ObjectAction>,
-	isValidField: ({
-		businessType,
-		objectFieldSettings,
-		system,
-	}: ObjectField) => void,
+	isValidField: (
+		{businessType, name, objectFieldSettings, system}: ObjectField,
+		isObjectActionSystem?: boolean
+	) => boolean,
 	setCurrentObjectDefinitionFields: (values: ObjectField[]) => void,
 	setValues: (values: Partial<ObjectAction>) => void
 ) {
 	let definitionId = objectDefinitionId;
 	let externalReferenceCode = objectDefinitionExternalReferenceCode;
-	let validFields: ObjectField[] = [];
+	let isSystemObject = systemObject;
+	const validFields: ObjectField[] = [];
 
 	if (values.objectActionExecutorKey === 'add-object-entry') {
 		definitionId = values?.parameters?.objectDefinitionId as number;
 		externalReferenceCode = values.parameters
 			?.objectDefinitionExternalReferenceCode as string;
+		isSystemObject = !!values?.parameters?.system;
 	}
 
 	if (externalReferenceCode) {
@@ -110,7 +125,11 @@ export async function fetchObjectDefinitionFields(
 			externalReferenceCode
 		);
 
-		validFields = items.filter(isValidField);
+		items.forEach((field) => {
+			if (isValidField(field, isSystemObject)) {
+				validFields.push(field);
+			}
+		});
 	}
 
 	setCurrentObjectDefinitionFields(validFields);

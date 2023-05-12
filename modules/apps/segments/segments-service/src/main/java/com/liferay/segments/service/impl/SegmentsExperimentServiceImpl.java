@@ -29,11 +29,9 @@ import com.liferay.segments.model.SegmentsExperiment;
 import com.liferay.segments.service.SegmentsExperienceLocalService;
 import com.liferay.segments.service.base.SegmentsExperimentServiceBaseImpl;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -102,8 +100,8 @@ public class SegmentsExperimentServiceImpl
 			int[] statuses)
 		throws PortalException {
 
-		LayoutPermissionUtil.check(
-			getPermissionChecker(), classPK, ActionKeys.UPDATE);
+		LayoutPermissionUtil.checkLayoutRestrictedUpdatePermission(
+			getPermissionChecker(), classPK);
 
 		return segmentsExperimentLocalService.fetchSegmentsExperiment(
 			segmentsExperienceId, classNameId, classPK, statuses);
@@ -134,8 +132,8 @@ public class SegmentsExperimentServiceImpl
 			int[] statuses, int start, int end)
 		throws PortalException {
 
-		LayoutPermissionUtil.check(
-			getPermissionChecker(), classPK, ActionKeys.UPDATE);
+		LayoutPermissionUtil.checkLayoutRestrictedUpdatePermission(
+			getPermissionChecker(), classPK);
 
 		return segmentsExperimentLocalService.
 			getSegmentsExperienceSegmentsExperiments(
@@ -220,20 +218,17 @@ public class SegmentsExperimentServiceImpl
 
 		_checkPermissions(segmentsExperiment, ActionKeys.UPDATE);
 
-		Set<Map.Entry<String, Double>> segmentsExperienceKeySplits =
-			segmentsExperienceKeySplitMap.entrySet();
+		Map<Long, Double> segmentsExperienceIdSplitMap = new HashMap<>();
 
-		Stream<Map.Entry<String, Double>> segmentsExperienceKeySplitsStream =
-			segmentsExperienceKeySplits.stream();
+		for (Map.Entry<String, Double> entry :
+				segmentsExperienceKeySplitMap.entrySet()) {
 
-		Map<Long, Double> segmentsExperienceIdSplitMap =
-			segmentsExperienceKeySplitsStream.collect(
-				Collectors.toMap(
-					entry -> _getSegmentsExperienceId(
-						segmentsExperiment.getGroupId(), entry.getKey(),
-						segmentsExperiment.getClassNameId(),
-						segmentsExperiment.getClassPK()),
-					Map.Entry::getValue));
+			segmentsExperienceIdSplitMap.put(
+				_getSegmentsExperienceId(
+					segmentsExperiment.getGroupId(), entry.getKey(),
+					segmentsExperiment.getClassPK()),
+				entry.getValue());
+		}
 
 		return segmentsExperimentLocalService.runSegmentsExperiment(
 			segmentsExperiment.getSegmentsExperimentId(), confidenceLevel,
@@ -319,7 +314,6 @@ public class SegmentsExperimentServiceImpl
 			segmentsExperiment.getSegmentsExperimentId(),
 			_getSegmentsExperienceId(
 				segmentsExperiment.getGroupId(), winnerSegmentsExperienceKey,
-				segmentsExperiment.getClassNameId(),
 				segmentsExperiment.getClassPK()),
 			status);
 	}
@@ -340,13 +334,12 @@ public class SegmentsExperimentServiceImpl
 	}
 
 	private long _getSegmentsExperienceId(
-		long groupId, String segmentsExperienceKey, long classNameId,
-		long classPK) {
+		long groupId, String segmentsExperienceKey, long classPK) {
 
 		if (Validator.isNotNull(segmentsExperienceKey)) {
 			SegmentsExperience segmentsExperience =
 				_segmentsExperienceLocalService.fetchSegmentsExperience(
-					groupId, segmentsExperienceKey, classNameId, classPK);
+					groupId, segmentsExperienceKey, classPK);
 
 			if (segmentsExperience != null) {
 				return segmentsExperience.getSegmentsExperienceId();

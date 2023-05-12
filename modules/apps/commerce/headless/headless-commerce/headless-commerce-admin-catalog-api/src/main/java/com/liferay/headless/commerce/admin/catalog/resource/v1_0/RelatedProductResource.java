@@ -25,6 +25,7 @@ import com.liferay.portal.odata.filter.ExpressionConvert;
 import com.liferay.portal.odata.filter.FilterParserProvider;
 import com.liferay.portal.odata.sort.SortParserProvider;
 import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
+import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineExportTaskResource;
 import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineImportTaskResource;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
@@ -75,13 +76,12 @@ public interface RelatedProductResource {
 		throws Exception;
 
 	public Response postProductIdRelatedProductBatch(
-			Long id, String callbackURL, Object object)
+			String callbackURL, Object object)
 		throws Exception;
 
 	public Response deleteRelatedProduct(Long id) throws Exception;
 
-	public Response deleteRelatedProductBatch(
-			Long id, String callbackURL, Object object)
+	public Response deleteRelatedProductBatch(String callbackURL, Object object)
 		throws Exception;
 
 	public RelatedProduct getRelatedProduct(Long id) throws Exception;
@@ -124,6 +124,10 @@ public interface RelatedProductResource {
 	public void setRoleLocalService(RoleLocalService roleLocalService);
 
 	public void setSortParserProvider(SortParserProvider sortParserProvider);
+
+	public void setVulcanBatchEngineExportTaskResource(
+		VulcanBatchEngineExportTaskResource
+			vulcanBatchEngineExportTaskResource);
 
 	public void setVulcanBatchEngineImportTaskResource(
 		VulcanBatchEngineImportTaskResource

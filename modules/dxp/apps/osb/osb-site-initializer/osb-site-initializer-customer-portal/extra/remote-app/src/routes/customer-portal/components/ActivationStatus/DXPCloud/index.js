@@ -15,10 +15,13 @@ import {Align} from '@clayui/drop-down';
 import ClayIcon from '@clayui/icon';
 import ClayModal, {useModal} from '@clayui/modal';
 import React, {useEffect, useState} from 'react';
+
 import i18n from '../../../../../common/I18n';
+
 import {Button, ButtonDropDown} from '../../../../../common/components';
 import SetupDXPCloudForm from '../../../../../common/containers/setup-forms/SetupDXPCloudForm';
 import {useAppPropertiesContext} from '../../../../../common/contexts/AppPropertiesContext';
+import {DXPIcon} from '../../../../../common/icons/navigation-menu';
 import {
 	getAccountSubscriptionGroups,
 	getCommerceOrderItems,
@@ -95,7 +98,7 @@ const ActivationStatusDXPCloud = ({
 		setSubscriptionGroupActivationStatus,
 	] = useState(subscriptionGroupDXPCloud?.activationStatus);
 	const [, dispatch] = useCustomerPortal();
-	const {client, liferayWebDAV} = useAppPropertiesContext();
+	const {client} = useAppPropertiesContext();
 	const [hasFinishedUpdate, setHasFinishedUpdate] = useState(false);
 	const [activationStatusDate, setActivationStatusDate] = useState('');
 	const [visibleSetup, setVisibleSetup] = useState(false);
@@ -142,16 +145,23 @@ const ActivationStatusDXPCloud = ({
 	const currentActivationStatus = {
 		[STATUS_TAG_TYPE_NAMES.active]: {
 			buttonLink: (
-				<a
-					className="font-weight-semi-bold m-0 p-0 text-brand-primary text-paragraph"
-					href="https://console.liferay.cloud"
-					rel="noopener noreferrer"
-					target="_blank"
-				>
-					{i18n.translate('go-to-product-console')}
+				<>
+					<PopoverIcon
+						symbol="question-circle-full"
+						title="link-only-accessible-to-current-product-users-permissions-and-roles-are-managed-separately-within-each-product"
+					/>
 
-					<ClayIcon className="ml-1" symbol="order-arrow-right" />
-				</a>
+					<a
+						className="font-weight-semi-bold m-0 p-0 text-brand-primary text-paragraph"
+						href="https://console.liferay.cloud"
+						rel="noopener noreferrer"
+						target="_blank"
+					>
+						{i18n.translate('go-to-product-console')}
+
+						<ClayIcon className="ml-1" symbol="order-arrow-right" />
+					</a>
+				</>
 			),
 			id: STATUS_TAG_TYPES.active,
 			subtitle: (
@@ -267,7 +277,7 @@ const ActivationStatusDXPCloud = ({
 			<ActivationStatusLayout
 				activationStatus={activationStatus}
 				activationStatusDate={activationStatusDate}
-				iconPath={`${liferayWebDAV}/assets/navigation-menu/dxp_icon.svg`}
+				iconPath={DXPIcon}
 				project={project}
 				subscriptionGroupActivationStatus={
 					subscriptionGroupActivationStatus

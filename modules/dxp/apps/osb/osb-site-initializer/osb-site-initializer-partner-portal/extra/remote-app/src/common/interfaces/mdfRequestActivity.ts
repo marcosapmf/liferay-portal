@@ -16,10 +16,15 @@ import MDFRequestBudget from './mdfRequestBudget';
 
 export default interface MDFRequestActivity extends Partial<LiferayObject> {
 	activityDescription?: MDFRequestActivityDescription;
+	activityStatus?: LiferayPicklist;
 	budgets: MDFRequestBudget[];
+	currency?: LiferayPicklist;
 	endDate?: string;
+	externalReferenceCode?: string;
+	externalReferenceCodeSF?: string;
 	mdfRequestAmount: number;
 	name: string;
+	removed?: boolean;
 	startDate?: string;
 	tactic: LiferayPicklist;
 	totalCostOfExpense: number;

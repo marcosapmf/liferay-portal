@@ -28,8 +28,8 @@ import com.liferay.object.model.ObjectRelationship;
 import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.object.service.ObjectEntryLocalService;
 import com.liferay.object.service.ObjectRelationshipLocalService;
-import com.liferay.object.system.SystemObjectDefinitionMetadata;
-import com.liferay.object.system.SystemObjectDefinitionMetadataRegistry;
+import com.liferay.object.system.SystemObjectDefinitionManager;
+import com.liferay.object.system.SystemObjectDefinitionManagerRegistry;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.model.BaseModel;
@@ -52,9 +52,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = "object.field.business.type.key=" + ObjectFieldConstants.BUSINESS_TYPE_RELATIONSHIP,
-	service = {
-		ObjectFieldBusinessType.class, RelationshipObjectFieldBusinessType.class
-	}
+	service = ObjectFieldBusinessType.class
 )
 public class RelationshipObjectFieldBusinessType
 	implements ObjectFieldBusinessType {
@@ -107,7 +105,9 @@ public class RelationshipObjectFieldBusinessType
 	}
 
 	@Override
-	public Set<String> getRequiredObjectFieldSettingsNames() {
+	public Set<String> getRequiredObjectFieldSettingsNames(
+		ObjectField objectField) {
+
 		return SetUtil.fromArray(
 			ObjectFieldSettingConstants.NAME_OBJECT_DEFINITION_1_SHORT_NAME,
 			ObjectFieldSettingConstants.
@@ -152,14 +152,14 @@ public class RelationshipObjectFieldBusinessType
 			_objectDefinitionLocalService.getObjectDefinition(
 				objectRelationship.getObjectDefinitionId1());
 
-		if (objectDefinition.isSystem()) {
-			SystemObjectDefinitionMetadata systemObjectDefinitionMetadata =
-				_systemObjectDefinitionMetadataRegistry.
-					getSystemObjectDefinitionMetadata(
+		if (objectDefinition.isUnmodifiableSystemObject()) {
+			SystemObjectDefinitionManager systemObjectDefinitionManager =
+				_systemObjectDefinitionManagerRegistry.
+					getSystemObjectDefinitionManager(
 						objectDefinition.getName());
 
 			BaseModel<?> baseModel =
-				systemObjectDefinitionMetadata.
+				systemObjectDefinitionManager.
 					getBaseModelByExternalReferenceCode(
 						externalReferenceCode, objectDefinition.getCompanyId());
 
@@ -190,7 +190,7 @@ public class RelationshipObjectFieldBusinessType
 	private ObjectRelationshipLocalService _objectRelationshipLocalService;
 
 	@Reference
-	private SystemObjectDefinitionMetadataRegistry
-		_systemObjectDefinitionMetadataRegistry;
+	private SystemObjectDefinitionManagerRegistry
+		_systemObjectDefinitionManagerRegistry;
 
 }

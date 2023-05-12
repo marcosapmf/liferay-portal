@@ -20,18 +20,15 @@ import com.liferay.dynamic.data.mapping.expression.DDMExpressionFactory;
 import com.liferay.dynamic.data.mapping.form.field.type.constants.DDMFormFieldTypeConstants;
 import com.liferay.object.constants.ObjectFieldConstants;
 import com.liferay.object.field.business.type.ObjectFieldBusinessType;
-import com.liferay.object.field.render.ObjectFieldRenderingContext;
 import com.liferay.object.model.ObjectField;
 import com.liferay.object.model.ObjectFieldSetting;
-import com.liferay.object.service.ObjectFieldSettingLocalService;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.scripting.ScriptingException;
-import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.SetUtil;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.vulcan.extension.PropertyDefinition;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -45,11 +42,10 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = "object.field.business.type.key=" + ObjectFieldConstants.BUSINESS_TYPE_FORMULA,
-	service = {
-		FormulaObjectFieldBusinessType.class, ObjectFieldBusinessType.class
-	}
+	service = ObjectFieldBusinessType.class
 )
-public class FormulaObjectFieldBusinessType implements ObjectFieldBusinessType {
+public class FormulaObjectFieldBusinessType
+	extends BaseObjectFieldBusinessType {
 
 	@Override
 	public Set<String> getAllowedObjectFieldSettingsNames() {
@@ -84,50 +80,31 @@ public class FormulaObjectFieldBusinessType implements ObjectFieldBusinessType {
 	}
 
 	@Override
-	public Map<String, Object> getProperties(
-			ObjectField objectField,
-			ObjectFieldRenderingContext objectFieldRenderingContext)
-		throws PortalException {
-
-		Map<String, Object> properties = new HashMap<>();
-
-		ListUtil.isNotEmptyForEach(
-			_objectFieldSettingLocalService.getObjectFieldObjectFieldSettings(
-				objectField.getObjectFieldId()),
-			objectFieldSetting -> properties.put(
-				objectFieldSetting.getName(), objectFieldSetting.getValue()));
-
-		return properties;
-	}
-
-	@Override
 	public PropertyDefinition.PropertyType getPropertyType() {
 		return PropertyDefinition.PropertyType.TEXT;
 	}
 
 	@Override
-	public Set<String> getRequiredObjectFieldSettingsNames() {
+	public Set<String> getRequiredObjectFieldSettingsNames(
+		ObjectField objectField) {
+
 		return SetUtil.fromArray("output");
 	}
 
 	@Override
 	public void validateObjectFieldSettings(
-			long objectDefinitionId, String objectFieldName,
+			ObjectField objectField,
 			List<ObjectFieldSetting> objectFieldSettings)
 		throws PortalException {
 
-		ObjectFieldBusinessType.super.validateObjectFieldSettings(
-			objectDefinitionId, objectFieldName, objectFieldSettings);
+		super.validateObjectFieldSettings(objectField, objectFieldSettings);
 
-		Map<String, String> objectFieldSettingsValues = new HashMap<>();
-
-		objectFieldSettings.forEach(
-			objectFieldSetting -> objectFieldSettingsValues.put(
-				objectFieldSetting.getName(), objectFieldSetting.getValue()));
+		Map<String, String> objectFieldSettingsValues =
+			getObjectFieldSettingsValues(objectFieldSettings);
 
 		String script = objectFieldSettingsValues.get("script");
 
-		if (script == null) {
+		if (Validator.isNull(script)) {
 			return;
 		}
 
@@ -147,8 +124,5 @@ public class FormulaObjectFieldBusinessType implements ObjectFieldBusinessType {
 
 	@Reference
 	private Language _language;
-
-	@Reference
-	private ObjectFieldSettingLocalService _objectFieldSettingLocalService;
 
 }

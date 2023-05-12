@@ -28,8 +28,8 @@ import com.liferay.object.service.ObjectEntryLocalService;
 import com.liferay.object.service.ObjectFieldLocalService;
 import com.liferay.object.service.ObjectRelationshipLocalService;
 import com.liferay.object.system.JaxRsApplicationDescriptor;
-import com.liferay.object.system.SystemObjectDefinitionMetadata;
-import com.liferay.object.system.SystemObjectDefinitionMetadataRegistry;
+import com.liferay.object.system.SystemObjectDefinitionManager;
+import com.liferay.object.system.SystemObjectDefinitionManagerRegistry;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.NoSuchModelException;
@@ -61,8 +61,8 @@ public class OneToManyObjectFieldFilterStrategy
 		ObjectRelationshipLocalService objectRelationshipLocalService,
 		ObjectViewFilterColumn objectViewFilterColumn,
 		PersistedModelLocalServiceRegistry persistedModelLocalServiceRegistry,
-		SystemObjectDefinitionMetadataRegistry
-			systemObjectDefinitionMetadataRegistry) {
+		SystemObjectDefinitionManagerRegistry
+			systemObjectDefinitionManagerRegistry) {
 
 		super(locale, objectViewFilterColumn);
 
@@ -74,8 +74,8 @@ public class OneToManyObjectFieldFilterStrategy
 		_objectRelationshipLocalService = objectRelationshipLocalService;
 		_persistedModelLocalServiceRegistry =
 			persistedModelLocalServiceRegistry;
-		_systemObjectDefinitionMetadataRegistry =
-			systemObjectDefinitionMetadataRegistry;
+		_systemObjectDefinitionManagerRegistry =
+			systemObjectDefinitionManagerRegistry;
 	}
 
 	@Override
@@ -102,14 +102,14 @@ public class OneToManyObjectFieldFilterStrategy
 
 		String restContextPath = null;
 
-		if (objectDefinition1.isSystem()) {
-			SystemObjectDefinitionMetadata systemObjectDefinitionMetadata =
-				_systemObjectDefinitionMetadataRegistry.
-					getSystemObjectDefinitionMetadata(
+		if (objectDefinition1.isUnmodifiableSystemObject()) {
+			SystemObjectDefinitionManager systemObjectDefinitionManager =
+				_systemObjectDefinitionManagerRegistry.
+					getSystemObjectDefinitionManager(
 						objectDefinition1.getName());
 
 			JaxRsApplicationDescriptor jaxRsApplicationDescriptor =
-				systemObjectDefinitionMetadata.getJaxRsApplicationDescriptor();
+				systemObjectDefinitionManager.getJaxRsApplicationDescriptor();
 
 			restContextPath =
 				"/o/" + jaxRsApplicationDescriptor.getRESTContextPath();
@@ -132,7 +132,7 @@ public class OneToManyObjectFieldFilterStrategy
 
 		JSONArray jsonArray = getJSONArray();
 
-		if (_objectDefinition1.isSystem()) {
+		if (_objectDefinition1.isUnmodifiableSystemObject()) {
 			for (int i = 0; i < jsonArray.length(); i++) {
 				selectionFDSFilterItems.add(
 					new SelectionFDSFilterItem(
@@ -178,7 +178,7 @@ public class OneToManyObjectFieldFilterStrategy
 
 		JSONArray jsonArray = getJSONArray();
 
-		if (_objectDefinition1.isSystem()) {
+		if (_objectDefinition1.isUnmodifiableSystemObject()) {
 			PersistedModelLocalService persistedModelLocalService =
 				_persistedModelLocalServiceRegistry.
 					getPersistedModelLocalService(
@@ -221,7 +221,7 @@ public class OneToManyObjectFieldFilterStrategy
 		_objectRelationshipLocalService;
 	private final PersistedModelLocalServiceRegistry
 		_persistedModelLocalServiceRegistry;
-	private final SystemObjectDefinitionMetadataRegistry
-		_systemObjectDefinitionMetadataRegistry;
+	private final SystemObjectDefinitionManagerRegistry
+		_systemObjectDefinitionManagerRegistry;
 
 }

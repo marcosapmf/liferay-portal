@@ -23,7 +23,6 @@ import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.util.LocalizedMapUtil;
 
 import java.util.Collections;
-import java.util.Optional;
 
 import javax.ws.rs.core.UriInfo;
 
@@ -55,42 +54,32 @@ public class TaxonomyCategoryBriefUtil {
 			long categoryId, DTOConverterContext dtoConverterContext)
 		throws Exception {
 
-		Optional<UriInfo> uriInfoOptional =
-			dtoConverterContext.getUriInfoOptional();
+		UriInfo uriInfo = dtoConverterContext.getUriInfo();
 
-		if (uriInfoOptional.map(
-				UriInfo::getQueryParameters
-			).map(
-				queryParameters -> queryParameters.getFirst("nestedFields")
-			).map(
-				nestedFields -> nestedFields.contains(
-					"embeddedTaxonomyCategory")
-			).orElse(
-				false
-			)) {
+		if (!dtoConverterContext.containsNestedFieldsValue(
+				"embeddedTaxonomyCategory")) {
 
-			DTOConverterRegistry dtoConverterRegistry =
-				dtoConverterContext.getDTOConverterRegistry();
-
-			DTOConverter<?, ?> dtoConverter =
-				dtoConverterRegistry.getDTOConverter(
-					AssetCategory.class.getName());
-
-			if (dtoConverter == null) {
-				return null;
-			}
-
-			return dtoConverter.toDTO(
-				new DefaultDTOConverterContext(
-					dtoConverterContext.isAcceptAllLanguages(),
-					Collections.emptyMap(), dtoConverterRegistry,
-					dtoConverterContext.getHttpServletRequest(), categoryId,
-					dtoConverterContext.getLocale(),
-					uriInfoOptional.orElse(null),
-					dtoConverterContext.getUser()));
+			return null;
 		}
 
-		return null;
+		DTOConverterRegistry dtoConverterRegistry =
+			dtoConverterContext.getDTOConverterRegistry();
+
+		DTOConverter<?, ?> dtoConverter = dtoConverterRegistry.getDTOConverter(
+			"Liferay.Headless.Admin.Taxonomy", AssetCategory.class.getName(),
+			"v1.0");
+
+		if (dtoConverter == null) {
+			return null;
+		}
+
+		return dtoConverter.toDTO(
+			new DefaultDTOConverterContext(
+				dtoConverterContext.isAcceptAllLanguages(),
+				Collections.emptyMap(), dtoConverterRegistry,
+				dtoConverterContext.getHttpServletRequest(), categoryId,
+				dtoConverterContext.getLocale(), uriInfo,
+				dtoConverterContext.getUser()));
 	}
 
 }

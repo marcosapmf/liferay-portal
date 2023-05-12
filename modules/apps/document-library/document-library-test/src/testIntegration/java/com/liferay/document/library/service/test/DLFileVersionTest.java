@@ -28,12 +28,14 @@ import com.liferay.document.library.kernel.service.DLAppServiceUtil;
 import com.liferay.document.library.kernel.service.DLFileEntryTypeLocalServiceUtil;
 import com.liferay.document.library.kernel.service.DLFileEntryTypeServiceUtil;
 import com.liferay.document.library.kernel.service.DLFileVersionLocalServiceUtil;
+import com.liferay.document.library.util.DLFileEntryTypeUtil;
 import com.liferay.dynamic.data.mapping.kernel.DDMForm;
 import com.liferay.dynamic.data.mapping.kernel.DDMFormFieldValue;
 import com.liferay.dynamic.data.mapping.kernel.DDMFormValues;
-import com.liferay.dynamic.data.mapping.kernel.DDMStructure;
 import com.liferay.dynamic.data.mapping.kernel.LocalizedValue;
+import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.dynamic.data.mapping.test.util.DDMStructureTestUtil;
+import com.liferay.dynamic.data.mapping.util.DDMBeanTranslator;
 import com.liferay.expando.kernel.model.ExpandoColumnConstants;
 import com.liferay.expando.kernel.model.ExpandoTable;
 import com.liferay.expando.kernel.service.ExpandoColumnLocalServiceUtil;
@@ -60,6 +62,7 @@ import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 
@@ -97,9 +100,8 @@ public class DLFileVersionTest {
 		setUpParentFolder();
 		setUpResourcePermission();
 
-		com.liferay.dynamic.data.mapping.model.DDMStructure ddmStructure =
-			DDMStructureTestUtil.addStructure(
-				_group.getGroupId(), DLFileEntryMetadata.class.getName());
+		DDMStructure ddmStructure = DDMStructureTestUtil.addStructure(
+			_group.getGroupId(), DLFileEntryMetadata.class.getName());
 
 		_dlFileEntryType = DLFileEntryTypeServiceUtil.addFileEntryType(
 			_group.getGroupId(), StringUtil.randomString(),
@@ -370,15 +372,13 @@ public class DLFileVersionTest {
 
 		serviceContext.setExpandoBridgeAttributes(expandoBridgeAttributes);
 
-		DLFileEntryType fileEntryType =
+		List<DDMStructure> ddmStructures = DLFileEntryTypeUtil.getDDMStructures(
 			DLFileEntryTypeLocalServiceUtil.getFileEntryType(
-				_dlFileEntryType.getFileEntryTypeId());
-
-		List<DDMStructure> ddmStructures = fileEntryType.getDDMStructures();
+				_dlFileEntryType.getFileEntryTypeId()));
 
 		for (DDMStructure ddmStructure : ddmStructures) {
 			DDMFormValues ddmFormValues = createDDMFormValues(
-				ddmStructure.getDDMForm());
+				_ddmBeanTranslator.translate(ddmStructure.getDDMForm()));
 
 			for (String fieldName : ddmStructure.getFieldNames()) {
 				DDMFormFieldValue ddmFormFieldValue = createDDMFormFieldValue(
@@ -409,8 +409,9 @@ public class DLFileVersionTest {
 		}
 
 		_parentFolder = DLAppServiceUtil.addFolder(
-			_group.getGroupId(), DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
-			"Test Folder", RandomTestUtil.randomString(),
+			null, _group.getGroupId(),
+			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID, "Test Folder",
+			RandomTestUtil.randomString(),
 			ServiceContextTestUtil.getServiceContext(
 				_group.getGroupId(), TestPropsValues.getUserId()));
 	}
@@ -446,10 +447,8 @@ public class DLFileVersionTest {
 			return;
 		}
 
-		DLFileEntryType fileEntryType =
-			DLFileEntryTypeLocalServiceUtil.getFileEntryType(fileEntryTypeId);
-
-		List<DDMStructure> ddmStructures = fileEntryType.getDDMStructures();
+		List<DDMStructure> ddmStructures = DLFileEntryTypeUtil.getDDMStructures(
+			DLFileEntryTypeLocalServiceUtil.getFileEntryType(fileEntryTypeId));
 
 		for (DDMStructure ddmStructure : ddmStructures) {
 			DDMFormValues ddmFormValues =
@@ -511,6 +510,9 @@ public class DLFileVersionTest {
 			_DATA_VERSION_3[i] = (byte)i;
 		}
 	}
+
+	@Inject
+	private DDMBeanTranslator _ddmBeanTranslator;
 
 	@DeleteAfterTestRun
 	private DLFileEntryType _dlFileEntryType;

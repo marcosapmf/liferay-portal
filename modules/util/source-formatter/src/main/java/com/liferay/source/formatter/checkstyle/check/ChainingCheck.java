@@ -20,6 +20,7 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.source.formatter.check.util.JavaSourceUtil;
@@ -39,13 +40,12 @@ import java.io.File;
 import java.net.URL;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * @author Hugo Huijser
@@ -351,8 +351,16 @@ public class ChainingCheck extends BaseCheck {
 			}
 		}
 
-		List<String> requiredChainingMethodNames =
-			_getRequiredChainingMethodNames(fullyQualifiedClassName);
+		List<String> requiredChainingMethodNames = null;
+
+		if (fullyQualifiedClassName.equals("org.json.JSONObject")) {
+			requiredChainingMethodNames = Arrays.asList(
+				"put", "putOnce", "putOpt");
+		}
+		else {
+			requiredChainingMethodNames = _getRequiredChainingMethodNames(
+				fullyQualifiedClassName);
+		}
 
 		if (requiredChainingMethodNames == null) {
 			return;
@@ -485,16 +493,10 @@ public class ChainingCheck extends BaseCheck {
 	private List<DetailAST> _getIdentDetailASTList(
 		DetailAST detailAST, String name) {
 
-		List<DetailAST> identDetailASTList = getAllChildTokens(
-			detailAST, true, TokenTypes.IDENT);
-
-		Stream<DetailAST> stream = identDetailASTList.stream();
-
-		return stream.filter(
-			identDetailAST -> StringUtil.equals(name, identDetailAST.getText())
-		).collect(
-			Collectors.toList()
-		);
+		return ListUtil.filter(
+			getAllChildTokens(detailAST, true, TokenTypes.IDENT),
+			identDetailAST -> StringUtil.equals(
+				name, identDetailAST.getText()));
 	}
 
 	private JavaClass _getJavaClass(String requiredChainingClassFileName) {

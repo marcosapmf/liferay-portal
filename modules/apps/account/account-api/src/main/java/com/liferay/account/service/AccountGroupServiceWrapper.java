@@ -36,10 +36,12 @@ public class AccountGroupServiceWrapper
 
 	@Override
 	public com.liferay.account.model.AccountGroup addAccountGroup(
-			long userId, String description, String name)
+			long userId, String description, String name,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
-		return _accountGroupService.addAccountGroup(userId, description, name);
+		return _accountGroupService.addAccountGroup(
+			userId, description, name, serviceContext);
 	}
 
 	@Override
@@ -55,6 +57,42 @@ public class AccountGroupServiceWrapper
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		_accountGroupService.deleteAccountGroups(accountGroupIds);
+	}
+
+	@Override
+	public com.liferay.account.model.AccountGroup
+			fetchAccountGroupByExternalReferenceCode(
+				String externalReferenceCode, long companyId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _accountGroupService.fetchAccountGroupByExternalReferenceCode(
+			externalReferenceCode, companyId);
+	}
+
+	@Override
+	public com.liferay.account.model.AccountGroup getAccountGroup(
+			long accountGroupId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _accountGroupService.getAccountGroup(accountGroupId);
+	}
+
+	@Override
+	public java.util.List<com.liferay.account.model.AccountGroup>
+			getAccountGroupsByAccountEntryId(
+				long accountEntryId, int start, int end)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _accountGroupService.getAccountGroupsByAccountEntryId(
+			accountEntryId, start, end);
+	}
+
+	@Override
+	public int getAccountGroupsCountByAccountEntryId(long accountEntryId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _accountGroupService.getAccountGroupsCountByAccountEntryId(
+			accountEntryId);
 	}
 
 	/**
@@ -81,11 +119,12 @@ public class AccountGroupServiceWrapper
 
 	@Override
 	public com.liferay.account.model.AccountGroup updateAccountGroup(
-			long accountGroupId, String description, String name)
+			long accountGroupId, String description, String name,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _accountGroupService.updateAccountGroup(
-			accountGroupId, description, name);
+			accountGroupId, description, name, serviceContext);
 	}
 
 	@Override

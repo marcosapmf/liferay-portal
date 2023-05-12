@@ -162,6 +162,29 @@ public class JenkinsMaster implements JenkinsNode<JenkinsMaster> {
 		return new ArrayList<>(_buildURLs);
 	}
 
+	public List<DefaultBuild> getDefaultBuilds() {
+		List<String> buildURLs = getBuildURLs();
+
+		List<DefaultBuild> oldDefaultBuilds = new ArrayList<>();
+
+		for (DefaultBuild defaultBuild : _defaultBuilds) {
+			if (!buildURLs.contains(defaultBuild.getBuildURL())) {
+				oldDefaultBuilds.add(defaultBuild);
+			}
+			else {
+				buildURLs.remove(defaultBuild.getBuildURL());
+			}
+		}
+
+		_defaultBuilds.removeAll(oldDefaultBuilds);
+
+		for (String buildURL : buildURLs) {
+			_defaultBuilds.add(BuildFactory.newDefaultBuild(buildURL));
+		}
+
+		return _defaultBuilds;
+	}
+
 	public int getIdleJenkinsSlavesCount() {
 		int idleSlavesCount = 0;
 
@@ -797,6 +820,7 @@ public class JenkinsMaster implements JenkinsNode<JenkinsMaster> {
 	private final Map<Long, Integer> _batchSizes = new TreeMap<>();
 	private boolean _blacklisted;
 	private final List<String> _buildURLs = new CopyOnWriteArrayList<>();
+	private final List<DefaultBuild> _defaultBuilds = new ArrayList<>();
 	private JenkinsCohort _jenkinsCohort;
 	private final Map<String, JenkinsSlave> _jenkinsSlavesMap =
 		Collections.synchronizedMap(new HashMap<String, JenkinsSlave>());

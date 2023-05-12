@@ -21,7 +21,6 @@ import {
 	debounce,
 	fetch,
 	navigate,
-	objectToFormData,
 	openToast,
 	sub,
 } from 'frontend-js-web';
@@ -30,6 +29,7 @@ import React, {useCallback, useEffect, useState} from 'react';
 import CodeMirrorEditor from './CodeMirrorEditor';
 import {FieldTypeSelector} from './FieldTypeSelector';
 import FragmentPreview from './FragmentPreview';
+import createFile from './createFile';
 
 const CHANGES_STATUS = {
 	saved: Liferay.Language.get('changes-saved'),
@@ -45,8 +45,6 @@ const FragmentEditor = ({
 			draft: false,
 		},
 		autocompleteTags,
-		cacheable,
-		cacheableEnabled,
 		dataAttributes,
 		fieldTypes: availableFieldTypes,
 		fragmentCollectionId,
@@ -65,7 +63,6 @@ const FragmentEditor = ({
 	},
 }) => {
 	const [activeTabKeyValue, setActiveTabKeyValue] = useState(0);
-	const [isCacheable, setIsCacheable] = useState(cacheable);
 	const [changesStatus, setChangesStatus] = useState(null);
 	const [configuration, setConfiguration] = useState(initialConfiguration);
 	const [css, setCss] = useState(initialCSS);
@@ -79,6 +76,13 @@ const FragmentEditor = ({
 	const previousHtml = usePrevious(html) || initialHTML;
 	const previousJs = usePrevious(js) || initialJS;
 
+	const [previewData, setPreviewData] = useState({
+		configuration: initialConfiguration,
+		css: initialCSS,
+		html: initialHTML,
+		js: initialJS,
+	});
+
 	const isMounted = useIsMounted();
 
 	const contentHasChanged = useCallback(() => {
@@ -87,11 +91,9 @@ const FragmentEditor = ({
 			previousCss !== css ||
 			previousFieldTypes.length !== fieldTypes.length ||
 			previousHtml !== html ||
-			previousJs !== js ||
-			cacheable !== isCacheable
+			previousJs !== js
 		);
 	}, [
-		cacheable,
 		configuration,
 		css,
 		fieldTypes,
@@ -101,7 +103,6 @@ const FragmentEditor = ({
 		previousFieldTypes,
 		previousHtml,
 		previousJs,
-		isCacheable,
 		js,
 	]);
 
@@ -149,21 +150,32 @@ const FragmentEditor = ({
 		debounce(() => {
 			setChangesStatus(CHANGES_STATUS.saving);
 
-			const data = {
-				cacheable: isCacheable,
-				configurationContent: configuration,
-				cssContent: btoa(css),
-				fieldTypes,
-				fragmentCollectionId,
-				fragmentEntryId,
-				htmlContent: btoa(html),
-				jsContent: btoa(js),
-				name,
-				status: allowedStatus.draft,
-			};
+			const formData = new FormData();
+
+			formData.append(`${namespace}configurationContent`, configuration);
+			formData.append(
+				`${namespace}cssContent`,
+				createFile('cssContent', css)
+			);
+			formData.append(`${namespace}fieldTypes`, fieldTypes);
+			formData.append(
+				`${namespace}fragmentCollectionId`,
+				fragmentCollectionId
+			);
+			formData.append(`${namespace}fragmentEntryId`, fragmentEntryId);
+			formData.append(
+				`${namespace}htmlContent`,
+				createFile('htmlContent', html)
+			);
+			formData.append(
+				`${namespace}jsContent`,
+				createFile('jsContent', js)
+			);
+			formData.append(`${namespace}name`, name);
+			formData.append(`${namespace}status`, allowedStatus.draft);
 
 			fetch(urls.edit, {
-				body: objectToFormData(Liferay.Util.ns(namespace, data)),
+				body: formData,
 				method: 'POST',
 			})
 				.then((response) => response.json())
@@ -175,6 +187,8 @@ const FragmentEditor = ({
 					return response;
 				})
 				.then(() => {
+					setPreviewData({configuration, css, html, js});
+
 					setChangesStatus(CHANGES_STATUS.saved);
 				})
 				.catch((error) => {
@@ -193,7 +207,7 @@ const FragmentEditor = ({
 					});
 				});
 		}, 500),
-		[configuration, css, fieldTypes, html, isCacheable, js]
+		[configuration, css, fieldTypes, html, js]
 	);
 
 	const previousSaveDraft = usePrevious(saveDraft);
@@ -282,38 +296,6 @@ const FragmentEditor = ({
 										</span>
 									</div>
 
-									<div className="btn-group-item custom-checkbox custom-control mb-1 mr-4 mt-1">
-										<label
-											className="lfr-portal-tooltip"
-											data-title={Liferay.Language.get(
-												'cacheable-fragment-help'
-											)}
-										>
-											<input
-												checked={isCacheable}
-												className="custom-control-input toggle-switch-check"
-												disabled={!cacheableEnabled}
-												name="cacheable"
-												onChange={(event) =>
-													setIsCacheable(
-														event.currentTarget
-															.checked
-													)
-												}
-												type="checkbox"
-												value="true"
-											/>
-
-											<span className="custom-control-label">
-												<span className="custom-control-label-text">
-													{Liferay.Language.get(
-														'cacheable'
-													)}
-												</span>
-											</span>
-										</label>
-									</div>
-
 									<div className="btn-group-item">
 										<button
 											className="btn btn-primary btn-sm"
@@ -380,10 +362,10 @@ const FragmentEditor = ({
 						</div>
 
 						<FragmentPreview
-							configuration={configuration}
-							css={css}
-							html={html}
-							js={js}
+							configuration={previewData.configuration}
+							css={previewData.css}
+							html={previewData.html}
+							js={previewData.js}
 							namespace={namespace}
 							urls={urls}
 						/>

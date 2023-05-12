@@ -6810,7 +6810,8 @@ public class AssetVocabularyPersistenceImpl
 				if (ercAssetVocabulary != null) {
 					throw new DuplicateAssetVocabularyExternalReferenceCodeException(
 						"Duplicate asset vocabulary with external reference code " +
-							assetVocabulary.getExternalReferenceCode());
+							assetVocabulary.getExternalReferenceCode() +
+								" and group " + assetVocabulary.getGroupId());
 				}
 			}
 			else {
@@ -6820,7 +6821,8 @@ public class AssetVocabularyPersistenceImpl
 
 					throw new DuplicateAssetVocabularyExternalReferenceCodeException(
 						"Duplicate asset vocabulary with external reference code " +
-							assetVocabulary.getExternalReferenceCode());
+							assetVocabulary.getExternalReferenceCode() +
+								" and group " + assetVocabulary.getGroupId());
 				}
 			}
 		}

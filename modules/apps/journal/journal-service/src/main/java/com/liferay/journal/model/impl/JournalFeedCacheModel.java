@@ -105,8 +105,8 @@ public class JournalFeedCacheModel
 		sb.append(name);
 		sb.append(", description=");
 		sb.append(description);
-		sb.append(", DDMStructureKey=");
-		sb.append(DDMStructureKey);
+		sb.append(", DDMStructureId=");
+		sb.append(DDMStructureId);
 		sb.append(", DDMTemplateKey=");
 		sb.append(DDMTemplateKey);
 		sb.append(", DDMRendererTemplateKey=");
@@ -195,12 +195,7 @@ public class JournalFeedCacheModel
 			journalFeedImpl.setDescription(description);
 		}
 
-		if (DDMStructureKey == null) {
-			journalFeedImpl.setDDMStructureKey("");
-		}
-		else {
-			journalFeedImpl.setDDMStructureKey(DDMStructureKey);
-		}
+		journalFeedImpl.setDDMStructureId(DDMStructureId);
 
 		if (DDMTemplateKey == null) {
 			journalFeedImpl.setDDMTemplateKey("");
@@ -294,7 +289,8 @@ public class JournalFeedCacheModel
 		feedId = objectInput.readUTF();
 		name = objectInput.readUTF();
 		description = objectInput.readUTF();
-		DDMStructureKey = objectInput.readUTF();
+
+		DDMStructureId = objectInput.readLong();
 		DDMTemplateKey = objectInput.readUTF();
 		DDMRendererTemplateKey = objectInput.readUTF();
 
@@ -362,12 +358,7 @@ public class JournalFeedCacheModel
 			objectOutput.writeUTF(description);
 		}
 
-		if (DDMStructureKey == null) {
-			objectOutput.writeUTF("");
-		}
-		else {
-			objectOutput.writeUTF(DDMStructureKey);
-		}
+		objectOutput.writeLong(DDMStructureId);
 
 		if (DDMTemplateKey == null) {
 			objectOutput.writeUTF("");
@@ -444,7 +435,7 @@ public class JournalFeedCacheModel
 	public String feedId;
 	public String name;
 	public String description;
-	public String DDMStructureKey;
+	public long DDMStructureId;
 	public String DDMTemplateKey;
 	public String DDMRendererTemplateKey;
 	public int delta;

@@ -14,7 +14,7 @@ definition {
 	tearDown {
 		var testPortalInstance = PropsUtil.get("test.portal.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testPortalInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -22,11 +22,11 @@ definition {
 		}
 	}
 
-	@priority = "5"
+	@priority = 5
 	test DisplayStyleOptions {
 		property portal.acceptance = "true";
 
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		JSONLayout.addPublicLayout(
 			groupName = "Site Name",
@@ -38,9 +38,9 @@ definition {
 			widgetName = "Sites Directory");
 
 		for (var n : list "1,2,3") {
-			JSONGroup.addChildGroup(
-				groupName = "Child SiteName ${n}",
-				parentGroupName = "Site Name");
+			HeadlessSite.addSite(
+				parentSiteName = "Site Name",
+				siteName = "Child SiteName ${n}");
 
 			JSONLayout.addPublicLayout(
 				groupName = "Child SiteName ${n}",
@@ -58,9 +58,9 @@ definition {
 			pageName = "Site Page",
 			siteName = "Site Name");
 
-		var siteName = TestCase.getSiteName(siteName = "${siteName}");
+		var siteName = TestCase.getSiteName(siteName = ${siteName});
 
-		SitesDirectory.viewDescriptivePG(siteName = "${siteName}");
+		SitesDirectory.viewDescriptivePG(siteName = ${siteName});
 
 		SitesDirectory.viewDescriptivePG(siteName = "Site Name");
 
@@ -83,7 +83,7 @@ definition {
 			siteName = "Site Name");
 
 		SitesDirectory.viewListHierarchyPG(
-			availableSiteName = "${siteName}",
+			availableSiteName = ${siteName},
 			childSiteName1 = "Child SiteName 1",
 			childSiteName2 = "Child SiteName 2",
 			childSiteName3 = "Child SiteName 3",

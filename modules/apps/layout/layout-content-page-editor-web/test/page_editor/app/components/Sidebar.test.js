@@ -19,6 +19,7 @@ import {
 	screen,
 	waitForElementToBeRemoved,
 } from '@testing-library/react';
+import {sessionStorage} from 'frontend-js-web';
 import React from 'react';
 import {DndProvider} from 'react-dnd';
 import {HTML5Backend} from 'react-dnd-html5-backend';
@@ -28,8 +29,8 @@ import Sidebar, {
 	MIN_SIZEBAR_WIDTH,
 	SIDEBAR_WIDTH_RESIZE_STEP,
 } from '../../../../src/main/resources/META-INF/resources/page_editor/app/components/Sidebar';
-import {DragAndDropContextProvider} from '../../../../src/main/resources/META-INF/resources/page_editor/app/utils/drag-and-drop/useDragAndDrop';
-import StoreMother from '../../../../src/main/resources/META-INF/resources/page_editor/test-utils/StoreMother';
+import {DragAndDropContextProvider} from '../../../../src/main/resources/META-INF/resources/page_editor/app/utils/drag_and_drop/useDragAndDrop';
+import StoreMother from '../../../../src/main/resources/META-INF/resources/page_editor/test_utils/StoreMother';
 
 const renderSidebar = async () => {
 	render(
@@ -50,7 +51,7 @@ const renderSidebar = async () => {
 describe('Sidebar', () => {
 	describe('resize', () => {
 		afterEach(() => {
-			window.sessionStorage.clear();
+			sessionStorage.clear();
 		});
 
 		it('can be resized with mouse', async () => {

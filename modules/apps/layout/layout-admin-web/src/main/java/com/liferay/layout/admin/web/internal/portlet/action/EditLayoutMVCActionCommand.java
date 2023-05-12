@@ -50,6 +50,7 @@ import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.UnicodePropertiesBuilder;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.sites.kernel.util.Sites;
 
@@ -92,11 +93,9 @@ public class EditLayoutMVCActionCommand extends BaseMVCActionCommand {
 			long liveGroupId = ParamUtil.getLong(actionRequest, "liveGroupId");
 			long stagingGroupId = ParamUtil.getLong(
 				actionRequest, "stagingGroupId");
-			boolean privateLayout = ParamUtil.getBoolean(
-				actionRequest, "privateLayout");
-			long layoutId = ParamUtil.getLong(actionRequest, "layoutId");
 			Map<Locale, String> nameMap = _localization.getLocalizationMap(
-				actionRequest, "name");
+				actionRequest, "nameMapAsXML");
+			long selPlid = ParamUtil.getLong(actionRequest, "selPlid");
 			String type = ParamUtil.getString(uploadPortletRequest, "type");
 			boolean hidden = ParamUtil.getBoolean(
 				uploadPortletRequest, "hidden");
@@ -117,8 +116,7 @@ public class EditLayoutMVCActionCommand extends BaseMVCActionCommand {
 				iconBytes = FileUtil.getBytes(fileEntry.getContentStream());
 			}
 
-			Layout layout = _layoutLocalService.getLayout(
-				groupId, privateLayout, layoutId);
+			Layout layout = _layoutLocalService.getLayout(selPlid);
 
 			long styleBookEntryId = ParamUtil.getLong(
 				uploadPortletRequest, "styleBookEntryId",
@@ -168,11 +166,12 @@ public class EditLayoutMVCActionCommand extends BaseMVCActionCommand {
 			}
 
 			layout = _layoutService.updateLayout(
-				groupId, privateLayout, layoutId, layout.getParentLayoutId(),
-				nameMap, layout.getTitleMap(), layout.getDescriptionMap(),
-				layout.getKeywordsMap(), layout.getRobotsMap(), type, hidden,
-				friendlyURLMap, !deleteLogo, iconBytes, styleBookEntryId,
-				faviconFileEntryId, masterLayoutPlid, serviceContext);
+				groupId, layout.isPrivateLayout(), layout.getLayoutId(),
+				layout.getParentLayoutId(), nameMap, layout.getTitleMap(),
+				layout.getDescriptionMap(), layout.getKeywordsMap(),
+				layout.getRobotsMap(), type, hidden, friendlyURLMap,
+				!deleteLogo, iconBytes, styleBookEntryId, faviconFileEntryId,
+				masterLayoutPlid, serviceContext);
 
 			_updateClientExtensions(
 				actionRequest, layout, themeDisplay.getUserId());
@@ -190,9 +189,10 @@ public class EditLayoutMVCActionCommand extends BaseMVCActionCommand {
 						Sites.LAYOUT_UPDATEABLE));
 
 				_layoutService.updateLayout(
-					groupId, privateLayout, draftLayout.getLayoutId(),
-					draftLayout.getParentLayoutId(), nameMap,
-					draftLayout.getTitleMap(), draftLayout.getDescriptionMap(),
+					groupId, layout.isPrivateLayout(),
+					draftLayout.getLayoutId(), draftLayout.getParentLayoutId(),
+					nameMap, draftLayout.getTitleMap(),
+					draftLayout.getDescriptionMap(),
 					draftLayout.getKeywordsMap(), draftLayout.getRobotsMap(),
 					type, draftLayout.isHidden(),
 					draftLayout.getFriendlyURLMap(), !deleteLogo, iconBytes,
@@ -213,7 +213,7 @@ public class EditLayoutMVCActionCommand extends BaseMVCActionCommand {
 
 			if (Validator.isNotNull(linkToLayoutUuid)) {
 				Layout linkToLayout = _layoutService.getLayoutByUuidAndGroupId(
-					linkToLayoutUuid, groupId, privateLayout);
+					linkToLayoutUuid, groupId, layout.isPrivateLayout());
 
 				formTypeSettingsUnicodeProperties.put(
 					"linkToLayoutId",
@@ -226,7 +226,9 @@ public class EditLayoutMVCActionCommand extends BaseMVCActionCommand {
 			if (type.equals(LayoutConstants.TYPE_PORTLET)) {
 				String layoutTemplateId = ParamUtil.getString(
 					uploadPortletRequest, "layoutTemplateId",
-					PropsValues.DEFAULT_LAYOUT_TEMPLATE_ID);
+					GetterUtil.getString(
+						layoutTypePortlet.getLayoutTemplateId(),
+						PropsValues.DEFAULT_LAYOUT_TEMPLATE_ID));
 
 				layoutTypePortlet.setLayoutTemplateId(
 					themeDisplay.getUserId(), layoutTemplateId);
@@ -252,7 +254,7 @@ public class EditLayoutMVCActionCommand extends BaseMVCActionCommand {
 			}
 
 			layout = _layoutService.updateLayout(
-				groupId, privateLayout, layoutId,
+				groupId, layout.isPrivateLayout(), layout.getLayoutId(),
 				layoutTypeSettingsUnicodeProperties.toString());
 
 			EventsProcessorUtil.process(
@@ -263,8 +265,14 @@ public class EditLayoutMVCActionCommand extends BaseMVCActionCommand {
 
 			ActionUtil.updateLookAndFeel(
 				actionRequest, themeDisplay.getCompanyId(), liveGroupId,
-				stagingGroupId, privateLayout, layout.getLayoutId(),
+				stagingGroupId, layout.isPrivateLayout(), layout.getLayoutId(),
 				layout.getTypeSettingsProperties());
+
+			if (layout.isDraftLayout()) {
+				_layoutLocalService.updateStatus(
+					themeDisplay.getUserId(), layout.getPlid(),
+					WorkflowConstants.STATUS_DRAFT, serviceContext);
+			}
 
 			String redirect = ParamUtil.getString(actionRequest, "redirect");
 
@@ -294,7 +302,7 @@ public class EditLayoutMVCActionCommand extends BaseMVCActionCommand {
 
 	private void _addClientExtensionEntryRel(
 			String cetExternalReferenceCode, Layout layout, String type,
-			long userId)
+			long userId, ServiceContext serviceContext)
 		throws PortalException {
 
 		if (Validator.isNotNull(cetExternalReferenceCode)) {
@@ -312,7 +320,8 @@ public class EditLayoutMVCActionCommand extends BaseMVCActionCommand {
 				_clientExtensionEntryRelLocalService.addClientExtensionEntryRel(
 					userId, layout.getGroupId(),
 					_portal.getClassNameId(Layout.class), layout.getPlid(),
-					cetExternalReferenceCode, type, StringPool.BLANK);
+					cetExternalReferenceCode, type, StringPool.BLANK,
+					serviceContext);
 			}
 		}
 		else {
@@ -328,9 +337,13 @@ public class EditLayoutMVCActionCommand extends BaseMVCActionCommand {
 		String themeFaviconCETExternalReferenceCode = ParamUtil.getString(
 			actionRequest, "themeFaviconCETExternalReferenceCode");
 
+		ServiceContext serviceContext = ServiceContextFactory.getInstance(
+			actionRequest);
+
 		_addClientExtensionEntryRel(
 			themeFaviconCETExternalReferenceCode, layout,
-			ClientExtensionEntryConstants.TYPE_THEME_FAVICON, userId);
+			ClientExtensionEntryConstants.TYPE_THEME_FAVICON, userId,
+			serviceContext);
 
 		_clientExtensionEntryRelLocalService.deleteClientExtensionEntryRels(
 			_portal.getClassNameId(Layout.class), layout.getPlid(),
@@ -346,8 +359,8 @@ public class EditLayoutMVCActionCommand extends BaseMVCActionCommand {
 				userId, layout.getGroupId(),
 				_portal.getClassNameId(Layout.class), layout.getPlid(),
 				globalCSSCETExternalReferenceCode,
-				ClientExtensionEntryConstants.TYPE_GLOBAL_CSS,
-				StringPool.BLANK);
+				ClientExtensionEntryConstants.TYPE_GLOBAL_CSS, StringPool.BLANK,
+				serviceContext);
 		}
 
 		_clientExtensionEntryRelLocalService.deleteClientExtensionEntryRels(
@@ -376,7 +389,7 @@ public class EditLayoutMVCActionCommand extends BaseMVCActionCommand {
 				userId, layout.getGroupId(),
 				_portal.getClassNameId(Layout.class), layout.getPlid(),
 				typeSettings[0], ClientExtensionEntryConstants.TYPE_GLOBAL_JS,
-				typeSettingsUnicodeProperties.toString());
+				typeSettingsUnicodeProperties.toString(), serviceContext);
 		}
 
 		String themeCSSCETExternalReferenceCode = ParamUtil.getString(
@@ -384,14 +397,16 @@ public class EditLayoutMVCActionCommand extends BaseMVCActionCommand {
 
 		_addClientExtensionEntryRel(
 			themeCSSCETExternalReferenceCode, layout,
-			ClientExtensionEntryConstants.TYPE_THEME_CSS, userId);
+			ClientExtensionEntryConstants.TYPE_THEME_CSS, userId,
+			serviceContext);
 
 		String themeSpritemapCETExternalReferenceCode = ParamUtil.getString(
 			actionRequest, "themeSpritemapCETExternalReferenceCode");
 
 		_addClientExtensionEntryRel(
 			themeSpritemapCETExternalReferenceCode, layout,
-			ClientExtensionEntryConstants.TYPE_THEME_SPRITEMAP, userId);
+			ClientExtensionEntryConstants.TYPE_THEME_SPRITEMAP, userId,
+			serviceContext);
 	}
 
 	@Reference

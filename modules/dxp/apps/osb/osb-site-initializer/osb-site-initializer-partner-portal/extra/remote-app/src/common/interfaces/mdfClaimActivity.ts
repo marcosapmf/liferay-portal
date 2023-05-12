@@ -9,15 +9,22 @@
  * distribution rights of the Software.
  */
 
+import LiferayFile from './liferayFile';
 import LiferayObject from './liferayObject';
+import LiferayPicklist from './liferayPicklist';
 import MDFClaimBudget from './mdfClaimBudget';
 
 export default interface MDFClaimActivity extends Partial<LiferayObject> {
+	activityStatus?: LiferayPicklist;
+	allContents?: LiferayFile[];
 	budgets?: MDFClaimBudget[];
-	documents?: File[];
-	listQualifiedLeads?: File;
+	claimed?: boolean;
+	currency?: LiferayPicklist;
+	listOfQualifiedLeads?: LiferayFile & number;
 	metrics: string;
-	name: string;
+	name?: string;
+	r_actToMDFClmActs_c_activityId?: number;
+	r_mdfClmToMDFClmActs_c_mdfClaimId?: number;
 	selected: boolean;
 	totalCost: number;
 }

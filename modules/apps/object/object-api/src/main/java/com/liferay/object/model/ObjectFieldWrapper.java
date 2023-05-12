@@ -58,11 +58,11 @@ public class ObjectFieldWrapper
 		attributes.put("dbColumnName", getDBColumnName());
 		attributes.put("dbTableName", getDBTableName());
 		attributes.put("dbType", getDBType());
-		attributes.put("defaultValue", getDefaultValue());
 		attributes.put("indexed", isIndexed());
 		attributes.put("indexedAsKeyword", isIndexedAsKeyword());
 		attributes.put("indexedLanguageId", getIndexedLanguageId());
 		attributes.put("label", getLabel());
+		attributes.put("localized", isLocalized());
 		attributes.put("name", getName());
 		attributes.put("relationshipType", getRelationshipType());
 		attributes.put("required", isRequired());
@@ -166,12 +166,6 @@ public class ObjectFieldWrapper
 			setDBType(dbType);
 		}
 
-		String defaultValue = (String)attributes.get("defaultValue");
-
-		if (defaultValue != null) {
-			setDefaultValue(defaultValue);
-		}
-
 		Boolean indexed = (Boolean)attributes.get("indexed");
 
 		if (indexed != null) {
@@ -194,6 +188,12 @@ public class ObjectFieldWrapper
 
 		if (label != null) {
 			setLabel(label);
+		}
+
+		Boolean localized = (Boolean)attributes.get("localized");
+
+		if (localized != null) {
+			setLocalized(localized);
 		}
 
 		String name = (String)attributes.get("name");
@@ -305,16 +305,6 @@ public class ObjectFieldWrapper
 	@Override
 	public String getDefaultLanguageId() {
 		return model.getDefaultLanguageId();
-	}
-
-	/**
-	 * Returns the default value of this object field.
-	 *
-	 * @return the default value of this object field
-	 */
-	@Override
-	public String getDefaultValue() {
-		return model.getDefaultValue();
 	}
 
 	/**
@@ -444,6 +434,16 @@ public class ObjectFieldWrapper
 	}
 
 	/**
+	 * Returns the localized of this object field.
+	 *
+	 * @return the localized of this object field
+	 */
+	@Override
+	public boolean getLocalized() {
+		return model.getLocalized();
+	}
+
+	/**
 	 * Returns the modified date of this object field.
 	 *
 	 * @return the modified date of this object field
@@ -471,6 +471,13 @@ public class ObjectFieldWrapper
 	@Override
 	public String getName() {
 		return model.getName();
+	}
+
+	@Override
+	public ObjectDefinition getObjectDefinition()
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return model.getObjectDefinition();
 	}
 
 	/**
@@ -609,6 +616,16 @@ public class ObjectFieldWrapper
 	}
 
 	/**
+	 * Returns <code>true</code> if this object field is localized.
+	 *
+	 * @return <code>true</code> if this object field is localized; <code>false</code> otherwise
+	 */
+	@Override
+	public boolean isLocalized() {
+		return model.isLocalized();
+	}
+
+	/**
 	 * Returns <code>true</code> if this object field is required.
 	 *
 	 * @return <code>true</code> if this object field is required; <code>false</code> otherwise
@@ -716,16 +733,6 @@ public class ObjectFieldWrapper
 	@Override
 	public void setDBType(String dbType) {
 		model.setDBType(dbType);
-	}
-
-	/**
-	 * Sets the default value of this object field.
-	 *
-	 * @param defaultValue the default value of this object field
-	 */
-	@Override
-	public void setDefaultValue(String defaultValue) {
-		model.setDefaultValue(defaultValue);
 	}
 
 	/**
@@ -840,6 +847,16 @@ public class ObjectFieldWrapper
 	@Override
 	public void setListTypeDefinitionId(long listTypeDefinitionId) {
 		model.setListTypeDefinitionId(listTypeDefinitionId);
+	}
+
+	/**
+	 * Sets whether this object field is localized.
+	 *
+	 * @param localized the localized of this object field
+	 */
+	@Override
+	public void setLocalized(boolean localized) {
+		model.setLocalized(localized);
 	}
 
 	/**

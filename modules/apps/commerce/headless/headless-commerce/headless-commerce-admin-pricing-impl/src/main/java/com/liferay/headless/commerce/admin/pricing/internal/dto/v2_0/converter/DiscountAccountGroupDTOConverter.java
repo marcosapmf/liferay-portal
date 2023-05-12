@@ -14,7 +14,8 @@
 
 package com.liferay.headless.commerce.admin.pricing.internal.dto.v2_0.converter;
 
-import com.liferay.commerce.account.model.CommerceAccountGroup;
+import com.liferay.account.model.AccountGroup;
+import com.liferay.account.service.AccountGroupLocalService;
 import com.liferay.commerce.discount.model.CommerceDiscount;
 import com.liferay.commerce.discount.model.CommerceDiscountCommerceAccountGroupRel;
 import com.liferay.commerce.discount.service.CommerceDiscountCommerceAccountGroupRelService;
@@ -30,7 +31,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = "dto.class.name=com.liferay.commerce.discount.model.CommerceDiscountCommerceAccountGroupRel",
-	service = {DiscountAccountGroupDTOConverter.class, DTOConverter.class}
+	service = DTOConverter.class
 )
 public class DiscountAccountGroupDTOConverter
 	implements DTOConverter
@@ -51,17 +52,19 @@ public class DiscountAccountGroupDTOConverter
 					getCommerceDiscountCommerceAccountGroupRel(
 						(Long)dtoConverterContext.getId());
 
-		CommerceAccountGroup commerceAccountGroup =
-			commerceDiscountCommerceAccountGroupRel.getCommerceAccountGroup();
+		AccountGroup discountAccountGroup =
+			_accountGroupLocalService.getAccountGroup(
+				commerceDiscountCommerceAccountGroupRel.
+					getCommerceAccountGroupId());
+
 		CommerceDiscount commerceDiscount =
 			commerceDiscountCommerceAccountGroupRel.getCommerceDiscount();
 
 		return new DiscountAccountGroup() {
 			{
 				accountGroupExternalReferenceCode =
-					commerceAccountGroup.getExternalReferenceCode();
-				accountGroupId =
-					commerceAccountGroup.getCommerceAccountGroupId();
+					discountAccountGroup.getExternalReferenceCode();
+				accountGroupId = discountAccountGroup.getAccountGroupId();
 				actions = dtoConverterContext.getActions();
 				discountAccountGroupId =
 					commerceDiscountCommerceAccountGroupRel.
@@ -72,6 +75,9 @@ public class DiscountAccountGroupDTOConverter
 			}
 		};
 	}
+
+	@Reference
+	private AccountGroupLocalService _accountGroupLocalService;
 
 	@Reference
 	private CommerceDiscountCommerceAccountGroupRelService

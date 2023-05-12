@@ -18,8 +18,9 @@ import {Observer} from '@clayui/modal/lib/types';
 import './ModalAddFilter.scss';
 interface IProps {
 	aggregationFilter?: boolean;
-	creationLanguageId?: Locale;
+	creationLanguageId?: Liferay.Language.Locale;
 	currentFilters: CurrentFilter[];
+	disableAutoClose?: boolean;
 	disableDateValues?: boolean;
 	editingFilter: boolean;
 	editingObjectFieldName: string;
@@ -86,6 +87,7 @@ export declare function ModalAddFilter({
 	aggregationFilter,
 	creationLanguageId,
 	currentFilters,
+	disableAutoClose,
 	disableDateValues,
 	editingFilter,
 	editingObjectFieldName,

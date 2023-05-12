@@ -21,12 +21,14 @@ import com.liferay.asset.kernel.model.AssetVocabulary;
 import com.liferay.asset.kernel.model.AssetVocabularyConstants;
 import com.liferay.asset.kernel.service.AssetCategoryService;
 import com.liferay.asset.kernel.service.AssetVocabularyLocalService;
+import com.liferay.dynamic.data.mapping.service.DDMStructureLocalService;
 import com.liferay.journal.model.JournalArticle;
 import com.liferay.journal.service.JournalArticleLocalService;
 import com.liferay.journal.test.util.search.JournalArticleBlueprint;
 import com.liferay.journal.test.util.search.JournalArticleContent;
 import com.liferay.journal.test.util.search.JournalArticleSearchFixture;
 import com.liferay.journal.test.util.search.JournalArticleTitle;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.Hits;
@@ -44,6 +46,7 @@ import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleThreadLocal;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.workflow.WorkflowThreadLocal;
 import com.liferay.portal.search.localization.SearchLocalizationHelper;
 import com.liferay.portal.search.test.util.DocumentsAssert;
@@ -57,14 +60,11 @@ import com.liferay.users.admin.test.util.search.GroupSearchFixture;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -96,7 +96,7 @@ public class AssetCategoryVocabularyVisibilitySearchTest {
 		_group = _groupSearchFixture.addGroup(new GroupBlueprint());
 
 		_journalArticleSearchFixture = new JournalArticleSearchFixture(
-			_journalArticleLocalService);
+			_ddmStructureLocalService, _journalArticleLocalService, _portal);
 	}
 
 	@Test
@@ -234,7 +234,8 @@ public class AssetCategoryVocabularyVisibilitySearchTest {
 
 		DocumentsAssert.assertValuesIgnoreRelevance(
 			(String)searchContext.getAttribute("queryString"), hits.getDocs(),
-			assetCategoryIdsFieldName, _asStringList(expectedAssetCategoryIds));
+			assetCategoryIdsFieldName,
+			TransformUtil.transform(expectedAssetCategoryIds, String::valueOf));
 
 		DocumentsAssert.assertValuesIgnoreRelevance(
 			(String)searchContext.getAttribute("queryString"), hits.getDocs(),
@@ -264,16 +265,6 @@ public class AssetCategoryVocabularyVisibilitySearchTest {
 			assetCategoryTitles);
 	}
 
-	private List<String> _asStringList(List<Long> expectedAssetCategoryIds) {
-		Stream<Long> stream = expectedAssetCategoryIds.stream();
-
-		return stream.map(
-			String::valueOf
-		).collect(
-			Collectors.toList()
-		);
-	}
-
 	private List<Long> _getAssetCategoryIds(AssetCategory assetCategory) {
 		return Arrays.asList(assetCategory.getCategoryId());
 	}
@@ -281,15 +272,7 @@ public class AssetCategoryVocabularyVisibilitySearchTest {
 	private List<String> _getAssetCategoryTitles(AssetCategory assetCategory) {
 		Map<Locale, String> titleMap = assetCategory.getTitleMap();
 
-		Collection<String> titles = titleMap.values();
-
-		Stream<String> stream = titles.stream();
-
-		return stream.map(
-			String::toLowerCase
-		).collect(
-			Collectors.toList()
-		);
+		return TransformUtil.transform(titleMap.values(), String::toLowerCase);
 	}
 
 	@Inject
@@ -298,10 +281,16 @@ public class AssetCategoryVocabularyVisibilitySearchTest {
 	@Inject
 	private static AssetVocabularyLocalService _assetVocabularyLocalService;
 
+	@Inject
+	private static DDMStructureLocalService _ddmStructureLocalService;
+
 	@Inject(
-		filter = "component.name=com.liferay.journal.internal.search.JournalArticleIndexer"
+		filter = "indexer.class.name=com.liferay.journal.model.JournalArticle"
 	)
 	private static Indexer<JournalArticle> _indexer;
+
+	@Inject
+	private static Portal _portal;
 
 	@DeleteAfterTestRun
 	private List<AssetCategory> _assetCategories = new ArrayList<>();

@@ -37,6 +37,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.ws.rs.core.UriInfo;
 
@@ -55,6 +56,9 @@ public class VulcanBatchEngineTaskItemDelegateAdaptor<T>
 		_depotEntryLocalService = depotEntryLocalService;
 		_groupLocalService = groupLocalService;
 		_vulcanBatchEngineTaskItemDelegate = vulcanBatchEngineTaskItemDelegate;
+
+		vulcanBatchEngineTaskItemDelegate.setGroupLocalService(
+			groupLocalService);
 	}
 
 	@Override
@@ -73,6 +77,18 @@ public class VulcanBatchEngineTaskItemDelegateAdaptor<T>
 
 		_vulcanBatchEngineTaskItemDelegate.delete(
 			items, _applyParamConverters(parameters));
+	}
+
+	@Override
+	public Set<String> getAvailableCreateStrategies() {
+		return _vulcanBatchEngineTaskItemDelegate.
+			getAvailableCreateStrategies();
+	}
+
+	@Override
+	public Set<String> getAvailableUpdateStrategies() {
+		return _vulcanBatchEngineTaskItemDelegate.
+			getAvailableUpdateStrategies();
 	}
 
 	@Override
@@ -99,6 +115,22 @@ public class VulcanBatchEngineTaskItemDelegateAdaptor<T>
 		}
 
 		return itemClass;
+	}
+
+	@Override
+	public boolean hasCreateStrategy(String createStrategy) {
+		Set<String> createStrategies =
+			_vulcanBatchEngineTaskItemDelegate.getAvailableCreateStrategies();
+
+		return createStrategies.contains(createStrategy);
+	}
+
+	@Override
+	public boolean hasUpdateStrategy(String updateStrategy) {
+		Set<String> updateStrategies =
+			_vulcanBatchEngineTaskItemDelegate.getAvailableUpdateStrategies();
+
+		return updateStrategies.contains(updateStrategy);
 	}
 
 	@Override

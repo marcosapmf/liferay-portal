@@ -15,7 +15,7 @@ definition {
 	tearDown {
 		var testPortalInstance = PropsUtil.get("test.portal.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testPortalInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -33,7 +33,7 @@ definition {
 		}
 	}
 
-	@priority = "5"
+	@priority = 5
 	@refactordone
 	test CanAddAddDocumentPermissionsForRegRole {
 		property portal.acceptance = "true";
@@ -67,7 +67,7 @@ definition {
 			dmDocumentTitle = "Document_1.doc");
 	}
 
-	@priority = "4"
+	@priority = 4
 	@refactordone
 	test CanAddAddDocumentPermissionsForSiteMember {
 		property portal.acceptance = "true";
@@ -109,7 +109,7 @@ definition {
 			dmDocumentTitle = "Document_2.doc");
 	}
 
-	@priority = "4"
+	@priority = 4
 	@refactordone
 	test CanAddDocumentAsSiteRoleWithPermissions {
 		property portal.acceptance = "true";
@@ -156,7 +156,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-128366, it ensures that the folder permissions are removed after removing permissions during folder addition."
-	@priority = "3"
+	@priority = 3
 	@refactordone
 	test CanAddFolderWithViewOnlyByOwnerPermissions {
 		JSONLayout.addPublicLayout(
@@ -164,7 +164,7 @@ definition {
 			layoutName = "Documents and Media Page");
 
 		JSONLayout.addWidgetToPublicLayout(
-			column = "1",
+			column = 1,
 			groupName = "Guest",
 			layoutName = "Documents and Media Page",
 			widgetName = "Documents and Media");
@@ -189,19 +189,19 @@ definition {
 
 		for (var permissionDefinitionKey : list "CONFIGURATION_PERMISSIONS_ADD_SUBFOLDER_CHECKBOX,CONFIGURATION_PERMISSIONS_ADD_SHORTCUT_CHECKBOX,CONFIGURATION_PERMISSIONS_ADD_DOCUMENT_CHECKBOX,CONFIGURATION_PERMISSIONS_SUBSCRIBE_CHECKBOX,CONFIGURATION_PERMISSIONS_VIEW_CHECKBOX") {
 			PermissionsInline.viewPermissionsRemoved(
-				permissionDefinitionKey = "${permissionDefinitionKey}",
+				permissionDefinitionKey = ${permissionDefinitionKey},
 				roleTitle = "Site Member");
 		}
 
 		for (var permissionDefinitionKey : list "CONFIGURATION_PERMISSIONS_VIEW_CHECKBOX,CONFIGURATION_PERMISSIONS_ACCESS_CHECKBOX") {
 			PermissionsInline.viewPermissionsRemoved(
-				permissionDefinitionKey = "${permissionDefinitionKey}",
+				permissionDefinitionKey = ${permissionDefinitionKey},
 				roleTitle = "Guest");
 		}
 	}
 
 	@description = "This is a test for LPS-90864. It checks that a site member can add shortcut to folder with permissions."
-	@priority = "4"
+	@priority = 4
 	test CanAddShortcutToFolderAsSiteMemberWithPermissions {
 		JSONUser.addUser(
 			userEmailAddress = "userea@liferay.com",
@@ -214,24 +214,18 @@ definition {
 			requireReset = "false",
 			userEmailAddress = "userea@liferay.com");
 
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		JSONUser.addUserToSite(
 			groupName = "Site Name",
 			userEmailAddress = "userea@liferay.com");
-
-		Permissions.definePermissionViaJSONAPI(
-			resourceAction = "ACCESS",
-			resourceName = "com.liferay.document.library.kernel.model.DLFolder",
-			roleTitle = "Site Member",
-			roleType = "site");
 
 		JSONLayout.addPublicLayout(
 			groupName = "Site Name",
 			layoutName = "Documents and Media Page");
 
 		JSONLayout.addWidgetToPublicLayout(
-			column = "2",
+			column = 2,
 			groupName = "Site Name",
 			layoutName = "Documents and Media Page",
 			widgetName = "Documents and Media");
@@ -282,7 +276,121 @@ definition {
 		DMDocument.viewPG(dmDocumentTitle = "DM Document Title");
 	}
 
-	@priority = "4"
+	@description = "This is a test for LPS-181561."
+	@priority = 4
+	test CanDownloadButNotViewFileAsGuest {
+		JSONLayout.addPublicLayout(
+			groupName = "Guest",
+			layoutName = "Documents and Media Page");
+
+		JSONLayout.addWidgetToPublicLayout(
+			column = 1,
+			groupName = "Guest",
+			layoutName = "Documents and Media Page",
+			widgetName = "Documents and Media");
+
+		JSONDocument.addFileWithUploadedFile(
+			dmDocumentDescription = "DM Document Description",
+			dmDocumentTitle = "Document_1",
+			groupName = "Guest",
+			mimeType = "application/msword",
+			sourceFileName = "Document_1.doc");
+
+		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
+
+		DMNavigator.gotoDocumentPermissionsCP(dmDocumentTitle = "Document_1");
+
+		PermissionsInline.addOrRemoveAnyPermissionsFromSpecificRole(
+			addOrRemoveViewPermission = "Remove",
+			permissionsKeyList = "INLINE_PERMISSIONS_VIEW_CHECKBOX",
+			roleTitle = "Guest");
+
+		User.logoutPG();
+
+		Navigator.gotoPage(pageName = "Documents and Media Page");
+
+		DMFolder.viewEntryNotPresent(dmFolderName = "Document_1");
+
+		DMDocument.downloadViaURL(dmDocumentTitle = "Document_1");
+
+		DMDocument.assertFileNameFromTempFolder(fileName = "Document_1.doc");
+	}
+
+	@description = "This is a test for LPS-181561."
+	@priority = 5
+	test CanDownloadButNotViewFileAsSiteMember {
+		JSONUser.addUser(
+			userEmailAddress = "userea@liferay.com",
+			userFirstName = "userfn",
+			userLastName = "userln",
+			userScreenName = "usersn");
+
+		JSONUser.setFirstPassword(
+			agreeToTermsAndAnswerReminderQuery = "true",
+			requireReset = "false",
+			userEmailAddress = "userea@liferay.com");
+
+		HeadlessSite.addSite(siteName = "Site Name");
+
+		JSONLayout.addPublicLayout(
+			groupName = "Site Name",
+			layoutName = "Documents and Media Page");
+
+		JSONLayout.addWidgetToPublicLayout(
+			column = 1,
+			groupName = "Site Name",
+			layoutName = "Documents and Media Page",
+			widgetName = "Documents and Media");
+
+		JSONDocument.addFileWithUploadedFile(
+			dmDocumentDescription = "DM Document Description",
+			dmDocumentTitle = "Document_1",
+			groupName = "Site Name",
+			mimeType = "application/msword",
+			sourceFileName = "Document_1.doc");
+
+		ApplicationsMenu.gotoPortlet(
+			category = "Users",
+			panel = "Control Panel",
+			portlet = "Users and Organizations");
+
+		User.editUserSiteCP(
+			siteName = "Site Name",
+			userScreenName = "usersn");
+
+		var documentId = JSONDocument.getFileEntryId(
+			dmDocumentTitle = "Document_1",
+			groupName = "Site Name");
+
+		var response = DocumentAPI.putDMPermissionsWithDocumentID(
+			actionIds = '''DOWNLOAD","ADD_DISCUSSION''',
+			documentId = ${documentId},
+			roleName = "Guest");
+		var response = DocumentAPI.putDMPermissionsWithDocumentID(
+			actionIds = '''DOWNLOAD","ADD_DISCUSSION''',
+			documentId = ${documentId},
+			roleName = "Site Member");
+
+		User.logoutPG();
+
+		User.loginUserPG(
+			password = "test",
+			userEmailAddress = "userea@liferay.com");
+
+		Navigator.gotoSitePage(
+			pageName = "Documents and Media Page",
+			siteName = "Site Name");
+
+		DMFolder.viewEntryNotPresent(dmFolderName = "Document_1");
+
+		DMDocument.downloadViaURL(
+			dmDocumentTitle = "Document_1",
+			siteURLKey = "site-name");
+
+		DMDocument.assertFileNameFromTempFolder(fileName = "Document_1.doc");
+	}
+
+	@priority = 4
 	@refactordone
 	test CannotAddDocumentAsSiteRoleWithoutPermissions {
 		property portal.acceptance = "true";
@@ -323,13 +431,13 @@ definition {
 		MenuItem.viewNotPresent(menuItem = "File Upload");
 	}
 
-	@priority = "5"
+	@priority = 5
 	@refactordone
 	test CannotDeleteDMFolderAsRegularRoleWithoutPermission {
 		property portal.acceptance = "true";
 		property testray.component.names = "Training";
 
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		Permissions.setUpRegRoleLoginUserPG(
 			pageName = "Documents and Media Page",
@@ -375,20 +483,100 @@ definition {
 		MenuItem.viewNotPresent(menuItem = "Delete");
 	}
 
-	@description = "This is a use case for LPS-43104."
-	@priority = "5"
-	@refactordone
-	test CannotViewDocumentAsGuestWithoutPermissions {
-		property portal.acceptance = "true";
+	@description = "This is a test for LPS-155227. It checks that a user can not receive notifications without the subscribe permission of the folder."
+	@priority = 4
+	test CannotReceiveNotificationsWithoutFolderSubscriptionPermissions {
+		HeadlessSite.addSite(siteName = "Site Name");
 
-		JSONGroup.addGroup(groupName = "Site Name");
+		JSONUser.addUser(
+			userEmailAddress = "userea@liferay.com",
+			userFirstName = "userfn",
+			userLastName = "userln",
+			userScreenName = "usersn");
+
+		JSONUser.setFirstPassword(
+			agreeToTermsAndAnswerReminderQuery = "true",
+			requireReset = "false",
+			userEmailAddress = "userea@liferay.com");
+
+		JSONUser.addUserToSite(
+			groupName = "Site Name",
+			userEmailAddress = "userea@liferay.com");
 
 		JSONLayout.addPublicLayout(
 			groupName = "Site Name",
 			layoutName = "Documents and Media Page");
 
 		JSONLayout.addWidgetToPublicLayout(
-			column = "1",
+			column = 2,
+			groupName = "Site Name",
+			layoutName = "Documents and Media Page",
+			widgetName = "Documents and Media");
+
+		JSONFolder.addFolder(
+			dmFolderDescription = "Parent Folder Description",
+			dmFolderName = "Parent Folder Name",
+			groupName = "Site Name");
+
+		JSONFolder.addFolder(
+			dmFolderDescription = "SubFolder Description",
+			dmFolderName = "SubFolder Name",
+			groupName = "Site Name",
+			parentFolderName = "Parent Folder Name");
+
+		DMNavigator.openToFolderInAdmin(
+			dmFolderName = "Parent Folder Name",
+			groupName = "Site Name",
+			siteURLKey = "site-name");
+
+		LexiconEntry.gotoEntryMenuItem(
+			menuItem = "Permissions",
+			rowEntry = "SubFolder Name");
+
+		Role.removePermissionPG(
+			permissionDefinitionKey = "INLINE_PERMISSIONS_SUBSCRIBE_CHECKBOX",
+			roleTitle = "Site Member");
+
+		JSONDocument.subscribeToFolder(
+			dmFolderName = "Parent Folder Name",
+			groupName = "Site Name",
+			userEmailAddress = "userea@liferay.com",
+			userPassword = "test");
+
+		DMNavigator.openToFolderInAdmin(
+			dmFolderName = "SubFolder Name",
+			groupName = "Site Name",
+			parentFolderName = "Parent Folder Name",
+			siteURLKey = "site-name");
+
+		DMDocument.addCP(
+			dmDocumentDescription = "DM Image Description",
+			dmDocumentFile = "Document_1.jpg",
+			dmDocumentTitle = "DM Image Title");
+
+		User.logoutAndLoginPG(
+			userLoginEmailAddress = "userea@liferay.com",
+			userLoginFullName = "userfn userln");
+
+		Notifications.gotoNotifications();
+
+		Notifications.viewNoNotifications(activePanel = "Notifications");
+	}
+
+	@description = "This is a use case for LPS-43104."
+	@priority = 5
+	@refactordone
+	test CannotViewDocumentAsGuestWithoutPermissions {
+		property portal.acceptance = "true";
+
+		HeadlessSite.addSite(siteName = "Site Name");
+
+		JSONLayout.addPublicLayout(
+			groupName = "Site Name",
+			layoutName = "Documents and Media Page");
+
+		JSONLayout.addWidgetToPublicLayout(
+			column = 1,
 			groupName = "Site Name",
 			layoutName = "Documents and Media Page",
 			widgetName = "Documents and Media");
@@ -424,7 +612,7 @@ definition {
 	}
 
 	@description = "This test covers LPS-118268. It ensures that the user without document view permission can not view the document via the display page."
-	@priority = "4"
+	@priority = 4
 	@refactordone
 	test CannotViewDocumentInDisplayPageWithoutPermissions {
 		property portal.acceptance = "true";
@@ -476,12 +664,12 @@ definition {
 	}
 
 	@description = "This ensures that the user can create document viewable only by the owner."
-	@priority = "4"
+	@priority = 4
 	@refactordone
 	test CannotViewDocumentWithOwnerAccessOnly {
 		property portal.acceptance = "true";
 
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		JSONUser.addUser(
 			userEmailAddress = "userea@liferay.com",
@@ -499,7 +687,7 @@ definition {
 			layoutName = "Documents and Media Page");
 
 		JSONLayout.addWidgetToPublicLayout(
-			column = "1",
+			column = 1,
 			groupName = "Site Name",
 			layoutName = "Documents and Media Page",
 			widgetName = "Documents and Media");
@@ -530,7 +718,7 @@ definition {
 		for (var roleTitle : list "guest,site-member") {
 			Role.removePermissionPG(
 				permissionDefinitionKey = "CONTENT_PERMISSIONS_VIEW_CHECKBOX",
-				roleTitle = "${roleTitle}");
+				roleTitle = ${roleTitle});
 		}
 
 		Navigator.openSitePage(
@@ -561,19 +749,19 @@ definition {
 		DMPortlet.viewDefaultPG();
 	}
 
-	@priority = "4"
+	@priority = 4
 	@refactordone
 	test CannotViewFolderAsGuestWithNoPermissions {
 		property portal.acceptance = "true";
 
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		JSONLayout.addPublicLayout(
 			groupName = "Site Name",
 			layoutName = "Documents and Media Page");
 
 		JSONLayout.addWidgetToPublicLayout(
-			column = "1",
+			column = 1,
 			groupName = "Site Name",
 			layoutName = "Documents and Media Page",
 			widgetName = "Documents and Media");
@@ -604,7 +792,7 @@ definition {
 		DMPortlet.viewDefaultPG();
 	}
 
-	@priority = "5"
+	@priority = 5
 	@refactordone
 	test CannotViewFolderAsOrganizationMemberWithoutPermissions {
 		property portal.acceptance = "true";
@@ -645,7 +833,7 @@ definition {
 			layoutName = "Documents and Media Page");
 
 		JSONLayout.addWidgetToPublicLayout(
-			column = "1",
+			column = 1,
 			groupName = "Organization Name",
 			layoutName = "Documents and Media Page",
 			widgetName = "Documents and Media");
@@ -670,7 +858,7 @@ definition {
 
 		for (var permissionsInLineUncheckListsCount : list "INLINE_PERMISSIONS_ADD_SUBFOLDER_CHECKBOX,INLINE_PERMISSIONS_ADD_SHORTCUT_CHECKBOX,INLINE_PERMISSIONS_ADD_DOCUMENT_CHECKBOX,INLINE_PERMISSIONS_SUBSCRIBE_CHECKBOX,INLINE_PERMISSIONS_VIEW_CHECKBOX") {
 			Role.removePermissionPG(
-				permissionDefinitionKey = "${permissionsInLineUncheckListsCount}",
+				permissionDefinitionKey = ${permissionsInLineUncheckListsCount},
 				roleTitle = "Site Member");
 		}
 
@@ -691,7 +879,7 @@ definition {
 		DMPortlet.viewDefaultPG();
 	}
 
-	@priority = "5"
+	@priority = 5
 	@refactordone
 	test CannotViewFolderAsSiteMember {
 		property portal.acceptance = "true";
@@ -707,14 +895,14 @@ definition {
 			requireReset = "false",
 			userEmailAddress = "userea@liferay.com");
 
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		JSONLayout.addPublicLayout(
 			groupName = "Site Name",
 			layoutName = "Documents and Media Page");
 
 		JSONLayout.addWidgetToPublicLayout(
-			column = "1",
+			column = 1,
 			groupName = "Site Name",
 			layoutName = "Documents and Media Page",
 			widgetName = "Documents and Media");
@@ -773,7 +961,7 @@ definition {
 
 		for (var permissionsInLineUncheckListsCount : list "INLINE_PERMISSIONS_ADD_SUBFOLDER_CHECKBOX,INLINE_PERMISSIONS_ADD_SHORTCUT_CHECKBOX,INLINE_PERMISSIONS_ADD_DOCUMENT_CHECKBOX,INLINE_PERMISSIONS_SUBSCRIBE_CHECKBOX,INLINE_PERMISSIONS_VIEW_CHECKBOX") {
 			Role.removePermissionPG(
-				permissionDefinitionKey = "${permissionsInLineUncheckListsCount}",
+				permissionDefinitionKey = ${permissionsInLineUncheckListsCount},
 				roleTitle = "Site Member");
 		}
 
@@ -794,7 +982,7 @@ definition {
 		DMPortlet.viewDefaultPG();
 	}
 
-	@priority = "5"
+	@priority = 5
 	@refactordone
 	test CannotViewMultipleDocumentsAsSiteMember {
 		property portal.acceptance = "true";
@@ -811,7 +999,7 @@ definition {
 			requireReset = "false",
 			userEmailAddress = "userea@liferay.com");
 
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		JSONUser.addUserToSite(
 			groupName = "Site Name",
@@ -822,7 +1010,7 @@ definition {
 			layoutName = "Documents and Media Page");
 
 		JSONLayout.addWidgetToPublicLayout(
-			column = "2",
+			column = 2,
 			groupName = "Site Name",
 			layoutName = "Documents and Media Page",
 			widgetName = "Documents and Media");
@@ -850,11 +1038,11 @@ definition {
 			siteName = "Site Name");
 
 		for (var dmDocumentTitle : list "Document_1.jpeg,Document_2.docx,Document_3.mp3") {
-			DMDocument.cannotViewCP(dmDocumentTitle = "${dmDocumentTitle}");
+			DMDocument.cannotViewCP(dmDocumentTitle = ${dmDocumentTitle});
 		}
 	}
 
-	@priority = "5"
+	@priority = 5
 	@refactordone
 	test CanRemoveAddDocumentPermissionsForRegRole {
 		property portal.acceptance = "true";
@@ -887,7 +1075,7 @@ definition {
 		AssertElementNotPresent(locator1 = "Toolbar#ADD");
 	}
 
-	@priority = "4"
+	@priority = 4
 	@refactordone
 	test CanRemoveAddDocumentPermissionsForSiteMember {
 		property portal.acceptance = "true";
@@ -929,19 +1117,95 @@ definition {
 		MenuItem.viewNotPresent(menuItem = "File Upload");
 	}
 
-	@priority = "4"
-	@refactordone
-	test CanViewFolderAsGuestWithPermissions {
-		property portal.acceptance = "true";
+	@description = "This is a test for LPS-181561."
+	@priority = 4
+	test CanViewButNotDownloadFileAsSiteMember {
+		JSONUser.addUser(
+			userEmailAddress = "userea@liferay.com",
+			userFirstName = "userfn",
+			userLastName = "userln",
+			userScreenName = "usersn");
 
-		JSONGroup.addGroup(groupName = "Site Name");
+		JSONUser.setFirstPassword(
+			agreeToTermsAndAnswerReminderQuery = "true",
+			requireReset = "false",
+			userEmailAddress = "userea@liferay.com");
+
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		JSONLayout.addPublicLayout(
 			groupName = "Site Name",
 			layoutName = "Documents and Media Page");
 
 		JSONLayout.addWidgetToPublicLayout(
-			column = "1",
+			column = 1,
+			groupName = "Site Name",
+			layoutName = "Documents and Media Page",
+			widgetName = "Documents and Media");
+
+		JSONDocument.addFileWithUploadedFile(
+			dmDocumentDescription = "DM Document Description",
+			dmDocumentTitle = "Document_1",
+			groupName = "Site Name",
+			mimeType = "application/msword",
+			sourceFileName = "Document_1.doc");
+
+		ApplicationsMenu.gotoPortlet(
+			category = "Users",
+			panel = "Control Panel",
+			portlet = "Users and Organizations");
+
+		User.editUserSiteCP(
+			siteName = "Site Name",
+			userScreenName = "usersn");
+
+		var documentId = JSONDocument.getFileEntryId(
+			dmDocumentTitle = "Document_1",
+			groupName = "Site Name");
+
+		var response = DocumentAPI.putDMPermissionsWithDocumentID(
+			actionIds = "ADD_DISCUSSION",
+			documentId = ${documentId},
+			roleName = "Guest");
+		var response = DocumentAPI.putDMPermissionsWithDocumentID(
+			actionIds = '''VIEW","ADD_DISCUSSION''',
+			documentId = ${documentId},
+			roleName = "Site Member");
+
+		User.logoutPG();
+
+		User.loginUserPG(
+			password = "test",
+			userEmailAddress = "userea@liferay.com");
+
+		Navigator.gotoSitePage(
+			pageName = "Documents and Media Page",
+			siteName = "Site Name");
+
+		DMDocument.viewPG(
+			dmDocumentTitle = "Document_1",
+			noDownloadPermissions = "true");
+
+		DMDocument.downloadViaURL(
+			dmDocumentTitle = "Document_1",
+			siteURLKey = "site-name");
+
+		DMDocument.assertNoFileNameFromTempFolder(fileName = "Document_1.doc");
+	}
+
+	@priority = 4
+	@refactordone
+	test CanViewFolderAsGuestWithPermissions {
+		property portal.acceptance = "true";
+
+		HeadlessSite.addSite(siteName = "Site Name");
+
+		JSONLayout.addPublicLayout(
+			groupName = "Site Name",
+			layoutName = "Documents and Media Page");
+
+		JSONLayout.addWidgetToPublicLayout(
+			column = 1,
 			groupName = "Site Name",
 			layoutName = "Documents and Media Page",
 			widgetName = "Documents and Media");
@@ -977,11 +1241,11 @@ definition {
 
 		AssertTextEquals(
 			locator1 = "DocumentsAndMedia#BREADCRUMB_FOLDER_NAME",
-			value1 = "${dmFolderNameUpperCase}");
+			value1 = ${dmFolderNameUpperCase});
 	}
 
 	@description = "This test covers LPS-93031. It ensures that the document still can be viewed after the author is deleted."
-	@priority = "4"
+	@priority = 4
 	@refactordone
 	test DocumentCanStillBeViewedAfterAuthorIsDeleted {
 		property portal.acceptance = "true";
@@ -1040,7 +1304,7 @@ definition {
 	}
 
 	@description = "This test covers LPS-100096. It ensures that a document type cannot be edited without permissions."
-	@priority = "4"
+	@priority = 4
 	@refactordone
 	test EntryCanNotBeEditedWithoutPermissions {
 		property portal.acceptance = "true";
@@ -1064,7 +1328,7 @@ definition {
 
 		Permissions.definePermissionViaJSONAPI(
 			resourceAction = "VIEW_CONTROL_PANEL",
-			resourceName = "90",
+			resourceName = 90,
 			roleTitle = "Depot Regrole Name");
 
 		Permissions.definePermissionViaJSONAPI(
@@ -1095,7 +1359,7 @@ definition {
 
 		LexiconEntry.viewNoEntryMenu(rowEntry = "DM Document Type Name");
 
-		Navigator.openSpecificURL(url = "${documentTypeURL}");
+		Navigator.openSpecificURL(url = ${documentTypeURL});
 
 		AssertTextEquals.assertPartialText(
 			locator1 = "Message#ERROR",
@@ -1103,7 +1367,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-136852. It checks that a guest cannot access a folder image without permissions."
-	@priority = "4"
+	@priority = 4
 	test GuestCannotAccessFolderImageThroughURLWithoutPermissions {
 		property portal.upstream = "true";
 
@@ -1121,56 +1385,38 @@ definition {
 			mimeType = "image/jpeg",
 			sourceFileName = "Document_1.jpg");
 
-		var dmDocumentURL = DMDocument.getDMLatestVersionURL(
-			dmDocumentTitle = "DM Document Title",
+		DMNavigator.openToFolderInAdmin(
 			dmFolderName = "DM Folder Name",
+			groupName = "Guest",
 			siteURLKey = "guest");
 
-		User.logoutPG();
+		DMNavigator.gotoDocumentPermissionsCP(dmDocumentTitle = "DM Document Title");
 
-		Navigator.openSpecificURL(url = "${dmDocumentURL}");
+		PermissionsInline.addOrRemoveAnyPermissionsFromSpecificRole(
+			addOrRemoveViewPermission = "Remove",
+			permissionsKeyList = "INLINE_PERMISSIONS_DOWNLOAD_CHECKBOX",
+			roleTitle = "Guest");
 
-		User.viewLoginPG();
-	}
-
-	@description = "This ensures that a guest cannot access a DM folder without permissions."
-	@priority = "3"
-	test GuestCannotAccessFolderWithoutPermissions {
-		JSONLayout.addPublicLayout(
-			groupName = "Guest",
-			layoutName = "Documents and Media Page");
-
-		JSONLayout.addWidgetToPublicLayout(
-			column = "1",
-			groupName = "Guest",
-			layoutName = "Documents and Media Page",
-			widgetName = "Documents and Media");
-
-		JSONFolder.addFolder(
-			dmFolderDescription = "DM Folder Description",
-			dmFolderName = "DM Folder Name",
+		var dmDocumentURL = JSONDocument.getLatestVersionURL(
+			dmDocumentTitle = "DM Document Title",
 			groupName = "Guest");
 
 		User.logoutPG();
 
-		Navigator.gotoPage(pageName = "Documents and Media Page");
+		Navigator.openSpecificURL(url = ${dmDocumentURL});
 
-		DMNavigator.gotoFolder(
-			dmFolderName = "DM Folder Name",
-			noPermissions = "true");
-
-		Alert.viewErrorMessage(errorMessage = "You do not have the required permissions");
+		User.viewLoginPG();
 	}
 
 	@description = "This is a test for LPS-136833. It checks that a guest cannot add a document in a folder without permissions."
-	@priority = "3"
+	@priority = 3
 	test GuestCannotAddDocumentInFolder {
 		JSONLayout.addPublicLayout(
 			groupName = "Guest",
 			layoutName = "Documents and Media Page");
 
 		JSONLayout.addWidgetToPublicLayout(
-			column = "1",
+			column = 1,
 			groupName = "Guest",
 			layoutName = "Documents and Media Page",
 			widgetName = "Documents and Media");
@@ -1179,11 +1425,6 @@ definition {
 			dmFolderDescription = "DM Folder Description",
 			dmFolderName = "DM Folder Name",
 			groupName = "Guest");
-
-		Permissions.definePermissionViaJSONAPI(
-			resourceAction = "ACCESS",
-			resourceName = "com.liferay.document.library.kernel.model.DLFolder",
-			roleTitle = "Guest");
 
 		Navigator.gotoPage(pageName = "Documents and Media Page");
 
@@ -1199,14 +1440,14 @@ definition {
 	}
 
 	@description = "This is a test for LPS-136834. It checks that a guest cannot delete a file without permissions."
-	@priority = "3"
+	@priority = 3
 	test GuestCannotDeleteFile {
 		JSONLayout.addPublicLayout(
 			groupName = "Guest",
 			layoutName = "Documents and Media Page");
 
 		JSONLayout.addWidgetToPublicLayout(
-			column = "1",
+			column = 1,
 			groupName = "Guest",
 			layoutName = "Documents and Media Page",
 			widgetName = "Documents and Media");
@@ -1236,14 +1477,14 @@ definition {
 	}
 
 	@description = "This is a test for LPS-136835. It checks that a guest cannot subscribe to a folder without permissions."
-	@priority = "3"
+	@priority = 3
 	test GuestCannotSubscribeToFolder {
 		JSONLayout.addPublicLayout(
 			groupName = "Guest",
 			layoutName = "Documents and Media Page");
 
 		JSONLayout.addWidgetToPublicLayout(
-			column = "1",
+			column = 1,
 			groupName = "Guest",
 			layoutName = "Documents and Media Page",
 			widgetName = "Documents and Media");
@@ -1252,11 +1493,6 @@ definition {
 			dmFolderDescription = "DM Folder Description",
 			dmFolderName = "DM Folder Name",
 			groupName = "Guest");
-
-		Permissions.definePermissionViaJSONAPI(
-			resourceAction = "ACCESS",
-			resourceName = "com.liferay.document.library.kernel.model.DLFolder",
-			roleTitle = "Guest");
 
 		User.logoutPG();
 
@@ -1268,7 +1504,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-136836. It checks that a guest cannot update comments in a file without permissions."
-	@priority = "3"
+	@priority = 3
 	test GuestCannotUpdateComments {
 		property testray.component.names = "Comment";
 
@@ -1277,7 +1513,7 @@ definition {
 			layoutName = "Documents and Media Page");
 
 		JSONLayout.addWidgetToPublicLayout(
-			column = "1",
+			column = 1,
 			groupName = "Guest",
 			layoutName = "Documents and Media Page",
 			widgetName = "Documents and Media");
@@ -1304,14 +1540,14 @@ definition {
 	}
 
 	@description = "This is a test for LPS-136837. It checks that a guest cannot update a folder without permissions."
-	@priority = "3"
+	@priority = 3
 	test GuestCannotUpdateFolder {
 		JSONLayout.addPublicLayout(
 			groupName = "Guest",
 			layoutName = "Documents and Media Page");
 
 		JSONLayout.addWidgetToPublicLayout(
-			column = "1",
+			column = 1,
 			groupName = "Guest",
 			layoutName = "Documents and Media Page",
 			widgetName = "Documents and Media");
@@ -1324,11 +1560,6 @@ definition {
 			dmFolderDescription = "DM Folder Description",
 			dmFolderName = "DM Folder Name",
 			groupName = "Guest");
-
-		Permissions.definePermissionViaJSONAPI(
-			resourceAction = "ACCESS",
-			resourceName = "com.liferay.document.library.kernel.model.DLFolder",
-			roleTitle = "Guest");
 
 		User.logoutPG();
 
@@ -1346,16 +1577,16 @@ definition {
 	}
 
 	@description = "This is a test for LPS-136838. It checks that a guest cannot view a folder without permissions."
-	@priority = "3"
+	@priority = 3
 	test GuestCannotViewFolder {
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		JSONLayout.addPublicLayout(
 			groupName = "Site Name",
 			layoutName = "Documents and Media Page");
 
 		JSONLayout.addWidgetToPublicLayout(
-			column = "1",
+			column = 1,
 			groupName = "Site Name",
 			layoutName = "Documents and Media Page",
 			widgetName = "Documents and Media");
@@ -1376,16 +1607,16 @@ definition {
 	}
 
 	@description = "This is a test for LPS-136832. It checks that a guest can access an image in a folder through the URL when he has permissions."
-	@priority = "3"
+	@priority = 3
 	test GuestWithAccessToFolderCanAccessImageThroughURL {
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		JSONLayout.addPublicLayout(
 			groupName = "Site Name",
 			layoutName = "Documents and Media Page");
 
 		JSONLayout.addWidgetToPublicLayout(
-			column = "1",
+			column = 1,
 			groupName = "Site Name",
 			layoutName = "Documents and Media Page",
 			widgetName = "Documents and Media");
@@ -1433,7 +1664,7 @@ definition {
 
 		DMDocument.viewDefault();
 
-		Navigator.openSpecificURL(url = "${dmDocumentURL}");
+		Navigator.openSpecificURL(url = ${dmDocumentURL});
 
 		AssertVisible(
 			key_imageSourceURL = "dm-document-title",
@@ -1441,7 +1672,7 @@ definition {
 	}
 
 	@description = "This test covers LPS-106905. It ensures that a site admin user is able to select an image from the global site in WCD."
-	@priority = "3"
+	@priority = 3
 	@refactordone
 	test ImageFromGlobalSiteCanBeSelectedWithPermissionsInWCD {
 		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "global");
@@ -1451,7 +1682,7 @@ definition {
 			dmDocumentFile = "Document_1.png",
 			dmDocumentTitle = "Document_1.png");
 
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		JSONLayout.addPublicLayout(
 			groupName = "Site Name",
@@ -1502,7 +1733,7 @@ definition {
 			webContentTitle = "WC WebContent Title");
 	}
 
-	@priority = "5"
+	@priority = 5
 	@refactordone
 	test RegRoleCannotAddDocumentByDefault {
 		property portal.acceptance = "true";
@@ -1526,7 +1757,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-136852. It checks that a site member cannot access a folder image without permissions."
-	@priority = "3"
+	@priority = 3
 	test SiteMemberCannotAccessFolderImageThroughURLWithoutPermissions {
 		JSONUser.addUser(
 			userEmailAddress = "userea@liferay.com",
@@ -1558,22 +1789,38 @@ definition {
 			mimeType = "image/jpeg",
 			sourceFileName = "Document_1.jpg");
 
-		var dmDocumentURL = DMDocument.getDMLatestVersionURL(
-			dmDocumentTitle = "DM Document Title",
+		DMNavigator.openToFolderInAdmin(
 			dmFolderName = "DM Folder Name",
+			groupName = "Guest",
 			siteURLKey = "guest");
+
+		DMNavigator.gotoDocumentPermissionsCP(dmDocumentTitle = "DM Document Title");
+
+		PermissionsInline.addOrRemoveAnyPermissionsFromSpecificRole(
+			addOrRemoveViewPermission = "Remove",
+			permissionsKeyList = "INLINE_PERMISSIONS_DOWNLOAD_CHECKBOX",
+			roleTitle = "Site Member");
+
+		PermissionsInline.addOrRemoveAnyPermissionsFromSpecificRole(
+			addOrRemoveViewPermission = "Remove",
+			permissionsKeyList = "INLINE_PERMISSIONS_DOWNLOAD_CHECKBOX",
+			roleTitle = "Guest");
+
+		var dmDocumentURL = JSONDocument.getLatestVersionURL(
+			dmDocumentTitle = "DM Document Title",
+			groupName = "Guest");
 
 		User.logoutAndLoginPG(
 			userLoginEmailAddress = "userea@liferay.com",
 			userLoginFullName = "userfn userln");
 
-		Navigator.openSpecificURL(url = "${dmDocumentURL}");
+		Navigator.openSpecificURL(url = ${dmDocumentURL});
 
 		AssertTextPresent(value1 = "You do not have permission to access the requested resource.");
 	}
 
 	@description = "This is a test for LPS-136841. It checks that a site member cannot add a document in a folder without permissions."
-	@priority = "3"
+	@priority = 3
 	test SiteMemberCannotAddDocumentInFolder {
 		JSONUser.addUser(
 			userEmailAddress = "userea@liferay.com",
@@ -1590,18 +1837,12 @@ definition {
 			groupName = "Guest",
 			userEmailAddress = "userea@liferay.com");
 
-		Permissions.definePermissionViaJSONAPI(
-			resourceAction = "ACCESS",
-			resourceName = "com.liferay.document.library.kernel.model.DLFolder",
-			roleTitle = "Site Member",
-			roleType = "site");
-
 		JSONLayout.addPublicLayout(
 			groupName = "Guest",
 			layoutName = "Documents and Media Page");
 
 		JSONLayout.addWidgetToPublicLayout(
-			column = "1",
+			column = 1,
 			groupName = "Guest",
 			layoutName = "Documents and Media Page",
 			widgetName = "Documents and Media");
@@ -1634,12 +1875,12 @@ definition {
 		LexiconEntry.gotoAdd();
 
 		for (var menuItem : list "File Upload,Multiple Files Upload") {
-			MenuItem.viewNotPresent(menuItem = "${menuItem}");
+			MenuItem.viewNotPresent(menuItem = ${menuItem});
 		}
 	}
 
 	@description = "This is a test for LPS-136842. It checks that a site member cannot add a shortcut without permissions."
-	@priority = "3"
+	@priority = 3
 	test SiteMemberCannotAddShortcut {
 		JSONUser.addUser(
 			userEmailAddress = "userea@liferay.com",
@@ -1661,7 +1902,7 @@ definition {
 			layoutName = "Documents and Media Page");
 
 		JSONLayout.addWidgetToPublicLayout(
-			column = "1",
+			column = 1,
 			groupName = "Guest",
 			layoutName = "Documents and Media Page",
 			widgetName = "Documents and Media");
@@ -1697,7 +1938,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-136845. It checks that a site member cannot delete a file without permissions."
-	@priority = "3"
+	@priority = 3
 	test SiteMemberCannotDeleteFile {
 		JSONUser.addUser(
 			userEmailAddress = "userea@liferay.com",
@@ -1719,7 +1960,7 @@ definition {
 			layoutName = "Documents and Media Page");
 
 		JSONLayout.addWidgetToPublicLayout(
-			column = "1",
+			column = 1,
 			groupName = "Guest",
 			layoutName = "Documents and Media Page",
 			widgetName = "Documents and Media");
@@ -1751,9 +1992,9 @@ definition {
 	}
 
 	@description = "This is a test for LPS-136846. It checks that a site member cannot delete a shortcut without permissions."
-	@priority = "3"
+	@priority = 3
 	test SiteMemberCannotDeleteShortcut {
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		JSONUser.addUser(
 			userEmailAddress = "userea@liferay.com",
@@ -1775,7 +2016,7 @@ definition {
 			layoutName = "Documents and Media Page");
 
 		JSONLayout.addWidgetToPublicLayout(
-			column = "1",
+			column = 1,
 			groupName = "Guest",
 			layoutName = "Documents and Media Page",
 			widgetName = "Documents and Media");
@@ -1811,7 +2052,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-136847. It checks that a site member cannot override a checkout process without permissions."
-	@priority = "3"
+	@priority = 3
 	test SiteMemberCannotOverrideCheckout {
 		JSONUser.addUser(
 			userEmailAddress = "userea@liferay.com",
@@ -1833,7 +2074,7 @@ definition {
 			layoutName = "Documents and Media Page");
 
 		JSONLayout.addWidgetToPublicLayout(
-			column = "1",
+			column = 1,
 			groupName = "Guest",
 			layoutName = "Documents and Media Page",
 			widgetName = "Documents and Media");
@@ -1871,7 +2112,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-136848. It checks that a site member cannot subscribe to a folder without permissions."
-	@priority = "3"
+	@priority = 3
 	test SiteMemberCannotSubscribeToFolder {
 		JSONUser.addUser(
 			userEmailAddress = "userea@liferay.com",
@@ -1888,18 +2129,12 @@ definition {
 			groupName = "Guest",
 			userEmailAddress = "userea@liferay.com");
 
-		Permissions.definePermissionViaJSONAPI(
-			resourceAction = "ACCESS",
-			resourceName = "com.liferay.document.library.kernel.model.DLFolder",
-			roleTitle = "Site Member",
-			roleType = "site");
-
 		JSONLayout.addPublicLayout(
 			groupName = "Guest",
 			layoutName = "Documents and Media Page");
 
 		JSONLayout.addWidgetToPublicLayout(
-			column = "1",
+			column = 1,
 			groupName = "Guest",
 			layoutName = "Documents and Media Page",
 			widgetName = "Documents and Media");
@@ -1929,7 +2164,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-136849. It checks that a site member cannot update comments without permissions."
-	@priority = "3"
+	@priority = 3
 	test SiteMemberCannotUpdateComments {
 		property testray.component.names = "Comment";
 
@@ -1953,7 +2188,7 @@ definition {
 			layoutName = "Documents and Media Page");
 
 		JSONLayout.addWidgetToPublicLayout(
-			column = "1",
+			column = 1,
 			groupName = "Guest",
 			layoutName = "Documents and Media Page",
 			widgetName = "Documents and Media");
@@ -1982,7 +2217,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-136843. It checks that a site member cannot update the permissions of a file without permissions."
-	@priority = "3"
+	@priority = 3
 	test SiteMemberCannotUpdateFilePermissions {
 		JSONUser.addUser(
 			userEmailAddress = "userea@liferay.com",
@@ -2004,7 +2239,7 @@ definition {
 			layoutName = "Documents and Media Page");
 
 		JSONLayout.addWidgetToPublicLayout(
-			column = "1",
+			column = 1,
 			groupName = "Guest",
 			layoutName = "Documents and Media Page",
 			widgetName = "Documents and Media");
@@ -2038,7 +2273,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-136850. It checks that a site member cannot update a folder without permissions."
-	@priority = "3"
+	@priority = 3
 	test SiteMemberCannotUpdateFolder {
 		JSONUser.addUser(
 			userEmailAddress = "userea@liferay.com",
@@ -2055,18 +2290,12 @@ definition {
 			groupName = "Guest",
 			userEmailAddress = "userea@liferay.com");
 
-		Permissions.definePermissionViaJSONAPI(
-			resourceAction = "ACCESS",
-			resourceName = "com.liferay.document.library.kernel.model.DLFolder",
-			roleTitle = "Site Member",
-			roleType = "site");
-
 		JSONLayout.addPublicLayout(
 			groupName = "Guest",
 			layoutName = "Documents and Media Page");
 
 		JSONLayout.addWidgetToPublicLayout(
-			column = "1",
+			column = 1,
 			groupName = "Guest",
 			layoutName = "Documents and Media Page",
 			widgetName = "Documents and Media");
@@ -2098,7 +2327,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-136844. It checks that a site member cannot update the permissions of a folder without permissions."
-	@priority = "3"
+	@priority = 3
 	test SiteMemberCannotUpdateFolderPermissions {
 		JSONUser.addUser(
 			userEmailAddress = "userea@liferay.com",
@@ -2115,18 +2344,12 @@ definition {
 			groupName = "Guest",
 			userEmailAddress = "userea@liferay.com");
 
-		Permissions.definePermissionViaJSONAPI(
-			resourceAction = "ACCESS",
-			resourceName = "com.liferay.document.library.kernel.model.DLFolder",
-			roleTitle = "Site Member",
-			roleType = "site");
-
 		JSONLayout.addPublicLayout(
 			groupName = "Guest",
 			layoutName = "Documents and Media Page");
 
 		JSONLayout.addWidgetToPublicLayout(
-			column = "1",
+			column = 1,
 			groupName = "Guest",
 			layoutName = "Documents and Media Page",
 			widgetName = "Documents and Media");
@@ -2160,9 +2383,9 @@ definition {
 	}
 
 	@description = "This is a test for LPS-136851. It checks that a site member cannot view a file without permissions."
-	@priority = "3"
+	@priority = 3
 	test SiteMemberCannotViewFile {
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		JSONUser.addUser(
 			userEmailAddress = "userea@liferay.com",
@@ -2184,7 +2407,7 @@ definition {
 			layoutName = "Documents and Media Page");
 
 		JSONLayout.addWidgetToPublicLayout(
-			column = "1",
+			column = 1,
 			groupName = "Site Name",
 			layoutName = "Documents and Media Page",
 			widgetName = "Documents and Media");
@@ -2214,9 +2437,9 @@ definition {
 	}
 
 	@description = "This is a test for LPS-136840. It checks that a site member can access an image in a folder through the URL with permissions."
-	@priority = "3"
+	@priority = 3
 	test SiteMemberWithAccessToFolderCanAccessImageThroughURL {
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		JSONUser.addUser(
 			userEmailAddress = "userea@liferay.com",
@@ -2238,7 +2461,7 @@ definition {
 			layoutName = "Documents and Media Page");
 
 		JSONLayout.addWidgetToPublicLayout(
-			column = "1",
+			column = 1,
 			groupName = "Site Name",
 			layoutName = "Documents and Media Page",
 			widgetName = "Documents and Media");
@@ -2289,7 +2512,7 @@ definition {
 
 		DMDocument.viewDefault();
 
-		Navigator.openSpecificURL(url = "${dmDocumentURL}");
+		Navigator.openSpecificURL(url = ${dmDocumentURL});
 
 		AssertVisible(
 			key_imageSourceURL = "dm-document-title",

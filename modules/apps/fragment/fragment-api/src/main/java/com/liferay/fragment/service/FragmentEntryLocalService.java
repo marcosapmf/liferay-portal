@@ -105,7 +105,7 @@ public interface FragmentEntryLocalService
 		throws PortalException;
 
 	public FragmentEntry copyFragmentEntry(
-			long userId, long groupId, long fragmentEntryId,
+			long userId, long groupId, long sourceFragmentEntryId,
 			long fragmentCollectionId, ServiceContext serviceContext)
 		throws PortalException;
 
@@ -441,6 +441,10 @@ public interface FragmentEntryLocalService
 	 */
 	@Indexable(type = IndexableType.REINDEX)
 	public FragmentEntry updateFragmentEntry(FragmentEntry draftFragmentEntry)
+		throws PortalException;
+
+	public FragmentEntry updateFragmentEntry(
+			long fragmentEntryId, boolean cacheable)
 		throws PortalException;
 
 	public FragmentEntry updateFragmentEntry(

@@ -24,7 +24,6 @@ import com.liferay.object.rest.manager.v1_0.ObjectEntryManager;
 import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.object.service.ObjectFieldLocalService;
 import com.liferay.object.storage.salesforce.configuration.SalesforceConfiguration;
-import com.liferay.object.util.LocalizedMapUtil;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
@@ -35,14 +34,14 @@ import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.MapUtil;
-import com.liferay.portal.kernel.util.UnicodePropertiesBuilder;
+import com.liferay.portal.test.rule.FeatureFlags;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
-import com.liferay.portal.util.PropsUtil;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterContext;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterRegistry;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
+import com.liferay.portal.vulcan.util.LocalizedMapUtil;
 
 import java.util.Collections;
 import java.util.Map;
@@ -60,6 +59,7 @@ import org.junit.runner.RunWith;
 /**
  * @author Guilherme Camacho
  */
+@FeatureFlags("LPS-135430")
 @RunWith(Arquillian.class)
 public class SalesforceObjectEntryManagerImplTest {
 
@@ -111,16 +111,11 @@ public class SalesforceObjectEntryManagerImplTest {
 
 	@Before
 	public void setUp() throws Exception {
-		PropsUtil.addProperties(
-			UnicodePropertiesBuilder.setProperty(
-				"feature.flag.LPS-135430", "true"
-			).build());
-
 		_user = TestPropsValues.getUser();
 
 		_objectDefinition =
 			_objectDefinitionLocalService.addCustomObjectDefinition(
-				_user.getUserId(), false,
+				_user.getUserId(), false, false,
 				LocalizedMapUtil.getLocalizedMap("Ticket"), "Ticket", null,
 				null, LocalizedMapUtil.getLocalizedMap("Tickets"),
 				ObjectDefinitionConstants.SCOPE_COMPANY,
@@ -131,15 +126,16 @@ public class SalesforceObjectEntryManagerImplTest {
 			null, _user.getUserId(), 0,
 			_objectDefinition.getObjectDefinitionId(),
 			ObjectFieldConstants.BUSINESS_TYPE_TEXT,
-			ObjectFieldConstants.DB_TYPE_STRING, null, false, false, null,
-			LocalizedMapUtil.getLocalizedMap("Title"), "title", false, false,
-			Collections.emptyList());
+			ObjectFieldConstants.DB_TYPE_STRING, false, false, null,
+			LocalizedMapUtil.getLocalizedMap("Title"), false, "title", false,
+			false, Collections.emptyList());
 
 		_objectFieldLocalService.updateCustomObjectField(
 			"Title__c", objectField.getObjectFieldId(), 0,
-			objectField.getBusinessType(), objectField.getDBType(), null, false,
-			false, null, objectField.getLabelMap(), objectField.getName(),
-			false, false, objectField.getObjectFieldSettings());
+			objectField.getBusinessType(), objectField.getDBType(), false,
+			false, null, objectField.getLabelMap(), false,
+			objectField.getName(), false, false,
+			objectField.getObjectFieldSettings());
 
 		_objectDefinition.setExternalReferenceCode("Ticket__c");
 		_objectDefinition.setTitleObjectFieldId(objectField.getObjectFieldId());
@@ -155,11 +151,6 @@ public class SalesforceObjectEntryManagerImplTest {
 
 	@After
 	public void tearDown() throws Exception {
-		PropsUtil.addProperties(
-			UnicodePropertiesBuilder.setProperty(
-				"feature.flag.LPS-135430", "false"
-			).build());
-
 		if (_objectDefinition != null) {
 			_objectDefinitionLocalService.deleteObjectDefinition(
 				_objectDefinition.getObjectDefinitionId());
@@ -182,8 +173,8 @@ public class SalesforceObjectEntryManagerImplTest {
 		Assert.assertNotNull(objectEntry.getExternalReferenceCode());
 
 		_objectEntryManager.deleteObjectEntry(
-			objectEntry.getExternalReferenceCode(),
-			TestPropsValues.getCompanyId(), _objectDefinition,
+			TestPropsValues.getCompanyId(), _getDTOConverterContext(),
+			objectEntry.getExternalReferenceCode(), _objectDefinition,
 			ObjectDefinitionConstants.SCOPE_COMPANY);
 	}
 
@@ -217,8 +208,8 @@ public class SalesforceObjectEntryManagerImplTest {
 			title, MapUtil.getString(objectEntry.getProperties(), "title"));
 
 		_objectEntryManager.deleteObjectEntry(
-			objectEntry.getExternalReferenceCode(),
-			TestPropsValues.getCompanyId(), _objectDefinition,
+			TestPropsValues.getCompanyId(), _getDTOConverterContext(),
+			objectEntry.getExternalReferenceCode(), _objectDefinition,
 			ObjectDefinitionConstants.SCOPE_COMPANY);
 	}
 
@@ -240,16 +231,16 @@ public class SalesforceObjectEntryManagerImplTest {
 			ObjectDefinitionConstants.SCOPE_COMPANY);
 
 		objectEntry = _objectEntryManager.getObjectEntry(
-			dtoConverterContext, objectEntry.getExternalReferenceCode(),
-			TestPropsValues.getCompanyId(), _objectDefinition,
+			TestPropsValues.getCompanyId(), dtoConverterContext,
+			objectEntry.getExternalReferenceCode(), _objectDefinition,
 			ObjectDefinitionConstants.SCOPE_COMPANY);
 
 		Assert.assertEquals(
 			title, MapUtil.getString(objectEntry.getProperties(), "title"));
 
 		_objectEntryManager.deleteObjectEntry(
-			objectEntry.getExternalReferenceCode(),
-			TestPropsValues.getCompanyId(), _objectDefinition,
+			TestPropsValues.getCompanyId(), _getDTOConverterContext(),
+			objectEntry.getExternalReferenceCode(), _objectDefinition,
 			ObjectDefinitionConstants.SCOPE_COMPANY);
 	}
 

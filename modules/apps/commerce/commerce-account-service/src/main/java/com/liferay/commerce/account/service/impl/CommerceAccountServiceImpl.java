@@ -39,6 +39,8 @@ import org.osgi.service.component.annotations.Reference;
 /**
  * @author Marco Leo
  * @author Alessio Antonio Rendina
+ * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
+ *             com.liferay.account.service.AccountEntryService}
  */
 @Component(
 	property = {
@@ -47,6 +49,7 @@ import org.osgi.service.component.annotations.Reference;
 	},
 	service = AopService.class
 )
+@Deprecated
 public class CommerceAccountServiceImpl extends CommerceAccountServiceBaseImpl {
 
 	@Override
@@ -157,7 +160,7 @@ public class CommerceAccountServiceImpl extends CommerceAccountServiceBaseImpl {
 
 		User user = getUser();
 
-		if ((user == null) || user.isDefaultUser()) {
+		if ((user == null) || user.isGuestUser()) {
 			return commerceAccountLocalService.getGuestCommerceAccount(
 				user.getCompanyId());
 		}
@@ -177,7 +180,7 @@ public class CommerceAccountServiceImpl extends CommerceAccountServiceBaseImpl {
 
 		User user = getUser();
 
-		if ((user == null) || user.isDefaultUser()) {
+		if ((user == null) || user.isGuestUser()) {
 			return commerceAccountLocalService.getGuestCommerceAccount(
 				user.getCompanyId());
 		}

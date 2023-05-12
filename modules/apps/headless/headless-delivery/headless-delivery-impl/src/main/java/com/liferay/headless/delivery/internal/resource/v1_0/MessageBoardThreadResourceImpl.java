@@ -22,7 +22,6 @@ import com.liferay.headless.common.spi.service.context.ServiceContextRequestUtil
 import com.liferay.headless.delivery.dto.v1_0.MessageBoardThread;
 import com.liferay.headless.delivery.dto.v1_0.Rating;
 import com.liferay.headless.delivery.dto.v1_0.util.CustomFieldsUtil;
-import com.liferay.headless.delivery.internal.dto.v1_0.converter.MessageBoardThreadDTOConverter;
 import com.liferay.headless.delivery.internal.dto.v1_0.util.RatingUtil;
 import com.liferay.headless.delivery.internal.odata.entity.v1_0.MessageBoardMessageEntityModel;
 import com.liferay.headless.delivery.resource.v1_0.MessageBoardThreadResource;
@@ -44,6 +43,7 @@ import com.liferay.message.boards.util.comparator.ThreadCreateDateComparator;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.change.tracking.CTAware;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.dao.orm.OrderFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.QueryDefinition;
@@ -74,6 +74,7 @@ import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.search.expando.ExpandoBridgeIndexer;
 import com.liferay.portal.vulcan.aggregation.Aggregation;
+import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterRegistry;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.pagination.Page;
@@ -92,7 +93,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Map;
-import java.util.Optional;
 
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.NotAuthorizedException;
@@ -110,6 +110,7 @@ import org.osgi.service.component.annotations.ServiceScope;
 	properties = "OSGI-INF/liferay/rest/v1_0/message-board-thread.properties",
 	scope = ServiceScope.PROTOTYPE, service = MessageBoardThreadResource.class
 )
+@CTAware
 public class MessageBoardThreadResourceImpl
 	extends BaseMessageBoardThreadResourceImpl {
 
@@ -159,6 +160,13 @@ public class MessageBoardThreadResourceImpl
 				addAction(
 					ActionKeys.ADD_MESSAGE, mbCategory.getCategoryId(),
 					"postMessageBoardSectionMessageBoardThread",
+					mbCategory.getUserId(), MBConstants.RESOURCE_NAME,
+					mbCategory.getGroupId())
+			).put(
+				"createBatch",
+				addAction(
+					ActionKeys.ADD_MESSAGE, mbCategory.getCategoryId(),
+					"postMessageBoardSectionMessageBoardThreadBatch",
 					mbCategory.getUserId(), MBConstants.RESOURCE_NAME,
 					mbCategory.getGroupId())
 			).put(
@@ -550,11 +558,7 @@ public class MessageBoardThreadResourceImpl
 		ServiceContext serviceContext =
 			ServiceContextRequestUtil.createServiceContext(
 				messageBoardThread.getTaxonomyCategoryIds(),
-				Optional.ofNullable(
-					messageBoardThread.getKeywords()
-				).orElse(
-					new String[0]
-				),
+				GetterUtil.getStringValues(messageBoardThread.getKeywords()),
 				_getExpandoBridgeAttributes(messageBoardThread), groupId,
 				contextHttpServletRequest,
 				messageBoardThread.getViewableByAsString());
@@ -843,8 +847,11 @@ public class MessageBoardThreadResourceImpl
 	@Reference
 	private MBThreadService _mbThreadService;
 
-	@Reference
-	private MessageBoardThreadDTOConverter _messageBoardThreadDTOConverter;
+	@Reference(
+		target = "(component.name=com.liferay.headless.delivery.internal.dto.v1_0.converter.MessageBoardThreadDTOConverter)"
+	)
+	private DTOConverter<MBThread, MessageBoardThread>
+		_messageBoardThreadDTOConverter;
 
 	@Reference
 	private Portal _portal;

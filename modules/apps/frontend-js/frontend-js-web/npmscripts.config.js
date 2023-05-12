@@ -13,14 +13,7 @@
  */
 
 module.exports = {
-	bridges: [
-		'lodash.escape',
-		'lodash.groupby',
-		'lodash.isequal',
-		'lodash.unescape',
-		'svg4everybody',
-		'uuid',
-	],
+	bridges: ['lodash.groupby', 'lodash.isequal', 'svg4everybody'],
 	build: {
 		customBridges: {
 			'bridge/frontend-js-web/index':

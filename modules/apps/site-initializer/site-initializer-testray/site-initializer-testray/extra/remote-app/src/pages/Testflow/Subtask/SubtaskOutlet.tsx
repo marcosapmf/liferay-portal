@@ -15,6 +15,7 @@
 import {useEffect} from 'react';
 import {Outlet, useOutletContext, useParams} from 'react-router-dom';
 
+import SearchBuilder from '../../../core/SearchBuilder';
 import {useFetch} from '../../../hooks/useFetch';
 import useHeader from '../../../hooks/useHeader';
 import i18n from '../../../i18n';
@@ -26,7 +27,6 @@ import {
 	testraySubTaskImpl,
 } from '../../../services/rest';
 import {testraySubtaskIssuesImpl} from '../../../services/rest/TestraySubtaskIssues';
-import {searchUtil} from '../../../util/search';
 
 type OutletContext = {
 	data: {
@@ -59,12 +59,14 @@ const SubtaskOutlet = () => {
 	const {data: testraySubtaskToMerged} = useFetch<
 		APIResponse<TestraySubTask>
 	>(testraySubTaskImpl.resource, {
-		fields: 'name',
-		filter: searchUtil.eq(
-			'r_mergedToTestraySubtask_c_subtaskId',
-			subtaskId as string
-		),
-		pageSize: 100,
+		params: {
+			fields: 'name',
+			filter: SearchBuilder.eq(
+				'r_mergedToTestraySubtask_c_subtaskId',
+				subtaskId as string
+			),
+			pageSize: 100,
+		},
 		transformData: (response) =>
 			testraySubTaskImpl.transformDataFromList(response),
 	});
@@ -72,7 +74,9 @@ const SubtaskOutlet = () => {
 	const {data, mutate: mutateSubtaskIssues} = useFetch(
 		testraySubtaskIssuesImpl.resource,
 		{
-			filter: searchUtil.eq('subtaskId', subtaskId as string),
+			params: {
+				filter: SearchBuilder.eq('subtaskId', subtaskId as string),
+			},
 			transformData: (response) =>
 				testraySubtaskIssuesImpl.transformDataFromList(response),
 		}
@@ -89,12 +93,14 @@ const SubtaskOutlet = () => {
 	const {data: testraySubtaskToSplit} = useFetch<APIResponse<TestraySubTask>>(
 		testraySubTaskImpl.resource,
 		{
-			fields: 'name',
-			filter: searchUtil.eq(
-				'r_splitFromTestraySubtask_c_subtaskId',
-				subtaskId as string
-			),
-			pageSize: 100,
+			params: {
+				fields: 'name',
+				filter: SearchBuilder.eq(
+					'r_splitFromTestraySubtask_c_subtaskId',
+					subtaskId as string
+				),
+				pageSize: 100,
+			},
 			transformData: (response) =>
 				testraySubTaskImpl.transformDataFromList(response),
 		}

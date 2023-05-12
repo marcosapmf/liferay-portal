@@ -16,6 +16,7 @@ import {ClayCheckbox} from '@clayui/form';
 import {useForm} from 'react-hook-form';
 import {useOutletContext} from 'react-router-dom';
 import {KeyedMutator} from 'swr';
+import {withPagePermission} from '~/hoc/withPagePermission';
 
 import Form from '../../../components/Form';
 import Container from '../../../components/Layout/Container';
@@ -47,7 +48,7 @@ const RoutineForm = () => {
 	} = useOutletContext<OutletContext>();
 
 	const {
-		formState: {errors},
+		formState: {errors, isSubmitting},
 		handleSubmit,
 		register,
 		setValue,
@@ -61,7 +62,7 @@ const RoutineForm = () => {
 		form: {onClose, onError, onSave, onSubmit},
 	} = useFormActions();
 
-	const _onSubmit = (form: RoutineFormType) => {
+	const _onSubmit = (form: RoutineFormType) =>
 		onSubmit(
 			{
 				...form,
@@ -75,7 +76,6 @@ const RoutineForm = () => {
 			.then(mutateTestrayRoutine)
 			.then(onSave)
 			.catch(onError);
-	};
 
 	const autoanalyze = watch('autoanalyze');
 
@@ -95,9 +95,15 @@ const RoutineForm = () => {
 				onChange={() => setValue('autoanalyze', !autoanalyze)}
 			/>
 
-			<Form.Footer onClose={onClose} onSubmit={handleSubmit(_onSubmit)} />
+			<Form.Footer
+				onClose={onClose}
+				onSubmit={handleSubmit(_onSubmit)}
+				primaryButtonProps={{loading: isSubmitting}}
+			/>
 		</Container>
 	);
 };
 
-export default RoutineForm;
+export default withPagePermission(RoutineForm, {
+	restImpl: testrayRoutineImpl,
+});

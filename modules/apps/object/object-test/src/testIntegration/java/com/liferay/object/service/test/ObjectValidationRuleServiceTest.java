@@ -25,7 +25,6 @@ import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.object.service.ObjectValidationRuleLocalService;
 import com.liferay.object.service.ObjectValidationRuleService;
 import com.liferay.object.service.test.util.ObjectDefinitionTestUtil;
-import com.liferay.object.util.LocalizedMapUtil;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.security.auth.PrincipalThreadLocal;
@@ -39,6 +38,7 @@ import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.vulcan.util.LocalizedMapUtil;
 
 import java.util.Arrays;
 
@@ -63,7 +63,7 @@ public class ObjectValidationRuleServiceTest {
 
 	@Before
 	public void setUp() throws Exception {
-		_defaultUser = _userLocalService.getDefaultUser(
+		_guestUser = _userLocalService.getGuestUser(
 			TestPropsValues.getCompanyId());
 		_objectDefinition = ObjectDefinitionTestUtil.addObjectDefinition(
 			_objectDefinitionLocalService,
@@ -76,12 +76,13 @@ public class ObjectValidationRuleServiceTest {
 		_originalPermissionChecker =
 			PermissionThreadLocal.getPermissionChecker();
 		_systemObjectDefinition =
-			_objectDefinitionLocalService.addSystemObjectDefinition(
+			ObjectDefinitionTestUtil.addUnmodifiableSystemObjectDefinition(
 				TestPropsValues.getUserId(), "Test", null,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				"Test", null, null,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				ObjectDefinitionConstants.SCOPE_COMPANY, null, 1,
+				_objectDefinitionLocalService,
 				Arrays.asList(
 					ObjectFieldUtil.createObjectField(
 						ObjectFieldConstants.BUSINESS_TYPE_TEXT,
@@ -101,7 +102,7 @@ public class ObjectValidationRuleServiceTest {
 	public void testAddObjectValidationRule() throws Exception {
 		try {
 			_testAddObjectValidationRule(
-				_objectDefinition.getObjectDefinitionId(), _defaultUser);
+				_objectDefinition.getObjectDefinitionId(), _guestUser);
 
 			Assert.fail();
 		}
@@ -110,7 +111,7 @@ public class ObjectValidationRuleServiceTest {
 
 			Assert.assertTrue(
 				message.contains(
-					"User " + _defaultUser.getUserId() +
+					"User " + _guestUser.getUserId() +
 						" must have UPDATE permission for"));
 		}
 
@@ -121,7 +122,7 @@ public class ObjectValidationRuleServiceTest {
 	@Test
 	public void testDeleteObjectValidationRule() throws Exception {
 		try {
-			_testDeleteObjectValidationRule(_defaultUser);
+			_testDeleteObjectValidationRule(_guestUser);
 
 			Assert.fail();
 		}
@@ -130,7 +131,7 @@ public class ObjectValidationRuleServiceTest {
 
 			Assert.assertTrue(
 				message.contains(
-					"User " + _defaultUser.getUserId() +
+					"User " + _guestUser.getUserId() +
 						" must have UPDATE permission for"));
 		}
 
@@ -140,14 +141,14 @@ public class ObjectValidationRuleServiceTest {
 	@Test
 	public void testGetObjectValidationRule() throws Exception {
 		try {
-			_testGetObjectValidationRule(_defaultUser);
+			_testGetObjectValidationRule(_guestUser);
 		}
 		catch (PrincipalException.MustHavePermission principalException) {
 			String message = principalException.getMessage();
 
 			Assert.assertTrue(
 				message.contains(
-					"User " + _defaultUser.getUserId() +
+					"User " + _guestUser.getUserId() +
 						" must have VIEW permission for"));
 		}
 
@@ -157,7 +158,7 @@ public class ObjectValidationRuleServiceTest {
 	@Test
 	public void testUpdateObjectValidationRule() throws Exception {
 		try {
-			_testUpdateObjectValidationRule(_defaultUser);
+			_testUpdateObjectValidationRule(_guestUser);
 
 			Assert.fail();
 		}
@@ -166,7 +167,7 @@ public class ObjectValidationRuleServiceTest {
 
 			Assert.assertTrue(
 				message.contains(
-					"User " + _defaultUser.getUserId() +
+					"User " + _guestUser.getUserId() +
 						" must have UPDATE permission for"));
 		}
 
@@ -284,7 +285,7 @@ public class ObjectValidationRuleServiceTest {
 		}
 	}
 
-	private User _defaultUser;
+	private User _guestUser;
 
 	@DeleteAfterTestRun
 	private ObjectDefinition _objectDefinition;

@@ -16,14 +16,14 @@ package com.liferay.analytics.settings.rest.internal.resource.v1_0;
 
 import com.liferay.analytics.settings.configuration.AnalyticsConfiguration;
 import com.liferay.analytics.settings.rest.dto.v1_0.ContactUserGroup;
-import com.liferay.analytics.settings.rest.internal.dto.v1_0.converter.ContactUserGroupDTOConverter;
 import com.liferay.analytics.settings.rest.internal.dto.v1_0.converter.ContactUserGroupDTOConverterContext;
 import com.liferay.analytics.settings.rest.manager.AnalyticsSettingsManager;
 import com.liferay.analytics.settings.rest.resource.v1_0.ContactUserGroupResource;
-import com.liferay.portal.kernel.model.UserGroupTable;
+import com.liferay.portal.kernel.model.UserGroup;
+import com.liferay.portal.kernel.search.BaseModelSearchResult;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.service.UserGroupLocalService;
-import com.liferay.portal.kernel.util.OrderByComparatorFactoryUtil;
+import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 
@@ -56,30 +56,32 @@ public class ContactUserGroupResourceImpl
 
 		Sort sort = sorts[0];
 
+		BaseModelSearchResult<UserGroup> userGroupBaseModelSearchResult =
+			_userGroupLocalService.searchUserGroups(
+				contextCompany.getCompanyId(), keywords, null,
+				pagination.getStartPosition(), pagination.getEndPosition(),
+				sort);
+
 		return Page.of(
 			transform(
-				_userGroupLocalService.getUserGroups(
-					contextCompany.getCompanyId(), keywords,
-					pagination.getStartPosition(), pagination.getEndPosition(),
-					OrderByComparatorFactoryUtil.create(
-						UserGroupTable.INSTANCE.getTableName(),
-						sort.getFieldName(), !sort.isReverse())),
+				userGroupBaseModelSearchResult.getBaseModels(),
 				userGroup -> _contactUserGroupDTOConverter.toDTO(
 					new ContactUserGroupDTOConverterContext(
 						userGroup.getUserGroupId(),
 						contextAcceptLanguage.getPreferredLocale(),
 						analyticsConfiguration.syncedUserGroupIds()),
 					userGroup)),
-			pagination,
-			_userGroupLocalService.getUserGroupsCount(
-				contextCompany.getCompanyId(), keywords));
+			pagination, userGroupBaseModelSearchResult.getLength());
 	}
 
 	@Reference
 	private AnalyticsSettingsManager _analyticsSettingsManager;
 
-	@Reference
-	private ContactUserGroupDTOConverter _contactUserGroupDTOConverter;
+	@Reference(
+		target = "(component.name=com.liferay.analytics.settings.rest.internal.dto.v1_0.converter.ContactUserGroupDTOConverter)"
+	)
+	private DTOConverter<UserGroup, ContactUserGroup>
+		_contactUserGroupDTOConverter;
 
 	@Reference
 	private UserGroupLocalService _userGroupLocalService;

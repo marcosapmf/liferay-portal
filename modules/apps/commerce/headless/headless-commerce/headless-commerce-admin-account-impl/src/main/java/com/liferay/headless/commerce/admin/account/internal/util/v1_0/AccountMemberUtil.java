@@ -14,30 +14,37 @@
 
 package com.liferay.headless.commerce.admin.account.internal.util.v1_0;
 
-import com.liferay.commerce.account.model.CommerceAccount;
-import com.liferay.commerce.account.model.CommerceAccountUserRel;
-import com.liferay.commerce.account.service.CommerceAccountUserRelService;
+import com.liferay.account.constants.AccountActionKeys;
+import com.liferay.account.model.AccountEntry;
+import com.liferay.account.model.AccountEntryUserRel;
+import com.liferay.account.service.AccountEntryUserRelService;
+import com.liferay.commerce.account.util.CommerceAccountHelper;
 import com.liferay.headless.commerce.admin.account.dto.v1_0.AccountMember;
 import com.liferay.headless.commerce.admin.account.dto.v1_0.AccountRole;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.exception.NoSuchUserException;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
+import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.util.Arrays;
-import java.util.stream.Stream;
 
 /**
  * @author Alessio Antonio Rendina
  */
 public class AccountMemberUtil {
 
-	public static CommerceAccountUserRel addCommerceAccountUserRel(
-			CommerceAccountUserRelService commerceAccountUserRelService,
-			AccountMember accountMember, CommerceAccount commerceAccount,
-			User user, ServiceContext serviceContext)
+	public static AccountEntryUserRel addAccountEntryUserRel(
+			ModelResourcePermission<AccountEntry>
+				accountEntryModelResourcePermission,
+			AccountEntryUserRelService accountEntryUserRelService,
+			AccountMember accountMember, AccountEntry accountEntry,
+			CommerceAccountHelper commerceAccountHelper, User user,
+			ServiceContext serviceContext)
 		throws PortalException {
 
 		long[] roleIds = null;
@@ -45,16 +52,20 @@ public class AccountMemberUtil {
 		AccountRole[] accountRoles = accountMember.getAccountRoles();
 
 		if (accountRoles != null) {
-			Stream<AccountRole> accountRoleStream = Arrays.stream(accountRoles);
-
-			roleIds = accountRoleStream.mapToLong(
-				AccountRole::getRoleId
-			).toArray();
+			roleIds = TransformUtil.transformToLongArray(
+				Arrays.asList(accountRoles), AccountRole::getRoleId);
 		}
 
-		return commerceAccountUserRelService.addCommerceAccountUserRel(
-			commerceAccount.getCommerceAccountId(), user.getUserId(), roleIds,
+		accountEntryModelResourcePermission.check(
+			PermissionThreadLocal.getPermissionChecker(),
+			accountEntry.getAccountEntryId(), AccountActionKeys.ASSIGN_USERS);
+
+		commerceAccountHelper.addAccountEntryUserRel(
+			accountEntry.getAccountEntryId(), user.getUserId(), roleIds,
 			serviceContext);
+
+		return accountEntryUserRelService.getAccountEntryUserRel(
+			accountEntry.getAccountEntryId(), user.getUserId());
 	}
 
 	public static User getUser(

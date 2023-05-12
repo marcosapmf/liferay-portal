@@ -31,19 +31,22 @@ const getMDFClaimSummary = async () => {
 	if (response.ok) {
 		const data = await response.json();
 
-		const amountClaimed = formatCurrency(
-			Liferay.Util.escape(data.amountClaimed)
+		const totalClaimAmount = formatCurrency(
+			Liferay.Util.escape(data.totalClaimAmount),
+			data.currency ? Liferay.Util.escape(data.currency.key) : 'USD'
 		);
-		const check = formatCurrency(Liferay.Util.escape(data.check));
+		const check = Liferay.Util.escape(data.checkNumber);
+
 		const paymentReceived = formatCurrency(
-			Liferay.Util.escape(data.paymentReceived)
+			Liferay.Util.escape(data.paymentReceived),
+			data.currency ? Liferay.Util.escape(data.currency.key) : 'USD'
 		);
 		const type = Liferay.Util.escape(data.partial ? 'Partial' : 'Full');
 
 		fragmentElement.querySelector('#mdf-claim-type').innerHTML = type;
 		fragmentElement.querySelector(
 			'#mdf-claim-amount-claimed'
-		).innerHTML = amountClaimed;
+		).innerHTML = totalClaimAmount;
 		fragmentElement.querySelector(
 			'#mdf-claim-payment-received'
 		).innerHTML = paymentReceived;
@@ -58,9 +61,9 @@ const getMDFClaimSummary = async () => {
 	});
 };
 
-const formatCurrency = (value) =>
+const formatCurrency = (value, currencyKey) =>
 	new Intl.NumberFormat(Liferay.ThemeDisplay.getBCP47LanguageId(), {
-		currency: 'USD',
+		currency: currencyKey ? currencyKey : 'USD',
 		style: 'currency',
 	}).format(value);
 

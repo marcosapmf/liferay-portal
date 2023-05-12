@@ -59,6 +59,10 @@ public class ServletDataImpl implements ServletData {
 			_cartCommentResourceComponentServiceObjects);
 		Mutation.setCartItemResourceComponentServiceObjects(
 			_cartItemResourceComponentServiceObjects);
+		Mutation.setPaymentMethodResourceComponentServiceObjects(
+			_paymentMethodResourceComponentServiceObjects);
+		Mutation.setShippingMethodResourceComponentServiceObjects(
+			_shippingMethodResourceComponentServiceObjects);
 
 		Query.setAddressResourceComponentServiceObjects(
 			_addressResourceComponentServiceObjects);
@@ -191,6 +195,16 @@ public class ServletDataImpl implements ServletData {
 						"mutation#createCartItem",
 						new ObjectValuePair<>(
 							CartItemResourceImpl.class, "postCartItem"));
+					put(
+						"mutation#createCartPaymentMethodsPageExportBatch",
+						new ObjectValuePair<>(
+							PaymentMethodResourceImpl.class,
+							"postCartPaymentMethodsPageExportBatch"));
+					put(
+						"mutation#createCartShippingMethodsPageExportBatch",
+						new ObjectValuePair<>(
+							ShippingMethodResourceImpl.class,
+							"postCartShippingMethodsPageExportBatch"));
 
 					put(
 						"query#cartBillingAddres",
@@ -240,6 +254,44 @@ public class ServletDataImpl implements ServletData {
 						new ObjectValuePair<>(
 							ShippingMethodResourceImpl.class,
 							"getCartShippingMethodsPage"));
+
+					put(
+						"query#Cart.paymentMethods",
+						new ObjectValuePair<>(
+							PaymentMethodResourceImpl.class,
+							"getCartPaymentMethodsPage"));
+					put(
+						"query#Cart.comments",
+						new ObjectValuePair<>(
+							CartCommentResourceImpl.class,
+							"getCartCommentsPage"));
+					put(
+						"query#Cart.shippingAddres",
+						new ObjectValuePair<>(
+							AddressResourceImpl.class,
+							"getCartShippingAddres"));
+					put(
+						"query#Cart.shippingMethods",
+						new ObjectValuePair<>(
+							ShippingMethodResourceImpl.class,
+							"getCartShippingMethodsPage"));
+					put(
+						"query#Cart.paymentURL",
+						new ObjectValuePair<>(
+							CartResourceImpl.class, "getCartPaymentURL"));
+					put(
+						"query#Cart.items",
+						new ObjectValuePair<>(
+							CartItemResourceImpl.class, "getCartItemsPage"));
+					put(
+						"query#Cart.billingAddres",
+						new ObjectValuePair<>(
+							AddressResourceImpl.class, "getCartBillingAddres"));
+
+					put(
+						"query#CartItem.parentCartItem",
+						new ObjectValuePair<>(
+							CartItemResourceImpl.class, "getCartItem"));
 				}
 			};
 
@@ -256,15 +308,15 @@ public class ServletDataImpl implements ServletData {
 		_cartItemResourceComponentServiceObjects;
 
 	@Reference(scope = ReferenceScope.PROTOTYPE_REQUIRED)
-	private ComponentServiceObjects<AddressResource>
-		_addressResourceComponentServiceObjects;
-
-	@Reference(scope = ReferenceScope.PROTOTYPE_REQUIRED)
 	private ComponentServiceObjects<PaymentMethodResource>
 		_paymentMethodResourceComponentServiceObjects;
 
 	@Reference(scope = ReferenceScope.PROTOTYPE_REQUIRED)
 	private ComponentServiceObjects<ShippingMethodResource>
 		_shippingMethodResourceComponentServiceObjects;
+
+	@Reference(scope = ReferenceScope.PROTOTYPE_REQUIRED)
+	private ComponentServiceObjects<AddressResource>
+		_addressResourceComponentServiceObjects;
 
 }

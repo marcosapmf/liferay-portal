@@ -23,8 +23,6 @@ import com.liferay.journal.configuration.JournalFileUploadsConfiguration;
 import com.liferay.journal.model.JournalArticle;
 import com.liferay.journal.web.internal.configuration.JournalWebConfiguration;
 import com.liferay.journal.web.internal.helper.JournalDDMTemplateHelper;
-import com.liferay.petra.string.StringBundler;
-import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.bean.BeanParamUtil;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
@@ -69,16 +67,15 @@ public class JournalEditDDMTemplateDisplayContext {
 		_httpServletRequest = httpServletRequest;
 		_renderResponse = renderResponse;
 
-		_ddmTemplateHelper =
-			(DDMTemplateHelper)_httpServletRequest.getAttribute(
-				DDMTemplateHelper.class.getName());
+		_ddmTemplateHelper = (DDMTemplateHelper)httpServletRequest.getAttribute(
+			DDMTemplateHelper.class.getName());
 
 		_journalFileUploadsConfiguration =
-			(JournalFileUploadsConfiguration)_httpServletRequest.getAttribute(
+			(JournalFileUploadsConfiguration)httpServletRequest.getAttribute(
 				JournalFileUploadsConfiguration.class.getName());
 
 		_journalWebConfiguration =
-			(JournalWebConfiguration)_httpServletRequest.getAttribute(
+			(JournalWebConfiguration)httpServletRequest.getAttribute(
 				JournalWebConfiguration.class.getName());
 	}
 
@@ -295,14 +292,6 @@ public class JournalEditDDMTemplateDisplayContext {
 		return ResourceBundleUtil.getBundle(themeDisplay.getLocale(), clazz);
 	}
 
-	public String getTemplateLanguageTypeLabel(String templateLanguageType) {
-		return StringBundler.concat(
-			LanguageUtil.get(
-				_httpServletRequest, templateLanguageType + "[stands-for]"),
-			StringPool.SPACE, StringPool.OPEN_PARENTHESIS, StringPool.PERIOD,
-			templateLanguageType, StringPool.CLOSE_PARENTHESIS);
-	}
-
 	public JSONArray getTemplateVariableGroupJSONArray() throws Exception {
 		JournalDDMTemplateHelper journalDDMTemplateHelper =
 			(JournalDDMTemplateHelper)_httpServletRequest.getAttribute(
@@ -405,11 +394,6 @@ public class JournalEditDDMTemplateDisplayContext {
 
 	public String[] imageExtensions() {
 		return _journalFileUploadsConfiguration.imageExtensions();
-	}
-
-	public boolean isAutocompleteEnabled() {
-		return _ddmTemplateHelper.isAutocompleteEnabled(
-			TemplateConstants.LANG_TYPE_FTL);
 	}
 
 	public boolean isCacheable() {

@@ -140,7 +140,7 @@ public class CommerceCheckoutTest {
 		_serviceContext = ServiceContextTestUtil.getServiceContext(
 			_group.getGroupId());
 
-		_commerceAccount = CommerceAccountTestUtil.addBusinessCommerceAccount(
+		_accountEntry = CommerceAccountTestUtil.addBusinessAccountEntry(
 			_user.getUserId(), RandomTestUtil.randomString(),
 			RandomTestUtil.randomString() + "@liferay.com",
 			RandomTestUtil.randomString(), new long[] {_user.getUserId()}, null,
@@ -176,7 +176,7 @@ public class CommerceCheckoutTest {
 			"The guest should be able to place the order"
 		);
 
-		User user = _company.getDefaultUser();
+		User user = _company.getGuestUser();
 
 		PermissionThreadLocal.setPermissionChecker(
 			PermissionCheckerFactoryUtil.create(user));
@@ -317,7 +317,7 @@ public class CommerceCheckoutTest {
 
 			modifiableSettings.store();
 
-			User user = _company.getDefaultUser();
+			User user = _company.getGuestUser();
 
 			PermissionThreadLocal.setPermissionChecker(
 				PermissionCheckerFactoryUtil.create(user));
@@ -372,13 +372,13 @@ public class CommerceCheckoutTest {
 		HttpServletRequest httpServletRequest = new MockHttpServletRequest();
 
 		CommerceContext commerceContext = new TestCommerceContext(
-			_commerceCurrency, _commerceChannel, _user, _group,
-			_commerceAccount, null);
+			_accountEntry, _commerceCurrency, _commerceChannel, _user, _group,
+			null);
 
 		httpServletRequest.setAttribute(
 			CommerceWebKeys.COMMERCE_CONTEXT, commerceContext);
 
-		User user = _company.getDefaultUser();
+		User user = _company.getGuestUser();
 
 		CommerceAccount commerceAccount =
 			_commerceAccountLocalService.getGuestCommerceAccount(
@@ -416,13 +416,13 @@ public class CommerceCheckoutTest {
 		HttpServletRequest httpServletRequest = new MockHttpServletRequest();
 
 		CommerceContext commerceContext = new TestCommerceContext(
-			_commerceCurrency, _commerceChannel, _user, _group,
-			_commerceAccount, null);
+			_accountEntry, _commerceCurrency, _commerceChannel, _user, _group,
+			null);
 
 		httpServletRequest.setAttribute(
 			CommerceWebKeys.COMMERCE_CONTEXT, commerceContext);
 
-		User user = _company.getDefaultUser();
+		User user = _company.getGuestUser();
 
 		CommerceAccount commerceAccount =
 			_commerceAccountLocalService.getGuestCommerceAccount(
@@ -472,13 +472,13 @@ public class CommerceCheckoutTest {
 		HttpServletRequest httpServletRequest = new MockHttpServletRequest();
 
 		CommerceContext commerceContext = new TestCommerceContext(
-			_commerceCurrency, _commerceChannel, _user, _group,
-			_commerceAccount, null);
+			_accountEntry, _commerceCurrency, _commerceChannel, _user, _group,
+			null);
 
 		httpServletRequest.setAttribute(
 			CommerceWebKeys.COMMERCE_CONTEXT, commerceContext);
 
-		User user = _company.getDefaultUser();
+		User user = _company.getGuestUser();
 
 		CommerceAccount commerceAccount =
 			_commerceAccountLocalService.getGuestCommerceAccount(
@@ -524,13 +524,13 @@ public class CommerceCheckoutTest {
 		HttpServletRequest httpServletRequest = new MockHttpServletRequest();
 
 		CommerceContext commerceContext = new TestCommerceContext(
-			_commerceCurrency, _commerceChannel, _user, _group,
-			_commerceAccount, null);
+			_accountEntry, _commerceCurrency, _commerceChannel, _user, _group,
+			null);
 
 		httpServletRequest.setAttribute(
 			CommerceWebKeys.COMMERCE_CONTEXT, commerceContext);
 
-		User user = _company.getDefaultUser();
+		User user = _company.getGuestUser();
 
 		CommerceAccount commerceAccount =
 			_commerceAccountLocalService.getGuestCommerceAccount(
@@ -567,13 +567,13 @@ public class CommerceCheckoutTest {
 		HttpServletRequest httpServletRequest = new MockHttpServletRequest();
 
 		CommerceContext commerceContext = new TestCommerceContext(
-			_commerceCurrency, _commerceChannel, _user, _group,
-			_commerceAccount, null);
+			_accountEntry, _commerceCurrency, _commerceChannel, _user, _group,
+			null);
 
 		httpServletRequest.setAttribute(
 			CommerceWebKeys.COMMERCE_CONTEXT, commerceContext);
 
-		User user = _company.getDefaultUser();
+		User user = _company.getGuestUser();
 
 		CommerceAccount commerceAccount =
 			_commerceAccountLocalService.getGuestCommerceAccount(
@@ -628,13 +628,13 @@ public class CommerceCheckoutTest {
 		HttpServletRequest httpServletRequest = new MockHttpServletRequest();
 
 		CommerceContext commerceContext = new TestCommerceContext(
-			_commerceCurrency, _commerceChannel, _user, _group,
-			_commerceAccount, null);
+			_accountEntry, _commerceCurrency, _commerceChannel, _user, _group,
+			null);
 
 		httpServletRequest.setAttribute(
 			CommerceWebKeys.COMMERCE_CONTEXT, commerceContext);
 
-		User user = _company.getDefaultUser();
+		User user = _company.getGuestUser();
 
 		CommerceAccount commerceAccount =
 			_commerceAccountLocalService.getGuestCommerceAccount(
@@ -674,7 +674,7 @@ public class CommerceCheckoutTest {
 
 		CommerceOrder commerceOrder = CommerceTestUtil.addB2BCommerceOrder(
 			_group.getGroupId(), _user.getUserId(),
-			_commerceAccount.getCommerceAccountId(),
+			_accountEntry.getAccountEntryId(),
 			_commerceCurrency.getCommerceCurrencyId());
 
 		commerceOrder = CommerceTestUtil.addCheckoutDetailsToCommerceOrder(
@@ -696,14 +696,16 @@ public class CommerceCheckoutTest {
 		if (cpDefinitionInventory == null) {
 			_cpDefinitionInventoryLocalService.addCPDefinitionInventory(
 				_user.getUserId(), cpDefinition.getCPDefinitionId(), "default",
-				"default", false, false, 1, false, 0,
+				"default", false, false, 1, false,
+				CPDefinitionInventoryConstants.DEFAULT_MIN_ORDER_QUANTITY,
 				CPDefinitionInventoryConstants.DEFAULT_MAX_ORDER_QUANTITY, null,
 				1);
 		}
 		else {
 			_cpDefinitionInventoryLocalService.updateCPDefinitionInventory(
 				cpDefinitionInventory.getCPDefinitionInventoryId(), "default",
-				"default", false, false, 1, false, 0,
+				"default", false, false, 1, false,
+				CPDefinitionInventoryConstants.DEFAULT_MIN_ORDER_QUANTITY,
 				CPDefinitionInventoryConstants.DEFAULT_MAX_ORDER_QUANTITY, null,
 				1);
 		}
@@ -838,7 +840,7 @@ public class CommerceCheckoutTest {
 	private static Company _company;
 	private static User _user;
 
-	private CommerceAccount _commerceAccount;
+	private AccountEntry _accountEntry;
 
 	@Inject
 	private CommerceAccountLocalService _commerceAccountLocalService;

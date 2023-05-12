@@ -15,6 +15,7 @@
 package com.liferay.gradle.plugins.defaults;
 
 import com.liferay.gradle.plugins.defaults.internal.util.GradleUtil;
+import com.liferay.gradle.plugins.source.formatter.FormatSourceTask;
 import com.liferay.gradle.plugins.source.formatter.SourceFormatterPlugin;
 import com.liferay.gradle.plugins.testray.TestrayPlugin;
 
@@ -26,6 +27,8 @@ import org.gradle.api.Project;
  */
 public class PoshiDefaultsPlugin implements Plugin<Project> {
 
+	public static final String FORMAT_POSHI_TASK_NAME = "formatPoshi";
+
 	@Override
 	public void apply(Project project) {
 		GradleUtil.applyPlugin(project, PoshiRunnerDefaultsPlugin.class);
@@ -33,6 +36,21 @@ public class PoshiDefaultsPlugin implements Plugin<Project> {
 			project, PoshiRunnerResourcesDefaultsPlugin.class);
 		GradleUtil.applyPlugin(project, SourceFormatterPlugin.class);
 		GradleUtil.applyPlugin(project, TestrayPlugin.class);
+
+		_addTaskFormatPoshi(project);
+	}
+
+	private FormatSourceTask _addTaskFormatPoshi(Project project) {
+		FormatSourceTask formatSourceTask = GradleUtil.addTask(
+			project, FORMAT_POSHI_TASK_NAME, FormatSourceTask.class);
+
+		formatSourceTask.setDescription(
+			"Runs Liferay Source Formatter to format Poshi files.");
+		formatSourceTask.setFileExtensions(
+			new String[] {"function", "macro", "path", "testcase"});
+		formatSourceTask.setGroup("formatting");
+
+		return formatSourceTask;
 	}
 
 }

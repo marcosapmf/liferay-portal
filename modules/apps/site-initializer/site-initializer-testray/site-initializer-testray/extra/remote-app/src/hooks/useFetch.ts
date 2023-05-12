@@ -13,15 +13,17 @@
  */
 
 import {useMemo} from 'react';
-import useSWR from 'swr';
+import useSWR, {SWRConfiguration} from 'swr';
 
-import Rest, {APIParametersOptions} from '../services/rest/Rest';
+import Rest, {APIParametersOptions} from '../core/Rest';
 
 type FetchOptions<Data> = {
+	params?: APIParametersOptions;
+	swrConfig?: SWRConfiguration & {shouldFetch?: boolean | string | number};
 	transformData?: (data: Data) => Data;
-} & APIParametersOptions;
+};
 
-const getBaseURL = (url: string | null, options: APIParametersOptions) => {
+const getBaseURL = (url: string | null, options?: APIParametersOptions) => {
 	if (!url) {
 		return null;
 	}
@@ -45,10 +47,13 @@ export function useFetch<Data = any, Error = any>(
 	url: string | null,
 	fetchParameters?: FetchOptions<Data>
 ) {
-	const {transformData, ...options} = fetchParameters ?? {};
+	const {params, swrConfig, transformData} = fetchParameters ?? {};
 
-	const {data, error, isValidating, mutate} = useSWR<Data, Error>(() =>
-		getBaseURL(url, options)
+	const shouldFetch = swrConfig?.shouldFetch ?? true;
+
+	const {data, error, isLoading, isValidating, mutate} = useSWR<Data, Error>(
+		() => (shouldFetch ? getBaseURL(url, params) : null),
+		swrConfig
 	);
 
 	const memoizedData = useMemo(() => {
@@ -65,7 +70,7 @@ export function useFetch<Data = any, Error = any>(
 		data: memoizedData,
 		error,
 		isValidating,
-		loading: !data,
+		loading: isLoading,
 		mutate,
 		revalidate: () => mutate((response) => response, {revalidate: true}),
 	};

@@ -260,6 +260,13 @@ public interface LayoutService extends BaseService {
 			InputStream inputStream, String mimeType)
 		throws PortalException;
 
+	public Layout copyLayout(
+			long groupId, boolean privateLayout,
+			Map<Locale, String> localeNamesMap, boolean hidden, boolean system,
+			boolean copyPermissions, long sourcePlid,
+			ServiceContext serviceContext)
+		throws PortalException;
+
 	/**
 	 * Deletes the layout with the primary key, also deleting the layout's child
 	 * layouts, and associated resources.

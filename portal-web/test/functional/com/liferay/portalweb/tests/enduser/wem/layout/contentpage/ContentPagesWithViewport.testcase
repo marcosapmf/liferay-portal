@@ -3,45 +3,35 @@ definition {
 
 	property portal.release = "true";
 	property portal.upstream = "true";
+	property testcase.url = "http://localhost:8080";
 	property testray.main.component.name = "Content Pages";
 
-	setUp {
-		task ("Set up instance and sign in") {
-			TestCase.setUpPortalInstance();
+	static var randomSiteName = StringUtil.randomString(8);
 
+	setUp {
+		task ("Sign in") {
 			User.firstLoginPG();
 		}
 
-		task ("Add a site via JSON") {
-			JSONGroup.addGroup(groupName = "Test Site Name");
+		task ("Add a site") {
+			HeadlessSite.addSite(siteName = ${randomSiteName});
 		}
 
 		task ("Add a content page") {
 			JSONLayout.addPublicLayout(
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				layoutName = "Test Content Page Name",
 				type = "content");
 		}
 	}
 
-	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
-
-		if ("${testPortalInstance}" == "true") {
-			PortalInstances.tearDownCP();
-		}
-		else {
-			JSONGroup.deleteGroupByName(groupName = "Test Site Name");
-		}
-	}
-
 	@description = "This is a test for 147512. The page editor cannot change background image on non-desktop viewports."
-	@priority = "4"
+	@priority = 4
 	test CannotChangeBackgroundImageOfFragmentInNonDesktopViewport {
 		task ("Given a page creator has a content page where a Container fragment has a background image") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Content Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			PageEditor.addFragment(
 				collectionName = "Layout Elements",
@@ -71,14 +61,14 @@ definition {
 	}
 
 	@description = "This is a test for 147512. The page editor could customize styles on non-desktop viewports."
-	@priority = "5"
+	@priority = 5
 	test CustomizeFragmentStylesInNonDesktopViewport {
 		property portal.acceptance = "true";
 
 		task ("Given a page creator has a content page with a Heading fragment") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Content Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			PageEditor.addFragment(
 				collectionName = "Basic Components",
@@ -125,7 +115,7 @@ definition {
 
 				for (var fieldSetLabel : list "Spacing,Text,Background,Borders,Effects") {
 					AssertElementPresent(
-						key_fieldSetLabel = "${fieldSetLabel}",
+						key_fieldSetLabel = ${fieldSetLabel},
 						locator1 = "PageEditor#ITEM_CONFIGURATION_FIELDSET_LABEL");
 				}
 			}
@@ -133,13 +123,13 @@ definition {
 	}
 
 	@description = "This is a test for LPS-119979 and LPS-106776. Customize the Layout of Grid in each viewport."
-	@priority = "4"
+	@priority = 4
 	@uitest
 	test CustomizeLayoutOfGridInEachViewport {
 		task ("Add a Grid to page") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Content Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			PageEditor.addFragment(
 				collectionName = "Layout Elements",
@@ -148,7 +138,7 @@ definition {
 
 		task ("Change the Number of Modules to 6") {
 			PageEditor.editLayoutGrid(
-				columnCount = "6",
+				columnCount = 6,
 				panel = "General");
 		}
 
@@ -195,17 +185,17 @@ definition {
 			PageEditor.switchViewport(deviceType = "Desktop");
 
 			PageEditor.viewGridStyle(
-				columnCount = "6",
-				layout = "6",
-				position = "1");
+				columnCount = 6,
+				layout = 6,
+				position = 1);
 
 			var moduleHeight = selenium.getElementHeight("//div[@aria-label='Grid']//div[contains(@class,'page-editor__topper__content')]//div[contains(@class,'col-6')]");
 
-			var moduleHeight = StringUtil.replace("${moduleHeight}", "px", "");
+			var moduleHeight = StringUtil.replace(${moduleHeight}, "px", "");
 
 			TestUtils.isGreaterThan(
-				actual = "${moduleHeight}",
-				expected = "20");
+				actual = ${moduleHeight},
+				expected = 20);
 		}
 
 		task ("Assert the Layout of Grid is 3 Modules per Row and the height of module is greater than 20px in Tablet viewport") {
@@ -214,17 +204,17 @@ definition {
 			SelectFrame.selectFrameNoLoading(locator1 = "IFrame#PAGE_EDITOR_GLOBAL_CONTEXT_IFRAME");
 
 			PageEditor.viewGridStyle(
-				columnCount = "6",
-				layout = "4",
-				position = "1");
+				columnCount = 6,
+				layout = 4,
+				position = 1);
 
 			var moduleHeight = selenium.getElementHeight("//div[@aria-label='Grid']//div[contains(@class,'page-editor__topper__content')]//div[contains(@class,'col-4')]");
 
-			var moduleHeight = StringUtil.replace("${moduleHeight}", "px", "");
+			var moduleHeight = StringUtil.replace(${moduleHeight}, "px", "");
 
 			TestUtils.isGreaterThan(
-				actual = "${moduleHeight}",
-				expected = "20");
+				actual = ${moduleHeight},
+				expected = 20);
 
 			SelectFrame(value1 = "relative=top");
 		}
@@ -235,17 +225,17 @@ definition {
 			SelectFrame.selectFrameNoLoading(locator1 = "IFrame#PAGE_EDITOR_GLOBAL_CONTEXT_IFRAME");
 
 			PageEditor.viewGridStyle(
-				columnCount = "6",
-				layout = "2",
-				position = "1");
+				columnCount = 6,
+				layout = 2,
+				position = 1);
 
 			var moduleHeight = selenium.getElementHeight("//div[@aria-label='Grid']//div[contains(@class,'page-editor__topper__content')]//div[contains(@class,'col-2')]");
 
-			var moduleHeight = StringUtil.replace("${moduleHeight}", "px", "");
+			var moduleHeight = StringUtil.replace(${moduleHeight}, "px", "");
 
 			TestUtils.isGreaterThan(
-				actual = "${moduleHeight}",
-				expected = "20");
+				actual = ${moduleHeight},
+				expected = 20);
 
 			SelectFrame(value1 = "relative=top");
 		}
@@ -256,29 +246,29 @@ definition {
 			SelectFrame.selectFrameNoLoading(locator1 = "IFrame#PAGE_EDITOR_GLOBAL_CONTEXT_IFRAME");
 
 			PageEditor.viewGridStyle(
-				columnCount = "6",
-				layout = "12",
-				position = "1");
+				columnCount = 6,
+				layout = 12,
+				position = 1);
 
 			var moduleHeight = selenium.getElementHeight("//div[@aria-label='Grid']//div[contains(@class,'page-editor__topper__content')]//div[contains(@class,'col-12')]");
 
-			var moduleHeight = StringUtil.replace("${moduleHeight}", "px", "");
+			var moduleHeight = StringUtil.replace(${moduleHeight}, "px", "");
 
 			TestUtils.isGreaterThan(
-				actual = "${moduleHeight}",
-				expected = "20");
+				actual = ${moduleHeight},
+				expected = 20);
 		}
 	}
 
 	@description = "This is a test for LPS-141278. The page editor could define Text Align for fragment per viewport."
-	@priority = "5"
+	@priority = 5
 	test CustomizeTextAlignInEachViewport {
 		property portal.acceptance = "true";
 
 		task ("Add a Heading fragment to a content page") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Content Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			PageEditor.addFragment(
 				collectionName = "Basic Components",
@@ -289,7 +279,7 @@ definition {
 			AssertCssValue(
 				fragmentName = "heading",
 				id = "element-text",
-				index = "1",
+				index = 1,
 				locator1 = "Fragment#CONTRIBUTED_FRAGMENT_TEXT",
 				locator2 = "text-align",
 				value1 = "start");
@@ -327,7 +317,7 @@ definition {
 			AssertCssValue(
 				fragmentName = "heading",
 				id = "element-text",
-				index = "1",
+				index = 1,
 				locator1 = "Fragment#CONTRIBUTED_FRAGMENT_TEXT",
 				locator2 = "text-align",
 				value1 = "start");
@@ -368,7 +358,7 @@ definition {
 
 			AssertCssValue(
 				fragmentName = "heading",
-				index = "1",
+				index = 1,
 				locator1 = "Fragment#FRAGMENT_BODY",
 				locator2 = "text-align",
 				value1 = "start");
@@ -376,13 +366,13 @@ definition {
 	}
 
 	@description = "This is a test for LPS-134844 and LPS-106776. Fragment view options can be reset to parent one."
-	@priority = "4"
+	@priority = 4
 	@uitest
 	test FragmentViewOptionsCanBeResetToParentOne {
 		task ("Add thee headings to page") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Content Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			PageEditor.addFragment(
 				collectionName = "Basic Components",
@@ -402,7 +392,7 @@ definition {
 				PageEditor.editFragmentText(
 					fragmentName = "Heading",
 					id = "element-text",
-					index = "2",
+					index = 2,
 					text = "Heading Example ${n}");
 			}
 		}
@@ -410,7 +400,7 @@ definition {
 		task ("Hide Heading Example 3 for desktop view") {
 			PageEditor.hideFragmentViaPageStructure(
 				fragmentName = "Heading",
-				index = "3");
+				index = 3);
 		}
 
 		task ("Change to landscape phone viewport, hide 1 and 2, unhide 3") {
@@ -418,15 +408,15 @@ definition {
 
 			PageEditor.hideFragmentViaPageStructure(
 				fragmentName = "Heading",
-				index = "1");
+				index = 1);
 
 			PageEditor.hideFragmentViaPageStructure(
 				fragmentName = "Heading",
-				index = "2");
+				index = 2);
 
 			PageEditor.unhideFragmentViaPageStructure(
 				fragmentName = "Heading",
-				index = "3");
+				index = 3);
 		}
 
 		task ("Change to Portrait phone viewport, hide 3, unhide 2") {
@@ -434,17 +424,17 @@ definition {
 
 			PageEditor.hideFragmentViaPageStructure(
 				fragmentName = "Heading",
-				index = "3");
+				index = 3);
 
 			PageEditor.unhideFragmentViaPageStructure(
 				fragmentName = "Heading",
-				index = "2");
+				index = 2);
 		}
 
 		task ("Click restore default for Heading Example 1 and assert is NOT shown") {
 			PageEditor.restoreDefaultHidePropertyForFragment(
 				fragmentName = "Heading",
-				index = "1");
+				index = 1);
 
 			SelectFrame.selectFrameNoLoading(locator1 = "IFrame#PAGE_EDITOR_GLOBAL_CONTEXT_IFRAME");
 
@@ -456,7 +446,7 @@ definition {
 		task ("Click restore default for Heading Example 2 and assert is NOT shown") {
 			PageEditor.restoreDefaultHidePropertyForFragment(
 				fragmentName = "Heading",
-				index = "2");
+				index = 2);
 
 			SelectFrame.selectFrameNoLoading(locator1 = "IFrame#PAGE_EDITOR_GLOBAL_CONTEXT_IFRAME");
 
@@ -468,20 +458,20 @@ definition {
 		task ("Click restore default for Heading Example 3 and assert is shown") {
 			PageEditor.restoreDefaultHidePropertyForFragment(
 				fragmentName = "Heading",
-				index = "3");
+				index = 3);
 
 			SelectFrame.selectFrameNoLoading(locator1 = "IFrame#PAGE_EDITOR_GLOBAL_CONTEXT_IFRAME");
 
 			ContentPages.viewFragmentText(
 				fragmentName = "heading",
 				id = "element-text",
-				position = "3",
+				position = 3,
 				text = "Heading Example 3");
 		}
 	}
 
 	@description = "This is a test for LPS-134844. Hidden property is propagated to smaller viewpoints."
-	@priority = "5"
+	@priority = 5
 	@uitest
 	test HiddenPropertyIsPropagatedToSmallerViewpoints {
 		property portal.acceptance = "true";
@@ -489,7 +479,7 @@ definition {
 		task ("Add five headings to page") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Content Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			PageEditor.addFragment(
 				collectionName = "Basic Components",
@@ -509,7 +499,7 @@ definition {
 				PageEditor.editFragmentText(
 					fragmentName = "Heading",
 					id = "element-text",
-					index = "2",
+					index = 2,
 					text = "Heading Example ${n}");
 			}
 		}
@@ -517,7 +507,7 @@ definition {
 		task ("Hide Heading Example 5 for desktop view") {
 			PageEditor.hideFragmentViaPageStructure(
 				fragmentName = "Heading",
-				index = "5");
+				index = 5);
 		}
 
 		task ("Hide Heading Example 4 for tablet viewport") {
@@ -525,7 +515,7 @@ definition {
 
 			PageEditor.hideFragmentViaPageStructure(
 				fragmentName = "Heading",
-				index = "4");
+				index = 4);
 		}
 
 		task ("Hide Heading Example 3 for landscape phone viewport") {
@@ -533,7 +523,7 @@ definition {
 
 			PageEditor.hideFragmentViaPageStructure(
 				fragmentName = "Heading",
-				index = "3");
+				index = 3);
 		}
 
 		task ("Hide Heading Example 2 for portrait phone viewport") {
@@ -541,7 +531,7 @@ definition {
 
 			PageEditor.hideFragmentViaPageStructure(
 				fragmentName = "Heading",
-				index = "2");
+				index = 2);
 		}
 
 		task ("Open the Preview modal") {
@@ -553,25 +543,25 @@ definition {
 				ContentPages.viewFragmentText(
 					fragmentName = "heading",
 					id = "element-text",
-					position = "${n}",
+					position = ${n},
 					text = "Heading Example ${n}");
 			}
 
 			AssertNotVisible(
 				fragmentName = "heading",
 				id = "element-text",
-				index = "5",
+				index = 5,
 				locator1 = "Fragment#CONTRIBUTED_FRAGMENT_TEXT");
 		}
 	}
 
 	@description = "This is a test for 147512. The page editor only could clear color picker selection defined on current non-desktop viewport."
-	@priority = "4"
+	@priority = 4
 	test OnlyClearColorPickerSelectionInCurrentNonDesktopViewport {
 		task ("Given a page creator has a content page where a Heading fragment has a defined Text Color in desktop viewport") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Content Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			PageEditor.addFragment(
 				collectionName = "Basic Components",
@@ -632,13 +622,13 @@ definition {
 	}
 
 	@description = "This is a test for LPS-110723. When change to other viewports, there are only limited common fragment style categories available."
-	@priority = "4"
+	@priority = 4
 	@uitest
 	test PropagateCommonFragmentStyleDefinedInDesktopToOtherViewports {
 		task ("Add a Paragraph to page") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Content Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			PageEditor.addFragment(
 				collectionName = "Basic Components",
@@ -649,43 +639,43 @@ definition {
 			PageEditor.gotoStyle(fragmentName = "Paragraph");
 
 			PageEditor.configureFragment(
-				marginBottom = "2",
-				marginLeft = "2",
-				marginRight = "2",
-				marginTop = "2",
-				paddingBottom = "2",
-				paddingLeft = "2",
-				paddingRight = "2",
-				paddingTop = "2");
+				marginBottom = 2,
+				marginLeft = 2,
+				marginRight = 2,
+				marginTop = 2,
+				paddingBottom = 2,
+				paddingLeft = 2,
+				paddingRight = 2,
+				paddingTop = 2);
 
 			PageEditor.viewFragmentStyle(
 				fragmentName = "Paragraph",
-				marginBottom = "2",
-				marginLeft = "2",
-				marginRight = "2",
-				marginTop = "2",
-				paddingBottom = "2",
-				paddingLeft = "2",
-				paddingRight = "2",
-				paddingTop = "2");
+				marginBottom = 2,
+				marginLeft = 2,
+				marginRight = 2,
+				marginTop = 2,
+				paddingBottom = 2,
+				paddingLeft = 2,
+				paddingRight = 2,
+				paddingTop = 2);
 		}
 
 		task ("Assert the common styles are propagated to other viewports") {
 			for (var deviceType : list "Tablet,Landscape Phone,Portrait Phone") {
-				PageEditor.switchViewport(deviceType = "${deviceType}");
+				PageEditor.switchViewport(deviceType = ${deviceType});
 
 				SelectFrame.selectFrameNoLoading(locator1 = "IFrame#PAGE_EDITOR_GLOBAL_CONTEXT_IFRAME");
 
 				PageEditor.viewFragmentStyle(
 					fragmentName = "Paragraph",
-					marginBottom = "2",
-					marginLeft = "2",
-					marginRight = "2",
-					marginTop = "2",
-					paddingBottom = "2",
-					paddingLeft = "2",
-					paddingRight = "2",
-					paddingTop = "2");
+					marginBottom = 2,
+					marginLeft = 2,
+					marginRight = 2,
+					marginTop = 2,
+					paddingBottom = 2,
+					paddingLeft = 2,
+					paddingRight = 2,
+					paddingTop = 2);
 
 				SelectFrame(value1 = "relative=top");
 			}
@@ -693,12 +683,12 @@ definition {
 	}
 
 	@description = "This is a test for LPS-153383. The page creator can resize editor sidebar on non desktop Viewport."
-	@priority = "4"
+	@priority = 4
 	test ResizeLeftSidebarPanelInNonDesktopViewport {
 		task ("Given a page creator accesses to the page editor") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Content Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 		}
 
 		task ("When the page creator resizes the left sidebar panel in the Desktop viewport") {
@@ -748,17 +738,17 @@ definition {
 	}
 
 	@description = "This is a test for LPS-110707. Can resize the width of non-desktop viewports when edit content page."
-	@priority = "5"
+	@priority = 5
 	@uitest
 	test ResizeWidthOfNonDesktopViewport {
 		property portal.acceptance = "true";
 
 		task ("View the viewport resizer not shown in Desktop viewport") {
-			TestUtils.maximizeWindow();
+			SetWindowSize.maximizeWindow();
 
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Content Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			AssertElementNotPresent(locator1 = "PageEditor#VIEWPORT_HANDLE");
 		}
@@ -797,7 +787,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-110723. When change to other viewports, there are only limited common fragment style categories available."
-	@priority = "5"
+	@priority = 5
 	@uitest
 	test ViewCommonFragmentStyleFieldSets {
 		property portal.acceptance = "true";
@@ -805,7 +795,7 @@ definition {
 		task ("Add a Heading to page") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Content Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			PageEditor.addFragment(
 				collectionName = "Basic Components",
@@ -823,14 +813,14 @@ definition {
 
 			for (var fieldSetLabel : list "Spacing,Text,Background,Borders,Effects") {
 				AssertElementPresent(
-					key_fieldSetLabel = "${fieldSetLabel}",
+					key_fieldSetLabel = ${fieldSetLabel},
 					locator1 = "PageEditor#ITEM_CONFIGURATION_FIELDSET_LABEL");
 			}
 		}
 
 		task ("Assert only Margin and Padding are available on other viewports") {
 			for (var deviceType : list "Tablet,Landscape Phone,Portrait Phone") {
-				PageEditor.switchViewport(deviceType = "${deviceType}");
+				PageEditor.switchViewport(deviceType = ${deviceType});
 
 				AssertElementPresent(
 					key_fieldSetLabel = "Spacing",

@@ -34,7 +34,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = "dto.class.name=com.liferay.message.boards.model.MBCategory",
-	service = {DTOConverter.class, MessageBoardSectionDTOConverter.class}
+	service = DTOConverter.class
 )
 public class MessageBoardSectionDTOConverter
 	implements DTOConverter<MBCategory, MessageBoardSection> {
@@ -55,7 +55,7 @@ public class MessageBoardSectionDTOConverter
 			{
 				actions = dtoConverterContext.getActions();
 				creator = CreatorUtil.toCreator(
-					_portal, dtoConverterContext.getUriInfoOptional(),
+					_portal, dtoConverterContext.getUriInfo(),
 					_userLocalService.fetchUser(mbCategory.getUserId()));
 				customFields = CustomFieldsUtil.toCustomFields(
 					dtoConverterContext.isAcceptAllLanguages(),

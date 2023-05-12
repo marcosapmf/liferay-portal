@@ -59,6 +59,27 @@ public class Sku implements Cloneable, Serializable {
 
 	protected BigDecimal cost;
 
+	public CustomField[] getCustomFields() {
+		return customFields;
+	}
+
+	public void setCustomFields(CustomField[] customFields) {
+		this.customFields = customFields;
+	}
+
+	public void setCustomFields(
+		UnsafeSupplier<CustomField[], Exception> customFieldsUnsafeSupplier) {
+
+		try {
+			customFields = customFieldsUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected CustomField[] customFields;
+
 	public Double getDepth() {
 		return depth;
 	}
@@ -521,6 +542,53 @@ public class Sku implements Cloneable, Serializable {
 	}
 
 	protected SkuOption[] skuOptions;
+
+	public SkuSubscriptionConfiguration getSkuSubscriptionConfiguration() {
+		return skuSubscriptionConfiguration;
+	}
+
+	public void setSkuSubscriptionConfiguration(
+		SkuSubscriptionConfiguration skuSubscriptionConfiguration) {
+
+		this.skuSubscriptionConfiguration = skuSubscriptionConfiguration;
+	}
+
+	public void setSkuSubscriptionConfiguration(
+		UnsafeSupplier<SkuSubscriptionConfiguration, Exception>
+			skuSubscriptionConfigurationUnsafeSupplier) {
+
+		try {
+			skuSubscriptionConfiguration =
+				skuSubscriptionConfigurationUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected SkuSubscriptionConfiguration skuSubscriptionConfiguration;
+
+	public SkuVirtualSettings getSkuVirtualSettings() {
+		return skuVirtualSettings;
+	}
+
+	public void setSkuVirtualSettings(SkuVirtualSettings skuVirtualSettings) {
+		this.skuVirtualSettings = skuVirtualSettings;
+	}
+
+	public void setSkuVirtualSettings(
+		UnsafeSupplier<SkuVirtualSettings, Exception>
+			skuVirtualSettingsUnsafeSupplier) {
+
+		try {
+			skuVirtualSettings = skuVirtualSettingsUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected SkuVirtualSettings skuVirtualSettings;
 
 	public String getUnspsc() {
 		return unspsc;

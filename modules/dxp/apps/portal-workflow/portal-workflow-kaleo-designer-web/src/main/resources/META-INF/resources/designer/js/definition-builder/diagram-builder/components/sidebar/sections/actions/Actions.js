@@ -33,6 +33,7 @@ const Actions = (props) => {
 					priority: actions.priority[i],
 					script: actions.script[i],
 					scriptLanguage: actions.scriptLanguage[i],
+					status: actions?.status[i],
 				});
 			}
 

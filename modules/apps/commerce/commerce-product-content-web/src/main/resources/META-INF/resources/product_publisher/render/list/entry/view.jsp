@@ -17,6 +17,8 @@
 <%@ include file="/init.jsp" %>
 
 <%
+CPCompareContentHelper cpCompareContentHelper = (CPCompareContentHelper)request.getAttribute(CPContentWebKeys.CP_COMPARE_CONTENT_HELPER);
+
 CPContentHelper cpContentHelper = (CPContentHelper)request.getAttribute(CPContentWebKeys.CP_CONTENT_HELPER);
 
 CPCatalogEntry cpCatalogEntry = cpContentHelper.getCPCatalogEntry(request);
@@ -52,6 +54,10 @@ CPCatalogEntry cpCatalogEntry = cpContentHelper.getCPCatalogEntry(request);
 
 				<div class="aspect-ratio-item-bottom-left">
 					<commerce-ui:availability-label
+						CPCatalogEntry="<%= cpCatalogEntry %>"
+					/>
+
+					<commerce-ui:discontinued-label
 						CPCatalogEntry="<%= cpCatalogEntry %>"
 					/>
 				</div>
@@ -121,6 +127,7 @@ CPCatalogEntry cpCatalogEntry = cpContentHelper.getCPCatalogEntry(request);
 									<commerce-ui:compare-checkbox
 										CPCatalogEntry="<%= cpCatalogEntry %>"
 										label='<%= LanguageUtil.get(request, "compare") %>'
+										refreshOnRemove="<%= (cpCompareContentHelper != null) && CPPortletKeys.CP_COMPARE_CONTENT_WEB.equals(portletDisplay.getPortletName()) %>"
 									/>
 								</div>
 							</div>

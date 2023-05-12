@@ -12,9 +12,9 @@
 			"indexed": true,
 			"indexedAsKeyword": false,
 			"label": {
-				"en_US": "MDF Request External Reference Code SF"
+				"en_US": "MDF Request External Reference Cod"
 			},
-			"name": "mdfRequestExternalReferenceCodeSF",
+			"name": "mdfRequestExternalReferenceCode",
 			"required": false,
 			"type": "String"
 		},
@@ -38,9 +38,9 @@
 			"indexed": true,
 			"indexedAsKeyword": false,
 			"label": {
-				"en_US": "MDF Requested Amount"
+				"en_US": "Total MDF Requested Amount"
 			},
-			"name": "mdfRequestedAmount",
+			"name": "totalMDFRequestedAmount",
 			"required": false,
 			"type": "BigDecimal"
 		},
@@ -51,13 +51,28 @@
 			"indexed": true,
 			"indexedAsKeyword": false,
 			"label": {
-				"en_US": "Amount Claimed"
+				"en_US": "Total Claim Amount"
 			},
-			"name": "amountClaimed",
+			"name": "totalClaimAmount",
 			"required": false,
 			"type": "BigDecimal"
+		},
+		{
+			"DBType": "String",
+			"businessType": "Picklist",
+			"externalReferenceCode": "CurrencyIsoCode",
+			"indexed": true,
+			"indexedAsKeyword": false,
+			"label": {
+				"en_US": "Currency"
+			},
+			"listTypeDefinitionId": "[$LIST_TYPE_DEFINITION_ID:Currencies$]",
+			"name": "currency",
+			"required": false,
+			"type": "String"
 		}
 	],
+	"panelCategoryKey": "control_panel.object",
 	"pluralLabel": {
 		"en_US": "MDF Claims SF"
 	},

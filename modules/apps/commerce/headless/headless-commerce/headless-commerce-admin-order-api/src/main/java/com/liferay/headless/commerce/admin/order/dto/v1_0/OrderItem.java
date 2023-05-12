@@ -961,6 +961,62 @@ public class OrderItem implements Serializable {
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Integer quantity;
 
+	@Schema(example = "1234123124")
+	public String getReplacedSku() {
+		return replacedSku;
+	}
+
+	public void setReplacedSku(String replacedSku) {
+		this.replacedSku = replacedSku;
+	}
+
+	@JsonIgnore
+	public void setReplacedSku(
+		UnsafeSupplier<String, Exception> replacedSkuUnsafeSupplier) {
+
+		try {
+			replacedSku = replacedSkuUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected String replacedSku;
+
+	@Schema
+	public Long getReplacedSkuId() {
+		return replacedSkuId;
+	}
+
+	public void setReplacedSkuId(Long replacedSkuId) {
+		this.replacedSkuId = replacedSkuId;
+	}
+
+	@JsonIgnore
+	public void setReplacedSkuId(
+		UnsafeSupplier<Long, Exception> replacedSkuIdUnsafeSupplier) {
+
+		try {
+			replacedSkuId = replacedSkuIdUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected Long replacedSkuId;
+
 	@Schema(example = "2017-07-21")
 	public Date getRequestedDeliveryDate() {
 		return requestedDeliveryDate;
@@ -1276,6 +1332,34 @@ public class OrderItem implements Serializable {
 	@GraphQLField
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected BigDecimal unitPriceWithTaxAmount;
+
+	@Schema
+	public String[] getVirtualItemURLs() {
+		return virtualItemURLs;
+	}
+
+	public void setVirtualItemURLs(String[] virtualItemURLs) {
+		this.virtualItemURLs = virtualItemURLs;
+	}
+
+	@JsonIgnore
+	public void setVirtualItemURLs(
+		UnsafeSupplier<String[], Exception> virtualItemURLsUnsafeSupplier) {
+
+		try {
+			virtualItemURLs = virtualItemURLsUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected String[] virtualItemURLs;
 
 	@Override
 	public boolean equals(Object object) {
@@ -1631,6 +1715,30 @@ public class OrderItem implements Serializable {
 			sb.append(quantity);
 		}
 
+		if (replacedSku != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"replacedSku\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(replacedSku));
+
+			sb.append("\"");
+		}
+
+		if (replacedSkuId != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"replacedSkuId\": ");
+
+			sb.append(replacedSkuId);
+		}
+
 		if (requestedDeliveryDate != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -1755,6 +1863,30 @@ public class OrderItem implements Serializable {
 			sb.append("\"unitPriceWithTaxAmount\": ");
 
 			sb.append(unitPriceWithTaxAmount);
+		}
+
+		if (virtualItemURLs != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"virtualItemURLs\": ");
+
+			sb.append("[");
+
+			for (int i = 0; i < virtualItemURLs.length; i++) {
+				sb.append("\"");
+
+				sb.append(_escape(virtualItemURLs[i]));
+
+				sb.append("\"");
+
+				if ((i + 1) < virtualItemURLs.length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
 		}
 
 		sb.append("}");

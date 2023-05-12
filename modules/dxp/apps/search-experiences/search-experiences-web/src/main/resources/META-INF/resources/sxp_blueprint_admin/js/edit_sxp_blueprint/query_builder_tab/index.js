@@ -14,7 +14,10 @@ import {ClayVerticalNav} from '@clayui/nav';
 import {PropTypes} from 'prop-types';
 import React, {useEffect, useState} from 'react';
 
-import {SESSION_IDS} from '../../utils/sessionStorage';
+import {
+	SIDEBAR_STATE,
+	getStorageAddSXPElementSidebar,
+} from '../../utils/sessionStorage';
 import {SIDEBAR_TYPES} from '../../utils/types/sidebarTypes';
 import QuerySXPElements from './QuerySXPElements';
 import QuerySettings from './QuerySettings';
@@ -58,8 +61,7 @@ function QueryBuilderTab({
 		if (
 			activeVerticalNavKey === VERTICAL_NAV_KEYS.QUERY_SXP_ELEMENTS &&
 			!openSidebar &&
-			sessionStorage.getItem(SESSION_IDS.ADD_SXP_ELEMENT_SIDEBAR) ===
-				'open'
+			getStorageAddSXPElementSidebar() === SIDEBAR_STATE.OPEN
 		) {
 			setOpenSidebar(SIDEBAR_TYPES.ADD_SXP_ELEMENT);
 		}
@@ -104,10 +106,10 @@ function QueryBuilderTab({
 
 	return (
 		<ClayLayout.ContainerFluid
-			className="builder query-builder-tab"
+			className="layout-section-main query-builder-tab"
 			size="xl"
 		>
-			<div className="builder-content-shift">
+			<div className="layout-section-main-shift">
 				<ClayLayout.Row>
 					<ClayLayout.Col md={3} sm={12}>
 						<ClayVerticalNav

@@ -14,32 +14,52 @@ import LiferayAccountBrief from '../../../common/interfaces/liferayAccountBrief'
 import MDFRequestActivity from '../../../common/interfaces/mdfRequestActivity';
 import createMDFRequestActivities from '../../../common/services/liferay/object/activity/createMDFRequestActivities';
 import updateMDFRequestActivities from '../../../common/services/liferay/object/activity/updateMDFRequestActivities';
+import updateMDFRequestActivitiesSF from '../../../common/services/liferay/object/activity/updateMDFRequestActivitiesSF';
 import {ResourceName} from '../../../common/services/liferay/object/enum/resourceName';
 
 export default async function createMDFRequestActivitiesProxyAPI(
 	mdfRequestActivity: MDFRequestActivity,
 	company?: LiferayAccountBrief,
 	mdfRequestId?: number,
-	mdFRequestExternalReferenceCodeSF?: string
+	mdFRequestExternalReferenceCode?: string
 ) {
-	const dtoMDFRequestActivitySFResponse = await createMDFRequestActivities(
-		ResourceName.ACTIVITY_SALESFORCE,
-		mdfRequestActivity,
-		company,
-		mdfRequestId,
-		mdFRequestExternalReferenceCodeSF
-	);
+	let dtoMDFRequestActivitySFResponse:
+		| MDFRequestActivityDTO
+		| undefined = undefined;
+
+	if (
+		mdfRequestActivity.externalReferenceCode ||
+		mdfRequestActivity.externalReferenceCodeSF
+	) {
+		dtoMDFRequestActivitySFResponse = await updateMDFRequestActivitiesSF(
+			ResourceName.ACTIVITY_SALESFORCE,
+			mdfRequestActivity,
+			company,
+			mdfRequestId,
+			mdfRequestActivity.externalReferenceCode
+		);
+	}
+	else {
+		dtoMDFRequestActivitySFResponse = await createMDFRequestActivities(
+			ResourceName.ACTIVITY_SALESFORCE,
+			mdfRequestActivity,
+			company,
+			mdfRequestId,
+			mdFRequestExternalReferenceCode,
+			mdfRequestActivity.externalReferenceCode
+		);
+	}
 
 	let dtoMDFRequestResponse: MDFRequestActivityDTO | undefined = undefined;
 
-	if (dtoMDFRequestActivitySFResponse.externalReferenceCode) {
+	if (dtoMDFRequestActivitySFResponse?.externalReferenceCode) {
 		if (mdfRequestActivity.id) {
 			dtoMDFRequestResponse = await updateMDFRequestActivities(
 				ResourceName.ACTIVITY_DXP,
 				mdfRequestActivity,
 				company,
 				mdfRequestId,
-				mdFRequestExternalReferenceCodeSF,
+				mdFRequestExternalReferenceCode,
 				dtoMDFRequestActivitySFResponse.externalReferenceCode
 			);
 		}
@@ -49,7 +69,7 @@ export default async function createMDFRequestActivitiesProxyAPI(
 				mdfRequestActivity,
 				company,
 				mdfRequestId,
-				mdFRequestExternalReferenceCodeSF,
+				mdFRequestExternalReferenceCode,
 				dtoMDFRequestActivitySFResponse.externalReferenceCode
 			);
 		}

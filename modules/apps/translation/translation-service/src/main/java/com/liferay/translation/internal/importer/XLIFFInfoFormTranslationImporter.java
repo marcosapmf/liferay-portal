@@ -490,7 +490,7 @@ public class XLIFFInfoFormTranslationImporter
 				Property versionProperty = documentPart.getProperty("version");
 
 				if ((versionProperty != null) &&
-					!Objects.equals("1.2", versionProperty.getValue())) {
+					!Objects.equals(versionProperty.getValue(), "1.2")) {
 
 					throw new XLIFFFileException.MustBeValid(
 						"version must be 1.2");
@@ -614,10 +614,7 @@ public class XLIFFInfoFormTranslationImporter
 
 		if ((segmentsExperience == null) ||
 			!Objects.equals(
-				segmentsExperience.getClassName(),
-				infoItemReference.getClassName()) ||
-			!Objects.equals(
-				segmentsExperience.getClassPK(),
+				segmentsExperience.getPlid(),
 				_getSegmentsExperienceClassPK(infoItemReference))) {
 
 			throw new XLIFFFileException.MustHaveValidId("File ID is invalid");

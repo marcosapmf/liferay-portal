@@ -415,6 +415,28 @@ public class Product implements Cloneable, Serializable {
 
 	protected Attachment[] images;
 
+	public LinkedProduct[] getLinkedProducts() {
+		return linkedProducts;
+	}
+
+	public void setLinkedProducts(LinkedProduct[] linkedProducts) {
+		this.linkedProducts = linkedProducts;
+	}
+
+	public void setLinkedProducts(
+		UnsafeSupplier<LinkedProduct[], Exception>
+			linkedProductsUnsafeSupplier) {
+
+		try {
+			linkedProducts = linkedProductsUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected LinkedProduct[] linkedProducts;
+
 	public MappedProduct[] getMappedProducts() {
 		return mappedProducts;
 	}
@@ -830,6 +852,30 @@ public class Product implements Cloneable, Serializable {
 	}
 
 	protected String productTypeI18n;
+
+	public ProductVirtualSettings getProductVirtualSettings() {
+		return productVirtualSettings;
+	}
+
+	public void setProductVirtualSettings(
+		ProductVirtualSettings productVirtualSettings) {
+
+		this.productVirtualSettings = productVirtualSettings;
+	}
+
+	public void setProductVirtualSettings(
+		UnsafeSupplier<ProductVirtualSettings, Exception>
+			productVirtualSettingsUnsafeSupplier) {
+
+		try {
+			productVirtualSettings = productVirtualSettingsUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected ProductVirtualSettings productVirtualSettings;
 
 	public RelatedProduct[] getRelatedProducts() {
 		return relatedProducts;

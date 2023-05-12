@@ -80,33 +80,48 @@ JSONArray rangesJSONArray = modifiedFacetPortletPreferences.getRangesJSONArray()
 			collapsible="<%= true %>"
 			label="advanced-configuration"
 		>
-			<aui:fieldset id='<%= liferayPortletResponse.getNamespace() + "rangesId" %>'>
+			<aui:input label="frequency-threshold" name="<%= PortletPreferencesJspUtil.getInputName(ModifiedFacetPortletPreferences.PREFERENCE_KEY_FREQUENCY_THRESHOLD) %>" value="<%= modifiedFacetPortletPreferences.getFrequencyThreshold() %>" />
 
-				<%
-				int[] rangesIndexes = new int[rangesJSONArray.length()];
+			<aui:select label="order-terms-by" name="<%= PortletPreferencesJspUtil.getInputName(ModifiedFacetPortletPreferences.PREFERENCE_KEY_ORDER) %>" value="<%= modifiedFacetPortletPreferences.getOrder() %>">
+				<aui:option label="ranges-configuration" value="" />
+				<aui:option label="term-frequency-descending" value="count:desc" />
+				<aui:option label="term-frequency-ascending" value="count:asc" />
+			</aui:select>
 
-				for (int i = 0; i < rangesJSONArray.length(); i++) {
-					rangesIndexes[i] = i;
+			<liferay-frontend:fieldset
+				collapsible="<%= true %>"
+				label="ranges-configuration"
+			>
+				<aui:fieldset id='<%= liferayPortletResponse.getNamespace() + "rangesId" %>'>
 
-					JSONObject jsonObject = rangesJSONArray.getJSONObject(i);
-				%>
+					<%
+					int[] rangesIndexes = new int[rangesJSONArray.length()];
 
-					<div class="lfr-form-row lfr-form-row-inline range-form-row">
-						<div class="row-fields">
-							<aui:input cssClass="label-input" label="label" name='<%= "label_" + i %>' required="<%= true %>" value='<%= jsonObject.getString("label") %>' />
+					for (int i = 0; i < rangesJSONArray.length(); i++) {
+						rangesIndexes[i] = i;
 
-							<aui:input cssClass="range-input" label="range" name='<%= "range_" + i %>' required="<%= true %>" value='<%= jsonObject.getString("range") %>' />
+						JSONObject jsonObject = rangesJSONArray.getJSONObject(i);
+					%>
+
+						<div class="lfr-form-row lfr-form-row-inline range-form-row">
+							<div class="row-fields">
+								<aui:input cssClass="label-input" label="label" name='<%= "label_" + i %>' required="<%= true %>" value='<%= jsonObject.getString("label") %>' />
+
+								<aui:input cssClass="range-input" label="range" name='<%= "range_" + i %>' required="<%= true %>" value='<%= jsonObject.getString("range") %>' />
+							</div>
 						</div>
-					</div>
 
-				<%
-				}
-				%>
+					<%
+					}
+					%>
 
-				<aui:input cssClass="ranges-input" name="<%= PortletPreferencesJspUtil.getInputName(ModifiedFacetPortletPreferences.PREFERENCE_KEY_RANGES) %>" type="hidden" value="<%= modifiedFacetPortletPreferences.getRangesString() %>" />
+					<aui:input cssClass="ranges-input" name="<%= PortletPreferencesJspUtil.getInputName(ModifiedFacetPortletPreferences.PREFERENCE_KEY_RANGES) %>" type="hidden" value="<%= modifiedFacetPortletPreferences.getRangesString() %>" />
 
-				<aui:input name="rangesIndexes" type="hidden" value="<%= StringUtil.merge(rangesIndexes) %>" />
-			</aui:fieldset>
+					<aui:input name="rangesIndexes" type="hidden" value="<%= StringUtil.merge(rangesIndexes) %>" />
+				</aui:fieldset>
+
+				<aui:input label="display-frequencies" name="<%= PortletPreferencesJspUtil.getInputName(ModifiedFacetPortletPreferences.PREFERENCE_KEY_FREQUENCIES_VISIBLE) %>" type="checkbox" value="<%= modifiedFacetPortletPreferences.isFrequenciesVisible() %>" />
+			</liferay-frontend:fieldset>
 		</liferay-frontend:fieldset>
 	</liferay-frontend:edit-form-body>
 

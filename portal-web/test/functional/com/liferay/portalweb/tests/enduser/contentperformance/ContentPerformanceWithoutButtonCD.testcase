@@ -14,7 +14,7 @@ definition {
 
 			Navigator.openURL();
 
-			JSONGroup.addGroup(groupName = "Test Site Name");
+			HeadlessSite.addSite(siteName = "Test Site Name");
 		}
 	}
 
@@ -23,9 +23,9 @@ definition {
 
 		Navigator.openURL();
 
-		AnalyticsCloud.teardownAnalyticsCloud();
+		ACDXPSettings.disconnectDXPFromAnalyticsCloud();
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testPortalInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -34,10 +34,12 @@ definition {
 	}
 
 	@description = "LPS-118006: When the DXP is connected to AC after the user has clicked the Don't show me this again button, the Metrics option is shown again, and the sidebar panel with instructions to sync, and without the Dont show me this again button shows up when the user clicks on it"
-	@priority = "4"
+	@priority = 4
 	test MetricsInContentDashboardACEnabled {
-		task ("Create a Web Content via JSONWS") {
-			JSONWebcontent.addWebContent(
+		property ci.retries.disabled = "true";
+
+		task ("Create a Web Content") {
+			HeadlessWebcontent.addBasicWebContent(
 				content = "Webcontent Content",
 				groupName = "Test Site Name",
 				title = "WC Content");

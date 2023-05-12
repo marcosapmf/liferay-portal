@@ -58,13 +58,14 @@ public interface LayoutUtilityPageEntryService extends BaseService {
 	public LayoutUtilityPageEntry addLayoutUtilityPageEntry(
 			String externalReferenceCode, long groupId, long plid,
 			long previewFileEntryId, boolean defaultLayoutUtilityPageEntry,
-			String name, String type, long masterLayoutPlid)
+			String name, String type, long masterLayoutPlid,
+			ServiceContext serviceContext)
 		throws PortalException;
 
 	public LayoutUtilityPageEntry copyLayoutUtilityPageEntry(
-			long groupId, long layoutUtilityPageEntryId,
+			long groupId, long sourceLayoutUtilityPageEntryId,
 			ServiceContext serviceContext)
-		throws PortalException;
+		throws Exception;
 
 	public LayoutUtilityPageEntry deleteLayoutUtilityPageEntry(
 			long layoutUtilityPageEntryId)
@@ -104,6 +105,10 @@ public interface LayoutUtilityPageEntryService extends BaseService {
 	public String getOSGiServiceIdentifier();
 
 	public LayoutUtilityPageEntry setDefaultLayoutUtilityPageEntry(
+			long layoutUtilityPageEntryId)
+		throws PortalException;
+
+	public LayoutUtilityPageEntry unsetDefaultLayoutUtilityPageEntry(
 			long layoutUtilityPageEntryId)
 		throws PortalException;
 

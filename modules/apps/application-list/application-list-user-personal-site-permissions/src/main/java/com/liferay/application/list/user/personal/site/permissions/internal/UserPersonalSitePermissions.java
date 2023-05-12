@@ -66,10 +66,12 @@ public class UserPersonalSitePermissions {
 
 		for (Portlet portlet : portlets) {
 			try {
-				initPermissions(
-					companyId, powerUserRole.getRoleId(),
-					portlet.getRootPortletId(),
-					userPersonalSiteGroup.getGroupId());
+				if (companyId == portlet.getCompanyId()) {
+					initPermissions(
+						companyId, powerUserRole.getRoleId(),
+						portlet.getRootPortletId(),
+						userPersonalSiteGroup.getGroupId());
+				}
 			}
 			catch (PortalException portalException) {
 				_log.error(
@@ -92,9 +94,9 @@ public class UserPersonalSitePermissions {
 		_bundleContext = bundleContext;
 
 		String filter = StringBundler.concat(
-			"(&(!(depot.panel.app.wrapper=*))(objectClass=",
-			PanelApp.class.getName(), ")(panel.category.key=",
-			PanelCategoryKeys.SITE_ADMINISTRATION, "*))");
+			"(&(objectClass=", PanelApp.class.getName(),
+			")(panel.category.key=", PanelCategoryKeys.SITE_ADMINISTRATION,
+			"*))");
 
 		_serviceTracker = ServiceTrackerFactory.open(
 			bundleContext, filter, new PanelAppServiceTrackerCustomizer());
@@ -186,9 +188,12 @@ public class UserPersonalSitePermissions {
 		}
 
 		try {
-			initPermissions(
-				companyId, powerUserRole.getRoleId(),
-				portlet.getRootPortletId(), userPersonalSiteGroup.getGroupId());
+			if (companyId == portlet.getCompanyId()) {
+				initPermissions(
+					companyId, powerUserRole.getRoleId(),
+					portlet.getRootPortletId(),
+					userPersonalSiteGroup.getGroupId());
+			}
 		}
 		catch (PortalException portalException) {
 			_log.error(

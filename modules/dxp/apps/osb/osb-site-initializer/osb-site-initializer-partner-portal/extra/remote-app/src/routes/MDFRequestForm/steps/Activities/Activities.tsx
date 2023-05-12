@@ -18,15 +18,12 @@ import {useCallback, useEffect, useState} from 'react';
 import PRMForm from '../../../../common/components/PRMForm';
 import PRMFormikPageProps from '../../../../common/components/PRMFormik/interfaces/prmFormikPageProps';
 import MDFRequest from '../../../../common/interfaces/mdfRequest';
-import deleteMDFRequestActivities from '../../../../common/services/liferay/object/activity/deleteMDFRequestActivities';
-import {ResourceName} from '../../../../common/services/liferay/object/enum/resourceName';
-import {Status} from '../../../../common/utils/constants/status';
-import handleError from '../../../../common/utils/handleError';
 import isObjectEmpty from '../../../../common/utils/isObjectEmpty';
 import {StepType} from '../../enums/stepType';
 import MDFRequestStepProps from '../../interfaces/mdfRequestStepProps';
 import Form from './components/Form';
 import Listing from './components/Listing';
+import useGetSummaryActivities from './hooks/useGetSummaryActivities';
 
 interface IProps {
 	arrayHelpers: ArrayHelpers;
@@ -35,7 +32,6 @@ interface IProps {
 
 const Activities = ({
 	arrayHelpers,
-	isEdit,
 	onCancel,
 	onContinue,
 	onPrevious,
@@ -46,6 +42,7 @@ const Activities = ({
 		isSubmitting,
 		isValid,
 		setFieldValue,
+		status: submitted,
 		values,
 		...formikHelpers
 	} = useFormikContext<MDFRequest>();
@@ -79,6 +76,26 @@ const Activities = ({
 
 	const onAdd = () => setCurrentActivityIndex(values.activities.length);
 
+	const {
+		maxDateActivity,
+		minDateActivity,
+		totalCostOfExpense,
+		totalMDFRequestAmount,
+	} = useGetSummaryActivities(values.activities);
+
+	useEffect(() => {
+		setFieldValue('maxDateActivity', maxDateActivity);
+		setFieldValue('minDateActivity', minDateActivity);
+		setFieldValue('totalCostOfExpense', totalCostOfExpense);
+		setFieldValue('totalMDFRequestAmount', totalMDFRequestAmount);
+	}, [
+		maxDateActivity,
+		minDateActivity,
+		setFieldValue,
+		totalCostOfExpense,
+		totalMDFRequestAmount,
+	]);
+
 	const onEdit = (index: number) => {
 		arrayHelpers.push(values.activities[index]);
 
@@ -106,22 +123,8 @@ const Activities = ({
 		updateEditableActivity();
 	};
 
-	const onRemove = async (index: number) => {
-		if (isEdit) {
-			try {
-				await deleteMDFRequestActivities(
-					ResourceName.ACTIVITY_DXP,
-					values.activities[index].id as number
-				);
-			}
-			catch (error: any) {
-				handleError(error.message);
-
-				return;
-			}
-		}
-
-		arrayHelpers.remove(index);
+	const onRemove = (index: number) => {
+		setFieldValue(`activities[${index}].removed`, true);
 	};
 
 	const hasActivityErrorsByIndex = (index: number): boolean =>
@@ -152,6 +155,7 @@ const Activities = ({
 		>
 			{currentActivityIndex !== undefined ? (
 				<Form
+					currency={values.currency}
 					currentActivity={values.activities[currentActivityIndex]}
 					currentActivityIndex={currentActivityIndex}
 					setFieldValue={setFieldValue}
@@ -159,7 +163,10 @@ const Activities = ({
 			) : (
 				<Listing
 					{...arrayHelpers}
-					activities={values.activities}
+					activities={values.activities?.filter(
+						(activity) => !activity.removed
+					)}
+					currency={values.currency}
 					hasActivityErrorsByIndex={hasActivityErrorsByIndex}
 					onAdd={onAdd}
 					onEdit={onEdit}
@@ -171,6 +178,7 @@ const Activities = ({
 			<PRMForm.Footer>
 				<div className="d-flex justify-content-between mr-auto">
 					<Button
+						disabled={submitted || isSubmitting}
 						displayType={null}
 						onClick={() =>
 							currentActivityIndex !== undefined
@@ -183,21 +191,21 @@ const Activities = ({
 
 					<Button
 						className="inline-item inline-item-after"
-						disabled={isSubmitting}
+						disabled={submitted || isSubmitting}
 						displayType={null}
 						onClick={onSaveAsDraftForm}
 					>
 						Save as Draft
-						{isSubmitting &&
-							values.mdfRequestStatus === Status.DRAFT && (
-								<ClayLoadingIndicator className="inline-item inline-item-after ml-2" />
-							)}
+						{isSubmitting && (
+							<ClayLoadingIndicator className="inline-item inline-item-after ml-2" />
+						)}
 					</Button>
 				</div>
 
 				<div className="d-flex justify-content-between px-2 px-md-0">
 					<Button
 						className="mr-4"
+						disabled={submitted || isSubmitting}
 						displayType="secondary"
 						onClick={onCancel}
 					>
@@ -205,6 +213,7 @@ const Activities = ({
 					</Button>
 
 					<Button
+						className="inline-item inline-item-after"
 						disabled={
 							currentActivityIndex !== undefined
 								? !isObjectEmpty(activityErrors as Object)
@@ -213,6 +222,9 @@ const Activities = ({
 						onClick={onContinueForm}
 					>
 						Continue
+						{isSubmitting && (
+							<ClayLoadingIndicator className="inline-item inline-item-after ml-2" />
+						)}
 					</Button>
 				</div>
 			</PRMForm.Footer>

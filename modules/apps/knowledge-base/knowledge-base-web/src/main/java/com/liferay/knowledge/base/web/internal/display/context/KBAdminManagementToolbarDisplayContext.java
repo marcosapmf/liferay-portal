@@ -18,10 +18,12 @@ import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenu;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemList;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuilder;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.ViewTypeItem;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.ViewTypeItemList;
 import com.liferay.knowledge.base.constants.KBActionKeys;
 import com.liferay.knowledge.base.constants.KBFolderConstants;
+import com.liferay.knowledge.base.constants.KBPortletKeys;
 import com.liferay.knowledge.base.model.KBArticle;
-import com.liferay.knowledge.base.model.KBArticleSearchDisplay;
 import com.liferay.knowledge.base.model.KBFolder;
 import com.liferay.knowledge.base.model.KBTemplate;
 import com.liferay.knowledge.base.service.KBArticleServiceUtil;
@@ -41,6 +43,7 @@ import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.PortletURLUtil;
+import com.liferay.portal.kernel.portlet.SearchDisplayStyleUtil;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
@@ -88,7 +91,7 @@ public class KBAdminManagementToolbarDisplayContext {
 		_renderResponse = renderResponse;
 		_portletConfig = portletConfig;
 
-		_themeDisplay = (ThemeDisplay)_httpServletRequest.getAttribute(
+		_themeDisplay = (ThemeDisplay)httpServletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
 		_createSearchContainer();
@@ -261,6 +264,18 @@ public class KBAdminManagementToolbarDisplayContext {
 		return creationMenu;
 	}
 
+	public String getDisplayStyle() {
+		if (Validator.isNotNull(_displayStyle)) {
+			return _displayStyle;
+		}
+
+		_displayStyle = SearchDisplayStyleUtil.getDisplayStyle(
+			_httpServletRequest, KBPortletKeys.KNOWLEDGE_BASE_ADMIN,
+			"entries-display-style", "descriptive", true);
+
+		return _displayStyle;
+	}
+
 	public List<DropdownItem> getEmptyStateActionDropdownItems() {
 		long kbFolderClassNameId = PortalUtil.getClassNameId(
 			KBFolderConstants.getClassName());
@@ -379,6 +394,26 @@ public class KBAdminManagementToolbarDisplayContext {
 		return _searchContainer.getTotal();
 	}
 
+	public List<ViewTypeItem> getViewTypeItems() {
+		PortletURL portletURL = PortletURLBuilder.createRenderURL(
+			_liferayPortletResponse
+		).setMVCPath(
+			"/admin/view.jsp"
+		).setParameter(
+			"parentResourcePrimKey",
+			ParamUtil.getLong(
+				_httpServletRequest, "parentResourcePrimKey",
+				KBFolderConstants.DEFAULT_PARENT_FOLDER_ID)
+		).buildPortletURL();
+
+		return new ViewTypeItemList(portletURL, getDisplayStyle()) {
+			{
+				addListViewTypeItem();
+				addTableViewTypeItem();
+			}
+		};
+	}
+
 	public boolean isDisabled() {
 		return !_searchContainer.hasResults();
 	}
@@ -433,16 +468,16 @@ public class KBAdminManagementToolbarDisplayContext {
 			_searchContainer.setOrderByComparator(
 				new KBOrderByComparatorAdapter<>(kbArticleOrderByComparator));
 
-			KBArticleSearchDisplay kbArticleSearchDisplay =
-				KBArticleServiceUtil.getKBArticleSearchDisplay(
-					_themeDisplay.getScopeGroupId(), keywords, keywords,
-					WorkflowConstants.STATUS_ANY, null, null, false, new int[0],
-					_searchContainer.getCur(), _searchContainer.getDelta(),
-					kbArticleOrderByComparator);
-
 			_searchContainer.setResultsAndTotal(
-				() -> new ArrayList<>(kbArticleSearchDisplay.getResults()),
-				kbArticleSearchDisplay.getTotal());
+				() -> new ArrayList<>(
+					KBArticleServiceUtil.getKBArticlesByKeywords(
+						_themeDisplay.getScopeGroupId(), keywords,
+						WorkflowConstants.STATUS_ANY,
+						_searchContainer.getStart(),
+						_searchContainer.getEnd())),
+				KBArticleServiceUtil.countKBArticlesByKeywords(
+					_themeDisplay.getScopeGroupId(), keywords,
+					WorkflowConstants.STATUS_ANY));
 		}
 		else if (kbFolderView) {
 			_searchContainer.setResultsAndTotal(
@@ -517,17 +552,17 @@ public class KBAdminManagementToolbarDisplayContext {
 		return new DropdownItemList() {
 			{
 				final Map<String, String> orderColumnsMap = HashMapBuilder.put(
-					"modifiedDate", "modified-date"
+					"modified-date", "modified-date"
 				).put(
 					"priority", "priority"
 				).put(
 					"title", "title"
 				).put(
-					"viewCount", "view-count"
+					"view-count", "view-count"
 				).build();
 
 				String[] orderColumns = {
-					"priority", "modifiedDate", "title", "viewCount"
+					"priority", "modified-date", "title", "view-count"
 				};
 
 				for (String orderByCol : orderColumns) {
@@ -601,6 +636,7 @@ public class KBAdminManagementToolbarDisplayContext {
 			KBActionKeys.ADD_KB_FOLDER);
 	}
 
+	private String _displayStyle;
 	private final HttpServletRequest _httpServletRequest;
 	private final LiferayPortletRequest _liferayPortletRequest;
 	private final LiferayPortletResponse _liferayPortletResponse;

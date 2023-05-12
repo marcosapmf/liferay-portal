@@ -35,6 +35,7 @@ import com.liferay.journal.model.JournalFolder;
 import com.liferay.journal.service.JournalArticleLocalService;
 import com.liferay.journal.service.JournalFolderLocalService;
 import com.liferay.journal.util.JournalContent;
+import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -196,8 +197,10 @@ public class AMJournalArticleStagedModelDataHandlerTest
 	public void testExportSucceedsWithInvalidReferences() throws Exception {
 		int invalidFileEntryId = 9999999;
 
-		JournalArticle journalArticle = _addJournalArticle(
-			_getContent(_getImgTag(invalidFileEntryId)), _getServiceContext());
+		JournalArticle journalArticle = _withPortletImportEnabled(
+			() -> _addJournalArticle(
+				_getContent(_getImgTag(invalidFileEntryId)),
+				_getServiceContext()));
 
 		initExport();
 
@@ -304,7 +307,7 @@ public class AMJournalArticleStagedModelDataHandlerTest
 			journalFolder.getFolderId(),
 			JournalArticleConstants.CLASS_NAME_ID_DEFAULT, 0, StringPool.BLANK,
 			true, 0, titleMap, null, titleMap, content,
-			ddmStructure.getStructureKey(), ddmTemplate.getTemplateKey(), null,
+			ddmStructure.getStructureId(), ddmTemplate.getTemplateKey(), null,
 			1, 1, 1965, 0, 0, 0, 0, 0, 0, 0, true, 0, 0, 0, 0, 0, true, true,
 			false, null, null, null, null, serviceContext);
 	}
@@ -438,6 +441,24 @@ public class AMJournalArticleStagedModelDataHandlerTest
 		sb.setIndex(sb.index() - 1);
 
 		return _getContent(sb.toString());
+	}
+
+	private JournalArticle _withPortletImportEnabled(
+			UnsafeSupplier<JournalArticle, Exception> unsafeSupplier)
+		throws Exception {
+
+		boolean portletImportInProcess =
+			ExportImportThreadLocal.isPortletImportInProcess();
+
+		try {
+			ExportImportThreadLocal.setPortletImportInProcess(true);
+
+			return unsafeSupplier.get();
+		}
+		finally {
+			ExportImportThreadLocal.setPortletImportInProcess(
+				portletImportInProcess);
+		}
 	}
 
 	private static final String _AM_JOURNAL_CONFIG_UUID = "journal-config";

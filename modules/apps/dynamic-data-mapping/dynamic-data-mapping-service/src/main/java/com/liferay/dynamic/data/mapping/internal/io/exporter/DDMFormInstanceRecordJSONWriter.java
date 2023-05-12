@@ -17,14 +17,11 @@ package com.liferay.dynamic.data.mapping.internal.io.exporter;
 import com.liferay.dynamic.data.mapping.io.exporter.DDMFormInstanceRecordWriter;
 import com.liferay.dynamic.data.mapping.io.exporter.DDMFormInstanceRecordWriterRequest;
 import com.liferay.dynamic.data.mapping.io.exporter.DDMFormInstanceRecordWriterResponse;
-import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.json.JSONUtil;
 
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.stream.Stream;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -45,20 +42,10 @@ public class DDMFormInstanceRecordJSONWriter
 				ddmFormInstanceRecordWriterRequest)
 		throws Exception {
 
-		List<Map<String, String>> ddmFormFieldsValueList =
-			ddmFormInstanceRecordWriterRequest.getDDMFormFieldValues();
-
-		JSONArray jsonArray = jsonFactory.createJSONArray();
-
-		Stream<Map<String, String>> stream = ddmFormFieldsValueList.stream();
-
-		stream.map(
-			this::_createJSONObject
-		).forEach(
-			jsonArray::put
-		);
-
-		String json = jsonArray.toString();
+		String json = String.valueOf(
+			JSONUtil.toJSONArray(
+				ddmFormInstanceRecordWriterRequest.getDDMFormFieldValues(),
+				this::_createJSONObject));
 
 		DDMFormInstanceRecordWriterResponse.Builder builder =
 			DDMFormInstanceRecordWriterResponse.Builder.newBuilder(
@@ -73,14 +60,11 @@ public class DDMFormInstanceRecordJSONWriter
 	private JSONObject _createJSONObject(
 		Map<String, String> ddmFormFieldsValue) {
 
-		Set<Map.Entry<String, String>> entrySet = ddmFormFieldsValue.entrySet();
-
-		Stream<Map.Entry<String, String>> stream = entrySet.stream();
-
 		JSONObject jsonObject = jsonFactory.createJSONObject();
 
-		stream.forEach(
-			entry -> jsonObject.put(entry.getKey(), entry.getValue()));
+		for (Map.Entry<String, String> entry : ddmFormFieldsValue.entrySet()) {
+			jsonObject.put(entry.getKey(), entry.getValue());
+		}
 
 		return jsonObject;
 	}

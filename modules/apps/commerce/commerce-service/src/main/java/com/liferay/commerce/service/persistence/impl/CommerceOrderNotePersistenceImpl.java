@@ -3067,7 +3067,9 @@ public class CommerceOrderNotePersistenceImpl
 				if (ercCommerceOrderNote != null) {
 					throw new DuplicateCommerceOrderNoteExternalReferenceCodeException(
 						"Duplicate commerce order note with external reference code " +
-							commerceOrderNote.getExternalReferenceCode());
+							commerceOrderNote.getExternalReferenceCode() +
+								" and company " +
+									commerceOrderNote.getCompanyId());
 				}
 			}
 			else {
@@ -3077,7 +3079,9 @@ public class CommerceOrderNotePersistenceImpl
 
 					throw new DuplicateCommerceOrderNoteExternalReferenceCodeException(
 						"Duplicate commerce order note with external reference code " +
-							commerceOrderNote.getExternalReferenceCode());
+							commerceOrderNote.getExternalReferenceCode() +
+								" and company " +
+									commerceOrderNote.getCompanyId());
 				}
 			}
 		}

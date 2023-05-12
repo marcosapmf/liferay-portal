@@ -32,6 +32,7 @@ import com.liferay.portal.kernel.security.permission.resource.PortletResourcePer
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.util.OrderByComparator;
+import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
 import java.util.List;
@@ -89,8 +90,8 @@ public class LayoutPageTemplateEntryServiceImpl
 	@Override
 	public LayoutPageTemplateEntry copyLayoutPageTemplateEntry(
 			long groupId, long layoutPageTemplateCollectionId,
-			long layoutPageTemplateEntryId, ServiceContext serviceContext)
-		throws PortalException {
+			long sourceLayoutPageTemplateEntryId, ServiceContext serviceContext)
+		throws Exception {
 
 		_portletResourcePermission.check(
 			getPermissionChecker(), groupId,
@@ -98,7 +99,7 @@ public class LayoutPageTemplateEntryServiceImpl
 
 		return layoutPageTemplateEntryLocalService.copyLayoutPageTemplateEntry(
 			getUserId(), groupId, layoutPageTemplateCollectionId,
-			layoutPageTemplateEntryId, serviceContext);
+			sourceLayoutPageTemplateEntryId, serviceContext);
 	}
 
 	@Override
@@ -133,8 +134,23 @@ public class LayoutPageTemplateEntryServiceImpl
 		Layout layout = _layoutLocalService.getLayout(
 			layoutPageTemplateEntry.getPlid());
 
-		_layoutCopyHelper.copyLayout(
+		_layoutCopyHelper.copyLayoutContent(
 			segmentsExperienceId, sourceLayout, layout.fetchDraftLayout());
+
+		Layout draftLayout = _layoutLocalService.fetchDraftLayout(
+			layout.getPlid());
+
+		draftLayout.setStatus(WorkflowConstants.STATUS_APPROVED);
+
+		UnicodeProperties typeSettingsUnicodeProperties =
+			draftLayout.getTypeSettingsProperties();
+
+		typeSettingsUnicodeProperties.put(
+			"published", Boolean.FALSE.toString());
+
+		draftLayout.setTypeSettingsProperties(typeSettingsUnicodeProperties);
+
+		_layoutLocalService.updateLayout(draftLayout);
 
 		return layoutPageTemplateEntry;
 	}

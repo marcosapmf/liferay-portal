@@ -1,11 +1,11 @@
 @component-name = "portal-publications"
 definition {
 
-	property database.types = "db2,hypersonic,mariadb,mysql,oracle,postgresql,sqlserver";
 	property osgi.module.configuration.file.names = "com.liferay.change.tracking.configuration.CTSettingsConfiguration.config";
 	property osgi.module.configurations = "enabled=B\"true\"";
 	property portal.release = "true";
 	property portal.upstream = "true";
+	property testray.component.names = "Document Management";
 	property testray.main.component.name = "Publications";
 
 	setUp {
@@ -17,7 +17,7 @@ definition {
 	tearDown {
 		var testPortalInstance = PropsUtil.get("test.portal.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testPortalInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -25,7 +25,97 @@ definition {
 		}
 	}
 
-	@priority = "4"
+	@description = "This is the use case for LPS-161041. Can view changes to a document across multiple publications"
+	@priority = 4
+	test CanViewDocumentFolderAndFileOverMultiplePublications {
+		property custom.properties = "feature.flag.LPS-161033=true";
+
+		task ("Add new document folder and file on new added site") {
+			JSONGroup.addGroup(groupName = "Site Name");
+
+			JSONFolder.addFolder(
+				dmFolderDescription = "DM Folder Description",
+				dmFolderName = "DM Folder Name",
+				groupName = "Site Name");
+
+			JSONDocument.addFileWithUploadedFile(
+				dmDocumentDescription = "DM Document Description",
+				dmDocumentTitle = "DM Document Title",
+				groupName = "Site Name",
+				mimeType = "image/jpeg",
+				sourceFileName = "Document_1.jpg");
+		}
+
+		task ("Add and select a new Publication") {
+			JSONPublications.addPublication(publicationName = "Publication Name 1");
+
+			JSONPublications.selectPublication(publicationName = "Publication Name 1");
+		}
+
+		task ("Assert there are no changes in the Publication timeline") {
+			DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "site-name");
+
+			DMNavigator.gotoDocumentCP(dmDocumentTitle = "DM Document Title");
+
+			DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "site-name");
+
+			DMNavigator.gotoFolder(dmFolderName = "DM Folder Name");
+
+			Publications.viewPublicationTimeline(isEmpty = "true");
+		}
+
+		task ("Edit the document folder and file") {
+			DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "site-name");
+
+			DMFolder.editCP(
+				dmFolderDescription = "DM Folder Description",
+				dmFolderDescriptionEdit = "DM Folder Description Edit",
+				dmFolderName = "DM Folder Name",
+				dmFolderNameEdit = "DM Folder Name Edit");
+
+			DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "site-name");
+
+			DMDocument.editCP(
+				dmDocumentDescription = "DM Document Description",
+				dmDocumentDescriptionEdit = "DM Document Description Edit",
+				dmDocumentTitle = "DM Document Title",
+				dmDocumentTitleEdit = "DM Document Title Edit");
+		}
+
+		task ("Publish the publication") {
+			JSONPublications.selectPublication(publicationName = "Publication Name 1");
+
+			JSONPublications.publishPublication(publicationName = "Publication Name 1");
+
+			Publications.viewPublicationPublished(publicationName = "Publication Name 1");
+		}
+
+		task ("Add a new Publication") {
+			JSONPublications.addPublication(publicationName = "Publication Name 2");
+		}
+
+		task ("View Publication timeline in Production") {
+			DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "site-name");
+
+			DMNavigator.gotoDocumentCP(dmDocumentTitle = "DM Document Title Edit");
+
+			Publications.viewPublicationTimeline(publicationName = "Publication Name 1");
+
+			DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "site-name");
+
+			DMNavigator.gotoFolder(dmFolderName = "DM Folder Name Edit");
+
+			Publications.viewPublicationTimeline(publicationName = "Publication Name 1");
+		}
+
+		task ("View Publication timeline in Publication") {
+			JSONPublications.selectPublication(publicationName = "Publication Name 2");
+
+			Publications.viewPublicationTimeline(publicationName = "Publication Name 1");
+		}
+	}
+
+	@priority = 4
 	test CheckoutAndCheckinDocumentInPublication {
 		property test.assert.warning.exceptions = "true";
 
@@ -75,7 +165,7 @@ definition {
 		DMDocument.viewDocumentVersionNumberCmdPG(dmDocumentVersionNumber = "2.0");
 	}
 
-	@priority = "4"
+	@priority = 4
 	test DeleteDMFolderWithMultipleFiles {
 		property test.assert.warning.exceptions = "true";
 
@@ -136,7 +226,7 @@ definition {
 			changeUser = "Test Test");
 	}
 
-	@priority = "4"
+	@priority = 4
 	test PublishDocumentFolderWithEditedDocument {
 		JSONGroup.addGroup(groupName = "Site Name");
 
@@ -203,7 +293,7 @@ definition {
 		DMDocument.viewCP(dmDocumentTitle = "DM Document Title Edit");
 	}
 
-	@priority = "4"
+	@priority = 4
 	test PublishDocumentWithNewDocumentType {
 		JSONPublications.addPublication(publicationName = "Publication Name");
 
@@ -265,7 +355,7 @@ definition {
 	}
 
 	@description = "Assert Shortcut can add within Publications and publish to production."
-	@priority = "4"
+	@priority = 4
 	test PublishWithShortcut {
 		property app.server.types = "tomcat";
 		property test.name.skip.portal.instance = "PublicationsDM#PublishWithShortcut";
@@ -326,13 +416,8 @@ definition {
 		DMDocument.viewCP(dmDocumentTitle = "Document_1.jpg");
 	}
 
-	@priority = "4"
+	@priority = 4
 	test ResolveConflictingPublicationsByDiscarding {
-
-		// Workaround LPS-148148
-
-		property app.server.types = "jboss,tomcat,weblogic,wildfly";
-
 		JSONGroup.addGroup(groupName = "Site Name");
 
 		JSONDocument.addFileWithUploadedFile(
@@ -391,7 +476,7 @@ definition {
 			columnName = "Title",
 			columnValueInProduction = "DM Document 2 Title Edit",
 			columnValueInPublication = "DM Document Title Edit",
-			diffRemovedValue = "2",
+			diffRemovedValue = 2,
 			modificationConflict = "true",
 			publicationName = "Publication Name");
 
@@ -410,7 +495,7 @@ definition {
 			dmDocumentVersionNumber = "1.1");
 	}
 
-	@priority = "4"
+	@priority = 4
 	test ViewPublicationsPreviewForAddedDocuments {
 		JSONPublications.addPublication(publicationName = "Publication Name");
 

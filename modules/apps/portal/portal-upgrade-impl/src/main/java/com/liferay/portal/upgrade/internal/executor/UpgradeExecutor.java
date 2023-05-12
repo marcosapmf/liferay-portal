@@ -19,8 +19,6 @@ import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.db.index.IndexUpdaterUtil;
 import com.liferay.portal.kernel.cache.CacheRegistryUtil;
-import com.liferay.portal.kernel.dao.db.DBContext;
-import com.liferay.portal.kernel.dao.db.DBProcessContext;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Release;
@@ -34,8 +32,7 @@ import com.liferay.portal.upgrade.internal.graph.ReleaseGraphManager;
 import com.liferay.portal.upgrade.internal.registry.UpgradeInfo;
 import com.liferay.portal.upgrade.internal.registry.UpgradeStepRegistratorTracker;
 import com.liferay.portal.upgrade.internal.release.ReleasePublisher;
-
-import java.io.OutputStream;
+import com.liferay.portal.upgrade.log.UpgradeLogContext;
 
 import java.util.Dictionary;
 import java.util.List;
@@ -53,7 +50,7 @@ import org.osgi.service.component.annotations.Reference;
 /**
  * @author Preston Crary
  */
-@Component(immediate = true, service = UpgradeExecutor.class)
+@Component(service = UpgradeExecutor.class)
 public class UpgradeExecutor {
 
 	public void execute(
@@ -142,35 +139,43 @@ public class UpgradeExecutor {
 	public Release executeUpgradeInfos(
 		String bundleSymbolicName, List<UpgradeInfo> upgradeInfos) {
 
-		Release release = _releaseLocalService.fetchRelease(bundleSymbolicName);
+		try {
+			UpgradeLogContext.setContext(bundleSymbolicName);
 
-		ServiceRegistration<Release> oldServiceRegistration = null;
+			Release release = _releaseLocalService.fetchRelease(
+				bundleSymbolicName);
 
-		if (release != null) {
-			oldServiceRegistration = _releasePublisher.publishInProgress(
-				release);
+			ServiceRegistration<Release> oldServiceRegistration = null;
+
+			if (release != null) {
+				oldServiceRegistration = _releasePublisher.publishInProgress(
+					release);
+			}
+
+			_executeUpgradeInfos(bundleSymbolicName, upgradeInfos);
+
+			release = _releaseLocalService.fetchRelease(bundleSymbolicName);
+
+			ServiceRegistration<Release> inProgressServiceRegistration = null;
+
+			if (release != null) {
+				inProgressServiceRegistration = _releasePublisher.publish(
+					release, _isInitialRelease(upgradeInfos));
+			}
+
+			if (inProgressServiceRegistration != null) {
+				inProgressServiceRegistration.unregister();
+			}
+
+			if (oldServiceRegistration != null) {
+				oldServiceRegistration.unregister();
+			}
+
+			return release;
 		}
-
-		_executeUpgradeInfos(bundleSymbolicName, upgradeInfos);
-
-		release = _releaseLocalService.fetchRelease(bundleSymbolicName);
-
-		ServiceRegistration<Release> inProgressServiceRegistration = null;
-
-		if (release != null) {
-			inProgressServiceRegistration = _releasePublisher.publish(
-				release, _isInitialRelease(upgradeInfos));
+		finally {
+			UpgradeLogContext.clearContext();
 		}
-
-		if (inProgressServiceRegistration != null) {
-			inProgressServiceRegistration.unregister();
-		}
-
-		if (oldServiceRegistration != null) {
-			oldServiceRegistration.unregister();
-		}
-
-		return release;
 	}
 
 	@Activate
@@ -200,20 +205,7 @@ public class UpgradeExecutor {
 			for (UpgradeInfo upgradeInfo : upgradeInfos) {
 				UpgradeStep upgradeStep = upgradeInfo.getUpgradeStep();
 
-				upgradeStep.upgrade(
-					new DBProcessContext() {
-
-						@Override
-						public DBContext getDBContext() {
-							return new DBContext();
-						}
-
-						@Override
-						public OutputStream getOutputStream() {
-							return null;
-						}
-
-					});
+				upgradeStep.upgrade();
 
 				_releaseLocalService.updateRelease(
 					bundleSymbolicName, upgradeInfo.getToSchemaVersionString(),
@@ -235,6 +227,8 @@ public class UpgradeExecutor {
 				if (buildNumber > 0) {
 					release.setBuildNumber(buildNumber);
 				}
+
+				release.setVerified(_isInitialRelease(upgradeInfos));
 
 				release.setState(state);
 
@@ -262,11 +256,7 @@ public class UpgradeExecutor {
 
 		String fromSchemaVersion = upgradeInfo.getFromSchemaVersionString();
 
-		String upgradeStepName = String.valueOf(upgradeInfo.getUpgradeStep());
-
-		if (fromSchemaVersion.equals("0.0.0") &&
-			upgradeStepName.equals("Initial Database Creation")) {
-
+		if (fromSchemaVersion.equals("0.0.0")) {
 			return true;
 		}
 

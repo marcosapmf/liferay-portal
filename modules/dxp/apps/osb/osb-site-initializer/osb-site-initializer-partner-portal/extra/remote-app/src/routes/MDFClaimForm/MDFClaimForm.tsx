@@ -12,43 +12,22 @@
 import ClayLoadingIndicator from '@clayui/loading-indicator';
 
 import PRMFormik from '../../common/components/PRMFormik';
-import {PRMPageRoute} from '../../common/enums/prmPageRoute';
 import useLiferayNavigate from '../../common/hooks/useLiferayNavigate';
-import MDFRequestActivityDTO from '../../common/interfaces/dto/mdfRequestActivityDTO';
-import MDFClaim from '../../common/interfaces/mdfClaim';
+import MDFClaimDTO from '../../common/interfaces/dto/mdfClaimDTO';
 import {Liferay} from '../../common/services/liferay';
 import useGetDocumentFolder from '../../common/services/liferay/headless-delivery/useGetDocumentFolders';
+import useGetMDFClaimById from '../../common/services/liferay/object/mdf-claim/useGetMDFClaimById';
 import useGetMDFRequestById from '../../common/services/liferay/object/mdf-requests/useGetMDFRequestById';
 import {Status} from '../../common/utils/constants/status';
+import {getMDFClaimFromDTO} from '../../common/utils/dto/mdf-claim/getMDFClaimFromDTO';
 import MDFClaimPage from './components/MDFClaimPage';
 import claimSchema from './components/MDFClaimPage/schema/yup';
 import useGetMDFRequestIdByHash from './hooks/useGetMDFRequestIdByHash';
+import getInitialFormValues from './utils/getInitialFormValues';
 import submitForm from './utils/submitForm';
 
-const getInitialFormValues = (
-	mdfRequestId: number,
-	activitiesDTO?: MDFRequestActivityDTO[],
-	totalrequestedAmount?: number
-): MDFClaim => ({
-	activities: activitiesDTO?.map((activity) => ({
-		budgets: activity.actToBgts?.map((budget) => ({
-			expenseName: budget.expense.name,
-			id: budget.id,
-			invoiceAmount: budget.cost,
-			requestAmount: budget.cost,
-			selected: false,
-		})),
-		id: activity.id,
-		metrics: '',
-		name: activity.name,
-		selected: false,
-		totalCost: 0,
-	})),
-	mdfClaimStatus: Status.PENDING,
-	r_mdfReqToMDFClms_c_mdfRequestId: mdfRequestId,
-	totalClaimAmount: 0,
-	totalrequestedAmount,
-});
+const SECOND_POSITION_AFTER_HASH = 1;
+const FOURTH_POSITION_AFTER_HASH = 3;
 
 const MDFClaimForm = () => {
 	const {
@@ -58,21 +37,34 @@ const MDFClaimForm = () => {
 
 	const claimParentFolderId = claimParentFolder?.items[0].id;
 
-	const mdfRequestId = useGetMDFRequestIdByHash();
+	const mdfRequestId = useGetMDFRequestIdByHash(SECOND_POSITION_AFTER_HASH);
+	const mdfClaimId = useGetMDFRequestIdByHash(FOURTH_POSITION_AFTER_HASH);
 
 	const {
 		data: mdfRequest,
 		isValidating: isValidatingMDFRequestById,
 	} = useGetMDFRequestById(Number(mdfRequestId));
 
+	const {
+		data: mdfClaimDTO,
+		isValidating: isValidatingMDFClaimById,
+	} = useGetMDFClaimById(Number(mdfClaimId));
+
 	const siteURL = useLiferayNavigate();
 
 	const onCancel = () =>
-		Liferay.Util.navigate(`${siteURL}/${PRMPageRoute.MDF_CLAIM_LISTING}`);
+		mdfRequestId &&
+		siteURL &&
+		Liferay.Util.navigate(`${siteURL}/l/${mdfRequestId}`);
+
+	const mdfClaim =
+		mdfClaimDTO && getMDFClaimFromDTO(mdfClaimDTO as MDFClaimDTO);
 
 	if (
 		!mdfRequest ||
+		(mdfClaimId && !mdfClaimDTO) ||
 		isValidatingMDFRequestById ||
+		(mdfClaimId && isValidatingMDFClaimById) ||
 		isValidatingClaimFolder ||
 		!claimParentFolderId
 	) {
@@ -83,8 +75,10 @@ const MDFClaimForm = () => {
 		<PRMFormik
 			initialValues={getInitialFormValues(
 				Number(mdfRequestId),
+				mdfRequest.currency,
 				mdfRequest.mdfReqToActs,
-				mdfRequest.totalMDFRequestAmount
+				mdfRequest.totalMDFRequestAmount,
+				mdfClaim
 			)}
 			onSubmit={(values, formikHelpers) =>
 				submitForm(

@@ -14,10 +14,14 @@
 
 package com.liferay.headless.commerce.admin.shipment.internal.dto.v1_0.converter;
 
+import com.liferay.commerce.constants.CommerceShipmentConstants;
 import com.liferay.commerce.model.CommerceShipment;
 import com.liferay.commerce.service.CommerceShipmentService;
 import com.liferay.headless.commerce.admin.shipment.dto.v1_0.Shipment;
+import com.liferay.headless.commerce.admin.shipment.dto.v1_0.Status;
 import com.liferay.headless.commerce.admin.shipment.internal.dto.v1_0.util.CustomFieldsUtil;
+import com.liferay.portal.kernel.language.Language;
+import com.liferay.portal.language.LanguageResources;
 import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterContext;
 
@@ -30,7 +34,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = "dto.class.name=com.liferay.commerce.model.CommerceShipment",
-	service = {DTOConverter.class, ShipmentDTOConverter.class}
+	service = DTOConverter.class
 )
 public class ShipmentDTOConverter
 	implements DTOConverter<CommerceShipment, Shipment> {
@@ -70,6 +74,19 @@ public class ShipmentDTOConverter
 				shippingMethodId =
 					commerceShipment.getCommerceShippingMethodId();
 				shippingOptionName = commerceShipment.getShippingOptionName();
+				status = new Status() {
+					{
+						code = commerceShipment.getStatus();
+						label =
+							CommerceShipmentConstants.getShipmentStatusLabel(
+								commerceShipment.getStatus());
+						label_i18n = _language.get(
+							LanguageResources.getResourceBundle(
+								dtoConverterContext.getLocale()),
+							CommerceShipmentConstants.getShipmentStatusLabel(
+								commerceShipment.getStatus()));
+					}
+				};
 				trackingNumber = commerceShipment.getTrackingNumber();
 				trackingURL = commerceShipment.getTrackingURL();
 				userName = commerceShipment.getUserName();
@@ -79,5 +96,8 @@ public class ShipmentDTOConverter
 
 	@Reference
 	private CommerceShipmentService _commerceShipmentService;
+
+	@Reference
+	private Language _language;
 
 }

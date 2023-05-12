@@ -12,7 +12,7 @@
  * details.
  */
 
-import React, {useRef} from 'react';
+import {useRef} from 'react';
 import {useNavigate} from 'react-router-dom';
 
 import useFormActions from '../../../hooks/useFormActions';
@@ -44,6 +44,7 @@ const useRoutineActions = ({isHeaderActions}: ActionsHookParameter = {}) => {
 				),
 			icon: 'cog',
 			name: i18n.translate('manage-templates'),
+			permission: 'UPDATE',
 		},
 		{
 			action: (routine) =>
@@ -57,11 +58,12 @@ const useRoutineActions = ({isHeaderActions}: ActionsHookParameter = {}) => {
 					footer: <div id="environment-factor-modal-footer"></div>,
 					footerDefault: false,
 					size: 'full-screen',
-
 					title: i18n.translate('select-default-environment-factors'),
 				}),
+
 			icon: 'display',
 			name: i18n.translate('select-default-environment-factors'),
+			permission: 'UPDATE',
 		},
 		{
 			action: ({id}, mutate) =>

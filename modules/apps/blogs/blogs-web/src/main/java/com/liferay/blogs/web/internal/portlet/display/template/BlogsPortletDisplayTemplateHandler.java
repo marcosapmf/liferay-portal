@@ -64,9 +64,9 @@ public class BlogsPortletDisplayTemplateHandler
 	@Override
 	public Map<String, Object> getCustomContextObjects() {
 		return HashMapBuilder.<String, Object>put(
-			"blogsEntryAssetEntryUtil", _blogsEntryAssetEntryUtil
+			"blogsEntryAssetEntryUtil", new BlogsEntryAssetEntryUtil()
 		).put(
-			"blogsEntryPermission", _blogsEntryPermission
+			"blogsEntryPermission", new BlogsEntryPermission()
 		).put(
 			"blogsEntryUtil", _blogsEntryUtil
 		).put(
@@ -152,12 +152,6 @@ public class BlogsPortletDisplayTemplateHandler
 	}
 
 	private volatile BlogsConfiguration _blogsConfiguration;
-
-	@Reference
-	private BlogsEntryAssetEntryUtil _blogsEntryAssetEntryUtil;
-
-	@Reference
-	private BlogsEntryPermission _blogsEntryPermission;
 
 	@Reference
 	private BlogsEntryUtil _blogsEntryUtil;

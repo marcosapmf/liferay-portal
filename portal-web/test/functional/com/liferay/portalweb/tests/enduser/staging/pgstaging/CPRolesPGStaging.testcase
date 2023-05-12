@@ -1,6 +1,7 @@
 @component-name = "portal-staging"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.component.names = "Roles";
@@ -16,7 +17,7 @@ definition {
 		}
 
 		task ("Setup: add a group with the name Site Name") {
-			JSONGroup.addGroup(groupName = "Site Name");
+			HeadlessSite.addSite(siteName = "Site Name");
 		}
 
 		task ("Setup: add a public layout to the group") {
@@ -29,7 +30,7 @@ definition {
 	tearDown {
 		var testPortalInstance = PropsUtil.get("test.portal.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testPortalInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -43,7 +44,7 @@ definition {
 		}
 	}
 
-	@priority = "4"
+	@priority = 4
 	test AccessStaging {
 		property portal.acceptance = "true";
 
@@ -99,8 +100,10 @@ definition {
 		}
 	}
 
-	@priority = "4"
+	@priority = 4
 	test StagingBlogsRolesWorkflow {
+		property test.name.skip.portal.instance = "CPRolesPGStaging#StagingBlogsRolesWorkflow";
+
 		task ("Given: Three users are created") {
 			JSONUser.addUser(
 				userEmailAddress = "usereapu@liferay.com",
@@ -198,7 +201,7 @@ definition {
 				site = "false");
 
 			JSONLayout.addWidgetToPublicLayout(
-				column = "1",
+				column = 1,
 				groupName = "Site Name (Staging)",
 				layoutName = "Blogs Test Page",
 				site = "false",

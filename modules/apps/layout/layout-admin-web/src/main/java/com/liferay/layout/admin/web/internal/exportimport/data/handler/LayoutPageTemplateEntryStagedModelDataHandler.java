@@ -135,10 +135,10 @@ public class LayoutPageTemplateEntryStagedModelDataHandler
 		Element entryElement = portletDataContext.getExportDataElement(
 			layoutPageTemplateEntry);
 
-		long defaultUserId = _userLocalService.getDefaultUserId(
+		long guestUserId = _userLocalService.getGuestUserId(
 			layoutPageTemplateEntry.getCompanyId());
 
-		if (defaultUserId == layoutPageTemplateEntry.getUserId()) {
+		if (guestUserId == layoutPageTemplateEntry.getUserId()) {
 			entryElement.addAttribute("preloaded", "true");
 		}
 
@@ -379,7 +379,9 @@ public class LayoutPageTemplateEntryStagedModelDataHandler
 			LayoutPageTemplateEntry layoutPageTemplateEntry)
 		throws Exception {
 
-		if (layoutPageTemplateEntry.isDefaultTemplate()) {
+		if (!ExportImportThreadLocal.isStagingInProcess() &&
+			layoutPageTemplateEntry.isDefaultTemplate()) {
+
 			LayoutPageTemplateEntry defaultLayoutPageTemplateEntry =
 				_layoutPageTemplateEntryLocalService.
 					fetchDefaultLayoutPageTemplateEntry(

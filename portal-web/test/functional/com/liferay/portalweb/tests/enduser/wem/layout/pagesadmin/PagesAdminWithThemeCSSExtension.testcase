@@ -3,7 +3,7 @@ definition {
 
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property testray.main.component.name = "Site Pages Administration";
+	property testray.main.component.name = "Page Administration";
 
 	setUp {
 		task ("Set up instance and sign in") {
@@ -13,7 +13,7 @@ definition {
 		}
 
 		task ("Add a site") {
-			JSONGroup.addGroup(groupName = "Test Site Name");
+			HeadlessSite.addSite(siteName = "Test Site Name");
 		}
 
 		task ("Upload two CSS extension files to Documents and Media") {
@@ -40,13 +40,13 @@ definition {
 		}
 
 		task ("Add two remote apps for CSS extension") {
-			JSONRemoteApp.addRemoteAppEntry(
-				mainURL = "${firstURL}",
+			JSONClientExtension.addRemoteAppEntry(
+				mainURL = ${firstURL},
 				name = "FontFamily",
 				type = "themeCSS");
 
-			JSONRemoteApp.addRemoteAppEntry(
-				mainURL = "${secondURL}",
+			JSONClientExtension.addRemoteAppEntry(
+				mainURL = ${secondURL},
 				name = "BackgroundColor",
 				type = "themeCSS");
 		}
@@ -55,18 +55,18 @@ definition {
 	tearDown {
 		var testPortalInstance = PropsUtil.get("test.portal.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testPortalInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
 			JSONGroup.deleteGroupByName(groupName = "Test Site Name");
 
-			RemoteApps.tearDown();
+			ClientExtensionGeneral.tearDown();
 		}
 	}
 
 	@description = "This is a test for LPS-153653. The site designer could add theme CSS extension to page, page template, and group of pages."
-	@priority = "5"
+	@priority = 5
 	test AddThemeCSSExtension {
 		property portal.acceptance = "true";
 
@@ -76,18 +76,18 @@ definition {
 				layoutName = "Test Page Name");
 		}
 
-		task ("When the site designer accesses to Look and Feel settings of widget page") {
+		task ("When the site designer accesses to Basic Settings of widget page") {
 			PagesAdmin.openPagesAdmin(siteURLKey = "test-site-name");
 
 			PagesAdmin.gotoPageEllipsisMenuItem(
 				menuItem = "Configure",
 				pageName = "Test Page Name");
 
-			Navigator.gotoNavTab(navTab = "Look and Feel");
+			Navigator.gotoNavTab(navTab = "Design");
 
 			AssertAttributeValue(
 				attribute1 = "placeholder",
-				key_text = "Client Extension",
+				key_text = "Theme CSS",
 				locator1 = "TextInput#ANY",
 				value1 = "No theme CSS client extension was loaded.");
 		}
@@ -96,7 +96,7 @@ definition {
 			PagesAdmin.addThemeCSSExtension(extensionName = "FontFamily");
 
 			AssertTextEquals(
-				key_text = "Client Extension",
+				key_text = "Theme CSS",
 				locator1 = "TextInput#ANY",
 				value1 = "FontFamily");
 
@@ -128,18 +128,18 @@ definition {
 			PageEditor.assertFragmentSidebarLoaded();
 		}
 
-		task ("When the site designer accesses to Look and Feel settings of content page template") {
+		task ("When the site designer accesses to Basic Settings of content page template") {
 			PageEditor.gotoTab(tabName = "Page Design Options");
 
 			Click(locator1 = "PageEditor#MORE_LINK");
 
 			WaitForPageLoad();
 
-			Navigator.gotoNavTab(navTab = "Look and Feel");
+			Navigator.gotoNavTab(navTab = "Design");
 
 			AssertAttributeValue(
 				attribute1 = "placeholder",
-				key_text = "Client Extension",
+				key_text = "Theme CSS",
 				locator1 = "TextInput#ANY",
 				value1 = "No theme CSS client extension was loaded.");
 		}
@@ -148,7 +148,7 @@ definition {
 			PagesAdmin.addThemeCSSExtension(extensionName = "FontFamily");
 
 			AssertTextEquals(
-				key_text = "Client Extension",
+				key_text = "Theme CSS",
 				locator1 = "TextInput#ANY",
 				value1 = "FontFamily");
 
@@ -164,7 +164,7 @@ definition {
 				value1 = "\"Times New Roman\"");
 		}
 
-		task ("When the site designer accesses to Look and Feel settings of Pages") {
+		task ("When the site designer accesses to Basic Settings of Pages") {
 			PagesAdmin.openPagesAdmin(siteURLKey = "test-site-name");
 
 			WaitForPageLoad();
@@ -175,13 +175,11 @@ definition {
 
 			WaitForPageLoad();
 
-			Navigator.gotoNavTab(navTab = "Look and Feel");
-
-			Panel.expandPanel(panel = "Look and Feel");
+			Navigator.gotoNavTab(navTab = "Design");
 
 			AssertAttributeValue(
 				attribute1 = "placeholder",
-				key_text = "Client Extension",
+				key_text = "Theme CSS",
 				locator1 = "TextInput#ANY",
 				value1 = "No theme CSS client extension was loaded.");
 		}
@@ -190,7 +188,7 @@ definition {
 			PagesAdmin.addThemeCSSExtension(extensionName = "BackgroundColor");
 
 			AssertTextEquals(
-				key_text = "Client Extension",
+				key_text = "Theme CSS",
 				locator1 = "TextInput#ANY",
 				value1 = "BackgroundColor");
 
@@ -227,7 +225,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-153653 and LPS-153658. The site designer could change theme CSS extension selection to an inheritor page. View the inherited theme CSS extension from master."
-	@priority = "5"
+	@priority = 5
 	test ChangeThemeCSSExtensionOfInheritorPage {
 		property portal.acceptance = "true";
 
@@ -257,7 +255,7 @@ definition {
 
 			WaitForPageLoad();
 
-			Navigator.gotoNavTab(navTab = "Look and Feel");
+			Navigator.gotoNavTab(navTab = "Design");
 
 			PagesAdmin.addThemeCSSExtension(extensionName = "FontFamily");
 
@@ -286,12 +284,12 @@ definition {
 
 			WaitForPageLoad();
 
-			Navigator.gotoNavTab(navTab = "Look and Feel");
+			Navigator.gotoNavTab(navTab = "Design");
 
 			PagesAdmin.addThemeCSSExtension(extensionName = "BackgroundColor");
 
 			AssertTextEquals(
-				key_text = "Client Extension",
+				key_text = "Theme CSS",
 				locator1 = "TextInput#ANY",
 				value1 = "BackgroundColor");
 
@@ -327,7 +325,7 @@ definition {
 
 			WaitForPageLoad();
 
-			Navigator.gotoNavTab(navTab = "Look and Feel");
+			Navigator.gotoNavTab(navTab = "Design");
 
 			PagesAdmin.addThemeCSSExtension(extensionName = "FontFamily");
 
@@ -355,18 +353,18 @@ definition {
 
 			WaitForPageLoad();
 
-			Navigator.gotoNavTab(navTab = "Look and Feel");
+			Navigator.gotoNavTab(navTab = "Design");
 
 			AssertAttributeValue(
 				attribute1 = "placeholder",
-				key_text = "Client Extension",
+				key_text = "Theme CSS",
 				locator1 = "TextInput#ANY",
 				value1 = "Theme CSS is inherited from master.");
 
 			PagesAdmin.addThemeCSSExtension(extensionName = "BackgroundColor");
 
 			AssertTextEquals(
-				key_text = "Client Extension",
+				key_text = "Theme CSS",
 				locator1 = "TextInput#ANY",
 				value1 = "BackgroundColor");
 
@@ -398,13 +396,13 @@ definition {
 
 			WaitForPageLoad();
 
-			Navigator.gotoNavTab(navTab = "Look and Feel");
-
-			Panel.expandPanel(panel = "Look and Feel");
+			Navigator.gotoNavTab(navTab = "Design");
 
 			PagesAdmin.addThemeCSSExtension(extensionName = "FontFamily");
 
 			PortletEntry.save();
+
+			Navigator.gotoBack();
 		}
 
 		task ("When the site designer adds a widget page") {
@@ -412,18 +410,18 @@ definition {
 		}
 
 		task ("Then the site designer could change the theme CSS extension of widget page") {
-			Navigator.gotoNavTab(navTab = "Look and Feel");
+			Navigator.gotoNavTab(navTab = "Design");
 
 			AssertAttributeValue(
 				attribute1 = "placeholder",
-				key_text = "Client Extension",
+				key_text = "Theme CSS",
 				locator1 = "TextInput#ANY",
 				value1 = "Theme CSS is inherited from Pages.");
 
 			PagesAdmin.addThemeCSSExtension(extensionName = "BackgroundColor");
 
 			AssertTextEquals(
-				key_text = "Client Extension",
+				key_text = "Theme CSS",
 				locator1 = "TextInput#ANY",
 				value1 = "BackgroundColor");
 
@@ -446,7 +444,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-153653. The site designer could delete inherited theme CSS extension from page template."
-	@priority = "4"
+	@priority = 4
 	test ClearInheritedThemeCSSExtensionFromPageTemplate {
 		task ("Given a site designer has a content page template with a theme CSS extension") {
 			JSONLayoutpagetemplate.addLayoutPageTemplateCollection(
@@ -474,7 +472,7 @@ definition {
 
 			WaitForPageLoad();
 
-			Navigator.gotoNavTab(navTab = "Look and Feel");
+			Navigator.gotoNavTab(navTab = "Design");
 
 			PagesAdmin.addThemeCSSExtension(extensionName = "FontFamily");
 
@@ -508,26 +506,26 @@ definition {
 
 			WaitForPageLoad();
 
-			Navigator.gotoNavTab(navTab = "Look and Feel");
+			Navigator.gotoNavTab(navTab = "Design");
 
 			AssertTextEquals(
-				key_text = "Client Extension",
+				key_text = "Theme CSS",
 				locator1 = "TextInput#ANY",
 				value1 = "FontFamily");
 
 			Click(
-				key_fieldLabel = "Client Extension",
+				key_fieldLabel = "Theme CSS",
 				key_text = "trash",
 				locator1 = "Icon#ANY_ITEM_SELECTOR");
 
 			AssertTextEquals(
-				key_text = "Client Extension",
+				key_text = "Theme CSS",
 				locator1 = "TextInput#ANY",
 				value1 = "");
 
 			AssertAttributeValue(
 				attribute1 = "placeholder",
-				key_text = "Client Extension",
+				key_text = "Theme CSS",
 				locator1 = "TextInput#ANY",
 				value1 = "No theme CSS client extension was loaded.");
 
@@ -545,7 +543,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-153653. The site designer could delete the theme CSS extenion selection."
-	@priority = "4"
+	@priority = 4
 	test ClearThemeCSSExtensionSelection {
 		task ("Given a site designer has a content page with a theme CSS extension") {
 			JSONLayout.addPublicLayout(
@@ -563,12 +561,12 @@ definition {
 
 			WaitForPageLoad();
 
-			Navigator.gotoNavTab(navTab = "Look and Feel");
+			Navigator.gotoNavTab(navTab = "Design");
 
 			PagesAdmin.addThemeCSSExtension(extensionName = "FontFamily");
 
 			AssertTextEquals(
-				key_text = "Client Extension",
+				key_text = "Theme CSS",
 				locator1 = "TextInput#ANY",
 				value1 = "FontFamily");
 
@@ -579,7 +577,7 @@ definition {
 			PageEditor.assertFragmentSidebarLoaded();
 		}
 
-		task ("When the site designer accesses to the Look and Feel settings") {
+		task ("When the site designer accesses to the Basic Settings") {
 			PageEditor.gotoTab(tabName = "Page Design Options");
 
 			Click(locator1 = "PageEditor#MORE_LINK");
@@ -588,21 +586,21 @@ definition {
 		}
 
 		task ("Then the site designer could clear the theme CSS extension selection") {
-			Navigator.gotoNavTab(navTab = "Look and Feel");
+			Navigator.gotoNavTab(navTab = "Design");
 
 			Click(
-				key_fieldLabel = "Client Extension",
+				key_fieldLabel = "Theme CSS",
 				key_text = "trash",
 				locator1 = "Icon#ANY_ITEM_SELECTOR");
 
 			AssertTextEquals(
-				key_text = "Client Extension",
+				key_text = "Theme CSS",
 				locator1 = "TextInput#ANY",
 				value1 = "");
 
 			AssertAttributeValue(
 				attribute1 = "placeholder",
-				key_text = "Client Extension",
+				key_text = "Theme CSS",
 				locator1 = "TextInput#ANY",
 				value1 = "No theme CSS client extension was loaded.");
 

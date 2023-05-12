@@ -1,6 +1,7 @@
 @component-name = "portal-friendly-url"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Friendly URL Service";
@@ -10,13 +11,13 @@ definition {
 
 		User.firstLoginPG();
 
-		JSONGroup.addGroup(groupName = "Test Site Name");
+		HeadlessSite.addSite(siteName = "Test Site Name");
 	}
 
 	tearDown {
 		var testPortalInstance = PropsUtil.get("test.portal.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testPortalInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -27,9 +28,10 @@ definition {
 	}
 
 	@description = "If virtual.hosts.strict.access=true is set, do not redirect to a default instance if there is no associated company"
-	@priority = "4"
+	@priority = 4
 	test DoNotRedirectToDefaultInstanceWithNoCompany {
-		property custom.properties = "virtual.hosts.strict.access=true";
+		property custom.properties = "virtual.hosts.valid.hosts=localhost,127.0.0.1,www.able.com${line.separator}virtual.hosts.strict.access=true";
+		property test.name.skip.portal.instance = "FriendlyURL#DoNotRedirectToDefaultInstanceWithNoCompany";
 
 		Navigator.openSpecificURL(url = "http://www.able.com:8080");
 
@@ -43,7 +45,7 @@ definition {
 	}
 
 	@description = "Verify navigating to the URL of an uncreated portlet does not throw errors."
-	@priority = "3"
+	@priority = 3
 	test NavigatingToURLOfUncreatedPortletDoesNotThrowError {
 		property test.assert.warning.exceptions = "true";
 
@@ -51,21 +53,89 @@ definition {
 	}
 
 	@description = "If virtual.hosts.strict.access=true is not set, redirect to a default instance even if there is no associated company"
-	@priority = "3"
+	@priority = 3
 	test RedirectToDefaultInstanceWithNoCompany {
-		Navigator.openSpecificURL(url = "http://www.able.com:8080");
+		property custom.properties = "virtual.hosts.valid.hosts=localhost,127.0.0.1,www.able.com";
+		property test.name.skip.portal.instance = "FriendlyURL#RedirectToDefaultInstanceWithNoCompany";
+
+		Navigator.gotoPage(
+			baseURL = "http://www.able.com:8080",
+			pageName = "Home");
 
 		AssertTextNotPresent(
 			locator1 = "//body",
 			value1 = "Unknown Virtual Hostname: www.able.com");
 
-		AssertLocation(value1 = "http://www.able.com:8080/web/guest");
+		AssertLocation(value1 = "http://www.able.com:8080/web/guest/home");
 
 		Smoke.viewWelcomeContentPage();
 	}
 
+	@description = "This is a use case for LPS-163426. Verify redirection to localized friendly URL's when using a virtual host."
+	@priority = 4
+	test RedirectToLocalizedFriendlyURLWithVirtualHost {
+		property custom.properties = "virtual.hosts.valid.hosts=localhost,127.0.0.1,www.able.com";
+		property test.name.skip.portal.instance = "FriendlyURL#RedirectToLocalizedFriendlyURLWithVirtualHost";
+
+		task ("Given two pages on a site") {
+			JSONLayout.addPublicLayout(
+				groupName = "Test Site Name",
+				layoutName = "Page 1");
+
+			JSONLayout.addPublicLayout(
+				groupName = "Test Site Name",
+				layoutName = "Page 2");
+		}
+
+		task ("And given the second page has a language selector widget") {
+			JSONLayout.addWidgetToPublicLayout(
+				groupName = "Test Site Name",
+				layoutName = "Page 2",
+				widgetName = "Language Selector");
+		}
+
+		task ("And given the second page has localized friendly URL's for English and Hungarian") {
+			PagesAdmin.openToConfigurePublicPage(
+				groupName = "Test Site Name",
+				layoutName = "Page 2",
+				site = "true",
+				siteURLKey = "test-site-name");
+
+			PagesAdmin.addLocalizedFriendlyURL(
+				friendlyURLLocalizedList = "en-US",
+				localizedFriendlyURLList = "/english/testurl",
+				localizedNameList = "Page 2");
+
+			PagesAdmin.addLocalizedFriendlyURL(
+				friendlyURLLocalizedList = "hu-HU",
+				localizedFriendlyURLList = "/magyar/testurl ",
+				localizedNameList = "Page 2");
+		}
+
+		task ("When the user signs in to a virtual host and navigates to the second page") {
+			Navigator.gotoSitePage(
+				baseURL = "http://www.able.com:8080",
+				pageName = "Page 2",
+				siteName = "Test Site Name");
+		}
+
+		task ("Then the user is redirected to the page via the English friendly URL") {
+			AssertLocation.assertPartialLocation(value1 = "/web/test-site-name/english/testurl");
+		}
+
+		task ("When the user changes the language to Hungarian") {
+			LanguagePortlet.selectLanguagePG(
+				locale = "hu-HU",
+				textIcon = "magyar-Magyarország");
+		}
+
+		task ("Then the user is redirected to the page via the Hungarial friendly URL") {
+			AssertLocation.assertPartialLocation(value1 = "/web/test-site-name/magyar/testurl");
+		}
+	}
+
 	@description = "This is a test for LPS-162714. Checks that Web Content FriendlyURL special characters like éöő are not escaped"
-	@priority = "4"
+	@priority = 4
 	test SpecialCharactersAreNotEscapedFromWebContentURL {
 		JSONWebcontent.addWebContent(
 			content = "WC WebContent Content",
@@ -80,7 +150,7 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-161024. Verify uppercase virtual host names added to a site's url are converted to lowercase."
-	@priority = "3"
+	@priority = 3
 	test UppercaseVirtualHostNamesConvertedToLowercase {
 		property test.name.skip.portal.instance = "FriendlyURL#UppercaseVirtualHostNamesConvertedToLowercase";
 
@@ -95,15 +165,15 @@ definition {
 		task ("Then the virtual host gets converted to lowercase in the database") {
 			var virtualHostQueryResult = SQL.executeMySQLStatement(mysqlStatement = "SELECT * FROM lportal.VirtualHost;");
 
-			if (contains("${virtualHostQueryResult}", "LIFERAY-UPPER") || !(contains("${virtualHostQueryResult}", "liferay-upper"))) {
-				echo("${virtualHostQueryResult}");
+			if (contains(${virtualHostQueryResult}, "LIFERAY-UPPER") || !(contains(${virtualHostQueryResult}, "liferay-upper"))) {
+				echo(${virtualHostQueryResult});
 
 				fail("The virtual host was not converted to lowercase");
 			}
 		}
 	}
 
-	@priority = "4"
+	@priority = 4
 	test VerifyFriendlyURLsOnlyDisplayLocaleOnce {
 		JSONLayout.addPublicLayout(
 			groupName = "Test Site Name",
@@ -134,14 +204,14 @@ definition {
 
 		Button.clickSave();
 
-		var portalURL = PropsUtil.get("portal.url");
+		var portalURL = JSONCompany.getPortalURL();
 
 		Navigator.openWithAppendToBaseURL(urlAppend = "hu/web/test-site-name/test-page");
 
 		AssertLocation(value1 = "${portalURL}/hu/web/test-site-name/teszt-page");
 	}
 
-	@priority = "5"
+	@priority = 5
 	test ViewCanonicalURLWithLocalizedFriendlyURL {
 		property portal.acceptance = "quarantine";
 		property portal.upstream = "quarantine";
@@ -152,7 +222,7 @@ definition {
 
 		User.logoutPG();
 
-		var portalURL = PropsUtil.get("portal.url");
+		var portalURL = JSONCompany.getPortalURL();
 
 		Navigator.openSpecificURL(url = "${portalURL}/web/test-site-name");
 
@@ -163,20 +233,20 @@ definition {
 		Page.assertCanonicalURL(customCanonicalURL = "${portalURL}/web/test-site-name");
 	}
 
-	@priority = "4"
+	@priority = 4
 	test ViewFriendlyURLWithSharedLocalesButDifferentLanguages {
 		property custom.properties = "locale.prepend.friendly.url.style=2${line.separator}locales.enabled=en_US,fr_FR,fr_CA";
 		property test.name.skip.portal.instance = "FriendlyURL#ViewFriendlyURLWithSharedLocalesButDifferentLanguages";
 
 		for (var siteName : list "USA Site Name,France Site Name,Canada Site Name") {
-			JSONGroup.addGroup(groupName = "${siteName}");
+			HeadlessSite.addSite(siteName = ${siteName});
 
 			JSONLayout.addPublicLayout(
-				groupName = "${siteName}",
+				groupName = ${siteName},
 				layoutName = "Test Page");
 
 			JSONLayout.addWidgetToPublicLayout(
-				groupName = "${siteName}",
+				groupName = ${siteName},
 				layoutName = "Test Page",
 				widgetName = "Language Selector");
 		}
@@ -209,7 +279,7 @@ definition {
 
 		PortletEntry.save();
 
-		var portalURL = PropsUtil.get("portal.url");
+		var portalURL = JSONCompany.getPortalURL();
 
 		Navigator.openWithAppendToBaseURL(urlAppend = "/web/usa-site-name/test-page");
 
@@ -231,7 +301,7 @@ definition {
 	}
 
 	@description = "This is a use case for LRQA-52002. FriendlyURLS should support Unicode characters."
-	@priority = "4"
+	@priority = 4
 	test ViewFriendlyURLWithUnicodeChars {
 		JSONLayout.addPublicLayout(
 			friendlyURL = "/⚽⚽⚽",
@@ -253,10 +323,10 @@ definition {
 	}
 
 	@description = "This is a test for LPS-135619 and LPS-134072. View the Home page in different user languages."
-	@priority = "5"
+	@priority = 5
 	test ViewLocaleChangeThroughFriendlyURL {
 		property environment.acceptance = "true";
-		property operating.system.types = "alpine,amazonlinux,centos,debian,fedora,orcllinux,osx,redhat,solaris,suse,ubuntu,windows";
+		property operating.system.types = "alpine,amazonlinux,centos,debian,fedora,orcllinux,osx,redhat,rockylinux,solaris,suse,ubuntu,windows";
 		property portal.acceptance = "true";
 
 		task ("View the inline text on Home page is in English as default") {

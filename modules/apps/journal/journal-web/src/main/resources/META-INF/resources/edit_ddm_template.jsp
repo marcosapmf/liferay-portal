@@ -54,31 +54,18 @@ renderResponse.setTitle(journalEditDDMTemplateDisplayContext.getTitle());
 		<clay:container-fluid>
 			<ul class="tbar-nav">
 				<li class="tbar-item tbar-item-expand">
-					<aui:input cssClass="form-control-inline" defaultLanguageId="<%= (ddmTemplate == null) ? LocaleUtil.toLanguageId(LocaleUtil.getSiteDefault()): ddmTemplate.getDefaultLanguageId() %>" label="" name="name" placeholder='<%= LanguageUtil.format(request, "untitled-x", "template") %>' wrapperCssClass="article-content-title mb-0" />
+					<aui:input cssClass="form-control-inline" defaultLanguageId="<%= (ddmTemplate == null) ? LocaleUtil.toLanguageId(LocaleUtil.getSiteDefault()): ddmTemplate.getDefaultLanguageId() %>" label='<%= LanguageUtil.get(request, "name") %>' labelCssClass="sr-only" name="name" placeholder='<%= LanguageUtil.format(request, "untitled-x", "template") %>' wrapperCssClass="article-content-title mb-0" />
 				</li>
 				<li class="tbar-item">
 					<div class="journal-article-button-row tbar-section text-right">
 						<aui:button cssClass="btn-sm mr-3" href="<%= journalEditDDMTemplateDisplayContext.getRedirect() %>" type="cancel" />
-
-						<%
-						String taglibOnClickSaveAndContinue = "Liferay.fire('" + liferayPortletResponse.getNamespace() + "saveAndContinue');";
-						%>
-
-						<aui:button cssClass="btn-sm mr-3" onClick="<%= taglibOnClickSaveAndContinue %>" primary="<%= false %>" type="submit" value="save-and-continue" />
-
-						<%
-						String taglibOnClickSaveTemplate = "Liferay.fire('" + liferayPortletResponse.getNamespace() + "saveTemplate');";
-						%>
-
-						<aui:button cssClass="btn-sm mr-3" onClick="<%= taglibOnClickSaveTemplate %>" type="submit" value="save" />
+						<aui:button cssClass="btn-sm mr-3 save-and-continue-button" primary="<%= false %>" type="submit" value="save-and-continue" />
+						<aui:button cssClass="btn-sm mr-3 save-button" type="submit" value="save" />
 					</div>
 				</li>
 			</ul>
 		</clay:container-fluid>
 	</nav>
-
-	<liferay-ui:error exception="<%= TemplateNameException.class %>" message="please-enter-a-valid-name" />
-	<liferay-ui:error exception="<%= TemplateScriptException.class %>" message="please-enter-a-valid-script" />
 
 	<c:if test="<%= (ddmTemplate != null) && (journalEditDDMTemplateDisplayContext.getGroupId() != scopeGroupId) %>">
 		<div class="alert alert-warning">
@@ -100,15 +87,3 @@ renderResponse.setTitle(journalEditDDMTemplateDisplayContext.getTitle());
 		</div>
 	</div>
 </aui:form>
-
-<aui:script>
-	Liferay.after('<portlet:namespace />saveAndContinue', () => {
-		document.<portlet:namespace />fm.<portlet:namespace />saveAndContinue.value = true;
-
-		Liferay.fire('<portlet:namespace />saveTemplate');
-	});
-
-	Liferay.after('<portlet:namespace />saveTemplate', () => {
-		submitForm(document.<portlet:namespace />fm);
-	});
-</aui:script>

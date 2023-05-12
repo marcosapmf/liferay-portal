@@ -16,10 +16,11 @@ import ClayTabs from '@clayui/tabs';
 import {
 	API,
 	SidePanelForm,
+	SidebarCategory,
 	openToast,
 	saveAndReload,
 } from '@liferay/object-js-components-web';
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 
 import './EditObjectField.scss';
 import {AdvancedTab} from './Tabs/Advanced/AdvancedTab';
@@ -27,6 +28,7 @@ import {BasicInfo} from './Tabs/BasicInfo/BasicInfo';
 import {useObjectFieldForm} from './useObjectFieldForm';
 
 interface EditObjectFieldProps {
+	creationLanguageId: Liferay.Language.Locale;
 	filterOperators: TFilterOperators;
 	forbiddenChars: string[];
 	forbiddenLastChars: string[];
@@ -35,16 +37,37 @@ interface EditObjectFieldProps {
 	isDefaultStorageType: boolean;
 	objectDefinitionExternalReferenceCode: string;
 	objectField: ObjectField;
+	objectFieldId: number;
 	objectFieldTypes: ObjectFieldType[];
 	objectName: string;
 	objectRelationshipId: number;
 	readOnly: boolean;
+	sidebarElements: SidebarCategory[];
 	workflowStatusJSONArray: LabelValueObject[];
 }
 
 const TABS = [Liferay.Language.get('basic-info')];
 
+const initialValues: Partial<ObjectField> = {
+	DBType: '',
+	businessType: 'Text',
+	externalReferenceCode: '',
+	id: 0,
+	indexed: true,
+	indexedAsKeyword: false,
+	indexedLanguageId: 'en_US',
+	label: {en_US: ''},
+	listTypeDefinitionId: 0,
+	name: '',
+	objectFieldSettings: [],
+	relationshipType: '',
+	required: false,
+	state: false,
+	system: false,
+};
+
 export default function EditObjectField({
+	creationLanguageId,
 	filterOperators,
 	forbiddenChars,
 	forbiddenLastChars,
@@ -52,16 +75,21 @@ export default function EditObjectField({
 	isApproved,
 	isDefaultStorageType,
 	objectDefinitionExternalReferenceCode,
-	objectField,
+	objectFieldId,
 	objectFieldTypes,
 	objectName,
 	objectRelationshipId,
 	readOnly,
+	sidebarElements,
 	workflowStatusJSONArray,
 }: EditObjectFieldProps) {
 	const [activeIndex, setActiveIndex] = useState(0);
 
 	const onSubmit = async ({id, ...objectField}: ObjectField) => {
+		if (Liferay.FeatureFlags['LPS-163716']) {
+			delete objectField.defaultValue;
+		}
+
 		delete objectField.listTypeDefinitionId;
 		delete objectField.system;
 
@@ -93,13 +121,29 @@ export default function EditObjectField({
 		forbiddenChars,
 		forbiddenLastChars,
 		forbiddenNames,
-		initialValues: objectField,
+		initialValues,
 		onSubmit,
 	});
 
-	if (Liferay.FeatureFlags['LPS-159913'] && TABS.length < 2) {
+	if (
+		(Liferay.FeatureFlags['LPS-159913'] ||
+			(Liferay.FeatureFlags['LPS-163716'] &&
+				values.businessType === 'Picklist')) &&
+		TABS.length < 2
+	) {
 		TABS.push(Liferay.Language.get('advanced'));
 	}
+
+	useEffect(() => {
+		const makeFetch = async () => {
+			const objectFieldResponse = await API.getObjectField(objectFieldId);
+
+			setValues(objectFieldResponse);
+		};
+
+		makeFetch();
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [objectFieldId]);
 
 	return (
 		<SidePanelForm
@@ -123,6 +167,7 @@ export default function EditObjectField({
 			<ClayTabs.Content activeIndex={activeIndex} fade>
 				<ClayTabs.TabPane>
 					<BasicInfo
+						creationLanguageId={creationLanguageId}
 						errors={errors}
 						filterOperators={filterOperators}
 						handleChange={handleChange}
@@ -141,12 +186,18 @@ export default function EditObjectField({
 					/>
 				</ClayTabs.TabPane>
 
-				{Liferay.FeatureFlags['LPS-159913'] ? (
+				{(Liferay.FeatureFlags['LPS-159913'] ||
+					(Liferay.FeatureFlags['LPS-163716'] &&
+						values.businessType === 'Picklist')) && (
 					<ClayTabs.TabPane>
-						<AdvancedTab setValues={setValues} values={values} />
+						<AdvancedTab
+							creationLanguageId={creationLanguageId}
+							errors={errors}
+							setValues={setValues}
+							sidebarElements={sidebarElements}
+							values={values}
+						/>
 					</ClayTabs.TabPane>
-				) : (
-					<></>
 				)}
 			</ClayTabs.Content>
 		</SidePanelForm>

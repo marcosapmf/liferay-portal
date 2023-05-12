@@ -15,6 +15,7 @@
 package com.liferay.portal.dao.db;
 
 import com.liferay.petra.function.UnsafeConsumer;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
@@ -58,8 +59,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.naming.NamingException;
 
@@ -199,6 +198,85 @@ public abstract class BaseDB implements DB {
 		throws IOException, SQLException;
 
 	@Override
+	public void copyTableRows(
+			Connection connection, String sourceTableName,
+			String targetTableName)
+		throws Exception {
+
+		String[] primaryKeyColumnNames = getPrimaryKeyColumnNames(
+			connection, sourceTableName);
+
+		StringBundler sb = new StringBundler(
+			14 + (((primaryKeyColumnNames.length - 1) * 8) + 7));
+
+		sb.append("insert into ");
+		sb.append(targetTableName);
+		sb.append(" select ");
+		sb.append(sourceTableName);
+		sb.append(".* from ");
+		sb.append(sourceTableName);
+		sb.append(" left join ");
+		sb.append(targetTableName);
+		sb.append(" on ");
+
+		for (int i = 0; i < primaryKeyColumnNames.length; i++) {
+			String primaryKeyColumnName = primaryKeyColumnNames[i];
+
+			sb.append(sourceTableName);
+			sb.append(".");
+			sb.append(primaryKeyColumnName);
+			sb.append(" = ");
+			sb.append(targetTableName);
+			sb.append(".");
+			sb.append(primaryKeyColumnName);
+
+			if (i < (primaryKeyColumnNames.length - 1)) {
+				sb.append(" and ");
+			}
+		}
+
+		sb.append(" where ");
+		sb.append(targetTableName);
+		sb.append(".");
+		sb.append(primaryKeyColumnNames[0]);
+		sb.append(" IS NULL");
+
+		runSQL(sb.toString());
+	}
+
+	@Override
+	public void copyTableStructure(
+			Connection connection, String tableName, String newTableName)
+		throws Exception {
+
+		runSQL(connection, getCopyTableStructureSQL(tableName, newTableName));
+
+		addPrimaryKey(
+			connection, newTableName,
+			getPrimaryKeyColumnNames(connection, tableName));
+
+		List<IndexMetadata> indexMetadatas = new ArrayList<>();
+
+		String indexNamePrefix = StringPool.BLANK;
+
+		if (!isSupportsDuplicatedIndexName()) {
+			indexNamePrefix = "TMP_";
+		}
+
+		for (IndexMetadata indexMetadata :
+				getIndexes(connection, tableName, null, false)) {
+
+			indexMetadatas.add(
+				new IndexMetadata(
+					indexNamePrefix.concat(indexMetadata.getIndexName()),
+					newTableName, indexMetadata.isUnique(),
+					indexMetadata.getColumnNames()));
+		}
+
+		addIndexes(connection, indexMetadatas);
+	}
+
+	@Override
 	public List<IndexMetadata> dropIndexes(
 			Connection connection, String tableName, String columnName)
 		throws IOException, SQLException {
@@ -220,16 +298,10 @@ public abstract class BaseDB implements DB {
 
 	@Override
 	public List<Index> getIndexes(Connection connection) throws SQLException {
-		List<IndexMetadata> indexes = getIndexes(connection, null, null, false);
-
-		Stream<IndexMetadata> stream = indexes.stream();
-
-		return stream.map(
+		return TransformUtil.transform(
+			getIndexes(connection, null, null, false),
 			index -> new Index(
-				index.getIndexName(), index.getTableName(), index.isUnique())
-		).collect(
-			Collectors.toList()
-		);
+				index.getIndexName(), index.getTableName(), index.isUnique()));
 	}
 
 	@Override
@@ -260,28 +332,16 @@ public abstract class BaseDB implements DB {
 			Connection connection, String tableName)
 		throws SQLException {
 
-		DatabaseMetaData databaseMetaData = connection.getMetaData();
+		List<PrimaryKey> primaryKeys = _getPrimaryKeys(connection, tableName);
 
-		DBInspector dbInspector = new DBInspector(connection);
+		String[] primaryKeyColumnNames = new String[primaryKeys.size()];
 
-		String normalizedTableName = dbInspector.normalizeName(
-			tableName, databaseMetaData);
-
-		String[] columnNames = new String[0];
-
-		try (ResultSet resultSet = databaseMetaData.getPrimaryKeys(
-				dbInspector.getCatalog(), dbInspector.getSchema(),
-				normalizedTableName)) {
-
-			while (resultSet.next()) {
-				columnNames = ArrayUtil.append(
-					columnNames,
-					dbInspector.normalizeName(
-						resultSet.getString("COLUMN_NAME"), databaseMetaData));
-			}
+		for (PrimaryKey primaryKey : primaryKeys) {
+			primaryKeyColumnNames[primaryKey._keySeq - 1] =
+				primaryKey._columnName;
 		}
 
-		return columnNames;
+		return primaryKeyColumnNames;
 	}
 
 	@Override
@@ -792,6 +852,14 @@ public abstract class BaseDB implements DB {
 		return validIndexNames;
 	}
 
+	protected String getCopyTableStructureSQL(
+		String tableName, String newTableName) {
+
+		return StringBundler.concat(
+			"create table ", newTableName, " as select * from ", tableName,
+			" where 1 = 0");
+	}
+
 	protected List<IndexMetadata> getIndexes(
 			Connection connection, String tableName, String columnName,
 			boolean onlyUnique)
@@ -904,6 +972,10 @@ public abstract class BaseDB implements DB {
 	}
 
 	protected abstract String[] getTemplate();
+
+	protected boolean isSupportsDuplicatedIndexName() {
+		return _SUPPORTS_DUPLICATED_INDEX_NAME;
+	}
 
 	protected String limitColumnLength(String column, int length) {
 		return StringBundler.concat(column, "\\(", length, "\\)");
@@ -1067,9 +1139,37 @@ public abstract class BaseDB implements DB {
 		return sb.toString();
 	}
 
+	private List<PrimaryKey> _getPrimaryKeys(
+			Connection connection, String tableName)
+		throws SQLException {
+
+		List<PrimaryKey> primaryKeys = new ArrayList<>();
+
+		DatabaseMetaData databaseMetaData = connection.getMetaData();
+		DBInspector dbInspector = new DBInspector(connection);
+
+		try (ResultSet resultSet = databaseMetaData.getPrimaryKeys(
+				dbInspector.getCatalog(), dbInspector.getSchema(),
+				dbInspector.normalizeName(tableName, databaseMetaData))) {
+
+			while (resultSet.next()) {
+				primaryKeys.add(
+					new PrimaryKey(
+						dbInspector.normalizeName(
+							resultSet.getString("COLUMN_NAME"),
+							databaseMetaData),
+						resultSet.getInt("KEY_SEQ")));
+			}
+		}
+
+		return primaryKeys;
+	}
+
 	private static final boolean _SUPPORTS_ALTER_COLUMN_NAME = true;
 
 	private static final boolean _SUPPORTS_ALTER_COLUMN_TYPE = true;
+
+	private static final boolean _SUPPORTS_DUPLICATED_INDEX_NAME = true;
 
 	private static final boolean _SUPPORTS_INLINE_DISTINCT = true;
 
@@ -1117,5 +1217,17 @@ public abstract class BaseDB implements DB {
 	private final Map<String, Integer> _sqlVarcharSizes = new HashMap<>();
 	private boolean _supportsStringCaseSensitiveQuery = true;
 	private final Map<String, String> _templates = new HashMap<>();
+
+	private static class PrimaryKey {
+
+		private PrimaryKey(String columnName, int keySeq) {
+			_columnName = columnName;
+			_keySeq = keySeq;
+		}
+
+		private final String _columnName;
+		private final int _keySeq;
+
+	}
 
 }

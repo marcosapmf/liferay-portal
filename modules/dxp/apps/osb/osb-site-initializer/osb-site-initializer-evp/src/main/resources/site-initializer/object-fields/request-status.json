@@ -1,0 +1,191 @@
+{
+	"object-fields": [
+		{
+			"DBType": "String",
+			"businessType": "Picklist",
+			"defaultValue": "awaitingApprovalOnEvp",
+			"externalReferenceCode": "EVP-REQUEST-STATUS-DEFAULT",
+			"indexed": true,
+			"indexedAsKeyword": false,
+			"indexedLanguageId": "en_US",
+			"label": {
+				"en_US": "EVP Request Status"
+			},
+			"listTypeDefinitionExternalReferenceCode": "EVP-REQUEST-STATUS-PICKLIST",
+			"name": "requestStatus",
+			"objectFieldSettings": [
+				{
+					"name": "stateFlow",
+					"value": {
+						"objectStates": [
+							{
+								"key": "rejected",
+								"objectStateTransitions": [
+									{
+										"key": "closed"
+									},
+									{
+										"key": "awaitingApprovalOnEvp"
+									},
+									{
+										"key": "awaitCompanyVerification"
+									},
+									{
+										"key": "awaitingFinanceReview"
+									},
+									{
+										"key": "awaitingPaymentConfirmation"
+									},
+									{
+										"key": "awaitingMoreInfoFromEmployee"
+									}
+								]
+							},
+							{
+								"key": "closed",
+								"objectStateTransitions": [
+									{
+										"key": "rejected"
+									},
+									{
+										"key": "awaitingApprovalOnEvp"
+									},
+									{
+										"key": "awaitCompanyVerification"
+									},
+									{
+										"key": "awaitingFinanceReview"
+									},
+									{
+										"key": "awaitingPaymentConfirmation"
+									},
+									{
+										"key": "awaitingMoreInfoFromEmployee"
+									}
+								]
+							},
+							{
+								"key": "awaitingApprovalOnEvp",
+								"objectStateTransitions": [
+									{
+										"key": "rejected"
+									},
+									{
+										"key": "closed"
+									},
+									{
+										"key": "awaitCompanyVerification"
+									},
+									{
+										"key": "awaitingFinanceReview"
+									},
+									{
+										"key": "awaitingPaymentConfirmation"
+									},
+									{
+										"key": "awaitingMoreInfoFromEmployee"
+									}
+								]
+							},
+							{
+								"key": "awaitCompanyVerification",
+								"objectStateTransitions": [
+									{
+										"key": "rejected"
+									},
+									{
+										"key": "closed"
+									},
+									{
+										"key": "awaitingApprovalOnEvp"
+									},
+									{
+										"key": "awaitingFinanceReview"
+									},
+									{
+										"key": "awaitingPaymentConfirmation"
+									},
+									{
+										"key": "awaitingMoreInfoFromEmployee"
+									}
+								]
+							},
+							{
+								"key": "awaitingFinanceReview",
+								"objectStateTransitions": [
+									{
+										"key": "rejected"
+									},
+									{
+										"key": "closed"
+									},
+									{
+										"key": "awaitingApprovalOnEvp"
+									},
+									{
+										"key": "awaitCompanyVerification"
+									},
+									{
+										"key": "awaitingPaymentConfirmation"
+									},
+									{
+										"key": "awaitingMoreInfoFromEmployee"
+									}
+								]
+							},
+							{
+								"key": "awaitingPaymentConfirmation",
+								"objectStateTransitions": [
+									{
+										"key": "rejected"
+									},
+									{
+										"key": "closed"
+									},
+									{
+										"key": "awaitingApprovalOnEvp"
+									},
+									{
+										"key": "awaitCompanyVerification"
+									},
+									{
+										"key": "awaitingFinanceReview"
+									},
+									{
+										"key": "awaitingMoreInfoFromEmployee"
+									}
+								]
+							},
+							{
+								"key": "awaitingMoreInfoFromEmployee",
+								"objectStateTransitions": [
+									{
+										"key": "rejected"
+									},
+									{
+										"key": "closed"
+									},
+									{
+										"key": "awaitingApprovalOnEvp"
+									},
+									{
+										"key": "awaitCompanyVerification"
+									},
+									{
+										"key": "awaitingFinanceReview"
+									},
+									{
+										"key": "awaitingPaymentConfirmation"
+									}
+								]
+							}
+						]
+					}
+				}
+			],
+			"required": true,
+			"state": true
+		}
+	],
+	"objectDefinitionId": "[$OBJECT_DEFINITION_ID:EVPRequest$]"
+}

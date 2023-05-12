@@ -27,7 +27,6 @@ import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.util.GetterUtil;
@@ -126,6 +125,13 @@ public class TemplateInfoItemTemplatedRenderer<T>
 		T t, String templateEntryId, HttpServletRequest httpServletRequest,
 		HttpServletResponse httpServletResponse) {
 
+		ServiceContext serviceContext =
+			ServiceContextThreadLocal.getServiceContext();
+
+		if (serviceContext == null) {
+			return;
+		}
+
 		try {
 			Writer writer = httpServletResponse.getWriter();
 
@@ -153,7 +159,9 @@ public class TemplateInfoItemTemplatedRenderer<T>
 						templateEntry, infoItemFieldValues,
 						_templateNodeFactory);
 
-			writer.write(templateDisplayTemplateTransformer.transform());
+			writer.write(
+				templateDisplayTemplateTransformer.transform(
+					serviceContext.getThemeDisplay()));
 		}
 		catch (Exception exception) {
 			throw new RuntimeException(exception);
@@ -172,20 +180,11 @@ public class TemplateInfoItemTemplatedRenderer<T>
 		}
 
 		try {
-			long groupId = serviceContext.getScopeGroupId();
-
-			if (!_stagingGroupHelper.isStagedPortlet(
-					groupId, TemplatePortletKeys.TEMPLATE)) {
-
-				Group liveGroup = _stagingGroupHelper.fetchLiveGroup(groupId);
-
-				if (liveGroup != null) {
-					groupId = liveGroup.getGroupId();
-				}
-			}
-
 			return _templateEntryLocalService.getTemplateEntries(
-				PortalUtil.getCurrentAndAncestorSiteGroupIds(groupId),
+				PortalUtil.getCurrentAndAncestorSiteGroupIds(
+					_stagingGroupHelper.getStagedPortletGroupId(
+						serviceContext.getScopeGroupId(),
+						TemplatePortletKeys.TEMPLATE)),
 				infoItemClassName, infoItemFormVariationKey, QueryUtil.ALL_POS,
 				QueryUtil.ALL_POS, null);
 		}

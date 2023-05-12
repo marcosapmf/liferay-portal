@@ -24,7 +24,7 @@ taglib uri="http://liferay.com/tld/frontend" prefix="liferay-frontend" %><%@
 taglib uri="http://liferay.com/tld/theme" prefix="liferay-theme" %><%@
 taglib uri="http://liferay.com/tld/ui" prefix="liferay-ui" %>
 
-<%@ page import="com.liferay.commerce.account.constants.CommerceAccountConstants" %><%@
+<%@ page import="com.liferay.account.constants.AccountConstants" %><%@
 page import="com.liferay.commerce.product.item.selector.web.internal.display.context.CPDefinitionItemSelectorViewDisplayContext" %><%@
 page import="com.liferay.commerce.product.item.selector.web.internal.display.context.CPDefinitionItemSelectorViewManagementToolbarDisplayContext" %><%@
 page import="com.liferay.commerce.product.item.selector.web.internal.display.context.CPInstanceItemSelectorViewDisplayContext" %><%@
@@ -35,12 +35,15 @@ page import="com.liferay.commerce.product.item.selector.web.internal.display.con
 page import="com.liferay.commerce.product.item.selector.web.internal.display.context.CPSpecificationOptionItemSelectorViewManagementToolbarDisplayContext" %><%@
 page import="com.liferay.commerce.product.item.selector.web.internal.display.context.CommerceChannelItemSelectorViewDisplayContext" %><%@
 page import="com.liferay.commerce.product.item.selector.web.internal.display.context.CommerceChannelsItemSelectorViewManagementToolbarDisplayContext" %><%@
+page import="com.liferay.commerce.product.item.selector.web.internal.display.context.LayoutPageTemplateEntryItemSelectorViewDisplayContext" %><%@
+page import="com.liferay.commerce.product.item.selector.web.internal.display.context.LayoutPageTemplateEntryItemSelectorViewManagementToolbarDisplayContext" %><%@
 page import="com.liferay.commerce.product.model.CPDefinition" %><%@
 page import="com.liferay.commerce.product.model.CPInstance" %><%@
 page import="com.liferay.commerce.product.model.CPOption" %><%@
 page import="com.liferay.commerce.product.model.CPSpecificationOption" %><%@
 page import="com.liferay.commerce.product.model.CommerceChannel" %><%@
 page import="com.liferay.commerce.product.type.CPType" %><%@
+page import="com.liferay.layout.page.template.model.LayoutPageTemplateEntry" %><%@
 page import="com.liferay.portal.kernel.dao.search.SearchContainer" %><%@
 page import="com.liferay.portal.kernel.util.HashMapBuilder" %><%@
 page import="com.liferay.portal.kernel.util.HtmlUtil" %><%@

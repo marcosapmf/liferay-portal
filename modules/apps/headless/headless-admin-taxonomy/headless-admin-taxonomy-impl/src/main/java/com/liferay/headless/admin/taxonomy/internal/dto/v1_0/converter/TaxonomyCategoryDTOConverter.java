@@ -37,8 +37,6 @@ import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterContext;
 import com.liferay.portal.vulcan.util.LocalizedMapUtil;
 
-import java.util.Optional;
-
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.UriInfo;
 
@@ -50,8 +48,12 @@ import org.osgi.service.component.annotations.Reference;
  * @author Víctor Galán
  */
 @Component(
-	property = "dto.class.name=com.liferay.asset.kernel.model.AssetCategory",
-	service = {DTOConverter.class, TaxonomyCategoryDTOConverter.class}
+	property = {
+		"application.name=Liferay.Headless.Admin.Taxonomy",
+		"dto.class.name=com.liferay.asset.kernel.model.AssetCategory",
+		"version=v1.0"
+	},
+	service = DTOConverter.class
 )
 public class TaxonomyCategoryDTOConverter
 	implements DTOConverter<AssetCategory, TaxonomyCategory> {
@@ -124,25 +126,6 @@ public class TaxonomyCategoryDTOConverter
 				numberOfTaxonomyCategories =
 					_assetCategoryService.getChildCategoriesCount(
 						assetCategory.getCategoryId());
-				parentTaxonomyVocabulary = new ParentTaxonomyVocabulary() {
-					{
-						id = assetCategory.getVocabularyId();
-
-						setName(
-							() -> {
-								if (assetCategory.getVocabularyId() == 0) {
-									return null;
-								}
-
-								AssetVocabulary assetVocabulary =
-									_assetVocabularyService.getVocabulary(
-										assetCategory.getVocabularyId());
-
-								return assetVocabulary.getTitle(
-									dtoConverterContext.getLocale());
-							});
-					}
-				};
 				siteId = assetCategory.getGroupId();
 				taxonomyCategoryProperties = TransformUtil.transformToArray(
 					_assetCategoryPropertyLocalService.getCategoryProperties(
@@ -162,14 +145,33 @@ public class TaxonomyCategoryDTOConverter
 							assetCategory.getParentCategory(),
 							dtoConverterContext);
 					});
+				setParentTaxonomyVocabulary(
+					() -> {
+						if (assetCategory.getVocabularyId() == 0) {
+							return null;
+						}
+
+						AssetVocabulary assetVocabulary =
+							_assetVocabularyService.fetchVocabulary(
+								assetCategory.getVocabularyId());
+
+						if (assetVocabulary == null) {
+							return null;
+						}
+
+						return new ParentTaxonomyVocabulary() {
+							{
+								id = assetCategory.getVocabularyId();
+								name = assetVocabulary.getTitle(
+									dtoConverterContext.getLocale());
+							}
+						};
+					});
 				setTaxonomyCategoryUsageCount(
 					() -> {
-						Optional<UriInfo> uriInfoOptional =
-							dtoConverterContext.getUriInfoOptional();
+						UriInfo uriInfo = dtoConverterContext.getUriInfo();
 
-						if (uriInfoOptional.isPresent()) {
-							UriInfo uriInfo = uriInfoOptional.get();
-
+						if (uriInfo != null) {
 							MultivaluedMap<String, String> queryParameters =
 								uriInfo.getQueryParameters();
 

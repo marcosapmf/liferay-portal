@@ -22,9 +22,12 @@ import com.liferay.portal.kernel.service.ServiceContext;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
+import org.osgi.annotation.versioning.ProviderType;
+
 /**
  * @author Stian Sigvartsen
  */
+@ProviderType
 public interface ProcessorContext<M extends BaseModel<M>> {
 
 	public <T extends BaseModel<T>> Bind<T> bind(
@@ -36,6 +39,8 @@ public interface ProcessorContext<M extends BaseModel<M>> {
 	public <V> V getValue(Class<V> clazz, String fieldExpression);
 
 	public <V> V[] getValueArray(Class<V> clazz, String fieldExpression);
+
+	public boolean isDefined(Class<?> clazz, String fieldExpression);
 
 	public interface Bind<T extends BaseModel<T>> {
 

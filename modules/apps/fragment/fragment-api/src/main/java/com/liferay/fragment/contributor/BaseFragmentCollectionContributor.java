@@ -50,7 +50,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.Set;
 
@@ -107,6 +106,25 @@ public abstract class BaseFragmentCollectionContributor
 	}
 
 	@Override
+	public List<FragmentEntry> getFragmentEntries(int[] types) {
+		_initialize();
+
+		List<FragmentEntry> fragmentEntries = new ArrayList<>();
+
+		for (int type : types) {
+			fragmentEntries.addAll(
+				_fragmentEntries.getOrDefault(type, Collections.emptyList()));
+		}
+
+		return fragmentEntries;
+	}
+
+	@Override
+	public List<FragmentEntry> getFragmentEntries(int[] types, Locale locale) {
+		return _getFragmentEntries(getFragmentEntries(types), locale);
+	}
+
+	@Override
 	public List<FragmentEntry> getFragmentEntries(Locale locale) {
 		return _getFragmentEntries(getFragmentEntries(), locale);
 	}
@@ -152,13 +170,16 @@ public abstract class BaseFragmentCollectionContributor
 	public ResourceBundleLoader getResourceBundleLoader() {
 		ServletContext servletContext = getServletContext();
 
-		return Optional.ofNullable(
+		ResourceBundleLoader resourceBundleLoader =
 			ResourceBundleLoaderUtil.
 				getResourceBundleLoaderByServletContextName(
-					servletContext.getServletContextName())
-		).orElse(
-			ResourceBundleLoaderUtil.getPortalResourceBundleLoader()
-		);
+					servletContext.getServletContextName());
+
+		if (resourceBundleLoader != null) {
+			return resourceBundleLoader;
+		}
+
+		return ResourceBundleLoaderUtil.getPortalResourceBundleLoader();
 	}
 
 	public abstract ServletContext getServletContext();

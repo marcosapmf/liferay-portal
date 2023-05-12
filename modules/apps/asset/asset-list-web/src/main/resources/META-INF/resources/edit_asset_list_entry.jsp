@@ -25,15 +25,13 @@ if (Validator.isNull(redirect)) {
 	redirect = portletURL.toString();
 }
 
-Map data = editAssetListDisplayContext.getData();
-
 portletDisplay.setShowBackIcon(true);
 portletDisplay.setURLBack(redirect);
 
 renderResponse.setTitle(assetListDisplayContext.getAssetListEntryTitle());
 %>
 
-<c:if test='<%= !(boolean)data.get("isSegmentationEnabled") %>'>
+<c:if test="<%= !editAssetListDisplayContext.isSegmentationEnabled(company.getCompanyId()) %>">
 	<clay:stripe
 		defaultTitleDisabled="<%= true %>"
 		dismissible="<%= true %>"
@@ -76,7 +74,7 @@ renderResponse.setTitle(assetListDisplayContext.getAssetListEntryTitle());
 
 				<react:component
 					module="js/components/VariationsNav/index"
-					props="<%= data %>"
+					props="<%= editAssetListDisplayContext.getData() %>"
 				/>
 			</div>
 		</clay:col>
@@ -98,8 +96,8 @@ renderResponse.setTitle(assetListDisplayContext.getAssetListEntryTitle());
 
 <script>
 	<portlet:actionURL name="/asset_list/add_asset_list_entry_variation" var="addAssetListEntryVariationURL">
-	<portlet:param name="assetListEntryId" value="<%= String.valueOf(editAssetListDisplayContext.getAssetListEntryId()) %>" />
-	<portlet:param name="type" value="<%= String.valueOf(editAssetListDisplayContext.getAssetListEntryType()) %>" />
+		<portlet:param name="assetListEntryId" value="<%= String.valueOf(editAssetListDisplayContext.getAssetListEntryId()) %>" />
+		<portlet:param name="type" value="<%= String.valueOf(editAssetListDisplayContext.getAssetListEntryType()) %>" />
 	</portlet:actionURL>
 
 	function <portlet:namespace />openSelectSegmentsEntryDialog() {

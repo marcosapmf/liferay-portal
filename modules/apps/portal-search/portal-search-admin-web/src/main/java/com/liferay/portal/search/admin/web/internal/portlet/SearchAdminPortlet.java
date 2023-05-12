@@ -16,6 +16,7 @@ package com.liferay.portal.search.admin.web.internal.portlet;
 
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
@@ -26,15 +27,15 @@ import com.liferay.portal.search.admin.web.internal.display.context.builder.Fiel
 import com.liferay.portal.search.admin.web.internal.display.context.builder.IndexActionsDisplayContextBuilder;
 import com.liferay.portal.search.admin.web.internal.display.context.builder.SearchAdminDisplayContextBuilder;
 import com.liferay.portal.search.admin.web.internal.display.context.builder.SearchEngineDisplayContextBuilder;
+import com.liferay.portal.search.admin.web.internal.reindexer.IndexReindexerRegistry;
+import com.liferay.portal.search.capabilities.SearchCapabilities;
 import com.liferay.portal.search.engine.SearchEngineInformation;
 import com.liferay.portal.search.index.IndexInformation;
-import com.liferay.portal.search.spi.reindexer.IndexReindexer;
 
 import java.io.IOException;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 import javax.portlet.Portlet;
 import javax.portlet.PortletException;
@@ -86,10 +87,13 @@ public class SearchAdminPortlet extends MVCPortlet {
 
 		searchAdminDisplayContextBuilder.setIndexInformation(indexInformation);
 
-		Collections.sort(_indexReindexerClassNames);
+		List<String> indexReindexerClassNames = ListUtil.fromCollection(
+			_indexReindexerRegistry.getIndexReindexerClassNames());
+
+		Collections.sort(indexReindexerClassNames);
 
 		searchAdminDisplayContextBuilder.setIndexReindexerClassNames(
-			_indexReindexerClassNames);
+			indexReindexerClassNames);
 
 		SearchAdminDisplayContext searchAdminDisplayContext =
 			searchAdminDisplayContextBuilder.build();
@@ -135,7 +139,8 @@ public class SearchAdminPortlet extends MVCPortlet {
 			IndexActionsDisplayContextBuilder
 				indexActionsDisplayContextBuilder =
 					new IndexActionsDisplayContextBuilder(
-						_language, _portal, renderRequest, renderResponse);
+						_language, _portal, renderRequest, renderResponse,
+						_searchCapabilities);
 
 			renderRequest.setAttribute(
 				SearchAdminWebKeys.INDEX_ACTIONS_DISPLAY_CONTEXT,
@@ -143,23 +148,6 @@ public class SearchAdminPortlet extends MVCPortlet {
 		}
 
 		super.render(renderRequest, renderResponse);
-	}
-
-	@Reference(
-		cardinality = ReferenceCardinality.MULTIPLE,
-		policy = ReferencePolicy.DYNAMIC,
-		policyOption = ReferencePolicyOption.GREEDY
-	)
-	protected void addIndexReindexer(IndexReindexer indexReindexer) {
-		Class<?> clazz = indexReindexer.getClass();
-
-		_indexReindexerClassNames.add(clazz.getName());
-	}
-
-	protected void removeIndexReindexer(IndexReindexer indexReindexer) {
-		Class<?> clazz = indexReindexer.getClass();
-
-		_indexReindexerClassNames.remove(clazz.getName());
 	}
 
 	@Reference(
@@ -176,13 +164,16 @@ public class SearchAdminPortlet extends MVCPortlet {
 	)
 	protected volatile SearchEngineInformation searchEngineInformation;
 
-	private final List<String> _indexReindexerClassNames =
-		new CopyOnWriteArrayList<>();
+	@Reference
+	private IndexReindexerRegistry _indexReindexerRegistry;
 
 	@Reference
 	private Language _language;
 
 	@Reference
 	private Portal _portal;
+
+	@Reference
+	private SearchCapabilities _searchCapabilities;
 
 }

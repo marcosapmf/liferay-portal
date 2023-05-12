@@ -54,7 +54,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = "dto.class.name=com.liferay.headless.commerce.delivery.cart.dto.v1_0.CartItem",
-	service = {CartItemDTOConverter.class, DTOConverter.class}
+	service = DTOConverter.class
 )
 public class CartItemDTOConverter
 	implements DTOConverter<CommerceOrderItem, CartItem> {
@@ -100,6 +100,8 @@ public class CartItemDTOConverter
 					_cpDefinitionLocalService.getUrlTitleMap(
 						commerceOrderItem.getCPDefinitionId()));
 				quantity = commerceOrderItem.getQuantity();
+				replacedSku = commerceOrderItem.getReplacedSku();
+				replacedSkuId = commerceOrderItem.getReplacedCPInstanceId();
 				settings = _getSettings(commerceOrderItem.getCPInstanceId());
 				sku = commerceOrderItem.getSku();
 				skuId = commerceOrderItem.getCPInstanceId();

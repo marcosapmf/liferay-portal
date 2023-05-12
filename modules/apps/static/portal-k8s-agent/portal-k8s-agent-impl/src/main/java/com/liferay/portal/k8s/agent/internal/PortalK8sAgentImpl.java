@@ -14,6 +14,7 @@
 
 package com.liferay.portal.k8s.agent.internal;
 
+import com.liferay.osgi.util.configuration.ConfigurationFactoryUtil;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
@@ -59,6 +60,7 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
+import org.osgi.service.cm.ConfigurationPlugin;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
@@ -81,6 +83,10 @@ public class PortalK8sAgentImpl implements PortalK8sConfigMapModifier {
 	public PortalK8sAgentImpl(
 			BundleContext bundleContext,
 			@Reference ConfigurationAdmin configurationAdmin,
+			@Reference(
+				target = "(config.plugin.id=org.apache.felix.configadmin.plugin.interpolation)"
+			)
+			ConfigurationPlugin configurationPlugin,
 			@Reference(
 				name = "portalK8sConfigurationPropertiesMutators",
 				policyOption = ReferencePolicyOption.GREEDY
@@ -199,90 +205,87 @@ public class PortalK8sAgentImpl implements PortalK8sConfigMapModifier {
 
 				return Result.UPDATED;
 			}
-			else {
-				if (_log.isInfoEnabled()) {
-					_log.info("Unchanged " + configMap);
-				}
-
-				return Result.UNCHANGED;
-			}
-		}
-		else {
-			Map<String, String> annotations = new TreeMap<>();
-			Map<String, String> binaryData = new TreeMap<>();
-			Map<String, String> data = new TreeMap<>();
-			Map<String, String> labels = new TreeMap<>();
-
-			configMapModelConsumer.accept(
-				new ConfigMapModel() {
-
-					@Override
-					public Map<String, String> annotations() {
-						return annotations;
-					}
-
-					@Override
-					public Map<String, String> binaryData() {
-						return binaryData;
-					}
-
-					@Override
-					public Map<String, String> data() {
-						return data;
-					}
-
-					@Override
-					public Map<String, String> labels() {
-						return labels;
-					}
-
-				});
-
-			if (binaryData.isEmpty() && data.isEmpty()) {
-				if (_log.isInfoEnabled()) {
-					_log.info(
-						StringBundler.concat(
-							"Config map does not exist and no data was ",
-							"supplied for ", configMapName,
-							" resulting in no change"));
-				}
-
-				return Result.UNCHANGED;
-			}
-
-			_validateLabels(configMapName, labels);
-
-			ConfigMapBuilder configMapBuilder = new ConfigMapBuilder();
-
-			configMap = configMapBuilder.withNewMetadata(
-			).withNamespace(
-				_portalK8sAgentConfiguration.namespace()
-			).withName(
-				configMapName
-			).addToAnnotations(
-				annotations
-			).addToLabels(
-				labels
-			).endMetadata(
-			).addToBinaryData(
-				binaryData
-			).addToData(
-				data
-			).build();
-
-			configMap = _kubernetesClient.configMaps(
-			).withName(
-				configMapName
-			).createOrReplace(
-				configMap
-			);
 
 			if (_log.isInfoEnabled()) {
-				_log.info("Created " + configMap);
+				_log.info("Unchanged " + configMap);
 			}
 
-			return Result.CREATED;
+			return Result.UNCHANGED;
 		}
+
+		Map<String, String> annotations = new TreeMap<>();
+		Map<String, String> binaryData = new TreeMap<>();
+		Map<String, String> data = new TreeMap<>();
+		Map<String, String> labels = new TreeMap<>();
+
+		configMapModelConsumer.accept(
+			new ConfigMapModel() {
+
+				@Override
+				public Map<String, String> annotations() {
+					return annotations;
+				}
+
+				@Override
+				public Map<String, String> binaryData() {
+					return binaryData;
+				}
+
+				@Override
+				public Map<String, String> data() {
+					return data;
+				}
+
+				@Override
+				public Map<String, String> labels() {
+					return labels;
+				}
+
+			});
+
+		if (binaryData.isEmpty() && data.isEmpty()) {
+			if (_log.isInfoEnabled()) {
+				_log.info(
+					StringBundler.concat(
+						"Config map does not exist and no data was supplied ",
+						"for ", configMapName, " resulting in no change"));
+			}
+
+			return Result.UNCHANGED;
+		}
+
+		_validateLabels(configMapName, labels);
+
+		ConfigMapBuilder configMapBuilder = new ConfigMapBuilder();
+
+		configMap = configMapBuilder.withNewMetadata(
+		).withNamespace(
+			_portalK8sAgentConfiguration.namespace()
+		).withName(
+			configMapName
+		).addToAnnotations(
+			annotations
+		).addToLabels(
+			labels
+		).endMetadata(
+		).addToBinaryData(
+			binaryData
+		).addToData(
+			data
+		).build();
+
+		configMap = _kubernetesClient.configMaps(
+		).withName(
+			configMapName
+		).createOrReplace(
+			configMap
+		);
+
+		if (_log.isInfoEnabled()) {
+			_log.info("Created " + configMap);
+		}
+
+		return Result.CREATED;
 	}
 
 	@Deactivate
@@ -389,12 +392,7 @@ public class PortalK8sAgentImpl implements PortalK8sConfigMapModifier {
 		return binaryData;
 	}
 
-	private Configuration _getConfiguration(
-			org.apache.felix.configurator.impl.model.Config config)
-		throws Exception {
-
-		String pid = config.getPid();
-
+	private Configuration _getConfiguration(String pid) throws Exception {
 		if (pid.endsWith(_FILE_EXTENSION)) {
 			pid = pid.substring(0, pid.length() - _FILE_EXTENSION.length());
 		}
@@ -443,81 +441,116 @@ public class PortalK8sAgentImpl implements PortalK8sConfigMapModifier {
 		return labels;
 	}
 
+	private String _getVirtualInstancePid(
+		org.apache.felix.configurator.impl.model.Config config,
+		String virtualInstanceId) {
+
+		String pid = config.getPid();
+
+		String factoryPid = ConfigurationFactoryUtil.getFactoryPidFromPid(pid);
+
+		if (factoryPid == null) {
+			return pid;
+		}
+
+		return StringBundler.concat(pid, "/", virtualInstanceId);
+	}
+
 	private void _processConfiguration(
 			org.apache.felix.configurator.impl.model.Config config,
 			ObjectMeta objectMeta)
 		throws Exception {
 
-		Configuration configuration = null;
+		Map<String, String> labels = objectMeta.getLabels();
 
-		Configuration[] configurations = _configurationAdmin.listConfigurations(
-			StringBundler.concat("(.k8s.config.key=", config.getPid(), ")"));
+		String virtualInstanceId = labels.get(
+			"dxp.lxc.liferay.com/virtualInstanceId");
 
-		if (ArrayUtil.isNotEmpty(configurations)) {
-			configuration = configurations[0];
-
-			Dictionary<String, Object> properties =
-				configuration.getProperties();
-
-			if (Objects.equals(
-					properties.get(".k8s.config.resource.version"),
-					objectMeta.getResourceVersion())) {
-
-				if (_log.isInfoEnabled()) {
-					_log.info(
-						"Configuration and Kubernetes resource versions are " +
-							"identical");
-				}
-
-				return;
-			}
-		}
-		else {
-			configuration = _getConfiguration(config);
+		if (virtualInstanceId == null) {
+			throw new IllegalArgumentException(
+				StringBundler.concat(
+					"Config map labels must contain the key ",
+					"\"dxp.lxc.liferay.com/virtualInstanceId\" whose value is ",
+					"the web ID of the target virtual instance"));
 		}
 
-		Set<Configuration.ConfigurationAttribute> configurationAttributes =
-			configuration.getAttributes();
+		// LPS-172217
 
-		if (configurationAttributes.contains(
-				Configuration.ConfigurationAttribute.READ_ONLY)) {
-
-			configuration.removeAttributes(
-				Configuration.ConfigurationAttribute.READ_ONLY);
-		}
-
-		Dictionary<String, Object> properties = config.getProperties();
-
-		for (PortalK8sConfigurationPropertiesMutator
-				portalK8sConfigurationPropertiesMutator :
-					_portalK8sConfigurationPropertiesMutators) {
-
-			portalK8sConfigurationPropertiesMutator.
-				mutateConfigurationProperties(
-					objectMeta.getAnnotations(), objectMeta.getLabels(),
-					properties);
-		}
-
-		properties.put(".k8s.config.key", config.getPid());
-		properties.put(
-			".k8s.config.resource.version", objectMeta.getResourceVersion());
-		properties.put(".k8s.config.uid", objectMeta.getUid());
-
-		if (_log.isInfoEnabled()) {
-			_log.info("Processed configuration " + properties);
-		}
+		String virtualInstancePid = _getVirtualInstancePid(
+			config, virtualInstanceId);
 
 		try {
 			InMemoryOnlyConfigurationThreadLocal.setInMemoryOnly(true);
 
+			Configuration configuration = null;
+
+			Configuration[] configurations =
+				_configurationAdmin.listConfigurations(
+					StringBundler.concat(
+						"(.k8s.config.key=", virtualInstancePid, ")"));
+
+			if (ArrayUtil.isNotEmpty(configurations)) {
+				configuration = configurations[0];
+
+				Dictionary<String, Object> properties =
+					configuration.getProperties();
+
+				if (Objects.equals(
+						properties.get(".k8s.config.resource.version"),
+						objectMeta.getResourceVersion())) {
+
+					if (_log.isInfoEnabled()) {
+						_log.info(
+							"Configuration and Kubernetes resource versions " +
+								"are identical");
+					}
+
+					return;
+				}
+			}
+			else {
+				configuration = _getConfiguration(virtualInstancePid);
+			}
+
+			Set<Configuration.ConfigurationAttribute> configurationAttributes =
+				configuration.getAttributes();
+
+			if (configurationAttributes.contains(
+					Configuration.ConfigurationAttribute.READ_ONLY)) {
+
+				configuration.removeAttributes(
+					Configuration.ConfigurationAttribute.READ_ONLY);
+			}
+
+			Dictionary<String, Object> properties = config.getProperties();
+
+			for (PortalK8sConfigurationPropertiesMutator
+					portalK8sConfigurationPropertiesMutator :
+						_portalK8sConfigurationPropertiesMutators) {
+
+				portalK8sConfigurationPropertiesMutator.
+					mutateConfigurationProperties(
+						objectMeta.getAnnotations(), labels, properties);
+			}
+
+			properties.put(".k8s.config.key", virtualInstancePid);
+			properties.put(
+				".k8s.config.resource.version",
+				objectMeta.getResourceVersion());
+			properties.put(".k8s.config.uid", objectMeta.getUid());
+
+			if (_log.isInfoEnabled()) {
+				_log.info("Processed configuration " + properties);
+			}
+
 			configuration.updateIfDifferent(properties);
+
+			configuration.addAttributes(
+				Configuration.ConfigurationAttribute.READ_ONLY);
 		}
 		finally {
 			InMemoryOnlyConfigurationThreadLocal.setInMemoryOnly(false);
 		}
-
-		configuration.addAttributes(
-			Configuration.ConfigurationAttribute.READ_ONLY);
 	}
 
 	private void _processConfigurations(
@@ -695,6 +728,13 @@ public class PortalK8sAgentImpl implements PortalK8sConfigMapModifier {
 
 		try {
 			ObjectMeta oldObjectMeta = oldConfigMap.getMetadata();
+
+			if (Objects.equals(
+					oldObjectMeta.getResourceVersion(),
+					objectMeta.getResourceVersion())) {
+
+				return;
+			}
 
 			configurations = _configurationAdmin.listConfigurations(
 				StringBundler.concat(

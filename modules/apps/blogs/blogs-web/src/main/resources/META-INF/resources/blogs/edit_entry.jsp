@@ -67,7 +67,7 @@ renderResponse.setTitle(blogsEditEntryDisplayContext.getPageTitle(resourceBundle
 			</liferay-ui:error>
 
 			<liferay-ui:error exception="<%= UploadRequestSizeException.class %>">
-				<liferay-ui:message arguments="<%= LanguageUtil.formatStorageSize(UploadServletRequestConfigurationHelperUtil.getMaxSize(), locale) %>" key="request-is-larger-than-x-and-could-not-be-processed" translateArguments="<%= false %>" />
+				<liferay-ui:message arguments="<%= LanguageUtil.formatStorageSize(UploadServletRequestConfigurationProviderUtil.getMaxSize(), locale) %>" key="request-is-larger-than-x-and-could-not-be-processed" translateArguments="<%= false %>" />
 			</liferay-ui:error>
 
 			<liferay-asset:asset-categories-error />
@@ -336,6 +336,8 @@ renderResponse.setTitle(blogsEditEntryDisplayContext.getPageTitle(resourceBundle
 								modelName="<%= BlogsEntry.class.getName() %>"
 							/>
 						</aui:fieldset>
+
+						<aui:input name="addEntryResources" type="hidden" value="<%= true %>" />
 					</c:if>
 
 					<%
@@ -370,7 +372,7 @@ renderResponse.setTitle(blogsEditEntryDisplayContext.getPageTitle(resourceBundle
 						String publishButtonLabel = "publish";
 
 						if (WorkflowDefinitionLinkLocalServiceUtil.hasWorkflowDefinitionLink(themeDisplay.getCompanyId(), scopeGroupId, BlogsEntry.class.getName())) {
-							publishButtonLabel = "submit-for-publication";
+							publishButtonLabel = "submit-for-workflow";
 						}
 						%>
 

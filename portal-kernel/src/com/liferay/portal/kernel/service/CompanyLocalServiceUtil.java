@@ -664,6 +664,21 @@ public class CompanyLocalServiceUtil {
 		getService().updateDisplayGroupNames(companyId);
 	}
 
+	public static Company updateIndexNameNext(
+			long companyId, String indexNameNext)
+		throws PortalException {
+
+		return getService().updateIndexNameNext(companyId, indexNameNext);
+	}
+
+	public static Company updateIndexNames(
+			long companyId, String indexNameCurrent, String indexNameNext)
+		throws PortalException {
+
+		return getService().updateIndexNames(
+			companyId, indexNameCurrent, indexNameNext);
+	}
+
 	/**
 	 * Updates the company's logo.
 	 *

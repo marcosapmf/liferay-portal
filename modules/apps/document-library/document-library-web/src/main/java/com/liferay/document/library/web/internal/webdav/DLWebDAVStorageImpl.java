@@ -40,10 +40,12 @@ import com.liferay.document.library.kernel.service.DLFileEntryTypeLocalService;
 import com.liferay.document.library.kernel.service.DLFileVersionLocalService;
 import com.liferay.document.library.kernel.service.DLTrashService;
 import com.liferay.document.library.kernel.util.DL;
+import com.liferay.document.library.util.DLFileEntryTypeUtil;
 import com.liferay.document.library.web.internal.helper.DLTrashHelper;
 import com.liferay.dynamic.data.mapping.kernel.DDMFormValues;
-import com.liferay.dynamic.data.mapping.kernel.DDMStructure;
-import com.liferay.dynamic.data.mapping.kernel.StorageEngineManagerUtil;
+import com.liferay.dynamic.data.mapping.model.DDMStructure;
+import com.liferay.dynamic.data.mapping.storage.DDMStorageEngineManager;
+import com.liferay.dynamic.data.mapping.util.DDMBeanTranslator;
 import com.liferay.expando.kernel.model.ExpandoBridge;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
@@ -146,7 +148,8 @@ public class DLWebDAVStorageImpl extends BaseWebDAVStorageImpl {
 
 			if (depth == 0) {
 				_dlAppService.addFolder(
-					groupId, parentFolderId, name, description, serviceContext);
+					null, groupId, parentFolderId, name, description,
+					serviceContext);
 			}
 			else {
 				_dlAppService.copyFolder(
@@ -537,7 +540,7 @@ public class DLWebDAVStorageImpl extends BaseWebDAVStorageImpl {
 				DLFolder.class.getName(), webDAVRequest);
 
 			_dlAppService.addFolder(
-				webDAVRequest.getGroupId(), parentFolderId, name,
+				null, webDAVRequest.getGroupId(), parentFolderId, name,
 				StringPool.BLANK, serviceContext);
 
 			String location = StringUtil.merge(pathArray, StringPool.SLASH);
@@ -1198,7 +1201,8 @@ public class DLWebDAVStorageImpl extends BaseWebDAVStorageImpl {
 		DLFileEntryType dlFileEntryType =
 			_dlFileEntryTypeLocalService.getFileEntryType(fileEntryTypeId);
 
-		List<DDMStructure> ddmStructures = dlFileEntryType.getDDMStructures();
+		List<DDMStructure> ddmStructures = DLFileEntryTypeUtil.getDDMStructures(
+			dlFileEntryType);
 
 		for (DDMStructure ddmStructure : ddmStructures) {
 			DLFileEntryMetadata dlFileEntryMetadata =
@@ -1213,8 +1217,9 @@ public class DLWebDAVStorageImpl extends BaseWebDAVStorageImpl {
 			serviceContext.setAttribute(
 				DDMFormValues.class.getName() + StringPool.POUND +
 					ddmStructure.getStructureId(),
-				StorageEngineManagerUtil.getDDMFormValues(
-					dlFileEntryMetadata.getDDMStorageId()));
+				_ddmBeanTranslator.translate(
+					_ddmStorageEngineManager.getDDMFormValues(
+						dlFileEntryMetadata.getDDMStorageId())));
 		}
 	}
 
@@ -1261,6 +1266,12 @@ public class DLWebDAVStorageImpl extends BaseWebDAVStorageImpl {
 
 	@Reference
 	private AssetTagLocalService _assetTagLocalService;
+
+	@Reference
+	private DDMBeanTranslator _ddmBeanTranslator;
+
+	@Reference
+	private DDMStorageEngineManager _ddmStorageEngineManager;
 
 	@Reference
 	private DLAppService _dlAppService;

@@ -243,6 +243,10 @@
 			<category name="Styling" />
 			<description name="Finds missing and unnecessary whitespace in `.ftl` files." />
 		</check>
+		<check name="IllegalTaglibsCheck">
+			<category name="Bug Prevention" />
+			<description name="Finds cases of incorrect use of certain taglibs." />
+		</check>
 	</source-processor>
 	<source-processor name="GradleSourceProcessor">
 		<check name="GradleBlockOrderCheck">
@@ -520,6 +524,11 @@
 			<category name="Bug Prevention" />
 			<description name="Finds missing empty lines before `removedService` or `addingService` calls." />
 		</check>
+		<check name="JavaNewProblemInstantiationParametersCheck">
+			<category name="Bug Prevention" />
+			<description name="Finds cases where `new Problem` can be simplified." />
+			<property name="enabled" value="false" />
+		</check>
 		<check name="JavaPackagePathCheck">
 			<category name="Bug Prevention" />
 			<description name="Checks that the package name matches the file location." />
@@ -649,7 +658,9 @@
 		<check name="JavaComponentAnnotationsCheck">
 			<category name="Bug Prevention" />
 			<description name="Performs several checks on classes with `@Component` annotation." />
+			<property name="checkConfigurationPidAttribute" value="true" />
 			<property name="checkConfigurationPolicyAttribute" value="false" />
+			<property name="checkHasMultipleServiceTypes" value="false" />
 			<property name="checkMismatchedServiceAttribute" value="false" />
 			<property name="checkSelfRegistration" value="false" />
 		</check>
@@ -668,6 +679,11 @@
 		<check name="JavaFinderImplCustomSQLCheck">
 			<category name="Bug Prevention" />
 			<description name="Checks that hardcoded SQL values in `*FinderImpl` classes match the SQL in the `.xml` file in the `custom-sql` directory." />
+		</check>
+		<check name="JavaGetFeatureFlagCheck">
+			<category name="Bug Prevention" />
+			<description name="Checks that `FeatureFlagManagerUtil.isEnabled` should be used (instead of `PropsUtil.get` in `GetterUtil.getBoolean`)." />
+			<property name="enabled" value="false" />
 		</check>
 		<check name="JavaHelperUtilCheck">
 			<category name="Naming Conventions" />
@@ -709,6 +725,10 @@
 		<check name="JavaProviderTypeAnnotationCheck">
 			<category name="Bug Prevention" />
 			<description name="Performs several checks on classes with `@ProviderType` annotation." />
+		</check>
+		<check name="JavaReferenceAnnotationsCheck">
+			<category name="Bug Prevention" />
+			<description name="Performs several checks on classes with `@Reference` annotations." />
 		</check>
 		<check name="JavaReleaseInfoCheck">
 			<category name="Bug Prevention" />
@@ -808,6 +828,10 @@
 			<description name="Finds cases where the service builder indexes are updated manually in Upgrade classes. This is not needed because Liferay takes care of it." />
 			<property name="enabled" value="false" />
 		</check>
+		<check name="JavaUpgradeProcessFactoryCheck">
+			<category name="Styling" />
+			<description name="Sorts and groups method calls." />
+		</check>
 		<check name="JavaUpgradeVersionCheck">
 			<category name="Bug Prevention" />
 			<description name="Verifies that the correct upgrade versions are used in classes that implement `UpgradeStepRegistrator`." />
@@ -866,7 +890,7 @@
 		</check>
 		<check name="JavaModuleComponentCheck">
 			<category name="Bug Prevention" />
-			<description name="Checks for use of `@Component` in `-api` or `-spi` modules." />
+			<description name="Performs several checks on classes with or without `@Component` annotation." />
 		</check>
 		<check name="JavaModuleExposureCheck">
 			<category name="Bug Prevention" />
@@ -892,6 +916,11 @@
 		<check name="JavaModuleTestCheck">
 			<category name="Bug Prevention" />
 			<description name="Checks package names in tests." />
+		</check>
+		<check name="JavaModuleUniqueVerifyProcessCheck">
+			<category name="Bug Prevention" />
+			<description name="Checks that a module can not have more than 1 verify process class (class extends VerifyProcess)." />
+			<property name="enabled" value="false" />
 		</check>
 		<check name="JavaOSGiReferenceCheck">
 			<category name="Bug Prevention" />
@@ -962,6 +991,10 @@
 			<category name="Bug Prevention" />
 			<description name="Finds cases of incorrect use of certain classes." />
 			<property name="enforceJavaUtilFunctionImports" value="true" />
+		</check>
+		<check name="IllegalTaglibsCheck">
+			<category name="Bug Prevention" />
+			<description name="Finds cases of incorrect use of certain taglibs." />
 		</check>
 		<check name="JSPArrowFunctionCheck">
 			<category name="Bug Prevention" />
@@ -1223,6 +1256,16 @@
 			<description name="Checks that `.lfrbuild*` files are documented in a marker file." />
 		</check>
 	</source-processor>
+	<source-processor name="LibrarySourceProcessor">
+
+		<!-- Liferay Source Checks -->
+
+		<check name="LibraryVulnerabilitiesCheck">
+			<category name="Bug Prevention" />
+			<description name="Checks the introduction of libraries and third party components with known vulnerabilities" />
+			<property name="enabled" value="false" />
+		</check>
+	</source-processor>
 	<source-processor name="MarkdownSourceProcessor">
 		<check name="MarkdownFileExtensionCheck">
 			<category name="Styling" />
@@ -1258,6 +1301,10 @@
 		</check>
 	</source-processor>
 	<source-processor name="PoshiSourceProcessor">
+		<check name="PoshiAntCommandParametersOrderCheck">
+			<category name="Styling" />
+			<description name="Sorts parameters in AntCommand call in Poshi Script files." />
+		</check>
 		<check name="PoshiDependenciesFileLocationCheck">
 			<category name="Bug Prevention" />
 			<description name="Checks that dependencies files are located in the correct directory." />
@@ -1509,9 +1556,56 @@
 		</check>
 	</source-processor>
 	<source-processor name="UpgradeSourceProcessor">
+		<check name="UpgradeBNDIncludeResourceCheck">
+			<category name="Upgrade" />
+			<description name="Checks if the property value `-includeresource` or `Include-Resource` exists and removes it" />
+			<weight>1</weight>
+		</check>
+		<check name="UpgradeGradleIncludeResourceCheck">
+			<category name="Upgrade" />
+			<description name="Replaces with `compileInclude` the configuration attribute for dependencies in `build.gradle` that are listed at `Include-Resource` property at `bnd.bnd` associated file." />
+			<weight>2</weight>
+		</check>
 		<check name="UpgradeJavaCheck">
 			<category name="Upgrade" />
 			<description name="Performs upgrade checks for `java` files" />
+		</check>
+		<check name="UpgradeVelocityCommentMigrationCheck">
+			<category name="Upgrade" />
+			<description name="Run code migration of comments from a Velocity file to a Freemarker file with the syntax replacements" />
+		</check>
+		<check name="UpgradeVelocityFileImportMigrationCheck">
+			<category name="Upgrade" />
+			<description name="Run code migration of file import from a Velocity file to a Freemarker file with the syntax replacements" />
+		</check>
+		<check name="UpgradeVelocityForeachMigrationCheck">
+			<category name="Upgrade" />
+			<description name="Run code migration of references to Foreach statement from a Velocity file to a Freemarker file with the syntax replacements" />
+		</check>
+		<check name="UpgradeVelocityIfStatementsMigrationCheck">
+			<category name="Upgrade" />
+			<description name="Run code migration of references to If statements from a Velocity file to a Freemarker file with the syntax replacements" />
+		</check>
+		<check name="UpgradeVelocityLiferayTaglibReferenceMigrationCheck">
+			<category name="Upgrade" />
+			<description name="Run code migration of references to specific Liferay taglib from a Velocity file to a Freemarker file with the syntax replacements" />
+			<weight>1</weight>
+		</check>
+		<check name="UpgradeVelocityMacroDeclarationMigrationCheck">
+			<category name="Upgrade" />
+			<description name="Run code migration of references to Macro statement from a Velocity file to a Freemarker file with the syntax replacements" />
+		</check>
+		<check name="UpgradeVelocityMacroReferenceMigrationCheck">
+			<category name="Upgrade" />
+			<description name="Run code migration of references to a custom Macro statement from a Velocity file to a Freemarker file with the syntax replacements" />
+		</check>
+		<check name="UpgradeVelocityVariableReferenceMigrationCheck">
+			<category name="Upgrade" />
+			<description name="Run code migration of references to variables from a Velocity file to a Freemarker file with the syntax replacements" />
+		</check>
+		<check name="UpgradeVelocityVariableSetMigrationCheck">
+			<category name="Upgrade" />
+			<description name="Run code migration of set variables from a Velocity file to a Freemarker file with the syntax replacements" />
 		</check>
 	</source-processor>
 	<source-processor name="XMLSourceProcessor">
@@ -1566,6 +1660,10 @@
 		<check name="XMLLog4jFileCheck">
 			<category name="Styling" />
 			<description name="Checks the order of categories in `*-log4j.xml` file." />
+		</check>
+		<check name="XMLLog4jLoggersCheck">
+			<category name="Miscellaneous" />
+			<description name="Checks the loggers defined in `*-log4j.xml` file." />
 		</check>
 		<check name="XMLLookAndFeelCompatibilityVersionCheck">
 			<category name="Bug Prevention" />

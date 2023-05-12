@@ -160,15 +160,11 @@ public class CommerceChannelAccountEntryRelAccountEntryLocalServiceWrapper
 		return new ArrayList<>(new LinkedHashSet<>(userAccountEntries));
 	}
 
-	@Reference(unbind = "-")
-	public void serviceSetter(
-		AccountEntryLocalService accountEntryLocalService) {
-
-		setWrappedService(accountEntryLocalService);
-	}
-
 	private static final Log _log = LogFactoryUtil.getLog(
 		CommerceChannelAccountEntryRelAccountEntryLocalServiceWrapper.class);
+
+	@Reference
+	private AccountEntryLocalService _accountEntryLocalService;
 
 	@Reference
 	private ClassNameLocalService _classNameLocalService;

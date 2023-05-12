@@ -14,17 +14,19 @@
 
 package com.liferay.analytics.batch.exportimport.internal.engine;
 
+import com.liferay.analytics.batch.exportimport.internal.dto.v1_0.converter.constants.DTOConverterConstants;
 import com.liferay.analytics.dxp.entity.rest.dto.v1_0.DXPEntity;
-import com.liferay.analytics.dxp.entity.rest.dto.v1_0.converter.DXPEntityDTOConverter;
 import com.liferay.batch.engine.BatchEngineTaskItemDelegate;
 import com.liferay.batch.engine.pagination.Page;
 import com.liferay.batch.engine.pagination.Pagination;
+import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.model.UserGroup;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.service.UserGroupLocalService;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.util.SearchUtil;
 
 import java.io.Serializable;
@@ -60,12 +62,7 @@ public class UserGroupAnalyticsDXPEntityBatchEngineTaskItemDelegate
 				filter, UserGroup.class.getName(), null, vulcanPagination,
 				queryConfig -> queryConfig.setSelectedFieldNames(
 					Field.ENTRY_CLASS_PK),
-				searchContext -> {
-					searchContext.setCompanyId(contextCompany.getCompanyId());
-					searchContext.setUserId(0);
-					searchContext.setVulcanCheckPermissions(false);
-				},
-				null,
+				this::getSearchContext, null,
 				document -> _dxpEntityDTOConverter.toDTO(
 					_userGroupLocalService.getUserGroup(
 						GetterUtil.getLong(
@@ -77,8 +74,8 @@ public class UserGroupAnalyticsDXPEntityBatchEngineTaskItemDelegate
 			page.getTotalCount());
 	}
 
-	@Reference
-	private DXPEntityDTOConverter _dxpEntityDTOConverter;
+	@Reference(target = DTOConverterConstants.DXP_ENTITY_DTO_CONVERTER)
+	private DTOConverter<BaseModel<?>, DXPEntity> _dxpEntityDTOConverter;
 
 	@Reference
 	private UserGroupLocalService _userGroupLocalService;

@@ -13,28 +13,15 @@
  */
 
 import classNames from 'classnames';
-import {ReactNode} from 'react';
 
-type CodeProps = {
-	children: ReactNode;
-	className?: string;
-};
+type CodeProps = React.HTMLAttributes<HTMLElement>;
 
 const Code: React.FC<CodeProps> = ({children, className}) => {
 	if (!children) {
 		return null;
 	}
 
-	return (
-		<code
-			className={classNames(
-				'bg-light break-text font-italic p-2 text-secondary w-100',
-				className
-			)}
-		>
-			{children}
-		</code>
-	);
+	return <code className={classNames('tr-code', className)}>{children}</code>;
 };
 
 export default Code;

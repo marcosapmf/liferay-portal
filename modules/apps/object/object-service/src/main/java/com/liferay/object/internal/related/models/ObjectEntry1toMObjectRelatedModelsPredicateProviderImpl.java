@@ -15,10 +15,10 @@
 package com.liferay.object.internal.related.models;
 
 import com.liferay.object.constants.ObjectRelationshipConstants;
-import com.liferay.object.internal.petra.sql.dsl.DynamicObjectDefinitionTable;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectEntryTable;
 import com.liferay.object.model.ObjectRelationship;
+import com.liferay.object.petra.sql.dsl.DynamicObjectDefinitionTable;
 import com.liferay.object.service.ObjectDefinitionLocalServiceUtil;
 import com.liferay.object.service.ObjectFieldLocalService;
 import com.liferay.petra.sql.dsl.Column;
@@ -60,7 +60,7 @@ public class ObjectEntry1toMObjectRelatedModelsPredicateProviderImpl
 		Column<?, ?> objectDefinition1PKObjectFieldColumn =
 			getPKObjectFieldColumn(
 				objectDefinition1DynamicObjectDefinitionTable,
-				objectDefinition1);
+				objectDefinition1.getPKObjectFieldDBColumnName());
 
 		ObjectDefinition objectDefinition2 = _getObjectDefinition2(
 			objectRelationship);
@@ -116,7 +116,7 @@ public class ObjectEntry1toMObjectRelatedModelsPredicateProviderImpl
 		Column<?, ?> objectDefinition2PKObjectFieldColumn =
 			getPKObjectFieldColumn(
 				objectDefinition2DynamicObjectDefinitionTable,
-				objectDefinition2);
+				objectDefinition2.getPKObjectFieldDBColumnName());
 		DynamicObjectDefinitionTable objectDefinition1ExtensionTable =
 			getExtensionDynamicObjectDefinitionTable(objectDefinition1);
 

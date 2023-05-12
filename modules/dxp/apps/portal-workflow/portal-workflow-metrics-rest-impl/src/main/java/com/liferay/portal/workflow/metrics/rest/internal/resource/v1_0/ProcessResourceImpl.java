@@ -18,6 +18,7 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.util.LocaleThreadLocal;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.search.document.Document;
 import com.liferay.portal.search.engine.adapter.search.SearchRequestExecutor;
 import com.liferay.portal.search.engine.adapter.search.SearchSearchRequest;
 import com.liferay.portal.search.engine.adapter.search.SearchSearchResponse;
@@ -39,7 +40,6 @@ import com.liferay.portal.workflow.metrics.search.index.name.WorkflowMetricsInde
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.stream.Stream;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -78,24 +78,23 @@ public class ProcessResourceImpl extends BaseProcessResourceImpl {
 				contextCompany.getCompanyId()));
 		searchSearchRequest.setQuery(_createBooleanQuery(processId));
 
-		return Stream.of(
-			_searchRequestExecutor.executeSearchRequest(searchSearchRequest)
-		).map(
-			SearchSearchResponse::getSearchHits
-		).map(
-			SearchHits::getSearchHits
-		).flatMap(
-			List::stream
-		).map(
-			SearchHit::getDocument
-		).findFirst(
-		).map(
-			document -> ProcessUtil.toProcess(
-				document, contextAcceptLanguage.getPreferredLocale())
-		).orElseThrow(
-			() -> new NoSuchProcessException(
-				"No process exists with the process ID " + processId)
-		);
+		SearchSearchResponse searchSearchResponse =
+			_searchRequestExecutor.executeSearchRequest(searchSearchRequest);
+
+		SearchHits searchHits = searchSearchResponse.getSearchHits();
+
+		List<SearchHit> searchHitsList = searchHits.getSearchHits();
+
+		if (searchHitsList.isEmpty()) {
+			throw new NoSuchProcessException(
+				"No process exists with the process ID " + processId);
+		}
+
+		SearchHit searchHit = searchHitsList.get(0);
+
+		return ProcessUtil.toProcess(
+			searchHit.getDocument(),
+			contextAcceptLanguage.getPreferredLocale());
 	}
 
 	@Override
@@ -111,34 +110,30 @@ public class ProcessResourceImpl extends BaseProcessResourceImpl {
 			_getTitleFieldName(contextAcceptLanguage.getPreferredLocale()),
 			_getTitleFieldName(LocaleThreadLocal.getDefaultLocale()));
 
-		return Stream.of(
-			_searchRequestExecutor.executeSearchRequest(searchSearchRequest)
-		).map(
-			SearchSearchResponse::getSearchHits
-		).map(
-			SearchHits::getSearchHits
-		).flatMap(
-			List::stream
-		).map(
-			SearchHit::getDocument
-		).findFirst(
-		).map(
-			document -> {
-				String title = document.getString(
-					_getTitleFieldName(
-						contextAcceptLanguage.getPreferredLocale()));
+		SearchSearchResponse searchSearchResponse =
+			_searchRequestExecutor.executeSearchRequest(searchSearchRequest);
 
-				if (Validator.isNull(title)) {
-					title = document.getString(
-						_getTitleFieldName(
-							LocaleThreadLocal.getDefaultLocale()));
-				}
+		SearchHits searchHits = searchSearchResponse.getSearchHits();
 
-				return title;
-			}
-		).orElseGet(
-			() -> StringPool.BLANK
-		);
+		List<SearchHit> searchHitsList = searchHits.getSearchHits();
+
+		if (searchHitsList.isEmpty()) {
+			return StringPool.BLANK;
+		}
+
+		SearchHit searchHit = searchHitsList.get(0);
+
+		Document document = searchHit.getDocument();
+
+		String title = document.getString(
+			_getTitleFieldName(contextAcceptLanguage.getPreferredLocale()));
+
+		if (Validator.isNull(title)) {
+			title = document.getString(
+				_getTitleFieldName(LocaleThreadLocal.getDefaultLocale()));
+		}
+
+		return title;
 	}
 
 	@Override

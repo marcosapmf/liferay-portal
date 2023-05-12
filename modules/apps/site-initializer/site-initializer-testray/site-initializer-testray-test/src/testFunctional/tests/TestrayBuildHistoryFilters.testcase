@@ -1,0 +1,277 @@
+@component-name = "portal-solutions"
+definition {
+
+	property custom.properties = "feature.flag.LPS-163118=true";
+	property osgi.modules.includes = "site-initializer-testray";
+	property portal.release = "false";
+	property portal.upstream = "true";
+	property release.feature.flags.disable.DISABLE_PRIVATE_LAYOUTS = "true";
+	property testray.main.component.name = "Site Initializer Testray";
+
+	var caseName = "Case 1";
+	var caseType = "Case Type 1";
+	var componentName = "Component 1";
+	var environmentFactorsName = "Environment Factors 1";
+	var projectName = "Project 1";
+	var routineName = "Routine 1";
+	var teamName = "Team 1";
+	var testSiteName = "Testray 2";
+
+	setUp {
+		task ("Login and create a Testray Site") {
+			TestCase.setUpPortalInstance();
+
+			User.firstLoginPG();
+
+			Testray.addTestraySite(siteName = ${testSiteName});
+		}
+
+		task ("create all objects: projects, routine, teams, components, cases, case type, enviroment factors, product version, build, category and options") {
+			JSONTestray.addProject(
+				projectDescription = "Project Description 1",
+				projectName = ${projectName});
+
+			JSONTestray.addTeam(
+				projectName = ${projectName},
+				teamName = ${teamName});
+
+			JSONTestray.addComponent(
+				componentName = ${componentName},
+				projectName = ${projectName},
+				teamName = ${teamName});
+
+			JSONTestray.addRoutine(
+				projectName = ${projectName},
+				routineName = ${routineName});
+
+			JSONTestray.addCaseType(caseType = ${caseType});
+
+			JSONTestray.addCases(
+				caseName = ${caseName},
+				caseType = ${caseType},
+				componentName = ${componentName},
+				projectName = ${projectName});
+
+			JSONTestray.addEnvironmentFactors(environmentFactorsName = ${environmentFactorsName});
+
+			JSONTestray.addProductVersion(
+				productVersion = "7.0",
+				projectName = ${projectName});
+
+			JSONTestray.addProductVersion(
+				productVersion = "1.2",
+				projectName = ${projectName});
+
+			JSONTestray.addBuild(
+				buildName = "Build 1",
+				productVersion = "7.0",
+				projectName = ${projectName},
+				routineName = ${routineName});
+
+			JSONTestray.addBuild(
+				buildName = "Build 2",
+				productVersion = "1.2",
+				projectName = ${projectName},
+				routineName = ${routineName});
+		}
+
+		task ("Go to the build page") {
+			ApplicationsMenu.gotoSite(site = ${testSiteName});
+
+			Testray.changePagination(
+				numberItems = 20,
+				valuePagination = 150);
+
+			Testray.goToProjectPage(projectName = ${projectName});
+
+			TestrayRoutines.goToRoutine(routineName = ${routineName});
+		}
+	}
+
+	tearDown {
+		var testPortalInstance = PropsUtil.get("test.portal.instance");
+
+		JSONTestrayAPI.deleteObjectViaAPI(
+			object = "routines",
+			objectName = ${routineName});
+
+		JSONTestrayAPI.deleteObjectViaAPI(
+			object = "casetypes",
+			objectName = ${caseType});
+
+		JSONTestrayAPI.deleteObjectViaAPI(
+			object = "factorcategories",
+			objectName = "Category 1");
+
+		JSONTestrayAPI.deleteProject(projectName = ${projectName});
+
+		Testray.testrayApisTearDown();
+
+		if (${testPortalInstance} == "true") {
+			PortalInstances.tearDownCP();
+		}
+	}
+
+	@description = "Story ID: LPS-173523 | Test Summary: Verify if as an Administrator I should be able to filter build history by build name"
+	@priority = 3
+	test AdminCanFilterByBuildName {
+		task ("Given that the user has two builds different in the table") {
+			AssertElementPresent(
+				key_projectName = "Build 1",
+				locator1 = "Testray#ITEM_NAME");
+
+			AssertElementPresent(
+				key_projectName = "Build 2",
+				locator1 = "Testray#ITEM_NAME");
+		}
+
+		task ("When the user select the build 2 in the filter") {
+			TestrayFilter.clickFilter();
+
+			TestrayFilter.typeFilter(
+				label = "Build Name",
+				value = "Build 2");
+		}
+
+		task ("Then the user see only build 2 in the table") {
+			AssertElementPresent(
+				key_projectName = "Build 2",
+				locator1 = "Testray#ITEM_NAME");
+		}
+
+		task ("And do not see the build 1 in the table") {
+			AssertElementNotPresent(
+				key_projectName = "Build 1",
+				locator1 = "Testray#ITEM_NAME");
+		}
+	}
+
+	@description = "Story ID: LPS-173523 | Test Summary: Verify if as an Administrator I should be able to filter build history by product version"
+	@priority = 3
+	test AdminCanFilterByProductVersion {
+		task ("Given that the user has two builds with different versions in the table") {
+			AssertElementPresent(
+				key_projectName = "7.0",
+				locator1 = "Testray#ITEM_NAME");
+
+			AssertElementPresent(
+				key_projectName = "1.2",
+				locator1 = "Testray#ITEM_NAME");
+		}
+
+		task ("When the user select product version 7.0 in the filter") {
+			TestrayFilter.clickFilter();
+
+			Select(
+				locator1 = "Select#SELECT_FIELD_LABEL",
+				selectFieldLabel = "Product Version",
+				value1 = "7.0");
+
+			Button.click(button = "Apply");
+		}
+
+		task ("Then the user see only products with version 7.0 in the table") {
+			AssertElementPresent(
+				key_projectName = "7.0",
+				locator1 = "Testray#ITEM_NAME");
+		}
+
+		task ("And do not see the products with other versions in the table") {
+			AssertElementNotPresent(
+				key_projectName = "1.2",
+				locator1 = "Testray#ITEM_NAME");
+		}
+	}
+
+	@description = "Story ID: LPS-173523 | Test Summary: Verify if as an Administrator I should be able to filter build history using multiple filtering options"
+	@priority = 4
+	test AdminCanFilterWithMultipleOptions {
+		task ("When the user select multiple options in the filter") {
+			TestrayFilter.clickFilter();
+
+			Select(
+				locator1 = "Select#SELECT_FIELD_LABEL",
+				selectFieldLabel = "Product Version",
+				value1 = "7.0");
+
+			TestrayFilter.typeFilter(
+				label = "Build Name",
+				value = "Build 1");
+		}
+
+		task ("Then the user see only build 1 and version 7.0 in the table") {
+			AssertElementPresent(
+				key_projectName = "Build 1",
+				locator1 = "Testray#ITEM_NAME");
+
+			AssertElementPresent(
+				key_projectName = "7.0",
+				locator1 = "Testray#ITEM_NAME");
+		}
+
+		task ("And do not see the build 2 and version 1.2 in the table") {
+			AssertElementNotPresent(
+				key_projectName = "Build 2",
+				locator1 = "Testray#ITEM_NAME");
+
+			AssertElementNotPresent(
+				key_projectName = "1.2",
+				locator1 = "Testray#ITEM_NAME");
+		}
+	}
+
+	@description = "Story ID: LPS-173523 | Test Summary: Verify if as an Administrator I should not see build history that don't exist when I try filtering for them"
+	@priority = 3
+	test AdminCanNotFilterForNonExistentBuildName {
+		task ("Given that the user has two builds that existent in the table") {
+			AssertElementPresent(
+				key_projectName = "Build 1",
+				locator1 = "Testray#ITEM_NAME");
+
+			AssertElementPresent(
+				key_projectName = "Build 2",
+				locator1 = "Testray#ITEM_NAME");
+		}
+
+		task ("When filtering a build by his non-existent name") {
+			TestrayFilter.clickFilter();
+
+			TestrayFilter.typeFilter(
+				label = "Build Name",
+				value = "Build 3");
+		}
+
+		task ("Then the user is not present in the build table") {
+			AssertElementNotPresent(
+				key_projectName = "Build 3",
+				locator1 = "Testray#ITEM_NAME");
+		}
+	}
+
+	@description = "Story ID: LPS-173523 | Test Summary: Verify that can search for a field"
+	@priority = 2
+	test AdminCanSearchForField {
+		task ("When the user searches for a field called product version") {
+			TestrayFilter.clickFilter();
+
+			TestrayFilter.searchFilter(value = "Product Version");
+		}
+
+		task ("Then the user can see the field label called product version") {
+			AssertElementPresent(
+				locator1 = "Select#SELECT_FIELD_LABEL",
+				selectFieldLabel = "Product Version");
+		}
+
+		task ("When the user searches for a field that does not exist") {
+			TestrayFilter.searchFilter(value = "Product Version 2");
+		}
+
+		task ("Then the user can no more see the label called product version in the filter") {
+			AssertElementNotPresent(
+				locator1 = "Select#SELECT_FIELD_LABEL",
+				selectFieldLabel = "Product Version");
+		}
+	}
+
+}

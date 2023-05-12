@@ -284,19 +284,18 @@ public interface JournalFeedModel
 	public void setDescription(String description);
 
 	/**
-	 * Returns the ddm structure key of this journal feed.
+	 * Returns the ddm structure ID of this journal feed.
 	 *
-	 * @return the ddm structure key of this journal feed
+	 * @return the ddm structure ID of this journal feed
 	 */
-	@AutoEscape
-	public String getDDMStructureKey();
+	public long getDDMStructureId();
 
 	/**
-	 * Sets the ddm structure key of this journal feed.
+	 * Sets the ddm structure ID of this journal feed.
 	 *
-	 * @param DDMStructureKey the ddm structure key of this journal feed
+	 * @param DDMStructureId the ddm structure ID of this journal feed
 	 */
-	public void setDDMStructureKey(String DDMStructureKey);
+	public void setDDMStructureId(long DDMStructureId);
 
 	/**
 	 * Returns the ddm template key of this journal feed.

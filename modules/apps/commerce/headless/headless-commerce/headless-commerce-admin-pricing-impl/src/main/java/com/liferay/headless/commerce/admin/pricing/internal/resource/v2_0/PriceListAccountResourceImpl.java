@@ -14,7 +14,7 @@
 
 package com.liferay.headless.commerce.admin.pricing.internal.resource.v2_0;
 
-import com.liferay.commerce.account.service.CommerceAccountService;
+import com.liferay.account.service.AccountEntryService;
 import com.liferay.commerce.price.list.exception.NoSuchPriceListException;
 import com.liferay.commerce.price.list.model.CommercePriceList;
 import com.liferay.commerce.price.list.model.CommercePriceListAccountRel;
@@ -22,7 +22,6 @@ import com.liferay.commerce.price.list.service.CommercePriceListAccountRelServic
 import com.liferay.commerce.price.list.service.CommercePriceListService;
 import com.liferay.headless.commerce.admin.pricing.dto.v2_0.PriceList;
 import com.liferay.headless.commerce.admin.pricing.dto.v2_0.PriceListAccount;
-import com.liferay.headless.commerce.admin.pricing.internal.dto.v2_0.converter.PriceListAccountDTOConverter;
 import com.liferay.headless.commerce.admin.pricing.internal.util.v2_0.PriceListAccountUtil;
 import com.liferay.headless.commerce.admin.pricing.resource.v2_0.PriceListAccountResource;
 import com.liferay.headless.commerce.core.util.ServiceContextHelper;
@@ -30,6 +29,7 @@ import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterRegistry;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.fields.NestedField;
@@ -133,7 +133,7 @@ public class PriceListAccountResourceImpl
 
 		CommercePriceListAccountRel commercePriceListAccountRel =
 			PriceListAccountUtil.addCommercePriceListAccountRel(
-				_commerceAccountService, _commercePriceListAccountRelService,
+				_accountEntryService, _commercePriceListAccountRelService,
 				priceListAccount, commercePriceList, _serviceContextHelper);
 
 		return _toPriceListAccount(
@@ -147,7 +147,7 @@ public class PriceListAccountResourceImpl
 
 		CommercePriceListAccountRel commercePriceListAccountRel =
 			PriceListAccountUtil.addCommercePriceListAccountRel(
-				_commerceAccountService, _commercePriceListAccountRelService,
+				_accountEntryService, _commercePriceListAccountRelService,
 				priceListAccount,
 				_commercePriceListService.getCommercePriceList(id),
 				_serviceContextHelper);
@@ -206,7 +206,7 @@ public class PriceListAccountResourceImpl
 	}
 
 	@Reference
-	private CommerceAccountService _commerceAccountService;
+	private AccountEntryService _accountEntryService;
 
 	@Reference(
 		target = "(model.class.name=com.liferay.commerce.price.list.model.CommercePriceListAccountRel)"
@@ -224,8 +224,11 @@ public class PriceListAccountResourceImpl
 	@Reference
 	private DTOConverterRegistry _dtoConverterRegistry;
 
-	@Reference
-	private PriceListAccountDTOConverter _priceListAccountDTOConverter;
+	@Reference(
+		target = "(component.name=com.liferay.headless.commerce.admin.pricing.internal.dto.v2_0.converter.PriceListAccountDTOConverter)"
+	)
+	private DTOConverter<CommercePriceListAccountRel, PriceListAccount>
+		_priceListAccountDTOConverter;
 
 	@Reference
 	private ServiceContextHelper _serviceContextHelper;

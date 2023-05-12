@@ -43,6 +43,9 @@ public class ThemeSpritemapCETImpl
 			UnicodePropertiesBuilder.create(
 				true
 			).put(
+				"enableSVG4Everybody",
+				ParamUtil.getString(portletRequest, "enableSVG4Everybody")
+			).put(
 				"url", ParamUtil.getString(portletRequest, "url")
 			).build());
 	}
@@ -81,6 +84,11 @@ public class ThemeSpritemapCETImpl
 	@Override
 	public boolean hasProperties() {
 		return false;
+	}
+
+	@Override
+	public boolean isEnableSVG4Everybody() {
+		return getBoolean("enableSVG4Everybody");
 	}
 
 	@Override

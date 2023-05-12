@@ -18,7 +18,6 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.module.configuration.ConfigurationException;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
@@ -35,7 +34,6 @@ import com.liferay.staging.StagingGroupHelperUtil;
 
 import java.util.List;
 
-import javax.portlet.PortletURL;
 import javax.portlet.RenderResponse;
 
 import javax.servlet.http.HttpServletRequest;
@@ -63,12 +61,12 @@ public class SegmentsSimulationDisplayContext {
 			WebKeys.THEME_DISPLAY);
 	}
 
-	public PortletURL getDeactivateSimulationURL() {
+	public String getDeactivateSimulationURL() {
 		return PortletURLBuilder.createActionURL(
 			_liferayPortletResponse, SegmentsPortletKeys.SEGMENTS_SIMULATION
 		).setActionName(
 			"/segments_simulation/deactivate_simulation"
-		).buildPortletURL();
+		).buildString();
 	}
 
 	public String getPortletNamespace() {
@@ -99,12 +97,12 @@ public class SegmentsSimulationDisplayContext {
 		return _segmentsEntries;
 	}
 
-	public PortletURL getSimulateSegmentsEntriesURL() {
+	public String getSimulateSegmentsEntriesURL() {
 		return PortletURLBuilder.createActionURL(
 			_liferayPortletResponse, SegmentsPortletKeys.SEGMENTS_SIMULATION
 		).setActionName(
 			"/segments_simulation/simulate_segments_entries"
-		).buildPortletURL();
+		).buildString();
 	}
 
 	public boolean isSegmentationEnabled() {
@@ -136,25 +134,13 @@ public class SegmentsSimulationDisplayContext {
 			return _groupId;
 		}
 
-		long groupId = _themeDisplay.getScopeGroupId();
-
 		StagingGroupHelper stagingGroupHelper =
 			StagingGroupHelperUtil.getStagingGroupHelper();
 
-		if (stagingGroupHelper.isStagingGroup(groupId) &&
-			!stagingGroupHelper.isStagedPortlet(
-				groupId, SegmentsPortletKeys.SEGMENTS)) {
+		_groupId = stagingGroupHelper.getStagedPortletGroupId(
+			_themeDisplay.getScopeGroupId(), SegmentsPortletKeys.SEGMENTS);
 
-			Group group = stagingGroupHelper.fetchLiveGroup(groupId);
-
-			if (group != null) {
-				groupId = group.getGroupId();
-			}
-		}
-
-		_groupId = groupId;
-
-		return groupId;
+		return _groupId;
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

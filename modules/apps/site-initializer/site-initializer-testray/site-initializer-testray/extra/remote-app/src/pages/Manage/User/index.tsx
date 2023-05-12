@@ -23,7 +23,6 @@ import useHeader from '../../../hooks/useHeader';
 import i18n from '../../../i18n';
 import {UserGroup} from '../../../services/rest';
 import {Action} from '../../../types';
-import useUserActions from './useUserActions';
 
 type UserListViewProps = {
 	actions?: Action[];
@@ -50,6 +49,7 @@ const UserListView: React.FC<UserListViewProps> = ({
 			forceRefetch={formModal?.forceRefetch}
 			managementToolbarProps={{
 				addButton: () => navigate('create'),
+				filterSchema: 'user',
 				title: i18n.translate('users'),
 			}}
 			resource="/user-accounts"
@@ -97,7 +97,6 @@ const UserListView: React.FC<UserListViewProps> = ({
 };
 
 const Users = () => {
-	const {actions, formModal} = useUserActions();
 	const navigate = useNavigate();
 
 	useHeader({
@@ -113,8 +112,6 @@ const Users = () => {
 	return (
 		<Container>
 			<UserListView
-				actions={actions}
-				formModal={formModal}
 				tableProps={{
 					onClickRow: (user) => navigate(`${user.id}/update`),
 				}}

@@ -14,9 +14,8 @@
 
 package com.liferay.commerce.payment.method.authorize.net.internal;
 
-import com.liferay.commerce.constants.CommerceOrderConstants;
 import com.liferay.commerce.constants.CommerceOrderPaymentConstants;
-import com.liferay.commerce.constants.CommercePaymentConstants;
+import com.liferay.commerce.constants.CommercePaymentMethodConstants;
 import com.liferay.commerce.currency.model.CommerceCurrency;
 import com.liferay.commerce.model.CommerceOrder;
 import com.liferay.commerce.payment.method.CommercePaymentMethod;
@@ -100,7 +99,7 @@ public class AuthorizeNetCommercePaymentMethod
 		return new CommercePaymentResult(
 			commercePaymentRequest.getTransactionId(),
 			authorizeNetCommercePaymentRequest.getCommerceOrderId(),
-			CommerceOrderConstants.PAYMENT_STATUS_PAID, false, null, null,
+			CommerceOrderPaymentConstants.STATUS_COMPLETED, false, null, null,
 			Collections.emptyList(), true);
 	}
 
@@ -122,8 +121,7 @@ public class AuthorizeNetCommercePaymentMethod
 
 	@Override
 	public int getPaymentType() {
-		return CommercePaymentConstants.
-			COMMERCE_PAYMENT_METHOD_TYPE_ONLINE_REDIRECT;
+		return CommercePaymentMethodConstants.TYPE_ONLINE_REDIRECT;
 	}
 
 	@Override
@@ -158,20 +156,24 @@ public class AuthorizeNetCommercePaymentMethod
 		CommerceOrder commerceOrder = _commerceOrderService.getCommerceOrder(
 			authorizeNetCommercePaymentRequest.getCommerceOrderId());
 
-		AuthorizeNetGroupServiceConfiguration configuration = _getConfiguration(
-			commerceOrder.getGroupId());
+		AuthorizeNetGroupServiceConfiguration
+			authorizeNetGroupServiceConfiguration =
+				_getAuthorizeNetGroupServiceConfiguration(
+					commerceOrder.getGroupId());
 
 		Environment environment = Environment.valueOf(
-			StringUtil.toUpperCase(configuration.environment()));
+			StringUtil.toUpperCase(
+				authorizeNetGroupServiceConfiguration.environment()));
 
 		ApiOperationBase.setEnvironment(environment);
 
 		MerchantAuthenticationType merchantAuthenticationType =
 			new MerchantAuthenticationType();
 
-		merchantAuthenticationType.setName(configuration.apiLoginId());
+		merchantAuthenticationType.setName(
+			authorizeNetGroupServiceConfiguration.apiLoginId());
 		merchantAuthenticationType.setTransactionKey(
-			configuration.transactionKey());
+			authorizeNetGroupServiceConfiguration.transactionKey());
 
 		ApiOperationBase.setMerchantAuthentication(merchantAuthenticationType);
 
@@ -228,7 +230,7 @@ public class AuthorizeNetCommercePaymentMethod
 
 			return new CommercePaymentResult(
 				token, authorizeNetCommercePaymentRequest.getCommerceOrderId(),
-				CommerceOrderConstants.PAYMENT_STATUS_PENDING, true, url, null,
+				CommerceOrderPaymentConstants.STATUS_PENDING, true, url, null,
 				resultMessages, true);
 		}
 
@@ -264,8 +266,9 @@ public class AuthorizeNetCommercePaymentMethod
 			long groupId, String cancelURL, String returnURL)
 		throws Exception {
 
-		AuthorizeNetGroupServiceConfiguration configuration = _getConfiguration(
-			groupId);
+		AuthorizeNetGroupServiceConfiguration
+			authorizeNetGroupServiceConfiguration =
+				_getAuthorizeNetGroupServiceConfiguration(groupId);
 
 		ArrayOfSetting arrayOfSetting = new ArrayOfSetting();
 
@@ -294,11 +297,14 @@ public class AuthorizeNetCommercePaymentMethod
 			_jsonFactory.createJSONObject();
 
 		hostedPaymentPaymentOptionsJSONObject.put(
-			"cardCodeRequired", configuration.requireCardCodeVerification()
+			"cardCodeRequired",
+			authorizeNetGroupServiceConfiguration.requireCardCodeVerification()
 		).put(
-			"showBankAccount", configuration.showBankAccount()
+			"showBankAccount",
+			authorizeNetGroupServiceConfiguration.showBankAccount()
 		).put(
-			"showCreditCard", configuration.showCreditCard()
+			"showCreditCard",
+			authorizeNetGroupServiceConfiguration.showCreditCard()
 		);
 
 		_addSetting(
@@ -309,7 +315,7 @@ public class AuthorizeNetCommercePaymentMethod
 			_jsonFactory.createJSONObject();
 
 		hostedPaymentSecurityOptionsJSONObject.put(
-			"captcha", configuration.requireCaptcha());
+			"captcha", authorizeNetGroupServiceConfiguration.requireCaptcha());
 
 		_addSetting(
 			settings, "hostedPaymentSecurityOptions",
@@ -365,7 +371,7 @@ public class AuthorizeNetCommercePaymentMethod
 		hostedPaymentOrderOptionsJSONObject.put(
 			"merchantName", commerceChannel.getName()
 		).put(
-			"show", configuration.showStoreName()
+			"show", authorizeNetGroupServiceConfiguration.showStoreName()
 		);
 
 		_addSetting(
@@ -375,8 +381,8 @@ public class AuthorizeNetCommercePaymentMethod
 		return arrayOfSetting;
 	}
 
-	private AuthorizeNetGroupServiceConfiguration _getConfiguration(
-			long groupId)
+	private AuthorizeNetGroupServiceConfiguration
+			_getAuthorizeNetGroupServiceConfiguration(long groupId)
 		throws Exception {
 
 		return _configurationProvider.getConfiguration(

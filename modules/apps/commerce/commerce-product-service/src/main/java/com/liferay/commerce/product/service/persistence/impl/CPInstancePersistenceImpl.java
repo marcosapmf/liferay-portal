@@ -7608,7 +7608,8 @@ public class CPInstancePersistenceImpl
 				if (ercCPInstance != null) {
 					throw new DuplicateCPInstanceExternalReferenceCodeException(
 						"Duplicate cp instance with external reference code " +
-							cpInstance.getExternalReferenceCode());
+							cpInstance.getExternalReferenceCode() +
+								" and company " + cpInstance.getCompanyId());
 				}
 			}
 			else {
@@ -7618,7 +7619,8 @@ public class CPInstancePersistenceImpl
 
 					throw new DuplicateCPInstanceExternalReferenceCodeException(
 						"Duplicate cp instance with external reference code " +
-							cpInstance.getExternalReferenceCode());
+							cpInstance.getExternalReferenceCode() +
+								" and company " + cpInstance.getCompanyId());
 				}
 			}
 		}

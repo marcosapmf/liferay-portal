@@ -15,7 +15,7 @@ definition {
 			layoutName = "Questions Page");
 
 		JSONLayout.addWidgetToPublicLayout(
-			column = "2",
+			column = 2,
 			groupName = "Guest",
 			layoutName = "Questions Page",
 			widgetName = "Questions");
@@ -24,7 +24,7 @@ definition {
 	tearDown {
 		var testPortalInstance = PropsUtil.get("test.portal.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testPortalInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -41,7 +41,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-159147. Verify if the user is notified when a followed question has a new answer."
-	@priority = "3"
+	@priority = 3
 	test CanBeNotifiedByAnswer {
 		task ("Create a Topic") {
 			JSONMBMessage.addCategory(
@@ -101,12 +101,12 @@ definition {
 		}
 
 		task ("Validate the notifications") {
-			Notifications.viewBadgeCount(notificationCount = "1");
+			Notifications.viewBadgeCount(notificationCount = 1);
 		}
 	}
 
 	@description = "This is a test for LPS-159156. Verify if the user is notified when a followed topic has a new comment."
-	@priority = "3"
+	@priority = 3
 	test CanBeNotifiedByComment {
 		task ("Create a Topic") {
 			JSONMBMessage.addCategory(
@@ -180,18 +180,27 @@ definition {
 		}
 
 		task ("Validate the notifications") {
-			Notifications.viewBadgeCount(notificationCount = "1");
+			Notifications.viewBadgeCount(notificationCount = 1);
 		}
 	}
 
 	@description = "This is a test for LPS-159158. Verify if the user is notified when a followed topic has a new question."
-	@priority = "3"
+	@priority = 3
 	test CanBeNotifiedByQuestion {
 		task ("Create a Topic") {
 			JSONMBMessage.addCategory(
 				categoryDescription = "Description",
 				categoryName = "Questions Test Topic",
 				userEmailAddress = "test@liferay.com");
+
+			Questions.openToQuestionsTopic(
+				layoutName = "questions-page",
+				siteURLKey = "guest",
+				topicName = "questions-test-topic");
+
+			Questions.addSubTopic(
+				subTopicDescription = "Topic Description",
+				subTopicName = "Questions Test Topic");
 		}
 
 		task ("Subcribe on a Topic") {
@@ -243,12 +252,12 @@ definition {
 		}
 
 		task ("Validate the notifications") {
-			Notifications.viewBadgeCount(notificationCount = "1");
+			Notifications.viewBadgeCount(notificationCount = 1);
 		}
 	}
 
 	@description = "This is a test for LPS-159138. Verify if the user is able to subscribe a tag if they want to."
-	@priority = "5"
+	@priority = 5
 	test CanSubscribeAQuestion {
 		task ("Create a Topic") {
 			JSONMBMessage.addCategory(
@@ -265,8 +274,8 @@ definition {
 				titleField = "Question1");
 		}
 
-		task ("Go to My Subscription") {
-			Questions.gotoTab(questionTabField = "My Subscriptions");
+		task ("Go to Subscriptions") {
+			Questions.gotoTab(questionTabField = "Subscriptions");
 		}
 
 		task ("Validate the subcribed question") {
@@ -275,7 +284,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-159144. Verify if the user is able to subscribe a tag if they want to."
-	@priority = "5"
+	@priority = 5
 	test CanSubscribeATag {
 		task ("Create a Topic") {
 			JSONMBMessage.addCategory(
@@ -301,8 +310,8 @@ definition {
 			Questions.subscribeFromTag();
 		}
 
-		task ("Go to My Subscription page") {
-			Questions.gotoTab(questionTabField = "My Subscriptions");
+		task ("Go to Subscription page") {
+			Questions.gotoTab(questionTabField = "Subscriptions");
 		}
 
 		task ("Validate the subcribed tag") {
@@ -311,7 +320,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-159160. Verify if the user is able to subscribe a topic if they want to."
-	@priority = "5"
+	@priority = 5
 	test CanSubscribeATopic {
 		task ("Create a Topic") {
 			JSONMBMessage.addCategory(
@@ -326,18 +335,22 @@ definition {
 				siteURLKey = "guest",
 				topicName = "questions-test-topic");
 
+			Questions.addSubTopic(
+				subTopicDescription = "Topic Description",
+				subTopicName = "Questions Test Topic");
+
 			Questions.subscribeTopic();
 		}
 
 		task ("Validate the subcribed topic") {
-			Questions.gotoTab(questionTabField = "My Subscriptions");
+			Questions.gotoTab(questionTabField = "Subscriptions");
 
 			Questions.viewSubscribedTopic(subscribedTopic = "Questions Test Topic");
 		}
 	}
 
 	@description = "This is a test for LPS-159138. Verify if the user is able to unsubscribe a question if they want to."
-	@priority = "5"
+	@priority = 5
 	test CanUnsubscribeAQuestion {
 		task ("Create a Topic") {
 			JSONMBMessage.addCategory(
@@ -355,7 +368,7 @@ definition {
 		}
 
 		task ("Go to my subscription page") {
-			Questions.gotoTab(questionTabField = "My Subscriptions");
+			Questions.gotoTab(questionTabField = "Subscriptions");
 		}
 
 		task ("Validate the subcribed Question") {
@@ -378,14 +391,14 @@ definition {
 		}
 
 		task ("Validate the unsubcribed Question") {
-			Questions.gotoTab(questionTabField = "My Subscriptions");
+			Questions.gotoTab(questionTabField = "Subscriptions");
 
 			Questions.viewSubscribedQuestion(noSubscribedQuestion = "true");
 		}
 	}
 
 	@description = "This is a test for LPS-159144. Verify if the user is able to unsubscribe a tag if they want to."
-	@priority = "5"
+	@priority = 5
 	test CanUnsubscribeATag {
 		task ("Create a Topic") {
 			JSONMBMessage.addCategory(
@@ -411,8 +424,8 @@ definition {
 			Questions.subscribeFromTag();
 		}
 
-		task ("Go to My Subscription page") {
-			Questions.gotoTab(questionTabField = "My Subscriptions");
+		task ("Go to Subscription page") {
+			Questions.gotoTab(questionTabField = "Subscriptions");
 		}
 
 		task ("Validate the subcribed tag") {
@@ -427,8 +440,8 @@ definition {
 			Questions.unsubscribeFromTag();
 		}
 
-		task ("Go to My Subscription page") {
-			Questions.gotoTab(questionTabField = "My Subscriptions");
+		task ("Go to Subscription page") {
+			Questions.gotoTab(questionTabField = "Subscriptions");
 		}
 
 		task ("Validate the unsubcribed tag") {
@@ -437,7 +450,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-159160. Verify if the user is able to unsubscribe a topic if they want to"
-	@priority = "5"
+	@priority = 5
 	test CanUnsubscribeATopic {
 		task ("Create a Topic") {
 			JSONMBMessage.addCategory(
@@ -451,6 +464,10 @@ definition {
 				layoutName = "questions-page",
 				siteURLKey = "guest",
 				topicName = "questions-test-topic");
+
+			Questions.addSubTopic(
+				subTopicDescription = "Topic Description",
+				subTopicName = "Questions Test Topic");
 		}
 
 		task ("Subcribe to the Topic") {
@@ -458,20 +475,16 @@ definition {
 		}
 
 		task ("Validate the subcribed topic") {
-			Questions.gotoTab(questionTabField = "My Subscriptions");
+			Questions.gotoTab(questionTabField = "Subscriptions");
 
 			Questions.viewSubscribedTopic(subscribedTopic = "Questions Test Topic");
 		}
 
 		task ("Unsubcribe to the Topic") {
-			Questions.gotoTab(questionTabField = "Questions");
-
 			Questions.unsubscribeFromTopic(topicName = "Questions Test Topic");
 		}
 
 		task ("Validate if the unsubcribed topic") {
-			Questions.gotoTab(questionTabField = "My Subscriptions");
-
 			Questions.viewSubscribedTopic(noSubscribedTopic = "true");
 		}
 	}

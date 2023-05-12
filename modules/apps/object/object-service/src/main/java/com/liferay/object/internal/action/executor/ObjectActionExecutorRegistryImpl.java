@@ -18,8 +18,8 @@ import com.liferay.object.action.executor.ObjectActionExecutor;
 import com.liferay.object.action.executor.ObjectActionExecutorRegistry;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMap;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMapFactory;
+import com.liferay.portal.kernel.util.ListUtil;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -53,7 +53,9 @@ public class ObjectActionExecutorRegistryImpl
 	}
 
 	@Override
-	public List<ObjectActionExecutor> getObjectActionExecutors() {
+	public List<ObjectActionExecutor> getObjectActionExecutors(
+		long companyId, String objectDefinitionName) {
+
 		Collection<ObjectActionExecutor> objectActionExecutorsCollection =
 			_serviceTrackerMap.values();
 
@@ -61,10 +63,13 @@ public class ObjectActionExecutorRegistryImpl
 			return Collections.<ObjectActionExecutor>emptyList();
 		}
 
-		List<ObjectActionExecutor> objectActionExecutors = new ArrayList<>(
-			objectActionExecutorsCollection);
-
-		objectActionExecutors.sort(
+		return ListUtil.sort(
+			ListUtil.filter(
+				ListUtil.fromCollection(objectActionExecutorsCollection),
+				objectActionExecutor ->
+					objectActionExecutor.isAllowedCompany(companyId) &&
+					objectActionExecutor.isAllowedObjectDefinition(
+						objectDefinitionName)),
 			(ObjectActionExecutor objectActionExecutor1,
 			 ObjectActionExecutor objectActionExecutor2) -> {
 
@@ -73,8 +78,6 @@ public class ObjectActionExecutorRegistryImpl
 
 				return key1.compareTo(key2);
 			});
-
-		return objectActionExecutors;
 	}
 
 	@Override

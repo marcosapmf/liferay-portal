@@ -16,7 +16,6 @@ package com.liferay.questions.web.internal.upgrade.registry;
 
 import com.liferay.portal.security.service.access.policy.service.SAPEntryService;
 import com.liferay.portal.upgrade.registry.UpgradeStepRegistrator;
-import com.liferay.questions.web.internal.upgrade.v1_0_0.UpdateAllowedServicesSignaturesInSAPEntryUpgradeProcess;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -34,8 +33,15 @@ public class QuestionsWebUpgradeStepRegistrator
 
 		registry.register(
 			"0.0.1", "1.0.0",
-			new UpdateAllowedServicesSignaturesInSAPEntryUpgradeProcess(
-				_sapEntryService));
+			new com.liferay.questions.web.internal.upgrade.v1_0_0.
+				UpdateAllowedServicesSignaturesInSAPEntryUpgradeProcess(
+					_sapEntryService));
+
+		registry.register(
+			"1.0.0", "1.0.1",
+			new com.liferay.questions.web.internal.upgrade.v1_0_0.
+				UpdateAllowedServicesSignaturesInSAPEntryUpgradeProcess(
+					_sapEntryService));
 	}
 
 	@Reference

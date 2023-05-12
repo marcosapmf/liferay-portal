@@ -22,11 +22,24 @@ interface ObjectManagementToolbarProps {
 	isApproved: boolean;
 	label: string;
 	objectDefinitionId: number;
+	onSubmit: (draft: boolean) => void;
 	portletNamespace: string;
 	screenNavigationCategoryKey: string;
+	setValues: (values: Partial<ObjectDefinition>) => void;
 	system: boolean;
 }
-export default function ObjectManagementToolbar(
-	props: ObjectManagementToolbarProps
-): JSX.Element;
+export default function ObjectManagementToolbar({
+	backURL,
+	externalReferenceCode,
+	hasPublishObjectPermission,
+	hasUpdateObjectDefinitionPermission,
+	isApproved,
+	label,
+	objectDefinitionId,
+	onSubmit,
+	portletNamespace,
+	screenNavigationCategoryKey,
+	setValues,
+	system,
+}: ObjectManagementToolbarProps): JSX.Element;
 export {};

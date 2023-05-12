@@ -107,13 +107,14 @@ public class DLFileEntryServiceUtil {
 	}
 
 	public static DLFileEntry copyFileEntry(
-			long groupId, long repositoryId, long fileEntryId,
-			long destFolderId,
+			long groupId, long repositoryId, long sourceFileEntryId,
+			long targetFolderId,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws PortalException {
 
 		return getService().copyFileEntry(
-			groupId, repositoryId, fileEntryId, destFolderId, serviceContext);
+			groupId, repositoryId, sourceFileEntryId, targetFolderId,
+			serviceContext);
 	}
 
 	public static void deleteFileEntry(long fileEntryId)
@@ -171,6 +172,13 @@ public class DLFileEntryServiceUtil {
 	}
 
 	public static List<DLFileEntry> getFileEntries(
+			long groupId, double score, int start, int end)
+		throws PortalException {
+
+		return getService().getFileEntries(groupId, score, start, end);
+	}
+
+	public static List<DLFileEntry> getFileEntries(
 			long groupId, long folderId, int status, int start, int end,
 			OrderByComparator<DLFileEntry> orderByComparator)
 		throws PortalException {
@@ -215,6 +223,12 @@ public class DLFileEntryServiceUtil {
 
 		return getService().getFileEntries(
 			groupId, folderId, mimeTypes, start, end, orderByComparator);
+	}
+
+	public static int getFileEntriesCount(long groupId, double score)
+		throws PortalException {
+
+		return getService().getFileEntriesCount(groupId, score);
 	}
 
 	public static int getFileEntriesCount(long groupId, long folderId) {

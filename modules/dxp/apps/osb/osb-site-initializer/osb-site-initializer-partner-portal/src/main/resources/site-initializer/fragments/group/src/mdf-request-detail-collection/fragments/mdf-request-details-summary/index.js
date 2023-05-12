@@ -37,10 +37,12 @@ const updateMDFDetailsSummary = async () => {
 			Liferay.Util.escape(data.maxDateActivity)
 		);
 		const totalCost = formatCurrency(
-			Liferay.Util.escape(data.totalCostOfExpense)
+			Liferay.Util.escape(data.totalCostOfExpense),
+			data.currency ? Liferay.Util.escape(data.currency.key) : 'USD'
 		);
 		const requestedCost = formatCurrency(
-			Liferay.Util.escape(data.totalMDFRequestAmount)
+			Liferay.Util.escape(data.totalMDFRequestAmount),
+			data.currency ? Liferay.Util.escape(data.currency.key) : 'USD'
 		);
 
 		fragmentElement.querySelector(
@@ -62,9 +64,9 @@ const updateMDFDetailsSummary = async () => {
 	});
 };
 
-const formatCurrency = (value) =>
+const formatCurrency = (value, currencyKey) =>
 	new Intl.NumberFormat(Liferay.ThemeDisplay.getBCP47LanguageId(), {
-		currency: 'USD',
+		currency: currencyKey ? currencyKey : 'USD',
 		style: 'currency',
 	}).format(value);
 

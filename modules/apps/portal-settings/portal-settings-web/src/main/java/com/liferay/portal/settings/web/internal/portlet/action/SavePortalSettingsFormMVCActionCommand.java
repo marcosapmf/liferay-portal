@@ -14,6 +14,8 @@
 
 package com.liferay.portal.settings.web.internal.portlet.action;
 
+import com.liferay.petra.function.transform.TransformUtil;
+import com.liferay.petra.string.StringUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.settings.CompanyServiceSettingsLocator;
@@ -22,6 +24,7 @@ import com.liferay.portal.kernel.settings.Settings;
 import com.liferay.portal.kernel.settings.SettingsDescriptor;
 import com.liferay.portal.kernel.settings.SettingsException;
 import com.liferay.portal.kernel.settings.SettingsFactoryUtil;
+import com.liferay.portal.kernel.settings.SettingsLocatorHelperUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
@@ -31,10 +34,8 @@ import com.liferay.portal.settings.portlet.action.PortalSettingsFormContributor;
 
 import java.io.IOException;
 
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.stream.Stream;
 
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
@@ -108,15 +109,10 @@ public class SavePortalSettingsFormMVCActionCommand
 			return null;
 		}
 
-		Stream<String> stream = Arrays.stream(value.split(","));
-
-		return stream.map(
-			index -> getString(actionRequest, name.concat(index))
-		).filter(
-			Validator::isNotNull
-		).toArray(
-			String[]::new
-		);
+		return TransformUtil.transformToArray(
+			StringUtil.split(value),
+			index -> getString(actionRequest, name.concat(index)),
+			String.class);
 	}
 
 	private void _storeSettings(
@@ -131,7 +127,7 @@ public class SavePortalSettingsFormMVCActionCommand
 			settings.getModifiableSettings();
 
 		SettingsDescriptor settingsDescriptor =
-			SettingsFactoryUtil.getSettingsDescriptor(getSettingsId());
+			SettingsLocatorHelperUtil.getSettingsDescriptor(getSettingsId());
 
 		Set<String> multiValuedKeys = new HashSet<>(
 			settingsDescriptor.getMultiValuedKeys());

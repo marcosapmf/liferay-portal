@@ -102,14 +102,14 @@ renderResponse.setTitle(role.getTitle(locale));
 	viewTypeItems="<%= editRoleAssignmentsManagementToolbarDisplayContext.getViewTypeItems() %>"
 />
 
-<c:if test='<%= !SegmentsEntryDisplayContext.isRoleSegmentationEnabled(themeDisplay.getCompanyId()) && tabs2.equals("segments") %>'>
+<c:if test='<%= !SegmentsEntryDisplayUtil.isRoleSegmentationEnabled(themeDisplay.getCompanyId()) && tabs2.equals("segments") %>'>
 	<clay:stripe
 		displayType="warning"
 	>
 		<strong class="lead"><liferay-ui:message key="assigning-roles-by-segment-is-disabled" /></strong>
 
 		<%
-		String segmentsConfigurationURL = SegmentsEntryDisplayContext.getSegmentsCompanyConfigurationURL(request);
+		String segmentsConfigurationURL = SegmentsEntryDisplayUtil.getSegmentsCompanyConfigurationURL(request);
 		%>
 
 		<c:choose>
@@ -163,13 +163,15 @@ renderResponse.setTitle(role.getTitle(locale));
 	</c:choose>
 </aui:form>
 
-<aui:script require='<%= npmResolvedPackageName + "/js/add_assignees as addAssignees" %>'>
+<aui:script require='<%= "frontend-js-web/index as frontendJsWeb, " + npmResolvedPackageName + "/js/add_assignees as addAssignees" %>'>
+	const {sessionStorage, COOKIE_TYPES} = frontendJsWeb;
+
 	var modalSegmentState = '<%= RolesAdminWebKeys.MODAL_SEGMENT_STATE %>';
 
-	var state = window.sessionStorage.getItem(modalSegmentState);
+	var state = sessionStorage.getItem(modalSegmentState, COOKIE_TYPES.NECESSARY);
 
 	if (state === 'open') {
-		window.sessionStorage.removeItem(modalSegmentState);
+		sessionStorage.removeItem(modalSegmentState);
 
 		addAssignees.default({
 			editRoleAssignmentsURL: '<%= editRoleAssignmentsURL.toString() %>',

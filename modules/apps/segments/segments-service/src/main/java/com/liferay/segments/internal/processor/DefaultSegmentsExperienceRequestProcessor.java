@@ -14,14 +14,10 @@
 
 package com.liferay.segments.internal.processor;
 
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.segments.model.SegmentsExperience;
-import com.liferay.segments.model.SegmentsExperienceModel;
 import com.liferay.segments.processor.SegmentsExperienceRequestProcessor;
 import com.liferay.segments.service.SegmentsExperienceLocalService;
-
-import java.util.List;
-import java.util.stream.Stream;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -42,42 +38,39 @@ public class DefaultSegmentsExperienceRequestProcessor
 	@Override
 	public long[] getSegmentsExperienceIds(
 			HttpServletRequest httpServletRequest,
-			HttpServletResponse httpServletResponse, long groupId,
-			long classNameId, long classPK, long[] segmentsExperienceIds)
+			HttpServletResponse httpServletResponse, long groupId, long plid,
+			long[] segmentsExperienceIds)
 		throws PortalException {
 
-		List<SegmentsExperience> segmentsExperiences =
+		return TransformUtil.transformToLongArray(
 			_segmentsExperienceLocalService.getSegmentsExperiences(
-				groupId, classNameId, classPK, true);
+				groupId, plid, true),
+			segmentsExperience -> {
+				if (segmentsExperience.getPriority() < 0) {
+					return null;
+				}
 
-		Stream<SegmentsExperience> stream = segmentsExperiences.stream();
-
-		return stream.filter(
-			segmentsExperience -> segmentsExperience.getPriority() >= 0
-		).mapToLong(
-			SegmentsExperienceModel::getSegmentsExperienceId
-		).toArray();
+				return segmentsExperience.getSegmentsExperienceId();
+			});
 	}
 
 	@Override
 	public long[] getSegmentsExperienceIds(
 			HttpServletRequest httpServletRequest,
-			HttpServletResponse httpServletResponse, long groupId,
-			long classNameId, long classPK, long[] segmentsEntryIds,
-			long[] segmentsExperienceIds)
+			HttpServletResponse httpServletResponse, long groupId, long plid,
+			long[] segmentsEntryIds, long[] segmentsExperienceIds)
 		throws PortalException {
 
-		List<SegmentsExperience> segmentsExperiences =
+		return TransformUtil.transformToLongArray(
 			_segmentsExperienceLocalService.getSegmentsExperiences(
-				groupId, segmentsEntryIds, classNameId, classPK, true);
+				groupId, segmentsEntryIds, plid, true),
+			segmentsExperience -> {
+				if (segmentsExperience.getPriority() < 0) {
+					return null;
+				}
 
-		Stream<SegmentsExperience> stream = segmentsExperiences.stream();
-
-		return stream.filter(
-			segmentsExperience -> segmentsExperience.getPriority() >= 0
-		).mapToLong(
-			SegmentsExperienceModel::getSegmentsExperienceId
-		).toArray();
+				return segmentsExperience.getSegmentsExperienceId();
+			});
 	}
 
 	@Reference

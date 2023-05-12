@@ -35,11 +35,11 @@ import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -149,25 +149,20 @@ public class PortletRegistryImpl implements PortletRegistry {
 			return;
 		}
 
-		Stream<String> stream = fragmentEntryLinkPortletIds.stream();
+		Set<Portlet> portlets = new HashSet<>();
 
-		List<Portlet> portlets = stream.map(
-			fragmentEntryLinkPortletId -> _portletLocalService.getPortletById(
-				fragmentEntryLinkPortletId)
-		).filter(
-			portlet -> {
-				if ((portlet == null) || !portlet.isActive() ||
-					portlet.isUndeployedPortlet()) {
+		for (String fragmentEntryLinkPortletId : fragmentEntryLinkPortletIds) {
+			Portlet portlet = _portletLocalService.getPortletById(
+				fragmentEntryLinkPortletId);
 
-					return false;
-				}
+			if ((portlet == null) || !portlet.isActive() ||
+				portlet.isUndeployedPortlet()) {
 
-				return true;
+				continue;
 			}
-		).distinct(
-		).collect(
-			Collectors.toList()
-		);
+
+			portlets.add(portlet);
+		}
 
 		for (Portlet portlet : portlets) {
 			try {

@@ -30,6 +30,7 @@ import com.liferay.data.engine.rest.client.permission.Permission;
 import com.liferay.data.engine.rest.client.resource.v2_0.DataDefinitionResource;
 import com.liferay.data.engine.rest.client.serdes.v2_0.DataDefinitionSerDes;
 import com.liferay.petra.function.UnsafeTriConsumer;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.json.JSONArray;
@@ -68,8 +69,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.annotation.Generated;
 
@@ -237,7 +236,10 @@ public abstract class BaseDataDefinitionResourceTestCase {
 			assertEquals(
 				Arrays.asList(irrelevantDataDefinition),
 				(List<DataDefinition>)page.getItems());
-			assertValid(page);
+			assertValid(
+				page,
+				testGetDataDefinitionByContentTypeContentTypePage_getExpectedActions(
+					irrelevantContentType));
 		}
 
 		DataDefinition dataDefinition1 =
@@ -258,11 +260,24 @@ public abstract class BaseDataDefinitionResourceTestCase {
 		assertEqualsIgnoringOrder(
 			Arrays.asList(dataDefinition1, dataDefinition2),
 			(List<DataDefinition>)page.getItems());
-		assertValid(page);
+		assertValid(
+			page,
+			testGetDataDefinitionByContentTypeContentTypePage_getExpectedActions(
+				contentType));
 
 		dataDefinitionResource.deleteDataDefinition(dataDefinition1.getId());
 
 		dataDefinitionResource.deleteDataDefinition(dataDefinition2.getId());
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetDataDefinitionByContentTypeContentTypePage_getExpectedActions(
+				String contentType)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
 	}
 
 	@Test
@@ -837,7 +852,10 @@ public abstract class BaseDataDefinitionResourceTestCase {
 			assertEquals(
 				Arrays.asList(irrelevantDataDefinition),
 				(List<DataDefinition>)page.getItems());
-			assertValid(page);
+			assertValid(
+				page,
+				testGetSiteDataDefinitionByContentTypeContentTypePage_getExpectedActions(
+					irrelevantSiteId, irrelevantContentType));
 		}
 
 		DataDefinition dataDefinition1 =
@@ -858,11 +876,24 @@ public abstract class BaseDataDefinitionResourceTestCase {
 		assertEqualsIgnoringOrder(
 			Arrays.asList(dataDefinition1, dataDefinition2),
 			(List<DataDefinition>)page.getItems());
-		assertValid(page);
+		assertValid(
+			page,
+			testGetSiteDataDefinitionByContentTypeContentTypePage_getExpectedActions(
+				siteId, contentType));
 
 		dataDefinitionResource.deleteDataDefinition(dataDefinition1.getId());
 
 		dataDefinitionResource.deleteDataDefinition(dataDefinition2.getId());
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetSiteDataDefinitionByContentTypeContentTypePage_getExpectedActions(
+				Long siteId, String contentType)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
 	}
 
 	@Test
@@ -1141,12 +1172,21 @@ public abstract class BaseDataDefinitionResourceTestCase {
 		DataDefinition getDataDefinition =
 			dataDefinitionResource.
 				getSiteDataDefinitionByContentTypeByDataDefinitionKey(
-					postDataDefinition.getSiteId(),
+					testGetSiteDataDefinitionByContentTypeByDataDefinitionKey_getSiteId(
+						postDataDefinition),
 					postDataDefinition.getContentType(),
 					postDataDefinition.getDataDefinitionKey());
 
 		assertEquals(postDataDefinition, getDataDefinition);
 		assertValid(getDataDefinition);
+	}
+
+	protected Long
+			testGetSiteDataDefinitionByContentTypeByDataDefinitionKey_getSiteId(
+				DataDefinition dataDefinition)
+		throws Exception {
+
+		return dataDefinition.getSiteId();
 	}
 
 	protected DataDefinition
@@ -1176,13 +1216,16 @@ public abstract class BaseDataDefinitionResourceTestCase {
 									{
 										put(
 											"siteKey",
-											"\"" + dataDefinition.getSiteId() +
-												"\"");
+											"\"" +
+												testGraphQLGetSiteDataDefinitionByContentTypeByDataDefinitionKey_getSiteId(
+													dataDefinition) + "\"");
+
 										put(
 											"contentType",
 											"\"" +
 												dataDefinition.
 													getContentType() + "\"");
+
 										put(
 											"dataDefinitionKey",
 											"\"" +
@@ -1194,6 +1237,14 @@ public abstract class BaseDataDefinitionResourceTestCase {
 								getGraphQLFields())),
 						"JSONObject/data",
 						"Object/dataDefinitionByContentTypeByDataDefinitionKey"))));
+	}
+
+	protected Long
+			testGraphQLGetSiteDataDefinitionByContentTypeByDataDefinitionKey_getSiteId(
+				DataDefinition dataDefinition)
+		throws Exception {
+
+		return dataDefinition.getSiteId();
 	}
 
 	@Test
@@ -1442,6 +1493,13 @@ public abstract class BaseDataDefinitionResourceTestCase {
 	}
 
 	protected void assertValid(Page<DataDefinition> page) {
+		assertValid(page, Collections.emptyMap());
+	}
+
+	protected void assertValid(
+		Page<DataDefinition> page,
+		Map<String, Map<String, String>> expectedActions) {
+
 		boolean valid = false;
 
 		java.util.Collection<DataDefinition> dataDefinitions = page.getItems();
@@ -1456,6 +1514,20 @@ public abstract class BaseDataDefinitionResourceTestCase {
 		}
 
 		Assert.assertTrue(valid);
+
+		Map<String, Map<String, String>> actions = page.getActions();
+
+		for (String key : expectedActions.keySet()) {
+			Map action = actions.get(key);
+
+			Assert.assertNotNull(key + " does not contain an action", action);
+
+			Map expectedAction = expectedActions.get(key);
+
+			Assert.assertEquals(
+				expectedAction.get("method"), action.get("method"));
+			Assert.assertEquals(expectedAction.get("href"), action.get("href"));
+		}
 	}
 
 	protected String[] getAdditionalAssertFieldNames() {
@@ -1734,14 +1806,16 @@ public abstract class BaseDataDefinitionResourceTestCase {
 	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
 		throws Exception {
 
-		Stream<java.lang.reflect.Field> stream = Stream.of(
-			ReflectionUtil.getDeclaredFields(clazz));
+		return TransformUtil.transform(
+			ReflectionUtil.getDeclaredFields(clazz),
+			field -> {
+				if (field.isSynthetic()) {
+					return null;
+				}
 
-		return stream.filter(
-			field -> !field.isSynthetic()
-		).toArray(
-			java.lang.reflect.Field[]::new
-		);
+				return field;
+			},
+			java.lang.reflect.Field.class);
 	}
 
 	protected java.util.Collection<EntityField> getEntityFields()
@@ -1758,6 +1832,10 @@ public abstract class BaseDataDefinitionResourceTestCase {
 		EntityModel entityModel = entityModelResource.getEntityModel(
 			new MultivaluedHashMap());
 
+		if (entityModel == null) {
+			return Collections.emptyList();
+		}
+
 		Map<String, EntityField> entityFieldsMap =
 			entityModel.getEntityFieldsMap();
 
@@ -1767,18 +1845,18 @@ public abstract class BaseDataDefinitionResourceTestCase {
 	protected List<EntityField> getEntityFields(EntityField.Type type)
 		throws Exception {
 
-		java.util.Collection<EntityField> entityFields = getEntityFields();
+		return TransformUtil.transform(
+			getEntityFields(),
+			entityField -> {
+				if (!Objects.equals(entityField.getType(), type) ||
+					ArrayUtil.contains(
+						getIgnoredEntityFieldNames(), entityField.getName())) {
 
-		Stream<EntityField> stream = entityFields.stream();
+					return null;
+				}
 
-		return stream.filter(
-			entityField ->
-				Objects.equals(entityField.getType(), type) &&
-				!ArrayUtil.contains(
-					getIgnoredEntityFieldNames(), entityField.getName())
-		).collect(
-			Collectors.toList()
-		);
+				return entityField;
+			});
 	}
 
 	protected String getFilterString(

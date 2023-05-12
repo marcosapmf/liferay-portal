@@ -25,6 +25,7 @@ import com.liferay.portal.odata.filter.ExpressionConvert;
 import com.liferay.portal.odata.filter.FilterParserProvider;
 import com.liferay.portal.odata.sort.SortParserProvider;
 import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
+import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineExportTaskResource;
 import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineImportTaskResource;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
@@ -66,8 +67,7 @@ public interface TaxCategoryResource {
 
 	public Response deleteTaxCategory(Long id) throws Exception;
 
-	public Response deleteTaxCategoryBatch(
-			Long id, String callbackURL, Object object)
+	public Response deleteTaxCategoryBatch(String callbackURL, Object object)
 		throws Exception;
 
 	public TaxCategory getTaxCategory(Long id) throws Exception;
@@ -75,8 +75,7 @@ public interface TaxCategoryResource {
 	public Response putTaxCategory(Long id, TaxCategory taxCategory)
 		throws Exception;
 
-	public Response putTaxCategoryBatch(
-			Long id, String callbackURL, Object object)
+	public Response putTaxCategoryBatch(String callbackURL, Object object)
 		throws Exception;
 
 	public default void setContextAcceptLanguage(
@@ -117,6 +116,10 @@ public interface TaxCategoryResource {
 	public void setRoleLocalService(RoleLocalService roleLocalService);
 
 	public void setSortParserProvider(SortParserProvider sortParserProvider);
+
+	public void setVulcanBatchEngineExportTaskResource(
+		VulcanBatchEngineExportTaskResource
+			vulcanBatchEngineExportTaskResource);
 
 	public void setVulcanBatchEngineImportTaskResource(
 		VulcanBatchEngineImportTaskResource

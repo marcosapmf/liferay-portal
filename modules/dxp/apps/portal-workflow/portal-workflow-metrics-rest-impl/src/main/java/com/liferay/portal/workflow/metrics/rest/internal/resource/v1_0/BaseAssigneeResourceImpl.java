@@ -17,6 +17,7 @@ package com.liferay.portal.workflow.metrics.rest.internal.resource.v1_0;
 import com.liferay.petra.function.UnsafeBiConsumer;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.function.UnsafeFunction;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.GroupedModel;
 import com.liferay.portal.kernel.search.Sort;
@@ -38,18 +39,19 @@ import com.liferay.portal.odata.sort.SortParser;
 import com.liferay.portal.odata.sort.SortParserProvider;
 import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
 import com.liferay.portal.vulcan.batch.engine.VulcanBatchEngineTaskItemDelegate;
+import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineExportTaskResource;
 import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineImportTaskResource;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 import com.liferay.portal.vulcan.util.ActionUtil;
-import com.liferay.portal.vulcan.util.TransformUtil;
 import com.liferay.portal.workflow.metrics.rest.dto.v1_0.Assignee;
 import com.liferay.portal.workflow.metrics.rest.dto.v1_0.AssigneeBulkSelection;
 import com.liferay.portal.workflow.metrics.rest.resource.v1_0.AssigneeResource;
 
 import java.io.Serializable;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
@@ -110,7 +112,7 @@ public abstract class BaseAssigneeResourceImpl
 	@Override
 	@SuppressWarnings("PMD.UnusedLocalVariable")
 	public void create(
-			java.util.Collection<Assignee> assignees,
+			Collection<Assignee> assignees,
 			Map<String, Serializable> parameters)
 		throws Exception {
 
@@ -120,7 +122,7 @@ public abstract class BaseAssigneeResourceImpl
 
 	@Override
 	public void delete(
-			java.util.Collection<Assignee> assignees,
+			Collection<Assignee> assignees,
 			Map<String, Serializable> parameters)
 		throws Exception {
 
@@ -189,7 +191,7 @@ public abstract class BaseAssigneeResourceImpl
 
 	@Override
 	public void update(
-			java.util.Collection<Assignee> assignees,
+			Collection<Assignee> assignees,
 			Map<String, Serializable> parameters)
 		throws Exception {
 
@@ -203,9 +205,8 @@ public abstract class BaseAssigneeResourceImpl
 
 	public void setContextBatchUnsafeConsumer(
 		UnsafeBiConsumer
-			<java.util.Collection<Assignee>,
-			 UnsafeConsumer<Assignee, Exception>, Exception>
-				contextBatchUnsafeConsumer) {
+			<Collection<Assignee>, UnsafeConsumer<Assignee, Exception>,
+			 Exception> contextBatchUnsafeConsumer) {
 
 		this.contextBatchUnsafeConsumer = contextBatchUnsafeConsumer;
 	}
@@ -272,6 +273,14 @@ public abstract class BaseAssigneeResourceImpl
 
 	public void setSortParserProvider(SortParserProvider sortParserProvider) {
 		this.sortParserProvider = sortParserProvider;
+	}
+
+	public void setVulcanBatchEngineExportTaskResource(
+		VulcanBatchEngineExportTaskResource
+			vulcanBatchEngineExportTaskResource) {
+
+		this.vulcanBatchEngineExportTaskResource =
+			vulcanBatchEngineExportTaskResource;
 	}
 
 	public void setVulcanBatchEngineImportTaskResource(
@@ -382,8 +391,7 @@ public abstract class BaseAssigneeResourceImpl
 	}
 
 	protected <T, R, E extends Throwable> List<R> transform(
-		java.util.Collection<T> collection,
-		UnsafeFunction<T, R, E> unsafeFunction) {
+		Collection<T> collection, UnsafeFunction<T, R, E> unsafeFunction) {
 
 		return TransformUtil.transform(collection, unsafeFunction);
 	}
@@ -395,8 +403,8 @@ public abstract class BaseAssigneeResourceImpl
 	}
 
 	protected <T, R, E extends Throwable> R[] transformToArray(
-		java.util.Collection<T> collection,
-		UnsafeFunction<T, R, E> unsafeFunction, Class<?> clazz) {
+		Collection<T> collection, UnsafeFunction<T, R, E> unsafeFunction,
+		Class<?> clazz) {
 
 		return TransformUtil.transformToArray(
 			collection, unsafeFunction, clazz);
@@ -408,9 +416,14 @@ public abstract class BaseAssigneeResourceImpl
 		return TransformUtil.transformToList(array, unsafeFunction);
 	}
 
+	protected <T, R, E extends Throwable> long[] transformToLongArray(
+		Collection<T> collection, UnsafeFunction<T, R, E> unsafeFunction) {
+
+		return TransformUtil.transformToLongArray(collection, unsafeFunction);
+	}
+
 	protected <T, R, E extends Throwable> List<R> unsafeTransform(
-			java.util.Collection<T> collection,
-			UnsafeFunction<T, R, E> unsafeFunction)
+			Collection<T> collection, UnsafeFunction<T, R, E> unsafeFunction)
 		throws E {
 
 		return TransformUtil.unsafeTransform(collection, unsafeFunction);
@@ -424,8 +437,8 @@ public abstract class BaseAssigneeResourceImpl
 	}
 
 	protected <T, R, E extends Throwable> R[] unsafeTransformToArray(
-			java.util.Collection<T> collection,
-			UnsafeFunction<T, R, E> unsafeFunction, Class<?> clazz)
+			Collection<T> collection, UnsafeFunction<T, R, E> unsafeFunction,
+			Class<?> clazz)
 		throws E {
 
 		return TransformUtil.unsafeTransformToArray(
@@ -439,10 +452,18 @@ public abstract class BaseAssigneeResourceImpl
 		return TransformUtil.unsafeTransformToList(array, unsafeFunction);
 	}
 
+	protected <T, R, E extends Throwable> long[] unsafeTransformToLongArray(
+			Collection<T> collection, UnsafeFunction<T, R, E> unsafeFunction)
+		throws E {
+
+		return TransformUtil.unsafeTransformToLongArray(
+			collection, unsafeFunction);
+	}
+
 	protected AcceptLanguage contextAcceptLanguage;
 	protected UnsafeBiConsumer
-		<java.util.Collection<Assignee>, UnsafeConsumer<Assignee, Exception>,
-		 Exception> contextBatchUnsafeConsumer;
+		<Collection<Assignee>, UnsafeConsumer<Assignee, Exception>, Exception>
+			contextBatchUnsafeConsumer;
 	protected com.liferay.portal.kernel.model.Company contextCompany;
 	protected HttpServletRequest contextHttpServletRequest;
 	protected HttpServletResponse contextHttpServletResponse;
@@ -456,6 +477,8 @@ public abstract class BaseAssigneeResourceImpl
 	protected ResourcePermissionLocalService resourcePermissionLocalService;
 	protected RoleLocalService roleLocalService;
 	protected SortParserProvider sortParserProvider;
+	protected VulcanBatchEngineExportTaskResource
+		vulcanBatchEngineExportTaskResource;
 	protected VulcanBatchEngineImportTaskResource
 		vulcanBatchEngineImportTaskResource;
 

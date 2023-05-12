@@ -22,7 +22,7 @@ import {
 	ControlsProvider,
 	useSelectItem,
 } from '../../../../src/main/resources/META-INF/resources/page_editor/app/contexts/ControlsContext';
-import StoreMother from '../../../../src/main/resources/META-INF/resources/page_editor/test-utils/StoreMother';
+import StoreMother from '../../../../src/main/resources/META-INF/resources/page_editor/test_utils/StoreMother';
 
 const AutoSelect = ({itemId}) => {
 	useSelectItem()(itemId);
@@ -127,31 +127,31 @@ describe('LayoutBreadcrumbs', () => {
 	it('renders item in breadcrumbs when selecting it', () => {
 		renderComponent({activeItemId: 'item-1'});
 
-		expect(screen.queryAllByTitle('Item 1')[0]).toBeInTheDocument();
+		expect(screen.queryAllByText('Item 1')[0]).toBeInTheDocument();
 	});
 
 	it('renders ancestors in breadcrumbs when selecting an item', () => {
 		renderComponent({activeItemId: 'item-3'});
 
-		expect(screen.queryAllByTitle('Item 3')[0]).toBeInTheDocument();
+		expect(screen.queryAllByText('Item 3')[0]).toBeInTheDocument();
 
-		expect(screen.queryAllByTitle('Item 2')[0]).toBeInTheDocument();
+		expect(screen.queryAllByText('Item 2')[0]).toBeInTheDocument();
 
-		expect(screen.queryAllByTitle('Item 1')[0]).toBeInTheDocument();
+		expect(screen.queryAllByText('Item 1')[0]).toBeInTheDocument();
 	});
 
 	it('does not render children in breadcrumbs when selecting an item', () => {
 		renderComponent({activeItemId: 'item-2'});
 
-		expect(screen.queryByTitle('Item 3')).not.toBeInTheDocument();
+		expect(screen.queryByText('Item 3')).not.toBeInTheDocument();
 	});
 
 	it('does not render columns in breadcrumbs even if they are in the path', () => {
 		renderComponent({activeItemId: 'item-4'});
 
-		expect(screen.queryAllByTitle('Item 4')[0]).toBeInTheDocument();
-		expect(screen.queryAllByTitle('grid')[0]).toBeInTheDocument();
+		expect(screen.queryAllByText('Item 4')[0]).toBeInTheDocument();
+		expect(screen.queryAllByText('grid')[0]).toBeInTheDocument();
 
-		expect(screen.queryByTitle('column')).not.toBeInTheDocument();
+		expect(screen.queryByText('column')).not.toBeInTheDocument();
 	});
 });

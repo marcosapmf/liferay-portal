@@ -157,7 +157,7 @@
 	</tr>
 	<tr>
 		<td>SORT_OPTION</td>
-		<td>//button[(@class='dropdown-item') and contains(.,'${key_sortOption}')]</td>
+		<td>//button[contains(@class,'dropdown-item') and contains(.,'${key_sortOption}')]</td>
 		<td></td>
 	</tr>
 	<tr>
@@ -188,6 +188,16 @@
 	<tr>
 		<td>VIEW_FIELDS_ENTRY_BY_POSITION</td>
 		<td>//div[contains(@class,'dnd-tbody')]//div[${key_position}]//span[contains(.,'${key_entryName}')]</td>
+		<td></td>
+	</tr>
+	<tr>
+		<td>CUSTOM_FIELD_VALUE_ONE</td>
+		<td>//div[contains(@class,'dnd-tbody')]/div[1]/div[1]/span</td>
+		<td></td>
+	</tr>
+	<tr>
+		<td>CUSTOM_FIELD_VALUE_TWO</td>
+		<td>//div[contains(@class,'dnd-tbody')]/div[2]/div[1]/span</td>
 		<td></td>
 	</tr>
 	<tr>
@@ -273,6 +283,16 @@
 	<tr>
 		<td>TOGGLE_SWITCH_EXCLUDE_STATUS</td>
 		<td>//div[contains(@id,'clay-dropdown-menu')]//input[contains(@class,'toggle-switch-check')]</td>
+		<td></td>
+	</tr>
+	<tr>
+		<td>FIELD_VIEW_FILTER_DROPDOWN_OPTION</td>
+		<td>//div[(@id='clay-dropdown-menu-4')]/../..//button[contains(., '${key_picklistOption}')]</td>
+		<td></td>
+	</tr>
+	<tr>
+		<td>FIELD_VIEW_FILTER_DATE_INPUT</td>
+		<td>//div[@class='col-lg-6'][${key_dateIndex}]//div[contains(@class, 'input-group-item')]/input[contains(@placeholder,'YYYY-MM-DD')]</td>
 		<td></td>
 	</tr>
 </tbody>

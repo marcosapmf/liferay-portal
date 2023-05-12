@@ -24,6 +24,7 @@ import com.liferay.headless.commerce.admin.pricing.client.serdes.v2_0.DiscountRu
 import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -45,12 +46,11 @@ public interface DiscountRuleResource {
 	public HttpInvoker.HttpResponse deleteDiscountRuleHttpResponse(Long id)
 		throws Exception;
 
-	public void deleteDiscountRuleBatch(
-			Long id, String callbackURL, Object object)
+	public void deleteDiscountRuleBatch(String callbackURL, Object object)
 		throws Exception;
 
 	public HttpInvoker.HttpResponse deleteDiscountRuleBatchHttpResponse(
-			Long id, String callbackURL, Object object)
+			String callbackURL, Object object)
 		throws Exception;
 
 	public DiscountRule getDiscountRule(Long id) throws Exception;
@@ -103,11 +103,11 @@ public interface DiscountRuleResource {
 		throws Exception;
 
 	public void postDiscountIdDiscountRuleBatch(
-			Long id, String callbackURL, Object object)
+			String callbackURL, Object object)
 		throws Exception;
 
 	public HttpInvoker.HttpResponse postDiscountIdDiscountRuleBatchHttpResponse(
-			Long id, String callbackURL, Object object)
+			String callbackURL, Object object)
 		throws Exception;
 
 	public static class Builder {
@@ -119,6 +119,10 @@ public interface DiscountRuleResource {
 			return this;
 		}
 
+		public Builder bearerToken(String token) {
+			return header("Authorization", "Bearer " + token);
+		}
+
 		public DiscountRuleResource build() {
 			return new DiscountRuleResourceImpl(this);
 		}
@@ -127,6 +131,28 @@ public interface DiscountRuleResource {
 			_contextPath = contextPath;
 
 			return this;
+		}
+
+		public Builder endpoint(String address, String scheme) {
+			String[] addressParts = address.split(":");
+
+			String host = addressParts[0];
+
+			int port = 443;
+
+			if (addressParts.length > 1) {
+				String portString = addressParts[1];
+
+				try {
+					port = Integer.parseInt(portString);
+				}
+				catch (NumberFormatException numberFormatException) {
+					throw new IllegalArgumentException(
+						"Unable to parse port from " + portString);
+				}
+			}
+
+			return endpoint(host, port, scheme);
 		}
 
 		public Builder endpoint(String host, int port, String scheme) {
@@ -207,7 +233,29 @@ public interface DiscountRuleResource {
 					"HTTP response status code: " +
 						httpResponse.getStatusCode());
 
-				throw new Problem.ProblemException(Problem.toDTO(content));
+				Problem.ProblemException problemException = null;
+
+				if (Objects.equals(
+						httpResponse.getContentType(), "application/json")) {
+
+					problemException = new Problem.ProblemException(
+						Problem.toDTO(content));
+				}
+				else {
+					_logger.log(
+						Level.WARNING,
+						"Unable to process content type: " +
+							httpResponse.getContentType());
+
+					Problem problem = new Problem();
+
+					problem.setStatus(
+						String.valueOf(httpResponse.getStatusCode()));
+
+					problemException = new Problem.ProblemException(problem);
+				}
+
+				throw problemException;
 			}
 			else {
 				_logger.fine("HTTP response content: " + content);
@@ -267,12 +315,11 @@ public interface DiscountRuleResource {
 			return httpInvoker.invoke();
 		}
 
-		public void deleteDiscountRuleBatch(
-				Long id, String callbackURL, Object object)
+		public void deleteDiscountRuleBatch(String callbackURL, Object object)
 			throws Exception {
 
 			HttpInvoker.HttpResponse httpResponse =
-				deleteDiscountRuleBatchHttpResponse(id, callbackURL, object);
+				deleteDiscountRuleBatchHttpResponse(callbackURL, object);
 
 			String content = httpResponse.getContent();
 
@@ -288,7 +335,29 @@ public interface DiscountRuleResource {
 					"HTTP response status code: " +
 						httpResponse.getStatusCode());
 
-				throw new Problem.ProblemException(Problem.toDTO(content));
+				Problem.ProblemException problemException = null;
+
+				if (Objects.equals(
+						httpResponse.getContentType(), "application/json")) {
+
+					problemException = new Problem.ProblemException(
+						Problem.toDTO(content));
+				}
+				else {
+					_logger.log(
+						Level.WARNING,
+						"Unable to process content type: " +
+							httpResponse.getContentType());
+
+					Problem problem = new Problem();
+
+					problem.setStatus(
+						String.valueOf(httpResponse.getStatusCode()));
+
+					problemException = new Problem.ProblemException(problem);
+				}
+
+				throw problemException;
 			}
 			else {
 				_logger.fine("HTTP response content: " + content);
@@ -301,7 +370,7 @@ public interface DiscountRuleResource {
 		}
 
 		public HttpInvoker.HttpResponse deleteDiscountRuleBatchHttpResponse(
-				Long id, String callbackURL, Object object)
+				String callbackURL, Object object)
 			throws Exception {
 
 			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
@@ -337,8 +406,6 @@ public interface DiscountRuleResource {
 					_builder._port + _builder._contextPath +
 						"/o/headless-commerce-admin-pricing/v2.0/discount-rules/batch");
 
-			httpInvoker.path("id", id);
-
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
 
@@ -363,7 +430,29 @@ public interface DiscountRuleResource {
 					"HTTP response status code: " +
 						httpResponse.getStatusCode());
 
-				throw new Problem.ProblemException(Problem.toDTO(content));
+				Problem.ProblemException problemException = null;
+
+				if (Objects.equals(
+						httpResponse.getContentType(), "application/json")) {
+
+					problemException = new Problem.ProblemException(
+						Problem.toDTO(content));
+				}
+				else {
+					_logger.log(
+						Level.WARNING,
+						"Unable to process content type: " +
+							httpResponse.getContentType());
+
+					Problem problem = new Problem();
+
+					problem.setStatus(
+						String.valueOf(httpResponse.getStatusCode()));
+
+					problemException = new Problem.ProblemException(problem);
+				}
+
+				throw problemException;
 			}
 			else {
 				_logger.fine("HTTP response content: " + content);
@@ -444,7 +533,29 @@ public interface DiscountRuleResource {
 					"HTTP response status code: " +
 						httpResponse.getStatusCode());
 
-				throw new Problem.ProblemException(Problem.toDTO(content));
+				Problem.ProblemException problemException = null;
+
+				if (Objects.equals(
+						httpResponse.getContentType(), "application/json")) {
+
+					problemException = new Problem.ProblemException(
+						Problem.toDTO(content));
+				}
+				else {
+					_logger.log(
+						Level.WARNING,
+						"Unable to process content type: " +
+							httpResponse.getContentType());
+
+					Problem problem = new Problem();
+
+					problem.setStatus(
+						String.valueOf(httpResponse.getStatusCode()));
+
+					problemException = new Problem.ProblemException(problem);
+				}
+
+				throw problemException;
 			}
 			else {
 				_logger.fine("HTTP response content: " + content);
@@ -530,7 +641,29 @@ public interface DiscountRuleResource {
 					"HTTP response status code: " +
 						httpResponse.getStatusCode());
 
-				throw new Problem.ProblemException(Problem.toDTO(content));
+				Problem.ProblemException problemException = null;
+
+				if (Objects.equals(
+						httpResponse.getContentType(), "application/json")) {
+
+					problemException = new Problem.ProblemException(
+						Problem.toDTO(content));
+				}
+				else {
+					_logger.log(
+						Level.WARNING,
+						"Unable to process content type: " +
+							httpResponse.getContentType());
+
+					Problem problem = new Problem();
+
+					problem.setStatus(
+						String.valueOf(httpResponse.getStatusCode()));
+
+					problemException = new Problem.ProblemException(problem);
+				}
+
+				throw problemException;
 			}
 			else {
 				_logger.fine("HTTP response content: " + content);
@@ -621,7 +754,29 @@ public interface DiscountRuleResource {
 					"HTTP response status code: " +
 						httpResponse.getStatusCode());
 
-				throw new Problem.ProblemException(Problem.toDTO(content));
+				Problem.ProblemException problemException = null;
+
+				if (Objects.equals(
+						httpResponse.getContentType(), "application/json")) {
+
+					problemException = new Problem.ProblemException(
+						Problem.toDTO(content));
+				}
+				else {
+					_logger.log(
+						Level.WARNING,
+						"Unable to process content type: " +
+							httpResponse.getContentType());
+
+					Problem problem = new Problem();
+
+					problem.setStatus(
+						String.valueOf(httpResponse.getStatusCode()));
+
+					problemException = new Problem.ProblemException(problem);
+				}
+
+				throw problemException;
 			}
 			else {
 				_logger.fine("HTTP response content: " + content);
@@ -708,7 +863,29 @@ public interface DiscountRuleResource {
 					"HTTP response status code: " +
 						httpResponse.getStatusCode());
 
-				throw new Problem.ProblemException(Problem.toDTO(content));
+				Problem.ProblemException problemException = null;
+
+				if (Objects.equals(
+						httpResponse.getContentType(), "application/json")) {
+
+					problemException = new Problem.ProblemException(
+						Problem.toDTO(content));
+				}
+				else {
+					_logger.log(
+						Level.WARNING,
+						"Unable to process content type: " +
+							httpResponse.getContentType());
+
+					Problem problem = new Problem();
+
+					problem.setStatus(
+						String.valueOf(httpResponse.getStatusCode()));
+
+					problemException = new Problem.ProblemException(problem);
+				}
+
+				throw problemException;
 			}
 			else {
 				_logger.fine("HTTP response content: " + content);
@@ -811,7 +988,29 @@ public interface DiscountRuleResource {
 					"HTTP response status code: " +
 						httpResponse.getStatusCode());
 
-				throw new Problem.ProblemException(Problem.toDTO(content));
+				Problem.ProblemException problemException = null;
+
+				if (Objects.equals(
+						httpResponse.getContentType(), "application/json")) {
+
+					problemException = new Problem.ProblemException(
+						Problem.toDTO(content));
+				}
+				else {
+					_logger.log(
+						Level.WARNING,
+						"Unable to process content type: " +
+							httpResponse.getContentType());
+
+					Problem problem = new Problem();
+
+					problem.setStatus(
+						String.valueOf(httpResponse.getStatusCode()));
+
+					problemException = new Problem.ProblemException(problem);
+				}
+
+				throw problemException;
 			}
 			else {
 				_logger.fine("HTTP response content: " + content);
@@ -875,12 +1074,12 @@ public interface DiscountRuleResource {
 		}
 
 		public void postDiscountIdDiscountRuleBatch(
-				Long id, String callbackURL, Object object)
+				String callbackURL, Object object)
 			throws Exception {
 
 			HttpInvoker.HttpResponse httpResponse =
 				postDiscountIdDiscountRuleBatchHttpResponse(
-					id, callbackURL, object);
+					callbackURL, object);
 
 			String content = httpResponse.getContent();
 
@@ -896,7 +1095,29 @@ public interface DiscountRuleResource {
 					"HTTP response status code: " +
 						httpResponse.getStatusCode());
 
-				throw new Problem.ProblemException(Problem.toDTO(content));
+				Problem.ProblemException problemException = null;
+
+				if (Objects.equals(
+						httpResponse.getContentType(), "application/json")) {
+
+					problemException = new Problem.ProblemException(
+						Problem.toDTO(content));
+				}
+				else {
+					_logger.log(
+						Level.WARNING,
+						"Unable to process content type: " +
+							httpResponse.getContentType());
+
+					Problem problem = new Problem();
+
+					problem.setStatus(
+						String.valueOf(httpResponse.getStatusCode()));
+
+					problemException = new Problem.ProblemException(problem);
+				}
+
+				throw problemException;
 			}
 			else {
 				_logger.fine("HTTP response content: " + content);
@@ -910,7 +1131,7 @@ public interface DiscountRuleResource {
 
 		public HttpInvoker.HttpResponse
 				postDiscountIdDiscountRuleBatchHttpResponse(
-					Long id, String callbackURL, Object object)
+					String callbackURL, Object object)
 			throws Exception {
 
 			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
@@ -945,8 +1166,6 @@ public interface DiscountRuleResource {
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port + _builder._contextPath +
 						"/o/headless-commerce-admin-pricing/v2.0/discounts/discount-rules/batch");
-
-			httpInvoker.path("id", id);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);

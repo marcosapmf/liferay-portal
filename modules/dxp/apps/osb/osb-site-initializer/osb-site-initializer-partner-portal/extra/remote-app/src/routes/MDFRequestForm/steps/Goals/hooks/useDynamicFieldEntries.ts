@@ -16,14 +16,16 @@ import useGetListTypeDefinitions from '../../../../../common/services/liferay/li
 import useGetMyUserAccount from '../../../../../common/services/liferay/user-account/useGetMyUserAccount';
 import getEntriesByListTypeDefinitions from '../../../../../common/utils/getEntriesByListTypeDefinitions';
 
-export default function useDynamicFieldEntries() {
-	const {data: userAccount} = useGetMyUserAccount();
+export default function useDynamicFieldEntries(skipCompanies?: boolean) {
+	const {data: userAccount} = useGetMyUserAccount(skipCompanies);
+
 	const {data: listTypeDefinitions} = useGetListTypeDefinitions([
 		LiferayPicklistName.ADDITIONAL_OPTIONS,
-		LiferayPicklistName.REGIONS,
+		LiferayPicklistName.COUNTRIES,
 		LiferayPicklistName.LIFERAY_BUSINESS_SALES_GOALS,
 		LiferayPicklistName.TARGET_AUDIENCE_ROLES,
 		LiferayPicklistName.TARGET_MARKETS,
+		LiferayPicklistName.CURRENCIES,
 	]);
 
 	const companiesEntries = useMemo(
@@ -31,7 +33,7 @@ export default function useDynamicFieldEntries() {
 			userAccount?.accountBriefs.map((accountBrief) => ({
 				label: accountBrief.name,
 				value: accountBrief.id,
-			})) as React.OptionHTMLAttributes<HTMLOptionElement>[],
+			})) as React.OptionHTMLAttributes<HTMLOptionElement>[] | undefined,
 		[userAccount?.accountBriefs]
 	);
 

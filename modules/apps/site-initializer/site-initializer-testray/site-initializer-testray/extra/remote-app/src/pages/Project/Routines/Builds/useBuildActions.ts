@@ -55,16 +55,18 @@ const useBuildActions = ({isHeaderActions}: ActionsHookParameter = {}) => {
 					.update(id, {
 						promoted: !promoted,
 					})
-					.then(() =>
-						isHeaderActions
-							? mutate((prevData: any) => ({
-									...prevData,
-									promoted: !prevData?.promoted,
-							  }))
-							: updateItemFromList(mutate, id, {
-									promoted: !promoted,
-							  })
-					)
+					.then(() => {
+						if (isHeaderActions) {
+							return mutate((prevData: any) => ({
+								...prevData,
+								promoted: !prevData?.promoted,
+							}));
+						}
+
+						updateItemFromList(mutate, id, {
+							promoted: !promoted,
+						});
+					})
 					.then(modal.onSuccess);
 			},
 			icon: 'star',
@@ -76,6 +78,7 @@ const useBuildActions = ({isHeaderActions}: ActionsHookParameter = {}) => {
 			action: () => alert('Archive'),
 			icon: 'archive',
 			name: i18n.translate('archive'),
+			permission: 'UPDATE',
 		},
 		{
 			action: ({id}, mutate) =>

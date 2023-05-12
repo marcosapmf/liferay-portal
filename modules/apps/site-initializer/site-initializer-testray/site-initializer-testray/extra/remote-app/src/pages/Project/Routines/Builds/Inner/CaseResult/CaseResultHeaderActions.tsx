@@ -53,24 +53,31 @@ const CaseResultHeaderActions: React.FC<{
 	].includes(caseResult.dueStatus.key as CaseResultStatuses);
 
 	const workflowDisabled = assignedUserId <= 0 || assignedUserId !== userId;
-
 	const buttonValidations = {
 		completeTest:
 			workflowDisabled ||
 			caseResult.dueStatus.key !== CaseResultStatuses.IN_PROGRESS,
+
 		editValidation: assignedUserId > 0 && assignedUserId !== userId,
+
 		reopenTest: workflowDisabled || isReopened,
 	};
+
+	const hasCaseResultEditPermission = !!caseResult.actions?.update;
 
 	return (
 		<>
 			<AssignModal modal={modal} />
 
-			<ClayButton.Group className="mb-3 ml-3" spaced>
+			<ClayButton.Group
+				className="mb-3 ml-3"
+				hidden={!hasCaseResultEditPermission}
+				spaced
+			>
 				<ClayButton
-					disabled={isCaseResultAssignedToMe}
+					disabled={!buttonValidations.completeTest}
 					displayType={
-						isCaseResultAssignedToMe ? 'unstyled' : undefined
+						!buttonValidations.completeTest ? 'unstyled' : undefined
 					}
 					onClick={() => modal.open()}
 				>
@@ -78,9 +85,11 @@ const CaseResultHeaderActions: React.FC<{
 				</ClayButton>
 
 				<ClayButton
-					disabled={isCaseResultAssignedToMe}
+					disabled={!buttonValidations.completeTest}
 					displayType={
-						isCaseResultAssignedToMe ? 'unstyled' : 'secondary'
+						buttonValidations.completeTest
+							? 'secondary'
+							: 'unstyled'
 					}
 					onClick={() =>
 						(isCaseResultAssignedToMe
@@ -127,11 +136,11 @@ const CaseResultHeaderActions: React.FC<{
 				<ClayButton
 					disabled={
 						buttonValidations.editValidation ||
-						isCaseResultAssignedToMe
+						!buttonValidations.completeTest
 					}
 					displayType={
 						buttonValidations.editValidation ||
-						isCaseResultAssignedToMe
+						!buttonValidations.completeTest
 							? 'unstyled'
 							: 'secondary'
 					}

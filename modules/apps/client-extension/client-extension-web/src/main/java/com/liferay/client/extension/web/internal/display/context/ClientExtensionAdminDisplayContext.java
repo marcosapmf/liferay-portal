@@ -14,16 +14,12 @@
 
 package com.liferay.client.extension.web.internal.display.context;
 
-import com.liferay.client.extension.constants.ClientExtensionEntryConstants;
 import com.liferay.client.extension.type.factory.CETFactory;
 import com.liferay.client.extension.web.internal.display.context.util.CETLabelUtil;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenu;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
-import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
-import com.liferay.portal.kernel.util.PropsUtil;
-
-import java.util.Objects;
 
 import javax.portlet.RenderRequest;
 import javax.portlet.RenderResponse;
@@ -48,11 +44,9 @@ public class ClientExtensionAdminDisplayContext {
 		CreationMenu creationMenu = new CreationMenu();
 
 		for (String type : _cetFactory.getTypes()) {
-			if (!GetterUtil.getBoolean(
-					PropsUtil.get("feature.flag.LPS-166479")) &&
-				Objects.equals(
-					type, ClientExtensionEntryConstants.TYPE_THEME_SPRITEMAP)) {
+			String key = CETFactory.FEATURE_FLAG_KEYS.get(type);
 
+			if ((key != null) && !FeatureFlagManagerUtil.isEnabled(key)) {
 				continue;
 			}
 

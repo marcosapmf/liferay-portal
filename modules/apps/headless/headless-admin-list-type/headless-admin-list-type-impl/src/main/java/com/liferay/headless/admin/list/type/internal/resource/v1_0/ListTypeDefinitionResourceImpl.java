@@ -25,6 +25,7 @@ import com.liferay.list.type.service.ListTypeDefinitionService;
 import com.liferay.list.type.service.ListTypeEntryLocalService;
 import com.liferay.object.service.ObjectFieldLocalService;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
+import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.search.filter.Filter;
@@ -79,6 +80,17 @@ public class ListTypeDefinitionResourceImpl
 	}
 
 	@Override
+	public ListTypeDefinition getListTypeDefinitionByExternalReferenceCode(
+			String externalReferenceCode)
+		throws PortalException {
+
+		return _toListTypeDefinition(
+			_listTypeDefinitionService.
+				getListTypeDefinitionByExternalReferenceCode(
+					externalReferenceCode, contextCompany.getCompanyId()));
+	}
+
+	@Override
 	public Page<ListTypeDefinition> getListTypeDefinitionsPage(
 			String search, Aggregation aggregation, Filter filter,
 			Pagination pagination, Sort[] sorts)
@@ -90,6 +102,13 @@ public class ListTypeDefinitionResourceImpl
 				addAction(
 					ListTypeActionKeys.ADD_LIST_TYPE_DEFINITION,
 					"postListTypeDefinition", ListTypeConstants.RESOURCE_NAME,
+					contextCompany.getCompanyId())
+			).put(
+				"createBatch",
+				addAction(
+					ListTypeActionKeys.ADD_LIST_TYPE_DEFINITION,
+					"postListTypeDefinitionBatch",
+					ListTypeConstants.RESOURCE_NAME,
 					contextCompany.getCompanyId())
 			).put(
 				"get",
@@ -124,7 +143,11 @@ public class ListTypeDefinitionResourceImpl
 			_listTypeDefinitionService.addListTypeDefinition(
 				listTypeDefinition.getExternalReferenceCode(),
 				LocalizedMapUtil.getLocalizedMap(
-					listTypeDefinition.getName_i18n())));
+					listTypeDefinition.getName_i18n()),
+				transformToList(
+					listTypeDefinition.getListTypeEntries(),
+					listTypeEntry -> ListTypeEntryUtil.toListTypeEntry(
+						listTypeEntry, _listTypeEntryLocalService))));
 	}
 
 	@Override
@@ -137,7 +160,33 @@ public class ListTypeDefinitionResourceImpl
 				listTypeDefinition.getExternalReferenceCode(),
 				listTypeDefinitionId,
 				LocalizedMapUtil.getLocalizedMap(
-					listTypeDefinition.getName_i18n())));
+					listTypeDefinition.getName_i18n()),
+				transformToList(
+					listTypeDefinition.getListTypeEntries(),
+					listTypeEntry -> ListTypeEntryUtil.toListTypeEntry(
+						listTypeEntry, _listTypeEntryLocalService))));
+	}
+
+	@Override
+	public ListTypeDefinition putListTypeDefinitionByExternalReferenceCode(
+			String externalReferenceCode, ListTypeDefinition listTypeDefinition)
+		throws Exception {
+
+		listTypeDefinition.setExternalReferenceCode(externalReferenceCode);
+
+		com.liferay.list.type.model.ListTypeDefinition
+			serviceBuilderListTypeDefinition =
+				_listTypeDefinitionService.
+					fetchListTypeDefinitionByExternalReferenceCode(
+						externalReferenceCode, contextCompany.getCompanyId());
+
+		if (serviceBuilderListTypeDefinition != null) {
+			return putListTypeDefinition(
+				serviceBuilderListTypeDefinition.getListTypeDefinitionId(),
+				listTypeDefinition);
+		}
+
+		return postListTypeDefinition(listTypeDefinition);
 	}
 
 	private Locale _getLocale() {

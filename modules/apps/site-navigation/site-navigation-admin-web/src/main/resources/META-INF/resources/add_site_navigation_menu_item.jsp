@@ -70,5 +70,12 @@ renderResponse.setTitle(siteNavigationMenuItemType.getAddTitle(locale));
 </aui:form>
 
 <liferay-frontend:component
+	context='<%=
+		HashMapBuilder.<String, Object>put(
+			"order", ParamUtil.getLong(request, "order", -1)
+		).put(
+			"parentSiteNavigationMenuItemId", ParamUtil.getLong(request, "parentSiteNavigationMenuItemId")
+		).build()
+	%>'
 	module="js/AddSiteNavigationMenuItem"
 />

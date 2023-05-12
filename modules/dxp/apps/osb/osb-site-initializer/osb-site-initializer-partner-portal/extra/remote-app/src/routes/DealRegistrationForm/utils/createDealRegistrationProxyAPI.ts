@@ -22,18 +22,17 @@ export default async function createDealRegistrationProxyAPI(
 	);
 
 	if (dtoLeadSFResponse.externalReferenceCode) {
-		const dtoLeadQualificationSFResponse = await createDealRegistration(
-			ResourceName.LEAD_QUALIFICATIONS_SALESFORCE,
+		const dtoLeadProjectSFResponse = await createDealRegistration(
+			ResourceName.PROJECT_SALESFORCE,
 			values,
 			dtoLeadSFResponse.externalReferenceCode
 		);
 
-		if (dtoLeadQualificationSFResponse) {
+		if (dtoLeadProjectSFResponse) {
 			await createDealRegistration(
-				ResourceName.PROJECT_SALESFORCE,
+				ResourceName.LEAD_NOTIFICATION,
 				values,
-				dtoLeadSFResponse.externalReferenceCode,
-				dtoLeadQualificationSFResponse.externalReferenceCode
+				dtoLeadSFResponse.externalReferenceCode
 			);
 		}
 	}

@@ -16,8 +16,7 @@ import ClayDropDown, {Align} from '@clayui/drop-down';
 import ClayIcon from '@clayui/icon';
 import React, {ReactElement, useState} from 'react';
 import {useNavigate} from 'react-router-dom';
-
-import {Dropdown} from '../../context/HeaderContext';
+import {Dropdown} from '~/atoms';
 
 type DropDownProps = {
 	items: Dropdown;
@@ -85,7 +84,7 @@ const DropDown: React.FC<DropDownProps> = ({
 													/>
 												)}
 
-												<span className="ml-1 testray-sidebar-text">
+												<span className="ml-1 tr-sidebar__text">
 													{label}
 												</span>
 											</div>

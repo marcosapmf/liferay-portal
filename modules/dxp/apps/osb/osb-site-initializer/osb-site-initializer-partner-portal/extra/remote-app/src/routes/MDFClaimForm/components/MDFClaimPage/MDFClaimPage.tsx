@@ -24,6 +24,7 @@ import MDFClaim from '../../../../common/interfaces/mdfClaim';
 import MDFClaimProps from '../../../../common/interfaces/mdfClaimProps';
 import {Status} from '../../../../common/utils/constants/status';
 import getIntlNumberFormat from '../../../../common/utils/getIntlNumberFormat';
+import useDynamicFieldEntries from '../../../MDFClaimList/hooks/useDynamicFieldEntries';
 import ActivityClaimPanel from './components/ActivityClaimPanel';
 import useActivitiesAmount from './hooks/useActivitiesAmount';
 
@@ -40,6 +41,7 @@ const MDFClaimPage = ({
 		isSubmitting,
 		isValid,
 		setFieldValue,
+		status: submitted,
 		values,
 		...formikHelpers
 	} = useFormikContext<MDFClaim>();
@@ -52,6 +54,8 @@ const MDFClaimPage = ({
 			[setFieldValue]
 		)
 	);
+
+	const {companiesEntries, fieldEntries} = useDynamicFieldEntries();
 
 	const claimsFiltered = mdfRequest.mdfReqToMDFClms?.filter(
 		(mdfRequestToMdfClaim) => {
@@ -68,7 +72,43 @@ const MDFClaimPage = ({
 	).length;
 
 	const getClaimPage = () => {
-		if (claimsFiltered && claimsFiltered >= 2) {
+		if (!fieldEntries || !companiesEntries) {
+			return <ClayLoadingIndicator />;
+		}
+
+		if (
+			values.id &&
+			values.mdfClaimStatus?.key !== 'draft' &&
+			values.mdfClaimStatus?.key !== 'moreInfoRequested'
+		) {
+			return (
+				<PRMForm name="" title="MDF Claim">
+					<div className="d-flex justify-content-center mt-4">
+						<ClayAlert
+							className="m-0 w-100"
+							displayType="info"
+							title="Info:"
+						>
+							This MDF Claim can not be edited.
+						</ClayAlert>
+					</div>
+
+					<PRMForm.Footer>
+						<div className="d-flex mr-auto">
+							<ClayButton
+								className="mr-4"
+								displayType="secondary"
+								onClick={() => onCancel()}
+							>
+								Cancel
+							</ClayButton>
+						</div>
+					</PRMForm.Footer>
+				</PRMForm>
+			);
+		}
+
+		if (claimsFiltered && claimsFiltered >= 2 && !values.id) {
 			return (
 				<PRMForm name="New" title="Reimbursement Claim">
 					<div className="d-flex justify-content-center mt-4">
@@ -168,9 +208,9 @@ const MDFClaimPage = ({
 					<ResumeCard
 						className="mb-4"
 						leftContent="Total MDF Requested Amount"
-						rightContent={getIntlNumberFormat().format(
-							values.totalrequestedAmount || 0
-						)}
+						rightContent={getIntlNumberFormat(
+							values.currency
+						).format(values.totalMDFRequestedAmount || 0)}
 					/>
 
 					<PRMFormik.Field
@@ -189,21 +229,21 @@ const MDFClaimPage = ({
 					<div className="d-flex mr-auto">
 						<ClayButton
 							className="inline-item inline-item-after pl-0"
-							disabled={isSubmitting}
+							disabled={isSubmitting || submitted}
 							displayType={null}
 							onClick={() => onSaveAsDraft(values, formikHelpers)}
 						>
 							Save as Draft
-							{isSubmitting &&
-								values.mdfClaimStatus === Status.DRAFT && (
-									<ClayLoadingIndicator className="inline-item inline-item-after ml-2" />
-								)}
+							{isSubmitting && (
+								<ClayLoadingIndicator className="inline-item inline-item-after ml-2" />
+							)}
 						</ClayButton>
 					</div>
 
 					<div>
 						<ClayButton
 							className="mr-4"
+							disabled={isSubmitting || submitted}
 							displayType="secondary"
 							onClick={() => onCancel()}
 						>
@@ -212,14 +252,13 @@ const MDFClaimPage = ({
 
 						<ClayButton
 							className="inline-item inline-item-after"
-							disabled={!isValid || isSubmitting}
+							disabled={!isValid || isSubmitting || submitted}
 							type="submit"
 						>
 							Submit
-							{isSubmitting &&
-								values.mdfClaimStatus === Status.PENDING && (
-									<ClayLoadingIndicator className="inline-item inline-item-after ml-2" />
-								)}
+							{isSubmitting && (
+								<ClayLoadingIndicator className="inline-item inline-item-after ml-2" />
+							)}
 						</ClayButton>
 					</div>
 				</PRMForm.Footer>

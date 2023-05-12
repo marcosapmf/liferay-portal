@@ -14710,7 +14710,8 @@ public class DLFolderPersistenceImpl
 				if (ercDLFolder != null) {
 					throw new DuplicateDLFolderExternalReferenceCodeException(
 						"Duplicate document library folder with external reference code " +
-							dlFolder.getExternalReferenceCode());
+							dlFolder.getExternalReferenceCode() +
+								" and group " + dlFolder.getGroupId());
 				}
 			}
 			else {
@@ -14719,7 +14720,8 @@ public class DLFolderPersistenceImpl
 
 					throw new DuplicateDLFolderExternalReferenceCodeException(
 						"Duplicate document library folder with external reference code " +
-							dlFolder.getExternalReferenceCode());
+							dlFolder.getExternalReferenceCode() +
+								" and group " + dlFolder.getGroupId());
 				}
 			}
 		}

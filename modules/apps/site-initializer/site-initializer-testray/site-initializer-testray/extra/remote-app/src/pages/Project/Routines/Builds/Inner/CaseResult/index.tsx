@@ -14,58 +14,50 @@
 
 import ClayIcon from '@clayui/icon';
 import ClayLayout from '@clayui/layout';
-import {useContext} from 'react';
+import {useMemo} from 'react';
 import {Link, useOutletContext} from 'react-router-dom';
 import {KeyedMutator} from 'swr';
 
 import Avatar from '../../../../../../components/Avatar';
-import AssignToMe from '../../../../../../components/Avatar/AssigneToMe';
+import AssignToMe from '../../../../../../components/Avatar/AssignToMe/AssignToMe';
 import Code from '../../../../../../components/Code';
+import JiraLink from '../../../../../../components/JiraLink';
 import Container from '../../../../../../components/Layout/Container';
 import StatusBadge from '../../../../../../components/StatusBadge';
 import {StatusBadgeType} from '../../../../../../components/StatusBadge/StatusBadge';
 import QATable, {Orientation} from '../../../../../../components/Table/QATable';
-import {ApplicationPropertiesContext} from '../../../../../../context/ApplicationPropertiesContext';
 import i18n from '../../../../../../i18n';
 import {
 	MessageBoardMessage,
 	TestrayAttachment,
 	TestrayCaseResult,
-	TestrayCaseResultIssue,
 	testrayCaseResultImpl,
 } from '../../../../../../services/rest';
+import {safeJSONParse} from '../../../../../../util';
 import {getTimeFromNow} from '../../../../../../util/date';
 import CaseResultHeaderActions from './CaseResultHeaderActions';
 
 type OutletContext = {
 	caseResult: TestrayCaseResult;
-	caseResultsIssues: TestrayCaseResultIssue[];
 	mbMessage: MessageBoardMessage;
 	mutateCaseResult: KeyedMutator<TestrayCaseResult>;
 	projectId: string;
 };
 
-const getAttachments = (caseResult: TestrayCaseResult): TestrayAttachment[] => {
-	try {
-		return JSON.parse(caseResult.attachments);
-	}
-	catch (error) {
-		return [];
-	}
-};
-
 const CaseResult = () => {
-	const {jiraBaseURL} = useContext(ApplicationPropertiesContext);
-
 	const {
 		caseResult,
-		caseResultsIssues,
 		mbMessage,
 		mutateCaseResult,
 		projectId,
 	}: OutletContext = useOutletContext();
 
-	const attachments = getAttachments(caseResult);
+	const attachments = useMemo(
+		() => safeJSONParse(caseResult.attachments, []) as TestrayAttachment[],
+		[caseResult.attachments]
+	);
+
+	const hasCaseResultEditPermission = !!caseResult?.actions?.update;
 
 	return (
 		<>
@@ -230,7 +222,8 @@ const CaseResult = () => {
 									value: caseResult?.user ? (
 										<Avatar
 											displayName
-											name={`${caseResult.user.givenName} ${caseResult.user.additionalName}`}
+											name={caseResult.user.name}
+											url={caseResult.user.image}
 										/>
 									) : (
 										<AssignToMe
@@ -241,24 +234,23 @@ const CaseResult = () => {
 											}
 										/>
 									),
+									visible:
+										!!caseResult.user ||
+										hasCaseResultEditPermission,
 								},
 								{
 									divider: true,
 									title: i18n.translate('issues'),
-									value: caseResultsIssues.map(
-										(
-											caseResultIssue: TestrayCaseResultIssue,
-											index: number
-										) => (
-											<a
-												className="mr-2"
-												href={`${jiraBaseURL}/browse/${caseResultIssue?.issue?.name}`}
-												key={index}
-											>
-												{caseResultIssue?.issue?.name}
-											</a>
-										)
-									),
+									value: caseResult.issues.length
+										? caseResult.issues.map(
+												(caseResultIssue, index) => (
+													<JiraLink
+														issue={caseResultIssue}
+														key={index}
+													/>
+												)
+										  )
+										: '-',
 								},
 								{
 									title: i18n.translate('comment'),
@@ -268,21 +260,28 @@ const CaseResult = () => {
 												{mbMessage?.articleBody}
 											</cite>
 
-											<small className="mt-1 text-gray">
+											<div className="align-items-center d-flex justify-center mt-2 text-gray">
 												<Avatar
-													displayName
-													name={`${
+													name={
 														mbMessage.creator?.name
-													} · ${getTimeFromNow(
-														mbMessage.dateCreated
-													)}`}
+													}
 													url={
 														mbMessage.creator?.image
 													}
 												/>
-											</small>
+
+												<span className="ml-2">
+													{`${
+														mbMessage.creator?.name
+													} · ${getTimeFromNow(
+														mbMessage.dateCreated
+													)}`}
+												</span>
+											</div>
 										</div>
-									) : null,
+									) : (
+										i18n.translate('none')
+									),
 								},
 							]}
 							orientation={Orientation.VERTICAL}

@@ -16,9 +16,9 @@ package com.liferay.headless.delivery.internal.resource.v1_0;
 
 import com.liferay.headless.common.spi.service.context.ServiceContextRequestUtil;
 import com.liferay.headless.delivery.dto.v1_0.WikiNode;
-import com.liferay.headless.delivery.internal.dto.v1_0.converter.WikiNodeDTOConverter;
 import com.liferay.headless.delivery.internal.odata.entity.v1_0.WikiNodeEntityModel;
 import com.liferay.headless.delivery.resource.v1_0.WikiNodeResource;
+import com.liferay.portal.kernel.change.tracking.CTAware;
 import com.liferay.portal.kernel.search.BooleanClauseOccur;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.Sort;
@@ -30,6 +30,7 @@ import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.vulcan.aggregation.Aggregation;
+import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterRegistry;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.pagination.Page;
@@ -52,6 +53,7 @@ import org.osgi.service.component.annotations.ServiceScope;
 	properties = "OSGI-INF/liferay/rest/v1_0/wiki-node.properties",
 	scope = ServiceScope.PROTOTYPE, service = WikiNodeResource.class
 )
+@CTAware
 public class WikiNodeResourceImpl extends BaseWikiNodeResourceImpl {
 
 	@Override
@@ -266,8 +268,11 @@ public class WikiNodeResourceImpl extends BaseWikiNodeResourceImpl {
 	@Reference
 	private DTOConverterRegistry _dtoConverterRegistry;
 
-	@Reference
-	private WikiNodeDTOConverter _wikiNodeDTOConverter;
+	@Reference(
+		target = "(component.name=com.liferay.headless.delivery.internal.dto.v1_0.converter.WikiNodeDTOConverter)"
+	)
+	private DTOConverter<com.liferay.wiki.model.WikiNode, WikiNode>
+		_wikiNodeDTOConverter;
 
 	@Reference
 	private WikiNodeLocalService _wikiNodeLocalService;

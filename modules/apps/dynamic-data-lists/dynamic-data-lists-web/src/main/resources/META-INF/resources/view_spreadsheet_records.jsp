@@ -129,16 +129,22 @@ DDMStructure ddmStructure = recordSet.getDDMStructure();
 		return a.displayIndex - b.displayIndex;
 	});
 
-	var data = Liferay.SpreadSheet.buildEmptyRecords(
-		<%= Math.max(recordSet.getMinDisplayRows() - records.size(), 0) %>,
-		keys
-	);
+	var data = [];
+
+	<c:if test="<%= editable %>">
+		data = Liferay.SpreadSheet.buildEmptyRecords(
+			<%= Math.max(recordSet.getMinDisplayRows() - records.size(), 0) %>,
+			keys
+		);
+	</c:if>
 
 	records.forEach((item, index) => {
 		data.splice(item.displayIndex, 0, item);
 	});
 
 	var spreadSheet = new Liferay.SpreadSheet({
+		addRecordURL:
+			'<liferay-portlet:resourceURL copyCurrentRenderParameters="<%= false %>" id="/dynamic_data_lists/add_record" />',
 		boundingBox: '#<portlet:namespace />dataTable',
 		columns: columns,
 		contentBox: '#<portlet:namespace />dataTableContent',

@@ -12804,7 +12804,9 @@ public class CommercePriceListPersistenceImpl
 				if (ercCommercePriceList != null) {
 					throw new DuplicateCommercePriceListExternalReferenceCodeException(
 						"Duplicate commerce price list with external reference code " +
-							commercePriceList.getExternalReferenceCode());
+							commercePriceList.getExternalReferenceCode() +
+								" and company " +
+									commercePriceList.getCompanyId());
 				}
 			}
 			else {
@@ -12814,7 +12816,9 @@ public class CommercePriceListPersistenceImpl
 
 					throw new DuplicateCommercePriceListExternalReferenceCodeException(
 						"Duplicate commerce price list with external reference code " +
-							commercePriceList.getExternalReferenceCode());
+							commercePriceList.getExternalReferenceCode() +
+								" and company " +
+									commercePriceList.getCompanyId());
 				}
 			}
 		}

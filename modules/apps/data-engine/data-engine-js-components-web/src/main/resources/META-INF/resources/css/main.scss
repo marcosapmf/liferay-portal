@@ -69,10 +69,15 @@ body .ddm-user-view-content {
 			margin-right: 16px;
 		}
 
-		.custom-control-inline + .custom-control-inline {
+		.custom-control-inline {
 			margin-left: 16px;
 		}
 	}
+}
+
+.form-control {
+	@extend %text-ellipsis;
+	white-space: normal;
 }
 
 .portlet-forms .ddm-form-basic-info .ddm-form-name {

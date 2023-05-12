@@ -67,6 +67,7 @@ import com.liferay.portal.kernel.model.Portlet;
 import com.liferay.portal.kernel.model.Role;
 import com.liferay.portal.kernel.model.SystemEvent;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.model.UserConstants;
 import com.liferay.portal.kernel.model.UserGroup;
 import com.liferay.portal.kernel.model.VirtualHost;
 import com.liferay.portal.kernel.model.role.RoleConstants;
@@ -89,6 +90,7 @@ import com.liferay.portal.kernel.service.PasswordPolicyLocalService;
 import com.liferay.portal.kernel.service.PortalPreferencesLocalService;
 import com.liferay.portal.kernel.service.PortletLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
+import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.SystemEventLocalService;
 import com.liferay.portal.kernel.service.UserGroupLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
@@ -99,7 +101,6 @@ import com.liferay.portal.kernel.service.persistence.PortalPreferencesPersistenc
 import com.liferay.portal.kernel.service.persistence.PortletPersistence;
 import com.liferay.portal.kernel.service.persistence.UserPersistence;
 import com.liferay.portal.kernel.service.persistence.VirtualHostPersistence;
-import com.liferay.portal.kernel.transaction.Isolation;
 import com.liferay.portal.kernel.transaction.TransactionCommitCallbackUtil;
 import com.liferay.portal.kernel.transaction.Transactional;
 import com.liferay.portal.kernel.util.ArrayUtil;
@@ -136,6 +137,7 @@ import java.net.UnknownHostException;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -270,7 +272,7 @@ public class CompanyLocalServiceImpl extends CompanyLocalServiceBaseImpl {
 				_addDemoSettings(company);
 			}
 
-			_addDefaultUser(company);
+			_addGuestUser(company);
 
 			company = _checkCompany(company, mx);
 
@@ -329,7 +331,7 @@ public class CompanyLocalServiceImpl extends CompanyLocalServiceBaseImpl {
 	public Company checkCompany(String webId) throws PortalException {
 		String mx = webId;
 
-		return companyLocalService.checkCompany(webId, mx);
+		return checkCompany(webId, mx);
 	}
 
 	/**
@@ -343,10 +345,6 @@ public class CompanyLocalServiceImpl extends CompanyLocalServiceBaseImpl {
 	 * @return the company with the web domain and mail domain
 	 */
 	@Override
-	@Transactional(
-		isolation = Isolation.PORTAL,
-		rollbackFor = {PortalException.class, SystemException.class}
-	)
 	public Company checkCompany(String webId, String mx)
 		throws PortalException {
 
@@ -393,14 +391,10 @@ public class CompanyLocalServiceImpl extends CompanyLocalServiceBaseImpl {
 					companyId);
 		}
 
-		Long companyThreadLocalCompanyId = CompanyThreadLocal.getCompanyId();
-
 		try (SafeCloseable safeCloseable1 =
-				CompanyThreadLocal.setWithSafeCloseable(
-					companyThreadLocalCompanyId);
+				CompanyThreadLocal.setWithSafeCloseable(companyId);
 			SafeCloseable safeCloseable2 =
-				PortalInstances.setCompanyInDeletionProcess(
-					companyThreadLocalCompanyId)) {
+				PortalInstances.setCompanyInDeletionProcess(companyId)) {
 
 			return doDeleteCompany(companyId);
 		}
@@ -899,7 +893,7 @@ public class CompanyLocalServiceImpl extends CompanyLocalServiceBaseImpl {
 			long companyId, String languageId, String timeZoneId)
 		throws PortalException {
 
-		User user = _userLocalService.getDefaultUser(companyId);
+		User user = _userLocalService.getGuestUser(companyId);
 
 		user.setLanguageId(languageId);
 		user.setTimeZoneId(timeZoneId);
@@ -912,7 +906,7 @@ public class CompanyLocalServiceImpl extends CompanyLocalServiceBaseImpl {
 	@Async
 	@Override
 	public void updateDisplayGroupNames(long companyId) throws PortalException {
-		User user = _userLocalService.getDefaultUser(companyId);
+		User user = _userLocalService.getGuestUser(companyId);
 
 		Locale locale = user.getLocale();
 
@@ -967,6 +961,30 @@ public class CompanyLocalServiceImpl extends CompanyLocalServiceBaseImpl {
 			});
 
 		groupActionableDynamicQuery.performActions();
+	}
+
+	@Override
+	public Company updateIndexNameNext(long companyId, String indexNameNext)
+		throws PortalException {
+
+		Company company = companyPersistence.findByPrimaryKey(companyId);
+
+		company.setIndexNameNext(indexNameNext);
+
+		return companyPersistence.update(company);
+	}
+
+	@Override
+	public Company updateIndexNames(
+			long companyId, String indexNameCurrent, String indexNameNext)
+		throws PortalException {
+
+		Company company = companyPersistence.findByPrimaryKey(companyId);
+
+		company.setIndexNameCurrent(indexNameCurrent);
+		company.setIndexNameNext(indexNameNext);
+
+		return companyPersistence.update(company);
 	}
 
 	/**
@@ -1045,6 +1063,8 @@ public class CompanyLocalServiceImpl extends CompanyLocalServiceBaseImpl {
 			String newLanguageIds = unicodeProperties.getProperty(
 				PropsKeys.LOCALES);
 
+			boolean invalidateLayoutSetTemplates = false;
+
 			if (Validator.isNotNull(newLanguageIds)) {
 				String oldLanguageIds = portletPreferences.getValue(
 					PropsKeys.LOCALES, StringPool.BLANK);
@@ -1057,20 +1077,7 @@ public class CompanyLocalServiceImpl extends CompanyLocalServiceBaseImpl {
 
 					LanguageUtil.resetAvailableLocales(companyId);
 
-					// Invalidate cache of all layout set prototypes that belong
-					// to this company. See LPS-36403.
-
-					Date date = new Date();
-
-					for (LayoutSetPrototype layoutSetPrototype :
-							_layoutSetPrototypeLocalService.
-								getLayoutSetPrototypes(companyId)) {
-
-						layoutSetPrototype.setModifiedDate(date);
-
-						_layoutSetPrototypeLocalService.
-							updateLayoutSetPrototype(layoutSetPrototype);
-					}
+					invalidateLayoutSetTemplates = true;
 				}
 			}
 
@@ -1107,6 +1114,24 @@ public class CompanyLocalServiceImpl extends CompanyLocalServiceBaseImpl {
 			}
 
 			portletPreferences.store();
+
+			if (invalidateLayoutSetTemplates) {
+
+				// Invalidate cache of all layout set prototypes that belong
+				// to this company. See LPS-36403.
+
+				Date date = new Date();
+
+				for (LayoutSetPrototype layoutSetPrototype :
+						_layoutSetPrototypeLocalService.getLayoutSetPrototypes(
+							companyId)) {
+
+					layoutSetPrototype.setModifiedDate(date);
+
+					_layoutSetPrototypeLocalService.updateLayoutSetPrototype(
+						layoutSetPrototype);
+				}
+			}
 		}
 		catch (LocaleException localeException) {
 			throw localeException;
@@ -1351,12 +1376,12 @@ public class CompanyLocalServiceImpl extends CompanyLocalServiceBaseImpl {
 
 		// User
 
-		User defaultUser = _userLocalService.getDefaultUser(companyId);
+		User guestUser = _userLocalService.getGuestUser(companyId);
 
 		String name = PrincipalThreadLocal.getName();
 
 		try {
-			PrincipalThreadLocal.setName(defaultUser.getUserId());
+			PrincipalThreadLocal.setName(guestUser.getUserId());
 
 			ActionableDynamicQuery userActionableDynamicQuery =
 				_userLocalService.getActionableDynamicQuery();
@@ -1364,7 +1389,7 @@ public class CompanyLocalServiceImpl extends CompanyLocalServiceBaseImpl {
 			userActionableDynamicQuery.setCompanyId(companyId);
 			userActionableDynamicQuery.setPerformActionMethod(
 				(User user) -> {
-					if (!user.isDefaultUser()) {
+					if (!user.isGuestUser()) {
 						_userLocalService.deleteUser(user.getUserId());
 					}
 				});
@@ -1375,7 +1400,7 @@ public class CompanyLocalServiceImpl extends CompanyLocalServiceBaseImpl {
 			PrincipalThreadLocal.setName(name);
 		}
 
-		_userLocalService.deleteUser(defaultUser);
+		_userLocalService.deleteUser(guestUser);
 
 		// Role
 
@@ -1403,16 +1428,6 @@ public class CompanyLocalServiceImpl extends CompanyLocalServiceBaseImpl {
 	}
 
 	protected void preregisterCompany(Company company) {
-		try {
-			SearchEngineHelperUtil.initialize(company.getCompanyId());
-		}
-		catch (Exception exception) {
-			_log.error(
-				"Unable to initialize search engine for company " +
-					company.getCompanyId(),
-				exception);
-		}
-
 		PortalInstanceLifecycleManager portalInstanceLifecycleManager =
 			_serviceTracker.getService();
 
@@ -1583,22 +1598,20 @@ public class CompanyLocalServiceImpl extends CompanyLocalServiceBaseImpl {
 				throw new CompanyVirtualHostException(
 					"Virtual hostname is invalid");
 			}
-			else {
-				VirtualHost virtualHost =
-					_virtualHostLocalService.fetchVirtualHost(virtualHostname);
 
-				if (virtualHost == null) {
-					return;
-				}
+			VirtualHost virtualHost = _virtualHostLocalService.fetchVirtualHost(
+				virtualHostname);
 
-				Company virtualHostnameCompany =
-					companyPersistence.findByPrimaryKey(
-						virtualHost.getCompanyId());
+			if (virtualHost == null) {
+				return;
+			}
 
-				if (!webId.equals(virtualHostnameCompany.getWebId())) {
-					throw new CompanyVirtualHostException(
-						"Duplicate virtual hostname " + virtualHostname);
-				}
+			Company virtualHostnameCompany =
+				companyPersistence.findByPrimaryKey(virtualHost.getCompanyId());
+
+			if (!webId.equals(virtualHostnameCompany.getWebId())) {
+				throw new CompanyVirtualHostException(
+					"Duplicate virtual hostname " + virtualHostname);
 			}
 		}
 		catch (CompanyVirtualHostException companyVirtualHostException) {
@@ -1823,72 +1836,27 @@ public class CompanyLocalServiceImpl extends CompanyLocalServiceBaseImpl {
 
 	}
 
-	private User _addDefaultUser(Company company) throws PortalException {
-		Date date = new Date();
+	private User _addDefaultServiceAccountUser(Company company)
+		throws PortalException {
 
-		User defaultUser = _userPersistence.create(
-			counterLocalService.increment());
+		Role adminRole = _roleLocalService.getRole(
+			company.getCompanyId(), RoleConstants.ADMINISTRATOR);
 
-		defaultUser.setCompanyId(company.getCompanyId());
-		defaultUser.setDefaultUser(true);
-		defaultUser.setContactId(counterLocalService.increment());
-		defaultUser.setPassword("password");
-		defaultUser.setScreenName(String.valueOf(defaultUser.getUserId()));
-		defaultUser.setEmailAddress("default@" + company.getMx());
-		defaultUser.setLanguageId(
-			LocaleUtil.toLanguageId(
-				LocaleUtil.fromLanguageId(PropsValues.COMPANY_DEFAULT_LOCALE)));
+		String userName = "default-service-account";
 
-		if (Validator.isNotNull(PropsValues.COMPANY_DEFAULT_TIME_ZONE)) {
-			defaultUser.setTimeZoneId(PropsValues.COMPANY_DEFAULT_TIME_ZONE);
-		}
-		else {
-			TimeZone timeZone = TimeZoneUtil.getDefault();
+		User defaultServiceAccountUser = _userLocalService.addUser(
+			UserConstants.USER_ID_DEFAULT, company.getCompanyId(), true, null,
+			null, false, userName, userName + StringPool.AT + company.getMx(),
+			LocaleUtil.fromLanguageId(PropsValues.COMPANY_DEFAULT_LOCALE),
+			userName, StringPool.BLANK, userName, 0, 0, true, Calendar.JANUARY,
+			1, 1970, StringPool.BLANK,
+			UserConstants.TYPE_DEFAULT_SERVICE_ACCOUNT, null, null,
+			new long[] {adminRole.getRoleId()}, null, false,
+			new ServiceContext());
 
-			defaultUser.setTimeZoneId(timeZone.getID());
-		}
+		defaultServiceAccountUser.setEmailAddressVerified(true);
 
-		String greeting = LanguageUtil.format(
-			defaultUser.getLocale(), "welcome", null, false);
-
-		defaultUser.setGreeting(greeting + StringPool.EXCLAMATION);
-
-		defaultUser.setLoginDate(date);
-		defaultUser.setFailedLoginAttempts(0);
-		defaultUser.setAgreedToTermsOfUse(true);
-		defaultUser.setStatus(WorkflowConstants.STATUS_APPROVED);
-
-		// Invoke updateImpl so that we do not trigger model listeners. See
-		// LPS-108239.
-
-		_userPersistence.updateImpl(defaultUser);
-
-		// Force update _defaultUsers map
-
-		defaultUser = _userLocalService.getDefaultUser(company.getCompanyId());
-
-		// Contact
-
-		Contact defaultContact = _contactPersistence.create(
-			defaultUser.getContactId());
-
-		defaultContact.setCompanyId(defaultUser.getCompanyId());
-		defaultContact.setUserId(defaultUser.getUserId());
-		defaultContact.setUserName(StringPool.BLANK);
-		defaultContact.setClassName(User.class.getName());
-		defaultContact.setClassPK(defaultUser.getUserId());
-		defaultContact.setParentContactId(
-			ContactConstants.DEFAULT_PARENT_CONTACT_ID);
-		defaultContact.setEmailAddress(defaultUser.getEmailAddress());
-		defaultContact.setFirstName(StringPool.BLANK);
-		defaultContact.setMiddleName(StringPool.BLANK);
-		defaultContact.setLastName(StringPool.BLANK);
-		defaultContact.setMale(true);
-		defaultContact.setBirthday(date);
-
-		_contactPersistence.update(defaultContact);
-
-		return defaultUser;
+		return _userLocalService.updateUser(defaultServiceAccountUser);
 	}
 
 	private void _addDemoSettings(Company company) throws PortalException {
@@ -1917,6 +1885,88 @@ public class CompanyLocalServiceImpl extends CompanyLocalServiceBaseImpl {
 		}
 	}
 
+	private User _addGuestUser(Company company) throws PortalException {
+		Date date = new Date();
+
+		User guestUser = _userPersistence.create(
+			counterLocalService.increment());
+
+		guestUser.setCompanyId(company.getCompanyId());
+		guestUser.setContactId(counterLocalService.increment());
+		guestUser.setPassword("password");
+		guestUser.setScreenName(String.valueOf(guestUser.getUserId()));
+		guestUser.setEmailAddress("default@" + company.getMx());
+
+		Locale locale = null;
+
+		if (Validator.isNotNull(PropsValues.COMPANY_DEFAULT_LOCALE)) {
+			locale = LocaleUtil.fromLanguageId(
+				PropsValues.COMPANY_DEFAULT_LOCALE);
+		}
+		else {
+			User defaultCompanyGuestUser = _userLocalService.fetchGuestUser(
+				PortalUtil.getDefaultCompanyId());
+
+			if (defaultCompanyGuestUser != null) {
+				locale = defaultCompanyGuestUser.getLocale();
+			}
+		}
+
+		guestUser.setLanguageId(LocaleUtil.toLanguageId(locale));
+
+		if (Validator.isNotNull(PropsValues.COMPANY_DEFAULT_TIME_ZONE)) {
+			guestUser.setTimeZoneId(PropsValues.COMPANY_DEFAULT_TIME_ZONE);
+		}
+		else {
+			TimeZone timeZone = TimeZoneUtil.getDefault();
+
+			guestUser.setTimeZoneId(timeZone.getID());
+		}
+
+		String greeting = LanguageUtil.format(
+			guestUser.getLocale(), "welcome", null, false);
+
+		guestUser.setGreeting(greeting + StringPool.EXCLAMATION);
+
+		guestUser.setLoginDate(date);
+		guestUser.setFailedLoginAttempts(0);
+		guestUser.setAgreedToTermsOfUse(true);
+		guestUser.setType(UserConstants.TYPE_GUEST);
+		guestUser.setStatus(WorkflowConstants.STATUS_APPROVED);
+
+		// Invoke updateImpl so that we do not trigger model listeners. See
+		// LPS-108239.
+
+		_userPersistence.updateImpl(guestUser);
+
+		// Force update _guestUsers map
+
+		guestUser = _userLocalService.getGuestUser(company.getCompanyId());
+
+		// Contact
+
+		Contact guestContact = _contactPersistence.create(
+			guestUser.getContactId());
+
+		guestContact.setCompanyId(guestUser.getCompanyId());
+		guestContact.setUserId(guestUser.getUserId());
+		guestContact.setUserName(StringPool.BLANK);
+		guestContact.setClassName(User.class.getName());
+		guestContact.setClassPK(guestUser.getUserId());
+		guestContact.setParentContactId(
+			ContactConstants.DEFAULT_PARENT_CONTACT_ID);
+		guestContact.setEmailAddress(guestUser.getEmailAddress());
+		guestContact.setFirstName(StringPool.BLANK);
+		guestContact.setMiddleName(StringPool.BLANK);
+		guestContact.setLastName(StringPool.BLANK);
+		guestContact.setMale(true);
+		guestContact.setBirthday(date);
+
+		_contactPersistence.update(guestContact);
+
+		return guestUser;
+	}
+
 	private Company _checkCompany(Company company, String mx)
 		throws PortalException {
 
@@ -1939,20 +1989,20 @@ public class CompanyLocalServiceImpl extends CompanyLocalServiceBaseImpl {
 
 			checkCompanyKey(company.getCompanyId());
 
-			// Default user
+			// Guest user
 
-			User defaultUser = _userPersistence.fetchByC_DU(
-				company.getCompanyId(), true);
+			User guestUser = _userPersistence.fetchByC_T_First(
+				company.getCompanyId(), UserConstants.TYPE_GUEST, null);
 
-			if (defaultUser != null) {
-				if (!defaultUser.isAgreedToTermsOfUse()) {
-					defaultUser.setAgreedToTermsOfUse(true);
+			if (guestUser != null) {
+				if (!guestUser.isAgreedToTermsOfUse()) {
+					guestUser.setAgreedToTermsOfUse(true);
 
-					defaultUser = _userPersistence.update(defaultUser);
+					guestUser = _userPersistence.update(guestUser);
 				}
 			}
 			else {
-				defaultUser = _addDefaultUser(company);
+				guestUser = _addGuestUser(company);
 			}
 
 			// System roles
@@ -1972,13 +2022,13 @@ public class CompanyLocalServiceImpl extends CompanyLocalServiceBaseImpl {
 			_passwordPolicyLocalService.checkDefaultPasswordPolicy(
 				company.getCompanyId());
 
-			// Default user must have the Guest role
+			// Guest user must have the Guest role
 
 			Role guestRole = _roleLocalService.getRole(
 				company.getCompanyId(), RoleConstants.GUEST);
 
 			_roleLocalService.setUserRoles(
-				defaultUser.getUserId(), new long[] {guestRole.getRoleId()});
+				guestUser.getUserId(), new long[] {guestRole.getRoleId()});
 
 			// Default admin
 
@@ -1991,10 +2041,19 @@ public class CompanyLocalServiceImpl extends CompanyLocalServiceBaseImpl {
 				_userLocalService.addDefaultAdminUser(
 					company.getCompanyId(),
 					PropsValues.DEFAULT_ADMIN_SCREEN_NAME, emailAddress,
-					defaultUser.getLocale(),
-					PropsValues.DEFAULT_ADMIN_FIRST_NAME,
+					guestUser.getLocale(), PropsValues.DEFAULT_ADMIN_FIRST_NAME,
 					PropsValues.DEFAULT_ADMIN_MIDDLE_NAME,
 					PropsValues.DEFAULT_ADMIN_LAST_NAME);
+			}
+
+			// Default service account
+
+			if (ListUtil.isEmpty(
+					_userPersistence.findByC_T(
+						company.getCompanyId(),
+						UserConstants.TYPE_DEFAULT_SERVICE_ACCOUNT))) {
+
+				_addDefaultServiceAccountUser(company);
 			}
 
 			// Portlets
@@ -2252,8 +2311,9 @@ public class CompanyLocalServiceImpl extends CompanyLocalServiceBaseImpl {
 
 			synchronized (_preregisterPendingCompanies) {
 				forEachCompany(
-					company -> portalInstanceLifecycleManager.registerCompany(
-						company),
+					company ->
+						portalInstanceLifecycleManager.preregisterCompany(
+							company),
 					new ArrayList<Company>(_preregisterPendingCompanies));
 
 				_preregisterPendingCompanies.clear();

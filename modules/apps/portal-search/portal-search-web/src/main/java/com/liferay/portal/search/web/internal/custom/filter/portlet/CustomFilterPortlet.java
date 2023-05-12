@@ -119,23 +119,23 @@ public class CustomFilterPortlet extends MVCPortlet {
 		SearchRequest searchRequest = searchResponse.getRequest();
 
 		return CustomFilterDisplayContextBuilder.builder(
-		).customHeadingOptional(
-			customFilterPortletPreferences.getCustomHeadingOptional()
+		).customHeading(
+			customFilterPortletPreferences.getCustomHeading()
 		).disabled(
 			customFilterPortletPreferences.isDisabled()
-		).filterFieldOptional(
-			customFilterPortletPreferences.getFilterFieldOptional()
+		).filterField(
+			customFilterPortletPreferences.getFilterField()
 		).immutable(
 			customFilterPortletPreferences.isImmutable()
-		).filterValueOptional(
-			customFilterPortletPreferences.getFilterValueOptional()
+		).filterValue(
+			customFilterPortletPreferences.getFilterValue()
 		).parameterName(
 			parameterName
 		).parameterValueOptional(
 			portletSharedSearchResponse.getParameter(
 				parameterName, renderRequest)
-		).queryNameOptional(
-			customFilterPortletPreferences.getQueryNameOptional()
+		).queryName(
+			customFilterPortletPreferences.getQueryName()
 		).renderNothing(
 			_isRenderNothing(searchRequest)
 		).themeDisplay(
@@ -163,7 +163,7 @@ public class CustomFilterPortlet extends MVCPortlet {
 		CustomFilterPortletPreferences customFilterPortletPreferences) {
 
 		return portletSharedSearchResponse.getFederatedSearchResponse(
-			customFilterPortletPreferences.getFederatedSearchKeyOptional());
+			customFilterPortletPreferences.getFederatedSearchKey());
 	}
 
 	private boolean _isRenderNothing(SearchRequest searchRequest) {

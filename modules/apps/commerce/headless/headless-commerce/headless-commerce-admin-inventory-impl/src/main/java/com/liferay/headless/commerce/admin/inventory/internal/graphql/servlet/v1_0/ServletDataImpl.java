@@ -142,6 +142,11 @@ public class ServletDataImpl implements ServletData {
 							ReplenishmentItemResourceImpl.class,
 							"patchReplenishmentItem"));
 					put(
+						"mutation#createReplenishmentItemsPageExportBatch",
+						new ObjectValuePair<>(
+							ReplenishmentItemResourceImpl.class,
+							"postReplenishmentItemsPageExportBatch"));
+					put(
 						"mutation#createReplenishmentItem",
 						new ObjectValuePair<>(
 							ReplenishmentItemResourceImpl.class,
@@ -151,6 +156,11 @@ public class ServletDataImpl implements ServletData {
 						new ObjectValuePair<>(
 							ReplenishmentItemResourceImpl.class,
 							"postReplenishmentItemBatch"));
+					put(
+						"mutation#createWarehousesPageExportBatch",
+						new ObjectValuePair<>(
+							WarehouseResourceImpl.class,
+							"postWarehousesPageExportBatch"));
 					put(
 						"mutation#createWarehouse",
 						new ObjectValuePair<>(
@@ -361,6 +371,37 @@ public class ServletDataImpl implements ServletData {
 						new ObjectValuePair<>(
 							WarehouseOrderTypeResourceImpl.class,
 							"getWarehouseIdWarehouseOrderTypesPage"));
+
+					put(
+						"query#ReplenishmentItem.warehouseByExternalReferenceCode",
+						new ObjectValuePair<>(
+							WarehouseResourceImpl.class,
+							"getWarehouseByExternalReferenceCode"));
+					put(
+						"query#ReplenishmentItem.warehouseItemByExternalReferenceCode",
+						new ObjectValuePair<>(
+							WarehouseItemResourceImpl.class,
+							"getWarehouseItemByExternalReferenceCode"));
+					put(
+						"query#ReplenishmentItem.warehouseByExternalReferenceCodeWarehouseOrderTypes",
+						new ObjectValuePair<>(
+							WarehouseOrderTypeResourceImpl.class,
+							"getWarehouseByExternalReferenceCodeWarehouseOrderTypesPage"));
+					put(
+						"query#ReplenishmentItem.warehouseByExternalReferenceCodeWarehouseItems",
+						new ObjectValuePair<>(
+							WarehouseItemResourceImpl.class,
+							"getWarehouseByExternalReferenceCodeWarehouseItemsPage"));
+					put(
+						"query#ReplenishmentItem.warehouseByExternalReferenceCodeWarehouseChannels",
+						new ObjectValuePair<>(
+							WarehouseChannelResourceImpl.class,
+							"getWarehouseByExternalReferenceCodeWarehouseChannelsPage"));
+					put(
+						"query#Warehouse.replenishmentItemByExternalReferenceCode",
+						new ObjectValuePair<>(
+							ReplenishmentItemResourceImpl.class,
+							"getReplenishmentItemByExternalReferenceCode"));
 				}
 			};
 

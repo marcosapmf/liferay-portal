@@ -18,19 +18,19 @@ definition {
 
 		var testPortalInstance = PropsUtil.get("test.portal.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testPortalInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 	}
 
 	@description = "LPS-135390 - Verify it is possible to view and access the Picklist portlet with the Access in Control Panel permission"
-	@priority = "4"
+	@priority = 4
 	test CanAccessPicklistWithAccessPermission {
 		JSONRole.addRegularRole(roleTitle = "Regular Role");
 
 		for (var resourceAction : list "ACCESS_IN_CONTROL_PANEL,VIEW") {
 			Permissions.definePermissionViaJSONAPI(
-				resourceAction = "${resourceAction}",
+				resourceAction = ${resourceAction},
 				resourceName = "com_liferay_object_web_internal_list_type_portlet_portlet_ListTypeDefinitionsPortlet",
 				roleTitle = "Regular Role");
 		}
@@ -56,19 +56,23 @@ definition {
 
 		Picklist.gotoPicklists();
 
-		ObjectPortlet.assertHeader(objectLabel = "Picklists");
+		AssertElementPresent(
+			key_objectLabel = "Picklists",
+			locator1 = "ObjectPortlet#OBJECT_PORTLET_HEADER");
 
-		ObjectAdmin.assertNoResultsWereFound();
+		AssertTextEquals(
+			locator1 = "Message#EMPTY_STATE_INFO",
+			value1 = "No Results Found");
 	}
 
 	@description = "LPS-135390 - Verify it is possible to add a Picklist with the Add permission"
-	@priority = "4"
+	@priority = 4
 	test CanAddPicklistWithAddPermission {
 		JSONRole.addRegularRole(roleTitle = "Regular Role");
 
 		for (var resourceAction : list "ACCESS_IN_CONTROL_PANEL,VIEW") {
 			Permissions.definePermissionViaJSONAPI(
-				resourceAction = "${resourceAction}",
+				resourceAction = ${resourceAction},
 				resourceName = "com_liferay_object_web_internal_list_type_portlet_portlet_ListTypeDefinitionsPortlet",
 				roleTitle = "Regular Role");
 		}
@@ -110,7 +114,7 @@ definition {
 	}
 
 	@description = "LPS-146759 - Verify it is possible to update a single Picklist permissions with the Permissions permission"
-	@priority = "5"
+	@priority = 5
 	test CanDefineSinglePicklistPermissionsWithPermissionsPermission {
 		property portal.acceptance = "true";
 		property test.name.skip.portal.instance = "ObjectPermission#CanDefineSinglePicklistPermissionsWithPermissionsPermission";
@@ -167,7 +171,7 @@ definition {
 	}
 
 	@description = "LPS-135390 - Verify it is possible to delete a Picklist with the Delete permission"
-	@priority = "4"
+	@priority = 4
 	test CanDeletePicklistWithDeletePermission {
 		Picklist.addPicklistViaAPI(picklistName = "Picklist Test");
 
@@ -177,14 +181,14 @@ definition {
 
 		for (var resourceAction : list "ACCESS_IN_CONTROL_PANEL,VIEW") {
 			Permissions.definePermissionViaJSONAPI(
-				resourceAction = "${resourceAction}",
+				resourceAction = ${resourceAction},
 				resourceName = "com_liferay_object_web_internal_list_type_portlet_portlet_ListTypeDefinitionsPortlet",
 				roleTitle = "Regular Role");
 		}
 
 		for (var resourceAction : list "DELETE,VIEW") {
 			Permissions.definePermissionViaJSONAPI(
-				resourceAction = "${resourceAction}",
+				resourceAction = ${resourceAction},
 				resourceName = "com.liferay.list.type.model.ListTypeDefinition",
 				roleTitle = "Regular Role");
 		}
@@ -211,14 +215,14 @@ definition {
 		Picklist.gotoPicklists();
 
 		Picklist.optionsPicklist(
-			picklistName = "Picklist Test",
-			picklistOption = "Delete");
+			menuItem = "Delete",
+			picklistName = "Picklist Test");
 
 		Picklist.assertPicklistNotPresent(picklistName = "Picklist Test");
 	}
 
 	@description = "LPS-146757 - Verify it is possible to delete a single Object Entry with the Delete permission"
-	@priority = "5"
+	@priority = 5
 	test CanDeleteSingleObjectEntryWithDeletePermission {
 		property osgi.module.configuration.file.names = "com.liferay.object.rest.internal.configuration.FFObjectEntryPermissionsActionConfiguration.config";
 		property osgi.module.configurations = "enabled=\"true\"";
@@ -294,7 +298,7 @@ definition {
 	}
 
 	@description = "LPS-146758 - Verify it is possible to delete a single Object with the Delete permission"
-	@priority = "5"
+	@priority = 5
 	test CanDeleteSingleObjectWithDeletePermission {
 		property portal.acceptance = "true";
 		property test.name.skip.portal.instance = "ObjectPermission#CanDeleteSingleObjectWithDeletePermission";
@@ -344,11 +348,13 @@ definition {
 
 		CreateObject.deleteObjectViaUI(objectLabel = "Custom Object 148930");
 
-		CreateObject.assertObjectNotPresent(objectLabel = "Custom Object 148930");
+		AssertElementNotPresent(
+			key_tabName = "Custom Object 148930",
+			locator1 = "ObjectAdmin#ANY_TAB_ON_ENTRY");
 	}
 
 	@description = "LPS-146759 - Verify it is possible to delete a single Picklist with the Delete permission"
-	@priority = "5"
+	@priority = 5
 	test CanDeleteSinglePicklistWithDeletePermission {
 		property portal.acceptance = "true";
 		property test.name.skip.portal.instance = "ObjectPermission#CanDeleteSinglePicklistWithDeletePermission";
@@ -394,14 +400,14 @@ definition {
 		Picklist.gotoPicklists();
 
 		Picklist.optionsPicklist(
-			picklistName = "Custom Picklist 148938",
-			picklistOption = "Delete");
+			menuItem = "Delete",
+			picklistName = "Custom Picklist 148938");
 
 		Picklist.assertPicklistNotPresent(picklistName = "Custom Picklist 148938");
 	}
 
 	@description = "LPS-135390 - Verify it is possible to edit its own Object entry with only the Add Object Entry permission"
-	@priority = "5"
+	@priority = 5
 	test CanEditItsOwnEntryWithOnlyAddPermission {
 		property portal.acceptance = "true";
 		property test.name.skip.portal.instance = "ObjectPermission#CanEditItsOwnEntryWithOnlyAddPermission";
@@ -480,7 +486,7 @@ definition {
 	}
 
 	@description = "LPS-135390 - Verify it is not possible to add a Picklist without the Add permission"
-	@priority = "5"
+	@priority = 5
 	test CannotAddPicklistWithoutAddPermission {
 		property portal.acceptance = "true";
 
@@ -488,7 +494,7 @@ definition {
 
 		for (var resourceAction : list "ACCESS_IN_CONTROL_PANEL,VIEW") {
 			Permissions.definePermissionViaJSONAPI(
-				resourceAction = "${resourceAction}",
+				resourceAction = ${resourceAction},
 				resourceName = "com_liferay_object_web_internal_list_type_portlet_portlet_ListTypeDefinitionsPortlet",
 				roleTitle = "Regular Role");
 		}
@@ -518,7 +524,7 @@ definition {
 	}
 
 	@description = "LPS-146759 - Verify it is not possible to update a single Picklist permissions created by the user if the Permissions Owner permission is removed"
-	@priority = "4"
+	@priority = 4
 	test CannotDefineSinglePicklistPermissionsWithoutPermissionsOwnerPermission {
 		property test.name.skip.portal.instance = "ObjectPermission#CannotDefineSinglePicklistPermissionsWithoutPermissionsOwnerPermission";
 
@@ -589,7 +595,7 @@ definition {
 	}
 
 	@description = "LPS-146757 - Verify it is not possible to delete a single Object Entry create by the user if the Delete Owner permission is removed"
-	@priority = "4"
+	@priority = 4
 	test CannotDeleteOwnSingleObjectEntryWithoutDeleteOwnerPermission {
 		property osgi.module.configuration.file.names = "com.liferay.object.rest.internal.configuration.FFObjectEntryPermissionsActionConfiguration.config";
 		property osgi.module.configurations = "enabled=\"true\"";
@@ -667,7 +673,7 @@ definition {
 	}
 
 	@description = "LPS-135390 - Verify it is not possible to delete a Picklist without the Delete permission"
-	@priority = "4"
+	@priority = 4
 	test CannotDeletePicklistWithoutDeletePermission {
 		Picklist.addPicklistViaAPI(picklistName = "Picklist Test");
 
@@ -677,7 +683,7 @@ definition {
 
 		for (var resourceAction : list "ACCESS_IN_CONTROL_PANEL,VIEW") {
 			Permissions.definePermissionViaJSONAPI(
-				resourceAction = "${resourceAction}",
+				resourceAction = ${resourceAction},
 				resourceName = "com_liferay_object_web_internal_list_type_portlet_portlet_ListTypeDefinitionsPortlet",
 				roleTitle = "Regular Role");
 		}
@@ -712,7 +718,7 @@ definition {
 	}
 
 	@description = "LPS-146758 - Verify it is not possible to delete a single Object created by the user if the Delete Owner permission is removed"
-	@priority = "4"
+	@priority = 4
 	test CannotDeleteSingleObjectWithoutDeleteOwnerPermission {
 		property test.name.skip.portal.instance = "ObjectPermission#CannotDeleteSingleObjectWithoutDeleteOwnerPermission";
 
@@ -753,7 +759,7 @@ definition {
 			fieldLabelName = "Custom Object 148934",
 			pluralLabelName = "Custom Objects 148934");
 
-		ObjectAdmin.saveCustomObject();
+		CreateObject.saveObject();
 
 		Refresh();
 
@@ -785,7 +791,7 @@ definition {
 	}
 
 	@description = "LPS-146759 - Verify it is not possible to delete a single Picklist created by the user if the Delete Owner permission is removed"
-	@priority = "4"
+	@priority = 4
 	test CannotDeleteSinglePicklistWithoutDeleteOwnerPermission {
 		property test.name.skip.portal.instance = "ObjectPermission#CannotDeleteSinglePicklistWithoutDeleteOwnerPermission";
 
@@ -849,7 +855,7 @@ definition {
 	}
 
 	@description = "LPS-146757 - Verify it is not possible to update a single Object Entry permissions create by the user if the Permissions Owner permission is removed"
-	@priority = "4"
+	@priority = 4
 	test CannotUpdateOwnSingleObjectEntryWithoutPermissionsOwnerPermission {
 		property osgi.module.configuration.file.names = "com.liferay.object.rest.internal.configuration.FFObjectEntryPermissionsActionConfiguration.config";
 		property osgi.module.configurations = "enabled=\"true\"";
@@ -927,7 +933,7 @@ definition {
 	}
 
 	@description = "LPS-146757 - Verify it is not possible to update a single Object Entry create by the user if the Update Owner permission is removed"
-	@priority = "4"
+	@priority = 4
 	test CannotUpdateOwnSingleObjectEntryWithoutUpdateOwnerPermission {
 		property osgi.module.configuration.file.names = "com.liferay.object.rest.internal.configuration.FFObjectEntryPermissionsActionConfiguration.config";
 		property osgi.module.configurations = "enabled=\"true\"";
@@ -1001,19 +1007,21 @@ definition {
 
 		ObjectPortlet.viewEntryDetails(entry = "Entry Test");
 
-		ObjectAdmin.viewFieldValueDisabled(fieldValue = "Entry Test");
+		AssertElementPresent(
+			key_fieldValue = "Entry Test",
+			locator1 = "ObjectAdmin#VIEW_FIELD_VALUE_DISABLED");
 
 		AssertElementNotPresent(locator1 = "Button#SAVE");
 	}
 
 	@description = "LPS-135390 - Verify it is not possible to update a Picklist without the Update permission"
-	@priority = "4"
+	@priority = 4
 	test CannotUpdatePicklistWithoutUpdatePermission {
 		Picklist.addPicklistViaAPI(picklistName = "Picklist Test");
 
 		Picklist.addPicklistItemViaAPI(
-			itemKey = "ItemTest",
-			itemName = "Picklist Item",
+			itemKey = "itemTest",
+			itemName = "Item Test",
 			picklistName = "Picklist Test");
 
 		JSONRole.addRegularRole(
@@ -1022,7 +1030,7 @@ definition {
 
 		for (var resourceAction : list "ACCESS_IN_CONTROL_PANEL,VIEW") {
 			Permissions.definePermissionViaJSONAPI(
-				resourceAction = "${resourceAction}",
+				resourceAction = ${resourceAction},
 				resourceName = "com_liferay_object_web_internal_list_type_portlet_portlet_ListTypeDefinitionsPortlet",
 				roleTitle = "Regular Role");
 		}
@@ -1053,21 +1061,31 @@ definition {
 
 		Picklist.gotoPicklists();
 
-		CreateObject.viewObject(labelName = "Picklist Test");
+		WaitForElementPresent(
+			key_pageNumber = 1,
+			locator1 = "ObjectPortlet#ANY_PAGE");
+
+		Picklist.optionsPicklist(
+			menuItem = "View",
+			picklistName = "Picklist Test");
+
+		SelectFrame(locator1 = "Picklist#IFRAME_PICKLIST_MODAL");
+
+		Click(
+			key_picklistName = "Item Test",
+			locator1 = "Picklist#VIEW_PICKLIST");
 
 		Picklist.assertDisabledPicklistName();
 
 		Picklist.assertDisabledSaveButton();
 
-		CreateObject.viewObject(labelName = "Picklist Item");
-
-		Picklist.assertDisabledPicklistItem(keyName = "ItemTest");
+		Picklist.assertDisabledPicklistItem(keyName = "itemTest");
 
 		Picklist.assertDisabledSaveButton();
 	}
 
 	@description = "LPS-146758 - Verify it is not possible to update a single Object permissions created by the user if the Permissions Owner permission is removed"
-	@priority = "4"
+	@priority = 4
 	test CannotUpdateSingleObjectPermissionWithoutPermissionsOwnerPermission {
 		property test.name.skip.portal.instance = "ObjectPermission#CannotUpdateSingleObjectPermissionWithoutPermissionsOwnerPermission";
 
@@ -1110,7 +1128,7 @@ definition {
 			fieldLabelName = "Custom Object 148937",
 			pluralLabelName = "Custom Objects 148937");
 
-		ObjectAdmin.saveCustomObject();
+		CreateObject.saveObject();
 
 		Refresh();
 
@@ -1142,7 +1160,7 @@ definition {
 	}
 
 	@description = "LPS-146758 - Verify it is not possible to update a single Object created by the user if the Delete Owner permission is removed"
-	@priority = "4"
+	@priority = 4
 	test CannotUpdateSingleObjectWithoutUpdateOwnerPermission {
 		property test.name.skip.portal.instance = "ObjectPermission#CannotUpdateSingleObjectWithoutUpdateOwnerPermission";
 
@@ -1190,7 +1208,7 @@ definition {
 			fieldLabelName = "Custom Object 148935",
 			pluralLabelName = "Custom Objects 148935");
 
-		ObjectAdmin.saveCustomObject();
+		CreateObject.saveObject();
 
 		Refresh();
 
@@ -1208,11 +1226,11 @@ definition {
 
 		CreateObject.assertDisabledAllFields();
 
-		CreateObject.assertDisabledPublishObjectButton();
+		AssertElementPresent(locator1 = "CreateObject#DISABLED_PUBLISH_OBJECT_BUTTON");
 	}
 
 	@description = "LPS-146759 - Verify it is not possible to update a single Picklist created by the user if the Update Owner permission is removed"
-	@priority = "4"
+	@priority = 4
 	test CannotUpdateSinglePicklistWithoutUpdateOwnerPermission {
 		property test.name.skip.portal.instance = "ObjectPermission#CannotUpdateSinglePicklistWithoutUpdateOwnerPermission";
 
@@ -1272,13 +1290,15 @@ definition {
 
 		Picklist.gotoPicklistView(picklistName = "Picklist Test");
 
+		SelectFrame(locator1 = "Picklist#IFRAME_PICKLIST_MODAL");
+
 		Picklist.assertDisabledPicklistName();
 
 		Picklist.assertDisabledSaveButton();
 	}
 
 	@description = "LPS-146757 - Verify it is not possible to view a single Object Entry create by the user if the View Owner permission is removed"
-	@priority = "4"
+	@priority = 4
 	test CannotViewOwnSingleObjectEntryWithoutViewOwnerPermission {
 		property test.name.skip.portal.instance = "ObjectPermission#CannotViewOwnSingleObjectEntryWithoutViewOwnerPermission";
 
@@ -1352,7 +1372,7 @@ definition {
 	}
 
 	@description = "LPS-135390 - Verify it is not possible to view a Picklist without the View permission"
-	@priority = "4"
+	@priority = 4
 	test CannotViewPicklistWithoutViewPermission {
 		Picklist.addPicklistViaAPI(picklistName = "Picklist Test");
 
@@ -1360,7 +1380,7 @@ definition {
 
 		for (var resourceAction : list "ACCESS_IN_CONTROL_PANEL,VIEW") {
 			Permissions.definePermissionViaJSONAPI(
-				resourceAction = "${resourceAction}",
+				resourceAction = ${resourceAction},
 				resourceName = "com_liferay_object_web_internal_list_type_portlet_portlet_ListTypeDefinitionsPortlet",
 				roleTitle = "Regular Role");
 		}
@@ -1390,7 +1410,7 @@ definition {
 	}
 
 	@description = "LPS-146758 - Verify it is not possible to View a single Object created by the user if the View Owner permission is removed"
-	@priority = "4"
+	@priority = 4
 	test CannotViewSingleObjectWithoutViewOwnerPermission {
 		property test.name.skip.portal.instance = "ObjectPermission#CannotViewSingleObjectWithoutViewOwnerPermission";
 
@@ -1438,7 +1458,7 @@ definition {
 			fieldLabelName = "Custom Object 148936",
 			pluralLabelName = "Custom Objects 148936");
 
-		ObjectAdmin.saveCustomObject();
+		CreateObject.saveObject();
 
 		Refresh();
 
@@ -1452,11 +1472,13 @@ definition {
 
 		Refresh();
 
-		CreateObject.assertCustomObjectNotPresent(labelName = "Custom Object 148936");
+		AssertElementNotPresent(
+			key_labelName = "Custom Object 148936",
+			locator1 = "CreateObject#OBJECT_NAME");
 	}
 
 	@description = "LPS-146759 - Verify it is not possible to view a single Picklist created by the user if the View Owner permission is removed"
-	@priority = "4"
+	@priority = 4
 	test CannotViewSinglePicklistWithoutViewOwnerPermission {
 		property test.name.skip.portal.instance = "ObjectPermission#CannotViewSinglePicklistWithoutViewOwnerPermission";
 
@@ -1518,7 +1540,7 @@ definition {
 	}
 
 	@description = "LPS-135390 - Verify it is possible to update a Picklist with the Update permission"
-	@priority = "4"
+	@priority = 4
 	test CanUpdatePicklistWithUpdatePermission {
 		Picklist.addPicklistViaAPI(picklistName = "Picklist Test");
 
@@ -1528,14 +1550,14 @@ definition {
 
 		for (var resourceAction : list "ACCESS_IN_CONTROL_PANEL,VIEW") {
 			Permissions.definePermissionViaJSONAPI(
-				resourceAction = "${resourceAction}",
+				resourceAction = ${resourceAction},
 				resourceName = "com_liferay_object_web_internal_list_type_portlet_portlet_ListTypeDefinitionsPortlet",
 				roleTitle = "Regular Role");
 		}
 
 		for (var resourceAction : list "UPDATE,VIEW") {
 			Permissions.definePermissionViaJSONAPI(
-				resourceAction = "${resourceAction}",
+				resourceAction = ${resourceAction},
 				resourceName = "com.liferay.list.type.model.ListTypeDefinition",
 				roleTitle = "Regular Role");
 		}
@@ -1561,7 +1583,9 @@ definition {
 
 		Picklist.gotoPicklists();
 
-		CreateObject.viewObject(labelName = "Picklist Test");
+		Click(
+			key_picklistName = "Picklist Test",
+			locator1 = "Picklist#VIEW_PICKLIST");
 
 		Picklist.updatePicklistName(picklistName = "Update Picklist");
 
@@ -1573,7 +1597,7 @@ definition {
 	}
 
 	@description = "LPS-146757 - Verify it is possible to update a single Object Entry permissions with the Permissions permission"
-	@priority = "5"
+	@priority = 5
 	test CanUpdateSingleObjectEntryPermissionsPermission {
 		property osgi.module.configuration.file.names = "com.liferay.object.rest.internal.configuration.FFObjectEntryPermissionsActionConfiguration.config";
 		property osgi.module.configurations = "enabled=\"true\"";
@@ -1655,7 +1679,7 @@ definition {
 	}
 
 	@description = "LPS-146757 - Verify it is possible to update a single Object Entry with the Update permission"
-	@priority = "5"
+	@priority = 5
 	test CanUpdateSingleObjectEntryWithUpdatePermission {
 		property osgi.module.configuration.file.names = "com.liferay.object.rest.internal.configuration.FFObjectEntryPermissionsActionConfiguration.config";
 		property osgi.module.configurations = "enabled=\"true\"";
@@ -1737,7 +1761,7 @@ definition {
 	}
 
 	@description = "LPS-146758 - Verify it is possible to update a single Object permissions with the Permissions permission"
-	@priority = "5"
+	@priority = 5
 	test CanUpdateSingleObjectPermissionsWithPermissionsPermission {
 		property portal.acceptance = "true";
 		property test.name.skip.portal.instance = "ObjectPermission#CanUpdateSingleObjectPermissionsWithPermissionsPermission";
@@ -1793,11 +1817,13 @@ definition {
 
 		Refresh();
 
-		CreateObject.assertObjectNotPresent(objectLabel = "Custom Object 148933");
+		AssertElementNotPresent(
+			key_tabName = "Custom Object 148933",
+			locator1 = "ObjectAdmin#ANY_TAB_ON_ENTRY");
 	}
 
 	@description = "LPS-146758 - Verify it is possible to update a single Object with the Update permission"
-	@priority = "5"
+	@priority = 5
 	test CanUpdateSingleObjectWithUpdatePermission {
 		property portal.acceptance = "true";
 		property test.name.skip.portal.instance = "ObjectPermission#CanUpdateSingleObjectWithUpdatePermission";
@@ -1853,11 +1879,13 @@ definition {
 
 		ObjectAdmin.openObjectAdmin();
 
-		CreateObject.assertCustomObject(labelName = "Update Custom Object");
+		AssertElementPresent(
+			key_labelName = "Update Custom Object",
+			locator1 = "CreateObject#OBJECT_NAME");
 	}
 
 	@description = "LPS-146759 - Verify it is possible to update a single Picklist with the Update permission"
-	@priority = "5"
+	@priority = 5
 	test CanUpdateSinglePicklistWithUpdatePermission {
 		property portal.acceptance = "true";
 		property test.name.skip.portal.instance = "ObjectPermission#CanUpdateSinglePicklistWithUpdatePermission";
@@ -1902,7 +1930,9 @@ definition {
 
 		Picklist.gotoPicklists();
 
-		CreateObject.viewObject(labelName = "Custom Picklist 148939");
+		Click(
+			key_picklistName = "Custom Picklist 148939",
+			locator1 = "Picklist#VIEW_PICKLIST");
 
 		Picklist.updatePicklistName(picklistName = "Update Custom Picklist");
 
@@ -1914,13 +1944,13 @@ definition {
 	}
 
 	@description = "LPS-140342 - Verify it is possible view and edit its own Picklist with only the Add Picklist permission"
-	@priority = "4"
+	@priority = 4
 	test CanViewAndEditPicklistWithAddPicklistPermission {
 		JSONRole.addRegularRole(roleTitle = "Regular Role");
 
 		for (var resourceAction : list "ACCESS_IN_CONTROL_PANEL,VIEW") {
 			Permissions.definePermissionViaJSONAPI(
-				resourceAction = "${resourceAction}",
+				resourceAction = ${resourceAction},
 				resourceName = "com_liferay_object_web_internal_list_type_portlet_portlet_ListTypeDefinitionsPortlet",
 				roleTitle = "Regular Role");
 		}
@@ -1960,7 +1990,9 @@ definition {
 
 		Picklist.assertPicklist(picklistName = "Picklist Test");
 
-		CreateObject.viewObject(labelName = "Picklist Test");
+		Click(
+			key_picklistName = "Picklist Test",
+			locator1 = "Picklist#VIEW_PICKLIST");
 
 		Picklist.updatePicklistName(picklistName = "Update Picklist");
 
@@ -1972,7 +2004,7 @@ definition {
 	}
 
 	@description = "LPS-135390 - Verify it is possible to view its own Object entry with only the Add Object Entry permission"
-	@priority = "5"
+	@priority = 5
 	test CanViewItsOwnEntryWithOnlyAddPermission {
 		property portal.acceptance = "true";
 		property test.name.skip.portal.instance = "ObjectPermission#CanViewItsOwnEntryWithOnlyAddPermission";
@@ -2034,7 +2066,7 @@ definition {
 	}
 
 	@description = "LPS-135390 - Verify it is possible to view a Picklist with the View permission"
-	@priority = "4"
+	@priority = 4
 	test CanViewPicklistWithViewPermission {
 		Picklist.addPicklistViaAPI(picklistName = "Picklist Test");
 
@@ -2042,7 +2074,7 @@ definition {
 
 		for (var resourceAction : list "ACCESS_IN_CONTROL_PANEL,VIEW") {
 			Permissions.definePermissionViaJSONAPI(
-				resourceAction = "${resourceAction}",
+				resourceAction = ${resourceAction},
 				resourceName = "com_liferay_object_web_internal_list_type_portlet_portlet_ListTypeDefinitionsPortlet",
 				roleTitle = "Regular Role");
 		}
@@ -2077,7 +2109,7 @@ definition {
 	}
 
 	@description = "LPS-146757 - Verify it is possible to view a single Object Entry with the View permission"
-	@priority = "5"
+	@priority = 5
 	test CanViewSingleObjectEntryWithViewPermission {
 		property osgi.module.configuration.file.names = "com.liferay.object.rest.internal.configuration.FFObjectEntryPermissionsActionConfiguration.config";
 		property osgi.module.configurations = "enabled=\"true\"";
@@ -2150,7 +2182,7 @@ definition {
 	}
 
 	@description = "LPS-146758 - Verify it is possible to view a single Object with the View permission"
-	@priority = "5"
+	@priority = 5
 	test CanViewSingleObjectWithViewPermission {
 		property portal.acceptance = "true";
 		property test.name.skip.portal.instance = "ObjectPermission#CanViewSingleObjectWithViewPermission";
@@ -2198,11 +2230,13 @@ definition {
 
 		ObjectAdmin.openObjectAdmin();
 
-		CreateObject.assertCustomObject(labelName = "Custom Object 148932");
+		AssertElementPresent(
+			key_labelName = "Custom Object 148932",
+			locator1 = "CreateObject#OBJECT_NAME");
 	}
 
 	@description = "LPS-146759 - Verify it is possible to view a single Picklist with the View permission"
-	@priority = "5"
+	@priority = 5
 	test CanViewSinglePicklistWithViewPermission {
 		property portal.acceptance = "true";
 		property test.name.skip.portal.instance = "ObjectPermission#CanViewSinglePicklistWithViewPermission";
@@ -2251,7 +2285,7 @@ definition {
 	}
 
 	@description = "LPS-146756 - Verify that a guest user with the resource permission action of 'Add Object Entry' activated can add new object entries and view its own entries"
-	@priority = "5"
+	@priority = 5
 	test GuestCanAddObjectEntriesWithAddPermission {
 		property portal.acceptance = "true";
 		property test.name.skip.portal.instance = "ObjectPermission#GuestCanAddObjectEntriesWithAddPermission";
@@ -2347,7 +2381,7 @@ definition {
 	}
 
 	@description = "LPS-146756 - Verify that a guest user with the resource permission action of "Add Object Entry" unactivated can't add new object entries"
-	@priority = "5"
+	@priority = 5
 	test GuestCannotAddObjectEntriesWithoutAddPermission {
 		property portal.acceptance = "true";
 		property test.name.skip.portal.instance = "ObjectPermission#GuestCannotAddObjectEntriesWithoutAddPermission";
@@ -2404,11 +2438,11 @@ definition {
 
 		Navigator.gotoPage(pageName = "Object Page");
 
-		ObjectPortlet.assertPlusButtonIsNotPresent();
+		AssertElementNotPresent(locator1 = "Button#PLUS");
 	}
 
 	@description = "LPS-146756 - Verify that a guest user with the resource permission action of "View"  unactivated can't vizualize object entries"
-	@priority = "5"
+	@priority = 5
 	test GuestCannotViewObjectEntriesWithoutViewPermission {
 		property portal.acceptance = "true";
 		property test.name.skip.portal.instance = "ObjectPermission#GuestCannotViewObjectEntriesWithoutViewPermission";
@@ -2469,7 +2503,7 @@ definition {
 	}
 
 	@description = "LPS-146756 - Verify that a guest user with the resource permission action of "View" activated can vizualize object entries"
-	@priority = "5"
+	@priority = 5
 	test GuestCanViewObjectEntriesWithViewPermission {
 		property portal.acceptance = "true";
 		property test.name.skip.portal.instance = "ObjectPermission#GuestCanViewObjectEntriesWithViewPermission";

@@ -14,38 +14,65 @@
 
 package com.liferay.redirect.internal.util;
 
-import com.liferay.petra.string.StringPool;
+import com.google.re2j.Pattern;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.regex.Pattern;
+import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
+import com.liferay.redirect.constants.RedirectConstants;
+import com.liferay.redirect.model.RedirectPatternEntry;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author Adolfo Pérez
  */
 public class PatternUtil {
 
-	public static Map<Pattern, String> parse(String[] patternStrings) {
-		Map<Pattern, String> parsedPatterns = new LinkedHashMap<>();
+	public static List<RedirectPatternEntry> parse(String[] patternStrings) {
+		List<RedirectPatternEntry> redirectPatternEntries = new ArrayList<>();
+
+		int limit = 2;
+
+		if (FeatureFlagManagerUtil.isEnabled("LPS-175850")) {
+			limit = 3;
+		}
 
 		for (String patternString : patternStrings) {
-			String[] parts = patternString.split("\\s+", 2);
+			String[] parts = patternString.split("\\s+", 3);
 
-			if ((parts.length != 2) || parts[0].isEmpty() ||
+			if ((parts.length < limit) || parts[0].isEmpty() ||
 				parts[1].isEmpty()) {
 
 				continue;
 			}
 
-			parsedPatterns.put(Pattern.compile(_normalize(parts[0])), parts[1]);
+			String userAgent = RedirectConstants.USER_AGENT_ALL;
+
+			if (FeatureFlagManagerUtil.isEnabled("LPS-175850")) {
+				if (parts[2].isEmpty()) {
+					continue;
+				}
+
+				userAgent = parts[2];
+			}
+
+			redirectPatternEntries.add(
+				new RedirectPatternEntry(
+					Pattern.compile(_normalize(parts[0])), parts[1],
+					userAgent));
 		}
 
-		return parsedPatterns;
+		return redirectPatternEntries;
 	}
 
 	private static String _normalize(String patternString) {
 		if (patternString.startsWith(StringPool.CARET)) {
-			return patternString;
+			patternString = patternString.substring(1);
+		}
+
+		if (patternString.startsWith(StringPool.SLASH)) {
+			patternString = patternString.substring(1);
 		}
 
 		return StringPool.CARET + patternString;

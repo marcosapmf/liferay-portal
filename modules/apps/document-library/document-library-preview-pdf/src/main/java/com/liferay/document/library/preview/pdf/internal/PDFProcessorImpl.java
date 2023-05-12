@@ -22,6 +22,7 @@ import com.liferay.document.library.kernel.util.DLPreviewableProcessor;
 import com.liferay.document.library.kernel.util.DLProcessor;
 import com.liferay.document.library.kernel.util.DLUtil;
 import com.liferay.document.library.kernel.util.PDFProcessor;
+import com.liferay.document.library.preview.pdf.internal.configuration.admin.service.PDFPreviewManagedServiceFactory;
 import com.liferay.document.library.preview.pdf.internal.util.ProcessConfigUtil;
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
 import com.liferay.petra.process.ProcessCallable;
@@ -30,6 +31,7 @@ import com.liferay.petra.process.ProcessException;
 import com.liferay.petra.process.ProcessExecutor;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.configuration.metatype.annotations.ExtendedObjectClassDefinition;
 import com.liferay.portal.kernel.image.Ghostscript;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -109,7 +111,13 @@ public class PDFProcessorImpl
 			FileVersion sourceFileVersion, FileVersion destinationFileVersion)
 		throws Exception {
 
-		_generateImages(sourceFileVersion, destinationFileVersion);
+		int maxNumberOfPages =
+			_pdfPreviewManagedServiceFactory.getMaxNumberOfPages(
+				ExtendedObjectClassDefinition.Scope.GROUP.getValue(),
+				destinationFileVersion.getGroupId());
+
+		_generateImages(
+			sourceFileVersion, destinationFileVersion, maxNumberOfPages);
 	}
 
 	@Override
@@ -396,19 +404,21 @@ public class PDFProcessorImpl
 		}
 	}
 
-	private void _generateImages(FileVersion fileVersion, File file)
+	private void _generateImages(
+			FileVersion fileVersion, File file, int maxNumberOfPages)
 		throws Exception {
 
 		if (_ghostscript.isEnabled()) {
-			_generateImagesGS(fileVersion, file);
+			_generateImagesGS(fileVersion, file, maxNumberOfPages);
 		}
 		else {
-			_generateImagesPB(fileVersion, file);
+			_generateImagesPB(fileVersion, file, maxNumberOfPages);
 		}
 	}
 
 	private void _generateImages(
-			FileVersion sourceFileVersion, FileVersion destinationFileVersion)
+			FileVersion sourceFileVersion, FileVersion destinationFileVersion,
+			int maxNumberOfPages)
 		throws Exception {
 
 		try {
@@ -428,7 +438,8 @@ public class PDFProcessorImpl
 				try (InputStream inputStream =
 						destinationFileVersion.getContentStream(false)) {
 
-					_generateImages(destinationFileVersion, inputStream);
+					_generateImages(
+						destinationFileVersion, inputStream, maxNumberOfPages);
 				}
 			}
 			else if (DocumentConversionUtil.isEnabled()) {
@@ -453,7 +464,8 @@ public class PDFProcessorImpl
 					File file = DocumentConversionUtil.convert(
 						tempFileId, inputStream, extension, "pdf");
 
-					_generateImages(destinationFileVersion, file);
+					_generateImages(
+						destinationFileVersion, file, maxNumberOfPages);
 				}
 			}
 		}
@@ -468,24 +480,26 @@ public class PDFProcessorImpl
 	}
 
 	private void _generateImages(
-			FileVersion fileVersion, InputStream inputStream)
+			FileVersion fileVersion, InputStream inputStream,
+			int maxNumberOfPages)
 		throws Exception {
 
 		if (_ghostscript.isEnabled()) {
-			_generateImagesGS(fileVersion, inputStream);
+			_generateImagesGS(fileVersion, inputStream, maxNumberOfPages);
 		}
 		else {
-			_generateImagesPB(fileVersion, inputStream);
+			_generateImagesPB(fileVersion, inputStream, maxNumberOfPages);
 		}
 	}
 
-	private void _generateImagesGS(FileVersion fileVersion, File file)
+	private void _generateImagesGS(
+			FileVersion fileVersion, File file, int maxNumberOfPages)
 		throws Exception {
 
 		if (_isGeneratePreview(fileVersion)) {
 			long start = System.currentTimeMillis();
 
-			_generateImagesGS(fileVersion, file, false);
+			_generateImagesGS(fileVersion, file, maxNumberOfPages, false);
 
 			if (_log.isInfoEnabled()) {
 				_log.info(
@@ -500,7 +514,7 @@ public class PDFProcessorImpl
 		if (_isGenerateThumbnail(fileVersion)) {
 			long start = System.currentTimeMillis();
 
-			_generateImagesGS(fileVersion, file, true);
+			_generateImagesGS(fileVersion, file, maxNumberOfPages, true);
 
 			if (_log.isInfoEnabled()) {
 				_log.info(
@@ -513,7 +527,8 @@ public class PDFProcessorImpl
 	}
 
 	private void _generateImagesGS(
-			FileVersion fileVersion, File file, boolean thumbnail)
+			FileVersion fileVersion, File file, int maxNumberOfPages,
+			boolean thumbnail)
 		throws Exception {
 
 		if (!_ghostscriptInitialized) {
@@ -540,6 +555,11 @@ public class PDFProcessorImpl
 		else {
 			arguments.add(
 				"-sOutputFile=" + getPreviewTempFilePath(tempFileId, -1));
+
+			if (maxNumberOfPages != 0) {
+				arguments.add("-dFirstPage=1");
+				arguments.add("-dLastPage=" + maxNumberOfPages);
+			}
 		}
 
 		arguments.add("-dTextAlphaBits=4");
@@ -638,7 +658,8 @@ public class PDFProcessorImpl
 	}
 
 	private void _generateImagesGS(
-			FileVersion fileVersion, InputStream inputStream)
+			FileVersion fileVersion, InputStream inputStream,
+			int maxNumberOfPages)
 		throws Exception {
 
 		File file = null;
@@ -646,14 +667,15 @@ public class PDFProcessorImpl
 		try {
 			file = FileUtil.createTempFile(inputStream);
 
-			_generateImagesGS(fileVersion, file);
+			_generateImagesGS(fileVersion, file, maxNumberOfPages);
 		}
 		finally {
 			FileUtil.delete(file);
 		}
 	}
 
-	private void _generateImagesPB(FileVersion fileVersion, File file)
+	private void _generateImagesPB(
+			FileVersion fileVersion, File file, int maxNumberOfPages)
 		throws Exception {
 
 		String tempFileId = DLUtil.getTempFileId(
@@ -668,7 +690,13 @@ public class PDFProcessorImpl
 		boolean generateThumbnail = _isGenerateThumbnail(fileVersion);
 
 		try (PDDocument pdDocument = _openPDDocument(file)) {
-			int previewFilesCount = pdDocument.getNumberOfPages();
+			int previewFilesCount = maxNumberOfPages;
+
+			if ((previewFilesCount == 0) ||
+				(previewFilesCount > pdDocument.getNumberOfPages())) {
+
+				previewFilesCount = pdDocument.getNumberOfPages();
+			}
 
 			if (previewFilesCount == 0) {
 				if (_log.isWarnEnabled()) {
@@ -812,7 +840,7 @@ public class PDFProcessorImpl
 						PropsValues.DL_FILE_ENTRY_PREVIEW_DOCUMENT_DPI,
 						PropsValues.DL_FILE_ENTRY_PREVIEW_DOCUMENT_MAX_HEIGHT,
 						PropsValues.DL_FILE_ENTRY_PREVIEW_DOCUMENT_MAX_WIDTH,
-						generatePreview, generateThumbnail);
+						generatePreview, generateThumbnail, previewFilesCount);
 				}
 			}
 			catch (TimeoutException timeoutException) {
@@ -896,7 +924,8 @@ public class PDFProcessorImpl
 	}
 
 	private void _generateImagesPB(
-			FileVersion fileVersion, InputStream inputStream)
+			FileVersion fileVersion, InputStream inputStream,
+			int maxNumberOfPages)
 		throws Exception {
 
 		File file = null;
@@ -904,7 +933,7 @@ public class PDFProcessorImpl
 		try {
 			file = FileUtil.createTempFile(inputStream);
 
-			_generateImagesPB(fileVersion, file);
+			_generateImagesPB(fileVersion, file, maxNumberOfPages);
 		}
 		finally {
 			FileUtil.delete(file);
@@ -1055,6 +1084,9 @@ public class PDFProcessorImpl
 	private boolean _ghostscriptInitialized;
 
 	@Reference
+	private PDFPreviewManagedServiceFactory _pdfPreviewManagedServiceFactory;
+
+	@Reference
 	private ProcessExecutor _processExecutor;
 
 	private static class LiferayPDFBoxProcessCallable
@@ -1078,7 +1110,7 @@ public class PDFProcessorImpl
 				LiferayPDFBoxUtil.generateImagesPB(
 					pdDocument, _thumbnailFile, _previewFiles, _extension,
 					_thumbnailExtension, _dpi, _height, _width,
-					_generatePreview, _generateThumbnail);
+					_generatePreview, _generateThumbnail, _previewFiles.length);
 			}
 			catch (Exception exception) {
 				throw new ProcessException(exception);

@@ -26,6 +26,8 @@ ObjectField objectField = (ObjectField)request.getAttribute(ObjectWebKeys.OBJECT
 	module="js/components/ObjectField/EditObjectField"
 	props='<%=
 		HashMapBuilder.<String, Object>put(
+			"creationLanguageId", objectDefinition.getDefaultLanguageId()
+		).put(
 			"filterOperators", LocalizedJSONArrayUtil.getFilterOperatorsJSONObject(locale)
 		).put(
 			"forbiddenChars", PropsUtil.getArray(PropsKeys.DL_CHAR_BLACKLIST)
@@ -40,7 +42,7 @@ ObjectField objectField = (ObjectField)request.getAttribute(ObjectWebKeys.OBJECT
 		).put(
 			"objectDefinitionExternalReferenceCode", objectDefinition.getExternalReferenceCode()
 		).put(
-			"objectField", objectDefinitionsFieldsDisplayContext.getObjectFieldJSONObject(objectField)
+			"objectFieldId", objectField.getObjectFieldId()
 		).put(
 			"objectFieldTypes", objectDefinitionsFieldsDisplayContext.getObjectFieldBusinessTypeMaps(Validator.isNotNull(objectField.getRelationshipType()), locale)
 		).put(
@@ -49,6 +51,8 @@ ObjectField objectField = (ObjectField)request.getAttribute(ObjectWebKeys.OBJECT
 			"objectRelationshipId", objectDefinitionsFieldsDisplayContext.getObjectRelationshipId(objectField)
 		).put(
 			"readOnly", !objectDefinitionsFieldsDisplayContext.hasUpdateObjectDefinitionPermission()
+		).put(
+			"sidebarElements", objectDefinitionsFieldsDisplayContext.getObjectFieldCodeEditorElements(objectField.getBusinessType())
 		).put(
 			"workflowStatusJSONArray", LocalizedJSONArrayUtil.getWorkflowStatusJSONArray(locale)
 		).build()

@@ -19,7 +19,6 @@
 <%@ taglib uri="http://java.sun.com/portlet_2_0" prefix="portlet" %>
 
 <%@ taglib uri="http://liferay.com/tld/application-list" prefix="liferay-application-list" %><%@
-taglib uri="http://liferay.com/tld/aui" prefix="aui" %><%@
 taglib uri="http://liferay.com/tld/clay" prefix="clay" %><%@
 taglib uri="http://liferay.com/tld/react" prefix="react" %><%@
 taglib uri="http://liferay.com/tld/staging" prefix="liferay-staging" %><%@
@@ -36,7 +35,6 @@ page import="com.liferay.portal.kernel.util.SessionClicks" %><%@
 page import="com.liferay.portal.kernel.webserver.WebServerServletTokenUtil" %><%@
 page import="com.liferay.product.navigation.applications.menu.configuration.ApplicationsMenuInstanceConfiguration" %><%@
 page import="com.liferay.product.navigation.product.menu.display.context.ProductMenuDisplayContext" %><%@
-page import="com.liferay.product.navigation.product.menu.web.internal.constants.ProductNavigationProductMenuWebKeys" %><%@
 page import="com.liferay.product.navigation.product.menu.web.internal.display.context.LayoutsTreeDisplayContext" %><%@
 page import="com.liferay.taglib.aui.AUIUtil" %><%@
 page import="com.liferay.taglib.servlet.PipingServletResponseFactory" %>

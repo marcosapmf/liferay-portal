@@ -3,10 +3,10 @@
 [#assign approvedRoles =[""] /]
 
 [#if configuration.channelAccountManager]
-	[#assign approvedRoles = approvedRoles + ["Channel Account Manager"] /]
+	[#assign approvedRoles = approvedRoles + ["Channel Account Manager (CAM)"] /]
 [/#if]
 [#if configuration.channelFinanceManager]
-	[#assign approvedRoles = approvedRoles + ["Channel Finance Manager"] /]
+	[#assign approvedRoles = approvedRoles + ["Channel Finance Manager (CFM)"] /]
 [/#if]
 [#if configuration.channelGeneralManager]
 	[#assign approvedRoles = approvedRoles + ["Channel General Manager"] /]
@@ -21,16 +21,12 @@
 	[#assign approvedRoles = approvedRoles + ["User"] /]
 [/#if]
 
+[#assign myUserAccount = restClient.get("/headless-admin-user/v1.0/my-user-account") /]
+[#assign hasPartnerManagerRole = myUserAccount.accountBriefs?filter(accountBrief -> accountBrief.roleBriefs?filter(roleBrief -> roleBrief.name == "Partner Manager (PM)")?has_content)?has_content ]
+
 [#list userRoles as userRoles]
-	[#if approvedRoles?seq_contains(userRoles.name)]
-		<ul class="nav nav-tabs nav-underline" role="tablist">
-			<li class="nav-item">
-			<a aria-controls="fields" class="nav-link" data-toggle="tab" href="#" id="mdf-request" role="tab">MDF Request</a>
-			</li>
-			<li class="nav-item">
-			<a aria-controls="settings" class="nav-link" data-toggle="tab" href="#" id="mdf-claim" role="tab">MDF Claim</a>
-			</li>
-		</ul>
+	[#if approvedRoles?seq_contains(userRoles.name) || hasPartnerManagerRole]
+		<lfr-drop-zone></lfr-drop-zone>
 		[#break]
 	[/#if]
 [/#list]

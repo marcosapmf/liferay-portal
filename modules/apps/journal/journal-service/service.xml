@@ -35,7 +35,7 @@
 		<column accessor="true" name="articleId" type="String" />
 		<column name="version" type="double" />
 		<column name="urlTitle" type="String" uad-nonanonymizable="true" />
-		<column name="DDMStructureKey" type="String" />
+		<column name="DDMStructureId" type="long" />
 		<column name="DDMTemplateKey" type="String" />
 		<column name="defaultLanguageId" type="String" />
 		<column name="layoutUuid" type="String" />
@@ -67,8 +67,8 @@
 		<finder name="CompanyId" return-type="Collection">
 			<finder-column name="companyId" />
 		</finder>
-		<finder name="DDMStructureKey" return-type="Collection">
-			<finder-column arrayable-operator="OR" name="DDMStructureKey" />
+		<finder name="DDMStructureId" return-type="Collection">
+			<finder-column name="DDMStructureId" />
 		</finder>
 		<finder name="DDMTemplateKey" return-type="Collection">
 			<finder-column name="DDMTemplateKey" />
@@ -107,9 +107,9 @@
 			<finder-column name="groupId" />
 			<finder-column name="urlTitle" />
 		</finder>
-		<finder name="G_DDMSK" return-type="Collection">
+		<finder name="G_DDMSI" return-type="Collection">
 			<finder-column name="groupId" />
-			<finder-column name="DDMStructureKey" />
+			<finder-column name="DDMStructureId" />
 		</finder>
 		<finder name="G_DDMTK" return-type="Collection">
 			<finder-column name="groupId" />
@@ -168,10 +168,10 @@
 			<finder-column name="classNameId" />
 			<finder-column name="classPK" />
 		</finder>
-		<finder name="G_C_DDMSK" return-type="JournalArticle">
+		<finder name="G_C_DDMSI" return-type="JournalArticle">
 			<finder-column name="groupId" />
 			<finder-column name="classNameId" />
-			<finder-column name="DDMStructureKey" />
+			<finder-column name="DDMStructureId" />
 		</finder>
 		<finder name="G_C_DDMTK" return-type="Collection">
 			<finder-column name="groupId" />
@@ -372,7 +372,7 @@
 		<column name="feedId" type="String" />
 		<column name="name" type="String" uad-nonanonymizable="true" />
 		<column name="description" type="String" uad-nonanonymizable="true" />
-		<column name="DDMStructureKey" type="String" />
+		<column name="DDMStructureId" type="long" />
 		<column name="DDMTemplateKey" type="String" />
 		<column name="DDMRendererTemplateKey" type="String" />
 		<column name="delta" type="int" />

@@ -54,12 +54,10 @@ import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ArrayUtil;
-import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.Portal;
-import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
@@ -155,15 +153,6 @@ public class
 	@Override
 	public Class<?> getSourceItemClass() {
 		return AssetEntry.class;
-	}
-
-	@Override
-	public boolean isAvailable() {
-		if (!GetterUtil.getBoolean(PropsUtil.get("feature.flag.LPS-166036"))) {
-			return false;
-		}
-
-		return true;
 	}
 
 	private long[] _getAssetCategories(
@@ -269,19 +258,8 @@ public class
 		ServiceContext serviceContext =
 			ServiceContextThreadLocal.getServiceContext();
 
-		return ArrayUtil.filter(
-			AssetRendererFactoryRegistryUtil.getClassNameIds(
-				serviceContext.getCompanyId(), true),
-			classNameId -> {
-				Indexer<?> indexer = IndexerRegistryUtil.getIndexer(
-					_portal.getClassName(classNameId));
-
-				if (indexer == null) {
-					return false;
-				}
-
-				return true;
-			});
+		return AssetRendererFactoryRegistryUtil.getIndexableClassNameIds(
+			serviceContext.getCompanyId(), true);
 	}
 
 	private InfoField _getItemTypesInfoField() {
@@ -356,8 +334,6 @@ public class
 				Field.STATUS, WorkflowConstants.STATUS_APPROVED
 			).put(
 				"head", true
-			).put(
-				"latest", true
 			).build(),
 			serviceContext.getCompanyId(), null, themeDisplay.getLayout(), null,
 			serviceContext.getScopeGroupId(), null, serviceContext.getUserId());

@@ -319,6 +319,27 @@ export const addTeamMembersInvitation = gql`
 	}
 `;
 
+export const createAndAssociateUserAccountWithAccountAndAccountRole = gql`
+	mutation createAndAssociateUserAccountWithAccountAndAccountRole(
+		$emailAddress: String!
+		$userAccount: InputUserAccount!
+		$accountKey: String!
+		$accountRoleId: Long!
+	) {
+		createAccountUserAccountByExternalReferenceCode(
+			userAccount: $userAccount
+			externalReferenceCode: $accountKey
+		) {
+			id
+		}
+		createAccountByExternalReferenceCodeAccountRoleUserAccountByEmailAddress(
+			accountRoleId: $accountRoleId
+			emailAddress: $emailAddress
+			externalReferenceCode: $accountKey
+		)
+	}
+`;
+
 export const associateUserAccountWithAccountAndAccountRole = gql`
 	mutation associateUserAccountWithAccountAndAccountRole(
 		$emailAddress: String!
@@ -326,14 +347,27 @@ export const associateUserAccountWithAccountAndAccountRole = gql`
 		$accountRoleId: Long!
 	) {
 		createAccountUserAccountByExternalReferenceCodeByEmailAddress(
-			emailAddress: $emailAddress
 			externalReferenceCode: $accountKey
+			emailAddress: $emailAddress
 		)
+
 		createAccountByExternalReferenceCodeAccountRoleUserAccountByEmailAddress(
 			accountRoleId: $accountRoleId
 			emailAddress: $emailAddress
 			externalReferenceCode: $accountKey
 		)
+	}
+`;
+
+export const getUserAccountByEmail = gql`
+	query GetUserAccounts($filter: String) {
+		userAccounts(filter: $filter) {
+			items {
+				name
+				emailAddress
+				id
+			}
+		}
 	}
 `;
 
@@ -410,6 +444,7 @@ export const getKoroneikiAccounts = gql`
 				items {
 					accountKey
 					acWorkspaceGroupId
+					allowSelfProvisioning
 					code
 					dxpVersion
 					externalReferenceCode

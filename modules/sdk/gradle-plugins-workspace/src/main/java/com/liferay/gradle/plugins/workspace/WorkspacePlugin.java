@@ -22,14 +22,23 @@ import groovy.lang.Closure;
 
 import java.io.File;
 
+import java.nio.file.FileSystem;
+import java.nio.file.Path;
+import java.nio.file.PathMatcher;
+
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
 
+import org.gradle.StartParameter;
+import org.gradle.api.Action;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.initialization.Settings;
 import org.gradle.api.invocation.Gradle;
+import org.gradle.api.logging.Logger;
+import org.gradle.api.logging.Logging;
 import org.gradle.api.plugins.ExtensionAware;
 import org.gradle.api.plugins.ExtensionContainer;
 
@@ -47,27 +56,18 @@ public class WorkspacePlugin implements Plugin<Settings> {
 	@SuppressWarnings("serial")
 	public void apply(Settings settings) {
 		Gradle gradle = settings.getGradle();
+		File rootDir = settings.getRootDir();
 
 		final WorkspaceExtension workspaceExtension = _addWorkspaceExtension(
 			settings);
 
-		for (ProjectConfigurator projectConfigurator :
-				workspaceExtension.getProjectConfigurators()) {
+		Path rootDirPath = rootDir.toPath();
 
-			for (File rootDir : projectConfigurator.getDefaultRootDirs()) {
-				for (File projectDir :
-						projectConfigurator.getProjectDirs(rootDir)) {
+		FileSystem fileSystem = rootDirPath.getFileSystem();
 
-					String projectPath = GradleUtil.getProjectPath(
-						projectDir, settings.getRootDir());
+		StartParameter startParameter = gradle.getStartParameter();
 
-					settings.include(new String[] {projectPath});
-
-					_projectConfiguratorsMap.put(
-						projectPath, projectConfigurator);
-				}
-			}
-		}
+		File currentDir = startParameter.getCurrentDir();
 
 		gradle.beforeProject(
 			new Closure<Void>(settings) {
@@ -100,6 +100,75 @@ public class WorkspacePlugin implements Plugin<Settings> {
 				}
 
 			});
+
+		gradle.settingsEvaluated(
+			new Action<Settings>() {
+
+				@Override
+				public void execute(Settings settings) {
+					for (ProjectConfigurator projectConfigurator :
+							workspaceExtension.getProjectConfigurators()) {
+
+						for (File defaultRootDir :
+								projectConfigurator.getDefaultRootDirs()) {
+
+							_includeProjects(
+								projectConfigurator, defaultRootDir);
+						}
+					}
+				}
+
+				private void _includeProjects(
+					ProjectConfigurator projectConfigurator,
+					File defaultRootDir) {
+
+					Iterable<File> projectDirs =
+						projectConfigurator.getProjectDirs(defaultRootDir);
+
+					Iterator<File> iterator = projectDirs.iterator();
+
+					while (iterator.hasNext()) {
+						File projectDir = iterator.next();
+
+						if (Objects.equals(currentDir, projectDir)) {
+							continue;
+						}
+
+						for (String glob :
+								workspaceExtension.getDirExcludesGlobs()) {
+
+							Path relativeProjectPath = rootDirPath.relativize(
+								projectDir.toPath());
+
+							PathMatcher pathMatcher = fileSystem.getPathMatcher(
+								"glob:" + glob);
+
+							if (pathMatcher.matches(relativeProjectPath)) {
+								if (_logger.isInfoEnabled()) {
+									_logger.info(
+										"Skipping project evaluation for {} " +
+											"because it matches the exclude " +
+												"pattern {}.",
+										relativeProjectPath, glob);
+								}
+
+								iterator.remove();
+							}
+						}
+					}
+
+					for (File projectDir : projectDirs) {
+						String projectPath = GradleUtil.getProjectPath(
+							projectDir, rootDir);
+
+						settings.include(new String[] {projectPath});
+
+						_projectConfiguratorsMap.put(
+							projectPath, projectConfigurator);
+					}
+				}
+
+			});
 	}
 
 	private WorkspaceExtension _addWorkspaceExtension(Settings settings) {
@@ -127,6 +196,9 @@ public class WorkspacePlugin implements Plugin<Settings> {
 			GradleUtil.setProperty(project, "portal.version", "7.0.x");
 		}
 	}
+
+	private static final Logger _logger = Logging.getLogger(
+		WorkspacePlugin.class);
 
 	private static final Map<String, ProjectConfigurator>
 		_projectConfiguratorsMap = new HashMap<>();

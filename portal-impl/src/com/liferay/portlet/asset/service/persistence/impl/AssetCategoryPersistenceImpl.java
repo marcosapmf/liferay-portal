@@ -12461,7 +12461,8 @@ public class AssetCategoryPersistenceImpl
 				if (ercAssetCategory != null) {
 					throw new DuplicateAssetCategoryExternalReferenceCodeException(
 						"Duplicate asset category with external reference code " +
-							assetCategory.getExternalReferenceCode());
+							assetCategory.getExternalReferenceCode() +
+								" and group " + assetCategory.getGroupId());
 				}
 			}
 			else {
@@ -12471,7 +12472,8 @@ public class AssetCategoryPersistenceImpl
 
 					throw new DuplicateAssetCategoryExternalReferenceCodeException(
 						"Duplicate asset category with external reference code " +
-							assetCategory.getExternalReferenceCode());
+							assetCategory.getExternalReferenceCode() +
+								" and group " + assetCategory.getGroupId());
 				}
 			}
 		}

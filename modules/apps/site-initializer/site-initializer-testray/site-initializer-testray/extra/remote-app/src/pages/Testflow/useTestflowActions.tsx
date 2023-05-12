@@ -34,7 +34,7 @@ const useTestflowActions = () => {
 					`/project/${task.build?.project?.id}/routines/${task.build?.routine?.id}/build/${task.build?.id}`
 				),
 			icon: 'page',
-			name: i18n.translate('view-associete-build'),
+			name: i18n.translate('view-associated-build'),
 		},
 		{
 			action: (task, mutate) =>
@@ -51,6 +51,7 @@ const useTestflowActions = () => {
 			hidden: ({dueStatus}) => dueStatus.key === TaskStatuses.IN_ANALYSIS,
 			icon: 'polls',
 			name: i18n.translate('reanalyze'),
+			permission: 'UPDATE',
 		},
 		{
 			action: (subtask, mutate) =>

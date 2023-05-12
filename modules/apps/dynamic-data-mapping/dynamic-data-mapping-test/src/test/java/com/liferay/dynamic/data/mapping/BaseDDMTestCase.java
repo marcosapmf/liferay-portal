@@ -29,6 +29,7 @@ import com.liferay.dynamic.data.mapping.internal.io.DDMFormLayoutJSONSerializer;
 import com.liferay.dynamic.data.mapping.internal.io.DDMFormValuesJSONDeserializer;
 import com.liferay.dynamic.data.mapping.internal.io.DDMFormValuesJSONSerializer;
 import com.liferay.dynamic.data.mapping.internal.util.DDMImpl;
+import com.liferay.dynamic.data.mapping.io.DDMFormDeserializer;
 import com.liferay.dynamic.data.mapping.io.DDMFormDeserializerDeserializeRequest;
 import com.liferay.dynamic.data.mapping.io.DDMFormDeserializerDeserializeResponse;
 import com.liferay.dynamic.data.mapping.io.DDMFormSerializerSerializeRequest;
@@ -66,6 +67,7 @@ import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.module.util.SystemBundleUtil;
 import com.liferay.portal.kernel.resource.bundle.ResourceBundleLoader;
 import com.liferay.portal.kernel.resource.bundle.ResourceBundleLoaderUtil;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
@@ -91,7 +93,9 @@ import java.io.InputStream;
 import java.io.Serializable;
 
 import java.util.ArrayList;
+import java.util.Dictionary;
 import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
@@ -99,16 +103,48 @@ import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.Set;
 
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 
+import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.stubbing.Answer;
+
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.FrameworkUtil;
+import org.osgi.framework.ServiceRegistration;
 
 /**
  * @author Pablo Carvalho
  * @author Miguel Angelo Caldas Gallindo
  */
 public abstract class BaseDDMTestCase {
+
+	@BeforeClass
+	public static void setUpClass() {
+		BundleContext bundleContext = SystemBundleUtil.getBundleContext();
+
+		Mockito.when(
+			FrameworkUtil.getBundle(Mockito.any())
+		).thenReturn(
+			bundleContext.getBundle()
+		);
+
+		Dictionary<String, Object> properties = new Hashtable<>();
+
+		properties.put("ddm.form.deserializer.type", "json");
+
+		_ddmFormDeserializerServiceRegistration = bundleContext.registerService(
+			DDMFormDeserializer.class, _ddmFormDeserializer, properties);
+	}
+
+	@AfterClass
+	public static void tearDownClass() {
+		_ddmFormDeserializerServiceRegistration.unregister();
+
+		_frameworkUtilMockedStatic.close();
+	}
 
 	@Before
 	public void setUp() throws Exception {
@@ -321,6 +357,12 @@ public abstract class BaseDDMTestCase {
 	}
 
 	protected DDMStructure createStructure(String name, String definition) {
+		ReflectionTestUtil.setFieldValue(
+			_ddmFormDeserializer, "_ddmFormFieldTypeServicesRegistry",
+			getMockedDDMFormFieldTypeServicesRegistry());
+		ReflectionTestUtil.setFieldValue(
+			_ddmFormDeserializer, "_jsonFactory", jsonFactory);
+
 		DDMStructure structure = new DDMStructureImpl();
 
 		structure.setStructureId(RandomTestUtil.randomLong());
@@ -841,6 +883,13 @@ public abstract class BaseDDMTestCase {
 		private static final long serialVersionUID = 1L;
 
 	}
+
+	private static final DDMFormDeserializer _ddmFormDeserializer =
+		new DDMFormJSONDeserializer();
+	private static ServiceRegistration<DDMFormDeserializer>
+		_ddmFormDeserializerServiceRegistration;
+	private static final MockedStatic<FrameworkUtil>
+		_frameworkUtilMockedStatic = Mockito.mockStatic(FrameworkUtil.class);
 
 	private final ClassLoader _classLoader = Mockito.mock(ClassLoader.class);
 	private final Configuration _configuration = Mockito.mock(

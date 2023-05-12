@@ -1,6 +1,7 @@
 @component-name = "portal-upgrades"
 definition {
 
+	property ci.retries.disabled = "true";
 	property database.types = "db2,mariadb,mysql,oracle,postgresql,sqlserver,sybase";
 	property portal.release = "true";
 	property portal.upstream = "true";
@@ -19,10 +20,11 @@ definition {
 	}
 
 	@description = "This test covers LPS-154481. It ensures that a blog small image can be published and rendered correctly after upgrading from 7.3.10.1."
-	@priority = "5"
+	@priority = 5
 	test CanPublishBlogSmallImageAfterUpgradeFrom73101Archive {
 		property data.archive.type = "data-archive-depot-local-staging-with-image";
 		property portal.version = "7.3.10.1";
+		property test.assert.warning.exceptions = "false";
 		property test.name.skip.portal.instance = "DepotLocalStagingUpgrade#CanPublishBlogSmallImageAfterUpgradeFrom73101Archive";
 
 		DepotNavigator.openDepotDocumentsAndMediaAdminStaging(depotName = "Test Depot Name Local Staging");
@@ -66,10 +68,11 @@ definition {
 	}
 
 	@description = "This test covers LPS-154477. It ensures that an image from an asset library can be published in a blog content field and correctly rendered after upgrading from 7.3.10.1."
-	@priority = "5"
+	@priority = 5
 	test CanPublishImageInBlogContentFieldAfterUpgradeFrom73101Archive {
 		property data.archive.type = "data-archive-depot-local-staging-with-image";
 		property portal.version = "7.3.10.1";
+		property test.assert.warning.exceptions = "false";
 		property test.name.skip.portal.instance = "DepotLocalStagingUpgrade#CanPublishImageInBlogContentFieldAfterUpgradeFrom73101Archive";
 
 		DepotNavigator.openDepotDocumentsAndMediaAdminStaging(depotName = "Test Depot Name Local Staging");
@@ -116,10 +119,11 @@ definition {
 	}
 
 	@description = "This test covers LPS-154485. It ensures that an image from an asset library can be rendered correctly in a Media Gallery widget after upgrading from 7.3.10.1"
-	@priority = "5"
+	@priority = 5
 	test CanPublishImageInMGAfterUpgradeFrom73101Archive {
 		property data.archive.type = "data-archive-depot-local-staging-with-image";
 		property portal.version = "7.3.10.1";
+		property test.assert.warning.exceptions = "false";
 		property test.name.skip.portal.instance = "DepotLocalStagingUpgrade#CanPublishImageInMGAfterUpgradeFrom73101Archive";
 
 		DepotNavigator.openDepotDocumentsAndMediaAdminStaging(depotName = "Test Depot Name Local Staging");
@@ -159,18 +163,19 @@ definition {
 			staging = "true");
 	}
 
-	@priority = "5"
+	@priority = 5
 	@refactordone
 	test ViewDepotStagingArchive73101 {
 		property data.archive.type = "data-archive-depot-staging";
 		property portal.version = "7.3.10.1";
+		property test.assert.warning.exceptions = "false";
 		property test.name.skip.portal.instance = "DepotLocalStagingUpgrade#ViewDepotStagingArchive73101";
 
-		Upgrade.publishDMsInStagingDepot();
+		ValidateDepotUpgrade.publishDMsInStagingDepot();
 
-		Upgrade.publishWCsInStagingDepot();
+		ValidateDepotUpgrade.publishWCsInStagingDepot();
 
-		Upgrade.publishCollectionsInStagingDepot();
+		ValidateDepotUpgrade.publishCollectionsInStagingDepot();
 	}
 
 }

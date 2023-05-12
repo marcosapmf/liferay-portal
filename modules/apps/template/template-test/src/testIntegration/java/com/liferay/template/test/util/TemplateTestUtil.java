@@ -34,7 +34,6 @@ import com.liferay.template.model.TemplateEntry;
 import com.liferay.template.service.TemplateEntryLocalServiceUtil;
 
 import java.util.Collection;
-import java.util.stream.Stream;
 
 /**
  * @author Lourdes Fernández Besada
@@ -140,13 +139,15 @@ public class TemplateTestUtil {
 				infoItemFormVariationsProvider.getInfoItemFormVariations(
 					groupId);
 
-			Stream<InfoItemFormVariation> infoItemFormVariationsStream =
-				infoItemFormVariations.stream();
+			for (InfoItemFormVariation infoItemFormVariation :
+					infoItemFormVariations) {
 
-			return infoItemFormVariationsStream.findFirst(
-			).orElse(
-				null
-			);
+				if (infoItemFormVariation == null) {
+					continue;
+				}
+
+				return infoItemFormVariation;
+			}
 		}
 
 		return null;
@@ -164,28 +165,23 @@ public class TemplateTestUtil {
 					InfoItemFormVariationsProvider.class,
 					infoItemClassDetails.getClassName());
 
-			if (infoItemFormVariationsProvider != null) {
-				Collection<InfoItemFormVariation> infoItemFormVariations =
-					infoItemFormVariationsProvider.getInfoItemFormVariations(
-						groupId);
+			if (infoItemFormVariationsProvider == null) {
+				continue;
+			}
 
-				Stream<InfoItemFormVariation> infoItemFormVariationsStream =
-					infoItemFormVariations.stream();
+			Collection<InfoItemFormVariation> infoItemFormVariations =
+				infoItemFormVariationsProvider.getInfoItemFormVariations(
+					groupId);
 
-				InfoItemFormVariation infoItemFormVariation =
-					infoItemFormVariationsStream.findFirst(
-					).orElse(
-						null
-					);
+			for (InfoItemFormVariation curInfoItemFormVariation :
+					infoItemFormVariations) {
 
-				if (infoItemFormVariation == null) {
+				if (curInfoItemFormVariation == null) {
 					continue;
 				}
 
 				return infoItemClassDetails;
 			}
-
-			return infoItemClassDetails;
 		}
 
 		return null;

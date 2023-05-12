@@ -49,12 +49,7 @@ public class PoshiSourceProcessor extends BaseSourceProcessor {
 
 	@Override
 	protected List<String> doGetFileNames() throws IOException {
-		List<String> fileNames = getFileNames(
-			new String[] {
-				"**/modules/apps/static/**", "**/modules/sdk/**",
-				"**/modules/util/**"
-			},
-			getIncludes());
+		List<String> fileNames = getFileNames(new String[0], getIncludes());
 
 		Iterator<String> iterator = fileNames.iterator();
 
@@ -67,7 +62,10 @@ public class PoshiSourceProcessor extends BaseSourceProcessor {
 				continue;
 			}
 
-			if ((fileName.contains("/modules/") ||
+			if (((fileName.contains("/modules/") &&
+				  !fileName.contains("/modules/apps/static/") &&
+				  !fileName.contains("/modules/sdk/") &&
+				  !fileName.contains("/modules/util/")) ||
 				 fileName.contains("/portal-web/")) &&
 				(fileName.contains("/test/") || fileName.contains("/tests/")) &&
 				fileName.contains("/dependencies/") &&

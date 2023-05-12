@@ -22,11 +22,13 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 
+import java.util.List;
 import java.util.Map;
 
 import javax.ws.rs.core.MultivaluedMap;
 
 import org.apache.cxf.rs.security.oauth2.common.Client;
+import org.apache.cxf.rs.security.oauth2.common.ServerAccessToken;
 import org.apache.cxf.rs.security.oauth2.common.UserSubject;
 import org.apache.cxf.rs.security.oauth2.grants.owner.ResourceOwnerGrantHandler;
 import org.apache.cxf.rs.security.oauth2.grants.owner.ResourceOwnerLoginHandler;
@@ -48,20 +50,28 @@ import org.osgi.service.component.annotations.ReferencePolicyOption;
 public class LiferayResourceOwnerAccessTokenGrantHandler
 	extends BaseAccessTokenGrantHandler {
 
+	@Override
+	public List<String> getSupportedGrantTypes() {
+		AccessTokenGrantHandler accessTokenGrantHandler =
+			_getAccessTokenGrantHandler();
+
+		return accessTokenGrantHandler.getSupportedGrantTypes();
+	}
+
 	@Activate
 	protected void activate(Map<String, Object> properties) {
-		_resourceOwnerGrantHandler = new ResourceOwnerGrantHandler();
-
-		_resourceOwnerGrantHandler.setDataProvider(_liferayOAuthDataProvider);
-		_resourceOwnerGrantHandler.setLoginHandler(_resourceOwnerLoginHandler);
-
 		_oAuth2ProviderConfiguration = ConfigurableUtil.createConfigurable(
 			OAuth2ProviderConfiguration.class, properties);
 	}
 
 	@Override
-	protected AccessTokenGrantHandler getAccessTokenGrantHandler() {
-		return _resourceOwnerGrantHandler;
+	protected ServerAccessToken doCreateAccessToken(
+		Client client, MultivaluedMap<String, String> params) {
+
+		AccessTokenGrantHandler accessTokenGrantHandler =
+			_getAccessTokenGrantHandler();
+
+		return accessTokenGrantHandler.createAccessToken(client, params);
 	}
 
 	@Override
@@ -104,50 +114,28 @@ public class LiferayResourceOwnerAccessTokenGrantHandler
 			allowResourceOwnerPasswordCredentialsGrant();
 	}
 
-	@Reference(
-		policy = ReferencePolicy.DYNAMIC,
-		policyOption = ReferencePolicyOption.GREEDY
-	)
-	protected void setLiferayOAuthDataProvider(
-		LiferayOAuthDataProvider liferayOAuthDataProvider) {
+	private AccessTokenGrantHandler _getAccessTokenGrantHandler() {
+		ResourceOwnerGrantHandler resourceOwnerGrantHandler =
+			new ResourceOwnerGrantHandler();
 
-		_liferayOAuthDataProvider = liferayOAuthDataProvider;
+		resourceOwnerGrantHandler.setDataProvider(_liferayOAuthDataProvider);
+		resourceOwnerGrantHandler.setLoginHandler(_resourceOwnerLoginHandler);
 
-		if (_resourceOwnerGrantHandler != null) {
-			_resourceOwnerGrantHandler.setDataProvider(
-				_liferayOAuthDataProvider);
-		}
-	}
-
-	@Reference(
-		policy = ReferencePolicy.DYNAMIC,
-		policyOption = ReferencePolicyOption.GREEDY
-	)
-	protected void setResourceOwnerLoginHandler(
-		ResourceOwnerLoginHandler resourceOwnerLoginHandler) {
-
-		_resourceOwnerLoginHandler = resourceOwnerLoginHandler;
-
-		if (_resourceOwnerGrantHandler != null) {
-			_resourceOwnerGrantHandler.setLoginHandler(
-				_resourceOwnerLoginHandler);
-		}
-	}
-
-	protected void unsetLiferayOAuthDataProvider(
-		LiferayOAuthDataProvider liferayOAuthDataProvider) {
-	}
-
-	protected void unsetResourceOwnerLoginHandler(
-		ResourceOwnerLoginHandler resourceOwnerLoginHandler) {
+		return resourceOwnerGrantHandler;
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		LiferayResourceOwnerAccessTokenGrantHandler.class);
 
-	private volatile LiferayOAuthDataProvider _liferayOAuthDataProvider;
+	@Reference
+	private LiferayOAuthDataProvider _liferayOAuthDataProvider;
+
 	private OAuth2ProviderConfiguration _oAuth2ProviderConfiguration;
-	private ResourceOwnerGrantHandler _resourceOwnerGrantHandler;
+
+	@Reference(
+		policy = ReferencePolicy.DYNAMIC,
+		policyOption = ReferencePolicyOption.GREEDY
+	)
 	private volatile ResourceOwnerLoginHandler _resourceOwnerLoginHandler;
 
 }

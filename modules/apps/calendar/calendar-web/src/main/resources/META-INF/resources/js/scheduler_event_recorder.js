@@ -133,6 +133,7 @@ AUI.add(
 							)
 						) {
 							editGroup.push({
+								cssClass: 'btn-primary btn-sm',
 								id: 'saveBtn',
 								label: Liferay.Language.get('save'),
 								on: {
@@ -153,6 +154,7 @@ AUI.add(
 							)
 						) {
 							editGroup.push({
+								cssClass: 'btn-secondary btn-sm',
 								id: 'editBtn',
 								label: Liferay.Language.get('edit'),
 								on: {
@@ -169,6 +171,7 @@ AUI.add(
 							permissions.VIEW_BOOKING_DETAILS
 						) {
 							editGroup.push({
+								cssClass: 'btn-secondary btn-sm',
 								id: 'viewBtn',
 								label: Liferay.Language.get('view-details'),
 								on: {
@@ -189,6 +192,7 @@ AUI.add(
 							)
 						) {
 							editGroup.push({
+								cssClass: 'btn-secondary btn-sm',
 								id: 'deleteBtn',
 								label: Liferay.Language.get('delete'),
 								on: {
@@ -475,6 +479,78 @@ AUI.add(
 					popoverBB.toggleClass(
 						'calendar-portlet-event-recorder-editing',
 						!!schedulerEvent
+					);
+
+					const idPopoverBB = popoverBB._node.getAttribute('id');
+
+					let focusableElements;
+					const keysPressed = {};
+
+					const setFocusableElemeents = () => {
+						if (!focusableElements) {
+							focusableElements = [
+								...document
+									.getElementById(idPopoverBB)
+									.querySelectorAll(
+										'a[href], button, input:not([type="hidden"]), textarea, select, details, [tabindex]:not([tabindex="-1"])'
+									),
+							].filter(
+								(element) =>
+									!element.hasAttribute('disabled') &&
+									!element.getAttribute('aria-hidden') &&
+									!element.classList.contains('hide')
+							);
+						}
+					};
+
+					popoverBB.delegate(
+						'keydown',
+						(event) => {
+							keysPressed[event.keyCode] = true;
+
+							setFocusableElemeents();
+
+							const lastIndexElem = focusableElements.length - 1;
+							const isTabPressed =
+								event.keyCode === A.Event.KeyMap.TAB ||
+								keysPressed[A.Event.KeyMap.TAB];
+							const isShiftPressed =
+								event.keyCode === A.Event.KeyMap.SHIFT ||
+								keysPressed[A.Event.KeyMap.SHIFT];
+							const isForwardNavigation =
+								isTabPressed && !isShiftPressed;
+							const isBackwardNavigation =
+								isTabPressed && isShiftPressed;
+
+							if (isForwardNavigation) {
+								const isLastFocusableElement =
+									focusableElements &&
+									focusableElements[lastIndexElem] ===
+										event.target._node;
+								if (isLastFocusableElement) {
+									focusableElements[0].focus();
+									event.preventDefault();
+								}
+							}
+							else if (isBackwardNavigation) {
+								const isFirstFocusableElement =
+									focusableElements &&
+									focusableElements[0] === event.target._node;
+								if (isFirstFocusableElement) {
+									focusableElements[lastIndexElem].focus();
+									event.preventDefault();
+								}
+							}
+						},
+						'#' + idPopoverBB
+					);
+
+					popoverBB.delegate(
+						'keyup',
+						(event) => {
+							delete keysPressed[event.keyCode];
+						},
+						'#' + idPopoverBB
 					);
 
 					const calendarContainer = instance.get('calendarContainer');

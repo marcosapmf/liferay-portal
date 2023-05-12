@@ -107,17 +107,7 @@ public class DSEnvelope {
 		).put(
 			"documents",
 			JSONUtil.toJSONArray(
-				getDSDocuments(),
-				dsDocument -> JSONUtil.put(
-					"documentBase64", dsDocument.getData()
-				).put(
-					"documentId", dsDocument.getDSDocumentId()
-				).put(
-					"fileExtension", dsDocument.getFileExtension()
-				).put(
-					"name", dsDocument.getName()
-				),
-				_log)
+				getDSDocuments(), dsDocument -> dsDocument.toJSONObject(), _log)
 		).put(
 			"emailBlurb", getEmailBlurb()
 		).put(
@@ -132,18 +122,7 @@ public class DSEnvelope {
 				"signers",
 				JSONUtil.toJSONArray(
 					getDSRecipients(),
-					dsRecipient -> JSONUtil.put(
-						"clientUserId", dsRecipient.getDSClientUserId()
-					).put(
-						"email", dsRecipient.getEmailAddress()
-					).put(
-						"name", dsRecipient.getName()
-					).put(
-						"recipientId", dsRecipient.getDSRecipientId()
-					).put(
-						"status", dsRecipient.getStatus()
-					),
-					_log))
+					dsRecipient -> dsRecipient.toJSONObject(), _log))
 		).put(
 			"senderEmailAddress", getSenderEmailAddress()
 		).put(

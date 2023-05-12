@@ -74,7 +74,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 
 import javax.portlet.WindowState;
 
@@ -200,25 +199,25 @@ public class DefaultAssetDisplayPageFriendlyURLResolver
 	}
 
 	private AssetEntry _getAssetEntry(JournalArticle journalArticle) {
+		AssetEntry assetEntry = _assetEntryLocalService.fetchEntry(
+			JournalArticle.class.getName(), journalArticle.getPrimaryKey());
+
+		if (assetEntry != null) {
+			return assetEntry;
+		}
+
 		AssetRendererFactory<?> assetRendererFactory =
 			AssetRendererFactoryRegistryUtil.getAssetRendererFactoryByClassName(
 				JournalArticle.class.getName());
 
-		return Optional.ofNullable(
-			_assetEntryLocalService.fetchEntry(
-				JournalArticle.class.getName(), journalArticle.getPrimaryKey())
-		).orElseGet(
-			() -> {
-				try {
-					return assetRendererFactory.getAssetEntry(
-						JournalArticle.class.getName(),
-						journalArticle.getResourcePrimKey());
-				}
-				catch (PortalException portalException) {
-					throw new RuntimeException(portalException);
-				}
-			}
-		);
+		try {
+			return assetRendererFactory.getAssetEntry(
+				JournalArticle.class.getName(),
+				journalArticle.getResourcePrimKey());
+		}
+		catch (PortalException portalException) {
+			throw new RuntimeException(portalException);
+		}
 	}
 
 	private String _getBasicLayoutURL(
@@ -424,7 +423,7 @@ public class DefaultAssetDisplayPageFriendlyURLResolver
 
 		String[] versions = params.get("version");
 
-		if (ArrayUtil.isNotEmpty(versions) && !_isDefaultUser()) {
+		if (ArrayUtil.isNotEmpty(versions) && !_isGuestUser()) {
 			double version = GetterUtil.getDouble(versions[0]);
 
 			journalArticle = _journalArticleLocalService.fetchArticleByUrlTitle(
@@ -582,7 +581,7 @@ public class DefaultAssetDisplayPageFriendlyURLResolver
 		return 0;
 	}
 
-	private boolean _isDefaultUser() {
+	private boolean _isGuestUser() {
 		ServiceContext serviceContext =
 			ServiceContextThreadLocal.getServiceContext();
 
@@ -592,7 +591,7 @@ public class DefaultAssetDisplayPageFriendlyURLResolver
 
 		User user = _userLocalService.fetchUser(serviceContext.getUserId());
 
-		if ((user == null) || user.isDefaultUser()) {
+		if ((user == null) || user.isGuestUser()) {
 			return true;
 		}
 

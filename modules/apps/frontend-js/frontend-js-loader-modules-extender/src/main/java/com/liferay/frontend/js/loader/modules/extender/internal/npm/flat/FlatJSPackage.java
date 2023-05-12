@@ -18,8 +18,10 @@ import com.liferay.frontend.js.loader.modules.extender.npm.JSModule;
 import com.liferay.frontend.js.loader.modules.extender.npm.JSModuleAlias;
 import com.liferay.frontend.js.loader.modules.extender.npm.JSPackageDependency;
 import com.liferay.frontend.js.loader.modules.extender.npm.ModifiableJSPackage;
+import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.util.StringUtil;
 
 import java.net.URL;
 
@@ -160,7 +162,7 @@ public class FlatJSPackage implements ModifiableJSPackage {
 			sb.append("META-INF/resources/node_modules/");
 
 			if (_name.startsWith(StringPool.AT)) {
-				sb.append(_name.replace(StringPool.SLASH, "%2F"));
+				sb.append(StringUtil.replace(_name, CharPool.SLASH, "%2F"));
 			}
 			else {
 				sb.append(_name);

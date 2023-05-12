@@ -34,7 +34,7 @@ public class SelectAccountUsersDisplayContext {
 		_liferayPortletResponse = liferayPortletResponse;
 
 		_accountEntryId = ParamUtil.getLong(
-			_liferayPortletRequest, "accountEntryId");
+			liferayPortletRequest, "accountEntryId");
 	}
 
 	public long getAccountEntryId() {
@@ -56,11 +56,6 @@ public class SelectAccountUsersDisplayContext {
 
 		return new AccountUserRowChecker(
 			_accountEntryId, _liferayPortletResponse);
-	}
-
-	public boolean isOpenModalOnRedirect() {
-		return ParamUtil.getBoolean(
-			_liferayPortletRequest, "openModalOnRedirect");
 	}
 
 	public boolean isShowCreateButton() {

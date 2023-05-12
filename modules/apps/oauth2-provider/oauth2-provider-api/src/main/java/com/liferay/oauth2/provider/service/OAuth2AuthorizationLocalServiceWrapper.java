@@ -173,7 +173,9 @@ public class OAuth2AuthorizationLocalServiceWrapper
 	}
 
 	@Override
-	public void deleteExpiredOAuth2Authorizations() {
+	public void deleteExpiredOAuth2Authorizations()
+		throws com.liferay.portal.kernel.exception.PortalException {
+
 		_oAuth2AuthorizationLocalService.deleteExpiredOAuth2Authorizations();
 	}
 

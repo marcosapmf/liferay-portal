@@ -32,6 +32,8 @@ export default function propsTransformer({
 		editEntryURL,
 		folderConfiguration,
 		openViewMoreFileEntryTypesURL,
+		selectAssetTagsURL,
+		selectExtensionURL,
 		selectFileEntryTypeURL,
 		selectFolderURL,
 		trashEnabled,
@@ -174,6 +176,75 @@ export default function propsTransformer({
 				);
 			}
 		);
+	};
+
+	const filterByDocumentType = () => {
+		openSelectionModal({
+			onSelect(selectedItem) {
+				if (selectedItem) {
+					const url = addParams(
+						`${portletNamespace}fileEntryTypeId=${selectedItem.value}`,
+						viewFileEntryTypeURL
+					);
+					navigate(url);
+				}
+			},
+			selectEventName: `${portletNamespace}selectFileEntryType`,
+			title: Liferay.Language.get('select-document-type'),
+			url: selectFileEntryTypeURL,
+		});
+	};
+
+	const filterByExtension = (extensionsFilterURL) => {
+		openSelectionModal({
+			buttonAddLabel: Liferay.Language.get('select'),
+			height: '70vh',
+			multiple: true,
+			onSelect(selectedItem) {
+				if (selectedItem) {
+					const url = selectedItem.reduce(
+						(acc, item) =>
+							addParams(
+								`${portletNamespace}extension=${item}`,
+								acc
+							),
+						selectExtensionURL
+					);
+
+					navigate(url);
+				}
+			},
+			selectEventName: `${portletNamespace}selectedFileExtension`,
+			size: 'md',
+			title: Liferay.Language.get('filter-by-extension'),
+			url: extensionsFilterURL,
+		});
+	};
+
+	const filterByTag = (tagsFilterURL) => {
+		openSelectionModal({
+			buttonAddLabel: Liferay.Language.get('select'),
+			height: '70vh',
+			multiple: true,
+			onSelect: (selectedItem) => {
+				if (selectedItem) {
+					const url = selectedItem.reduce(
+						(acc, item) =>
+							addParams(
+								`${portletNamespace}assetTagId=${item.value}`,
+								acc
+							),
+						selectAssetTagsURL
+					);
+
+					navigate(url);
+				}
+			},
+			selectEventName: `${portletNamespace}selectedAssetTag`,
+			size: 'lg',
+			title: Liferay.Language.get('filter-by-tags'),
+			url: tagsFilterURL,
+		});
 	};
 
 	const move = () => {
@@ -319,20 +390,13 @@ export default function propsTransformer({
 		},
 		onFilterDropdownItemClick(event, {item}) {
 			if (item?.data?.action === 'openDocumentTypesSelector') {
-				openSelectionModal({
-					onSelect(selectedItem) {
-						if (selectedItem) {
-							const url = addParams(
-								`${portletNamespace}fileEntryTypeId=${selectedItem.value}`,
-								viewFileEntryTypeURL
-							);
-							navigate(url);
-						}
-					},
-					selectEventName: `${portletNamespace}selectFileEntryType`,
-					title: Liferay.Language.get('select-document-type'),
-					url: selectFileEntryTypeURL,
-				});
+				filterByDocumentType();
+			}
+			else if (item?.data?.action === 'openExtensionSelector') {
+				filterByExtension(item?.data?.extensionsFilterURL);
+			}
+			else if (item?.data?.action === 'openTagsSelector') {
+				filterByTag(item?.data?.tagsFilterURL);
 			}
 		},
 		onShowMoreButtonClick() {

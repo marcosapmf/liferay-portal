@@ -34,9 +34,7 @@ page import="com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder" %>
 page import="com.liferay.portal.kernel.search.Indexer" %><%@
 page import="com.liferay.portal.kernel.search.IndexerClassNameComparator" %><%@
 page import="com.liferay.portal.kernel.search.IndexerRegistryUtil" %><%@
-page import="com.liferay.portal.kernel.util.GetterUtil" %><%@
 page import="com.liferay.portal.kernel.util.ParamUtil" %><%@
-page import="com.liferay.portal.kernel.util.PropsUtil" %><%@
 page import="com.liferay.portal.kernel.util.WebKeys" %><%@
 page import="com.liferay.portal.search.admin.web.internal.constants.SearchAdminWebKeys" %><%@
 page import="com.liferay.portal.search.admin.web.internal.display.context.IndexActionsDisplayContext" %><%@
@@ -100,7 +98,7 @@ page import="java.util.Map" %>
 				size="4"
 			>
 				<react:component
-					module="js/ExecutionScope.es"
+					module="js/execution_options/index"
 					props="<%= indexActionsDisplayContext.getData() %>"
 				/>
 			</clay:col>
@@ -156,23 +154,9 @@ page import="java.util.Map" %>
 							</div>
 
 							<div class="autofit-col">
-								<aui:button cssClass="save-server-button" data-cmd="reindexDictionaries" value="execute" />
+								<aui:button cssClass="save-server-button" data-cmd="reindexDictionaries" data-concurrent-disabled="" value="execute" />
 							</div>
 						</li>
-
-						<c:if test='<%= GetterUtil.getBoolean(PropsUtil.get("feature.flag.LPS-163688")) %>'>
-							<li class="list-group-item list-group-item-flex">
-								<div class="autofit-col autofit-col-expand">
-									<p class="list-group-title">
-										<liferay-ui:message arguments="<%= indexActionsDisplayContext.getTextEmbeddingServiceStatus() %>" key="reindex-text-embeddings-x" />
-									</p>
-								</div>
-
-								<div class="autofit-col">
-									<aui:button cssClass="save-server-button" data-cmd="reindexTextEmbeddings" value="execute" />
-								</div>
-							</li>
-						</c:if>
 
 						<%
 						List<Indexer<?>> indexers = new ArrayList<>(IndexerRegistryUtil.getIndexers());
@@ -193,7 +177,7 @@ page import="java.util.Map" %>
 								<div class="autofit-col index-action-wrapper" data-type="<%= indexer.getClassName() %>">
 									<c:choose>
 										<c:when test="<%= (backgroundTaskDisplay == null) || !backgroundTaskDisplay.hasPercentage() %>">
-											<aui:button cssClass="save-server-button" data-classname="<%= indexer.getClassName() %>" data-cmd="reindex" disabled="<%= !indexer.isIndexerEnabled() %>" value="execute" />
+											<aui:button cssClass="save-server-button" data-classname="<%= indexer.getClassName() %>" data-cmd="reindex" data-concurrent-disabled="" disabled="<%= !indexer.isIndexerEnabled() %>" value="execute" />
 										</c:when>
 										<c:otherwise>
 											<%= backgroundTaskDisplay.renderDisplayTemplate() %>
@@ -220,7 +204,7 @@ page import="java.util.Map" %>
 								</div>
 
 								<div class="autofit-col index-action-wrapper" data-type="<%= indexReindexerClassName %>">
-									<aui:button cssClass="save-server-button" data-classname="<%= indexReindexerClassName %>" data-cmd="reindexIndexReindexer" value="execute" />
+									<aui:button cssClass="save-server-button" data-classname="<%= indexReindexerClassName %>" data-cmd="reindexIndexReindexer" data-concurrent-disabled="" value="execute" />
 								</div>
 							</li>
 

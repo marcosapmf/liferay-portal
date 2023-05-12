@@ -15,28 +15,31 @@
 import ClayAlert from '@clayui/alert';
 import ClayButton from '@clayui/button';
 import {ClayCheckbox} from '@clayui/form';
-import {useState} from 'react';
+import {useMemo, useState} from 'react';
 import {useForm} from 'react-hook-form';
 import {useOutletContext, useParams} from 'react-router-dom';
 import {KeyedMutator} from 'swr';
-
-import Form from '../../../components/Form';
-import Container from '../../../components/Layout/Container';
-import {useHeader} from '../../../hooks';
-import useFormActions from '../../../hooks/useFormActions';
-import useFormModal from '../../../hooks/useFormModal';
-import i18n from '../../../i18n';
-import yupSchema, {yupResolver} from '../../../schema/yup';
+import Form from '~/components/Form';
+import Container from '~/components/Layout/Container';
+import SearchBuilder from '~/core/SearchBuilder';
+import {withPagePermission} from '~/hoc/withPagePermission';
+import {useHeader} from '~/hooks';
+import useFormActions from '~/hooks/useFormActions';
+import useFormModal from '~/hooks/useFormModal';
+import i18n from '~/i18n';
+import yupSchema, {yupResolver} from '~/schema/yup';
 import {
 	TestrayCase,
 	TestraySuite,
-	createSuiteCaseBatch,
-	testraySuiteRest,
-} from '../../../services/rest';
-import {getUniqueList} from '../../../util';
-import {searchUtil} from '../../../util/search';
+	testraySuiteCaseImpl,
+	testraySuiteImpl,
+} from '~/services/rest';
+import {getUniqueList, safeJSONParse} from '~/util';
+
 import {CaseListView} from '../Cases';
+import SuitesCasesTable from './SuiteCasesTable';
 import SuiteSelectCasesModal from './modal';
+import {getCaseValues} from './useSuiteCaseFilter';
 
 type SuiteFormData = {
 	caseParameters?: string;
@@ -53,16 +56,18 @@ const SuiteForm = () => {
 
 	useHeader({tabs: [], timeout: 100});
 
-	const [cases, setCases] = useState<number[]>([]);
 	const {projectId} = useParams();
 	const context: {
 		mutateTestraySuite: KeyedMutator<any>;
+		suiteCasesItems: number[];
 		testrayProject?: any;
-		testraySuite?: TestraySuite;
+		testraySuite: TestraySuite;
 	} = useOutletContext();
 
+	const [cases, setCases] = useState<number[]>(context.suiteCasesItems ?? []);
+
 	const {
-		formState: {errors},
+		formState: {errors, isSubmitting},
 		handleSubmit,
 		register,
 		setValue,
@@ -75,14 +80,62 @@ const SuiteForm = () => {
 	});
 
 	const smartSuite = watch('smartSuite');
-	const caseParameters = watch('caseParameters');
+	const caseParametersWatch = watch('caseParameters');
 
-	const _onSubmit = (form: SuiteFormData) => {
+	const getCaseFilter = useMemo(() => {
+		if (!caseParametersWatch) {
+			return SearchBuilder.in('id', cases);
+		}
+
+		const caseParameters = safeJSONParse(caseParametersWatch, {});
+
+		const searchBuilder = new SearchBuilder();
+
+		if (caseParameters?.testrayCaseTypes) {
+			searchBuilder
+				.in(
+					'caseTypeId',
+					getCaseValues(caseParameters.testrayCaseTypes)
+				)
+				.or();
+		}
+
+		if (caseParameters?.testrayComponents) {
+			searchBuilder
+				.in(
+					'componentId',
+					getCaseValues(caseParameters.testrayComponents)
+				)
+				.or();
+		}
+
+		if (caseParameters?.testrayPriorities) {
+			searchBuilder
+				.inEqualNumbers(
+					'priority',
+					getCaseValues(caseParameters.testrayPriorities)
+				)
+				.or();
+		}
+
+		if (caseParameters?.testrayRequirements) {
+			searchBuilder.in(
+				'requerimentsId',
+				getCaseValues(caseParameters.testrayRequirements)
+			);
+		}
+
+		return searchBuilder.build();
+	}, [caseParametersWatch, cases]);
+
+	const caseFilter = getCaseFilter;
+
+	const _onSubmit = (form: SuiteFormData) =>
 		onSubmit<TestraySuite>(
 			{...form, projectId},
 			{
-				create: (data) => testraySuiteRest.create(data),
-				update: (id, data) => testraySuiteRest.update(id, data),
+				create: (data) => testraySuiteImpl.create(data),
+				update: (id, data) => testraySuiteImpl.update(id, data),
 			}
 		)
 			.then((response) => {
@@ -90,18 +143,12 @@ const SuiteForm = () => {
 					const suiteId =
 						response.id || (context.testraySuite?.id as number);
 
-					return createSuiteCaseBatch(
-						cases.map((caseId) => ({
-							caseId,
-							suiteId,
-						}))
-					);
+					return testraySuiteCaseImpl.createSuiteCase(cases, suiteId);
 				}
 			})
 			.then(context.mutateTestraySuite)
 			.then(onSave)
 			.catch(onError);
-	};
 
 	const {modal} = useFormModal({
 		onSave: (value) => {
@@ -112,6 +159,8 @@ const SuiteForm = () => {
 			setCases((prevCases) => getUniqueList([...prevCases, ...value]));
 		},
 	});
+
+	const listViewVisible = !!(cases.length || caseParametersWatch);
 
 	return (
 		<Container className="container">
@@ -156,9 +205,7 @@ const SuiteForm = () => {
 				</ClayButton>
 			</ClayButton.Group>
 
-			{caseParameters || !!cases.length ? (
-				<div />
-			) : (
+			{!listViewVisible && (
 				<ClayAlert>
 					{i18n.translate('there-are-no-linked-cases')}
 				</ClayAlert>
@@ -166,51 +213,69 @@ const SuiteForm = () => {
 
 			<SuiteSelectCasesModal
 				modal={modal}
+				selectedCaseIds={cases}
 				type={smartSuite ? 'select-case-parameters' : 'select-cases'}
 			/>
 
-			{!!cases.length && (
-				<CaseListView
-					listViewProps={{
-						managementToolbarProps: {visible: false},
-						tableProps: {
-							actions: [
-								{
-									action: ({id}: TestrayCase) =>
-										setCases((prevCases) =>
-											prevCases.filter(
-												(prevCase: number) =>
-													prevCase !== id
-											)
-										),
-									name: i18n.translate('delete'),
+			{listViewVisible && (
+				<>
+					{context.testraySuite ? (
+						<SuitesCasesTable
+							isSmartSuite={!!context.testraySuite.caseParameters}
+							testraySuite={context.testraySuite}
+						/>
+					) : (
+						<CaseListView
+							listViewProps={{
+								managementToolbarProps: {visible: false},
+								tableProps: {
+									actions: [
+										{
+											action: ({id}: TestrayCase) =>
+												setCases((prevCases) =>
+													prevCases.filter(
+														(prevCase: number) =>
+															prevCase !== id
+													)
+												),
+											name: i18n.translate('delete'),
+										},
+									] as any,
+									columns: [
+										{
+											key: 'priority',
+											value: i18n.translate('priority'),
+										},
+										{
+											key: 'name',
+											size: 'md',
+											value: i18n.translate('name'),
+										},
+										{
+											key: 'description',
+											size: 'lg',
+											value: i18n.translate(
+												'description'
+											),
+										},
+									],
 								},
-							] as any,
-							columns: [
-								{
-									key: 'priority',
-									value: i18n.translate('priority'),
-								},
-								{
-									key: 'name',
-									size: 'md',
-									value: i18n.translate('name'),
-								},
-								{
-									key: 'description',
-									size: 'lg',
-									value: i18n.translate('description'),
-								},
-							],
-						},
-						variables: {filter: searchUtil.in('id', cases)},
-					}}
-				/>
+								variables: {filter: caseFilter},
+							}}
+						/>
+					)}
+				</>
 			)}
 
-			<Form.Footer onClose={onClose} onSubmit={handleSubmit(_onSubmit)} />
+			<Form.Footer
+				onClose={onClose}
+				onSubmit={handleSubmit(_onSubmit)}
+				primaryButtonProps={{loading: isSubmitting}}
+			/>
 		</Container>
 	);
 };
 
-export default SuiteForm;
+export default withPagePermission(SuiteForm, {
+	restImpl: testraySuiteImpl,
+});

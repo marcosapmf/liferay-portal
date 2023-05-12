@@ -77,8 +77,8 @@ public class DLViewFileEntryDisplayContext {
 		_renderRequest = renderRequest;
 		_renderResponse = renderResponse;
 
-		_httpServletResponse = _portal.getHttpServletResponse(renderResponse);
-		_themeDisplay = (ThemeDisplay)_renderRequest.getAttribute(
+		_httpServletResponse = portal.getHttpServletResponse(renderResponse);
+		_themeDisplay = (ThemeDisplay)renderRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
 		_dlRequestHelper = new DLRequestHelper(_httpServletRequest);
@@ -234,7 +234,8 @@ public class DLViewFileEntryDisplayContext {
 			return _redirect;
 		}
 
-		_redirect = ParamUtil.getString(_renderRequest, "redirect");
+		_redirect = _portal.escapeRedirect(
+			ParamUtil.getString(_renderRequest, "redirect"));
 
 		if (Validator.isNotNull(_redirect)) {
 			return _redirect;

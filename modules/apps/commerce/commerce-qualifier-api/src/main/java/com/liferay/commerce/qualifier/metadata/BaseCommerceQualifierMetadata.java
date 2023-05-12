@@ -28,6 +28,7 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.model.BaseModelListener;
+import com.liferay.portal.kernel.model.ModelListener;
 import com.liferay.portal.kernel.module.configuration.ConfigurationException;
 import com.liferay.portal.kernel.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
@@ -38,13 +39,17 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.Set;
 
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceRegistration;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Riccardo Alberti
  */
 public abstract class BaseCommerceQualifierMetadata<T extends BaseModel<T>>
-	extends BaseModelListener<T> implements CommerceQualifierMetadata<T> {
+	implements CommerceQualifierMetadata<T> {
 
 	@Override
 	public String[][] getAllowedTargetKeysArray() {
@@ -150,28 +155,24 @@ public abstract class BaseCommerceQualifierMetadata<T extends BaseModel<T>>
 		return new OrderByExpression[0];
 	}
 
-	@Override
-	public void onBeforeRemove(T model) {
-		try {
-			commerceQualifierEntryLocalService.
-				deleteSourceCommerceQualifierEntries(
-					model.getModelClassName(), (Long)model.getPrimaryKeyObj());
+	@Activate
+	protected void activate(BundleContext bundleContext) {
+		_modelListenerServiceRegistration = bundleContext.registerService(
+			(Class<ModelListener<T>>)(Class<?>)ModelListener.class,
+			new CommerceQualifierMetadataModelListener(getModelClass()), null);
+	}
 
-			commerceQualifierEntryLocalService.
-				deleteTargetCommerceQualifierEntries(
-					model.getModelClassName(), (Long)model.getPrimaryKeyObj());
-		}
-		catch (PortalException portalException) {
-			if (_log.isWarnEnabled()) {
-				_log.warn(portalException);
-			}
-		}
+	@Deactivate
+	protected void deactivate() {
+		_modelListenerServiceRegistration.unregister();
 	}
 
 	protected abstract OrderByExpression[] getAdditionalOrderByExpressions(
 		Map<String, ?> targetAttributes);
 
 	protected abstract Class<?> getConfigurationBeanClass();
+
+	protected abstract Class<T> getModelClass();
 
 	@Reference
 	protected CommerceQualifierEntryLocalService
@@ -232,5 +233,44 @@ public abstract class BaseCommerceQualifierMetadata<T extends BaseModel<T>>
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		BaseCommerceQualifierMetadata.class);
+
+	private ServiceRegistration<ModelListener<T>>
+		_modelListenerServiceRegistration;
+
+	private class CommerceQualifierMetadataModelListener
+		extends BaseModelListener<T> {
+
+		@Override
+		public Class<T> getModelClass() {
+			return _modelClass;
+		}
+
+		@Override
+		public void onBeforeRemove(T model) {
+			try {
+				commerceQualifierEntryLocalService.
+					deleteSourceCommerceQualifierEntries(
+						model.getModelClassName(),
+						(Long)model.getPrimaryKeyObj());
+
+				commerceQualifierEntryLocalService.
+					deleteTargetCommerceQualifierEntries(
+						model.getModelClassName(),
+						(Long)model.getPrimaryKeyObj());
+			}
+			catch (PortalException portalException) {
+				if (_log.isWarnEnabled()) {
+					_log.warn(portalException);
+				}
+			}
+		}
+
+		private CommerceQualifierMetadataModelListener(Class<T> modelClass) {
+			_modelClass = modelClass;
+		}
+
+		private final Class<T> _modelClass;
+
+	}
 
 }

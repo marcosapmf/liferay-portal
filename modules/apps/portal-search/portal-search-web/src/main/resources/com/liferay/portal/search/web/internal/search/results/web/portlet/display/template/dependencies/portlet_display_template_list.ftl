@@ -1,14 +1,21 @@
-<div class="search-total-label">
-	<#if searchContainer.getTotal() == 1>
-		${languageUtil.format(locale, "x-result-for-x", [searchContainer.getTotal(), "<strong>" + htmlUtil.escape(searchResultsPortletDisplayContext.getKeywords()) + "</strong>"], false)}
-	<#else>
-		${languageUtil.format(locale, "x-results-for-x", [searchContainer.getTotal(), "<strong>" + htmlUtil.escape(searchResultsPortletDisplayContext.getKeywords()) + "</strong>"], false)}
-	</#if>
-</div>
+<#if !entries?has_content>
+	<div class="sheet">
+		<@liferay_frontend["empty-result-message"]
+			description='${languageUtil.format(locale, "no-results-were-found-that-matched-the-keywords-x", "<strong>" + htmlUtil.escape(searchResultsPortletDisplayContext.getKeywords()) + "</strong>", false)}'
+			title='${languageUtil.format(request, "no-results-were-found", false)}'
+		/>
+	</div>
+<#else>
+	<div class="c-mb-4 c-mt-4 search-total-label">
+		<#if searchContainer.getTotal() == 1>
+			${languageUtil.format(locale, "x-result-for-x", [searchContainer.getTotal(), "<strong>" + htmlUtil.escape(searchResultsPortletDisplayContext.getKeywords()) + "</strong>"], false)}
+		<#else>
+			${languageUtil.format(locale, "x-results-for-x", [searchContainer.getTotal(), "<strong>" + htmlUtil.escape(searchResultsPortletDisplayContext.getKeywords()) + "</strong>"], false)}
+		</#if>
+	</div>
 
-<div class="display-list">
-	<ul class="list-group" id="search-results-display-list">
-		<#if entries?has_content>
+	<div class="display-list">
+		<ul class="list-group" id="search-results-display-list">
 			<#list entries as entry>
 				<li class="list-group-item list-group-item-flex">
 					<div class="autofit-col">
@@ -33,7 +40,7 @@
 
 					<div class="autofit-col autofit-col-expand">
 						<section class="autofit-section">
-							<div class="list-group-title">
+							<div class="c-mt-0 list-group-title">
 								<a href="${entry.getViewURL()}">
 									${entry.getHighlightedTitle()}
 								</a>
@@ -48,10 +55,9 @@
 									</#if>
 
 									<#if entry.isLocaleReminderVisible()>
-										<@liferay_ui["icon"]
-											icon="../language/${entry.getLocaleLanguageId()}"
-											message=entry.getLocaleReminder()
-										/>
+										<span class="lfr-portal-tooltip" title="${entry.getLocaleReminder()}">
+											<@clay["icon"] symbol="${entry.getLocaleLanguageId()?lower_case?replace('_', '-')}" />
+										</span>
 									</#if>
 
 									<#if entry.isCreatorVisible()>
@@ -100,7 +106,7 @@
 								</#if>
 
 								<#if entry.isAssetCategoriesOrTagsVisible()>
-									<div class="h6 search-document-tags text-default">
+									<div class="c-mt-2 h6 search-document-tags text-default">
 										<@liferay_asset["asset-tags-summary"]
 											className=entry.getClassName()
 											classPK=entry.getClassPK()
@@ -118,22 +124,22 @@
 								</#if>
 
 								<#if entry.isDocumentFormVisible()>
-									<div class="expand-details h6 text-default">
-										<span class="list-group-text" style="">
-											<a href="javascript:void(0);">
+									<div class="expand-details text-default">
+										<span class="list-group-text text-2">
+											<a class="shadow-none" href="javascript:void(0);">
 												<@liferay.language key="details" />...
 											</a>
 										</span>
 									</div>
 
 									<div class="hide search-results-list table-details table-responsive">
-										<table class="table">
+										<table class="table table-sm">
 											<thead>
 												<tr>
-													<th class="key-column">
+													<th class="table-cell-expand-smaller table-cell-text-end">
 														<@liferay.language key="key" />
 													</th>
-													<th>
+													<th class="table-cell-expand">
 														<@liferay.language key="value" />
 													</th>
 												</tr>
@@ -142,10 +148,10 @@
 											<tbody>
 												<#list entry.getDocumentFormFieldDisplayContexts() as fieldDisplayContext>
 													<tr>
-														<td class="key-column table-details-content">
+														<td class="table-cell-expand-smaller table-cell-text-end table-details-content">
 															<strong>${htmlUtil.escape(fieldDisplayContext.getName())}</strong>
 														</td>
-														<td class="table-details-content">
+														<td class="table-cell-expand table-details-content">
 															<code>
 																${fieldDisplayContext.getValuesToString()}
 															</code>
@@ -161,18 +167,26 @@
 					</div>
 				</li>
 			</#list>
-		</#if>
-	</ul>
-</div>
+		</ul>
+	</div>
 
-<@liferay_aui.script use="aui-base">
-	A.one('#search-results-display-list').delegate(
-		'click',
-		function(event) {
-			var currentTarget = event.currentTarget;
+	<@liferay_aui.form useNamespace=false>
+		<@liferay_ui["search-paginator"]
+			id="${namespace + 'searchContainerTag'}"
+			markupView="lexicon"
+			searchContainer=searchContainer
+		/>
+	</@liferay_aui.form>
 
-			currentTarget.siblings('.search-results-list').toggleClass('hide');
-		},
-		'.expand-details'
-	);
-</@liferay_aui.script>
+	<@liferay_aui.script use="aui-base">
+		A.one('#search-results-display-list').delegate(
+			'click',
+			function(event) {
+				var currentTarget = event.currentTarget;
+
+				currentTarget.siblings('.search-results-list').toggleClass('hide');
+			},
+			'.expand-details'
+		);
+	</@liferay_aui.script>
+</#if>

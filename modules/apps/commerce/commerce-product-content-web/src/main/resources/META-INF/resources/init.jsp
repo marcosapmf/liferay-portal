@@ -35,14 +35,15 @@ taglib uri="http://liferay.com/tld/theme" prefix="liferay-theme" %><%@
 taglib uri="http://liferay.com/tld/ui" prefix="liferay-ui" %><%@
 taglib uri="http://liferay.com/tld/util" prefix="liferay-util" %>
 
-<%@ page import="com.liferay.asset.kernel.exception.DuplicateQueryRuleException" %><%@
-page import="com.liferay.commerce.account.model.CommerceAccount" %><%@
+<%@ page import="com.liferay.account.model.AccountEntry" %><%@
+page import="com.liferay.asset.kernel.exception.DuplicateQueryRuleException" %><%@
 page import="com.liferay.commerce.constants.CPDefinitionInventoryConstants" %><%@
 page import="com.liferay.commerce.constants.CommerceWebKeys" %><%@
 page import="com.liferay.commerce.context.CommerceContext" %><%@
 page import="com.liferay.commerce.model.CommerceOrder" %><%@
 page import="com.liferay.commerce.product.catalog.CPCatalogEntry" %><%@
 page import="com.liferay.commerce.product.catalog.CPSku" %><%@
+page import="com.liferay.commerce.product.constants.CPPortletKeys" %><%@
 page import="com.liferay.commerce.product.constants.CPWebKeys" %><%@
 page import="com.liferay.commerce.product.content.constants.CPContentWebKeys" %><%@
 page import="com.liferay.commerce.product.content.render.CPContentRenderer" %><%@

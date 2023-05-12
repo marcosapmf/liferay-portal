@@ -14,11 +14,14 @@
 
 package com.liferay.source.formatter.check;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.tools.GitUtil;
 import com.liferay.source.formatter.SourceFormatterArgs;
 import com.liferay.source.formatter.processor.SourceProcessor;
+
+import java.util.List;
 
 /**
  * @author Hugo Huijser
@@ -62,14 +65,6 @@ public class IllegalImportsCheck extends BaseFileCheck {
 				});
 		}
 
-		if (isAttributeValue(
-				_ENFORCE_PETRA_FUNCTION_TRANSFORM_UTIL_KEY, absolutePath)) {
-
-			content = StringUtil.replace(
-				content, "com.liferay.portal.vulcan.util.TransformUtil",
-				"com.liferay.petra.function.transform.TransformUtil");
-		}
-
 		if (!isExcludedPath(RUN_OUTSIDE_PORTAL_EXCLUDES, absolutePath) &&
 			!isExcludedPath(_PROXY_EXCLUDES, absolutePath) &&
 			content.contains("import java.lang.reflect.Proxy;")) {
@@ -87,8 +82,6 @@ public class IllegalImportsCheck extends BaseFileCheck {
 			addMessage(fileName, "Illegal import: jodd.util.StringPool");
 		}
 
-		// LPS-39508
-
 		if (!isExcludedPath(RUN_OUTSIDE_PORTAL_EXCLUDES, absolutePath) &&
 			!isExcludedPath(_SECURE_RANDOM_EXCLUDES, absolutePath) &&
 			content.contains("java.security.SecureRandom") &&
@@ -98,10 +91,8 @@ public class IllegalImportsCheck extends BaseFileCheck {
 				fileName,
 				"Use SecureRandomUtil or com.liferay.portal.kernel.security." +
 					"SecureRandom instead of java.security.SecureRandom, see " +
-						"LPS-39058");
+						"LPS-39508");
 		}
-
-		// LPS-45027
 
 		if (content.contains(
 				"com.liferay.portal.kernel.util.UnmodifiableList")) {
@@ -113,8 +104,6 @@ public class IllegalImportsCheck extends BaseFileCheck {
 						"LPS-45027");
 		}
 
-		// LPS-47682
-
 		if (isPortalSource() && absolutePath.contains("/portal-kernel/") &&
 			content.contains("import javax.servlet.jsp.")) {
 
@@ -124,16 +113,12 @@ public class IllegalImportsCheck extends BaseFileCheck {
 					"LPS-47682");
 		}
 
-		// LPS-55690
-
 		if (content.contains("org.testng.Assert")) {
 			addMessage(
 				fileName,
 				"Use org.junit.Assert instead of org.testng.Assert, see " +
 					"LPS-55690");
 		}
-
-		// LPS-60473
 
 		if (content.contains(".supportsBatchUpdates()") &&
 			!fileName.endsWith("AutoBatchPreparedStatementUtil.java")) {
@@ -144,8 +129,6 @@ public class IllegalImportsCheck extends BaseFileCheck {
 					"DatabaseMetaData.supportsBatchUpdates, see LPS-60473");
 		}
 
-		// LPS-62786
-
 		if (!fileName.endsWith("TypeConvertorUtil.java") &&
 			content.contains("org.apache.commons.beanutils.PropertyUtils")) {
 
@@ -154,8 +137,6 @@ public class IllegalImportsCheck extends BaseFileCheck {
 				"Do not use org.apache.commons.beanutils.PropertyUtils, see " +
 					"LPS-62786");
 		}
-
-		// LPS-64056
 
 		if (content.contains("Configurable.createConfigurable(") &&
 			!fileName.endsWith("ConfigurableUtil.java")) {
@@ -166,8 +147,6 @@ public class IllegalImportsCheck extends BaseFileCheck {
 					"Configurable.createConfigurable, see LPS-64056");
 		}
 
-		// LPS-65229
-
 		if (fileName.endsWith("ResourceCommand.java") &&
 			content.contains("ServletResponseUtil.sendFile(")) {
 
@@ -177,16 +156,12 @@ public class IllegalImportsCheck extends BaseFileCheck {
 					"ServletResponseUtil.sendFile, see LPS-65229");
 		}
 
-		// LPS-70963
-
 		if (content.contains("java.util.WeakHashMap")) {
 			addMessage(
 				fileName,
 				"Do not use java.util.WeakHashMap because it is not " +
 					"thread-safe, see LPS-70963");
 		}
-
-		// LPS-164101
 
 		if (isAttributeValue(_ENFORCE_COOKIES_MANAGER_UTIL_KEY, absolutePath) &&
 			content.contains("com.liferay.portal.kernel.util.CookieKeys")) {
@@ -207,8 +182,6 @@ public class IllegalImportsCheck extends BaseFileCheck {
 					"org.slf4j.Logger");
 		}
 
-		// LPS-170503
-
 		SourceProcessor sourceProcessor = getSourceProcessor();
 
 		SourceFormatterArgs sourceFormatterArgs =
@@ -219,9 +192,31 @@ public class IllegalImportsCheck extends BaseFileCheck {
 				sourceFormatterArgs.getBaseDirName(),
 				sourceFormatterArgs.getGitWorkingBranchName(), absolutePath);
 
-			for (String line : StringUtil.split(currentBranchFileDiff, "\n")) {
+			List<String> replacedTaglibs = getAttributeValues(
+				_REPLACED_TAGLIBS_KEY, absolutePath);
+
+			for (String line : StringUtil.splitLines(currentBranchFileDiff)) {
 				if (!line.startsWith(StringPool.PLUS)) {
 					continue;
+				}
+
+				for (String replacedTaglib : replacedTaglibs) {
+					String[] replacedTaglibArray = StringUtil.split(
+						replacedTaglib, "->");
+
+					if (replacedTaglibArray.length != 2) {
+						continue;
+					}
+
+					if (line.contains(replacedTaglibArray[0])) {
+						addMessage(
+							fileName,
+							StringBundler.concat(
+								"Use ", replacedTaglibArray[1], " instead of ",
+								replacedTaglibArray[0]));
+
+						break;
+					}
 				}
 
 				if (isAttributeValue(_AVOID_OPTIONAL_KEY, absolutePath) &&
@@ -233,7 +228,7 @@ public class IllegalImportsCheck extends BaseFileCheck {
 				}
 
 				if (isAttributeValue(_AVOID_STREAM_KEY, absolutePath) &&
-					line.contains("java.util.stream.Stream")) {
+					line.contains("java.util.stream")) {
 
 					addMessage(
 						fileName,
@@ -255,10 +250,9 @@ public class IllegalImportsCheck extends BaseFileCheck {
 	private static final String _ENFORCE_JAVA_UTIL_FUNCTION_IMPORTS_KEY =
 		"enforceJavaUtilFunctionImports";
 
-	private static final String _ENFORCE_PETRA_FUNCTION_TRANSFORM_UTIL_KEY =
-		"enforcePetraFunctionTransformUtil";
-
 	private static final String _PROXY_EXCLUDES = "proxy.excludes";
+
+	private static final String _REPLACED_TAGLIBS_KEY = "replacedTaglibs";
 
 	private static final String _SECURE_RANDOM_EXCLUDES =
 		"secure.random.excludes";

@@ -19,9 +19,17 @@ const btnCall = fragmentElement.querySelector('#contact-agent-btn-call');
 const contextualMessageIdKey = 'raylife-contextual-message';
 const valueCall = fragmentElement.querySelector('#value-number-call')
 	.textContent;
+const baseURL = window.location.origin + Liferay.ThemeDisplay.getPathContext();
+
+const consentType = Liferay.Util.LocalStorage.TYPES.NECESSARY;
 
 btnBack.onclick = function () {
-	localStorage.setItem('raylife-back-to-edit', true);
+	Liferay.Util.LocalStorage.setItem(
+		'raylife-back-to-edit',
+		true,
+		consentType
+	);
+
 	window.history.back();
 };
 
@@ -29,14 +37,20 @@ btnCall.onclick = function () {
 	window.location.href = 'tel:' + valueCall;
 };
 
-const applicationId = localStorage.getItem(applicationIdKey);
+const applicationId = Liferay.Util.LocalStorage.getItem(
+	applicationIdKey,
+	consentType
+);
 
 if (applicationId) {
 	document.getElementById('content-agent-text-your-application').textContent =
 		'Your Application #' + applicationId;
 }
 
-const contextualMessage = localStorage.getItem(contextualMessageIdKey);
+const contextualMessage = Liferay.Util.LocalStorage.getItem(
+	contextualMessageIdKey,
+	consentType
+);
 
 if (contextualMessage) {
 	document.getElementById(
@@ -46,7 +60,7 @@ if (contextualMessage) {
 
 const fetchHeadless = async (url, options) => {
 	// eslint-disable-next-line @liferay/portal/no-global-fetch
-	const response = await fetch(`${window.location.origin}/${url}`, {
+	const response = await fetch(`${baseURL}/${url}`, {
 		...options,
 		headers: {
 			'Content-Type': 'application/json',
@@ -54,9 +68,7 @@ const fetchHeadless = async (url, options) => {
 		},
 	});
 
-	const data = await response.json();
-
-	return data;
+	return response.json();
 };
 
 const updateApplicationStatus = async () => {

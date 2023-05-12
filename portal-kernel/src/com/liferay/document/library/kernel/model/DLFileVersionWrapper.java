@@ -71,6 +71,7 @@ public class DLFileVersionWrapper
 		attributes.put("version", getVersion());
 		attributes.put("size", getSize());
 		attributes.put("checksum", getChecksum());
+		attributes.put("storeUUID", getStoreUUID());
 		attributes.put("expirationDate", getExpirationDate());
 		attributes.put("reviewDate", getReviewDate());
 		attributes.put("lastPublishDate", getLastPublishDate());
@@ -234,6 +235,12 @@ public class DLFileVersionWrapper
 			setChecksum(checksum);
 		}
 
+		String storeUUID = (String)attributes.get("storeUUID");
+
+		if (storeUUID != null) {
+			setStoreUUID(storeUUID);
+		}
+
 		Date expirationDate = (Date)attributes.get("expirationDate");
 
 		if (expirationDate != null) {
@@ -346,6 +353,11 @@ public class DLFileVersionWrapper
 		return model.getCtCollectionId();
 	}
 
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
+	 DLFileEntryTypeUtil#getDDMStructures(DLFileEntryType)}
+	 */
+	@Deprecated
 	@Override
 	public java.util.List<com.liferay.dynamic.data.mapping.kernel.DDMStructure>
 			getDDMStructures()
@@ -620,6 +632,21 @@ public class DLFileVersionWrapper
 	@Override
 	public Date getStatusDate() {
 		return model.getStatusDate();
+	}
+
+	@Override
+	public String getStoreFileName() {
+		return model.getStoreFileName();
+	}
+
+	/**
+	 * Returns the store uuid of this document library file version.
+	 *
+	 * @return the store uuid of this document library file version
+	 */
+	@Override
+	public String getStoreUUID() {
+		return model.getStoreUUID();
 	}
 
 	/**
@@ -1063,6 +1090,16 @@ public class DLFileVersionWrapper
 	@Override
 	public void setStatusDate(Date statusDate) {
 		model.setStatusDate(statusDate);
+	}
+
+	/**
+	 * Sets the store uuid of this document library file version.
+	 *
+	 * @param storeUUID the store uuid of this document library file version
+	 */
+	@Override
+	public void setStoreUUID(String storeUUID) {
+		model.setStoreUUID(storeUUID);
 	}
 
 	/**

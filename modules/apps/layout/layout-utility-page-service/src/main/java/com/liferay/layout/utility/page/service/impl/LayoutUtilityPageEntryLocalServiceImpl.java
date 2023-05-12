@@ -14,11 +14,12 @@
 
 package com.liferay.layout.utility.page.service.impl;
 
-import com.liferay.document.library.kernel.model.DLFileEntry;
 import com.liferay.document.library.kernel.service.DLFileEntryLocalService;
+import com.liferay.layout.admin.constants.LayoutAdminPortletKeys;
 import com.liferay.layout.utility.page.exception.LayoutUtilityPageEntryNameException;
 import com.liferay.layout.utility.page.model.LayoutUtilityPageEntry;
 import com.liferay.layout.utility.page.service.base.LayoutUtilityPageEntryLocalServiceBaseImpl;
+import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -32,14 +33,16 @@ import com.liferay.portal.kernel.model.ResourceConstants;
 import com.liferay.portal.kernel.model.SystemEventConstants;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.portletfilerepository.PortletFileRepository;
+import com.liferay.portal.kernel.repository.model.FileEntry;
+import com.liferay.portal.kernel.repository.model.Folder;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.LayoutSetLocalService;
 import com.liferay.portal.kernel.service.ResourceLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
-import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.service.ThemeLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.systemevent.SystemEvent;
+import com.liferay.portal.kernel.util.File;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -71,7 +74,8 @@ public class LayoutUtilityPageEntryLocalServiceImpl
 	public LayoutUtilityPageEntry addLayoutUtilityPageEntry(
 			String externalReferenceCode, long userId, long groupId, long plid,
 			long previewFileEntryId, boolean defaultLayoutUtilityPageEntry,
-			String name, String type, long masterLayoutPlid)
+			String name, String type, long masterLayoutPlid,
+			ServiceContext serviceContext)
 		throws PortalException {
 
 		_validateName(groupId, 0, name, type);
@@ -79,6 +83,17 @@ public class LayoutUtilityPageEntryLocalServiceImpl
 		LayoutUtilityPageEntry layoutUtilityPageEntry =
 			layoutUtilityPageEntryPersistence.create(
 				counterLocalService.increment());
+
+		layoutUtilityPageEntry.setUuid(serviceContext.getUuid());
+
+		if (Validator.isNotNull(externalReferenceCode)) {
+			layoutUtilityPageEntry.setExternalReferenceCode(
+				externalReferenceCode);
+		}
+		else {
+			layoutUtilityPageEntry.setExternalReferenceCode(
+				_getExternalReferenceCode(groupId, name));
+		}
 
 		layoutUtilityPageEntry.setGroupId(groupId);
 
@@ -88,12 +103,9 @@ public class LayoutUtilityPageEntryLocalServiceImpl
 		layoutUtilityPageEntry.setUserId(user.getUserId());
 		layoutUtilityPageEntry.setUserName(user.getFullName());
 
-		layoutUtilityPageEntry.setExternalReferenceCode(externalReferenceCode);
-
 		if (plid == 0) {
 			Layout layout = _addLayout(
-				userId, groupId, name, masterLayoutPlid,
-				ServiceContextThreadLocal.getServiceContext());
+				userId, groupId, name, masterLayoutPlid, serviceContext);
 
 			if (layout != null) {
 				plid = layout.getPlid();
@@ -103,13 +115,16 @@ public class LayoutUtilityPageEntryLocalServiceImpl
 		layoutUtilityPageEntry.setPlid(plid);
 
 		layoutUtilityPageEntry.setPreviewFileEntryId(previewFileEntryId);
-		layoutUtilityPageEntry.setDefaultLayoutUtilityPageEntry(
-			defaultLayoutUtilityPageEntry);
 		layoutUtilityPageEntry.setName(name);
 		layoutUtilityPageEntry.setType(type);
 
 		layoutUtilityPageEntry = layoutUtilityPageEntryPersistence.update(
 			layoutUtilityPageEntry);
+
+		if (defaultLayoutUtilityPageEntry) {
+			layoutUtilityPageEntry = setDefaultLayoutUtilityPageEntry(
+				layoutUtilityPageEntry.getLayoutUtilityPageEntryId());
+		}
 
 		_resourceLocalService.addResources(
 			layoutUtilityPageEntry.getCompanyId(),
@@ -124,35 +139,46 @@ public class LayoutUtilityPageEntryLocalServiceImpl
 
 	@Override
 	public LayoutUtilityPageEntry copyLayoutUtilityPageEntry(
-			long userId, long groupId, long layoutUtilityPageEntryId,
+			long userId, long groupId, long sourceLayoutUtilityPageEntryId,
 			ServiceContext serviceContext)
-		throws PortalException {
+		throws Exception {
 
 		LayoutUtilityPageEntry sourceLayoutUtilityPageEntry =
 			layoutUtilityPageEntryPersistence.findByPrimaryKey(
-				layoutUtilityPageEntryId);
+				sourceLayoutUtilityPageEntryId);
 
 		String name = _getUniqueCopyName(
 			groupId, sourceLayoutUtilityPageEntry.getName(),
 			sourceLayoutUtilityPageEntry.getType(), serviceContext.getLocale());
 
-		LayoutUtilityPageEntry layoutUtilityPageEntry =
+		long masterLayoutPlid = 0;
+
+		Layout layout = _layoutLocalService.fetchLayout(
+			sourceLayoutUtilityPageEntry.getPlid());
+
+		if (layout != null) {
+			masterLayoutPlid = layout.getMasterLayoutPlid();
+		}
+
+		LayoutUtilityPageEntry targetLayoutUtilityPageEntry =
 			addLayoutUtilityPageEntry(
 				null, userId, serviceContext.getScopeGroupId(), 0, 0, false,
-				name, sourceLayoutUtilityPageEntry.getType(), 0);
+				name, sourceLayoutUtilityPageEntry.getType(), masterLayoutPlid,
+				serviceContext);
 
 		long previewFileEntryId = _copyPreviewFileEntryId(
-			userId, layoutUtilityPageEntry.getLayoutUtilityPageEntryId(),
+			targetLayoutUtilityPageEntry.getLayoutUtilityPageEntryId(),
 			sourceLayoutUtilityPageEntry.getPreviewFileEntryId(),
 			serviceContext);
 
 		if (previewFileEntryId > 0) {
-			layoutUtilityPageEntry = updateLayoutUtilityPageEntry(
-				layoutUtilityPageEntry.getLayoutUtilityPageEntryId(),
-				previewFileEntryId);
+			return layoutUtilityPageEntryLocalService.
+				updateLayoutUtilityPageEntry(
+					targetLayoutUtilityPageEntry.getLayoutUtilityPageEntryId(),
+					previewFileEntryId);
 		}
 
-		return layoutUtilityPageEntry;
+		return targetLayoutUtilityPageEntry;
 	}
 
 	@Override
@@ -214,6 +240,19 @@ public class LayoutUtilityPageEntryLocalServiceImpl
 
 		return layoutUtilityPageEntryPersistence.fetchByG_D_T_First(
 			groupId, true, type, null);
+	}
+
+	@Override
+	public LayoutUtilityPageEntry fetchLayoutUtilityPageEntry(
+		long groupId, String name, String type) {
+
+		return layoutUtilityPageEntryPersistence.fetchByG_N_T(
+			groupId, name, type);
+	}
+
+	@Override
+	public LayoutUtilityPageEntry fetchLayoutUtilityPageEntryByPlid(long plid) {
+		return layoutUtilityPageEntryPersistence.fetchByPlid(plid);
 	}
 
 	@Override
@@ -374,23 +413,31 @@ public class LayoutUtilityPageEntryLocalServiceImpl
 	}
 
 	private long _copyPreviewFileEntryId(
-			long userId, long layoutUtilityPageEntryId, long previewFileEntryId,
+			long layoutUtilityPageEntryId, long previewFileEntryId,
 			ServiceContext serviceContext)
-		throws PortalException {
+		throws Exception {
 
-		if (previewFileEntryId == 0) {
+		if (previewFileEntryId <= 0) {
 			return previewFileEntryId;
 		}
 
-		DLFileEntry dlFileEntry = _dlFileEntryLocalService.getFileEntry(
+		FileEntry portletFileEntry = _portletFileRepository.getPortletFileEntry(
 			previewFileEntryId);
 
-		DLFileEntry copyDLFileEntry = _dlFileEntryLocalService.copyFileEntry(
-			userId, dlFileEntry.getGroupId(), dlFileEntry.getRepositoryId(),
-			previewFileEntryId, dlFileEntry.getFolderId(),
-			layoutUtilityPageEntryId + "_preview", serviceContext);
+		Folder folder = portletFileEntry.getFolder();
 
-		return copyDLFileEntry.getFileEntryId();
+		String fileName =
+			layoutUtilityPageEntryId + "_preview." +
+				portletFileEntry.getExtension();
+
+		FileEntry fileEntry = _portletFileRepository.addPortletFileEntry(
+			portletFileEntry.getGroupId(), serviceContext.getUserId(),
+			LayoutUtilityPageEntry.class.getName(), layoutUtilityPageEntryId,
+			LayoutAdminPortletKeys.GROUP_PAGES, folder.getFolderId(),
+			_file.getBytes(portletFileEntry.getContentStream()), fileName,
+			portletFileEntry.getMimeType(), false);
+
+		return fileEntry.getFileEntryId();
 	}
 
 	private String _getColorSchemeId(long companyId, String themeId) {
@@ -398,6 +445,28 @@ public class LayoutUtilityPageEntryLocalServiceImpl
 			companyId, themeId, StringPool.BLANK);
 
 		return colorScheme.getColorSchemeId();
+	}
+
+	private String _getExternalReferenceCode(long groupId, String name) {
+		String externalReferenceCode = StringUtil.toLowerCase(name.trim());
+
+		externalReferenceCode = StringUtil.replace(
+			externalReferenceCode, CharPool.SPACE, CharPool.DASH);
+
+		int count = 0;
+
+		while (true) {
+			LayoutUtilityPageEntry layoutUtilityPageEntry =
+				layoutUtilityPageEntryPersistence.fetchByERC_G(
+					externalReferenceCode, groupId);
+
+			if (layoutUtilityPageEntry == null) {
+				return externalReferenceCode;
+			}
+
+			externalReferenceCode =
+				externalReferenceCode + CharPool.DASH + count++;
+		}
 	}
 
 	private String _getUniqueCopyName(
@@ -467,6 +536,9 @@ public class LayoutUtilityPageEntryLocalServiceImpl
 
 	@Reference
 	private DLFileEntryLocalService _dlFileEntryLocalService;
+
+	@Reference
+	private File _file;
 
 	@Reference
 	private Language _language;

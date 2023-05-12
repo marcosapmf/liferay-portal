@@ -14,6 +14,7 @@
 
 package com.liferay.portal.search.tuning.rankings.web.internal.portlet.action;
 
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.portlet.LiferayPortletURL;
@@ -43,6 +44,7 @@ import com.liferay.portal.search.tuning.rankings.web.internal.index.RankingIndex
 import com.liferay.portal.search.tuning.rankings.web.internal.index.name.RankingIndexName;
 import com.liferay.portal.search.tuning.rankings.web.internal.index.name.RankingIndexNameBuilder;
 import com.liferay.portal.search.tuning.rankings.web.internal.storage.RankingStorageAdapter;
+import com.liferay.portal.search.tuning.rankings.web.internal.util.RankingUtil;
 
 import java.io.IOException;
 
@@ -52,10 +54,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
@@ -210,10 +208,7 @@ public class EditRankingMVCActionCommand extends BaseMVCActionCommand {
 
 		String id = rankingStorageAdapter.create(rankingIndexName, ranking);
 
-		Optional<Ranking> optional = rankingIndexReader.fetchOptional(
-			rankingIndexName, id);
-
-		return optional.get();
+		return rankingIndexReader.fetch(rankingIndexName, id);
 	}
 
 	private void _deactivate(
@@ -320,18 +315,9 @@ public class EditRankingMVCActionCommand extends BaseMVCActionCommand {
 	private List<String> _getAliases(
 		EditRankingMVCActionRequest editRankingMVCActionRequest) {
 
-		List<String> strings = new ArrayList<>(
-			editRankingMVCActionRequest.getAliases());
-
-		Stream<String> stream = strings.stream();
-
-		Predicate<String> predicate = this::_isUpdateSpecial;
-
-		return stream.filter(
-			predicate.negate()
-		).collect(
-			Collectors.toList()
-		);
+		return ListUtil.filter(
+			editRankingMVCActionRequest.getAliases(),
+			string -> !_isUpdateSpecial(string));
 	}
 
 	private String _getCompanyIndexName() {
@@ -342,18 +328,21 @@ public class EditRankingMVCActionCommand extends BaseMVCActionCommand {
 		String oldName,
 		EditRankingMVCActionRequest editRankingMVCActionRequest) {
 
-		List<String> strings = editRankingMVCActionRequest.getAliases();
+		List<String> strings = TransformUtil.transform(
+			editRankingMVCActionRequest.getAliases(),
+			alias -> {
+				if (_isUpdateSpecial(alias)) {
+					return _stripUpdateSpecial(alias);
+				}
 
-		Stream<String> stream = strings.stream();
+				return null;
+			});
 
-		return stream.filter(
-			this::_isUpdateSpecial
-		).map(
-			this::_stripUpdateSpecial
-		).findAny(
-		).orElse(
-			oldName
-		);
+		if (strings.isEmpty()) {
+			return oldName;
+		}
+
+		return strings.get(0);
 	}
 
 	private String[] _getRankingDocumentIds(
@@ -380,25 +369,11 @@ public class EditRankingMVCActionCommand extends BaseMVCActionCommand {
 		ActionRequest actionRequest,
 		EditRankingMVCActionRequest editRankingMVCActionRequest) {
 
-		List<Ranking> rankings = new ArrayList<>();
-
-		String[] rankingDocumentIds = _getRankingDocumentIds(
-			actionRequest, editRankingMVCActionRequest);
-
 		RankingIndexName rankingIndexName = getRankingIndexName();
 
-		for (String rankingDocumentId : rankingDocumentIds) {
-			Optional<Ranking> optional = rankingIndexReader.fetchOptional(
-				rankingIndexName, rankingDocumentId);
-
-			if (optional.isPresent()) {
-				Ranking ranking = optional.get();
-
-				rankings.add(ranking);
-			}
-		}
-
-		return rankings;
+		return TransformUtil.transformToList(
+			_getRankingDocumentIds(actionRequest, editRankingMVCActionRequest),
+			id -> rankingIndexReader.fetch(rankingIndexName, id));
 	}
 
 	private String _getSaveAndContinueRedirect(
@@ -465,17 +440,9 @@ public class EditRankingMVCActionCommand extends BaseMVCActionCommand {
 		Collection<String> queryStrings = ranking.getQueryStrings();
 
 		if (editRankingMVCActionRequest.isCmd(Constants.UPDATE)) {
-			List<String> aliases = _getAliases(editRankingMVCActionRequest);
-
-			queryStrings = Stream.concat(
-				Stream.of(ranking.getQueryString()), aliases.stream()
-			).filter(
-				string -> !Validator.isBlank(string)
-			).distinct(
-			).sorted(
-			).collect(
-				Collectors.toList()
-			);
+			queryStrings = RankingUtil.getQueryStrings(
+				ranking.getQueryString(),
+				_getAliases(editRankingMVCActionRequest));
 		}
 
 		if (_detectedDuplicateQueryStrings(ranking, queryStrings)) {
@@ -532,16 +499,14 @@ public class EditRankingMVCActionCommand extends BaseMVCActionCommand {
 
 		String id = editRankingMVCActionRequest.getResultsRankingUid();
 
-		Optional<Ranking> optional = rankingIndexReader.fetchOptional(
+		Ranking ranking = rankingIndexReader.fetch(
 			rankingIndexNameBuilder.getRankingIndexName(
 				portal.getCompanyId(actionRequest)),
 			id);
 
-		if (!optional.isPresent()) {
+		if (ranking == null) {
 			return;
 		}
-
-		Ranking ranking = optional.get();
 
 		_guardDuplicateQueryStrings(editRankingMVCActionRequest, ranking);
 

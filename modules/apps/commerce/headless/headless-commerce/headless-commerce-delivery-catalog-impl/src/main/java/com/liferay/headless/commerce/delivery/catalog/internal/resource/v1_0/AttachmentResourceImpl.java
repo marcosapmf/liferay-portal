@@ -14,9 +14,9 @@
 
 package com.liferay.headless.commerce.delivery.catalog.internal.resource.v1_0;
 
+import com.liferay.account.model.AccountEntry;
+import com.liferay.account.service.AccountEntryLocalService;
 import com.liferay.commerce.account.exception.NoSuchAccountException;
-import com.liferay.commerce.account.model.CommerceAccount;
-import com.liferay.commerce.account.service.CommerceAccountLocalService;
 import com.liferay.commerce.account.util.CommerceAccountHelper;
 import com.liferay.commerce.product.constants.CPAttachmentFileEntryConstants;
 import com.liferay.commerce.product.exception.NoSuchCPDefinitionException;
@@ -28,12 +28,12 @@ import com.liferay.commerce.product.service.CPDefinitionLocalService;
 import com.liferay.commerce.product.service.CommerceChannelLocalService;
 import com.liferay.headless.commerce.delivery.catalog.dto.v1_0.Attachment;
 import com.liferay.headless.commerce.delivery.catalog.dto.v1_0.Product;
-import com.liferay.headless.commerce.delivery.catalog.internal.dto.v1_0.converter.AttachmentDTOConverter;
 import com.liferay.headless.commerce.delivery.catalog.internal.dto.v1_0.converter.AttachmentDTOConverterContext;
 import com.liferay.headless.commerce.delivery.catalog.resource.v1_0.AttachmentResource;
 import com.liferay.portal.kernel.change.tracking.CTAware;
 import com.liferay.portal.kernel.service.ClassNameLocalService;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
+import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.fields.NestedField;
 import com.liferay.portal.vulcan.fields.NestedFieldId;
 import com.liferay.portal.vulcan.fields.NestedFieldSupport;
@@ -105,31 +105,29 @@ public class AttachmentResourceImpl
 	private Long _getAccountId(Long accountId, CommerceChannel commerceChannel)
 		throws Exception {
 
-		int countUserCommerceAccounts =
+		int countUserAccounts =
 			_commerceAccountHelper.countUserCommerceAccounts(
 				contextUser.getUserId(), commerceChannel.getGroupId());
 
-		if (countUserCommerceAccounts > 1) {
+		if (countUserAccounts > 1) {
 			if (accountId == null) {
 				throw new NoSuchAccountException();
 			}
 		}
 		else {
-			long[] commerceAccountIds =
+			long[] accountIds =
 				_commerceAccountHelper.getUserCommerceAccountIds(
 					contextUser.getUserId(), commerceChannel.getGroupId());
 
-			if (commerceAccountIds.length == 0) {
-				CommerceAccount commerceAccount =
-					_commerceAccountLocalService.getGuestCommerceAccount(
+			if (accountIds.length == 0) {
+				AccountEntry accountEntry =
+					_accountEntryLocalService.getGuestAccountEntry(
 						contextCompany.getCompanyId());
 
-				commerceAccountIds = new long[] {
-					commerceAccount.getCommerceAccountId()
-				};
+				accountIds = new long[] {accountEntry.getAccountEntryId()};
 			}
 
-			return commerceAccountIds[0];
+			return accountIds[0];
 		}
 
 		return accountId;
@@ -169,16 +167,19 @@ public class AttachmentResourceImpl
 	}
 
 	@Reference
-	private AttachmentDTOConverter _attachmentDTOConverter;
+	private AccountEntryLocalService _accountEntryLocalService;
+
+	@Reference(
+		target = "(component.name=com.liferay.headless.commerce.delivery.catalog.internal.dto.v1_0.converter.AttachmentDTOConverter)"
+	)
+	private DTOConverter<CPAttachmentFileEntry, Attachment>
+		_attachmentDTOConverter;
 
 	@Reference
 	private ClassNameLocalService _classNameLocalService;
 
 	@Reference
 	private CommerceAccountHelper _commerceAccountHelper;
-
-	@Reference
-	private CommerceAccountLocalService _commerceAccountLocalService;
 
 	@Reference
 	private CommerceChannelLocalService _commerceChannelLocalService;

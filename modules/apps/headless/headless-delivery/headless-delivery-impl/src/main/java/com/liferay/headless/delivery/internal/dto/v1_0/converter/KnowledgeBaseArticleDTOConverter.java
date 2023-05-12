@@ -51,7 +51,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = "dto.class.name=com.liferay.knowledge.base.model.KBArticle",
-	service = {DTOConverter.class, KnowledgeBaseArticleDTOConverter.class}
+	service = DTOConverter.class
 )
 public class KnowledgeBaseArticleDTOConverter
 	implements DTOConverter<KBArticle, KnowledgeBaseArticle> {
@@ -82,7 +82,7 @@ public class KnowledgeBaseArticleDTOConverter
 						kbArticle.getResourcePrimKey()));
 				articleBody = kbArticle.getContent();
 				creator = CreatorUtil.toCreator(
-					_portal, dtoConverterContext.getUriInfoOptional(),
+					_portal, dtoConverterContext.getUriInfo(),
 					_userLocalService.fetchUser(kbArticle.getUserId()));
 				customFields = CustomFieldsUtil.toCustomFields(
 					dtoConverterContext.isAcceptAllLanguages(),

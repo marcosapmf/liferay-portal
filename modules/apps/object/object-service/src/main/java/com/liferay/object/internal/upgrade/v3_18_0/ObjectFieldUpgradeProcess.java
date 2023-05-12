@@ -45,39 +45,38 @@ public class ObjectFieldUpgradeProcess extends UpgradeProcess {
 
 	@Override
 	protected void doUpgrade() throws Exception {
-		String selectSQL = SQLTransformer.transform(
-			StringBundler.concat(
-				"select ObjectDefinition.companyId, ",
-				"ObjectDefinition.dbTableName, ",
-				"ObjectDefinition.objectDefinitionId, ",
-				"ObjectDefinition.userName, ObjectDefinition.userId, ",
-				"ObjectDefinition.system_ from ObjectDefinition where ",
-				"ObjectDefinition.objectDefinitionId not in (select distinct ",
-				"ObjectField.objectDefinitionId from ObjectField where ",
-				"(ObjectField.name = 'creator' or ObjectField.name = ",
-				"'createDate' or ObjectField.name = 'id' or ObjectField.name ",
-				"= 'modifiedDate' or ObjectField.name = 'status') and ",
-				"ObjectField.system_ = [$TRUE$])"));
-
 		try (PreparedStatement preparedStatement1 = connection.prepareStatement(
-				selectSQL);
+				SQLTransformer.transform(
+					StringBundler.concat(
+						"select ObjectDefinition.companyId, ",
+						"ObjectDefinition.dbTableName, ",
+						"ObjectDefinition.objectDefinitionId, ",
+						"ObjectDefinition.userName, ObjectDefinition.userId, ",
+						"ObjectDefinition.system_ from ObjectDefinition where ",
+						"ObjectDefinition.objectDefinitionId not in (select ",
+						"distinct ObjectField.objectDefinitionId from ",
+						"ObjectField where (ObjectField.name = 'creator' or ",
+						"ObjectField.name = 'createDate' or ObjectField.name ",
+						"= 'id' or ObjectField.name = 'modifiedDate' or ",
+						"ObjectField.name = 'status') and ObjectField.system_ ",
+						"= [$TRUE$])")));
+			PreparedStatement preparedStatement2 =
+				AutoBatchPreparedStatementUtil.concurrentAutoBatch(
+					connection,
+					StringBundler.concat(
+						"insert into ObjectField (mvccVersion, uuid_, ",
+						"objectFieldId, companyId, userId, userName, ",
+						"createDate, modifiedDate, externalReferenceCode, ",
+						"listTypeDefinitionId, objectDefinitionId, ",
+						"businessType, dbColumnName, dbTableName, dbType, ",
+						"defaultValue, indexed, indexedAsKeyWord, ",
+						"indexedLanguageId, label, name, relationshipType, ",
+						"required, state_, system_) values (?, ?, ?, ?, ?, ?, ",
+						"?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ",
+						"?, ?)"));
 			ResultSet resultSet = preparedStatement1.executeQuery()) {
 
-			String insertSQL = StringBundler.concat(
-				"insert into ObjectField (mvccVersion, uuid_, objectFieldId, ",
-				"companyId, userId, userName, createDate, modifiedDate, ",
-				"externalReferenceCode, listTypeDefinitionId, ",
-				"objectDefinitionId, businessType, dbColumnName, dbTableName, ",
-				"dbType, defaultValue, indexed, indexedAsKeyWord, ",
-				"indexedLanguageId, label, name, relationshipType, required, ",
-				"state_, system_) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ",
-				"?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-
 			while (resultSet.next()) {
-				PreparedStatement preparedStatement2 =
-					AutoBatchPreparedStatementUtil.concurrentAutoBatch(
-						connection, insertSQL);
-
 				long companyId = resultSet.getLong("companyId");
 				String dbTableName = resultSet.getString("dbTableName");
 				Locale defaultLocale = LocaleUtil.fromLanguageId(
@@ -170,9 +169,9 @@ public class ObjectFieldUpgradeProcess extends UpgradeProcess {
 						},
 						"Label"),
 					"status");
-
-				preparedStatement2.executeBatch();
 			}
+
+			preparedStatement2.executeBatch();
 		}
 	}
 
@@ -203,15 +202,15 @@ public class ObjectFieldUpgradeProcess extends UpgradeProcess {
 		preparedStatement.setString(14, dbTableName);
 		preparedStatement.setString(15, dbType);
 		preparedStatement.setString(16, null);
-		preparedStatement.setInt(17, 0);
-		preparedStatement.setInt(18, 0);
+		preparedStatement.setBoolean(17, false);
+		preparedStatement.setBoolean(18, false);
 		preparedStatement.setString(19, null);
 		preparedStatement.setString(20, label);
 		preparedStatement.setString(21, name);
 		preparedStatement.setString(22, null);
-		preparedStatement.setInt(23, 0);
-		preparedStatement.setInt(24, 0);
-		preparedStatement.setInt(25, 1);
+		preparedStatement.setBoolean(23, false);
+		preparedStatement.setBoolean(24, false);
+		preparedStatement.setBoolean(25, true);
 
 		preparedStatement.addBatch();
 	}

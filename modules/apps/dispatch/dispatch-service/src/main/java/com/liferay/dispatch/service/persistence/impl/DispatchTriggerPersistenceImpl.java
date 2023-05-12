@@ -7223,7 +7223,9 @@ public class DispatchTriggerPersistenceImpl
 				if (ercDispatchTrigger != null) {
 					throw new DuplicateDispatchTriggerExternalReferenceCodeException(
 						"Duplicate dispatch trigger with external reference code " +
-							dispatchTrigger.getExternalReferenceCode());
+							dispatchTrigger.getExternalReferenceCode() +
+								" and company " +
+									dispatchTrigger.getCompanyId());
 				}
 			}
 			else {
@@ -7233,7 +7235,9 @@ public class DispatchTriggerPersistenceImpl
 
 					throw new DuplicateDispatchTriggerExternalReferenceCodeException(
 						"Duplicate dispatch trigger with external reference code " +
-							dispatchTrigger.getExternalReferenceCode());
+							dispatchTrigger.getExternalReferenceCode() +
+								" and company " +
+									dispatchTrigger.getCompanyId());
 				}
 			}
 		}

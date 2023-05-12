@@ -30,7 +30,7 @@ import com.liferay.calendar.internal.upgrade.v4_0_0.util.CalendarResourceTable;
 import com.liferay.calendar.internal.upgrade.v4_0_0.util.CalendarTable;
 import com.liferay.calendar.internal.upgrade.v4_2_1.CalendarBookingUpgradeProcess;
 import com.liferay.calendar.model.CalendarBooking;
-import com.liferay.comment.upgrade.UpgradeDiscussionSubscriptionClassName;
+import com.liferay.comment.upgrade.DiscussionSubscriptionClassNameUpgradeProcess;
 import com.liferay.portal.kernel.service.ClassNameLocalService;
 import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.ResourceActionLocalService;
@@ -52,12 +52,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Iván Zaera
  * @author Manuel de la Peña
  */
-@Component(
-	service = {
-		CalendarServiceUpgradeStepRegistrator.class,
-		UpgradeStepRegistrator.class
-	}
-)
+@Component(service = UpgradeStepRegistrator.class)
 public class CalendarServiceUpgradeStepRegistrator
 	implements UpgradeStepRegistrator {
 
@@ -103,10 +98,11 @@ public class CalendarServiceUpgradeStepRegistrator
 
 		registry.register(
 			"3.0.0", "3.0.1",
-			new UpgradeDiscussionSubscriptionClassName(
+			new DiscussionSubscriptionClassNameUpgradeProcess(
 				_classNameLocalService, _subscriptionLocalService,
 				CalendarBooking.class.getName(),
-				UpgradeDiscussionSubscriptionClassName.DeletionMode.UPDATE));
+				DiscussionSubscriptionClassNameUpgradeProcess.DeletionMode.
+					UPDATE));
 
 		registry.register(
 			"3.0.1", "4.0.0",
@@ -119,10 +115,10 @@ public class CalendarServiceUpgradeStepRegistrator
 
 		registry.register(
 			"4.0.0", "4.0.1",
-			new UpgradeDiscussionSubscriptionClassName(
+			new DiscussionSubscriptionClassNameUpgradeProcess(
 				_classNameLocalService, _subscriptionLocalService,
 				CalendarBooking.class.getName(),
-				UpgradeDiscussionSubscriptionClassName.DeletionMode.
+				DiscussionSubscriptionClassNameUpgradeProcess.DeletionMode.
 					DELETE_OLD));
 
 		registry.register(

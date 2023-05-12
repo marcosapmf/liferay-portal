@@ -244,6 +244,10 @@ public class OracleDB extends BaseDB {
 		}
 	}
 
+	protected boolean isSupportsDuplicatedIndexName() {
+		return _SUPPORTS_DUPLICATED_INDEX_NAME;
+	}
+
 	@Override
 	protected String limitColumnLength(String column, int length) {
 		return StringBundler.concat("substr(", column, ", 1, ", length, ")");
@@ -341,21 +345,26 @@ public class OracleDB extends BaseDB {
 	private static final String[] _ORACLE = {
 		"--", "1", "0",
 		"to_date('1970-01-01 00:00:00','YYYY-MM-DD HH24:MI:SS')", "sysdate",
-		" blob", " blob", " number(1, 0)", " timestamp", " number(30,20)",
+		" blob", " blob", " number(1, 0)", " timestamp", " binary_double",
 		" number(30,0)", " number(30,0)", " varchar2(4000 char)", " clob",
 		" varchar2", "", "commit"
 	};
 
 	private static final int _SQL_STRING_SIZE = 4000;
 
+	private static final int _SQL_TYPE_BINARY_DOUBLE = 101;
+
 	private static final int[] _SQL_TYPES = {
-		Types.BLOB, Types.BLOB, Types.NUMERIC, Types.TIMESTAMP, Types.NUMERIC,
-		Types.NUMERIC, Types.NUMERIC, Types.VARCHAR, Types.CLOB, Types.VARCHAR
+		Types.BLOB, Types.BLOB, Types.NUMERIC, Types.TIMESTAMP,
+		_SQL_TYPE_BINARY_DOUBLE, Types.NUMERIC, Types.NUMERIC, Types.VARCHAR,
+		Types.CLOB, Types.VARCHAR
 	};
 
 	private static final int[] _SQL_VARCHAR_SIZES = {
 		_SQL_STRING_SIZE, SQL_SIZE_NONE
 	};
+
+	private static final boolean _SUPPORTS_DUPLICATED_INDEX_NAME = false;
 
 	private static final boolean _SUPPORTS_INLINE_DISTINCT = false;
 

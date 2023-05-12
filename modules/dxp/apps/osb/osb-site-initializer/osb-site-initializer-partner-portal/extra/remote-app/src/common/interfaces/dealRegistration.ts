@@ -41,12 +41,18 @@ interface AdditionalContact {
 }
 
 export default interface DealRegistration extends Partial<LiferayObject> {
-	accountExternalReferenceCodeSF?: string;
+	accountExternalReferenceCode?: string;
 	additionalContact?: AdditionalContact;
 	additionalInformationAboutTheOpportunity?: string;
+	currency: LiferayPicklist;
 	leadStatusDetails?: string;
 	mdfActivityAssociated: Partial<MDFRequestActivityDTO>;
 	partnerAccount: LiferayAccountBrief;
+	partnerFirstName: string;
+	partnerLastName: string;
+	primaryContactEmail?: string;
+	primaryContactFirstName?: string;
+	primaryContactLastName?: string;
 	primaryProspect: PrimaryProspect;
 	projectCategories: string[];
 	projectNeed: string[];

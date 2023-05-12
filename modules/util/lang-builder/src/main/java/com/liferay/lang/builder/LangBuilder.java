@@ -147,7 +147,7 @@ public class LangBuilder {
 
 		File propertiesFile = new File(
 			StringBundler.concat(
-				_langDirName, "/", _langFileName, ".properties"));
+				langDirName, "/", langFileName, ".properties"));
 
 		if (!propertiesFile.exists()) {
 			return;
@@ -162,6 +162,7 @@ public class LangBuilder {
 		_createProperties(content, "ar"); // Arabic
 		_createProperties(content, "eu"); // Basque
 		_createProperties(content, "bg"); // Bulgarian
+		_createProperties(content, "km"); // Cambodian
 		_createProperties(content, "ca"); // Catalan
 		_createProperties(content, "zh_CN"); // Chinese (China)
 		_createProperties(content, "zh_TW"); // Chinese (Taiwan)

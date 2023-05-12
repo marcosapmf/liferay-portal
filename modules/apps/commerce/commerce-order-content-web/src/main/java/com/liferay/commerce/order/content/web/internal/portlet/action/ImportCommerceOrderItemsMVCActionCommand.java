@@ -197,7 +197,7 @@ public class ImportCommerceOrderItemsMVCActionCommand
 
 		List<CommerceOrderImporterItem> commerceOrderImporterItems =
 			commerceOrderImporterType.getCommerceOrderImporterItems(
-				commerceOrder,
+				commerceOrder, null,
 				commerceOrderImporterType.getCommerceOrderImporterItem(
 					_portal.getHttpServletRequest(actionRequest)));
 
@@ -216,7 +216,7 @@ public class ImportCommerceOrderItemsMVCActionCommand
 						commerceOrder.getCommerceOrderId(),
 						commerceOrderImporterItem.getCPInstanceId(),
 						commerceOrderImporterItem.getJSON(),
-						commerceOrderImporterItem.getQuantity(), 0,
+						commerceOrderImporterItem.getQuantity(), 0, 0,
 						(CommerceContext)actionRequest.getAttribute(
 							CommerceWebKeys.COMMERCE_CONTEXT),
 						ServiceContextFactory.getInstance(

@@ -21,11 +21,11 @@
 			</c:if>
 
 			<c:if test="<%= Validator.isNotNull(onSubmit) %>">
-				</fieldset>
+				</div>
 			</c:if>
 		</div>
 
-	<c:if test="<%= !themeDisplay.isStatePopUp() %>">
+	<c:if test="<%= wrappedFormContent %>">
 		</div>
 	</c:if>
 </form>

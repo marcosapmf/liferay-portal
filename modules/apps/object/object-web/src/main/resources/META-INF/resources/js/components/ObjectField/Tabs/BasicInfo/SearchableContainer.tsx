@@ -17,13 +17,14 @@ import ClayForm, {ClayRadio, ClayRadioGroup, ClayToggle} from '@clayui/form';
 import {Card, SingleSelect} from '@liferay/object-js-components-web';
 import React, {useMemo} from 'react';
 
+import {defaultLanguageId} from '../../../../utils/constants';
 import {ObjectFieldErrors} from '../../ObjectFieldFormBase';
 
-const defaultLanguageId = Liferay.ThemeDisplay.getDefaultLanguageId();
 const languages = Liferay.Language.available;
 const languageLabels = Object.values(languages).map((language) => {
 	return {label: language};
 });
+const defaultLanguage = languageLabels[0].label;
 
 interface ISearchableProps {
 	disabled?: boolean;
@@ -52,7 +53,7 @@ export function SearchableContainer({
 			objectField.indexedLanguageId &&
 			languages[objectField.indexedLanguageId];
 
-		return label ?? undefined;
+		return label || defaultLanguage;
 	}, [objectField.indexedLanguageId]);
 
 	return (
@@ -67,6 +68,7 @@ export function SearchableContainer({
 
 			<ClayForm.Group>
 				<ClayToggle
+					disabled={objectField.businessType === 'Encrypted'}
 					label={Liferay.Language.get('searchable')}
 					name="indexed"
 					onToggle={(indexed) => setValues({indexed})}
@@ -114,7 +116,7 @@ export function SearchableContainer({
 						const [indexedLanguageId] = Object.entries(
 							languages
 						).find(([, label]) => value.label === label) as [
-							Locale,
+							Liferay.Language.Locale,
 							string
 						];
 

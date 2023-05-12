@@ -20,6 +20,7 @@ import ClayModal, {useModal} from '@clayui/modal';
 import ClaySticker from '@clayui/sticker';
 import ClayTabs from '@clayui/tabs';
 import {ReactDOMServer, useEventListener} from '@liferay/frontend-js-react-web';
+import {useId} from '@liferay/layout-content-page-editor-web';
 import classNames from 'classnames';
 import {fetch, navigate, openSelectionModal} from 'frontend-js-web';
 import PropTypes from 'prop-types';
@@ -30,16 +31,16 @@ import '../css/ApplicationsMenu.scss';
 const getOpenMenuTooltip = (keyLabel) => (
 	<>
 		<div>{Liferay.Language.get('open-applications-menu')}</div>
-		<kbd className="c-kbd c-kbd-dark">
+		<kbd className="c-kbd c-kbd-dark mt-1">
+			<kbd className="c-kbd">Ctrl</kbd>
+
+			<span className="c-kbd-separator">+</span>
+
 			<kbd className="c-kbd">{keyLabel}</kbd>
 
 			<span className="c-kbd-separator">+</span>
 
-			<kbd className="c-kbd">⇧</kbd>
-
-			<span className="c-kbd-separator">+</span>
-
-			<kbd className="c-kbd">M</kbd>
+			<kbd className="c-kbd">A</kbd>
 		</kbd>
 	</>
 );
@@ -47,7 +48,7 @@ const getOpenMenuTooltip = (keyLabel) => (
 const SitesPanel = ({portletNamespace, sites, virtualInstance}) => {
 	return (
 		<div className="applications-menu-sites c-p-3 c-px-md-4">
-			<h2 className="applications-menu-sites-label c-mt-2 c-mt-md-0 text-uppercase">
+			<h2 className="applications-menu-sites-label c-mt-2 c-mt-md-0 mb-0 text-uppercase">
 				{Liferay.Language.get('sites')}
 			</h2>
 
@@ -214,7 +215,7 @@ const AppsPanel = ({
 
 	return (
 		<div className="applications-menu-wrapper">
-			<div className="applications-menu-header flex-shrink-0">
+			<div className="applications-menu-header">
 				<ClayLayout.ContainerFluid>
 					<ClayLayout.Row>
 						<ClayLayout.Col>
@@ -245,6 +246,9 @@ const AppsPanel = ({
 
 								<ClayLayout.ContentCol>
 									<ClayButtonWithIcon
+										aria-label={Liferay.Language.get(
+											'close'
+										)}
 										displayType="unstyled"
 										onClick={handleCloseButtonClick}
 										size="sm"
@@ -260,7 +264,7 @@ const AppsPanel = ({
 
 			<div className="applications-menu-bg applications-menu-border-top applications-menu-content">
 				<ClayLayout.ContainerFluid>
-					<ClayLayout.Row className="flex-md-nowrap">
+					<ClayLayout.Row>
 						<ClayLayout.Col lg="9" md="8">
 							<ClayTabs.Content activeIndex={activeTab}>
 								{categories.map(({childCategories}, index) => (
@@ -271,56 +275,15 @@ const AppsPanel = ({
 										<div className="applications-menu-nav-columns c-mt-md-3 c-my-2">
 											{childCategories.map(
 												({key, label, panelApps}) => (
-													<ClayLayout.Col
+													<NavigationSection
+														id={`nav_${key}`}
 														key={key}
-														md
-													>
-														<ul className="list-unstyled">
-															<li className="c-my-3">
-																<h2 className="applications-menu-nav-header">
-																	{label}
-																</h2>
-															</li>
-
-															{panelApps.map(
-																({
-																	label,
-																	portletId,
-																	url,
-																}) => (
-																	<li
-																		className="c-mt-2"
-																		key={
-																			portletId
-																		}
-																	>
-																		<a
-																			className={classNames(
-																				'component-link applications-menu-nav-link',
-																				{
-																					active:
-																						portletId ===
-																						selectedPortletId,
-																				}
-																			)}
-																			href={
-																				url
-																			}
-																		>
-																			<span
-																				className="c-inner"
-																				tabIndex="-1"
-																			>
-																				{
-																					label
-																				}
-																			</span>
-																		</a>
-																	</li>
-																)
-															)}
-														</ul>
-													</ClayLayout.Col>
+														label={label}
+														panelApps={panelApps}
+														selectedPortletId={
+															selectedPortletId
+														}
+													/>
 												)
 											)}
 										</div>
@@ -344,7 +307,7 @@ const AppsPanel = ({
 				</ClayLayout.ContainerFluid>
 			</div>
 
-			<div className="applications-menu-bg applications-menu-footer flex-shrink-0">
+			<div className="applications-menu-bg applications-menu-footer">
 				<ClayLayout.ContainerFluid>
 					<ClayLayout.Row>
 						<ClayLayout.Col lg="9" md="8">
@@ -388,6 +351,38 @@ const AppsPanel = ({
 	);
 };
 
+const NavigationSection = ({id, label, panelApps, selectedPortletId}) => {
+	return (
+		<ClayLayout.Col md>
+			<nav aria-labelledby={id}>
+				<h2 className="applications-menu-nav-header c-my-3" id={id}>
+					{label}
+				</h2>
+
+				<ul className="list-unstyled">
+					{panelApps.map(({label, portletId, url}) => (
+						<li className="c-mt-2" key={portletId}>
+							<a
+								className={classNames(
+									'component-link applications-menu-nav-link',
+									{
+										active: portletId === selectedPortletId,
+									}
+								)}
+								href={url}
+							>
+								<span className="c-inner" tabIndex="-1">
+									{label}
+								</span>
+							</a>
+						</li>
+					))}
+				</ul>
+			</nav>
+		</ClayLayout.Col>
+	);
+};
+
 const ApplicationsMenu = ({
 	liferayLogoURL,
 	liferayName,
@@ -397,6 +392,7 @@ const ApplicationsMenu = ({
 }) => {
 	const [appsPanelData, setAppsPanelData] = useState({});
 	const buttonRef = useRef();
+	const buttonTitleId = useId();
 	const [visible, setVisible] = useState(false);
 
 	const {observer, onClose} = useModal({
@@ -407,7 +403,7 @@ const ApplicationsMenu = ({
 	});
 
 	const buttonTitle = useMemo(() => {
-		const keyLabel = Liferay.Browser.isMac() ? '⌘' : 'Ctrl';
+		const keyLabel = Liferay.Browser.isMac() ? '⌥' : 'Alt';
 
 		return getOpenMenuTooltip(keyLabel);
 	}, []);
@@ -440,14 +436,12 @@ const ApplicationsMenu = ({
 	useEventListener(
 		'keydown',
 		(event) => {
-			const isCMDPressed = Liferay.Browser.isMac()
-				? event.metaKey
-				: event.ctrlKey;
+			const AKey = Liferay.Browser.isMac() ? 'å' : 'a';
 
 			if (
-				isCMDPressed &&
-				event.shiftKey &&
-				event.key.toLowerCase() === 'm'
+				event.ctrlKey &&
+				event.altKey &&
+				event.key.toLowerCase() === AKey
 			) {
 				event.preventDefault();
 
@@ -487,7 +481,7 @@ const ApplicationsMenu = ({
 						{Liferay.Language.get('applications-menu')}
 					</ClayModal.Header>
 
-					<ClayModal.Body>
+					<ClayModal.Body className="p-0">
 						<AppsPanel
 							handleCloseButtonClick={onClose}
 							liferayLogoURL={liferayLogoURL}
@@ -500,17 +494,11 @@ const ApplicationsMenu = ({
 			)}
 
 			<ClayButtonWithIcon
-				aria-label={
-					Liferay.Browser.isMac()
-						? Liferay.Language.get(
-								'open-applications-menu-or-use-cmd-shift-m'
-						  )
-						: Liferay.Language.get(
-								'open-applications-menu-or-use-ctrl-shift-m'
-						  )
-				}
+				aria-haspopup="dialog"
+				aria-labelledby={buttonTitleId}
 				className="dropdown-toggle lfr-portal-tooltip"
 				data-qa-id="applicationsMenu"
+				data-title={ReactDOMServer.renderToString(buttonTitle)}
 				data-title-set-as-html
 				data-tooltip-align="bottom-left"
 				displayType="unstyled"
@@ -520,8 +508,11 @@ const ApplicationsMenu = ({
 				ref={buttonRef}
 				size="sm"
 				symbol="grid"
-				title={ReactDOMServer.renderToString(buttonTitle)}
 			/>
+
+			<div className="sr-only" id={buttonTitleId}>
+				{buttonTitle}
+			</div>
 		</>
 	);
 };

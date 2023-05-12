@@ -14,9 +14,9 @@
 
 package com.liferay.headless.commerce.admin.pricing.internal.resource.v2_0;
 
+import com.liferay.account.service.AccountEntryService;
+import com.liferay.account.service.AccountGroupService;
 import com.liferay.asset.kernel.service.AssetCategoryLocalService;
-import com.liferay.commerce.account.service.CommerceAccountGroupService;
-import com.liferay.commerce.account.service.CommerceAccountService;
 import com.liferay.commerce.currency.model.CommerceCurrency;
 import com.liferay.commerce.currency.service.CommerceCurrencyService;
 import com.liferay.commerce.discount.service.CommerceDiscountService;
@@ -55,7 +55,6 @@ import com.liferay.headless.commerce.admin.pricing.dto.v2_0.PriceListDiscount;
 import com.liferay.headless.commerce.admin.pricing.dto.v2_0.PriceListOrderType;
 import com.liferay.headless.commerce.admin.pricing.dto.v2_0.PriceModifier;
 import com.liferay.headless.commerce.admin.pricing.dto.v2_0.TierPrice;
-import com.liferay.headless.commerce.admin.pricing.internal.dto.v2_0.converter.PriceListDTOConverter;
 import com.liferay.headless.commerce.admin.pricing.internal.odata.entity.v2_0.PriceListEntityModel;
 import com.liferay.headless.commerce.admin.pricing.internal.util.v2_0.PriceListAccountGroupUtil;
 import com.liferay.headless.commerce.admin.pricing.internal.util.v2_0.PriceListAccountUtil;
@@ -76,6 +75,7 @@ import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.odata.entity.EntityModel;
+import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterRegistry;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.pagination.Page;
@@ -349,12 +349,11 @@ public class PriceListResourceImpl extends BasePriceListResourceImpl {
 					continue;
 				}
 
-				PriceListAccountGroupUtil.
-					addCommercePriceListCommerceAccountGroupRel(
-						_commerceAccountGroupService,
-						_commercePriceListCommerceAccountGroupRelService,
-						priceListAccountGroup, commercePriceList,
-						_serviceContextHelper);
+				PriceListAccountGroupUtil.addCommercePriceListAccountGroupRel(
+					_accountGroupService,
+					_commercePriceListCommerceAccountGroupRelService,
+					priceListAccountGroup, commercePriceList,
+					_serviceContextHelper);
 			}
 		}
 
@@ -375,9 +374,8 @@ public class PriceListResourceImpl extends BasePriceListResourceImpl {
 				}
 
 				PriceListAccountUtil.addCommercePriceListAccountRel(
-					_commerceAccountService,
-					_commercePriceListAccountRelService, priceListAccount,
-					commercePriceList, _serviceContextHelper);
+					_accountEntryService, _commercePriceListAccountRelService,
+					priceListAccount, commercePriceList, _serviceContextHelper);
 			}
 		}
 
@@ -614,13 +612,13 @@ public class PriceListResourceImpl extends BasePriceListResourceImpl {
 	private static final EntityModel _entityModel = new PriceListEntityModel();
 
 	@Reference
+	private AccountEntryService _accountEntryService;
+
+	@Reference
+	private AccountGroupService _accountGroupService;
+
+	@Reference
 	private AssetCategoryLocalService _assetCategoryLocalService;
-
-	@Reference
-	private CommerceAccountGroupService _commerceAccountGroupService;
-
-	@Reference
-	private CommerceAccountService _commerceAccountService;
 
 	@Reference
 	private CommerceCatalogService _commerceCatalogService;
@@ -681,8 +679,10 @@ public class PriceListResourceImpl extends BasePriceListResourceImpl {
 	@Reference
 	private DTOConverterRegistry _dtoConverterRegistry;
 
-	@Reference
-	private PriceListDTOConverter _priceListDTOConverter;
+	@Reference(
+		target = "(component.name=com.liferay.headless.commerce.admin.pricing.internal.dto.v2_0.converter.PriceListDTOConverter)"
+	)
+	private DTOConverter<CommercePriceList, PriceList> _priceListDTOConverter;
 
 	@Reference
 	private ServiceContextHelper _serviceContextHelper;

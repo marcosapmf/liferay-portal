@@ -121,9 +121,9 @@ page import="com.liferay.roles.admin.web.internal.display.context.EditRolePermis
 page import="com.liferay.roles.admin.web.internal.display.context.EditRolePermissionsResourceDisplayContext" %><%@
 page import="com.liferay.roles.admin.web.internal.display.context.EditRolePermissionsSummaryDisplayContext" %><%@
 page import="com.liferay.roles.admin.web.internal.display.context.RoleDisplayContext" %><%@
-page import="com.liferay.roles.admin.web.internal.display.context.SegmentsEntryDisplayContext" %><%@
 page import="com.liferay.roles.admin.web.internal.display.context.SelectRoleManagementToolbarDisplayContext" %><%@
 page import="com.liferay.roles.admin.web.internal.display.context.ViewRolesManagementToolbarDisplayContext" %><%@
+page import="com.liferay.roles.admin.web.internal.display.util.SegmentsEntryDisplayUtil" %><%@
 page import="com.liferay.roles.admin.web.internal.frontend.taglib.clay.servlet.taglib.GroupVerticalCard" %><%@
 page import="com.liferay.roles.admin.web.internal.frontend.taglib.clay.servlet.taglib.OrganizationVerticalCard" %><%@
 page import="com.liferay.roles.admin.web.internal.frontend.taglib.clay.servlet.taglib.UserGroupVerticalCard" %><%@
@@ -143,8 +143,7 @@ page import="java.util.Map" %><%@
 page import="java.util.Objects" %><%@
 page import="java.util.Set" %>
 
-<%@ page import="javax.portlet.PortletURL" %><%@
-page import="javax.portlet.WindowState" %>
+<%@ page import="javax.portlet.PortletURL" %>
 
 <liferay-frontend:defineObjects />
 

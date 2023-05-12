@@ -59,7 +59,7 @@ SegmentsSimulationDisplayContext segmentsSimulationDisplayContext = (SegmentsSim
 					for (SegmentsEntry segmentsEntry : segmentsSimulationDisplayContext.getSegmentsEntries()) {
 					%>
 
-						<li class="bg-transparent list-group-item list-group-item-flex pb-3 pt-0 px-0">
+						<li class="bg-transparent border-0 list-group-item list-group-item-flex pb-3 pt-0 px-0">
 							<span>
 								<div class="custom-checkbox">
 									<label class="position-relative">
@@ -82,15 +82,16 @@ SegmentsSimulationDisplayContext segmentsSimulationDisplayContext = (SegmentsSim
 				</ul>
 			</aui:form>
 
-			<aui:script use="liferay-portlet-segments-simulation">
-				new Liferay.Portlet.SegmentsSimulation({
-					deactivateSimulationUrl:
-						'<%= segmentsSimulationDisplayContext.getDeactivateSimulationURL() %>',
-					form: document.<portlet:namespace />segmentsSimulationFm,
-					simulateSegmentsEntriesUrl:
-						'<%= segmentsSimulationDisplayContext.getSimulateSegmentsEntriesURL() %>',
-				});
-			</aui:script>
+			<liferay-frontend:component
+				context='<%=
+					HashMapBuilder.<String, Object>put(
+						"deactivateSimulationURL", segmentsSimulationDisplayContext.getDeactivateSimulationURL()
+					).put(
+						"simulateSegmentsEntriesURL", segmentsSimulationDisplayContext.getSimulateSegmentsEntriesURL()
+					).build()
+				%>'
+				module="js/main"
+			/>
 		</c:otherwise>
 	</c:choose>
 </clay:container-fluid>

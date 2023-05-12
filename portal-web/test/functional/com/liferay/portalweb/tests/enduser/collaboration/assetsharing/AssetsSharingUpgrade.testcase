@@ -11,49 +11,51 @@ definition {
 	setUp {
 		SignIn.signIn();
 
-		var portalURL = PropsUtil.get("portal.url");
+		var portalURL = JSONCompany.getPortalURL();
 
 		AssertLocation.assertPartialLocation(value1 = "${portalURL}/web/guest");
 
 		SearchAdministration.executeReindex();
 	}
 
-	@priority = "5"
+	@description = "Skip the instance for performance improvement."
+	@priority = 5
 	@refactordone
 	test CanViewSharedAssetsArchive72101 {
 		property data.archive.type = "data-archive-asset-sharing";
 		property portal.version = "7.2.10.1";
+		property test.name.skip.portal.instance = "AssetsSharingUpgrade#CanViewSharedAssetsArchive72101";
 
-		Upgrade.viewSharedDocument(dmDocumentTitle = "DM Document Title 1");
+		ValidateAssetSharingUpgrade.viewSharedDocument(dmDocumentTitle = "DM Document Title 1");
 
-		Upgrade.viewSharedBlog();
+		ValidateAssetSharingUpgrade.viewSharedBlog();
 
-		Upgrade.revokeAndUpdateSharedEntry(
+		ValidateAssetSharingUpgrade.revokeAndUpdateSharedEntry(
 			blogsEntryTitleUpdate = "Blogs Entry Title Can Update",
 			blogsEntryTitleView = "Blogs Entry Title",
 			dmDocumentTitleUpdate = "DM Document Title Can Update",
 			dmDocumentTitleView = "DM Document Title 1");
 
-		Upgrade.viewNoShareOptionAfterDisabled();
+		ValidateAssetSharingUpgrade.viewNoShareOptionAfterDisabled();
 	}
 
-	@priority = "5"
+	@priority = 5
 	@refactordone
 	test CanViewSharedAssetsArchive73101 {
 		property data.archive.type = "data-archive-asset-sharing";
 		property portal.version = "7.3.10.1";
 
-		Upgrade.viewSharedDocument(dmDocumentTitle = "DM Document Title 1");
+		ValidateAssetSharingUpgrade.viewSharedDocument(dmDocumentTitle = "DM Document Title 1");
 
-		Upgrade.viewSharedBlog();
+		ValidateAssetSharingUpgrade.viewSharedBlog();
 
-		Upgrade.revokeAndUpdateSharedEntry(
+		ValidateAssetSharingUpgrade.revokeAndUpdateSharedEntry(
 			blogsEntryTitleUpdate = "Blogs Entry Title Can Update",
 			blogsEntryTitleView = "Blogs Entry Title",
 			dmDocumentTitleUpdate = "DM Document Title Can Update",
 			dmDocumentTitleView = "DM Document Title 1");
 
-		Upgrade.viewNoShareOptionAfterDisabled();
+		ValidateAssetSharingUpgrade.viewNoShareOptionAfterDisabled();
 	}
 
 }

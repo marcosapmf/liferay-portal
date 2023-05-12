@@ -38,6 +38,7 @@ import com.liferay.portal.search.web.portlet.shared.search.PortletSharedSearchSe
 
 import java.util.Optional;
 
+import javax.portlet.PortletPreferences;
 import javax.portlet.RenderRequest;
 
 import org.osgi.service.component.annotations.Component;
@@ -64,7 +65,8 @@ public class CPPriceRangeFacetsPortletSharedSearchContributor
 			SearchContext searchContext =
 				portletSharedSearchSettings.getSearchContext();
 
-			Facet facet = _getFacet(renderRequest, searchContext);
+			Facet facet = _getFacet(
+				portletSharedSearchSettings, renderRequest, searchContext);
 
 			Optional<String[]> parameterValuesOptional =
 				portletSharedSearchSettings.getParameterValues71(
@@ -88,6 +90,7 @@ public class CPPriceRangeFacetsPortletSharedSearchContributor
 	}
 
 	private Facet _getFacet(
+			PortletSharedSearchSettings portletSharedSearchSettings,
 			RenderRequest renderRequest, SearchContext searchContext)
 		throws PortalException {
 
@@ -110,6 +113,17 @@ public class CPPriceRangeFacetsPortletSharedSearchContributor
 		String rangesJSONArrayString =
 			cpPriceRangeFacetsPortletInstanceConfiguration.
 				rangesJSONArrayString();
+
+		Optional<PortletPreferences> portletPreferencesOptional =
+			portletSharedSearchSettings.getPortletPreferencesOptional();
+
+		if (portletPreferencesOptional.isPresent()) {
+			PortletPreferences portletPreferences =
+				portletPreferencesOptional.get();
+
+			rangesJSONArrayString = portletPreferences.getValue(
+				"rangesJSONArrayString", rangesJSONArrayString);
+		}
 
 		rangesJSONArrayString = StringUtil.replace(
 			rangesJSONArrayString, new String[] {"\\,", StringPool.STAR},

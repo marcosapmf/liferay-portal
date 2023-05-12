@@ -13,13 +13,14 @@ definition {
 	tearDown {
 		var testPortalInstance = PropsUtil.get("test.portal.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testPortalInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 	}
 
-	@priority = "4"
+	@priority = 4
 	test ExternalDataSourceSmoke {
+		property ci.retries.disabled = "true";
 		property skip.start.app.server = "true";
 		property test.assert.warning.exceptions = "true";
 		property test.name.skip.portal.instance = "ServiceBuilder#ExternalDataSourceSmoke";
@@ -35,13 +36,13 @@ definition {
 
 		AntCommand(
 			locator1 = "build-test.xml",
-			value1 = "deploy-osgi-module-to-specific-bundle -Dmodule.base.dir=/modules/test/external-data-source-test-api -DliferayHome=${liferayHome}");
+			value1 = "deploy-osgi-module-to-specific-bundle -DliferayHome=${liferayHome} -Dmodule.base.dir=/modules/test/external-data-source-test-api");
 
 		WaitForConsoleTextPresent(value1 = "STARTED com.liferay.external.data.source.test.api_");
 
 		AntCommand(
 			locator1 = "build-test.xml",
-			value1 = "deploy-osgi-module-to-specific-bundle -Dmodule.base.dir=/modules/test/external-data-source-test-service -DliferayHome=${liferayHome}");
+			value1 = "deploy-osgi-module-to-specific-bundle -DliferayHome=${liferayHome} -Dmodule.base.dir=/modules/test/external-data-source-test-service");
 
 		WaitForConsoleTextPresent(value1 = "STARTED com.liferay.external.data.source.test.service_");
 
@@ -52,8 +53,9 @@ definition {
 		Smoke.runSmoke();
 	}
 
-	@priority = "4"
+	@priority = 4
 	test RenameFinderColumn {
+		property database.bare.enabled = "true";
 		property test.assert.warning.exceptions = "true";
 		property test.name.skip.portal.instance = "ServiceBuilder#RenameFinderColumn";
 
@@ -69,13 +71,13 @@ definition {
 
 		AntCommand(
 			locator1 = "build-test.xml",
-			value1 = "deploy-osgi-module-to-specific-bundle -Dmodule.base.dir=/modules/util/portal-tools-service-builder-test-api -DliferayHome=${liferayHome}");
+			value1 = "deploy-osgi-module-to-specific-bundle -DliferayHome=${liferayHome} -Dmodule.base.dir=/modules/util/portal-tools-service-builder-test-api");
 
 		WaitForConsoleTextPresent(value1 = "STARTED com.liferay.portal.tools.service.builder.test.api_");
 
 		AntCommand(
 			locator1 = "build-test.xml",
-			value1 = "deploy-osgi-module-to-specific-bundle -Dmodule.base.dir=/modules/util/portal-tools-service-builder-test-service -DliferayHome=${liferayHome}");
+			value1 = "deploy-osgi-module-to-specific-bundle -DliferayHome=${liferayHome} -Dmodule.base.dir=/modules/util/portal-tools-service-builder-test-service");
 
 		WaitForConsoleTextPresent(value1 = "STARTED com.liferay.portal.tools.service.builder.test.service_");
 	}

@@ -65,8 +65,10 @@ public class ObjectDefinitionWrapper
 		attributes.put("className", getClassName());
 		attributes.put("enableCategorization", isEnableCategorization());
 		attributes.put("enableComments", isEnableComments());
+		attributes.put("enableLocalization", isEnableLocalization());
 		attributes.put(
 			"enableObjectEntryHistory", isEnableObjectEntryHistory());
+		attributes.put("modifiable", isModifiable());
 		attributes.put("name", getName());
 		attributes.put("panelAppOrder", getPanelAppOrder());
 		attributes.put("panelCategoryKey", getPanelCategoryKey());
@@ -206,11 +208,24 @@ public class ObjectDefinitionWrapper
 			setEnableComments(enableComments);
 		}
 
+		Boolean enableLocalization = (Boolean)attributes.get(
+			"enableLocalization");
+
+		if (enableLocalization != null) {
+			setEnableLocalization(enableLocalization);
+		}
+
 		Boolean enableObjectEntryHistory = (Boolean)attributes.get(
 			"enableObjectEntryHistory");
 
 		if (enableObjectEntryHistory != null) {
 			setEnableObjectEntryHistory(enableObjectEntryHistory);
+		}
+
+		Boolean modifiable = (Boolean)attributes.get("modifiable");
+
+		if (modifiable != null) {
+			setModifiable(modifiable);
 		}
 
 		String name = (String)attributes.get("name");
@@ -408,6 +423,16 @@ public class ObjectDefinitionWrapper
 	}
 
 	/**
+	 * Returns the enable localization of this object definition.
+	 *
+	 * @return the enable localization of this object definition
+	 */
+	@Override
+	public boolean getEnableLocalization() {
+		return model.getEnableLocalization();
+	}
+
+	/**
 	 * Returns the enable object entry history of this object definition.
 	 *
 	 * @return the enable object entry history of this object definition
@@ -506,6 +531,16 @@ public class ObjectDefinitionWrapper
 	@Override
 	public Map<java.util.Locale, String> getLabelMap() {
 		return model.getLabelMap();
+	}
+
+	/**
+	 * Returns the modifiable of this object definition.
+	 *
+	 * @return the modifiable of this object definition
+	 */
+	@Override
+	public boolean getModifiable() {
+		return model.getModifiable();
 	}
 
 	/**
@@ -865,6 +900,16 @@ public class ObjectDefinitionWrapper
 	}
 
 	/**
+	 * Returns <code>true</code> if this object definition is enable localization.
+	 *
+	 * @return <code>true</code> if this object definition is enable localization; <code>false</code> otherwise
+	 */
+	@Override
+	public boolean isEnableLocalization() {
+		return model.isEnableLocalization();
+	}
+
+	/**
 	 * Returns <code>true</code> if this object definition is enable object entry history.
 	 *
 	 * @return <code>true</code> if this object definition is enable object entry history; <code>false</code> otherwise
@@ -872,6 +917,16 @@ public class ObjectDefinitionWrapper
 	@Override
 	public boolean isEnableObjectEntryHistory() {
 		return model.isEnableObjectEntryHistory();
+	}
+
+	/**
+	 * Returns <code>true</code> if this object definition is modifiable.
+	 *
+	 * @return <code>true</code> if this object definition is modifiable; <code>false</code> otherwise
+	 */
+	@Override
+	public boolean isModifiable() {
+		return model.isModifiable();
 	}
 
 	/**
@@ -892,6 +947,11 @@ public class ObjectDefinitionWrapper
 	@Override
 	public boolean isSystem() {
 		return model.isSystem();
+	}
+
+	@Override
+	public boolean isUnmodifiableSystemObject() {
+		return model.isUnmodifiableSystemObject();
 	}
 
 	@Override
@@ -1018,6 +1078,16 @@ public class ObjectDefinitionWrapper
 	}
 
 	/**
+	 * Sets whether this object definition is enable localization.
+	 *
+	 * @param enableLocalization the enable localization of this object definition
+	 */
+	@Override
+	public void setEnableLocalization(boolean enableLocalization) {
+		model.setEnableLocalization(enableLocalization);
+	}
+
+	/**
 	 * Sets whether this object definition is enable object entry history.
 	 *
 	 * @param enableObjectEntryHistory the enable object entry history of this object definition
@@ -1099,6 +1169,16 @@ public class ObjectDefinitionWrapper
 		java.util.Locale defaultLocale) {
 
 		model.setLabelMap(labelMap, defaultLocale);
+	}
+
+	/**
+	 * Sets whether this object definition is modifiable.
+	 *
+	 * @param modifiable the modifiable of this object definition
+	 */
+	@Override
+	public void setModifiable(boolean modifiable) {
+		model.setModifiable(modifiable);
 	}
 
 	/**

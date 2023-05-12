@@ -14,9 +14,8 @@
 
 package com.liferay.headless.commerce.admin.account.internal.dto.v1_0.converter;
 
-import com.liferay.commerce.account.model.CommerceAccountUserRel;
-import com.liferay.commerce.account.service.CommerceAccountUserRelService;
-import com.liferay.commerce.account.service.persistence.CommerceAccountUserRelPK;
+import com.liferay.account.model.AccountEntryUserRel;
+import com.liferay.account.service.AccountEntryUserRelService;
 import com.liferay.headless.commerce.admin.account.dto.v1_0.AccountMember;
 import com.liferay.headless.commerce.admin.account.dto.v1_0.AccountRole;
 import com.liferay.portal.kernel.model.User;
@@ -27,7 +26,6 @@ import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Stream;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -36,11 +34,11 @@ import org.osgi.service.component.annotations.Reference;
  * @author Alessio Antonio Rendina
  */
 @Component(
-	property = "dto.class.name=com.liferay.commerce.account.model.CommerceAccountUserRel",
-	service = {AccountMemberDTOConverter.class, DTOConverter.class}
+	property = "dto.class.name=com.liferay.account.model.AccountEntryUserRel",
+	service = DTOConverter.class
 )
 public class AccountMemberDTOConverter
-	implements DTOConverter<CommerceAccountUserRel, AccountMember> {
+	implements DTOConverter<AccountEntryUserRel, AccountMember> {
 
 	@Override
 	public String getContentType() {
@@ -51,17 +49,17 @@ public class AccountMemberDTOConverter
 	public AccountMember toDTO(DTOConverterContext dtoConverterContext)
 		throws Exception {
 
-		CommerceAccountUserRel commerceAccountUserRel =
-			_commerceAccountUserRelService.getCommerceAccountUserRel(
-				(CommerceAccountUserRelPK)dtoConverterContext.getId());
+		AccountEntryUserRel accountEntryUserRel =
+			_accountEntryUserRelService.fetchAccountEntryUserRel(
+				(long)dtoConverterContext.getId());
 
-		User user = commerceAccountUserRel.getUser();
+		User user = accountEntryUserRel.getUser();
 
 		return new AccountMember() {
 			{
-				accountId = commerceAccountUserRel.getCommerceAccountId();
+				accountId = accountEntryUserRel.getAccountEntryId();
 				accountRoles = _getAccountRoles(
-					commerceAccountUserRel, dtoConverterContext);
+					accountEntryUserRel, dtoConverterContext);
 				email = user.getEmailAddress();
 				name = user.getFullName();
 				userId = user.getUserId();
@@ -70,14 +68,14 @@ public class AccountMemberDTOConverter
 	}
 
 	private AccountRole[] _getAccountRoles(
-			CommerceAccountUserRel commerceAccountUserRel,
+			AccountEntryUserRel accountEntryUserRel,
 			DTOConverterContext dtoConverterContext)
 		throws Exception {
 
 		List<AccountRole> accountRoles = new ArrayList<>();
 
 		for (UserGroupRole userGroupRole :
-				commerceAccountUserRel.getUserGroupRoles()) {
+				accountEntryUserRel.getUserGroupRoles()) {
 
 			accountRoles.add(
 				_accountRoleDTOConverter.toDTO(
@@ -86,15 +84,15 @@ public class AccountMemberDTOConverter
 						dtoConverterContext.getLocale())));
 		}
 
-		Stream<AccountRole> stream = accountRoles.stream();
-
-		return stream.toArray(AccountRole[]::new);
+		return accountRoles.toArray(new AccountRole[0]);
 	}
 
 	@Reference
-	private AccountRoleDTOConverter _accountRoleDTOConverter;
+	private AccountEntryUserRelService _accountEntryUserRelService;
 
-	@Reference
-	private CommerceAccountUserRelService _commerceAccountUserRelService;
+	@Reference(
+		target = "(component.name=com.liferay.headless.commerce.admin.account.internal.dto.v1_0.converter.AccountRoleDTOConverter)"
+	)
+	private DTOConverter<UserGroupRole, AccountRole> _accountRoleDTOConverter;
 
 }

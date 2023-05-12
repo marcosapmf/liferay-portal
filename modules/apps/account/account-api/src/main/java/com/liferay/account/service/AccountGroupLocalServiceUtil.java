@@ -60,10 +60,12 @@ public class AccountGroupLocalServiceUtil {
 	}
 
 	public static AccountGroup addAccountGroup(
-			long userId, String description, String name)
+			long userId, String description, String name,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws PortalException {
 
-		return getService().addAccountGroup(userId, description, name);
+		return getService().addAccountGroup(
+			userId, description, name, serviceContext);
 	}
 
 	public static AccountGroup checkGuestAccountGroup(long companyId)
@@ -313,6 +315,13 @@ public class AccountGroupLocalServiceUtil {
 			companyId, name, start, end, orderByComparator);
 	}
 
+	public static List<AccountGroup> getAccountGroupsByAccountEntryId(
+		long accountEntryId, int start, int end) {
+
+		return getService().getAccountGroupsByAccountEntryId(
+			accountEntryId, start, end);
+	}
+
 	public static List<AccountGroup> getAccountGroupsByAccountGroupId(
 		long[] accountGroupIds) {
 
@@ -334,6 +343,13 @@ public class AccountGroupLocalServiceUtil {
 
 	public static long getAccountGroupsCount(long companyId, String name) {
 		return getService().getAccountGroupsCount(companyId, name);
+	}
+
+	public static int getAccountGroupsCountByAccountEntryId(
+		long accountEntryId) {
+
+		return getService().getAccountGroupsCountByAccountEntryId(
+			accountEntryId);
 	}
 
 	public static com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery
@@ -417,11 +433,12 @@ public class AccountGroupLocalServiceUtil {
 	}
 
 	public static AccountGroup updateAccountGroup(
-			long accountGroupId, String description, String name)
+			long accountGroupId, String description, String name,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws PortalException {
 
 		return getService().updateAccountGroup(
-			accountGroupId, description, name);
+			accountGroupId, description, name, serviceContext);
 	}
 
 	public static AccountGroup updateExternalReferenceCode(

@@ -13,7 +13,7 @@ definition {
 		SearchAdministration.executeReindex();
 	}
 
-	@priority = "5"
+	@priority = 5
 	test ViewClassicSearchPortletConfigurationArchive704 {
 		property data.archive.type = "data-archive-classic-search-portlet";
 		property database.types = "mariadb,mysql,postgresql";
@@ -33,90 +33,90 @@ definition {
 
 		SystemSettings.saveConfiguration();
 
-		Upgrade.viewClassicSearchPortletConfiguration();
+		ValidateSearchUpgrade.viewClassicSearchPortletConfiguration();
 	}
 
-	@priority = "5"
+	@priority = 5
 	test ViewClassicSearchPortletConfigurationArchive713 {
 		property data.archive.type = "data-archive-classic-search-portlet";
 		property database.types = "mariadb,mysql,postgresql";
 		property portal.version = "7.1.3";
 
-		Upgrade.viewClassicSearchPortletConfiguration();
+		ValidateSearchUpgrade.viewClassicSearchPortletConfiguration();
 	}
 
-	@priority = "5"
+	@priority = 5
 	test ViewClassicSearchPortletConfigurationArchive720 {
 		property data.archive.type = "data-archive-classic-search-portlet";
 		property database.types = "mariadb,mysql,postgresql";
 		property portal.version = "7.2.0";
 
-		Upgrade.viewClassicSearchPortletConfiguration();
+		ValidateSearchUpgrade.viewClassicSearchPortletConfiguration();
 	}
 
-	@priority = "5"
+	@priority = 5
 	test ViewClassicSearchPortletConfigurationArchive721 {
 		property data.archive.type = "data-archive-classic-search-portlet";
 		property database.types = "mariadb,mysql,postgresql";
 		property portal.version = "7.2.1";
 
-		Upgrade.viewClassicSearchPortletConfiguration();
+		ValidateSearchUpgrade.viewClassicSearchPortletConfiguration();
 	}
 
-	@priority = "5"
+	@priority = 5
 	test ViewClassicSearchPortletConfigurationArchive730 {
 		property data.archive.type = "data-archive-classic-search-portlet";
 		property database.types = "mariadb,mysql,postgresql";
 		property portal.version = "7.3.0";
 
-		Upgrade.viewClassicSearchPortletConfiguration();
+		ValidateSearchUpgrade.viewClassicSearchPortletConfiguration();
 	}
 
-	@priority = "5"
+	@priority = 5
 	test ViewClassicSearchPortletConfigurationArchive740 {
 		property data.archive.type = "data-archive-classic-search-portlet";
 		property database.types = "mariadb,mysql,postgresql";
 		property portal.version = "7.4.0";
 
-		Upgrade.viewClassicSearchPortletConfiguration();
+		ValidateSearchUpgrade.viewClassicSearchPortletConfiguration();
 	}
 
-	@priority = "5"
+	@priority = 5
 	test ViewClassicSearchPortletConfigurationArchive7110 {
 		property data.archive.type = "data-archive-classic-search-portlet";
 		property portal.version = "7.1.10";
 
-		Upgrade.viewClassicSearchPortletConfiguration();
+		ValidateSearchUpgrade.viewClassicSearchPortletConfiguration();
 	}
 
-	@priority = "5"
+	@priority = 5
 	test ViewClassicSearchPortletConfigurationArchive7210 {
 		property data.archive.type = "data-archive-classic-search-portlet";
 		property portal.version = "7.2.10";
 		property test.run.environment = "EE";
 
-		Upgrade.viewClassicSearchPortletConfiguration();
+		ValidateSearchUpgrade.viewClassicSearchPortletConfiguration();
 	}
 
-	@priority = "5"
+	@priority = 5
 	test ViewClassicSearchPortletConfigurationArchive7310 {
 		property data.archive.type = "data-archive-classic-search-portlet";
 		property portal.version = "7.3.10";
 		property test.run.environment = "EE";
 
-		Upgrade.viewClassicSearchPortletConfiguration();
+		ValidateSearchUpgrade.viewClassicSearchPortletConfiguration();
 	}
 
-	@priority = "5"
+	@priority = 5
 	test ViewClassicSearchPortletConfigurationArchive7413 {
 		property data.archive.type = "data-archive-classic-search-portlet";
 		property portal.version = "7.4.13";
 		property test.run.environment = "EE";
 
-		Upgrade.viewClassicSearchPortletConfiguration();
+		ValidateSearchUpgrade.viewClassicSearchPortletConfiguration();
 	}
 
-	@priority = "5"
+	@priority = 5
 	test ViewClassicSearchPortletConfigurationArchive70106 {
 		property data.archive.type = "data-archive-classic-search-portlet";
 		property portal.version = "7.0.10.6";
@@ -135,19 +135,19 @@ definition {
 
 		SystemSettings.saveConfiguration();
 
-		Upgrade.viewClassicSearchPortletConfiguration();
+		ValidateSearchUpgrade.viewClassicSearchPortletConfiguration();
 	}
 
-	@priority = "5"
+	@priority = 5
 	test ViewClassicSearchPortletConfigurationArchive72101 {
 		property data.archive.type = "data-archive-classic-search-portlet";
 		property portal.version = "7.2.10.1";
 		property test.run.environment = "EE";
 
-		Upgrade.viewClassicSearchPortletConfiguration();
+		ValidateSearchUpgrade.viewClassicSearchPortletConfiguration();
 	}
 
-	@priority = "5"
+	@priority = 5
 	test ViewClassicSearchPortletConfigurationArchiveAutoUpgrade721 {
 		property custom.properties = "upgrade.database.auto.run=true";
 		property data.archive.type = "data-archive-classic-search-portlet";
@@ -157,10 +157,10 @@ definition {
 		property skip.upgrade-legacy-database = "true";
 		property test.assert.warning.exceptions = "true";
 
-		Upgrade.viewClassicSearchPortletConfiguration();
+		ValidateSearchUpgrade.viewClassicSearchPortletConfiguration();
 	}
 
-	@priority = "5"
+	@priority = 5
 	test ViewClassicSearchPortletConfigurationArchiveAutoUpgrade730 {
 		property custom.properties = "upgrade.database.auto.run=true";
 		property data.archive.type = "data-archive-classic-search-portlet";
@@ -170,10 +170,10 @@ definition {
 		property skip.upgrade-legacy-database = "true";
 		property test.assert.warning.exceptions = "true";
 
-		Upgrade.viewClassicSearchPortletConfiguration();
+		ValidateSearchUpgrade.viewClassicSearchPortletConfiguration();
 	}
 
-	@priority = "5"
+	@priority = 5
 	test ViewClassicSearchPortletConfigurationArchiveAutoUpgrade7110 {
 		property custom.properties = "upgrade.database.auto.run=true";
 		property data.archive.type = "data-archive-classic-search-portlet";
@@ -182,10 +182,10 @@ definition {
 		property skip.upgrade-legacy-database = "true";
 		property test.assert.warning.exceptions = "true";
 
-		Upgrade.viewClassicSearchPortletConfiguration();
+		ValidateSearchUpgrade.viewClassicSearchPortletConfiguration();
 	}
 
-	@priority = "5"
+	@priority = 5
 	test ViewClassicSearchPortletConfigurationArchiveAutoUpgrade7210 {
 		property custom.properties = "upgrade.database.auto.run=true";
 		property data.archive.type = "data-archive-classic-search-portlet";
@@ -195,10 +195,10 @@ definition {
 		property test.assert.warning.exceptions = "true";
 		property test.run.environment = "EE";
 
-		Upgrade.viewClassicSearchPortletConfiguration();
+		ValidateSearchUpgrade.viewClassicSearchPortletConfiguration();
 	}
 
-	@priority = "5"
+	@priority = 5
 	test ViewClassicSearchPortletConfigurationArchiveAutoUpgrade70106 {
 		property custom.properties = "upgrade.database.auto.run=true";
 		property data.archive.type = "data-archive-classic-search-portlet";
@@ -221,10 +221,10 @@ definition {
 
 		SystemSettings.saveConfiguration();
 
-		Upgrade.viewClassicSearchPortletConfiguration();
+		ValidateSearchUpgrade.viewClassicSearchPortletConfiguration();
 	}
 
-	@priority = "5"
+	@priority = 5
 	test ViewClassicSearchPortletConfigurationArchiveAutoUpgrade72101 {
 		property custom.properties = "upgrade.database.auto.run=true";
 		property data.archive.type = "data-archive-classic-search-portlet";
@@ -234,122 +234,131 @@ definition {
 		property test.assert.warning.exceptions = "true";
 		property test.run.environment = "EE";
 
-		Upgrade.viewClassicSearchPortletConfiguration();
+		ValidateSearchUpgrade.viewClassicSearchPortletConfiguration();
 	}
 
-	@priority = "5"
+	@priority = 5
 	test ViewResultRankingsEntryArchive7310 {
 		property data.archive.type = "data-archive-search-result-rankings";
 		property portal.version = "7.3.10";
 		property test.run.environment = "EE";
 
-		Upgrade.viewResultRankingsEntry();
+		ValidateSearchUpgrade.viewResultRankingsEntry();
 	}
 
-	@priority = "5"
+	@priority = 5
 	test ViewResultRankingsEntryArchive7413 {
 		property data.archive.type = "data-archive-search-result-rankings";
 		property portal.version = "7.4.13";
 		property test.run.environment = "EE";
 
-		Upgrade.viewResultRankingsEntry();
+		ValidateSearchUpgrade.viewResultRankingsEntry();
 	}
 
-	@priority = "5"
+	@priority = 5
+	test ViewSearchBarWidgetTemplateArchive7310 {
+		property data.archive.type = "data-archive-search-bar-widget-template";
+		property portal.version = "7.3.10";
+		property test.run.environment = "EE";
+
+		ValidateSearchUpgrade.viewSearchBarWidgetTemplate();
+	}
+
+	@priority = 5
 	test ViewSearchPortletsConfigurationArchive713 {
 		property data.archive.type = "data-archive-search-portlets";
 		property database.types = "mariadb,mysql,postgresql";
 		property portal.version = "7.1.3";
 		property test.assert.warning.exceptions = "true";
 
-		Upgrade.viewSearchPortletsConfiguration();
+		ValidateSearchUpgrade.viewSearchPortletsConfiguration();
 	}
 
-	@priority = "5"
+	@priority = 5
 	test ViewSearchPortletsConfigurationArchive720 {
 		property data.archive.type = "data-archive-search-portlets";
 		property database.types = "mariadb,mysql,postgresql";
 		property portal.version = "7.2.0";
 
-		Upgrade.viewSearchPortletsConfiguration();
+		ValidateSearchUpgrade.viewSearchPortletsConfiguration();
 	}
 
-	@priority = "5"
+	@priority = 5
 	test ViewSearchPortletsConfigurationArchive721 {
 		property data.archive.type = "data-archive-search-portlets";
 		property database.types = "mariadb,mysql,postgresql";
 		property portal.version = "7.2.1";
 
-		Upgrade.viewSearchPortletsConfiguration();
+		ValidateSearchUpgrade.viewSearchPortletsConfiguration();
 	}
 
-	@priority = "5"
+	@priority = 5
 	test ViewSearchPortletsConfigurationArchive730 {
 		property data.archive.type = "data-archive-search-portlets";
 		property database.types = "mariadb,mysql,postgresql";
 		property portal.version = "7.3.0";
 
-		Upgrade.viewSearchPortletsConfiguration();
+		ValidateSearchUpgrade.viewSearchPortletsConfiguration();
 	}
 
-	@priority = "5"
+	@priority = 5
 	test ViewSearchPortletsConfigurationArchive740 {
 		property data.archive.type = "data-archive-search-portlets";
 		property database.types = "mariadb,mysql,postgresql";
 		property portal.version = "7.4.0";
 
-		Upgrade.viewSearchPortletsConfiguration();
+		ValidateSearchUpgrade.viewSearchPortletsConfiguration();
 	}
 
-	@priority = "5"
+	@priority = 5
 	test ViewSearchPortletsConfigurationArchive7110 {
 		property data.archive.type = "data-archive-search-portlets";
 		property portal.version = "7.1.10";
 
-		Upgrade.viewSearchPortletsConfiguration();
+		ValidateSearchUpgrade.viewSearchPortletsConfiguration();
 	}
 
-	@priority = "5"
+	@priority = 5
 	test ViewSearchPortletsConfigurationArchive7210 {
 		property data.archive.type = "data-archive-search-portlets";
 		property portal.version = "7.2.10";
 		property test.assert.warning.exceptions = "true";
 		property test.run.environment = "EE";
 
-		Upgrade.viewSearchPortletsConfiguration();
+		ValidateSearchUpgrade.viewSearchPortletsConfiguration();
 	}
 
-	@priority = "5"
+	@priority = 5
 	test ViewSearchPortletsConfigurationArchive7310 {
 		property data.archive.type = "data-archive-search-portlets";
 		property portal.version = "7.3.10";
 		property test.assert.warning.exceptions = "true";
 		property test.run.environment = "EE";
 
-		Upgrade.viewSearchPortletsConfiguration();
+		ValidateSearchUpgrade.viewSearchPortletsConfiguration();
 	}
 
-	@priority = "5"
+	@priority = 5
 	test ViewSearchPortletsConfigurationArchive7413 {
 		property data.archive.type = "data-archive-search-portlets";
 		property portal.version = "7.4.13";
 		property test.assert.warning.exceptions = "true";
 		property test.run.environment = "EE";
 
-		Upgrade.viewSearchPortletsConfiguration();
+		ValidateSearchUpgrade.viewSearchPortletsConfiguration();
 	}
 
-	@priority = "5"
+	@priority = 5
 	test ViewSearchPortletsConfigurationArchive72101 {
 		property data.archive.type = "data-archive-search-portlets";
 		property portal.version = "7.2.10.1";
 		property test.assert.warning.exceptions = "true";
 		property test.run.environment = "EE";
 
-		Upgrade.viewSearchPortletsConfiguration();
+		ValidateSearchUpgrade.viewSearchPortletsConfiguration();
 	}
 
-	@priority = "5"
+	@priority = 5
 	test ViewSearchPortletsConfigurationArchiveAutoUpgrade721 {
 		property custom.properties = "upgrade.database.auto.run=true";
 		property data.archive.type = "data-archive-search-portlets";
@@ -359,10 +368,10 @@ definition {
 		property skip.upgrade-legacy-database = "true";
 		property test.assert.warning.exceptions = "true";
 
-		Upgrade.viewSearchPortletsConfiguration();
+		ValidateSearchUpgrade.viewSearchPortletsConfiguration();
 	}
 
-	@priority = "5"
+	@priority = 5
 	test ViewSearchPortletsConfigurationArchiveAutoUpgrade730 {
 		property custom.properties = "upgrade.database.auto.run=true";
 		property data.archive.type = "data-archive-search-portlets";
@@ -372,10 +381,10 @@ definition {
 		property skip.upgrade-legacy-database = "true";
 		property test.assert.warning.exceptions = "true";
 
-		Upgrade.viewSearchPortletsConfiguration();
+		ValidateSearchUpgrade.viewSearchPortletsConfiguration();
 	}
 
-	@priority = "5"
+	@priority = 5
 	test ViewSearchPortletsConfigurationArchiveAutoUpgrade7110 {
 		property custom.properties = "upgrade.database.auto.run=true";
 		property data.archive.type = "data-archive-search-portlets";
@@ -384,10 +393,10 @@ definition {
 		property skip.upgrade-legacy-database = "true";
 		property test.assert.warning.exceptions = "true";
 
-		Upgrade.viewSearchPortletsConfiguration();
+		ValidateSearchUpgrade.viewSearchPortletsConfiguration();
 	}
 
-	@priority = "5"
+	@priority = 5
 	test ViewSearchPortletsConfigurationArchiveAutoUpgrade7210 {
 		property custom.properties = "upgrade.database.auto.run=true";
 		property data.archive.type = "data-archive-search-portlets";
@@ -397,10 +406,10 @@ definition {
 		property test.assert.warning.exceptions = "true";
 		property test.run.environment = "EE";
 
-		Upgrade.viewSearchPortletsConfiguration();
+		ValidateSearchUpgrade.viewSearchPortletsConfiguration();
 	}
 
-	@priority = "5"
+	@priority = 5
 	test ViewSearchPortletsConfigurationArchiveAutoUpgrade72101 {
 		property custom.properties = "upgrade.database.auto.run=true";
 		property data.archive.type = "data-archive-search-portlets";
@@ -410,7 +419,7 @@ definition {
 		property test.assert.warning.exceptions = "true";
 		property test.run.environment = "EE";
 
-		Upgrade.viewSearchPortletsConfiguration();
+		ValidateSearchUpgrade.viewSearchPortletsConfiguration();
 	}
 
 	test ViewSearchWidgetTemplatesArchive7413U43 {
@@ -492,7 +501,7 @@ definition {
 		property test.assert.warning.exceptions = "true";
 		property test.run.environment = "EE";
 
-		Upgrade.viewSXPBlueprintAndElements();
+		ValidateSearchExperiencesUpgrade.viewSXPBlueprintAndElements();
 	}
 
 	test ViewSXPBlueprintsAndElementsArchive7413U33 {
@@ -501,25 +510,173 @@ definition {
 		property test.assert.warning.exceptions = "true";
 		property test.run.environment = "EE";
 
-		Upgrade.viewSXPBlueprintAndElements();
+		ValidateSearchExperiencesUpgrade.viewSXPBlueprintAndElements();
 	}
 
-	@priority = "5"
+	@description = "This is a use case for LPS-147329."
+	test ViewSXPLocalizedElementsArchive7413U63 {
+		property data.archive.type = "data-archive-sxp-localized";
+		property portal.version = "7.4.13.u63";
+		property test.assert.warning.exceptions = "true";
+		property test.run.environment = "EE";
+
+		task ("Assert elements within existing blueprint query builder add element sidebar are using English translations and not language keys") {
+			Blueprints.openBlueprintsAdmin();
+
+			Blueprints.gotoBlueprint(title = "Test Blueprint");
+
+			Blueprints.searchAddElementsSidebar(element = "Text Match");
+
+			AssertElementPresent(
+				key_element = "Text Match Over Multiple Fields",
+				locator1 = "Blueprints#BLUEPRINTS_ADD_ELEMENTS_SIDEBAR_ELEMENT_NAME");
+
+			AssertTextEquals.assertPartialText(
+				key_element = "Text Match Over Multiple Fields",
+				locator1 = "Blueprints#BLUEPRINTS_ADD_ELEMENTS_SIDEBAR_ELEMENT_DESCRIPTION",
+				value1 = "Search for a text match over multiple text fields.");
+
+			Blueprints.searchAddElementsSidebar(element = "Title");
+
+			AssertElementPresent(
+				key_element = "Custom Element Title in English",
+				locator1 = "Blueprints#BLUEPRINTS_ADD_ELEMENTS_SIDEBAR_ELEMENT_NAME");
+
+			AssertTextEquals.assertPartialText(
+				key_element = "Custom Element Title in English",
+				locator1 = "Blueprints#BLUEPRINTS_ADD_ELEMENTS_SIDEBAR_ELEMENT_DESCRIPTION",
+				value1 = "Custom Element Description in English");
+		}
+
+		task ("Assert element instances within existing blueprint are using English translations and not language keys") {
+			AssertElementPresent(
+				key_element = "Text Match Over Multiple Fields",
+				locator1 = "Blueprints#BLUEPRINTS_ADDED_ELEMENT");
+
+			AssertElementPresent(
+				key_element = "Search for a text match over multiple text fields",
+				locator1 = "Blueprints#BLUEPRINTS_ADDED_ELEMENT");
+
+			AssertElementPresent(
+				key_element = "Custom Element Title in English",
+				locator1 = "Blueprints#BLUEPRINTS_ADDED_ELEMENT");
+
+			AssertElementPresent(
+				key_element = "Custom Element Description in English",
+				locator1 = "Blueprints#BLUEPRINTS_ADDED_ELEMENT");
+		}
+
+		Navigator.gotoBack();
+
+		task ("Assert elements within Elements admin are using English translations") {
+			Navigator.gotoNavItem(navItem = "Elements");
+
+			Blueprints.viewEntryTitle(title = "Text Match Over Multiple Fields");
+
+			Blueprints.viewEntryDescription(
+				description = "Search for a text match over multiple text fields",
+				title = "Text Match Over Multiple Fields");
+
+			Blueprints.viewEntryTitle(title = "Custom Element Title in English");
+
+			Blueprints.viewEntryDescription(
+				description = "Custom Element Description in English",
+				title = "Custom Element Title in English");
+		}
+
+		task ("Assert title and description in OOTB element JSON configuration is using language keys") {
+			Blueprints.gotoEntry(title = "Text Match Over Multiple Fields");
+
+			AssertTextEquals.assertPartialText(
+				locator1 = "Blueprints#CODE_MIRROR_EDITOR",
+				value1 = "text-match-over-multiple-fields");
+
+			AssertTextEquals.assertPartialText(
+				locator1 = "Blueprints#CODE_MIRROR_EDITOR",
+				value1 = "text-match-over-multiple-fields-description");
+		}
+
+		Navigator.gotoBack();
+
+		task ("Assert elements in Elements admin are using correct translations when using Portuguese locale") {
+			Navigator.ensureLocaleURL(locale = "pt");
+
+			Blueprints.viewEntryTitle(title = "Corresponder texto por vários campos");
+
+			Blueprints.viewEntryDescription(
+				description = "Buscar por uma correspondência de texto por vários campos de texto",
+				title = "Corresponder texto por vários campos");
+
+			Blueprints.viewEntryTitle(title = "Título em Português");
+
+			Blueprints.viewEntryDescription(
+				description = "Descrição em Português",
+				title = "Título em Português");
+		}
+
+		task ("Assert OOTB elements within blueprint query builder add element sidebar are using correct translations when using Portuguese locale") {
+			Navigator.gotoNavItem(navItem = "Blueprints");
+
+			Blueprints.gotoBlueprint(title = "Test Blueprint");
+
+			Blueprints.searchAddElementsSidebar(element = "Corresponder");
+
+			AssertElementPresent(
+				key_element = "Corresponder texto por vários campos",
+				locator1 = "Blueprints#BLUEPRINTS_ADD_ELEMENTS_SIDEBAR_ELEMENT_NAME");
+
+			AssertTextEquals.assertPartialText(
+				key_element = "Corresponder texto por vários campos",
+				locator1 = "Blueprints#BLUEPRINTS_ADD_ELEMENTS_SIDEBAR_ELEMENT_DESCRIPTION",
+				value1 = "Buscar por uma correspondência de texto por vários campos de texto.");
+
+			Blueprints.searchAddElementsSidebar(element = "Título");
+
+			AssertElementPresent(
+				key_element = "Título em Português",
+				locator1 = "Blueprints#BLUEPRINTS_ADD_ELEMENTS_SIDEBAR_ELEMENT_NAME");
+
+			AssertTextEquals.assertPartialText(
+				key_element = "Título em Português",
+				locator1 = "Blueprints#BLUEPRINTS_ADD_ELEMENTS_SIDEBAR_ELEMENT_DESCRIPTION",
+				value1 = "Descrição em Português");
+		}
+
+		task ("Assert element instances within existing blueprint are using correct translations when using Portuguese locale") {
+			AssertElementPresent(
+				key_element = "Corresponder texto por vários campos",
+				locator1 = "Blueprints#BLUEPRINTS_ADDED_ELEMENT");
+
+			AssertElementPresent(
+				key_element = "Buscar por uma correspondência de texto por vários campos de texto",
+				locator1 = "Blueprints#BLUEPRINTS_ADDED_ELEMENT");
+
+			AssertElementPresent(
+				key_element = "Título em Português",
+				locator1 = "Blueprints#BLUEPRINTS_ADDED_ELEMENT");
+
+			AssertElementPresent(
+				key_element = "Descrição em Português",
+				locator1 = "Blueprints#BLUEPRINTS_ADDED_ELEMENT");
+		}
+	}
+
+	@priority = 5
 	test ViewSynonymsEntryArchive7310 {
 		property data.archive.type = "data-archive-search-synonyms";
 		property portal.version = "7.3.10";
 		property test.run.environment = "EE";
 
-		Upgrade.viewSynonymsEntry();
+		ValidateSearchUpgrade.viewSynonymsEntry();
 	}
 
-	@priority = "5"
+	@priority = 5
 	test ViewSynonymsEntryArchive7413 {
 		property data.archive.type = "data-archive-search-synonyms";
 		property portal.version = "7.4.13";
 		property test.run.environment = "EE";
 
-		Upgrade.viewSynonymsEntry();
+		ValidateSearchUpgrade.viewSynonymsEntry();
 	}
 
 }

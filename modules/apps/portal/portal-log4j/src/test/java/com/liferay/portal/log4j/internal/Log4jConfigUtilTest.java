@@ -14,14 +14,13 @@
 
 package com.liferay.portal.log4j.internal;
 
-import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.CodeCoverageAssertor;
 import com.liferay.portal.kernel.test.rule.NewEnv;
 import com.liferay.portal.kernel.test.util.PropsTestUtil;
-import com.liferay.portal.kernel.util.LinkedHashMapBuilder;
+import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.test.log.LogCapture;
@@ -36,14 +35,10 @@ import java.nio.file.Path;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.logging.Level;
 
-import org.apache.log4j.ConsoleAppender;
-import org.apache.log4j.WriterAppender;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.core.Appender;
 import org.apache.logging.log4j.core.Logger;
@@ -160,71 +155,6 @@ public class Log4jConfigUtilTest {
 	}
 
 	@Test
-	public void testConfigureLog4JWithCompatibility() throws Exception {
-		String loggerName = StringUtil.randomString();
-
-		Logger logger = (Logger)LogManager.getLogger(loggerName);
-
-		Log4jConfigUtil.configureLog4J(
-			_generateLog4j1XMLConfigurationContent(loggerName, _DEBUG));
-
-		_assertPriority(logger, _DEBUG);
-
-		Log4jConfigUtil.configureLog4J(
-			_generateLog4j1XMLConfigurationContent(loggerName, _ERROR));
-
-		_assertPriority(logger, _ERROR);
-
-		Log4jConfigUtil.configureLog4J(
-			_generateLog4j1XMLConfigurationContent(
-				loggerName, _ERROR, ConsoleAppender.class));
-
-		_assertAppenders(logger, ConsoleAppender.class.getName());
-
-		Log4jConfigUtil.configureLog4J(
-			_generateLog4j1XMLConfigurationContent(
-				loggerName, _ERROR, WriterAppender.class));
-
-		_assertAppenders(
-			logger, ConsoleAppender.class.getName(),
-			WriterAppender.class.getName());
-
-		Log4jConfigUtil.configureLog4J(
-			_generateLog4j1XMLConfigurationContent(
-				loggerName, _ERROR, ConsoleAppender.class,
-				WriterAppender.class));
-
-		_assertAppenders(
-			logger, ConsoleAppender.class.getName(),
-			WriterAppender.class.getName());
-
-		Log4jConfigUtil.configureLog4J(
-			_generateLog4j1XMLConfigurationContent(
-				loggerName, _ERROR, ConsoleAppender.class,
-				WriterAppender.class),
-			ConsoleAppender.class.getName());
-
-		_assertAppenders(
-			logger, ConsoleAppender.class.getName(),
-			WriterAppender.class.getName());
-
-		Log4jConfigUtil.configureLog4J(
-			_generateLog4j1XMLConfigurationContent(
-				loggerName, _ERROR,
-				LinkedHashMapBuilder.put(
-					"org.apache.log4j.rolling.RollingFileAppender", "TEXT_FILE"
-				).put(
-					WriterAppender.class.getName(), "WRITER_APPENDER"
-				).build()));
-
-		_assertAppenders(
-			logger, ConsoleAppender.class.getName(),
-			WriterAppender.class.getName(),
-			"TEXT_FILE_" + Log4jConfigUtilTest.class.getSimpleName(),
-			"WRITER_APPENDER");
-	}
-
-	@Test
 	public void testConfigureLog4JWithException() {
 		try (LogCapture logCapture = LoggerTestUtil.configureJDKLogger(
 				Log4jConfigUtil.class.getName(), Level.SEVERE)) {
@@ -258,6 +188,16 @@ public class Log4jConfigUtilTest {
 			Assert.assertEquals(
 				"<Configuration> strict attribute requires true",
 				logEntry.getMessage());
+
+			Log4jConfigUtil.configureLog4J(
+				_generateLog4j1XMLConfigurationContent());
+
+			Assert.assertEquals(logEntries.toString(), 3, logEntries.size());
+
+			logEntry = logEntries.get(2);
+
+			Assert.assertEquals(
+				"Log4J 2 <Configuration> is required", logEntry.getMessage());
 		}
 	}
 
@@ -426,17 +366,20 @@ public class Log4jConfigUtilTest {
 	}
 
 	private String _generateCompanyLogRoutingAppenderConfigurationContent(
-		String appenderName, String filePattern, String loggerName,
-		String priority) {
+		String appenderName, String dirPattern, String fileNamePattern,
+		String loggerName, String priority) {
 
-		StringBundler sb = new StringBundler(14);
+		StringBundler sb = new StringBundler(17);
 
 		sb.append("<?xml version=\"1.0\"?><Configuration strict=\"true\">");
 		sb.append("<Appenders><Appender name=\"");
 		sb.append(appenderName);
-		sb.append("\" filePattern=\"");
-		sb.append(filePattern);
+		sb.append("\" dirPattern=\"");
+		sb.append(dirPattern);
 		sb.append("\" type=\"CompanyLogRouting\">");
+		sb.append("<FilePattern fileNamePattern=\"");
+		sb.append(fileNamePattern);
+		sb.append("\"><Log4j1XmlLayout locationInfo=\"true\" /></FilePattern>");
 		sb.append("<TimeBasedTriggeringPolicy /><DirectWriteRolloverStrategy ");
 		sb.append("/></Appender></Appenders><Loggers><Logger level= \"");
 		sb.append(priority);
@@ -449,78 +392,14 @@ public class Log4jConfigUtilTest {
 		return sb.toString();
 	}
 
-	private String _generateLog4j1XMLConfigurationContent(
-			String loggerName, String priority, Class<?>... appenderTypes)
-		throws Exception {
-
-		Map<String, String> appenders = new LinkedHashMap<>();
-
-		for (Class<?> appenderType : appenderTypes) {
-			appenders.put(appenderType.getName(), appenderType.getName());
-		}
-
-		return _generateLog4j1XMLConfigurationContent(
-			loggerName, priority, appenders);
-	}
-
-	private String _generateLog4j1XMLConfigurationContent(
-			String loggerName, String priority, Map<String, String> appenders)
-		throws Exception {
-
-		StringBundler sb = new StringBundler(10 + (appenders.size() * 17));
+	private String _generateLog4j1XMLConfigurationContent() {
+		StringBundler sb = new StringBundler(5);
 
 		sb.append("<?xml version=\"1.0\"?>");
 		sb.append("<!DOCTYPE log4j:configuration SYSTEM \"log4j.dtd\">");
 		sb.append("<log4j:configuration xmlns:log4j=");
 		sb.append("\"http://jakarta.apache.org/log4j/\">");
-
-		for (Map.Entry<String, String> appenderEntry : appenders.entrySet()) {
-			sb.append("<appender class=\"");
-			sb.append(appenderEntry.getKey());
-			sb.append("\" name=\"");
-			sb.append(appenderEntry.getValue());
-			sb.append("\">");
-
-			if (Objects.equals(
-					appenderEntry.getKey(),
-					"org.apache.log4j.rolling.RollingFileAppender")) {
-
-				Path tempDirPath = Files.createTempDirectory(
-					Log4jConfigUtilTest.class.getName());
-
-				File tempDir = tempDirPath.toFile();
-
-				tempDir.mkdirs();
-				tempDir.deleteOnExit();
-
-				sb.append("<rollingPolicy class=\"");
-				sb.append("org.apache.log4j.rolling.TimeBasedRollingPolicy\">");
-				sb.append("<param name=\"FileNamePattern\" ");
-				sb.append("value=\"");
-				sb.append(tempDir);
-				sb.append("/");
-				sb.append(Log4jConfigUtilTest.class.getSimpleName());
-				sb.append(".%d{yyyy-MM-dd}.log\" />");
-				sb.append("<param name=\"paramName\" value=\"paramValue\" />");
-				sb.append("\t\t</rollingPolicy>");
-			}
-
-			sb.append("</appender>");
-		}
-
-		sb.append("<category name=\"");
-		sb.append(loggerName);
-		sb.append("\"><priority value=\"");
-		sb.append(priority);
-		sb.append("\" />");
-
-		for (String appenderName : appenders.values()) {
-			sb.append("<appender-ref ref=\"");
-			sb.append(appenderName);
-			sb.append("\" />");
-		}
-
-		sb.append("</category></log4j:configuration>");
+		sb.append("</log4j:configuration>");
 
 		return sb.toString();
 	}
@@ -529,7 +408,11 @@ public class Log4jConfigUtilTest {
 		String loggerName, String priority, String... appenderTypes) {
 
 		int initialCapacity =
-			(appenderTypes.length == 0) ? 7 : (9 + (8 * appenderTypes.length));
+			(appenderTypes.length == 0) ? 7 : (9 + (9 * appenderTypes.length));
+
+		if (ArrayUtil.contains(appenderTypes, _CONSOLE, false)) {
+			initialCapacity = initialCapacity + 1;
+		}
 
 		StringBundler sb = new StringBundler(initialCapacity);
 
@@ -543,7 +426,13 @@ public class Log4jConfigUtilTest {
 				sb.append(appenderType);
 				sb.append("\" type=\"");
 				sb.append(appenderType);
-				sb.append("\"></Appender>");
+				sb.append("\">");
+
+				if (appenderType.equals(_CONSOLE)) {
+					sb.append("<Layout type=\"PatternLayout\"/>");
+				}
+
+				sb.append("</Appender>");
 			}
 
 			sb.append("</Appenders>");
@@ -574,7 +463,16 @@ public class Log4jConfigUtilTest {
 		Log4jConfigUtil.configureLog4J(
 			_generateXMLConfigurationContent(loggerName, _INFO));
 
-		Assert.assertNull(Log4jConfigUtil.getCompanyLogDirectory(companyId));
+		try {
+			Log4jConfigUtil.getCompanyLogDirectory(companyId);
+
+			Assert.fail();
+		}
+		catch (IllegalStateException illegalStateException) {
+			Assert.assertEquals(
+				"No company log routing appender defined",
+				illegalStateException.getMessage());
+		}
 
 		File tempLogFileDir = null;
 
@@ -586,15 +484,12 @@ public class Log4jConfigUtilTest {
 
 			String tempLogFileDirPathString = tempLogFileDir.getPath();
 
-			String filePattern = "liferay-@company.id@.%d{yyyy-MM-dd}.xml.log";
-
 			Log4jConfigUtil.configureLog4J(
 				_generateCompanyLogRoutingAppenderConfigurationContent(
 					"COMPANY_LOG_ROUTING_TEXT_FILE",
-					StringBundler.concat(
-						tempLogFileDirPathString, CharPool.FORWARD_SLASH,
-						filePattern),
-					loggerName, _INFO));
+					tempLogFileDirPathString + "/@company.id@",
+					"liferay-@company.id@.%d{yyyy-MM-dd}.xml.log", loggerName,
+					_INFO));
 
 			Logger logger = (Logger)LogManager.getLogger(loggerName);
 
@@ -603,14 +498,23 @@ public class Log4jConfigUtilTest {
 			File companyLogDirectory = Log4jConfigUtil.getCompanyLogDirectory(
 				companyId);
 
+			File expectedCompanyLogDirectory = new File(
+				tempLogFileDirPathString, String.valueOf(companyId));
+
+			String expectedCompanyLogDirectoryPathString =
+				expectedCompanyLogDirectory.getPath();
+
+			Assert.assertEquals(
+				"Company log directory should be " +
+					expectedCompanyLogDirectoryPathString,
+				expectedCompanyLogDirectoryPathString,
+				companyLogDirectory.getPath());
+
 			if (enabled) {
-				Assert.assertEquals(
-					"Company log directory should be " +
-						tempLogFileDirPathString,
-					tempLogFileDirPathString, companyLogDirectory.getPath());
+				Assert.assertTrue(companyLogDirectory.exists());
 			}
 			else {
-				Assert.assertNull(companyLogDirectory);
+				Assert.assertFalse(companyLogDirectory.exists());
 			}
 		}
 		finally {

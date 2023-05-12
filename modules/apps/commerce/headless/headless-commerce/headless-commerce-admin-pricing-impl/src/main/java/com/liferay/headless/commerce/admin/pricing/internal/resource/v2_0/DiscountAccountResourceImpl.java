@@ -14,7 +14,7 @@
 
 package com.liferay.headless.commerce.admin.pricing.internal.resource.v2_0;
 
-import com.liferay.commerce.account.service.CommerceAccountService;
+import com.liferay.account.service.AccountEntryService;
 import com.liferay.commerce.discount.exception.NoSuchDiscountException;
 import com.liferay.commerce.discount.model.CommerceDiscount;
 import com.liferay.commerce.discount.model.CommerceDiscountAccountRel;
@@ -22,7 +22,6 @@ import com.liferay.commerce.discount.service.CommerceDiscountAccountRelService;
 import com.liferay.commerce.discount.service.CommerceDiscountService;
 import com.liferay.headless.commerce.admin.pricing.dto.v2_0.Discount;
 import com.liferay.headless.commerce.admin.pricing.dto.v2_0.DiscountAccount;
-import com.liferay.headless.commerce.admin.pricing.internal.dto.v2_0.converter.DiscountAccountDTOConverter;
 import com.liferay.headless.commerce.admin.pricing.internal.util.v2_0.DiscountAccountUtil;
 import com.liferay.headless.commerce.admin.pricing.resource.v2_0.DiscountAccountResource;
 import com.liferay.headless.commerce.core.util.ServiceContextHelper;
@@ -30,6 +29,7 @@ import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterRegistry;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.fields.NestedField;
@@ -131,7 +131,7 @@ public class DiscountAccountResourceImpl
 
 		CommerceDiscountAccountRel commerceDiscountAccountRel =
 			DiscountAccountUtil.addCommerceDiscountAccountRel(
-				_commerceAccountService, _commerceDiscountAccountRelService,
+				_accountEntryService, _commerceDiscountAccountRelService,
 				discountAccount, commerceDiscount, _serviceContextHelper);
 
 		return _toDiscountAccount(
@@ -145,7 +145,7 @@ public class DiscountAccountResourceImpl
 
 		CommerceDiscountAccountRel commerceDiscountAccountRel =
 			DiscountAccountUtil.addCommerceDiscountAccountRel(
-				_commerceAccountService, _commerceDiscountAccountRelService,
+				_accountEntryService, _commerceDiscountAccountRelService,
 				discountAccount,
 				_commerceDiscountService.getCommerceDiscount(id),
 				_serviceContextHelper);
@@ -204,7 +204,7 @@ public class DiscountAccountResourceImpl
 	}
 
 	@Reference
-	private CommerceAccountService _commerceAccountService;
+	private AccountEntryService _accountEntryService;
 
 	@Reference(
 		target = "(model.class.name=com.liferay.commerce.discount.model.CommerceDiscountAccountRel)"
@@ -219,8 +219,11 @@ public class DiscountAccountResourceImpl
 	@Reference
 	private CommerceDiscountService _commerceDiscountService;
 
-	@Reference
-	private DiscountAccountDTOConverter _discountAccountDTOConverter;
+	@Reference(
+		target = "(component.name=com.liferay.headless.commerce.admin.pricing.internal.dto.v2_0.converter.DiscountAccountDTOConverter)"
+	)
+	private DTOConverter<CommerceDiscountAccountRel, DiscountAccount>
+		_discountAccountDTOConverter;
 
 	@Reference
 	private DTOConverterRegistry _dtoConverterRegistry;

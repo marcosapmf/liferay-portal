@@ -3,7 +3,7 @@ definition {
 
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property testray.main.component.name = "Site Administration";
+	property testray.main.component.name = "Sites Administration";
 
 	setUp {
 		task ("Set up instance and sign in") {
@@ -14,7 +14,7 @@ definition {
 
 		task ("Add two sites via JSON") {
 			for (var n : list "1,2") {
-				JSONGroup.addGroup(groupName = "Test Site Name ${n}");
+				HeadlessSite.addSite(siteName = "Test Site Name ${n}");
 			}
 		}
 
@@ -175,7 +175,7 @@ definition {
 	tearDown {
 		var testPortalInstance = PropsUtil.get("test.portal.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testPortalInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -186,10 +186,11 @@ definition {
 	}
 
 	@description = "Export a live site into a different staging site. This test is focused on modern site building features. The high level steps of this test are outlined in LRQA-44517."
-	@priority = "5"
+	@priority = 5
 	test ImportLiveSiteToStagingSite {
 		property portal.acceptance = "true";
 		property test.name.skip.portal.instance = "SitesExportImportWithStaging#ImportLiveSiteToStagingSite";
+		property timeout.explicit.wait = "30";
 
 		task ("Export the first site") {
 			LAR.openExportAdmin(siteScopeName = "test-site-name-1");
@@ -202,6 +203,11 @@ definition {
 		}
 
 		task ("Import the first site's lar into the staging site for the second site") {
+			JSONLayoututilitypage.deleteLayoutUtilityPage(
+				groupName = "Test Site Name 2 (Staging)",
+				layoutUtilityPageName = "404 Error",
+				site = "false");
+
 			LAR.openImportAdmin(siteName = "test-site-name-2-staging");
 
 			LexiconEntry.gotoAdd();
@@ -248,14 +254,14 @@ definition {
 
 			PageTemplatesAdmin.gotoPageTemplate(pageTemplateName = "Page Template Name");
 
-			var n = "1";
+			var n = 1;
 
 			for (var text : list "Submit,Cancel") {
 				PageEditor.viewFragmentEditableText(
 					contributed = "false",
-					editableText = "${text}",
+					editableText = ${text},
 					fragmentName = "Button",
-					position = "${n}");
+					position = ${n});
 
 				var n = ${n} + 1;
 			}
@@ -268,14 +274,14 @@ definition {
 				key_pageName = "Test Template Content Page",
 				locator1 = "Home#PAGE");
 
-			var n = "1";
+			var n = 1;
 
 			for (var text : list "Submit,Cancel") {
 				ContentPages.viewFragmentText(
 					contributed = "false",
 					fragmentName = "button",
-					position = "${n}",
-					text = "${text}");
+					position = ${n},
+					text = ${text});
 
 				var n = ${n} + 1;
 			}

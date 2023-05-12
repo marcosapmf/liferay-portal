@@ -14,7 +14,7 @@
 
 package com.liferay.commerce.account.internal.verify;
 
-import com.liferay.commerce.account.service.CommerceAccountGroupLocalService;
+import com.liferay.account.service.AccountGroupLocalService;
 import com.liferay.commerce.account.util.CommerceAccountRoleHelper;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.exception.NoSuchUserException;
@@ -35,21 +35,14 @@ import org.osgi.service.component.annotations.Reference;
 /**
  * @author Alessio Antonio Rendina
  */
-@Component(
-	property = {
-		"initial.deployment=true",
-		"verify.process.name=com.liferay.commerce.account.service"
-	},
-	service = {CommerceAccountServiceVerifyProcess.class, VerifyProcess.class}
-)
+@Component(property = "initial.deployment=true", service = VerifyProcess.class)
 public class CommerceAccountServiceVerifyProcess extends VerifyProcess {
 
 	public void verifyAccountGroup() throws Exception {
 		try (LoggingTimer loggingTimer = new LoggingTimer()) {
 			_companyLocalService.forEachCompanyId(
-				companyId ->
-					_commerceAccountGroupLocalService.
-						checkGuestCommerceAccountGroup(companyId));
+				companyId -> _accountGroupLocalService.checkGuestAccountGroup(
+					companyId));
 		}
 	}
 
@@ -92,7 +85,7 @@ public class CommerceAccountServiceVerifyProcess extends VerifyProcess {
 	}
 
 	@Reference
-	private CommerceAccountGroupLocalService _commerceAccountGroupLocalService;
+	private AccountGroupLocalService _accountGroupLocalService;
 
 	@Reference
 	private CommerceAccountRoleHelper _commerceAccountRoleHelper;

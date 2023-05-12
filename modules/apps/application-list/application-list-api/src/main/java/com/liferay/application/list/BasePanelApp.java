@@ -99,15 +99,12 @@ public abstract class BasePanelApp implements PanelApp {
 			return 0;
 		}
 
+		Portlet portlet = getPortlet();
+
 		return _userNotificationEventLocalService.
 			getUserNotificationEventsCount(
-				user.getUserId(), _portlet.getPortletId(),
+				user.getUserId(), portlet.getPortletId(),
 				UserNotificationDeliveryConstants.TYPE_WEBSITE, true, false);
-	}
-
-	@Override
-	public Portlet getPortlet() {
-		return _portlet;
 	}
 
 	@Override
@@ -173,9 +170,10 @@ public abstract class BasePanelApp implements PanelApp {
 		this.groupProvider = groupProvider;
 	}
 
-	@Override
-	public void setPortlet(Portlet portlet) {
-		_portlet = portlet;
+	public void setPortletLocalService(
+		PortletLocalService portletLocalService) {
+
+		_portletLocalService = portletLocalService;
 	}
 
 	protected ControlPanelEntry getControlPanelEntry() {
@@ -215,12 +213,6 @@ public abstract class BasePanelApp implements PanelApp {
 		return groupProvider.getGroup(httpServletRequest);
 	}
 
-	protected void setPortletLocalService(
-		PortletLocalService portletLocalService) {
-
-		_portletLocalService = portletLocalService;
-	}
-
 	protected void setUserNotificationEventLocalService(
 		UserNotificationEventLocalService userNotificationEventLocalService) {
 
@@ -231,7 +223,6 @@ public abstract class BasePanelApp implements PanelApp {
 
 	private static final Log _log = LogFactoryUtil.getLog(BasePanelApp.class);
 
-	private Portlet _portlet;
 	private PortletLocalService _portletLocalService;
 	private UserNotificationEventLocalService
 		_userNotificationEventLocalService;

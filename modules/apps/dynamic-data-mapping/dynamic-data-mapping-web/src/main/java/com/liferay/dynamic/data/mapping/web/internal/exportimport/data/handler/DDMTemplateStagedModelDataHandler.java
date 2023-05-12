@@ -23,7 +23,7 @@ import com.liferay.dynamic.data.mapping.security.permission.DDMPermissionSupport
 import com.liferay.dynamic.data.mapping.service.DDMStructureLocalService;
 import com.liferay.dynamic.data.mapping.service.DDMTemplateLocalService;
 import com.liferay.dynamic.data.mapping.service.DDMTemplateVersionLocalService;
-import com.liferay.dynamic.data.mapping.web.internal.exportimport.content.processor.DDMTemplateExportImportContentProcessor;
+import com.liferay.exportimport.content.processor.ExportImportContentProcessor;
 import com.liferay.exportimport.data.handler.base.BaseStagedModelDataHandler;
 import com.liferay.exportimport.kernel.lar.ExportImportPathUtil;
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
@@ -127,10 +127,10 @@ public class DDMTemplateStagedModelDataHandler
 			"template-key", template.getTemplateKey()
 		).build();
 
-		long defaultUserId = 0;
+		long guestUserId = 0;
 
 		try {
-			defaultUserId = _userLocalService.getDefaultUserId(
+			guestUserId = _userLocalService.getGuestUserId(
 				template.getCompanyId());
 		}
 		catch (Exception exception) {
@@ -143,7 +143,7 @@ public class DDMTemplateStagedModelDataHandler
 
 		referenceAttributes.put(
 			"preloaded",
-			String.valueOf(_isPreloadedTemplate(defaultUserId, template)));
+			String.valueOf(_isPreloadedTemplate(guestUserId, template)));
 
 		return referenceAttributes;
 	}
@@ -258,7 +258,7 @@ public class DDMTemplateStagedModelDataHandler
 		template.setScript(script);
 
 		if (_isPreloadedTemplate(
-				_userLocalService.getDefaultUserId(template.getCompanyId()),
+				_userLocalService.getGuestUserId(template.getCompanyId()),
 				template)) {
 
 			templateElement.addAttribute("preloaded", "true");
@@ -554,9 +554,9 @@ public class DDMTemplateStagedModelDataHandler
 	}
 
 	private boolean _isPreloadedTemplate(
-		long defaultUserId, DDMTemplate template) {
+		long guestUserId, DDMTemplate template) {
 
-		if (defaultUserId == template.getUserId()) {
+		if (guestUserId == template.getUserId()) {
 			return true;
 		}
 
@@ -573,7 +573,7 @@ public class DDMTemplateStagedModelDataHandler
 		}
 
 		if ((ddmTemplateVersion != null) &&
-			(defaultUserId == ddmTemplateVersion.getUserId())) {
+			(guestUserId == ddmTemplateVersion.getUserId())) {
 
 			return true;
 		}
@@ -587,8 +587,10 @@ public class DDMTemplateStagedModelDataHandler
 	@Reference
 	private DDMStructureLocalService _ddmStructureLocalService;
 
-	@Reference
-	private DDMTemplateExportImportContentProcessor
+	@Reference(
+		target = "(model.class.name=com.liferay.dynamic.data.mapping.model.DDMTemplate)"
+	)
+	private ExportImportContentProcessor<String>
 		_ddmTemplateExportImportContentProcessor;
 
 	@Reference

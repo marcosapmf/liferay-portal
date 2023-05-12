@@ -27,6 +27,7 @@ import com.liferay.headless.admin.user.client.http.HttpInvoker;
 import com.liferay.headless.admin.user.client.pagination.Page;
 import com.liferay.headless.admin.user.client.resource.v1_0.WebUrlResource;
 import com.liferay.headless.admin.user.client.serdes.v1_0.WebUrlSerDes;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
@@ -54,6 +55,7 @@ import java.text.DateFormat;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -61,8 +63,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.annotation.Generated;
 
@@ -214,7 +214,10 @@ public abstract class BaseWebUrlResourceTestCase {
 
 			assertEquals(
 				Arrays.asList(irrelevantWebUrl), (List<WebUrl>)page.getItems());
-			assertValid(page);
+			assertValid(
+				page,
+				testGetOrganizationWebUrlsPage_getExpectedActions(
+					irrelevantOrganizationId));
 		}
 
 		WebUrl webUrl1 = testGetOrganizationWebUrlsPage_addWebUrl(
@@ -229,7 +232,19 @@ public abstract class BaseWebUrlResourceTestCase {
 
 		assertEqualsIgnoringOrder(
 			Arrays.asList(webUrl1, webUrl2), (List<WebUrl>)page.getItems());
-		assertValid(page);
+		assertValid(
+			page,
+			testGetOrganizationWebUrlsPage_getExpectedActions(organizationId));
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetOrganizationWebUrlsPage_getExpectedActions(
+				String organizationId)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
 	}
 
 	protected WebUrl testGetOrganizationWebUrlsPage_addWebUrl(
@@ -276,7 +291,10 @@ public abstract class BaseWebUrlResourceTestCase {
 
 			assertEquals(
 				Arrays.asList(irrelevantWebUrl), (List<WebUrl>)page.getItems());
-			assertValid(page);
+			assertValid(
+				page,
+				testGetUserAccountWebUrlsPage_getExpectedActions(
+					irrelevantUserAccountId));
 		}
 
 		WebUrl webUrl1 = testGetUserAccountWebUrlsPage_addWebUrl(
@@ -291,7 +309,18 @@ public abstract class BaseWebUrlResourceTestCase {
 
 		assertEqualsIgnoringOrder(
 			Arrays.asList(webUrl1, webUrl2), (List<WebUrl>)page.getItems());
-		assertValid(page);
+		assertValid(
+			page,
+			testGetUserAccountWebUrlsPage_getExpectedActions(userAccountId));
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetUserAccountWebUrlsPage_getExpectedActions(Long userAccountId)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
 	}
 
 	protected WebUrl testGetUserAccountWebUrlsPage_addWebUrl(
@@ -482,6 +511,12 @@ public abstract class BaseWebUrlResourceTestCase {
 	}
 
 	protected void assertValid(Page<WebUrl> page) {
+		assertValid(page, Collections.emptyMap());
+	}
+
+	protected void assertValid(
+		Page<WebUrl> page, Map<String, Map<String, String>> expectedActions) {
+
 		boolean valid = false;
 
 		java.util.Collection<WebUrl> webUrls = page.getItems();
@@ -496,6 +531,20 @@ public abstract class BaseWebUrlResourceTestCase {
 		}
 
 		Assert.assertTrue(valid);
+
+		Map<String, Map<String, String>> actions = page.getActions();
+
+		for (String key : expectedActions.keySet()) {
+			Map action = actions.get(key);
+
+			Assert.assertNotNull(key + " does not contain an action", action);
+
+			Map expectedAction = expectedActions.get(key);
+
+			Assert.assertEquals(
+				expectedAction.get("method"), action.get("method"));
+			Assert.assertEquals(expectedAction.get("href"), action.get("href"));
+		}
 	}
 
 	protected String[] getAdditionalAssertFieldNames() {
@@ -636,14 +685,16 @@ public abstract class BaseWebUrlResourceTestCase {
 	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
 		throws Exception {
 
-		Stream<java.lang.reflect.Field> stream = Stream.of(
-			ReflectionUtil.getDeclaredFields(clazz));
+		return TransformUtil.transform(
+			ReflectionUtil.getDeclaredFields(clazz),
+			field -> {
+				if (field.isSynthetic()) {
+					return null;
+				}
 
-		return stream.filter(
-			field -> !field.isSynthetic()
-		).toArray(
-			java.lang.reflect.Field[]::new
-		);
+				return field;
+			},
+			java.lang.reflect.Field.class);
 	}
 
 	protected java.util.Collection<EntityField> getEntityFields()
@@ -660,6 +711,10 @@ public abstract class BaseWebUrlResourceTestCase {
 		EntityModel entityModel = entityModelResource.getEntityModel(
 			new MultivaluedHashMap());
 
+		if (entityModel == null) {
+			return Collections.emptyList();
+		}
+
 		Map<String, EntityField> entityFieldsMap =
 			entityModel.getEntityFieldsMap();
 
@@ -669,18 +724,18 @@ public abstract class BaseWebUrlResourceTestCase {
 	protected List<EntityField> getEntityFields(EntityField.Type type)
 		throws Exception {
 
-		java.util.Collection<EntityField> entityFields = getEntityFields();
+		return TransformUtil.transform(
+			getEntityFields(),
+			entityField -> {
+				if (!Objects.equals(entityField.getType(), type) ||
+					ArrayUtil.contains(
+						getIgnoredEntityFieldNames(), entityField.getName())) {
 
-		Stream<EntityField> stream = entityFields.stream();
+					return null;
+				}
 
-		return stream.filter(
-			entityField ->
-				Objects.equals(entityField.getType(), type) &&
-				!ArrayUtil.contains(
-					getIgnoredEntityFieldNames(), entityField.getName())
-		).collect(
-			Collectors.toList()
-		);
+				return entityField;
+			});
 	}
 
 	protected String getFilterString(
