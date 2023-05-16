@@ -14,22 +14,35 @@
 
 package com.liferay.osb.faro.engine.client.constants;
 
-import org.apache.commons.lang3.StringUtils;
+import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.PropsUtil;
+
 
 /**
  * @author André Miranda
  */
 public class TokenConstants {
 
-	public static final String OSB_ASAH_SECURITY_TOKEN;
+	public static final String OSB_ASAH_SECURITY_TOKEN = GetterUtil.getString(
+		PropsUtil.get(FaroPropsKeys.OSB_ASAH_SECURITY_TOKEN),
+		System.getenv("OSB_ASAH_SECURITY_TOKEN"));
 
-	static {
-		if (StringUtils.isNotBlank(System.getenv("OSB_ASAH_SECURITY_TOKEN"))) {
-			OSB_ASAH_SECURITY_TOKEN = System.getenv("OSB_ASAH_SECURITY_TOKEN");
-		}
-		else {
-			OSB_ASAH_SECURITY_TOKEN = System.getenv("OSB_ASAH_TOKEN");
-		}
-	}
+//	static {
+//		String osbAsahSecurityToken = GetterUtil.getString(
+//			PropsUtil.get(FaroPropsKeys.OSB_ASAH_SECURITY_TOKEN),
+//			System.getenv("OSB_ASAH_SECURITY_TOKEN"));
+//
+//		if (StringUtils.isNotBlank(osbAsahSecurityToken)) {
+//			OSB_ASAH_SECURITY_TOKEN = osbAsahSecurityToken;
+//		}
+//		else {
+//			OSB_ASAH_SECURITY_TOKEN = GetterUtil.getString(
+//				PropsUtil.get(FaroPropsKeys.OSB_ASAH_TOKEN),
+//				System.getenv("OSB_ASAH_TOKEN"));
+//		}
+//	}
+
+
+
 
 }

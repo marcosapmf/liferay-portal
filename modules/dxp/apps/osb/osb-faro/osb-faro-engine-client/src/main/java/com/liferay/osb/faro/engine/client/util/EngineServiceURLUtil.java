@@ -17,11 +17,14 @@ package com.liferay.osb.faro.engine.client.util;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import com.liferay.osb.faro.engine.client.constants.FaroPropsKeys;
 import com.liferay.osb.faro.engine.client.exception.FaroEngineClientException;
 import com.liferay.osb.faro.engine.client.model.LCPProject;
 import com.liferay.osb.faro.model.FaroProject;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 
 import java.net.URI;
@@ -47,16 +50,17 @@ public class EngineServiceURLUtil {
 			return url;
 		}
 
-		return _getExternalURL(url);
+//		return _getExternalURL(url);
+		return  url;
 	}
 
 	public static String getBackendURL(FaroProject faroProject, String path)
 		throws URISyntaxException {
 
-		String url = StringUtil.replace(
-			_getClusterBaseURL(faroProject), "{service}", "osbasahbackend");
+//		String url = StringUtil.replace(
+//			_getClusterBaseURL(faroProject), "{service}", "osbasahbackend");
 
-		return _getURL(faroProject, url, path);
+		return _getURL(faroProject, "http://localhost:8086", path);
 	}
 
 	public static String getPublisherExternalURL(FaroProject faroProject)
@@ -68,16 +72,17 @@ public class EngineServiceURLUtil {
 			return url;
 		}
 
-		return _getExternalURL(url);
+//		return _getExternalURL(url);
+		return url;
 	}
 
 	public static String getPublisherURL(FaroProject faroProject, String path)
 		throws URISyntaxException {
 
-		String url = StringUtil.replace(
-			_getClusterBaseURL(faroProject), "{service}", "osbasahpublisher");
+//		String url = StringUtil.replace(
+//			_getClusterBaseURL(faroProject), "{service}", "osbasahpublisher");
 
-		return _getURL(faroProject, url, path);
+		return _getURL(faroProject, "http://localhost:8084", path);
 	}
 
 	private static String _getClusterBaseURL(FaroProject faroProject) {
@@ -135,14 +140,15 @@ public class EngineServiceURLUtil {
 		return uri.toString();
 	}
 
-	private static final String _OSB_ASAH_BACKEND_URL = System.getenv(
-		"OSB_ASAH_BACKEND_URL");
+	private static final String _OSB_ASAH_BACKEND_URL = GetterUtil.getString(
+		PropsUtil.get(FaroPropsKeys.OSB_ASAH_BACKEND_URL), System.getenv(
+		"OSB_ASAH_BACKEND_URL"));
 
-	private static final String _OSB_ASAH_LOCAL_CLUSTER_URL = System.getenv(
-		"OSB_ASAH_LOCAL_CLUSTER_URL");
+	private static final String _OSB_ASAH_LOCAL_CLUSTER_URL = GetterUtil.getString(PropsUtil.get(FaroPropsKeys.OSB_ASAH_LOCAL_CLUSTER_URL), System.getenv(
+		"OSB_ASAH_LOCAL_CLUSTER_URL"));
 
-	private static final String _OSB_ASAH_PUBLISHER_URL = System.getenv(
-		"OSB_ASAH_PUBLISHER_URL");
+	private static final String _OSB_ASAH_PUBLISHER_URL = GetterUtil.getString( PropsUtil.get(FaroPropsKeys.OSB_ASAH_PUBLISHER_URL), System.getenv(
+		"OSB_ASAH_PUBLISHER_URL"));
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		EngineServiceURLUtil.class);

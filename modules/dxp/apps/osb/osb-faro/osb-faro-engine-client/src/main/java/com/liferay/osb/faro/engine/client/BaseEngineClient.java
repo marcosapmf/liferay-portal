@@ -17,7 +17,6 @@ package com.liferay.osb.faro.engine.client;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import com.liferay.osb.faro.engine.client.cache.FaroCache;
 import com.liferay.osb.faro.engine.client.exception.FaroEngineClientException;
 import com.liferay.osb.faro.engine.client.http.client.AuditClientHttpRequestInterceptor;
@@ -43,22 +42,9 @@ import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
-
-import java.net.URI;
-import java.net.URISyntaxException;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-
 import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
 import org.apache.http.client.methods.HttpUriRequest;
-
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.cache.Cache;
 import org.springframework.core.ParameterizedTypeReference;
@@ -76,6 +62,16 @@ import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
+
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author Matthew Kong
