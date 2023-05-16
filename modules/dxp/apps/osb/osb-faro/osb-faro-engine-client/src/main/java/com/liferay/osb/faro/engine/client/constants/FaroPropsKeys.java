@@ -12,5 +12,9 @@ public class FaroPropsKeys {
 
 	public static final String OSB_ASAH_TOKEN = "osb.asah.token";
 
+	public static final String OSB_ASAH_BACKEND_LOCAL_URL = "osb.asah.backend.local.url";
+
+	public static final String OSB_ASAH_PUBLISHER_LOCAL_URL = "osb.asah.publisher.local.url";
+
 
 }

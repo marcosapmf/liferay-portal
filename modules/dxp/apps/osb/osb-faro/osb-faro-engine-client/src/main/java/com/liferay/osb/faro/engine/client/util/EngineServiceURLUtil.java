@@ -46,21 +46,27 @@ public class EngineServiceURLUtil {
 
 		String url = getBackendURL(faroProject, null);
 
-		if (_OSB_ASAH_BACKEND_URL.contains("{wedeploy}")) {
+		if ((StringUtils.isNotBlank(_OSB_ASAH_BACKEND_URL) && _OSB_ASAH_BACKEND_URL.contains("{wedeploy}")) || StringUtils.contains(url, PropsUtil.get(FaroPropsKeys.OSB_ASAH_BACKEND_LOCAL_URL))) {
 			return url;
 		}
 
-//		return _getExternalURL(url);
-		return  url;
+		return _getExternalURL(url);
 	}
 
 	public static String getBackendURL(FaroProject faroProject, String path)
 		throws URISyntaxException {
+		String url = null;
 
-//		String url = StringUtil.replace(
-//			_getClusterBaseURL(faroProject), "{service}", "osbasahbackend");
+		if(StringUtils.isNotBlank(PropsUtil.get(FaroPropsKeys.OSB_ASAH_BACKEND_LOCAL_URL))){
+			url = PropsUtil.get(FaroPropsKeys.OSB_ASAH_BACKEND_LOCAL_URL);
 
-		return _getURL(faroProject, "http://localhost:8086", path);
+		}
+		else{
+			url = StringUtil.replace(
+				_getClusterBaseURL(faroProject), "{service}", "osbasahbackend");
+		}
+
+		return _getURL(faroProject, url, path);
 	}
 
 	public static String getPublisherExternalURL(FaroProject faroProject)
@@ -68,21 +74,28 @@ public class EngineServiceURLUtil {
 
 		String url = getPublisherURL(faroProject, null);
 
-		if (_OSB_ASAH_PUBLISHER_URL.contains("{wedeploy}")) {
+		if ((StringUtils.isNotBlank(_OSB_ASAH_PUBLISHER_URL) && _OSB_ASAH_PUBLISHER_URL.contains("{wedeploy}")) || StringUtils.contains(url, PropsUtil.get(FaroPropsKeys.OSB_ASAH_PUBLISHER_LOCAL_URL))) {
 			return url;
 		}
 
-//		return _getExternalURL(url);
-		return url;
+		return _getExternalURL(url);
 	}
 
 	public static String getPublisherURL(FaroProject faroProject, String path)
 		throws URISyntaxException {
 
-//		String url = StringUtil.replace(
-//			_getClusterBaseURL(faroProject), "{service}", "osbasahpublisher");
+		String url = null;
 
-		return _getURL(faroProject, "http://localhost:8084", path);
+		if(StringUtils.isNotBlank(PropsUtil.get(FaroPropsKeys.OSB_ASAH_PUBLISHER_LOCAL_URL))){
+			url = PropsUtil.get(FaroPropsKeys.OSB_ASAH_PUBLISHER_LOCAL_URL);
+
+		}
+		else{
+			url = StringUtil.replace(
+			_getClusterBaseURL(faroProject), "{service}", "osbasahpublisher");
+		}
+
+		return _getURL(faroProject, url, path);
 	}
 
 	private static String _getClusterBaseURL(FaroProject faroProject) {
