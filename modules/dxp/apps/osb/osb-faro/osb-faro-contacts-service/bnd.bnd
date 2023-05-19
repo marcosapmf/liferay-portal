@@ -3,4 +3,10 @@ Bundle-SymbolicName: com.liferay.osb.faro.contacts.service
 Bundle-Version: 1.0.0
 Liferay-Require-SchemaVersion: 2.0.0
 Liferay-Service: true
+Import-Package:\
+	com.liferay.portal.kernel.dao.db;version="[1.0.0,9999.0.0)",\
+	com.liferay.portal.kernel.service;version="[4.0.0,9999.0.0)",\
+	com.liferay.portal.kernel.util;version="[7.38.0,9999.0.0)",\
+	\
+	*
 -dsannotations-options: inherit

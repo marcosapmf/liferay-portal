@@ -45,4 +45,4 @@ COPY *.war $LIFERAY_HOME/osgi/war/
 
 # Modules
 
-COPY *.jar $LIFERAY_HOME/osgi/modules/
+COPY *osb.faro*.jar $LIFERAY_HOME/osgi/modules/
