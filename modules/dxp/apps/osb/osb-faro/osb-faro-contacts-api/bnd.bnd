@@ -1,6 +1,11 @@
 Bundle-Name: Liferay OSB Faro Contacts API
 Bundle-SymbolicName: com.liferay.osb.faro.contacts.api
 Bundle-Version: 1.0.0
+Import-Package:\
+	com.liferay.portal.kernel.service;version="[4.0.0,9999.0.0)",\
+	com.liferay.portal.kernel.util;version="[7.38.0,9999.0.0)",\
+	\
+	*
 Export-Package:\
 	com.liferay.osb.faro.contacts.exception,\
 	com.liferay.osb.faro.contacts.model,\

@@ -8,3 +8,8 @@ Export-Package:\
 	com.liferay.osb.faro.service,\
 	com.liferay.osb.faro.service.persistence,\
 	com.liferay.osb.faro.util
+Import-Package:\
+	com.liferay.portal.kernel.service;version="[4.0.0,9999.0.0)",\
+	com.liferay.portal.kernel.util;version="[7.38.0,9999.0.0)",\
+	\
+	*
