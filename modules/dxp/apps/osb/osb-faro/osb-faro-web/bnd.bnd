@@ -2,21 +2,20 @@ Bundle-Name: Liferay OSB Faro Web
 Bundle-SymbolicName: com.liferay.osb.faro.web
 Bundle-Version: 1.0.13
 Import-Package:\
-	com.liferay.document.library.kernel.service;version="[1.0.0,9999.0.0)",\
-    com.liferay.expando.kernel.service;version="[1.0.0,9999.0.0)",\
-    com.liferay.oauth2.provider.service;version="[4.0.64,9999.0.0)",\
-	com.liferay.portal.kernel.portlet;version="[1.0.0,9999.0.0)",\
-	com.liferay.portal.kernel.service;version="[4.0.0,9999.0.0)",\
-	com.liferay.portal.kernel.util;version="[7.38.0,9999.0.0)",\
-    com.liferay.portal.security.service.access.policy.service;version="[1.0.0,9999.0.0)",\
-	com.liferay.portal.util;version="[1.0.0,9999.0.0)",\
-
-	\
 	!jakarta.xml.bind.*,\
 	\
 	!javax.validation.*,\
 	\
 	!org.yaml.snakeyaml.*,\
+	\
+	com.liferay.document.library.kernel.service;version="[1.0.0,9999.0.0)",\
+	com.liferay.expando.kernel.service;version="[1.0.0,9999.0.0)",\
+	com.liferay.oauth2.provider.service;version="[3.0.0,9999.0.0)",\
+	com.liferay.portal.kernel.portlet;version="[1.0.0,9999.0.0)",\
+	com.liferay.portal.kernel.service;version="[4.0.0,9999.0.0)",\
+	com.liferay.portal.kernel.util;version="[7.38.0,9999.0.0)",\
+	com.liferay.portal.security.service.access.policy.service;version="[1.0.0,9999.0.0)",\
+	com.liferay.portal.util;version="[1.0.0,9999.0.0)",\
 	\
 	*
 Web-ContextPath: /osb-faro-web
