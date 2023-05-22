@@ -42,9 +42,6 @@ Import-Package:\
 	\
 	!com.jcraft.jzlib.*,\
 	\
-	com.liferay.portal.kernel.service;version="[4.0.0,9999.0.0)",\
-	com.liferay.portal.kernel.util;version="[7.38.0,9999.0.0)",\
-	\
 	!com.ning.compress.*,\
 	\
 	!com.oracle.svm.core.annotate.*,\
@@ -191,6 +188,9 @@ Import-Package:\
 	!rx.*,\
 	\
 	!sun.security.*,\
+	\
+	com.liferay.portal.kernel.service;version="[1.0.0,9999.0.0)",\
+	com.liferay.portal.kernel.util;version="[1.00.0,9999.0.0)",\
 	\
 	*
 -dsannotations-options: inherit

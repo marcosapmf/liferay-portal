@@ -4,9 +4,11 @@ Bundle-Version: 1.0.0
 Liferay-Require-SchemaVersion: 17.0.0
 Liferay-Service: true
 Import-Package:\
+	com.liferay.counter.kernel.service;version="[1.0.0,9999.0.0)",\
 	com.liferay.portal.kernel.dao.db;version="[1.0.0,9999.0.0)",\
-	com.liferay.portal.kernel.service;version="[4.0.0,9999.0.0)",\
-	com.liferay.portal.kernel.util;version="[7.38.0,9999.0.0)",\
+	com.liferay.portal.kernel.service;version="[1.0.0,9999.0.0)",\
+	com.liferay.portal.kernel.service.persistence;version="[1.0.0,9999.0.0)",\
+	com.liferay.portal.kernel.util;version="[1.0.0,9999.0.0)",\
 	\
 	*
 -dsannotations-options: inherit
