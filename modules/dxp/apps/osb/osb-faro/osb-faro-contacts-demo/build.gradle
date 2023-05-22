@@ -29,12 +29,12 @@ repositories {
 	}
 }
 
-deploy {
-	doFirst {
-		delete file(liferay.deployDir)
-	}
-
-	liferay {
-		deployDir = new File("${rootDir}/dxp/apps/osb/osb-faro/build/deploy")
-	}
-}
+//deploy {
+//	doFirst {
+//		delete file(liferay.deployDir)
+//	}
+//
+//	liferay {
+//		deployDir = new File("${rootDir}/dxp/apps/osb/osb-faro/build/deploy")
+//	}
+//}
