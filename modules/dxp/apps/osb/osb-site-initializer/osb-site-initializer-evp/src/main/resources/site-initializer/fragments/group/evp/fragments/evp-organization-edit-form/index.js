@@ -1,13 +1,7 @@
 /* eslint-disable @liferay/portal/no-global-fetch */
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 const ROLE = {
@@ -34,27 +28,6 @@ searchParams.set(
 	'fields',
 	'bankingInfo,city,contactEmail,contactName,contactPhone,country,id,organizationName,organizationSiteSocialMediaLink,smallDescription,state,street,taxId,zip'
 );
-
-function getOrganizationFormValues() {
-	const evpOrganizationForm = document.querySelector(
-		'.evp-organization-form'
-	);
-
-	if (!evpOrganizationForm) {
-		return console.error('Evp Form not found');
-	}
-
-	const organizationForm = {};
-	const formData = new FormData(evpOrganizationForm);
-
-	for (const [key, value] of Array.from(formData.entries())) {
-		if (!ignoreFields.includes(key)) {
-			organizationForm[key] = value;
-		}
-	}
-
-	return organizationForm;
-}
 
 async function getEVPOrganizations() {
 	const response = await fetch(
@@ -104,6 +77,27 @@ const ignoreFields = [
 	'organizationStatus-label',
 ];
 
+function getOrganizationFormValues() {
+	const evpOrganizationForm = document.querySelector(
+		'.evp-organization-form'
+	);
+
+	if (!evpOrganizationForm) {
+		return console.error('Evp Form not found');
+	}
+
+	const organizationForm = {};
+	const formData = new FormData(evpOrganizationForm);
+
+	for (const [key, value] of Array.from(formData.entries())) {
+		if (!ignoreFields.includes(key)) {
+			organizationForm[key] = value;
+		}
+	}
+
+	return organizationForm;
+}
+
 const organizationUpdate = async () => {
 	const organizationForm = getOrganizationFormValues();
 
@@ -126,7 +120,7 @@ const organizationUpdate = async () => {
 		},
 		method: 'PATCH',
 	});
-	localStorage.setItem('sucess', 'Sucess');
+	localStorage.setItem('success', 'Success');
 };
 
 const formInputName = document.querySelector('.submit-button');

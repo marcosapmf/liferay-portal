@@ -6,10 +6,10 @@ import debounce from 'shared/util/debounce-decorator';
 import EntityList from 'shared/components/EntityList';
 import ErrorDisplay from 'shared/components/ErrorDisplay';
 import getCN from 'classnames';
+import Loading from 'shared/components/Loading';
 import NoResultsDisplay from 'shared/components/NoResultsDisplay';
 import React from 'react';
 import SearchInput from 'shared/components/SearchInput';
-import Spinner from 'shared/components/Spinner';
 import {autoCancel, hasRequest} from 'shared/util/request-decorator';
 import {hasChanges} from 'shared/util/react';
 import {PropTypes} from 'prop-types';
@@ -98,7 +98,7 @@ export default class AssociatedSegmentsCard extends React.Component {
 				/>
 			);
 		} else if (loading) {
-			return <Spinner overlay />;
+			return <Loading overlay />;
 		} else if (!items.length) {
 			if (searchValue) {
 				return (
@@ -149,15 +149,18 @@ export default class AssociatedSegmentsCard extends React.Component {
 
 				<Card.Footer>
 					<ClayLink
+						borderless
+						button
 						className='button-root'
 						displayType='secondary'
 						href={pageUrl}
+						small
 					>
 						{Liferay.Language.get('view-all-segments')}
 
 						<ClayIcon
 							className='icon-root ml-2'
-							symbol='angle-right'
+							symbol='angle-right-small'
 						/>
 					</ClayLink>
 				</Card.Footer>

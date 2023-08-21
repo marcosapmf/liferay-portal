@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.delivery.internal.resource.v1_0;
@@ -32,6 +23,7 @@ import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.SetUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.odata.filter.ExpressionConvert;
@@ -799,22 +791,23 @@ public abstract class BaseMessageBoardAttachmentResourceImpl
 			Map<String, Serializable> parameters)
 		throws Exception {
 
-		UnsafeConsumer<MessageBoardAttachment, Exception>
-			messageBoardAttachmentUnsafeConsumer = null;
+		UnsafeFunction
+			<MessageBoardAttachment, MessageBoardAttachment, Exception>
+				messageBoardAttachmentUnsafeFunction = null;
 
 		String createStrategy = (String)parameters.getOrDefault(
 			"createStrategy", "INSERT");
 
-		if ("INSERT".equalsIgnoreCase(createStrategy)) {
+		if (StringUtil.equalsIgnoreCase(createStrategy, "INSERT")) {
 			if (parameters.containsKey("messageBoardMessageId")) {
-				messageBoardAttachmentUnsafeConsumer = messageBoardAttachment ->
+				messageBoardAttachmentUnsafeFunction = messageBoardAttachment ->
 					postMessageBoardMessageMessageBoardAttachment(
 						_parseLong(
 							(String)parameters.get("messageBoardMessageId")),
 						(MultipartBody)parameters.get("multipartBody"));
 			}
 			else if (parameters.containsKey("messageBoardThreadId")) {
-				messageBoardAttachmentUnsafeConsumer = messageBoardAttachment ->
+				messageBoardAttachmentUnsafeFunction = messageBoardAttachment ->
 					postMessageBoardThreadMessageBoardAttachment(
 						_parseLong(
 							(String)parameters.get("messageBoardThreadId")),
@@ -826,21 +819,26 @@ public abstract class BaseMessageBoardAttachmentResourceImpl
 			}
 		}
 
-		if (messageBoardAttachmentUnsafeConsumer == null) {
+		if (messageBoardAttachmentUnsafeFunction == null) {
 			throw new NotSupportedException(
 				"Create strategy \"" + createStrategy +
 					"\" is not supported for MessageBoardAttachment");
 		}
 
-		if (contextBatchUnsafeConsumer != null) {
+		if (contextBatchUnsafeBiConsumer != null) {
+			contextBatchUnsafeBiConsumer.accept(
+				messageBoardAttachments, messageBoardAttachmentUnsafeFunction);
+		}
+		else if (contextBatchUnsafeConsumer != null) {
 			contextBatchUnsafeConsumer.accept(
-				messageBoardAttachments, messageBoardAttachmentUnsafeConsumer);
+				messageBoardAttachments,
+				messageBoardAttachmentUnsafeFunction::apply);
 		}
 		else {
 			for (MessageBoardAttachment messageBoardAttachment :
 					messageBoardAttachments) {
 
-				messageBoardAttachmentUnsafeConsumer.accept(
+				messageBoardAttachmentUnsafeFunction.apply(
 					messageBoardAttachment);
 			}
 		}
@@ -948,6 +946,16 @@ public abstract class BaseMessageBoardAttachmentResourceImpl
 
 	public void setContextAcceptLanguage(AcceptLanguage contextAcceptLanguage) {
 		this.contextAcceptLanguage = contextAcceptLanguage;
+	}
+
+	public void setContextBatchUnsafeBiConsumer(
+		UnsafeBiConsumer
+			<Collection<MessageBoardAttachment>,
+			 UnsafeFunction
+				 <MessageBoardAttachment, MessageBoardAttachment, Exception>,
+			 Exception> contextBatchUnsafeBiConsumer) {
+
+		this.contextBatchUnsafeBiConsumer = contextBatchUnsafeBiConsumer;
 	}
 
 	public void setContextBatchUnsafeConsumer(
@@ -1209,6 +1217,11 @@ public abstract class BaseMessageBoardAttachmentResourceImpl
 	}
 
 	protected AcceptLanguage contextAcceptLanguage;
+	protected UnsafeBiConsumer
+		<Collection<MessageBoardAttachment>,
+		 UnsafeFunction
+			 <MessageBoardAttachment, MessageBoardAttachment, Exception>,
+		 Exception> contextBatchUnsafeBiConsumer;
 	protected UnsafeBiConsumer
 		<Collection<MessageBoardAttachment>,
 		 UnsafeConsumer<MessageBoardAttachment, Exception>, Exception>

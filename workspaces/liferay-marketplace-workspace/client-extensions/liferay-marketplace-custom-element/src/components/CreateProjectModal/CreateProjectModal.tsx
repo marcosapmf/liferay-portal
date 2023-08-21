@@ -1,3 +1,8 @@
+/**
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
+ */
+
 import ClayButton from '@clayui/button';
 import ClayModal, {useModal} from '@clayui/modal';
 import classNames from 'classnames';
@@ -10,7 +15,8 @@ import {
 	getProductSKU,
 	getProducts,
 	patchOrderByERC,
-	postOrder,
+	postCartByChannelId,
+	postCheckoutCart,
 } from '../../utils/api';
 import {getCustomFieldValue} from '../../utils/customFieldUtil';
 import {ProjectDetails} from './ProjectDetails';
@@ -27,14 +33,14 @@ interface CreateProjectModalProps {
 
 const multiStepItemsInitialValues = [
 	{
+		completed: false,
 		label: 'Rules & Guidelines',
 		selected: true,
-		completed: false,
 	},
 	{
+		completed: false,
 		label: 'Project Details',
 		selected: false,
-		completed: false,
 	},
 ];
 
@@ -81,43 +87,63 @@ export function CreateProjectModal({
 				({name}) => name['en_US'] === 'Project - 60 days'
 			);
 
-			const newOrder: Order = {
-				account: {
-					id: selectedAccount.id,
-					type: selectedAccount.type,
-				},
-				accountId: selectedAccount.id,
-				channel: {
-					currencyCode: currentChannel.currencyCode,
-					id: currentChannel.id,
-					type: currentChannel.type,
-				},
-				channelId: currentChannel.id,
-				currencyCode: currentChannel.currencyCode,
-				orderItems: [
+			const cart: Partial<Cart> = {
+				accountId: selectedAccount?.id as number,
+				cartItems: [
 					{
-						skuId: projectSKU.id,
-						unitPriceWithTaxAmount: 0,
+						price: {
+							currency: currentChannel.currencyCode,
+							discount: 0,
+							finalPrice: 0,
+							price: 0,
+						},
+						productId: projectProduct.id,
+						quantity: 1,
+						settings: {
+							maxQuantity: 1,
+						},
+						skuId: projectSKU.id as number,
 					},
 				],
+				currencyCode: currentChannel.currencyCode,
 				orderTypeExternalReferenceCode:
 					projectOrderType?.externalReferenceCode,
 				orderTypeId: projectOrderType?.id as number,
-				orderStatus: 1,
-				marketplaceOrderType: projectOrderType?.externalReferenceCode,
 			};
 
-			const orderResponse = await postOrder(newOrder);
+			let newCart: Partial<Cart> = {};
+
+			newCart = {
+				...cart,
+			};
+
+			const cartResponse = await postCartByChannelId({
+				cartBody: newCart,
+				channelId: currentChannel.id,
+			});
+
+			const cartCheckoutResponse = await postCheckoutCart({
+				cartId: cartResponse.id,
+			});
+
+			const newOrderValues = {
+				orderStatus: 1,
+			};
 
 			const orderCustomFields = {
 				customFields: {
-					'Project Name': projectName,
 					'Github username': githubUsername,
+					'Project Name': projectName,
 				},
 			};
 
 			await patchOrderByERC(
-				orderResponse.externalReferenceCode as string,
+				cartCheckoutResponse.orderUUID,
+				newOrderValues
+			);
+
+			await patchOrderByERC(
+				cartCheckoutResponse.orderUUID,
 				orderCustomFields
 			);
 
@@ -136,8 +162,11 @@ export function CreateProjectModal({
 				<div className="create-project-modal-multi-step-container">
 					<div className="create-project-modal-multi-step-divider" />
 
-					{multiStepItems.map((multiStepItem) => (
-						<div className="create-project-modal-multi-step-item-container">
+					{multiStepItems.map((multiStepItem, i) => (
+						<div
+							className="create-project-modal-multi-step-item-container"
+							key={multiStepItem.label + i}
+						>
 							<img
 								alt="Circle Icon"
 								className={classNames(
@@ -177,7 +206,7 @@ export function CreateProjectModal({
 					<RulesAndGuidelines />
 				) : (
 					<ProjectDetails
-						githubUsername={githubUsername}
+						githubUsername={githubUsername as string}
 						onGithubUsernameChange={setGithubUsername}
 						onProjectNameChange={setProjectName}
 						projectName={projectName}

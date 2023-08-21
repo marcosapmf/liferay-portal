@@ -13,9 +13,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -348,6 +348,10 @@ definition {
 			groupName = "Site Name",
 			mimeType = "application/msword",
 			sourceFileName = "Document_1.doc");
+
+		Site.openSiteSettingsAdmin(siteURLKey = "site-name");
+
+		Site.manageMembershipOptions(allowManualMembershipManagement = "true");
 
 		ApplicationsMenu.gotoPortlet(
 			category = "Users",
@@ -715,7 +719,7 @@ definition {
 			dmDocumentTitle = "Document_1.doc",
 			pageName = "Documents and Media Page");
 
-		for (var roleTitle : list "guest,site-member") {
+		for (var roleTitle : list "Guest,Site Member") {
 			Role.removePermissionPG(
 				permissionDefinitionKey = "CONTENT_PERMISSIONS_VIEW_CHECKBOX",
 				roleTitle = ${roleTitle});
@@ -906,6 +910,10 @@ definition {
 			groupName = "Site Name",
 			layoutName = "Documents and Media Page",
 			widgetName = "Documents and Media");
+
+		Site.openSiteSettingsAdmin(siteURLKey = "site-name");
+
+		Site.manageMembershipOptions(allowManualMembershipManagement = "true");
 
 		ApplicationsMenu.gotoPortlet(
 			category = "Users",
@@ -1149,6 +1157,10 @@ definition {
 			groupName = "Site Name",
 			mimeType = "application/msword",
 			sourceFileName = "Document_1.doc");
+
+		Site.openSiteSettingsAdmin(siteURLKey = "site-name");
+
+		Site.manageMembershipOptions(allowManualMembershipManagement = "true");
 
 		ApplicationsMenu.gotoPortlet(
 			category = "Users",

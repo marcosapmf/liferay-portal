@@ -1,22 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.action;
 
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.exception.NoSuchUserException;
-import com.liferay.portal.kernel.exception.UserLockoutException;
 import com.liferay.portal.kernel.exception.UserPasswordException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -89,17 +79,8 @@ public class UpdatePasswordAction implements Action {
 			if (ticket != null) {
 				User user = UserLocalServiceUtil.getUser(ticket.getClassPK());
 
-				try {
-					UserLocalServiceUtil.checkLockout(user);
-
-					UserLocalServiceUtil.updatePasswordReset(
-						user.getUserId(), true);
-				}
-				catch (UserLockoutException userLockoutException) {
-					SessionErrors.add(
-						httpServletRequest, userLockoutException.getClass(),
-						userLockoutException);
-				}
+				UserLocalServiceUtil.updatePasswordReset(
+					user.getUserId(), true);
 			}
 
 			User user = PortalUtil.getUser(httpServletRequest);
@@ -294,7 +275,7 @@ public class UpdatePasswordAction implements Action {
 
 				user.setReminderQueryAnswer(null);
 
-				UserLocalServiceUtil.updateUser(user);
+				user = UserLocalServiceUtil.updateUser(user);
 			}
 
 			HttpSession httpSession = httpServletRequest.getSession();
@@ -316,6 +297,8 @@ public class UpdatePasswordAction implements Action {
 
 		if (ticket != null) {
 			TicketLocalServiceUtil.deleteTicket(ticket);
+
+			UserLocalServiceUtil.updateLockout(user, false);
 
 			UserLocalServiceUtil.updatePasswordReset(userId, false);
 

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.admin.order.internal.resource.v1_0;
@@ -28,6 +19,7 @@ import com.liferay.commerce.model.CommerceOrderItem;
 import com.liferay.commerce.model.CommerceOrderType;
 import com.liferay.commerce.model.CommerceShippingMethod;
 import com.liferay.commerce.order.engine.CommerceOrderEngine;
+import com.liferay.commerce.payment.engine.CommercePaymentEngine;
 import com.liferay.commerce.product.model.CommerceChannel;
 import com.liferay.commerce.product.service.CPInstanceService;
 import com.liferay.commerce.product.service.CommerceChannelLocalService;
@@ -50,6 +42,7 @@ import com.liferay.headless.commerce.admin.order.resource.v1_0.OrderResource;
 import com.liferay.headless.commerce.core.util.DateConfig;
 import com.liferay.headless.commerce.core.util.ExpandoUtil;
 import com.liferay.headless.commerce.core.util.ServiceContextHelper;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.Sort;
@@ -671,8 +664,6 @@ public class OrderResourceImpl extends BaseOrderResourceImpl {
 					commerceOrder.getCommerceAccountId())),
 			false);
 
-		// Requested Delivery Date
-
 		_commerceOrderService.updateCommerceOrderPrices(
 			commerceOrder.getCommerceOrderId(),
 			(BigDecimal)GetterUtil.getNumber(
@@ -815,16 +806,17 @@ public class OrderResourceImpl extends BaseOrderResourceImpl {
 				requestedDeliveryDate.getMinute(), serviceContext);
 		}
 		else {
-
-			// Printed note
-
 			commerceOrder = _commerceOrderService.updatePrintedNote(
 				commerceOrder.getCommerceOrderId(),
 				GetterUtil.getString(
 					order.getPrintedNote(), commerceOrder.getPrintedNote()));
 		}
 
-		// Expando
+		commerceOrder = _commercePaymentEngine.updateOrderPaymentStatus(
+			commerceOrder.getCommerceOrderId(),
+			GetterUtil.getInteger(
+				order.getPaymentStatus(), commerceOrder.getPaymentStatus()),
+			commerceOrder.getTransactionId(), StringPool.BLANK);
 
 		Map<String, ?> customFields = order.getCustomFields();
 
@@ -833,8 +825,6 @@ public class OrderResourceImpl extends BaseOrderResourceImpl {
 				contextCompany.getCompanyId(), CommerceOrder.class,
 				commerceOrder.getPrimaryKey(), customFields);
 		}
-
-		// Update nested resources
 
 		commerceOrder = _updateNestedResources(
 			order, commerceOrder,
@@ -845,7 +835,8 @@ public class OrderResourceImpl extends BaseOrderResourceImpl {
 			(commerceOrder.getOrderStatus() != order.getOrderStatus())) {
 
 			commerceOrder = _commerceOrderEngine.transitionCommerceOrder(
-				commerceOrder, order.getOrderStatus(), contextUser.getUserId());
+				commerceOrder, order.getOrderStatus(), contextUser.getUserId(),
+				true);
 		}
 
 		return commerceOrder;
@@ -885,6 +876,9 @@ public class OrderResourceImpl extends BaseOrderResourceImpl {
 
 	@Reference
 	private CommerceOrderTypeService _commerceOrderTypeService;
+
+	@Reference
+	private CommercePaymentEngine _commercePaymentEngine;
 
 	@Reference
 	private CommerceShippingMethodService _commerceShippingMethodService;

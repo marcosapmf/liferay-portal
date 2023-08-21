@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.rest.internal.dto.v1_0.converter;
@@ -27,6 +18,7 @@ import com.liferay.object.constants.ObjectActionKeys;
 import com.liferay.object.constants.ObjectFieldConstants;
 import com.liferay.object.constants.ObjectFieldSettingConstants;
 import com.liferay.object.constants.ObjectRelationshipConstants;
+import com.liferay.object.entry.util.ObjectEntryDTOConverterUtil;
 import com.liferay.object.entry.util.ObjectEntryValuesUtil;
 import com.liferay.object.field.setting.util.ObjectFieldSettingUtil;
 import com.liferay.object.model.ObjectDefinition;
@@ -44,7 +36,6 @@ import com.liferay.object.rest.dto.v1_0.TaxonomyCategoryBrief;
 import com.liferay.object.rest.dto.v1_0.util.CreatorUtil;
 import com.liferay.object.rest.dto.v1_0.util.LinkUtil;
 import com.liferay.object.rest.internal.dto.v1_0.util.TaxonomyCategoryBriefUtil;
-import com.liferay.object.rest.internal.util.DTOConverterUtil;
 import com.liferay.object.scope.ObjectScopeProvider;
 import com.liferay.object.scope.ObjectScopeProviderRegistry;
 import com.liferay.object.service.ObjectDefinitionLocalService;
@@ -71,6 +62,7 @@ import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ListUtil;
+import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
@@ -88,6 +80,10 @@ import com.liferay.portal.vulcan.jaxrs.extension.ExtendedEntity;
 import com.liferay.portal.vulcan.util.LocalizedMapUtil;
 
 import java.io.Serializable;
+
+import java.sql.Timestamp;
+
+import java.text.SimpleDateFormat;
 
 import java.util.HashMap;
 import java.util.List;
@@ -200,25 +196,47 @@ public class ObjectEntryDTOConverter
 							objectRelationship.getObjectDefinitionId1());
 
 					if (objectDefinition.isUnmodifiableSystemObject()) {
-						if (FeatureFlagManagerUtil.isEnabled("LPS-172094")) {
+						if (FeatureFlagManagerUtil.isEnabled("LPS-183882")) {
 							SystemObjectDefinitionManager
 								systemObjectDefinitionManager =
 									_systemObjectDefinitionManagerRegistry.
 										getSystemObjectDefinitionManager(
 											objectDefinition.getName());
 
-							relatedObjectEntryAtomicReference.set(
-								(Serializable)DTOConverterUtil.toDTO(
-									systemObjectDefinitionManager.
-										getBaseModelByExternalReferenceCode(
-											systemObjectDefinitionManager.
-												getExternalReferenceCode(
-													primaryKey),
-											objectDefinition.getCompanyId()),
+							BaseModel<?> baseModel =
+								systemObjectDefinitionManager.
+									getBaseModelByExternalReferenceCode(
+										systemObjectDefinitionManager.
+											getBaseModelExternalReferenceCode(
+												primaryKey),
+										objectDefinition.getCompanyId());
+
+							Map<String, Object> values =
+								ObjectEntryDTOConverterUtil.toValues(
+									baseModel,
 									dtoConverterContext.
 										getDTOConverterRegistry(),
-									systemObjectDefinitionManager,
-									dtoConverterContext.getUser()));
+									objectDefinition.getName(),
+									_systemObjectDefinitionManagerRegistry,
+									dtoConverterContext.getUser());
+
+							if (MapUtil.isNotEmpty(values)) {
+								ObjectField objectField =
+									_objectFieldLocalService.fetchObjectField(
+										objectDefinition.
+											getTitleObjectFieldId());
+
+								values.put(
+									objectField.getName(),
+									ObjectEntryValuesUtil.getTitleFieldValue(
+										objectField.getBusinessType(),
+										baseModel.getModelAttributes(),
+										objectField,
+										dtoConverterContext.getUser(), values));
+							}
+
+							relatedObjectEntryAtomicReference.set(
+								(Serializable)values);
 						}
 						else {
 							relatedObjectEntryAtomicReference.set(
@@ -314,12 +332,8 @@ public class ObjectEntryDTOConverter
 							nestedFieldName);
 
 				if ((objectRelationship == null) ||
-					(!Objects.equals(
-						objectRelationship.getType(),
-						ObjectRelationshipConstants.TYPE_MANY_TO_MANY) &&
-					 !Objects.equals(
-						 objectRelationship.getType(),
-						 ObjectRelationshipConstants.TYPE_ONE_TO_MANY))) {
+					!objectRelationship.isAllowedObjectRelationshipType(
+						objectRelationship.getType())) {
 
 					return null;
 				}
@@ -342,13 +356,9 @@ public class ObjectEntryDTOConverter
 				List<?> relatedModels =
 					objectRelatedModelsProvider.getRelatedModels(
 						groupId, objectRelationship.getObjectRelationshipId(),
-						primaryKey, QueryUtil.ALL_POS, QueryUtil.ALL_POS);
+						primaryKey, null, QueryUtil.ALL_POS, QueryUtil.ALL_POS);
 
 				if (relatedObjectDefinition.isUnmodifiableSystemObject()) {
-					if (!FeatureFlagManagerUtil.isEnabled("LPS-165819")) {
-						return null;
-					}
-
 					SystemObjectDefinitionManager
 						systemObjectDefinitionManager =
 							_systemObjectDefinitionManagerRegistry.
@@ -440,7 +450,7 @@ public class ObjectEntryDTOConverter
 
 				return TransformUtil.transformToArray(
 					_auditEventLocalService.getAuditEvents(
-						0, 0, null, null, null, null, null,
+						0, 0, 0, null, null, null, null, null,
 						String.valueOf(objectEntry.getObjectEntryId()), null,
 						null, null, 0, null, false, QueryUtil.ALL_POS,
 						QueryUtil.ALL_POS),
@@ -570,11 +580,11 @@ public class ObjectEntryDTOConverter
 		throws Exception {
 
 		DTOConverter<BaseModel<?>, ?> dtoConverter =
-			DTOConverterUtil.getDTOConverter(
+			ObjectEntryDTOConverterUtil.getDTOConverter(
 				dtoConverterContext.getDTOConverterRegistry(),
 				systemObjectDefinitionManager);
 
-		Object dto = DTOConverterUtil.toDTO(
+		Object dto = ObjectEntryDTOConverterUtil.toDTO(
 			baseModel, dtoConverterContext.getDTOConverterRegistry(),
 			systemObjectDefinitionManager, dtoConverterContext.getUser());
 
@@ -609,46 +619,20 @@ public class ObjectEntryDTOConverter
 				objectDefinition.getObjectDefinitionId(), false);
 
 		for (ObjectField objectField : objectFields) {
+			if (FeatureFlagManagerUtil.isEnabled("LPS-172017") &&
+				objectField.isLocalized()) {
+
+				map.put(
+					objectField.getI18nObjectFieldName(),
+					values.get(objectField.getI18nObjectFieldName()));
+			}
+
 			String objectFieldName = objectField.getName();
 
 			Serializable serializable = values.get(objectFieldName);
 
-			if (StringUtil.equals(
-					objectField.getBusinessType(),
-					ObjectFieldConstants.BUSINESS_TYPE_MULTISELECT_PICKLIST)) {
-
-				if (objectField.getListTypeDefinitionId() == 0) {
-					continue;
-				}
-
-				map.put(
-					objectFieldName,
-					TransformUtil.transformToList(
-						StringUtil.split(
-							(String)serializable, StringPool.COMMA_AND_SPACE),
-						key -> _getListEntry(
-							dtoConverterContext, key,
-							objectField.getListTypeDefinitionId())));
-			}
-			else if (StringUtil.equals(
-						objectField.getBusinessType(),
-						ObjectFieldConstants.BUSINESS_TYPE_PICKLIST)) {
-
-				if (objectField.getListTypeDefinitionId() == 0) {
-					continue;
-				}
-
-				ListEntry listEntry = _getListEntry(
-					dtoConverterContext, (String)serializable,
-					objectField.getListTypeDefinitionId());
-
-				if (listEntry != null) {
-					map.put(objectFieldName, listEntry);
-				}
-			}
-			else if (Objects.equals(
-						objectField.getBusinessType(),
-						ObjectFieldConstants.BUSINESS_TYPE_ATTACHMENT)) {
+			if (objectField.compareBusinessType(
+					ObjectFieldConstants.BUSINESS_TYPE_ATTACHMENT)) {
 
 				long fileEntryId = GetterUtil.getLong(
 					values.get(objectField.getName()));
@@ -674,8 +658,64 @@ public class ObjectEntryDTOConverter
 
 				map.put(objectFieldName, fileEntry);
 			}
-			else if (Objects.equals(
-						objectField.getBusinessType(),
+			else if (objectField.compareBusinessType(
+						ObjectFieldConstants.BUSINESS_TYPE_DATE_TIME)) {
+
+				Timestamp timestamp = (Timestamp)serializable;
+
+				if (timestamp == null) {
+					continue;
+				}
+
+				String pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS";
+
+				if (StringUtil.equals(
+						ObjectFieldSettingUtil.getValue(
+							ObjectFieldSettingConstants.NAME_TIME_STORAGE,
+							objectField),
+						ObjectFieldSettingConstants.VALUE_CONVERT_TO_UTC)) {
+
+					pattern += "'Z'";
+				}
+
+				SimpleDateFormat simpleDateFormat = new SimpleDateFormat(
+					pattern);
+
+				map.put(objectFieldName, simpleDateFormat.format(timestamp));
+			}
+			else if (objectField.compareBusinessType(
+						ObjectFieldConstants.
+							BUSINESS_TYPE_MULTISELECT_PICKLIST)) {
+
+				if (objectField.getListTypeDefinitionId() == 0) {
+					continue;
+				}
+
+				map.put(
+					objectFieldName,
+					TransformUtil.transformToList(
+						StringUtil.split(
+							(String)serializable, StringPool.COMMA_AND_SPACE),
+						key -> _getListEntry(
+							dtoConverterContext, key,
+							objectField.getListTypeDefinitionId())));
+			}
+			else if (objectField.compareBusinessType(
+						ObjectFieldConstants.BUSINESS_TYPE_PICKLIST)) {
+
+				if (objectField.getListTypeDefinitionId() == 0) {
+					continue;
+				}
+
+				ListEntry listEntry = _getListEntry(
+					dtoConverterContext, (String)serializable,
+					objectField.getListTypeDefinitionId());
+
+				if (listEntry != null) {
+					map.put(objectFieldName, listEntry);
+				}
+			}
+			else if (objectField.compareBusinessType(
 						ObjectFieldConstants.BUSINESS_TYPE_RICH_TEXT)) {
 
 				map.put(objectFieldName, serializable);

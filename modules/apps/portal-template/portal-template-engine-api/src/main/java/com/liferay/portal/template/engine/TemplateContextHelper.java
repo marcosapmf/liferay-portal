@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.template.engine;
@@ -24,7 +15,9 @@ import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.audit.AuditMessageFactoryUtil;
 import com.liferay.portal.kernel.audit.AuditRouterUtil;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.image.ImageToolUtil;
+import com.liferay.portal.kernel.json.JSONException;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.language.UnicodeLanguageUtil;
@@ -369,6 +362,21 @@ public class TemplateContextHelper {
 				StringPool.SPACE);
 
 			contextObjects.put("pageSubtitle", pageSubtitle);
+		}
+
+		// Feature flags
+
+		if (themeDisplay != null) {
+			try {
+				contextObjects.put(
+					"featureFlags",
+					JSONFactoryUtil.createJSONObject(
+						FeatureFlagManagerUtil.getJSON(
+							themeDisplay.getCompanyId())));
+			}
+			catch (JSONException jsonException) {
+				_log.error(jsonException);
+			}
 		}
 	}
 
@@ -1042,7 +1050,7 @@ public class TemplateContextHelper {
 			if (!HTTP.equals(protocol) && !HTTPS.equals(protocol)) {
 				throw new IOException(
 					StringBundler.concat(
-						"Denied access to resource ", url.toString(),
+						"Denied access to resource ", url,
 						". $httpUtil template variable supports only HTTP and ",
 						"HTTPS protocols."));
 			}
@@ -1050,7 +1058,7 @@ public class TemplateContextHelper {
 			if (isLocationAccessDenied(url.toString())) {
 				throw new IOException(
 					StringBundler.concat(
-						"Denied access to resource ", url.toString(),
+						"Denied access to resource ", url,
 						" using $httpUtil variable from a template. Please ",
 						"use restricted variable $httpUtilUnsafe to access ",
 						"local network."));

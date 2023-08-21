@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.account.item.selector.web.internal;
@@ -19,7 +10,7 @@ import com.liferay.account.service.AccountGroupRelLocalService;
 import com.liferay.account.service.AccountGroupService;
 import com.liferay.commerce.account.item.selector.criterion.CommerceAccountGroupAccountItemSelectorCriterion;
 import com.liferay.commerce.account.item.selector.web.internal.display.context.CommerceAccountGroupAccountItemSelectorViewDisplayContext;
-import com.liferay.commerce.account.util.CommerceAccountHelper;
+import com.liferay.commerce.util.CommerceAccountHelper;
 import com.liferay.item.selector.ItemSelectorReturnType;
 import com.liferay.item.selector.ItemSelectorView;
 import com.liferay.item.selector.criteria.Base64ItemSelectorReturnType;
@@ -83,6 +74,12 @@ public class CommerceAccountGroupAccountItemSelectorView
 			PortletURL portletURL, String itemSelectedEventName, boolean search)
 		throws IOException, ServletException {
 
+		ServletContext servletContext = getServletContext();
+
+		RequestDispatcher requestDispatcher =
+			servletContext.getRequestDispatcher(
+				"/account_group_account_item_selector.jsp");
+
 		HttpServletRequest httpServletRequest =
 			(HttpServletRequest)servletRequest;
 
@@ -96,12 +93,6 @@ public class CommerceAccountGroupAccountItemSelectorView
 		httpServletRequest.setAttribute(
 			WebKeys.PORTLET_DISPLAY_CONTEXT,
 			commerceAccountGroupAccountItemSelectorViewDisplayContext);
-
-		ServletContext servletContext = getServletContext();
-
-		RequestDispatcher requestDispatcher =
-			servletContext.getRequestDispatcher(
-				"/account_group_account_item_selector.jsp");
 
 		requestDispatcher.include(servletRequest, servletResponse);
 	}

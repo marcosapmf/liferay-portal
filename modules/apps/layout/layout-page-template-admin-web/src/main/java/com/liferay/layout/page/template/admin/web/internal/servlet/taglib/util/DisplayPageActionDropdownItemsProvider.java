@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.layout.page.template.admin.web.internal.servlet.taglib.util;
@@ -37,6 +28,7 @@ import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.portlet.PortletURLFactoryUtil;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactoryUtil;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
+import com.liferay.portal.kernel.portlet.url.builder.ResourceURLBuilder;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.service.LayoutLocalServiceUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
@@ -52,10 +44,8 @@ import java.util.List;
 import java.util.Objects;
 
 import javax.portlet.PortletRequest;
-import javax.portlet.PortletURL;
 import javax.portlet.RenderRequest;
 import javax.portlet.RenderResponse;
-import javax.portlet.ResourceURL;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -150,9 +140,6 @@ public class DisplayPageActionDropdownItemsProvider {
 			dropdownGroupItem -> {
 				dropdownGroupItem.setDropdownItems(
 					DropdownItemListBuilder.add(
-						() -> hasUpdatePermission,
-						_getConfigureDisplayPageActionUnsafeConsumer()
-					).add(
 						() -> LayoutPageTemplateEntryPermission.contains(
 							_themeDisplay.getPermissionChecker(),
 							_layoutPageTemplateEntry, ActionKeys.PERMISSIONS),
@@ -169,31 +156,9 @@ public class DisplayPageActionDropdownItemsProvider {
 							_layoutPageTemplateEntry, ActionKeys.DELETE),
 						_getDeleteDisplayPageActionUnsafeConsumer()
 					).build());
-
 				dropdownGroupItem.setSeparator(true);
 			}
 		).build();
-	}
-
-	private UnsafeConsumer<DropdownItem, Exception>
-		_getConfigureDisplayPageActionUnsafeConsumer() {
-
-		PortletURL editPageURL = PortalUtil.getControlPanelPortletURL(
-			_httpServletRequest, LayoutAdminPortletKeys.GROUP_PAGES,
-			PortletRequest.RENDER_PHASE);
-
-		return dropdownItem -> {
-			dropdownItem.setHref(
-				editPageURL, "mvcRenderCommandName",
-				"/layout_admin/edit_layout", "redirect",
-				_themeDisplay.getURLCurrent(), "backURL",
-				_themeDisplay.getURLCurrent(), "portletResource",
-				LayoutPageTemplateAdminPortletKeys.LAYOUT_PAGE_TEMPLATES,
-				"selPlid", _layoutPageTemplateEntry.getPlid());
-			dropdownItem.setIcon("cog");
-			dropdownItem.setLabel(
-				LanguageUtil.get(_httpServletRequest, "configure"));
-		};
 	}
 
 	private UnsafeConsumer<DropdownItem, Exception>
@@ -310,18 +275,17 @@ public class DisplayPageActionDropdownItemsProvider {
 	private UnsafeConsumer<DropdownItem, Exception>
 		_getExportDisplayPageActionUnsafeConsumer() {
 
-		ResourceURL exportDisplayPageURL = _renderResponse.createResourceURL();
-
-		exportDisplayPageURL.setParameter(
-			"layoutPageTemplateEntryId",
-			String.valueOf(
-				_layoutPageTemplateEntry.getLayoutPageTemplateEntryId()));
-		exportDisplayPageURL.setResourceID(
-			"/layout_page_template_admin/export_display_pages");
-
 		return dropdownItem -> {
 			dropdownItem.setDisabled(_layoutPageTemplateEntry.isDraft());
-			dropdownItem.setHref(exportDisplayPageURL);
+			dropdownItem.setHref(
+				ResourceURLBuilder.createResourceURL(
+					_renderResponse
+				).setParameter(
+					"layoutPageTemplateEntryId",
+					_layoutPageTemplateEntry.getLayoutPageTemplateEntryId()
+				).setResourceID(
+					"/layout_page_template_admin/export_display_pages"
+				).buildString());
 			dropdownItem.setIcon("upload");
 			dropdownItem.setLabel(
 				LanguageUtil.get(_httpServletRequest, "export"));

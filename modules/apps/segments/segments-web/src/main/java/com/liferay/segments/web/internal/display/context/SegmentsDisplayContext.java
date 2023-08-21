@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.segments.web.internal.display.context;
@@ -18,8 +9,6 @@ import com.liferay.analytics.settings.configuration.AnalyticsConfiguration;
 import com.liferay.analytics.settings.rest.manager.AnalyticsSettingsManager;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenu;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenuBuilder;
-import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
-import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuilder;
 import com.liferay.item.selector.ItemSelector;
 import com.liferay.item.selector.criteria.UUIDItemSelectorReturnType;
 import com.liferay.petra.string.StringPool;
@@ -54,17 +43,14 @@ import com.liferay.roles.admin.role.type.contributor.RoleTypeContributor;
 import com.liferay.roles.admin.role.type.contributor.provider.RoleTypeContributorProvider;
 import com.liferay.roles.item.selector.RoleItemSelectorCriterion;
 import com.liferay.segments.configuration.provider.SegmentsConfigurationProvider;
-import com.liferay.segments.constants.SegmentsActionKeys;
 import com.liferay.segments.constants.SegmentsEntryConstants;
 import com.liferay.segments.constants.SegmentsPortletKeys;
 import com.liferay.segments.model.SegmentsEntry;
 import com.liferay.segments.service.SegmentsEntryService;
 import com.liferay.segments.web.internal.security.permission.resource.SegmentsEntryPermission;
-import com.liferay.segments.web.internal.security.permission.resource.SegmentsResourcePermission;
 import com.liferay.segments.web.internal.util.comparator.SegmentsEntryModifiedDateComparator;
 import com.liferay.segments.web.internal.util.comparator.SegmentsEntryNameComparator;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -108,18 +94,6 @@ public class SegmentsDisplayContext {
 		_permissionChecker = _themeDisplay.getPermissionChecker();
 	}
 
-	public List<DropdownItem> getActionDropdownItems() {
-		return DropdownItemListBuilder.add(
-			dropdownItem -> {
-				dropdownItem.putData("action", "deleteSegmentsEntries");
-				dropdownItem.setIcon("times-circle");
-				dropdownItem.setLabel(
-					_language.get(_httpServletRequest, "delete"));
-				dropdownItem.setQuickAction(true);
-			}
-		).build();
-	}
-
 	public Map<String, Object> getAssignUserRolesDataMap(
 		SegmentsEntry segmentsEntry) {
 
@@ -160,14 +134,6 @@ public class SegmentsDisplayContext {
 		}
 
 		return StringPool.BLANK;
-	}
-
-	public String getClearResultsURL() {
-		return PortletURLBuilder.create(
-			_getPortletURL()
-		).setKeywords(
-			StringPool.BLANK
-		).buildString();
 	}
 
 	public CreationMenu getCreationMenu() {
@@ -216,23 +182,6 @@ public class SegmentsDisplayContext {
 		).setParameter(
 			"segmentsEntryId", segmentsEntry.getSegmentsEntryId()
 		).buildString();
-	}
-
-	public List<DropdownItem> getFilterItemsDropdownItems() {
-		return DropdownItemListBuilder.addGroup(
-			dropdownGroupItem -> {
-				dropdownGroupItem.setDropdownItems(
-					_getFilterNavigationDropdownItems());
-				dropdownGroupItem.setLabel(
-					_language.get(_httpServletRequest, "filter-by-navigation"));
-			}
-		).addGroup(
-			dropdownGroupItem -> {
-				dropdownGroupItem.setDropdownItems(_getOrderByDropdownItems());
-				dropdownGroupItem.setLabel(
-					_language.get(_httpServletRequest, "order-by"));
-			}
-		).build();
 	}
 
 	public String getOrderByType() {
@@ -295,10 +244,6 @@ public class SegmentsDisplayContext {
 		}
 
 		return _language.get(_themeDisplay.getLocale(), "parent-site");
-	}
-
-	public String getSearchActionURL() {
-		return String.valueOf(_getPortletURL());
 	}
 
 	public SearchContainer<SegmentsEntry> getSearchContainer()
@@ -408,15 +353,6 @@ public class SegmentsDisplayContext {
 		return "_self";
 	}
 
-	public String getSortingURL() {
-		return PortletURLBuilder.create(
-			_getPortletURL()
-		).setParameter(
-			"orderByType",
-			Objects.equals(getOrderByType(), "asc") ? "desc" : "asc"
-		).buildString();
-	}
-
 	public int getTotalItems() throws PortalException {
 		SearchContainer<?> searchContainer = getSearchContainer();
 
@@ -476,18 +412,6 @@ public class SegmentsDisplayContext {
 		}
 		catch (PortalException portalException) {
 			_log.error(portalException);
-		}
-
-		return false;
-	}
-
-	public boolean isShowCreationMenu() {
-		if (SegmentsResourcePermission.contains(
-				_themeDisplay.getPermissionChecker(),
-				_themeDisplay.getScopeGroupId(),
-				SegmentsActionKeys.MANAGE_SEGMENTS_ENTRIES)) {
-
-			return true;
 		}
 
 		return false;
@@ -560,17 +484,6 @@ public class SegmentsDisplayContext {
 		return new String[0];
 	}
 
-	private List<DropdownItem> _getFilterNavigationDropdownItems() {
-		return DropdownItemListBuilder.add(
-			dropdownItem -> {
-				dropdownItem.setActive(true);
-				dropdownItem.setHref(_renderResponse.createRenderURL());
-				dropdownItem.setLabel(
-					_language.get(_httpServletRequest, "all"));
-			}
-		).build();
-	}
-
 	private String _getKeywords() {
 		if (_keywords != null) {
 			return _keywords;
@@ -612,27 +525,6 @@ public class SegmentsDisplayContext {
 		}
 
 		return orderByComparator;
-	}
-
-	private List<DropdownItem> _getOrderByDropdownItems() {
-		return DropdownItemListBuilder.add(
-			dropdownItem -> {
-				dropdownItem.setActive(
-					Objects.equals(_getOrderByCol(), "modified-date"));
-				dropdownItem.setHref(
-					_getPortletURL(), "orderByCol", "modified-date");
-				dropdownItem.setLabel(
-					_language.get(_httpServletRequest, "modified-date"));
-			}
-		).add(
-			dropdownItem -> {
-				dropdownItem.setActive(
-					Objects.equals(_getOrderByCol(), "name"));
-				dropdownItem.setHref(_getPortletURL(), "orderByCol", "name");
-				dropdownItem.setLabel(
-					_language.get(_httpServletRequest, "name"));
-			}
-		).build();
 	}
 
 	private PortletURL _getPortletURL() {

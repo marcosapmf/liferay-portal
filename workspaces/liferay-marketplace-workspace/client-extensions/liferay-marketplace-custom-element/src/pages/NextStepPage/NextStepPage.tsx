@@ -1,35 +1,40 @@
+/**
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
+ */
+
 import ClayIcon from '@clayui/icon';
 import classNames from 'classnames';
 import {ReactNode, useState} from 'react';
 
-import {showAccountImage, showAppImage} from '../../utils/util';
-
+import catalogIcon from '../../assets/icons/catalog_icon.svg';
 import {AccountAndAppCard} from '../../components/Card/AccountAndAppCard';
 import {Footer} from '../../components/Footer/Footer';
 import {Header} from '../../components/Header/Header';
 import {NewAppPageFooterButtons} from '../../components/NewAppPageFooterButtons/NewAppPageFooterButtons';
 import {Liferay} from '../../liferay/liferay';
-
 import {
+	baseURL,
 	getAccountInfoFromCommerce,
 	getCart,
 	getCartItems,
 } from '../../utils/api';
+import {showAccountImage, showAppImage} from '../../utils/util';
 
 import './NextStepPage.scss';
 
 interface NextStepPageProps {
-	continueButtonText?: string;
 	children?: ReactNode;
+	continueButtonText?: string;
 	header?: {
 		description?: string;
 		title?: string;
 	};
 	linkText?: string;
 	onClickContinue?: () => void;
-	size?: 'lg';
 	showBackButton?: boolean;
 	showOrderId?: boolean;
+	size?: 'lg';
 }
 
 export function NextStepPage({
@@ -45,14 +50,15 @@ export function NextStepPage({
 	const queryString = window.location.search;
 
 	const urlParams = new URLSearchParams(queryString);
+
 	const orderId = urlParams.get('orderId');
 
 	const [accountLogo, setAccountLogo] = useState(urlParams.get('logoURL'));
 	const [accountName, setAccountName] = useState(
 		urlParams.get('accountName')
 	);
-	const [appLogo, setAppLogo] = useState(urlParams.get('appLogoURL'));
 	const [appName, setAppName] = useState(urlParams.get('appName'));
+	const appLogo = urlParams.get('appLogoURL');
 
 	let cart;
 	let cartItems;
@@ -64,7 +70,6 @@ export function NextStepPage({
 
 			const item = cartItems.items[0];
 
-			setAppLogo(item.thumbnail);
 			setAppName(item.name);
 
 			const currentAccountCommerce = await getAccountInfoFromCommerce(
@@ -92,9 +97,16 @@ export function NextStepPage({
 								<AccountAndAppCard
 									category="Application"
 									logo={
-										showAppImage(
-											appLogo as string
-										) as string
+										!appLogo
+											? showAppImage(
+													appLogo as string
+											  ).replace(
+													(appLogo as string)?.split(
+														'/o'
+													)[0],
+													baseURL
+											  )
+											: catalogIcon
 									}
 									title={appName ?? ''}
 								></AccountAndAppCard>
@@ -118,11 +130,16 @@ export function NextStepPage({
 					<div className="next-step-page-text">
 						<Header
 							description={
-								header?.description ?? [
-									'Congratulations on the purchase of ',
-									<b>{appName}</b>,
-									'. You will now need to configure the app in the Cloud Console. To access the Cloud Console, click the button below and provide your Order ID when prompted.',
-								]
+								header?.description ?? (
+									<>
+										Congratulations on the purchase of
+										<b>{appName}</b>. You will now need to
+										configure the app in the Cloud Console.
+										To access the Cloud Console, click the
+										button below and provide your Order ID
+										when prompted.
+									</>
+								)
 							}
 							title={header?.title ?? 'Next steps'}
 						/>
@@ -151,9 +168,10 @@ export function NextStepPage({
 						}}
 						onClickContinue={
 							onClickContinue ??
-							(() =>
-								(window.location.href =
-									'https://console.marketplacedemo.liferay.sh/projects'))
+							(() => {
+								window.location.href =
+									'https://console.marketplacedemo.liferay.sh/projects';
+							})
 						}
 						showBackButton={showBackButton}
 					/>

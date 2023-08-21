@@ -1,29 +1,20 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.product.content.search.web.internal.portlet.shared.search;
 
 import com.liferay.account.model.AccountEntry;
+import com.liferay.account.service.AccountGroupLocalService;
 import com.liferay.asset.kernel.model.AssetCategory;
-import com.liferay.commerce.account.util.CommerceAccountHelper;
 import com.liferay.commerce.product.constants.CPField;
 import com.liferay.commerce.product.constants.CPPortletKeys;
 import com.liferay.commerce.product.content.search.web.internal.configuration.CPSearchResultsPortletInstanceConfiguration;
 import com.liferay.commerce.product.model.CPDefinition;
 import com.liferay.commerce.product.model.CommerceChannel;
 import com.liferay.commerce.product.service.CommerceChannelLocalService;
-import com.liferay.petra.string.StringPool;
+import com.liferay.commerce.util.CommerceAccountHelper;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.search.BooleanClauseOccur;
@@ -43,7 +34,6 @@ import com.liferay.portal.search.web.portlet.shared.search.PortletSharedSearchCo
 import com.liferay.portal.search.web.portlet.shared.search.PortletSharedSearchSettings;
 
 import java.util.NoSuchElementException;
-import java.util.Optional;
 
 import javax.portlet.PortletPreferences;
 import javax.portlet.RenderRequest;
@@ -102,11 +92,9 @@ public class CPSearchResultsPortletSharedSearchContributor
 			_commerceChannelLocalService.fetchCommerceChannelBySiteGroupId(
 				themeDisplay.getScopeGroupId());
 
-		Optional<String> parameterValueOptional =
-			portletSharedSearchSettings.getParameterOptional("q");
-
 		portletSharedSearchSettings.setKeywords(
-			parameterValueOptional.orElse(StringPool.BLANK));
+			GetterUtil.getString(
+				portletSharedSearchSettings.getParameter("q")));
 
 		portletSharedSearchSettings.addCondition(
 			new BooleanClauseImpl<Query>(
@@ -145,7 +133,7 @@ public class CPSearchResultsPortletSharedSearchContributor
 			if (accountEntry != null) {
 				searchContext.setAttribute(
 					"commerceAccountGroupIds",
-					_commerceAccountHelper.getCommerceAccountGroupIds(
+					_accountGroupLocalService.getAccountGroupIds(
 						accountEntry.getAccountEntryId()));
 			}
 		}
@@ -178,42 +166,42 @@ public class CPSearchResultsPortletSharedSearchContributor
 		portletSharedSearchSettings.setPaginationStartParameterName(
 			paginationStartParameterName);
 
-		Optional<String> paginationStartParameterValueOptional =
-			portletSharedSearchSettings.getParameterOptional(
+		String paginationStartParameterValue =
+			portletSharedSearchSettings.getParameter(
 				paginationStartParameterName);
 
-		Optional<Integer> paginationStartOptional =
-			paginationStartParameterValueOptional.map(Integer::valueOf);
+		if (paginationStartParameterValue != null) {
+			portletSharedSearchSettings.setPaginationStart(
+				Integer.valueOf(paginationStartParameterValue));
+		}
 
-		paginationStartOptional.ifPresent(
-			portletSharedSearchSettings::setPaginationStart);
+		String paginationDeltaParameterValue =
+			portletSharedSearchSettings.getParameter("delta");
 
-		String paginationDeltaParameterName = "delta";
+		if (paginationDeltaParameterValue != null) {
+			portletSharedSearchSettings.setPaginationDelta(
+				Integer.valueOf(paginationDeltaParameterValue));
 
-		Optional<String> paginationDeltaParameterValueOptional =
-			portletSharedSearchSettings.getParameterOptional(
-				paginationDeltaParameterName);
-
-		Optional<Integer> paginationDeltaOptional =
-			paginationDeltaParameterValueOptional.map(Integer::valueOf);
+			return;
+		}
 
 		int configurationPaginationDelta =
 			cpSearchResultsPortletInstanceConfiguration.paginationDelta();
 
-		Optional<PortletPreferences> portletPreferencesOptional =
-			portletSharedSearchSettings.getPortletPreferencesOptional();
+		PortletPreferences portletPreferences =
+			portletSharedSearchSettings.getPortletPreferences();
 
-		if (portletPreferencesOptional.isPresent()) {
-			PortletPreferences portletPreferences =
-				portletPreferencesOptional.get();
-
+		if (portletPreferences != null) {
 			configurationPaginationDelta = GetterUtil.getInteger(
 				portletPreferences.getValue("paginationDelta", null));
 		}
 
 		portletSharedSearchSettings.setPaginationDelta(
-			paginationDeltaOptional.orElse(configurationPaginationDelta));
+			configurationPaginationDelta);
 	}
+
+	@Reference
+	private AccountGroupLocalService _accountGroupLocalService;
 
 	@Reference
 	private CommerceAccountHelper _commerceAccountHelper;

@@ -55,7 +55,10 @@ definition {
 		}
 
 		task ("And when the user downloads the CSV template file") {
-			Button.click(button = "Download Template");
+			AssertClick(
+				key_text = "Download Template",
+				locator1 = "Button#ANY",
+				value1 = "Download Template");
 		}
 
 		task ("Then the template is downloaded as .csv file and populated") {
@@ -194,7 +197,11 @@ definition {
 
 			SelectFrameTop();
 
-			Alert.viewErrorMessage(errorMessage = "1 row was not imported.");
+			WaitForElementPresent(locator1 = "Message#ERROR");
+
+			AssertTextEquals.assertText(
+				locator1 = "Message#ERROR",
+				value1 = "Error: 1 row was not imported.");
 		}
 	}
 

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.security.sso.openid.connect.internal.configuration.admin.service;
@@ -47,6 +38,7 @@ import java.security.MessageDigest;
 
 import java.util.Dictionary;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -140,6 +132,34 @@ public class OpenIdConnectProviderManagedServiceFactory
 						company.getCompanyId(), null, "", properties);
 				}
 			});
+
+		List<OAuthClientEntry> oAuthClientEntries =
+			_oAuthClientEntryLocalService.getCompanyOAuthClientEntries(
+				company.getCompanyId());
+
+		for (OAuthClientEntry oAuthClientEntry : oAuthClientEntries) {
+			Map<String, Long> oAuthClientEntryIds = _oAuthClientEntryIds.get(
+				company.getCompanyId());
+
+			if (oAuthClientEntryIds == null) {
+				oAuthClientEntryIds = new HashMap<>();
+
+				_oAuthClientEntryIds.put(
+					company.getCompanyId(), oAuthClientEntryIds);
+			}
+
+			JSONObject jsonObject = _jsonFactory.createJSONObject(
+				oAuthClientEntry.getInfoJSON());
+
+			String clientName = jsonObject.getString("client_name", null);
+
+			if (clientName != null) {
+				clientName = clientName.substring(_CLIENT_TO.length());
+			}
+
+			oAuthClientEntryIds.put(
+				clientName, oAuthClientEntry.getOAuthClientEntryId());
+		}
 	}
 
 	@Override
@@ -268,7 +288,7 @@ public class OpenIdConnectProviderManagedServiceFactory
 			return null;
 		}
 
-		return "Client to " + providerName;
+		return _CLIENT_TO + providerName;
 	}
 
 	private String _generateInfoJSON(Dictionary<String, ?> properties) {
@@ -560,6 +580,8 @@ public class OpenIdConnectProviderManagedServiceFactory
 			}
 		}
 	}
+
+	private static final String _CLIENT_TO = "Client to ";
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		OpenIdConnectProviderManagedServiceFactory.class);

@@ -509,6 +509,11 @@
 			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
+		<attribute>
+			<name>showDefaultSkuPrice</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
 	</tag>
 	<tag>
 		<name>product-subscription-info</name>
@@ -525,6 +530,21 @@
 			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
 			<type>boolean</type>
+		</attribute>
+	</tag>
+	<tag>
+		<name>request-quote</name>
+		<tag-class>com.liferay.commerce.frontend.taglib.servlet.taglib.RequestQuoteTag</tag-class>
+		<body-content>empty</body-content>
+		<attribute>
+			<name>CPCatalogEntry</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<name>namespace</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
 		</attribute>
 	</tag>
 	<tag>

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.segments.service;
@@ -57,8 +48,8 @@ public interface SegmentsExperimentService extends BaseService {
 	 * Never modify this interface directly. Add custom service methods to <code>com.liferay.segments.service.impl.SegmentsExperimentServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface. Consume the segments experiment remote service via injection or a <code>org.osgi.util.tracker.ServiceTracker</code>. Use {@link SegmentsExperimentServiceUtil} if injection and service tracking are not available.
 	 */
 	public SegmentsExperiment addSegmentsExperiment(
-			long segmentsExperienceId, long classNameId, long classPK,
-			String name, String description, String goal, String goalTarget,
+			long segmentsExperienceId, long plid, String name,
+			String description, String goal, String goalTarget,
 			ServiceContext serviceContext)
 		throws PortalException;
 
@@ -71,9 +62,12 @@ public interface SegmentsExperimentService extends BaseService {
 		throws PortalException;
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public SegmentsExperiment fetchSegmentsExperiment(long groupId, long plid)
+		throws PortalException;
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public SegmentsExperiment fetchSegmentsExperiment(
-			long segmentsExperienceId, long classNameId, long classPK,
-			int[] statuses)
+			long segmentsExperienceId, long plid, int[] statuses)
 		throws PortalException;
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
@@ -90,8 +84,8 @@ public interface SegmentsExperimentService extends BaseService {
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<SegmentsExperiment> getSegmentsExperienceSegmentsExperiments(
-			long[] segmentsExperienceIds, long classNameId, long classPK,
-			int[] statuses, int start, int end)
+			long[] segmentsExperienceIds, long plid, int[] statuses, int start,
+			int end)
 		throws PortalException;
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
@@ -103,14 +97,17 @@ public interface SegmentsExperimentService extends BaseService {
 			String segmentsExperimentKey)
 		throws PortalException;
 
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link #fetchSegmentsExperiment(long, long)}
+	 */
+	@Deprecated
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<SegmentsExperiment> getSegmentsExperiments(
-		long groupId, long classNameId, long classPK);
+		long groupId, long plid);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<SegmentsExperiment> getSegmentsExperiments(
-		long segmentsExperienceId, long classNameId, long classPK,
-		int[] statuses,
+		long segmentsExperienceId, long plid, int[] statuses,
 		OrderByComparator<SegmentsExperiment> orderByComparator);
 
 	public SegmentsExperiment runSegmentsExperiment(

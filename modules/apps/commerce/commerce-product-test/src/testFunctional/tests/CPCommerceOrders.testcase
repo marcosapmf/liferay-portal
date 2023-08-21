@@ -80,7 +80,9 @@ definition {
 
 		CommerceAcceleratorsInitializer.createNewOrderFromAccountSelectorDropdown();
 
-		Alert.viewErrorMessage(errorMessage = "Unable to create a new order as the open order limit has been reached.");
+		AssertTextEquals.assertText(
+			locator1 = "Message#ERROR",
+			value1 = "Close Error:Unable to create a new order as the open order limit has been reached.");
 	}
 
 	@description = "Verify users can add a minimum order amount rule that applies to order subtotals. Orders that have a subtotal less than the minimum cannot be checked out"
@@ -612,7 +614,9 @@ definition {
 		}
 
 		task ("Then an error message is shown which states a default billing address has not been set") {
-			Alert.viewErrorMessage(errorMessage = "No default billing address has been created for this account. Please contact the system administrator to create an order.");
+			AssertTextEquals.assertText(
+				locator1 = "Message#ERROR",
+				value1 = "Close Error:No default billing address has been created for this account. Please contact the system administrator to create an order.");
 		}
 	}
 
@@ -914,6 +918,53 @@ definition {
 		}
 	}
 
+	@description = "This is a test for COMMERCE-11386. As admin, I can cancel an order without getting an error in the log."
+	@priority = 5
+	test CanCancelOrder {
+		property portal.acceptance = "true";
+
+		task ("Given a Minium Site with an account is created") {
+			CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
+
+			JSONAccountEntry.addAccountEntry(
+				accountEntryName = "Commerce Account",
+				accountEntryType = "Business");
+		}
+
+		task ("And a payment method is activated") {
+			CommerceChannels.openChannelsAdmin();
+
+			CommerceNavigator.gotoEntry(entryName = "Minium Portal");
+
+			CommerceChannels.activatePaymentMethod(paymentMethod = "Money Order");
+		}
+
+		task ("And an order is placed") {
+			CommerceJSONOrdersAPI._addCommerceOrder(
+				accountEntryName = "Commerce Account",
+				orderItems = "MIN55861:1",
+				orderStatus = 1,
+				paymentMethod = "money-order",
+				paymentStatus = 2);
+		}
+
+		task ("When the order is canceled") {
+			CommerceOrders.openOrdersAdmin();
+
+			CommerceNavigator.gotoOrderEntryViaAdmin(status = "Pending");
+
+			Click(
+				key_index = "Cancel",
+				locator1 = "WorkflowMetrics#SEARCH_FIELD_MAPPINGS_METRICS_INDEXES");
+
+			CommerceUtilities.checkSuccessAlertAppearsAndDisappears();
+		}
+
+		task ("Then there is no error in the log") {
+			AssertConsoleTextNotPresent(value1 = "NoSuchInventoryBookedQuantityException");
+		}
+	}
+
 	@description = "This is a test for COMMERCE-6210. Shipment cancelled"
 	@ignore = "true"
 	@priority = 3
@@ -921,6 +972,72 @@ definition {
 
 		// TODO COMMERCE-6210 CancelShipmentAndCreateNewFromPendingOrder Pending Implementation
 
+	}
+
+	@description = "This is a test for COMMERCE-11716. Can create orders using GoGo Shell command"
+	@priority = 3
+	test CanCreateOrdersUsingOrderGenerator {
+		property custom.properties = "jsonws.web.service.paths.excludes=${line.separator}company.security.strangers.verify=false";
+		property portal.acceptance = "false";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		task ("Given a Minium site with an Account is created") {
+			CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
+
+			CommerceEntry.addAccountEntryUser(
+				accountName = "Commerce Account",
+				accountType = "Business",
+				agreeToTermsAndAnswerReminderQuery = "true",
+				createNewAccount = "true",
+				requireReset = "false",
+				userEmailAddress = "buyer@liferay.com",
+				userFirstName = "Buyer",
+				userLastName = "User",
+				userRole = "Buyer",
+				userScreenName = "buyeruser",
+				userSiteMembership = "Minium");
+
+			Account.openAccountsAdmin();
+
+			LexiconEntry.gotoEntry(rowEntry = "Commerce Account");
+
+			Account.gotoAssigneeTab(assigneeTab = "Addresses");
+
+			Account.addAddress(
+				addressCity = "Dalian",
+				addressCountry = "China",
+				addressName = "Liferay Dalian Software Co., Ltd.",
+				addressPostalCode = 116023,
+				addressRegion = "Liaoning Sheng",
+				addressStreet1 = "537 Huangpu Road Taide Building,",
+				addressStreet2 = "1005 High-Tech Zone",
+				phoneNumber = "+86 (0)411 88120855");
+		}
+
+		task ("When the admin uses Gogo Shell to create the orders") {
+			GogoShell.openGogoShellAdmin();
+
+			var siteId = JSONGroupAPI._getGroupIdByName(
+				groupName = "Minium",
+				site = "true");
+
+			GogoShell.executeCommand(commandName = "generateOrders ${siteId} 50");
+		}
+
+		task ("Then the user goes to the order admin page and the orders are generated correctly") {
+			CommerceOrders.openOrdersAdmin();
+
+			var orderIds = CommerceJSONOrdersAPI._getCommerceOrderIds(email = "buyer@liferay.com");
+
+			var firstOrderId = StringUtil.extractLast(${orderIds}, ",");
+
+			AssertElementPresent(
+				key_entryName = ${firstOrderId},
+				locator1 = "CommerceNavigation#ENTRY_NAME");
+
+			Pagination.viewResults(results = "Showing 1 to 20 of 50 entries.");
+		}
 	}
 
 	@description = "This is a test for COMMERCE-8970. As admin, when I try to delete orders one by one, a pop-up confirmation message will appear before removing the order."
@@ -1330,10 +1447,12 @@ definition {
 				locator1 = "Button#ANY");
 		}
 
-		task ("And if the buyer click on the 'Reorder' the checkout start again") {
+		task ("And if the buyer click on the 'Reorder' is redirected to Open Order's Page to start the checkout") {
 			Click(
 				key_text = "Reorder",
 				locator1 = "Button#ANY");
+
+			Button.click(button = "Checkout");
 
 			CommerceCheckout.setAddress(
 				newAddressAddress = "Test Address",
@@ -2731,6 +2850,89 @@ definition {
 		}
 	}
 
+	@description = "This is a test for COMMERCE-11815. Admin can view an order's quote label border is grey"
+	@priority = 3
+	test CanViewOrderQuoteLabelBorderIsGrey {
+		property custom.properties = "jsonws.web.service.paths.excludes=${line.separator}company.security.strangers.verify=false${line.separator}feature.flag.COMMERCE-11028=true";
+		property portal.acceptance = "false";
+
+		task ("Given a Minium site with a buyer user") {
+			CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
+
+			CommerceEntry.addAccountEntryUser(
+				accountName = "Commerce Account",
+				accountType = "Business",
+				agreeToTermsAndAnswerReminderQuery = "true",
+				createNewAccount = "true",
+				requireReset = "false",
+				userEmailAddress = "buyer@liferay.com",
+				userFirstName = "Buyer",
+				userLastName = "User",
+				userRole = "Buyer",
+				userScreenName = "buyeruser",
+				userSiteMembership = "Minium");
+		}
+
+		task ("And 'Allow Request a Quote on a Fully Priced Cart' is enabled for the site") {
+			CommerceChannels.openChannelsAdmin();
+
+			CommerceNavigator.gotoEntry(entryName = "Minium Portal");
+
+			Check.checkToggleSwitch(
+				key_toggleSwitchLabel = "Request a Quote",
+				locator1 = "ToggleSwitch#ANY_TOGGLE_SWITCH");
+
+			Button.clickSave();
+		}
+
+		task ("And the buyer requests a quote for an order") {
+			User.logoutPG();
+
+			CommerceLogin.miniumLogin(
+				password = "test",
+				urlAppend = "web/minium",
+				userEmailAddress = "buyer@liferay.com");
+
+			FrontStore.addInitializerProductToCart(
+				productName = "U-Joint",
+				productQuantity = 1);
+
+			var orderId = selenium.getText("CommerceEntry#ACTIVE_ORDER_ID");
+
+			CommerceNavigator.gotoMiniCart();
+
+			CommerceOrders.createQuoteRequest(
+				quoteRequestValue = "I kindly request a quote for this product.",
+				requestAQuoteInMiniCart = "true",
+				requestAQuoteInOpenOrdersPage = "true");
+		}
+
+		task ("When the admin clicks 'Quote Processed' in the order details") {
+			User.logoutAndLoginPG(
+				userLoginEmailAddress = "test@liferay.com",
+				userLoginFullName = "Test Test");
+
+			CommerceOrders.openOrdersAdmin();
+
+			CommerceNavigator.gotoOrderEntryViaAdmin(status = "Quote Requested");
+
+			Click(
+				key_index = "Quote Processed",
+				locator1 = "WorkflowMetrics#SEARCH_FIELD_MAPPINGS_METRICS_INDEXES");
+		}
+
+		task ("Then the admin can view the order status 'Quote Processed' field is grey border on Orders admin page") {
+			CommerceOrders.openOrdersAdmin();
+
+			AssertCssValue(
+				key_productName = ${orderId},
+				key_status = "Quote Processed",
+				locator1 = "CommerceEntry#PRODUCT_STATUS_BASED_ON_PRODUCT_NAME",
+				locator2 = "border-color",
+				value1 = "rgb(205, 206, 217)");
+		}
+	}
+
 	@description = "This is a test for COMMERCE-10750. User can see if a SKU is on order and can search for Order Id or Account Name the orders under Order Tab in Inventory"
 	@priority = 5
 	test CanViewOrderSKUAndSearchForSpecificOrderIdAndAccountName {
@@ -2846,6 +3048,88 @@ definition {
 				key_orderQuantity = 0,
 				key_reference = "Commerce Account",
 				locator1 = "CommerceEntry#ON_ORDER_QUANTITY");
+		}
+	}
+
+	@description = "This is a test for COMMERCE-11737. If admin adds a product to the cart with a printed note, then the printed note still can be viewed after the cart checkout via headless API"
+	@priority = 5
+	test CanViewPrintedNoteAfterCartCheckoutViaHeadlessAPI {
+		property portal.acceptance = "true";
+
+		task ("Given a Minium site with a business account is created") {
+			CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
+
+			CommerceJSONAccountsAPI._addCommerceAccount(
+				accountName = "Commerce Account",
+				accountType = "Business");
+
+			CommerceJSONAccountsAPI._addCommerceAccountAddress(
+				accountEntryName = "Commerce Account",
+				city = "Test City",
+				countryISOCode = "US",
+				name = "Test Address",
+				street1 = "Test Street",
+				zip = "Test Zip Code");
+		}
+
+		task ("When the product 'ABS Sensor' with a printed note is added to the cart via API") {
+			CommerceJSONDeliveryCart._addCommerceCart(
+				accountEntryName = "Commerce Account",
+				billingAddressName = "Test Address",
+				cartItems = "MIN93015:10",
+				printedNote = "Test Print Note Content",
+				shippingAddressName = "Test Address",
+				shippingOption = "Standard Delivery");
+
+			var orderId = CommerceJSONOrdersAPI._getCommerceOrder();
+		}
+
+		task ("Then the admin can view the printed note is added in the open order via API") {
+			var printedNote = CommerceJSONOrdersAPI.getOrderField(
+				email = "test@liferay.com",
+				jsonPath = "$.printedNote",
+				orderId = ${orderId},
+				parameter = "fields",
+				parameterValue = "printedNote",
+				password = "test");
+
+			TestUtils.assertEquals(
+				actual = ${printedNote},
+				expected = "Test Print Note Content");
+		}
+
+		task ("And the admin can view the printed note is added in the open order via UI") {
+			CommerceOrders.openOrdersAdmin();
+
+			CommerceNavigator.gotoOrderEntryViaAdmin(status = "Open");
+
+			CommerceOrders.viewOrdersEntry(printedNote = "Test Print Note Content");
+		}
+
+		task ("When the cart checkout is patched") {
+			CommerceJSONDeliveryCart._postCommerceCartCheckout(cartId = ${orderId});
+		}
+
+		task ("Then the admin can view the printed note is added in the placed order via API") {
+			var printedNote = CommerceJSONOrdersAPI.getOrderField(
+				email = "test@liferay.com",
+				jsonPath = "$.printedNote",
+				orderId = ${orderId},
+				parameter = "fields",
+				parameterValue = "printedNote",
+				password = "test");
+
+			TestUtils.assertEquals(
+				actual = ${printedNote},
+				expected = "Test Print Note Content");
+		}
+
+		task ("And the admin can view the printed note is added in the placed order via UI") {
+			CommerceOrders.openOrdersAdmin();
+
+			CommerceNavigator.gotoOrderEntryViaAdmin(status = "Pending");
+
+			CommerceOrders.viewOrdersEntry(printedNote = "Test Print Note Content");
 		}
 	}
 

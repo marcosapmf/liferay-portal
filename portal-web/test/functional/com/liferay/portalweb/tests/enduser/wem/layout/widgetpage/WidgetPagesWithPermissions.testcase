@@ -1,6 +1,7 @@
 @component-name = "portal-wcm"
 definition {
 
+	property ci.retries.disabled = "true";
 	property custom.properties = "jsonws.web.service.paths.excludes=";
 	property portal.release = "true";
 	property portal.upstream = "true";
@@ -44,17 +45,17 @@ definition {
 		property testray.component.names = "Site and Page Templates";
 
 		var siteName = StringUtil.randomString(8);
-
+		var siteTemplateName = StringUtil.randomString(8);
 		var siteURLKey = StringUtil.toLowerCase(${siteName});
 
 		task ("Add a site template") {
-			SiteTemplates.addCP(siteTemplateName = "Site Template Name");
+			SiteTemplates.addCP(siteTemplateName = ${siteTemplateName});
 		}
 
 		task ("Add a site based on template") {
 			HeadlessSite.addSite(
 				siteName = ${siteName},
-				templateName = "Site Template Name",
+				templateName = ${siteTemplateName},
 				templateType = "Site Template");
 		}
 
@@ -180,8 +181,6 @@ definition {
 			User.viewLoginPG();
 
 			AssertElementNotPresent(locator1 = "Message#ERROR");
-
-			AssertElementNotPresent(locator1 = "Home#ERROR_MESSAGE_ALERT_ERROR");
 		}
 
 		task ("View blogs entry is not shown for Guest") {
@@ -273,9 +272,10 @@ definition {
 				pageName = "Test Page Name",
 				siteName = ${randomSiteName});
 
-			AssertTextEquals(
-				locator1 = "Home#ERROR_MESSAGE_ALERT_ERROR",
-				value1 = "Not Found");
+			ContentPages.viewFragmentText(
+				fragmentName = "heading",
+				id = "element-text",
+				text = "Page Not Found");
 		}
 
 		task ("View blogs entry is not shown for new user") {
@@ -310,16 +310,17 @@ definition {
 
 		var siteURLKey = StringUtil.toLowerCase(${siteName});
 		var roleKey = StringUtil.randomString(8);
+		var siteTemplateName = StringUtil.randomString(8);
 
 		task ("Add a site template") {
-			SiteTemplates.addCP(siteTemplateName = "Site Template Name");
+			SiteTemplates.addCP(siteTemplateName = ${siteTemplateName});
 		}
 
 		task ("Add a private site based on new site template") {
 			HeadlessSite.addSite(
 				membershipType = "Private",
 				siteName = ${siteName},
-				templateName = "Site Template Name",
+				templateName = ${siteTemplateName},
 				templateType = "Site Template");
 		}
 
@@ -438,7 +439,7 @@ definition {
 		task ("View not found error in home page") {
 			AssertTextEquals(
 				locator1 = "Home#ERROR_MESSAGE_ALERT_ERROR",
-				value1 = "Not Found");
+				value1 = "Error:Not Found");
 
 			AssertTextPresent(value1 = "The requested resource could not be found.");
 

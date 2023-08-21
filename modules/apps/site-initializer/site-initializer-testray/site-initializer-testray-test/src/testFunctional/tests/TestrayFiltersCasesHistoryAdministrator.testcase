@@ -10,27 +10,32 @@ definition {
 
 	var buildName = "Build 1";
 	var caseName = "Case 1";
+	var caseResultName = "case result 1";
 	var caseType = "Case Type 1";
 	var componentName = "Component 1";
 	var environmentFactorsName = "Environment Factors 1";
 	var productVersion = "1.2";
 	var projectName = "Project 1";
-	var teamName = "Team 1";
 	var routineName = "Routine 1";
 	var runName = "Option 1";
-	var caseResultName = "case result 1";
+	var teamName = "Team 1";
 	var testSiteName = "Testray 2";
 
 	setUp {
-		task ("Login and create a Testray Site") {
+		task ("Set up instance and sign in") {
 			TestCase.setUpPortalInstance();
 
 			User.firstLoginPG();
-
-			Testray.addTestraySite(siteName = ${testSiteName});
 		}
 
-		task ("create all objects: projects, routine, teams, components, cases, case type, enviroment factors, product version, build, category, options, run and case results") {
+		task ("Create a new Testray Site") {
+			HeadlessSite.addSite(
+				siteName = ${testSiteName},
+				templateName = "Testray",
+				templateType = "Site Initializer");
+		}
+
+		task ("create project, routine, team, component, case, case type, enviroment factor, product version, build, category, option, run and case result via API") {
 			JSONTestray.addProject(
 				projectDescription = "Project Description 1",
 				projectName = ${projectName});
@@ -119,7 +124,7 @@ definition {
 				runName = "Run 2");
 		}
 
-		task ("Go to the case history page") {
+		task ("Go to build page") {
 			ApplicationsMenu.gotoSite(site = ${testSiteName});
 
 			Testray.changePagination(
@@ -135,41 +140,43 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		task ("Delete product version, routine, case type, factor category and project via API, Testray Site and Client Extensions") {
+			JSONTestrayAPI.deleteObjectViaAPI(
+				object = "productversions",
+				objectName = "1.2");
 
-		JSONTestrayAPI.deleteObjectViaAPI(
-			object = "productversions",
-			objectName = "1.2");
+			JSONTestrayAPI.deleteObjectViaAPI(
+				object = "productversions",
+				objectName = "7.0");
 
-		JSONTestrayAPI.deleteObjectViaAPI(
-			object = "productversions",
-			objectName = "7.0");
+			JSONTestrayAPI.deleteObjectViaAPI(
+				object = "routines",
+				objectName = "Routine 1");
 
-		JSONTestrayAPI.deleteObjectViaAPI(
-			object = "routines",
-			objectName = "Routine 1");
+			JSONTestrayAPI.deleteObjectViaAPI(
+				object = "routines",
+				objectName = "Routine 2");
 
-		JSONTestrayAPI.deleteObjectViaAPI(
-			object = "routines",
-			objectName = "Routine 2");
+			JSONTestrayAPI.deleteObjectViaAPI(
+				object = "casetypes",
+				objectName = "Case Type 1");
 
-		JSONTestrayAPI.deleteObjectViaAPI(
-			object = "casetypes",
-			objectName = "Case Type 1");
+			JSONTestrayAPI.deleteObjectViaAPI(
+				object = "casetypes",
+				objectName = "Case Type 2");
 
-		JSONTestrayAPI.deleteObjectViaAPI(
-			object = "casetypes",
-			objectName = "Case Type 2");
+			JSONTestrayAPI.deleteObjectViaAPI(
+				object = "factorcategories",
+				objectName = "Category 1");
 
-		JSONTestrayAPI.deleteObjectViaAPI(
-			object = "factorcategories",
-			objectName = "Category 1");
+			JSONTestrayAPI.deleteProject(projectName = ${projectName});
 
-		JSONTestrayAPI.deleteProject(projectName = ${projectName});
+			Testray.testrayApisTearDown();
+		}
 
-		Testray.testrayApisTearDown();
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 	}
@@ -177,6 +184,9 @@ definition {
 	@description = "Story ID: LPS-173525 | Test Summary: Verify if as an Administrator I should be able to filter case results by assignee"
 	@priority = 3
 	test AdminCanFilterByAssignee {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
 		task ("Given that the user assign to me a case result") {
 			TestrayResults.goToCaseResults(caseResultsName = "Case 1");
 
@@ -215,9 +225,53 @@ definition {
 		}
 	}
 
+	@description = "Story ID: LPS-173525 | Test Summary: Verify if as an Administrator I should be able to filter case results by issues"
+	@priority = 3
+	test AdminCanFilterByIssue {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		task ("Given that the user add a issue in the case result") {
+			TestrayResults.goToCaseResults(caseResultsName = "Case 1");
+
+			Button.click(button = "Assign to Me");
+
+			Button.click(button = "Complete Test");
+
+			TestrayTestflow.editStatus(
+				comment = "button does not work",
+				issues = "LPS-123456",
+				selectStatus = "Test Fix");
+
+			WaitForPageLoad();
+
+			Testray.projectTabNavigator(navTabName = "History");
+		}
+
+		task ("When the user filter a issue") {
+			TestrayFilter.clickFilter();
+
+			Type(
+				key_text = "issues",
+				locator1 = "TextArea#ANY",
+				value1 = "LPS-123456");
+
+			Button.click(button = "Apply");
+		}
+
+		task ("Then the user can see the issue in the table") {
+			AssertElementPresent(
+				key_projectName = "LPS-123456",
+				locator1 = "Testray#ITEM_NAME");
+		}
+	}
+
 	@description = "Story ID: LPS-173525 | Test Summary: Verify if as an Administrator I should be able to filter case results by product version name"
 	@priority = 2
 	test AdminCanFilterByProductVersionName {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
 		task ("Given that the user has two product version different in the table") {
 			TestrayResults.goToCaseResults(caseResultsName = "Case 1");
 
@@ -263,6 +317,9 @@ definition {
 	@description = "Story ID: LPS-173525 | Test Summary: Verify if as an Administrator I should be able to filter case results by routine"
 	@priority = 3
 	test AdminCanFilterByRoutine {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
 		task ("Given that the user has two routine different in the table") {
 			TestrayResults.goToCaseResults(caseResultsName = "Case 1");
 
@@ -304,6 +361,9 @@ definition {
 	@description = "Story ID: LPS-173525 | Test Summary: Verify if as an Administrator I should be able to filter case results by status"
 	@priority = 3
 	test AdminCanFilterByStatus {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
 		task ("Given that the user complete a test with passed status") {
 			TestrayResults.goToCaseResults(caseResultsName = "Case 1");
 
@@ -339,6 +399,9 @@ definition {
 	@description = "Story ID: LPS-173525 | Test Summary: Verify if as an Administrator I should be able to filter case results by environment"
 	@priority = 3
 	test AdminCanFilterCaseHistoryByEnvironment {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
 		task ("Given that the user has two enviroments different in the table") {
 			TestrayResults.goToCaseResults(caseResultsName = "Case 1");
 
@@ -386,6 +449,9 @@ definition {
 	@description = "Story ID: LPS-173525 | Test Summary: Verify if as an Administrator I should be able to filter case results by error"
 	@priority = 4
 	test AdminCanFilterCaseHistoryByError {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
 		task ("Given that the user has two case result with errors different in the table") {
 			TestrayResults.goToCaseResults(caseResultsName = "Case 1");
 
@@ -433,6 +499,9 @@ definition {
 	@description = "Story ID: LPS-173525 | Test Summary: Verify if as an Administrator I should be able to filter case results by team"
 	@priority = 3
 	test AdminCanFilterCaseHistoryTeam {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
 		task ("Given that the user has a team in the table") {
 			AssertElementPresent(
 				key_projectName = "Team 1",
@@ -474,6 +543,9 @@ definition {
 	@description = "Story ID: LPS-173525 | Test Summary: Verify if as an Administrator I should be able to filter the filter options"
 	@priority = 2
 	test AdminCanFilterOptionsToFilter {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
 		task ("When the user searches for a field called routine") {
 			TestrayResults.goToCaseResults(caseResultsName = "Case 1");
 
@@ -500,6 +572,9 @@ definition {
 	@description = "Story ID: LPS-173525 | Test Summary: Verify if as an Administrator I should be able to filter case results using multiple filtering options"
 	@priority = 4
 	test AdminCanFilterWithMultipleOptions {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
 		task ("Given that the user complete a test with passed status") {
 			TestrayResults.goToCaseResults(caseResultsName = "Case 1");
 
@@ -574,6 +649,9 @@ definition {
 	@description = "Story ID: LPS-173525 | Test Summary: Verify if as an Administrator I should not see case results that don't exist when I try filtering for them"
 	@priority = 3
 	test AdminCanNotFilterForNonExistentCaseResult {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
 		task ("Given that the user filter a case result history existent") {
 			TestrayResults.goToCaseResults(caseResultsName = "Case 1");
 

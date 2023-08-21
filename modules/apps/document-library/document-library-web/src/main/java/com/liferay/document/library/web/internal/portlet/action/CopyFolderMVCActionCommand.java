@@ -1,28 +1,30 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.document.library.web.internal.portlet.action;
 
+import com.liferay.depot.group.provider.SiteConnectedGroupGroupProvider;
 import com.liferay.document.library.constants.DLPortletKeys;
 import com.liferay.document.library.kernel.model.DLFolder;
 import com.liferay.document.library.kernel.service.DLAppService;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.json.JSONFactory;
+import com.liferay.portal.kernel.json.JSONUtil;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.portlet.JSONPortletResponseUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
-import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ServiceContextFactory;
+import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ParamUtil;
+import com.liferay.portal.kernel.util.WebKeys;
+
+import java.io.IOException;
 
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
@@ -49,6 +51,30 @@ public class CopyFolderMVCActionCommand extends BaseMVCActionCommand {
 			ActionRequest actionRequest, ActionResponse actionResponse)
 		throws PortalException {
 
+		try {
+			_copyFolder(actionRequest, actionResponse);
+		}
+		catch (IOException ioException) {
+			_log.error(ioException);
+
+			throw new PortalException(ioException);
+		}
+	}
+
+	private void _checkDestinationGroup(Group group) throws PortalException {
+		if ((group != null) && group.isStaged() && !group.isStagingGroup()) {
+			throw new PortalException(
+				"cannot-copy-folders-to-the-live-version-of-a-group");
+		}
+	}
+
+	private void _copyFolder(
+			ActionRequest actionRequest, ActionResponse actionResponse)
+		throws IOException {
+
+		ThemeDisplay themeDisplay = (ThemeDisplay)actionRequest.getAttribute(
+			WebKeys.THEME_DISPLAY);
+
 		long sourceRepositoryId = ParamUtil.getLong(
 			actionRequest, "sourceRepositoryId");
 		long sourceFolderId = ParamUtil.getLong(
@@ -58,15 +84,49 @@ public class CopyFolderMVCActionCommand extends BaseMVCActionCommand {
 		long destinationParentFolderId = ParamUtil.getLong(
 			actionRequest, "destinationParentFolderId");
 
-		ServiceContext serviceContext = ServiceContextFactory.getInstance(
-			DLFolder.class.getName(), actionRequest);
+		try {
+			Group group = _groupLocalService.fetchGroup(
+				destinationRepositoryId);
 
-		_dlAppService.copyFolder(
-			sourceRepositoryId, sourceFolderId, destinationRepositoryId,
-			destinationParentFolderId, serviceContext);
+			_checkDestinationGroup(group);
+
+			_dlAppService.copyFolder(
+				sourceRepositoryId, sourceFolderId, destinationRepositoryId,
+				destinationParentFolderId,
+				_siteConnectedGroupGroupProvider.
+					getCurrentAndAncestorSiteAndDepotGroupIds(
+						group.getGroupId()),
+				ServiceContextFactory.getInstance(
+					DLFolder.class.getName(), actionRequest));
+
+			JSONPortletResponseUtil.writeJSON(
+				actionRequest, actionResponse, _jsonFactory.createJSONObject());
+		}
+		catch (PortalException portalException) {
+			String errorMessage = themeDisplay.translate(
+				portalException.getMessage());
+
+			JSONPortletResponseUtil.writeJSON(
+				actionRequest, actionResponse,
+				JSONUtil.put("errorMessage", errorMessage));
+
+			hideDefaultSuccessMessage(actionRequest);
+		}
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		CopyFolderMVCActionCommand.class);
 
 	@Reference
 	private DLAppService _dlAppService;
+
+	@Reference
+	private GroupLocalService _groupLocalService;
+
+	@Reference
+	private JSONFactory _jsonFactory;
+
+	@Reference
+	private SiteConnectedGroupGroupProvider _siteConnectedGroupGroupProvider;
 
 }

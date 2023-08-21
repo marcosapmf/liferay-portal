@@ -1,19 +1,14 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.web.internal.object.entries.display.context;
 
+import com.liferay.dynamic.data.mapping.expression.CreateExpressionRequest;
+import com.liferay.dynamic.data.mapping.expression.DDMExpression;
+import com.liferay.dynamic.data.mapping.expression.DDMExpressionException;
+import com.liferay.dynamic.data.mapping.expression.DDMExpressionFactory;
 import com.liferay.dynamic.data.mapping.form.field.type.constants.DDMFormFieldTypeConstants;
 import com.liferay.dynamic.data.mapping.form.renderer.DDMFormRenderer;
 import com.liferay.dynamic.data.mapping.form.renderer.DDMFormRenderingContext;
@@ -43,6 +38,7 @@ import com.liferay.object.constants.ObjectFieldSettingConstants;
 import com.liferay.object.constants.ObjectRelationshipConstants;
 import com.liferay.object.constants.ObjectWebKeys;
 import com.liferay.object.display.context.ObjectEntryDisplayContext;
+import com.liferay.object.dynamic.data.mapping.expression.ObjectEntryDDMExpressionFieldAccessor;
 import com.liferay.object.exception.NoSuchObjectLayoutException;
 import com.liferay.object.field.business.type.ObjectFieldBusinessType;
 import com.liferay.object.field.business.type.ObjectFieldBusinessTypeRegistry;
@@ -68,16 +64,20 @@ import com.liferay.object.service.ObjectEntryLocalService;
 import com.liferay.object.service.ObjectEntryService;
 import com.liferay.object.service.ObjectEntryServiceUtil;
 import com.liferay.object.service.ObjectFieldLocalService;
+import com.liferay.object.service.ObjectFieldSettingLocalServiceUtil;
 import com.liferay.object.service.ObjectLayoutLocalService;
 import com.liferay.object.service.ObjectRelationshipLocalService;
 import com.liferay.object.web.internal.display.context.helper.ObjectRequestHelper;
 import com.liferay.object.web.internal.security.permission.resource.util.ObjectDefinitionResourcePermissionUtil;
+import com.liferay.object.web.internal.util.ObjectEntryUtil;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
+import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
@@ -97,6 +97,7 @@ import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -128,6 +129,7 @@ public class ObjectEntryDisplayContextImpl
 	implements ObjectEntryDisplayContext {
 
 	public ObjectEntryDisplayContextImpl(
+		DDMExpressionFactory ddmExpressionFactory,
 		DDMFormRenderer ddmFormRenderer, HttpServletRequest httpServletRequest,
 		ItemSelector itemSelector,
 		ObjectDefinitionLocalService objectDefinitionLocalService,
@@ -140,6 +142,7 @@ public class ObjectEntryDisplayContextImpl
 		ObjectRelationshipLocalService objectRelationshipLocalService,
 		ObjectScopeProviderRegistry objectScopeProviderRegistry) {
 
+		_ddmExpressionFactory = ddmExpressionFactory;
 		_ddmFormRenderer = ddmFormRenderer;
 		_itemSelector = itemSelector;
 		_objectDefinitionLocalService = objectDefinitionLocalService;
@@ -671,6 +674,13 @@ public class ObjectEntryDisplayContextImpl
 					continue;
 				}
 
+				if (FeatureFlagManagerUtil.isEnabled("LPS-170122")) {
+					ddmForm.addDDMFormField(
+						_getDDMFormField(objectEntry, objectField, readOnly));
+
+					continue;
+				}
+
 				if (objectField.compareBusinessType(
 						ObjectFieldConstants.BUSINESS_TYPE_AGGREGATION) ||
 					objectField.compareBusinessType(
@@ -707,7 +717,8 @@ public class ObjectEntryDisplayContextImpl
 
 		DDMFormField ddmFormField = new DDMFormField(
 			objectField.getName(),
-			objectFieldBusinessType.getDDMFormFieldTypeName());
+			objectFieldBusinessType.getDDMFormFieldTypeName(
+				objectField.isLocalized()));
 
 		Map<String, Object> properties = objectFieldBusinessType.getProperties(
 			objectField, _createObjectFieldRenderingContext(objectEntry));
@@ -725,6 +736,8 @@ public class ObjectEntryDisplayContextImpl
 			objectField.getLabel(_objectRequestHelper.getLocale()));
 
 		ddmFormField.setLabel(ddmFormFieldLabelLocalizedValue);
+
+		ddmFormField.setLocalizable(objectField.isLocalized());
 
 		properties.forEach(
 			(key, value) -> ddmFormField.setProperty(key, value));
@@ -778,10 +791,23 @@ public class ObjectEntryDisplayContextImpl
 			ddmFormField.setReadOnly(true);
 		}
 		else {
-			ddmFormField.setReadOnly(readOnly);
+			if (FeatureFlagManagerUtil.isEnabled("LPS-170122")) {
+				ddmFormField.setReadOnly(
+					_isReadOnly(objectEntry, objectField, readOnly));
+			}
+			else {
+				ddmFormField.setReadOnly(readOnly);
+			}
 		}
 
 		ddmFormField.setRequired(objectField.isRequired());
+
+		if (objectField.isLocalized() &&
+			StringUtil.equals(
+				ddmFormField.getType(), DDMFormFieldTypeConstants.TEXT)) {
+
+			ddmFormField.setType(DDMFormFieldTypeConstants.LOCALIZABLE_TEXT);
+		}
 
 		return ddmFormField;
 	}
@@ -854,7 +880,6 @@ public class ObjectEntryDisplayContextImpl
 			ddmFormLayoutColumn.setDDMFormFieldNames(
 				ListUtil.fromArray(
 					String.valueOf(objectLayoutBox.getPrimaryKey())));
-
 			ddmFormLayoutColumn.setSize(12);
 
 			ddmFormLayoutRow.addDDMFormLayoutColumn(ddmFormLayoutColumn);
@@ -875,8 +900,6 @@ public class ObjectEntryDisplayContextImpl
 		if (values.isEmpty()) {
 			return null;
 		}
-
-		_setDateDDMFormFieldValue(ddmForm.getDDMFormFields(), values);
 
 		DDMFormValues ddmFormValues = new DDMFormValues(ddmForm);
 
@@ -986,6 +1009,14 @@ public class ObjectEntryDisplayContextImpl
 				_objectFieldNames.put(
 					objectLayoutColumn.getObjectFieldId(),
 					currentObjectField.getName());
+
+				if (FeatureFlagManagerUtil.isEnabled("LPS-170122")) {
+					nestedDDMFormFields.add(
+						_getDDMFormField(
+							objectEntry, currentObjectField, readOnly));
+
+					continue;
+				}
 
 				if (currentObjectField.compareBusinessType(
 						ObjectFieldConstants.BUSINESS_TYPE_AGGREGATION) ||
@@ -1100,7 +1131,8 @@ public class ObjectEntryDisplayContextImpl
 				_objectFieldBusinessTypeRegistry.getObjectFieldBusinessType(
 					objectField.getBusinessType());
 
-			return objectFieldBusinessType.getValue(objectField, values);
+			return objectFieldBusinessType.getDisplayContextValue(
+				objectField, _objectRequestHelper.getUserId(), values);
 		}
 		catch (PortalException portalException) {
 			if (_log.isDebugEnabled()) {
@@ -1139,35 +1171,78 @@ public class ObjectEntryDisplayContextImpl
 		return relatedObjectDefinition.isActive();
 	}
 
-	private void _removeTimeFromDateString(
-		DDMFormField ddmFormField, Map<String, Object> values) {
+	private boolean _isReadOnly(
+			ObjectEntry objectEntry, ObjectField objectField, boolean readOnly)
+		throws PortalException {
 
-		Object value = values.get(ddmFormField.getName());
-
-		if (value == null) {
-			return;
+		if (readOnly) {
+			return true;
 		}
 
-		String valueString = String.valueOf(value);
+		if (Objects.equals(
+				objectField.getReadOnly(),
+				ObjectFieldConstants.READ_ONLY_FALSE)) {
 
-		values.put(
-			ddmFormField.getName(),
-			valueString.replaceAll(
-				" [0-9]{1,2}:[0-9]{1,2}:[0-9]{1,2}.[0-9]", ""));
-	}
+			return false;
+		}
 
-	private void _setDateDDMFormFieldValue(
-		List<DDMFormField> ddmFormFields, Map<String, Object> values) {
+		if (Objects.equals(
+				objectField.getReadOnly(),
+				ObjectFieldConstants.READ_ONLY_TRUE)) {
 
-		for (DDMFormField ddmFormField : ddmFormFields) {
-			if (StringUtil.equals(ddmFormField.getType(), "date")) {
-				_removeTimeFromDateString(ddmFormField, values);
-			}
-			else if (StringUtil.equals(ddmFormField.getType(), "fieldset")) {
-				_setDateDDMFormFieldValue(
-					ddmFormField.getNestedDDMFormFields(), values);
+			return true;
+		}
+
+		Map<String, Object> existingValues = new HashMap<>();
+
+		if (objectEntry == null) {
+			for (ObjectField objectField1 :
+					_objectFieldLocalService.getObjectFields(
+						objectField.getObjectDefinitionId())) {
+
+				existingValues.put(
+					objectField1.getName(),
+					ObjectFieldSettingUtil.getDefaultValueAsString(
+						null, objectField.getObjectFieldId(),
+						ObjectFieldSettingLocalServiceUtil.getService(), null));
 			}
 		}
+		else {
+			com.liferay.object.model.ObjectEntry serviceBuilderObjectEntry =
+				_objectEntryLocalService.getObjectEntry(
+					objectEntry.getExternalReferenceCode(),
+					objectField.getObjectDefinitionId());
+
+			existingValues.putAll(
+				_objectEntryLocalService.getSystemValues(
+					serviceBuilderObjectEntry));
+			existingValues.putAll(
+				_objectEntryLocalService.getValues(serviceBuilderObjectEntry));
+
+			existingValues.put("currentUserId", _themeDisplay.getUserId());
+		}
+
+		try {
+			DDMExpression<Boolean> ddmExpression =
+				_ddmExpressionFactory.createExpression(
+					CreateExpressionRequest.Builder.newBuilder(
+						objectField.getReadOnlyConditionExpression()
+					).withDDMExpressionFieldAccessor(
+						new ObjectEntryDDMExpressionFieldAccessor(
+							existingValues)
+					).build());
+
+			ddmExpression.setVariables(existingValues);
+
+			if (ddmExpression.evaluate()) {
+				return true;
+			}
+		}
+		catch (DDMExpressionException ddmExpressionException) {
+			_log.error(ddmExpressionException);
+		}
+
+		return false;
 	}
 
 	private void _setDDMFormFieldValueValue(
@@ -1177,8 +1252,19 @@ public class ObjectEntryDisplayContextImpl
 		Object value = _getValue(ddmFormField, values);
 
 		if (value == null) {
-			ddmFormFieldValue.setValue(
-				new UnlocalizedValue(GetterUtil.DEFAULT_STRING));
+			LocalizedValue ddmFormFieldPredefinedValue =
+				ddmFormField.getPredefinedValue();
+
+			if (MapUtil.isEmpty(ddmFormFieldPredefinedValue.getValues())) {
+				ddmFormFieldValue.setValue(
+					new UnlocalizedValue(StringPool.BLANK));
+			}
+			else {
+				ddmFormFieldValue.setValue(
+					new UnlocalizedValue(
+						ddmFormFieldPredefinedValue.getString(
+							_objectRequestHelper.getLocale())));
+			}
 		}
 		else if (value instanceof ArrayList) {
 			ddmFormFieldValue.setValue(
@@ -1203,6 +1289,15 @@ public class ObjectEntryDisplayContextImpl
 			ddmFormFieldValue.setValue(
 				new UnlocalizedValue(listEntry.getKey()));
 		}
+		else if (FeatureFlagManagerUtil.isEnabled("LPS-172017") &&
+				 (value instanceof Map)) {
+
+			JSONObject jsonObject = JSONFactoryUtil.createJSONObject(
+				(Map<String, String>)value);
+
+			ddmFormFieldValue.setValue(
+				new UnlocalizedValue(jsonObject.toString()));
+		}
 		else {
 			if (value instanceof Double) {
 				DecimalFormat decimalFormat =
@@ -1226,22 +1321,14 @@ public class ObjectEntryDisplayContextImpl
 
 		ObjectDefinition objectDefinition = getObjectDefinition1();
 
-		com.liferay.object.model.ObjectEntry serviceBuilderObjectEntry =
-			_objectEntryLocalService.createObjectEntry(0L);
-
-		serviceBuilderObjectEntry.setExternalReferenceCode(
-			objectEntry.getExternalReferenceCode());
-		serviceBuilderObjectEntry.setObjectEntryId(
-			GetterUtil.getLong(objectEntry.getId()));
-		serviceBuilderObjectEntry.setObjectDefinitionId(
-			objectDefinition.getObjectDefinitionId());
-
-		return serviceBuilderObjectEntry;
+		return ObjectEntryUtil.toObjectEntry(
+			objectDefinition.getObjectDefinitionId(), objectEntry);
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		ObjectEntryDisplayContextImpl.class);
 
+	private final DDMExpressionFactory _ddmExpressionFactory;
 	private final DDMFormRenderer _ddmFormRenderer;
 	private final ItemSelector _itemSelector;
 	private final ObjectDefinitionLocalService _objectDefinitionLocalService;

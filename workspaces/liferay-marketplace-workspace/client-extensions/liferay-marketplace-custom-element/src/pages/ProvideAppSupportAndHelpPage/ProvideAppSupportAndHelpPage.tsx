@@ -1,3 +1,8 @@
+/**
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
+ */
+
 import {Header} from '../../components/Header/Header';
 import {Input} from '../../components/Input/Input';
 import {NewAppPageFooterButtons} from '../../components/NewAppPageFooterButtons/NewAppPageFooterButtons';
@@ -41,7 +46,7 @@ export function ProvideAppSupportAndHelpPage({
 
 			<Section
 				label="App Support and help"
-				tooltip="More info"
+				tooltip="Define the support and help references. Users can access these resources pre and post purchase to find out more information about your app or solution."
 				tooltipText="More Info"
 			>
 				<Input

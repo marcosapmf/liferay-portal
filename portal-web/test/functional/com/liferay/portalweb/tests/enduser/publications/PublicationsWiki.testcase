@@ -15,9 +15,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -67,12 +67,6 @@ definition {
 			changeTitle = "Wiki Page Title",
 			changeType = "Added",
 			changeUser = "Test Test");
-
-		Button.clickPublish();
-
-		AssertTextEquals.assertPartialText(
-			locator1 = "Message#SUCCESS",
-			value1 = "No unresolved conflicts, ready to publish.");
 
 		Publications.publishPublication(publicationName = "Publication Name");
 	}
@@ -145,12 +139,6 @@ definition {
 			changeTitle = "Wiki Node Name",
 			changeType = "Deleted",
 			changeUser = "Test Test");*/
-
-		Button.clickPublish();
-
-		AssertTextEquals.assertPartialText(
-			locator1 = "Message#SUCCESS",
-			value1 = "No unresolved conflicts, ready to publish.");
 
 		Publications.publishPublication(publicationName = "Publication Name");
 	}
@@ -230,16 +218,14 @@ definition {
 		}
 
 		task ("Publish the publication") {
-			JSONPublications.publishPublication(publicationName = "Test Publication");
-
-			Publications.viewPublicationPublished(publicationName = "Test Publication");
+			Publications.publishPublication(publicationName = "Test Publication");
 		}
 	}
 
 	@description = "This is the use case for LPS-179026. Can preview changes for WikiPages"
 	@priority = 3
 	test CanPreviewChangesForWikiPages {
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		JSONWiki.addWikiPage(
 			groupName = "Site Name",
@@ -278,7 +264,8 @@ definition {
 				changeType = "Modified",
 				contentValueInProduction = "Wiki Page Content",
 				contentValueInPublication = "Wiki Page Content Edited",
-				diffAddedValue = "Attachments");
+				diffAddedValue = "Attachments",
+				publicationName = "Publication Name 1");
 		}
 	}
 
@@ -329,17 +316,13 @@ definition {
 		}
 
 		task ("Publish publications and assert that was successful") {
-			PublicationsNavigator.gotoPublish(
+			Publications.publishPublication(
 				gotoPublicationsAdmin = "true",
 				publicationName = "Publication Name 2");
 
-			Publications.publishPublication(publicationName = "Publication Name 2");
-
-			PublicationsNavigator.gotoPublish(
+			Publications.publishPublication(
 				gotoPublicationsAdmin = "true",
 				publicationName = "Publication Name 1");
-
-			Publications.publishPublication(publicationName = "Publication Name 1");
 		}
 	}
 

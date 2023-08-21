@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.service.impl;
@@ -244,6 +235,7 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 	 * Adds a default admin user for the company.
 	 *
 	 * @param  companyId the primary key of the user's company
+	 * @param  password the password of the user
 	 * @param  screenName the user's screen name
 	 * @param  emailAddress the user's email address
 	 * @param  locale the user's locale
@@ -252,22 +244,18 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 	 * @param  lastName the user's last name
 	 * @return the new default admin user
 	 */
-	@Override
 	public User addDefaultAdminUser(
-			long companyId, String screenName, String emailAddress,
-			Locale locale, String firstName, String middleName, String lastName)
+			long companyId, String password, String screenName,
+			String emailAddress, Locale locale, String firstName,
+			String middleName, String lastName)
 		throws PortalException {
 
 		long creatorUserId = 0;
 		boolean autoPassword = false;
 
-		String password1 = PropsValues.DEFAULT_ADMIN_PASSWORD;
-
-		String password2 = password1;
-
 		boolean passwordReset = _isPasswordReset(companyId);
 
-		if (Validator.isNull(password1)) {
+		if (Validator.isNull(password)) {
 			autoPassword = true;
 			passwordReset = true;
 		}
@@ -320,7 +308,7 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 		serviceContext.setPortalURL(company.getPortalURL(0));
 
 		User defaultAdminUser = addUser(
-			creatorUserId, companyId, autoPassword, password1, password2,
+			creatorUserId, companyId, autoPassword, password, password,
 			autoScreenName, screenName, emailAddress, locale, firstName,
 			middleName, lastName, prefixListTypeId, suffixListTypeId, male,
 			birthdayMonth, birthdayDay, birthdayYear, jobTitle,
@@ -532,10 +520,13 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 	 *
 	 * @param groupId the primary key of the group
 	 * @param userId the primary key of the user
+	 * @return <code>true</code> if the association between the ${groupId} and ${userId} is added; <code>false</code> if it was already added
 	 */
 	@Override
-	public void addGroupUser(long groupId, long userId) {
-		_groupPersistence.addUser(groupId, userId);
+	public boolean addGroupUser(long groupId, long userId) {
+		if (!super.addGroupUser(groupId, userId)) {
+			return false;
+		}
 
 		try {
 			reindex(userId);
@@ -545,6 +536,8 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 		catch (PortalException portalException) {
 			throw new SystemException(portalException);
 		}
+
+		return true;
 	}
 
 	/**
@@ -552,10 +545,11 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 	 *
 	 * @param groupId the primary key of the group
 	 * @param user the user
+	 * @return <code>true</code> if the association between the ${groupId} and ${user} is added; <code>false</code> if it was already added
 	 */
 	@Override
-	public void addGroupUser(long groupId, User user) {
-		addGroupUser(groupId, user.getUserId());
+	public boolean addGroupUser(long groupId, User user) {
+		return addGroupUser(groupId, user.getUserId());
 	}
 
 	/**
@@ -563,10 +557,11 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 	 *
 	 * @param  groupId the primary key of the group
 	 * @param  users the users
+	 * @return <code>true</code> if at least an association between the ${groupId} and the ${users} is added; <code>false</code> if all were already added
 	 * @throws PortalException
 	 */
 	@Override
-	public void addGroupUsers(long groupId, List<User> users)
+	public boolean addGroupUsers(long groupId, List<User> users)
 		throws PortalException {
 
 		List<Long> userIds = new ArrayList<>();
@@ -575,7 +570,7 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 			userIds.add(user.getUserId());
 		}
 
-		addGroupUsers(groupId, ArrayUtil.toLongArray(userIds));
+		return addGroupUsers(groupId, ArrayUtil.toLongArray(userIds));
 	}
 
 	/**
@@ -583,16 +578,21 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 	 *
 	 * @param groupId the primary key of the group
 	 * @param userIds the primary keys of the users
+	 * @return <code>true</code> if at least an association between the ${groupId} and the ${userIds} is added; <code>false</code> if all were already added
 	 */
 	@Override
-	public void addGroupUsers(long groupId, long[] userIds)
+	public boolean addGroupUsers(long groupId, long[] userIds)
 		throws PortalException {
 
-		_groupPersistence.addUsers(groupId, userIds);
+		if (!super.addGroupUsers(groupId, userIds)) {
+			return false;
+		}
 
 		reindex(userIds);
 
 		addDefaultRolesAndTeams(groupId, userIds);
+
+		return true;
 	}
 
 	/**
@@ -600,10 +600,13 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 	 *
 	 * @param organizationId the primary key of the organization
 	 * @param userId the primary key of the user
+	 * @return <code>true</code> if the association between the ${organizationId} and ${userId} is added; <code>false</code> if it was already added
 	 */
 	@Override
-	public void addOrganizationUser(long organizationId, long userId) {
-		_organizationPersistence.addUser(organizationId, userId);
+	public boolean addOrganizationUser(long organizationId, long userId) {
+		if (!super.addOrganizationUser(organizationId, userId)) {
+			return false;
+		}
 
 		try {
 			reindex(userId);
@@ -611,6 +614,8 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 		catch (SearchException searchException) {
 			throw new SystemException(searchException);
 		}
+
+		return true;
 	}
 
 	/**
@@ -618,10 +623,13 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 	 *
 	 * @param organizationId the primary key of the organization
 	 * @param user the user
+	 * @return <code>true</code> if the association between the ${organizationId} and ${user} is added; <code>false</code> if it was already added
 	 */
 	@Override
-	public void addOrganizationUser(long organizationId, User user) {
-		_organizationPersistence.addUser(organizationId, user);
+	public boolean addOrganizationUser(long organizationId, User user) {
+		if (!super.addOrganizationUser(organizationId, user)) {
+			return false;
+		}
 
 		try {
 			reindex(user);
@@ -629,6 +637,8 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 		catch (SearchException searchException) {
 			throw new SystemException(searchException);
 		}
+
+		return true;
 	}
 
 	/**
@@ -636,14 +646,19 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 	 *
 	 * @param organizationId the primary key of the organization
 	 * @param users the users
+	 * @return <code>true</code> if at least an association between the ${organizationId} and the ${users} is added; <code>false</code> if all were already added
 	 */
 	@Override
-	public void addOrganizationUsers(long organizationId, List<User> users)
+	public boolean addOrganizationUsers(long organizationId, List<User> users)
 		throws PortalException {
 
-		_organizationPersistence.addUsers(organizationId, users);
+		if (!super.addOrganizationUsers(organizationId, users)) {
+			return false;
+		}
 
 		reindex(users);
+
+		return true;
 	}
 
 	/**
@@ -651,14 +666,19 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 	 *
 	 * @param organizationId the primary key of the organization
 	 * @param userIds the primary keys of the users
+	 * @return <code>true</code> if at least an association between the ${organizationId} and the ${userIds} is added; <code>false</code> if all were already added
 	 */
 	@Override
-	public void addOrganizationUsers(long organizationId, long[] userIds)
+	public boolean addOrganizationUsers(long organizationId, long[] userIds)
 		throws PortalException {
 
-		_organizationPersistence.addUsers(organizationId, userIds);
+		if (!super.addOrganizationUsers(organizationId, userIds)) {
+			return false;
+		}
 
 		reindex(userIds);
+
+		return true;
 	}
 
 	@Override
@@ -738,10 +758,13 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 	 *
 	 * @param roleId the primary key of the role
 	 * @param userId the primary key of the user
+	 * @return <code>true</code> if the association between the ${roleId} and ${userId} is added; <code>false</code> if it was already added
 	 */
 	@Override
-	public void addRoleUser(long roleId, long userId) {
-		_rolePersistence.addUser(roleId, userId);
+	public boolean addRoleUser(long roleId, long userId) {
+		if (!super.addRoleUser(roleId, userId)) {
+			return false;
+		}
 
 		try {
 			reindex(userId);
@@ -749,6 +772,8 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 		catch (SearchException searchException) {
 			throw new SystemException(searchException);
 		}
+
+		return true;
 	}
 
 	/**
@@ -756,10 +781,13 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 	 *
 	 * @param roleId the primary key of the role
 	 * @param user the user
+	 * @return <code>true</code> if the association between the ${roleId} and ${user} is added; <code>false</code> if it was already added
 	 */
 	@Override
-	public void addRoleUser(long roleId, User user) {
-		_rolePersistence.addUser(roleId, user);
+	public boolean addRoleUser(long roleId, User user) {
+		if (!super.addRoleUser(roleId, user)) {
+			return false;
+		}
 
 		try {
 			reindex(user);
@@ -767,6 +795,8 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 		catch (SearchException searchException) {
 			throw new SystemException(searchException);
 		}
+
+		return true;
 	}
 
 	/**
@@ -774,15 +804,20 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 	 *
 	 * @param  roleId the primary key of the role
 	 * @param  users the users
+	 * @return <code>true</code> if at least an association between the ${roleId} and the ${users} is added; <code>false</code> if all were already added
 	 * @throws PortalException
 	 */
 	@Override
-	public void addRoleUsers(long roleId, List<User> users)
+	public boolean addRoleUsers(long roleId, List<User> users)
 		throws PortalException {
 
-		_rolePersistence.addUsers(roleId, users);
+		if (!super.addRoleUsers(roleId, users)) {
+			return false;
+		}
 
 		reindex(users);
+
+		return true;
 	}
 
 	/**
@@ -790,14 +825,19 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 	 *
 	 * @param roleId the primary key of the role
 	 * @param userIds the primary keys of the users
+	 * @return <code>true</code> if at least an association between the ${roleId} and the ${userIds} is added; <code>false</code> if all were already added
 	 */
 	@Override
-	public void addRoleUsers(long roleId, long[] userIds)
+	public boolean addRoleUsers(long roleId, long[] userIds)
 		throws PortalException {
 
-		_rolePersistence.addUsers(roleId, userIds);
+		if (!super.addRoleUsers(roleId, userIds)) {
+			return false;
+		}
 
 		reindex(userIds);
+
+		return true;
 	}
 
 	/**
@@ -805,10 +845,13 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 	 *
 	 * @param teamId the primary key of the team
 	 * @param userId the primary key of the user
+	 * @return <code>true</code> if the association between the ${teamId} and ${userId} is added; <code>false</code> if it was already added
 	 */
 	@Override
-	public void addTeamUser(long teamId, long userId) {
-		_teamPersistence.addUser(teamId, userId);
+	public boolean addTeamUser(long teamId, long userId) {
+		if (!super.addTeamUser(teamId, userId)) {
+			return false;
+		}
 
 		try {
 			reindex(userId);
@@ -816,6 +859,8 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 		catch (SearchException searchException) {
 			throw new SystemException(searchException);
 		}
+
+		return true;
 	}
 
 	/**
@@ -823,10 +868,13 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 	 *
 	 * @param teamId the primary key of the team
 	 * @param user the user
+	 * @return <code>true</code> if the association between the ${teamId} and ${user} is added; <code>false</code> if it was already added
 	 */
 	@Override
-	public void addTeamUser(long teamId, User user) {
-		_teamPersistence.addUser(teamId, user);
+	public boolean addTeamUser(long teamId, User user) {
+		if (!super.addTeamUser(teamId, user)) {
+			return false;
+		}
 
 		try {
 			reindex(user);
@@ -834,6 +882,8 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 		catch (SearchException searchException) {
 			throw new SystemException(searchException);
 		}
+
+		return true;
 	}
 
 	/**
@@ -841,15 +891,20 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 	 *
 	 * @param  teamId the primary key of the team
 	 * @param  users the users
+	 * @return <code>true</code> if at least an association between the ${teamId} and the ${users} is added; <code>false</code> if all were already added
 	 * @throws PortalException
 	 */
 	@Override
-	public void addTeamUsers(long teamId, List<User> users)
+	public boolean addTeamUsers(long teamId, List<User> users)
 		throws PortalException {
 
-		_teamPersistence.addUsers(teamId, users);
+		if (!super.addTeamUsers(teamId, users)) {
+			return false;
+		}
 
 		reindex(users);
+
+		return true;
 	}
 
 	/**
@@ -857,14 +912,19 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 	 *
 	 * @param teamId the primary key of the team
 	 * @param userIds the primary keys of the users
+	 * @return <code>true</code> if at least an association between the ${teamId} and the ${userIds} is added; <code>false</code> if all were already added
 	 */
 	@Override
-	public void addTeamUsers(long teamId, long[] userIds)
+	public boolean addTeamUsers(long teamId, long[] userIds)
 		throws PortalException {
 
-		_teamPersistence.addUsers(teamId, userIds);
+		if (!super.addTeamUsers(teamId, userIds)) {
+			return false;
+		}
 
 		reindex(userIds);
+
+		return true;
 	}
 
 	/**
@@ -958,17 +1018,23 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 	 * Adds the user to the user group.
 	 *
 	 * @param userGroupId the primary key of the user group
+	 * @param userId the primary key of the user
+	 * @return <code>true</code> if the association between the ${userGroupId} and ${userId} is added; <code>false</code> if it was already added
 	 */
 	@Override
-	public void addUserGroupUser(long userGroupId, long userId) {
-		try {
-			_userGroupPersistence.addUser(userGroupId, userId);
+	public boolean addUserGroupUser(long userGroupId, long userId) {
+		if (!super.addUserGroupUser(userGroupId, userId)) {
+			return false;
+		}
 
+		try {
 			reindex(userId);
 		}
 		catch (PortalException portalException) {
 			throw new SystemException(portalException);
 		}
+
+		return true;
 	}
 
 	/**
@@ -976,11 +1042,12 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 	 *
 	 * @param userGroupId the primary key of the user group
 	 * @param user the user
+	 * @return <code>true</code> if the association between the ${userGroupId} and ${user} is added; <code>false</code> if it was already added
 	 */
 	@Override
 	@SuppressWarnings("deprecation")
-	public void addUserGroupUser(long userGroupId, User user) {
-		addUserGroupUser(userGroupId, user.getUserId());
+	public boolean addUserGroupUser(long userGroupId, User user) {
+		return addUserGroupUser(userGroupId, user.getUserId());
 	}
 
 	/**
@@ -988,23 +1055,24 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 	 *
 	 * @param userGroupId the primary key of the user group
 	 * @param users the users
+	 * @return <code>true</code> if at least an association between the ${userGroupId} and the ${users} is added; <code>false</code> if all were already added
 	 */
 	@Override
-	public void addUserGroupUsers(long userGroupId, List<User> users)
+	public boolean addUserGroupUsers(long userGroupId, List<User> users)
 		throws PortalException {
 
-		List<Long> userIds = new ArrayList<>();
-
-		for (User user : users) {
-			userIds.add(user.getUserId());
+		if (!super.addUserGroupUsers(userGroupId, users)) {
+			return false;
 		}
 
 		try {
-			addUserGroupUsers(userGroupId, ArrayUtil.toLongArray(userIds));
+			reindex(users);
 		}
 		catch (PortalException portalException) {
 			throw new SystemException(portalException);
 		}
+
+		return true;
 	}
 
 	/**
@@ -1012,14 +1080,19 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 	 *
 	 * @param userGroupId the primary key of the user group
 	 * @param userIds the primary keys of the users
+	 * @return <code>true</code> if at least an association between the ${userGroupId} and the ${userIds} is added; <code>false</code> if all were already added
 	 */
 	@Override
-	public void addUserGroupUsers(long userGroupId, long[] userIds)
+	public boolean addUserGroupUsers(long userGroupId, long[] userIds)
 		throws PortalException {
 
-		_userGroupPersistence.addUsers(userGroupId, userIds);
+		if (!super.addUserGroupUsers(userGroupId, userIds)) {
+			return false;
+		}
 
 		reindex(userIds);
+
+		return true;
 	}
 
 	/**
@@ -1561,7 +1634,8 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 		}
 
 		handleAuthenticationFailure(
-			login, authType, user, Collections.<String, String[]>emptyMap(),
+			companyId, authType, login, user,
+			Collections.<String, String[]>emptyMap(),
 			Collections.<String, String[]>emptyMap());
 
 		return 0;
@@ -1640,7 +1714,7 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 		Company company = _companyPersistence.findByPrimaryKey(companyId);
 
 		handleAuthenticationFailure(
-			userName, company.getAuthType(), user,
+			companyId, company.getAuthType(), userName, user,
 			new HashMap<String, String[]>(), new HashMap<String, String[]>());
 
 		return 0;
@@ -5683,6 +5757,14 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 				PwdAuthenticator.pretendToAuthenticate();
 			}
 
+			try {
+				AuthPipeline.onDoesNotExist(
+					companyId, authType, login, headerMap, parameterMap);
+			}
+			catch (Exception exception) {
+				_log.error(exception);
+			}
+
 			return Authenticator.DNE;
 		}
 
@@ -5746,7 +5828,7 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 			}
 			catch (PortalException portalException) {
 				handleAuthenticationFailure(
-					login, authType, user, headerMap, parameterMap);
+					companyId, authType, login, user, headerMap, parameterMap);
 
 				throw portalException;
 			}
@@ -5777,7 +5859,7 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 
 		if (authResult == Authenticator.FAILURE) {
 			authResult = handleAuthenticationFailure(
-				login, authType, user, headerMap, parameterMap);
+				companyId, authType, login, user, headerMap, parameterMap);
 
 			user = userPersistence.fetchByPrimaryKey(user.getUserId());
 		}
@@ -6016,41 +6098,55 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 	}
 
 	protected int handleAuthenticationFailure(
-		String login, String authType, User user,
+		long companyId, String authType, String login, User user,
 		Map<String, String[]> headerMap, Map<String, String[]> parameterMap) {
 
 		if (user == null) {
+			try {
+				AuthPipeline.onDoesNotExist(
+					companyId, authType, login, headerMap, parameterMap);
+			}
+			catch (Exception exception) {
+				_log.error(exception);
+			}
+
 			return Authenticator.DNE;
 		}
 
 		try {
 			if (authType.equals(CompanyConstants.AUTH_TYPE_EA)) {
 				AuthPipeline.onFailureByEmailAddress(
-					PropsKeys.AUTH_FAILURE, user.getCompanyId(),
-					user.getEmailAddress(), headerMap, parameterMap);
+					PropsKeys.AUTH_FAILURE, companyId, user.getEmailAddress(),
+					headerMap, parameterMap);
 			}
 			else if (authType.equals(CompanyConstants.AUTH_TYPE_SN)) {
 				AuthPipeline.onFailureByScreenName(
-					PropsKeys.AUTH_FAILURE, user.getCompanyId(),
-					user.getScreenName(), headerMap, parameterMap);
+					PropsKeys.AUTH_FAILURE, companyId, user.getScreenName(),
+					headerMap, parameterMap);
 			}
 			else if (authType.equals(CompanyConstants.AUTH_TYPE_ID)) {
 				AuthPipeline.onFailureByUserId(
-					PropsKeys.AUTH_FAILURE, user.getCompanyId(),
-					user.getUserId(), headerMap, parameterMap);
+					PropsKeys.AUTH_FAILURE, companyId, user.getUserId(),
+					headerMap, parameterMap);
 			}
 
 			user = userPersistence.fetchByPrimaryKey(user.getUserId());
 
 			if (user == null) {
+				try {
+					AuthPipeline.onDoesNotExist(
+						companyId, authType, login, headerMap, parameterMap);
+				}
+				catch (Exception exception) {
+					_log.error(exception);
+				}
+
 				return Authenticator.DNE;
 			}
 
 			// Let LDAP handle max failure event
 
-			if (!LDAPSettingsUtil.isPasswordPolicyEnabled(
-					user.getCompanyId())) {
-
+			if (!LDAPSettingsUtil.isPasswordPolicyEnabled(companyId)) {
 				PasswordPolicy passwordPolicy = user.getPasswordPolicy();
 
 				user = userPersistence.fetchByPrimaryKey(user.getUserId());
@@ -6064,17 +6160,17 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 
 					if (authType.equals(CompanyConstants.AUTH_TYPE_EA)) {
 						AuthPipeline.onMaxFailuresByEmailAddress(
-							PropsKeys.AUTH_MAX_FAILURES, user.getCompanyId(),
+							PropsKeys.AUTH_MAX_FAILURES, companyId,
 							user.getEmailAddress(), headerMap, parameterMap);
 					}
 					else if (authType.equals(CompanyConstants.AUTH_TYPE_SN)) {
 						AuthPipeline.onMaxFailuresByScreenName(
-							PropsKeys.AUTH_MAX_FAILURES, user.getCompanyId(),
+							PropsKeys.AUTH_MAX_FAILURES, companyId,
 							user.getScreenName(), headerMap, parameterMap);
 					}
 					else if (authType.equals(CompanyConstants.AUTH_TYPE_ID)) {
 						AuthPipeline.onMaxFailuresByUserId(
-							PropsKeys.AUTH_MAX_FAILURES, user.getCompanyId(),
+							PropsKeys.AUTH_MAX_FAILURES, companyId,
 							user.getUserId(), headerMap, parameterMap);
 					}
 				}

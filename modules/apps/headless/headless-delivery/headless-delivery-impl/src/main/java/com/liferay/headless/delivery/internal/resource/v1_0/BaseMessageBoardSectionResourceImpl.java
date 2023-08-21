@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.delivery.internal.resource.v1_0;
@@ -1136,15 +1127,15 @@ public abstract class BaseMessageBoardSectionResourceImpl
 			Map<String, Serializable> parameters)
 		throws Exception {
 
-		UnsafeConsumer<MessageBoardSection, Exception>
-			messageBoardSectionUnsafeConsumer = null;
+		UnsafeFunction<MessageBoardSection, MessageBoardSection, Exception>
+			messageBoardSectionUnsafeFunction = null;
 
 		String createStrategy = (String)parameters.getOrDefault(
 			"createStrategy", "INSERT");
 
-		if ("INSERT".equalsIgnoreCase(createStrategy)) {
+		if (StringUtil.equalsIgnoreCase(createStrategy, "INSERT")) {
 			if (parameters.containsKey("siteId")) {
-				messageBoardSectionUnsafeConsumer =
+				messageBoardSectionUnsafeFunction =
 					messageBoardSection -> postSiteMessageBoardSection(
 						(Long)parameters.get("siteId"), messageBoardSection);
 			}
@@ -1154,21 +1145,25 @@ public abstract class BaseMessageBoardSectionResourceImpl
 			}
 		}
 
-		if (messageBoardSectionUnsafeConsumer == null) {
+		if (messageBoardSectionUnsafeFunction == null) {
 			throw new NotSupportedException(
 				"Create strategy \"" + createStrategy +
 					"\" is not supported for MessageBoardSection");
 		}
 
-		if (contextBatchUnsafeConsumer != null) {
+		if (contextBatchUnsafeBiConsumer != null) {
+			contextBatchUnsafeBiConsumer.accept(
+				messageBoardSections, messageBoardSectionUnsafeFunction);
+		}
+		else if (contextBatchUnsafeConsumer != null) {
 			contextBatchUnsafeConsumer.accept(
-				messageBoardSections, messageBoardSectionUnsafeConsumer);
+				messageBoardSections, messageBoardSectionUnsafeFunction::apply);
 		}
 		else {
 			for (MessageBoardSection messageBoardSection :
 					messageBoardSections) {
 
-				messageBoardSectionUnsafeConsumer.accept(messageBoardSection);
+				messageBoardSectionUnsafeFunction.apply(messageBoardSection);
 			}
 		}
 	}
@@ -1257,14 +1252,14 @@ public abstract class BaseMessageBoardSectionResourceImpl
 			Map<String, Serializable> parameters)
 		throws Exception {
 
-		UnsafeConsumer<MessageBoardSection, Exception>
-			messageBoardSectionUnsafeConsumer = null;
+		UnsafeFunction<MessageBoardSection, MessageBoardSection, Exception>
+			messageBoardSectionUnsafeFunction = null;
 
 		String updateStrategy = (String)parameters.getOrDefault(
 			"updateStrategy", "UPDATE");
 
-		if ("PARTIAL_UPDATE".equalsIgnoreCase(updateStrategy)) {
-			messageBoardSectionUnsafeConsumer =
+		if (StringUtil.equalsIgnoreCase(updateStrategy, "PARTIAL_UPDATE")) {
+			messageBoardSectionUnsafeFunction =
 				messageBoardSection -> patchMessageBoardSection(
 					messageBoardSection.getId() != null ?
 						messageBoardSection.getId() :
@@ -1274,8 +1269,8 @@ public abstract class BaseMessageBoardSectionResourceImpl
 					messageBoardSection);
 		}
 
-		if ("UPDATE".equalsIgnoreCase(updateStrategy)) {
-			messageBoardSectionUnsafeConsumer =
+		if (StringUtil.equalsIgnoreCase(updateStrategy, "UPDATE")) {
+			messageBoardSectionUnsafeFunction =
 				messageBoardSection -> putMessageBoardSection(
 					messageBoardSection.getId() != null ?
 						messageBoardSection.getId() :
@@ -1285,21 +1280,25 @@ public abstract class BaseMessageBoardSectionResourceImpl
 					messageBoardSection);
 		}
 
-		if (messageBoardSectionUnsafeConsumer == null) {
+		if (messageBoardSectionUnsafeFunction == null) {
 			throw new NotSupportedException(
 				"Update strategy \"" + updateStrategy +
 					"\" is not supported for MessageBoardSection");
 		}
 
-		if (contextBatchUnsafeConsumer != null) {
+		if (contextBatchUnsafeBiConsumer != null) {
+			contextBatchUnsafeBiConsumer.accept(
+				messageBoardSections, messageBoardSectionUnsafeFunction);
+		}
+		else if (contextBatchUnsafeConsumer != null) {
 			contextBatchUnsafeConsumer.accept(
-				messageBoardSections, messageBoardSectionUnsafeConsumer);
+				messageBoardSections, messageBoardSectionUnsafeFunction::apply);
 		}
 		else {
 			for (MessageBoardSection messageBoardSection :
 					messageBoardSections) {
 
-				messageBoardSectionUnsafeConsumer.accept(messageBoardSection);
+				messageBoardSectionUnsafeFunction.apply(messageBoardSection);
 			}
 		}
 	}
@@ -1485,6 +1484,16 @@ public abstract class BaseMessageBoardSectionResourceImpl
 
 	public void setContextAcceptLanguage(AcceptLanguage contextAcceptLanguage) {
 		this.contextAcceptLanguage = contextAcceptLanguage;
+	}
+
+	public void setContextBatchUnsafeBiConsumer(
+		UnsafeBiConsumer
+			<Collection<MessageBoardSection>,
+			 UnsafeFunction
+				 <MessageBoardSection, MessageBoardSection, Exception>,
+			 Exception> contextBatchUnsafeBiConsumer) {
+
+		this.contextBatchUnsafeBiConsumer = contextBatchUnsafeBiConsumer;
 	}
 
 	public void setContextBatchUnsafeConsumer(
@@ -1751,6 +1760,10 @@ public abstract class BaseMessageBoardSectionResourceImpl
 	}
 
 	protected AcceptLanguage contextAcceptLanguage;
+	protected UnsafeBiConsumer
+		<Collection<MessageBoardSection>,
+		 UnsafeFunction<MessageBoardSection, MessageBoardSection, Exception>,
+		 Exception> contextBatchUnsafeBiConsumer;
 	protected UnsafeBiConsumer
 		<Collection<MessageBoardSection>,
 		 UnsafeConsumer<MessageBoardSection, Exception>, Exception>

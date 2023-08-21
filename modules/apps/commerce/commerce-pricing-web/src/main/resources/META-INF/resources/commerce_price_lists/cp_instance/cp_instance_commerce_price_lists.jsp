@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -58,33 +49,38 @@ long cpInstanceId = cpInstanceCommercePriceEntryDisplayContext.getCPInstanceId()
 	</aui:form>
 </div>
 
-<aui:script use="liferay-item-selector-dialog">
+<aui:script sandbox="<%= true %>">
 	Liferay.on('<portlet:namespace />addCommercePriceEntry', () => {
-		var itemSelectorDialog = new A.LiferayItemSelectorDialog({
-			eventName: 'priceListsSelectItem',
-			on: {
-				selectedItemChange: function (event) {
-					var selectedItems = event.newVal;
+		const openerWindow = Liferay.Util.getOpener();
 
-					if (selectedItems) {
-						window.document.querySelector(
-							'#<portlet:namespace />commercePriceListIds'
-						).value = selectedItems;
+		openerWindow.Liferay.Util.openSelectionModal({
+			multiple: true,
+			onSelect: (selectedItems) => {
+				if (!selectedItems || !selectedItems.length) {
+					return;
+				}
 
-						var addCommercePriceEntryFm = window.document.querySelector(
-							'#<portlet:namespace />addCommercePriceEntryFm'
-						);
+				const commercePriceListIds = document.getElementById(
+					'<portlet:namespace />commercePriceListIds'
+				);
 
-						submitForm(addCommercePriceEntryFm);
-					}
-				},
+				if (commercePriceListIds) {
+					commercePriceListIds.value = selectedItems;
+				}
+
+				var addCommercePriceEntryFm = window.document.querySelector(
+					'#<portlet:namespace />addCommercePriceEntryFm'
+				);
+
+				if (addCommercePriceEntryFm) {
+					submitForm(addCommercePriceEntryFm);
+				}
 			},
+			selectEventName: 'priceListsSelectItem',
 			title:
 				'<liferay-ui:message arguments="<%= HtmlUtil.escape(cpInstance.getSku()) %>" key="add-x-to-price-list" />',
 			url:
 				'<%= cpInstanceCommercePriceEntryDisplayContext.getItemSelectorUrl() %>',
 		});
-
-		itemSelectorDialog.open();
 	});
 </aui:script>

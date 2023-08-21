@@ -1,6 +1,7 @@
 @component-name = "portal-wcm"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Fragments";
@@ -35,9 +36,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -84,11 +85,11 @@ definition {
 			task ("Change the Type of Submit Button to Secondary") {
 				PageEditor.gotoConfiguration(fragmentName = "Submit Button");
 
-				PageEditor.configureFragment(type = "Secondary");
+				PageEditor.configureFragment(style = "Secondary");
 
 				PageEditor.viewFragmentStyle(
 					fragmentName = "Button",
-					type = "secondary");
+					style = "secondary");
 			}
 
 			task ("Change the Size of Submit Button to Small") {

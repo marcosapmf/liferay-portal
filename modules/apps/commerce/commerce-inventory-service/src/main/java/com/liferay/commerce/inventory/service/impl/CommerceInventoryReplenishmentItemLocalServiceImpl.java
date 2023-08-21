@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.inventory.service.impl;
@@ -30,6 +21,8 @@ import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.Validator;
+
+import java.math.BigDecimal;
 
 import java.util.Date;
 import java.util.List;
@@ -52,8 +45,8 @@ public class CommerceInventoryReplenishmentItemLocalServiceImpl
 	public CommerceInventoryReplenishmentItem
 			addCommerceInventoryReplenishmentItem(
 				String externalReferenceCode, long userId,
-				long commerceInventoryWarehouseId, String sku,
-				Date availabilityDate, int quantity)
+				long commerceInventoryWarehouseId, Date availabilityDate,
+				BigDecimal quantity, String sku, String unitOfMeasureKey)
 		throws PortalException {
 
 		User user = _userLocalService.getUser(userId);
@@ -78,10 +71,12 @@ public class CommerceInventoryReplenishmentItemLocalServiceImpl
 		commerceInventoryReplenishmentItem.setUserName(user.getFullName());
 		commerceInventoryReplenishmentItem.setCommerceInventoryWarehouseId(
 			commerceInventoryWarehouseId);
-		commerceInventoryReplenishmentItem.setSku(sku);
 		commerceInventoryReplenishmentItem.setAvailabilityDate(
 			availabilityDate);
 		commerceInventoryReplenishmentItem.setQuantity(quantity);
+		commerceInventoryReplenishmentItem.setSku(sku);
+		commerceInventoryReplenishmentItem.setUnitOfMeasureKey(
+			unitOfMeasureKey);
 
 		return commerceInventoryReplenishmentItemPersistence.update(
 			commerceInventoryReplenishmentItem);
@@ -133,7 +128,7 @@ public class CommerceInventoryReplenishmentItemLocalServiceImpl
 	}
 
 	@Override
-	public long getCommerceInventoryReplenishmentItemsCount(
+	public BigDecimal getCommerceInventoryReplenishmentItemsCount(
 		long commerceInventoryWarehouseId, String sku) {
 
 		DynamicQuery dynamicQuery =
@@ -152,12 +147,12 @@ public class CommerceInventoryReplenishmentItemLocalServiceImpl
 
 		dynamicQuery.add(skuProperty.eq(sku));
 
-		List<Long> results =
+		List<BigDecimal> results =
 			commerceInventoryReplenishmentItemLocalService.dynamicQuery(
 				dynamicQuery);
 
 		if (results.get(0) == null) {
-			return 0;
+			return BigDecimal.ZERO;
 		}
 
 		return results.get(0);
@@ -185,7 +180,7 @@ public class CommerceInventoryReplenishmentItemLocalServiceImpl
 			updateCommerceInventoryReplenishmentItem(
 				String externalReferenceCode,
 				long commerceInventoryReplenishmentItemId,
-				Date availabilityDate, int quantity, long mvccVersion)
+				Date availabilityDate, BigDecimal quantity, long mvccVersion)
 		throws PortalException {
 
 		CommerceInventoryReplenishmentItem commerceInventoryReplenishmentItem =
@@ -245,8 +240,8 @@ public class CommerceInventoryReplenishmentItemLocalServiceImpl
 		}
 	}
 
-	private void _validateQuantity(int quantity) throws PortalException {
-		if (quantity <= 0) {
+	private void _validateQuantity(BigDecimal quantity) throws PortalException {
+		if ((quantity == null) || (quantity.compareTo(BigDecimal.ZERO) <= 0)) {
 			throw new CommerceInventoryReplenishmentQuantityException(
 				"Enter a quantity greater than or equal to 1");
 		}

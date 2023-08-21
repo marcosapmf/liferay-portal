@@ -1,9 +1,14 @@
+/**
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
+ */
+
 import ClayDropDown from '@clayui/drop-down';
 import ClayIcon from '@clayui/icon';
 import {Dispatch} from 'react';
 
-import {DashboardNavigationList} from './DashboardNavigationList';
 import {showAccountImage} from '../../utils/util';
+import {DashboardNavigationList} from './DashboardNavigationList';
 
 import './DashboardNavigation.scss';
 import {AppProps} from '../DashboardTable/DashboardTable';
@@ -16,12 +21,12 @@ export interface DashboardListItems {
 }
 
 interface DashboardNavigationProps {
-	accountAppsNumber: string;
+	accountAppsNumber: number;
 	accountIcon: string;
 	accounts: Account[];
 	currentAccount: Account;
 	dashboardNavigationItems: DashboardListItems[];
-	onSelectAppChange?: (value: AppProps) => void;
+	onSelectAppChange?: (value: AppProps | undefined) => void;
 	setDashboardNavigationItems: (values: DashboardListItems[]) => void;
 	setSelectedAccount: Dispatch<React.SetStateAction<Account>>;
 }
@@ -50,7 +55,7 @@ export function DashboardNavigation({
 
 							<div className="dashboard-navigation-header-text-container">
 								<span className="dashboard-navigation-header-title">
-									{currentAccount.name}
+									{currentAccount?.name}
 								</span>
 
 								<span className="dashboard-navigation-header-apps">

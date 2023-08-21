@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayAlert from '@clayui/alert';
@@ -175,7 +166,7 @@ function Inputs({index, onInputSetItemChange, value}) {
 
 			<ClayInput.GroupItem>
 				<label htmlFor={`order${index}`}>
-					{Liferay.Language.get('order')}
+					{Liferay.Language.get('order[sort]')}
 				</label>
 
 				<ClaySelect
@@ -354,7 +345,7 @@ function SortConfigurationOptions({
 
 	return (
 		<div className="sort-configurations-options">
-			<div className="c-mb-2 view-switcher">
+			<div className="c-mb-2 flex-row-reverse form-inline view-switcher">
 				<ClayButton
 					borderless
 					displayType="secondary"
@@ -372,7 +363,7 @@ function SortConfigurationOptions({
 			{view.value === VIEWS.NEW.value && (
 				<>
 					<InputSets>
-						<ClayForm.Group className="input-sets-item-form-group relevance">
+						<ClayForm.Group className="c-mb-0 c-pl-5 c-pr-2 input-sets-item-form-group list-group-item rounded">
 							<ClayInput.Group>
 								<ClayInput.GroupItem>
 									<label htmlFor="relevance">
@@ -486,7 +477,7 @@ function SortConfigurationOptions({
 							key={index}
 						>
 							<div className="row-fields">
-								<div className="form-group">
+								<div className="c-mb-2 form-group">
 									<label htmlFor={`label_${index}`}>
 										{Liferay.Language.get('label')}
 									</label>
@@ -503,7 +494,7 @@ function SortConfigurationOptions({
 									/>
 								</div>
 
-								<div className="form-group">
+								<div className="c-mb-3 form-group">
 									<label htmlFor={`field_${index}`}>
 										{Liferay.Language.get('field')}
 									</label>

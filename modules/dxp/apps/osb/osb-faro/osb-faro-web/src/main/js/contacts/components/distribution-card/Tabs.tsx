@@ -49,6 +49,7 @@ const TabItem: React.FC<ITabItemProps> = ({
 				{title}
 
 				<ClayButton
+					aria-label={Liferay.Language.get('close')}
 					className='button-root remove-tab'
 					displayType='unstyled'
 					onClick={() => onDelete(id)}
@@ -131,6 +132,7 @@ export default class Tabs extends React.Component<ITabsProps> {
 				</ScrollableSection>
 
 				<ClayButton
+					aria-label={Liferay.Language.get('add')}
 					borderless
 					className={getCN('button-root add-tab', {
 						active: showAddProperty
@@ -140,10 +142,7 @@ export default class Tabs extends React.Component<ITabsProps> {
 					onClick={onAdd}
 					size='sm'
 				>
-					<ClayIcon
-						className='icon-root icon-size-sm'
-						symbol='plus'
-					/>
+					<ClayIcon symbol='plus' />
 				</ClayButton>
 			</div>
 		);

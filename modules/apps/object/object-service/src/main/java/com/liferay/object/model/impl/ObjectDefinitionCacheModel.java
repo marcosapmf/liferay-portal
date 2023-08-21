@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.model.impl;
@@ -78,7 +69,7 @@ public class ObjectDefinitionCacheModel
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(69);
+		StringBundler sb = new StringBundler(71);
 
 		sb.append("{mvccVersion=");
 		sb.append(mvccVersion);
@@ -102,6 +93,8 @@ public class ObjectDefinitionCacheModel
 		sb.append(accountEntryRestrictedObjectFieldId);
 		sb.append(", descriptionObjectFieldId=");
 		sb.append(descriptionObjectFieldId);
+		sb.append(", objectFolderId=");
+		sb.append(objectFolderId);
 		sb.append(", titleObjectFieldId=");
 		sb.append(titleObjectFieldId);
 		sb.append(", accountEntryRestricted=");
@@ -203,6 +196,7 @@ public class ObjectDefinitionCacheModel
 			accountEntryRestrictedObjectFieldId);
 		objectDefinitionImpl.setDescriptionObjectFieldId(
 			descriptionObjectFieldId);
+		objectDefinitionImpl.setObjectFolderId(objectFolderId);
 		objectDefinitionImpl.setTitleObjectFieldId(titleObjectFieldId);
 		objectDefinitionImpl.setAccountEntryRestricted(accountEntryRestricted);
 		objectDefinitionImpl.setActive(active);
@@ -322,6 +316,8 @@ public class ObjectDefinitionCacheModel
 
 		descriptionObjectFieldId = objectInput.readLong();
 
+		objectFolderId = objectInput.readLong();
+
 		titleObjectFieldId = objectInput.readLong();
 
 		accountEntryRestricted = objectInput.readBoolean();
@@ -395,6 +391,8 @@ public class ObjectDefinitionCacheModel
 		objectOutput.writeLong(accountEntryRestrictedObjectFieldId);
 
 		objectOutput.writeLong(descriptionObjectFieldId);
+
+		objectOutput.writeLong(objectFolderId);
 
 		objectOutput.writeLong(titleObjectFieldId);
 
@@ -509,6 +507,7 @@ public class ObjectDefinitionCacheModel
 	public long modifiedDate;
 	public long accountEntryRestrictedObjectFieldId;
 	public long descriptionObjectFieldId;
+	public long objectFolderId;
 	public long titleObjectFieldId;
 	public boolean accountEntryRestricted;
 	public boolean active;

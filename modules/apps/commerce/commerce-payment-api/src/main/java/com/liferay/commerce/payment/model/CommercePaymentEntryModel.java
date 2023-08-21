@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.payment.model;
@@ -233,6 +224,20 @@ public interface CommercePaymentEntryModel
 	public void setClassPK(long classPK);
 
 	/**
+	 * Returns the commerce channel ID of this commerce payment entry.
+	 *
+	 * @return the commerce channel ID of this commerce payment entry
+	 */
+	public long getCommerceChannelId();
+
+	/**
+	 * Sets the commerce channel ID of this commerce payment entry.
+	 *
+	 * @param commerceChannelId the commerce channel ID of this commerce payment entry
+	 */
+	public void setCommerceChannelId(long commerceChannelId);
+
+	/**
 	 * Returns the amount of this commerce payment entry.
 	 *
 	 * @return the amount of this commerce payment entry
@@ -245,6 +250,21 @@ public interface CommercePaymentEntryModel
 	 * @param amount the amount of this commerce payment entry
 	 */
 	public void setAmount(BigDecimal amount);
+
+	/**
+	 * Returns the callback url of this commerce payment entry.
+	 *
+	 * @return the callback url of this commerce payment entry
+	 */
+	@AutoEscape
+	public String getCallbackURL();
+
+	/**
+	 * Sets the callback url of this commerce payment entry.
+	 *
+	 * @param callbackURL the callback url of this commerce payment entry
+	 */
+	public void setCallbackURL(String callbackURL);
 
 	/**
 	 * Returns the currency code of this commerce payment entry.
@@ -262,19 +282,33 @@ public interface CommercePaymentEntryModel
 	public void setCurrencyCode(String currencyCode);
 
 	/**
-	 * Returns the payment method name of this commerce payment entry.
+	 * Returns the payment integration key of this commerce payment entry.
 	 *
-	 * @return the payment method name of this commerce payment entry
+	 * @return the payment integration key of this commerce payment entry
 	 */
 	@AutoEscape
-	public String getPaymentMethodName();
+	public String getPaymentIntegrationKey();
 
 	/**
-	 * Sets the payment method name of this commerce payment entry.
+	 * Sets the payment integration key of this commerce payment entry.
 	 *
-	 * @param paymentMethodName the payment method name of this commerce payment entry
+	 * @param paymentIntegrationKey the payment integration key of this commerce payment entry
 	 */
-	public void setPaymentMethodName(String paymentMethodName);
+	public void setPaymentIntegrationKey(String paymentIntegrationKey);
+
+	/**
+	 * Returns the payment integration type of this commerce payment entry.
+	 *
+	 * @return the payment integration type of this commerce payment entry
+	 */
+	public int getPaymentIntegrationType();
+
+	/**
+	 * Sets the payment integration type of this commerce payment entry.
+	 *
+	 * @param paymentIntegrationType the payment integration type of this commerce payment entry
+	 */
+	public void setPaymentIntegrationType(int paymentIntegrationType);
 
 	/**
 	 * Returns the payment status of this commerce payment entry.
@@ -289,6 +323,21 @@ public interface CommercePaymentEntryModel
 	 * @param paymentStatus the payment status of this commerce payment entry
 	 */
 	public void setPaymentStatus(int paymentStatus);
+
+	/**
+	 * Returns the redirect url of this commerce payment entry.
+	 *
+	 * @return the redirect url of this commerce payment entry
+	 */
+	@AutoEscape
+	public String getRedirectURL();
+
+	/**
+	 * Sets the redirect url of this commerce payment entry.
+	 *
+	 * @param redirectURL the redirect url of this commerce payment entry
+	 */
+	public void setRedirectURL(String redirectURL);
 
 	/**
 	 * Returns the transaction code of this commerce payment entry.

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portlet.asset.service.persistence.impl;
@@ -48,7 +39,6 @@ import com.liferay.portlet.asset.model.impl.AssetLinkModelImpl;
 
 import java.io.Serializable;
 
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 
 import java.util.ArrayList;
@@ -2832,21 +2822,21 @@ public class AssetLinkPersistenceImpl
 	public AssetLink fetchByE_E_T(
 		long entryId1, long entryId2, int type, boolean useFinderCache) {
 
-		boolean productionMode = CTPersistenceHelperUtil.isProductionMode(
-			AssetLink.class);
-
 		Object[] finderArgs = null;
 
-		if (useFinderCache && productionMode) {
+		if (useFinderCache) {
 			finderArgs = new Object[] {entryId1, entryId2, type};
 		}
 
 		Object result = null;
 
-		if (useFinderCache && productionMode) {
+		if (useFinderCache) {
 			result = FinderCacheUtil.getResult(
 				_finderPathFetchByE_E_T, finderArgs, this);
 		}
+
+		boolean productionMode = CTPersistenceHelperUtil.isProductionMode(
+			AssetLink.class);
 
 		if (result instanceof AssetLink) {
 			AssetLink assetLink = (AssetLink)result;
@@ -2857,6 +2847,14 @@ public class AssetLinkPersistenceImpl
 
 				result = null;
 			}
+			else if (!CTPersistenceHelperUtil.isProductionMode(
+						AssetLink.class, assetLink.getPrimaryKey())) {
+
+				result = null;
+			}
+		}
+		else if (!productionMode && (result instanceof List<?>)) {
+			result = null;
 		}
 
 		if (result == null) {
@@ -3904,28 +3902,13 @@ public class AssetLinkPersistenceImpl
 			},
 			new String[] {"entryId1", "entryId2", "type_"}, false);
 
-		_setAssetLinkUtilPersistence(this);
+		AssetLinkUtil.setPersistence(this);
 	}
 
 	public void destroy() {
-		_setAssetLinkUtilPersistence(null);
+		AssetLinkUtil.setPersistence(null);
 
 		EntityCacheUtil.removeCache(AssetLinkImpl.class.getName());
-	}
-
-	private void _setAssetLinkUtilPersistence(
-		AssetLinkPersistence assetLinkPersistence) {
-
-		try {
-			Field field = AssetLinkUtil.class.getDeclaredField("_persistence");
-
-			field.setAccessible(true);
-
-			field.set(null, assetLinkPersistence);
-		}
-		catch (ReflectiveOperationException reflectiveOperationException) {
-			throw new RuntimeException(reflectiveOperationException);
-		}
 	}
 
 	private static final String _SQL_SELECT_ASSETLINK =

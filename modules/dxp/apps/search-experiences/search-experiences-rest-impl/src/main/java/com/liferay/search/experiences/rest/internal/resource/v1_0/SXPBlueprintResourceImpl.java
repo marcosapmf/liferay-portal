@@ -1,21 +1,11 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.search.experiences.rest.internal.resource.v1_0;
 
 import com.liferay.petra.string.StringBundler;
-import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.search.Field;
@@ -36,6 +26,7 @@ import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.portal.vulcan.util.LocalizedMapUtil;
 import com.liferay.search.experiences.constants.SXPActionKeys;
 import com.liferay.search.experiences.constants.SXPConstants;
+import com.liferay.search.experiences.exception.DuplicateSXPBlueprintExternalReferenceCodeException;
 import com.liferay.search.experiences.rest.dto.v1_0.SXPBlueprint;
 import com.liferay.search.experiences.rest.dto.v1_0.util.ElementInstanceUtil;
 import com.liferay.search.experiences.rest.dto.v1_0.util.SXPBlueprintUtil;
@@ -48,11 +39,10 @@ import com.liferay.search.experiences.service.SXPBlueprintService;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Objects;
 
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
-
-import org.apache.commons.lang.StringUtils;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -87,6 +77,25 @@ public class SXPBlueprintResourceImpl extends BaseSXPBlueprintResourceImpl {
 				sxpBlueprintId, contextAcceptLanguage.getPreferredLocale(),
 				contextUriInfo, contextUser),
 			_sxpBlueprintService.getSXPBlueprint(sxpBlueprintId));
+	}
+
+	@Override
+	public SXPBlueprint getSXPBlueprintByExternalReferenceCode(
+			String externalReferenceCode)
+		throws Exception {
+
+		com.liferay.search.experiences.model.SXPBlueprint sxpBlueprint =
+			_sxpBlueprintService.getSXPBlueprintByExternalReferenceCode(
+				contextCompany.getCompanyId(), externalReferenceCode);
+
+		return _sxpBlueprintDTOConverter.toDTO(
+			new DefaultDTOConverterContext(
+				contextAcceptLanguage.isAcceptAllLanguages(), new HashMap<>(),
+				_dtoConverterRegistry, contextHttpServletRequest,
+				sxpBlueprint.getSXPBlueprintId(),
+				contextAcceptLanguage.getPreferredLocale(), contextUriInfo,
+				contextUser),
+			sxpBlueprint);
 	}
 
 	@Override
@@ -285,7 +294,31 @@ public class SXPBlueprintResourceImpl extends BaseSXPBlueprintResourceImpl {
 
 	@Override
 	public SXPBlueprint postSXPBlueprintValidate(String json) throws Exception {
-		return SXPBlueprintUtil.toSXPBlueprint(json);
+		SXPBlueprint sxpBlueprint = SXPBlueprintUtil.toSXPBlueprint(json);
+
+		_validateSXPBlueprintExternalReferenceCode(sxpBlueprint);
+
+		return sxpBlueprint;
+	}
+
+	@Override
+	public SXPBlueprint putSXPBlueprintByExternalReferenceCode(
+			String externalReferenceCode, SXPBlueprint sxpBlueprint)
+		throws Exception {
+
+		com.liferay.search.experiences.model.SXPBlueprint
+			serviceBuilderSxpBlueprint =
+				_sxpBlueprintService.fetchSXPBlueprintByExternalReferenceCode(
+					externalReferenceCode, contextCompany.getCompanyId());
+
+		sxpBlueprint.setExternalReferenceCode(externalReferenceCode);
+
+		if (serviceBuilderSxpBlueprint != null) {
+			return patchSXPBlueprint(
+				serviceBuilderSxpBlueprint.getSXPBlueprintId(), sxpBlueprint);
+		}
+
+		return postSXPBlueprint(sxpBlueprint);
 	}
 
 	private String _getConfigurationJSON(SXPBlueprint sxpBlueprint) {
@@ -306,8 +339,31 @@ public class SXPBlueprintResourceImpl extends BaseSXPBlueprintResourceImpl {
 	}
 
 	private String _getSchemaVersion() {
-		return StringUtils.substringBetween(
-			contextUriInfo.getPath(), "v", StringPool.SLASH);
+		return "1.0";
+	}
+
+	private void _validateSXPBlueprintExternalReferenceCode(
+			SXPBlueprint sxpBlueprint)
+		throws Exception {
+
+		if (Validator.isBlank(sxpBlueprint.getExternalReferenceCode())) {
+			return;
+		}
+
+		com.liferay.search.experiences.model.SXPBlueprint
+			serviceBuilderSXPBlueprint =
+				_sxpBlueprintLocalService.
+					fetchSXPBlueprintByExternalReferenceCode(
+						sxpBlueprint.getExternalReferenceCode(),
+						contextCompany.getCompanyId());
+
+		if ((serviceBuilderSXPBlueprint != null) &&
+			!Objects.equals(
+				serviceBuilderSXPBlueprint.getSXPBlueprintId(),
+				sxpBlueprint.getId())) {
+
+			throw new DuplicateSXPBlueprintExternalReferenceCodeException();
+		}
 	}
 
 	@Reference
@@ -325,6 +381,9 @@ public class SXPBlueprintResourceImpl extends BaseSXPBlueprintResourceImpl {
 	private DTOConverter
 		<com.liferay.search.experiences.model.SXPBlueprint, SXPBlueprint>
 			_sxpBlueprintDTOConverter;
+
+	@Reference
+	private SXPBlueprintService _sxpBlueprintLocalService;
 
 	@Reference
 	private SXPBlueprintService _sxpBlueprintService;

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.document.library.web.internal.info.item.provider;
@@ -38,8 +29,10 @@ import com.liferay.info.item.InfoItemReference;
 import com.liferay.info.item.field.reader.InfoItemFieldReaderFieldSetProvider;
 import com.liferay.info.item.provider.InfoItemFieldValuesProvider;
 import com.liferay.info.type.WebImage;
+import com.liferay.layout.page.template.info.item.provider.DisplayPageInfoItemFieldSetProvider;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.repository.model.FileVersion;
@@ -80,6 +73,8 @@ public class FileEntryInfoItemFieldValuesProvider
 			).infoFieldValues(
 				_getDDMStructureInfoFieldValues(fileEntry)
 			).infoFieldValues(
+				_getDisplayPageInfoFieldValues(fileEntry)
+			).infoFieldValues(
 				_getExpandoInfoFieldValues(fileEntry)
 			).infoFieldValues(
 				_infoItemFieldReaderFieldSetProvider.getInfoFieldValues(
@@ -96,6 +91,9 @@ public class FileEntryInfoItemFieldValuesProvider
 		catch (PortalException portalException) {
 			throw new RuntimeException(
 				"Caught unexpected exception", portalException);
+		}
+		catch (Exception exception) {
+			throw new RuntimeException("Unexpected exception", exception);
 		}
 	}
 
@@ -160,12 +158,31 @@ public class FileEntryInfoItemFieldValuesProvider
 		return Collections.emptyList();
 	}
 
+	private List<InfoFieldValue<Object>> _getDisplayPageInfoFieldValues(
+			FileEntry fileEntry)
+		throws Exception {
+
+		if (fileEntry.getModel() instanceof DLFileEntry) {
+			DLFileEntry dlFileEntry = (DLFileEntry)fileEntry.getModel();
+
+			return _displayPageInfoItemFieldSetProvider.getInfoFieldValues(
+				new InfoItemReference(
+					FileEntry.class.getName(), fileEntry.getFileEntryId()),
+				String.valueOf(dlFileEntry.getFileEntryTypeId()),
+				_getThemeDisplay());
+		}
+
+		return Collections.emptyList();
+	}
+
 	private String _getDisplayPageURL(
 			FileEntry fileEntry, ThemeDisplay themeDisplay)
 		throws PortalException {
 
 		return _assetDisplayPageFriendlyURLProvider.getFriendlyURL(
-			FileEntry.class.getName(), fileEntry.getFileEntryId(),
+			new InfoItemReference(
+				FileEntry.class.getName(),
+				new ClassPKInfoItemIdentifier(fileEntry.getFileEntryId())),
 			themeDisplay);
 	}
 
@@ -309,7 +326,9 @@ public class FileEntryInfoItemFieldValuesProvider
 					FileEntryInfoItemFields.previewImageInfoField,
 					imagePreviewURLWebImage));
 
-			if (themeDisplay != null) {
+			if ((themeDisplay != null) &&
+				!FeatureFlagManagerUtil.isEnabled("LPS-183727")) {
+
 				fileEntryFieldValues.add(
 					new InfoFieldValue<>(
 						FileEntryInfoItemFields.displayPageURLInfoField,
@@ -358,6 +377,10 @@ public class FileEntryInfoItemFieldValuesProvider
 
 	@Reference
 	private DDMStorageEngineManager _ddmStorageEngineManager;
+
+	@Reference
+	private DisplayPageInfoItemFieldSetProvider
+		_displayPageInfoItemFieldSetProvider;
 
 	@Reference
 	private DLFileEntryMetadataLocalService _dlFileEntryMetadataLocalService;

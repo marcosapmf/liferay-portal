@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.jenkins.results.parser;
@@ -46,8 +37,6 @@ public class PortalTestSuiteUpstreamControllerBuildRunner
 
 	@Override
 	public void run() {
-		keepJenkinsBuild(true);
-
 		invokeTestSuiteBuilds();
 	}
 
@@ -76,7 +65,7 @@ public class PortalTestSuiteUpstreamControllerBuildRunner
 			JenkinsResultsParserUtil.getMostAvailableMasterURL(
 				JenkinsResultsParserUtil.combine(
 					"http://" + getInvocationCohortName() + ".liferay.com"),
-				1);
+				null, 1, 24, 2);
 
 		S buildData = getBuildData();
 
@@ -111,8 +100,12 @@ public class PortalTestSuiteUpstreamControllerBuildRunner
 		if (testSuiteNames.isEmpty()) {
 			System.out.println("There are no test suites to run at this time.");
 
+			keepJenkinsBuild(false);
+
 			return;
 		}
+
+		keepJenkinsBuild(true);
 
 		String jenkinsAuthenticationToken;
 
@@ -230,8 +223,30 @@ public class PortalTestSuiteUpstreamControllerBuildRunner
 			}
 		}
 
-		buildData.setBuildDescription(
-			JenkinsResultsParserUtil.join(", ", _invokedTestSuiteNames));
+		StringBuilder sb = new StringBuilder();
+
+		sb.append(JenkinsResultsParserUtil.join(", ", _invokedTestSuiteNames));
+		sb.append(",");
+		sb.append(" <strong>GIT ID</strong> - ");
+		sb.append("<a href=\"https://github.com/");
+		sb.append(buildData.getPortalGitHubUsername());
+		sb.append("/");
+		sb.append(buildData.getPortalGitHubRepositoryName());
+		sb.append("/commit/");
+
+		String portalSHA = buildData.getPortalBranchSHA();
+
+		sb.append(portalSHA);
+
+		sb.append("\">");
+
+		String abbreviatedSHA = portalSHA.substring(0, 7);
+
+		sb.append(abbreviatedSHA);
+
+		sb.append("</a>");
+
+		buildData.setBuildDescription(sb.toString());
 
 		updateBuildDescription();
 	}

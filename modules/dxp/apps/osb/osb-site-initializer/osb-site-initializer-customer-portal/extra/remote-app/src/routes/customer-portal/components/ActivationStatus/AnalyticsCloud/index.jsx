@@ -1,19 +1,14 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 import ClayAlert from '@clayui/alert';
 import {ButtonWithIcon} from '@clayui/core';
 import {Align} from '@clayui/drop-down';
 import ClayIcon from '@clayui/icon';
 import {useModal} from '@clayui/modal';
-import React, {useEffect, useState} from 'react';
+import {useEffect, useState} from 'react';
+import SearchBuilder from '~/common/core/SearchBuilder';
 import i18n from '../../../../../common/I18n';
 import {Button, ButtonDropDown} from '../../../../../common/components';
 import {useAppPropertiesContext} from '../../../../../common/contexts/AppPropertiesContext';
@@ -30,6 +25,7 @@ import {useCustomerPortal} from '../../../context';
 import {actionTypes} from '../../../context/reducer';
 import {
 	AUTO_CLOSE_ALERT_TIME,
+	PRODUCT_TYPES,
 	STATUS_TAG_TYPES,
 	STATUS_TAG_TYPE_NAMES,
 } from '../../../utils/constants';
@@ -37,12 +33,12 @@ import PopoverIcon from '../DXPCloud/components/PopoverIcon';
 import ActivationStatusLayout from '../Layout';
 import AnalyticsCloudStatusModal from './AnalyticsCloudStatusModal';
 
-const ActivationStatusAnalyticsCloud = ({
-	project,
-	subscriptionGroupAnalyticsCloud,
-	userAccount,
-}) => {
-	const [, dispatch] = useCustomerPortal();
+const ActivationStatusAnalyticsCloud = () => {
+	const [
+		{project, subscriptionGroups, userAccount},
+		dispatch,
+	] = useCustomerPortal();
+
 	const {client} = useAppPropertiesContext();
 	const [activationStatusDate, setActivationStatusDate] = useState('');
 	const [isVisible, setIsVisible] = useState(false);
@@ -57,6 +53,11 @@ const ActivationStatusAnalyticsCloud = ({
 		onClose: () => setVisible(false),
 	});
 
+	const subscriptionGroupAnalyticsCloud = subscriptionGroups.find(
+		(subscriptionGroup) =>
+			subscriptionGroup.name === PRODUCT_TYPES.analyticsCloud
+	);
+
 	const [
 		subscriptionGroupActivationStatus,
 		setSubscriptionGroupActivationStatus,
@@ -66,20 +67,24 @@ const ActivationStatusAnalyticsCloud = ({
 		onClose();
 
 		if (isSuccess) {
+			const searchBuilder = new SearchBuilder();
 			const getSubscriptionGroups = async (accountKey) => {
 				const {data: dataSubscriptionGroups} = await client.query({
 					query: getAccountSubscriptionGroups,
 					variables: {
-						filter: `accountKey eq '${accountKey}' and hasActivation eq true`,
+						filter: searchBuilder
+							.eq('accountKey', accountKey)
+							.and()
+							.eq('hasActivation', true)
+							.build(),
 					},
 				});
 
 				if (dataSubscriptionGroups) {
-					const items =
-						dataSubscriptionGroups?.c?.accountSubscriptionGroups
-							?.items;
 					dispatch({
-						payload: items,
+						payload:
+							dataSubscriptionGroups?.c?.accountSubscriptionGroups
+								?.items,
 						type: actionTypes.UPDATE_SUBSCRIPTION_GROUPS,
 					});
 
@@ -178,19 +183,20 @@ const ActivationStatusAnalyticsCloud = ({
 
 	useEffect(() => {
 		const fetchCommerceOrderItems = async () => {
-			const filterAccountSubscriptionERC = `customFields/accountSubscriptionGroupERC eq '${project.accountKey}_analytics-cloud'`;
 			const {data} = await client.query({
 				query: getCommerceOrderItems,
 				variables: {
-					filter: filterAccountSubscriptionERC,
+					filter: SearchBuilder.eq(
+						'customFields/accountSubscriptionGroupERC',
+						`${project.accountKey}_analytics-cloud`
+					),
 				},
 			});
 
 			if (data) {
-				const activationStatusDateRange = getActivationStatusDateRange(
-					data?.orderItems?.items
+				setActivationStatusDate(
+					getActivationStatusDateRange(data?.orderItems?.items)
 				);
-				setActivationStatusDate(activationStatusDateRange);
 			}
 		};
 
@@ -198,25 +204,22 @@ const ActivationStatusAnalyticsCloud = ({
 	}, [client, project]);
 
 	const updateGroupId = async () => {
-		await Promise.all([
-			await client.mutate({
-				context: {
-					displaySuccess: false,
-					type: 'liferay-rest',
+		await client.mutate({
+			context: {
+				displaySuccess: false,
+				type: 'liferay-rest',
+			},
+			mutation: updateAccountSubscriptionGroups,
+			variables: {
+				accountSubscriptionGroup: {
+					accountKey: project.accountKey,
+					activationStatus: STATUS_TAG_TYPE_NAMES.active,
+					r_accountEntryToAccountSubscriptionGroup_accountEntryId:
+						project.id,
 				},
-				mutation: updateAccountSubscriptionGroups,
-				variables: {
-					accountSubscriptionGroup: {
-						accountKey: project.accountKey,
-						activationStatus: STATUS_TAG_TYPE_NAMES.active,
-						r_accountEntryToAccountSubscriptionGroup_accountEntryId:
-							project.id,
-					},
-					id:
-						subscriptionGroupAnalyticsCloud?.accountSubscriptionGroupId,
-				},
-			}),
-		]);
+				id: subscriptionGroupAnalyticsCloud?.accountSubscriptionGroupId,
+			},
+		});
 
 		setSubscriptionGroupActivationStatus(STATUS_TAG_TYPE_NAMES.active);
 		setVisible(false);
@@ -235,6 +238,7 @@ const ActivationStatusAnalyticsCloud = ({
 					}
 				/>
 			)}
+
 			<ActivationStatusLayout
 				activationStatus={activationStatus}
 				activationStatusDate={activationStatusDate}
@@ -244,15 +248,16 @@ const ActivationStatusAnalyticsCloud = ({
 					subscriptionGroupActivationStatus
 				}
 			/>
+
 			{visible && (
 				<AnalyticsCloudStatusModal
 					groupIdValue={project?.acWorkspaceGroupId}
 					observer={observerStatusModal}
 					onClose={onCloseStatusModal}
-					project={project}
 					updateCardStatus={updateGroupId}
 				/>
 			)}
+
 			{hasFinishedUpdate && (
 				<ClayAlert.ToastContainer>
 					<ClayAlert

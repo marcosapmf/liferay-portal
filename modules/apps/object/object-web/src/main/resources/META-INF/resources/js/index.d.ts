@@ -1,18 +1,19 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 type LocalizedValue<T> = Liferay.Language.LocalizedValue<T>;
+
+interface Folder {
+	actions: {};
+	dateCreated: string;
+	dateModified: string;
+	externalReferenceCode: string;
+	id: number;
+	label: LocalizedValue<string>;
+	name: string;
+}
 
 type NotificationTemplate = {
 	attachmentObjectFieldIds: string[] | number[];
@@ -65,6 +66,7 @@ type ObjectFieldBusinessType =
 	| 'Aggregation'
 	| 'Attachment'
 	| 'Date'
+	| 'DateTime'
 	| 'Decimal'
 	| 'Encrypted'
 	| 'Formula'
@@ -99,6 +101,8 @@ interface ObjectField {
 	localized: boolean;
 	name: string;
 	objectFieldSettings?: ObjectFieldSetting[];
+	readOnly: ReadOnlyFieldValue;
+	readOnlyConditionExpression: string;
 	relationshipId?: number;
 	relationshipType?: unknown;
 	required: boolean;
@@ -133,6 +137,7 @@ interface ObjectDefinition {
 	name: string;
 	objectActions: [];
 	objectFields: ObjectField[];
+	objectFolderExternalReferenceCode: string;
 	objectLayouts: [];
 	objectRelationships: [];
 	objectViews: [];
@@ -152,6 +157,8 @@ interface ObjectDefinition {
 	titleObjectFieldId: number | string;
 	titleObjectFieldName: string;
 }
+
+type ReadOnlyFieldValue = '' | 'conditional' | 'false' | 'true';
 
 type ObjectFieldSettingValue =
 	| LocalizedValue<string>
@@ -248,13 +255,12 @@ type ObjectFieldSettingName =
 	| 'objectFieldName'
 	| 'objectRelationshipName'
 	| 'output'
-	| 'readOnly'
-	| 'readOnlyScript'
 	| 'script'
 	| 'showCounter'
 	| 'showFilesInDocumentsAndMedia'
 	| 'stateFlow'
 	| 'storageDLFolderPath'
+	| 'timeStorage'
 	| 'uniqueValues'
 	| 'uniqueValuesErrorMessage';
 
@@ -267,6 +273,11 @@ interface ObjectValidation {
 	id: number;
 	lineCount?: number;
 	name: LocalizedValue<string>;
+	objectValidationRuleSettings?: {
+		name: 'objectFieldExternalReferenceCode';
+		value: string;
+	}[];
+	outputType?: string;
 	script: string;
 }
 
@@ -331,6 +342,7 @@ interface HTTPMethod {
 }
 
 interface PredefinedValue {
+	businessType: ObjectFieldBusinessType;
 	inputAsValue: boolean;
 	label: LocalizedValue<string>;
 	name: string;
@@ -345,6 +357,11 @@ interface LabelValueObject {
 interface LabelNameObject {
 	label: string;
 	name: string;
+}
+
+interface LabelTypeObject {
+	label: string;
+	type: string;
 }
 
 interface NameValueObject {

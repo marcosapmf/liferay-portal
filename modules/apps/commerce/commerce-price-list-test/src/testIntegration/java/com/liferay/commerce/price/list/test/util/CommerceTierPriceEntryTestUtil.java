@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.price.list.test.util;
@@ -33,7 +24,7 @@ import java.math.BigDecimal;
 public class CommerceTierPriceEntryTestUtil {
 
 	public static CommerceTierPriceEntry addCommerceTierPriceEntry(
-			long commercePriceEntryId, int minQuantity, double price,
+			long commercePriceEntryId, double minQuantity, double price,
 			double promoPrice, String externalReferenceCode)
 		throws PortalException {
 
@@ -47,14 +38,14 @@ public class CommerceTierPriceEntryTestUtil {
 		return CommerceTierPriceEntryLocalServiceUtil.addCommerceTierPriceEntry(
 			externalReferenceCode, commercePriceEntryId,
 			BigDecimal.valueOf(price), BigDecimal.valueOf(promoPrice),
-			minQuantity,
+			BigDecimal.valueOf(minQuantity),
 			ServiceContextTestUtil.getServiceContext(
 				commercePriceList.getGroupId()));
 	}
 
 	public static CommerceTierPriceEntry addOrUpdateCommerceTierPriceEntry(
 			long companyId, long commerceTierPriceEntryId,
-			long commercePriceEntryId, int minQuantity, double price,
+			long commercePriceEntryId, double minQuantity, double price,
 			double promoPrice, String externalReferenceCode,
 			String priceEntryExternalReferenceCode)
 		throws PortalException {
@@ -66,7 +57,7 @@ public class CommerceTierPriceEntryTestUtil {
 			addOrUpdateCommerceTierPriceEntry(
 				externalReferenceCode, commerceTierPriceEntryId,
 				commercePriceEntryId, BigDecimal.valueOf(price),
-				BigDecimal.valueOf(promoPrice), minQuantity,
+				BigDecimal.valueOf(promoPrice), BigDecimal.valueOf(minQuantity),
 				priceEntryExternalReferenceCode,
 				ServiceContextTestUtil.getServiceContext(groupId));
 	}
@@ -92,7 +83,7 @@ public class CommerceTierPriceEntryTestUtil {
 		if (priceEntryExternalReferenceCode != null) {
 			CommercePriceEntry commercePriceEntry =
 				CommercePriceEntryLocalServiceUtil.fetchByExternalReferenceCode(
-					companyId, priceEntryExternalReferenceCode);
+					priceEntryExternalReferenceCode, companyId);
 
 			if (commercePriceEntry != null) {
 				CommercePriceList commercePriceList =

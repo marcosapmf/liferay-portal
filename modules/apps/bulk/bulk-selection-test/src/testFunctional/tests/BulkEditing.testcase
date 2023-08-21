@@ -28,9 +28,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -598,11 +598,9 @@ definition {
 
 		DMDocument.selectDocuments(dmDocumentTitle = "Document_1,DM Folder Name");
 
-		DMNavigator.gotoItemViaManagementBar(
-			item = "dropdownMenu",
-			menuItem = "Permissions");
+		Click(locator1 = "Icon#TOOLBAR_ELLIPSIS");
 
-		Alert.viewErrorMessage(errorMessage = "It is not possible to simultaneously change the permissions of different asset types.");
+		MenuItem.viewDisabled(menuItem = "Permissions");
 	}
 
 	@description = "This ensures that users can not edit file and shortcut permissions simultaneously."
@@ -626,11 +624,9 @@ definition {
 
 		PortletEntry.selectAll();
 
-		DMNavigator.gotoItemViaManagementBar(
-			item = "dropdownMenu",
-			menuItem = "Permissions");
+		Click(locator1 = "Icon#TOOLBAR_ELLIPSIS");
 
-		Alert.viewErrorMessage(errorMessage = "It is not possible to simultaneously change the permissions of different asset types.");
+		MenuItem.viewDisabled(menuItem = "Permissions");
 	}
 
 	@description = "This ensures that the files permissions can be removed via bulk editing."
@@ -656,7 +652,7 @@ definition {
 
 		PermissionsInline.addOrRemoveAnyPermissionsFromSpecificRole(
 			addOrRemoveViewPermission = "Remove",
-			permissionsKeyList = "INLINE_PERMISSIONS_VIEW_CHECKBOX,INLINE_PERMISSIONS_ADD_DISCUSSION_CHECKBOX",
+			permissionsKeyList = "INLINE_PERMISSIONS_VIEW_CHECKBOX,INLINE_PERMISSIONS_ADD_DISCUSSION_CHECKBOX,INLINE_PERMISSIONS_DOWNLOAD_CHECKBOX",
 			roleTitle = "Guest");
 
 		Navigator.gotoPage(pageName = "Documents and Media Page");
@@ -670,7 +666,7 @@ definition {
 		PermissionsInline.addOrRemoveAnyPermissionsFromSpecificRole(
 			addOrRemoveViewPermission = "Remove",
 			permissionsBulkEditing = "true",
-			permissionsKeyList = "INLINE_PERMISSIONS_VIEW_CHECKBOX,INLINE_PERMISSIONS_ADD_DISCUSSION_CHECKBOX",
+			permissionsKeyList = "INLINE_PERMISSIONS_DOWNLOAD_CHECKBOX,INLINE_PERMISSIONS_VIEW_CHECKBOX,INLINE_PERMISSIONS_ADD_DISCUSSION_CHECKBOX",
 			roleTitle = "Guest");
 
 		User.logoutPG();

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.osb.faro.contacts.demo.internal.data.creator;
@@ -18,6 +9,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import com.liferay.osb.faro.engine.client.ContactsEngineClient;
 import com.liferay.osb.faro.model.FaroProject;
+import com.liferay.osb.faro.util.FaroPropsValues;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.ContentTypes;
@@ -67,7 +59,7 @@ public class AnalyticEventsDataCreator extends DataCreator {
 				"X-Forwarded-For", internet.publicIpV4Address()
 			).build());
 
-		options.setLocation(_OSB_ASAH_PUBLISHER_URL);
+		options.setLocation(FaroPropsValues.OSB_ASAH_PUBLISHER_URL);
 		options.setPost(true);
 
 		for (Map<String, Object> object : objects) {
@@ -246,9 +238,6 @@ public class AnalyticEventsDataCreator extends DataCreator {
 		"Beryl Promotions Newsletter", "Beryl Urban Farming Newsletter",
 		"Check out", "Loyalty Program"
 	};
-
-	private static final String _OSB_ASAH_PUBLISHER_URL = System.getenv(
-		"OSB_ASAH_PUBLISHER_URL");
 
 	private static final String[] _SEARCH_TERMS = {
 		"FF-2100 Owners Manual", "Hydroponics", "MX-350 Rebate",

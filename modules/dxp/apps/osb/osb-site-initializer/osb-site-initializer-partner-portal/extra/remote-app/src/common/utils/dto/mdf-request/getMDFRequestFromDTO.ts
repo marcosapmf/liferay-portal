@@ -1,12 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import MDFRequestDTO from '../../../interfaces/dto/mdfRequestDTO';
@@ -19,45 +13,129 @@ export function getMDFRequestFromDTO(mdfRequest: MDFRequestDTO): MDFRequest {
 			mdfRequest.mdfReqToActs?.map((activityItem) => {
 				const {
 					actToBgts,
+					activityPromotion,
 					activityStatus,
+					ad,
+					assetsLiferayDescription,
+					assetsLiferayRequired,
+					audienceTarget,
+					broadcastChannel,
+					creator,
+					cta,
+					description,
+					detailsLeadFollowUp,
 					endDate,
+					expectedImpressions,
 					externalReferenceCode,
+					gatedLandingPage,
+					goalOfContent,
+					guaranteedImpressions,
+					hiringOutsideWriterOrAgency,
+					howLiferayBrandUsed,
 					id,
+					keywordsForPPCCampaigns,
+					landingPageCopy,
+					leadFollowUpStrategies,
+					leadGenerated,
+					liferayBranding,
+					liferayParticipationRequirements,
+					location,
+					manySeries,
+					marketingActivity,
 					mdfRequestAmount,
-					mdfRequestExternalReferenceCode,
 					name,
+					nurtureDripCampaign,
+					overallMessageContentCTA,
+					primaryThemeOrMessage,
+					publication,
+					quantity,
+					r_accToActs_accountEntryERC,
 					r_accToActs_accountEntryId,
+					r_mdfReqToActs_c_mdfRequestERC,
 					r_mdfReqToActs_c_mdfRequestId,
+					resourcesNecessaryFromLiferay,
+					sourceAndSizeOfCallList,
+					sourceAndSizeOfInviteeList,
+					specificSites,
 					startDate,
+					status,
+					submitted,
 					tactic,
+					targetOfLeads,
+					targetOfSends,
 					totalCostOfExpense,
 					typeActivity,
-					...activityDescription
+					typeMerchandise,
+					usingCIABAssets,
+					venueName,
+					webinarHostPlatform,
+					webinarTopic,
+					weeksAiring,
 				} = activityItem;
 
 				return {
 					activityDescription: {
-						...activityDescription,
-						assetsLiferayRequired: String(
-							activityItem.assetsLiferayRequired
-						),
-						leadFollowUpStrategies: activityItem.leadFollowUpStrategies?.split(
+						activityPromotion,
+						ad,
+						assetsLiferayDescription,
+						assetsLiferayRequired: String(assetsLiferayRequired),
+						audienceTarget,
+						broadcastChannel,
+						creator,
+						cta,
+						description,
+						detailsLeadFollowUp,
+						expectedImpressions,
+						gatedLandingPage,
+						goalOfContent,
+						guaranteedImpressions,
+						hiringOutsideWriterOrAgency,
+						howLiferayBrandUsed,
+						keywordsForPPCCampaigns,
+						landingPageCopy,
+						leadFollowUpStrategies: leadFollowUpStrategies?.split(
 							', '
 						),
-						leadGenerated: String(activityItem.leadGenerated),
+						leadGenerated: String(leadGenerated),
+						liferayBranding,
+						liferayParticipationRequirements,
+						location,
+						manySeries,
+						marketingActivity,
+						nurtureDripCampaign,
+						overallMessageContentCTA,
+						primaryThemeOrMessage,
+						publication,
+						quantity,
+						resourcesNecessaryFromLiferay,
+						sourceAndSizeOfCallList,
+						sourceAndSizeOfInviteeList,
+						specificSites,
+						status,
+						targetOfLeads,
+						targetOfSends,
+						typeMerchandise,
+						usingCIABAssets,
+						venueName,
+						webinarHostPlatform,
+						webinarTopic,
+						weeksAiring,
 					},
 					activityStatus,
 					budgets: actToBgts || [],
+					claimPercent: mdfRequest.claimPercent,
 					endDate: endDate?.split('T')[0],
 					externalReferenceCode,
 					id,
 					mdfRequestAmount,
-					mdfRequestExternalReferenceCode,
-					mdfRequestId: r_mdfReqToActs_c_mdfRequestId,
+					mdfRequestExternalReferenceCode: r_mdfReqToActs_c_mdfRequestERC,
 					name,
+					r_accToActs_accountEntryERC,
 					r_accToActs_accountEntryId,
+					r_mdfReqToActs_c_mdfRequestERC,
 					r_mdfReqToActs_c_mdfRequestId,
 					startDate: startDate?.split('T')[0],
+					submitted,
 					tactic,
 					totalCostOfExpense,
 					typeActivity,
@@ -65,9 +143,17 @@ export function getMDFRequestFromDTO(mdfRequest: MDFRequestDTO): MDFRequest {
 			}) || [],
 		additionalOption: mdfRequest.additionalOption,
 		company: mdfRequest.r_accToMDFReqs_accountEntry,
-		liferayBusinessSalesGoals: mdfRequest.liferayBusinessSalesGoals
-			?.split('; ')
-			.filter((request) => request !== ''),
+		liferayBusinessSalesGoals:
+			mdfRequest.liferayBusinessSalesGoalsOther !== ''
+				? (
+						'Other - Please describe; ' +
+						mdfRequest.liferayBusinessSalesGoals
+				  )
+						?.split('; ')
+						.filter((request) => request !== '')
+				: mdfRequest.liferayBusinessSalesGoals
+						?.split('; ')
+						.filter((request) => request !== ''),
 		liferayBusinessSalesGoalsOther:
 			mdfRequest.liferayBusinessSalesGoalsOther,
 		mdfRequestStatus: mdfRequest.mdfRequestStatus,

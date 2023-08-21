@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.order.content.web.internal.importer.type;
@@ -46,6 +37,8 @@ import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.io.IOException;
+
+import java.math.BigDecimal;
 
 import java.util.List;
 import java.util.Locale;
@@ -219,10 +212,11 @@ public class CommerceOrdersCommerceOrderImporterTypeImpl
 				_cpInstanceHelper.fetchFirstAvailableReplacementCPInstance(
 					commerceChannelGroupId, cpInstance.getCPInstanceId());
 
+			BigDecimal quantity = commerceOrderItem.getQuantity();
+
 			if ((firstAvailableReplacementCPInstance != null) &&
 				!_cpAvailabilityChecker.check(
-					commerceChannelGroupId, cpInstance,
-					commerceOrderItem.getQuantity())) {
+					commerceChannelGroupId, cpInstance, quantity.intValue())) {
 
 				commerceOrderImporterItemImpl.setReplacingSKU(
 					cpInstance.getSku());
@@ -250,6 +244,8 @@ public class CommerceOrdersCommerceOrderImporterTypeImpl
 		commerceOrderImporterItemImpl.setJSON(json);
 		commerceOrderImporterItemImpl.setQuantity(
 			commerceOrderItem.getQuantity());
+		commerceOrderImporterItemImpl.setUnitOfMeasureKey(
+			commerceOrderItem.getUnitOfMeasureKey());
 
 		return commerceOrderImporterItemImpl;
 	}

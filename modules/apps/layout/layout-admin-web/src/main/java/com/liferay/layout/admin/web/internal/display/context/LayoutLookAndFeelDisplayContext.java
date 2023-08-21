@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.layout.admin.web.internal.display.context;
@@ -97,6 +88,8 @@ public class LayoutLookAndFeelDisplayContext {
 					ClientExtensionEntryConstants.TYPE_GLOBAL_CSS)
 			).buildString()
 		).put(
+			"isReadOnly", _layoutsAdminDisplayContext.isReadOnly()
+		).put(
 			"selectGlobalCSSCETsEventName", "selectGlobalCSSCETs"
 		).build();
 	}
@@ -116,6 +109,8 @@ public class LayoutLookAndFeelDisplayContext {
 					true, "selectGlobalJSCETs",
 					ClientExtensionEntryConstants.TYPE_GLOBAL_JS)
 			).buildString()
+		).put(
+			"isReadOnly", _layoutsAdminDisplayContext.isReadOnly()
 		).put(
 			"selectGlobalJSCETsEventName", "selectGlobalJSCETs"
 		).build();
@@ -170,6 +165,8 @@ public class LayoutLookAndFeelDisplayContext {
 						"p_l_mode", Constants.EDIT),
 					"p_l_back_url", editLayoutURL);
 			}
+		).put(
+			"isReadOnly", _layoutsAdminDisplayContext.isReadOnly()
 		).put(
 			"masterLayoutName", getMasterLayoutName()
 		).put(
@@ -239,6 +236,8 @@ public class LayoutLookAndFeelDisplayContext {
 						styleBookEntryItemSelectorCriterion));
 			}
 		).put(
+			"isReadOnly", _layoutsAdminDisplayContext.isReadOnly()
+		).put(
 			"styleBookEntryId",
 			() -> {
 				Layout selLayout = _layoutsAdminDisplayContext.getSelLayout();
@@ -293,6 +292,8 @@ public class LayoutLookAndFeelDisplayContext {
 		String className, long classPK) {
 
 		return HashMapBuilder.<String, Object>put(
+			"isReadOnly", _layoutsAdminDisplayContext.isReadOnly()
+		).put(
 			"selectThemeSpritemapCETEventName", "selectThemeSpritemapCET"
 		).put(
 			"themeSpritemapCET",
@@ -378,6 +379,34 @@ public class LayoutLookAndFeelDisplayContext {
 		_hasMasterLayout = hasMasterLayout;
 
 		return _hasMasterLayout;
+	}
+
+	public boolean isIconSelectorVisible() {
+		Layout selLayout = _layoutsAdminDisplayContext.getSelLayout();
+
+		if (selLayout.isTypeAssetDisplay()) {
+			return false;
+		}
+
+		LayoutPageTemplateEntry layoutPageTemplateEntry =
+			LayoutPageTemplateEntryLocalServiceUtil.
+				fetchLayoutPageTemplateEntryByPlid(selLayout.getPlid());
+
+		if (layoutPageTemplateEntry == null) {
+			layoutPageTemplateEntry =
+				LayoutPageTemplateEntryLocalServiceUtil.
+					fetchLayoutPageTemplateEntryByPlid(selLayout.getClassPK());
+		}
+
+		if ((layoutPageTemplateEntry != null) &&
+			Objects.equals(
+				layoutPageTemplateEntry.getType(),
+				LayoutPageTemplateEntryTypeConstants.TYPE_MASTER_LAYOUT)) {
+
+			return false;
+		}
+
+		return true;
 	}
 
 	private JSONObject _getCETJSONObject(

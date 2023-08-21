@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.blogs.web.internal.portlet.action;
@@ -30,9 +21,9 @@ import com.liferay.blogs.exception.NoSuchEntryException;
 import com.liferay.blogs.model.BlogsEntry;
 import com.liferay.blogs.service.BlogsEntryLocalService;
 import com.liferay.blogs.service.BlogsEntryService;
-import com.liferay.blogs.web.internal.bulk.selection.BlogsEntryBulkSelectionFactory;
 import com.liferay.blogs.web.internal.helper.BlogsEntryImageSelectorHelper;
 import com.liferay.bulk.selection.BulkSelection;
+import com.liferay.bulk.selection.BulkSelectionFactory;
 import com.liferay.document.library.kernel.exception.FileSizeException;
 import com.liferay.friendly.url.exception.DuplicateFriendlyURLEntryException;
 import com.liferay.petra.reflect.ReflectionUtil;
@@ -553,7 +544,7 @@ public class EditEntryMVCActionCommand extends BaseMVCActionCommand {
 			if (!content.equals(updatedContent)) {
 				entry.setContent(updatedContent);
 
-				_blogsEntryLocalService.updateBlogsEntry(entry);
+				entry = _blogsEntryLocalService.updateBlogsEntry(entry);
 			}
 		}
 		else {
@@ -631,8 +622,8 @@ public class EditEntryMVCActionCommand extends BaseMVCActionCommand {
 	@Reference
 	private AttachmentContentUpdater _attachmentContentUpdater;
 
-	@Reference
-	private BlogsEntryBulkSelectionFactory _blogsEntryBulkSelectionFactory;
+	@Reference(target = "(model.class.name=com.liferay.blogs.model.BlogsEntry)")
+	private BulkSelectionFactory<BlogsEntry> _blogsEntryBulkSelectionFactory;
 
 	@Reference
 	private BlogsEntryLocalService _blogsEntryLocalService;

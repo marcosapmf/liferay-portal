@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.layout.internal.exportimport.data.handler;
@@ -34,7 +25,8 @@ import com.liferay.exportimport.kernel.staging.LayoutStagingUtil;
 import com.liferay.exportimport.kernel.staging.MergeLayoutPrototypesThreadLocal;
 import com.liferay.exportimport.lar.ThemeExporter;
 import com.liferay.exportimport.lar.ThemeImporter;
-import com.liferay.layout.internal.exportimport.staged.model.repository.StagedLayoutSetStagedModelRepository;
+import com.liferay.exportimport.staged.model.repository.StagedModelRepository;
+import com.liferay.layout.internal.exportimport.staged.model.repository.StagedLayoutSetStagedModelRepositoryUtil;
 import com.liferay.layout.set.model.adapter.StagedLayoutSet;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringBundler;
@@ -190,7 +182,7 @@ public class StagedLayoutSetStagedModelDataHandler
 		LayoutSet layoutSet = stagedLayoutSet.getLayoutSet();
 
 		StagedLayoutSet existingStagedLayoutSet =
-			_stagedLayoutSetStagedModelRepository.fetchExistingLayoutSet(
+			StagedLayoutSetStagedModelRepositoryUtil.fetchExistingLayoutSet(
 				portletDataContext.getScopeGroupId(),
 				layoutSet.isPrivateLayout());
 
@@ -482,8 +474,9 @@ public class StagedLayoutSetStagedModelDataHandler
 		}
 
 		for (StagedModel stagedModel :
-				_stagedLayoutSetStagedModelRepository.fetchChildrenStagedModels(
-					portletDataContext, stagedLayoutSet)) {
+				StagedLayoutSetStagedModelRepositoryUtil.
+					fetchChildrenStagedModels(
+						portletDataContext, stagedLayoutSet)) {
 
 			Layout layout = (Layout)stagedModel;
 
@@ -996,7 +989,7 @@ public class StagedLayoutSetStagedModelDataHandler
 
 			layout.setPriority(newLayoutPriority);
 
-			_layoutLocalService.updateLayout(layout);
+			layout = _layoutLocalService.updateLayout(layout);
 
 			parentLayoutIds.add(layout.getParentLayoutId());
 		}
@@ -1149,8 +1142,10 @@ public class StagedLayoutSetStagedModelDataHandler
 	@Reference
 	private Sites _sites;
 
-	@Reference
-	private StagedLayoutSetStagedModelRepository
+	@Reference(
+		target = "(model.class.name=com.liferay.layout.set.model.adapter.StagedLayoutSet)"
+	)
+	private StagedModelRepository<StagedLayoutSet>
 		_stagedLayoutSetStagedModelRepository;
 
 	@Reference

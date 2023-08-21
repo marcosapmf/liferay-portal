@@ -1,23 +1,22 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
+
 import {ApolloProvider} from '@apollo/client';
 import {ClayIconSpriteContext} from '@clayui/icon';
 import ClayLoadingIndicator from '@clayui/loading-indicator';
 import React from 'react';
 import {createRoot} from 'react-dom/client';
+import {SWRConfig} from 'swr';
 import './common/styles/global.scss';
 
+import {OktaStatusPortal} from './OktaStatus';
+import SWRCacheProvider from './SWRCacheProvider';
 import {AppPropertiesContext} from './common/contexts/AppPropertiesContext';
 import useApollo from './common/hooks/useApollo';
 import useGlobalNetworkIndicator from './common/hooks/useGlobalNetworkIndicator';
+import {Liferay} from './common/services/liferay';
 import getIconSpriteMap from './common/utils/getIconSpriteMap';
 import CustomerPortal from './routes/customer-portal';
 import Home from './routes/home';
@@ -26,14 +25,17 @@ import Onboarding from './routes/onboarding';
 const ELEMENT_ID = 'liferay-remote-app-customer-portal';
 
 const AppRoutes = {
-	home: <Home />,
-	onboarding: <Onboarding />,
-	portal: <CustomerPortal />,
+	home: Home,
+	onboarding: Onboarding,
+	portal: CustomerPortal,
 };
 
 type Properties = {
 	articleAccountSupportURL: string | null;
 	articleDeployingActivationKeysURL: string | null;
+	articleGettingStartedWithLiferayEnterpriseSearchURL: string | null;
+	articleWhatIsMyInstanceSizingValueURL: string | null;
+	featureFlags?: string[];
 	importDate?: Date | null;
 	submitSupportTicketURL: string | null;
 };
@@ -65,6 +67,8 @@ const CustomerPortalApp: React.FC<CustomerPortalAppProps> = ({
 		return <ClayLoadingIndicator />;
 	}
 
+	const AppRouteComponent = (AppRoutes as any)[route];
+
 	return (
 		<ApolloProvider client={client}>
 			<AppPropertiesContext.Provider
@@ -76,7 +80,11 @@ const CustomerPortalApp: React.FC<CustomerPortalAppProps> = ({
 					} as any
 				}
 			>
-				{(AppRoutes as any)[route]}
+				{properties.featureFlags?.includes('LPS-192494') && (
+					<OktaStatusPortal />
+				)}
+
+				<AppRouteComponent />
 			</AppPropertiesContext.Provider>
 		</ApolloProvider>
 	);
@@ -91,6 +99,15 @@ class CustomerPortalWebComponent extends HTMLElement {
 			articleDeployingActivationKeysURL: super.getAttribute(
 				'article-deploying-activation-keys-url'
 			),
+			articleGettingStartedWithLiferayEnterpriseSearchURL: super.getAttribute(
+				'article-getting-started-with-liferay-enterprise-search-url'
+			),
+			articleWhatIsMyInstanceSizingValueURL: super.getAttribute(
+				'article-what-is-my-instance-sizing-value-url'
+			),
+			featureFlags: (super.getAttribute('feature-flags') ?? '')
+				.split(',')
+				.map((featureflag) => featureflag.trim()),
 			importDate: super.getAttribute('import-date')
 				? new Date(super.getAttribute('import-date') as string)
 				: undefined,
@@ -98,6 +115,13 @@ class CustomerPortalWebComponent extends HTMLElement {
 				'submit-support-ticket-url'
 			),
 		};
+
+		if (
+			!properties.featureFlags.includes('LPS-153478') &&
+			(Liferay.FeatureFlags as any)['LPS-153478']
+		) {
+			properties.featureFlags.push('LPS-153478');
+		}
 
 		const apis = {
 			gravatarAPI: super.getAttribute('gravatar-api'),
@@ -111,11 +135,18 @@ class CustomerPortalWebComponent extends HTMLElement {
 
 		root.render(
 			<ClayIconSpriteContext.Provider value={getIconSpriteMap()}>
-				<CustomerPortalApp
-					{...properties}
-					apis={apis}
-					route={super.getAttribute('route') as string}
-				/>
+				<SWRConfig
+					value={{
+						provider: SWRCacheProvider,
+						revalidateOnFocus: false,
+					}}
+				>
+					<CustomerPortalApp
+						{...properties}
+						apis={apis}
+						route={super.getAttribute('route') as string}
+					/>
+				</SWRConfig>
 			</ClayIconSpriteContext.Provider>
 		);
 	}

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.document.library.preview.pdf.internal.configuration.admin.service;
@@ -200,8 +191,8 @@ public class PDFPreviewManagedServiceFactory implements ManagedServiceFactory {
 		if (scope.equals(
 				ExtendedObjectClassDefinition.Scope.COMPANY.getValue())) {
 
-			if ((systemMaxNumberOfPages != 0) && (maxNumberOfPages != 0) &&
-				(systemMaxNumberOfPages < maxNumberOfPages)) {
+			if (_isMaxNumberOfPagesLimitExceeded(
+					systemMaxNumberOfPages, maxNumberOfPages)) {
 
 				throw new PDFPreviewException(systemMaxNumberOfPages);
 			}
@@ -211,8 +202,8 @@ public class PDFPreviewManagedServiceFactory implements ManagedServiceFactory {
 		else if (scope.equals(
 					ExtendedObjectClassDefinition.Scope.GROUP.getValue())) {
 
-			if ((systemMaxNumberOfPages != 0) && (maxNumberOfPages != 0) &&
-				(systemMaxNumberOfPages < maxNumberOfPages)) {
+			if (_isMaxNumberOfPagesLimitExceeded(
+					systemMaxNumberOfPages, maxNumberOfPages)) {
 
 				throw new PDFPreviewException(systemMaxNumberOfPages);
 			}
@@ -222,8 +213,8 @@ public class PDFPreviewManagedServiceFactory implements ManagedServiceFactory {
 			int companyMaxNumberOfPages = _getCompanyMaxNumberOfPages(
 				group.getCompanyId());
 
-			if ((companyMaxNumberOfPages != 0) && (maxNumberOfPages != 0) &&
-				(companyMaxNumberOfPages < maxNumberOfPages)) {
+			if (_isMaxNumberOfPagesLimitExceeded(
+					companyMaxNumberOfPages, maxNumberOfPages)) {
 
 				throw new PDFPreviewException(companyMaxNumberOfPages);
 			}
@@ -317,6 +308,14 @@ public class PDFPreviewManagedServiceFactory implements ManagedServiceFactory {
 
 	private int _getSystemMaxNumberOfPages() {
 		return _systemPDFPreviewConfiguration.maxNumberOfPages();
+	}
+
+	private boolean _isMaxNumberOfPagesLimitExceeded(int limit, int value) {
+		if ((limit != 0) && ((value == 0) || (limit < value))) {
+			return true;
+		}
+
+		return false;
 	}
 
 	private void _unmapPid(String pid) {

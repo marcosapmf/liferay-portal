@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.fragment.importer.test;
@@ -459,6 +450,40 @@ public class FragmentsImporterTest {
 	}
 
 	@Test
+	public void testImportInvalidFragmentComposition() throws Exception {
+		ServiceContextThreadLocal.pushServiceContext(
+			ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
+
+		try {
+			List<FragmentsImporterResultEntry>
+				filteredFragmentsImporterResultEntries = ListUtil.filter(
+					_fragmentsImporter.importFragmentEntries(
+						_user.getUserId(), _group.getGroupId(), 0, _file,
+						false),
+					fragmentsImporterResultEntry -> Objects.equals(
+						fragmentsImporterResultEntry.getName(),
+						"Fragment./Composition"));
+
+			Assert.assertEquals(
+				filteredFragmentsImporterResultEntries.toString(), 1,
+				filteredFragmentsImporterResultEntries.size());
+
+			FragmentsImporterResultEntry fragmentsImporterResultEntry =
+				filteredFragmentsImporterResultEntries.get(0);
+
+			Assert.assertEquals(
+				FragmentsImporterResultEntry.Status.INVALID,
+				fragmentsImporterResultEntry.getStatus());
+			Assert.assertEquals(
+				FragmentsImporterResultEntry.Type.COMPOSITION,
+				fragmentsImporterResultEntry.getType());
+		}
+		finally {
+			ServiceContextThreadLocal.popServiceContext();
+		}
+	}
+
+	@Test
 	public void testImportReactFragmentWithInvalidConfiguration()
 		throws Exception {
 
@@ -485,6 +510,9 @@ public class FragmentsImporterTest {
 			Assert.assertEquals(
 				FragmentsImporterResultEntry.Status.INVALID,
 				fragmentsImporterResultEntry.getStatus());
+			Assert.assertEquals(
+				FragmentsImporterResultEntry.Type.FRAGMENT,
+				fragmentsImporterResultEntry.getType());
 		}
 		finally {
 			ServiceContextThreadLocal.popServiceContext();
@@ -642,6 +670,31 @@ public class FragmentsImporterTest {
 			_addZipWriterEntry(zipWriter, path, jsonObject.getString("jsPath"));
 			_addZipWriterEntry(
 				zipWriter, path, jsonObject.getString("thumbnailPath"));
+		}
+
+		enumeration = _bundle.findEntries(
+			basePath,
+			FragmentExportImportConstants.FILE_NAME_FRAGMENT_COMPOSITION, true);
+
+		if (enumeration == null) {
+			return;
+		}
+
+		while (enumeration.hasMoreElements()) {
+			URL url = enumeration.nextElement();
+
+			String content = StringUtil.read(url.openStream());
+
+			JSONObject jsonObject = JSONFactoryUtil.createJSONObject(content);
+
+			String path = FileUtil.getPath(url.getPath());
+
+			_addZipWriterEntry(
+				zipWriter, path,
+				FragmentExportImportConstants.FILE_NAME_FRAGMENT_COMPOSITION);
+			_addZipWriterEntry(
+				zipWriter, path,
+				jsonObject.getString("fragmentCompositionDefinitionPath"));
 		}
 	}
 

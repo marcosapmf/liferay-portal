@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.osb.faro.service.base;
@@ -47,8 +38,6 @@ import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PortalUtil;
 
 import java.io.Serializable;
-
-import java.lang.reflect.Field;
 
 import java.util.List;
 
@@ -388,7 +377,7 @@ public abstract class FaroProjectLocalServiceBaseImpl
 
 	@Deactivate
 	protected void deactivate() {
-		_setLocalServiceUtilService(null);
+		FaroProjectLocalServiceUtil.setService(null);
 	}
 
 	@Override
@@ -403,7 +392,7 @@ public abstract class FaroProjectLocalServiceBaseImpl
 	public void setAopProxy(Object aopProxy) {
 		faroProjectLocalService = (FaroProjectLocalService)aopProxy;
 
-		_setLocalServiceUtilService(faroProjectLocalService);
+		FaroProjectLocalServiceUtil.setService(faroProjectLocalService);
 	}
 
 	/**
@@ -445,22 +434,6 @@ public abstract class FaroProjectLocalServiceBaseImpl
 		}
 		catch (Exception exception) {
 			throw new SystemException(exception);
-		}
-	}
-
-	private void _setLocalServiceUtilService(
-		FaroProjectLocalService faroProjectLocalService) {
-
-		try {
-			Field field = FaroProjectLocalServiceUtil.class.getDeclaredField(
-				"_service");
-
-			field.setAccessible(true);
-
-			field.set(null, faroProjectLocalService);
-		}
-		catch (ReflectiveOperationException reflectiveOperationException) {
-			throw new RuntimeException(reflectiveOperationException);
 		}
 	}
 

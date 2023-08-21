@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.delivery.catalog.dto.v1_0;
@@ -149,6 +140,34 @@ public class Sku implements Serializable {
 	@GraphQLField
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Availability availability;
+
+	@Schema
+	public Boolean getBackOrderAllowed() {
+		return backOrderAllowed;
+	}
+
+	public void setBackOrderAllowed(Boolean backOrderAllowed) {
+		this.backOrderAllowed = backOrderAllowed;
+	}
+
+	@JsonIgnore
+	public void setBackOrderAllowed(
+		UnsafeSupplier<Boolean, Exception> backOrderAllowedUnsafeSupplier) {
+
+		try {
+			backOrderAllowed = backOrderAllowedUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected Boolean backOrderAllowed;
 
 	@DecimalMin("0")
 	@Schema(example = "1.1")
@@ -626,6 +645,36 @@ public class Sku implements Serializable {
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Boolean purchasable;
 
+	@Schema
+	@Valid
+	public ReplacementSku getReplacementSku() {
+		return replacementSku;
+	}
+
+	public void setReplacementSku(ReplacementSku replacementSku) {
+		this.replacementSku = replacementSku;
+	}
+
+	@JsonIgnore
+	public void setReplacementSku(
+		UnsafeSupplier<ReplacementSku, Exception>
+			replacementSkuUnsafeSupplier) {
+
+		try {
+			replacementSku = replacementSkuUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected ReplacementSku replacementSku;
+
 	@Schema(example = "SKU0111")
 	public String getReplacementSkuExternalReferenceCode() {
 		return replacementSkuExternalReferenceCode;
@@ -885,6 +934,16 @@ public class Sku implements Serializable {
 			sb.append(String.valueOf(availability));
 		}
 
+		if (backOrderAllowed != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"backOrderAllowed\": ");
+
+			sb.append(backOrderAllowed);
+		}
+
 		if (depth != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -1079,6 +1138,16 @@ public class Sku implements Serializable {
 			sb.append(purchasable);
 		}
 
+		if (replacementSku != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"replacementSku\": ");
+
+			sb.append(String.valueOf(replacementSku));
+		}
+
 		if (replacementSkuExternalReferenceCode != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -1251,5 +1320,7 @@ public class Sku implements Serializable {
 		{"\\", "\"", "\b", "\f", "\n", "\r", "\t"},
 		{"\\\\", "\\\"", "\\b", "\\f", "\\n", "\\r", "\\t"}
 	};
+
+	private Map<String, Serializable> _extendedProperties;
 
 }

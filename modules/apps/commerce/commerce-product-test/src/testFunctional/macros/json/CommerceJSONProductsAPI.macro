@@ -581,6 +581,29 @@ definition {
 		return ${curl};
 	}
 
+	macro _getCommerceProductAttachments {
+		Variables.assertDefined(parameterList = ${productName});
+
+		var baseURL = ${baseURL};
+
+		if (!(isSet(baseURL))) {
+			var baseURL = PropsUtil.get("portal.url");
+		}
+
+		var productId = CommerceJSONProductsAPI._getProductId(productName = ${productName});
+		var userLoginInfo = JSONUtil2.formatJSONUser();
+
+		var curl = '''
+			${baseURL}/o/headless-commerce-admin-catalog/v1.0/products/${productId}/attachments \
+				-u ${userLoginInfo} \
+				-H 'accept: application/json' \
+		''';
+
+		var responseBody = JSONCurlUtil.get(${curl});
+
+		return ${responseBody};
+	}
+
 	macro _getCommerceProductCategoryUsingProductERC {
 		Variables.assertDefined(parameterList = ${productERC});
 
@@ -657,6 +680,29 @@ definition {
 		}
 
 		return ${productImageIds};
+	}
+
+	macro _getCommerceProductImages {
+		Variables.assertDefined(parameterList = ${productName});
+
+		var baseURL = ${baseURL};
+
+		if (!(isSet(baseURL))) {
+			var baseURL = PropsUtil.get("portal.url");
+		}
+
+		var productId = CommerceJSONProductsAPI._getProductId(productName = ${productName});
+		var userLoginInfo = JSONUtil2.formatJSONUser();
+
+		var curl = '''
+			${baseURL}/o/headless-commerce-admin-catalog/v1.0/products/${productId}/images \
+				-u ${userLoginInfo} \
+				-H 'accept: application/json' \
+		''';
+
+		var responseBody = JSONCurlUtil.get(${curl});
+
+		return ${responseBody};
 	}
 
 	macro _getCommerceProductImageURL {
@@ -875,25 +921,27 @@ definition {
 		return ${cpDefinitionId};
 	}
 
-	macro _getProductCreateDate {
+	macro _getProductById {
+		Variables.assertDefined(parameterList = ${productName});
+
 		var baseURL = ${baseURL};
 
 		if (!(isSet(baseURL))) {
 			var baseURL = PropsUtil.get("portal.url");
 		}
 
-		var productCreateDate = CommerceJSONProductsAPI._getProductId(productName = ${productName});
+		var productId = CommerceJSONProductsAPI._getProductId(productName = ${productName});
 		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
-			${baseURL}/o/headless-commerce-admin-catalog/v1.0/products?search=%22${search}%22 \
+			${baseURL}/o/headless-commerce-admin-catalog/v1.0/products/${productId} \
 				-u ${userLoginInfo} \
 				-H 'accept: application/json' \
 		''';
 
-		var productCreateDate = JSONCurlUtil.get(${curl}, "$.items[?(@['name'].['en_US'] == '${productName}')].['productCreateDate']");
+		var responseBody = JSONCurlUtil.get(${curl});
 
-		return ${productCreateDate};
+		return ${responseBody};
 	}
 
 	macro _getProductId {
@@ -955,6 +1003,55 @@ definition {
 		echo("The SKU ID is: ${skuId}");
 
 		return ${skuId};
+	}
+
+	macro _patchCommerceProductAttachmentUsingERC {
+		Variables.assertDefined(parameterList = ${productERC});
+
+		var baseURL = PropsUtil.get("portal.url");
+
+		if (!(isSet(attachment))) {
+			var attachment = "";
+		}
+
+		if (!(isSet(attachmentTitle))) {
+			var attachmentTitle = "Simple Attachment Title API";
+		}
+
+		if (isSet(customFieldName)) {
+			var customFields = '''
+				{
+					"customValue": {
+						"data": "${customFieldContent}"
+					},
+					"dataType": "${customFieldType}",
+					"name": "${customFieldName}"
+				}
+			''';
+		}
+		else {
+			var customFields = "";
+		}
+
+		var userLoginInfo = JSONUtil2.formatJSONUser();
+
+		var curl = '''
+			${baseURL}/o/headless-commerce-admin-catalog/v1.0/products/by-externalReferenceCode/${productERC}/attachments \
+				-u ${userLoginInfo} \
+				-H 'accept: application/json' \
+				-H 'Content-Type: application/json' \
+				-d '{
+					"attachment": "${attachment}",
+					"customFields": [${customFields}],
+					"title": {
+						"en_US": "${attachmentTitle}"
+					}
+				}'
+		''';
+
+		var responseBody = JSONCurlUtil.post(${curl});
+
+		return ${responseBody};
 	}
 
 	macro _patchCommerceProductConfiguration {
@@ -1267,6 +1364,46 @@ definition {
 		com.liferay.poshi.runner.util.JSONCurlUtil.patch(${curl});
 	}
 
+	macro _patchCommerceVirtualProductSku {
+		Variables.assertDefined(parameterList = ${productSku});
+
+		var baseURL = ${baseURL};
+		var fieldsList = ListUtil.newList();
+
+		if (!(isSet(baseURL))) {
+			var baseURL = PropsUtil.get("portal.url");
+		}
+
+		if (!(isSet(override))) {
+			var override = "true";
+		}
+
+		var sku = '''"sku": "${productSku}"''';
+
+		ListUtil.add(${fieldsList}, ${sku});
+
+		var fieldsList = ListUtil.toString(${fieldsList});
+
+		var payload = CommerceUtilities.getPayloadFromFieldsList(fieldsList = ${fieldsList});
+		var skuId = CommerceJSONProductsAPI._getSKUId(productSKU = ${productSku});
+		var userLoginInfo = JSONUtil2.formatJSONUser();
+
+		var curl = '''
+			${baseURL}/o/headless-commerce-admin-catalog/v1.0/skus/${skuId} \
+				-u ${userLoginInfo} \
+				-H 'accept: application/json' \
+				-H 'Content-Type: application/json' \
+				-d '{
+					${payload},
+					"skuVirtualSettings": {
+						"override": ${override}
+					}
+				}'
+		''';
+
+		com.liferay.poshi.runner.util.JSONCurlUtil.patch(${curl});
+	}
+
 	macro _updateCommerceProduct {
 		Variables.assertDefined(parameterList = ${productName});
 
@@ -1377,6 +1514,36 @@ definition {
 		var skuId = JSONUtil.getWithJSONPath(${responseBody}, "$..['id']");
 
 		return ${skuId};
+	}
+
+	macro getCommerceProductMediaFieldValues {
+		Variables.assertDefined(parameterList = "${jsonPath},${productName}");
+
+		if (${type} == "images") {
+			var responseBody = CommerceJSONProductsAPI._getCommerceProductImages(productName = ${productName});
+		}
+
+		if (${type} == "attachment") {
+			var responseBody = CommerceJSONProductsAPI._getCommerceProductAttachments(productName = ${productName});
+		}
+
+		var fieldValues = JSONUtil.getWithJSONPath(${responseBody}, ${jsonPath});
+
+		echo("Field: ${fieldValues}");
+
+		return ${fieldValues};
+	}
+
+	macro getProductField {
+		Variables.assertDefined(parameterList = "${jsonPath},${productName}");
+
+		var responseBody = CommerceJSONProductsAPI._getProductById(productName = ${productName});
+
+		var fieldValue = JSONUtil.getWithJSONPath(${responseBody}, ${jsonPath});
+
+		echo("Field: ${fieldValue}");
+
+		return ${fieldValue};
 	}
 
 	macro getProductIdsByName {

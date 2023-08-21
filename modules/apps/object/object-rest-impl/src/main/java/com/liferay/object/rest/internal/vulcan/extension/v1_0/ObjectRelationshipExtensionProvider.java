@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.rest.internal.vulcan.extension.v1_0;
@@ -17,6 +8,7 @@ package com.liferay.object.rest.internal.vulcan.extension.v1_0;
 import com.liferay.object.constants.ObjectRelationshipConstants;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectRelationship;
+import com.liferay.object.related.models.ObjectRelatedModelsProviderRegistry;
 import com.liferay.object.rest.dto.v1_0.ObjectEntry;
 import com.liferay.object.rest.manager.v1_0.DefaultObjectEntryManager;
 import com.liferay.object.rest.manager.v1_0.DefaultObjectEntryManagerProvider;
@@ -29,7 +21,6 @@ import com.liferay.object.service.ObjectRelationshipLocalService;
 import com.liferay.object.service.ObjectRelationshipService;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -38,7 +29,6 @@ import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.extension.ExtensionProvider;
 import com.liferay.portal.vulcan.extension.PropertyDefinition;
 import com.liferay.portal.vulcan.extension.validation.DefaultPropertyValidator;
-import com.liferay.portal.vulcan.extension.validation.PropertyValidator;
 import com.liferay.portal.vulcan.fields.NestedFieldsSupplier;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
@@ -75,17 +65,13 @@ public class ObjectRelationshipExtensionProvider
 			nestedFieldName -> {
 				ObjectRelationship objectRelationship =
 					_objectRelationshipLocalService.
-						fetchObjectRelationshipByObjectDefinitionId1(
+						fetchObjectRelationshipByObjectDefinitionId(
 							objectDefinition.getObjectDefinitionId(),
 							nestedFieldName);
 
 				if ((objectRelationship == null) ||
-					(!Objects.equals(
-						objectRelationship.getType(),
-						ObjectRelationshipConstants.TYPE_MANY_TO_MANY) &&
-					 !Objects.equals(
-						 objectRelationship.getType(),
-						 ObjectRelationshipConstants.TYPE_ONE_TO_MANY))) {
+					!objectRelationship.isAllowedObjectRelationshipType(
+						objectRelationship.getType())) {
 
 					return null;
 				}
@@ -100,12 +86,29 @@ public class ObjectRelationshipExtensionProvider
 					return null;
 				}
 
+				long primaryKey = getPrimaryKey(entity);
+
+				if (_isManyToOneObjectRelationship(
+						objectDefinition, objectRelationship,
+						relatedObjectDefinition)) {
+
+					DefaultObjectEntryManager defaultObjectEntryManager =
+						DefaultObjectEntryManagerProvider.provide(
+							_objectEntryManagerRegistry.getObjectEntryManager(
+								objectDefinition.getStorageType()));
+
+					return defaultObjectEntryManager.
+						fetchRelatedManyToOneObjectEntry(
+							_getDefaultDTOConverterContext(
+								objectDefinition, primaryKey, null),
+							objectDefinition, primaryKey,
+							objectRelationship.getName());
+				}
+
 				DefaultObjectEntryManager defaultObjectEntryManager =
 					DefaultObjectEntryManagerProvider.provide(
 						_objectEntryManagerRegistry.getObjectEntryManager(
 							objectDefinition.getStorageType()));
-
-				long primaryKey = getPrimaryKey(entity);
 
 				Page<ObjectEntry> relatedObjectEntriesPage =
 					defaultObjectEntryManager.
@@ -136,12 +139,8 @@ public class ObjectRelationshipExtensionProvider
 				_objectRelationshipLocalService.getAllObjectRelationships(
 					objectDefinition.getObjectDefinitionId())) {
 
-			if (!Objects.equals(
-					objectRelationship.getType(),
-					ObjectRelationshipConstants.TYPE_MANY_TO_MANY) &&
-				!Objects.equals(
-					objectRelationship.getType(),
-					ObjectRelationshipConstants.TYPE_ONE_TO_MANY)) {
+			if (!objectRelationship.isAllowedObjectRelationshipType(
+					objectRelationship.getType())) {
 
 				continue;
 			}
@@ -156,15 +155,6 @@ public class ObjectRelationshipExtensionProvider
 				continue;
 			}
 
-			PropertyValidator propertyValidator = null;
-
-			if (FeatureFlagManagerUtil.isEnabled("LPS-153117")) {
-				propertyValidator = new DefaultPropertyValidator();
-			}
-			else {
-				propertyValidator = new UnsupportedOperationPropertyValidator();
-			}
-
 			extendedPropertyDefinitions.put(
 				objectRelationship.getName(),
 				new PropertyDefinition(
@@ -177,7 +167,7 @@ public class ObjectRelationshipExtensionProvider
 						" can be embedded with \"nestedFields\"."),
 					objectRelationship.getName(),
 					_getPropertyType(objectDefinition, objectRelationship),
-					propertyValidator, false));
+					new DefaultPropertyValidator(), false));
 		}
 
 		return extendedPropertyDefinitions;
@@ -196,6 +186,8 @@ public class ObjectRelationshipExtensionProvider
 			throw new IllegalStateException(
 				"No object definition exists with class name " + className);
 		}
+
+		long primaryKey = getPrimaryKey(entity);
 
 		for (Map.Entry<String, Serializable> entry :
 				extendedProperties.entrySet()) {
@@ -225,17 +217,28 @@ public class ObjectRelationshipExtensionProvider
 				objectRelationshipElementsParser.parse(
 					objectRelationship, entry.getValue());
 
+			DefaultObjectEntryManager defaultObjectEntryManager =
+				DefaultObjectEntryManagerProvider.provide(
+					_objectEntryManagerRegistry.getObjectEntryManager(
+						objectDefinition.getStorageType()));
+
+			defaultObjectEntryManager.disassociateRelatedModels(
+				_getDefaultDTOConverterContext(
+					objectDefinition, primaryKey, null),
+				objectDefinition, objectRelationship, primaryKey,
+				relatedObjectDefinition, userId);
+
 			for (ObjectEntry nestedObjectEntry : nestedObjectEntries) {
 				nestedObjectEntry = objectEntryManager.updateObjectEntry(
 					objectDefinition.getCompanyId(),
 					_getDefaultDTOConverterContext(
-						objectDefinition, getPrimaryKey(entity), null),
+						objectDefinition, primaryKey, null),
 					nestedObjectEntry.getExternalReferenceCode(),
 					relatedObjectDefinition, nestedObjectEntry,
 					relatedObjectDefinition.getScope());
 
 				_relateNestedObjectEntry(
-					objectDefinition, objectRelationship, getPrimaryKey(entity),
+					objectDefinition, objectRelationship, primaryKey,
 					nestedObjectEntry.getId());
 			}
 
@@ -294,6 +297,25 @@ public class ObjectRelationshipExtensionProvider
 			relatedObjectDefinitionId);
 	}
 
+	private boolean _isManyToOneObjectRelationship(
+		ObjectDefinition objectDefinition,
+		ObjectRelationship objectRelationship,
+		ObjectDefinition relatedObjectDefinition) {
+
+		if (Objects.equals(
+				objectRelationship.getType(),
+				ObjectRelationshipConstants.TYPE_ONE_TO_MANY) &&
+			(objectRelationship.getObjectDefinitionId1() ==
+				relatedObjectDefinition.getObjectDefinitionId()) &&
+			(objectRelationship.getObjectDefinitionId2() ==
+				objectDefinition.getObjectDefinitionId())) {
+
+			return true;
+		}
+
+		return false;
+	}
+
 	private void _relateNestedObjectEntry(
 			ObjectDefinition objectDefinition,
 			ObjectRelationship objectRelationship, long primaryKey,
@@ -325,6 +347,10 @@ public class ObjectRelationshipExtensionProvider
 	private ObjectEntryManagerRegistry _objectEntryManagerRegistry;
 
 	@Reference
+	private ObjectRelatedModelsProviderRegistry
+		_objectRelatedModelsProviderRegistry;
+
+	@Reference
 	private ObjectRelationshipElementsParserRegistry
 		_objectRelationshipElementsParserRegistry;
 
@@ -333,19 +359,5 @@ public class ObjectRelationshipExtensionProvider
 
 	@Reference
 	private ObjectRelationshipService _objectRelationshipService;
-
-	private class UnsupportedOperationPropertyValidator
-		implements PropertyValidator {
-
-		@Override
-		public void validate(
-			PropertyDefinition propertyDefinition, Object propertyValue) {
-
-			throw new UnsupportedOperationException(
-				"The property " + propertyDefinition.getPropertyName() +
-					" cannot be set");
-		}
-
-	}
 
 }

@@ -1,15 +1,10 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayAlert from '@clayui/alert';
+import {ClayCheckbox} from '@clayui/form';
 import ClayIcon from '@clayui/icon';
 import {ClayTooltipProvider} from '@clayui/tooltip';
 import {FieldArray, Formik} from 'formik';
@@ -20,13 +15,15 @@ import {Badge, Button, Input} from '../../../../../common/components';
 import Layout from '../../../../../common/containers/setup-forms/Layout';
 import {useAppPropertiesContext} from '../../../../../common/contexts/AppPropertiesContext';
 import {patchOrderItemByExternalReferenceCode} from '../../../../../common/services/liferay/graphql/queries';
-import {createNewGenerateKey} from '../../../../../common/services/liferay/rest/raysource/LicenseKeys';
+import {
+	createNewGenerateKey,
+	putSubscriptionInKey,
+} from '../../../../../common/services/liferay/rest/raysource/LicenseKeys';
 import getInitialGenerateNewKey from '../../../../../common/utils/constants/getInitialGenerateNewKey';
 import GenerateCardLayout from '../GenerateCardLayout';
 import KeyInputs from '../KeyInputs';
 import KeySelect from '../KeySelect';
-
-const DNE_YEARS = 100;
+import {getLicenseKeyEndDatesByLicenseType} from '../utils/licenseKeyEndDateUtil';
 
 const RequiredInformation = ({
 	accountKey,
@@ -40,13 +37,18 @@ const RequiredInformation = ({
 	urlPreviousPage,
 	values,
 }) => {
-	const {client, provisioningServerAPI} = useAppPropertiesContext();
+	const {
+		client,
+		featureFlags,
+		provisioningServerAPI,
+	} = useAppPropertiesContext();
 
 	const [baseButtonDisabled, setBaseButtonDisabled] = useState(true);
 	const [addButtonDisabled, setAddButtonDisabled] = useState(false);
 	const [showKeyEmptyError, setShowKeyEmptyError] = useState(false);
-
+	const [isLoadingGenerateKey, setIsLoadingGenerateKey] = useState(false);
 	const [availableKeys, setAvailableKeys] = useState(1);
+	const [checkedBoxSubscription, setCheckedBoxSubscription] = useState(true);
 	const navigate = useNavigate();
 
 	const hasTouched = !Object.keys(touched).length;
@@ -63,15 +65,30 @@ const RequiredInformation = ({
 		return !!fieldValues.length;
 	});
 
+	const isComplementaryKey =
+		infoSelectedKey?.selectedSubscription.complimentary;
+
 	const newUsedKeys = usedKeysCount + values?.keys?.length;
 	const hasReachedMaximumKeys = newUsedKeys === avaliableKeysMaximumCount;
 
-	useEffect(() => {
-		const verificationDisabledType = infoSelectedKey.hasNotPermanentLicence
-			? !values.name || !values.maxClusterNodes
-			: !hasFilledAtLeastOneField || hasError;
+	const isOemOrEnterprise =
+		infoSelectedKey?.licenseEntryType.includes('OEM') ||
+		infoSelectedKey?.licenseEntryType.includes('Enterprise');
 
-		setBaseButtonDisabled(verificationDisabledType);
+	useEffect(() => {
+		const getVerificationDisabledType = () => {
+			if (infoSelectedKey.hasNotPermanentLicence) {
+				if (isOemOrEnterprise) {
+					return !values.name;
+				}
+
+				return !values.name || !values.maxClusterNodes;
+			}
+
+			return !hasFilledAtLeastOneField || hasError;
+		};
+
+		setBaseButtonDisabled(getVerificationDisabledType());
 
 		setAddButtonDisabled(
 			hasReachedMaximumKeys || !hasFilledAtLeastOneField
@@ -81,6 +98,7 @@ const RequiredInformation = ({
 		hasFilledAtLeastOneField,
 		hasReachedMaximumKeys,
 		infoSelectedKey.hasNotPermanentLicence,
+		isOemOrEnterprise,
 		values.maxClusterNodes,
 		values.name,
 	]);
@@ -127,34 +145,31 @@ const RequiredInformation = ({
 			infoSelectedKey?.selectedSubscription?.instanceSize || 1
 		}`;
 
-		const isVirtualClusterOrProduction = infoSelectedKey?.licenseEntryType?.includes(
-			'Virtual Cluster'
-		)
-			? 'virtual-cluster'
-			: 'production';
+		const getLicenseEntryTypeSelected = () => {
+			if (infoSelectedKey?.licenseEntryType.includes('Virtual Cluster')) {
+				return 'virtual-cluster';
+			}
 
-		const subscriptionStartDate = new Date(
-			infoSelectedKey.selectedSubscription.startDate
-		);
+			if (infoSelectedKey?.licenseEntryType.includes('OEM')) {
+				return 'oem';
+			}
 
-		const permanentLicenseKeys = new Date(
-			subscriptionStartDate.setFullYear(
-				subscriptionStartDate.getFullYear() + DNE_YEARS
-			)
-		);
+			if (infoSelectedKey?.licenseEntryType.includes('Enterprise')) {
+				return 'enterprise';
+			}
 
-		const hasExpirationDate =
-			infoSelectedKey?.doesNotAllowPermanentLicense ||
-			infoSelectedKey?.hasNotPermanentLicence;
+			return 'production';
+		};
 
 		const licenseKey = {
 			accountKey,
 			active: true,
+			complimentary: infoSelectedKey?.selectedSubscription.complimentary,
 			description: values?.description,
-			expirationDate: hasExpirationDate
-				? infoSelectedKey?.selectedSubscription.endDate
-				: permanentLicenseKeys,
-			licenseEntryType: isVirtualClusterOrProduction,
+			expirationDate:
+				getLicenseKeyEndDatesByLicenseType(infoSelectedKey) ??
+				infoSelectedKey?.selectedSubscription.endDate,
+			licenseEntryType: getLicenseEntryTypeSelected(),
 			maxClusterNodes: values?.maxClusterNodes || 0,
 			name: values?.name,
 			productKey: infoSelectedKey?.selectedSubscription.productKey,
@@ -166,16 +181,29 @@ const RequiredInformation = ({
 			startDate: infoSelectedKey?.selectedSubscription.startDate,
 		};
 
+		const saveSubscriptionKey = async (id) => {
+			return putSubscriptionInKey(provisioningServerAPI, id, sessionId);
+		};
+
 		if (infoSelectedKey.hasNotPermanentLicence) {
-			await createNewGenerateKey(
+			setIsLoadingGenerateKey(true);
+
+			const result = await createNewGenerateKey(
 				accountKey,
 				provisioningServerAPI,
 				sessionId,
 				licenseKey
 			);
-		}
-		else {
-			await Promise.all(
+
+			if (checkedBoxSubscription) {
+				await saveSubscriptionKey(result?.items[0]?.id);
+			}
+
+			setIsLoadingGenerateKey(false);
+		} else {
+			setIsLoadingGenerateKey(true);
+
+			const results = await Promise.all(
 				values?.keys?.map(({hostName, ipAddresses, macAddresses}) => {
 					licenseKey.macAddresses = macAddresses.replace('\n', ',');
 					licenseKey.hostName = hostName.replace('\n', ',');
@@ -189,31 +217,74 @@ const RequiredInformation = ({
 					);
 				})
 			);
+
+			if (checkedBoxSubscription && isComplementaryKey) {
+				await saveSubscriptionKey(results[0]?.items[0]?.id);
+			}
+
+			setIsLoadingGenerateKey(false);
 		}
 
-		await client.mutate({
-			context: {
-				displaySuccess: false,
-			},
-			mutation: patchOrderItemByExternalReferenceCode,
-			variables: {
-				externalReferenceCode: licenseKey.productPurchaseKey,
-				orderItem: {
-					customFields: [
-						{
-							customValue: {
-								data:
-									infoSelectedKey.selectedSubscription
-										.provisionedCount + 1,
-							},
-							name: 'provisionedCount',
-						},
-					],
+		if (!isComplementaryKey) {
+			await client.mutate({
+				context: {
+					displaySuccess: false,
 				},
-			},
-		});
+				mutation: patchOrderItemByExternalReferenceCode,
+				variables: {
+					externalReferenceCode: licenseKey.productPurchaseKey,
+					orderItem: {
+						customFields: [
+							{
+								customValue: {
+									data:
+										infoSelectedKey.selectedSubscription
+											.provisionedCount + 1,
+								},
+								name: 'provisionedCount',
+							},
+						],
+					},
+				},
+			});
+		}
 
 		navigate(urlPreviousPage, {state: {newKeyGeneratedAlert: true}});
+	};
+
+	const CheckboxSubscriptionNotification = () => {
+		if (
+			featureFlags.includes('LPS-180001') &&
+			(infoSelectedKey?.hasNotPermanentLicence || isComplementaryKey)
+		) {
+			return (
+				<>
+					<div className="d-flex mb-3 pt-2">
+						<div className="pr-2 pt-1">
+							<ClayCheckbox
+								checked={checkedBoxSubscription}
+								id="expiration-checkbox"
+								onChange={() =>
+									setCheckedBoxSubscription(
+										(checkedBoxSubcription) =>
+											!checkedBoxSubcription
+									)
+								}
+							/>
+						</div>
+
+						<label htmlFor="expiration-checkbox">
+							{i18n.sub(
+								'receive-expiration-notifications-through-email-when-this-activation-key-is-about-to-expire-x-days-before-x-days-before-and-on-the-day-of-expiration-unsubscribe-at-any-time',
+								[30, 15]
+							)}
+						</label>
+					</div>
+
+					<div className="dropdown-divider"></div>
+				</>
+			);
+		}
 	};
 
 	return (
@@ -236,27 +307,36 @@ const RequiredInformation = ({
 							<Button
 								className="btn btn-secondary mr-3"
 								displayType="secundary"
-								onClick={() => setStep(0)}
+								onClick={() =>
+									setStep(isComplementaryKey ? 1 : 0)
+								}
 							>
 								{i18n.translate('previous')}
 							</Button>
 
 							<Button
-								disabled={baseButtonDisabled}
+								disabled={
+									baseButtonDisabled || isLoadingGenerateKey
+								}
 								displayType="primary"
+								isLoading={isLoadingGenerateKey}
 								onClick={() => submitKey()}
 							>
-								{infoSelectedKey.hasNotPermanentLicence
-									? i18n.sub('generate-cluster-x-keys', [
-											values.maxClusterNodes,
-									  ])
-									: availableKeys > 1
-									? i18n.sub('generate-x-keys', [
-											availableKeys,
-									  ])
-									: i18n.sub('generate-x-key', [
-											availableKeys,
-									  ])}
+								{infoSelectedKey?.licenseEntryType.includes(
+									'Virtual Cluster'
+								)
+									? i18n.sub(
+											Number(values.maxClusterNodes) === 1
+												? 'generate-cluster-x-key'
+												: 'generate-cluster-x-keys',
+											[values.maxClusterNodes]
+									  )
+									: i18n.sub(
+											availableKeys > 1
+												? 'generate-x-keys'
+												: 'generate-x-key',
+											[availableKeys]
+									  )}
 							</Button>
 						</div>
 					),
@@ -335,7 +415,7 @@ const RequiredInformation = ({
 									>
 										<span>
 											{i18n.translate(
-												'one-or-more-host-name-ip-address-or-mac-address-is-required'
+												'please-provide-static-server-identifiers-that-do-not-change-over-time'
 											)}
 										</span>
 									</ClayAlert>
@@ -348,7 +428,7 @@ const RequiredInformation = ({
 										<Badge badgeClassName="m-0">
 											<span className="pl-1">
 												{i18n.translate(
-													'one-or-more-host-name-ip-address-or-mac-address-is-required'
+													'one-host-name-per-instance-or-ip-address-is-required'
 												)}
 											</span>
 										</Badge>
@@ -426,22 +506,28 @@ const RequiredInformation = ({
 										</Button>
 									</ClayTooltipProvider>
 
-									<div className="dropdown-divider"></div>
+									<CheckboxSubscriptionNotification />
 								</div>
 							) : (
-								<div className="cp-input-generate-label px-6">
-									<KeySelect
-										avaliableKeysMaximumCount={
-											avaliableKeysMaximumCount
-										}
-										minAvaliableKeysCount={
-											avaliableKeysMaximumCount -
-											usedKeysCount
-										}
-										selectedClusterNodes={
-											values.maxClusterNodes
-										}
-									/>
+								<div className="mx-6">
+									{!isOemOrEnterprise && (
+										<div className="cp-input-generate-label">
+											<KeySelect
+												avaliableKeysMaximumCount={
+													avaliableKeysMaximumCount
+												}
+												minAvaliableKeysCount={
+													avaliableKeysMaximumCount -
+													usedKeysCount
+												}
+												selectedClusterNodes={
+													values.maxClusterNodes
+												}
+											/>
+										</div>
+									)}
+
+									<CheckboxSubscriptionNotification />
 								</div>
 							)}
 						</>

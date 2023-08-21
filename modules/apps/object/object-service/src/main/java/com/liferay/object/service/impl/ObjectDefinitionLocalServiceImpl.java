@@ -1,28 +1,16 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.service.impl;
 
 import com.liferay.account.service.AccountEntryLocalService;
 import com.liferay.account.service.AccountEntryOrganizationRelLocalService;
-import com.liferay.asset.kernel.service.AssetCategoryLocalService;
-import com.liferay.asset.kernel.service.AssetTagLocalService;
-import com.liferay.asset.kernel.service.AssetVocabularyLocalService;
+import com.liferay.asset.kernel.service.AssetEntryLocalService;
 import com.liferay.fragment.model.FragmentEntryLink;
 import com.liferay.layout.model.LayoutClassedModelUsage;
 import com.liferay.layout.service.LayoutClassedModelUsageLocalService;
-import com.liferay.list.type.service.ListTypeEntryLocalService;
 import com.liferay.object.constants.ObjectDefinitionConstants;
 import com.liferay.object.constants.ObjectFieldConstants;
 import com.liferay.object.constants.ObjectFieldSettingConstants;
@@ -35,7 +23,9 @@ import com.liferay.object.exception.ObjectDefinitionActiveException;
 import com.liferay.object.exception.ObjectDefinitionEnableCategorizationException;
 import com.liferay.object.exception.ObjectDefinitionEnableCommentsException;
 import com.liferay.object.exception.ObjectDefinitionEnableObjectEntryHistoryException;
+import com.liferay.object.exception.ObjectDefinitionExternalReferenceCodeException;
 import com.liferay.object.exception.ObjectDefinitionLabelException;
+import com.liferay.object.exception.ObjectDefinitionModifiableException;
 import com.liferay.object.exception.ObjectDefinitionNameException;
 import com.liferay.object.exception.ObjectDefinitionPluralLabelException;
 import com.liferay.object.exception.ObjectDefinitionScopeException;
@@ -45,21 +35,27 @@ import com.liferay.object.exception.ObjectFieldRelationshipTypeException;
 import com.liferay.object.exception.RequiredObjectDefinitionException;
 import com.liferay.object.exception.RequiredObjectFieldException;
 import com.liferay.object.field.setting.util.ObjectFieldSettingUtil;
+import com.liferay.object.internal.dao.db.ObjectDBManagerUtil;
+import com.liferay.object.internal.definition.util.ObjectDefinitionUtil;
 import com.liferay.object.internal.deployer.ObjectDefinitionDeployerImpl;
+import com.liferay.object.internal.petra.sql.dsl.DynamicObjectDefinitionLocalizationTableFactory;
+import com.liferay.object.model.ObjectAction;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectEntry;
 import com.liferay.object.model.ObjectEntryTable;
 import com.liferay.object.model.ObjectField;
+import com.liferay.object.model.ObjectFolder;
 import com.liferay.object.model.ObjectRelationship;
 import com.liferay.object.model.impl.ObjectDefinitionImpl;
+import com.liferay.object.petra.sql.dsl.DynamicObjectDefinitionLocalizationTable;
 import com.liferay.object.petra.sql.dsl.DynamicObjectDefinitionTable;
-import com.liferay.object.rest.manager.v1_0.ObjectEntryManagerRegistry;
 import com.liferay.object.scope.ObjectScopeProviderRegistry;
 import com.liferay.object.service.ObjectActionLocalService;
 import com.liferay.object.service.ObjectDefinitionLocalServiceUtil;
 import com.liferay.object.service.ObjectEntryLocalService;
 import com.liferay.object.service.ObjectEntryService;
 import com.liferay.object.service.ObjectFieldLocalService;
+import com.liferay.object.service.ObjectFolderLocalService;
 import com.liferay.object.service.ObjectLayoutLocalService;
 import com.liferay.object.service.ObjectLayoutTabLocalService;
 import com.liferay.object.service.ObjectRelationshipLocalService;
@@ -80,8 +76,7 @@ import com.liferay.portal.kernel.cache.MultiVMPool;
 import com.liferay.portal.kernel.cache.PortalCache;
 import com.liferay.portal.kernel.cluster.ClusterExecutorUtil;
 import com.liferay.portal.kernel.cluster.ClusterRequest;
-import com.liferay.portal.kernel.dao.db.IndexMetadata;
-import com.liferay.portal.kernel.dao.db.IndexMetadataFactoryUtil;
+import com.liferay.portal.kernel.dao.jdbc.CurrentConnection;
 import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.Property;
 import com.liferay.portal.kernel.dao.orm.PropertyFactoryUtil;
@@ -168,24 +163,30 @@ public class ObjectDefinitionLocalServiceImpl
 	@Indexable(type = IndexableType.REINDEX)
 	@Override
 	public ObjectDefinition addCustomObjectDefinition(
-			long userId, boolean enableComments, boolean enableLocalization,
-			Map<Locale, String> labelMap, String name, String panelAppOrder,
-			String panelCategoryKey, Map<Locale, String> pluralLabelMap,
-			String scope, String storageType, List<ObjectField> objectFields)
+			long userId, long objectFolderId, boolean enableComments,
+			boolean enableLocalization, Map<Locale, String> labelMap,
+			String name, String panelAppOrder, String panelCategoryKey,
+			Map<Locale, String> pluralLabelMap, boolean portlet, String scope,
+			String storageType, List<ObjectField> objectFields)
 		throws PortalException {
 
 		return _addObjectDefinition(
-			userId, null, null, enableComments, enableLocalization, labelMap,
-			true, name, panelAppOrder, panelCategoryKey, null, null,
-			pluralLabelMap, scope, storageType, false, null, 0,
-			WorkflowConstants.STATUS_DRAFT, objectFields);
+			null, userId, objectFolderId, null, null, enableComments,
+			enableLocalization, labelMap, true, name, panelAppOrder,
+			panelCategoryKey, null, null, pluralLabelMap, portlet, scope,
+			storageType, false, null, 0, WorkflowConstants.STATUS_DRAFT,
+			objectFields);
 	}
 
 	@Indexable(type = IndexableType.REINDEX)
 	@Override
 	public ObjectDefinition addObjectDefinition(
-			String externalReferenceCode, long userId)
+			String externalReferenceCode, long userId, long objectFolderId,
+			boolean modifiable, boolean system)
 		throws PortalException {
+
+		_validateExternalReferenceCode(
+			true, externalReferenceCode, modifiable, StringPool.BLANK, system);
 
 		ObjectDefinition objectDefinition = objectDefinitionPersistence.create(
 			counterLocalService.increment());
@@ -200,14 +201,18 @@ public class ObjectDefinitionLocalServiceImpl
 
 		objectDefinition.setActive(false);
 		objectDefinition.setLabel(externalReferenceCode);
-		objectDefinition.setModifiable(true);
+		objectDefinition.setModifiable(modifiable);
 		objectDefinition.setName(externalReferenceCode);
 		objectDefinition.setPluralLabel(externalReferenceCode);
 		objectDefinition.setScope(ObjectDefinitionConstants.SCOPE_COMPANY);
 		objectDefinition.setStorageType(
 			ObjectDefinitionConstants.STORAGE_TYPE_DEFAULT);
-		objectDefinition.setSystem(false);
+		objectDefinition.setSystem(system);
 		objectDefinition.setStatus(WorkflowConstants.STATUS_DRAFT);
+
+		if (objectDefinition.isUnmodifiableSystemObject() || !modifiable) {
+			throw new ObjectDefinitionModifiableException.MustBeModifiable();
+		}
 
 		objectDefinition = objectDefinitionPersistence.update(objectDefinition);
 
@@ -226,7 +231,7 @@ public class ObjectDefinitionLocalServiceImpl
 	@Indexable(type = IndexableType.REINDEX)
 	@Override
 	public ObjectDefinition addOrUpdateSystemObjectDefinition(
-			long companyId,
+			long companyId, long objectFolderId,
 			SystemObjectDefinitionManager systemObjectDefinitionManager)
 		throws PortalException {
 
@@ -241,8 +246,10 @@ public class ObjectDefinitionLocalServiceImpl
 			Column<?, Long> primaryKeyColumn =
 				systemObjectDefinitionManager.getPrimaryKeyColumn();
 
-			return addSystemObjectDefinition(
-				userId, systemObjectDefinitionManager.getModelClassName(),
+			objectDefinition = addSystemObjectDefinition(
+				systemObjectDefinitionManager.getExternalReferenceCode(),
+				userId, objectFolderId,
+				systemObjectDefinitionManager.getModelClassName(),
 				table.getTableName(), false,
 				systemObjectDefinitionManager.getLabelMap(), false,
 				systemObjectDefinitionManager.getName(), null, null,
@@ -253,8 +260,15 @@ public class ObjectDefinitionLocalServiceImpl
 				systemObjectDefinitionManager.getVersion(),
 				WorkflowConstants.STATUS_APPROVED,
 				systemObjectDefinitionManager.getObjectFields());
+
+			_addOrUpdateObjectActions(
+				userId, objectDefinition.getObjectDefinitionId(),
+				systemObjectDefinitionManager.getObjectActions());
+
+			return objectDefinition;
 		}
 
+		objectDefinition.setObjectFolderId(objectFolderId);
 		objectDefinition.setVersion(systemObjectDefinitionManager.getVersion());
 
 		objectDefinition = objectDefinitionPersistence.update(objectDefinition);
@@ -310,25 +324,31 @@ public class ObjectDefinitionLocalServiceImpl
 			}
 		}
 
+		_addOrUpdateObjectActions(
+			userId, objectDefinition.getObjectDefinitionId(),
+			systemObjectDefinitionManager.getObjectActions());
+
 		return objectDefinition;
 	}
 
 	@Indexable(type = IndexableType.REINDEX)
 	@Override
 	public ObjectDefinition addSystemObjectDefinition(
-			long userId, String className, String dbTableName,
-			boolean enableComments, Map<Locale, String> labelMap,
-			boolean modifiable, String name, String panelAppOrder,
-			String panelCategoryKey, String pkObjectFieldDBColumnName,
-			String pkObjectFieldName, Map<Locale, String> pluralLabelMap,
-			String scope, String titleObjectFieldName, int version, int status,
+			String externalReferenceCode, long userId, long objectFolderId,
+			String className, String dbTableName, boolean enableComments,
+			Map<Locale, String> labelMap, boolean modifiable, String name,
+			String panelAppOrder, String panelCategoryKey,
+			String pkObjectFieldDBColumnName, String pkObjectFieldName,
+			Map<Locale, String> pluralLabelMap, String scope,
+			String titleObjectFieldName, int version, int status,
 			List<ObjectField> objectFields)
 		throws PortalException {
 
 		return _addObjectDefinition(
-			userId, className, dbTableName, enableComments, false, labelMap,
-			modifiable, name, panelAppOrder, panelCategoryKey,
-			pkObjectFieldDBColumnName, pkObjectFieldName, pluralLabelMap, scope,
+			externalReferenceCode, userId, objectFolderId, className,
+			dbTableName, enableComments, false, labelMap, modifiable, name,
+			panelAppOrder, panelCategoryKey, pkObjectFieldDBColumnName,
+			pkObjectFieldName, pluralLabelMap, false, scope,
 			ObjectDefinitionConstants.STORAGE_TYPE_DEFAULT, true,
 			titleObjectFieldName, version, status, objectFields);
 	}
@@ -384,12 +404,6 @@ public class ObjectDefinitionLocalServiceImpl
 			}
 		}
 
-		_objectFieldLocalService.deleteObjectFieldByObjectDefinitionId(
-			objectDefinition.getObjectDefinitionId());
-
-		_objectLayoutLocalService.deleteObjectLayouts(
-			objectDefinition.getObjectDefinitionId());
-
 		for (ObjectRelationship objectRelationship :
 				_objectRelationshipPersistence.findByODI1_R(
 					objectDefinition.getObjectDefinitionId(), false)) {
@@ -405,6 +419,12 @@ public class ObjectDefinitionLocalServiceImpl
 			_objectRelationshipLocalService.deleteObjectRelationship(
 				objectRelationship);
 		}
+
+		_objectFieldLocalService.deleteObjectFieldByObjectDefinitionId(
+			objectDefinition.getObjectDefinitionId());
+
+		_objectLayoutLocalService.deleteObjectLayouts(
+			objectDefinition.getObjectDefinitionId());
 
 		_objectValidationRuleLocalService.deleteObjectValidationRules(
 			objectDefinition.getObjectDefinitionId());
@@ -453,6 +473,10 @@ public class ObjectDefinitionLocalServiceImpl
 
 			_dropTable(objectDefinition.getDBTableName());
 			_dropTable(objectDefinition.getExtensionDBTableName());
+
+			if (objectDefinition.isEnableLocalization()) {
+				_dropTable(objectDefinition.getLocalizationDBTableName());
+			}
 
 			undeployObjectDefinition(objectDefinition);
 
@@ -518,6 +542,38 @@ public class ObjectDefinitionLocalServiceImpl
 		objectDefinition2.setAccountEntryRestricted(true);
 
 		return objectDefinitionPersistence.update(objectDefinition2);
+	}
+
+	@Override
+	public ObjectDefinition
+			enableAccountEntryRestrictedForNondefaultStorageType(
+				ObjectField objectField)
+		throws PortalException {
+
+		if (!objectField.compareBusinessType(
+				ObjectFieldConstants.BUSINESS_TYPE_INTEGER) &&
+			!objectField.compareBusinessType(
+				ObjectFieldConstants.BUSINESS_TYPE_LONG_INTEGER) &&
+			!objectField.compareBusinessType(
+				ObjectFieldConstants.BUSINESS_TYPE_TEXT)) {
+
+			throw new ObjectDefinitionAccountEntryRestrictedException(
+				"Custom object definitions can only be restricted by an " +
+					"integer, long integer, or text field");
+		}
+
+		ObjectDefinition objectDefinition = getObjectDefinition(
+			objectField.getObjectDefinitionId());
+
+		if (objectDefinition.isDefaultStorageType()) {
+			throw new UnsupportedOperationException();
+		}
+
+		objectDefinition.setAccountEntryRestricted(true);
+		objectDefinition.setAccountEntryRestrictedObjectFieldId(
+			objectField.getObjectFieldId());
+
+		return objectDefinitionPersistence.update(objectDefinition);
 	}
 
 	@Override
@@ -644,19 +700,17 @@ public class ObjectDefinitionLocalServiceImpl
 			new ObjectDefinitionDeployerImpl(
 				_accountEntryLocalService,
 				_accountEntryOrganizationRelLocalService,
-				_assetCategoryLocalService, _assetTagLocalService,
-				_assetVocabularyLocalService, _bundleContext,
+				_assetEntryLocalService, _bundleContext,
 				_dynamicQueryBatchIndexingActionableFactory, _groupLocalService,
-				_listTypeEntryLocalService, _listTypeLocalService,
-				_modelSearchRegistrarHelper, _objectActionLocalService, this,
-				_objectEntryLocalService, _objectEntryManagerRegistry,
+				_listTypeLocalService, _modelSearchRegistrarHelper,
+				_objectActionLocalService, this, _objectEntryLocalService,
 				_objectEntryService, _objectFieldLocalService,
 				_objectLayoutLocalService, _objectLayoutTabLocalService,
 				_objectRelationshipLocalService, _objectScopeProviderRegistry,
 				_objectViewLocalService, _organizationLocalService,
 				_persistedModelLocalServiceRegistry, _ploEntryLocalService,
-				_portletLocalService, _resourceActions, _userLocalService,
-				_resourcePermissionLocalService,
+				_portal, _portletLocalService, _resourceActions,
+				_userLocalService, _resourcePermissionLocalService,
 				_workflowStatusModelPreFilterContributor,
 				_userGroupRoleLocalService));
 
@@ -758,13 +812,13 @@ public class ObjectDefinitionLocalServiceImpl
 	public ObjectDefinition updateCustomObjectDefinition(
 			String externalReferenceCode, long objectDefinitionId,
 			long accountEntryRestrictedObjectFieldId,
-			long descriptionObjectFieldId, long titleObjectFieldId,
-			boolean accountEntryRestricted, boolean active,
-			boolean enableCategorization, boolean enableComments,
-			boolean enableLocalization, boolean enableObjectEntryHistory,
-			Map<Locale, String> labelMap, String name, String panelAppOrder,
-			String panelCategoryKey, boolean portlet,
-			Map<Locale, String> pluralLabelMap, String scope)
+			long descriptionObjectFieldId, long objectFolderId,
+			long titleObjectFieldId, boolean accountEntryRestricted,
+			boolean active, boolean enableCategorization,
+			boolean enableComments, boolean enableLocalization,
+			boolean enableObjectEntryHistory, Map<Locale, String> labelMap,
+			String name, String panelAppOrder, String panelCategoryKey,
+			boolean portlet, Map<Locale, String> pluralLabelMap, String scope)
 		throws PortalException {
 
 		ObjectDefinition objectDefinition =
@@ -778,8 +832,8 @@ public class ObjectDefinitionLocalServiceImpl
 		return _updateObjectDefinition(
 			externalReferenceCode, objectDefinition,
 			accountEntryRestrictedObjectFieldId, descriptionObjectFieldId,
-			titleObjectFieldId, accountEntryRestricted, active, null,
-			enableCategorization, enableComments, enableLocalization,
+			objectFolderId, titleObjectFieldId, accountEntryRestricted, active,
+			null, enableCategorization, enableComments, enableLocalization,
 			enableObjectEntryHistory, labelMap, name, panelAppOrder,
 			panelCategoryKey, portlet, null, null, pluralLabelMap, scope);
 	}
@@ -792,6 +846,10 @@ public class ObjectDefinitionLocalServiceImpl
 		ObjectDefinition objectDefinition =
 			objectDefinitionPersistence.findByPrimaryKey(objectDefinitionId);
 
+		_validateExternalReferenceCode(
+			false, externalReferenceCode, objectDefinition.isModifiable(),
+			objectDefinition.getName(), objectDefinition.isSystem());
+
 		objectDefinition.setExternalReferenceCode(externalReferenceCode);
 
 		return objectDefinitionPersistence.update(objectDefinition);
@@ -801,15 +859,21 @@ public class ObjectDefinitionLocalServiceImpl
 	@Override
 	public ObjectDefinition updateSystemObjectDefinition(
 			String externalReferenceCode, long objectDefinitionId,
-			long titleObjectFieldId)
+			long objectFolderId, long titleObjectFieldId)
 		throws PortalException {
 
 		ObjectDefinition objectDefinition =
 			objectDefinitionPersistence.fetchByPrimaryKey(objectDefinitionId);
 
+		_validateExternalReferenceCode(
+			false, externalReferenceCode, objectDefinition.isModifiable(),
+			objectDefinition.getName(), objectDefinition.isSystem());
 		_validateObjectFieldId(objectDefinition, titleObjectFieldId);
 
 		objectDefinition.setExternalReferenceCode(externalReferenceCode);
+		objectDefinition.setObjectFolderId(
+			_getObjectFolderId(
+				objectDefinition.getCompanyId(), objectFolderId));
 		objectDefinition.setTitleObjectFieldId(titleObjectFieldId);
 
 		return objectDefinitionPersistence.update(objectDefinition);
@@ -870,19 +934,20 @@ public class ObjectDefinitionLocalServiceImpl
 	}
 
 	private ObjectDefinition _addObjectDefinition(
-			long userId, String className, String dbTableName,
-			boolean enableComments, boolean enableLocalization,
-			Map<Locale, String> labelMap, boolean modifiable, String name,
-			String panelAppOrder, String panelCategoryKey,
-			String pkObjectFieldDBColumnName, String pkObjectFieldName,
-			Map<Locale, String> pluralLabelMap, String scope,
-			String storageType, boolean system, String titleObjectFieldName,
-			int version, int status, List<ObjectField> objectFields)
+			String externalReferenceCode, long userId, long objectFolderId,
+			String className, String dbTableName, boolean enableComments,
+			boolean enableLocalization, Map<Locale, String> labelMap,
+			boolean modifiable, String name, String panelAppOrder,
+			String panelCategoryKey, String pkObjectFieldDBColumnName,
+			String pkObjectFieldName, Map<Locale, String> pluralLabelMap,
+			boolean portlet, String scope, String storageType, boolean system,
+			String titleObjectFieldName, int version, int status,
+			List<ObjectField> objectFields)
 		throws PortalException {
 
 		User user = _userLocalService.getUser(userId);
 
-		name = _getName(name, modifiable, system);
+		name = _getName(name, system);
 
 		String shortName = ObjectDefinitionImpl.getShortName(name);
 
@@ -899,21 +964,25 @@ public class ObjectDefinitionLocalServiceImpl
 		storageType = Validator.isNotNull(storageType) ? storageType :
 			ObjectDefinitionConstants.STORAGE_TYPE_DEFAULT;
 
+		_validateExternalReferenceCode(
+			true, externalReferenceCode, modifiable, name, system);
 		_validateEnableComments(
 			enableComments, modifiable, storageType, system);
-
 		_validateLabel(labelMap);
 		_validateName(0, user.getCompanyId(), modifiable, name, system);
 		_validatePluralLabel(pluralLabelMap);
-		_validateScope(scope);
+		_validateScope(scope, storageType);
 		_validateVersion(system, version);
 
 		ObjectDefinition objectDefinition = objectDefinitionPersistence.create(
 			counterLocalService.increment());
 
+		objectDefinition.setExternalReferenceCode(externalReferenceCode);
 		objectDefinition.setCompanyId(user.getCompanyId());
 		objectDefinition.setUserId(user.getUserId());
 		objectDefinition.setUserName(user.getFullName());
+		objectDefinition.setObjectFolderId(
+			_getObjectFolderId(user.getCompanyId(), objectFolderId));
 		objectDefinition.setActive(
 			_isUnmodifiableSystemObject(modifiable, system));
 		objectDefinition.setDBTableName(dbTableName);
@@ -936,6 +1005,7 @@ public class ObjectDefinitionLocalServiceImpl
 			pkObjectFieldDBColumnName);
 		objectDefinition.setPKObjectFieldName(pkObjectFieldName);
 		objectDefinition.setPluralLabelMap(pluralLabelMap);
+		objectDefinition.setPortlet(portlet);
 		objectDefinition.setScope(scope);
 		objectDefinition.setStorageType(
 			Validator.isNotNull(storageType) ? storageType :
@@ -986,8 +1056,9 @@ public class ObjectDefinitionLocalServiceImpl
 						objectField.isIndexedAsKeyword(),
 						objectField.getIndexedLanguageId(),
 						objectField.getLabelMap(), objectField.isLocalized(),
-						objectField.getName(), objectField.isRequired(),
-						objectField.isState(),
+						objectField.getName(), objectField.getReadOnly(),
+						objectField.getReadOnlyConditionExpression(),
+						objectField.isRequired(), objectField.isState(),
 						objectField.getObjectFieldSettings());
 				}
 			}
@@ -1002,6 +1073,25 @@ public class ObjectDefinitionLocalServiceImpl
 		}
 
 		return objectDefinition;
+	}
+
+	private void _addOrUpdateObjectActions(
+			long userId, long objectDefinitionId,
+			List<ObjectAction> objectActions)
+		throws PortalException {
+
+		for (ObjectAction objectAction : objectActions) {
+			_objectActionLocalService.addOrUpdateObjectAction(
+				objectAction.getExternalReferenceCode(), 0, userId,
+				objectDefinitionId, objectAction.getActive(),
+				objectAction.getConditionExpression(),
+				objectAction.getDescription(),
+				objectAction.getErrorMessageMap(), objectAction.getLabelMap(),
+				objectAction.getName(),
+				objectAction.getObjectActionExecutorKey(),
+				objectAction.getObjectActionTriggerKey(),
+				objectAction.getParametersUnicodeProperties());
+		}
 	}
 
 	private void _addSystemObjectFields(
@@ -1071,8 +1161,22 @@ public class ObjectDefinitionLocalServiceImpl
 			"status", false, false);
 	}
 
+	private void _createLocalizationTable(ObjectDefinition objectDefinition) {
+		DynamicObjectDefinitionLocalizationTable
+			dynamicObjectDefinitionLocalizedTable =
+				DynamicObjectDefinitionLocalizationTableFactory.create(
+					objectDefinition, _objectFieldLocalService);
+
+		if (dynamicObjectDefinitionLocalizedTable == null) {
+			return;
+		}
+
+		runSQL(dynamicObjectDefinitionLocalizedTable.getCreateTableSQL());
+	}
+
 	private void _createTable(
-		String dbTableName, ObjectDefinition objectDefinition) {
+			String dbTableName, ObjectDefinition objectDefinition)
+		throws PortalException {
 
 		List<ObjectField> objectFields =
 			_objectFieldLocalService.getObjectFields(
@@ -1085,17 +1189,33 @@ public class ObjectDefinitionLocalServiceImpl
 		runSQL(dynamicObjectDefinitionTable.getCreateTableSQL());
 
 		for (ObjectField objectField : objectFields) {
-			if (GetterUtil.getBoolean(
-					ObjectFieldSettingUtil.getValue(
-						ObjectFieldSettingConstants.NAME_UNIQUE_VALUES,
-						objectField))) {
+			boolean indexable = false;
+			boolean unique = false;
 
-				IndexMetadata indexMetadata =
-					IndexMetadataFactoryUtil.createIndexMetadata(
-						true, dbTableName, objectField.getDBColumnName());
+			if (StringUtil.equals(
+					objectField.getBusinessType(),
+					ObjectFieldConstants.BUSINESS_TYPE_RELATIONSHIP)) {
 
-				runSQL(indexMetadata.getCreateSQL(null));
+				indexable = true;
 			}
+			else if (GetterUtil.getBoolean(
+						ObjectFieldSettingUtil.getValue(
+							ObjectFieldSettingConstants.NAME_UNIQUE_VALUES,
+							objectField))) {
+
+				indexable = true;
+				unique = true;
+			}
+
+			if (!indexable) {
+				continue;
+			}
+
+			ObjectDBManagerUtil.createIndexMetadata(
+				objectField.getDBColumnName(),
+				_currentConnection.getConnection(
+					objectDefinitionPersistence.getDataSource()),
+				dbTableName, unique);
 		}
 	}
 
@@ -1132,14 +1252,22 @@ public class ObjectDefinitionLocalServiceImpl
 			return name;
 		}
 
+		// See DBInspector.java#isObjectTable
+
+		String prefix = "O_";
+
+		if (modifiable && system) {
+			prefix = "L_";
+		}
+
 		return StringBundler.concat(
-			"O_", companyId, StringPool.UNDERLINE, shortName);
+			prefix, companyId, StringPool.UNDERLINE, shortName);
 	}
 
-	private String _getName(String name, boolean modifiable, boolean system) {
+	private String _getName(String name, boolean system) {
 		name = StringUtil.trim(name);
 
-		if (modifiable || !system) {
+		if (!system) {
 			name = "C_" + name;
 		}
 
@@ -1155,6 +1283,22 @@ public class ObjectDefinitionLocalServiceImpl
 					companyId, true, WorkflowConstants.STATUS_APPROVED)));
 
 		return objectDefinitions;
+	}
+
+	private long _getObjectFolderId(long companyId, long objectFolderId)
+		throws PortalException {
+
+		if (objectFolderId == 0) {
+			ObjectFolder objectFolder =
+				_objectFolderLocalService.getObjectFolder(
+					companyId, "Uncategorized");
+
+			return objectFolder.getObjectFolderId();
+		}
+
+		_objectFolderLocalService.getObjectFolder(objectFolderId);
+
+		return objectFolderId;
 	}
 
 	private String _getPKObjectFieldDBColumnName(
@@ -1261,6 +1405,7 @@ public class ObjectDefinitionLocalServiceImpl
 
 		objectDefinition = objectDefinitionPersistence.update(objectDefinition);
 
+		_createLocalizationTable(objectDefinition);
 		_createTable(objectDefinition.getDBTableName(), objectDefinition);
 		_createTable(
 			objectDefinition.getExtensionDBTableName(), objectDefinition);
@@ -1306,18 +1451,22 @@ public class ObjectDefinitionLocalServiceImpl
 	private ObjectDefinition _updateObjectDefinition(
 			String externalReferenceCode, ObjectDefinition objectDefinition,
 			long accountEntryRestrictedObjectFieldId,
-			long descriptionObjectFieldId, long titleObjectFieldId,
-			boolean accountEntryRestricted, boolean active, String dbTableName,
-			boolean enableCategorization, boolean enableComments,
-			boolean enableLocalization, boolean enableObjectEntryHistory,
-			Map<Locale, String> labelMap, String name, String panelAppOrder,
-			String panelCategoryKey, boolean portlet,
-			String pkObjectFieldDBColumnName, String pkObjectFieldName,
-			Map<Locale, String> pluralLabelMap, String scope)
+			long descriptionObjectFieldId, long objectFolderId,
+			long titleObjectFieldId, boolean accountEntryRestricted,
+			boolean active, String dbTableName, boolean enableCategorization,
+			boolean enableComments, boolean enableLocalization,
+			boolean enableObjectEntryHistory, Map<Locale, String> labelMap,
+			String name, String panelAppOrder, String panelCategoryKey,
+			boolean portlet, String pkObjectFieldDBColumnName,
+			String pkObjectFieldName, Map<Locale, String> pluralLabelMap,
+			String scope)
 		throws PortalException {
 
 		boolean originalActive = objectDefinition.isActive();
 
+		_validateExternalReferenceCode(
+			false, externalReferenceCode, objectDefinition.isModifiable(), name,
+			objectDefinition.isSystem());
 		_validateAccountEntryRestrictedObjectFieldId(
 			accountEntryRestrictedObjectFieldId, accountEntryRestricted,
 			objectDefinition);
@@ -1355,6 +1504,9 @@ public class ObjectDefinitionLocalServiceImpl
 		objectDefinition.setAccountEntryRestrictedObjectFieldId(
 			accountEntryRestrictedObjectFieldId);
 		objectDefinition.setDescriptionObjectFieldId(descriptionObjectFieldId);
+		objectDefinition.setObjectFolderId(
+			_getObjectFolderId(
+				objectDefinition.getCompanyId(), objectFolderId));
 		objectDefinition.setTitleObjectFieldId(titleObjectFieldId);
 		objectDefinition.setAccountEntryRestricted(accountEntryRestricted);
 		objectDefinition.setActive(active);
@@ -1389,8 +1541,7 @@ public class ObjectDefinitionLocalServiceImpl
 			return objectDefinitionPersistence.update(objectDefinition);
 		}
 
-		name = _getName(
-			name, objectDefinition.isModifiable(), objectDefinition.isSystem());
+		name = _getName(name, objectDefinition.isSystem());
 
 		String shortName = ObjectDefinitionImpl.getShortName(name);
 
@@ -1411,7 +1562,7 @@ public class ObjectDefinitionLocalServiceImpl
 			objectDefinition.getObjectDefinitionId(),
 			objectDefinition.getCompanyId(), objectDefinition.isModifiable(),
 			name, objectDefinition.isSystem());
-		_validateScope(scope);
+		_validateScope(scope, objectDefinition.getStorageType());
 
 		objectDefinition.setDBTableName(dbTableName);
 		objectDefinition.setEnableLocalization(enableLocalization);
@@ -1596,6 +1747,29 @@ public class ObjectDefinitionLocalServiceImpl
 		}
 	}
 
+	private void _validateExternalReferenceCode(
+			boolean addObjectDefinition, String externalReferenceCode,
+			boolean modifiable, String name, boolean system)
+		throws PortalException {
+
+		if (addObjectDefinition && !modifiable && system &&
+			!ObjectDefinitionUtil.
+				isAllowedUnmodifiableSystemObjectDefinitionExternalReferenceCode(
+					externalReferenceCode, name)) {
+
+			throw new ObjectDefinitionExternalReferenceCodeException.
+				ForbiddenUnmodifiableSystemObjectDefinitionExternalReferenceCode(
+					externalReferenceCode);
+		}
+
+		if (!system && (externalReferenceCode != null) &&
+			externalReferenceCode.startsWith("L_")) {
+
+			throw new ObjectDefinitionExternalReferenceCodeException.
+				MustNotStartWithPrefix();
+		}
+	}
+
 	private void _validateLabel(Map<Locale, String> labelMap)
 		throws PortalException {
 
@@ -1611,6 +1785,14 @@ public class ObjectDefinitionLocalServiceImpl
 			long objectDefinitionId, long companyId, boolean modifiable,
 			String name, boolean system)
 		throws PortalException {
+
+		if (modifiable && system &&
+			!ObjectDefinitionUtil.isAllowedModifiableSystemObjectDefinitionName(
+				name)) {
+
+			throw new ObjectDefinitionNameException.
+				ForbiddenModifiableSystemObjectDefinitionName(name);
+		}
 
 		if (Validator.isNull(name) || (!system && name.equals("C_"))) {
 			throw new ObjectDefinitionNameException.MustNotBeNull();
@@ -1709,7 +1891,9 @@ public class ObjectDefinitionLocalServiceImpl
 		}
 	}
 
-	private void _validateScope(String scope) throws PortalException {
+	private void _validateScope(String scope, String storageType)
+		throws PortalException {
+
 		if (Validator.isNull(scope)) {
 			throw new ObjectDefinitionScopeException("Scope is null");
 		}
@@ -1720,6 +1904,18 @@ public class ObjectDefinitionLocalServiceImpl
 		catch (IllegalArgumentException illegalArgumentException) {
 			throw new ObjectDefinitionScopeException(
 				illegalArgumentException.getMessage());
+		}
+
+		if (StringUtil.equals(scope, ObjectDefinitionConstants.SCOPE_SITE) &&
+			StringUtil.equals(
+				storageType,
+				ObjectDefinitionConstants.STORAGE_TYPE_SALESFORCE)) {
+
+			throw new ObjectDefinitionScopeException(
+				StringBundler.concat(
+					"Scope \"", ObjectDefinitionConstants.SCOPE_SITE,
+					"\" cannot be associated with storage type \"",
+					ObjectDefinitionConstants.STORAGE_TYPE_SALESFORCE));
 		}
 	}
 
@@ -1760,13 +1956,7 @@ public class ObjectDefinitionLocalServiceImpl
 		_accountEntryOrganizationRelLocalService;
 
 	@Reference
-	private AssetCategoryLocalService _assetCategoryLocalService;
-
-	@Reference
-	private AssetTagLocalService _assetTagLocalService;
-
-	@Reference
-	private AssetVocabularyLocalService _assetVocabularyLocalService;
+	private AssetEntryLocalService _assetEntryLocalService;
 
 	private BundleContext _bundleContext;
 
@@ -1775,6 +1965,9 @@ public class ObjectDefinitionLocalServiceImpl
 
 	@Reference
 	private CompanyLocalService _companyLocalService;
+
+	@Reference
+	private CurrentConnection _currentConnection;
 
 	private final Set<String> _defaultSystemObjectFieldNames =
 		SetUtil.fromArray(
@@ -1798,9 +1991,6 @@ public class ObjectDefinitionLocalServiceImpl
 		_layoutClassedModelUsageLocalService;
 
 	@Reference
-	private ListTypeEntryLocalService _listTypeEntryLocalService;
-
-	@Reference
 	private ListTypeLocalService _listTypeLocalService;
 
 	@Reference
@@ -1819,9 +2009,6 @@ public class ObjectDefinitionLocalServiceImpl
 	private ObjectEntryLocalService _objectEntryLocalService;
 
 	@Reference
-	private ObjectEntryManagerRegistry _objectEntryManagerRegistry;
-
-	@Reference
 	private ObjectEntryPersistence _objectEntryPersistence;
 
 	@Reference
@@ -1832,6 +2019,9 @@ public class ObjectDefinitionLocalServiceImpl
 
 	@Reference
 	private ObjectFieldPersistence _objectFieldPersistence;
+
+	@Reference
+	private ObjectFolderLocalService _objectFolderLocalService;
 
 	@Reference
 	private ObjectLayoutLocalService _objectLayoutLocalService;

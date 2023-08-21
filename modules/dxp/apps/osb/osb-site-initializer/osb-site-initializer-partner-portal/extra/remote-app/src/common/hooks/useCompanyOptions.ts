@@ -1,19 +1,14 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {useEffect, useState} from 'react';
 
 import LiferayAccountBrief from '../interfaces/liferayAccountBrief';
 import LiferayPicklist from '../interfaces/liferayPicklist';
-import useGetAccountById from '../services/liferay/accounts/useGetAccountById';
+import useGetAccountByERC from '../services/liferay/accounts/useGetAccountByERC';
+import useGetPartnerLevel from '../services/liferay/object/partner-level/useGetPartnerLevel';
 import isObjectEmpty from '../utils/isObjectEmpty';
 
 export default function useCompanyOptions(
@@ -21,7 +16,7 @@ export default function useCompanyOptions(
 		partnerCountry: LiferayPicklist,
 		company: LiferayAccountBrief,
 		currency: LiferayPicklist,
-		accountExternalReferenceCode?: string
+		claimPercent: number
 	) => void,
 	companyOptions?: React.OptionHTMLAttributes<HTMLOptionElement>[],
 	currencyOptions?: React.OptionHTMLAttributes<HTMLOptionElement>[],
@@ -34,7 +29,13 @@ export default function useCompanyOptions(
 		LiferayAccountBrief | undefined
 	>(currentCompany);
 
-	const {data: account} = useGetAccountById(selectedAccountBrief?.id);
+	const {data: account} = useGetAccountByERC(
+		selectedAccountBrief?.externalReferenceCode
+	);
+
+	const {data: partnerLevel} = useGetPartnerLevel(
+		account?.r_prtLvlToAcc_c_partnerLevelERC
+	);
 
 	const currencyPicklist =
 		account &&
@@ -51,8 +52,9 @@ export default function useCompanyOptions(
 	if (!companyOptions && account) {
 		companyOptions = [
 			{
+				defaultValue: account.id,
 				label: account.name,
-				value: account.id,
+				value: account.externalReferenceCode,
 			},
 		];
 	}
@@ -75,7 +77,7 @@ export default function useCompanyOptions(
 							name: currencyPicklist.label as string,
 					  }) ||
 							{},
-				account?.externalReferenceCode
+				partnerLevel?.claimPercent || 0
 			);
 		}
 	}, [
@@ -85,16 +87,18 @@ export default function useCompanyOptions(
 		currentCountry,
 		currentCurrency,
 		handleSelected,
+		partnerLevel?.claimPercent,
 		selectedAccountBrief,
 	]);
 
 	const onCompanySelected = (event: React.ChangeEvent<HTMLInputElement>) => {
 		const optionSelected = companyOptions?.find(
-			(options) => options.value === +event.target.value
+			(options) => options.value === event.target.value
 		);
 
 		setSelectedAccountBrief({
-			id: optionSelected?.value as number,
+			externalReferenceCode: optionSelected?.value as string,
+			id: optionSelected?.defaultValue as number,
 			name: optionSelected?.label as string,
 		});
 	};

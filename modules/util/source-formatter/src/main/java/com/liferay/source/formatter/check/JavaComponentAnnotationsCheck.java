@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.source.formatter.check;
@@ -36,6 +27,7 @@ import com.liferay.source.formatter.processor.SourceProcessor;
 import java.io.File;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -388,14 +380,22 @@ public class JavaComponentAnnotationsCheck extends JavaAnnotationsCheck {
 			configurationPid = configurationPid.substring(
 				1, configurationPid.length() - 1);
 
-			for (String configurationClass :
-					StringUtil.split(configurationPid, ", ")) {
-
-				configurationClasses.add(configurationClass);
-			}
+			Collections.addAll(
+				configurationClasses, StringUtil.split(configurationPid, ", "));
 		}
 		else {
 			configurationClasses.add(configurationPid);
+		}
+
+		if (isAttributeValue(
+				_CHECK_HAS_MULTIPLE_CONFIGURATION_PIDS_KEY, absolutePath) &&
+			(configurationClasses.size() > 1)) {
+
+			addMessage(
+				fileName,
+				"Component classes cannot have multiple configuration PIDs");
+
+			return annotation;
 		}
 
 		List<String> importNames = javaClass.getImportNames();
@@ -660,6 +660,9 @@ public class JavaComponentAnnotationsCheck extends JavaAnnotationsCheck {
 
 	private static final String _CHECK_CONFIGURATION_POLICY_ATTRIBUTE_KEY =
 		"checkConfigurationPolicyAttribute";
+
+	private static final String _CHECK_HAS_MULTIPLE_CONFIGURATION_PIDS_KEY =
+		"checkHasMultipleConfigurationPids";
 
 	private static final String _CHECK_HAS_MULTIPLE_SERVICE_TYPES_KEY =
 		"checkHasMultipleServiceTypes";

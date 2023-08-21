@@ -1,19 +1,11 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.admin.rest.resource.v1_0.test;
 
+import com.liferay.account.model.AccountEntry;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.object.admin.rest.client.dto.v1_0.ObjectDefinition;
 import com.liferay.object.admin.rest.client.dto.v1_0.ObjectField;
@@ -21,10 +13,11 @@ import com.liferay.object.admin.rest.client.dto.v1_0.Status;
 import com.liferay.object.admin.rest.client.pagination.Page;
 import com.liferay.object.admin.rest.client.problem.Problem;
 import com.liferay.object.admin.rest.client.serdes.v1_0.ObjectDefinitionSerDes;
-import com.liferay.object.admin.rest.resource.v1_0.test.BaseObjectDefinitionResourceTestCase.GraphQLField;
 import com.liferay.object.constants.ObjectDefinitionConstants;
+import com.liferay.object.constants.ObjectRelationshipConstants;
 import com.liferay.object.exception.NoSuchObjectDefinitionException;
 import com.liferay.object.service.ObjectDefinitionLocalService;
+import com.liferay.object.service.ObjectRelationshipLocalService;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.json.JSONObject;
@@ -32,6 +25,7 @@ import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
@@ -41,6 +35,7 @@ import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.language.LanguageResources;
 import com.liferay.portal.test.rule.FeatureFlags;
 import com.liferay.portal.test.rule.Inject;
+import com.liferay.portal.vulcan.util.LocalizedMapUtil;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -55,7 +50,7 @@ import org.junit.runner.RunWith;
 /**
  * @author Javier Gamarra
  */
-@FeatureFlags({"LPS-146755", "LPS-167253"})
+@FeatureFlags({"LPS-148856", "LPS-167253", "LPS-170122", "LPS-172017"})
 @RunWith(Arquillian.class)
 public class ObjectDefinitionResourceTest
 	extends BaseObjectDefinitionResourceTestCase {
@@ -239,10 +234,67 @@ public class ObjectDefinitionResourceTest
 	public void testPutObjectDefinition() throws Exception {
 		super.testPutObjectDefinition();
 
-		ObjectDefinition postObjectDefinition =
-			testPutObjectDefinition_addObjectDefinition();
+		// Account entry restricted
 
 		ObjectDefinition randomObjectDefinition = randomObjectDefinition();
+
+		randomObjectDefinition.setSystem(false);
+
+		ObjectDefinition postObjectDefinition =
+			objectDefinitionResource.postObjectDefinition(
+				randomObjectDefinition);
+
+		com.liferay.object.model.ObjectDefinition
+			serviceBuilderAccountEntryObjectDefinition =
+				_objectDefinitionLocalService.fetchSystemObjectDefinition(
+					AccountEntry.class.getSimpleName());
+
+		_objectDefinitionLocalService.enableAccountEntryRestricted(
+			_objectRelationshipLocalService.addObjectRelationship(
+				TestPropsValues.getUserId(),
+				serviceBuilderAccountEntryObjectDefinition.
+					getObjectDefinitionId(),
+				postObjectDefinition.getId(), 0,
+				ObjectRelationshipConstants.DELETION_TYPE_DISASSOCIATE,
+				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
+				"a" + RandomTestUtil.randomString(),
+				ObjectRelationshipConstants.TYPE_ONE_TO_MANY));
+
+		postObjectDefinition = objectDefinitionResource.getObjectDefinition(
+			postObjectDefinition.getId());
+
+		Assert.assertTrue(postObjectDefinition.getAccountEntryRestricted());
+
+		String accountEntryRestrictedObjectFieldName =
+			postObjectDefinition.getAccountEntryRestrictedObjectFieldName();
+
+		ObjectDefinition accountEntryObjectDefinition =
+			objectDefinitionResource.getObjectDefinition(
+				serviceBuilderAccountEntryObjectDefinition.
+					getObjectDefinitionId());
+
+		accountEntryObjectDefinition.setExternalReferenceCode(
+			RandomTestUtil.randomString());
+
+		objectDefinitionResource.putObjectDefinition(
+			accountEntryObjectDefinition.getId(), accountEntryObjectDefinition);
+
+		postObjectDefinition = objectDefinitionResource.getObjectDefinition(
+			postObjectDefinition.getId());
+
+		Assert.assertTrue(postObjectDefinition.getAccountEntryRestricted());
+		Assert.assertEquals(
+			accountEntryRestrictedObjectFieldName,
+			postObjectDefinition.getAccountEntryRestrictedObjectFieldName());
+
+		_objectDefinitionLocalService.deleteObjectDefinition(
+			postObjectDefinition.getId());
+
+		// Storage type
+
+		postObjectDefinition = testPutObjectDefinition_addObjectDefinition();
+
+		randomObjectDefinition = randomObjectDefinition();
 
 		randomObjectDefinition.setStorageType(
 			ObjectDefinitionConstants.STORAGE_TYPE_DEFAULT);
@@ -270,7 +322,7 @@ public class ObjectDefinitionResourceTest
 
 	@Override
 	protected String[] getIgnoredEntityFieldNames() {
-		return new String[] {"dateCreated", "dateModified", "userId"};
+		return new String[] {"dateCreated", "dateModified", "label", "userId"};
 	}
 
 	@Override
@@ -284,12 +336,9 @@ public class ObjectDefinitionResourceTest
 			Collections.singletonMap(
 				"en_US", "O" + objectDefinition.getName()));
 		objectDefinition.setEnableLocalization(true);
-
-		if (!FeatureFlagManagerUtil.isEnabled("LPS-167253")) {
-			objectDefinition.setModifiable((Boolean)null);
-		}
-
+		objectDefinition.setModifiable(true);
 		objectDefinition.setName("O" + objectDefinition.getName());
+		objectDefinition.setObjectFolderExternalReferenceCode("uncategorized");
 		objectDefinition.setPluralLabel(
 			Collections.singletonMap(
 				"en_US", "O" + objectDefinition.getName()));
@@ -304,6 +353,7 @@ public class ObjectDefinitionResourceTest
 						label = Collections.singletonMap("en_US", "Column");
 						localized = !objectDefinition.getSystem();
 						name = StringUtil.randomId();
+						readOnly = ReadOnly.FALSE;
 						required = false;
 						system = false;
 					}
@@ -323,6 +373,7 @@ public class ObjectDefinitionResourceTest
 							WorkflowConstants.STATUS_DRAFT));
 				}
 			});
+		objectDefinition.setSystem(false);
 
 		if (!FeatureFlagManagerUtil.isEnabled("LPS-135430")) {
 			objectDefinition.setStorageType(StringPool.BLANK);
@@ -426,5 +477,8 @@ public class ObjectDefinitionResourceTest
 
 	@Inject
 	private ObjectDefinitionLocalService _objectDefinitionLocalService;
+
+	@Inject
+	private ObjectRelationshipLocalService _objectRelationshipLocalService;
 
 }

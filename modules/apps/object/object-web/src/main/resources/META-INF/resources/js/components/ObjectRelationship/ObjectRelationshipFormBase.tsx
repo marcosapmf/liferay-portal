@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayLabel from '@clayui/label';
@@ -28,6 +19,21 @@ import {
 import React, {useEffect, useMemo, useState} from 'react';
 
 import {defaultLanguageId} from '../../utils/constants';
+
+interface ObjectRelationshipFormBaseProps {
+	errors: FormError<ObjectRelationship>;
+	handleChange: React.ChangeEventHandler<HTMLInputElement>;
+	objectRelationshipTypes?: string[];
+	readonly?: boolean;
+	setValues: (values: Partial<ObjectRelationship>) => void;
+	values: Partial<ObjectRelationship>;
+}
+
+interface UseObjectRelationshipFormProps {
+	initialValues: Partial<ObjectRelationship>;
+	onSubmit: (relationship: ObjectRelationship) => void;
+	parameterRequired: boolean;
+}
 
 export enum ObjectRelationshipType {
 	MANY_TO_MANY = 'manyToMany',
@@ -57,11 +63,13 @@ const ONE_TO_ONE = {
 	value: ObjectRelationshipType.ONE_TO_ONE,
 };
 
+const OBJECT_RELATIONSHIP_TYPES = [MANY_TO_MANY, ONE_TO_MANY, ONE_TO_ONE];
+
 export function useObjectRelationshipForm({
 	initialValues,
 	onSubmit,
 	parameterRequired,
-}: IUseObjectRelationshipForm) {
+}: UseObjectRelationshipFormProps) {
 	const validate = (relationship: Partial<ObjectRelationship>) => {
 		const errors: FormError<ObjectRelationship> = {};
 
@@ -105,12 +113,12 @@ export function useObjectRelationshipForm({
 
 export function ObjectRelationshipFormBase({
 	errors,
-	ffOneToOneRelationshipConfigurationEnabled,
 	handleChange,
+	objectRelationshipTypes,
 	readonly,
 	setValues,
 	values,
-}: IPros) {
+}: ObjectRelationshipFormBaseProps) {
 	const [creationLanguageId, setCreationLanguageId] = useState<
 		Liferay.Language.Locale
 	>();
@@ -120,25 +128,20 @@ export function ObjectRelationshipFormBase({
 	>([]);
 	const [query, setQuery] = useState<string>('');
 
-	const [types, selectedType] = useMemo(() => {
-		const types = [ONE_TO_MANY, MANY_TO_MANY];
-		if (ffOneToOneRelationshipConfigurationEnabled) {
-			types.push(ONE_TO_ONE);
-		}
+	const types = useMemo(() => {
+		return OBJECT_RELATIONSHIP_TYPES.filter((relationshipType) =>
+			objectRelationshipTypes?.includes(relationshipType.value)
+		);
+	}, [objectRelationshipTypes]);
 
-		return [types, types.find(({value}) => value === values.type)?.label];
-	}, [ffOneToOneRelationshipConfigurationEnabled, values.type]);
-
-	useEffect(() => {
-		const makeFetch = async () => {
-			const objectDefinition = await API.getObjectDefinitionByExternalReferenceCode(
-				values.objectDefinitionExternalReferenceCode1!
-			);
-
-			setCreationLanguageId(objectDefinition.defaultLanguageId);
-		};
-		makeFetch();
-	}, [values]);
+	const filteredRelationships = useMemo(() => {
+		return filterArrayByQuery({
+			array: objectDefinitions,
+			creationLanguageId,
+			query,
+			str: 'label',
+		});
+	}, [creationLanguageId, objectDefinitions, query]);
 
 	useEffect(() => {
 		const fetchObjectDefinitions = async () => {
@@ -191,16 +194,7 @@ export function ObjectRelationshipFormBase({
 			fetchObjectDefinitions();
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [readonly, values.objectDefinitionId1]);
-
-	const filteredRelationships = useMemo(() => {
-		return filterArrayByQuery({
-			array: objectDefinitions,
-			creationLanguageId,
-			query,
-			str: 'label',
-		});
-	}, [creationLanguageId, objectDefinitions, query]);
+	}, [readonly, values.objectDefinitionExternalReferenceCode1]);
 
 	return (
 		<>
@@ -221,13 +215,14 @@ export function ObjectRelationshipFormBase({
 				onChange={({value}) => setValues({type: value})}
 				options={types}
 				required
-				value={selectedType}
+				value={
+					OBJECT_RELATIONSHIP_TYPES.find(
+						({value}) => value === values.type
+					)?.label
+				}
 			/>
 
 			<AutoComplete<Partial<ObjectDefinition>>
-				creationLanguageId={
-					creationLanguageId as Liferay.Language.Locale
-				}
 				disabled={readonly}
 				emptyStateMessage={Liferay.Language.get(
 					'no-objects-were-found'
@@ -235,6 +230,7 @@ export function ObjectRelationshipFormBase({
 				error={errors.objectDefinitionId2}
 				items={filteredRelationships}
 				label={Liferay.Language.get('object')}
+				onActive={(item) => item.name === values.objectDefinitionName2}
 				onChangeQuery={setQuery}
 				onSelectItem={(item) => {
 					setValues({
@@ -268,19 +264,4 @@ export function ObjectRelationshipFormBase({
 			</AutoComplete>
 		</>
 	);
-}
-
-interface IUseObjectRelationshipForm {
-	initialValues: Partial<ObjectRelationship>;
-	onSubmit: (relationship: ObjectRelationship) => void;
-	parameterRequired: boolean;
-}
-
-interface IPros {
-	errors: FormError<ObjectRelationship>;
-	ffOneToOneRelationshipConfigurationEnabled?: boolean;
-	handleChange: React.ChangeEventHandler<HTMLInputElement>;
-	readonly?: boolean;
-	setValues: (values: Partial<ObjectRelationship>) => void;
-	values: Partial<ObjectRelationship>;
 }

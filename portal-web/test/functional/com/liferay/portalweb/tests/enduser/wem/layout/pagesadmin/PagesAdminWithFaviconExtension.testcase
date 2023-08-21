@@ -1,6 +1,7 @@
 @component-name = "portal-wcm"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testcase.url = "http://localhost:8080";
@@ -48,7 +49,7 @@ definition {
 		task ("When the site designer accesses to the widget page") {
 			Navigator.gotoSitePage(
 				pageName = "Widget Page Name",
-				siteName = "Test Site name");
+				siteName = ${randomSiteName});
 		}
 
 		task ("Then the site designer could view the favicon from theme") {
@@ -82,7 +83,7 @@ definition {
 		task ("Then the site designer could view the new favicon on widget page") {
 			Navigator.gotoSitePage(
 				pageName = "Widget Page Name",
-				siteName = "Test Site name");
+				siteName = ${randomSiteName});
 
 			AssertElementPresent(
 				imageFileName = "https://www.google.com/favicon.ico",
@@ -113,8 +114,6 @@ definition {
 			PageEditor.gotoTab(tabName = "Page Design Options");
 
 			Click(locator1 = "PageEditor#MORE_LINK");
-
-			Navigator.gotoNavTab(navTab = "Design");
 
 			AssertTextEquals(
 				locator1 = "PagesAdmin#FAVICON_NAME",
@@ -179,7 +178,7 @@ definition {
 
 			Navigator.gotoSitePage(
 				pageName = "Widget Page Name",
-				siteName = "Test Site name");
+				siteName = ${randomSiteName});
 
 			AssertElementPresent(
 				imageFileName = "https://www.google.com/favicon.ico",
@@ -206,8 +205,6 @@ definition {
 
 			WaitForPageLoad();
 
-			Navigator.gotoNavTab(navTab = "Design");
-
 			PagesAdmin.selectFaviconExtension(extensionName = ${randomEntryName1});
 
 			PortletEntry.save();
@@ -226,8 +223,6 @@ definition {
 		}
 
 		task ("Then the site designer could clear the favicon extension selection") {
-			Navigator.gotoNavTab(navTab = "Design");
-
 			AssertTextEquals(
 				locator1 = "PagesAdmin#FAVICON_NAME",
 				value1 = ${randomEntryName1});
@@ -274,8 +269,6 @@ definition {
 
 			WaitForPageLoad();
 
-			Navigator.gotoNavTab(navTab = "Design");
-
 			PagesAdmin.selectFaviconExtension(extensionName = ${randomEntryName1});
 
 			PortletEntry.save();
@@ -299,8 +292,6 @@ definition {
 			Click(locator1 = "PageEditor#MORE_LINK");
 
 			WaitForPageLoad();
-
-			Navigator.gotoNavTab(navTab = "Design");
 
 			AssertTextEquals(
 				locator1 = "PagesAdmin#FAVICON_NAME",
@@ -350,8 +341,6 @@ definition {
 
 			WaitForPageLoad();
 
-			Navigator.gotoNavTab(navTab = "Design");
-
 			PagesAdmin.selectFaviconExtension(extensionName = ${randomEntryName1});
 
 			PortletEntry.save();
@@ -379,8 +368,6 @@ definition {
 		}
 
 		task ("Then the site designer could apply a new favicon extension") {
-			Navigator.gotoNavTab(navTab = "Design");
-
 			PagesAdmin.selectFaviconExtension(extensionName = ${randomEntryName2});
 
 			AssertTextEquals(
@@ -423,8 +410,6 @@ definition {
 
 			WaitForPageLoad();
 
-			Navigator.gotoNavTab(navTab = "Design");
-
 			PagesAdmin.selectFaviconExtension(extensionName = ${randomEntryName1});
 
 			PortletEntry.save();
@@ -455,8 +440,6 @@ definition {
 			Click(locator1 = "PageEditor#MORE_LINK");
 
 			WaitForPageLoad();
-
-			Navigator.gotoNavTab(navTab = "Design");
 
 			AssertTextEquals(
 				locator1 = "PagesAdmin#FAVICON_NAME",

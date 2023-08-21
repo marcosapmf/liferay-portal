@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.blogs.web.internal.display.context;
@@ -17,10 +8,14 @@ package com.liferay.blogs.web.internal.display.context;
 import com.liferay.blogs.constants.BlogsPortletKeys;
 import com.liferay.blogs.model.BlogsEntry;
 import com.liferay.blogs.service.BlogsEntryServiceUtil;
+import com.liferay.item.selector.ItemSelector;
+import com.liferay.item.selector.criteria.UUIDItemSelectorReturnType;
+import com.liferay.organizations.item.selector.OrganizationItemSelectorCriterion;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.portlet.PortletPreferencesFactoryUtil;
+import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactoryUtil;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.GetterUtil;
@@ -53,6 +48,8 @@ public class BlogsAggregatorViewDisplayContext {
 		_renderRequest = renderRequest;
 		_renderResponse = renderResponse;
 
+		_itemSelector = (ItemSelector)httpServletRequest.getAttribute(
+			ItemSelector.class.getName());
 		_themeDisplay = (ThemeDisplay)httpServletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 		_portletPreferences =
@@ -87,6 +84,20 @@ public class BlogsAggregatorViewDisplayContext {
 		}
 
 		return _organizationId;
+	}
+
+	public String getOrganizationItemSelectorURL() {
+		OrganizationItemSelectorCriterion organizationItemSelectorCriterion =
+			new OrganizationItemSelectorCriterion();
+
+		organizationItemSelectorCriterion.setDesiredItemSelectorReturnTypes(
+			new UUIDItemSelectorReturnType());
+
+		return String.valueOf(
+			_itemSelector.getItemSelectorURL(
+				RequestBackedPortletURLFactoryUtil.create(_httpServletRequest),
+				_renderResponse.getNamespace() + "selectOrganization",
+				organizationItemSelectorCriterion));
 	}
 
 	public PortletURL getPortletURL() {
@@ -151,6 +162,7 @@ public class BlogsAggregatorViewDisplayContext {
 	}
 
 	private final HttpServletRequest _httpServletRequest;
+	private final ItemSelector _itemSelector;
 	private Integer _max;
 	private Long _organizationId;
 	private final PortletPreferences _portletPreferences;

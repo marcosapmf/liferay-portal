@@ -1,5 +1,24 @@
 components:
     schemas:
+        ActionExecutionResult:
+            # @review
+            description:
+                Represents a definition of an action execution result.
+            properties:
+                type:
+                    # @review
+                    description:
+                        The type of result.
+                    enum: [None, Notification, Page, URL]
+                    type:
+                        string
+                value:
+                    oneOf:
+                        - $ref: "#/components/schemas/NoneActionExecutionResult"
+                        - $ref: "#/components/schemas/NotificationActionExecutionResult"
+                        - $ref: "#/components/schemas/SitePageActionExecutionResult"
+                        - $ref: "#/components/schemas/URLActionExecutionResult"
+            type: object
         AggregateRating:
             description:
                 Represents the average rating. See [AggregateRating](https://www.schema.org/AggregateRating) for more
@@ -165,7 +184,6 @@ components:
                         A list of related contents to this blog post.
                     items:
                         $ref: "#/components/schemas/RelatedContent"
-                    readOnly: true
                     type: array
                 renderedContents:
                     description:
@@ -645,6 +663,10 @@ components:
                                 The resource's title.
                             type: string
                     type: object
+                value:
+                    description:
+                        The field's visible value
+                    type: string
         ContentSetElement:
             description:
                 Represents each member of a content set and can contain different types of assets.
@@ -1604,6 +1626,7 @@ components:
                     type: string
                 value:
                     anyOf:
+                        - $ref: "#/components/schemas/FragmentFieldAction"
                         - $ref: "#/components/schemas/FragmentFieldBackgroundImage"
                         - $ref: "#/components/schemas/FragmentFieldHTML"
                         - $ref: "#/components/schemas/FragmentFieldImage"
@@ -1611,6 +1634,37 @@ components:
                     # @review
                     description:
                         The fragment field's value.
+            type: object
+        FragmentFieldAction:
+            # @review
+            description:
+                Represents a fragment field with an action.
+            properties:
+                action:
+                    # @review
+                    description:
+                        The fragment field's action. Must be mapped to an external value.
+                    oneOf:
+                        - $ref: "#/components/schemas/FragmentMappedValue"
+                onError:
+                    allOf:
+                        - $ref: "#/components/schemas/ActionExecutionResult"
+                    # @review
+                    description:
+                        The action execution result in case the action fails.
+                onSuccess:
+                    allOf:
+                        - $ref: "#/components/schemas/ActionExecutionResult"
+                    # @review
+                    description:
+                        The action execution result in case the action succeeds.
+                text:
+                    # @review
+                    description:
+                        The fragment field's text.
+                    oneOf:
+                        - $ref: "#/components/schemas/FragmentInlineValue"
+                        - $ref: "#/components/schemas/FragmentMappedValue"
             type: object
         FragmentFieldBackgroundImage:
             # @review
@@ -3082,6 +3136,14 @@ components:
                     # @review
                     description:
                         The localized submission of message type.
+                messageType:
+                    # @review
+                    description:
+                        The message form submission type (embedded, none).
+                    enum: [Embedded, None]
+                    type: string
+                showNotification:
+                    type: boolean
             type: object
         NavigationMenu:
             # @review
@@ -3255,6 +3317,34 @@ components:
                     type: string
                 useCustomName:
                     type: boolean
+        NoneActionExecutionResult:
+            # @review
+            description:
+                Represents a definition of an action execution result of type none.
+            properties:
+                reload:
+                    # @review
+                    description:
+                        Whether to reload the page after the action is executed.
+                    type: boolean
+            type: object
+        NotificationActionExecutionResult:
+            # @review
+            description:
+                Represents a definition of an action execution result of type notification.
+            properties:
+                reload:
+                    # @review
+                    description:
+                        Whether to reload the page after the action is executed.
+                    type: boolean
+                text:
+                    allOf:
+                        - $ref: "#/components/schemas/FragmentInlineValue"
+                    # @review
+                    description:
+                        The localized text to display when an action is executed.
+            type: object
         OpenGraphSettings:
             # @review
             description:
@@ -4326,13 +4416,11 @@ components:
                 contentType:
                     description:
                         The type of the content.
-                    readOnly: true
                     type: string
                 id:
                     description:
                         The identifier of the resource.
                     format: int64
-                    readOnly: true
                     type: integer
                 title:
                     description:
@@ -4786,12 +4874,13 @@ components:
                         The categories associated with this page.
                     items:
                         $ref: "#/components/schemas/TaxonomyCategoryBrief"
-                    readOnly: true
                     type: array
                 taxonomyCategoryIds:
+                    deprecated: true
                     # @review
                     description:
-                        A write-only field that adds `TaxonomyCategory` instances to the page.
+                        A write-only field that adds `TaxonomyCategory` instances to the page. Deprecated as of
+                        Cavanaugh (7.4.x), replaced by `taxonomyCategoryBriefs.taxonomyCategoryReference`
                     items:
                         format: int64
                         type: integer
@@ -4824,6 +4913,18 @@ components:
                     writeOnly: true
             required:
                 - title
+            type: object
+        SitePageActionExecutionResult:
+            # @review
+            description:
+                Represents a definition of an action execution of type page.
+            properties:
+                itemReference:
+                    allOf:
+                        - $ref: "#/components/schemas/ClassFieldsReference"
+                    # @review
+                    description:
+                        The reference to a page.
             type: object
         SitePageFormSubmissionResult:
             # @review
@@ -4996,7 +5097,6 @@ components:
                         A list of related contents to this structured content.
                     items:
                         $ref: "#/components/schemas/RelatedContent"
-                    readOnly: true
                     type: array
                 renderedContents:
                     description:
@@ -5016,7 +5116,6 @@ components:
                     description:
                         The ID of the folder where structured content is stored.
                     format: int64
-                    readOnly: true
                     type: integer
                 subscribed:
                     # @review
@@ -5195,6 +5294,37 @@ components:
                         The localized category's names.
                     readOnly: true
                     type: object
+                taxonomyCategoryReference:
+                    # @review
+                    description:
+                        A unique reference to a taxonomy category.
+                    properties:
+                        externalReferenceCode:
+                            # @review
+                            description:
+                                The taxonomy category's external reference code.
+                            type: string
+                        siteKey:
+                            # @review
+                            description:
+                                The key of the site or asset library where the taxonomy category is located. It can be
+                                left out if the taxonomy category is in the same site as the page.
+                            type: string
+                    required:
+                        - externalReferenceCode
+                    type: object
+            type: object
+        URLActionExecutionResult:
+            # @review
+            description:
+                Represents a definition of an action execution result of type URL.
+            properties:
+                url:
+                    allOf:
+                        - $ref: "#/components/schemas/FragmentInlineValue"
+                    # @review
+                    description:
+                        The localized action execution result of type URL.
             type: object
         URLFormSubmissionResult:
             # @review
@@ -5554,7 +5684,7 @@ components:
 info:
     description:
         "A Java client JAR is available for use with the group ID 'com.liferay', artifact ID
-        'com.liferay.headless.delivery.client', and version '4.0.57'."
+        'com.liferay.headless.delivery.client', and version '4.0.63'."
     license:
         name: "Apache 2.0"
         url: "http://www.apache.org/licenses/LICENSE-2.0.html"
@@ -12774,6 +12904,35 @@ paths:
                                 $ref: "#/components/schemas/KnowledgeBaseArticle"
             tags: ["KnowledgeBaseArticle"]
     "/sites/{siteId}/knowledge-base-articles/by-external-reference-code/{knowledgeBaseArticleExternalReferenceCode}/knowledge-base-attachments/by-external-reference-code/{externalReferenceCode}":
+        delete:
+            # @review
+            description:
+                Delete the knowledge base attachment by knowledge base article's and knowledge base attachment's
+                external reference codes.
+            operationId: deleteSiteKnowledgeBaseArticleByExternalReferenceCodeKnowledgeBaseArticleExternalReferenceCodeKnowledgeBaseAttachmentByExternalReferenceCode
+            parameters:
+                - in: path
+                  name: siteId
+                  required: true
+                  schema:
+                      format: int64
+                      type: integer
+                - in: path
+                  name: knowledgeBaseArticleExternalReferenceCode
+                  required: true
+                  schema:
+                      type: string
+                - in: path
+                  name: externalReferenceCode
+                  required: true
+                  schema:
+                      type: string
+            responses:
+                204:
+                    content:
+                        application/json: {}
+                        application/xml: {}
+            tags: ["KnowledgeBaseAttachment"]
         get:
             # @review
             description:
@@ -12808,97 +12967,6 @@ paths:
                   name: restrictFields
                   schema:
                       type: string
-            responses:
-                200:
-                    content:
-                        application/json:
-                            schema:
-                                $ref: "#/components/schemas/KnowledgeBaseAttachment"
-                        application/xml:
-                            schema:
-                                $ref: "#/components/schemas/KnowledgeBaseAttachment"
-            tags: ["KnowledgeBaseAttachment"]
-        post:
-            # @review
-            description:
-                Creates the knowledge base article attachment by external reference code with the information sent in
-                the request body. The request body must be `multipart/form-data` with two parts, the file's bytes
-                (`file`), and an optional JSON string (`knowledgeBaseAttachment`) with the metadata.
-            operationId: postSiteKnowledgeBaseArticleByExternalReferenceCodeKnowledgeBaseArticleExternalReferenceCodeKnowledgeBaseAttachmentByExternalReferenceCode
-            parameters:
-                - in: path
-                  name: siteId
-                  required: true
-                  schema:
-                      format: int64
-                      type: integer
-                - in: path
-                  name: knowledgeBaseArticleExternalReferenceCode
-                  required: true
-                  schema:
-                      type: string
-                - in: path
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      type: string
-            requestBody:
-                content:
-                    multipart/form-data:
-                        schema:
-                            properties:
-                                file:
-                                    format: binary
-                                    type: string
-                                knowledgeBaseAttachment:
-                                    $ref: "#/components/schemas/KnowledgeBaseAttachment"
-                            type: object
-            responses:
-                200:
-                    content:
-                        application/json:
-                            schema:
-                                $ref: "#/components/schemas/KnowledgeBaseAttachment"
-                        application/xml:
-                            schema:
-                                $ref: "#/components/schemas/KnowledgeBaseAttachment"
-            tags: ["KnowledgeBaseAttachment"]
-        put:
-            # @review
-            description:
-                Replaces the knowledge base article attachment by external reference code with the information sent in
-                the request body. Any missing fields are deleted, unless they are required. The request body must be
-                `multipart/form-data` with two parts, the file's bytes (`file`), and an optional JSON string
-                (`knowledgeBaseAttachment`) with the metadata.
-            operationId: putSiteKnowledgeBaseArticleByExternalReferenceCodeKnowledgeBaseArticleExternalReferenceCodeKnowledgeBaseAttachmentByExternalReferenceCode
-            parameters:
-                - in: path
-                  name: siteId
-                  required: true
-                  schema:
-                      format: int64
-                      type: integer
-                - in: path
-                  name: knowledgeBaseArticleExternalReferenceCode
-                  required: true
-                  schema:
-                      type: string
-                - in: path
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      type: string
-            requestBody:
-                content:
-                    multipart/form-data:
-                        schema:
-                            properties:
-                                file:
-                                    format: binary
-                                    type: string
-                                knowledgeBaseAttachment:
-                                    $ref: "#/components/schemas/KnowledgeBaseAttachment"
-                            type: object
             responses:
                 200:
                     content:
@@ -15429,6 +15497,47 @@ paths:
                             schema:
                                 $ref: "#/components/schemas/WikiPageAttachment"
             tags: ["WikiPageAttachment"]
+    "/sites/{siteId}/{userId}/message-board-messages/activity":
+        # @review
+        get:
+            description:
+                Retrieves the site's message board messages user's activity.
+            operationId: getSiteUserMessageBoardMessagesActivityPage
+            parameters:
+                - in: path
+                  name: siteId
+                  required: true
+                  schema:
+                      format: int64
+                      type: integer
+                - in: path
+                  name: userId
+                  required: true
+                  schema:
+                      format: int64
+                      type: integer
+                - in: query
+                  name: page
+                  schema:
+                      type: integer
+                - in: query
+                  name: pageSize
+                  schema:
+                      type: integer
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/MessageBoardMessage"
+                                type: array
+                        application/xml:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/MessageBoardMessage"
+                                type: array
+            tags: ["MessageBoardMessage"]
     "/structured-content-folder/{structuredContentFolderId}/permissions":
         get:
             operationId: getStructuredContentFolderPermissionsPage

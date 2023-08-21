@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.osb.faro.service;
@@ -83,11 +74,6 @@ public interface FaroChannelLocalService
 	public void addUsers(
 			long companyId, String channelId, List<Long> invitedUserIds,
 			long userId, long workspaceGroupId)
-		throws PortalException;
-
-	public int countFaroUsers(
-			String channelId, boolean available, String query,
-			List<Integer> statuses, long workspaceGroupId)
 		throws PortalException;
 
 	/**
@@ -224,12 +210,6 @@ public interface FaroChannelLocalService
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public FaroChannel fetchFaroChannel(long faroChannelId);
 
-	public List<FaroUser> findFaroUsers(
-			String channelId, boolean available, String query,
-			List<Integer> statuses, long workspaceGroupId, int start, int end,
-			OrderByComparator<FaroUser> orderByComparator)
-		throws PortalException;
-
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public ActionableDynamicQuery getActionableDynamicQuery();
 
@@ -269,6 +249,19 @@ public interface FaroChannelLocalService
 	 */
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public int getFaroChannelsCount();
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<FaroUser> getFaroUsers(
+			String channelId, boolean available, String query,
+			List<Integer> statuses, long workspaceGroupId, int start, int end,
+			OrderByComparator<FaroUser> orderByComparator)
+		throws PortalException;
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int getFaroUsersCount(
+			String channelId, boolean available, String query,
+			List<Integer> statuses, long workspaceGroupId)
+		throws PortalException;
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public IndexableActionableDynamicQuery getIndexableActionableDynamicQuery();

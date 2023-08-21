@@ -1,6 +1,7 @@
 @component-name = "portal-wcm"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testcase.url = "http://localhost:8080";
@@ -113,7 +114,7 @@ definition {
 
 			ObjectAdmin.goToLayoutsTab();
 
-			ObjectAdmin.selectKebabMenuOption(kebabOption = "View");
+			ObjectAdmin.selectKebabMenuOption(kebabOption = "Edit");
 
 			ObjectAdmin.markLayoutAsDefault();
 
@@ -308,7 +309,7 @@ definition {
 
 			ObjectAdmin.goToLayoutsTab();
 
-			ObjectAdmin.selectKebabMenuOption(kebabOption = "View");
+			ObjectAdmin.selectKebabMenuOption(kebabOption = "Edit");
 
 			ObjectAdmin.markLayoutAsDefault();
 
@@ -416,6 +417,8 @@ definition {
 	@description = "This is a test for LPS-161638. Both site and global categories are shown when the object scope is set to the site"
 	@priority = 5
 	test ViewAllCategoriesAvailableToSiteScopeObject {
+		property portal.acceptance = "true";
+
 		var vocabularyName1 = StringUtil.randomString(8);
 
 		var vocabularyName1 = StringUtil.toLowerCase(${vocabularyName1});
@@ -506,7 +509,7 @@ definition {
 
 			ObjectAdmin.goToLayoutsTab();
 
-			ObjectAdmin.selectKebabMenuOption(kebabOption = "View");
+			ObjectAdmin.selectKebabMenuOption(kebabOption = "Edit");
 
 			ObjectAdmin.markLayoutAsDefault();
 
@@ -726,6 +729,8 @@ definition {
 	@description = "This is a test for LPS-161638. Only global vocabularies are shown when the object scope is set to an instance"
 	@priority = 5
 	test ViewOnlyGlobalVocabulariesAvailableToCompanyScopeObject {
+		property portal.acceptance = "true";
+
 		var vocabularyName1 = StringUtil.randomString(8);
 
 		var vocabularyName1 = StringUtil.toLowerCase(${vocabularyName1});
@@ -815,7 +820,7 @@ definition {
 
 			ObjectAdmin.goToLayoutsTab();
 
-			ObjectAdmin.selectKebabMenuOption(kebabOption = "View");
+			ObjectAdmin.selectKebabMenuOption(kebabOption = "Edit");
 
 			ObjectAdmin.markLayoutAsDefault();
 

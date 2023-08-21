@@ -1,18 +1,9 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {Component, useMemo} from 'react';
+import React, {Component, useMemo} from 'react';
 import {Navigate, useMatch, useOutletContext} from 'react-router-dom';
 import Loading from '~/components/Loading/Loading';
 import Rest from '~/core/Rest';
@@ -21,6 +12,7 @@ import {ObjectActionsItems} from '~/services/rest';
 
 type PageProperties = {
 	createPath?: string;
+	deniedChildren?: React.ReactNode | string;
 	redirectTo?: string;
 	restImpl: Rest;
 };
@@ -35,6 +27,7 @@ const CheckPermission: React.FC<CheckPermissionProps> = ({
 	properties: {
 		createPath = '',
 		restImpl,
+		deniedChildren,
 		redirectTo = `/404?type=permission`,
 	},
 }) => {
@@ -66,6 +59,10 @@ const CheckPermission: React.FC<CheckPermissionProps> = ({
 
 	if (createPermission || updatePermission) {
 		return children;
+	}
+
+	if (deniedChildren) {
+		return deniedChildren;
 	}
 
 	return <Navigate to={redirectTo} />;

@@ -1,24 +1,20 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.osgi.util.service;
 
 import com.liferay.portal.kernel.module.util.SystemBundleUtil;
+import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.CodeCoverageAssertor;
 import com.liferay.portal.kernel.util.MapUtil;
+import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
+
+import java.util.Dictionary;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -30,6 +26,7 @@ import org.junit.Test;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 
+import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.FrameworkUtil;
@@ -51,10 +48,29 @@ public class SnapshotTest {
 	public static void setUpClass() {
 		BundleContext bundleContext = SystemBundleUtil.getBundleContext();
 
+		Bundle bundle = bundleContext.getBundle();
+
+		ReflectionTestUtil.setFieldValue(
+			bundle, "bundleContext",
+			ProxyUtil.newDelegateProxyInstance(
+				BundleContext.class.getClassLoader(), BundleContext.class,
+				new Object() {
+
+					public Bundle getBundle() {
+						if (!_valid.getAndSet(true)) {
+							throw new IllegalStateException();
+						}
+
+						return bundle;
+					}
+
+				},
+				bundleContext));
+
 		Mockito.when(
 			FrameworkUtil.getBundle(Mockito.any())
 		).thenReturn(
-			bundleContext.getBundle()
+			bundle
 		);
 	}
 
@@ -102,6 +118,31 @@ public class SnapshotTest {
 
 		Assert.assertNull(snapshot1.get());
 		Assert.assertNull(snapshot2.get());
+	}
+
+	@Test
+	public void testDynamicWithInvalidBundleContext() {
+		Snapshot<TestService<String>> snapshot = new Snapshot<>(
+			SnapshotTest.class, Snapshot.cast(TestService.class), null, true);
+
+		Assert.assertNull(snapshot.get());
+
+		BundleContext bundleContext = SystemBundleUtil.getBundleContext();
+
+		TestService<String> testService = new TestService<>();
+
+		ServiceRegistration<?> serviceRegistration =
+			bundleContext.registerService(TestService.class, testService, null);
+
+		Assert.assertSame(testService, snapshot.get());
+
+		_valid.set(false);
+
+		Assert.assertSame(testService, snapshot.get());
+
+		serviceRegistration.unregister();
+
+		Assert.assertNull(snapshot.get());
 	}
 
 	@Test
@@ -190,6 +231,27 @@ public class SnapshotTest {
 				exception.getMessage());
 		}
 
+		Dictionary<String, Object> dictionary =
+			ReflectionTestUtil.getFieldValue(serviceRegistration, "properties");
+
+		dictionary.put(Constants.SERVICE_ID, "(1");
+
+		snapshot = new Snapshot<>(
+			SnapshotTest.class, Snapshot.cast(TestService.class));
+
+		try {
+			snapshot.get();
+
+			Assert.fail();
+		}
+		catch (Exception exception) {
+			Assert.assertSame(
+				InvalidSyntaxException.class, exception.getClass());
+
+			Assert.assertEquals(
+				"Unknown operator: : (service.id=(1)", exception.getMessage());
+		}
+
 		serviceRegistration.unregister();
 	}
 
@@ -228,10 +290,14 @@ public class SnapshotTest {
 		Assert.assertSame(testService1, snapshot2.get());
 
 		serviceRegistration1.unregister();
-		serviceRegistration2.unregister();
 
 		Assert.assertSame(testService2, snapshot1.get());
-		Assert.assertSame(testService1, snapshot2.get());
+		Assert.assertNull(snapshot2.get());
+
+		serviceRegistration2.unregister();
+
+		Assert.assertNull(snapshot1.get());
+		Assert.assertNull(snapshot2.get());
 	}
 
 	@Test
@@ -266,14 +332,19 @@ public class SnapshotTest {
 		Assert.assertSame(testService2, snapshot2.get());
 
 		serviceRegistration1.unregister();
+
+		Assert.assertSame(testService2, snapshot1.get());
+		Assert.assertSame(testService2, snapshot2.get());
+
 		serviceRegistration2.unregister();
 
-		Assert.assertSame(testService1, snapshot1.get());
-		Assert.assertSame(testService2, snapshot2.get());
+		Assert.assertNull(snapshot1.get());
+		Assert.assertNull(snapshot2.get());
 	}
 
 	private static final MockedStatic<FrameworkUtil>
 		_frameworkUtilMockedStatic = Mockito.mockStatic(FrameworkUtil.class);
+	private static final AtomicBoolean _valid = new AtomicBoolean(true);
 
 	private static class TestService<T> {
 	}

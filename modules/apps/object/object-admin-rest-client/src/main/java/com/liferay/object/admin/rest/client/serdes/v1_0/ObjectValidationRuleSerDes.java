@@ -1,20 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.admin.rest.client.serdes.v1_0;
 
 import com.liferay.object.admin.rest.client.dto.v1_0.ObjectValidationRule;
+import com.liferay.object.admin.rest.client.dto.v1_0.ObjectValidationRuleSetting;
 import com.liferay.object.admin.rest.client.json.BaseJSONParser;
 
 import java.text.DateFormat;
@@ -200,6 +192,50 @@ public class ObjectValidationRuleSerDes {
 			sb.append(objectValidationRule.getObjectDefinitionId());
 		}
 
+		if (objectValidationRule.getObjectValidationRuleSettings() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"objectValidationRuleSettings\": ");
+
+			sb.append("[");
+
+			for (int i = 0;
+				 i <
+					 objectValidationRule.
+						 getObjectValidationRuleSettings().length;
+				 i++) {
+
+				sb.append(
+					String.valueOf(
+						objectValidationRule.getObjectValidationRuleSettings()
+							[i]));
+
+				if ((i + 1) < objectValidationRule.
+						getObjectValidationRuleSettings().length) {
+
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
+		}
+
+		if (objectValidationRule.getOutputType() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"outputType\": ");
+
+			sb.append("\"");
+
+			sb.append(objectValidationRule.getOutputType());
+
+			sb.append("\"");
+		}
+
 		if (objectValidationRule.getScript() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -334,6 +370,25 @@ public class ObjectValidationRuleSerDes {
 				String.valueOf(objectValidationRule.getObjectDefinitionId()));
 		}
 
+		if (objectValidationRule.getObjectValidationRuleSettings() == null) {
+			map.put("objectValidationRuleSettings", null);
+		}
+		else {
+			map.put(
+				"objectValidationRuleSettings",
+				String.valueOf(
+					objectValidationRule.getObjectValidationRuleSettings()));
+		}
+
+		if (objectValidationRule.getOutputType() == null) {
+			map.put("outputType", null);
+		}
+		else {
+			map.put(
+				"outputType",
+				String.valueOf(objectValidationRule.getOutputType()));
+		}
+
 		if (objectValidationRule.getScript() == null) {
 			map.put("script", null);
 		}
@@ -435,6 +490,37 @@ public class ObjectValidationRuleSerDes {
 				if (jsonParserFieldValue != null) {
 					objectValidationRule.setObjectDefinitionId(
 						Long.valueOf((String)jsonParserFieldValue));
+				}
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "objectValidationRuleSettings")) {
+
+				if (jsonParserFieldValue != null) {
+					Object[] jsonParserFieldValues =
+						(Object[])jsonParserFieldValue;
+
+					ObjectValidationRuleSetting[]
+						objectValidationRuleSettingsArray =
+							new ObjectValidationRuleSetting
+								[jsonParserFieldValues.length];
+
+					for (int i = 0;
+						 i < objectValidationRuleSettingsArray.length; i++) {
+
+						objectValidationRuleSettingsArray[i] =
+							ObjectValidationRuleSettingSerDes.toDTO(
+								(String)jsonParserFieldValues[i]);
+					}
+
+					objectValidationRule.setObjectValidationRuleSettings(
+						objectValidationRuleSettingsArray);
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "outputType")) {
+				if (jsonParserFieldValue != null) {
+					objectValidationRule.setOutputType(
+						ObjectValidationRule.OutputType.create(
+							(String)jsonParserFieldValue));
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "script")) {

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.internal;
@@ -30,10 +21,14 @@ import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.search.SearchEngineHelperUtil;
 import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.search.index.ConcurrentReindexManager;
+import com.liferay.portal.search.index.SyncReindexManager;
 import com.liferay.portal.util.PropsValues;
 
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.FutureTask;
@@ -50,13 +45,15 @@ public class SearchEngineInitializer implements Runnable {
 	public SearchEngineInitializer(
 		BundleContext bundleContext, long companyId,
 		ConcurrentReindexManager concurrentReindexManager, String executionMode,
-		PortalExecutorManager portalExecutorManager) {
+		PortalExecutorManager portalExecutorManager,
+		SyncReindexManager syncReindexManager) {
 
 		_bundleContext = bundleContext;
 		_companyId = companyId;
 		_concurrentReindexManager = concurrentReindexManager;
 		_executionMode = executionMode;
 		_portalExecutorManager = portalExecutorManager;
+		_syncReindexManager = syncReindexManager;
 	}
 
 	public void halt() {
@@ -113,6 +110,16 @@ public class SearchEngineInitializer implements Runnable {
 		return false;
 	}
 
+	private boolean _isExecuteSyncReindex() {
+		if ((_syncReindexManager != null) && (_executionMode != null) &&
+			_executionMode.equals("sync")) {
+
+			return true;
+		}
+
+		return false;
+	}
+
 	private void _reindex(int delay) {
 		if (IndexWriterHelperUtil.isIndexReadOnly()) {
 			return;
@@ -146,8 +153,17 @@ public class SearchEngineInitializer implements Runnable {
 		stopWatch.start();
 
 		try {
+			Date date = null;
+
 			if (_isExecuteConcurrentReindex()) {
+				SearchEngineHelperUtil.initialize(_companyId);
+
 				_concurrentReindexManager.createNextIndex(_companyId);
+			}
+			else if (_isExecuteSyncReindex()) {
+				date = new Date();
+
+				Thread.sleep(1000);
 			}
 			else {
 				SearchEngineHelperUtil.removeCompany(_companyId);
@@ -170,7 +186,11 @@ public class SearchEngineInitializer implements Runnable {
 					"(!(system.index=true))");
 			}
 
+			Set<String> indexerClassNames = new HashSet<>();
+
 			for (Indexer<?> indexer : _indexers) {
+				indexerClassNames.add(indexer.getClassName());
+
 				FutureTask<Void> futureTask = new FutureTask<>(
 					new Callable<Void>() {
 
@@ -215,6 +235,10 @@ public class SearchEngineInitializer implements Runnable {
 				_concurrentReindexManager.replaceCurrentIndexWithNextIndex(
 					_companyId);
 			}
+			else if (_isExecuteSyncReindex()) {
+				_syncReindexManager.deleteStaleDocuments(
+					_companyId, date, indexerClassNames);
+			}
 
 			if (_log.isInfoEnabled()) {
 				_log.info(
@@ -247,5 +271,6 @@ public class SearchEngineInitializer implements Runnable {
 	private boolean _finished;
 	private ServiceTrackerList<Indexer<?>> _indexers;
 	private final PortalExecutorManager _portalExecutorManager;
+	private final SyncReindexManager _syncReindexManager;
 
 }

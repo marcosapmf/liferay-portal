@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.segments.service;
@@ -40,14 +31,14 @@ public class SegmentsExperimentServiceWrapper
 
 	@Override
 	public SegmentsExperiment addSegmentsExperiment(
-			long segmentsExperienceId, long classNameId, long classPK,
-			String name, String description, String goal, String goalTarget,
+			long segmentsExperienceId, long plid, String name,
+			String description, String goal, String goalTarget,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _segmentsExperimentService.addSegmentsExperiment(
-			segmentsExperienceId, classNameId, classPK, name, description, goal,
-			goalTarget, serviceContext);
+			segmentsExperienceId, plid, name, description, goal, goalTarget,
+			serviceContext);
 	}
 
 	@Override
@@ -69,13 +60,20 @@ public class SegmentsExperimentServiceWrapper
 	}
 
 	@Override
-	public SegmentsExperiment fetchSegmentsExperiment(
-			long segmentsExperienceId, long classNameId, long classPK,
-			int[] statuses)
+	public SegmentsExperiment fetchSegmentsExperiment(long groupId, long plid)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _segmentsExperimentService.fetchSegmentsExperiment(
-			segmentsExperienceId, classNameId, classPK, statuses);
+			groupId, plid);
+	}
+
+	@Override
+	public SegmentsExperiment fetchSegmentsExperiment(
+			long segmentsExperienceId, long plid, int[] statuses)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _segmentsExperimentService.fetchSegmentsExperiment(
+			segmentsExperienceId, plid, statuses);
 	}
 
 	@Override
@@ -100,14 +98,13 @@ public class SegmentsExperimentServiceWrapper
 	@Override
 	public java.util.List<SegmentsExperiment>
 			getSegmentsExperienceSegmentsExperiments(
-				long[] segmentsExperienceIds, long classNameId, long classPK,
-				int[] statuses, int start, int end)
+				long[] segmentsExperienceIds, long plid, int[] statuses,
+				int start, int end)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _segmentsExperimentService.
 			getSegmentsExperienceSegmentsExperiments(
-				segmentsExperienceIds, classNameId, classPK, statuses, start,
-				end);
+				segmentsExperienceIds, plid, statuses, start, end);
 	}
 
 	@Override
@@ -127,24 +124,25 @@ public class SegmentsExperimentServiceWrapper
 			segmentsExperimentKey);
 	}
 
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link #fetchSegmentsExperiment(long, long)}
+	 */
+	@Deprecated
 	@Override
 	public java.util.List<SegmentsExperiment> getSegmentsExperiments(
-		long groupId, long classNameId, long classPK) {
+		long groupId, long plid) {
 
-		return _segmentsExperimentService.getSegmentsExperiments(
-			groupId, classNameId, classPK);
+		return _segmentsExperimentService.getSegmentsExperiments(groupId, plid);
 	}
 
 	@Override
 	public java.util.List<SegmentsExperiment> getSegmentsExperiments(
-		long segmentsExperienceId, long classNameId, long classPK,
-		int[] statuses,
+		long segmentsExperienceId, long plid, int[] statuses,
 		com.liferay.portal.kernel.util.OrderByComparator<SegmentsExperiment>
 			orderByComparator) {
 
 		return _segmentsExperimentService.getSegmentsExperiments(
-			segmentsExperienceId, classNameId, classPK, statuses,
-			orderByComparator);
+			segmentsExperienceId, plid, statuses, orderByComparator);
 	}
 
 	@Override

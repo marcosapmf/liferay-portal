@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.change.tracking.service;
@@ -177,15 +168,6 @@ public class CTCollectionLocalServiceUtil {
 		return getService().deletePersistedModel(persistedModel);
 	}
 
-	public static void discardCTEntries(
-			long ctCollectionId, long modelClassNameId, long modelClassPK,
-			boolean force)
-		throws PortalException {
-
-		getService().discardCTEntries(
-			ctCollectionId, modelClassNameId, modelClassPK, force);
-	}
-
 	public static void discardCTEntry(
 			long ctCollectionId, long modelClassNameId, long modelClassPK,
 			boolean force)
@@ -284,6 +266,27 @@ public class CTCollectionLocalServiceUtil {
 		return getService().fetchCTCollection(ctCollectionId);
 	}
 
+	public static CTCollection fetchCTCollectionByExternalReferenceCode(
+		String externalReferenceCode, long companyId) {
+
+		return getService().fetchCTCollectionByExternalReferenceCode(
+			externalReferenceCode, companyId);
+	}
+
+	/**
+	 * Returns the ct collection with the matching UUID and company.
+	 *
+	 * @param uuid the ct collection's UUID
+	 * @param companyId the primary key of the company
+	 * @return the matching ct collection, or <code>null</code> if a matching ct collection could not be found
+	 */
+	public static CTCollection fetchCTCollectionByUuidAndCompanyId(
+		String uuid, long companyId) {
+
+		return getService().fetchCTCollectionByUuidAndCompanyId(
+			uuid, companyId);
+	}
+
 	public static com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery
 		getActionableDynamicQuery() {
 
@@ -301,6 +304,29 @@ public class CTCollectionLocalServiceUtil {
 		throws PortalException {
 
 		return getService().getCTCollection(ctCollectionId);
+	}
+
+	public static CTCollection getCTCollectionByExternalReferenceCode(
+			String externalReferenceCode, long companyId)
+		throws PortalException {
+
+		return getService().getCTCollectionByExternalReferenceCode(
+			externalReferenceCode, companyId);
+	}
+
+	/**
+	 * Returns the ct collection with the matching UUID and company.
+	 *
+	 * @param uuid the ct collection's UUID
+	 * @param companyId the primary key of the company
+	 * @return the matching ct collection
+	 * @throws PortalException if a matching ct collection could not be found
+	 */
+	public static CTCollection getCTCollectionByUuidAndCompanyId(
+			String uuid, long companyId)
+		throws PortalException {
+
+		return getService().getCTCollectionByUuidAndCompanyId(uuid, companyId);
 	}
 
 	/**
@@ -341,9 +367,10 @@ public class CTCollectionLocalServiceUtil {
 		return getService().getCTMappingTableInfos(ctCollectionId);
 	}
 
-	public static List<com.liferay.change.tracking.model.CTEntry>
-		getDiscardCTEntries(
-			long ctCollectionId, long modelClassNameId, long modelClassPK) {
+	public static Map<Long, List<com.liferay.change.tracking.model.CTEntry>>
+			getDiscardCTEntries(
+				long ctCollectionId, long modelClassNameId, long modelClassPK)
+		throws PortalException {
 
 		return getService().getDiscardCTEntries(
 			ctCollectionId, modelClassNameId, modelClassPK);
@@ -355,6 +382,14 @@ public class CTCollectionLocalServiceUtil {
 
 		return getService().getExclusivePublishedCTCollections(
 			modelClassNameId, modelClassPK);
+	}
+
+	public static com.liferay.portal.kernel.dao.orm.ExportActionableDynamicQuery
+		getExportActionableDynamicQuery(
+			com.liferay.exportimport.kernel.lar.PortletDataContext
+				portletDataContext) {
+
+		return getService().getExportActionableDynamicQuery(portletDataContext);
 	}
 
 	public static
@@ -433,6 +468,10 @@ public class CTCollectionLocalServiceUtil {
 
 	public static CTCollectionLocalService getService() {
 		return _service;
+	}
+
+	public static void setService(CTCollectionLocalService service) {
+		_service = service;
 	}
 
 	private static volatile CTCollectionLocalService _service;

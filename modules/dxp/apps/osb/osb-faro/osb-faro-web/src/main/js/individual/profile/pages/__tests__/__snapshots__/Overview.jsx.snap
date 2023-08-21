@@ -45,6 +45,7 @@ exports[`IndividualOverview should render 1`] = `
                   class="input-group-inset-item input-group-inset-item-after"
                 >
                   <button
+                    aria-label="Search"
                     class="button-root btn btn-unstyled"
                     type="button"
                   >
@@ -391,50 +392,54 @@ Chrome"
               <li
                 class="page-item disabled"
               >
-                <a
-                  class="button-root page-link btn btn-unstyled"
+                <button
+                  class="button-root btn btn-unstyled page-link btn btn-primary"
                   disabled=""
                   href=""
+                  type="button"
                 >
                   <svg
-                    class="lexicon-icon lexicon-icon-angle-left icon-root"
+                    class="lexicon-icon lexicon-icon-angle-left-small icon-root"
                     role="presentation"
                   >
                     <use
-                      xlink:href="#angle-left"
+                      xlink:href="#angle-left-small"
                     />
                   </svg>
-                </a>
+                </button>
               </li>
               <li
                 class="page-item active"
               >
-                <a
-                  class="button-root page-link btn btn-unstyled"
+                <button
+                  class="button-root btn btn-unstyled page-link btn btn-primary"
                   href=""
+                  type="button"
                 >
                   1
-                </a>
+                </button>
               </li>
               <li
                 class="page-item"
               >
-                <a
-                  class="button-root page-link btn btn-unstyled"
+                <button
+                  class="button-root btn btn-unstyled page-link btn btn-primary"
                   href=""
+                  type="button"
                 >
                   2
-                </a>
+                </button>
               </li>
               <li
                 class="page-item"
               >
-                <a
-                  class="button-root page-link btn btn-unstyled"
+                <button
+                  class="button-root btn btn-unstyled page-link btn btn-primary"
                   href=""
+                  type="button"
                 >
                   3
-                </a>
+                </button>
               </li>
               <li
                 class="page-item"
@@ -446,6 +451,7 @@ Chrome"
                     aria-controls="clay-dropdown-menu-2"
                     aria-expanded="false"
                     aria-haspopup="true"
+                    aria-label="See more"
                     class="dropdown-toggle page-link btn btn-unstyled"
                     type="button"
                   >
@@ -456,29 +462,31 @@ Chrome"
               <li
                 class="page-item"
               >
-                <a
-                  class="button-root page-link btn btn-unstyled"
+                <button
+                  class="button-root btn btn-unstyled page-link btn btn-primary"
                   href=""
+                  type="button"
                 >
                   287
-                </a>
+                </button>
               </li>
               <li
                 class="page-item"
               >
-                <a
-                  class="button-root page-link btn btn-unstyled"
+                <button
+                  class="button-root btn btn-unstyled page-link btn btn-primary"
                   href=""
+                  type="button"
                 >
                   <svg
-                    class="lexicon-icon lexicon-icon-angle-right icon-root"
+                    class="lexicon-icon lexicon-icon-angle-right-small icon-root"
                     role="presentation"
                   >
                     <use
-                      xlink:href="#angle-right"
+                      xlink:href="#angle-right-small"
                     />
                   </svg>
-                </a>
+                </button>
               </li>
             </ul>
           </div>
@@ -517,17 +525,16 @@ Chrome"
           class="card-footer"
         >
           <a
-            class="button-root"
+            class="button-root btn btn-outline-borderless btn-sm btn-outline-secondary"
             href="/workspace/23/contacts/individuals/known-individuals/0/details"
           >
             View All Details
             <svg
-              class="lexicon-icon lexicon-icon-angle-right"
-              classname="icon-root ml-2"
+              class="lexicon-icon lexicon-icon-angle-right-small icon-root ml-2"
               role="presentation"
             >
               <use
-                xlink:href="#angle-right"
+                xlink:href="#angle-right-small"
               />
             </svg>
           </a>
@@ -555,6 +562,7 @@ Chrome"
               class="list-group-title text-truncate"
             >
               <a
+                class="text-decoration-none"
                 href="/workspace/23/contacts/individuals/known-individuals/0/interests/Bar0"
               >
                 Bar0
@@ -566,16 +574,16 @@ Chrome"
           class="card-footer"
         >
           <a
-            class="button-root"
+            class="button-root btn btn-outline-borderless btn-sm btn-outline-secondary"
             href="/workspace/23/contacts/individuals/known-individuals/0/interests"
           >
             View All Interests
             <svg
-              class="lexicon-icon lexicon-icon-angle-right icon-root ml-2"
+              class="lexicon-icon lexicon-icon-angle-right-small icon-root ml-2"
               role="presentation"
             >
               <use
-                xlink:href="#angle-right"
+                xlink:href="#angle-right-small"
               />
             </svg>
           </a>
@@ -613,6 +621,7 @@ Chrome"
                 class="input-group-inset-item input-group-inset-item-after"
               >
                 <button
+                  aria-label="Search"
                   class="button-root btn btn-unstyled"
                   type="button"
                 >
@@ -641,7 +650,7 @@ Chrome"
                   class="autofit-col"
                 >
                   <div
-                    class="sticker sticker-root sticker-static sticker-rounded sticker-light"
+                    class="sticker sticker-root sticker-static sticker-rounded sticker-primary"
                   >
                     <svg
                       class="lexicon-icon lexicon-icon-individual-dynamic-segment icon-root"
@@ -682,16 +691,16 @@ Chrome"
           class="card-footer"
         >
           <a
-            class="button-root c-link link-secondary text-decoration-underline"
+            class="button-root btn btn-outline-borderless btn-sm btn-outline-secondary"
             href="/workspace/23/contacts/individuals/known-individuals/test/segments"
           >
             View All Segments
             <svg
-              class="lexicon-icon lexicon-icon-angle-right icon-root ml-2"
+              class="lexicon-icon lexicon-icon-angle-right-small icon-root ml-2"
               role="presentation"
             >
               <use
-                xlink:href="#angle-right"
+                xlink:href="#angle-right-small"
               />
             </svg>
           </a>

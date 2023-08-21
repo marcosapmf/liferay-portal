@@ -1,12 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {MockedProvider} from '@apollo/client/testing';
@@ -116,15 +110,15 @@ describe('Account Subscription Modal', () => {
 			await new Promise((resolve) => setTimeout(resolve, 1000));
 		});
 
-		const subscriptionStartDate = screen.getByText('08/24/2017', {
+		const subscriptionStartDate = screen.getByText('08/25/2017', {
 			exact: false,
 		});
-		expect(subscriptionStartDate).toHaveTextContent('08/24/2017');
+		expect(subscriptionStartDate).toHaveTextContent('08/25/2017');
 
-		const subscriptionEndDate = screen.getByText('07/24/2018', {
+		const subscriptionEndDate = screen.getByText('07/25/2018', {
 			exact: false,
 		});
-		expect(subscriptionEndDate).toHaveTextContent('07/24/2018');
+		expect(subscriptionEndDate).toHaveTextContent('07/25/2018');
 	});
 
 	it('Displays the number of Purchased Subscriptions', async () => {
@@ -157,7 +151,7 @@ describe('Account Subscription Modal', () => {
 						externalReferenceCode="ERC-001"
 						observer={observerMock}
 						onClose={functionMock}
-						title="Title Test"
+						title="Portal Backup"
 					/>
 				</MockedProvider>
 			);
@@ -189,8 +183,8 @@ describe('Account Subscription Modal', () => {
 			await new Promise((resolve) => setTimeout(resolve, 1000));
 		});
 
-		const subscriptionStatus = screen.getByText(/active/i);
-		expect(subscriptionStatus).toHaveTextContent('Active');
+		const subscriptionTable = document.querySelector('.table');
+		expect(subscriptionTable).toHaveTextContent('Active');
 	});
 
 	it('Displays Subscription Terms Table Pagination', async () => {
@@ -215,5 +209,59 @@ describe('Account Subscription Modal', () => {
 			/showing 1 to 1 of 1 entries/i
 		);
 		expect(subscriptionTermsPagination).toBeInTheDocument();
+	});
+
+	it('Not Display Instance Size Column When is Liferay Experience Cloud', async () => {
+		await act(async () => {
+			render(
+				<MockedProvider addTypename={false} mocks={[mocks]}>
+					<AccountSubscriptionModal
+						externalReferenceCode="ERC-001"
+						observer={observerMock}
+						onClose={functionMock}
+						title="Liferay Experience Cloud Enterprise"
+					/>
+				</MockedProvider>
+			);
+		});
+
+		const instanceSizeColumn = screen.queryByText('Instance Size');
+		expect(instanceSizeColumn).not.toBeInTheDocument();
+	});
+
+	it('Display Instance Size Column When is Portal Backup', async () => {
+		await act(async () => {
+			render(
+				<MockedProvider addTypename={false} mocks={[mocks]}>
+					<AccountSubscriptionModal
+						externalReferenceCode="ERC-001"
+						observer={observerMock}
+						onClose={functionMock}
+						title="Portal Backup"
+					/>
+				</MockedProvider>
+			);
+		});
+
+		const instanceSizeColumn = screen.queryByText('Instance Size');
+		expect(instanceSizeColumn).toBeInTheDocument();
+	});
+
+	it('Display Purchased Column', async () => {
+		await act(async () => {
+			render(
+				<MockedProvider addTypename={false} mocks={[mocks]}>
+					<AccountSubscriptionModal
+						externalReferenceCode="ERC-001"
+						observer={observerMock}
+						onClose={functionMock}
+						title="Title Test"
+					/>
+				</MockedProvider>
+			);
+		});
+
+		const quantityColumn = screen.queryByText('Purchased');
+		expect(quantityColumn).toBeInTheDocument();
 	});
 });

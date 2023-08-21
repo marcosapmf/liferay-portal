@@ -1,19 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.jethr0.entity;
 
+import com.liferay.jethr0.util.BaseRetryable;
+import com.liferay.jethr0.util.Retryable;
 import com.liferay.jethr0.util.StringUtil;
 
 import java.util.Arrays;
@@ -70,10 +63,17 @@ public abstract class BaseEntity implements Entity {
 		jsonObject.put(
 			"dateCreated", StringUtil.toString(getCreatedDate())
 		).put(
+			"dateModified", StringUtil.toString(getModifiedDate())
+		).put(
 			"id", getId()
 		);
 
 		return jsonObject;
+	}
+
+	@Override
+	public Date getModifiedDate() {
+		return _modifiedDate;
 	}
 
 	@Override
@@ -105,13 +105,19 @@ public abstract class BaseEntity implements Entity {
 	}
 
 	@Override
+	public void setModifiedDate(Date modifiedDate) {
+		_modifiedDate = modifiedDate;
+	}
+
+	@Override
 	public String toString() {
 		return String.valueOf(getJSONObject());
 	}
 
 	protected BaseEntity(JSONObject jsonObject) {
-		_createdDate = StringUtil.toDate(jsonObject.optString("dateCreated"));
+		_createdDate = _getDateFromJSON(jsonObject, "dateCreated");
 		_id = jsonObject.optLong("id");
+		_modifiedDate = _getDateFromJSON(jsonObject, "dateModified");
 	}
 
 	protected void addRelatedEntities(Collection<? extends Entity> entities) {
@@ -148,6 +154,19 @@ public abstract class BaseEntity implements Entity {
 			_getEntityClass(entity.getClass()));
 
 		relatedEntities.removeAll(Arrays.asList(entity));
+	}
+
+	private Date _getDateFromJSON(JSONObject jsonObject, String dateKey) {
+		Retryable<Date> retryable = new BaseRetryable<Date>() {
+
+			@Override
+			public Date execute() {
+				return StringUtil.toDate(jsonObject.optString(dateKey));
+			}
+
+		};
+
+		return retryable.executeWithRetries();
 	}
 
 	private Class<? extends Entity> _getEntityClass(Class<?> entityClass) {
@@ -188,6 +207,7 @@ public abstract class BaseEntity implements Entity {
 
 	private Date _createdDate;
 	private long _id;
+	private Date _modifiedDate;
 	private final Map<Class<? extends Entity>, Set<Entity>>
 		_relatedEntitiesMap = new HashMap<>();
 

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.rest.dto.v1_0;
@@ -60,20 +51,21 @@ public class SearchRequestBody implements Serializable {
 
 	@Schema
 	@Valid
-	public Facet[] getFacets() {
-		return facets;
+	public Map<String, Object> getAttributes() {
+		return attributes;
 	}
 
-	public void setFacets(Facet[] facets) {
-		this.facets = facets;
+	public void setAttributes(Map<String, Object> attributes) {
+		this.attributes = attributes;
 	}
 
 	@JsonIgnore
-	public void setFacets(
-		UnsafeSupplier<Facet[], Exception> facetsUnsafeSupplier) {
+	public void setAttributes(
+		UnsafeSupplier<Map<String, Object>, Exception>
+			attributesUnsafeSupplier) {
 
 		try {
-			facets = facetsUnsafeSupplier.get();
+			attributes = attributesUnsafeSupplier.get();
 		}
 		catch (RuntimeException re) {
 			throw re;
@@ -85,28 +77,27 @@ public class SearchRequestBody implements Serializable {
 
 	@GraphQLField
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
-	protected Facet[] facets;
+	protected Map<String, Object> attributes;
 
 	@Schema
 	@Valid
-	public Map<String, Object> getSearchContextAttributes() {
-		return searchContextAttributes;
+	public FacetConfiguration[] getFacetConfigurations() {
+		return facetConfigurations;
 	}
 
-	public void setSearchContextAttributes(
-		Map<String, Object> searchContextAttributes) {
+	public void setFacetConfigurations(
+		FacetConfiguration[] facetConfigurations) {
 
-		this.searchContextAttributes = searchContextAttributes;
+		this.facetConfigurations = facetConfigurations;
 	}
 
 	@JsonIgnore
-	public void setSearchContextAttributes(
-		UnsafeSupplier<Map<String, Object>, Exception>
-			searchContextAttributesUnsafeSupplier) {
+	public void setFacetConfigurations(
+		UnsafeSupplier<FacetConfiguration[], Exception>
+			facetConfigurationsUnsafeSupplier) {
 
 		try {
-			searchContextAttributes =
-				searchContextAttributesUnsafeSupplier.get();
+			facetConfigurations = facetConfigurationsUnsafeSupplier.get();
 		}
 		catch (RuntimeException re) {
 			throw re;
@@ -118,7 +109,7 @@ public class SearchRequestBody implements Serializable {
 
 	@GraphQLField
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
-	protected Map<String, Object> searchContextAttributes;
+	protected FacetConfiguration[] facetConfigurations;
 
 	@Override
 	public boolean equals(Object object) {
@@ -147,34 +138,34 @@ public class SearchRequestBody implements Serializable {
 
 		sb.append("{");
 
-		if (facets != null) {
+		if (attributes != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
 			}
 
-			sb.append("\"facets\": ");
+			sb.append("\"attributes\": ");
+
+			sb.append(_toJSON(attributes));
+		}
+
+		if (facetConfigurations != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"facetConfigurations\": ");
 
 			sb.append("[");
 
-			for (int i = 0; i < facets.length; i++) {
-				sb.append(String.valueOf(facets[i]));
+			for (int i = 0; i < facetConfigurations.length; i++) {
+				sb.append(String.valueOf(facetConfigurations[i]));
 
-				if ((i + 1) < facets.length) {
+				if ((i + 1) < facetConfigurations.length) {
 					sb.append(", ");
 				}
 			}
 
 			sb.append("]");
-		}
-
-		if (searchContextAttributes != null) {
-			if (sb.length() > 1) {
-				sb.append(", ");
-			}
-
-			sb.append("\"searchContextAttributes\": ");
-
-			sb.append(_toJSON(searchContextAttributes));
 		}
 
 		sb.append("}");
@@ -271,5 +262,7 @@ public class SearchRequestBody implements Serializable {
 		{"\\", "\"", "\b", "\f", "\n", "\r", "\t"},
 		{"\\\\", "\\\"", "\\b", "\\f", "\\n", "\\r", "\\t"}
 	};
+
+	private Map<String, Serializable> _extendedProperties;
 
 }

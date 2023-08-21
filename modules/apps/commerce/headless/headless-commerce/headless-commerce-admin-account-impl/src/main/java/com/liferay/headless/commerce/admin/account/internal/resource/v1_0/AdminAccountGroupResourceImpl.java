@@ -1,31 +1,21 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.admin.account.internal.resource.v1_0;
 
 import com.liferay.account.exception.NoSuchEntryException;
+import com.liferay.account.exception.NoSuchGroupException;
 import com.liferay.account.model.AccountEntry;
 import com.liferay.account.model.AccountGroup;
 import com.liferay.account.service.AccountEntryService;
 import com.liferay.account.service.AccountGroupService;
-import com.liferay.commerce.account.exception.NoSuchAccountGroupException;
 import com.liferay.headless.commerce.admin.account.dto.v1_0.AdminAccountGroup;
 import com.liferay.headless.commerce.admin.account.internal.odata.entity.v1_0.AccountGroupEntityModel;
 import com.liferay.headless.commerce.admin.account.resource.v1_0.AdminAccountGroupResource;
 import com.liferay.headless.commerce.core.util.ExpandoUtil;
 import com.liferay.headless.commerce.core.util.ServiceContextHelper;
-import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.search.filter.Filter;
@@ -77,7 +67,7 @@ public class AdminAccountGroupResourceImpl
 				externalReferenceCode, contextCompany.getCompanyId());
 
 		if (accountGroup == null) {
-			throw new NoSuchAccountGroupException(
+			throw new NoSuchGroupException(
 				"Unable to find account group with external reference code " +
 					externalReferenceCode);
 		}
@@ -128,7 +118,7 @@ public class AdminAccountGroupResourceImpl
 				externalReferenceCode, contextCompany.getCompanyId());
 
 		if (accountGroup == null) {
-			throw new NoSuchAccountGroupException(
+			throw new NoSuchGroupException(
 				"Unable to find account group with external reference code " +
 					externalReferenceCode);
 		}
@@ -141,13 +131,13 @@ public class AdminAccountGroupResourceImpl
 
 	@Override
 	public Page<AdminAccountGroup> getAccountGroupsPage(
-			Filter filter, Pagination pagination, Sort[] sorts)
+			String search, Filter filter, Pagination pagination, Sort[] sorts)
 		throws Exception {
 
 		return SearchUtil.search(
 			Collections.emptyMap(),
 			booleanQuery -> booleanQuery.getPreBooleanFilter(), filter,
-			AccountGroup.class.getName(), StringPool.BLANK, pagination,
+			AccountGroup.class.getName(), search, pagination,
 			queryConfig -> queryConfig.setSelectedFieldNames(
 				Field.ENTRY_CLASS_PK),
 			searchContext -> searchContext.setCompanyId(
@@ -197,7 +187,7 @@ public class AdminAccountGroupResourceImpl
 				externalReferenceCode, contextCompany.getCompanyId());
 
 		if (accountGroup == null) {
-			throw new NoSuchAccountGroupException(
+			throw new NoSuchGroupException(
 				"Unable to find account group with external reference code " +
 					externalReferenceCode);
 		}
@@ -238,8 +228,8 @@ public class AdminAccountGroupResourceImpl
 
 		if (accountGroup == null) {
 			accountGroup = _accountGroupService.addAccountGroup(
-				contextCompany.getCompanyId(),
-				adminAccountGroup.getDescription(), adminAccountGroup.getName(),
+				contextUser.getUserId(), adminAccountGroup.getDescription(),
+				adminAccountGroup.getName(),
 				_serviceContextHelper.getServiceContext());
 
 			accountGroup = _accountGroupService.updateExternalReferenceCode(

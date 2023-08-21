@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.journal.service;
@@ -106,6 +97,7 @@ public class JournalArticleServiceWrapper
 	 * @param neverReview whether the web content article is not set for review
 	 * @param indexable whether the web content article is searchable
 	 * @param smallImage whether the web content article has a small image
+	 * @param smallImageSource the web content article's small image source
 	 * @param smallImageURL the web content article's small image URL
 	 * @param smallFile the web content article's small image file
 	 * @param images the web content's images
@@ -135,8 +127,9 @@ public class JournalArticleServiceWrapper
 			int expirationDateMinute, boolean neverExpire, int reviewDateMonth,
 			int reviewDateDay, int reviewDateYear, int reviewDateHour,
 			int reviewDateMinute, boolean neverReview, boolean indexable,
-			boolean smallImage, String smallImageURL, java.io.File smallFile,
-			java.util.Map<String, byte[]> images, String articleURL,
+			boolean smallImage, int smallImageSource, String smallImageURL,
+			java.io.File smallFile, java.util.Map<String, byte[]> images,
+			String articleURL,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
@@ -149,8 +142,8 @@ public class JournalArticleServiceWrapper
 			expirationDateYear, expirationDateHour, expirationDateMinute,
 			neverExpire, reviewDateMonth, reviewDateDay, reviewDateYear,
 			reviewDateHour, reviewDateMinute, neverReview, indexable,
-			smallImage, smallImageURL, smallFile, images, articleURL,
-			serviceContext);
+			smallImage, smallImageSource, smallImageURL, smallFile, images,
+			articleURL, serviceContext);
 	}
 
 	/**
@@ -207,7 +200,7 @@ public class JournalArticleServiceWrapper
 			int expirationDateMinute, boolean neverExpire, int reviewDateMonth,
 			int reviewDateDay, int reviewDateYear, int reviewDateHour,
 			int reviewDateMinute, boolean neverReview, boolean indexable,
-			boolean smallImage, String smallImageURL,
+			boolean smallImage, int smallImageSource, String smallImageURL,
 			java.io.File smallImageFile,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
@@ -219,8 +212,8 @@ public class JournalArticleServiceWrapper
 			expirationDateMonth, expirationDateDay, expirationDateYear,
 			expirationDateHour, expirationDateMinute, neverExpire,
 			reviewDateMonth, reviewDateDay, reviewDateYear, reviewDateHour,
-			reviewDateMinute, neverReview, indexable, smallImage, smallImageURL,
-			smallImageFile, serviceContext);
+			reviewDateMinute, neverReview, indexable, smallImage,
+			smallImageSource, smallImageURL, smallImageFile, serviceContext);
 	}
 
 	/**
@@ -1729,6 +1722,8 @@ public class JournalArticleServiceWrapper
 	 * @param smallImage whether to update web content article's a small image.
 	 A file must be passed in as <code>smallImageFile</code> value,
 	 otherwise the current small image is deleted.
+	 * @param smallImageSource the web content article's small image source
+	 (optionally <code>null</code>)
 	 * @param smallImageURL the web content article's small image URL
 	 (optionally <code>null</code>)
 	 * @param smallFile the web content article's new small image file
@@ -1764,7 +1759,7 @@ public class JournalArticleServiceWrapper
 			boolean neverExpire, int reviewDateMonth, int reviewDateDay,
 			int reviewDateYear, int reviewDateHour, int reviewDateMinute,
 			boolean neverReview, boolean indexable, boolean smallImage,
-			String smallImageURL, java.io.File smallFile,
+			int smallImageSource, String smallImageURL, java.io.File smallFile,
 			java.util.Map<String, byte[]> images, String articleURL,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
@@ -1777,8 +1772,8 @@ public class JournalArticleServiceWrapper
 			expirationDateYear, expirationDateHour, expirationDateMinute,
 			neverExpire, reviewDateMonth, reviewDateDay, reviewDateYear,
 			reviewDateHour, reviewDateMinute, neverReview, indexable,
-			smallImage, smallImageURL, smallFile, images, articleURL,
-			serviceContext);
+			smallImage, smallImageSource, smallImageURL, smallFile, images,
+			articleURL, serviceContext);
 	}
 
 	/**
@@ -1835,6 +1830,8 @@ public class JournalArticleServiceWrapper
 	 * @param smallImage whether to update web content article's a small image.
 	 A file must be passed in as <code>smallImageFile</code> value,
 	 otherwise the current small image is deleted.
+	 * @param smallImageSource the web content article's small image source
+	 (optionally <code>null</code>)
 	 * @param smallImageURL the web content article's small image URL
 	 (optionally <code>null</code>)
 	 * @param smallFile the web content article's new small image file
@@ -1869,7 +1866,7 @@ public class JournalArticleServiceWrapper
 			boolean neverExpire, int reviewDateMonth, int reviewDateDay,
 			int reviewDateYear, int reviewDateHour, int reviewDateMinute,
 			boolean neverReview, boolean indexable, boolean smallImage,
-			String smallImageURL, java.io.File smallFile,
+			int smallImageSource, String smallImageURL, java.io.File smallFile,
 			java.util.Map<String, byte[]> images, String articleURL,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
@@ -1881,8 +1878,9 @@ public class JournalArticleServiceWrapper
 			expirationDateMonth, expirationDateDay, expirationDateYear,
 			expirationDateHour, expirationDateMinute, neverExpire,
 			reviewDateMonth, reviewDateDay, reviewDateYear, reviewDateHour,
-			reviewDateMinute, neverReview, indexable, smallImage, smallImageURL,
-			smallFile, images, articleURL, serviceContext);
+			reviewDateMinute, neverReview, indexable, smallImage,
+			smallImageSource, smallImageURL, smallFile, images, articleURL,
+			serviceContext);
 	}
 
 	/**
@@ -1948,7 +1946,8 @@ public class JournalArticleServiceWrapper
 			boolean neverExpire, int reviewDateMonth, int reviewDateDay,
 			int reviewDateYear, int reviewDateHour, int reviewDateMinute,
 			boolean neverReview, boolean indexable, boolean smallImage,
-			String smallImageURL, java.io.File smallImageFile,
+			int smallImageSource, String smallImageURL,
+			java.io.File smallImageFile,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
@@ -1959,8 +1958,8 @@ public class JournalArticleServiceWrapper
 			expirationDateMonth, expirationDateDay, expirationDateYear,
 			expirationDateHour, expirationDateMinute, neverExpire,
 			reviewDateMonth, reviewDateDay, reviewDateYear, reviewDateHour,
-			reviewDateMinute, neverReview, indexable, smallImage, smallImageURL,
-			smallImageFile, serviceContext);
+			reviewDateMinute, neverReview, indexable, smallImage,
+			smallImageSource, smallImageURL, smallImageFile, serviceContext);
 	}
 
 	/**

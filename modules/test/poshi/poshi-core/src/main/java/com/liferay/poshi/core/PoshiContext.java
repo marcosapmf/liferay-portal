@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.poshi.core;
@@ -32,7 +23,6 @@ import com.liferay.poshi.core.util.GetterUtil;
 import com.liferay.poshi.core.util.MathUtil;
 import com.liferay.poshi.core.util.OSDetector;
 import com.liferay.poshi.core.util.PropsUtil;
-import com.liferay.poshi.core.util.PropsValues;
 import com.liferay.poshi.core.util.StringUtil;
 import com.liferay.poshi.core.util.Validator;
 
@@ -117,7 +107,9 @@ public class PoshiContext {
 	}
 
 	public static List<String> executePQLQuery() throws Exception {
-		return executePQLQuery(PropsValues.TEST_BATCH_PROPERTY_QUERY, true);
+		PoshiProperties poshiProperties = PoshiProperties.getPoshiProperties();
+
+		return executePQLQuery(poshiProperties.testBatchPropertyQuery, true);
 	}
 
 	public static List<String> executePQLQuery(String query, boolean readFiles)
@@ -135,9 +127,11 @@ public class PoshiContext {
 		sb.append(query);
 		sb.append(") AND (ignored == null)");
 
-		if (Validator.isNotNull(PropsValues.TEST_RUN_ENVIRONMENT)) {
+		PoshiProperties poshiProperties = PoshiProperties.getPoshiProperties();
+
+		if (Validator.isNotNull(poshiProperties.testRunEnvironment)) {
 			sb.append(" AND (test.run.environment == \"");
-			sb.append(PropsValues.TEST_RUN_ENVIRONMENT);
+			sb.append(poshiProperties.testRunEnvironment);
 			sb.append("\" OR test.run.environment == null)");
 		}
 
@@ -389,8 +383,10 @@ public class PoshiContext {
 		poshiPropertyNames.add("test.class.name");
 		poshiPropertyNames.add("test.run.environment");
 
+		PoshiProperties poshiProperties = PoshiProperties.getPoshiProperties();
+
 		String testCaseAvailablePropertyNames =
-			PropsValues.TEST_CASE_AVAILABLE_PROPERTY_NAMES;
+			poshiProperties.testCaseAvailablePropertyNames;
 
 		if (Validator.isNotNull(testCaseAvailablePropertyNames)) {
 			Collections.addAll(
@@ -399,7 +395,7 @@ public class PoshiContext {
 		}
 
 		String testCaseRequiredPropertyNames =
-			PropsValues.TEST_CASE_REQUIRED_PROPERTY_NAMES;
+			poshiProperties.testCaseRequiredPropertyNames;
 
 		if (Validator.isNotNull(testCaseRequiredPropertyNames)) {
 			Collections.addAll(
@@ -452,8 +448,10 @@ public class PoshiContext {
 	public static List<String> getRequiredPoshiPropertyNames() {
 		List<String> requiredPoshiPropertyNames = new ArrayList<>();
 
+		PoshiProperties poshiProperties = PoshiProperties.getPoshiProperties();
+
 		String testCaseRequiredPropertyNames =
-			PropsValues.TEST_CASE_REQUIRED_PROPERTY_NAMES;
+			poshiProperties.testCaseRequiredPropertyNames;
 
 		if (Validator.isNotNull(testCaseRequiredPropertyNames)) {
 			Collections.addAll(
@@ -502,10 +500,7 @@ public class PoshiContext {
 				}
 			}
 
-			if (!properties.containsKey("test.liferay.virtual.instance") ||
-				Boolean.parseBoolean(
-					(String)properties.get("test.liferay.virtual.instance"))) {
-
+			if (!_isTestRunIndividually(properties)) {
 				properties.remove("test.class.method.name");
 			}
 
@@ -620,8 +615,11 @@ public class PoshiContext {
 			Collections.addAll(poshiFileIncludes, includes);
 		}
 		else {
+			PoshiProperties poshiProperties =
+				PoshiProperties.getPoshiProperties();
+
 			List<String> testNames = Arrays.asList(
-				PropsValues.TEST_NAME.split("\\s*,\\s*"));
+				poshiProperties.testName.split("\\s*,\\s*"));
 
 			for (String testName : testNames) {
 				String className =
@@ -666,6 +664,12 @@ public class PoshiContext {
 		}
 
 		for (String testDirName : testDirNames) {
+			testDirName = testDirName.trim();
+
+			if (testDirName.isEmpty()) {
+				continue;
+			}
+
 			poshiURLs.addAll(
 				_getPoshiURLs(
 					poshiFileIncludes.toArray(new String[0]), testDirName));
@@ -685,8 +689,9 @@ public class PoshiContext {
 				_getPoshiURLs(POSHI_SUPPORT_FILE_INCLUDES, testSupportDirName));
 		}
 
-		_readPoshiFiles(poshiURLs);
 		_readSeleniumFiles();
+
+		_readPoshiFiles(poshiURLs);
 
 		_initComponentCommandNamesMap();
 
@@ -722,7 +727,7 @@ public class PoshiContext {
 
 		executorService.shutdown();
 
-		if (!executorService.awaitTermination(2, TimeUnit.MINUTES)) {
+		if (!executorService.awaitTermination(3, TimeUnit.MINUTES)) {
 			throw new TimeoutException(
 				"Timed out while loading " + poshiFileType + " Poshi files");
 		}
@@ -1051,6 +1056,23 @@ public class PoshiContext {
 		if (ignorableCommandNames.contains(commandName) ||
 			(rootElement.attributeValue("ignore") != null)) {
 
+			return true;
+		}
+
+		return false;
+	}
+
+	private static boolean _isTestRunIndividually(Properties properties) {
+		if (properties.containsKey("test.liferay.virtual.instance") &&
+			!Boolean.parseBoolean(
+				(String)properties.get("test.liferay.virtual.instance"))) {
+
+			return true;
+		}
+
+		String testRunType = (String)properties.get("test.run.type");
+
+		if (Validator.isNotNull(testRunType) && testRunType.equals("single")) {
 			return true;
 		}
 
@@ -1688,17 +1710,19 @@ public class PoshiContext {
 				new PoshiFileRunnable(url, namespace));
 		}
 
+		PoshiProperties poshiProperties = PoshiProperties.getPoshiProperties();
+
 		_executePoshiFileRunnables(
 			"dependency", dependencyPoshiFileRunnables,
-			PropsValues.POSHI_FILE_READ_THREAD_POOL);
+			poshiProperties.poshiFileReadThreadPool);
 
 		_executePoshiFileRunnables(
 			"macro", macroPoshiFileRunnables,
-			PropsValues.POSHI_FILE_READ_THREAD_POOL);
+			poshiProperties.poshiFileReadThreadPool);
 
 		_executePoshiFileRunnables(
 			"test", testPoshiFileRunnables,
-			PropsValues.POSHI_FILE_READ_THREAD_POOL);
+			poshiProperties.poshiFileReadThreadPool);
 	}
 
 	private static void _throwExceptions() throws Exception {
@@ -1778,17 +1802,19 @@ public class PoshiContext {
 
 		sb.append("## Autogenerated\n\n");
 
-		if (PropsValues.TEST_BATCH_PROPERTY_QUERY != null) {
-			int maxSubgroupSize = PropsValues.TEST_BATCH_MAX_SUBGROUP_SIZE;
+		PoshiProperties poshiProperties = PoshiProperties.getPoshiProperties();
 
-			if (PropsValues.TEST_BATCH_RUN_TYPE.equals("single")) {
+		if (poshiProperties.testBatchPropertyQuery != null) {
+			int maxSubgroupSize = poshiProperties.testBatchMaxSubgroupSize;
+
+			if (poshiProperties.testBatchRunType.equals("single")) {
 				maxSubgroupSize = 1;
 			}
 
 			List<List<List<String>>> segments = Lists.partition(
 				getTestBatchGroups(
-					PropsValues.TEST_BATCH_PROPERTY_QUERY, maxSubgroupSize),
-				PropsValues.TEST_BATCH_MAX_GROUP_SIZE);
+					poshiProperties.testBatchPropertyQuery, maxSubgroupSize),
+				poshiProperties.testBatchMaxGroupSize);
 
 			for (int i = 0; i < segments.size(); i++) {
 				List<List<String>> segment = segments.get(i);
@@ -1837,7 +1863,9 @@ public class PoshiContext {
 	}
 
 	private static void _writeTestCSVReportFile() throws Exception {
-		if (PropsValues.TEST_CSV_REPORT_PROPERTY_NAMES == null) {
+		PoshiProperties poshiProperties = PoshiProperties.getPoshiProperties();
+
+		if (poshiProperties.testCSVReportPropertyNames == null) {
 			return;
 		}
 
@@ -1855,7 +1883,7 @@ public class PoshiContext {
 			reportLineItems.add("Command Name");
 
 			for (String propertyName :
-					PropsValues.TEST_CSV_REPORT_PROPERTY_NAMES) {
+					poshiProperties.testCSVReportPropertyNames) {
 
 				reportLineItems.add(propertyName);
 			}
@@ -1885,7 +1913,7 @@ public class PoshiContext {
 						testCaseNamespacedClassCommandName);
 
 				for (String propertyName :
-						PropsValues.TEST_CSV_REPORT_PROPERTY_NAMES) {
+						poshiProperties.testCSVReportPropertyNames) {
 
 					if (properties.containsKey(propertyName)) {
 						String propertyValue = properties.getProperty(

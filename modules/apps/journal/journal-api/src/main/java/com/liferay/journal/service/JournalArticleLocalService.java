@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.journal.service;
@@ -49,6 +40,7 @@ import com.liferay.portal.kernel.util.OrderByComparator;
 import java.io.File;
 import java.io.Serializable;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -168,6 +160,7 @@ public interface JournalArticleLocalService
 	 * @param neverReview whether the web content article is not set for review
 	 * @param indexable whether the web content article is searchable
 	 * @param smallImage whether the web content article has a small image
+	 * @param smallImageSource the web content article's small image source
 	 * @param smallImageURL the web content article's small image URL
 	 * @param smallImageFile the web content article's small image file
 	 * @param images the web content's images
@@ -196,7 +189,7 @@ public interface JournalArticleLocalService
 			boolean neverExpire, int reviewDateMonth, int reviewDateDay,
 			int reviewDateYear, int reviewDateHour, int reviewDateMinute,
 			boolean neverReview, boolean indexable, boolean smallImage,
-			String smallImageURL, File smallImageFile,
+			int smallImageSource, String smallImageURL, File smallImageFile,
 			Map<String, byte[]> images, String articleURL,
 			ServiceContext serviceContext)
 		throws PortalException;
@@ -215,10 +208,10 @@ public interface JournalArticleLocalService
 	 * @param content the HTML content wrapped in XML. For more information,
 	 see the content example in the {@link #addArticle(String, long,
 	 long, long, long, long, String, boolean, double, Map, Map, Map,
-	 String, long, String, String, int, int, int, int, int, int,
-	 int, int, int, int, boolean, int, int, int, int, int, boolean,
-	 boolean, boolean, String, File, Map, String, ServiceContext)}
-	 description.
+	 String, long, String, String, int, int, int, int, int, int, int,
+	 int, int, int, boolean, int, int, int, int, int, boolean,
+	 boolean, boolean, int, String, File, Map, String,
+	 ServiceContext)} description.
 	 * @param ddmStructureId the primary key of the web content article's DDM
 	 structure, if the article is related to a DDM structure, or
 	 <code>0</code> otherwise
@@ -252,8 +245,8 @@ public interface JournalArticleLocalService
 			int expirationDateMinute, boolean neverExpire, int reviewDateMonth,
 			int reviewDateDay, int reviewDateYear, int reviewDateHour,
 			int reviewDateMinute, boolean neverReview, boolean indexable,
-			boolean smallImage, String smallImageURL, File smallImageFile,
-			ServiceContext serviceContext)
+			boolean smallImage, int smallImageSource, String smallImageURL,
+			File smallImageFile, ServiceContext serviceContext)
 		throws PortalException;
 
 	/**
@@ -1310,6 +1303,10 @@ public interface JournalArticleLocalService
 	public List<JournalArticle> getArticlesByResourcePrimKey(
 		long resourcePrimKey);
 
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<JournalArticle> getArticlesByReviewDate(
+		Date previousCheckDate, Date reviewDate);
+
 	/**
 	 * Returns all the web content articles matching the small image ID.
 	 *
@@ -2239,10 +2236,10 @@ public interface JournalArticleLocalService
 	 * @param content the HTML content wrapped in XML. For more information,
 	 see the content example in the {@link #addArticle(String, long,
 	 long, long, long, long, String, boolean, double, Map, Map, Map,
-	 String, long, String, String, int, int, int, int, int, int,
-	 int, int, int, int, boolean, int, int, int, int, int, boolean,
-	 boolean, boolean, String, File, Map, String, ServiceContext)}
-	 description.
+	 String, long, String, String, int, int, int, int, int, int, int,
+	 int, int, int, boolean, int, int, int, int, int, boolean,
+	 boolean, boolean, int, String, File, Map, String,
+	 ServiceContext)} description.
 	 * @param ddmTemplateKey the primary key of the web content article's DDM
 	 template
 	 * @param layoutUuid the unique string identifying the web content
@@ -2282,6 +2279,8 @@ public interface JournalArticleLocalService
 	 * @param smallImage whether to update web content article's a small image.
 	 A file must be passed in as <code>smallImageFile</code> value,
 	 otherwise the current small image is deleted.
+	 * @param smallImageSource the web content article's small image source
+	 (optionally <code>null</code>)
 	 * @param smallImageURL the web content article's small image URL
 	 (optionally <code>null</code>)
 	 * @param smallImageFile the web content article's new small image file
@@ -2317,7 +2316,7 @@ public interface JournalArticleLocalService
 			boolean neverExpire, int reviewDateMonth, int reviewDateDay,
 			int reviewDateYear, int reviewDateHour, int reviewDateMinute,
 			boolean neverReview, boolean indexable, boolean smallImage,
-			String smallImageURL, File smallImageFile,
+			int smallImageSource, String smallImageURL, File smallImageFile,
 			Map<String, byte[]> images, String articleURL,
 			ServiceContext serviceContext)
 		throws PortalException;
@@ -2338,10 +2337,10 @@ public interface JournalArticleLocalService
 	 * @param content the HTML content wrapped in XML. For more information,
 	 see the content example in the {@link #addArticle(String, long,
 	 long, long, long, long, String, boolean, double, Map, Map, Map,
-	 String, long, String, String, int, int, int, int, int, int,
-	 int, int, int, int, boolean, int, int, int, int, int, boolean,
-	 boolean, boolean, String, File, Map, String, ServiceContext)}
-	 description.
+	 String, long, String, String, int, int, int, int, int, int, int,
+	 int, int, int, boolean, int, int, int, int, int, boolean,
+	 boolean, boolean, int, String, File, Map, String,
+	 ServiceContext)} description.
 	 * @param layoutUuid the unique string identifying the web content
 	 article's display page
 	 * @param serviceContext the service context to be applied. Can set the
@@ -2380,10 +2379,10 @@ public interface JournalArticleLocalService
 	 * @param content the HTML content wrapped in XML. For more information,
 	 see the content example in the {@link #addArticle(String, long,
 	 long, long, long, long, String, boolean, double, Map, Map, Map,
-	 String, long, String, String, int, int, int, int, int, int,
-	 int, int, int, int, boolean, int, int, int, int, int, boolean,
-	 boolean, boolean, String, File, Map, String, ServiceContext)}
-	 description.
+	 String, long, String, String, int, int, int, int, int, int, int,
+	 int, int, int, boolean, int, int, int, int, int, boolean,
+	 boolean, boolean, int, String, File, Map, String,
+	 ServiceContext)} description.
 	 * @param ddmTemplateKey the primary key of the web content article's DDM
 	 template
 	 * @param layoutUuid the unique string identifying the web content
@@ -2423,6 +2422,8 @@ public interface JournalArticleLocalService
 	 * @param smallImage whether to update web content article's a small image.
 	 A file must be passed in as <code>smallImageFile</code> value,
 	 otherwise the current small image is deleted.
+	 * @param smallImageSource the web content article's small image source
+	 (optionally <code>null</code>)
 	 * @param smallImageURL the web content article's small image URL
 	 (optionally <code>null</code>)
 	 * @param smallImageFile the web content article's new small image file
@@ -2457,7 +2458,7 @@ public interface JournalArticleLocalService
 			boolean neverExpire, int reviewDateMonth, int reviewDateDay,
 			int reviewDateYear, int reviewDateHour, int reviewDateMinute,
 			boolean neverReview, boolean indexable, boolean smallImage,
-			String smallImageURL, File smallImageFile,
+			int smallImageSource, String smallImageURL, File smallImageFile,
 			Map<String, byte[]> images, String articleURL,
 			ServiceContext serviceContext)
 		throws PortalException;
@@ -2475,10 +2476,10 @@ public interface JournalArticleLocalService
 	 * @param content the HTML content wrapped in XML. For more information,
 	 see the content example in the {@link #addArticle(String, long,
 	 long, long, long, long, String, boolean, double, Map, Map, Map,
-	 String, long, String, String, int, int, int, int, int, int,
-	 int, int, int, int, boolean, int, int, int, int, int, boolean,
-	 boolean, boolean, String, File, Map, String, ServiceContext)}
-	 description.
+	 String, long, String, String, int, int, int, int, int, int, int,
+	 int, int, int, boolean, int, int, int, int, int, boolean,
+	 boolean, boolean, int, String, File, Map, String,
+	 ServiceContext)} description.
 	 * @param serviceContext the service context to be applied. Can set the
 	 modification date, expando bridge attributes, asset category IDs,
 	 asset tag names, asset link entry IDs, asset priority, workflow
@@ -2519,7 +2520,7 @@ public interface JournalArticleLocalService
 			boolean neverExpire, int reviewDateMonth, int reviewDateDay,
 			int reviewDateYear, int reviewDateHour, int reviewDateMinute,
 			boolean neverReview, boolean indexable, boolean smallImage,
-			String smallImageURL, File smallImageFile,
+			int smallImageSource, String smallImageURL, File smallImageFile,
 			ServiceContext serviceContext)
 		throws PortalException;
 
@@ -2535,10 +2536,10 @@ public interface JournalArticleLocalService
 	 * @param content the HTML content wrapped in XML. For more information,
 	 see the content example in the {@link #addArticle(String, long,
 	 long, long, long, long, String, boolean, double, Map, Map, Map,
-	 String, long, String, String, int, int, int, int, int, int,
-	 int, int, int, int, boolean, int, int, int, int, int, boolean,
-	 boolean, boolean, String, File, Map, String, ServiceContext)}
-	 description.
+	 String, long, String, String, int, int, int, int, int, int, int,
+	 int, int, int, boolean, int, int, int, int, int, boolean,
+	 boolean, boolean, int, String, File, Map, String,
+	 ServiceContext)} description.
 	 * @param images the web content's images
 	 * @param serviceContext the service context to be applied. Can set the
 	 modification date and URL title for the web content article.

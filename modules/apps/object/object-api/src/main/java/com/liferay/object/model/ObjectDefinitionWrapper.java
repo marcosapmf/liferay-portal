@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.model;
@@ -57,6 +48,7 @@ public class ObjectDefinitionWrapper
 			getAccountEntryRestrictedObjectFieldId());
 		attributes.put(
 			"descriptionObjectFieldId", getDescriptionObjectFieldId());
+		attributes.put("objectFolderId", getObjectFolderId());
 		attributes.put("titleObjectFieldId", getTitleObjectFieldId());
 		attributes.put("accountEntryRestricted", isAccountEntryRestricted());
 		attributes.put("active", isActive());
@@ -156,6 +148,12 @@ public class ObjectDefinitionWrapper
 
 		if (descriptionObjectFieldId != null) {
 			setDescriptionObjectFieldId(descriptionObjectFieldId);
+		}
+
+		Long objectFolderId = (Long)attributes.get("objectFolderId");
+
+		if (objectFolderId != null) {
+			setObjectFolderId(objectFolderId);
 		}
 
 		Long titleObjectFieldId = (Long)attributes.get("titleObjectFieldId");
@@ -533,6 +531,11 @@ public class ObjectDefinitionWrapper
 		return model.getLabelMap();
 	}
 
+	@Override
+	public String getLocalizationDBTableName() {
+		return model.getLocalizationDBTableName();
+	}
+
 	/**
 	 * Returns the modifiable of this object definition.
 	 *
@@ -581,6 +584,16 @@ public class ObjectDefinitionWrapper
 	@Override
 	public long getObjectDefinitionId() {
 		return model.getObjectDefinitionId();
+	}
+
+	/**
+	 * Returns the object folder ID of this object definition.
+	 *
+	 * @return the object folder ID of this object definition
+	 */
+	@Override
+	public long getObjectFolderId() {
+		return model.getObjectFolderId();
 	}
 
 	@Override
@@ -1219,6 +1232,16 @@ public class ObjectDefinitionWrapper
 	@Override
 	public void setObjectDefinitionId(long objectDefinitionId) {
 		model.setObjectDefinitionId(objectDefinitionId);
+	}
+
+	/**
+	 * Sets the object folder ID of this object definition.
+	 *
+	 * @param objectFolderId the object folder ID of this object definition
+	 */
+	@Override
+	public void setObjectFolderId(long objectFolderId) {
+		model.setObjectFolderId(objectFolderId);
 	}
 
 	/**

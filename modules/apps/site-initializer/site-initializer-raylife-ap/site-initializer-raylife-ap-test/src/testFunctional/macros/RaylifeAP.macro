@@ -14,13 +14,16 @@ definition {
 		AssertElementNotPresent(locator1 = ${applicationvalue});
 	}
 
+	macro assertClaimNumberVisible {
+		AssertVisible(locator1 = "RaylifeAP#CLAIM_NUMBER");
+	}
+
 	macro assertFieldRequiredMessage {
 		AssertElementPresent(
 			key_field = ${field},
 			locator1 = "RaylifeAP#FIELD_REQUIRED_MESSAGE");
 	}
 
-	@summary = "This macro states that the filter options are hidden"
 	macro assertNotViewFilterOptions {
 		for (var optionList : list ${options}) {
 			AssertNotVisible(
@@ -35,14 +38,20 @@ definition {
 			locator1 = "RaylifeAP#COMPONENT_HEADER");
 	}
 
-	@summary = "This macro asserts the number of entries shown in the table"
+	macro assertPolicyDetailPage {
+		AssertVisible(locator1 = "RaylifeAP#POLICY_DETAIL_TITLE");
+	}
+
 	macro assertQuantity {
 		var key_quantity = ${text};
 
 		AssertVisible(locator1 = "RaylifeAP#ASSERT_QUANTITY");
 	}
 
-	@summary = "Assert element present in the table"
+	macro assertSettledStatus {
+		AssertVisible(locator1 = "RaylifeAP#SETTLED_STATUS");
+	}
+
 	macro assertTableElement {
 		AssertElementPresent(
 			key_colunmPosition = ${column},
@@ -68,7 +77,6 @@ definition {
 			value1 = ${text});
 	}
 
-	@summary = "This macro states that the filter options are being displayed on the page"
 	macro assertViewFilterOptions {
 		for (var optionList : list ${options}) {
 			AssertVisible(
@@ -94,13 +102,31 @@ definition {
 			locator1 = "RaylifeAP#KEBAB_OPTION");
 	}
 
+	macro clickInApplicationNumber {
+		Click(
+			key_product = ${product},
+			key_status = ${status},
+			locator1 = "RaylifeAP#APPLICATIONS_NUMBER_WITH_STATUS");
+	}
+
 	macro clickOnAllAplications {
 		Button.click(button = "All Applications");
 	}
 
-	@summary = "This macro enables and disables the filter"
+	macro clickOnBackToClaimsPage {
+		Click(locator1 = "RaylifeAP#CLAIM_BACK_BUTTON");
+	}
+
+	macro clickOnClaimNumber {
+		Click(locator1 = "RaylifeAP#CLAIM_NUMBER");
+	}
+
 	macro clickOnFilter {
 		Click(locator1 = "RaylifeAP#ICON_FILTER");
+	}
+
+	macro clickOnPolicyNumberOnClaimDetais {
+		Click(locator1 = "RaylifeAP#POLICY_NUMBER");
 	}
 
 	macro clickOnSubsectionTasks {
@@ -109,7 +135,6 @@ definition {
 			locator1 = "RaylifeAP#TASKS_SECTION");
 	}
 
-	@summary = "This macro edits the deletion type to cascade and deletes all entries created when adding an application"
 	macro deleteAllCreatedEntries {
 		var entry = ${searchTerm};
 
@@ -149,7 +174,6 @@ definition {
 			locator1 = "RaylifeAP#MENU_SIDEBAR");
 	}
 
-	@summary = "This macro is for any ellipses button on the Raylife AP site"
 	macro gotoEllipsisMenuItem {
 		Click.waitForMenuToggleJSClick(locator1 = "RaylifeAP#ANY_VERTICAL_ELLIPSIS");
 
@@ -188,7 +212,6 @@ definition {
 		MouseOver(locator1 = "RaylifeAP#MENU_SIDEBAR");
 	}
 
-	@summary = "This macro is for any search box on the Raylife AP site"
 	macro search {
 		WaitForElementPresent(locator1 = "RaylifeAP#SEARCH");
 
@@ -255,6 +278,14 @@ definition {
 		Alert.viewSuccessMessage();
 	}
 
+	macro userAvatarFunctionality {
+		Click(locator1 = "RaylifeAP#USER_AVATAR");
+
+		Click(
+			key_option = ${option},
+			locator1 = "RaylifeAP#USER_AVATAR_OPTION");
+	}
+
 	macro userLoginInRaylife {
 		var passwordRaylife = "portal4all";
 		var email = "${email}@mailinator.com";
@@ -266,9 +297,11 @@ definition {
 			userEmailAddress = ${email},
 			userPassword = ${passwordRaylife});
 
-		Button.click(button = "I Agree");
+		if (IsElementPresent(key_text = "I Agree", locator1 = "Button#ANY")) {
+			Button.click(button = "I Agree");
 
-		User.answerPasswordReminder();
+			User.answerPasswordReminder();
+		}
 	}
 
 }

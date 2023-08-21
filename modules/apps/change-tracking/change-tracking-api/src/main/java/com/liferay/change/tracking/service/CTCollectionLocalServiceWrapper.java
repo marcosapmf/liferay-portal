@@ -1,20 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.change.tracking.service;
 
 import com.liferay.portal.kernel.service.ServiceWrapper;
+import com.liferay.portal.kernel.service.persistence.BasePersistence;
 
 /**
  * Provides a wrapper for {@link CTCollectionLocalService}.
@@ -193,16 +185,6 @@ public class CTCollectionLocalServiceWrapper
 	}
 
 	@Override
-	public void discardCTEntries(
-			long ctCollectionId, long modelClassNameId, long modelClassPK,
-			boolean force)
-		throws com.liferay.portal.kernel.exception.PortalException {
-
-		_ctCollectionLocalService.discardCTEntries(
-			ctCollectionId, modelClassNameId, modelClassPK, force);
-	}
-
-	@Override
 	public void discardCTEntry(
 			long ctCollectionId, long modelClassNameId, long modelClassPK,
 			boolean force)
@@ -322,6 +304,31 @@ public class CTCollectionLocalServiceWrapper
 	}
 
 	@Override
+	public com.liferay.change.tracking.model.CTCollection
+		fetchCTCollectionByExternalReferenceCode(
+			String externalReferenceCode, long companyId) {
+
+		return _ctCollectionLocalService.
+			fetchCTCollectionByExternalReferenceCode(
+				externalReferenceCode, companyId);
+	}
+
+	/**
+	 * Returns the ct collection with the matching UUID and company.
+	 *
+	 * @param uuid the ct collection's UUID
+	 * @param companyId the primary key of the company
+	 * @return the matching ct collection, or <code>null</code> if a matching ct collection could not be found
+	 */
+	@Override
+	public com.liferay.change.tracking.model.CTCollection
+		fetchCTCollectionByUuidAndCompanyId(String uuid, long companyId) {
+
+		return _ctCollectionLocalService.fetchCTCollectionByUuidAndCompanyId(
+			uuid, companyId);
+	}
+
+	@Override
 	public com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery
 		getActionableDynamicQuery() {
 
@@ -341,6 +348,33 @@ public class CTCollectionLocalServiceWrapper
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _ctCollectionLocalService.getCTCollection(ctCollectionId);
+	}
+
+	@Override
+	public com.liferay.change.tracking.model.CTCollection
+			getCTCollectionByExternalReferenceCode(
+				String externalReferenceCode, long companyId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _ctCollectionLocalService.getCTCollectionByExternalReferenceCode(
+			externalReferenceCode, companyId);
+	}
+
+	/**
+	 * Returns the ct collection with the matching UUID and company.
+	 *
+	 * @param uuid the ct collection's UUID
+	 * @param companyId the primary key of the company
+	 * @return the matching ct collection
+	 * @throws PortalException if a matching ct collection could not be found
+	 */
+	@Override
+	public com.liferay.change.tracking.model.CTCollection
+			getCTCollectionByUuidAndCompanyId(String uuid, long companyId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _ctCollectionLocalService.getCTCollectionByUuidAndCompanyId(
+			uuid, companyId);
 	}
 
 	/**
@@ -392,9 +426,12 @@ public class CTCollectionLocalServiceWrapper
 	}
 
 	@Override
-	public java.util.List<com.liferay.change.tracking.model.CTEntry>
-		getDiscardCTEntries(
-			long ctCollectionId, long modelClassNameId, long modelClassPK) {
+	public java.util.Map
+		<Long, java.util.List<com.liferay.change.tracking.model.CTEntry>>
+				getDiscardCTEntries(
+					long ctCollectionId, long modelClassNameId,
+					long modelClassPK)
+			throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _ctCollectionLocalService.getDiscardCTEntries(
 			ctCollectionId, modelClassNameId, modelClassPK);
@@ -408,6 +445,16 @@ public class CTCollectionLocalServiceWrapper
 
 		return _ctCollectionLocalService.getExclusivePublishedCTCollections(
 			modelClassNameId, modelClassPK);
+	}
+
+	@Override
+	public com.liferay.portal.kernel.dao.orm.ExportActionableDynamicQuery
+		getExportActionableDynamicQuery(
+			com.liferay.exportimport.kernel.lar.PortletDataContext
+				portletDataContext) {
+
+		return _ctCollectionLocalService.getExportActionableDynamicQuery(
+			portletDataContext);
 	}
 
 	@Override
@@ -494,6 +541,11 @@ public class CTCollectionLocalServiceWrapper
 
 		return _ctCollectionLocalService.updateCTCollection(
 			userId, ctCollectionId, name, description);
+	}
+
+	@Override
+	public BasePersistence<?> getBasePersistence() {
+		return _ctCollectionLocalService.getBasePersistence();
 	}
 
 	@Override

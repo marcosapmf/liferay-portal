@@ -1,9 +1,11 @@
 @component-name = "portal-ab-test"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property property.group = "analytics.cloud.profile";
+	property test.liferay.virtual.instance = "false";
 	property testray.main.component.name = "A/B Test";
 
 	setUp {
@@ -26,7 +28,7 @@ definition {
 		}
 
 		task ("Connect and synchronyze with Analytics Cloud") {
-			ACDXPSettings.connectDXPtoAnalyticsCloud(siteName = "Test Site Name");
+			ACDXPSettings.connectDXPtoAnalyticsCloudWithTryAgain(siteName = "Test Site Name");
 		}
 
 		task ("Create content page") {
@@ -37,27 +39,6 @@ definition {
 
 			Navigator.openWithAppendToBaseURL(urlAppend = "web/test-site-name/content-page");
 		}
-	}
-
-	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
-
-		// It is not possible to delete properties and data source after LRAC-13389. This functionality should return after LRAC-8040
-
-		//ACUtils.tearDownAC();
-
-		ACUtils.tearDownDXP();
-
-		if (${testPortalInstance} == "true") {
-			PortalInstances.tearDownCP();
-		}
-		else {
-			JSONGroup.deleteGroupByName(groupName = "Test Site Name");
-		}
-
-		JSONUser.tearDownNonAdminUsers();
-
-		JSONRole.deleteTestRoles();
 	}
 
 	@description = "LPS-101341: Validate if the user has one experience with the AB test in a Running status, the experiences dropdown menu shows the AB test icon and one help hint"
@@ -780,7 +761,8 @@ definition {
 	@description = "LPS-96781: Validate if, when the A/B Testing changes in the Liferay DXP, information about the Liferay DXP context, the changes are reflected in the test in Analytics Cloud"
 	@priority = 4
 	test CheckTestChangesInAC {
-		property test.name.skip.portal.instance = "ABTesting#CheckTestChangesInAC";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Create AB test, create variant and run the test") {
 			ABTest.createABTest(
@@ -820,7 +802,8 @@ definition {
 	@description = "LPS-97195: Validate if the variant for A/B Test that was deleted on Liferay portal is visible in the Analytics Cloud"
 	@priority = 4
 	test CheckVariantDeletedInAC {
-		property test.name.skip.portal.instance = "ABTesting#CheckVariantDeletedInAC";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Create AB test and create 2 variants") {
 			ABTest.createABTest(
@@ -1452,8 +1435,6 @@ definition {
 	@description = "LPS-97195: Validate if a message will appear asking if the user wants to delete a variant for A/B Test and he can delete with success"
 	@priority = 4
 	test DeleteVariant {
-		property ci.retries.disabled = "true";
-
 		task ("Create AB test and create variant") {
 			ABTest.createABTest(
 				goal = "Bounce Rate",
@@ -1504,8 +1485,6 @@ definition {
 	@description = "LPS-101341: Validate if an alert appears when the user tries to delete an experience with an AB Test in a draft mode, the user should be able to delete the experience"
 	@priority = 4
 	test DeletExperienceWithDraftABTest {
-		property ci.retries.disabled = "true";
-
 		task ("Create an experience and add on content page") {
 			ContentPages.gotoPageEditor();
 
@@ -1785,8 +1764,6 @@ definition {
 	@description = "LPS-97882: Validate if, when the user tries to edit an existing A/B Test, a modal is opened requiring some initial fields information"
 	@priority = 3
 	test EditRequiredInfo {
-		property ci.retries.disabled = "true";
-
 		task ("Create AB test and create variant") {
 			ABTest.createABTest(
 				goal = "Bounce Rate",
@@ -2263,8 +2240,6 @@ definition {
 	@description = "LPS-96787: Validate if in the notification message has one link to the content page of the test, with the AB test panel open in that test"
 	@priority = 3
 	test NotificationLinkToContentPage {
-		property ci.retries.disabled = "true";
-
 		task ("Create user and sync contact with AC") {
 			JSONUser.addUser(
 				userEmailAddress = "userea@liferay.com",
@@ -2546,8 +2521,6 @@ definition {
 	@description = "LPS-99225: Validate if the admin can rename a segment in an experience with an A/B test in the draft status"
 	@priority = 3
 	test RenameSegmentABTestDraft {
-		property ci.retries.disabled = "true";
-
 		task ("Create a segment and an Experience using the segment created") {
 			ContentPages.gotoPageEditor();
 

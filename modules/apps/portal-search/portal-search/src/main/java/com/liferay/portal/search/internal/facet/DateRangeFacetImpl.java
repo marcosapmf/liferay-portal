@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.internal.facet;
@@ -20,6 +11,7 @@ import com.liferay.portal.kernel.search.BooleanClauseOccur;
 import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.search.facet.RangeFacet;
 import com.liferay.portal.kernel.search.facet.util.RangeParserUtil;
+import com.liferay.portal.kernel.search.filter.BooleanFilter;
 import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.search.generic.BooleanClauseImpl;
 import com.liferay.portal.kernel.util.ArrayUtil;
@@ -76,40 +68,44 @@ public class DateRangeFacetImpl extends RangeFacet implements Facet {
 			return null;
 		}
 
-		String rangeString = _selections[0];
+		BooleanFilter booleanFilter = new BooleanFilter();
 
-		String start = StringPool.BLANK;
-		String end = StringPool.BLANK;
+		for (String selection : _selections) {
+			String start = StringPool.BLANK;
+			String end = StringPool.BLANK;
 
-		if (!isStatic() && Validator.isNotNull(rangeString)) {
-			String[] range = RangeParserUtil.parserRange(rangeString);
+			if (!isStatic() && Validator.isNotNull(selection)) {
+				String[] range = RangeParserUtil.parserRange(selection);
 
-			start = range[0];
-			end = range[1];
+				start = range[0];
+				end = range[1];
+			}
+
+			if (Validator.isNull(start) && Validator.isNull(end)) {
+				return null;
+			}
+
+			DateRangeFilterBuilder dateRangeFilterBuilder =
+				_filterBuilders.dateRangeFilterBuilder();
+
+			dateRangeFilterBuilder.setFieldName(getFieldName());
+
+			if (Validator.isNotNull(start)) {
+				dateRangeFilterBuilder.setFrom(start);
+			}
+
+			dateRangeFilterBuilder.setIncludeLower(true);
+			dateRangeFilterBuilder.setIncludeUpper(true);
+
+			if (Validator.isNotNull(end)) {
+				dateRangeFilterBuilder.setTo(end);
+			}
+
+			booleanFilter.add(
+				dateRangeFilterBuilder.build(), BooleanClauseOccur.SHOULD);
 		}
 
-		if (Validator.isNull(start) && Validator.isNull(end)) {
-			return null;
-		}
-
-		DateRangeFilterBuilder dateRangeFilterBuilder =
-			_filterBuilders.dateRangeFilterBuilder();
-
-		dateRangeFilterBuilder.setFieldName(getFieldName());
-
-		if (Validator.isNotNull(start)) {
-			dateRangeFilterBuilder.setFrom(start);
-		}
-
-		dateRangeFilterBuilder.setIncludeLower(true);
-		dateRangeFilterBuilder.setIncludeUpper(true);
-
-		if (Validator.isNotNull(end)) {
-			dateRangeFilterBuilder.setTo(end);
-		}
-
-		return new BooleanClauseImpl(
-			dateRangeFilterBuilder.build(), BooleanClauseOccur.MUST);
+		return new BooleanClauseImpl(booleanFilter, BooleanClauseOccur.MUST);
 	}
 
 	private String _aggregationName;

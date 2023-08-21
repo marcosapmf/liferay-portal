@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.osb.faro.service.impl;
@@ -26,6 +17,7 @@ import com.liferay.osb.faro.service.FaroProjectEmailDomainLocalService;
 import com.liferay.osb.faro.service.FaroUserLocalService;
 import com.liferay.osb.faro.service.base.FaroProjectLocalServiceBaseImpl;
 import com.liferay.osb.faro.util.EmailUtil;
+import com.liferay.osb.faro.util.FaroPropsValues;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.petra.string.CharPool;
@@ -94,7 +86,7 @@ public class FaroProjectLocalServiceImpl
 		if ((friendlyURL == null) || Validator.isBlank(friendlyURL.trim())) {
 			group.setFriendlyURL(null);
 
-			_groupLocalService.updateGroup(group);
+			group = _groupLocalService.updateGroup(group);
 		}
 
 		long groupId = group.getGroupId();
@@ -271,7 +263,8 @@ public class FaroProjectLocalServiceImpl
 				_language.format(
 					resourceBundle, "email-sign-in-or-create-an-account",
 					new String[] {
-						"<a class=\"body-link\" href=\"" + _FARO_URL + "\">",
+						"<a class=\"body-link\" href=\"" +
+							FaroPropsValues.FARO_URL + "\">",
 						"</a>",
 						"<b class=\"link-override\">" +
 							faroUser.getEmailAddress() + "</strong>"
@@ -334,8 +327,6 @@ public class FaroProjectLocalServiceImpl
 
 		return faroProjectPersistence.update(faroProject);
 	}
-
-	private static final String _FARO_URL = System.getenv("FARO_URL");
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		FaroProjectLocalServiceImpl.class);

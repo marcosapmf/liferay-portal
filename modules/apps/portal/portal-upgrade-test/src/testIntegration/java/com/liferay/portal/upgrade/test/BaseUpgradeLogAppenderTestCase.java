@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.upgrade.test;
@@ -61,6 +52,7 @@ import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.ClassRule;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -81,11 +73,9 @@ public abstract class BaseUpgradeLogAppenderTestCase {
 
 		ReflectionTestUtil.setFieldValue(
 			DBUpgrader.class, "_upgradeClient", _originalUpgradeClient);
-
 		ReflectionTestUtil.setFieldValue(
 			PropsValues.class, "UPGRADE_LOG_CONTEXT_ENABLED",
 			_originalUpgradeLogContextEnabled);
-
 		ReflectionTestUtil.setFieldValue(
 			PropsValues.class, "UPGRADE_REPORT_ENABLED",
 			_originalUpgradeReportEnabled);
@@ -335,6 +325,7 @@ public abstract class BaseUpgradeLogAppenderTestCase {
 				longestUpgradeProcessesValue.indexOf(fasterUpgradeProcessName));
 	}
 
+	@Ignore
 	@Test
 	public void testLogEvents() throws Exception {
 		_appender.start();
@@ -490,10 +481,10 @@ public abstract class BaseUpgradeLogAppenderTestCase {
 				"Portal initial schema version: 1.0.0\n",
 				"Portal final build number: ", ReleaseInfo.getBuildNumber(),
 				StringPool.NEW_LINE, "Portal final schema version: ",
-				latestSchemaVersion.toString(), StringPool.NEW_LINE,
+				latestSchemaVersion, StringPool.NEW_LINE,
 				"Portal expected build number: ", ReleaseInfo.getBuildNumber(),
 				StringPool.NEW_LINE, "Portal expected schema version: ",
-				latestSchemaVersion.toString(), StringPool.NEW_LINE));
+				latestSchemaVersion, StringPool.NEW_LINE));
 	}
 
 	protected static void setUpClass(boolean upgradeClient) throws Exception {

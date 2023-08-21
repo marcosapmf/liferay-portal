@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.payment.internal.gateway;
@@ -20,9 +11,11 @@ import com.liferay.commerce.payment.audit.CommercePaymentEntryAuditTypeRegistry;
 import com.liferay.commerce.payment.configuration.CommercePaymentEntryAuditConfiguration;
 import com.liferay.commerce.payment.constants.CommercePaymentEntryAuditConstants;
 import com.liferay.commerce.payment.gateway.CommercePaymentGateway;
+import com.liferay.commerce.payment.integration.CommercePaymentIntegration;
 import com.liferay.commerce.payment.model.CommercePaymentEntry;
 import com.liferay.commerce.payment.service.CommercePaymentEntryAuditLocalService;
 import com.liferay.commerce.payment.service.CommercePaymentEntryLocalService;
+import com.liferay.commerce.payment.util.CommercePaymentHelper;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.model.User;
@@ -30,6 +23,8 @@ import com.liferay.portal.kernel.module.configuration.ConfigurationException;
 import com.liferay.portal.kernel.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserService;
+import com.liferay.portal.kernel.transaction.Propagation;
+import com.liferay.portal.kernel.transaction.Transactional;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 
 import org.osgi.service.component.annotations.Component;
@@ -42,6 +37,10 @@ import org.osgi.service.component.annotations.Reference;
 public class CommercePaymentGatewayImpl implements CommercePaymentGateway {
 
 	@Override
+	@Transactional(
+		propagation = Propagation.REQUIRED, readOnly = false,
+		rollbackFor = Exception.class
+	)
 	public CommercePaymentEntry authorize(
 			CommercePaymentEntry commercePaymentEntry)
 		throws PortalException {
@@ -50,10 +49,19 @@ public class CommercePaymentGatewayImpl implements CommercePaymentGateway {
 			throw new UnsupportedOperationException();
 		}
 
+		CommercePaymentIntegration commercePaymentIntegration =
+			_commercePaymentHelper.getCommercePaymentIntegration(
+				commercePaymentEntry.getCommerceChannelId(),
+				commercePaymentEntry.getPaymentIntegrationKey());
+
+		CommercePaymentEntry authorizedCommercePaymentEntry =
+			commercePaymentIntegration.authorize(commercePaymentEntry);
+
 		commercePaymentEntry =
 			_commercePaymentEntryLocalService.updateCommercePaymentEntry(
 				commercePaymentEntry.getCommercePaymentEntryId(),
-				CommercePaymentEntryConstants.STATUS_AUTHORIZED, null);
+				CommercePaymentEntryConstants.STATUS_AUTHORIZED,
+				authorizedCommercePaymentEntry.getTransactionCode());
 
 		CommercePaymentEntryAuditConfiguration
 			commercePaymentEntryAuditConfiguration =
@@ -90,6 +98,10 @@ public class CommercePaymentGatewayImpl implements CommercePaymentGateway {
 	}
 
 	@Override
+	@Transactional(
+		propagation = Propagation.REQUIRED, readOnly = false,
+		rollbackFor = Exception.class
+	)
 	public CommercePaymentEntry cancel(
 			CommercePaymentEntry commercePaymentEntry)
 		throws PortalException {
@@ -98,10 +110,19 @@ public class CommercePaymentGatewayImpl implements CommercePaymentGateway {
 			throw new UnsupportedOperationException();
 		}
 
+		CommercePaymentIntegration commercePaymentIntegration =
+			_commercePaymentHelper.getCommercePaymentIntegration(
+				commercePaymentEntry.getCommerceChannelId(),
+				commercePaymentEntry.getPaymentIntegrationKey());
+
+		CommercePaymentEntry cancelledCommercePaymentEntry =
+			commercePaymentIntegration.cancel(commercePaymentEntry);
+
 		commercePaymentEntry =
 			_commercePaymentEntryLocalService.updateCommercePaymentEntry(
 				commercePaymentEntry.getCommercePaymentEntryId(),
-				CommercePaymentEntryConstants.STATUS_CANCELLED, null);
+				CommercePaymentEntryConstants.STATUS_CANCELLED,
+				cancelledCommercePaymentEntry.getTransactionCode());
 
 		CommercePaymentEntryAuditConfiguration
 			commercePaymentEntryAuditConfiguration =
@@ -137,6 +158,10 @@ public class CommercePaymentGatewayImpl implements CommercePaymentGateway {
 	}
 
 	@Override
+	@Transactional(
+		propagation = Propagation.REQUIRED, readOnly = false,
+		rollbackFor = Exception.class
+	)
 	public CommercePaymentEntry capture(
 			CommercePaymentEntry commercePaymentEntry)
 		throws PortalException {
@@ -145,10 +170,19 @@ public class CommercePaymentGatewayImpl implements CommercePaymentGateway {
 			throw new UnsupportedOperationException();
 		}
 
+		CommercePaymentIntegration commercePaymentIntegration =
+			_commercePaymentHelper.getCommercePaymentIntegration(
+				commercePaymentEntry.getCommerceChannelId(),
+				commercePaymentEntry.getPaymentIntegrationKey());
+
+		CommercePaymentEntry capturedCommercePaymentEntry =
+			commercePaymentIntegration.capture(commercePaymentEntry);
+
 		commercePaymentEntry =
 			_commercePaymentEntryLocalService.updateCommercePaymentEntry(
 				commercePaymentEntry.getCommercePaymentEntryId(),
-				CommercePaymentEntryConstants.STATUS_COMPLETED, null);
+				CommercePaymentEntryConstants.STATUS_COMPLETED,
+				capturedCommercePaymentEntry.getTransactionCode());
 
 		CommercePaymentEntryAuditConfiguration
 			commercePaymentEntryAuditConfiguration =
@@ -185,6 +219,10 @@ public class CommercePaymentGatewayImpl implements CommercePaymentGateway {
 	}
 
 	@Override
+	@Transactional(
+		propagation = Propagation.REQUIRED, readOnly = false,
+		rollbackFor = Exception.class
+	)
 	public CommercePaymentEntry refund(
 			CommercePaymentEntry commercePaymentEntry)
 		throws PortalException {
@@ -193,10 +231,19 @@ public class CommercePaymentGatewayImpl implements CommercePaymentGateway {
 			throw new UnsupportedOperationException();
 		}
 
+		CommercePaymentIntegration commercePaymentIntegration =
+			_commercePaymentHelper.getCommercePaymentIntegration(
+				commercePaymentEntry.getCommerceChannelId(),
+				commercePaymentEntry.getPaymentIntegrationKey());
+
+		CommercePaymentEntry refundedCommercePaymentEntry =
+			commercePaymentIntegration.refund(commercePaymentEntry);
+
 		commercePaymentEntry =
 			_commercePaymentEntryLocalService.updateCommercePaymentEntry(
 				commercePaymentEntry.getCommercePaymentEntryId(),
-				CommercePaymentEntryConstants.STATUS_REFUND, null);
+				CommercePaymentEntryConstants.STATUS_REFUND,
+				refundedCommercePaymentEntry.getTransactionCode());
 
 		CommercePaymentEntryAuditConfiguration
 			commercePaymentEntryAuditConfiguration =
@@ -259,6 +306,9 @@ public class CommercePaymentGatewayImpl implements CommercePaymentGateway {
 
 	@Reference
 	private CommercePaymentEntryLocalService _commercePaymentEntryLocalService;
+
+	@Reference
+	private CommercePaymentHelper _commercePaymentHelper;
 
 	@Reference
 	private ConfigurationProvider _configurationProvider;

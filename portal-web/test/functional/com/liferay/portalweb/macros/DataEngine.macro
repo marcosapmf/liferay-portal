@@ -7,7 +7,10 @@ definition {
 
 		var key_fieldFieldLabel = ${fieldFieldLabel};
 		var key_fieldName = ${fieldName};
-		var fieldReference = StringUtil.replace(${fieldFieldLabel}, " ", "");
+
+		if (!(isSet(fieldReference))) {
+			var fieldReference = StringUtil.replace(${fieldFieldLabel}, " ", "");
+		}
 
 		if (isSet(fieldLocation)) {
 			DragAndDrop.javaScriptDragAndDropToObject(
@@ -80,9 +83,9 @@ definition {
 				key_fieldName = "fieldReference",
 				locator1 = "Sidebar#TEXT_INPUT",
 				value1 = ${fieldReference});
-
-			Click(locator1 = "Sidebar#BACK");
 		}
+
+		Click(locator1 = "Sidebar#BACK");
 	}
 
 	macro addFieldGroupWithFields {
@@ -705,6 +708,13 @@ definition {
 		}
 	}
 
+	macro assertFieldInFieldsGroupRepeated {
+		AssertElementPresent(
+			key_fieldName = ${fieldName},
+			key_index = ${index},
+			locator1 = "WCEditWebContent#REPEATED_FIELD_IN_FIELDS_GROUP");
+	}
+
 	macro assertFieldNotPresent {
 		if (isSet(fieldFieldLabel)) {
 			AssertElementNotPresent(
@@ -1227,10 +1237,17 @@ definition {
 	}
 
 	macro editFieldSearchable {
-		AssertClick.assertPartialTextClickAt(
-			key_fieldFieldLabel = ${fieldFieldLabel},
-			locator1 = "DDMEditStructure#FORM_FIELD_CONTAINER",
-			value1 = ${fieldFieldLabel});
+		if (${fieldFieldLabel} == "Boolean") {
+			Click(
+				key_fieldLabel = ${fieldFieldLabel},
+				locator1 = "Checkbox#CHECKBOX_LABEL");
+		}
+		else {
+			AssertClick.assertPartialTextClickAt(
+				key_fieldFieldLabel = ${fieldFieldLabel},
+				locator1 = "DDMEditStructure#FORM_FIELD_CONTAINER",
+				value1 = ${fieldFieldLabel});
+		}
 
 		Navigator.gotoNavTab(navTab = "Advanced");
 
@@ -1946,7 +1963,7 @@ definition {
 	}
 
 	macro waitForAutoSave {
-		if (IsElementPresent(locator1 = "Button#PUBLISH")) {
+		if (IsElementPresent(key_text = "Publish", locator1 = "Button#ANY")) {
 			Button.clickPublish();
 		}
 		else if (IsElementPresent(locator1 = "Button#SAVE")) {

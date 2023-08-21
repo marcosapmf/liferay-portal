@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.asset.categories.admin.web.internal.info.item.provider;
@@ -27,8 +18,10 @@ import com.liferay.info.item.provider.InfoItemFieldValuesProvider;
 import com.liferay.info.localized.InfoLocalizedValue;
 import com.liferay.layout.display.page.LayoutDisplayPageProvider;
 import com.liferay.layout.display.page.LayoutDisplayPageProviderRegistry;
+import com.liferay.layout.page.template.info.item.provider.DisplayPageInfoItemFieldSetProvider;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
@@ -54,19 +47,31 @@ public class AssetCategoryInfoItemFieldValuesProvider
 	public InfoItemFieldValues getInfoItemFieldValues(
 		AssetCategory assetCategory) {
 
-		return InfoItemFieldValues.builder(
-		).infoFieldValues(
-			_getAssetCategoryInfoFieldValues(assetCategory)
-		).infoFieldValues(
-			_infoItemFieldReaderFieldSetProvider.getInfoFieldValues(
-				AssetCategory.class.getName(), assetCategory)
-		).infoFieldValues(
-			_templateInfoItemFieldSetProvider.getInfoFieldValues(
-				AssetCategory.class.getName(), assetCategory)
-		).infoItemReference(
-			new InfoItemReference(
-				AssetCategory.class.getName(), assetCategory.getCategoryId())
-		).build();
+		try {
+			return InfoItemFieldValues.builder(
+			).infoFieldValues(
+				_getAssetCategoryInfoFieldValues(assetCategory)
+			).infoFieldValues(
+				_displayPageInfoItemFieldSetProvider.getInfoFieldValues(
+					new InfoItemReference(
+						AssetCategory.class.getName(),
+						assetCategory.getCategoryId()),
+					StringPool.BLANK, _getThemeDisplay())
+			).infoFieldValues(
+				_infoItemFieldReaderFieldSetProvider.getInfoFieldValues(
+					AssetCategory.class.getName(), assetCategory)
+			).infoFieldValues(
+				_templateInfoItemFieldSetProvider.getInfoFieldValues(
+					AssetCategory.class.getName(), assetCategory)
+			).infoItemReference(
+				new InfoItemReference(
+					AssetCategory.class.getName(),
+					assetCategory.getCategoryId())
+			).build();
+		}
+		catch (Exception exception) {
+			throw new RuntimeException("Unexpected exception", exception);
+		}
 	}
 
 	private List<InfoFieldValue<Object>> _getAssetCategoryInfoFieldValues(
@@ -115,7 +120,9 @@ public class AssetCategoryInfoItemFieldValuesProvider
 
 		ThemeDisplay themeDisplay = _getThemeDisplay();
 
-		if (themeDisplay != null) {
+		if ((themeDisplay != null) &&
+			!FeatureFlagManagerUtil.isEnabled("LPS-183727")) {
+
 			assetCategoryInfoFieldValues.add(
 				new InfoFieldValue<>(
 					AssetCategoryInfoItemFields.displayPageURLInfoField,
@@ -170,6 +177,10 @@ public class AssetCategoryInfoItemFieldValuesProvider
 
 	@Reference
 	private AssetVocabularyLocalService _assetVocabularyLocalService;
+
+	@Reference
+	private DisplayPageInfoItemFieldSetProvider
+		_displayPageInfoItemFieldSetProvider;
 
 	@Reference
 	private InfoItemFieldReaderFieldSetProvider

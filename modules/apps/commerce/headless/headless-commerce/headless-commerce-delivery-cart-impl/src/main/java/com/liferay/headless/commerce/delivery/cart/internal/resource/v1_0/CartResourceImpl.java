@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.delivery.cart.internal.resource.v1_0;
@@ -26,6 +17,7 @@ import com.liferay.commerce.currency.model.CommerceCurrency;
 import com.liferay.commerce.currency.service.CommerceCurrencyLocalService;
 import com.liferay.commerce.exception.CommerceOrderBillingAddressException;
 import com.liferay.commerce.exception.CommerceOrderGuestCheckoutException;
+import com.liferay.commerce.exception.CommerceOrderPriceException;
 import com.liferay.commerce.exception.CommerceOrderShippingAddressException;
 import com.liferay.commerce.exception.CommerceOrderShippingMethodException;
 import com.liferay.commerce.exception.CommerceOrderStatusException;
@@ -54,8 +46,8 @@ import com.liferay.headless.commerce.delivery.cart.dto.v1_0.Address;
 import com.liferay.headless.commerce.delivery.cart.dto.v1_0.Cart;
 import com.liferay.headless.commerce.delivery.cart.dto.v1_0.CartItem;
 import com.liferay.headless.commerce.delivery.cart.dto.v1_0.CouponCode;
-import com.liferay.headless.commerce.delivery.cart.internal.dto.v1_0.CartItemDTOConverterContext;
-import com.liferay.headless.commerce.delivery.cart.internal.dto.v1_0.constants.DTOConverterConstants;
+import com.liferay.headless.commerce.delivery.cart.internal.dto.v1_0.converter.CartItemDTOConverterContext;
+import com.liferay.headless.commerce.delivery.cart.internal.dto.v1_0.converter.constants.DTOConverterConstants;
 import com.liferay.headless.commerce.delivery.cart.resource.v1_0.CartResource;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
@@ -82,6 +74,8 @@ import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
+
+import java.math.BigDecimal;
 
 import java.security.Key;
 
@@ -216,24 +210,27 @@ public class CartResourceImpl extends BaseCartResourceImpl {
 			cart = _toCart(commerceOrder);
 		}
 		catch (Exception exception) {
+			cart.setValid(false);
+
 			if (exception.getCause() instanceof
 					CommerceOrderBillingAddressException) {
 
-				cart.setValid(false);
 				cart.setErrorMessages(new String[] {"Invalid billing address"});
 			}
 
 			if (exception.getCause() instanceof
 					CommerceOrderGuestCheckoutException) {
 
-				cart.setValid(false);
 				cart.setErrorMessages(new String[] {"Invalid guest checkout"});
+			}
+
+			if (exception.getCause() instanceof CommerceOrderPriceException) {
+				cart.setErrorMessages(new String[] {"Invalid price"});
 			}
 
 			if (exception.getCause() instanceof
 					CommerceOrderShippingAddressException) {
 
-				cart.setValid(false);
 				cart.setErrorMessages(
 					new String[] {"Invalid shipping address"});
 			}
@@ -241,12 +238,10 @@ public class CartResourceImpl extends BaseCartResourceImpl {
 			if (exception.getCause() instanceof
 					CommerceOrderShippingMethodException) {
 
-				cart.setValid(false);
 				cart.setErrorMessages(new String[] {"Invalid shipping method"});
 			}
 
 			if (exception.getCause() instanceof CommerceOrderStatusException) {
-				cart.setValid(false);
 				cart.setErrorMessages(new String[] {"Invalid cart status"});
 			}
 		}
@@ -391,9 +386,10 @@ public class CartResourceImpl extends BaseCartResourceImpl {
 
 		_commerceOrderItemService.addOrUpdateCommerceOrderItem(
 			commerceOrder.getCommerceOrderId(), cpInstance.getCPInstanceId(),
-			cartItem.getOptions(), GetterUtil.get(cartItem.getQuantity(), 1),
-			GetterUtil.getLong(cartItem.getReplacedSkuId()), 0, commerceContext,
-			serviceContext);
+			cartItem.getOptions(),
+			BigDecimal.valueOf(GetterUtil.get(cartItem.getQuantity(), 1)),
+			GetterUtil.getLong(cartItem.getReplacedSkuId()), 0,
+			StringPool.BLANK, commerceContext, serviceContext);
 	}
 
 	private void _addOrUpdateNestedResources(
@@ -755,7 +751,10 @@ public class CartResourceImpl extends BaseCartResourceImpl {
 			commerceOrder.getTotalDiscountAmount(),
 			commerceOrder.getTotalWithTaxAmount(), commerceContext, true);
 
-		// Expando
+		commerceOrder = _commerceOrderService.updatePrintedNote(
+			commerceOrder.getCommerceOrderId(),
+			GetterUtil.get(
+				cart.getPrintedNote(), commerceOrder.getPrintedNote()));
 
 		Map<String, ?> customFields = cart.getCustomFields();
 
@@ -765,8 +764,6 @@ public class CartResourceImpl extends BaseCartResourceImpl {
 				commerceOrder.getPrimaryKey(), customFields);
 		}
 
-		// Update nested resources
-
 		_addOrUpdateNestedResources(cart, commerceOrder, commerceContext);
 	}
 
@@ -774,7 +771,7 @@ public class CartResourceImpl extends BaseCartResourceImpl {
 	private AccountEntryLocalService _accountEntryLocalService;
 
 	@Reference(
-		target = "(component.name=com.liferay.headless.commerce.delivery.cart.internal.dto.v1_0.CartDTOConverter)"
+		target = "(component.name=com.liferay.headless.commerce.delivery.cart.internal.dto.v1_0.converter.CartDTOConverter)"
 	)
 	private DTOConverter<CommerceOrder, Cart> _cartDTOConverter;
 

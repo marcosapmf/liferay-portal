@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ServiceProvider from '../../ServiceProvider/index';
@@ -17,38 +8,60 @@ import {CURRENT_ORDER_UPDATED} from '../../utilities/eventsDefinitions';
 
 const CartResource = ServiceProvider.DeliveryCartAPI('v1');
 
-function formatCartItem(cpInstance) {
+function formatCartItem(
+	cpInstance,
+	namespace,
+	skuOptions,
+	skuOptionsNamespace
+) {
+	let optionsJSON = cpInstance.skuOptions || [];
+
+	if (namespace && skuOptionsNamespace && namespace === skuOptionsNamespace) {
+		optionsJSON = skuOptions;
+	}
+	else if (optionsJSON.length) {
+		optionsJSON = optionsJSON.map((optionJSON) => ({
+			...optionJSON,
+			value: optionJSON.skuOptionValueKey || optionJSON.value,
+		}));
+	}
+
 	return {
-		options: JSON.stringify(cpInstance.skuOptions || []),
+		options: JSON.stringify(optionsJSON),
 		quantity: cpInstance.quantity,
+		replacedSkuId: cpInstance.replacedSkuId ?? 0,
 		skuId: cpInstance.skuId,
 	};
 }
 
-export async function addToCart(cpInstances, cartId, channel, accountId) {
+export async function addToCart(
+	cpInstances,
+	cartId,
+	channel,
+	accountId,
+	orderTypeId,
+	namespace,
+	skuOptions,
+	skuOptionsNamespace
+) {
 	if (!cartId) {
 		const newCart = await CartResource.createCartByChannelId(channel.id, {
 			accountId,
-			cartItems: cpInstances.map(formatCartItem),
+			cartItems: cpInstances.map((cpInstance) =>
+				formatCartItem(
+					cpInstance,
+					namespace,
+					skuOptions,
+					skuOptionsNamespace
+				)
+			),
 			currencyCode: channel.currencyCode,
+			orderTypeId,
 		});
 
 		Liferay.fire(CURRENT_ORDER_UPDATED, {order: newCart});
 
 		return newCart;
-	}
-
-	if (cpInstances.length === 1) {
-		await CartResource.createItemByCartId(
-			cartId,
-			formatCartItem(cpInstances[0])
-		);
-
-		const updatedCart = await CartResource.getCartByIdWithItems(cartId);
-
-		Liferay.fire(CURRENT_ORDER_UPDATED, {order: updatedCart});
-
-		return updatedCart;
 	}
 
 	const fetchedCart = await CartResource.getCartByIdWithItems(cartId);
@@ -57,17 +70,45 @@ export async function addToCart(cpInstances, cartId, channel, accountId) {
 
 	cpInstances.forEach((cpInstance) => {
 		const includedCartItem = updatedCartItems.find((cartItem) => {
-			return (
-				cartItem.skuId === cpInstance.skuId &&
-				cartItem.options === JSON.stringify(cpInstance.skuOptions)
-			);
+			const optionsJSON = JSON.parse(cartItem.options);
+
+			let includedCartItem = cartItem.skuId === cpInstance.skuId;
+
+			if (includedCartItem) {
+				optionsJSON.forEach((optionJSON) => {
+					if (!includedCartItem) {
+						return;
+					}
+
+					const currentSkuOption = cpInstance.skuOptions?.find(
+						(skuOption) =>
+							optionJSON.skuOptionKey === skuOption.skuOptionKey
+					);
+
+					// eslint-disable-next-line no-unused-expressions
+					currentSkuOption
+						? (includedCartItem =
+								optionJSON.skuOptionValueKey ===
+								currentSkuOption.skuOptionValueKey)
+						: (includedCartItem = false);
+				});
+			}
+
+			return includedCartItem;
 		});
 
 		if (includedCartItem) {
 			includedCartItem.quantity += cpInstance.quantity;
 		}
 		else {
-			updatedCartItems.push(formatCartItem(cpInstance));
+			updatedCartItems.push(
+				formatCartItem(
+					cpInstance,
+					namespace,
+					skuOptions,
+					skuOptionsNamespace
+				)
+			);
 		}
 	});
 

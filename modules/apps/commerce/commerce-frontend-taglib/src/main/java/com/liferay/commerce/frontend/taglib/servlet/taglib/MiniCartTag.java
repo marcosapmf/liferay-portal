@@ -1,19 +1,11 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.frontend.taglib.servlet.taglib;
 
+import com.liferay.account.model.AccountEntry;
 import com.liferay.commerce.configuration.CommerceOrderFieldsConfiguration;
 import com.liferay.commerce.configuration.CommercePriceConfiguration;
 import com.liferay.commerce.constants.CommerceConstants;
@@ -45,6 +37,8 @@ import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.taglib.util.IncludeTag;
 
+import java.math.BigDecimal;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -69,6 +63,12 @@ public class MiniCartTag extends IncludeTag {
 				CommerceWebKeys.COMMERCE_CONTEXT);
 
 		try {
+			AccountEntry accountEntry = commerceContext.getAccountEntry();
+
+			if (accountEntry != null) {
+				_accountEntryId = accountEntry.getAccountEntryId();
+			}
+
 			_checkoutURL = StringPool.BLANK;
 
 			PortletURL portletURL = PortletProviderUtil.getPortletURL(
@@ -206,6 +206,7 @@ public class MiniCartTag extends IncludeTag {
 	protected void cleanUp() {
 		super.cleanUp();
 
+		_accountEntryId = 0;
 		_checkoutURL = null;
 		_commerceChannelGroupId = 0;
 		_commerceChannelId = 0;
@@ -231,6 +232,8 @@ public class MiniCartTag extends IncludeTag {
 
 	@Override
 	protected void setAttributes(HttpServletRequest httpServletRequest) {
+		httpServletRequest.setAttribute(
+			"liferay-commerce:cart:accountEntryId", _accountEntryId);
 		httpServletRequest.setAttribute(
 			"liferay-commerce:cart:cartViews", _views);
 		httpServletRequest.setAttribute(
@@ -272,8 +275,11 @@ public class MiniCartTag extends IncludeTag {
 		throws PortalException {
 
 		if (_displayTotalItemsQuantity) {
-			return _commerceOrderHttpHelper.getCommerceOrderItemsQuantity(
-				httpServletRequest);
+			BigDecimal quantity =
+				_commerceOrderHttpHelper.getCommerceOrderItemsQuantity(
+					httpServletRequest);
+
+			return quantity.intValue();
 		}
 
 		List<CommerceOrderItem> commerceOrderItems =
@@ -327,6 +333,7 @@ public class MiniCartTag extends IncludeTag {
 
 	private static final Log _log = LogFactoryUtil.getLog(MiniCartTag.class);
 
+	private long _accountEntryId;
 	private String _checkoutURL;
 	private long _commerceChannelGroupId;
 	private long _commerceChannelId;

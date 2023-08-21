@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.poshi.core.util;
@@ -72,6 +63,36 @@ public class StringUtil {
 			}
 
 			s = sb.toString();
+		}
+
+		return s;
+	}
+
+	public static void assertContains(String expectedText, String actualText) {
+		if (!contains(expectedText, actualText)) {
+			throw new RuntimeException(
+				"Expected text \"" + expectedText +
+					"\" does not contain atual text\"" + actualText + "\"");
+		}
+	}
+
+	public static void assertEquals(String expectedText, String actualText) {
+		if (!equals(expectedText, actualText)) {
+			throw new RuntimeException(
+				"Expected text \"" + expectedText +
+					"\" does not equal actual text \"" + actualText + "\"");
+		}
+	}
+
+	public static String capitalize(String s) {
+		if ((s == null) || s.isEmpty()) {
+			return "";
+		}
+
+		char firstChar = s.charAt(0);
+
+		if (Character.isLowerCase(firstChar)) {
+			s = Character.toUpperCase(firstChar) + s.substring(1);
 		}
 
 		return s;

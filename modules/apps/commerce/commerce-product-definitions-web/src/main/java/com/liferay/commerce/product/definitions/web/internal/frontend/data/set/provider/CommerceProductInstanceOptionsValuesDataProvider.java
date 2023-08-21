@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.product.definitions.web.internal.frontend.data.set.provider;
@@ -33,7 +24,7 @@ import com.liferay.commerce.product.service.CPDefinitionOptionValueRelLocalServi
 import com.liferay.commerce.product.service.CPInstanceOptionValueRelLocalService;
 import com.liferay.commerce.product.service.CommerceChannelLocalService;
 import com.liferay.commerce.product.util.CPInstanceHelper;
-import com.liferay.commerce.product.util.JsonHelper;
+import com.liferay.commerce.product.util.CPJSONUtil;
 import com.liferay.commerce.service.CPDefinitionInventoryLocalService;
 import com.liferay.dynamic.data.mapping.data.provider.DDMDataProvider;
 import com.liferay.dynamic.data.mapping.data.provider.DDMDataProviderException;
@@ -43,6 +34,7 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
@@ -144,7 +136,7 @@ public class CommerceProductInstanceOptionsValuesDataProvider
 
 				// Collect filters and outputs
 
-				if (_jsonHelper.isEmpty(parameterValue)) {
+				if (CPJSONUtil.isEmpty(parameterValue)) {
 					requestedCPDefinitionOptionRels.add(cpDefinitionOptionRel);
 
 					continue;
@@ -152,9 +144,13 @@ public class CommerceProductInstanceOptionsValuesDataProvider
 
 				String optionValueKey = parameterValue;
 
-				if (_jsonHelper.isArray(parameterValue)) {
-					optionValueKey = _jsonHelper.getFirstElementStringValue(
+				if (JSONUtil.isJSONArray(parameterValue)) {
+					JSONArray jsonArray = CPJSONUtil.toJSONArray(
 						parameterValue);
+
+					if (jsonArray.length() > 0) {
+						optionValueKey = (String)jsonArray.get(0);
+					}
 				}
 
 				CPDefinitionOptionValueRel cpDefinitionOptionValueRel =
@@ -298,11 +294,14 @@ public class CommerceProductInstanceOptionsValuesDataProvider
 
 			String optionValueKey = parameterValue;
 
-			if (_jsonHelper.isArray(parameterValue) &&
-				!_jsonHelper.isEmpty(parameterValue)) {
+			if (!CPJSONUtil.isEmpty(parameterValue) &&
+				JSONUtil.isJSONArray(parameterValue)) {
 
-				optionValueKey = _jsonHelper.getFirstElementStringValue(
-					parameterValue);
+				JSONArray jsonArray = CPJSONUtil.toJSONArray(parameterValue);
+
+				if (jsonArray.length() > 0) {
+					optionValueKey = (String)jsonArray.get(0);
+				}
 			}
 
 			CPDefinitionOptionValueRel selectedCPDefinitionOptionValueRel =
@@ -681,8 +680,5 @@ public class CommerceProductInstanceOptionsValuesDataProvider
 
 	@Reference
 	private JSONFactory _jsonFactory;
-
-	@Reference
-	private JsonHelper _jsonHelper;
 
 }

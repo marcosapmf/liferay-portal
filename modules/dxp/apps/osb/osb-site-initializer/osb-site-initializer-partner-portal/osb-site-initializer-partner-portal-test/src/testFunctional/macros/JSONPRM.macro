@@ -15,8 +15,8 @@ definition {
 
 		JSONPRMAPI.changeClaimStatus(
 			claimId = ${claimId},
-			claimStatus = ${claimStatus},
-			statusKey = ${statusKey});
+			statusKey = ${statusKey},
+			userEmailAddress = ${userEmailAddress});
 	}
 
 	macro changeMDFStatus {
@@ -25,16 +25,16 @@ definition {
 		var statusKey = StringUtil.lowerCaseFirstLetter(${statusKey});
 
 		JSONPRMAPI.changeMDFStatus(
-			mdfStatus = ${mdfStatus},
-			requestId = ${requestId},
-			statusKey = ${statusKey});
+			requestId = ${staticRequestId},
+			statusKey = ${statusKey},
+			userEmailAddress = ${userEmailAddress});
 	}
 
 	macro createMDFRequest {
 		var totalCostOfExpense = 0;
 
 		if (!(isSet(userEmailAddress))) {
-			var userEmailAddress = "test@liferay.com";
+			var userEmailAddress = "pmu@partner.com";
 		}
 
 		if (!(isSet(accountEntryName))) {
@@ -101,10 +101,10 @@ definition {
 		var marketingDirectorReviewCondition = MathUtil.isGreaterThan(${totalMDFRequestAmount}, ${marketingDirectorReviewValue});
 
 		if (${marketingDirectorReviewCondition} == "true") {
-			var mdfRequestStatus = "Marketing Director Review";
+			var mdfRequestStatus = "MarketingDirectorReview";
 		}
 		else {
-			var mdfRequestStatus = "Pending Marketing Review";
+			var mdfRequestStatus = "PendingMarketingReview";
 		}
 
 		var mdfRequestStatusKey = StringUtil.lowerCaseFirstLetter(${mdfRequestStatus});
@@ -123,7 +123,8 @@ definition {
 			targetMarketOptions = ${targetMarketOptions},
 			targetRolesOptions = ${targetRolesOptions},
 			totalCostOfExpense = ${totalCostOfExpense},
-			totalMDFRequestAmount = ${totalMDFRequestAmount});
+			totalMDFRequestAmount = ${totalMDFRequestAmount},
+			userEmailAddress = ${userEmailAddress});
 
 		var requestId = JSONPRMAPI.addMDF(
 			accountEntryName = ${accountEntryName},
@@ -168,6 +169,7 @@ definition {
 
 		for (var budgetValue : list ${budgetValueList}) {
 			JSONPRMAPI.addBudget(
+				activityExternalReferenceCode = ${activityExternalReferenceCode},
 				activityId = ${activityId},
 				budgetValue = ${budgetValue},
 				expenseOption = ${expenseOption});
@@ -209,6 +211,7 @@ definition {
 
 			for (var secondBudgetValue : list ${secondBudgetValueList}) {
 				JSONPRMAPI.addBudget(
+					activityExternalReferenceCode = ${activityExternalReferenceCode},
 					activityId = ${secondActivityId},
 					budgetValue = ${secondBudgetValue},
 					expenseOption = ${expenseOption});
@@ -216,6 +219,14 @@ definition {
 		}
 
 		return ${requestId};
+	}
+
+	macro updateAccount {
+		if (!(isSet(accountName))) {
+			var accountName = "Company Name 1";
+		}
+
+		JSONPRMAPI.updateAccount(accountName = ${accountName});
 	}
 
 }

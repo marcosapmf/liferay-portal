@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.inventory.internal.method;
@@ -27,6 +18,7 @@ import com.liferay.commerce.inventory.service.CommerceInventoryWarehouseItemLoca
 import com.liferay.commerce.inventory.service.CommerceInventoryWarehouseItemService;
 import com.liferay.commerce.inventory.type.CommerceInventoryAuditType;
 import com.liferay.commerce.inventory.type.CommerceInventoryAuditTypeRegistry;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
@@ -34,6 +26,8 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.transaction.Propagation;
 import com.liferay.portal.kernel.transaction.Transactional;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
+
+import java.math.BigDecimal;
 
 import java.util.Locale;
 import java.util.Map;
@@ -66,7 +60,7 @@ public class DefaultCommerceInventoryMethodImpl
 
 		if (bookedQuantityId > 0) {
 			_commerceBookedQuantityLocalService.consumeCommerceBookedQuantity(
-				bookedQuantityId, quantity);
+				bookedQuantityId, BigDecimal.valueOf(quantity));
 		}
 
 		decreaseStockQuantity(
@@ -77,8 +71,9 @@ public class DefaultCommerceInventoryMethodImpl
 				CommerceInventoryConstants.AUDIT_TYPE_CONSUME_QUANTITY);
 
 		_commerceInventoryAuditLocalService.addCommerceInventoryAudit(
-			userId, sku, commerceInventoryAuditType.getType(),
-			commerceInventoryAuditType.getLog(context), quantity);
+			userId, commerceInventoryAuditType.getType(),
+			commerceInventoryAuditType.getLog(context),
+			BigDecimal.valueOf(quantity), sku, StringPool.BLANK);
 
 		for (CommerceInventoryEngineContributor
 				commerceInventoryEngineContributor :
@@ -105,13 +100,18 @@ public class DefaultCommerceInventoryMethodImpl
 				fetchCommerceInventoryWarehouseItem(
 					commerceInventoryWarehouseId, sku);
 
+		BigDecimal commerceInventoryWarehouseItemQuantity =
+			commerceInventoryWarehouseItem.getQuantity();
+
 		_commerceInventoryWarehouseItemLocalService.
 			updateCommerceInventoryWarehouseItem(
 				userId,
 				commerceInventoryWarehouseItem.
 					getCommerceInventoryWarehouseItemId(),
-				commerceInventoryWarehouseItem.getQuantity() - quantity,
-				commerceInventoryWarehouseItem.getMvccVersion());
+				commerceInventoryWarehouseItem.getMvccVersion(),
+				commerceInventoryWarehouseItemQuantity.subtract(
+					BigDecimal.valueOf(quantity)),
+				commerceInventoryWarehouseItem.getUnitOfMeasureKey());
 
 		for (CommerceInventoryEngineContributor
 				commerceInventoryEngineContributor :
@@ -150,23 +150,28 @@ public class DefaultCommerceInventoryMethodImpl
 	public int getStockQuantity(
 		long companyId, long commerceChannelGroupId, String sku) {
 
-		return Math.min(
+		BigDecimal stockQuantity =
 			_commerceInventoryWarehouseItemService.getStockQuantity(
-				companyId, commerceChannelGroupId, sku),
-			getStockQuantity(companyId, sku));
+				companyId, commerceChannelGroupId, sku);
+
+		BigDecimal subtract = stockQuantity.subtract(
+			_commerceBookedQuantityLocalService.getCommerceBookedQuantity(
+				companyId, commerceChannelGroupId, sku));
+
+		return subtract.intValue();
 	}
 
 	@Override
 	public int getStockQuantity(long companyId, String sku) {
-		int stockQuantity =
+		BigDecimal stockQuantity =
 			_commerceInventoryWarehouseItemService.getStockQuantity(
 				companyId, sku);
 
-		int commerceBookedQuantity =
+		BigDecimal subtract = stockQuantity.subtract(
 			_commerceBookedQuantityLocalService.getCommerceBookedQuantity(
-				companyId, sku);
+				companyId, sku));
 
-		return stockQuantity - commerceBookedQuantity;
+		return subtract.intValue();
 	}
 
 	@Override
@@ -193,13 +198,18 @@ public class DefaultCommerceInventoryMethodImpl
 					commerceInventoryWarehouseId, sku);
 
 		try {
+			BigDecimal commerceInventoryWarehouseItemQuantity =
+				commerceInventoryWarehouseItem.getQuantity();
+
 			_commerceInventoryWarehouseItemLocalService.
 				updateCommerceInventoryWarehouseItem(
 					userId,
 					commerceInventoryWarehouseItem.
 						getCommerceInventoryWarehouseItemId(),
-					commerceInventoryWarehouseItem.getQuantity() + quantity,
-					commerceInventoryWarehouseItem.getMvccVersion());
+					commerceInventoryWarehouseItem.getMvccVersion(),
+					commerceInventoryWarehouseItemQuantity.add(
+						BigDecimal.valueOf(quantity)),
+					commerceInventoryWarehouseItem.getUnitOfMeasureKey());
 		}
 		catch (MVCCException mvccException) {
 			_log.error(mvccException);
@@ -212,8 +222,9 @@ public class DefaultCommerceInventoryMethodImpl
 				CommerceInventoryConstants.AUDIT_TYPE_INCREASE_QUANTITY);
 
 		_commerceInventoryAuditLocalService.addCommerceInventoryAudit(
-			userId, sku, commerceInventoryAuditType.getType(),
-			commerceInventoryAuditType.getLog(null), quantity);
+			userId, commerceInventoryAuditType.getType(),
+			commerceInventoryAuditType.getLog(null),
+			BigDecimal.valueOf(quantity), sku, StringPool.BLANK);
 
 		for (CommerceInventoryEngineContributor
 				commerceInventoryEngineContributor :

@@ -1,33 +1,30 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.admin.user.internal.resource.v1_0;
 
 import com.liferay.account.constants.AccountActionKeys;
 import com.liferay.account.constants.AccountConstants;
+import com.liferay.account.constants.AccountListTypeConstants;
 import com.liferay.account.model.AccountEntry;
+import com.liferay.account.service.AccountEntryLocalService;
 import com.liferay.account.service.AccountEntryOrganizationRelLocalService;
 import com.liferay.account.service.AccountEntryService;
+import com.liferay.account.service.AccountEntryUserRelLocalService;
 import com.liferay.headless.admin.user.dto.v1_0.Account;
-import com.liferay.headless.admin.user.internal.dto.v1_0.converter.AccountResourceDTOConverter;
-import com.liferay.headless.admin.user.internal.dto.v1_0.converter.OrganizationResourceDTOConverter;
+import com.liferay.headless.admin.user.dto.v1_0.Organization;
+import com.liferay.headless.admin.user.dto.v1_0.PostalAddress;
+import com.liferay.headless.admin.user.dto.v1_0.UserAccount;
+import com.liferay.headless.admin.user.internal.dto.v1_0.converter.constants.DTOConverterConstants;
 import com.liferay.headless.admin.user.internal.dto.v1_0.util.CustomFieldsUtil;
+import com.liferay.headless.admin.user.internal.dto.v1_0.util.ServiceBuilderAddressUtil;
 import com.liferay.headless.admin.user.internal.odata.entity.v1_0.AccountEntityModel;
 import com.liferay.headless.admin.user.resource.v1_0.AccountResource;
 import com.liferay.headless.common.spi.service.context.ServiceContextRequestUtil;
 import com.liferay.petra.function.UnsafeConsumer;
-import com.liferay.portal.kernel.model.Organization;
+import com.liferay.portal.kernel.model.Address;
 import com.liferay.portal.kernel.search.BooleanClauseOccur;
 import com.liferay.portal.kernel.search.BooleanQuery;
 import com.liferay.portal.kernel.search.Field;
@@ -37,16 +34,20 @@ import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.search.filter.TermFilter;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
+import com.liferay.portal.kernel.service.AddressLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.PortletKeys;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.odata.entity.EntityModel;
+import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterContext;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
+import com.liferay.portal.vulcan.dto.converter.util.DTOConverterUtil;
 import com.liferay.portal.vulcan.fields.NestedField;
 import com.liferay.portal.vulcan.fields.NestedFieldSupport;
 import com.liferay.portal.vulcan.pagination.Page;
@@ -54,7 +55,9 @@ import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.portal.vulcan.util.SearchUtil;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import javax.ws.rs.core.MultivaluedMap;
 
@@ -86,8 +89,8 @@ public class AccountResourceImpl
 		throws Exception {
 
 		deleteAccount(
-			_accountResourceDTOConverter.getAccountEntryId(
-				externalReferenceCode));
+			DTOConverterUtil.getModelPrimaryKey(
+				_accountResourceDTOConverter, externalReferenceCode));
 	}
 
 	@Override
@@ -109,8 +112,8 @@ public class AccountResourceImpl
 		for (String externalReferenceCode : externalReferenceCodes) {
 			_accountEntryOrganizationRelLocalService.
 				deleteAccountEntryOrganizationRel(
-					_accountResourceDTOConverter.getAccountEntryId(
-						externalReferenceCode),
+					DTOConverterUtil.getModelPrimaryKey(
+						_accountResourceDTOConverter, externalReferenceCode),
 					organizationId);
 		}
 	}
@@ -126,8 +129,8 @@ public class AccountResourceImpl
 		throws Exception {
 
 		return getAccount(
-			_accountResourceDTOConverter.getAccountEntryId(
-				externalReferenceCode));
+			DTOConverterUtil.getModelPrimaryKey(
+				_accountResourceDTOConverter, externalReferenceCode));
 	}
 
 	@Override
@@ -182,17 +185,13 @@ public class AccountResourceImpl
 	}
 
 	@NestedField(
-		parentClass = com.liferay.headless.admin.user.dto.v1_0.Organization.class,
-		value = "organizationAccounts"
+		parentClass = Organization.class, value = "organizationAccounts"
 	)
 	@Override
 	public Page<Account> getOrganizationAccountsPage(
 			String organizationId, String search, Filter filter,
 			Pagination pagination, Sort[] sorts)
 		throws Exception {
-
-		Organization organization = _organizationResourceDTOConverter.getObject(
-			organizationId);
 
 		return _getOrganizationAccountsPage(
 			Collections.emptyMap(),
@@ -203,7 +202,10 @@ public class AccountResourceImpl
 				booleanFilter.add(
 					new TermFilter(
 						"organizationIds",
-						String.valueOf(organization.getOrganizationId())),
+						String.valueOf(
+							DTOConverterUtil.getModelPrimaryKey(
+								_organizationResourceDTOConverter,
+								organizationId))),
 					BooleanClauseOccur.MUST);
 			},
 			search, filter, pagination, sorts);
@@ -236,8 +238,20 @@ public class AccountResourceImpl
 		AccountEntry accountEntry = _accountEntryService.addAccountEntry(
 			contextUser.getUserId(), _getParentAccountId(account),
 			account.getName(), account.getDescription(), _getDomains(account),
-			null, null, null, _getType(account), _getStatus(account),
-			_getServiceContext(account));
+			null, null, account.getTaxId(), _getType(account),
+			_getStatus(account), _getServiceContext(account));
+
+		if (_isValidId(account.getDefaultBillingAddressId())) {
+			_accountEntryLocalService.updateDefaultBillingAddressId(
+				accountEntry.getAccountEntryId(),
+				account.getDefaultBillingAddressId());
+		}
+
+		if (_isValidId(account.getDefaultShippingAddressId())) {
+			_accountEntryLocalService.updateDefaultShippingAddressId(
+				accountEntry.getAccountEntryId(),
+				account.getDefaultShippingAddressId());
+		}
 
 		accountEntry = _accountEntryService.updateExternalReferenceCode(
 			accountEntry.getAccountEntryId(),
@@ -246,6 +260,23 @@ public class AccountResourceImpl
 		_accountEntryOrganizationRelLocalService.
 			setAccountEntryOrganizationRels(
 				accountEntry.getAccountEntryId(), _getOrganizationIds(account));
+
+		_accountEntryUserRelLocalService.setAccountEntryUserRels(
+			accountEntry.getAccountEntryId(),
+			_getAccountUserAccountIds(account));
+
+		for (Address address : _getAddresses(account)) {
+			_addressLocalService.addAddress(
+				address.getExternalReferenceCode(), contextUser.getUserId(),
+				AccountEntry.class.getName(), accountEntry.getAccountEntryId(),
+				address.getName(), address.getDescription(),
+				address.getStreet1(), address.getStreet2(),
+				address.getStreet3(), address.getCity(), address.getZip(),
+				address.getRegionId(), address.getCountryId(),
+				address.getListTypeId(), address.getMailing(),
+				address.getPrimary(), address.getPhoneNumber(),
+				_getServiceContext(account));
+		}
 
 		return _toAccount(accountEntry);
 	}
@@ -268,8 +299,8 @@ public class AccountResourceImpl
 		for (String externalReferenceCode : externalReferenceCodes) {
 			_accountEntryOrganizationRelLocalService.
 				addAccountEntryOrganizationRel(
-					_accountResourceDTOConverter.getAccountEntryId(
-						externalReferenceCode),
+					DTOConverterUtil.getModelPrimaryKey(
+						_accountResourceDTOConverter, externalReferenceCode),
 					organizationId);
 		}
 	}
@@ -284,6 +315,21 @@ public class AccountResourceImpl
 		_accountEntryOrganizationRelLocalService.
 			setAccountEntryOrganizationRels(
 				accountId, _getOrganizationIds(account));
+
+		_accountEntryUserRelLocalService.setAccountEntryUserRels(
+			accountId, _getAccountUserAccountIds(account));
+
+		for (Address address : _getAddresses(account)) {
+			_addressLocalService.addAddress(
+				address.getExternalReferenceCode(), contextUser.getUserId(),
+				AccountEntry.class.getName(), accountId, address.getName(),
+				address.getDescription(), address.getStreet1(),
+				address.getStreet2(), address.getStreet3(), address.getCity(),
+				address.getZip(), address.getRegionId(), address.getCountryId(),
+				address.getListTypeId(), address.getMailing(),
+				address.getPrimary(), address.getPhoneNumber(),
+				_getServiceContext(account));
+		}
 
 		return _toAccount(
 			_accountEntryService.updateAccountEntry(
@@ -304,6 +350,36 @@ public class AccountResourceImpl
 				account.getDescription(), _getDomains(account), null, null,
 				null, _getType(account), _getStatus(account),
 				_getServiceContext(account)));
+	}
+
+	private long[] _getAccountUserAccountIds(Account account) {
+		UserAccount[] userAccounts = account.getAccountUserAccounts();
+
+		if (userAccounts == null) {
+			return new long[0];
+		}
+
+		Long[] userAccountIds = transform(
+			userAccounts, userAccount -> userAccount.getId(), Long.class);
+
+		return ArrayUtil.toArray(userAccountIds);
+	}
+
+	private List<Address> _getAddresses(Account account) {
+		PostalAddress[] postalAddresses = account.getPostalAddresses();
+
+		if (postalAddresses == null) {
+			return Collections.emptyList();
+		}
+
+		return ListUtil.filter(
+			transformToList(
+				postalAddresses,
+				_postalAddress ->
+					ServiceBuilderAddressUtil.toServiceBuilderAddress(
+						contextCompany.getCompanyId(), _postalAddress,
+						AccountListTypeConstants.ACCOUNT_ENTRY_ADDRESS)),
+			Objects::nonNull);
 	}
 
 	private String[] _getDomains(Account account) {
@@ -481,10 +557,21 @@ public class AccountResourceImpl
 		return type;
 	}
 
+	private boolean _isValidId(Long value) {
+		if ((value == null) || (value <= 0)) {
+			return false;
+		}
+
+		return true;
+	}
+
 	private Account _toAccount(AccountEntry accountEntry) throws Exception {
 		return _accountResourceDTOConverter.toDTO(
 			_getDTOConverterContext(accountEntry.getAccountEntryId()));
 	}
+
+	@Reference
+	private AccountEntryLocalService _accountEntryLocalService;
 
 	@Reference(
 		policy = ReferencePolicy.DYNAMIC,
@@ -502,11 +589,21 @@ public class AccountResourceImpl
 	private AccountEntryService _accountEntryService;
 
 	@Reference
-	private AccountResourceDTOConverter _accountResourceDTOConverter;
+	private AccountEntryUserRelLocalService _accountEntryUserRelLocalService;
+
+	@Reference(target = DTOConverterConstants.ACCOUNT_RESOURCE_DTO_CONVERTER)
+	private DTOConverter<AccountEntry, Account> _accountResourceDTOConverter;
+
+	@Reference
+	private AddressLocalService _addressLocalService;
 
 	private final EntityModel _entityModel = new AccountEntityModel();
 
-	@Reference
-	private OrganizationResourceDTOConverter _organizationResourceDTOConverter;
+	@Reference(
+		target = DTOConverterConstants.ORGANIZATION_RESOURCE_DTO_CONVERTER
+	)
+	private DTOConverter
+		<com.liferay.portal.kernel.model.Organization, Organization>
+			_organizationResourceDTOConverter;
 
 }

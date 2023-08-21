@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.osb.faro.service;
@@ -276,6 +267,17 @@ public class FaroUserLocalServiceUtil {
 		return getService().getFaroUsers(start, end);
 	}
 
+	public static List<FaroUser> getFaroUsers(
+			long groupId, boolean available, String query,
+			List<Integer> statuses, long workspaceGroupId, int start, int end,
+			OrderByComparator<FaroUser> orderByComparator)
+		throws PortalException {
+
+		return getService().getFaroUsers(
+			groupId, available, query, statuses, workspaceGroupId, start, end,
+			orderByComparator);
+	}
+
 	public static List<FaroUser> getFaroUsersByLiveUserId(
 		long liveUserId, int status) {
 
@@ -301,6 +303,15 @@ public class FaroUserLocalServiceUtil {
 	 */
 	public static int getFaroUsersCount() {
 		return getService().getFaroUsersCount();
+	}
+
+	public static int getFaroUsersCount(
+			long groupId, boolean available, String query,
+			List<Integer> statuses, long workspaceGroupId)
+		throws PortalException {
+
+		return getService().getFaroUsersCount(
+			groupId, available, query, statuses, workspaceGroupId);
 	}
 
 	public static
@@ -364,6 +375,10 @@ public class FaroUserLocalServiceUtil {
 
 	public static FaroUserLocalService getService() {
 		return _service;
+	}
+
+	public static void setService(FaroUserLocalService service) {
+		_service = service;
 	}
 
 	private static volatile FaroUserLocalService _service;

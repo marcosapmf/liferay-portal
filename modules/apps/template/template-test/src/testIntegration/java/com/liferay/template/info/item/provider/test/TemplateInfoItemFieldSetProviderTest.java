@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.template.info.item.provider.test;
@@ -33,7 +24,7 @@ import com.liferay.dynamic.data.mapping.util.DDMFormValuesToFieldsConverter;
 import com.liferay.info.field.InfoField;
 import com.liferay.info.field.InfoFieldSet;
 import com.liferay.info.field.InfoFieldValue;
-import com.liferay.info.field.type.TextInfoFieldType;
+import com.liferay.info.field.type.HTMLInfoFieldType;
 import com.liferay.info.localized.bundle.FunctionInfoLocalizedValue;
 import com.liferay.journal.constants.JournalArticleConstants;
 import com.liferay.journal.constants.JournalFolderConstants;
@@ -65,7 +56,6 @@ import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.DateUtil;
-import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleThreadLocal;
@@ -116,6 +106,14 @@ public class TemplateInfoItemFieldSetProviderTest {
 		new AggregateTestRule(
 			new LiferayIntegrationTestRule(),
 			PermissionCheckerMethodTestRule.INSTANCE);
+
+	public boolean isHTMLInfoFieldType(InfoField infoField) {
+		if (infoField.getInfoFieldType() instanceof HTMLInfoFieldType) {
+			return true;
+		}
+
+		return false;
+	}
 
 	@Before
 	public void setUp() throws Exception {
@@ -187,8 +185,7 @@ public class TemplateInfoItemFieldSetProviderTest {
 		InfoField infoField = infoFields.get(0);
 
 		Assert.assertTrue(
-			GetterUtil.getBoolean(
-				infoField.getAttribute(TextInfoFieldType.HTML)));
+			infoField.getInfoFieldType() instanceof HTMLInfoFieldType);
 		Assert.assertEquals(
 			infoFields.toString(),
 			PortletDisplayTemplate.DISPLAY_STYLE_PREFIX +
@@ -230,8 +227,7 @@ public class TemplateInfoItemFieldSetProviderTest {
 		InfoField infoField = infoFields.get(0);
 
 		Assert.assertTrue(
-			GetterUtil.getBoolean(
-				infoField.getAttribute(TextInfoFieldType.HTML)));
+			infoField.getInfoFieldType() instanceof HTMLInfoFieldType);
 		Assert.assertEquals(
 			infoFields.toString(),
 			PortletDisplayTemplate.DISPLAY_STYLE_PREFIX +
@@ -290,8 +286,7 @@ public class TemplateInfoItemFieldSetProviderTest {
 		InfoField infoField = infoFieldValue.getInfoField();
 
 		Assert.assertTrue(
-			GetterUtil.getBoolean(
-				infoField.getAttribute(TextInfoFieldType.HTML)));
+			infoField.getInfoFieldType() instanceof HTMLInfoFieldType);
 		Assert.assertEquals(
 			infoField.toString(),
 			PortletDisplayTemplate.DISPLAY_STYLE_PREFIX +
@@ -710,7 +705,7 @@ public class TemplateInfoItemFieldSetProviderTest {
 			).put(
 				expectedKey2, RandomTestUtil.randomString()
 			).build(),
-			DDMFormFieldTypeConstants.SELECT);
+			DDMFormFieldTypeConstants.CHECKBOX_MULTIPLE);
 
 		JournalArticle journalArticle = JournalTestUtil.addJournalArticle(
 			_dataDefinitionResourceFactory, ddmFormField,

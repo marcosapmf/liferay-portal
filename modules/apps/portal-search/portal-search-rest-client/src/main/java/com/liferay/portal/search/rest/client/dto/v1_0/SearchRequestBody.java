@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.rest.client.dto.v1_0;
@@ -35,51 +26,51 @@ public class SearchRequestBody implements Cloneable, Serializable {
 		return SearchRequestBodySerDes.toDTO(json);
 	}
 
-	public Facet[] getFacets() {
-		return facets;
+	public Map<String, Object> getAttributes() {
+		return attributes;
 	}
 
-	public void setFacets(Facet[] facets) {
-		this.facets = facets;
+	public void setAttributes(Map<String, Object> attributes) {
+		this.attributes = attributes;
 	}
 
-	public void setFacets(
-		UnsafeSupplier<Facet[], Exception> facetsUnsafeSupplier) {
-
-		try {
-			facets = facetsUnsafeSupplier.get();
-		}
-		catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	protected Facet[] facets;
-
-	public Map<String, Object> getSearchContextAttributes() {
-		return searchContextAttributes;
-	}
-
-	public void setSearchContextAttributes(
-		Map<String, Object> searchContextAttributes) {
-
-		this.searchContextAttributes = searchContextAttributes;
-	}
-
-	public void setSearchContextAttributes(
+	public void setAttributes(
 		UnsafeSupplier<Map<String, Object>, Exception>
-			searchContextAttributesUnsafeSupplier) {
+			attributesUnsafeSupplier) {
 
 		try {
-			searchContextAttributes =
-				searchContextAttributesUnsafeSupplier.get();
+			attributes = attributesUnsafeSupplier.get();
 		}
 		catch (Exception e) {
 			throw new RuntimeException(e);
 		}
 	}
 
-	protected Map<String, Object> searchContextAttributes;
+	protected Map<String, Object> attributes;
+
+	public FacetConfiguration[] getFacetConfigurations() {
+		return facetConfigurations;
+	}
+
+	public void setFacetConfigurations(
+		FacetConfiguration[] facetConfigurations) {
+
+		this.facetConfigurations = facetConfigurations;
+	}
+
+	public void setFacetConfigurations(
+		UnsafeSupplier<FacetConfiguration[], Exception>
+			facetConfigurationsUnsafeSupplier) {
+
+		try {
+			facetConfigurations = facetConfigurationsUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected FacetConfiguration[] facetConfigurations;
 
 	@Override
 	public SearchRequestBody clone() throws CloneNotSupportedException {

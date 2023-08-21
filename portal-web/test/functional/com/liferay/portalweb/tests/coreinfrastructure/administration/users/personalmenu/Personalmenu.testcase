@@ -12,9 +12,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -32,7 +32,8 @@ definition {
 	@priority = 3
 	test CanViewNotFoundWhenGuestAccessManageURL {
 		property custom.properties = "virtual.hosts.default.site.name=Guest";
-		property test.name.skip.portal.instance = "Personalmenu#CanViewNotFoundWhenGuestAccessManageURL";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		var portalURL = PropsUtil.get("portal.url");
 
@@ -143,7 +144,8 @@ definition {
 
 	@priority = 4
 	test EnableStaging {
-		property test.name.skip.portal.instance = "Personalmenu#EnableStaging";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		var siteName = TestCase.getSiteName(siteName = ${siteName});
 
@@ -283,6 +285,9 @@ definition {
 	@description = "This is a use case for LPS-120825."
 	@priority = 4
 	test UpdateUserInformation {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
 		UserBar.viewUserDefaultIcon();
 
 		Navigator.gotoAccountSettings();
@@ -324,7 +329,9 @@ definition {
 	@description = "LPS-182444 TC-1-8. Verify back Navigation icon present and can return to the previous page from the personal menu page."
 	@priority = 5
 	test VerifyBackNavigationLinkOfPersonalMenuPages {
-		for (var menuItem : list "Shared Content,My Submissions,My Workflow Tasks,Account Settings,My Connected Applications,My Organizations,My Subscriptions") {
+		property portal.release = "false";
+
+		for (var menuItem : list "Shared Content,My Submissions,My Workflow Tasks,Account Settings,My Connected Applications,My Organizations") {
 			Navigator.openURL();
 
 			UserBar.gotoDropdownItem(dropdownItem = ${menuItem});

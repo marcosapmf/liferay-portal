@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.rest.internal.manager.v1_0.test;
@@ -18,6 +9,7 @@ import com.liferay.account.constants.AccountConstants;
 import com.liferay.account.constants.AccountRoleConstants;
 import com.liferay.account.model.AccountEntry;
 import com.liferay.account.model.AccountEntryUserRel;
+import com.liferay.account.model.AccountRole;
 import com.liferay.account.service.AccountEntryLocalService;
 import com.liferay.account.service.AccountEntryOrganizationRelLocalService;
 import com.liferay.account.service.AccountEntryUserRelLocalService;
@@ -39,14 +31,18 @@ import com.liferay.object.constants.ObjectFieldSettingConstants;
 import com.liferay.object.constants.ObjectFilterConstants;
 import com.liferay.object.constants.ObjectRelationshipConstants;
 import com.liferay.object.exception.NoSuchObjectEntryException;
+import com.liferay.object.exception.ObjectDefinitionAccountEntryRestrictedException;
+import com.liferay.object.exception.ObjectEntryValuesException;
 import com.liferay.object.exception.ObjectRelationshipDeletionTypeException;
 import com.liferay.object.exception.RequiredObjectRelationshipException;
 import com.liferay.object.field.builder.AggregationObjectFieldBuilder;
 import com.liferay.object.field.builder.AttachmentObjectFieldBuilder;
 import com.liferay.object.field.builder.DateObjectFieldBuilder;
+import com.liferay.object.field.builder.DateTimeObjectFieldBuilder;
 import com.liferay.object.field.builder.DecimalObjectFieldBuilder;
 import com.liferay.object.field.builder.IntegerObjectFieldBuilder;
 import com.liferay.object.field.builder.LongIntegerObjectFieldBuilder;
+import com.liferay.object.field.builder.LongTextObjectFieldBuilder;
 import com.liferay.object.field.builder.PicklistObjectFieldBuilder;
 import com.liferay.object.field.builder.PrecisionDecimalObjectFieldBuilder;
 import com.liferay.object.field.builder.RichTextObjectFieldBuilder;
@@ -62,14 +58,12 @@ import com.liferay.object.rest.dto.v1_0.ListEntry;
 import com.liferay.object.rest.dto.v1_0.ObjectEntry;
 import com.liferay.object.rest.manager.v1_0.DefaultObjectEntryManager;
 import com.liferay.object.rest.manager.v1_0.ObjectEntryManager;
-import com.liferay.object.rest.petra.sql.dsl.expression.FilterPredicateFactory;
 import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.object.service.ObjectFieldLocalService;
 import com.liferay.object.service.ObjectFieldService;
 import com.liferay.object.service.ObjectFieldSettingLocalService;
 import com.liferay.object.service.ObjectFilterLocalService;
 import com.liferay.object.service.ObjectRelationshipLocalService;
-import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.model.Group;
@@ -80,17 +74,20 @@ import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.search.SortFactoryUtil;
+import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.security.auth.PrincipalThreadLocal;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.PermissionCheckerFactoryUtil;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.service.GroupLocalService;
+import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.service.OrganizationLocalService;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.kernel.service.UserGroupRoleLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
+import com.liferay.portal.kernel.test.AssertUtils;
 import com.liferay.portal.kernel.test.constants.TestDataConstants;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
@@ -134,11 +131,17 @@ import java.math.MathContext;
 
 import java.text.DateFormat;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -146,6 +149,7 @@ import java.util.Objects;
 import org.hamcrest.CoreMatchers;
 
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -157,7 +161,7 @@ import org.junit.runner.RunWith;
 /**
  * @author Feliphe Marinho
  */
-@FeatureFlags("LPS-164801")
+@FeatureFlags({"LPS-164801", "LPS-172017"})
 @RunWith(Arquillian.class)
 public class DefaultObjectEntryManagerImplTest {
 
@@ -192,12 +196,48 @@ public class DefaultObjectEntryManagerImplTest {
 		PrincipalThreadLocal.setName(_adminUser.getUserId());
 	}
 
+	@AfterClass
+	public static void tearDownClass() throws Exception {
+		GroupLocalServiceUtil.deleteGroup(_group);
+
+		PermissionThreadLocal.setPermissionChecker(_originalPermissionChecker);
+
+		PrincipalThreadLocal.setName(_originalName);
+	}
+
 	@Before
 	public void setUp() throws Exception {
 		_dtoConverterContext = new DefaultDTOConverterContext(
 			false, Collections.emptyMap(), _dtoConverterRegistry, null,
 			LocaleUtil.getDefault(), null, _adminUser);
-
+		_listTypeDefinition =
+			_listTypeDefinitionLocalService.addListTypeDefinition(
+				null, _adminUser.getUserId(),
+				Collections.singletonMap(
+					LocaleUtil.US, RandomTestUtil.randomString()),
+				Collections.emptyList());
+		_localizedObjectFieldI18nValues = HashMapBuilder.<String, Object>put(
+			"localizedLongTextObjectFieldName_i18n",
+			HashMapBuilder.put(
+				"en_US", "en_US localizedLongTextObjectFieldValue"
+			).put(
+				"pt_BR", "pt_BR localizedLongTextObjectFieldValue"
+			).build()
+		).put(
+			"localizedRichTextObjectFieldName_i18n",
+			HashMapBuilder.put(
+				"en_US", "en_US <i>localizedRichTextObjectFieldValue</i>"
+			).put(
+				"pt_BR", "pt_BR <i>localizedRichTextObjectFieldValue</i>"
+			).build()
+		).put(
+			"localizedTextObjectFieldName_i18n",
+			HashMapBuilder.put(
+				"en_US", "en_US localizedTextObjectFieldValue"
+			).put(
+				"pt_BR", "pt_BR localizedTextObjectFieldValue"
+			).build()
+		).build();
 		_objectDefinition1 = _createObjectDefinition(
 			Arrays.asList(
 				new TextObjectFieldBuilder(
@@ -206,16 +246,7 @@ public class DefaultObjectEntryManagerImplTest {
 						RandomTestUtil.randomString())
 				).name(
 					"textObjectFieldName"
-				).objectFieldSettings(
-					Collections.emptyList()
 				).build()));
-
-		_listTypeDefinition =
-			_listTypeDefinitionLocalService.addListTypeDefinition(
-				null, _adminUser.getUserId(),
-				Collections.singletonMap(
-					LocaleUtil.US, RandomTestUtil.randomString()),
-				Collections.emptyList());
 
 		_objectDefinition2 = _createObjectDefinition(
 			Arrays.asList(
@@ -239,8 +270,31 @@ public class DefaultObjectEntryManagerImplTest {
 						RandomTestUtil.randomString())
 				).name(
 					"dateObjectFieldName"
+				).build(),
+				new DateTimeObjectFieldBuilder(
+				).labelMap(
+					LocalizedMapUtil.getLocalizedMap(
+						RandomTestUtil.randomString())
+				).name(
+					"dateTimeObjectFieldName"
 				).objectFieldSettings(
-					Collections.emptyList()
+					Collections.singletonList(
+						_createObjectFieldSetting(
+							ObjectFieldSettingConstants.NAME_TIME_STORAGE,
+							ObjectFieldSettingConstants.
+								VALUE_USE_INPUT_AS_ENTERED))
+				).build(),
+				new DateTimeObjectFieldBuilder(
+				).labelMap(
+					LocalizedMapUtil.getLocalizedMap(
+						RandomTestUtil.randomString())
+				).name(
+					"dateTimeUTCObjectFieldName"
+				).objectFieldSettings(
+					Collections.singletonList(
+						_createObjectFieldSetting(
+							ObjectFieldSettingConstants.NAME_TIME_STORAGE,
+							ObjectFieldSettingConstants.VALUE_CONVERT_TO_UTC))
 				).build(),
 				new DecimalObjectFieldBuilder(
 				).labelMap(
@@ -248,8 +302,6 @@ public class DefaultObjectEntryManagerImplTest {
 						RandomTestUtil.randomString())
 				).name(
 					"decimalObjectFieldName"
-				).objectFieldSettings(
-					Collections.emptyList()
 				).build(),
 				new IntegerObjectFieldBuilder(
 				).labelMap(
@@ -257,8 +309,6 @@ public class DefaultObjectEntryManagerImplTest {
 						RandomTestUtil.randomString())
 				).name(
 					"integerObjectFieldName"
-				).objectFieldSettings(
-					Collections.emptyList()
 				).build(),
 				new LongIntegerObjectFieldBuilder(
 				).labelMap(
@@ -266,8 +316,15 @@ public class DefaultObjectEntryManagerImplTest {
 						RandomTestUtil.randomString())
 				).name(
 					"longIntegerObjectFieldName"
-				).objectFieldSettings(
-					Collections.emptyList()
+				).build(),
+				new LongTextObjectFieldBuilder(
+				).labelMap(
+					LocalizedMapUtil.getLocalizedMap(
+						RandomTestUtil.randomString())
+				).localized(
+					true
+				).name(
+					"localizedLongTextObjectFieldName"
 				).build(),
 				new PicklistObjectFieldBuilder(
 				).indexed(
@@ -279,8 +336,6 @@ public class DefaultObjectEntryManagerImplTest {
 					_listTypeDefinition.getListTypeDefinitionId()
 				).name(
 					"picklistObjectFieldName"
-				).objectFieldSettings(
-					Collections.emptyList()
 				).build(),
 				new PrecisionDecimalObjectFieldBuilder(
 				).labelMap(
@@ -288,8 +343,6 @@ public class DefaultObjectEntryManagerImplTest {
 						RandomTestUtil.randomString())
 				).name(
 					"precisionDecimalObjectFieldName"
-				).objectFieldSettings(
-					Collections.emptyList()
 				).build(),
 				new RichTextObjectFieldBuilder(
 				).labelMap(
@@ -297,8 +350,15 @@ public class DefaultObjectEntryManagerImplTest {
 						RandomTestUtil.randomString())
 				).name(
 					"richTextObjectFieldName"
-				).objectFieldSettings(
-					Collections.emptyList()
+				).build(),
+				new RichTextObjectFieldBuilder(
+				).labelMap(
+					LocalizedMapUtil.getLocalizedMap(
+						RandomTestUtil.randomString())
+				).localized(
+					true
+				).name(
+					"localizedRichTextObjectFieldName"
 				).build(),
 				new TextObjectFieldBuilder(
 				).indexed(
@@ -308,8 +368,17 @@ public class DefaultObjectEntryManagerImplTest {
 						RandomTestUtil.randomString())
 				).name(
 					"textObjectFieldName"
-				).objectFieldSettings(
-					Collections.emptyList()
+				).build(),
+				new TextObjectFieldBuilder(
+				).indexed(
+					true
+				).labelMap(
+					LocalizedMapUtil.getLocalizedMap(
+						RandomTestUtil.randomString())
+				).localized(
+					true
+				).name(
+					"localizedTextObjectFieldName"
 				).build()));
 
 		ObjectRelationship objectRelationship1 =
@@ -345,13 +414,20 @@ public class DefaultObjectEntryManagerImplTest {
 
 		_objectDefinition3 =
 			_objectDefinitionLocalService.addCustomObjectDefinition(
-				_adminUser.getUserId(), false, false,
+				_adminUser.getUserId(), 0, false, false,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				"A" + RandomTestUtil.randomString(), null, null,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
-				ObjectDefinitionConstants.SCOPE_COMPANY,
+				true, ObjectDefinitionConstants.SCOPE_COMPANY,
 				ObjectDefinitionConstants.STORAGE_TYPE_DEFAULT,
-				Collections.emptyList());
+				Collections.singletonList(
+					new TextObjectFieldBuilder(
+					).labelMap(
+						LocalizedMapUtil.getLocalizedMap(
+							RandomTestUtil.randomString())
+					).name(
+						"textObjectFieldName"
+					).build()));
 
 		ObjectDefinition accountEntryObjectDefinition =
 			_objectDefinitionLocalService.fetchObjectDefinition(
@@ -407,10 +483,6 @@ public class DefaultObjectEntryManagerImplTest {
 	public void tearDown() throws Exception {
 		NestedFieldsContextThreadLocal.setNestedFieldsContext(
 			_originalNestedFieldsContext);
-
-		PermissionThreadLocal.setPermissionChecker(_originalPermissionChecker);
-
-		PrincipalThreadLocal.setName(_originalName);
 	}
 
 	@Test
@@ -677,6 +749,67 @@ public class DefaultObjectEntryManagerImplTest {
 				_simpleDTOConverterContext, _objectDefinition1,
 				parentObjectEntry1.getId()));
 
+		// Date time
+
+		LocalDateTime localDateTime = LocalDateTime.now();
+
+		_assertEquals(
+			new ObjectEntry() {
+				{
+					properties = Collections.singletonMap(
+						"dateTimeObjectFieldName",
+						localDateTime.format(
+							DateTimeFormatter.ofPattern(
+								"yyyy-MM-dd'T'HH:mm:ss.SSS")));
+				}
+			},
+			_defaultObjectEntryManager.addObjectEntry(
+				_dtoConverterContext, _objectDefinition2,
+				new ObjectEntry() {
+					{
+						properties = Collections.singletonMap(
+							"dateTimeObjectFieldName", localDateTime);
+					}
+				},
+				ObjectDefinitionConstants.SCOPE_COMPANY));
+
+		User user = UserTestUtil.addOmniAdminUser();
+
+		user.setTimeZoneId("America/Sao_Paulo");
+
+		user = _userLocalService.updateUser(user);
+
+		ZonedDateTime zonedDateTime = localDateTime.atZone(
+			ZoneId.of(user.getTimeZoneId()));
+
+		LocalDateTime utcLocalDateTime = LocalDateTime.from(
+			zonedDateTime.withZoneSameInstant(ZoneId.of(StringPool.UTC)));
+
+		_assertEquals(
+			new ObjectEntry() {
+				{
+					properties = Collections.singletonMap(
+						"dateTimeUTCObjectFieldName",
+						utcLocalDateTime.format(
+							DateTimeFormatter.ofPattern(
+								"yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")));
+				}
+			},
+			_defaultObjectEntryManager.addObjectEntry(
+				new DefaultDTOConverterContext(
+					false, Collections.emptyMap(), _dtoConverterRegistry, null,
+					LocaleUtil.getDefault(), null, user),
+				_objectDefinition2,
+				new ObjectEntry() {
+					{
+						properties = Collections.singletonMap(
+							"dateTimeUTCObjectFieldName", localDateTime);
+					}
+				},
+				ObjectDefinitionConstants.SCOPE_COMPANY));
+
+		_userLocalService.deleteUser(user);
+
 		// Picklist by list entry
 
 		ListTypeEntry listTypeEntry =
@@ -712,102 +845,108 @@ public class DefaultObjectEntryManagerImplTest {
 	}
 
 	@Test
-	public void testAddObjectEntryAccountEntryRestriction() throws Exception {
+	public void testAddObjectEntryWithAccountEntryRestricted()
+		throws Exception {
 
-		// Account entry scope
+		// Account entry restricted scope
 
 		AccountEntry accountEntry1 = _addAccountEntry();
 		_user = _addUser();
 
-		_accountEntryUserRelLocalService.addAccountEntryUserRel(
-			accountEntry1.getAccountEntryId(), _user.getUserId());
+		_assignAccountEntryRole(accountEntry1, _buyerRole, _user);
 
-		_assertFailure(
-			StringBundler.concat(
-				"User ", _user.getUserId(),
-				" must have ADD_OBJECT_ENTRY permission for ",
-				_objectDefinition3.getResourceName(), StringPool.SPACE),
-			() -> _addObjectEntry(accountEntry1));
-
-		_addResourcePermission("ADD_OBJECT_ENTRY", _buyerRole);
-
-		_userGroupRoleLocalService.addUserGroupRole(
-			_user.getUserId(), accountEntry1.getAccountEntryGroupId(),
-			_buyerRole.getRoleId());
-
-		Assert.assertNotNull(_addObjectEntry(accountEntry1));
+		_addResourcePermission(ObjectActionKeys.ADD_OBJECT_ENTRY, _buyerRole);
 
 		AccountEntry accountEntry2 = _addAccountEntry();
 
-		_assertFailure(
+		AssertUtils.assertFailure(
+			ObjectDefinitionAccountEntryRestrictedException.class,
 			StringBundler.concat(
 				"User ", _user.getUserId(),
 				" does not have access to account entry ",
 				accountEntry2.getAccountEntryId()),
 			() -> _addObjectEntry(accountEntry2));
 
-		_accountEntryUserRelLocalService.addAccountEntryUserRel(
-			accountEntry2.getAccountEntryId(), _user.getUserId());
-
-		_assertFailure(
-			StringBundler.concat(
-				"User ", _user.getUserId(),
-				" must have ADD_OBJECT_ENTRY permission for ",
-				_objectDefinition3.getResourceName(), StringPool.SPACE),
-			() -> _addObjectEntry(accountEntry2));
-
-		_userGroupRoleLocalService.addUserGroupRole(
-			_user.getUserId(), accountEntry2.getAccountEntryGroupId(),
-			_buyerRole.getRoleId());
-
-		Assert.assertNotNull(_addObjectEntry(accountEntry1));
-
-		// Organization scope
+		// Account entry restricted with organization scope
 
 		Organization organization1 = OrganizationTestUtil.addOrganization();
 
-		_accountEntryOrganizationRelLocalService.addAccountEntryOrganizationRel(
-			accountEntry1.getAccountEntryId(),
-			organization1.getOrganizationId());
+		_addAccountEntryOrganizationRel(accountEntry1, organization1);
 
 		_user = _addUser();
 
 		_assignOrganizationRole(organization1, _accountManagerRole, _user);
 
-		_assertFailure(
-			StringBundler.concat(
-				"User ", _user.getUserId(),
-				" must have ADD_OBJECT_ENTRY permission for ",
-				_objectDefinition3.getResourceName(), StringPool.SPACE),
-			() -> _addObjectEntry(accountEntry1));
+		_addResourcePermission(
+			ObjectActionKeys.ADD_OBJECT_ENTRY, _accountManagerRole);
 
-		_addResourcePermission("ADD_OBJECT_ENTRY", _accountManagerRole);
-
-		_addObjectEntry(accountEntry1);
-
-		_assertFailure(
+		AssertUtils.assertFailure(
+			ObjectDefinitionAccountEntryRestrictedException.class,
 			StringBundler.concat(
 				"User ", _user.getUserId(),
 				" does not have access to account entry ",
 				accountEntry2.getAccountEntryId()),
 			() -> _addObjectEntry(accountEntry2));
 
-		_removeResourcePermission("ADD_OBJECT_ENTRY", _accountManagerRole);
+		_deleteAccountEntryOrganizationRel(accountEntry1, organization1);
 
-		// Suborganization scope
-
-		_accountEntryOrganizationRelLocalService.
-			deleteAccountEntryOrganizationRel(
-				accountEntry1.getAccountEntryId(),
-				organization1.getOrganizationId());
+		// Account entry restricted with suborganization scope
 
 		Organization suborganization1 = OrganizationTestUtil.addOrganization(
 			organization1.getOrganizationId(), RandomTestUtil.randomString(),
 			false);
 
-		_accountEntryOrganizationRelLocalService.addAccountEntryOrganizationRel(
-			accountEntry1.getAccountEntryId(),
-			suborganization1.getOrganizationId());
+		_addAccountEntryOrganizationRel(accountEntry1, suborganization1);
+
+		_user = _addUser();
+
+		_assignOrganizationRole(organization1, _accountManagerRole, _user);
+
+		AssertUtils.assertFailure(
+			ObjectDefinitionAccountEntryRestrictedException.class,
+			StringBundler.concat(
+				"User ", _user.getUserId(),
+				" does not have access to account entry ",
+				accountEntry2.getAccountEntryId()),
+			() -> _addObjectEntry(accountEntry2));
+
+		_deleteAccountEntryOrganizationRel(accountEntry1, suborganization1);
+
+		_removeResourcePermission(
+			ObjectActionKeys.ADD_OBJECT_ENTRY, _accountManagerRole);
+
+		// Check account entry permission
+
+		_user = _addUser();
+
+		_testAddObjectEntryAccountEntryRestriction(accountEntry1);
+		_testAddObjectEntryAccountEntryRestriction(accountEntry2);
+
+		// Check account entry permission with organization
+
+		_addAccountEntryOrganizationRel(accountEntry1, organization1);
+
+		_user = _addUser();
+
+		_assignOrganizationRole(organization1, _accountManagerRole, _user);
+
+		AssertUtils.assertFailure(
+			PrincipalException.MustHavePermission.class,
+			StringBundler.concat(
+				"User ", _user.getUserId(),
+				" must have ADD_OBJECT_ENTRY permission for ",
+				_objectDefinition3.getResourceName(), StringPool.SPACE),
+			() -> _addObjectEntry(accountEntry1));
+
+		_addResourcePermission(
+			ObjectActionKeys.ADD_OBJECT_ENTRY, _accountManagerRole);
+
+		Assert.assertNotNull(_addObjectEntry(accountEntry1));
+
+		_removeResourcePermission(
+			ObjectActionKeys.ADD_OBJECT_ENTRY, _accountManagerRole);
+
+		// Check account entry permission with suborganization
 
 		Organization organization2 = OrganizationTestUtil.addOrganization();
 
@@ -815,35 +954,170 @@ public class DefaultObjectEntryManagerImplTest {
 			organization2.getOrganizationId(), RandomTestUtil.randomString(),
 			false);
 
-		_accountEntryOrganizationRelLocalService.addAccountEntryOrganizationRel(
-			accountEntry2.getAccountEntryId(),
-			suborganization2.getOrganizationId());
+		_addAccountEntryOrganizationRel(accountEntry2, suborganization2);
 
 		_user = _addUser();
 
 		_assignOrganizationRole(organization1, _accountManagerRole, _user);
 
-		_assertFailure(
+		AssertUtils.assertFailure(
+			PrincipalException.MustHavePermission.class,
 			StringBundler.concat(
 				"User ", _user.getUserId(),
 				" must have ADD_OBJECT_ENTRY permission for ",
 				_objectDefinition3.getResourceName(), StringPool.SPACE),
 			() -> _addObjectEntry(accountEntry1));
 
-		_addResourcePermission("ADD_OBJECT_ENTRY", _accountManagerRole);
+		_addResourcePermission(
+			ObjectActionKeys.ADD_OBJECT_ENTRY, _accountManagerRole);
 
-		_addObjectEntry(accountEntry1);
-
-		_assertFailure(
-			StringBundler.concat(
-				"User ", _user.getUserId(),
-				" does not have access to account entry ",
-				accountEntry2.getAccountEntryId()),
-			() -> _addObjectEntry(accountEntry2));
+		Assert.assertNotNull(_addObjectEntry(accountEntry1));
 	}
 
 	@Test
-	public void testDeleteObjectEntryAccountEntryRestriction()
+	public void testDeleteObjectEntry() throws Exception {
+		ObjectDefinition objectDefinition1 = _createObjectDefinition(
+			Collections.singletonList(
+				new TextObjectFieldBuilder(
+				).labelMap(
+					LocalizedMapUtil.getLocalizedMap(
+						RandomTestUtil.randomString())
+				).name(
+					"textObjectFieldName"
+				).build()));
+		ObjectDefinition objectDefinition2 = _createObjectDefinition(
+			Collections.singletonList(
+				new TextObjectFieldBuilder(
+				).labelMap(
+					LocalizedMapUtil.getLocalizedMap(
+						RandomTestUtil.randomString())
+				).name(
+					"a" + RandomTestUtil.randomString()
+				).build()));
+
+		// Relationship type cascade
+
+		ObjectRelationship objectRelationship =
+			_objectRelationshipLocalService.addObjectRelationship(
+				_adminUser.getUserId(),
+				objectDefinition1.getObjectDefinitionId(),
+				objectDefinition2.getObjectDefinitionId(), 0,
+				ObjectRelationshipConstants.DELETION_TYPE_CASCADE,
+				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
+				"oneToManyRelationship",
+				ObjectRelationshipConstants.TYPE_ONE_TO_MANY);
+
+		_addRelatedObjectEntries(
+			objectDefinition1, objectDefinition2, "externalReferenceCode1",
+			"externalReferenceCode2", objectRelationship);
+
+		_user = _addUser();
+
+		Role role = _addRoleUser(
+			new String[] {
+				ActionKeys.DELETE, ActionKeys.PERMISSIONS, ActionKeys.UPDATE,
+				ActionKeys.VIEW
+			},
+			objectDefinition1, _user);
+
+		try {
+			_defaultObjectEntryManager.deleteObjectEntry(
+				_companyId, _simpleDTOConverterContext,
+				"externalReferenceCode1", objectDefinition1, null);
+
+			Assert.fail();
+		}
+		catch (ObjectRelationshipDeletionTypeException
+					objectRelationshipDeletionTypeException) {
+
+			Assert.assertThat(
+				objectRelationshipDeletionTypeException.getMessage(),
+				CoreMatchers.containsString(
+					StringBundler.concat(
+						"User ", _user.getUserId(),
+						" must have DELETE permission for ",
+						objectDefinition2.getClassName())));
+		}
+
+		// Relationship type disassociate
+
+		objectRelationship =
+			_objectRelationshipLocalService.updateObjectRelationship(
+				objectRelationship.getObjectRelationshipId(), 0,
+				ObjectRelationshipConstants.DELETION_TYPE_DISASSOCIATE,
+				objectRelationship.getLabelMap());
+
+		_defaultObjectEntryManager.deleteObjectEntry(
+			_companyId, _simpleDTOConverterContext, "externalReferenceCode1",
+			objectDefinition1, null);
+
+		try {
+			_defaultObjectEntryManager.getObjectEntry(
+				_companyId, _simpleDTOConverterContext,
+				"externalReferenceCode1", objectDefinition1, null);
+
+			Assert.fail();
+		}
+		catch (NoSuchObjectEntryException noSuchObjectEntryException) {
+			Assert.assertNotNull(noSuchObjectEntryException);
+		}
+
+		PrincipalThreadLocal.setName(_adminUser.getUserId());
+		PermissionThreadLocal.setPermissionChecker(
+			PermissionCheckerFactoryUtil.create(_adminUser));
+
+		Assert.assertNotNull(
+			_defaultObjectEntryManager.getObjectEntry(
+				_companyId, _simpleDTOConverterContext,
+				"externalReferenceCode2", objectDefinition2, null));
+
+		_addRelatedObjectEntries(
+			objectDefinition1, objectDefinition2, "externalReferenceCode3",
+			"externalReferenceCode4", objectRelationship);
+
+		PrincipalThreadLocal.setName(_user.getUserId());
+		PermissionThreadLocal.setPermissionChecker(
+			PermissionCheckerFactoryUtil.create(_user));
+
+		// Relationshp type prevent
+
+		objectRelationship =
+			_objectRelationshipLocalService.updateObjectRelationship(
+				objectRelationship.getObjectRelationshipId(), 0,
+				ObjectRelationshipConstants.DELETION_TYPE_PREVENT,
+				objectRelationship.getLabelMap());
+
+		try {
+			_defaultObjectEntryManager.deleteObjectEntry(
+				_companyId, _simpleDTOConverterContext,
+				"externalReferenceCode3", objectDefinition1, null);
+
+			Assert.fail();
+		}
+		catch (RequiredObjectRelationshipException
+					requiredObjectRelationshipException) {
+
+			Assert.assertEquals(
+				StringBundler.concat(
+					"Object relationship ",
+					objectRelationship.getObjectRelationshipId(),
+					" does not allow deletes"),
+				requiredObjectRelationshipException.getMessage());
+		}
+
+		_roleLocalService.deleteRole(role.getRoleId());
+
+		_objectRelationshipLocalService.deleteObjectRelationship(
+			objectRelationship.getObjectRelationshipId());
+
+		_objectDefinitionLocalService.deleteObjectDefinition(
+			objectDefinition1.getObjectDefinitionId());
+		_objectDefinitionLocalService.deleteObjectDefinition(
+			objectDefinition2.getObjectDefinitionId());
+	}
+
+	@Test
+	public void testDeleteObjectEntryWithAccountEntryRestricted()
 		throws Exception {
 
 		// Regular roles' company scope permissions should not be restricted by
@@ -976,15 +1250,11 @@ public class DefaultObjectEntryManagerImplTest {
 
 		_assignOrganizationRole(organization1, _accountManagerRole, _user);
 
-		_accountEntryOrganizationRelLocalService.addAccountEntryOrganizationRel(
-			accountEntry1.getAccountEntryId(),
-			organization1.getOrganizationId());
+		_addAccountEntryOrganizationRel(accountEntry1, organization1);
 
 		Organization organization2 = OrganizationTestUtil.addOrganization();
 
-		_accountEntryOrganizationRelLocalService.addAccountEntryOrganizationRel(
-			accountEntry2.getAccountEntryId(),
-			organization2.getOrganizationId());
+		_addAccountEntryOrganizationRel(accountEntry2, organization2);
 
 		_assertObjectEntriesSize(1);
 
@@ -1012,15 +1282,8 @@ public class DefaultObjectEntryManagerImplTest {
 
 		_assertObjectEntriesSize(0);
 
-		_accountEntryOrganizationRelLocalService.
-			deleteAccountEntryOrganizationRel(
-				accountEntry1.getAccountEntryId(),
-				organization1.getOrganizationId());
-
-		_accountEntryOrganizationRelLocalService.
-			deleteAccountEntryOrganizationRel(
-				accountEntry2.getAccountEntryId(),
-				organization2.getOrganizationId());
+		_deleteAccountEntryOrganizationRel(accountEntry1, organization1);
+		_deleteAccountEntryOrganizationRel(accountEntry2, organization2);
 
 		// Suborganization scope
 
@@ -1039,17 +1302,13 @@ public class DefaultObjectEntryManagerImplTest {
 			organization1.getOrganizationId(), RandomTestUtil.randomString(),
 			false);
 
-		_accountEntryOrganizationRelLocalService.addAccountEntryOrganizationRel(
-			accountEntry1.getAccountEntryId(),
-			suborganization1.getOrganizationId());
+		_addAccountEntryOrganizationRel(accountEntry1, suborganization1);
 
 		Organization suborganization2 = OrganizationTestUtil.addOrganization(
 			organization2.getOrganizationId(), RandomTestUtil.randomString(),
 			false);
 
-		_accountEntryOrganizationRelLocalService.addAccountEntryOrganizationRel(
-			accountEntry2.getAccountEntryId(),
-			suborganization2.getOrganizationId());
+		_addAccountEntryOrganizationRel(accountEntry2, suborganization2);
 
 		_assertObjectEntriesSize(1);
 
@@ -1078,154 +1337,6 @@ public class DefaultObjectEntryManagerImplTest {
 			_objectDefinition3, objectEntry1.getId());
 
 		_assertObjectEntriesSize(0);
-	}
-
-	@Test
-	public void testDeleteObjectEntryForAllObjectRelationshipDeletionTypes()
-		throws Exception {
-
-		ObjectDefinition objectDefinition1 = _createObjectDefinition(
-			Collections.singletonList(
-				new TextObjectFieldBuilder(
-				).labelMap(
-					LocalizedMapUtil.getLocalizedMap(
-						RandomTestUtil.randomString())
-				).name(
-					"textObjectFieldName"
-				).objectFieldSettings(
-					Collections.emptyList()
-				).build()));
-		ObjectDefinition objectDefinition2 = _createObjectDefinition(
-			Collections.singletonList(
-				new TextObjectFieldBuilder(
-				).labelMap(
-					LocalizedMapUtil.getLocalizedMap(
-						RandomTestUtil.randomString())
-				).name(
-					"a" + RandomTestUtil.randomString()
-				).objectFieldSettings(
-					Collections.emptyList()
-				).build()));
-
-		// Relationship type cascade
-
-		ObjectRelationship objectRelationship =
-			_objectRelationshipLocalService.addObjectRelationship(
-				_adminUser.getUserId(),
-				objectDefinition1.getObjectDefinitionId(),
-				objectDefinition2.getObjectDefinitionId(), 0,
-				ObjectRelationshipConstants.DELETION_TYPE_CASCADE,
-				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
-				"oneToManyRelationship",
-				ObjectRelationshipConstants.TYPE_ONE_TO_MANY);
-
-		_addRelatedObjectEntries(
-			objectDefinition1, objectDefinition2, "externalReferenceCode1",
-			"externalReferenceCode2", objectRelationship);
-
-		_user = _addUser();
-
-		Role role = _addRoleUser(
-			new String[] {
-				ActionKeys.DELETE, ActionKeys.PERMISSIONS, ActionKeys.UPDATE,
-				ActionKeys.VIEW
-			},
-			objectDefinition1, _user);
-
-		try {
-			_defaultObjectEntryManager.deleteObjectEntry(
-				_companyId, _simpleDTOConverterContext,
-				"externalReferenceCode1", objectDefinition1, null);
-
-			Assert.fail();
-		}
-		catch (ObjectRelationshipDeletionTypeException
-					objectRelationshipDeletionTypeException) {
-
-			Assert.assertThat(
-				objectRelationshipDeletionTypeException.getMessage(),
-				CoreMatchers.containsString(
-					StringBundler.concat(
-						"User ", _user.getUserId(),
-						" must have DELETE permission for ",
-						objectDefinition2.getClassName())));
-		}
-
-		// Relationship type disassociate
-
-		objectRelationship =
-			_objectRelationshipLocalService.updateObjectRelationship(
-				objectRelationship.getObjectRelationshipId(), 0,
-				ObjectRelationshipConstants.DELETION_TYPE_DISASSOCIATE,
-				objectRelationship.getLabelMap());
-
-		_defaultObjectEntryManager.deleteObjectEntry(
-			_companyId, _simpleDTOConverterContext, "externalReferenceCode1",
-			objectDefinition1, null);
-
-		try {
-			_defaultObjectEntryManager.getObjectEntry(
-				_companyId, _simpleDTOConverterContext,
-				"externalReferenceCode1", objectDefinition1, null);
-
-			Assert.fail();
-		}
-		catch (NoSuchObjectEntryException noSuchObjectEntryException) {
-			Assert.assertNotNull(noSuchObjectEntryException);
-		}
-
-		PrincipalThreadLocal.setName(_adminUser.getUserId());
-		PermissionThreadLocal.setPermissionChecker(
-			PermissionCheckerFactoryUtil.create(_adminUser));
-
-		Assert.assertNotNull(
-			_defaultObjectEntryManager.getObjectEntry(
-				_companyId, _simpleDTOConverterContext,
-				"externalReferenceCode2", objectDefinition2, null));
-
-		_addRelatedObjectEntries(
-			objectDefinition1, objectDefinition2, "externalReferenceCode3",
-			"externalReferenceCode4", objectRelationship);
-
-		PrincipalThreadLocal.setName(_user.getUserId());
-		PermissionThreadLocal.setPermissionChecker(
-			PermissionCheckerFactoryUtil.create(_user));
-
-		// Relationshp type prevent
-
-		objectRelationship =
-			_objectRelationshipLocalService.updateObjectRelationship(
-				objectRelationship.getObjectRelationshipId(), 0,
-				ObjectRelationshipConstants.DELETION_TYPE_PREVENT,
-				objectRelationship.getLabelMap());
-
-		try {
-			_defaultObjectEntryManager.deleteObjectEntry(
-				_companyId, _simpleDTOConverterContext,
-				"externalReferenceCode3", objectDefinition1, null);
-
-			Assert.fail();
-		}
-		catch (RequiredObjectRelationshipException
-					requiredObjectRelationshipException) {
-
-			Assert.assertEquals(
-				StringBundler.concat(
-					"Object relationship ",
-					objectRelationship.getObjectRelationshipId(),
-					" does not allow deletes"),
-				requiredObjectRelationshipException.getMessage());
-		}
-
-		_roleLocalService.deleteRole(role.getRoleId());
-
-		_objectRelationshipLocalService.deleteObjectRelationship(
-			objectRelationship.getObjectRelationshipId());
-
-		_objectDefinitionLocalService.deleteObjectDefinition(
-			objectDefinition1.getObjectDefinitionId());
-		_objectDefinitionLocalService.deleteObjectDefinition(
-			objectDefinition2.getObjectDefinitionId());
 	}
 
 	@Test
@@ -1258,10 +1369,40 @@ public class DefaultObjectEntryManagerImplTest {
 							"picklistObjectFieldName", picklistObjectFieldValue1
 						).put(
 							"textObjectFieldName", "aaa"
+						).putAll(
+							_localizedObjectFieldI18nValues
 						).build();
 					}
 				},
 				ObjectDefinitionConstants.SCOPE_COMPANY);
+
+		_assertEquals(
+			new ObjectEntry() {
+				{
+					properties = HashMapBuilder.<String, Object>put(
+						_objectRelationshipFieldName, parentObjectEntry1.getId()
+					).put(
+						"localizedLongTextObjectFieldName",
+						"en_US localizedLongTextObjectFieldValue"
+					).put(
+						"localizedRichTextObjectFieldName",
+						"en_US <i>localizedRichTextObjectFieldValue</i>"
+					).put(
+						"localizedRichTextObjectFieldNameRawText",
+						"en_US localizedRichTextObjectFieldValue"
+					).put(
+						"localizedTextObjectFieldName",
+						"en_US localizedTextObjectFieldValue"
+					).put(
+						"picklistObjectFieldName", picklistObjectFieldValue1
+					).put(
+						"textObjectFieldName", "aaa"
+					).putAll(
+						_localizedObjectFieldI18nValues
+					).build();
+				}
+			},
+			childObjectEntry1);
 
 		ObjectEntry parentObjectEntry2 =
 			_defaultObjectEntryManager.addObjectEntry(
@@ -1355,6 +1496,14 @@ public class DefaultObjectEntryManagerImplTest {
 					parentObjectEntry2.getExternalReferenceCode())
 			).build(),
 			childObjectEntry2);
+		_testGetObjectEntries(
+			HashMapBuilder.put(
+				"filter",
+				_buildEqualsExpressionFilterString(
+					"localizedLongTextObjectFieldName",
+					"en_US localizedLongTextObjectFieldValue")
+			).build(),
+			childObjectEntry1);
 
 		// In expression
 
@@ -1465,6 +1614,15 @@ public class DefaultObjectEntryManagerImplTest {
 
 		_testGetObjectEntries(
 			HashMapBuilder.put(
+				"search", "en_US"
+			).build(),
+			childObjectEntry1);
+		_testGetObjectEntries(
+			HashMapBuilder.put(
+				"search", "pt_BR"
+			).build());
+		_testGetObjectEntries(
+			HashMapBuilder.put(
 				"search", String.valueOf(childObjectEntry1.getId())
 			).build(),
 			childObjectEntry1);
@@ -1510,6 +1668,16 @@ public class DefaultObjectEntryManagerImplTest {
 			childObjectEntry2, childObjectEntry1);
 		_testGetObjectEntries(
 			HashMapBuilder.put(
+				"sort", "localizedTextObjectFieldName:asc"
+			).build(),
+			childObjectEntry2, childObjectEntry1);
+		_testGetObjectEntries(
+			HashMapBuilder.put(
+				"sort", "localizedTextObjectFieldName:desc"
+			).build(),
+			childObjectEntry1, childObjectEntry2);
+		_testGetObjectEntries(
+			HashMapBuilder.put(
 				"sort", "textObjectFieldName:asc"
 			).build(),
 			childObjectEntry1, childObjectEntry2);
@@ -1521,7 +1689,7 @@ public class DefaultObjectEntryManagerImplTest {
 	}
 
 	@Test
-	public void testGetObjectEntriesAccountEntryRestrictions()
+	public void testGetObjectEntriesWithAccountEntryRestricted()
 		throws Exception {
 
 		// Regular roles permissions should not be restricted by account entry
@@ -1586,12 +1754,8 @@ public class DefaultObjectEntryManagerImplTest {
 
 		Organization organization1 = OrganizationTestUtil.addOrganization();
 
-		_accountEntryOrganizationRelLocalService.addAccountEntryOrganizationRel(
-			accountEntry1.getAccountEntryId(),
-			organization1.getOrganizationId());
-		_accountEntryOrganizationRelLocalService.addAccountEntryOrganizationRel(
-			accountEntry2.getAccountEntryId(),
-			organization1.getOrganizationId());
+		_addAccountEntryOrganizationRel(accountEntry1, organization1);
+		_addAccountEntryOrganizationRel(accountEntry2, organization1);
 
 		_user = _addUser();
 
@@ -1600,10 +1764,7 @@ public class DefaultObjectEntryManagerImplTest {
 
 		_assertObjectEntriesSize(2);
 
-		_accountEntryOrganizationRelLocalService.
-			deleteAccountEntryOrganizationRel(
-				accountEntry2.getAccountEntryId(),
-				organization1.getOrganizationId());
+		_deleteAccountEntryOrganizationRel(accountEntry2, organization1);
 
 		_assertObjectEntriesSize(1);
 
@@ -1612,10 +1773,7 @@ public class DefaultObjectEntryManagerImplTest {
 
 		_assertObjectEntriesSize(0);
 
-		_accountEntryOrganizationRelLocalService.
-			deleteAccountEntryOrganizationRel(
-				accountEntry1.getAccountEntryId(),
-				organization1.getOrganizationId());
+		_deleteAccountEntryOrganizationRel(accountEntry1, organization1);
 
 		// Check suborganizations
 
@@ -1623,9 +1781,7 @@ public class DefaultObjectEntryManagerImplTest {
 			organization1.getOrganizationId(), RandomTestUtil.randomString(),
 			false);
 
-		_accountEntryOrganizationRelLocalService.addAccountEntryOrganizationRel(
-			accountEntry1.getAccountEntryId(),
-			suborganization1.getOrganizationId());
+		_addAccountEntryOrganizationRel(accountEntry1, suborganization1);
 
 		Organization organization2 = OrganizationTestUtil.addOrganization();
 
@@ -1633,9 +1789,7 @@ public class DefaultObjectEntryManagerImplTest {
 			organization2.getOrganizationId(), RandomTestUtil.randomString(),
 			false);
 
-		_accountEntryOrganizationRelLocalService.addAccountEntryOrganizationRel(
-			accountEntry2.getAccountEntryId(),
-			suborganization2.getOrganizationId());
+		_addAccountEntryOrganizationRel(accountEntry2, suborganization2);
 
 		_user = _addUser();
 
@@ -1661,7 +1815,7 @@ public class DefaultObjectEntryManagerImplTest {
 	}
 
 	@Test
-	public void testGetObjectEntriesAggregationFacets() throws Exception {
+	public void testGetObjectEntriesWithAggregationFacets() throws Exception {
 		_defaultObjectEntryManager.addObjectEntry(
 			_simpleDTOConverterContext, _objectDefinition1,
 			new ObjectEntry() {
@@ -1722,7 +1876,326 @@ public class DefaultObjectEntryManagerImplTest {
 	}
 
 	@Test
-	public void testUpdateObjectEntryAccountEntryRestriction()
+	public void testGetObjectEntryRelatedObjectEntriesWithAccountEntryRestricted()
+		throws Exception {
+
+		ObjectDefinition childObjectDefinition = _createObjectDefinition(
+			Arrays.asList(
+				new TextObjectFieldBuilder(
+				).labelMap(
+					LocalizedMapUtil.getLocalizedMap(
+						RandomTestUtil.randomString())
+				).name(
+					"textObjectFieldName"
+				).build()));
+
+		ObjectRelationship objectRelationship1 =
+			_objectRelationshipLocalService.addObjectRelationship(
+				_adminUser.getUserId(),
+				_objectDefinition3.getObjectDefinitionId(),
+				childObjectDefinition.getObjectDefinitionId(), 0,
+				ObjectRelationshipConstants.DELETION_TYPE_CASCADE,
+				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
+				StringUtil.randomId(),
+				ObjectRelationshipConstants.TYPE_ONE_TO_MANY);
+
+		ObjectDefinition accountEntryObjectDefinition =
+			_objectDefinitionLocalService.fetchObjectDefinition(
+				_companyId, "AccountEntry");
+
+		ObjectRelationship objectRelationship2 =
+			_objectRelationshipLocalService.addObjectRelationship(
+				_adminUser.getUserId(),
+				accountEntryObjectDefinition.getObjectDefinitionId(),
+				childObjectDefinition.getObjectDefinitionId(), 0,
+				ObjectRelationshipConstants.DELETION_TYPE_CASCADE,
+				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
+				StringUtil.randomId(),
+				ObjectRelationshipConstants.TYPE_ONE_TO_MANY);
+
+		childObjectDefinition.setAccountEntryRestrictedObjectFieldId(
+			objectRelationship2.getObjectFieldId2());
+
+		childObjectDefinition.setAccountEntryRestricted(true);
+
+		childObjectDefinition =
+			_objectDefinitionLocalService.updateObjectDefinition(
+				childObjectDefinition);
+
+		_addRelatedObjectEntries(
+			_objectDefinition3, childObjectDefinition,
+			"parentExternalReferenceCode", StringUtil.randomId(),
+			objectRelationship1);
+
+		AccountEntry accountEntry = _addAccountEntry();
+
+		AccountRole accountRole = _accountRoleLocalService.addAccountRole(
+			TestPropsValues.getUserId(), accountEntry.getAccountEntryId(),
+			RandomTestUtil.randomString(), null, null);
+
+		User user = _addUser();
+
+		_accountEntryUserRelLocalService.addAccountEntryUserRel(
+			accountEntry.getAccountEntryId(), user.getUserId());
+
+		_accountRoleLocalService.associateUser(
+			accountEntry.getAccountEntryId(), accountRole.getAccountRoleId(),
+			user.getUserId());
+
+		Role role = accountRole.getRole();
+
+		_addResourcePermission(ActionKeys.VIEW, role);
+
+		_resourcePermissionLocalService.addResourcePermission(
+			_companyId, childObjectDefinition.getClassName(),
+			ResourceConstants.SCOPE_GROUP_TEMPLATE, "0", role.getRoleId(),
+			ActionKeys.VIEW);
+
+		ObjectEntry parentObjectEntry =
+			_defaultObjectEntryManager.getObjectEntry(
+				_companyId, _simpleDTOConverterContext,
+				"parentExternalReferenceCode", _objectDefinition3, null);
+
+		Page<ObjectEntry> page =
+			_defaultObjectEntryManager.getObjectEntryRelatedObjectEntries(
+				_simpleDTOConverterContext, _objectDefinition3,
+				parentObjectEntry.getId(), objectRelationship1.getName(), null);
+
+		Collection<ObjectEntry> objectEntries = page.getItems();
+
+		Assert.assertEquals(objectEntries.toString(), 1, objectEntries.size());
+
+		_objectRelationshipLocalService.deleteObjectRelationship(
+			objectRelationship1.getObjectRelationshipId());
+
+		_objectRelationshipLocalService.deleteObjectRelationship(
+			objectRelationship2.getObjectRelationshipId());
+	}
+
+	@Test
+	public void testUpdateObjectEntry() throws Exception {
+		ObjectEntry objectEntry = _objectEntryManager.addObjectEntry(
+			_dtoConverterContext, _objectDefinition2,
+			new ObjectEntry() {
+				{
+					properties = _localizedObjectFieldI18nValues;
+				}
+			},
+			ObjectDefinitionConstants.SCOPE_COMPANY);
+
+		Role role = _roleLocalService.getRole(
+			_companyId, RoleConstants.ADMINISTRATOR);
+
+		_user = _addUser();
+
+		_userLocalService.addRoleUser(role.getRoleId(), _user);
+
+		_assertLocalizedValues(
+			HashMapBuilder.<String, Object>put(
+				"localizedLongTextObjectFieldName",
+				"en_US localizedLongTextObjectFieldValue"
+			).put(
+				"localizedRichTextObjectFieldName",
+				"en_US <i>localizedRichTextObjectFieldValue</i>"
+			).put(
+				"localizedRichTextObjectFieldNameRawText",
+				"en_US localizedRichTextObjectFieldValue"
+			).put(
+				"localizedTextObjectFieldName",
+				"en_US localizedTextObjectFieldValue"
+			).putAll(
+				_localizedObjectFieldI18nValues
+			).build(),
+			"en_US", objectEntry.getId());
+		_assertLocalizedValues(
+			HashMapBuilder.<String, Object>put(
+				"localizedLongTextObjectFieldName",
+				"pt_BR localizedLongTextObjectFieldValue"
+			).put(
+				"localizedRichTextObjectFieldName",
+				"pt_BR <i>localizedRichTextObjectFieldValue</i>"
+			).put(
+				"localizedRichTextObjectFieldNameRawText",
+				"pt_BR localizedRichTextObjectFieldValue"
+			).put(
+				"localizedTextObjectFieldName",
+				"pt_BR localizedTextObjectFieldValue"
+			).putAll(
+				_localizedObjectFieldI18nValues
+			).build(),
+			"pt_BR", objectEntry.getId());
+
+		_localizedObjectFieldI18nValues = HashMapBuilder.<String, Object>put(
+			"localizedLongTextObjectFieldName_i18n",
+			HashMapBuilder.put(
+				"en_US", "en_US localizedLongTextObjectFieldValue"
+			).put(
+				"invalid_languageId", ""
+			).build()
+		).put(
+			"localizedRichTextObjectFieldName_i18n",
+			HashMapBuilder.put(
+				"ar_SA", "ar_SA localizedRichTextObjectFieldValue"
+			).build()
+		).build();
+
+		_updateLocalizedObjectEntryValues(
+			_objectDefinition2, objectEntry.getId(),
+			_localizedObjectFieldI18nValues);
+
+		_localizedObjectFieldI18nValues.putAll(
+			HashMapBuilder.<String, Object>put(
+				"localizedLongTextObjectFieldName_i18n",
+				HashMapBuilder.put(
+					"en_US", "en_US localizedLongTextObjectFieldValue"
+				).build()
+			).put(
+				"localizedTextObjectFieldName_i18n", new HashMap<>()
+			).build());
+
+		_assertLocalizedValues(
+			HashMapBuilder.<String, Object>put(
+				"localizedLongTextObjectFieldName", ""
+			).put(
+				"localizedRichTextObjectFieldName",
+				"ar_SA localizedRichTextObjectFieldValue"
+			).put(
+				"localizedRichTextObjectFieldNameRawText",
+				"ar_SA localizedRichTextObjectFieldValue"
+			).put(
+				"localizedTextObjectFieldName", ""
+			).putAll(
+				_localizedObjectFieldI18nValues
+			).build(),
+			"ar_SA", objectEntry.getId());
+		_assertLocalizedValues(
+			HashMapBuilder.<String, Object>put(
+				"localizedLongTextObjectFieldName",
+				"en_US localizedLongTextObjectFieldValue"
+			).put(
+				"localizedRichTextObjectFieldName", ""
+			).put(
+				"localizedRichTextObjectFieldNameRawText", ""
+			).put(
+				"localizedTextObjectFieldName", ""
+			).putAll(
+				_localizedObjectFieldI18nValues
+			).build(),
+			"en_US", objectEntry.getId());
+		_assertLocalizedValues(
+			HashMapBuilder.<String, Object>put(
+				"localizedLongTextObjectFieldName", ""
+			).put(
+				"localizedRichTextObjectFieldName", ""
+			).put(
+				"localizedRichTextObjectFieldNameRawText", ""
+			).put(
+				"localizedTextObjectFieldName", ""
+			).putAll(
+				_localizedObjectFieldI18nValues
+			).build(),
+			"pt_BR", objectEntry.getId());
+
+		_localizedObjectFieldI18nValues = HashMapBuilder.<String, Object>put(
+			"localizedLongTextObjectFieldName_i18n",
+			HashMapBuilder.put(
+				"en_US", "en_US localizedLongTextObjectFieldValue"
+			).put(
+				"pt_BR", ""
+			).build()
+		).put(
+			"localizedRichTextObjectFieldName_i18n",
+			HashMapBuilder.put(
+				"ar_SA", "ar_SA localizedRichTextObjectFieldValue"
+			).put(
+				"ca_ES", "ca_ES localizedRichTextObjectFieldValue"
+			).put(
+				"en_US", "en_US <i>localizedRichTextObjectFieldValue</i>"
+			).build()
+		).put(
+			"localizedTextObjectFieldName_i18n",
+			HashMapBuilder.put(
+				"en_US", "en_US localizedTextObjectFieldValue"
+			).put(
+				"pt_BR", "pt_BR localizedTextObjectFieldValue"
+			).build()
+		).build();
+
+		_updateLocalizedObjectEntryValues(
+			_objectDefinition2, objectEntry.getId(),
+			_localizedObjectFieldI18nValues);
+
+		_localizedObjectFieldI18nValues.put(
+			"localizedLongTextObjectFieldName_i18n",
+			HashMapBuilder.put(
+				"en_US", "en_US localizedLongTextObjectFieldValue"
+			).build());
+
+		_assertLocalizedValues(
+			HashMapBuilder.<String, Object>put(
+				"localizedLongTextObjectFieldName", ""
+			).put(
+				"localizedRichTextObjectFieldName",
+				"ar_SA localizedRichTextObjectFieldValue"
+			).put(
+				"localizedRichTextObjectFieldNameRawText",
+				"ar_SA localizedRichTextObjectFieldValue"
+			).put(
+				"localizedTextObjectFieldName", ""
+			).putAll(
+				_localizedObjectFieldI18nValues
+			).build(),
+			"ar_SA", objectEntry.getId());
+		_assertLocalizedValues(
+			HashMapBuilder.<String, Object>put(
+				"localizedLongTextObjectFieldName", ""
+			).put(
+				"localizedRichTextObjectFieldName",
+				"ca_ES localizedRichTextObjectFieldValue"
+			).put(
+				"localizedRichTextObjectFieldNameRawText",
+				"ca_ES localizedRichTextObjectFieldValue"
+			).put(
+				"localizedTextObjectFieldName", ""
+			).putAll(
+				_localizedObjectFieldI18nValues
+			).build(),
+			"ca_ES", objectEntry.getId());
+		_assertLocalizedValues(
+			HashMapBuilder.<String, Object>put(
+				"localizedLongTextObjectFieldName",
+				"en_US localizedLongTextObjectFieldValue"
+			).put(
+				"localizedRichTextObjectFieldName",
+				"en_US <i>localizedRichTextObjectFieldValue</i>"
+			).put(
+				"localizedRichTextObjectFieldNameRawText",
+				"en_US localizedRichTextObjectFieldValue"
+			).put(
+				"localizedTextObjectFieldName",
+				"en_US localizedTextObjectFieldValue"
+			).putAll(
+				_localizedObjectFieldI18nValues
+			).build(),
+			"en_US", objectEntry.getId());
+		_assertLocalizedValues(
+			HashMapBuilder.<String, Object>put(
+				"localizedLongTextObjectFieldName", ""
+			).put(
+				"localizedRichTextObjectFieldName", ""
+			).put(
+				"localizedRichTextObjectFieldNameRawText", ""
+			).put(
+				"localizedTextObjectFieldName",
+				"pt_BR localizedTextObjectFieldValue"
+			).putAll(
+				_localizedObjectFieldI18nValues
+			).build(),
+			"pt_BR", objectEntry.getId());
+	}
+
+	@Test
+	public void testUpdateObjectEntryWithAccountEntryRestricted()
 		throws Exception {
 
 		// Regular roles' company scope permissions should not be restricted by
@@ -1742,6 +2215,15 @@ public class DefaultObjectEntryManagerImplTest {
 			new String[] {ActionKeys.UPDATE, ActionKeys.VIEW},
 			_objectDefinition3, _user);
 
+		AssertUtils.assertFailure(
+			ObjectEntryValuesException.UnmodifiableAccountEntryObjectField.
+				class,
+			"The object field r_oneToManyRelationshipName_accountEntryId is " +
+				"unmodifiable because it is the account entry restrictor",
+			() -> _defaultObjectEntryManager.updateObjectEntry(
+				_simpleDTOConverterContext, _objectDefinition3,
+				objectEntry1.getId(), objectEntry2));
+
 		_defaultObjectEntryManager.updateObjectEntry(
 			_simpleDTOConverterContext, _objectDefinition3,
 			objectEntry1.getId(), objectEntry1);
@@ -1751,7 +2233,8 @@ public class DefaultObjectEntryManagerImplTest {
 			ResourceConstants.SCOPE_COMPANY, String.valueOf(_companyId),
 			role.getRoleId(), ActionKeys.UPDATE);
 
-		_assertFailure(
+		AssertUtils.assertFailure(
+			PrincipalException.MustHavePermission.class,
 			StringBundler.concat(
 				"User ", _user.getUserId(), " must have UPDATE permission for ",
 				_objectDefinition3.getClassName(), StringPool.SPACE,
@@ -1793,7 +2276,8 @@ public class DefaultObjectEntryManagerImplTest {
 			_simpleDTOConverterContext, _objectDefinition3,
 			objectEntry1.getId(), objectEntry1);
 
-		_assertFailure(
+		AssertUtils.assertFailure(
+			PrincipalException.MustHavePermission.class,
 			StringBundler.concat(
 				"User ", _user.getUserId(), " must have UPDATE permission for ",
 				_objectDefinition3.getClassName(), StringPool.SPACE,
@@ -1812,17 +2296,14 @@ public class DefaultObjectEntryManagerImplTest {
 
 		_assignOrganizationRole(organization1, _accountManagerRole, _user);
 
-		_accountEntryOrganizationRelLocalService.addAccountEntryOrganizationRel(
-			accountEntry1.getAccountEntryId(),
-			organization1.getOrganizationId());
+		_addAccountEntryOrganizationRel(accountEntry1, organization1);
 
 		Organization organization2 = OrganizationTestUtil.addOrganization();
 
-		_accountEntryOrganizationRelLocalService.addAccountEntryOrganizationRel(
-			accountEntry2.getAccountEntryId(),
-			organization2.getOrganizationId());
+		_addAccountEntryOrganizationRel(accountEntry2, organization2);
 
-		_assertFailure(
+		AssertUtils.assertFailure(
+			PrincipalException.MustHavePermission.class,
 			StringBundler.concat(
 				"User ", _user.getUserId(), " must have UPDATE permission for ",
 				_objectDefinition3.getClassName(), StringPool.SPACE,
@@ -1845,17 +2326,13 @@ public class DefaultObjectEntryManagerImplTest {
 			organization1.getOrganizationId(), RandomTestUtil.randomString(),
 			false);
 
-		_accountEntryOrganizationRelLocalService.addAccountEntryOrganizationRel(
-			accountEntry1.getAccountEntryId(),
-			suborganization1.getOrganizationId());
+		_addAccountEntryOrganizationRel(accountEntry1, suborganization1);
 
 		Organization suborganization2 = OrganizationTestUtil.addOrganization(
 			organization2.getOrganizationId(), RandomTestUtil.randomString(),
 			false);
 
-		_accountEntryOrganizationRelLocalService.addAccountEntryOrganizationRel(
-			accountEntry2.getAccountEntryId(),
-			suborganization2.getOrganizationId());
+		_addAccountEntryOrganizationRel(accountEntry2, suborganization2);
 
 		_user = _addUser();
 
@@ -1863,7 +2340,8 @@ public class DefaultObjectEntryManagerImplTest {
 
 		_assertObjectEntriesSize(1);
 
-		_assertFailure(
+		AssertUtils.assertFailure(
+			PrincipalException.MustHavePermission.class,
 			StringBundler.concat(
 				"User ", _user.getUserId(), " must have UPDATE permission for ",
 				_objectDefinition3.getClassName(), StringPool.SPACE,
@@ -1877,21 +2355,6 @@ public class DefaultObjectEntryManagerImplTest {
 		_defaultObjectEntryManager.updateObjectEntry(
 			_simpleDTOConverterContext, _objectDefinition3,
 			objectEntry1.getId(), objectEntry1);
-
-		_assertFailure(
-			"The object field r_oneToManyRelationshipName_accountEntryId is " +
-				"unmodifiable because it is the account entry restrictor",
-			() -> _defaultObjectEntryManager.updateObjectEntry(
-				_simpleDTOConverterContext, _objectDefinition3,
-				objectEntry1.getId(),
-				new ObjectEntry() {
-					{
-						properties = HashMapBuilder.<String, Object>put(
-							"r_oneToManyRelationshipName_accountEntryId",
-							accountEntry2.getAccountEntryId()
-						).build();
-					}
-				}));
 	}
 
 	private AccountEntry _addAccountEntry() throws Exception {
@@ -1902,6 +2365,14 @@ public class DefaultObjectEntryManagerImplTest {
 			AccountConstants.ACCOUNT_ENTRY_TYPE_BUSINESS,
 			WorkflowConstants.STATUS_APPROVED,
 			ServiceContextTestUtil.getServiceContext());
+	}
+
+	private void _addAccountEntryOrganizationRel(
+			AccountEntry accountEntry, Organization organization)
+		throws Exception {
+
+		_accountEntryOrganizationRelLocalService.addAccountEntryOrganizationRel(
+			accountEntry.getAccountEntryId(), organization.getOrganizationId());
 	}
 
 	private void _addAggregationObjectField(
@@ -1948,6 +2419,8 @@ public class DefaultObjectEntryManagerImplTest {
 			objectField.isIndexedAsKeyword(),
 			objectField.getIndexedLanguageId(), objectField.getLabelMap(),
 			objectField.isLocalized(), objectField.getName(),
+			objectField.getReadOnly(),
+			objectField.getReadOnlyConditionExpression(),
 			objectField.isRequired(), objectField.isState(),
 			objectField.getObjectFieldSettings());
 	}
@@ -2180,13 +2653,6 @@ public class DefaultObjectEntryManagerImplTest {
 				}
 			}
 			else if (Objects.equals(
-						expectedEntry.getKey(), "richTextObjectFieldName")) {
-
-				Assert.assertEquals(
-					expectedEntry.getValue(),
-					actualObjectEntryProperties.get(expectedEntry.getKey()));
-			}
-			else if (Objects.equals(
 						expectedEntry.getKey(),
 						"richTextObjectFieldNameRawText")) {
 
@@ -2224,17 +2690,26 @@ public class DefaultObjectEntryManagerImplTest {
 		}
 	}
 
-	private void _assertFailure(
-		String message, UnsafeSupplier<Object, Exception> unsafeSupplier) {
+	private void _assertLocalizedValues(
+			Map<String, Object> expectedLocalizedValues, String languageId,
+			long objectEntryId)
+		throws Exception {
 
-		try {
-			unsafeSupplier.get();
+		_user.setLanguageId(languageId);
 
-			Assert.fail();
-		}
-		catch (Exception exception) {
-			Assert.assertEquals(exception.getMessage(), message);
-		}
+		_user = _userLocalService.updateUser(_user);
+
+		_assertEquals(
+			new ObjectEntry() {
+				{
+					setProperties(expectedLocalizedValues);
+				}
+			},
+			_defaultObjectEntryManager.getObjectEntry(
+				new DefaultDTOConverterContext(
+					false, Collections.emptyMap(), _dtoConverterRegistry, null,
+					LocaleUtil.getDefault(), null, _user),
+				_objectDefinition2, objectEntryId));
 	}
 
 	private void _assertObjectEntriesSize(long size) throws Exception {
@@ -2368,11 +2843,11 @@ public class DefaultObjectEntryManagerImplTest {
 
 		ObjectDefinition objectDefinition =
 			_objectDefinitionLocalService.addCustomObjectDefinition(
-				_adminUser.getUserId(), false, false,
+				_adminUser.getUserId(), 0, false, true,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				"A" + RandomTestUtil.randomString(), null, null,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
-				ObjectDefinitionConstants.SCOPE_COMPANY,
+				true, ObjectDefinitionConstants.SCOPE_COMPANY,
 				ObjectDefinitionConstants.STORAGE_TYPE_DEFAULT, objectFields);
 
 		return _objectDefinitionLocalService.publishCustomObjectDefinition(
@@ -2389,6 +2864,16 @@ public class DefaultObjectEntryManagerImplTest {
 		objectFieldSetting.setValue(value);
 
 		return objectFieldSetting;
+	}
+
+	private void _deleteAccountEntryOrganizationRel(
+			AccountEntry accountEntry, Organization organization)
+		throws Exception {
+
+		_accountEntryOrganizationRelLocalService.
+			deleteAccountEntryOrganizationRel(
+				accountEntry.getAccountEntryId(),
+				organization.getOrganizationId());
 	}
 
 	private Long _getAttachmentObjectFieldValue() throws Exception {
@@ -2424,6 +2909,36 @@ public class DefaultObjectEntryManagerImplTest {
 			role.getRoleId(), actionId);
 	}
 
+	private void _testAddObjectEntryAccountEntryRestriction(
+			AccountEntry accountEntry)
+		throws Exception {
+
+		_accountEntryUserRelLocalService.addAccountEntryUserRel(
+			accountEntry.getAccountEntryId(), _user.getUserId());
+
+		AssertUtils.assertFailure(
+			PrincipalException.MustHavePermission.class,
+			StringBundler.concat(
+				"User ", _user.getUserId(),
+				" must have ADD_OBJECT_ENTRY permission for ",
+				_objectDefinition3.getResourceName(), StringPool.SPACE),
+			() -> _addObjectEntry(accountEntry));
+
+		_addResourcePermission(ObjectActionKeys.ADD_OBJECT_ENTRY, _buyerRole);
+
+		_userGroupRoleLocalService.addUserGroupRole(
+			_user.getUserId(), accountEntry.getAccountEntryGroupId(),
+			_buyerRole.getRoleId());
+
+		Assert.assertNotNull(_addObjectEntry(accountEntry));
+
+		_userGroupRoleLocalService.deleteUserGroupRolesByUserId(
+			_user.getUserId());
+
+		_removeResourcePermission(
+			ObjectActionKeys.ADD_OBJECT_ENTRY, _buyerRole);
+	}
+
 	private void _testGetObjectEntries(
 			Map<String, String> context, ObjectEntry... expectedObjectEntries)
 		throws Exception {
@@ -2447,6 +2962,20 @@ public class DefaultObjectEntryManagerImplTest {
 			(List<ObjectEntry>)page.getItems());
 	}
 
+	private void _updateLocalizedObjectEntryValues(
+			ObjectDefinition objectDefinition, long objectEntryId,
+			Map<String, Object> values)
+		throws Exception {
+
+		_defaultObjectEntryManager.updateObjectEntry(
+			_simpleDTOConverterContext, objectDefinition, objectEntryId,
+			new ObjectEntry() {
+				{
+					properties = values;
+				}
+			});
+	}
+
 	private static User _adminUser;
 	private static long _companyId;
 	private static DefaultObjectEntryManager _defaultObjectEntryManager;
@@ -2455,7 +2984,6 @@ public class DefaultObjectEntryManagerImplTest {
 	@Inject
 	private static DTOConverterRegistry _dtoConverterRegistry;
 
-	@DeleteAfterTestRun
 	private static Group _group;
 
 	@Inject(
@@ -2497,9 +3025,6 @@ public class DefaultObjectEntryManagerImplTest {
 	private DLURLHelper _dlURLHelper;
 
 	@Inject
-	private FilterPredicateFactory _filterPredicateFactory;
-
-	@Inject
 	private GroupLocalService _groupLocalService;
 
 	private ListTypeDefinition _listTypeDefinition;
@@ -2509,6 +3034,8 @@ public class DefaultObjectEntryManagerImplTest {
 
 	@Inject
 	private ListTypeEntryLocalService _listTypeEntryLocalService;
+
+	private Map<String, Object> _localizedObjectFieldI18nValues;
 
 	@DeleteAfterTestRun
 	private ObjectDefinition _objectDefinition1;

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.upgrade.test;
@@ -19,13 +10,14 @@ import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
-import com.liferay.portal.util.PropsValues;
+import com.liferay.portal.util.PropsUtil;
 
 import java.lang.management.ManagementFactory;
 
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
 
+import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -34,7 +26,10 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
+import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.runtime.ServiceComponentRuntime;
 import org.osgi.util.promise.Promise;
 
@@ -51,15 +46,26 @@ public class UpgradeManagerTest {
 
 	@BeforeClass
 	public static void setUpClass() {
-		_originalUpgradeDatabaseAutoRun = ReflectionTestUtil.getFieldValue(
-			PropsValues.class, "UPGRADE_DATABASE_AUTO_RUN");
+		_originalUpgradeDatabaseAutoRun = PropsUtil.get(
+			"upgrade.database.auto.run");
 	}
 
 	@AfterClass
 	public static void tearDownClass() {
-		ReflectionTestUtil.setFieldValue(
-			PropsValues.class, "UPGRADE_DATABASE_AUTO_RUN",
-			_originalUpgradeDatabaseAutoRun);
+		PropsUtil.set(
+			"upgrade.database.auto.run", _originalUpgradeDatabaseAutoRun);
+	}
+
+	@After
+	public void tearDown() throws Exception {
+		Promise<?> promise = _serviceComponentRuntime.disableComponent(
+			_serviceComponentRuntime.getComponentDescriptionDTO(
+				FrameworkUtil.getBundle(_upgradeRecorder.getClass()),
+				"com.liferay.portal.upgrade.internal.jmx.UpgradeManager"));
+
+		promise.getValue();
+
+		_upgradeManager = null;
 	}
 
 	@Test
@@ -137,9 +143,9 @@ public class UpgradeManagerTest {
 
 		promise.getValue();
 
-		ReflectionTestUtil.setFieldValue(
-			PropsValues.class, "UPGRADE_DATABASE_AUTO_RUN",
-			upgradeDatabaseAutoRun);
+		PropsUtil.set(
+			"upgrade.database.auto.run",
+			String.valueOf(upgradeDatabaseAutoRun));
 
 		promise = _serviceComponentRuntime.enableComponent(
 			_serviceComponentRuntime.getComponentDescriptionDTO(
@@ -150,21 +156,31 @@ public class UpgradeManagerTest {
 		promise.getValue();
 	}
 
-	private String _upgradeManagerInvoke(String methodName) {
+	private String _upgradeManagerInvoke(String methodName) throws Exception {
+		if (_upgradeManager == null) {
+			Bundle bundle = FrameworkUtil.getBundle(
+				_upgradeRecorder.getClass());
+
+			BundleContext bundleContext = bundle.getBundleContext();
+
+			ServiceReference<?>[] serviceReferences =
+				bundleContext.getServiceReferences(
+					"javax.management.DynamicMBean",
+					"(component.name=com.liferay.portal.upgrade.internal.jmx." +
+						"UpgradeManager)");
+
+			_upgradeManager = bundleContext.getService(serviceReferences[0]);
+		}
+
 		return ReflectionTestUtil.invoke(
 			_upgradeManager, methodName, new Class<?>[0], null);
 	}
 
-	private static boolean _originalUpgradeDatabaseAutoRun;
+	private static String _originalUpgradeDatabaseAutoRun;
+	private static Object _upgradeManager;
 
 	@Inject
 	private ServiceComponentRuntime _serviceComponentRuntime;
-
-	@Inject(
-		filter = "component.name=com.liferay.portal.upgrade.internal.recorder.UpgradeRecorder",
-		type = Inject.NoType.class
-	)
-	private Object _upgradeManager;
 
 	@Inject(
 		filter = "component.name=com.liferay.portal.upgrade.internal.recorder.UpgradeRecorder",

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.layout.page.template.service.persistence.impl;
@@ -51,7 +42,6 @@ import com.liferay.portal.kernel.uuid.PortalUUID;
 
 import java.io.Serializable;
 
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 
 import java.util.ArrayList;
@@ -736,21 +726,21 @@ public class LayoutPageTemplateStructurePersistenceImpl
 
 		uuid = Objects.toString(uuid, "");
 
-		boolean productionMode = ctPersistenceHelper.isProductionMode(
-			LayoutPageTemplateStructure.class);
-
 		Object[] finderArgs = null;
 
-		if (useFinderCache && productionMode) {
+		if (useFinderCache) {
 			finderArgs = new Object[] {uuid, groupId};
 		}
 
 		Object result = null;
 
-		if (useFinderCache && productionMode) {
+		if (useFinderCache) {
 			result = finderCache.getResult(
 				_finderPathFetchByUUID_G, finderArgs, this);
 		}
+
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			LayoutPageTemplateStructure.class);
 
 		if (result instanceof LayoutPageTemplateStructure) {
 			LayoutPageTemplateStructure layoutPageTemplateStructure =
@@ -761,6 +751,15 @@ public class LayoutPageTemplateStructurePersistenceImpl
 
 				result = null;
 			}
+			else if (!ctPersistenceHelper.isProductionMode(
+						LayoutPageTemplateStructure.class,
+						layoutPageTemplateStructure.getPrimaryKey())) {
+
+				result = null;
+			}
+		}
+		else if (!productionMode && (result instanceof List<?>)) {
+			result = null;
 		}
 
 		if (result == null) {
@@ -2129,21 +2128,21 @@ public class LayoutPageTemplateStructurePersistenceImpl
 	public LayoutPageTemplateStructure fetchByG_P(
 		long groupId, long plid, boolean useFinderCache) {
 
-		boolean productionMode = ctPersistenceHelper.isProductionMode(
-			LayoutPageTemplateStructure.class);
-
 		Object[] finderArgs = null;
 
-		if (useFinderCache && productionMode) {
+		if (useFinderCache) {
 			finderArgs = new Object[] {groupId, plid};
 		}
 
 		Object result = null;
 
-		if (useFinderCache && productionMode) {
+		if (useFinderCache) {
 			result = finderCache.getResult(
 				_finderPathFetchByG_P, finderArgs, this);
 		}
+
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			LayoutPageTemplateStructure.class);
 
 		if (result instanceof LayoutPageTemplateStructure) {
 			LayoutPageTemplateStructure layoutPageTemplateStructure =
@@ -2154,6 +2153,15 @@ public class LayoutPageTemplateStructurePersistenceImpl
 
 				result = null;
 			}
+			else if (!ctPersistenceHelper.isProductionMode(
+						LayoutPageTemplateStructure.class,
+						layoutPageTemplateStructure.getPrimaryKey())) {
+
+				result = null;
+			}
+		}
+		else if (!productionMode && (result instanceof List<?>)) {
+			result = null;
 		}
 
 		if (result == null) {
@@ -3270,33 +3278,15 @@ public class LayoutPageTemplateStructurePersistenceImpl
 			new String[] {Long.class.getName(), Long.class.getName()},
 			new String[] {"groupId", "plid"}, false);
 
-		_setLayoutPageTemplateStructureUtilPersistence(this);
+		LayoutPageTemplateStructureUtil.setPersistence(this);
 	}
 
 	@Deactivate
 	public void deactivate() {
-		_setLayoutPageTemplateStructureUtilPersistence(null);
+		LayoutPageTemplateStructureUtil.setPersistence(null);
 
 		entityCache.removeCache(
 			LayoutPageTemplateStructureImpl.class.getName());
-	}
-
-	private void _setLayoutPageTemplateStructureUtilPersistence(
-		LayoutPageTemplateStructurePersistence
-			layoutPageTemplateStructurePersistence) {
-
-		try {
-			Field field =
-				LayoutPageTemplateStructureUtil.class.getDeclaredField(
-					"_persistence");
-
-			field.setAccessible(true);
-
-			field.set(null, layoutPageTemplateStructurePersistence);
-		}
-		catch (ReflectiveOperationException reflectiveOperationException) {
-			throw new RuntimeException(reflectiveOperationException);
-		}
 	}
 
 	@Override

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.journal.service;
@@ -131,6 +122,7 @@ public interface JournalArticleService extends BaseService {
 	 * @param neverReview whether the web content article is not set for review
 	 * @param indexable whether the web content article is searchable
 	 * @param smallImage whether the web content article has a small image
+	 * @param smallImageSource the web content article's small image source
 	 * @param smallImageURL the web content article's small image URL
 	 * @param smallFile the web content article's small image file
 	 * @param images the web content's images
@@ -158,8 +150,9 @@ public interface JournalArticleService extends BaseService {
 			boolean neverExpire, int reviewDateMonth, int reviewDateDay,
 			int reviewDateYear, int reviewDateHour, int reviewDateMinute,
 			boolean neverReview, boolean indexable, boolean smallImage,
-			String smallImageURL, File smallFile, Map<String, byte[]> images,
-			String articleURL, ServiceContext serviceContext)
+			int smallImageSource, String smallImageURL, File smallFile,
+			Map<String, byte[]> images, String articleURL,
+			ServiceContext serviceContext)
 		throws PortalException;
 
 	/**
@@ -207,8 +200,8 @@ public interface JournalArticleService extends BaseService {
 			int expirationDateMinute, boolean neverExpire, int reviewDateMonth,
 			int reviewDateDay, int reviewDateYear, int reviewDateHour,
 			int reviewDateMinute, boolean neverReview, boolean indexable,
-			boolean smallImage, String smallImageURL, File smallImageFile,
-			ServiceContext serviceContext)
+			boolean smallImage, int smallImageSource, String smallImageURL,
+			File smallImageFile, ServiceContext serviceContext)
 		throws PortalException;
 
 	/**
@@ -1418,6 +1411,8 @@ public interface JournalArticleService extends BaseService {
 	 * @param smallImage whether to update web content article's a small image.
 	 A file must be passed in as <code>smallImageFile</code> value,
 	 otherwise the current small image is deleted.
+	 * @param smallImageSource the web content article's small image source
+	 (optionally <code>null</code>)
 	 * @param smallImageURL the web content article's small image URL
 	 (optionally <code>null</code>)
 	 * @param smallFile the web content article's new small image file
@@ -1451,8 +1446,9 @@ public interface JournalArticleService extends BaseService {
 			boolean neverExpire, int reviewDateMonth, int reviewDateDay,
 			int reviewDateYear, int reviewDateHour, int reviewDateMinute,
 			boolean neverReview, boolean indexable, boolean smallImage,
-			String smallImageURL, File smallFile, Map<String, byte[]> images,
-			String articleURL, ServiceContext serviceContext)
+			int smallImageSource, String smallImageURL, File smallFile,
+			Map<String, byte[]> images, String articleURL,
+			ServiceContext serviceContext)
 		throws PortalException;
 
 	/**
@@ -1509,6 +1505,8 @@ public interface JournalArticleService extends BaseService {
 	 * @param smallImage whether to update web content article's a small image.
 	 A file must be passed in as <code>smallImageFile</code> value,
 	 otherwise the current small image is deleted.
+	 * @param smallImageSource the web content article's small image source
+	 (optionally <code>null</code>)
 	 * @param smallImageURL the web content article's small image URL
 	 (optionally <code>null</code>)
 	 * @param smallFile the web content article's new small image file
@@ -1541,8 +1539,9 @@ public interface JournalArticleService extends BaseService {
 			boolean neverExpire, int reviewDateMonth, int reviewDateDay,
 			int reviewDateYear, int reviewDateHour, int reviewDateMinute,
 			boolean neverReview, boolean indexable, boolean smallImage,
-			String smallImageURL, File smallFile, Map<String, byte[]> images,
-			String articleURL, ServiceContext serviceContext)
+			int smallImageSource, String smallImageURL, File smallFile,
+			Map<String, byte[]> images, String articleURL,
+			ServiceContext serviceContext)
 		throws PortalException;
 
 	/**
@@ -1600,7 +1599,7 @@ public interface JournalArticleService extends BaseService {
 			boolean neverExpire, int reviewDateMonth, int reviewDateDay,
 			int reviewDateYear, int reviewDateHour, int reviewDateMinute,
 			boolean neverReview, boolean indexable, boolean smallImage,
-			String smallImageURL, File smallImageFile,
+			int smallImageSource, String smallImageURL, File smallImageFile,
 			ServiceContext serviceContext)
 		throws PortalException;
 

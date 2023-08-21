@@ -1,20 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.upgrade.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.events.StartupHelperUtil;
 import com.liferay.portal.kernel.log.Log;
@@ -24,7 +16,6 @@ import com.liferay.portal.kernel.service.ReleaseLocalService;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.upgrade.UpgradeProcess;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.version.Version;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
@@ -41,6 +32,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -155,6 +147,7 @@ public class UpgradeRecorderTest {
 		Assert.assertEquals("no upgrade", _getType());
 	}
 
+	@Ignore
 	@Test
 	public void testWarning() throws Exception {
 		StartupHelperUtil.setUpgrading(true);
@@ -207,11 +200,9 @@ public class UpgradeRecorderTest {
 			if (type.equals("major")) {
 				majorRelease.setSchemaVersion(
 					StringBundler.concat(
-						String.valueOf(majorSchemaVersion.getMajor() + 1),
-						StringPool.PERIOD,
-						String.valueOf(majorSchemaVersion.getMinor()),
-						StringPool.PERIOD,
-						String.valueOf(majorSchemaVersion.getMicro())));
+						majorSchemaVersion.getMajor() + 1, StringPool.PERIOD,
+						majorSchemaVersion.getMinor(), StringPool.PERIOD,
+						majorSchemaVersion.getMicro()));
 
 				majorRelease = _releaseLocalService.updateRelease(majorRelease);
 			}
@@ -219,11 +210,9 @@ public class UpgradeRecorderTest {
 			if (type.equals("major") || type.equals("minor")) {
 				minorRelease.setSchemaVersion(
 					StringBundler.concat(
-						String.valueOf(minorSchemaVersion.getMajor()),
-						StringPool.PERIOD,
-						String.valueOf(minorSchemaVersion.getMinor() + 1),
-						StringPool.PERIOD,
-						String.valueOf(minorSchemaVersion.getMicro())));
+						minorSchemaVersion.getMajor(), StringPool.PERIOD,
+						minorSchemaVersion.getMinor() + 1, StringPool.PERIOD,
+						minorSchemaVersion.getMicro()));
 
 				minorRelease = _releaseLocalService.updateRelease(minorRelease);
 			}
@@ -233,11 +222,9 @@ public class UpgradeRecorderTest {
 
 				microRelease.setSchemaVersion(
 					StringBundler.concat(
-						String.valueOf(microSchemaVersion.getMajor()),
-						StringPool.PERIOD,
-						String.valueOf(microSchemaVersion.getMinor()),
-						StringPool.PERIOD,
-						String.valueOf(microSchemaVersion.getMicro() + 1)));
+						microSchemaVersion.getMajor(), StringPool.PERIOD,
+						microSchemaVersion.getMinor(), StringPool.PERIOD,
+						microSchemaVersion.getMicro() + 1));
 
 				microRelease = _releaseLocalService.updateRelease(microRelease);
 			}

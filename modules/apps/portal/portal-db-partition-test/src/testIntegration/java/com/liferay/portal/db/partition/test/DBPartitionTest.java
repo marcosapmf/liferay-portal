@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.db.partition.test;
@@ -18,10 +9,22 @@ import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.db.partition.DBPartitionUtil;
 import com.liferay.portal.db.partition.test.util.BaseDBPartitionTestCase;
+import com.liferay.portal.kernel.dao.jdbc.DataAccess;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
+import com.liferay.portal.kernel.service.CompanyLocalService;
+import com.liferay.portal.kernel.test.ReflectionTestUtil;
+import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.upgrade.UpgradeProcess;
 import com.liferay.portal.kernel.util.ArrayUtil;
+import com.liferay.portal.kernel.util.ProxyUtil;
+import com.liferay.portal.service.impl.CompanyLocalServiceImpl;
+import com.liferay.portal.spring.aop.AopInvocationHandler;
+import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.util.PortalInstances;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 
 import java.util.Arrays;
 import java.util.List;
@@ -163,6 +166,53 @@ public class DBPartitionTest extends BaseDBPartitionTestCase {
 	}
 
 	@Test
+	public void testRemoveDBPartitionWhenCompanyCreationFails()
+		throws Exception {
+
+		AopInvocationHandler aopInvocationHandler =
+			ProxyUtil.fetchInvocationHandler(
+				_companyLocalService, AopInvocationHandler.class);
+
+		CompanyLocalServiceImpl companyLocalServiceImpl =
+			(CompanyLocalServiceImpl)aopInvocationHandler.getTarget();
+
+		ReflectionTestUtil.setFieldValue(
+			companyLocalServiceImpl, "_dlFileEntryTypeLocalService", null);
+
+		long companyId = RandomTestUtil.randomLong();
+		boolean orphanedDBPartition = false;
+		String webId = "test.com";
+
+		try {
+			_companyLocalService.addCompany(
+				companyId, webId, webId, webId, 0, true, null, null, null, null,
+				null, null);
+		}
+		catch (Exception exception) {
+			try (Connection connection = DataAccess.getConnection();
+				PreparedStatement preparedStatement =
+					connection.prepareStatement(
+						StringBundler.concat(
+							"select schema_name from ",
+							"information_schema.schemata where schema_name = '",
+							_DB_PARTITION_SCHEMA_NAME_PREFIX + companyId, "'"));
+				ResultSet resultSet = preparedStatement.executeQuery()) {
+
+				orphanedDBPartition = resultSet.next();
+
+				Assert.assertFalse(
+					"The database partition was not removed",
+					orphanedDBPartition);
+			}
+		}
+		finally {
+			if (orphanedDBPartition) {
+				removeDBPartitions(new long[] {companyId}, false);
+			}
+		}
+	}
+
+	@Test
 	public void testUpdateIndexes() throws Exception {
 		try {
 			DBPartitionUtil.forEachCompanyId(
@@ -218,5 +268,11 @@ public class DBPartitionTest extends BaseDBPartitionTestCase {
 		private volatile List<Long> _companyIds = new CopyOnWriteArrayList<>();
 
 	}
+
+	private static final String _DB_PARTITION_SCHEMA_NAME_PREFIX =
+		"lpartitiontest_";
+
+	@Inject
+	private CompanyLocalService _companyLocalService;
 
 }

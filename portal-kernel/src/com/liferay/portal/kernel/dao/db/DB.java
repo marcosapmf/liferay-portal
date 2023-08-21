@@ -1,20 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.kernel.dao.db;
 
 import com.liferay.petra.function.UnsafeConsumer;
+import com.liferay.portal.kernel.util.ObjectValuePair;
 
 import java.io.IOException;
 
@@ -23,6 +15,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import java.util.List;
+import java.util.Map;
 
 import javax.naming.NamingException;
 
@@ -67,7 +60,7 @@ public interface DB {
 
 	public void copyTableRows(
 			Connection connection, String sourceTableName,
-			String targetTableName)
+			String targetTableName, Map<String, String> columnNamesMap)
 		throws Exception;
 
 	public void copyTableStructure(
@@ -79,6 +72,8 @@ public interface DB {
 		throws IOException, SQLException;
 
 	public DBType getDBType();
+
+	public String getDefaultValue(String columnDef);
 
 	public List<Index> getIndexes(Connection connection) throws SQLException;
 
@@ -103,7 +98,9 @@ public interface DB {
 
 	public Integer getSQLType(String templateType);
 
-	public Integer getSQLVarcharSize(String templateType);
+	public Integer getSQLTypeDecimalDigits(String templateType);
+
+	public Integer getSQLTypeSize(String templateType);
 
 	public String getTemplateBlob();
 
@@ -135,6 +132,11 @@ public interface DB {
 		throws Exception;
 
 	public void removePrimaryKey(Connection connection, String tableName)
+		throws Exception;
+
+	public void renameTables(
+			Connection connection,
+			ObjectValuePair<String, String>... tableNameObjectValuePairs)
 		throws Exception;
 
 	public default void runSQL(
@@ -173,6 +175,11 @@ public interface DB {
 
 	public void setSupportsStringCaseSensitiveQuery(
 		boolean supportsStringCaseSensitiveQuery);
+
+	public AutoCloseable syncTables(
+			Connection connection, String sourceTableName,
+			String targetTableName, Map<String, String> columnNamesMap)
+		throws Exception;
 
 	public void updateIndexes(
 			Connection connection, String tablesSQL, String indexesSQL,

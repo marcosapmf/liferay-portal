@@ -1,3 +1,8 @@
+/**
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
+ */
+
 import classNames from 'classnames';
 
 import checkFill from '../../assets/icons/check_fill_icon.svg';
@@ -41,9 +46,9 @@ export function StepTracker({
 				{freeApp ? (
 					<span>{steps[0].name}</span>
 				) : (
-					steps.map((step) => {
+					steps.map((step, i) => {
 						return (
-							<div className="get-app-modal-step-item">
+							<div className="get-app-modal-step-item" key={i}>
 								<img
 									className={classNames(
 										'get-app-modal-step-icon',

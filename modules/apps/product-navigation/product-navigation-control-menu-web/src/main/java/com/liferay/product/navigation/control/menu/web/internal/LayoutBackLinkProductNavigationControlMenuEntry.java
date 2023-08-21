@@ -1,25 +1,22 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.product.navigation.control.menu.web.internal;
 
+import com.liferay.layout.content.page.editor.constants.ContentPageEditorPortletKeys;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.model.Layout;
+import com.liferay.portal.kernel.portlet.PortletURLFactoryUtil;
+import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
+import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Validator;
@@ -29,6 +26,9 @@ import com.liferay.product.navigation.control.menu.ProductNavigationControlMenuE
 import com.liferay.product.navigation.control.menu.constants.ProductNavigationControlMenuCategoryKeys;
 
 import java.util.Locale;
+import java.util.Objects;
+
+import javax.portlet.PortletRequest;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -85,8 +85,34 @@ public class LayoutBackLinkProductNavigationControlMenuEntry
 
 	@Override
 	public String getURL(HttpServletRequest httpServletRequest) {
-		return _portal.escapeRedirect(
-			ParamUtil.getString(httpServletRequest, "p_l_back_url"));
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
+
+		Layout layout = _layoutLocalService.fetchLayout(themeDisplay.getPlid());
+
+		if (!FeatureFlagManagerUtil.isEnabled("LPS-180328") ||
+			!Objects.equals(
+				ParamUtil.getString(
+					httpServletRequest, "p_l_mode", Constants.VIEW),
+				Constants.EDIT) ||
+			(layout == null) || !layout.isDraftLayout()) {
+
+			return _portal.escapeRedirect(
+				ParamUtil.getString(httpServletRequest, "p_l_back_url"));
+		}
+
+		return PortletURLBuilder.create(
+			PortletURLFactoryUtil.create(
+				httpServletRequest,
+				ContentPageEditorPortletKeys.CONTENT_PAGE_EDITOR_PORTLET,
+				themeDisplay.getPlid(), PortletRequest.ACTION_PHASE)
+		).setActionName(
+			"/layout_content_page_editor/unlock_draft_layout"
+		).setRedirect(
+			() -> _portal.escapeRedirect(
+				ParamUtil.getString(httpServletRequest, "p_l_back_url"))
+		).buildString();
 	}
 
 	@Override
@@ -115,6 +141,9 @@ public class LayoutBackLinkProductNavigationControlMenuEntry
 
 	@Reference
 	private Language _language;
+
+	@Reference
+	private LayoutLocalService _layoutLocalService;
 
 	@Reference
 	private Portal _portal;

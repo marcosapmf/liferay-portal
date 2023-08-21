@@ -1,21 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.test.util.context;
 
 import com.liferay.account.service.AccountEntryLocalService;
-import com.liferay.commerce.account.util.CommerceAccountHelper;
+import com.liferay.account.service.AccountGroupLocalService;
 import com.liferay.commerce.context.CommerceContext;
 import com.liferay.commerce.context.CommerceContextFactory;
 import com.liferay.commerce.currency.service.CommerceCurrencyLocalService;
@@ -23,6 +14,7 @@ import com.liferay.commerce.order.CommerceOrderHttpHelper;
 import com.liferay.commerce.product.service.CommerceChannelAccountEntryRelLocalService;
 import com.liferay.commerce.product.service.CommerceChannelLocalService;
 import com.liferay.commerce.service.CommerceOrderService;
+import com.liferay.commerce.util.CommerceAccountHelper;
 import com.liferay.portal.kernel.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.util.Portal;
 
@@ -44,8 +36,8 @@ public class TestCustomCommerceContextFactory
 	@Override
 	public CommerceContext create(HttpServletRequest httpServletRequest) {
 		return new TestCustomCommerceContextHttp(
-			httpServletRequest, _commerceAccountHelper,
-			_commerceChannelAccountEntryRelLocalService,
+			httpServletRequest, _accountGroupLocalService,
+			_commerceAccountHelper, _commerceChannelAccountEntryRelLocalService,
 			_commerceChannelLocalService, _commerceCurrencyLocalService,
 			_commerceOrderHttpHelper, _configurationProvider, _portal);
 	}
@@ -57,7 +49,7 @@ public class TestCustomCommerceContextFactory
 
 		return new TestCustomCommerceContext(
 			companyId, commerceChannelGroupId, orderId, commerceAccountId,
-			_accountEntryLocalService, _commerceAccountHelper,
+			_accountEntryLocalService, _accountGroupLocalService,
 			_commerceChannelAccountEntryRelLocalService,
 			_commerceChannelLocalService, _commerceCurrencyLocalService,
 			_commerceOrderService, _configurationProvider);
@@ -65,6 +57,9 @@ public class TestCustomCommerceContextFactory
 
 	@Reference
 	private AccountEntryLocalService _accountEntryLocalService;
+
+	@Reference
+	private AccountGroupLocalService _accountGroupLocalService;
 
 	@Reference
 	private CommerceAccountHelper _commerceAccountHelper;

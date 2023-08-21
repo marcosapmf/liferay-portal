@@ -46,6 +46,11 @@
 		<td></td>
 	</tr>
 	<tr>
+		<td>LAYOUT_FIELD_NAME</td>
+		<td>//div[contains(@class,'layout-tab')]//*[contains(text(),'${key_fieldName}')]</td>
+		<td></td>
+	</tr>
+	<tr>
 		<td>ADD_FIELD_ON_BLOCK</td>
 		<td>//button[contains(@class,'btn-secondary') and contains (text(),'Add Field')]</td>
 		<td></td>
@@ -312,7 +317,7 @@
 	</tr>
 	<tr>
 		<td>OBJECT_STATUS</td>
-		<td>//a[text() = '${key_label}']/../../following-sibling::div//span[contains(@class,'workflow-status')]//strong[contains(text(),'${key_status}')]</td>
+		<td>//*[@class='dnd-tr'][contains(.,'${key_label}')] //*[contains(@class,'label')]</td>
 		<td></td>
 	</tr>
 	<tr>
@@ -321,8 +326,8 @@
 		<td></td>
 	</tr>
 	<tr>
-		<td>OBJECT_LABEL_COLUMN</td>
-		<td>//div[contains(@class,'dnd-th') and contains(text(),'Label')]</td>
+		<td>GENERIC_LABEL_COLUMN</td>
+		<td>//div[contains(@class,'dnd-th')]//button[contains(text(),'Label')]</td>
 		<td></td>
 	</tr>
 	<tr>
@@ -391,11 +396,6 @@
 		<td></td>
 	</tr>
 	<tr>
-		<td>FIELDS_LABEL_COLUMN</td>
-		<td>//div[contains(@class,'dnd-th') and contains(text(),'Label')]</td>
-		<td></td>
-	</tr>
-	<tr>
 		<td>FIELDS_RADIO_OPTION</td>
 		<td>//label[contains(.,'${key_radioOption}')]/input[@type='radio']</td>
 		<td></td>
@@ -437,7 +437,7 @@
 	</tr>
 	<tr>
 		<td>KEBAB_MENU_OPTION</td>
-		<td>//*[@class = 'dropdown-item' and contains(text(), '${key_kebabOption}')]</td>
+		<td>//*[@class='dropdown-menu show']//*[(@class='dropdown-item' and @role='menuitem') and contains(text(),'${key_kebabOption}')]</td>
 		<td></td>
 	</tr>
 	<tr>
@@ -521,13 +521,18 @@
 		<td></td>
 	</tr>
 	<tr>
+		<td>VIEW_FIELD_LONG_TEXT_DISABLED</td>
+		<td>//textarea[@disabled][contains(@class, 'ddm-field-text')]</td>
+		<td></td>
+	</tr>
+	<tr>
 		<td>VIEW_OPTION_TITLE_FIELD</td>
 		<td>//*[contains(@id,'titleObjectFieldId')]//option[contains(text(),'${key_optionName}')]</td>
 		<td></td>
 	</tr>
 	<tr>
 		<td>VIEW_PICKLIST_OPTIONS</td>
-		<td>//div[@class='dropdown-menu show']//.//ul//button[contains(@class, 'dropdown-item')]//div[contains(text(), '${key_optionName}')]</td>
+		<td>//div[@class='dropdown-menu autocomplete-expand show']//div[contains(text(), '${key_optionName}')]</td>
 		<td></td>
 	</tr>
 	<tr>
@@ -552,7 +557,7 @@
 	</tr>
 	<tr>
 		<td>DROPDOWN_DEFAULT_VALUE</td>
-		<td>//div[contains(@class,'form-group')]//label[contains(text(),'Default Value')]//..//div[contains(@class,'input-group-item')]</td>
+		<td>//div[contains(@class,'form-group')]//label[contains(text(),'Default Value') or contains(text(),'Input as Value')]//..//div[contains(@class,'input-group-item')]</td>
 		<td></td>
 	</tr>
 	<tr>

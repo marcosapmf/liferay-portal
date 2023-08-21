@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.segments.experiment.web.internal.portlet.action;
@@ -134,8 +125,7 @@ public class GetDataMVCResourceCommand extends BaseMVCResourceCommand {
 		throws Exception {
 
 		return _segmentsExperimentService.fetchSegmentsExperiment(
-			segmentsExperienceId, _portal.getClassNameId(Layout.class),
-			layout.getPlid(),
+			segmentsExperienceId, layout.getPlid(),
 			SegmentsExperimentConstants.Status.getExclusiveStatusValues());
 	}
 
@@ -170,11 +160,11 @@ public class GetDataMVCResourceCommand extends BaseMVCResourceCommand {
 			).put(
 				"createSegmentsVariantURL",
 				() -> PortletURLBuilder.create(
-					_portal.getControlPanelPortletURL(
-						httpServletRequest, group,
+					_portletURLFactory.create(
+						httpServletRequest,
 						ContentPageEditorPortletKeys.
 							CONTENT_PAGE_EDITOR_PORTLET,
-						0, 0, PortletRequest.ACTION_PHASE)
+						PortletRequest.ACTION_PHASE)
 				).setActionName(
 					"/layout_content_page_editor/add_segments_experience"
 				).setGlobalParameter(
@@ -230,9 +220,7 @@ public class GetDataMVCResourceCommand extends BaseMVCResourceCommand {
 		).put(
 			"page",
 			JSONUtil.put(
-				"classNameId", _portal.getClassNameId(Layout.class.getName())
-			).put(
-				"classPK", layout.getPlid()
+				"plid", layout.getPlid()
 			).put(
 				"type", layout.getType()
 			)
@@ -322,8 +310,7 @@ public class GetDataMVCResourceCommand extends BaseMVCResourceCommand {
 			"historySegmentsExperiments",
 			JSONUtil.toJSONArray(
 				_segmentsExperimentService.getSegmentsExperiments(
-					segmentsExperienceId, _portal.getClassNameId(Layout.class),
-					layout.getPlid(),
+					segmentsExperienceId, layout.getPlid(),
 					SegmentsExperimentConstants.Status.
 						getNonexclusiveStatusValues(),
 					new SegmentsExperimentModifiedDateComparator()),

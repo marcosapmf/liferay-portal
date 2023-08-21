@@ -1,6 +1,7 @@
 @component-name = "portal-wcm"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testcase.url = "http://localhost:8080";
@@ -188,8 +189,6 @@ definition {
 
 			WaitForPageLoad();
 
-			Navigator.gotoNavTab(navTab = "Design");
-
 			Navigator.gotoNavTab(navTab = "JavaScript");
 
 			AssertElementPresent(locator1 = "PagesAdmin#NO_JAVASCRIPT_EXTENSIONS_LOADED");
@@ -221,8 +220,6 @@ definition {
 			DropdownMenuItem.click(menuItem = "Configuration");
 
 			WaitForPageLoad();
-
-			Navigator.gotoNavTab(navTab = "Design");
 
 			Navigator.gotoNavTab(navTab = "JavaScript");
 
@@ -292,8 +289,6 @@ definition {
 
 			Click(locator1 = "PageEditor#MORE_LINK");
 
-			Navigator.gotoNavTab(navTab = "Design");
-
 			Navigator.gotoNavTab(navTab = "JavaScript");
 
 			PagesAdmin.addJavaScriptExtensions(
@@ -311,8 +306,6 @@ definition {
 			PageEditor.gotoTab(tabName = "Page Design Options");
 
 			Click(locator1 = "PageEditor#MORE_LINK");
-
-			Navigator.gotoNavTab(navTab = "Design");
 
 			Navigator.gotoNavTab(navTab = "JavaScript");
 
@@ -371,8 +364,6 @@ definition {
 
 			Click(locator1 = "PageEditor#MORE_LINK");
 
-			Navigator.gotoNavTab(navTab = "Design");
-
 			Navigator.gotoNavTab(navTab = "JavaScript");
 
 			PagesAdmin.addJavaScriptExtensions(
@@ -406,8 +397,6 @@ definition {
 
 			WaitForPageLoad();
 
-			Navigator.gotoNavTab(navTab = "Design");
-
 			Navigator.gotoNavTab(navTab = "JavaScript");
 
 			AssertVisible(
@@ -436,8 +425,6 @@ definition {
 			Click(locator1 = "PageEditor#MORE_LINK");
 
 			WaitForPageLoad();
-
-			Navigator.gotoNavTab(navTab = "Design");
 
 			Navigator.gotoNavTab(navTab = "JavaScript");
 
@@ -483,8 +470,6 @@ definition {
 
 			Click(locator1 = "PageEditor#MORE_LINK");
 
-			Navigator.gotoNavTab(navTab = "Design");
-
 			Navigator.gotoNavTab(navTab = "JavaScript");
 
 			PagesAdmin.addJavaScriptExtensions(
@@ -509,8 +494,6 @@ definition {
 		}
 
 		task ("Then the site designer could clear the JavaScript extension selection") {
-			Navigator.gotoNavTab(navTab = "Design");
-
 			Navigator.gotoNavTab(navTab = "JavaScript");
 
 			Click(
@@ -632,8 +615,6 @@ definition {
 
 			WaitForPageLoad();
 
-			Navigator.gotoNavTab(navTab = "Design");
-
 			Navigator.gotoNavTab(navTab = "JavaScript");
 
 			PagesAdmin.addJavaScriptExtensions(
@@ -663,8 +644,6 @@ definition {
 			Click(locator1 = "PageEditor#MORE_LINK");
 
 			WaitForPageLoad();
-
-			Navigator.gotoNavTab(navTab = "Design");
 
 			Navigator.gotoNavTab(navTab = "JavaScript");
 
@@ -700,8 +679,6 @@ definition {
 
 			Click(locator1 = "PageEditor#MORE_LINK");
 
-			Navigator.gotoNavTab(navTab = "Design");
-
 			Navigator.gotoNavTab(navTab = "JavaScript");
 
 			PagesAdmin.addJavaScriptExtensions(
@@ -729,8 +706,6 @@ definition {
 			PageEditor.gotoTab(tabName = "Page Design Options");
 
 			Click(locator1 = "PageEditor#MORE_LINK");
-
-			Navigator.gotoNavTab(navTab = "Design");
 
 			Navigator.gotoNavTab(navTab = "JavaScript");
 
@@ -838,8 +813,6 @@ definition {
 
 			Click(locator1 = "PageEditor#MORE_LINK");
 
-			Navigator.gotoNavTab(navTab = "Design");
-
 			Navigator.gotoNavTab(navTab = "JavaScript");
 
 			PagesAdmin.addJavaScriptExtensions(
@@ -867,8 +840,6 @@ definition {
 			PageEditor.gotoTab(tabName = "Page Design Options");
 
 			Click(locator1 = "PageEditor#MORE_LINK");
-
-			Navigator.gotoNavTab(navTab = "Design");
 
 			Navigator.gotoNavTab(navTab = "JavaScript");
 
@@ -996,8 +967,6 @@ definition {
 
 				Click(locator1 = "PageEditor#MORE_LINK");
 
-				Navigator.gotoNavTab(navTab = "Design");
-
 				Navigator.gotoNavTab(navTab = "JavaScript");
 
 				PagesAdmin.addJavaScriptExtensions(
@@ -1032,8 +1001,6 @@ definition {
 				PageEditor.gotoTab(tabName = "Page Design Options");
 
 				Click(locator1 = "PageEditor#MORE_LINK");
-
-				Navigator.gotoNavTab(navTab = "Design");
 
 				Navigator.gotoNavTab(navTab = "JavaScript");
 

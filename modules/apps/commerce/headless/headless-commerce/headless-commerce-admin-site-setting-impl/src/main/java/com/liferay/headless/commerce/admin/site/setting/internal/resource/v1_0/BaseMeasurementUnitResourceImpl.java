@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.admin.site.setting.internal.resource.v1_0;
@@ -31,6 +22,7 @@ import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.SetUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.odata.filter.ExpressionConvert;
@@ -654,30 +646,34 @@ public abstract class BaseMeasurementUnitResourceImpl
 			Map<String, Serializable> parameters)
 		throws Exception {
 
-		UnsafeConsumer<MeasurementUnit, Exception>
-			measurementUnitUnsafeConsumer = null;
+		UnsafeFunction<MeasurementUnit, MeasurementUnit, Exception>
+			measurementUnitUnsafeFunction = null;
 
 		String createStrategy = (String)parameters.getOrDefault(
 			"createStrategy", "INSERT");
 
-		if ("INSERT".equalsIgnoreCase(createStrategy)) {
-			measurementUnitUnsafeConsumer =
+		if (StringUtil.equalsIgnoreCase(createStrategy, "INSERT")) {
+			measurementUnitUnsafeFunction =
 				measurementUnit -> postMeasurementUnit(measurementUnit);
 		}
 
-		if (measurementUnitUnsafeConsumer == null) {
+		if (measurementUnitUnsafeFunction == null) {
 			throw new NotSupportedException(
 				"Create strategy \"" + createStrategy +
 					"\" is not supported for MeasurementUnit");
 		}
 
-		if (contextBatchUnsafeConsumer != null) {
+		if (contextBatchUnsafeBiConsumer != null) {
+			contextBatchUnsafeBiConsumer.accept(
+				measurementUnits, measurementUnitUnsafeFunction);
+		}
+		else if (contextBatchUnsafeConsumer != null) {
 			contextBatchUnsafeConsumer.accept(
-				measurementUnits, measurementUnitUnsafeConsumer);
+				measurementUnits, measurementUnitUnsafeFunction::apply);
 		}
 		else {
 			for (MeasurementUnit measurementUnit : measurementUnits) {
-				measurementUnitUnsafeConsumer.accept(measurementUnit);
+				measurementUnitUnsafeFunction.apply(measurementUnit);
 			}
 		}
 	}
@@ -757,33 +753,40 @@ public abstract class BaseMeasurementUnitResourceImpl
 			Map<String, Serializable> parameters)
 		throws Exception {
 
-		UnsafeConsumer<MeasurementUnit, Exception>
-			measurementUnitUnsafeConsumer = null;
+		UnsafeFunction<MeasurementUnit, MeasurementUnit, Exception>
+			measurementUnitUnsafeFunction = null;
 
 		String updateStrategy = (String)parameters.getOrDefault(
 			"updateStrategy", "UPDATE");
 
-		if ("PARTIAL_UPDATE".equalsIgnoreCase(updateStrategy)) {
-			measurementUnitUnsafeConsumer =
-				measurementUnit -> patchMeasurementUnit(
+		if (StringUtil.equalsIgnoreCase(updateStrategy, "PARTIAL_UPDATE")) {
+			measurementUnitUnsafeFunction = measurementUnit -> {
+				patchMeasurementUnit(
 					measurementUnit.getId() != null ? measurementUnit.getId() :
 						_parseLong((String)parameters.get("measurementUnitId")),
 					measurementUnit);
+
+				return null;
+			};
 		}
 
-		if (measurementUnitUnsafeConsumer == null) {
+		if (measurementUnitUnsafeFunction == null) {
 			throw new NotSupportedException(
 				"Update strategy \"" + updateStrategy +
 					"\" is not supported for MeasurementUnit");
 		}
 
-		if (contextBatchUnsafeConsumer != null) {
+		if (contextBatchUnsafeBiConsumer != null) {
+			contextBatchUnsafeBiConsumer.accept(
+				measurementUnits, measurementUnitUnsafeFunction);
+		}
+		else if (contextBatchUnsafeConsumer != null) {
 			contextBatchUnsafeConsumer.accept(
-				measurementUnits, measurementUnitUnsafeConsumer);
+				measurementUnits, measurementUnitUnsafeFunction::apply);
 		}
 		else {
 			for (MeasurementUnit measurementUnit : measurementUnits) {
-				measurementUnitUnsafeConsumer.accept(measurementUnit);
+				measurementUnitUnsafeFunction.apply(measurementUnit);
 			}
 		}
 	}
@@ -798,6 +801,15 @@ public abstract class BaseMeasurementUnitResourceImpl
 
 	public void setContextAcceptLanguage(AcceptLanguage contextAcceptLanguage) {
 		this.contextAcceptLanguage = contextAcceptLanguage;
+	}
+
+	public void setContextBatchUnsafeBiConsumer(
+		UnsafeBiConsumer
+			<Collection<MeasurementUnit>,
+			 UnsafeFunction<MeasurementUnit, MeasurementUnit, Exception>,
+			 Exception> contextBatchUnsafeBiConsumer) {
+
+		this.contextBatchUnsafeBiConsumer = contextBatchUnsafeBiConsumer;
 	}
 
 	public void setContextBatchUnsafeConsumer(
@@ -1059,6 +1071,10 @@ public abstract class BaseMeasurementUnitResourceImpl
 	}
 
 	protected AcceptLanguage contextAcceptLanguage;
+	protected UnsafeBiConsumer
+		<Collection<MeasurementUnit>,
+		 UnsafeFunction<MeasurementUnit, MeasurementUnit, Exception>, Exception>
+			contextBatchUnsafeBiConsumer;
 	protected UnsafeBiConsumer
 		<Collection<MeasurementUnit>,
 		 UnsafeConsumer<MeasurementUnit, Exception>, Exception>

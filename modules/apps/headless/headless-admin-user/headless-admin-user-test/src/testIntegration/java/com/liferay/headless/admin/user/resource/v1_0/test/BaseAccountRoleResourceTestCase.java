@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.admin.user.resource.v1_0.test;
@@ -505,45 +496,40 @@ public abstract class BaseAccountRoleResourceTestCase {
 	public void testGetAccountAccountRolesByExternalReferenceCodePageWithFilterDoubleEquals()
 		throws Exception {
 
-		List<EntityField> entityFields = getEntityFields(
-			EntityField.Type.DOUBLE);
+		testGetAccountAccountRolesByExternalReferenceCodePageWithFilter(
+			"eq", EntityField.Type.DOUBLE);
+	}
 
-		if (entityFields.isEmpty()) {
-			return;
-		}
+	@Test
+	public void testGetAccountAccountRolesByExternalReferenceCodePageWithFilterStringContains()
+		throws Exception {
 
-		String externalReferenceCode =
-			testGetAccountAccountRolesByExternalReferenceCodePage_getExternalReferenceCode();
-
-		AccountRole accountRole1 =
-			testGetAccountAccountRolesByExternalReferenceCodePage_addAccountRole(
-				externalReferenceCode, randomAccountRole());
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		AccountRole accountRole2 =
-			testGetAccountAccountRolesByExternalReferenceCodePage_addAccountRole(
-				externalReferenceCode, randomAccountRole());
-
-		for (EntityField entityField : entityFields) {
-			Page<AccountRole> page =
-				accountRoleResource.
-					getAccountAccountRolesByExternalReferenceCodePage(
-						externalReferenceCode, null,
-						getFilterString(entityField, "eq", accountRole1),
-						Pagination.of(1, 2), null);
-
-			assertEquals(
-				Collections.singletonList(accountRole1),
-				(List<AccountRole>)page.getItems());
-		}
+		testGetAccountAccountRolesByExternalReferenceCodePageWithFilter(
+			"contains", EntityField.Type.STRING);
 	}
 
 	@Test
 	public void testGetAccountAccountRolesByExternalReferenceCodePageWithFilterStringEquals()
 		throws Exception {
 
-		List<EntityField> entityFields = getEntityFields(
-			EntityField.Type.STRING);
+		testGetAccountAccountRolesByExternalReferenceCodePageWithFilter(
+			"eq", EntityField.Type.STRING);
+	}
+
+	@Test
+	public void testGetAccountAccountRolesByExternalReferenceCodePageWithFilterStringStartsWith()
+		throws Exception {
+
+		testGetAccountAccountRolesByExternalReferenceCodePageWithFilter(
+			"startswith", EntityField.Type.STRING);
+	}
+
+	protected void
+			testGetAccountAccountRolesByExternalReferenceCodePageWithFilter(
+				String operator, EntityField.Type type)
+		throws Exception {
+
+		List<EntityField> entityFields = getEntityFields(type);
 
 		if (entityFields.isEmpty()) {
 			return;
@@ -566,7 +552,7 @@ public abstract class BaseAccountRoleResourceTestCase {
 				accountRoleResource.
 					getAccountAccountRolesByExternalReferenceCodePage(
 						externalReferenceCode, null,
-						getFilterString(entityField, "eq", accountRole1),
+						getFilterString(entityField, operator, accountRole1),
 						Pagination.of(1, 2), null);
 
 			assertEquals(
@@ -1116,43 +1102,37 @@ public abstract class BaseAccountRoleResourceTestCase {
 	public void testGetAccountAccountRolesPageWithFilterDoubleEquals()
 		throws Exception {
 
-		List<EntityField> entityFields = getEntityFields(
-			EntityField.Type.DOUBLE);
+		testGetAccountAccountRolesPageWithFilter("eq", EntityField.Type.DOUBLE);
+	}
 
-		if (entityFields.isEmpty()) {
-			return;
-		}
+	@Test
+	public void testGetAccountAccountRolesPageWithFilterStringContains()
+		throws Exception {
 
-		Long accountId = testGetAccountAccountRolesPage_getAccountId();
-
-		AccountRole accountRole1 =
-			testGetAccountAccountRolesPage_addAccountRole(
-				accountId, randomAccountRole());
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		AccountRole accountRole2 =
-			testGetAccountAccountRolesPage_addAccountRole(
-				accountId, randomAccountRole());
-
-		for (EntityField entityField : entityFields) {
-			Page<AccountRole> page =
-				accountRoleResource.getAccountAccountRolesPage(
-					accountId, null,
-					getFilterString(entityField, "eq", accountRole1),
-					Pagination.of(1, 2), null);
-
-			assertEquals(
-				Collections.singletonList(accountRole1),
-				(List<AccountRole>)page.getItems());
-		}
+		testGetAccountAccountRolesPageWithFilter(
+			"contains", EntityField.Type.STRING);
 	}
 
 	@Test
 	public void testGetAccountAccountRolesPageWithFilterStringEquals()
 		throws Exception {
 
-		List<EntityField> entityFields = getEntityFields(
-			EntityField.Type.STRING);
+		testGetAccountAccountRolesPageWithFilter("eq", EntityField.Type.STRING);
+	}
+
+	@Test
+	public void testGetAccountAccountRolesPageWithFilterStringStartsWith()
+		throws Exception {
+
+		testGetAccountAccountRolesPageWithFilter(
+			"startswith", EntityField.Type.STRING);
+	}
+
+	protected void testGetAccountAccountRolesPageWithFilter(
+			String operator, EntityField.Type type)
+		throws Exception {
+
+		List<EntityField> entityFields = getEntityFields(type);
 
 		if (entityFields.isEmpty()) {
 			return;
@@ -1173,7 +1153,7 @@ public abstract class BaseAccountRoleResourceTestCase {
 			Page<AccountRole> page =
 				accountRoleResource.getAccountAccountRolesPage(
 					accountId, null,
-					getFilterString(entityField, "eq", accountRole1),
+					getFilterString(entityField, operator, accountRole1),
 					Pagination.of(1, 2), null);
 
 			assertEquals(
@@ -1638,14 +1618,19 @@ public abstract class BaseAccountRoleResourceTestCase {
 
 		Assert.assertTrue(valid);
 
-		Map<String, Map<String, String>> actions = page.getActions();
+		assertValid(page.getActions(), expectedActions);
+	}
 
-		for (String key : expectedActions.keySet()) {
-			Map action = actions.get(key);
+	protected void assertValid(
+		Map<String, Map<String, String>> actions1,
+		Map<String, Map<String, String>> actions2) {
+
+		for (String key : actions2.keySet()) {
+			Map action = actions1.get(key);
 
 			Assert.assertNotNull(key + " does not contain an action", action);
 
-			Map expectedAction = expectedActions.get(key);
+			Map<String, String> expectedAction = actions2.get(key);
 
 			Assert.assertEquals(
 				expectedAction.get("method"), action.get("method"));
@@ -1893,17 +1878,93 @@ public abstract class BaseAccountRoleResourceTestCase {
 		}
 
 		if (entityFieldName.equals("description")) {
-			sb.append("'");
-			sb.append(String.valueOf(accountRole.getDescription()));
-			sb.append("'");
+			Object object = accountRole.getDescription();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
 
 		if (entityFieldName.equals("displayName")) {
-			sb.append("'");
-			sb.append(String.valueOf(accountRole.getDisplayName()));
-			sb.append("'");
+			Object object = accountRole.getDisplayName();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
@@ -1914,9 +1975,47 @@ public abstract class BaseAccountRoleResourceTestCase {
 		}
 
 		if (entityFieldName.equals("name")) {
-			sb.append("'");
-			sb.append(String.valueOf(accountRole.getName()));
-			sb.append("'");
+			Object object = accountRole.getName();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}

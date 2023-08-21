@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.saml.opensaml.integration.internal.servlet.profile;
@@ -465,7 +456,6 @@ public class WebSsoProfileImpl extends BaseProfile implements WebSsoProfile {
 		}
 
 		samlSsoRequestContext.setStage(SamlSsoRequestContext.STAGE_INITIAL);
-
 		samlSsoRequestContext.setUserId(portal.getUserId(httpServletRequest));
 
 		return samlSsoRequestContext;
@@ -862,9 +852,8 @@ public class WebSsoProfileImpl extends BaseProfile implements WebSsoProfile {
 
 		throw new AssertionException(
 			StringBundler.concat(
-				"Date ", nowDateTime.toString(), " is before ",
-				lowerBoundDateTime.toString(), " including clock skew ",
-				clockSkew));
+				"Date ", nowDateTime, " is before ", lowerBoundDateTime,
+				" including clock skew ", clockSkew));
 	}
 
 	protected void verifyNotOnOrAfterDateTime(
@@ -881,9 +870,8 @@ public class WebSsoProfileImpl extends BaseProfile implements WebSsoProfile {
 
 		throw new ExpiredException(
 			StringBundler.concat(
-				"Date ", nowDateTime.toString(), " is after ",
-				upperBoundDateTime.toString(), " including clock skew ",
-				clockSkew));
+				"Date ", nowDateTime, " is after ", upperBoundDateTime,
+				" including clock skew ", clockSkew));
 	}
 
 	protected void verifyReplay(
@@ -1139,7 +1127,6 @@ public class WebSsoProfileImpl extends BaseProfile implements WebSsoProfile {
 
 			samlSsoRequestContext.setStage(
 				SamlSsoRequestContext.STAGE_AUTHENTICATED);
-
 			samlSsoRequestContext.setUserId(
 				portal.getUserId(httpServletRequest));
 

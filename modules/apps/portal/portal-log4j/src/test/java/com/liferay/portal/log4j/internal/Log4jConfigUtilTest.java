@@ -1,20 +1,13 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.log4j.internal;
 
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.log.LogContext;
+import com.liferay.portal.kernel.log.LogContextRegistryUtil;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.CodeCoverageAssertor;
@@ -37,6 +30,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Level;
 
 import org.apache.logging.log4j.LogManager;
@@ -58,6 +52,40 @@ public class Log4jConfigUtilTest {
 	public static final AggregateTestRule aggregateTestRule =
 		new AggregateTestRule(
 			CodeCoverageAssertor.INSTANCE, LiferayUnitTestRule.INSTANCE);
+
+	@NewEnv(type = NewEnv.Type.CLASSLOADER)
+	@Test
+	public void testCompanyWebIdLogContextDisabled() {
+		Set<LogContext> logContexts = LogContextRegistryUtil.getLogContexts();
+
+		Assert.assertTrue(logContexts.isEmpty());
+
+		Log4jConfigUtil.configureLog4J(
+			_generateXMLConfigurationContent(
+				StringUtil.randomString(), _ALL, _CONSOLE));
+
+		Assert.assertTrue(logContexts.isEmpty());
+	}
+
+	@NewEnv(type = NewEnv.Type.CLASSLOADER)
+	@Test
+	public void testCompanyWebIdLogContextEnabled() {
+		Set<LogContext> logContexts = LogContextRegistryUtil.getLogContexts();
+
+		Assert.assertTrue(logContexts.isEmpty());
+
+		Log4jConfigUtil.configureLog4J(
+			_generateCompanyWebIdLogContextConfigurationContent());
+
+		Assert.assertFalse(logContexts.isEmpty());
+
+		for (LogContext logContext : logContexts) {
+			LogContextRegistryUtil.unregisterLogContext(logContext);
+
+			Assert.assertTrue(logContext instanceof CompanyWebIdLogContext);
+			Assert.assertEquals("company", logContext.getName());
+		}
+	}
 
 	@Test
 	public void testConfigureLog4J() {
@@ -388,6 +416,18 @@ public class Log4jConfigUtilTest {
 		sb.append("\"><AppenderRef ref=\"");
 		sb.append(appenderName);
 		sb.append("\" /></Logger></Loggers></Configuration>");
+
+		return sb.toString();
+	}
+
+	private String _generateCompanyWebIdLogContextConfigurationContent() {
+		StringBundler sb = new StringBundler(5);
+
+		sb.append("<?xml version=\"1.0\"?><Configuration strict=\"true\">");
+		sb.append("<Appenders><Appender name=\"");
+		sb.append(StringUtil.randomString());
+		sb.append("\" type=\"CompanyWebIdConsole\"><Layout type=\"");
+		sb.append("PatternLayout\"/></Appender></Appenders></Configuration>");
 
 		return sb.toString();
 	}

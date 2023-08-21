@@ -1,44 +1,87 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.layout.admin.web.internal.portlet.action;
 
+import com.liferay.layout.set.prototype.helper.LayoutSetPrototypeHelper;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
+import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.model.ColorScheme;
+import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
+import com.liferay.portal.kernel.model.LayoutSet;
 import com.liferay.portal.kernel.model.Theme;
 import com.liferay.portal.kernel.model.ThemeSetting;
 import com.liferay.portal.kernel.service.LayoutLocalServiceUtil;
 import com.liferay.portal.kernel.service.LayoutServiceUtil;
 import com.liferay.portal.kernel.service.ThemeLocalServiceUtil;
+import com.liferay.portal.kernel.servlet.SessionMessages;
+import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.ThemeFactoryUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.model.impl.ThemeSettingImpl;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
 import javax.portlet.ActionRequest;
 
+import javax.servlet.http.HttpServletRequest;
+
 /**
  * @author Eudaldo Alonso
  */
 public class ActionUtil {
+
+	public static void addFriendlyURLWarningSessionMessages(
+			HttpServletRequest httpServletRequest, Layout layout,
+			LayoutSetPrototypeHelper layoutSetPrototypeHelper)
+		throws PortalException {
+
+		Group group = layout.getGroup();
+		LayoutSet layoutSet = layout.getLayoutSet();
+
+		if (!FeatureFlagManagerUtil.isEnabled("LPS-174417") ||
+			(!group.isLayoutSetPrototype() &&
+			 !layoutSet.isLayoutSetPrototypeLinkActive())) {
+
+			return;
+		}
+
+		List<Layout> layouts =
+			layoutSetPrototypeHelper.getDuplicatedFriendlyURLLayouts(layout);
+
+		if (layouts.isEmpty()) {
+			return;
+		}
+
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
+
+		String key = "the-page-was-saved-with-a-conflicting-friendly-url";
+
+		if (group.isLayoutSetPrototype()) {
+			key =
+				"the-site-template-page-was-saved-with-a-conflicting-" +
+					"friendly-url";
+		}
+
+		SessionMessages.add(
+			httpServletRequest,
+			"layoutSetPrototypeFriendlyURL_requestProcessedWarning",
+			LanguageUtil.get(themeDisplay.getLocale(), key));
+	}
 
 	public static void deleteThemeSettingsProperties(
 		UnicodeProperties typeSettingsUnicodeProperties) {

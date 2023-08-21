@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.admin.rest.internal.resource.v1_0;
@@ -31,6 +22,7 @@ import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.SetUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.odata.filter.ExpressionConvert;
@@ -359,6 +351,10 @@ public abstract class BaseObjectActionResourceImpl
 			@io.swagger.v3.oas.annotations.Parameter(
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
 				name = "search"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "sort"
 			)
 		}
 	)
@@ -380,7 +376,8 @@ public abstract class BaseObjectActionResourceImpl
 				@io.swagger.v3.oas.annotations.Parameter(hidden = true)
 				@javax.ws.rs.QueryParam("search")
 				String search,
-				@javax.ws.rs.core.Context Pagination pagination)
+				@javax.ws.rs.core.Context Pagination pagination,
+				@javax.ws.rs.core.Context Sort[] sorts)
 		throws Exception {
 
 		return Page.of(Collections.emptyList());
@@ -442,6 +439,10 @@ public abstract class BaseObjectActionResourceImpl
 			@io.swagger.v3.oas.annotations.Parameter(
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
 				name = "search"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "sort"
 			)
 		}
 	)
@@ -460,7 +461,8 @@ public abstract class BaseObjectActionResourceImpl
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
 			@javax.ws.rs.QueryParam("search")
 			String search,
-			@javax.ws.rs.core.Context Pagination pagination)
+			@javax.ws.rs.core.Context Pagination pagination,
+			@javax.ws.rs.core.Context Sort[] sorts)
 		throws Exception {
 
 		return Page.of(Collections.emptyList());
@@ -480,6 +482,10 @@ public abstract class BaseObjectActionResourceImpl
 			@io.swagger.v3.oas.annotations.Parameter(
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
 				name = "search"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "sort"
 			),
 			@io.swagger.v3.oas.annotations.Parameter(
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
@@ -513,6 +519,7 @@ public abstract class BaseObjectActionResourceImpl
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
 			@javax.ws.rs.QueryParam("search")
 			String search,
+			@javax.ws.rs.core.Context Sort[] sorts,
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
 			@javax.ws.rs.QueryParam("callbackURL")
 			String callbackURL,
@@ -637,15 +644,15 @@ public abstract class BaseObjectActionResourceImpl
 			Map<String, Serializable> parameters)
 		throws Exception {
 
-		UnsafeConsumer<ObjectAction, Exception> objectActionUnsafeConsumer =
-			null;
+		UnsafeFunction<ObjectAction, ObjectAction, Exception>
+			objectActionUnsafeFunction = null;
 
 		String createStrategy = (String)parameters.getOrDefault(
 			"createStrategy", "INSERT");
 
-		if ("INSERT".equalsIgnoreCase(createStrategy)) {
+		if (StringUtil.equalsIgnoreCase(createStrategy, "INSERT")) {
 			if (parameters.containsKey("objectDefinitionId")) {
-				objectActionUnsafeConsumer =
+				objectActionUnsafeFunction =
 					objectAction -> postObjectDefinitionObjectAction(
 						_parseLong(
 							(String)parameters.get("objectDefinitionId")),
@@ -657,19 +664,23 @@ public abstract class BaseObjectActionResourceImpl
 			}
 		}
 
-		if (objectActionUnsafeConsumer == null) {
+		if (objectActionUnsafeFunction == null) {
 			throw new NotSupportedException(
 				"Create strategy \"" + createStrategy +
 					"\" is not supported for ObjectAction");
 		}
 
-		if (contextBatchUnsafeConsumer != null) {
+		if (contextBatchUnsafeBiConsumer != null) {
+			contextBatchUnsafeBiConsumer.accept(
+				objectActions, objectActionUnsafeFunction);
+		}
+		else if (contextBatchUnsafeConsumer != null) {
 			contextBatchUnsafeConsumer.accept(
-				objectActions, objectActionUnsafeConsumer);
+				objectActions, objectActionUnsafeFunction::apply);
 		}
 		else {
 			for (ObjectAction objectAction : objectActions) {
-				objectActionUnsafeConsumer.accept(objectAction);
+				objectActionUnsafeFunction.apply(objectAction);
 			}
 		}
 	}
@@ -721,7 +732,7 @@ public abstract class BaseObjectActionResourceImpl
 		if (parameters.containsKey("objectDefinitionId")) {
 			return getObjectDefinitionObjectActionsPage(
 				_parseLong((String)parameters.get("objectDefinitionId")),
-				search, pagination);
+				search, pagination, sorts);
 		}
 		else {
 			throw new NotSupportedException(
@@ -757,39 +768,43 @@ public abstract class BaseObjectActionResourceImpl
 			Map<String, Serializable> parameters)
 		throws Exception {
 
-		UnsafeConsumer<ObjectAction, Exception> objectActionUnsafeConsumer =
-			null;
+		UnsafeFunction<ObjectAction, ObjectAction, Exception>
+			objectActionUnsafeFunction = null;
 
 		String updateStrategy = (String)parameters.getOrDefault(
 			"updateStrategy", "UPDATE");
 
-		if ("PARTIAL_UPDATE".equalsIgnoreCase(updateStrategy)) {
-			objectActionUnsafeConsumer = objectAction -> patchObjectAction(
+		if (StringUtil.equalsIgnoreCase(updateStrategy, "PARTIAL_UPDATE")) {
+			objectActionUnsafeFunction = objectAction -> patchObjectAction(
 				objectAction.getId() != null ? objectAction.getId() :
 					_parseLong((String)parameters.get("objectActionId")),
 				objectAction);
 		}
 
-		if ("UPDATE".equalsIgnoreCase(updateStrategy)) {
-			objectActionUnsafeConsumer = objectAction -> putObjectAction(
+		if (StringUtil.equalsIgnoreCase(updateStrategy, "UPDATE")) {
+			objectActionUnsafeFunction = objectAction -> putObjectAction(
 				objectAction.getId() != null ? objectAction.getId() :
 					_parseLong((String)parameters.get("objectActionId")),
 				objectAction);
 		}
 
-		if (objectActionUnsafeConsumer == null) {
+		if (objectActionUnsafeFunction == null) {
 			throw new NotSupportedException(
 				"Update strategy \"" + updateStrategy +
 					"\" is not supported for ObjectAction");
 		}
 
-		if (contextBatchUnsafeConsumer != null) {
+		if (contextBatchUnsafeBiConsumer != null) {
+			contextBatchUnsafeBiConsumer.accept(
+				objectActions, objectActionUnsafeFunction);
+		}
+		else if (contextBatchUnsafeConsumer != null) {
 			contextBatchUnsafeConsumer.accept(
-				objectActions, objectActionUnsafeConsumer);
+				objectActions, objectActionUnsafeFunction::apply);
 		}
 		else {
 			for (ObjectAction objectAction : objectActions) {
-				objectActionUnsafeConsumer.accept(objectAction);
+				objectActionUnsafeFunction.apply(objectAction);
 			}
 		}
 	}
@@ -804,6 +819,15 @@ public abstract class BaseObjectActionResourceImpl
 
 	public void setContextAcceptLanguage(AcceptLanguage contextAcceptLanguage) {
 		this.contextAcceptLanguage = contextAcceptLanguage;
+	}
+
+	public void setContextBatchUnsafeBiConsumer(
+		UnsafeBiConsumer
+			<Collection<ObjectAction>,
+			 UnsafeFunction<ObjectAction, ObjectAction, Exception>, Exception>
+				contextBatchUnsafeBiConsumer) {
+
+		this.contextBatchUnsafeBiConsumer = contextBatchUnsafeBiConsumer;
 	}
 
 	public void setContextBatchUnsafeConsumer(
@@ -1068,6 +1092,10 @@ public abstract class BaseObjectActionResourceImpl
 	}
 
 	protected AcceptLanguage contextAcceptLanguage;
+	protected UnsafeBiConsumer
+		<Collection<ObjectAction>,
+		 UnsafeFunction<ObjectAction, ObjectAction, Exception>, Exception>
+			contextBatchUnsafeBiConsumer;
 	protected UnsafeBiConsumer
 		<Collection<ObjectAction>, UnsafeConsumer<ObjectAction, Exception>,
 		 Exception> contextBatchUnsafeConsumer;

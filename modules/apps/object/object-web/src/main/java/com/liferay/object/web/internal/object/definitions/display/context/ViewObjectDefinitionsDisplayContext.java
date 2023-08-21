@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.web.internal.object.definitions.display.context;
@@ -20,8 +11,9 @@ import com.liferay.object.constants.ObjectActionKeys;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.rest.manager.v1_0.ObjectEntryManagerRegistry;
 import com.liferay.object.web.internal.display.context.helper.ObjectRequestHelper;
-import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.json.JSONArray;
+import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.portlet.PortletURLUtil;
@@ -32,7 +24,6 @@ import com.liferay.portal.kernel.security.permission.resource.PortletResourcePer
 import com.liferay.portal.kernel.util.PortalUtil;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 import javax.portlet.ActionRequest;
@@ -84,19 +75,30 @@ public class ViewObjectDefinitionsDisplayContext {
 		return creationMenu;
 	}
 
+	public String getEditObjectDefinitionURL() throws Exception {
+		return PortletURLBuilder.create(
+			getPortletURL()
+		).setMVCRenderCommandName(
+			"/object_definitions/edit_object_definition"
+		).setParameter(
+			"objectDefinitionId", "{id}"
+		).buildString();
+	}
+
+	public String getEditObjectFolderURL() throws Exception {
+		return PortletURLBuilder.create(
+			getPortletURL()
+		).setMVCRenderCommandName(
+			"/object_definitions/edit_object_folder"
+		).buildString();
+	}
+
 	public List<FDSActionDropdownItem> getFDSActionDropdownItems()
 		throws Exception {
 
 		return Arrays.asList(
 			new FDSActionDropdownItem(
-				PortletURLBuilder.create(
-					getPortletURL()
-				).setMVCRenderCommandName(
-					"/object_definitions/edit_object_definition"
-				).setParameter(
-					"objectDefinitionId", "{id}"
-				).buildString(),
-				"view", "view",
+				getEditObjectDefinitionURL(), "view", "view",
 				LanguageUtil.get(_objectRequestHelper.getRequest(), "view"),
 				"get", null, null),
 			new FDSActionDropdownItem(
@@ -116,7 +118,7 @@ public class ViewObjectDefinitionsDisplayContext {
 				LanguageUtil.get(_objectRequestHelper.getRequest(), "delete"),
 				"delete", "delete", null),
 			new FDSActionDropdownItem(
-				_getPermissionsURL(), null, "permissions",
+				_getPermissionsURL(), "password-policies", "permissions",
 				LanguageUtil.get(
 					_objectRequestHelper.getRequest(), "permissions"),
 				"get", "permissions", "modal-permissions"));
@@ -130,16 +132,17 @@ public class ViewObjectDefinitionsDisplayContext {
 			_objectRequestHelper.getLiferayPortletResponse());
 	}
 
-	public List<String> getStorageTypes() {
-		List<String> storageTypes = TransformUtil.transform(
-			_objectEntryManagerRegistry.getStorageTypes(),
-			objectEntryManagerStorageType -> LanguageUtil.get(
-				_objectRequestHelper.getLocale(),
-				objectEntryManagerStorageType));
-
-		Collections.sort(storageTypes);
-
-		return storageTypes;
+	public JSONArray getStoragesJSONArray() throws Exception {
+		return JSONUtil.toJSONArray(
+			_objectEntryManagerRegistry.getObjectEntryManagers(
+				_objectRequestHelper.getCompanyId()),
+			objectEntryManager -> JSONUtil.put(
+				"label",
+				objectEntryManager.getStorageLabel(
+					_objectRequestHelper.getLocale())
+			).put(
+				"type", objectEntryManager.getStorageType()
+			));
 	}
 
 	private String _getPermissionsURL() throws Exception {

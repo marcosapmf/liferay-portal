@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.service.persistence.test;
@@ -160,13 +151,13 @@ public class CommerceOrderItemPersistenceTest {
 
 		newCommerceOrderItem.setCProductId(RandomTestUtil.nextLong());
 
+		newCommerceOrderItem.setCustomerCommerceOrderItemId(
+			RandomTestUtil.nextLong());
+
 		newCommerceOrderItem.setParentCommerceOrderItemId(
 			RandomTestUtil.nextLong());
 
 		newCommerceOrderItem.setShippingAddressId(RandomTestUtil.nextLong());
-
-		newCommerceOrderItem.setDecimalQuantity(
-			new BigDecimal(RandomTestUtil.nextDouble()));
 
 		newCommerceOrderItem.setDeliveryGroup(RandomTestUtil.randomString());
 
@@ -240,6 +231,9 @@ public class CommerceOrderItemPersistenceTest {
 		newCommerceOrderItem.setPriceManuallyAdjusted(
 			RandomTestUtil.randomBoolean());
 
+		newCommerceOrderItem.setPriceOnApplication(
+			RandomTestUtil.randomBoolean());
+
 		newCommerceOrderItem.setPrintedNote(RandomTestUtil.randomString());
 
 		newCommerceOrderItem.setPromoPrice(
@@ -248,7 +242,8 @@ public class CommerceOrderItemPersistenceTest {
 		newCommerceOrderItem.setPromoPriceWithTaxAmount(
 			new BigDecimal(RandomTestUtil.nextDouble()));
 
-		newCommerceOrderItem.setQuantity(RandomTestUtil.nextInt());
+		newCommerceOrderItem.setQuantity(
+			new BigDecimal(RandomTestUtil.nextDouble()));
 
 		newCommerceOrderItem.setReplacedCPInstanceId(RandomTestUtil.nextLong());
 
@@ -275,6 +270,8 @@ public class CommerceOrderItemPersistenceTest {
 
 		newCommerceOrderItem.setSubscriptionTypeSettings(
 			RandomTestUtil.randomString());
+
+		newCommerceOrderItem.setUnitOfMeasureKey(RandomTestUtil.randomString());
 
 		newCommerceOrderItem.setUnitPrice(
 			new BigDecimal(RandomTestUtil.nextDouble()));
@@ -340,14 +337,14 @@ public class CommerceOrderItemPersistenceTest {
 			existingCommerceOrderItem.getCProductId(),
 			newCommerceOrderItem.getCProductId());
 		Assert.assertEquals(
+			existingCommerceOrderItem.getCustomerCommerceOrderItemId(),
+			newCommerceOrderItem.getCustomerCommerceOrderItemId());
+		Assert.assertEquals(
 			existingCommerceOrderItem.getParentCommerceOrderItemId(),
 			newCommerceOrderItem.getParentCommerceOrderItemId());
 		Assert.assertEquals(
 			existingCommerceOrderItem.getShippingAddressId(),
 			newCommerceOrderItem.getShippingAddressId());
-		Assert.assertEquals(
-			existingCommerceOrderItem.getDecimalQuantity(),
-			newCommerceOrderItem.getDecimalQuantity());
 		Assert.assertEquals(
 			existingCommerceOrderItem.getDeliveryGroup(),
 			newCommerceOrderItem.getDeliveryGroup());
@@ -431,6 +428,9 @@ public class CommerceOrderItemPersistenceTest {
 			existingCommerceOrderItem.isPriceManuallyAdjusted(),
 			newCommerceOrderItem.isPriceManuallyAdjusted());
 		Assert.assertEquals(
+			existingCommerceOrderItem.isPriceOnApplication(),
+			newCommerceOrderItem.isPriceOnApplication());
+		Assert.assertEquals(
 			existingCommerceOrderItem.getPrintedNote(),
 			newCommerceOrderItem.getPrintedNote());
 		Assert.assertEquals(
@@ -479,6 +479,9 @@ public class CommerceOrderItemPersistenceTest {
 		Assert.assertEquals(
 			existingCommerceOrderItem.getSubscriptionTypeSettings(),
 			newCommerceOrderItem.getSubscriptionTypeSettings());
+		Assert.assertEquals(
+			existingCommerceOrderItem.getUnitOfMeasureKey(),
+			newCommerceOrderItem.getUnitOfMeasureKey());
 		Assert.assertEquals(
 			existingCommerceOrderItem.getUnitPrice(),
 			newCommerceOrderItem.getUnitPrice());
@@ -571,6 +574,14 @@ public class CommerceOrderItemPersistenceTest {
 	}
 
 	@Test
+	public void testCountByCustomerCommerceOrderItemId() throws Exception {
+		_persistence.countByCustomerCommerceOrderItemId(
+			RandomTestUtil.nextLong());
+
+		_persistence.countByCustomerCommerceOrderItemId(0L);
+	}
+
+	@Test
 	public void testCountByParentCommerceOrderItemId() throws Exception {
 		_persistence.countByParentCommerceOrderItemId(
 			RandomTestUtil.nextLong());
@@ -634,11 +645,11 @@ public class CommerceOrderItemPersistenceTest {
 			true, "createDate", true, "modifiedDate", true, "bookedQuantityId",
 			true, "commerceOrderId", true, "commercePriceListId", true,
 			"CPInstanceId", true, "CPMeasurementUnitId", true, "CProductId",
-			true, "parentCommerceOrderItemId", true, "shippingAddressId", true,
-			"decimalQuantity", true, "deliveryGroup", true,
-			"deliveryMaxSubscriptionCycles", true, "deliverySubscriptionLength",
-			true, "deliverySubscriptionType", true,
-			"deliverySubscriptionTypeSettings", true, "depth", true,
+			true, "customerCommerceOrderItemId", true,
+			"parentCommerceOrderItemId", true, "shippingAddressId", true,
+			"deliveryGroup", true, "deliveryMaxSubscriptionCycles", true,
+			"deliverySubscriptionLength", true, "deliverySubscriptionType",
+			true, "deliverySubscriptionTypeSettings", true, "depth", true,
 			"discountAmount", true, "discountManuallyAdjusted", true,
 			"discountPercentageLevel1", true, "discountPercentageLevel2", true,
 			"discountPercentageLevel3", true, "discountPercentageLevel4", true,
@@ -649,15 +660,16 @@ public class CommerceOrderItemPersistenceTest {
 			"discountWithTaxAmount", true, "finalPrice", true,
 			"finalPriceWithTaxAmount", true, "freeShipping", true, "height",
 			true, "manuallyAdjusted", true, "maxSubscriptionCycles", true,
-			"name", true, "priceManuallyAdjusted", true, "printedNote", true,
-			"promoPrice", true, "promoPriceWithTaxAmount", true, "quantity",
-			true, "replacedCPInstanceId", true, "replacedSku", true,
+			"name", true, "priceManuallyAdjusted", true, "priceOnApplication",
+			true, "printedNote", true, "promoPrice", true,
+			"promoPriceWithTaxAmount", true, "quantity", true,
+			"replacedCPInstanceId", true, "replacedSku", true,
 			"requestedDeliveryDate", true, "shipSeparately", true, "shippable",
 			true, "shippedQuantity", true, "shippingExtraPrice", true, "sku",
 			true, "subscription", true, "subscriptionLength", true,
 			"subscriptionType", true, "subscriptionTypeSettings", true,
-			"unitPrice", true, "unitPriceWithTaxAmount", true, "weight", true,
-			"width", true);
+			"unitOfMeasureKey", true, "unitPrice", true,
+			"unitPriceWithTaxAmount", true, "weight", true, "width", true);
 	}
 
 	@Test
@@ -998,13 +1010,13 @@ public class CommerceOrderItemPersistenceTest {
 
 		commerceOrderItem.setCProductId(RandomTestUtil.nextLong());
 
+		commerceOrderItem.setCustomerCommerceOrderItemId(
+			RandomTestUtil.nextLong());
+
 		commerceOrderItem.setParentCommerceOrderItemId(
 			RandomTestUtil.nextLong());
 
 		commerceOrderItem.setShippingAddressId(RandomTestUtil.nextLong());
-
-		commerceOrderItem.setDecimalQuantity(
-			new BigDecimal(RandomTestUtil.nextDouble()));
 
 		commerceOrderItem.setDeliveryGroup(RandomTestUtil.randomString());
 
@@ -1076,6 +1088,8 @@ public class CommerceOrderItemPersistenceTest {
 		commerceOrderItem.setPriceManuallyAdjusted(
 			RandomTestUtil.randomBoolean());
 
+		commerceOrderItem.setPriceOnApplication(RandomTestUtil.randomBoolean());
+
 		commerceOrderItem.setPrintedNote(RandomTestUtil.randomString());
 
 		commerceOrderItem.setPromoPrice(
@@ -1084,7 +1098,8 @@ public class CommerceOrderItemPersistenceTest {
 		commerceOrderItem.setPromoPriceWithTaxAmount(
 			new BigDecimal(RandomTestUtil.nextDouble()));
 
-		commerceOrderItem.setQuantity(RandomTestUtil.nextInt());
+		commerceOrderItem.setQuantity(
+			new BigDecimal(RandomTestUtil.nextDouble()));
 
 		commerceOrderItem.setReplacedCPInstanceId(RandomTestUtil.nextLong());
 
@@ -1110,6 +1125,8 @@ public class CommerceOrderItemPersistenceTest {
 
 		commerceOrderItem.setSubscriptionTypeSettings(
 			RandomTestUtil.randomString());
+
+		commerceOrderItem.setUnitOfMeasureKey(RandomTestUtil.randomString());
 
 		commerceOrderItem.setUnitPrice(
 			new BigDecimal(RandomTestUtil.nextDouble()));

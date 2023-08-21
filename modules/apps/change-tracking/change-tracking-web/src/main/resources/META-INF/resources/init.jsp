@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -21,6 +12,7 @@
 <%@ taglib uri="http://liferay.com/tld/aui" prefix="aui" %><%@
 taglib uri="http://liferay.com/tld/clay" prefix="clay" %><%@
 taglib uri="http://liferay.com/tld/frontend" prefix="liferay-frontend" %><%@
+taglib uri="http://liferay.com/tld/frontend-data-set" prefix="frontend-data-set" %><%@
 taglib uri="http://liferay.com/tld/portlet" prefix="liferay-portlet" %><%@
 taglib uri="http://liferay.com/tld/react" prefix="react" %><%@
 taglib uri="http://liferay.com/tld/theme" prefix="liferay-theme" %><%@
@@ -32,13 +24,16 @@ page import="com.liferay.change.tracking.exception.CTLocalizedException" %><%@
 page import="com.liferay.change.tracking.model.CTCollection" %><%@
 page import="com.liferay.change.tracking.model.CTCollectionTemplate" %><%@
 page import="com.liferay.change.tracking.model.CTProcess" %><%@
+page import="com.liferay.change.tracking.model.CTRemote" %><%@
 page import="com.liferay.change.tracking.service.CTCollectionTemplateLocalServiceUtil" %><%@
+page import="com.liferay.change.tracking.spi.display.CTDisplayRendererRegistry" %><%@
 page import="com.liferay.change.tracking.web.internal.constants.CTWebKeys" %><%@
-page import="com.liferay.change.tracking.web.internal.display.CTDisplayRendererRegistry" %><%@
+page import="com.liferay.change.tracking.web.internal.constants.PublicationsFDSNames" %><%@
 page import="com.liferay.change.tracking.web.internal.display.context.PublicationsConfigurationDisplayContext" %><%@
 page import="com.liferay.change.tracking.web.internal.display.context.PublicationsDisplayContext" %><%@
 page import="com.liferay.change.tracking.web.internal.display.context.PublicationsManagementToolbarDisplayContext" %><%@
 page import="com.liferay.change.tracking.web.internal.display.context.ReschedulePublicationDisplayContext" %><%@
+page import="com.liferay.change.tracking.web.internal.display.context.ViewCTRemotesDisplayContext" %><%@
 page import="com.liferay.change.tracking.web.internal.display.context.ViewChangesDisplayContext" %><%@
 page import="com.liferay.change.tracking.web.internal.display.context.ViewConflictsDisplayContext" %><%@
 page import="com.liferay.change.tracking.web.internal.display.context.ViewDiscardDisplayContext" %><%@
@@ -54,6 +49,7 @@ page import="com.liferay.petra.string.StringBundler" %><%@
 page import="com.liferay.petra.string.StringPool" %><%@
 page import="com.liferay.portal.kernel.dao.search.ResultRow" %><%@
 page import="com.liferay.portal.kernel.dao.search.SearchContainer" %><%@
+page import="com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil" %><%@
 page import="com.liferay.portal.kernel.language.LanguageUtil" %><%@
 page import="com.liferay.portal.kernel.model.ModelHintsUtil" %><%@
 page import="com.liferay.portal.kernel.portlet.url.builder.ResourceURLBuilder" %><%@

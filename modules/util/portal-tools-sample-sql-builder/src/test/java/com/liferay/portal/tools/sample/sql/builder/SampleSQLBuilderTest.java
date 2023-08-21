@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.tools.sample.sql.builder;
@@ -107,6 +98,9 @@ public class SampleSQLBuilderTest {
 			BenchmarksPropsKeys.COMMERCE_LAYOUT_EXCLUDED_PORTLETS,
 			StringPool.BLANK);
 		properties.put(BenchmarksPropsKeys.DB_TYPE, "hypersonic");
+		properties.put(
+			BenchmarksPropsKeys.MAX_ACCOUNT_ENTRY_COMMERCE_ORDER_COUNT, "1");
+		properties.put(BenchmarksPropsKeys.MAX_ACCOUNT_ENTRY_COUNT, "1");
 		properties.put(BenchmarksPropsKeys.MAX_ASSET_CATEGORY_COUNT, "1");
 		properties.put(
 			BenchmarksPropsKeys.MAX_ASSET_ENTRY_TO_ASSET_CATEGORY_COUNT, "1");
@@ -117,8 +111,6 @@ public class SampleSQLBuilderTest {
 		properties.put(BenchmarksPropsKeys.MAX_ASSETPUBLISHER_PAGE_COUNT, "2");
 		properties.put(BenchmarksPropsKeys.MAX_BLOGS_ENTRY_COMMENT_COUNT, "1");
 		properties.put(BenchmarksPropsKeys.MAX_BLOGS_ENTRY_COUNT, "1");
-		properties.put(
-			BenchmarksPropsKeys.MAX_COMMERCE_ACCOUNT_ENTRY_COUNT, "1");
 		properties.put(BenchmarksPropsKeys.MAX_COMMERCE_CATALOG_COUNT, "1");
 		properties.put(BenchmarksPropsKeys.MAX_COMMERCE_GROUP_COUNT, "1");
 		properties.put(
@@ -182,10 +174,10 @@ public class SampleSQLBuilderTest {
 		properties.put(
 			BenchmarksPropsKeys.OUTPUT_CSV_FILE_NAMES,
 			StringBundler.concat(
-				"assetPublisher,blog,company,commerceInventoryWarehouseItem,",
-				"commerceOrder,commerceProduct,cpDefinition,documentLibrary,",
-				"dynamicDataList,fragment,layout,mbCategory,mbThread,",
-				"repository,user,wiki"));
+				"assetPublisher,blog,commerceDeliveryAPI,",
+				"commerceInventoryWarehouseItem,commerceOrder,commerceProduct,",
+				"company,cpDefinition,documentLibrary,dynamicDataList,",
+				"fragment,layout,mbCategory,mbThread,repository,user,wiki"));
 		properties.put(BenchmarksPropsKeys.OUTPUT_MERGE, "true");
 		properties.put(
 			BenchmarksPropsKeys.SCRIPT,

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.kernel.security.auth;
@@ -19,12 +10,14 @@ import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.change.tracking.CTCollectionThreadLocal;
 import com.liferay.portal.kernel.dao.jdbc.DataAccess;
+import com.liferay.portal.kernel.db.partition.DBPartition;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.CompanyConstants;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.UserConstants;
 import com.liferay.portal.kernel.service.UserLocalServiceUtil;
+import com.liferay.portal.kernel.spring.orm.LastSessionRecorderHelperUtil;
 import com.liferay.portal.kernel.util.LocaleThreadLocal;
 import com.liferay.portal.kernel.util.TimeZoneThreadLocal;
 
@@ -73,6 +66,8 @@ public class CompanyThreadLocal {
 					currentCompanyId.longValue(), " are different"));
 		}
 
+		_syncLastDBPartitionSessionState();
+
 		SafeCloseable safeCloseable = _companyId.setWithSafeCloseable(
 			companyId);
 
@@ -80,6 +75,8 @@ public class CompanyThreadLocal {
 
 		return () -> {
 			_locked.set(false);
+
+			_syncLastDBPartitionSessionState();
 
 			safeCloseable.close();
 		};
@@ -120,13 +117,17 @@ public class CompanyThreadLocal {
 		Locale defaultLocale = LocaleThreadLocal.getDefaultLocale();
 		TimeZone defaultTimeZone = TimeZoneThreadLocal.getDefaultTimeZone();
 
-		_setCompanyId(companyId);
+		boolean changed = _setCompanyId(companyId);
 
 		SafeCloseable ctCollectionSafeCloseable =
 			CTCollectionThreadLocal.setCTCollectionIdWithSafeCloseable(
 				ctCollectionId);
 
 		return () -> {
+			if (changed) {
+				_syncLastDBPartitionSessionState();
+			}
+
 			_companyId.set(currentCompanyId);
 			LocaleThreadLocal.setDefaultLocale(defaultLocale);
 			TimeZoneThreadLocal.setDefaultTimeZone(defaultTimeZone);
@@ -195,6 +196,8 @@ public class CompanyThreadLocal {
 				"CompanyThreadLocal modification is not allowed");
 		}
 
+		_syncLastDBPartitionSessionState();
+
 		if (_log.isDebugEnabled()) {
 			_log.debug("setCompanyId " + companyId);
 		}
@@ -240,13 +243,16 @@ public class CompanyThreadLocal {
 		}
 	}
 
+	private static void _syncLastDBPartitionSessionState() {
+		if (DBPartition.isPartitionEnabled()) {
+			LastSessionRecorderHelperUtil.syncLastSessionState(false);
+		}
+	}
+
 	private static final Log _log = LogFactoryUtil.getLog(
 		CompanyThreadLocal.class);
 
-	private static final CentralizedThreadLocal<Long> _companyId =
-		new CentralizedThreadLocal<>(
-			CompanyThreadLocal.class + "._companyId",
-			() -> CompanyConstants.SYSTEM);
+	private static final CentralizedThreadLocal<Long> _companyId;
 	private static final CentralizedThreadLocal<Boolean>
 		_initializingPortalInstance = new CentralizedThreadLocal<>(
 			CompanyThreadLocal.class + "._initializingPortalInstance",
@@ -254,5 +260,11 @@ public class CompanyThreadLocal {
 	private static final ThreadLocal<Boolean> _locked =
 		new CentralizedThreadLocal<>(
 			CompanyThreadLocal.class + "._locked", () -> Boolean.FALSE);
+
+	static {
+		_companyId = new CentralizedThreadLocal<>(
+			CompanyThreadLocal.class + "._companyId",
+			() -> CompanyConstants.SYSTEM);
+	}
 
 }

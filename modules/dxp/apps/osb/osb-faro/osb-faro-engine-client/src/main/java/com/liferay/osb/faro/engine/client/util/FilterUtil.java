@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.osb.faro.engine.client.util;
@@ -17,8 +8,8 @@ package com.liferay.osb.faro.engine.client.util;
 import com.liferay.osb.faro.engine.client.constants.FilterConstants;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.CharPool;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 
@@ -47,13 +38,23 @@ public class FilterUtil {
 	}
 
 	public static String getFilter(
-		String fieldName, String operator, Object value) {
+		String fieldName, String operator, boolean useDoubleApostrophe,
+		Object value) {
 
 		if (value == null) {
 			return null;
 		}
 
-		if (value instanceof Date) {
+		if (!(value instanceof Boolean) && !(value instanceof Long)) {
+			String valueString = String.valueOf(value);
+
+			if (Validator.isBlank(valueString)) {
+				return null;
+			}
+
+			value = StringUtil.quote(valueString, StringPool.APOSTROPHE);
+		}
+		else if (value instanceof Date) {
 			Date date = (Date)value;
 
 			value = String.valueOf(date.toInstant());
@@ -65,15 +66,6 @@ public class FilterUtil {
 					TransformUtil.transform((List<?>)value, String::valueOf),
 					StringPool.COMMA),
 				StringPool.CLOSE_BRACKET);
-		}
-		else {
-			String valueString = String.valueOf(value);
-
-			if (Validator.isBlank(valueString)) {
-				return null;
-			}
-
-			value = StringUtil.quote(valueString, StringPool.APOSTROPHE);
 		}
 
 		if (FilterConstants.isStringFunction(operator)) {
@@ -99,6 +91,12 @@ public class FilterUtil {
 	}
 
 	public static String getFilter(
+		String fieldName, String operator, Object value) {
+
+		return getFilter(fieldName, operator, false, value);
+	}
+
+	public static String getFilter(
 		String fieldName, String fieldNameContext, String operator,
 		String value) {
 
@@ -120,9 +118,11 @@ public class FilterUtil {
 		FilterBuilder filterBuilder = new FilterBuilder();
 
 		filterBuilder.addFilter(
-			"name", FilterConstants.COMPARISON_OPERATOR_EQUALS, interestName);
+			"name", FilterConstants.COMPARISON_OPERATOR_EQUALS, interestName,
+			false, true, true);
 		filterBuilder.addFilter(
-			"score", FilterConstants.COMPARISON_OPERATOR_EQUALS, interested);
+			"score", FilterConstants.COMPARISON_OPERATOR_EQUALS, interested,
+			false, true, true);
 
 		sb.append(filterBuilder.build());
 
@@ -132,7 +132,7 @@ public class FilterUtil {
 	}
 
 	public static String getNullFilter(String fieldName, String operator) {
-		return operator + StringPool.NULL;
+		return fieldName + operator + StringPool.NULL;
 	}
 
 	public static String negate(String filterString) {

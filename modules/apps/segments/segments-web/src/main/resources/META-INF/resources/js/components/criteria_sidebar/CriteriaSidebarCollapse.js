@@ -1,20 +1,10 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayBadge from '@clayui/badge';
-import ClayIcon from '@clayui/icon';
-import classNames from 'classnames';
+import ClayPanel from '@clayui/panel';
 import {parse} from 'date-fns';
 import PropTypes from 'prop-types';
 import React from 'react';
@@ -88,7 +78,7 @@ const CriteriaSidebarCollapse = ({
 	const _handleClick = (key, editing) => () => onCollapseClick(key, editing);
 
 	return (
-		<ul className="c-mb-0 c-pl-0 d-flex sidebar-collapse-groups">
+		<ClayPanel.Group>
 			{propertyGroups.map((propertyGroup) => {
 				const key = propertyGroup.propertyKey;
 
@@ -102,91 +92,81 @@ const CriteriaSidebarCollapse = ({
 					: properties;
 
 				return (
-					<li
-						className={classNames(
-							`d-flex flex-column sidebar-collapse-item sidebar-collapse-${propertyGroup.propertyKey}`,
-							{
-								active,
-							}
-						)}
-						key={key}
-					>
-						<a
-							className="d-flex justify-content-between position-relative sidebar-collapse-header text-decoration-none text-uppercase"
-							onClick={_handleClick(key, active)}
-							tabIndex="0"
-						>
-							{propertyGroup.name}
+					<ClayPanel
+						collapsable={true}
+						displayTitle={
+							<div className="c-inner" tabIndex="-1">
+								<ClayPanel.Title className="d-flex justify-content-between text-uppercase">
+									{propertyGroup.name}
 
-							{searchValue && (
-								<ClayBadge
-									className="c-ml-auto c-mr-2"
-									displayType="secondary"
-									label={filteredProperties.length}
-								/>
-							)}
-
-							<span>
-								<ClayIcon
-									className={classNames({
-										active,
-									})}
-									symbol="angle-right"
-								/>
-							</span>
-						</a>
-
-						{active && (
-							<div className="flex-grow-1 overflow-y-auto sidebar-collapse-body">
-								<p className="c-pt-3 c-px-4 text-secondary">
-									{Liferay.Language.get(
-										'inherited-attributes-are-not-taken-into-account-to-include-members-in-segments'
+									{searchValue && (
+										<ClayBadge
+											displayType="secondary"
+											label={filteredProperties.length}
+										/>
 									)}
-								</p>
-
-								<ul className="c-pl-0">
-									{!filteredProperties.length && (
-										<li className="align-items-center d-flex empty-message h-100 justify-content-center position-relative">
-											{Liferay.Language.get(
-												'no-results-were-found'
-											)}
-										</li>
-									)}
-
-									{!!filteredProperties.length &&
-										filteredProperties.map(
-											({label, name, options, type}) => {
-												const defaultValue = getDefaultValue(
-													{
-														label,
-														name,
-														options,
-														type,
-													}
-												);
-
-												return (
-													<CriteriaSidebarItem
-														className={`color--${key}`}
-														defaultValue={
-															defaultValue
-														}
-														key={name}
-														label={label}
-														name={name}
-														propertyKey={key}
-														type={type}
-													/>
-												);
-											}
-										)}
-								</ul>
+								</ClayPanel.Title>
 							</div>
-						)}
-					</li>
+						}
+						displayType="unstyled"
+						expanded={active}
+						key={key}
+						onExpandedChange={_handleClick(key, active)}
+					>
+						<ClayPanel.Body className="c-px-0">
+							<p className="c-pt-1 c-px-4 text-secondary">
+								{Liferay.Language.get(
+									'inherited-attributes-are-not-taken-into-account-to-include-members-in-segments'
+								)}
+							</p>
+
+							<ul className="c-pl-0">
+								{!filteredProperties.length && (
+									<li className="align-items-center d-flex empty-message h-100 justify-content-center position-relative">
+										{Liferay.Language.get(
+											'no-results-were-found'
+										)}
+									</li>
+								)}
+
+								{!!filteredProperties.length &&
+									filteredProperties.map(
+										({
+											icon,
+											label,
+											name,
+											options,
+											type,
+										}) => {
+											const defaultValue = getDefaultValue(
+												{
+													label,
+													name,
+													options,
+													type,
+												}
+											);
+
+											return (
+												<CriteriaSidebarItem
+													className={`color--${key}`}
+													defaultValue={defaultValue}
+													icon={icon}
+													key={name}
+													label={label}
+													name={name}
+													propertyKey={key}
+													type={type}
+												/>
+											);
+										}
+									)}
+							</ul>
+						</ClayPanel.Body>
+					</ClayPanel>
 				);
 			})}
-		</ul>
+		</ClayPanel.Group>
 	);
 };
 

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.admin.inventory.internal.dto.v1_0.converter;
@@ -18,8 +9,11 @@ import com.liferay.commerce.inventory.model.CommerceInventoryWarehouse;
 import com.liferay.commerce.inventory.model.CommerceInventoryWarehouseItem;
 import com.liferay.commerce.inventory.service.CommerceInventoryWarehouseItemService;
 import com.liferay.headless.commerce.admin.inventory.dto.v1_0.WarehouseItem;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterContext;
+
+import java.math.BigDecimal;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -58,15 +52,53 @@ public class WarehouseItemDTOConverter
 				id =
 					commerceInventoryWarehouseItem.
 						getCommerceInventoryWarehouseItemId();
-				quantity = commerceInventoryWarehouseItem.getQuantity();
-				reservedQuantity =
-					commerceInventoryWarehouseItem.getReservedQuantity();
 				sku = commerceInventoryWarehouseItem.getSku();
 				warehouseExternalReferenceCode =
 					commerceInventoryWarehouse.getExternalReferenceCode();
 				warehouseId =
-					commerceInventoryWarehouse.
+					commerceInventoryWarehouseItem.
 						getCommerceInventoryWarehouseId();
+
+				setQuantity(
+					() -> {
+						BigDecimal commerceInventoryWarehouseItemQuantity =
+							commerceInventoryWarehouseItem.getQuantity();
+
+						if (commerceInventoryWarehouseItemQuantity == null) {
+							return null;
+						}
+
+						return commerceInventoryWarehouseItemQuantity.setScale(
+							2);
+					});
+				setReservedQuantity(
+					() -> {
+						BigDecimal
+							commerceInventoryWarehouseItemReservedQuantity =
+								commerceInventoryWarehouseItem.
+									getReservedQuantity();
+
+						if (commerceInventoryWarehouseItemReservedQuantity ==
+								null) {
+
+							return null;
+						}
+
+						return commerceInventoryWarehouseItemReservedQuantity.
+							setScale(2);
+					});
+				setUnitOfMeasureKey(
+					() -> {
+						if (Validator.isNull(
+								commerceInventoryWarehouseItem.
+									getUnitOfMeasureKey())) {
+
+							return null;
+						}
+
+						return commerceInventoryWarehouseItem.
+							getUnitOfMeasureKey();
+					});
 			}
 		};
 	}

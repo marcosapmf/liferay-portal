@@ -1,20 +1,37 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 import DOMPurify from 'dompurify';
 import {useEffect, useState} from 'react';
+import {Liferay} from '~/common/services/liferay';
 import i18n from '../../../../../../common/I18n';
 import {Table} from '../../../../../../common/components';
 import {fetchHeadless} from '../../../../../../common/services/liferay/api';
 import {useCustomerPortal} from '../../../../context';
 import ActivationKeysLayout from '../../../../layouts/ActivationKeysLayout';
+
+const columns = [
+	{
+		accessor: 'version',
+		bodyClass: 'border border-0 py-4 pl-4',
+		header: {
+			name: i18n.translate('version'),
+			styles:
+				'bg-neutral-1 font-weight-bold text-neutral-8 table-cell-minw-200 py-3 pl-4',
+		},
+		headingTitle: true,
+	},
+	{
+		accessor: 'instructions',
+		bodyClass: 'border border-0',
+		header: {
+			name: i18n.translate('instructions'),
+			styles:
+				'bg-neutral-1 font-weight-bold text-neutral-8 table-cell-expand-smaller py-3',
+		},
+	},
+];
 
 const Commerce = () => {
 	const [
@@ -87,28 +104,6 @@ const Commerce = () => {
 		fetchCommerceActivationsKeysInstructions();
 	}, []);
 
-	const columns = [
-		{
-			accessor: 'version',
-			bodyClass: 'border border-0 py-4 pl-4',
-			header: {
-				name: i18n.translate('version'),
-				styles:
-					'bg-neutral-1 font-weight-bold text-neutral-8 table-cell-minw-200 py-3 pl-4',
-			},
-			headingTitle: true,
-		},
-		{
-			accessor: 'instructions',
-			bodyClass: 'border border-0',
-			header: {
-				name: i18n.translate('instructions'),
-				styles:
-					'bg-neutral-1 font-weight-bold text-neutral-8 table-cell-expand-smaller py-3',
-			},
-		},
-	];
-
 	if (!project) {
 		return <ActivationKeysLayout.Skeleton />;
 	}
@@ -120,6 +115,7 @@ const Commerce = () => {
 					accountKey={project.accountKey}
 					productKey="commerce"
 					productTitle="Commerce"
+					projectName={project?.name}
 					sessionId={sessionId}
 				/>
 			) : (

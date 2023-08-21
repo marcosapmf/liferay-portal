@@ -1,24 +1,15 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.web.internal.layout.prototype;
 
+import com.liferay.osgi.util.service.Snapshot;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutConstants;
@@ -41,9 +32,6 @@ import java.util.Map;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
-import org.osgi.service.component.annotations.ReferenceCardinality;
-import org.osgi.service.component.annotations.ReferencePolicy;
-import org.osgi.service.component.annotations.ReferencePolicyOption;
 
 /**
  * @author Adam Brandizzi
@@ -68,9 +56,7 @@ public class SearchLayoutFactoryImpl implements SearchLayoutFactory {
 	}
 
 	@Override
-	public Layout createSearchLayoutPrototype(Company company) {
-		long companyId = company.getCompanyId();
-
+	public Layout createSearchLayoutPrototype(long companyId) {
 		try {
 			return createSearchLayoutPrototype(
 				companyId, userLocalService.getGuestUserId(companyId));
@@ -107,10 +93,8 @@ public class SearchLayoutFactoryImpl implements SearchLayoutFactory {
 
 		serviceContext.setAttribute(
 			"layoutPrototypeLinkEnabled", Boolean.FALSE);
-
 		serviceContext.setAttribute(
 			"layoutPrototypeUuid", layoutPrototype.getUuid());
-
 		serviceContext.setUserId(group.getCreatorUserId());
 
 		layoutLocalService.addLayout(
@@ -180,20 +164,17 @@ public class SearchLayoutFactoryImpl implements SearchLayoutFactory {
 	}
 
 	protected void customize(Layout layout) throws Exception {
-		if (searchLayoutPrototypeCustomizer != null) {
-			searchLayoutPrototypeCustomizer.customize(layout);
-		}
-		else {
-			_defaultSearchLayoutPrototypeCustomizer.customize(layout);
-		}
+		SearchLayoutPrototypeCustomizer searchLayoutPrototypeCustomizer =
+			_getSearchLayoutPrototypeCustomizer();
+
+		searchLayoutPrototypeCustomizer.customize(layout);
 	}
 
 	protected String getLayoutTemplateId() {
-		if (searchLayoutPrototypeCustomizer != null) {
-			return searchLayoutPrototypeCustomizer.getLayoutTemplateId();
-		}
+		SearchLayoutPrototypeCustomizer searchLayoutPrototypeCustomizer =
+			_getSearchLayoutPrototypeCustomizer();
 
-		return _defaultSearchLayoutPrototypeCustomizer.getLayoutTemplateId();
+		return searchLayoutPrototypeCustomizer.getLayoutTemplateId();
 	}
 
 	@Reference
@@ -204,14 +185,6 @@ public class SearchLayoutFactoryImpl implements SearchLayoutFactory {
 
 	@Reference
 	protected LayoutPrototypeLocalService layoutPrototypeLocalService;
-
-	@Reference(
-		cardinality = ReferenceCardinality.OPTIONAL,
-		policy = ReferencePolicy.DYNAMIC,
-		policyOption = ReferencePolicyOption.GREEDY
-	)
-	protected volatile SearchLayoutPrototypeCustomizer
-		searchLayoutPrototypeCustomizer;
 
 	@Reference
 	protected UserLocalService userLocalService;
@@ -245,6 +218,19 @@ public class SearchLayoutFactoryImpl implements SearchLayoutFactory {
 
 	private Map<Locale, String> _getSearchDescriptionLocalizationMap() {
 		return _getLocalizationMap("layout-prototype-search-description");
+	}
+
+	private SearchLayoutPrototypeCustomizer
+		_getSearchLayoutPrototypeCustomizer() {
+
+		SearchLayoutPrototypeCustomizer searchLayoutPrototypeCustomizer =
+			_searchLayoutPrototypeCustomizerSnapshot.get();
+
+		if (searchLayoutPrototypeCustomizer != null) {
+			return searchLayoutPrototypeCustomizer;
+		}
+
+		return _defaultSearchLayoutPrototypeCustomizer;
 	}
 
 	private Map<Locale, String> _getSearchTitleLocalizationMap() {
@@ -291,6 +277,11 @@ public class SearchLayoutFactoryImpl implements SearchLayoutFactory {
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		SearchLayoutFactoryImpl.class);
+
+	private static final Snapshot<SearchLayoutPrototypeCustomizer>
+		_searchLayoutPrototypeCustomizerSnapshot = new Snapshot<>(
+			SearchLayoutFactoryImpl.class,
+			SearchLayoutPrototypeCustomizer.class, null, true);
 
 	private final SearchLayoutPrototypeCustomizer
 		_defaultSearchLayoutPrototypeCustomizer =

@@ -19,9 +19,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -772,7 +772,8 @@ definition {
 	test PermanentRedirectionCanBePerformedWhenAccessingBlogOldFriendlyURL {
 		property custom.properties = "locale.prepend.friendly.url.style=0";
 		property portal.acceptance = "false";
-		property test.name.skip.portal.instance = "FriendlyURLService#PermanentRedirectionCanBePerformedWhenAccessingBlogOldFriendlyURL";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		var portalURL = PropsUtil.get("portal.url");
 
@@ -820,7 +821,8 @@ definition {
 	@priority = 4
 	test PermanentRedirectionCanBePerformedWhenAccessingPageOldFriendlyURL {
 		property custom.properties = "locale.prepend.friendly.url.style=0";
-		property test.name.skip.portal.instance = "FriendlyURLService#PermanentRedirectionCanBePerformedWhenAccessingPageOldFriendlyURL";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		var portalURL = PropsUtil.get("portal.url");
 
@@ -854,7 +856,8 @@ definition {
 	test TemporaryRedirectionCanBePerformedWhenAccessingBlogOldFriendlyURL {
 		property custom.properties = "locale.prepend.friendly.url.style=0";
 		property portal.acceptance = "false";
-		property test.name.skip.portal.instance = "FriendlyURLService#TemporaryRedirectionCanBePerformedWhenAccessingBlogOldFriendlyURL";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		var portalURL = PropsUtil.get("portal.url");
 
@@ -904,7 +907,8 @@ definition {
 	@priority = 4
 	test TemporaryRedirectionCanBePerformedWhenAccessingPageOldFriendlyURL {
 		property custom.properties = "locale.prepend.friendly.url.style=0";
-		property test.name.skip.portal.instance = "FriendlyURLService#TemporaryRedirectionCanBePerformedWhenAccessingPageOldFriendlyURL";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		var portalURL = PropsUtil.get("portal.url");
 

@@ -1,24 +1,22 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.admin.rest.internal.dto.v1_0.converter;
 
 import com.liferay.object.admin.rest.dto.v1_0.ObjectValidationRule;
+import com.liferay.object.admin.rest.dto.v1_0.ObjectValidationRuleSetting;
+import com.liferay.object.constants.ObjectValidationRuleSettingConstants;
 import com.liferay.object.model.ObjectDefinition;
+import com.liferay.object.model.ObjectField;
 import com.liferay.object.service.ObjectDefinitionLocalService;
+import com.liferay.object.service.ObjectFieldLocalService;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.language.Language;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterContext;
 import com.liferay.portal.vulcan.util.LocalizedMapUtil;
@@ -80,7 +78,63 @@ public class ObjectValidationRuleDTOConverter
 					objectDefinition.getExternalReferenceCode();
 				objectDefinitionId =
 					serviceBuilderObjectValidationRule.getObjectDefinitionId();
+
+				if (FeatureFlagManagerUtil.isEnabled("LPS-187846")) {
+					objectValidationRuleSettings =
+						TransformUtil.transformToArray(
+							serviceBuilderObjectValidationRule.
+								getObjectValidationRuleSettings(),
+							objectValidationRuleSetting ->
+								_toObjectValidationRuleSetting(
+									objectValidationRuleSetting),
+							ObjectValidationRuleSetting.class);
+					outputType = ObjectValidationRule.OutputType.create(
+						serviceBuilderObjectValidationRule.getOutputType());
+				}
+
 				script = serviceBuilderObjectValidationRule.getScript();
+			}
+		};
+	}
+
+	private ObjectValidationRuleSetting _toObjectValidationRuleSetting(
+		com.liferay.object.model.ObjectValidationRuleSetting
+			objectValidationRuleSetting) {
+
+		if (objectValidationRuleSetting == null) {
+			return null;
+		}
+
+		return new ObjectValidationRuleSetting() {
+			{
+				setName(
+					() -> {
+						if (objectValidationRuleSetting.compareName(
+								ObjectValidationRuleSettingConstants.
+									NAME_OBJECT_FIELD_ID)) {
+
+							return ObjectValidationRuleSettingConstants.
+								NAME_OBJECT_FIELD_EXTERNAL_REFERENCE_CODE;
+						}
+
+						return objectValidationRuleSetting.getName();
+					});
+				setValue(
+					() -> {
+						if (!objectValidationRuleSetting.compareName(
+								ObjectValidationRuleSettingConstants.
+									NAME_OBJECT_FIELD_ID)) {
+
+							return objectValidationRuleSetting.getValue();
+						}
+
+						ObjectField objectField =
+							_objectFieldLocalService.getObjectField(
+								GetterUtil.getLong(
+									objectValidationRuleSetting.getValue()));
+
+						return objectField.getExternalReferenceCode();
+					});
 			}
 		};
 	}
@@ -90,5 +144,8 @@ public class ObjectValidationRuleDTOConverter
 
 	@Reference
 	private ObjectDefinitionLocalService _objectDefinitionLocalService;
+
+	@Reference
+	private ObjectFieldLocalService _objectFieldLocalService;
 
 }

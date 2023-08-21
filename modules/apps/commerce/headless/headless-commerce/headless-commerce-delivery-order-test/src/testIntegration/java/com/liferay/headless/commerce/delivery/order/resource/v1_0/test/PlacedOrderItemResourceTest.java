@@ -1,19 +1,11 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.delivery.order.resource.v1_0.test;
 
+import com.liferay.account.constants.AccountConstants;
 import com.liferay.account.model.AccountEntry;
 import com.liferay.account.service.AccountEntryLocalService;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
@@ -108,7 +100,8 @@ public class PlacedOrderItemResourceTest
 			_user.getUserId(), _commerceCurrency.getCode());
 
 		_commerceChannel = _commerceChannelLocalService.addCommerceChannel(
-			RandomTestUtil.randomString(), testGroup.getGroupId(),
+			RandomTestUtil.randomString(),
+			AccountConstants.ACCOUNT_ENTRY_ID_DEFAULT, testGroup.getGroupId(),
 			RandomTestUtil.randomString(),
 			CommerceChannelConstants.CHANNEL_TYPE_SITE, null,
 			_commerceCurrency.getCode(), _serviceContext);
@@ -121,7 +114,8 @@ public class PlacedOrderItemResourceTest
 		_commerceOrder.setOrderStatus(
 			CommerceOrderConstants.ORDER_STATUS_COMPLETED);
 
-		_commerceOrderLocalService.updateCommerceOrder(_commerceOrder);
+		_commerceOrder = _commerceOrderLocalService.updateCommerceOrder(
+			_commerceOrder);
 
 		_commercePriceList =
 			_commercePriceListLocalService.addCommercePriceList(
@@ -161,7 +155,8 @@ public class PlacedOrderItemResourceTest
 	@Override
 	protected PlacedOrderItem randomPlacedOrderItem() throws Exception {
 		return _toPlacedOrderItem(
-			_addCPDefinition(0, RandomTestUtil.randomString()));
+			_addCPDefinition(
+				0, "https://liferay.com/" + RandomTestUtil.randomString()));
 	}
 
 	@Override
@@ -209,8 +204,8 @@ public class PlacedOrderItemResourceTest
 					cpDefinition.getModelClassName(),
 					cpDefinition.getCPDefinitionId(), fileEntryId, url,
 					CommerceOrderConstants.ORDER_STATUS_PENDING, 0,
-					RandomTestUtil.randomInt(), true, 0, "sampleUrl", false,
-					null, 0, _serviceContext);
+					RandomTestUtil.randomInt(), true, 0, "https://liferay.com",
+					false, null, 0, _serviceContext);
 
 		CommerceTestUtil.updateBackOrderCPDefinitionInventory(cpDefinition);
 
@@ -223,8 +218,9 @@ public class PlacedOrderItemResourceTest
 		CommerceOrderItem commerceOrderItem =
 			_commerceOrderItemLocalService.addCommerceOrderItem(
 				_user.getUserId(), _commerceOrder.getCommerceOrderId(),
-				placedOrderItem.getSkuId(), null, placedOrderItem.getQuantity(),
-				0, placedOrderItem.getQuantity(),
+				placedOrderItem.getSkuId(), null,
+				BigDecimal.valueOf(placedOrderItem.getQuantity()), 0,
+				placedOrderItem.getQuantity(), StringPool.BLANK,
 				new TestCommerceContext(
 					_accountEntry, _commerceCurrency, _commerceChannel, _user,
 					testGroup, _commerceOrder),
@@ -240,12 +236,17 @@ public class PlacedOrderItemResourceTest
 				id = commerceOrderItem.getCommerceOrderItemId();
 				name = commerceOrderItem.getName();
 				productId = commerceOrderItem.getCProductId();
-				quantity = commerceOrderItem.getQuantity();
 				sku = commerceOrderItem.getSku();
 				skuId = commerceOrderItem.getCPInstanceId();
 				subscription = commerceOrderItem.isSubscription();
 				valid = true;
 
+				setQuantity(
+					() -> {
+						BigDecimal quantity = commerceOrderItem.getQuantity();
+
+						return quantity.intValue();
+					});
 				setVirtualItemURLs(
 					() -> {
 						CommerceVirtualOrderItem commerceVirtualOrderItem =
@@ -300,7 +301,7 @@ public class PlacedOrderItemResourceTest
 	}
 
 	private void _testGetPlacedOrderItemWithURL() throws Exception {
-		String url = "http://www.example.com/myfiles/download";
+		String url = "https://liferay.com/myfiles/download";
 
 		PlacedOrderItem postPlacedOrderItem = _addPlacedOrderItem(
 			_toPlacedOrderItem(_addCPDefinition(0, url)));

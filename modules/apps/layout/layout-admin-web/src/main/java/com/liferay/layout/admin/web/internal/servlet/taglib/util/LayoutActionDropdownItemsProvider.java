@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.layout.admin.web.internal.servlet.taglib.util;
@@ -18,18 +9,14 @@ import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownContextItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuilder;
 import com.liferay.layout.admin.web.internal.display.context.LayoutsAdminDisplayContext;
+import com.liferay.layout.admin.web.internal.helper.LayoutActionsHelper;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.bean.BeanPropertiesUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
-import com.liferay.portal.kernel.log.Log;
-import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactoryUtil;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
-import com.liferay.portal.kernel.security.permission.ActionKeys;
-import com.liferay.portal.kernel.security.permission.PermissionChecker;
-import com.liferay.portal.kernel.service.permission.LayoutPermissionUtil;
 import com.liferay.portal.kernel.theme.PortletDisplay;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.GetterUtil;
@@ -37,12 +24,9 @@ import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.segments.service.SegmentsExperienceLocalServiceUtil;
-import com.liferay.translation.constants.TranslationActionKeys;
-import com.liferay.translation.security.permission.TranslationPermission;
 import com.liferay.translation.url.provider.TranslationURLProvider;
 
 import java.util.List;
-import java.util.Locale;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -53,13 +37,13 @@ public class LayoutActionDropdownItemsProvider {
 
 	public LayoutActionDropdownItemsProvider(
 		HttpServletRequest httpServletRequest,
+		LayoutActionsHelper layoutActionsHelper,
 		LayoutsAdminDisplayContext layoutsAdminDisplayContext,
-		TranslationPermission translationPermission,
 		TranslationURLProvider translationURLProvider) {
 
 		_httpServletRequest = httpServletRequest;
+		_layoutActionsHelper = layoutActionsHelper;
 		_layoutsAdminDisplayContext = layoutsAdminDisplayContext;
-		_translationPermission = translationPermission;
 		_translationURLProvider = translationURLProvider;
 
 		_themeDisplay = (ThemeDisplay)httpServletRequest.getAttribute(
@@ -80,11 +64,11 @@ public class LayoutActionDropdownItemsProvider {
 							(_layoutsAdminDisplayContext.isConversionDraft(
 								layout) ||
 							 layout.isTypeContent()) &&
-							_layoutsAdminDisplayContext.isShowConfigureAction(
-								layout),
+							_layoutActionsHelper.isShowConfigureAction(layout),
 						_getEditLayoutActionUnsafeConsumer(layout)
 					).add(
-						() -> _isShowTranslateAction(layout),
+						() -> _layoutActionsHelper.isShowTranslateAction(
+							layout),
 						_getAutomaticTranslateLayoutActionUnsafeConsumer(
 							draftLayout, layout)
 					).add(
@@ -92,7 +76,7 @@ public class LayoutActionDropdownItemsProvider {
 							draftLayout, layout)
 					).add(
 						() ->
-							_layoutsAdminDisplayContext.
+							_layoutActionsHelper.
 								isShowViewCollectionItemsAction(layout),
 						_getViewCollectionItemsLayoutActionUnsafeConsumer(
 							layout)
@@ -110,32 +94,29 @@ public class LayoutActionDropdownItemsProvider {
 						_getAddLayoutActionUnsafeConsumer(layout)
 					).add(
 						() ->
-							_layoutsAdminDisplayContext.
-								isShowConvertLayoutAction(layout) &&
+							_layoutActionsHelper.isShowConvertLayoutAction(
+								layout) &&
 							(draftLayout == null),
 						_getConvertToContentPageLayoutActionUnsafeConsumer(
 							layout)
 					).add(
 						() ->
-							_layoutsAdminDisplayContext.
-								isShowConvertLayoutAction(layout) &&
+							_layoutActionsHelper.isShowConvertLayoutAction(
+								layout) &&
 							(draftLayout != null),
 						_getDiscardConversionDraftLayoutActionUnsafeConsumer(
 							draftLayout)
 					).add(
-						() ->
-							_layoutsAdminDisplayContext.
-								isShowPreviewDraftActions(layout),
+						() -> _layoutActionsHelper.isShowPreviewDraftActions(
+							layout),
 						_getPreviewDraftLayoutActionUnsafeConsumer(layout)
 					).add(
-						() ->
-							_layoutsAdminDisplayContext.
-								isShowDiscardDraftActions(layout),
+						() -> _layoutActionsHelper.isShowDiscardDraftActions(
+							layout),
 						_getDiscardDraftLayoutActionUnsafeConsumer(layout)
 					).add(
-						() ->
-							_layoutsAdminDisplayContext.
-								isShowOrphanPortletsAction(layout),
+						() -> _layoutActionsHelper.isShowOrphanPortletsAction(
+							layout, _layoutsAdminDisplayContext.getSelGroup()),
 						_getOrphanWidgetsLayoutActionUnsafeConsumer(layout)
 					).build());
 				dropdownGroupItem.setSeparator(true);
@@ -148,12 +129,14 @@ public class LayoutActionDropdownItemsProvider {
 							layout)
 					).add(
 						() ->
-							_layoutsAdminDisplayContext.
-								isShowExportTranslationAction(layout),
+							_layoutActionsHelper.isShowExportTranslationAction(
+								layout),
 						_getExportForTranslationLayoutActionUnsafeConsumer(
 							draftLayout, layout)
 					).add(
-						() -> _isShowImportTranslationAction(layout),
+						() ->
+							_layoutActionsHelper.isShowImportTranslationAction(
+								layout),
 						_getImportTranslationLayoutActionUnsafeConsumer(
 							draftLayout, layout)
 					).build());
@@ -163,13 +146,12 @@ public class LayoutActionDropdownItemsProvider {
 			dropdownGroupItem -> {
 				dropdownGroupItem.setDropdownItems(
 					DropdownItemListBuilder.add(
-						() -> _layoutsAdminDisplayContext.isShowConfigureAction(
+						() -> _layoutActionsHelper.isShowConfigureAction(
 							layout),
 						_getConfigureLayoutActionUnsafeConsumer(layout)
 					).add(
-						() ->
-							_layoutsAdminDisplayContext.isShowPermissionsAction(
-								layout),
+						() -> _layoutActionsHelper.isShowPermissionsAction(
+							layout, _layoutsAdminDisplayContext.getSelGroup()),
 						_getPermissionLayoutActionUnsafeConsumer(layout)
 					).build());
 				dropdownGroupItem.setSeparator(true);
@@ -178,8 +160,7 @@ public class LayoutActionDropdownItemsProvider {
 			dropdownGroupItem -> {
 				dropdownGroupItem.setDropdownItems(
 					DropdownItemListBuilder.add(
-						() -> _layoutsAdminDisplayContext.isShowDeleteAction(
-							layout),
+						() -> _layoutActionsHelper.isShowDeleteAction(layout),
 						_getDeleteLayoutActionUnsafeConsumer(layout)
 					).build());
 				dropdownGroupItem.setSeparator(true);
@@ -263,7 +244,9 @@ public class LayoutActionDropdownItemsProvider {
 		_getCopyLayoutWithPermissionsActionUnsafeConsumer(Layout layout) {
 
 		return dropdownContextItem -> {
-			if (_layoutsAdminDisplayContext.isShowCopyLayoutAction(layout)) {
+			if (_layoutActionsHelper.isShowCopyLayoutAction(
+					layout, _layoutsAdminDisplayContext.getSelGroup())) {
+
 				dropdownContextItem.setDropdownItems(
 					DropdownItemListBuilder.add(
 						dropdownItem -> {
@@ -542,63 +525,10 @@ public class LayoutActionDropdownItemsProvider {
 		return draftLayout.hasScopeGroup();
 	}
 
-	private boolean _hasTranslatePermission() {
-		PermissionChecker permissionChecker =
-			_themeDisplay.getPermissionChecker();
-		long scopeGroupId = _themeDisplay.getScopeGroupId();
-
-		for (Locale locale : LanguageUtil.getAvailableLocales(scopeGroupId)) {
-			if (_translationPermission.contains(
-					permissionChecker, scopeGroupId,
-					LanguageUtil.getLanguageId(locale),
-					TranslationActionKeys.TRANSLATE)) {
-
-				return true;
-			}
-		}
-
-		return false;
-	}
-
-	private boolean _isShowImportTranslationAction(Layout layout) {
-		try {
-			if (layout.isTypeContent() &&
-				!_layoutsAdminDisplayContext.isSingleLanguageSite() &&
-				LayoutPermissionUtil.contains(
-					_themeDisplay.getPermissionChecker(), layout,
-					ActionKeys.UPDATE)) {
-
-				return true;
-			}
-
-			return false;
-		}
-		catch (Exception exception) {
-			if (_log.isDebugEnabled()) {
-				_log.debug(exception);
-			}
-
-			return false;
-		}
-	}
-
-	private boolean _isShowTranslateAction(Layout layout) {
-		if (layout.isTypeContent() && _hasTranslatePermission() &&
-			!_layoutsAdminDisplayContext.isSingleLanguageSite()) {
-
-			return true;
-		}
-
-		return false;
-	}
-
-	private static final Log _log = LogFactoryUtil.getLog(
-		LayoutActionDropdownItemsProvider.class);
-
 	private final HttpServletRequest _httpServletRequest;
+	private final LayoutActionsHelper _layoutActionsHelper;
 	private final LayoutsAdminDisplayContext _layoutsAdminDisplayContext;
 	private final ThemeDisplay _themeDisplay;
-	private final TranslationPermission _translationPermission;
 	private final TranslationURLProvider _translationURLProvider;
 
 }

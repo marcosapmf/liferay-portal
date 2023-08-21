@@ -1,12 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {ClaySelect} from '@clayui/form';
@@ -35,12 +29,15 @@ const ActivationKeysInputs = ({
 	accountKey,
 	productKey,
 	productTitle,
+	projectName,
 	sessionId,
 }) => {
 	const [{project, userAccount}] = useCustomerPortal();
 
 	const {
+		articleGettingStartedWithLiferayEnterpriseSearchURL,
 		client,
+		featureFlags,
 		provisioningServerAPI,
 		submitSupportTicketURL,
 	} = useAppPropertiesContext();
@@ -126,12 +123,23 @@ const ActivationKeysInputs = ({
 			sessionId
 		);
 
+		const formatText = (text) =>
+			text.replaceAll(/[^a-zA-Z0-9]/g, '').toLowerCase();
+		const productName = [productTitle, selectedAccountSubscriptionName]
+			.map(formatText)
+			.join('');
+
 		if (license.status === STATUS_CODE.success) {
 			const contentType = license.headers.get('content-type');
 			const extensionFile = EXTENSION_FILE_TYPES[contentType] || '.txt';
 			const licenseBlob = await license.blob();
 
-			downloadFromBlob(licenseBlob, `license${extensionFile}`);
+			downloadFromBlob(
+				licenseBlob,
+				`activation-key-${productName}-${formatText(
+					projectName
+				)}${extensionFile}`
+			);
 
 			return;
 		}
@@ -148,8 +156,15 @@ const ActivationKeysInputs = ({
 		() => ({
 			messageRequestersAdministrators: (
 				<p className="mt-3 text-neutral-7 text-paragraph">
+					<span className="mt-3 text-danger text-paragraph">
+						{i18n.sub(
+							'the-requested-activation-key-is-not-yet-available',
+							[getKebabCase(productTitle)]
+						)}
+					</span>
+
 					{i18n.sub(
-						'the-requested-activation-key-is-not-yet-available-for-more-information-about-the-availability-of-your-x-activation-keys-please',
+						'for-more-information-about-the-availability-of-your-x-activation-keys-please',
 						[getKebabCase(productTitle)]
 					)}
 
@@ -159,17 +174,24 @@ const ActivationKeysInputs = ({
 						target="_blank"
 					>
 						<u className="font-weight-bold text-neutral-9">
-							{i18n.translate('contact-the-support-team')}
+							{` ${i18n.translate('contact-the-support-team')}`}
 						</u>
 					</a>
 				</p>
 			),
 			messageUsers: (
-				<p className="mt-3 text-neutral-7 text-paragraph">
+				<p className="mt-3 text-danger text-paragraph">
 					{i18n.sub(
-						'the-requested-activation-key-is-not-yet-available-if-you-need-more-information-about-the-availability-of-your-x-activation-keys-please-ask-one-of-your-administrator-team-members-to-update-your-permissions-so-you-can-contact-liferay-support-alternatively-team-members-with-administrator-or-requester-role-can-submit-a-support-ticket-on-your-behalf',
+						'the-requested-activation-key-is-not-yet-available',
 						[getKebabCase(productTitle)]
 					)}
+
+					<span className="mt-3 text-neutral-7 text-paragraph">
+						{i18n.sub(
+							'if-you-need-more-information-about-the-availability-of-your-x-activation-keys-please-ask-one-of-your-administrator-team-members-to-update-your-permissions-so-you-can-contact-liferay-support-alternatively-team-members-with-administrator-or-requester-role-can-submit-a-support-ticket-on-your-behalf',
+							[getKebabCase(productTitle)]
+						)}
+					</span>
 				</p>
 			),
 		}),
@@ -280,6 +302,28 @@ const ActivationKeysInputs = ({
 			</Button>
 
 			{hasLicenseDownloadError && currentEnterpriseMessage}
+
+			{featureFlags.includes('LPS-185004') && (
+				<p className="pt-3 text-neutral-7">
+					{`${i18n.translate(
+						'for-instructions-on-how-to-setup-your-liferay-enterprise-search-software-please-read-the'
+					)} `}
+
+					<a
+						href={
+							articleGettingStartedWithLiferayEnterpriseSearchURL
+						}
+						rel="noreferrer noopener"
+						target="_blank"
+					>
+						<u className="font-weight-semi-bold text-neutral-7">
+							{i18n.translate(
+								'getting-started-with-liferay-enterprise-search-article'
+							)}
+						</u>
+					</a>
+				</p>
+			)}
 		</div>
 	);
 };

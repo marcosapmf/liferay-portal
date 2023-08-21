@@ -15,6 +15,59 @@ definition {
 		CommerceConfiguration.commerceTearDown();
 	}
 
+	@description = "This is a test for COMMERCE-9800. Users can add a sample URL to the virtual products after the selected file is removed."
+	@priority = 3
+	test CanAddSampleURLAfterRemovingSelectedFile {
+		property portal.acceptance = "false";
+
+		task ("Given a Minium site is created") {
+			CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
+		}
+
+		task ("And a virtual product is created") {
+			CommerceJSONProductsAPI._addCommerceProduct(
+				catalogName = "Minium",
+				productDescription = "Full Description",
+				productName = "Virtual Product",
+				productType = "Virtual",
+				shortDescription = "Short Description",
+				sku = "VIRTUALSKU");
+		}
+
+		task ("And the user selects a sample file for the virtual product") {
+			CommerceProducts.openProductsAdmin();
+
+			CommerceNavigator.searchEntry(entryName = "Virtual");
+
+			CommerceNavigator.gotoEntry(entryName = "Virtual Product");
+
+			CommerceEntry.gotoMenuTab(menuTab = "Virtual");
+
+			CommerceProducts.updateProductVirtualConfiguration(
+				enableSample = "true",
+				sampleFileName = "Commerce_White.jpg",
+				virtualProductFile = "Commerce_Blue.jpg");
+		}
+
+		task ("When the user removes the file") {
+			Click(
+				key_sampleFileName = "Commerce_White.jpg",
+				locator1 = "CommerceEntry#DELETE_SAMPLE_FILE_ATTACHMENT");
+		}
+
+		task ("Then a sample file URL can be added") {
+			Type(
+				key_labelName = "Sample File URL",
+				locator1 = "TextInput#SPECIFIC_LABEL_TEXT_INPUT",
+				value1 = "virtualproduct");
+
+			AssertElementPresent(
+				key_labelName = "Sample File URL",
+				locator1 = "TextInput#SPECIFIC_LABEL_TEXT_INPUT",
+				value1 = "virtualproduct");
+		}
+	}
+
 	@description = "This is a test case for COMMERCE-5582. A new virtual product with no saved configuration will use the default settings and check out with no console errors."
 	@priority = 3
 	test CanCheckoutVirtualProductWithNoSavedConfiguration {
@@ -84,6 +137,136 @@ definition {
 				value1 = "Success! Your order has been processed.");
 
 			AssertConsoleTextNotPresent(value1 = "MessageListenerException");
+		}
+	}
+
+	@description = "This is a test for COMMERCE-11343. User can disable the virtual product's SKU override correctly via both UI and API"
+	@priority = 3
+	test CanDisableVirtualProductSKUOverrideCorrectly {
+		property portal.acceptance = "false";
+
+		task ("Given a Minium site is created") {
+			CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
+		}
+
+		task ("And a virtual product is created") {
+			CommerceJSONProductsAPI._addCommerceProduct(
+				catalogName = "Minium",
+				productDescription = "Full Description",
+				productName = "Virtual Product",
+				productType = "Virtual",
+				shortDescription = "Short Description",
+				sku = "VIRTUALSKU");
+		}
+
+		task ("And the admin enables override for SKU with all settings is updated") {
+			CommerceProducts.openProductsAdmin();
+
+			CommerceNavigator.searchEntry(entryName = '''"Virtual Product"''');
+
+			CommerceNavigator.gotoEntry(entryName = "Virtual Product");
+
+			CommerceEntry.gotoMenuTab(menuTab = "SKUs");
+
+			CommerceNavigator.gotoTableListEntry(entryName = "VIRTUALSKU");
+
+			SelectFrame.selectFrameNoLoading(locator1 = "IFrame#IFRAME");
+
+			CommerceEntry.gotoMenuTab(menuTab = "Virtual Settings Override");
+
+			Check.checkToggleSwitch(
+				key_toggleSwitchLabel = "Override",
+				locator1 = "ToggleSwitch#ANY_TOGGLE_SWITCH");
+
+			CommerceProducts.updateVirtualSkuConfiguration(
+				activationStatus = "Pending",
+				duration = 3,
+				enableSample = "true",
+				key_contentType = "Base Information",
+				key_fieldLabel = "Activation Status",
+				maxDownloads = 3,
+				sampleFileName = "Commerce_Black.jpg",
+				virtualProductFile = "Commerce_Black.jpg");
+
+			CommerceProducts.viewVirtualSkuConfiguration(
+				activationStatus = "Pending",
+				duration = 3,
+				enableSample = "true",
+				maxDownloads = 3,
+				sampleFileName = "Commerce_Black",
+				virtualProductFile = "Commerce_Black");
+		}
+
+		task ("When the admin disables the override for the SKU via UI") {
+			Uncheck.uncheckToggleSwitch(
+				key_toggleSwitchLabel = "Override",
+				locator1 = "ToggleSwitch#ANY_TOGGLE_SWITCH");
+
+			Button.clickSave();
+		}
+
+		task ("Then the virtual settings are overridden to the default values") {
+			Check.checkToggleSwitch(
+				key_toggleSwitchLabel = "Override",
+				locator1 = "ToggleSwitch#ANY_TOGGLE_SWITCH");
+
+			CommerceProducts.viewVirtualSkuConfiguration(
+				activationStatus = "Completed",
+				duration = 0,
+				enableSample = "false",
+				maxDownloads = 0,
+				virtualURL = "");
+		}
+
+		task ("When the admin disables the override for the SKU via API") {
+			CommerceProducts.updateVirtualSkuConfiguration(
+				activationStatus = "Pending",
+				duration = 3,
+				enableSample = "true",
+				key_contentType = "Base Information",
+				key_fieldLabel = "Activation Status",
+				maxDownloads = 3,
+				sampleFileName = "Commerce_Black.jpg",
+				virtualProductFile = "Commerce_Black.jpg");
+
+			CommerceProducts.viewVirtualSkuConfiguration(
+				activationStatus = "Pending",
+				duration = 3,
+				enableSample = "true",
+				maxDownloads = 3,
+				sampleFileName = "Commerce_Black",
+				virtualProductFile = "Commerce_Black");
+
+			CommerceJSONProductsAPI._patchCommerceVirtualProductSku(
+				override = "false",
+				productSku = "VIRTUALSKU");
+		}
+
+		task ("Then the virtual settings are overridden to the default values") {
+			CommerceProducts.openProductsAdmin();
+
+			CommerceNavigator.searchEntry(entryName = '''"Virtual Product"''');
+
+			CommerceNavigator.gotoEntry(entryName = "Virtual Product");
+
+			CommerceEntry.gotoMenuTab(menuTab = "SKUs");
+
+			CommerceNavigator.gotoTableListEntry(entryName = "VIRTUALSKU");
+
+			SelectFrame.selectFrameNoLoading(locator1 = "IFrame#IFRAME");
+
+			CommerceEntry.gotoMenuTab(menuTab = "Virtual Settings Override");
+
+			Check.checkToggleSwitch(
+				key_toggleSwitchLabel = "Override",
+				locator1 = "ToggleSwitch#ANY_TOGGLE_SWITCH");
+
+			CommerceProducts.viewVirtualSkuConfiguration(
+				activationStatus = "Completed",
+				duration = 0,
+				enableSample = "false",
+				maxDownloads = 0,
+				virtualURL = "");
 		}
 	}
 

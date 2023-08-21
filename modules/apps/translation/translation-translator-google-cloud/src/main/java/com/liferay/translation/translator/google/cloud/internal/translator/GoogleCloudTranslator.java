@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.translation.translator.google.cloud.internal.translator;
@@ -50,6 +41,7 @@ import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Adolfo Pérez
+ * @author Roberto Díaz
  */
 @Component(
 	configurationPid = "com.liferay.translation.translator.google.cloud.internal.configuration.GoogleCloudTranslatorConfiguration",
@@ -78,7 +70,12 @@ public class GoogleCloudTranslator implements Translator {
 	public TranslatorPacket translate(TranslatorPacket translatorPacket)
 		throws PortalException {
 
-		if (!isEnabled(translatorPacket.getCompanyId())) {
+		GoogleCloudTranslatorConfiguration googleCloudTranslatorConfiguration =
+			_configurationProvider.getCompanyConfiguration(
+				GoogleCloudTranslatorConfiguration.class,
+				translatorPacket.getCompanyId());
+
+		if (!googleCloudTranslatorConfiguration.enabled()) {
 			return translatorPacket;
 		}
 
@@ -87,7 +84,7 @@ public class GoogleCloudTranslator implements Translator {
 		String targetLanguageCode = _getLanguageCode(
 			translatorPacket.getTargetLanguageId());
 
-		Translate translate = _getTranslate(translatorPacket.getCompanyId());
+		Translate translate = _getTranslate(googleCloudTranslatorConfiguration);
 
 		Set<String> supportedLanguageCodes = SetUtil.fromCollection(
 			TransformUtil.transform(
@@ -130,6 +127,11 @@ public class GoogleCloudTranslator implements Translator {
 			}
 
 			@Override
+			public Map<String, Boolean> getHTMLMap() {
+				return null;
+			}
+
+			@Override
 			public String getSourceLanguageId() {
 				return translatorPacket.getSourceLanguageId();
 			}
@@ -148,12 +150,10 @@ public class GoogleCloudTranslator implements Translator {
 		return list.get(0);
 	}
 
-	private Translate _getTranslate(long companyId)
+	private Translate _getTranslate(
+			GoogleCloudTranslatorConfiguration
+				googleCloudTranslatorConfiguration)
 		throws ConfigurationException {
-
-		GoogleCloudTranslatorConfiguration googleCloudTranslatorConfiguration =
-			_configurationProvider.getCompanyConfiguration(
-				GoogleCloudTranslatorConfiguration.class, companyId);
 
 		String serviceAccountPrivateKey =
 			googleCloudTranslatorConfiguration.serviceAccountPrivateKey();

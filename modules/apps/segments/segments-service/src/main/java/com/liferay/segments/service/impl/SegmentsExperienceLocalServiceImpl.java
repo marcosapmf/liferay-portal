@@ -1,32 +1,25 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.segments.service.impl;
 
 import com.liferay.portal.aop.AopService;
+import com.liferay.portal.kernel.exception.LockedLayoutException;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.ResourceConstants;
 import com.liferay.portal.kernel.model.SystemEventConstants;
 import com.liferay.portal.kernel.model.User;
-import com.liferay.portal.kernel.service.ClassNameLocalService;
+import com.liferay.portal.kernel.security.auth.GuestOrUserUtil;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.ResourceLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.systemevent.SystemEvent;
+import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.GroupThreadLocal;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
@@ -120,6 +113,8 @@ public class SegmentsExperienceLocalServiceImpl
 			UnicodeProperties typeSettingsUnicodeProperties,
 			ServiceContext serviceContext)
 		throws PortalException {
+
+		_checkUnlockedLayout(plid, userId);
 
 		// Segments experience
 
@@ -216,6 +211,9 @@ public class SegmentsExperienceLocalServiceImpl
 			segmentsExperiencePersistence.findByPrimaryKey(
 				segmentsExperienceId);
 
+		_checkUnlockedLayout(
+			segmentsExperience.getPlid(), GuestOrUserUtil.getUserId());
+
 		return segmentsExperienceLocalService.deleteSegmentsExperience(
 			segmentsExperience);
 	}
@@ -236,6 +234,9 @@ public class SegmentsExperienceLocalServiceImpl
 					segmentsExperience.getSegmentsExperienceId());
 		}
 
+		_checkUnlockedLayout(
+			segmentsExperience.getPlid(), GuestOrUserUtil.getUserId());
+
 		segmentsExperiencePersistence.remove(segmentsExperience);
 
 		segmentsExperiencePersistence.flush();
@@ -249,9 +250,8 @@ public class SegmentsExperienceLocalServiceImpl
 		// Segments experiments
 
 		for (SegmentsExperiment segmentsExperiment :
-				_segmentsExperimentPersistence.findByS_C_C(
+				_segmentsExperimentPersistence.findByS_P(
 					segmentsExperience.getSegmentsExperienceId(),
-					_classNameLocalService.getClassNameId(Layout.class),
 					_getPublishedLayoutPlid(segmentsExperience.getPlid()))) {
 
 			_deleteSegmentsExperiment(segmentsExperiment);
@@ -276,9 +276,8 @@ public class SegmentsExperienceLocalServiceImpl
 
 		if (defaultSegmentsExperience != null) {
 			for (SegmentsExperiment segmentsExperiment :
-					_segmentsExperimentPersistence.findByS_C_C(
+					_segmentsExperimentPersistence.findByS_P(
 						defaultSegmentsExperience.getSegmentsExperienceId(),
-						_classNameLocalService.getClassNameId(Layout.class),
 						_getPublishedLayoutPlid(plid))) {
 
 				_deleteSegmentsExperiment(segmentsExperiment);
@@ -450,6 +449,9 @@ public class SegmentsExperienceLocalServiceImpl
 					" has a locked segments experiment");
 		}
 
+		_checkUnlockedLayout(
+			segmentsExperience.getPlid(), GuestOrUserUtil.getUserId());
+
 		segmentsExperience.setSegmentsEntryId(segmentsEntryId);
 		segmentsExperience.setNameMap(nameMap);
 		segmentsExperience.setActive(active);
@@ -467,6 +469,9 @@ public class SegmentsExperienceLocalServiceImpl
 		SegmentsExperience segmentsExperience =
 			segmentsExperiencePersistence.findByPrimaryKey(
 				segmentsExperienceId);
+
+		_checkUnlockedLayout(
+			segmentsExperience.getPlid(), GuestOrUserUtil.getUserId());
 
 		segmentsExperience.setActive(active);
 
@@ -487,6 +492,9 @@ public class SegmentsExperienceLocalServiceImpl
 				"Segments experience " + segmentsExperienceId +
 					" has a locked segments experiment");
 		}
+
+		_checkUnlockedLayout(
+			segmentsExperience.getPlid(), GuestOrUserUtil.getUserId());
 
 		boolean swap = true;
 
@@ -535,6 +543,16 @@ public class SegmentsExperienceLocalServiceImpl
 
 		return segmentsExperiencePersistence.findByPrimaryKey(
 			segmentsExperience.getSegmentsExperienceId());
+	}
+
+	private void _checkUnlockedLayout(long plid, long userId)
+		throws PortalException {
+
+		Layout layout = _layoutLocalService.fetchLayout(plid);
+
+		if ((layout != null) && !layout.isUnlocked(Constants.EDIT, userId)) {
+			throw new LockedLayoutException();
+		}
 	}
 
 	private void _compactSegmentsExperiencesPriorities(
@@ -696,9 +714,6 @@ public class SegmentsExperienceLocalServiceImpl
 					" already exists");
 		}
 	}
-
-	@Reference
-	private ClassNameLocalService _classNameLocalService;
 
 	@Reference
 	private Language _language;

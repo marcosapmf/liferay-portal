@@ -2,10 +2,10 @@ import Card from 'shared/components/Card';
 import ClayButton from '@clayui/button';
 import ClayIcon from '@clayui/icon';
 import Constants from 'shared/util/constants';
+import Loading from 'shared/components/Loading';
 import React from 'react';
 import RecommendationPageAssetsQuery from '../queries/RecommendationPageAssetsQuery';
 import RuleItem from './RuleItem';
-import Spinner from 'shared/components/Spinner';
 import {close, modalTypes, open} from 'shared/actions/modals';
 import {connect} from 'react-redux';
 import {EXCLUDE, Filter} from '../utils/utils';
@@ -33,6 +33,7 @@ const TrainingItem: React.FC<ITrainingItemProps> = ({
 }) => (
 	<div className='training-item-root d-flex align-items-baseline'>
 		<ClayButton
+			aria-label={Liferay.Language.get('watch')}
 			borderless
 			className='button-root'
 			displayType='secondary'
@@ -78,7 +79,7 @@ const TrainingItemsCard: React.FC<ITrainingItemsCardProps> = ({
 
 	const renderTotalTrainingUrls = () => {
 		if (loading) {
-			return <Spinner key='LOADING_SPINNER' size='sm' />;
+			return <Loading key='LOADING' />;
 		}
 
 		return get(data, ['pageAssets', 'total'], 0).toLocaleString();
@@ -105,6 +106,7 @@ const TrainingItemsCard: React.FC<ITrainingItemsCardProps> = ({
 
 				<div className='total-training-urls d-flex align-items-center'>
 					<ClayButton
+						aria-label={Liferay.Language.get('watch')}
 						borderless
 						className='button-root'
 						displayType='secondary'

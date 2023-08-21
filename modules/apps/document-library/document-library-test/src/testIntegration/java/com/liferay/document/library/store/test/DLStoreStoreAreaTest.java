@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.document.library.store.test;
@@ -35,6 +26,7 @@ import com.liferay.portal.test.rule.FeatureFlags;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 
+import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.BeforeClass;
@@ -103,6 +95,11 @@ public class DLStoreStoreAreaTest {
 			).build());
 	}
 
+	@AfterClass
+	public static void tearDownClass() throws Exception {
+		ConfigurationTestUtil.deleteConfiguration(_configuration);
+	}
+
 	@Test
 	public void testAddFile() throws Exception {
 		String fileName = StringUtil.randomString();
@@ -115,7 +112,7 @@ public class DLStoreStoreAreaTest {
 				fileName, Store.VERSION_DEFAULT));
 
 		StoreArea.withStoreArea(
-			StoreArea.LIVE,
+			StoreArea.NEW,
 			() -> _assertHasStoreFile(fileName, Store.VERSION_DEFAULT));
 	}
 
@@ -166,7 +163,7 @@ public class DLStoreStoreAreaTest {
 		_addFile(fileName, Store.VERSION_DEFAULT);
 		_addFile(fileName, "2.0");
 
-		DLStoreUtil.deleteFile(
+		DLStoreUtil.deleteDirectory(
 			TestPropsValues.getCompanyId(), TestPropsValues.getGroupId(),
 			fileName);
 
@@ -238,6 +235,8 @@ public class DLStoreStoreAreaTest {
 		StoreArea.withStoreArea(
 			StoreArea.DELETED,
 			() -> _assertHasStoreFile(fileName, Store.VERSION_DEFAULT));
+		StoreArea.withStoreArea(
+			StoreArea.NEW, () -> _assertHasStoreFile(fileName, "2.0"));
 	}
 
 	private void _addFile(String fileName, String version) throws Exception {

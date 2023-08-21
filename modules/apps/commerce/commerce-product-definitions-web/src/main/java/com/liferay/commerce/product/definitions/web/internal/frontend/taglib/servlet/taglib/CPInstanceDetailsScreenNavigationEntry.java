@@ -1,26 +1,17 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.product.definitions.web.internal.frontend.taglib.servlet.taglib;
 
 import com.liferay.commerce.currency.service.CommerceCurrencyLocalService;
-import com.liferay.commerce.currency.util.CommercePriceFormatter;
 import com.liferay.commerce.price.CommerceProductPriceCalculation;
-import com.liferay.commerce.product.ddm.DDMHelper;
+import com.liferay.commerce.price.list.service.CommercePriceEntryService;
 import com.liferay.commerce.product.definitions.web.internal.display.context.CPInstanceDisplayContext;
 import com.liferay.commerce.product.model.CPInstance;
 import com.liferay.commerce.product.model.CommerceCatalog;
+import com.liferay.commerce.product.option.CommerceOptionTypeRegistry;
 import com.liferay.commerce.product.portlet.action.ActionHelper;
 import com.liferay.commerce.product.service.CPDefinitionOptionRelService;
 import com.liferay.commerce.product.service.CPMeasurementUnitLocalService;
@@ -92,9 +83,10 @@ public class CPInstanceDetailsScreenNavigationEntry
 		CPInstanceDisplayContext cpInstanceDisplayContext =
 			new CPInstanceDisplayContext(
 				_actionHelper, httpServletRequest,
-				_commerceCurrencyLocalService, _commercePriceFormatter,
-				_commerceProductPriceCalculation, _cpDefinitionOptionRelService,
-				_cpInstanceHelper, _cpMeasurementUnitLocalService, _ddmHelper);
+				_commerceCurrencyLocalService, _commerceOptionTypeRegistry,
+				_commercePriceEntryService, _commerceProductPriceCalculation,
+				_cpDefinitionOptionRelService, _cpInstanceHelper,
+				_cpMeasurementUnitLocalService);
 
 		httpServletRequest.setAttribute(
 			WebKeys.PORTLET_DISPLAY_CONTEXT, cpInstanceDisplayContext);
@@ -120,7 +112,10 @@ public class CPInstanceDetailsScreenNavigationEntry
 	private CommerceCurrencyLocalService _commerceCurrencyLocalService;
 
 	@Reference
-	private CommercePriceFormatter _commercePriceFormatter;
+	private CommerceOptionTypeRegistry _commerceOptionTypeRegistry;
+
+	@Reference
+	private CommercePriceEntryService _commercePriceEntryService;
 
 	@Reference
 	private CommerceProductPriceCalculation _commerceProductPriceCalculation;
@@ -133,9 +128,6 @@ public class CPInstanceDetailsScreenNavigationEntry
 
 	@Reference
 	private CPMeasurementUnitLocalService _cpMeasurementUnitLocalService;
-
-	@Reference
-	private DDMHelper _ddmHelper;
 
 	@Reference
 	private JSPRenderer _jspRenderer;

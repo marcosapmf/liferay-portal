@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portlet.documentlibrary.service.impl;
@@ -441,7 +432,6 @@ public class DLFileEntryLocalServiceImpl
 		latestDLFileVersion.setChangeLog(changeLog);
 		latestDLFileVersion.setVersion(
 			_getNextVersion(dlFileEntry, computedDLVersionNumberIncrease));
-
 		latestDLFileVersion.setStoreUUID(String.valueOf(UUID.randomUUID()));
 
 		latestDLFileVersion = _dlFileVersionPersistence.update(
@@ -464,7 +454,7 @@ public class DLFileEntryLocalServiceImpl
 			dlFileEntry.getName(), oldStoreFileName,
 			latestDLFileVersion.getStoreFileName());
 
-		_registerPWCDeletionCallback(dlFileEntry);
+		_registerPWCDeletionCallback(dlFileEntry, oldStoreFileName);
 
 		unlockFileEntry(fileEntryId);
 	}
@@ -774,7 +764,7 @@ public class DLFileEntryLocalServiceImpl
 		// File
 
 		try {
-			DLStoreUtil.deleteFile(
+			DLStoreUtil.deleteDirectory(
 				dlFileEntry.getCompanyId(), dlFileEntry.getDataRepositoryId(),
 				dlFileEntry.getName());
 		}
@@ -1815,7 +1805,7 @@ public class DLFileEntryLocalServiceImpl
 
 		dlFileEntry.setFileEntryTypeId(fileEntryTypeId);
 
-		dlFileEntryLocalService.updateDLFileEntry(dlFileEntry);
+		dlFileEntry = dlFileEntryLocalService.updateDLFileEntry(dlFileEntry);
 
 		DLFileVersion dlFileVersion =
 			_dlFileVersionLocalService.getLatestFileVersion(
@@ -3239,13 +3229,15 @@ public class DLFileEntryLocalServiceImpl
 		_removeFileVersion(dlFileEntry, latestDLFileVersion);
 	}
 
-	private void _registerPWCDeletionCallback(DLFileEntry dlFileEntry) {
+	private void _registerPWCDeletionCallback(
+		DLFileEntry dlFileEntry, String storeFileName) {
+
 		TransactionCommitCallbackUtil.registerCallback(
 			() -> {
 				_deleteFile(
 					dlFileEntry.getCompanyId(),
 					dlFileEntry.getDataRepositoryId(), dlFileEntry.getName(),
-					DLFileEntryConstants.PRIVATE_WORKING_COPY_VERSION);
+					storeFileName);
 
 				return null;
 			});
@@ -3397,19 +3389,24 @@ public class DLFileEntryLocalServiceImpl
 					user.getCompanyId(), dlFileEntry.getDataRepositoryId(),
 					dlFileEntry.getName(), oldStoreFileName);
 
+				DLStoreRequest dlStoreRequest = DLStoreRequest.builder(
+					user.getCompanyId(), dlFileEntry.getDataRepositoryId(),
+					dlFileEntry.getName()
+				).fileExtension(
+					dlFileEntry.getExtension()
+				).sourceFileName(
+					sourceFileName
+				).validateFileExtension(
+					false
+				).versionLabel(
+					updatedFileVersion.getStoreFileName()
+				).build();
+
 				if (file != null) {
-					DLStoreUtil.updateFile(
-						user.getCompanyId(), dlFileEntry.getDataRepositoryId(),
-						dlFileEntry.getName(), dlFileEntry.getExtension(),
-						false, updatedFileVersion.getStoreFileName(),
-						sourceFileName, file);
+					DLStoreUtil.updateFile(dlStoreRequest, file);
 				}
 				else {
-					DLStoreUtil.updateFile(
-						user.getCompanyId(), dlFileEntry.getDataRepositoryId(),
-						dlFileEntry.getName(), dlFileEntry.getExtension(),
-						false, updatedFileVersion.getStoreFileName(),
-						sourceFileName, inputStream);
+					DLStoreUtil.updateFile(dlStoreRequest, inputStream);
 				}
 			}
 

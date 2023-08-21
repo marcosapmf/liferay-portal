@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.redirect.web.internal.portlet.action;
@@ -18,7 +9,6 @@ import com.google.re2j.Pattern;
 import com.google.re2j.PatternSyntaxException;
 
 import com.liferay.portal.configuration.persistence.listener.ConfigurationModelListenerException;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
@@ -29,7 +19,6 @@ import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.redirect.configuration.RedirectPatternConfigurationProvider;
-import com.liferay.redirect.constants.RedirectConstants;
 import com.liferay.redirect.model.RedirectPatternEntry;
 import com.liferay.redirect.web.internal.constants.RedirectPortletKeys;
 
@@ -126,10 +115,6 @@ public class EditRedirectPatternsMVCActionCommand extends BaseMVCActionCommand {
 	}
 
 	private String _getUserAgent(Map<String, String[]> parameterMap, int i) {
-		if (!FeatureFlagManagerUtil.isEnabled("LPS-175850")) {
-			return RedirectConstants.USER_AGENT_ALL;
-		}
-
 		String[] userAgents = parameterMap.get("userAgent_" + i);
 
 		if ((userAgents.length != 0) && Validator.isNotNull(userAgents[0])) {

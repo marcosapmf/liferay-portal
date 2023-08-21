@@ -48,4 +48,12 @@ definition {
 			locator1 = "TestraySubtask#SUBTASK_DETAILS");
 	}
 
+	macro viewSubtaskSidebar {
+		for (var subtaskName : list ${listsubtaskName}) {
+			AssertElementPresent(
+				key_subtaskName = ${subtaskName},
+				locator1 = "TestraySubtask#VIEW_SUBTASK_SIDEBAR");
+		}
+	}
+
 }

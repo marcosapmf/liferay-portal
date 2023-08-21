@@ -19,9 +19,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -37,6 +37,8 @@ definition {
 		property environment.acceptance = "true";
 		property operating.system.types = "alpine,amazonlinux,centos,debian,fedora,orcllinux,osx,redhat,rockylinux,solaris,suse,ubuntu,windows";
 		property portal.acceptance = "quarantine";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		Staging.remoteStagingSetUp(siteName = "Site Name");
 
@@ -153,7 +155,8 @@ definition {
 		property databases.size = "1";
 		property minimum.slave.ram = "24";
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "PGStaging#ActivateRemoteStaging";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		Staging.remoteStagingSetUp(
 			remotePort = 9080,
@@ -189,6 +192,10 @@ definition {
 			siteName = "Site Name");
 
 		DMDocument.enableActionsMenuOnPortlet();
+
+		WaitForElementPresent(
+			key_portletName = "Documents and Media",
+			locator1 = "Portlet#ICON_PLUS_SIGN");
 
 		DMDocument.addPG(
 			dmDocumentFile = "Document_1.docx",
@@ -465,9 +472,7 @@ definition {
 
 		AssertElementPresent(locator1 = "DocumentsAndMedia#DESCRIPTIVE_LIST_DOCUMENT_ICON");
 
-		AssertTextEquals(
-			locator1 = "DocumentsAndMedia#DESCRIPTIVE_LIST_DOCUMENT_TITLE",
-			value1 = "DM Document Title");
+		DMDocument.viewDocumentTitleInListView(dmDocumentTitle = "DM Document Title");
 
 		Navigator.gotoStagedSitePage(
 			pageName = "Staging Test Page",
@@ -765,7 +770,8 @@ definition {
 		property custom.properties = "tunneling.servlet.shared.secret=1234567890123456${line.separator}auth.verifier.TunnelAuthVerifier.hosts.allowed=";
 		property databases.size = "1";
 		property minimum.slave.ram = "24";
-		property test.name.skip.portal.instance = "PGStaging#PublishWCWithPagesVariationViaRemoteStaging";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		Staging.remoteStagingSetUp(
 			pageVersioningEnabled = "true",

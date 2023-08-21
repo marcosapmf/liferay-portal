@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -49,9 +40,10 @@
 		</liferay-ui:error>
 
 		<c:if test="<%= liveGroup.isLayoutSetPrototype() && !PropsValues.LAYOUT_SET_PROTOTYPE_PROPAGATE_LOGO %>">
-			<div class="alert alert-warning">
-				<liferay-ui:message key="modifying-the-site-template-logo-only-affects-sites-that-are-not-yet-created" />
-			</div>
+			<clay:alert
+				displayType="warning"
+				message="modifying-the-site-template-logo-only-affects-sites-that-are-not-yet-created"
+			/>
 		</c:if>
 
 		<%
@@ -83,10 +75,10 @@
 		boolean showSiteNameDefault = GetterUtil.getBoolean(selTheme.getSetting("show-site-name-default"), showSiteNameSupported);
 		%>
 
-		<aui:input aria-describedby='<%= showSiteNameSupported ? StringPool.BLANK : liferayPortletResponse.getNamespace() + "showSiteNameDescription" %>' disabled="<%= !showSiteNameSupported %>" label="show-site-name" labelCssClass="font-weight-normal" name="TypeSettingsProperties--showSiteName--" type="checkbox" value='<%= GetterUtil.getBoolean(selLayoutSet.getSettingsProperty("showSiteName"), showSiteNameDefault) %>' wrapperCssClass="mb-2" />
+		<aui:input aria-describedby='<%= showSiteNameSupported ? StringPool.BLANK : liferayPortletResponse.getNamespace() + "showSiteNameDescription" %>' disabled="<%= !showSiteNameSupported %>" label="show-site-name" labelCssClass="font-weight-normal" name="TypeSettingsProperties--showSiteName--" type="checkbox" value='<%= GetterUtil.getBoolean(selLayoutSet.getSettingsProperty("showSiteName"), showSiteNameDefault) %>' wrapperCssClass="c-mb-2" />
 
 		<c:if test="<%= !showSiteNameSupported %>">
-			<p class="mb-0 text-3 text-secondary" id="<portlet:namespace />showSiteNameDescription">
+			<p class="c-mb-0 text-3 text-secondary" id="<portlet:namespace />showSiteNameDescription">
 				<liferay-ui:message key="the-theme-selected-for-the-site-does-not-support-displaying-the-title" />
 			</p>
 		</c:if>

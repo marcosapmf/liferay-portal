@@ -33,7 +33,6 @@ definition {
 		WaitForLiferayEvent.initializeLiferayEventLog();
 	}
 
-	@summary = "Agree to Liferay Portal Terms of Use"
 	macro agreeToTermsOfUse {
 		AssertClick(
 			locator1 = "Button#I_AGREE",
@@ -42,7 +41,6 @@ definition {
 		AssertElementNotPresent(locator1 = "Button#I_AGREE");
 	}
 
-	@summary = "Enter '${userPasswordReminderAnswer}' as password reminder"
 	macro setPasswordReminder {
 		Type(
 			locator1 = "TextInput#ANSWER",
@@ -51,7 +49,6 @@ definition {
 		Button.clickSave();
 	}
 
-	@summary = "Sign in to Liferay Portal as '${userEmailAddress}' using the password '${userPassword}'"
 	macro signIn {
 		SignIn._signIn(
 			userEmailAddress = ${userEmailAddress},
@@ -61,9 +58,9 @@ definition {
 	macro signInPortalInstanceSetUp {
 		var portalURL = PropsUtil.get("portal.url");
 
-		var portalURL = StringUtil.replace(${portalURL}, "http://", "");
+		var portalURL = Regex.removeHTTP(url = ${portalURL});
 
-		var portalURL = StringUtil.extractFirst(${portalURL}, ":8");
+		var portalURL = Regex.removePortNumber(url = ${portalURL});
 
 		HeadlessPortalInstanceAPI.addPortalInstance(
 			authenticationMethod = ${authenticationMethod},
@@ -79,9 +76,10 @@ definition {
 			virtualHostsURL = ${url});
 	}
 
-	@summary = "Sign in to Liferay Portal as '${userEmailAddress}' using the password '${userPassword}'"
 	macro signInTestSetup {
-		JSONUser.agreeToTermsAndAnswerReminderQuery(userEmailAddress = "test@liferay.com");
+		var userEmailAddress = JSONUtil2.getDefaultUserEmail();
+
+		JSONUser.agreeToTermsAndAnswerReminderQuery(userEmailAddress = ${userEmailAddress});
 
 		SignIn._signIn(
 			licenseExpired = ${licenseExpired},

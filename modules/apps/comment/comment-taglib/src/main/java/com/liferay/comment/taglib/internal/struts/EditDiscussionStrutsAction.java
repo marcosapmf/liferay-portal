@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.comment.taglib.internal.struts;
@@ -144,27 +135,10 @@ public class EditDiscussionStrutsAction implements StrutsAction {
 
 		long commentId = ParamUtil.getLong(httpServletRequest, "commentId");
 
-		DiscussionPermission discussionPermission = _getDiscussionPermission(
-			themeDisplay);
-
-		discussionPermission.checkDeletePermission(commentId);
+		_discussionPermission.checkDeletePermission(
+			themeDisplay.getPermissionChecker(), commentId);
 
 		_commentManager.deleteComment(commentId);
-	}
-
-	private DiscussionPermission _getDiscussionPermission(
-			ThemeDisplay themeDisplay)
-		throws Exception {
-
-		DiscussionPermission discussionPermission =
-			_commentManager.getDiscussionPermission(
-				themeDisplay.getPermissionChecker());
-
-		if (discussionPermission == null) {
-			throw new PrincipalException("Discussion permission is null");
-		}
-
-		return discussionPermission;
 	}
 
 	private void _subscribeToComments(
@@ -175,18 +149,16 @@ public class EditDiscussionStrutsAction implements StrutsAction {
 			(ThemeDisplay)httpServletRequest.getAttribute(
 				WebKeys.THEME_DISPLAY);
 
-		DiscussionPermission discussionPermission = _getDiscussionPermission(
-			themeDisplay);
-
 		String className = ParamUtil.getString(httpServletRequest, "className");
 		long classPK = ParamUtil.getLong(httpServletRequest, "classPK");
 
 		AssetEntry assetEntry = _assetEntryLocalService.getEntry(
 			className, classPK);
 
-		discussionPermission.checkSubscribePermission(
-			assetEntry.getCompanyId(), assetEntry.getGroupId(),
-			assetEntry.getClassName(), assetEntry.getClassPK());
+		_discussionPermission.checkSubscribePermission(
+			themeDisplay.getPermissionChecker(), assetEntry.getCompanyId(),
+			assetEntry.getGroupId(), assetEntry.getClassName(),
+			assetEntry.getClassPK());
 
 		if (subscribe) {
 			_commentManager.subscribeDiscussion(
@@ -216,9 +188,6 @@ public class EditDiscussionStrutsAction implements StrutsAction {
 
 		Function<String, ServiceContext> serviceContextFunction =
 			new ServiceContextFunction(httpServletRequest);
-
-		DiscussionPermission discussionPermission = _getDiscussionPermission(
-			themeDisplay);
 
 		if (commentId <= 0) {
 
@@ -251,7 +220,8 @@ public class EditDiscussionStrutsAction implements StrutsAction {
 			PrincipalThreadLocal.setName(user.getUserId());
 
 			try {
-				discussionPermission.checkAddPermission(
+				_discussionPermission.checkAddPermission(
+					themeDisplay.getPermissionChecker(),
 					themeDisplay.getCompanyId(), themeDisplay.getScopeGroupId(),
 					className, classPK);
 
@@ -268,7 +238,8 @@ public class EditDiscussionStrutsAction implements StrutsAction {
 
 			// Update message
 
-			discussionPermission.checkUpdatePermission(commentId);
+			_discussionPermission.checkUpdatePermission(
+				themeDisplay.getPermissionChecker(), commentId);
 
 			commentId = _commentManager.updateComment(
 				themeDisplay.getUserId(), className, classPK, commentId,
@@ -302,6 +273,9 @@ public class EditDiscussionStrutsAction implements StrutsAction {
 
 	@Reference
 	private CommentManager _commentManager;
+
+	@Reference
+	private DiscussionPermission _discussionPermission;
 
 	@Reference
 	private JSONFactory _jsonFactory;

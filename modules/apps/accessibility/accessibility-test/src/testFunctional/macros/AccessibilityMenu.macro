@@ -1,0 +1,72 @@
+definition {
+
+	macro activateAccessibilityMenu {
+		ApplicationsMenu.gotoPortlet(
+			category = "Configuration",
+			panel = "Control Panel",
+			portlet = "Instance Settings");
+
+		Click(
+			key_itemName = "Accessibility",
+			locator1 = "ListGroupItem#ITEM_TEXT");
+
+		if (!(IsElementPresent(checkboxName = "Enable Accessibility Menu", locator1 = "Checkbox#ANY_CHECKBOX_CHECKED"))) {
+			Check.checkNotVisible(
+				checkboxName = "Enable Accessibility Menu",
+				locator1 = "Checkbox#ANY_CHECKBOX");
+
+			if (IsElementPresent(locator1 = "Button#SAVE")) {
+				Click(locator1 = "Button#SAVE");
+			}
+			else {
+				Click(locator1 = "Button#UPDATE");
+			}
+
+			Alert.viewSuccessMessage();
+		}
+	}
+
+	macro disableSpecificOption {
+		AccessibilityMenu.openAccessibilityMenu();
+
+		Uncheck.uncheckToggleSwitch(
+			key_toggleSwitchLabel = ${key_toggleSwitchLabel},
+			locator1 = "ToggleSwitch#ANY_TOGGLE_SWITCH");
+	}
+
+	macro enableSpecificOption {
+		AccessibilityMenu.openAccessibilityMenu();
+
+		Check.checkToggleSwitch(
+			key_toggleSwitchLabel = ${key_toggleSwitchLabel},
+			locator1 = "ToggleSwitch#ANY_TOGGLE_SWITCH");
+	}
+
+	macro goToAccessibilityMenuQuickLink {
+		KeyPress(
+			locator1 = "//body",
+			value1 = "\TAB");
+
+		KeyPress(
+			key_link = "Skip to Main Content",
+			locator1 = "AccessibilityMenu#QUICK_LINK",
+			value1 = "\TAB");
+	}
+
+	macro openAccessibilityMenu {
+		KeyPress(
+			locator1 = "//body",
+			value1 = "\TAB");
+
+		KeyPress(
+			key_link = "Skip to Main Content",
+			locator1 = "AccessibilityMenu#QUICK_LINK",
+			value1 = "\TAB");
+
+		KeyPress(
+			key_link = "Open Accessibility Menu",
+			locator1 = "AccessibilityMenu#QUICK_LINK",
+			value1 = "\ENTER");
+	}
+
+}

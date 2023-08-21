@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.delivery.internal.resource.v1_0;
@@ -33,6 +24,7 @@ import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.SetUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.odata.filter.ExpressionConvert;
@@ -245,7 +237,7 @@ public abstract class BaseSitePageResourceImpl
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'POST' 'http://localhost:8080/o/headless-delivery/v1.0/sites/{siteId}/site-pages' -d $'{"customFields": ___, "datePublished": ___, "experience": ___, "friendlyUrlPath": ___, "friendlyUrlPath_i18n": ___, "keywords": ___, "pageDefinition": ___, "pagePermissions": ___, "pageSettings": ___, "pageType": ___, "parentSitePage": ___, "renderedPage": ___, "taxonomyCategoryIds": ___, "title": ___, "title_i18n": ___, "viewableBy": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 * curl -X 'POST' 'http://localhost:8080/o/headless-delivery/v1.0/sites/{siteId}/site-pages' -d $'{"customFields": ___, "datePublished": ___, "experience": ___, "friendlyUrlPath": ___, "friendlyUrlPath_i18n": ___, "keywords": ___, "pageDefinition": ___, "pagePermissions": ___, "pageSettings": ___, "pageType": ___, "parentSitePage": ___, "renderedPage": ___, "taxonomyCategoryBriefs": ___, "taxonomyCategoryIds": ___, "title": ___, "title_i18n": ___, "viewableBy": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Operation(
 		description = "Adds a new site page"
@@ -625,14 +617,15 @@ public abstract class BaseSitePageResourceImpl
 			Map<String, Serializable> parameters)
 		throws Exception {
 
-		UnsafeConsumer<SitePage, Exception> sitePageUnsafeConsumer = null;
+		UnsafeFunction<SitePage, SitePage, Exception> sitePageUnsafeFunction =
+			null;
 
 		String createStrategy = (String)parameters.getOrDefault(
 			"createStrategy", "INSERT");
 
-		if ("INSERT".equalsIgnoreCase(createStrategy)) {
+		if (StringUtil.equalsIgnoreCase(createStrategy, "INSERT")) {
 			if (parameters.containsKey("siteId")) {
-				sitePageUnsafeConsumer = sitePage -> postSiteSitePage(
+				sitePageUnsafeFunction = sitePage -> postSiteSitePage(
 					(Long)parameters.get("siteId"), sitePage);
 			}
 			else {
@@ -641,19 +634,23 @@ public abstract class BaseSitePageResourceImpl
 			}
 		}
 
-		if (sitePageUnsafeConsumer == null) {
+		if (sitePageUnsafeFunction == null) {
 			throw new NotSupportedException(
 				"Create strategy \"" + createStrategy +
 					"\" is not supported for SitePage");
 		}
 
-		if (contextBatchUnsafeConsumer != null) {
+		if (contextBatchUnsafeBiConsumer != null) {
+			contextBatchUnsafeBiConsumer.accept(
+				sitePages, sitePageUnsafeFunction);
+		}
+		else if (contextBatchUnsafeConsumer != null) {
 			contextBatchUnsafeConsumer.accept(
-				sitePages, sitePageUnsafeConsumer);
+				sitePages, sitePageUnsafeFunction::apply);
 		}
 		else {
 			for (SitePage sitePage : sitePages) {
-				sitePageUnsafeConsumer.accept(sitePage);
+				sitePageUnsafeFunction.apply(sitePage);
 			}
 		}
 	}
@@ -746,6 +743,15 @@ public abstract class BaseSitePageResourceImpl
 
 	public void setContextAcceptLanguage(AcceptLanguage contextAcceptLanguage) {
 		this.contextAcceptLanguage = contextAcceptLanguage;
+	}
+
+	public void setContextBatchUnsafeBiConsumer(
+		UnsafeBiConsumer
+			<Collection<SitePage>,
+			 UnsafeFunction<SitePage, SitePage, Exception>, Exception>
+				contextBatchUnsafeBiConsumer) {
+
+		this.contextBatchUnsafeBiConsumer = contextBatchUnsafeBiConsumer;
 	}
 
 	public void setContextBatchUnsafeConsumer(
@@ -1006,6 +1012,9 @@ public abstract class BaseSitePageResourceImpl
 	}
 
 	protected AcceptLanguage contextAcceptLanguage;
+	protected UnsafeBiConsumer
+		<Collection<SitePage>, UnsafeFunction<SitePage, SitePage, Exception>,
+		 Exception> contextBatchUnsafeBiConsumer;
 	protected UnsafeBiConsumer
 		<Collection<SitePage>, UnsafeConsumer<SitePage, Exception>, Exception>
 			contextBatchUnsafeConsumer;

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.admin.catalog.resource.v1_0.test;
@@ -266,33 +257,31 @@ public abstract class BaseProductResourceTestCase {
 
 	@Test
 	public void testGetProductsPageWithFilterDoubleEquals() throws Exception {
-		List<EntityField> entityFields = getEntityFields(
-			EntityField.Type.DOUBLE);
+		testGetProductsPageWithFilter("eq", EntityField.Type.DOUBLE);
+	}
 
-		if (entityFields.isEmpty()) {
-			return;
-		}
-
-		Product product1 = testGetProductsPage_addProduct(randomProduct());
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		Product product2 = testGetProductsPage_addProduct(randomProduct());
-
-		for (EntityField entityField : entityFields) {
-			Page<Product> page = productResource.getProductsPage(
-				null, getFilterString(entityField, "eq", product1),
-				Pagination.of(1, 2), null);
-
-			assertEquals(
-				Collections.singletonList(product1),
-				(List<Product>)page.getItems());
-		}
+	@Test
+	public void testGetProductsPageWithFilterStringContains() throws Exception {
+		testGetProductsPageWithFilter("contains", EntityField.Type.STRING);
 	}
 
 	@Test
 	public void testGetProductsPageWithFilterStringEquals() throws Exception {
-		List<EntityField> entityFields = getEntityFields(
-			EntityField.Type.STRING);
+		testGetProductsPageWithFilter("eq", EntityField.Type.STRING);
+	}
+
+	@Test
+	public void testGetProductsPageWithFilterStringStartsWith()
+		throws Exception {
+
+		testGetProductsPageWithFilter("startswith", EntityField.Type.STRING);
+	}
+
+	protected void testGetProductsPageWithFilter(
+			String operator, EntityField.Type type)
+		throws Exception {
+
+		List<EntityField> entityFields = getEntityFields(type);
 
 		if (entityFields.isEmpty()) {
 			return;
@@ -305,7 +294,7 @@ public abstract class BaseProductResourceTestCase {
 
 		for (EntityField entityField : entityFields) {
 			Page<Product> page = productResource.getProductsPage(
-				null, getFilterString(entityField, "eq", product1),
+				null, getFilterString(entityField, operator, product1),
 				Pagination.of(1, 2), null);
 
 			assertEquals(
@@ -1158,14 +1147,6 @@ public abstract class BaseProductResourceTestCase {
 				continue;
 			}
 
-			if (Objects.equals("configuration", additionalAssertFieldName)) {
-				if (product.getConfiguration() == null) {
-					valid = false;
-				}
-
-				continue;
-			}
-
 			if (Objects.equals("createDate", additionalAssertFieldName)) {
 				if (product.getCreateDate() == null) {
 					valid = false;
@@ -1560,14 +1541,19 @@ public abstract class BaseProductResourceTestCase {
 
 		Assert.assertTrue(valid);
 
-		Map<String, Map<String, String>> actions = page.getActions();
+		assertValid(page.getActions(), expectedActions);
+	}
 
-		for (String key : expectedActions.keySet()) {
-			Map action = actions.get(key);
+	protected void assertValid(
+		Map<String, Map<String, String>> actions1,
+		Map<String, Map<String, String>> actions2) {
+
+		for (String key : actions2.keySet()) {
+			Map action = actions1.get(key);
 
 			Assert.assertNotNull(key + " does not contain an action", action);
 
-			Map expectedAction = expectedActions.get(key);
+			Map<String, String> expectedAction = actions2.get(key);
 
 			Assert.assertEquals(
 				expectedAction.get("method"), action.get("method"));
@@ -1695,17 +1681,6 @@ public abstract class BaseProductResourceTestCase {
 			if (Objects.equals("categories", additionalAssertFieldName)) {
 				if (!Objects.deepEquals(
 						product1.getCategories(), product2.getCategories())) {
-
-					return false;
-				}
-
-				continue;
-			}
-
-			if (Objects.equals("configuration", additionalAssertFieldName)) {
-				if (!Objects.deepEquals(
-						product1.getConfiguration(),
-						product2.getConfiguration())) {
 
 					return false;
 				}
@@ -2328,11 +2303,6 @@ public abstract class BaseProductResourceTestCase {
 				"Invalid entity field " + entityFieldName);
 		}
 
-		if (entityFieldName.equals("configuration")) {
-			throw new IllegalArgumentException(
-				"Invalid entity field " + entityFieldName);
-		}
-
 		if (entityFieldName.equals("createDate")) {
 			if (operator.equals("between")) {
 				sb = new StringBundler();
@@ -2370,9 +2340,47 @@ public abstract class BaseProductResourceTestCase {
 		}
 
 		if (entityFieldName.equals("defaultSku")) {
-			sb.append("'");
-			sb.append(String.valueOf(product.getDefaultSku()));
-			sb.append("'");
+			Object object = product.getDefaultSku();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
@@ -2455,9 +2463,47 @@ public abstract class BaseProductResourceTestCase {
 		}
 
 		if (entityFieldName.equals("externalReferenceCode")) {
-			sb.append("'");
-			sb.append(String.valueOf(product.getExternalReferenceCode()));
-			sb.append("'");
+			Object object = product.getExternalReferenceCode();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
@@ -2590,17 +2636,93 @@ public abstract class BaseProductResourceTestCase {
 		}
 
 		if (entityFieldName.equals("productType")) {
-			sb.append("'");
-			sb.append(String.valueOf(product.getProductType()));
-			sb.append("'");
+			Object object = product.getProductType();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
 
 		if (entityFieldName.equals("productTypeI18n")) {
-			sb.append("'");
-			sb.append(String.valueOf(product.getProductTypeI18n()));
-			sb.append("'");
+			Object object = product.getProductTypeI18n();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
@@ -2626,9 +2748,47 @@ public abstract class BaseProductResourceTestCase {
 		}
 
 		if (entityFieldName.equals("skuFormatted")) {
-			sb.append("'");
-			sb.append(String.valueOf(product.getSkuFormatted()));
-			sb.append("'");
+			Object object = product.getSkuFormatted();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
@@ -2654,9 +2814,47 @@ public abstract class BaseProductResourceTestCase {
 		}
 
 		if (entityFieldName.equals("thumbnail")) {
-			sb.append("'");
-			sb.append(String.valueOf(product.getThumbnail()));
-			sb.append("'");
+			Object object = product.getThumbnail();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}

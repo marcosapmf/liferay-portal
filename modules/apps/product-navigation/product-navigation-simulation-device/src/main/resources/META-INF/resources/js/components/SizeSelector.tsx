@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayAlert from '@clayui/alert';
@@ -65,35 +56,71 @@ export default function SizeSelector({
 	const customSizeSelectorId = `${namespace}customSizeSelector`;
 
 	return (
-		<ClayLayout.Container>
-			<ClayLayout.Row className="size-selector">
-				{sizesList.map((size, index) => (
-					<SizeButton
-						activeSize={activeSize}
-						customSizeSelectorId={customSizeSelectorId}
-						key={index}
-						onRotate={onRotate}
-						setActiveSize={setActiveSize}
-						size={size}
-					/>
-				))}
-			</ClayLayout.Row>
+		<>
+			{Liferay.FeatureFlags['LPS-186558'] ? (
+				<>
+					<ClayLayout.Container>
+						<ClayLayout.Row className="size-selector">
+							{sizesList.map((size, index) => (
+								<SizeButton
+									activeSize={activeSize}
+									customSizeSelectorId={customSizeSelectorId}
+									key={index}
+									onRotate={onRotate}
+									setActiveSize={setActiveSize}
+									size={size}
+								/>
+							))}
+						</ClayLayout.Row>
+					</ClayLayout.Container>
 
-			{activeSize.id === SIZES.custom.id && (
-				<CustomSizeSelector
-					id={customSizeSelectorId}
-					namespace={namespace}
-					previewRef={previewRef}
-				/>
+					{activeSize.id === SIZES.custom.id && (
+						<CustomSizeSelector
+							id={customSizeSelectorId}
+							namespace={namespace}
+							previewRef={previewRef}
+						/>
+					)}
+
+					<span aria-live="polite" className="sr-only">
+						{sub(
+							Liferay.Language.get('x-screen-size-is-selected'),
+							activeSize.label
+						)}
+					</span>
+				</>
+			) : (
+				<ClayLayout.Container>
+					<ClayLayout.Row className="size-selector">
+						{sizesList.map((size, index) => (
+							<SizeButton
+								activeSize={activeSize}
+								customSizeSelectorId={customSizeSelectorId}
+								key={index}
+								onRotate={onRotate}
+								setActiveSize={setActiveSize}
+								size={size}
+							/>
+						))}
+					</ClayLayout.Row>
+
+					{activeSize.id === SIZES.custom.id && (
+						<CustomSizeSelector
+							id={customSizeSelectorId}
+							namespace={namespace}
+							previewRef={previewRef}
+						/>
+					)}
+
+					<span aria-live="polite" className="sr-only">
+						{sub(
+							Liferay.Language.get('x-screen-size-is-selected'),
+							activeSize.label
+						)}
+					</span>
+				</ClayLayout.Container>
 			)}
-
-			<span aria-live="polite" className="sr-only">
-				{sub(
-					Liferay.Language.get('x-screen-size-is-selected'),
-					activeSize.label
-				)}
-			</span>
-		</ClayLayout.Container>
+		</>
 	);
 }
 
@@ -187,6 +214,20 @@ function CustomSizeSelector({
 
 	const [alertMessage, setAlertMessage] = useState<string | null>(null);
 
+	const updatePreview = () => {
+		if (previewRef.current) {
+			previewRef.current.style.height = `${height}px`;
+			previewRef.current.style.width = `${width}px`;
+
+			setAlertMessage(
+				sub(
+					Liferay.Language.get('custom-size-x-applied'),
+					`${height}x${width}`
+				)
+			);
+		}
+	};
+
 	useEffect(() => {
 		const resizeObserver = new ResizeObserver(([firstEntry]) => {
 			const preview = firstEntry.target as HTMLElement;
@@ -206,53 +247,144 @@ function CustomSizeSelector({
 
 	return (
 		<div id={id}>
-			<div className="d-flex flex-nowrap mt-4">
-				<ClayForm.Group className="mr-3">
-					<label htmlFor={`${namespace}height`}>
-						{Liferay.Language.get('height') + ' (px):'}
-					</label>
+			<div
+				className={classNames('d-flex flex-nowrap mt-4', {
+					'w-100': Liferay.FeatureFlags['LPS-186558'],
+				})}
+			>
+				<ClayForm.Group
+					className={classNames('mr-3', {
+						'flex-grow-1': Liferay.FeatureFlags['LPS-186558'],
+					})}
+				>
+					{Liferay.FeatureFlags['LPS-186558'] ? (
+						<>
+							<label htmlFor={`${namespace}width`}>
+								{Liferay.Language.get('width')}
 
-					<ClayInput
-						id={`${namespace}height`}
-						max={MAX_CUSTOM_SIZE}
-						min={MIN_CUSTOM_SIZE}
-						onChange={(event) => {
-							const value = Number(event.target.value);
+								<span className="sr-only">(px)</span>
+							</label>
+							<ClayInput.Group>
+								<ClayInput.GroupItem prepend>
+									<ClayInput
+										id={`${namespace}width`}
+										max={MAX_CUSTOM_SIZE}
+										min={MIN_CUSTOM_SIZE}
+										onChange={(event) => {
+											const value = Number(
+												event.target.value
+											);
 
-							if (
-								value >= MIN_CUSTOM_SIZE &&
-								value <= MAX_CUSTOM_SIZE
-							) {
-								setHeight(value);
-							}
-						}}
-						type="number"
-						value={height}
-					/>
+											if (
+												value >= MIN_CUSTOM_SIZE &&
+												value <= MAX_CUSTOM_SIZE
+											) {
+												setWidth(value);
+											}
+										}}
+										sizing="sm"
+										type="number"
+										value={width}
+									/>
+								</ClayInput.GroupItem>
+
+								<ClayInput.GroupItem append shrink>
+									<span className="input-group-text">PX</span>
+								</ClayInput.GroupItem>
+							</ClayInput.Group>
+						</>
+					) : (
+						<>
+							<label htmlFor={`${namespace}width`}>
+								{Liferay.Language.get('width') + ' (px):'}
+							</label>
+							<ClayInput
+								id={`${namespace}width`}
+								max={MAX_CUSTOM_SIZE}
+								min={MIN_CUSTOM_SIZE}
+								onChange={(event) => {
+									const value = Number(event.target.value);
+
+									if (
+										value >= MIN_CUSTOM_SIZE &&
+										value <= MAX_CUSTOM_SIZE
+									) {
+										setWidth(value);
+									}
+								}}
+								type="number"
+								value={width}
+							/>
+						</>
+					)}
 				</ClayForm.Group>
 
-				<ClayForm.Group>
-					<label htmlFor={`${namespace}width`}>
-						{Liferay.Language.get('width') + ' (px):'}
-					</label>
+				<ClayForm.Group
+					className={classNames({
+						'flex-grow-1': Liferay.FeatureFlags['LPS-186558'],
+					})}
+				>
+					{Liferay.FeatureFlags['LPS-186558'] ? (
+						<>
+							<label htmlFor={`${namespace}height`}>
+								{Liferay.Language.get('height')}
 
-					<ClayInput
-						id={`${namespace}width`}
-						max={MAX_CUSTOM_SIZE}
-						min={MIN_CUSTOM_SIZE}
-						onChange={(event) => {
-							const value = Number(event.target.value);
+								<span className="sr-only">(px)</span>
+							</label>
+							<ClayInput.Group>
+								<ClayInput.GroupItem prepend>
+									<ClayInput
+										id={`${namespace}height`}
+										max={MAX_CUSTOM_SIZE}
+										min={MIN_CUSTOM_SIZE}
+										onChange={(event) => {
+											const value = Number(
+												event.target.value
+											);
 
-							if (
-								value >= MIN_CUSTOM_SIZE &&
-								value <= MAX_CUSTOM_SIZE
-							) {
-								setWidth(value);
-							}
-						}}
-						type="number"
-						value={width}
-					/>
+											if (
+												value >= MIN_CUSTOM_SIZE &&
+												value <= MAX_CUSTOM_SIZE
+											) {
+												setHeight(value);
+											}
+										}}
+										sizing="sm"
+										type="number"
+										value={height}
+									/>
+								</ClayInput.GroupItem>
+
+								<ClayInput.GroupItem append shrink>
+									<span className="input-group-text">PX</span>
+								</ClayInput.GroupItem>
+							</ClayInput.Group>
+						</>
+					) : (
+						<>
+							<label htmlFor={`${namespace}height`}>
+								{Liferay.Language.get('height') + ' (px):'}
+							</label>
+
+							<ClayInput
+								id={`${namespace}height`}
+								max={MAX_CUSTOM_SIZE}
+								min={MIN_CUSTOM_SIZE}
+								onChange={(event) => {
+									const value = Number(event.target.value);
+
+									if (
+										value >= MIN_CUSTOM_SIZE &&
+										value <= MAX_CUSTOM_SIZE
+									) {
+										setHeight(value);
+									}
+								}}
+								type="number"
+								value={height}
+							/>
+						</>
+					)}
 				</ClayForm.Group>
 			</div>
 
@@ -261,17 +393,7 @@ function CustomSizeSelector({
 				className="w-100"
 				displayType="secondary"
 				onClick={() => {
-					if (previewRef.current) {
-						previewRef.current.style.height = `${height}px`;
-						previewRef.current.style.width = `${width}px`;
-
-						setAlertMessage(
-							sub(
-								Liferay.Language.get('custom-size-x-applied'),
-								`${height}x${width}`
-							)
-						);
-					}
+					updatePreview();
 				}}
 			>
 				{Liferay.Language.get('apply-custom-size')}

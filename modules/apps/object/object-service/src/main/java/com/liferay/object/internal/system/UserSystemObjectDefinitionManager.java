@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.internal.system;
@@ -17,6 +8,8 @@ package com.liferay.object.internal.system;
 import com.liferay.headless.admin.user.dto.v1_0.UserAccount;
 import com.liferay.headless.admin.user.resource.v1_0.UserAccountResource;
 import com.liferay.object.constants.ObjectDefinitionConstants;
+import com.liferay.object.field.builder.DateObjectFieldBuilder;
+import com.liferay.object.field.builder.TextObjectFieldBuilder;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectField;
 import com.liferay.object.system.BaseSystemObjectDefinitionManager;
@@ -88,12 +81,17 @@ public class UserSystemObjectDefinitionManager
 	}
 
 	@Override
-	public String getExternalReferenceCode(long primaryKey)
+	public String getBaseModelExternalReferenceCode(long primaryKey)
 		throws PortalException {
 
 		User user = _userLocalService.getUser(primaryKey);
 
 		return user.getExternalReferenceCode();
+	}
+
+	@Override
+	public String getExternalReferenceCode() {
+		return "L_USER";
 	}
 
 	@Override
@@ -116,25 +114,82 @@ public class UserSystemObjectDefinitionManager
 	@Override
 	public List<ObjectField> getObjectFields() {
 		return Arrays.asList(
-			createObjectField(
-				"Text", "middleName", "String", "middle-name", "additionalName",
-				false, true),
-			createObjectField(
-				"Text", "screenName", "String", "screen-name", "alternateName",
-				true, true),
-			createObjectField(
-				"Text", "String", "email-address", "emailAddress", true, true),
-			createObjectField(
-				"Text", "lastName", "String", "last-name", "familyName", true,
-				true),
-			createObjectField(
-				"Text", "firstName", "String", "first-name", "givenName", true,
-				true),
-			createObjectField(
-				"Date", "lastLoginDate", "Date", "last-login-date",
-				"lastLoginDate", false, true),
-			createObjectField(
-				"Text", "uuid_", "String", "uuid", "uuid", false, true));
+			new TextObjectFieldBuilder(
+			).dbColumnName(
+				"middleName"
+			).labelMap(
+				createLabelMap("middle-name")
+			).name(
+				"additionalName"
+			).system(
+				true
+			).build(),
+			new TextObjectFieldBuilder(
+			).dbColumnName(
+				"screenName"
+			).labelMap(
+				createLabelMap("screen-name")
+			).name(
+				"alternateName"
+			).required(
+				true
+			).system(
+				true
+			).build(),
+			new TextObjectFieldBuilder(
+			).labelMap(
+				createLabelMap("email-address")
+			).name(
+				"emailAddress"
+			).required(
+				true
+			).system(
+				true
+			).build(),
+			new TextObjectFieldBuilder(
+			).dbColumnName(
+				"lastName"
+			).labelMap(
+				createLabelMap("last-name")
+			).name(
+				"familyName"
+			).required(
+				true
+			).system(
+				true
+			).build(),
+			new TextObjectFieldBuilder(
+			).dbColumnName(
+				"firstName"
+			).labelMap(
+				createLabelMap("first-name")
+			).name(
+				"givenName"
+			).required(
+				true
+			).system(
+				true
+			).build(),
+			new DateObjectFieldBuilder(
+			).dbColumnName(
+				"lastLoginDate"
+			).labelMap(
+				createLabelMap("last-login-date")
+			).name(
+				"lastLoginDate"
+			).system(
+				true
+			).build(),
+			new TextObjectFieldBuilder(
+			).dbColumnName(
+				"uuid_"
+			).labelMap(
+				createLabelMap("uuid")
+			).name(
+				"uuid"
+			).system(
+				true
+			).build());
 	}
 
 	@Override

@@ -779,7 +779,7 @@ definition {
 				orderAuthor = "Buyer User",
 				productName = "Bushings",
 				productPrice = "18.00",
-				productQuantity = 1,
+				productQuantity = "1.00",
 				productSku = "MIN38795",
 				productUnitPrice = "18.00");
 
@@ -790,6 +790,101 @@ definition {
 			AssertElementNotPresent(
 				locator1 = "CommerceFrontStore#FS_PRODUCT_NAME",
 				value1 = "Bushings");
+		}
+	}
+
+	@description = "This is a test for COMMERCE-11913. User can search for a product and view the correct pagination for the search result in a placed order"
+	@priority = 5
+	test CanViewSearchedProductWithPaginationInPlacedOrderDetails {
+		property custom.properties = "jsonws.web.service.paths.excludes=${line.separator}company.security.strangers.verify=false";
+		property portal.acceptance = "true";
+
+		task ("Given a buyer user connected to the Commerce Account") {
+			CommerceEntry.addAccountEntryUser(
+				accountName = "Commerce Account",
+				agreeToTermsAndAnswerReminderQuery = "true",
+				requireReset = "false",
+				userEmailAddress = "buyer@liferay.com",
+				userFirstName = "Buyer",
+				userLastName = "User",
+				userRole = "Buyer",
+				userScreenName = "buyeruser",
+				userSiteMembership = "Minium");
+		}
+
+		task ("And the buyer has placed an order for seven products") {
+			User.logoutPG();
+
+			CommerceLogin.miniumLogin(
+				password = "test",
+				urlAppend = "web/minium",
+				userEmailAddress = "buyer@liferay.com");
+
+			CommerceAcceleratorsInitializer.changeProductsSorting(sortingType = "Name Ascending");
+
+			for (var productName : list "ABS Sensor,Ball Joints,Bearings,Brake Pads,Brake Rotors,Bushings,Calipers") {
+				FrontStore.addInitializerProductToCart(
+					productName = ${productName},
+					productQuantity = 1);
+			}
+
+			CommerceCheckout.gotoCheckout();
+
+			CommerceCheckout.checkout(
+				newAddressAddress = "Test Address",
+				newAddressCity = "Test City",
+				newAddressCountry = "United States",
+				newAddressName = "Address Name",
+				newAddressZipCode = "Test Zip Code",
+				shippingMethod = "Standard");
+		}
+
+		task ("And the buyer can view the products and pagination results from the Placed Orders detail page") {
+			Navigator.openWithAppendToBaseURL(urlAppend = "web/minium/placed-orders");
+
+			Button.click(button = "View");
+
+			AssertTextEquals(
+				locator1 = "CP2ActivationKeys#PAGINATION_BUTTON",
+				value1 = "10 Items");
+
+			for (var productName : list "ABS Sensor,Ball Joints,Bearings,Brake Pads,Brake Rotors,Bushings,Calipers") {
+				LexiconEntry.viewEntryName(rowEntry = ${productName});
+			}
+
+			Pagination.viewResults(results = "Showing 1 to 7 of 7 entries.");
+		}
+
+		task ("When the pagination is changed to 4") {
+			Pagination.changePagination(itemsPerPage = "4 Items");
+		}
+
+		task ("Then the seven products are divided into two pages to display with pagination results") {
+			Pagination.viewResults(results = "Showing 1 to 4 of 7 entries.");
+
+			Click(locator1 = "Pagination#NEXT_LINK");
+
+			Pagination.viewResults(results = "Showing 5 to 7 of 7 entries.");
+		}
+
+		task ("When a product ABS Sensor is searched on the page") {
+			CommerceNavigator.searchEntry(entryName = "ABS Sensor");
+		}
+
+		task ("Then the pagination results are changed accordingly only for the searched product") {
+			LexiconEntry.viewEntryName(rowEntry = "ABS Sensor");
+
+			AssertTextEquals(
+				locator1 = "CP2ActivationKeys#PAGINATION_BUTTON",
+				value1 = "4 Items");
+
+			Pagination.viewResults(results = "Showing 1 to 1 of 1 entries.");
+
+			AssertElementPresent(locator1 = "Pagination#FIRST_LINK");
+
+			AssertElementNotPresent(
+				key_pageNumber = 2,
+				locator1 = "Pagination#ANY_PAGE");
 		}
 	}
 
@@ -958,7 +1053,8 @@ definition {
 	test GlobalSettingsForOrderDateConfiguration {
 		property custom.properties = "jsonws.web.service.paths.excludes=${line.separator}company.security.strangers.verify=false";
 		property portal.acceptance = "false";
-		property test.name.skip.portal.instance = "SFCommerceOrders#GlobalSettingsForOrderDateConfiguration";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Given a buyer user connected to the Commerce Account") {
 			CommerceEntry.addAccountEntryUser(
@@ -1248,6 +1344,8 @@ definition {
 			key_text = "Reorder",
 			locator1 = "Button#ANY");
 
+		Button.click(button = "Checkout");
+
 		for (var iterator : list "1,2,3,4,5") {
 			if (${iterator} == 2) {
 				Click(
@@ -1511,6 +1609,8 @@ definition {
 			productSkuList = "MIN55861",
 			warehouseName = "Italy");
 
+		var shipmentId = selenium.getText("CommerceEntry#HEADER_ID");
+
 		ApplicationsMenu.gotoSite(site = "Minium");
 
 		CommerceNavigator.gotoMiniumSidebarItem(menuItem = "Placed Orders");
@@ -1531,15 +1631,15 @@ definition {
 			key_title = "Shipments",
 			locator1 = "Header#H2_TITLE");
 
-		for (var currentRow : list "status;Delivered,carrier;Test Carrier,tracking-number;Test Tracking Number") {
-			var currentColumn = StringUtil.extractFirst(${currentRow}, ";");
-			var currentValue = StringUtil.extractLast(${currentRow}, ";");
+		for (var currentRow : list "1;Delivered,3;Test Carrier,4;Test Tracking Number") {
+			var column = StringUtil.extractFirst(${currentRow}, ";");
+			var value = StringUtil.extractLast(${currentRow}, ";");
 
 			AssertTextEquals(
-				key_columnName = ${currentColumn},
-				key_tableEntry = "",
-				locator1 = "LexiconTable#TABLE_ENTRY_INFO",
-				value1 = ${currentValue});
+				key_entry = ${shipmentId},
+				key_index = ${column},
+				locator1 = "CommerceEntry#MODAL_DATASET_ROW_ITEM",
+				value1 = ${value});
 		}
 	}
 

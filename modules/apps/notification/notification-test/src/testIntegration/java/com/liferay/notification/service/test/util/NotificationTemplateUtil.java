@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.notification.service.test.util;
@@ -19,48 +10,124 @@ import com.liferay.notification.constants.NotificationQueueEntryConstants;
 import com.liferay.notification.constants.NotificationTemplateConstants;
 import com.liferay.notification.context.NotificationContext;
 import com.liferay.notification.model.NotificationQueueEntry;
-import com.liferay.notification.model.NotificationRecipient;
 import com.liferay.notification.model.NotificationRecipientSetting;
 import com.liferay.notification.model.NotificationTemplate;
 import com.liferay.notification.service.NotificationQueueEntryLocalServiceUtil;
 import com.liferay.notification.service.NotificationRecipientLocalServiceUtil;
 import com.liferay.notification.service.NotificationRecipientSettingLocalServiceUtil;
 import com.liferay.notification.service.NotificationTemplateLocalServiceUtil;
+import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.test.util.TestPropsValues;
 
-import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * @author Murilo Stodolni
  */
 public class NotificationTemplateUtil {
 
+	public static NotificationContext createNotificationContext(
+			List<NotificationRecipientSetting> notificationRecipientSettings,
+			String type)
+		throws PortalException {
+
+		return createNotificationContext(
+			TestPropsValues.getUser(), RandomTestUtil.randomString(),
+			RandomTestUtil.randomString(), notificationRecipientSettings,
+			RandomTestUtil.randomString(), type);
+	}
+
 	public static NotificationContext createNotificationContext(User user) {
 		return createNotificationContext(
-			user, RandomTestUtil.randomString(), null,
-			RandomTestUtil.randomString(), NotificationConstants.TYPE_EMAIL);
+			user, null, NotificationConstants.TYPE_USER_NOTIFICATION);
 	}
 
 	public static NotificationContext createNotificationContext(
-		User user, String description) {
+		User user, String description, String type) {
 
 		return createNotificationContext(
 			user, RandomTestUtil.randomString(), description,
-			RandomTestUtil.randomString(), NotificationConstants.TYPE_EMAIL);
+			RandomTestUtil.randomString(), type);
+	}
+
+	public static NotificationContext createNotificationContext(
+		User user, String body, String description,
+		List<NotificationRecipientSetting> notificationRecipientSettings,
+		String subject, String type) {
+
+		NotificationContext notificationContext = new NotificationContext();
+
+		notificationContext.setNotificationQueueEntry(
+			createNotificationQueueEntry(user, body, subject, type));
+		notificationContext.setNotificationRecipient(
+			NotificationRecipientLocalServiceUtil.createNotificationRecipient(
+				RandomTestUtil.randomInt()));
+		notificationContext.setNotificationRecipientSettings(
+			notificationRecipientSettings);
+		notificationContext.setNotificationTemplate(
+			createNotificationTemplate(
+				user.getUserId(), body, description, subject, type));
+		notificationContext.setType(type);
+
+		return notificationContext;
 	}
 
 	public static NotificationContext createNotificationContext(
 		User user, String body, String description, String subject,
 		String type) {
 
-		NotificationContext notificationContext = new NotificationContext();
+		return createNotificationContext(
+			user, body, description,
+			Collections.singletonList(
+				createNotificationRecipientSetting(
+					RandomTestUtil.randomString(),
+					RandomTestUtil.randomString())),
+			subject, type);
+	}
+
+	public static NotificationQueueEntry createNotificationQueueEntry(
+		User user, String body, String subject, String type) {
+
+		NotificationQueueEntry notificationQueueEntry =
+			NotificationQueueEntryLocalServiceUtil.createNotificationQueueEntry(
+				RandomTestUtil.randomInt());
+
+		notificationQueueEntry.setUserId(user.getUserId());
+		notificationQueueEntry.setUserName(user.getFullName());
+		notificationQueueEntry.setBody(body);
+		notificationQueueEntry.setSubject(subject);
+		notificationQueueEntry.setType(type);
+		notificationQueueEntry.setStatus(
+			NotificationQueueEntryConstants.STATUS_UNSENT);
+
+		return notificationQueueEntry;
+	}
+
+	public static NotificationRecipientSetting
+		createNotificationRecipientSetting(String name, String value) {
+
+		NotificationRecipientSetting notificationRecipientSetting =
+			NotificationRecipientSettingLocalServiceUtil.
+				createNotificationRecipientSetting(RandomTestUtil.randomInt());
+
+		notificationRecipientSetting.setName(name);
+		notificationRecipientSetting.setValue(value);
+
+		return notificationRecipientSetting;
+	}
+
+	public static NotificationTemplate createNotificationTemplate(
+		long userId, String body, String description, String subject,
+		String type) {
 
 		NotificationTemplate notificationTemplate =
 			NotificationTemplateLocalServiceUtil.createNotificationTemplate(
 				RandomTestUtil.randomInt());
 
-		notificationTemplate.setUserId(user.getUserId());
+		notificationTemplate.setUserId(userId);
 		notificationTemplate.setBody(body);
 		notificationTemplate.setDescription(description);
 		notificationTemplate.setEditorType(
@@ -69,47 +136,7 @@ public class NotificationTemplateUtil {
 		notificationTemplate.setSubject(subject);
 		notificationTemplate.setType(type);
 
-		notificationContext.setNotificationTemplate(notificationTemplate);
-
-		NotificationQueueEntry notificationQueueEntry =
-			NotificationQueueEntryLocalServiceUtil.createNotificationQueueEntry(
-				RandomTestUtil.randomInt());
-
-		notificationQueueEntry.setUserId(user.getUserId());
-		notificationQueueEntry.setUserName(user.getFullName());
-		notificationQueueEntry.setBody(notificationTemplate.getBody());
-		notificationQueueEntry.setSubject(notificationTemplate.getSubject());
-		notificationQueueEntry.setType(notificationTemplate.getType());
-		notificationQueueEntry.setStatus(
-			NotificationQueueEntryConstants.STATUS_UNSENT);
-
-		notificationContext.setNotificationQueueEntry(notificationQueueEntry);
-
-		NotificationRecipient notificationRecipient =
-			NotificationRecipientLocalServiceUtil.createNotificationRecipient(
-				RandomTestUtil.randomInt());
-
-		notificationRecipient.setClassName(
-			NotificationQueueEntry.class.getName());
-		notificationRecipient.setClassPK(
-			notificationQueueEntry.getNotificationQueueEntryId());
-
-		notificationContext.setNotificationRecipient(notificationRecipient);
-
-		NotificationRecipientSetting notificationRecipientSetting =
-			NotificationRecipientSettingLocalServiceUtil.
-				createNotificationRecipientSetting(RandomTestUtil.randomInt());
-
-		notificationRecipientSetting.setNotificationRecipientId(
-			notificationRecipient.getNotificationRecipientId());
-
-		notificationContext.setNotificationRecipientSettings(
-			Arrays.asList(notificationRecipientSetting));
-
-		notificationContext.setType(
-			NotificationConstants.TYPE_USER_NOTIFICATION);
-
-		return notificationContext;
+		return notificationTemplate;
 	}
 
 }

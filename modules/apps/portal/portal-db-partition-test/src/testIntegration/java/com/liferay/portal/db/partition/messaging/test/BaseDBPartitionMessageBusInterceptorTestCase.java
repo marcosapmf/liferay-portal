@@ -1,26 +1,16 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.db.partition.messaging.test;
 
 import com.liferay.petra.lang.SafeCloseable;
-import com.liferay.portal.db.partition.DBPartitionUtil;
 import com.liferay.portal.db.partition.test.util.BaseDBPartitionTestCase;
 import com.liferay.portal.kernel.messaging.BaseMessageListener;
 import com.liferay.portal.kernel.messaging.Destination;
 import com.liferay.portal.kernel.messaging.DestinationConfiguration;
-import com.liferay.portal.kernel.messaging.DestinationFactoryUtil;
+import com.liferay.portal.kernel.messaging.DestinationFactory;
 import com.liferay.portal.kernel.messaging.Message;
 import com.liferay.portal.kernel.messaging.MessageBus;
 import com.liferay.portal.kernel.messaging.MessageBusInterceptor;
@@ -28,12 +18,15 @@ import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.CompanyConstants;
 import com.liferay.portal.kernel.scheduler.SchedulerEngine;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
+import com.liferay.portal.kernel.security.auth.PrincipalThreadLocal;
 import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.util.CompanyTestUtil;
+import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.util.PortalInstances;
+import com.liferay.portal.util.PropsUtil;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -64,11 +57,12 @@ public abstract class BaseDBPartitionMessageBusInterceptorTestCase
 
 		destination.destroy();
 
+		PropsUtil.set(
+			"database.partition.enabled", _originalDatabasePartitionEnabled);
+
 		_companyLocalService.deleteCompany(_company);
 
-		ReflectionTestUtil.setFieldValue(
-			_dbPartitionMessageBusInterceptor, "_databasePartitionEnabled",
-			_currentDatabasePartitionEnabled);
+		PrincipalThreadLocal.setName(_originalName);
 	}
 
 	@Before
@@ -92,7 +86,6 @@ public abstract class BaseDBPartitionMessageBusInterceptorTestCase
 			_dbPartitionMessageBusInterceptor,
 			"_excludedMessageBusDestinationNames",
 			_currentExcludedMessageBusDestinationNames);
-
 		ReflectionTestUtil.setFieldValue(
 			_dbPartitionMessageBusInterceptor, "_excludedSchedulerJobNames",
 			_currentExcludedSchedulerJobNames);
@@ -224,10 +217,6 @@ public abstract class BaseDBPartitionMessageBusInterceptorTestCase
 	public void testSendMessageWithCompanyInDeletionProcess()
 		throws InterruptedException {
 
-		boolean databasePartitionEnabled =
-			ReflectionTestUtil.getAndSetFieldValue(
-				DBPartitionUtil.class, "_DATABASE_PARTITION_ENABLED", true);
-
 		try (SafeCloseable safeCloseable =
 				PortalInstances.setCompanyInDeletionProcess(
 					_activeCompanyIds[0])) {
@@ -239,14 +228,13 @@ public abstract class BaseDBPartitionMessageBusInterceptorTestCase
 			_testDBPartitionMessageListener.assertCollected(
 				ArrayUtil.remove(_activeCompanyIds, _activeCompanyIds[0]));
 		}
-		finally {
-			ReflectionTestUtil.setFieldValue(
-				DBPartitionUtil.class, "_DATABASE_PARTITION_ENABLED",
-				databasePartitionEnabled);
-		}
 	}
 
 	protected static void setUpClass(String destinationType) throws Exception {
+		_originalName = PrincipalThreadLocal.getName();
+
+		PrincipalThreadLocal.setName(TestPropsValues.getUserId());
+
 		_company = CompanyTestUtil.addCompany();
 
 		Set<Long> companyIds = new TreeSet<>();
@@ -260,14 +248,14 @@ public abstract class BaseDBPartitionMessageBusInterceptorTestCase
 
 		_activeCompanyIds = companyIds.toArray(new Long[0]);
 
-		_currentDatabasePartitionEnabled =
-			ReflectionTestUtil.getAndSetFieldValue(
-				_dbPartitionMessageBusInterceptor, "_databasePartitionEnabled",
-				true);
+		_originalDatabasePartitionEnabled = PropsUtil.get(
+			"database.partition.enabled");
+
+		PropsUtil.set("database.partition.enabled", "true");
 
 		_testDBPartitionMessageListener = new TestDBPartitionMessageListener();
 
-		Destination destination = DestinationFactoryUtil.createDestination(
+		Destination destination = _destinationFactory.createDestination(
 			new DestinationConfiguration(destinationType, _DESTINATION_NAME));
 
 		destination.register(_testDBPartitionMessageListener);
@@ -289,18 +277,22 @@ public abstract class BaseDBPartitionMessageBusInterceptorTestCase
 	private static CompanyLocalService _companyLocalService;
 
 	private static volatile CountDownLatch _countDownLatch;
-	private static boolean _currentDatabasePartitionEnabled;
 
 	@Inject(
 		filter = "component.name=com.liferay.portal.db.partition.internal.messaging.DBPartitionMessageBusInterceptor"
 	)
 	private static MessageBusInterceptor _dbPartitionMessageBusInterceptor;
 
+	@Inject
+	private static DestinationFactory _destinationFactory;
+
 	private static Map<String, Destination> _destinations;
 
 	@Inject
 	private static MessageBus _messageBus;
 
+	private static String _originalDatabasePartitionEnabled;
+	private static String _originalName;
 	private static TestDBPartitionMessageListener
 		_testDBPartitionMessageListener;
 

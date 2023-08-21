@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {fetch} from 'frontend-js-web';
@@ -31,6 +22,16 @@ interface Actions {
 
 interface ErrorDetails extends Error {
 	detail?: string;
+}
+
+interface Folder {
+	actions: [];
+	dateCreated: string;
+	dateModified: string;
+	externalReferenceCode: string;
+	id: number;
+	label: LocalizedValue<string>;
+	name: string;
 }
 
 interface PickListItem {
@@ -115,7 +116,13 @@ async function deleteItem(url: string) {
 		window.location.reload();
 	}
 	else if (!response.ok) {
-		const errorMessage = Liferay.Language.get('an-error-occurred');
+		const {
+			title,
+		}: {
+			title?: string;
+		} = await response.json();
+
+		const errorMessage = title || Liferay.Language.get('an-error-occurred');
 
 		throw new Error(errorMessage);
 	}
@@ -123,6 +130,14 @@ async function deleteItem(url: string) {
 
 export function deleteObjectDefinitions(id: number) {
 	return deleteItem(`/o/object-admin/v1.0/object-definitions/${id}`);
+}
+
+export function deleteFolder(id: number) {
+	return deleteItem(`/o/object-admin/v1.0/object-folders/${id}`);
+}
+
+export function deleteObjectField(id: number) {
+	return deleteItem(`/o/object-admin/v1.0/object-fields/${id}`);
 }
 
 export function deleteObjectRelationships(id: number) {
@@ -150,6 +165,12 @@ export async function fetchJSON<T>(input: RequestInfo, init?: RequestInit) {
 export async function getAllObjectDefinitions() {
 	return await getList<ObjectDefinition>(
 		'/o/object-admin/v1.0/object-definitions?page=-1'
+	);
+}
+
+export async function getAllObjectFolders() {
+	return await getList<Folder>(
+		'/o/object-admin/v1.0/object-folders?pageSize=-1'
 	);
 }
 
@@ -267,6 +288,14 @@ export async function getRelationship<T>(objectRelationshipId: number) {
 	);
 }
 
+export async function getObjectValidationRuleById<T>(
+	objectValidationRuleId: number
+) {
+	return await fetchJSON<T>(
+		`/o/object-admin/v1.0/object-validation-rules/${objectValidationRuleId}`
+	);
+}
+
 export async function publishObjectDefinitionById(objectDefinitionId: number) {
 	return await fetch(
 		`/o/object-admin/v1.0/object-definitions/${objectDefinitionId}/publish`,
@@ -292,7 +321,7 @@ export async function putObjectDefinitionByExternalReferenceCode(
 export async function save(
 	url: string,
 	item: unknown,
-	method: 'PUT' | 'POST' = 'PUT'
+	method: 'PATCH' | 'POST' | 'PUT' = 'PUT'
 ) {
 	const isFormData = item instanceof FormData;
 

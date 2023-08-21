@@ -1,20 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.jethr0.jenkins.server;
 
 import com.liferay.jethr0.entity.BaseEntity;
+import com.liferay.jethr0.jenkins.cohort.JenkinsCohort;
 import com.liferay.jethr0.jenkins.node.JenkinsNode;
 import com.liferay.jethr0.util.StringUtil;
 
@@ -41,15 +33,11 @@ public abstract class BaseJenkinsServer
 	@Override
 	public void addJenkinsNode(JenkinsNode jenkinsNode) {
 		addRelatedEntity(jenkinsNode);
-
-		jenkinsNode.setJenkinsServer(this);
 	}
 
 	@Override
 	public void addJenkinsNodes(Set<JenkinsNode> jenkinsNodes) {
-		for (JenkinsNode jenkinsNode : jenkinsNodes) {
-			addJenkinsNode(jenkinsNode);
-		}
+		addRelatedEntities(jenkinsNodes);
 	}
 
 	@Override
@@ -71,6 +59,15 @@ public abstract class BaseJenkinsServer
 		).block();
 
 		return new JSONObject(response);
+	}
+
+	@Override
+	public JenkinsCohort getJenkinsCohort() {
+		return _jenkinsCohort;
+	}
+
+	public long getJenkinsCohortId() {
+		return _jenkinsCohortId;
 	}
 
 	@Override
@@ -99,6 +96,9 @@ public abstract class BaseJenkinsServer
 		).put(
 			"name", getName()
 		).put(
+			"r_jenkinsCohortToJenkinsServers_c_jenkinsCohortId",
+			getJenkinsCohortId()
+		).put(
 			"url", getURL()
 		);
 
@@ -123,6 +123,18 @@ public abstract class BaseJenkinsServer
 	@Override
 	public void removeJenkinsNodes(Set<JenkinsNode> jenkinsNodes) {
 		removeRelatedEntities(jenkinsNodes);
+	}
+
+	@Override
+	public void setJenkinsCohort(JenkinsCohort jenkinsCohort) {
+		_jenkinsCohort = jenkinsCohort;
+
+		if (jenkinsCohort != null) {
+			_jenkinsCohortId = jenkinsCohort.getId();
+		}
+		else {
+			_jenkinsCohortId = 0;
+		}
 	}
 
 	@Override
@@ -174,12 +186,16 @@ public abstract class BaseJenkinsServer
 	protected BaseJenkinsServer(JSONObject jsonObject) {
 		super(jsonObject);
 
+		_jenkinsCohortId = jsonObject.optLong(
+			"r_jenkinsCohortToJenkinsServers_c_jenkinsCohortId");
 		_jenkinsUserName = jsonObject.getString("jenkinsUserName");
 		_jenkinsUserPassword = jsonObject.getString("jenkinsUserPassword");
 		_name = jsonObject.optString("name");
 		_url = StringUtil.toURL(jsonObject.getString("url"));
 	}
 
+	private JenkinsCohort _jenkinsCohort;
+	private long _jenkinsCohortId;
 	private String _jenkinsUserName;
 	private String _jenkinsUserPassword;
 	private String _name;

@@ -25,9 +25,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -53,7 +53,8 @@ definition {
 	@priority = 5
 	test AccountUserCanApproveTask {
 		property portal.upstream = "quarantine";
-		property test.name.skip.portal.instance = "MyWorkflowTasks#AccountUserCanApproveTask";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
 
@@ -334,7 +335,8 @@ definition {
 
 	@priority = 4
 	test ApproveResubmitTaskByActions {
-		property test.name.skip.portal.instance = "MyWorkflowTasks#ApproveResubmitTaskByActions";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		Navigator.openURL();
 
@@ -418,6 +420,11 @@ definition {
 	@description = "Verify that when there are no pending tasks Assigned to My Roles, the page is displaying -There are no pending tasks assigned to your roles.-"
 	@priority = 2
 	test AssignedToMyRolesShowsMessageWhenNoPendingTasks {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		SearchAdministration.executeReindex();
+
 		UserBar.gotoDropdownItem(dropdownItem = "My Workflow Tasks");
 
 		Navigator.gotoNavTab(navTab = "Assigned to My Roles");
@@ -432,7 +439,8 @@ definition {
 	@description = "Verify that the user can assign a task to current user in the Assigned to My Roles tab"
 	@priority = 5
 	test CanAssignTaskToCurrentUser {
-		property test.name.skip.portal.instance = "MyWorkflowTasks#CanAssignTaskToCurrentUser";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		JSONBlog.addEntry(
 			entryContent = "Blogs Entry Content",
@@ -498,7 +506,8 @@ definition {
 	@description = "LPS-135888 - Verify that the task is assigned to the user with Account role type"
 	@priority = 4
 	test CanAssignTaskToUserWithAccountRole {
-		property test.name.skip.portal.instance = "MyWorkflowTasks#CanAssignTaskToUserWithAccountRole";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
 
@@ -653,15 +662,6 @@ definition {
 			key_workflowAssetTitle = "Blogs Entry Title",
 			key_workflowTask = "Blogs Entry",
 			locator1 = "MyWorkflowTasks#ASSIGNED_TO_MY_ROLES_TABLE_ASSET_TITLE");
-	}
-
-	@description = "Verify that in Update Due Date modal, the user can expand the comment box"
-	@ignore = "Test Stub"
-	@priority = 2
-	test CanExpandCommentBox {
-
-		// TODO LRQA-68860 CanExpandCommentBox pending implementation
-
 	}
 
 	@description = "Verify that the user can filter the results inside Assigned to Me by status"
@@ -903,7 +903,8 @@ definition {
 	@description = "Verify that the user can search for results inside Assigned to My Roles by Asset Title"
 	@priority = 5
 	test CanSearchForAssetTitleOnAssignedToMyRolesTab {
-		property test.name.skip.portal.instance = "MyWorkflowTasks#CanSearchForAssetTitleOnAssignedToMyRolesTab";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		JSONBlog.addEntry(
 			entryContent = "Blogs Entry Content",
@@ -1393,7 +1394,8 @@ definition {
 	@priority = 5
 	test ResubmitTaskByDetails {
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "MyWorkflowTasks#ResubmitTaskByDetails";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		Navigator.openURL();
 
@@ -1415,6 +1417,10 @@ definition {
 			workflowTask = "Review");
 
 		UserBar.gotoDropdownItem(dropdownItem = "My Workflow Tasks");
+
+		Refresh();
+
+		WaitForSPARefresh();
 
 		Workflow.rejectTaskByActions(
 			workflowAssetContent = "Blogs Entry Content",

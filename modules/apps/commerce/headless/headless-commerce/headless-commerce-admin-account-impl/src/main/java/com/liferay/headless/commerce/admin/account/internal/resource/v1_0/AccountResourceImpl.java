@@ -1,21 +1,13 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.admin.account.internal.resource.v1_0;
 
 import com.liferay.account.constants.AccountConstants;
 import com.liferay.account.exception.NoSuchEntryException;
+import com.liferay.account.exception.NoSuchGroupException;
 import com.liferay.account.model.AccountEntry;
 import com.liferay.account.model.AccountEntryOrganizationRel;
 import com.liferay.account.model.AccountEntryUserRel;
@@ -27,12 +19,10 @@ import com.liferay.account.service.AccountEntryService;
 import com.liferay.account.service.AccountEntryUserRelService;
 import com.liferay.account.service.AccountGroupRelService;
 import com.liferay.account.service.AccountGroupService;
-import com.liferay.commerce.account.constants.CommerceAccountConstants;
-import com.liferay.commerce.account.exception.NoSuchAccountGroupException;
-import com.liferay.commerce.account.util.CommerceAccountHelper;
 import com.liferay.commerce.constants.CommerceAddressConstants;
 import com.liferay.commerce.model.CommerceAddress;
 import com.liferay.commerce.service.CommerceAddressService;
+import com.liferay.commerce.util.CommerceAccountHelper;
 import com.liferay.headless.commerce.admin.account.dto.v1_0.Account;
 import com.liferay.headless.commerce.admin.account.dto.v1_0.AccountAddress;
 import com.liferay.headless.commerce.admin.account.dto.v1_0.AccountMember;
@@ -136,7 +126,7 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 				externalReferenceCode, contextCompany.getCompanyId());
 
 		if (accountGroup == null) {
-			throw new NoSuchAccountGroupException(
+			throw new NoSuchGroupException(
 				"Unable to find account group with external reference code " +
 					externalReferenceCode);
 		}
@@ -330,7 +320,7 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 				externalReferenceCode, contextCompany.getCompanyId());
 
 		if (accountGroup == null) {
-			throw new NoSuchAccountGroupException(
+			throw new NoSuchGroupException(
 				"Unable to find account group with external reference code " +
 					externalReferenceCode);
 		}
@@ -470,19 +460,13 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 	}
 
 	private String _toAccountEntryType(int commerceAccountType) {
-		if (commerceAccountType ==
-				CommerceAccountConstants.ACCOUNT_TYPE_BUSINESS) {
-
+		if (commerceAccountType == _ACCOUNT_TYPE_BUSINESS) {
 			return AccountConstants.ACCOUNT_ENTRY_TYPE_BUSINESS;
 		}
-		else if (commerceAccountType ==
-					CommerceAccountConstants.ACCOUNT_TYPE_GUEST) {
-
+		else if (commerceAccountType == _ACCOUNT_TYPE_GUEST) {
 			return AccountConstants.ACCOUNT_ENTRY_TYPE_GUEST;
 		}
-		else if (commerceAccountType ==
-					CommerceAccountConstants.ACCOUNT_TYPE_PERSONAL) {
-
+		else if (commerceAccountType == _ACCOUNT_TYPE_PERSONAL) {
 			return AccountConstants.ACCOUNT_ENTRY_TYPE_PERSON;
 		}
 
@@ -514,7 +498,7 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 			_toAccountEntryStatus(
 				GetterUtil.getBoolean(account.getActive(), true)));
 
-		_accountEntryService.updateAccountEntry(accountEntry);
+		accountEntry = _accountEntryService.updateAccountEntry(accountEntry);
 
 		// Expando
 
@@ -697,6 +681,12 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 
 		return accountEntry;
 	}
+
+	private static final int _ACCOUNT_TYPE_BUSINESS = 2;
+
+	private static final int _ACCOUNT_TYPE_GUEST = 0;
+
+	private static final int _ACCOUNT_TYPE_PERSONAL = 1;
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		AccountResourceImpl.class);

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 export default {
@@ -169,6 +160,7 @@ export default {
 	'edit-user-account': 'Edit User Account',
 	'edit-x': 'Edit {0}',
 	'email-address': 'Email Address',
+	'empty': 'Empty',
 	'enter-the-case-name': 'Enter the Case Name',
 	'environment': 'Environment',
 	'environment-factors': 'Enviroment Factors',
@@ -319,6 +311,7 @@ export default {
 	'search-filters': 'Search Filters',
 	'search-in': 'Search in...',
 	'search-x': 'Search {0}',
+	'select-all': 'Select All',
 	'select-build': 'Select Build',
 	'select-case-parameters': 'Select Case Parameters',
 	'select-cases': 'Select Cases',
@@ -450,6 +443,8 @@ export default {
 	'you-are-not-the-assigned-user': 'You are not the assigned user.',
 	'you-cannot-split-all-case-results-from-a-subtask':
 		'You cannot split all case results from a subtask.',
+	'you-do-not-have-permission-to-access-the-requested-resource.':
+		'You do not have permission to access the requested resource.',
 	'you-do-not-have-permissions-to-access-this-app-contact-the-app-administrator-to-request-the-access':
 		'You do not have permissions to access this app. Contact the app administrator to request the access.',
 	'you-must-have-at-least-one-column-selected':

@@ -16,14 +16,6 @@
 		"type": "string"
 	},
 	{
-		"key": "integrationPlatform",
-		"name": "Integration Platform",
-		"name_i18n": {
-			"en-US": "Integration Platform"
-		},
-		"type": "string"
-	},
-	{
 		"key": "govpublicAdminPortal",
 		"name": "Gov/Public Admin Portal",
 		"name_i18n": {
@@ -36,6 +28,14 @@
 		"name": "Headless Platform",
 		"name_i18n": {
 			"en-US": "Headless Platform"
+		},
+		"type": "string"
+	},
+	{
+		"key": "integrationPlatform",
+		"name": "Integration Platform",
+		"name_i18n": {
+			"en-US": "Integration Platform"
 		},
 		"type": "string"
 	},
@@ -64,7 +64,7 @@
 		"type": "string"
 	},
 	{
-		"key": "studnetCampusPortal",
+		"key": "studentCampusPortal",
 		"name": "Student/Campus Portal",
 		"name_i18n": {
 			"en-US": "Student/Campus Portal"

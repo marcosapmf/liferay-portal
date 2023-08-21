@@ -83,11 +83,10 @@ definition {
 	}
 
 	macro addCustomerPortalSite {
-		Site.openSitesAdmin();
-
-		Site.addSiteTemplateCP(
+		HeadlessSite.addSite(
 			siteName = ${siteName},
-			siteTemplateName = "Liferay OSB Site Initializer Customer Portal");
+			templateName = "Liferay OSB Site Initializer Customer Portal",
+			templateType = "Site Initializer");
 	}
 
 	macro addIdPCForCustomerPortal {
@@ -310,6 +309,10 @@ definition {
 
 		var key_status = ${status};
 
+		// Refresh added due to portal instability
+
+		Refresh();
+
 		Search.searchCP(searchTerm = ${key_status});
 
 		if (IsElementPresent(key_accountName = ${key_status}, locator1 = "CP2Utils#ANY_ACCOUNT_ELLIPSIS_BUTTON")) {
@@ -318,6 +321,10 @@ definition {
 				locator1 = "CP2Utils#ANY_ACCOUNT_ELLIPSIS_BUTTON");
 
 			MenuItem.click(menuItem = "View");
+
+			// Refresh added due to portal instability
+
+			Refresh();
 
 			CP2DXPCloudSetup.typeSetupDXPCloudInfoFields(
 				label = "activationStatus",
@@ -428,6 +435,23 @@ definition {
 		else {
 			CustomerPortal.customerPortalApisTearDown();
 		}
+
+		ApplicationsMenu.gotoPortlet(
+			category = "Sites",
+			panel = "Control Panel",
+			portlet = "Sites");
+
+		Refresh();
+
+		PortletEntry.selectAll();
+
+		Click(locator1 = "Icon#SITES_VERTICAL_ELLIPSIS");
+
+		MenuItem.clickNoError(menuItem = "Delete");
+
+		Click(locator1 = "Button#MODAL_DELETE");
+
+		Alert.viewSuccessMessage();
 	}
 
 	macro deactivateKoroneikiAccount {
@@ -506,7 +530,7 @@ definition {
 
 	macro loginOktaToUpdateCP {
 		var userEmailAddress = "dbace26d5dadb9eed597@uat.com.broken";
-		var userPassword = "q4F63ZEH3njnnA34S761";
+		var oktaUserPassword = "q4F63ZEH3njnnA34S761";
 
 		Open.openInTheNewTab(locator1 = "https://login-dev.liferay.com/");
 
@@ -516,7 +540,7 @@ definition {
 
 		Type(
 			locator1 = "CustomerPortalSite#OKTA_PASSWORD",
-			value1 = ${userPassword});
+			value1 = ${oktaUserPassword});
 
 		Click(locator1 = "CustomerPortalSite#OKTA_SUBMIT");
 
@@ -621,9 +645,9 @@ definition {
 	}
 
 	macro search {
-		if (IsElementPresent(locator1 = "CustomerPortalSite#SEARCH_BAR")) {
+		if (IsElementPresent(locator1 = "CustomerPortalSite#SEARCH")) {
 			Type(
-				locator1 = "CustomerPortalSite#SEARCH_BAR",
+				locator1 = "CustomerPortalSite#SEARCH",
 				value1 = ${searchItem});
 		}
 	}
@@ -828,9 +852,7 @@ definition {
 	}
 
 	macro viewCardValue {
-		AssertElementPresent(
-			locator1 = "CustomerPortalSite#PROJECT_LOGO",
-			logo = ${logo});
+		AssertElementPresent(locator1 = "CustomerPortalSite#PROJECT_LOGO");
 
 		AssertElementPresent(
 			cardName = ${cardName},
@@ -857,6 +879,8 @@ definition {
 		var key_text = ${pageText};
 
 		AssertVisible(locator1 = "CustomerPortalSite#PAGE_INFO");
+
+		CustomerPortal.clickAtButton(text = "Done");
 	}
 
 	macro viewCPObjectCustomInfo {
@@ -987,6 +1011,8 @@ definition {
 		WaitForVisible(
 			key_userFirstName = ${userFirstName},
 			locator1 = "CustomerPortalSite#WELCOME_PAGE_USER_NAME");
+
+		WaitForPageLoad();
 	}
 
 	macro waitToLiferayPage {

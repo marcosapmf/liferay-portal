@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -60,11 +51,18 @@ ContentDashboardAdminDisplayContext contentDashboardAdminDisplayContext = (Conte
 					<clay:content-col>
 						<span class="lfr-portal-tooltip" title="<%= LanguageUtil.get(request, "configure-chart") %>">
 							<clay:button
+								additionalProps='<%=
+									HashMapBuilder.<String, Object>put(
+										"chartConfigurationURL", contentDashboardAdminDisplayContext.getPortletURL()
+									).put(
+										"portletId", contentDashboardAdminDisplayContext.getPortletDisplayId()
+									).build()
+								%>'
 								borderless="<%= true %>"
 								cssClass="component-action"
 								displayType="secondary"
 								icon="cog"
-								onClick="<%= contentDashboardAdminDisplayContext.getOnClickConfiguration() %>"
+								propsTransformer="js/ConfigurationButtonPropsTransformer"
 								small="<%= true %>"
 							/>
 						</span>
@@ -72,7 +70,7 @@ ContentDashboardAdminDisplayContext contentDashboardAdminDisplayContext = (Conte
 				</clay:content-row>
 			</h2>
 
-			<div class="audit-graph">
+			<div class="audit-graph position-relative">
 				<div class="audit-graph-loading c-my-5 c-p-5 inline-item w-100">
 					<span aria-hidden="true" class="loading-animation"></span>
 				</div>
@@ -104,7 +102,6 @@ ContentDashboardAdminDisplayContext contentDashboardAdminDisplayContext = (Conte
 			</div>
 
 			<clay:management-toolbar
-				cssClass="content-dashboard-management-toolbar"
 				managementToolbarDisplayContext="<%= (ContentDashboardAdminManagementToolbarDisplayContext)request.getAttribute(ContentDashboardAdminManagementToolbarDisplayContext.class.getName()) %>"
 				propsTransformer="js/ContentDashboardManagementToolbarPropsTransformer"
 			/>
@@ -121,9 +118,7 @@ ContentDashboardAdminDisplayContext contentDashboardAdminDisplayContext = (Conte
 				>
 
 					<%
-					InfoItemReference infoItemReference = contentDashboardItem.getInfoItemReference();
-
-					String rowId = String.valueOf(infoItemReference.getClassPK());
+					String rowId = String.valueOf(contentDashboardAdminDisplayContext.getClassPK(contentDashboardItem.getInfoItemReference()));
 
 					row.setData(Collections.singletonMap("rowId", rowId));
 					row.setRowId(rowId);

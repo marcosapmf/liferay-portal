@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.product.service.impl;
@@ -38,6 +29,7 @@ import com.liferay.commerce.product.exception.CPDefinitionMetaKeywordsException;
 import com.liferay.commerce.product.exception.CPDefinitionMetaTitleException;
 import com.liferay.commerce.product.exception.CPDefinitionProductTypeNameException;
 import com.liferay.commerce.product.exception.CPDefinitionSubscriptionLengthException;
+import com.liferay.commerce.product.exception.DuplicateCProductException;
 import com.liferay.commerce.product.model.CPAttachmentFileEntry;
 import com.liferay.commerce.product.model.CPDefinition;
 import com.liferay.commerce.product.model.CPDefinitionLink;
@@ -231,6 +223,7 @@ public class CPDefinitionLocalServiceImpl
 		_validate(
 			groupId, ddmStructureKey, metaTitleMap, metaDescriptionMap,
 			metaKeywordsMap, displayDate, expirationDate, productTypeName);
+		_validateCProduct(externalReferenceCode, user.getCompanyId());
 		_validateSubscriptionLength(subscriptionLength, "length");
 		_validateSubscriptionCycles(
 			maxSubscriptionCycles, "subscriptionCycles");
@@ -249,8 +242,8 @@ public class CPDefinitionLocalServiceImpl
 		CPDefinition cpDefinition = cpDefinitionPersistence.create(
 			cpDefinitionId);
 
-		CProduct cProduct = _cProductLocalService.addCProduct(
-			externalReferenceCode, groupId, userId, new ServiceContext());
+		CProduct cProduct = _cProductLocalService.createCProduct(
+			counterLocalService.increment());
 
 		cpDefinition.setGroupId(groupId);
 		cpDefinition.setCompanyId(user.getCompanyId());
@@ -313,6 +306,17 @@ public class CPDefinitionLocalServiceImpl
 		cpDefinition.setExpandoBridgeAttributes(serviceContext);
 
 		cpDefinition = cpDefinitionPersistence.update(cpDefinition);
+
+		// Commerce product
+
+		cProduct.setExternalReferenceCode(externalReferenceCode);
+		cProduct.setGroupId(groupId);
+		cProduct.setCompanyId(user.getCompanyId());
+		cProduct.setUserId(user.getUserId());
+		cProduct.setUserName(user.getFullName());
+		cProduct.setLatestVersion(1);
+
+		cProduct = _cProductLocalService.updateCProduct(cProduct);
 
 		// Commerce product definition localization
 
@@ -877,14 +881,14 @@ public class CPDefinitionLocalServiceImpl
 
 			serviceContext.setWorkflowAction(WorkflowConstants.ACTION_PUBLISH);
 
+			newCPInstance = _cpInstancePersistence.update(newCPInstance);
+
 			_addCommercePriceEntry(
 				newCPInstance, cpInstance.getCPInstanceUuid(),
 				CommercePriceListConstants.TYPE_PRICE_LIST, serviceContext);
 			_addCommercePriceEntry(
 				newCPInstance, cpInstance.getCPInstanceUuid(),
 				CommercePriceListConstants.TYPE_PROMOTION, serviceContext);
-
-			_cpInstancePersistence.update(newCPInstance);
 		}
 
 		for (CommerceChannelRel commerceChannelRel :
@@ -2674,9 +2678,11 @@ public class CPDefinitionLocalServiceImpl
 		CPDefinition cpDefinition = cpInstance.getCPDefinition();
 
 		_commercePriceEntryLocalService.addCommercePriceEntry(
-			cpDefinition.getCProductId(), cpInstance.getCPInstanceUuid(),
+			null, cpDefinition.getCProductId(), cpInstance.getCPInstanceUuid(),
 			commercePriceList.getCommercePriceListId(),
-			commercePriceEntry.getPrice(), null, serviceContext);
+			commercePriceEntry.getPrice(),
+			commercePriceEntry.isPriceOnApplication(), null, null,
+			serviceContext);
 	}
 
 	private List<CPDefinitionLocalization> _addCPDefinitionLocalizedFields(
@@ -3205,6 +3211,23 @@ public class CPDefinitionLocalServiceImpl
 
 		if (cpType == null) {
 			throw new CPDefinitionProductTypeNameException();
+		}
+	}
+
+	private void _validateCProduct(String externalReferenceCode, long companyId)
+		throws PortalException {
+
+		if (Validator.isNull(externalReferenceCode)) {
+			return;
+		}
+
+		CProduct cProduct = _cProductPersistence.fetchByERC_C(
+			externalReferenceCode, companyId);
+
+		if (cProduct != null) {
+			throw new DuplicateCProductException(
+				"There is another commerce product with external reference " +
+					"code " + externalReferenceCode);
 		}
 	}
 

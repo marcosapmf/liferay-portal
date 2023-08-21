@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.model.impl;
@@ -80,7 +71,7 @@ public class CommerceOrderItemCacheModel
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(131);
+		StringBundler sb = new StringBundler(135);
 
 		sb.append("{mvccVersion=");
 		sb.append(mvccVersion);
@@ -114,12 +105,12 @@ public class CommerceOrderItemCacheModel
 		sb.append(CPMeasurementUnitId);
 		sb.append(", CProductId=");
 		sb.append(CProductId);
+		sb.append(", customerCommerceOrderItemId=");
+		sb.append(customerCommerceOrderItemId);
 		sb.append(", parentCommerceOrderItemId=");
 		sb.append(parentCommerceOrderItemId);
 		sb.append(", shippingAddressId=");
 		sb.append(shippingAddressId);
-		sb.append(", decimalQuantity=");
-		sb.append(decimalQuantity);
 		sb.append(", deliveryGroup=");
 		sb.append(deliveryGroup);
 		sb.append(", deliveryMaxSubscriptionCycles=");
@@ -172,6 +163,8 @@ public class CommerceOrderItemCacheModel
 		sb.append(name);
 		sb.append(", priceManuallyAdjusted=");
 		sb.append(priceManuallyAdjusted);
+		sb.append(", priceOnApplication=");
+		sb.append(priceOnApplication);
 		sb.append(", printedNote=");
 		sb.append(printedNote);
 		sb.append(", promoPrice=");
@@ -204,6 +197,8 @@ public class CommerceOrderItemCacheModel
 		sb.append(subscriptionType);
 		sb.append(", subscriptionTypeSettings=");
 		sb.append(subscriptionTypeSettings);
+		sb.append(", unitOfMeasureKey=");
+		sb.append(unitOfMeasureKey);
 		sb.append(", unitPrice=");
 		sb.append(unitPrice);
 		sb.append(", unitPriceWithTaxAmount=");
@@ -271,10 +266,11 @@ public class CommerceOrderItemCacheModel
 		commerceOrderItemImpl.setCPInstanceId(CPInstanceId);
 		commerceOrderItemImpl.setCPMeasurementUnitId(CPMeasurementUnitId);
 		commerceOrderItemImpl.setCProductId(CProductId);
+		commerceOrderItemImpl.setCustomerCommerceOrderItemId(
+			customerCommerceOrderItemId);
 		commerceOrderItemImpl.setParentCommerceOrderItemId(
 			parentCommerceOrderItemId);
 		commerceOrderItemImpl.setShippingAddressId(shippingAddressId);
-		commerceOrderItemImpl.setDecimalQuantity(decimalQuantity);
 
 		if (deliveryGroup == null) {
 			commerceOrderItemImpl.setDeliveryGroup("");
@@ -349,6 +345,7 @@ public class CommerceOrderItemCacheModel
 		}
 
 		commerceOrderItemImpl.setPriceManuallyAdjusted(priceManuallyAdjusted);
+		commerceOrderItemImpl.setPriceOnApplication(priceOnApplication);
 
 		if (printedNote == null) {
 			commerceOrderItemImpl.setPrintedNote("");
@@ -408,6 +405,13 @@ public class CommerceOrderItemCacheModel
 				subscriptionTypeSettings);
 		}
 
+		if (unitOfMeasureKey == null) {
+			commerceOrderItemImpl.setUnitOfMeasureKey("");
+		}
+		else {
+			commerceOrderItemImpl.setUnitOfMeasureKey(unitOfMeasureKey);
+		}
+
 		commerceOrderItemImpl.setUnitPrice(unitPrice);
 		commerceOrderItemImpl.setUnitPriceWithTaxAmount(unitPriceWithTaxAmount);
 		commerceOrderItemImpl.setWeight(weight);
@@ -449,10 +453,11 @@ public class CommerceOrderItemCacheModel
 
 		CProductId = objectInput.readLong();
 
+		customerCommerceOrderItemId = objectInput.readLong();
+
 		parentCommerceOrderItemId = objectInput.readLong();
 
 		shippingAddressId = objectInput.readLong();
-		decimalQuantity = (BigDecimal)objectInput.readObject();
 		deliveryGroup = objectInput.readUTF();
 
 		deliveryMaxSubscriptionCycles = objectInput.readLong();
@@ -492,11 +497,12 @@ public class CommerceOrderItemCacheModel
 		name = objectInput.readUTF();
 
 		priceManuallyAdjusted = objectInput.readBoolean();
+
+		priceOnApplication = objectInput.readBoolean();
 		printedNote = objectInput.readUTF();
 		promoPrice = (BigDecimal)objectInput.readObject();
 		promoPriceWithTaxAmount = (BigDecimal)objectInput.readObject();
-
-		quantity = objectInput.readInt();
+		quantity = (BigDecimal)objectInput.readObject();
 
 		replacedCPInstanceId = objectInput.readLong();
 		replacedSku = objectInput.readUTF();
@@ -516,6 +522,7 @@ public class CommerceOrderItemCacheModel
 		subscriptionLength = objectInput.readInt();
 		subscriptionType = objectInput.readUTF();
 		subscriptionTypeSettings = objectInput.readUTF();
+		unitOfMeasureKey = objectInput.readUTF();
 		unitPrice = (BigDecimal)objectInput.readObject();
 		unitPriceWithTaxAmount = (BigDecimal)objectInput.readObject();
 
@@ -572,10 +579,11 @@ public class CommerceOrderItemCacheModel
 
 		objectOutput.writeLong(CProductId);
 
+		objectOutput.writeLong(customerCommerceOrderItemId);
+
 		objectOutput.writeLong(parentCommerceOrderItemId);
 
 		objectOutput.writeLong(shippingAddressId);
-		objectOutput.writeObject(decimalQuantity);
 
 		if (deliveryGroup == null) {
 			objectOutput.writeUTF("");
@@ -642,6 +650,8 @@ public class CommerceOrderItemCacheModel
 
 		objectOutput.writeBoolean(priceManuallyAdjusted);
 
+		objectOutput.writeBoolean(priceOnApplication);
+
 		if (printedNote == null) {
 			objectOutput.writeUTF("");
 		}
@@ -651,8 +661,7 @@ public class CommerceOrderItemCacheModel
 
 		objectOutput.writeObject(promoPrice);
 		objectOutput.writeObject(promoPriceWithTaxAmount);
-
-		objectOutput.writeInt(quantity);
+		objectOutput.writeObject(quantity);
 
 		objectOutput.writeLong(replacedCPInstanceId);
 
@@ -698,6 +707,13 @@ public class CommerceOrderItemCacheModel
 			objectOutput.writeUTF(subscriptionTypeSettings);
 		}
 
+		if (unitOfMeasureKey == null) {
+			objectOutput.writeUTF("");
+		}
+		else {
+			objectOutput.writeUTF(unitOfMeasureKey);
+		}
+
 		objectOutput.writeObject(unitPrice);
 		objectOutput.writeObject(unitPriceWithTaxAmount);
 
@@ -722,9 +738,9 @@ public class CommerceOrderItemCacheModel
 	public long CPInstanceId;
 	public long CPMeasurementUnitId;
 	public long CProductId;
+	public long customerCommerceOrderItemId;
 	public long parentCommerceOrderItemId;
 	public long shippingAddressId;
-	public BigDecimal decimalQuantity;
 	public String deliveryGroup;
 	public long deliveryMaxSubscriptionCycles;
 	public int deliverySubscriptionLength;
@@ -751,10 +767,11 @@ public class CommerceOrderItemCacheModel
 	public long maxSubscriptionCycles;
 	public String name;
 	public boolean priceManuallyAdjusted;
+	public boolean priceOnApplication;
 	public String printedNote;
 	public BigDecimal promoPrice;
 	public BigDecimal promoPriceWithTaxAmount;
-	public int quantity;
+	public BigDecimal quantity;
 	public long replacedCPInstanceId;
 	public String replacedSku;
 	public long requestedDeliveryDate;
@@ -767,6 +784,7 @@ public class CommerceOrderItemCacheModel
 	public int subscriptionLength;
 	public String subscriptionType;
 	public String subscriptionTypeSettings;
+	public String unitOfMeasureKey;
 	public BigDecimal unitPrice;
 	public BigDecimal unitPriceWithTaxAmount;
 	public double weight;

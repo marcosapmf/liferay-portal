@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.segments.experiment.web.internal.product.navigation.control.menu;
@@ -41,7 +32,6 @@ import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
-import com.liferay.portal.kernel.util.SessionClicks;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
@@ -52,6 +42,7 @@ import com.liferay.product.navigation.control.menu.ProductNavigationControlMenuE
 import com.liferay.product.navigation.control.menu.constants.ProductNavigationControlMenuCategoryKeys;
 import com.liferay.segments.constants.SegmentsExperimentConstants;
 import com.liferay.segments.constants.SegmentsPortletKeys;
+import com.liferay.segments.experiment.web.internal.constants.ProductNavigationControlMenuEntryConstants;
 import com.liferay.segments.manager.SegmentsExperienceManager;
 import com.liferay.segments.model.SegmentsExperiment;
 import com.liferay.segments.service.SegmentsExperienceLocalService;
@@ -64,7 +55,6 @@ import java.io.Writer;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Objects;
 import java.util.ResourceBundle;
 
 import javax.portlet.PortletRequest;
@@ -88,10 +78,7 @@ import org.osgi.service.component.annotations.Reference;
 		"product.navigation.control.menu.category.key=" + ProductNavigationControlMenuCategoryKeys.USER,
 		"product.navigation.control.menu.entry.order:Integer=500"
 	},
-	service = {
-		ProductNavigationControlMenuEntry.class,
-		SegmentsExperimentProductNavigationControlMenuEntry.class
-	}
+	service = ProductNavigationControlMenuEntry.class
 )
 public class SegmentsExperimentProductNavigationControlMenuEntry
 	extends BaseProductNavigationControlMenuEntry {
@@ -136,7 +123,11 @@ public class SegmentsExperimentProductNavigationControlMenuEntry
 
 		Map<String, String> values = new HashMap<>();
 
-		if (isPanelStateOpen(httpServletRequest)) {
+		if (isPanelStateOpen(
+				httpServletRequest,
+				ProductNavigationControlMenuEntryConstants.
+					SESSION_CLICKS_KEY)) {
+
 			values.put("cssClass", "active");
 		}
 		else {
@@ -172,11 +163,11 @@ public class SegmentsExperimentProductNavigationControlMenuEntry
 		return true;
 	}
 
-	public boolean isPanelStateOpen(HttpServletRequest httpServletRequest) {
-		String segmentsExperimentPanelState = SessionClicks.get(
-			httpServletRequest, _SESSION_CLICKS_KEY, "closed");
+	@Override
+	public boolean isPanelStateOpen(
+		HttpServletRequest httpServletRequest, String key) {
 
-		if (Objects.equals(segmentsExperimentPanelState, "open")) {
+		if (super.isPanelStateOpen(httpServletRequest, key)) {
 			return true;
 		}
 
@@ -247,12 +238,6 @@ public class SegmentsExperimentProductNavigationControlMenuEntry
 		return super.isShow(httpServletRequest);
 	}
 
-	public void setPanelState(
-		HttpServletRequest httpServletRequest, String panelState) {
-
-		SessionClicks.put(httpServletRequest, _SESSION_CLICKS_KEY, panelState);
-	}
-
 	@Activate
 	protected void activate(Map<String, Object> properties) {
 		_portletNamespace = _portal.getPortletNamespace(
@@ -271,6 +256,10 @@ public class SegmentsExperimentProductNavigationControlMenuEntry
 				"namespace",
 				_portal.getPortletNamespace(
 					SegmentsPortletKeys.SEGMENTS_EXPERIMENT)
+			).put(
+				"segmentExperimentAction",
+				ParamUtil.getString(
+					httpServletRequest, "segmentExperimentAction")
 			).put(
 				"segmentExperimentDataURL",
 				_getSegmentExperimentDataURL(httpServletRequest)
@@ -362,8 +351,7 @@ public class SegmentsExperimentProductNavigationControlMenuEntry
 
 		SegmentsExperiment segmentsExperiment =
 			_segmentsExperimentService.fetchSegmentsExperiment(
-				segmentsExperienceId, _portal.getClassNameId(Layout.class),
-				layout.getPlid(),
+				segmentsExperienceId, layout.getPlid(),
 				SegmentsExperimentConstants.Status.getExclusiveStatusValues());
 
 		if (segmentsExperiment != null) {
@@ -409,7 +397,9 @@ public class SegmentsExperimentProductNavigationControlMenuEntry
 
 			sb.append("<div class=\"");
 
-			boolean panelStateOpen = isPanelStateOpen(httpServletRequest);
+			boolean panelStateOpen = isPanelStateOpen(
+				httpServletRequest,
+				ProductNavigationControlMenuEntryConstants.SESSION_CLICKS_KEY);
 
 			if (panelStateOpen) {
 				sb.append(
@@ -473,9 +463,6 @@ public class SegmentsExperimentProductNavigationControlMenuEntry
 
 	private static final String _ICON_TMPL_CONTENT = StringUtil.read(
 		SegmentsExperimentProductNavigationControlMenuEntry.class, "icon.tmpl");
-
-	private static final String _SESSION_CLICKS_KEY =
-		"com.liferay.segments.experiment.web_panelState";
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		SegmentsExperimentProductNavigationControlMenuEntry.class);

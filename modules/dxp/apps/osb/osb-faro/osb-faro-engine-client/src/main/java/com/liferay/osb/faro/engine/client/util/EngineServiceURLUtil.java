@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.osb.faro.engine.client.util;
@@ -20,6 +11,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.liferay.osb.faro.engine.client.exception.FaroEngineClientException;
 import com.liferay.osb.faro.engine.client.model.LCPProject;
 import com.liferay.osb.faro.model.FaroProject;
+import com.liferay.osb.faro.util.FaroPropsValues;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -43,7 +35,9 @@ public class EngineServiceURLUtil {
 
 		String url = getBackendURL(faroProject, null);
 
-		if (_OSB_ASAH_BACKEND_URL.contains("{wedeploy}")) {
+		if (StringUtils.contains(
+				FaroPropsValues.OSB_ASAH_BACKEND_URL, "{wedeploy}")) {
+
 			return url;
 		}
 
@@ -64,7 +58,9 @@ public class EngineServiceURLUtil {
 
 		String url = getPublisherURL(faroProject, null);
 
-		if (_OSB_ASAH_PUBLISHER_URL.contains("{wedeploy}")) {
+		if (StringUtils.contains(
+				FaroPropsValues.OSB_ASAH_PUBLISHER_URL, "{wedeploy}")) {
+
 			return url;
 		}
 
@@ -81,8 +77,10 @@ public class EngineServiceURLUtil {
 	}
 
 	private static String _getClusterBaseURL(FaroProject faroProject) {
-		if (StringUtils.isNotBlank(_OSB_ASAH_LOCAL_CLUSTER_URL)) {
-			return _OSB_ASAH_LOCAL_CLUSTER_URL;
+		if (StringUtils.isNotBlank(
+				FaroPropsValues.OSB_ASAH_LOCAL_CLUSTER_URL)) {
+
+			return FaroPropsValues.OSB_ASAH_LOCAL_CLUSTER_URL;
 		}
 
 		LCPProject.Cluster cluster = LCPProject.Cluster.fromString(
@@ -134,15 +132,6 @@ public class EngineServiceURLUtil {
 
 		return uri.toString();
 	}
-
-	private static final String _OSB_ASAH_BACKEND_URL = System.getenv(
-		"OSB_ASAH_BACKEND_URL");
-
-	private static final String _OSB_ASAH_LOCAL_CLUSTER_URL = System.getenv(
-		"OSB_ASAH_LOCAL_CLUSTER_URL");
-
-	private static final String _OSB_ASAH_PUBLISHER_URL = System.getenv(
-		"OSB_ASAH_PUBLISHER_URL");
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		EngineServiceURLUtil.class);

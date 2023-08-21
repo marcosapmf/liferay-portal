@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2023 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.layout.reports.web.internal.product.navigation.control.menu;
@@ -21,10 +12,12 @@ import com.liferay.frontend.taglib.clay.servlet.taglib.ButtonTag;
 import com.liferay.frontend.taglib.clay.servlet.taglib.IconTag;
 import com.liferay.journal.model.JournalArticle;
 import com.liferay.layout.reports.web.internal.configuration.provider.LayoutReportsGooglePageSpeedConfigurationProvider;
+import com.liferay.layout.reports.web.internal.constants.ProductNavigationControlMenuEntryConstants;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -43,7 +36,6 @@ import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
-import com.liferay.portal.kernel.util.SessionClicks;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.template.react.renderer.ComponentDescriptor;
@@ -59,7 +51,6 @@ import java.io.Writer;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Objects;
 import java.util.ResourceBundle;
 
 import javax.servlet.http.HttpServletRequest;
@@ -79,10 +70,7 @@ import org.osgi.service.component.annotations.Reference;
 		"product.navigation.control.menu.category.key=" + ProductNavigationControlMenuCategoryKeys.USER,
 		"product.navigation.control.menu.entry.order:Integer=550"
 	},
-	service = {
-		LayoutReportsProductNavigationControlMenuEntry.class,
-		ProductNavigationControlMenuEntry.class
-	}
+	service = ProductNavigationControlMenuEntry.class
 )
 public class LayoutReportsProductNavigationControlMenuEntry
 	extends BaseProductNavigationControlMenuEntry {
@@ -127,7 +115,11 @@ public class LayoutReportsProductNavigationControlMenuEntry
 
 		Map<String, String> values = new HashMap<>();
 
-		if (isPanelStateOpen(httpServletRequest)) {
+		if (isPanelStateOpen(
+				httpServletRequest,
+				ProductNavigationControlMenuEntryConstants.
+					SESSION_CLICKS_KEY)) {
+
 			values.put("cssClass", "active");
 		}
 		else {
@@ -160,58 +152,36 @@ public class LayoutReportsProductNavigationControlMenuEntry
 		return true;
 	}
 
-	public boolean isPanelStateOpen(HttpServletRequest httpServletRequest) {
-		String layoutReportsPanelState = SessionClicks.get(
-			httpServletRequest, _SESSION_CLICKS_KEY, "closed");
-
-		if (Objects.equals(layoutReportsPanelState, "open")) {
-			return true;
-		}
-
-		return false;
-	}
-
 	@Override
 	public boolean isShow(HttpServletRequest httpServletRequest)
 		throws PortalException {
 
-		long scopeGroupId = _portal.getScopeGroupId(httpServletRequest);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
-		if ((scopeGroupId == 0) ||
+		if (!FeatureFlagManagerUtil.isEnabled("LPS-187284") &&
 			!_layoutReportsGooglePageSpeedConfigurationProvider.isEnabled(
-				_groupLocalService.getGroup(scopeGroupId))) {
+				themeDisplay.getScopeGroup())) {
 
 			return false;
 		}
 
-		ThemeDisplay themeDisplay =
-			(ThemeDisplay)httpServletRequest.getAttribute(
-				WebKeys.THEME_DISPLAY);
+		Layout layout = themeDisplay.getLayout();
+
+		if (FeatureFlagManagerUtil.isEnabled("LPS-187284") &&
+			!_layoutReportsGooglePageSpeedConfigurationProvider.isEnabled(
+				themeDisplay.getScopeGroup()) &&
+			!layout.isTypeContent() && !layout.isTypeAssetDisplay()) {
+
+			return false;
+		}
 
 		if (!_isShow(themeDisplay) || !_isShowPanel(httpServletRequest)) {
 			return false;
 		}
 
 		return super.isShow(httpServletRequest);
-	}
-
-	public void setPanelState(
-		HttpServletRequest httpServletRequest, String panelState) {
-
-		SessionClicks.put(httpServletRequest, _SESSION_CLICKS_KEY, panelState);
-	}
-
-	private String _getLayoutReportsDataURL(
-		HttpServletRequest httpServletRequest) {
-
-		ThemeDisplay themeDisplay =
-			(ThemeDisplay)httpServletRequest.getAttribute(
-				WebKeys.THEME_DISPLAY);
-
-		return HttpComponentsUtil.addParameters(
-			themeDisplay.getPortalURL() + themeDisplay.getPathMain() +
-				"/layout_reports/get_layout_reports_data",
-			"plid", themeDisplay.getPlid());
 	}
 
 	private boolean _hasEditPermission(
@@ -307,7 +277,11 @@ public class LayoutReportsProductNavigationControlMenuEntry
 			sb.append(_language.get(resourceBundle, "page-audit"));
 			sb.append("\" class=\"");
 
-			if (isPanelStateOpen(httpServletRequest)) {
+			if (isPanelStateOpen(
+					httpServletRequest,
+					ProductNavigationControlMenuEntryConstants.
+						SESSION_CLICKS_KEY)) {
+
 				sb.append("lfr-has-layout-reports-panel open-admin-panel ");
 			}
 
@@ -323,7 +297,7 @@ public class LayoutReportsProductNavigationControlMenuEntry
 			sb.append("class=\"autofit-col autofit-col-expand\">");
 			sb.append("<h1 class=\"sr-only\">");
 			sb.append(_language.get(resourceBundle, "page-audit"));
-			sb.append("</h1><span>");
+			sb.append("</h1><span class=\"font-weight-bold\">");
 			sb.append(_language.get(resourceBundle, "page-audit"));
 			sb.append("</span></div>");
 			sb.append("<div class=\"autofit-col\">");
@@ -351,10 +325,40 @@ public class LayoutReportsProductNavigationControlMenuEntry
 					_npmResolver.resolveModuleName("layout-reports-web") +
 						"/js/App"),
 				HashMapBuilder.<String, Object>put(
-					"isPanelStateOpen", isPanelStateOpen(httpServletRequest)
+					"isPanelStateOpen",
+					isPanelStateOpen(
+						httpServletRequest,
+						ProductNavigationControlMenuEntryConstants.
+							SESSION_CLICKS_KEY)
 				).put(
-					"layoutReportsDataURL",
-					_getLayoutReportsDataURL(httpServletRequest)
+					() -> {
+						if (!FeatureFlagManagerUtil.isEnabled("LPS-187284")) {
+							return "layoutReportsDataURL";
+						}
+
+						return "layoutReportsTabsURL";
+					},
+					() -> {
+						ThemeDisplay themeDisplay =
+							(ThemeDisplay)httpServletRequest.getAttribute(
+								WebKeys.THEME_DISPLAY);
+
+						if (!FeatureFlagManagerUtil.isEnabled("LPS-187284")) {
+							return HttpComponentsUtil.addParameters(
+								StringBundler.concat(
+									themeDisplay.getPortalURL(),
+									themeDisplay.getPathMain(),
+									"/layout_reports",
+									"/get_layout_reports_data"),
+								"p_l_id", themeDisplay.getPlid());
+						}
+
+						return HttpComponentsUtil.addParameters(
+							themeDisplay.getPortalURL() +
+								themeDisplay.getPathMain() +
+									"/layout_reports/get_layout_reports_tabs",
+							"p_l_id", themeDisplay.getPlid());
+					}
 				).build(),
 				httpServletRequest, jspWriter);
 
@@ -367,9 +371,6 @@ public class LayoutReportsProductNavigationControlMenuEntry
 
 	private static final String _ICON_TMPL_CONTENT = StringUtil.read(
 		LayoutReportsProductNavigationControlMenuEntry.class, "icon.tmpl");
-
-	private static final String _SESSION_CLICKS_KEY =
-		"com.liferay.layout.reports.web_layoutReportsPanelState";
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		LayoutReportsProductNavigationControlMenuEntry.class);

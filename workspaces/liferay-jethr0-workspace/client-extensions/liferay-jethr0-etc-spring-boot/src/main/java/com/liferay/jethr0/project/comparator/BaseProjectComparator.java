@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.jethr0.project.comparator;
@@ -37,19 +28,13 @@ public abstract class BaseProjectComparator
 		jsonObject.put(
 			"position", getPosition()
 		).put(
+			"r_projectPrioritizerToProjectComparators_c_projectPrioritizerId",
+			getProjectPrioritizerId()
+		).put(
 			"type", type.getJSONObject()
 		).put(
 			"value", getValue()
 		);
-
-		ProjectPrioritizer projectPrioritizer = getProjectPrioritizer();
-
-		if (projectPrioritizer != null) {
-			jsonObject.put(
-				"r_projectPrioritizerToProjectComparators_c_" +
-					"projectPrioritizerId",
-				projectPrioritizer.getId());
-		}
 
 		return jsonObject;
 	}
@@ -62,6 +47,11 @@ public abstract class BaseProjectComparator
 	@Override
 	public ProjectPrioritizer getProjectPrioritizer() {
 		return _projectPrioritizer;
+	}
+
+	@Override
+	public long getProjectPrioritizerId() {
+		return _projectPrioritizerId;
 	}
 
 	@Override
@@ -82,6 +72,13 @@ public abstract class BaseProjectComparator
 	@Override
 	public void setProjectPrioritizer(ProjectPrioritizer projectPrioritizer) {
 		_projectPrioritizer = projectPrioritizer;
+
+		if (_projectPrioritizer != null) {
+			_projectPrioritizerId = _projectPrioritizer.getId();
+		}
+		else {
+			_projectPrioritizerId = 0;
+		}
 	}
 
 	@Override
@@ -93,6 +90,8 @@ public abstract class BaseProjectComparator
 		super(jsonObject);
 
 		_position = jsonObject.getInt("position");
+		_projectPrioritizerId = jsonObject.optLong(
+			"r_projectPrioritizerToProjectComparators_c_projectPrioritizerId");
 		_type = Type.get(jsonObject.getJSONObject("type"));
 		_value = jsonObject.optString("value");
 	}
@@ -102,9 +101,7 @@ public abstract class BaseProjectComparator
 
 		super(jsonObject);
 
-		_projectPrioritizer = projectPrioritizer;
-
-		_projectPrioritizer.addProjectComparator(this);
+		setProjectPrioritizer(projectPrioritizer);
 
 		_position = jsonObject.getInt("position");
 		_type = Type.get(jsonObject.getJSONObject("type"));
@@ -113,6 +110,7 @@ public abstract class BaseProjectComparator
 
 	private int _position;
 	private ProjectPrioritizer _projectPrioritizer;
+	private long _projectPrioritizerId;
 	private final Type _type;
 	private String _value;
 

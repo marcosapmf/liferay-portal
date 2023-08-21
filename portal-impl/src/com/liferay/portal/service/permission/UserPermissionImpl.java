@@ -1,20 +1,10 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.service.permission;
 
-import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Contact;
@@ -24,7 +14,6 @@ import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
-import com.liferay.portal.kernel.security.permission.BaseModelPermissionChecker;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.service.OrganizationLocalServiceUtil;
 import com.liferay.portal.kernel.service.UserGroupRoleLocalServiceUtil;
@@ -34,8 +23,6 @@ import com.liferay.portal.kernel.service.permission.UserPermission;
 import com.liferay.portal.kernel.spring.osgi.OSGiBeanProperties;
 import com.liferay.portal.kernel.util.PortalUtil;
 
-import java.util.List;
-
 /**
  * @author Charles May
  * @author Jorge Ferrer
@@ -43,8 +30,7 @@ import java.util.List;
 @OSGiBeanProperties(
 	property = "model.class.name=com.liferay.portal.kernel.model.User"
 )
-public class UserPermissionImpl
-	implements BaseModelPermissionChecker, UserPermission {
+public class UserPermissionImpl implements UserPermission {
 
 	@Override
 	public void check(
@@ -67,26 +53,6 @@ public class UserPermissionImpl
 			throw new PrincipalException.MustHavePermission(
 				permissionChecker, User.class.getName(), userId, actionId);
 		}
-	}
-
-	@Override
-	public void checkBaseModel(
-			PermissionChecker permissionChecker, long groupId, long primaryKey,
-			String actionId)
-		throws PortalException {
-
-		List<Organization> organizations =
-			OrganizationLocalServiceUtil.getUserOrganizations(primaryKey);
-
-		long[] organizationsIds = new long[organizations.size()];
-
-		for (int i = 0; i < organizations.size(); i++) {
-			Organization organization = organizations.get(i);
-
-			organizationsIds[i] = organization.getOrganizationId();
-		}
-
-		check(permissionChecker, primaryKey, organizationsIds, actionId);
 	}
 
 	@Override

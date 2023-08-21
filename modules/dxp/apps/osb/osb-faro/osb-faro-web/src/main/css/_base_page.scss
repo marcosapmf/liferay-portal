@@ -5,6 +5,7 @@
 		display: flex;
 		flex-direction: column;
 		flex-grow: 1;
+		min-height: 10rem;
 		position: relative;
 	}
 
@@ -46,6 +47,16 @@
 			padding: 0;
 		}
 
+		.header-actions {
+			bottom: 0;
+			height: 40px;
+			margin: auto;
+			padding: 0 48px;
+			position: absolute;
+			right: 0;
+			top: 0;
+		}
+
 		.header-content {
 			width: 100%;
 		}
@@ -57,32 +68,6 @@
 			&:first-child {
 				overflow: auto;
 				padding-right: 40px;
-			}
-		}
-
-		.page-subnav .nav-item {
-			.nav-link {
-				margin: 0 8px;
-				padding: 4px 0 12px;
-
-				> .title {
-					font-size: $fontSizeSmall;
-					font-weight: $fontWeightSemiBold;
-					line-height: 24px;
-					margin-bottom: 0;
-				}
-			}
-
-			&:first-child {
-				.nav-link {
-					margin-left: 0;
-				}
-			}
-
-			&:last-child {
-				.nav-link {
-					margin-right: 0;
-				}
 			}
 		}
 

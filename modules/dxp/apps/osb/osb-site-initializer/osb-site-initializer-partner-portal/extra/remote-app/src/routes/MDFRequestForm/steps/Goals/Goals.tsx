@@ -1,12 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import Button from '@clayui/button';
@@ -47,19 +41,11 @@ const Goals = ({
 
 	const {companyOptions, onCompanySelected} = useCompanyOptions(
 		useCallback(
-			(
-				partnerCountry,
-				company,
-				currency,
-				accountExternalReferenceCode
-			) => {
+			(partnerCountry, company, currency, claimPercent) => {
 				setFieldValue('company', company);
 				setFieldValue('partnerCountry', partnerCountry);
 				setFieldValue('currency', currency);
-				setFieldValue(
-					'accountExternalReferenceCode',
-					accountExternalReferenceCode
-				);
+				setFieldValue('claimPercent', claimPercent);
 			},
 			[setFieldValue]
 		),
@@ -191,7 +177,10 @@ const Goals = ({
 					<div className="d-flex justify-content-end mr-auto">
 						<Button
 							className="inline-item inline-item-after pl-0"
-							disabled={submitted || !values.company?.id}
+							disabled={
+								submitted ||
+								!values.company?.externalReferenceCode
+							}
 							displayType={null}
 							onClick={() =>
 								onSaveAsDraft?.(values, formikHelpers)

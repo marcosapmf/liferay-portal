@@ -189,6 +189,8 @@ definition {
 		LexiconEntry.gotoEntryMenuItem(
 			menuItem = "Edit Default Values",
 			rowEntry = ${structureName});
+
+		WaitForVisible(locator1 = "WCEditWebContent#SIDEBAR");
 	}
 
 	macro getDdmStructureId {
@@ -205,12 +207,30 @@ definition {
 		return ${ddmStructureId};
 	}
 
+	macro importStructure {
+		LexiconEntry.gotoHeaderMenuItem(menuItem = "Import Structure");
+
+		PortletEntry.inputName(name = ${structureName});
+
+		UploadDependencyFile.uploadFile(fileName = ${uploadFileName});
+
+		InputField.viewText(
+			fieldLabel = "JSON File",
+			text = ${uploadFileName});
+
+		Button.clickImport();
+
+		Alert.viewSuccessMessage();
+	}
+
 	macro openWebContentStructuresAdmin {
 		Navigator.openWithAppendToBaseURL(urlAppend = "group/${siteURLKey}/~/control_panel/manage?p_p_id=com_liferay_journal_web_portlet_JournalPortlet&_com_liferay_journal_web_portlet_JournalPortlet_mvcPath=%2Fview_ddm_structures.jsp");
 	}
 
 	macro resetStructureDefaultValuesCP {
-		ClickNoError(locator1 = "Button#RESET_VALUES");
+		ClickNoError(
+			key_text = "Reset Values",
+			locator1 = "Button#ANY");
 
 		if (isSet(cancel)) {
 			Confirm.dismissAlert();
@@ -261,7 +281,7 @@ definition {
 	}
 
 	macro saveCP {
-		DDLDataDefinition.save(publicationsEnabled = ${publicationsEnabled});
+		PortletEntry.save();
 
 		if (isSet(addRoleViewPermissions)) {
 			LexiconEntry.gotoEntryMenuItem(

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.knowledge.base.web.internal.scheduler.test;
@@ -37,6 +28,8 @@ import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 
 import java.util.Date;
+
+import org.apache.commons.lang.time.DateUtils;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -68,6 +61,37 @@ public class CheckKBArticleSchedulerJobConfigurationTest {
 	}
 
 	@Test
+	public void testDoNotExpireFileEntryIfKBArticleIsScheduled()
+		throws Exception {
+
+		Date displayDate = DateUtils.addDays(RandomTestUtil.nextDate(), 1);
+
+		Date expirationDate = DateUtils.addDays(displayDate, 1);
+
+		KBArticle kbArticle = _kbArticleLocalService.addKBArticle(
+			null, UserLocalServiceUtil.getGuestUserId(_group.getCompanyId()),
+			PortalUtil.getClassNameId(KBFolder.class.getName()), 0,
+			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
+			RandomTestUtil.randomString(), RandomTestUtil.randomString(), null,
+			null, displayDate, expirationDate, null, null,
+			ServiceContextTestUtil.getServiceContext(
+				_group, _user.getUserId()));
+
+		kbArticle.setExpirationDate(
+			new Date(System.currentTimeMillis() - (Time.MINUTE * 10)));
+
+		kbArticle = _kbArticleLocalService.updateKBArticle(kbArticle);
+
+		_kbArticleLocalService.checkKBArticles(_group.getCompanyId());
+
+		kbArticle = _kbArticleLocalService.getLatestKBArticle(
+			kbArticle.getResourcePrimKey(), WorkflowConstants.STATUS_ANY);
+
+		Assert.assertNotEquals(
+			WorkflowConstants.STATUS_EXPIRED, kbArticle.getStatus());
+	}
+
+	@Test
 	public void testExpireFileEntry() throws Exception {
 		Date expirationDate = new Date(
 			System.currentTimeMillis() + (Time.MINUTE * 5));
@@ -77,7 +101,7 @@ public class CheckKBArticleSchedulerJobConfigurationTest {
 			PortalUtil.getClassNameId(KBFolder.class.getName()), 0,
 			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
 			RandomTestUtil.randomString(), RandomTestUtil.randomString(), null,
-			null, expirationDate, null, null,
+			null, new Date(), expirationDate, null, null,
 			ServiceContextTestUtil.getServiceContext(
 				_group, _user.getUserId()));
 

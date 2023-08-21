@@ -1,11 +1,16 @@
+/**
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
+ */
+
 import classNames from 'classnames';
 
 import circleFill from '../../assets/icons/circle_fill_icon.svg';
 
 import './DashboardNavigationListItem.scss';
+import {getThumbnailByProductAttachment, showAppImage} from '../../utils/util';
 import {AppProps} from '../DashboardTable/DashboardTable';
 import {DashboardListItems} from './DashboardNavigation';
-import {showAppImage} from '../../utils/util';
 interface DashboardNavigationListItem {
 	dashboardNavigationItems: DashboardListItems[];
 	item: AppProps;
@@ -23,7 +28,8 @@ export function DashboardNavigationListItem({
 	onSelectAppChange,
 	setDashboardNavigationItems,
 }: DashboardNavigationListItem) {
-	const {name, selected, status, thumbnail, version} = item;
+	const {attachments, name, selected, status, version} = item;
+	const thumbnail = getThumbnailByProductAttachment(attachments);
 
 	return (
 		<div

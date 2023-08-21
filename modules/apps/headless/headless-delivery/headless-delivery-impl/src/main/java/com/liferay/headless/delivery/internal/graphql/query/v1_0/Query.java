@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.delivery.internal.graphql.query.v1_0;
@@ -2437,6 +2428,31 @@ public class Query {
 				messageBoardMessageResource.
 					getSiteMessageBoardMessagePermissionsPage(
 						Long.valueOf(siteKey), roleNames)));
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {userMessageBoardMessagesActivity(page: ___, pageSize: ___, siteKey: ___, userId: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
+	 */
+	@GraphQLField(
+		description = "Retrieves the site's message board messages user's activity."
+	)
+	public MessageBoardMessagePage userMessageBoardMessagesActivity(
+			@GraphQLName("siteKey") @NotEmpty String siteKey,
+			@GraphQLName("userId") Long userId,
+			@GraphQLName("pageSize") int pageSize,
+			@GraphQLName("page") int page)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_messageBoardMessageResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			messageBoardMessageResource -> new MessageBoardMessagePage(
+				messageBoardMessageResource.
+					getSiteUserMessageBoardMessagesActivityPage(
+						Long.valueOf(siteKey), userId,
+						Pagination.of(page, pageSize))));
 	}
 
 	/**

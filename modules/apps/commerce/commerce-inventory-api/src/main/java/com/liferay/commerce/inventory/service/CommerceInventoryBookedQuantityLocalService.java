@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.inventory.service;
@@ -36,6 +27,8 @@ import com.liferay.portal.kernel.transaction.Transactional;
 import com.liferay.portal.kernel.util.OrderByComparator;
 
 import java.io.Serializable;
+
+import java.math.BigDecimal;
 
 import java.util.Date;
 import java.util.List;
@@ -68,8 +61,8 @@ public interface CommerceInventoryBookedQuantityLocalService
 	 */
 	@Indexable(type = IndexableType.REINDEX)
 	public CommerceInventoryBookedQuantity addCommerceBookedQuantity(
-			long userId, String sku, int quantity, Date expirationDate,
-			Map<String, String> context)
+			long userId, Date expirationDate, BigDecimal quantity, String sku,
+			String unitOfMeasureKey, Map<String, String> context)
 		throws PortalException;
 
 	/**
@@ -89,7 +82,7 @@ public interface CommerceInventoryBookedQuantityLocalService
 	public void checkCommerceInventoryBookedQuantities();
 
 	public CommerceInventoryBookedQuantity consumeCommerceBookedQuantity(
-			long commerceBookedQuantityId, int quantity)
+			long commerceBookedQuantityId, BigDecimal quantity)
 		throws NoSuchInventoryBookedQuantityException;
 
 	/**
@@ -228,7 +221,11 @@ public interface CommerceInventoryBookedQuantityLocalService
 	public ActionableDynamicQuery getActionableDynamicQuery();
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public int getCommerceBookedQuantity(long companyId, String sku);
+	public BigDecimal getCommerceBookedQuantity(
+		long companyId, long commerceChannelGroupId, String sku);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public BigDecimal getCommerceBookedQuantity(long companyId, String sku);
 
 	/**
 	 * Returns a range of all the commerce inventory booked quantities.
@@ -304,8 +301,8 @@ public interface CommerceInventoryBookedQuantityLocalService
 		throws PortalException;
 
 	public CommerceInventoryBookedQuantity resetCommerceBookedQuantity(
-			long commerceBookedQuantityId, long userId, String sku,
-			int quantity, Date expirationDate, Map<String, String> context)
+			long commerceBookedQuantityId, long userId, Date expirationDate,
+			BigDecimal quantity, String sku, Map<String, String> context)
 		throws PortalException;
 
 	public CommerceInventoryBookedQuantity
@@ -343,7 +340,8 @@ public interface CommerceInventoryBookedQuantityLocalService
 	public CommerceInventoryBookedQuantity
 			updateCommerceInventoryBookedQuantity(
 				long userId, long commerceInventoryBookedQuantityId,
-				int quantity, Map<String, String> context, long mvccVersion)
+				BigDecimal quantity, Map<String, String> context,
+				long mvccVersion)
 		throws PortalException;
 
 }

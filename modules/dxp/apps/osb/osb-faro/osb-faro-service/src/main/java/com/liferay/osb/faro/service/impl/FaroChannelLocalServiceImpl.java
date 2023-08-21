@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.osb.faro.service.impl;
@@ -20,11 +11,10 @@ import com.liferay.osb.faro.constants.DocumentationConstants;
 import com.liferay.osb.faro.constants.FaroChannelConstants;
 import com.liferay.osb.faro.model.FaroChannel;
 import com.liferay.osb.faro.model.FaroUser;
+import com.liferay.osb.faro.service.FaroUserLocalService;
 import com.liferay.osb.faro.service.base.FaroChannelLocalServiceBaseImpl;
-import com.liferay.osb.faro.service.persistence.FaroUserFinder;
 import com.liferay.osb.faro.util.EmailUtil;
 import com.liferay.portal.aop.AopService;
-import com.liferay.portal.kernel.bean.BeanReference;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
@@ -83,7 +73,7 @@ public class FaroChannelLocalServiceImpl
 
 		group.setFriendlyURL(null);
 
-		_groupLocalService.updateGroup(group);
+		group = _groupLocalService.updateGroup(group);
 
 		FaroChannel faroChannel = faroChannelPersistence.create(faroChannelId);
 
@@ -133,19 +123,6 @@ public class FaroChannelLocalServiceImpl
 		}
 	}
 
-	public int countFaroUsers(
-			String channelId, boolean available, String query,
-			List<Integer> statuses, long workspaceGroupId)
-		throws PortalException {
-
-		FaroChannel faroChannel = faroChannelPersistence.findByC_W(
-			channelId, workspaceGroupId);
-
-		return _faroUserFinder.countByChannelKeywords(
-			faroChannel.getGroupId(), available, query, statuses,
-			faroChannel.getWorkspaceGroupId());
-	}
-
 	public FaroChannel deleteFaroChannel(FaroChannel faroChannel)
 		throws PortalException {
 
@@ -173,7 +150,13 @@ public class FaroChannelLocalServiceImpl
 		}
 	}
 
-	public List<FaroUser> findFaroUsers(
+	public FaroChannel getFaroChannel(String channelId, long workspaceGroupId)
+		throws PortalException {
+
+		return faroChannelPersistence.findByC_W(channelId, workspaceGroupId);
+	}
+
+	public List<FaroUser> getFaroUsers(
 			String channelId, boolean available, String query,
 			List<Integer> statuses, long workspaceGroupId, int start, int end,
 			OrderByComparator<FaroUser> orderByComparator)
@@ -182,15 +165,22 @@ public class FaroChannelLocalServiceImpl
 		FaroChannel faroChannel = faroChannelPersistence.findByC_W(
 			channelId, workspaceGroupId);
 
-		return _faroUserFinder.findByChannelKeywords(
+		return _faroUserLocalService.getFaroUsers(
 			faroChannel.getGroupId(), available, query, statuses,
 			faroChannel.getWorkspaceGroupId(), start, end, orderByComparator);
 	}
 
-	public FaroChannel getFaroChannel(String channelId, long workspaceGroupId)
+	public int getFaroUsersCount(
+			String channelId, boolean available, String query,
+			List<Integer> statuses, long workspaceGroupId)
 		throws PortalException {
 
-		return faroChannelPersistence.findByC_W(channelId, workspaceGroupId);
+		FaroChannel faroChannel = faroChannelPersistence.findByC_W(
+			channelId, workspaceGroupId);
+
+		return _faroUserLocalService.getFaroUsersCount(
+			faroChannel.getGroupId(), available, query, statuses,
+			faroChannel.getWorkspaceGroupId());
 	}
 
 	public void removeUsers(
@@ -289,8 +279,8 @@ public class FaroChannelLocalServiceImpl
 	private static final Log _log = LogFactoryUtil.getLog(
 		FaroChannelLocalServiceImpl.class);
 
-	@BeanReference(type = FaroUserFinder.class)
-	private FaroUserFinder _faroUserFinder;
+	@Reference
+	private FaroUserLocalService _faroUserLocalService;
 
 	@Reference
 	private GroupLocalService _groupLocalService;

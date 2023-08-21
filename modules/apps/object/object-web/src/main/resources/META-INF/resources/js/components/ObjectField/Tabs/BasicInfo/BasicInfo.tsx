@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {
@@ -20,7 +11,6 @@ import {
 } from '@liferay/object-js-components-web';
 import React, {useEffect, useState} from 'react';
 
-import PicklistDefaultValueSelect from '../../../../components/ObjectField/DefaultValueFields/PicklistDefaultValueSelect';
 import {updateFieldSettings} from '../../../../utils/fieldSettings';
 import ObjectFieldFormBase, {
 	ObjectFieldErrors,
@@ -48,7 +38,6 @@ interface AggregationFilters {
 }
 
 interface BasicInfoProps {
-	creationLanguageId: Liferay.Language.Locale;
 	errors: ObjectFieldErrors;
 	filterOperators: TFilterOperators;
 	handleChange: React.ChangeEventHandler<HTMLInputElement>;
@@ -65,7 +54,6 @@ interface BasicInfoProps {
 }
 
 export function BasicInfo({
-	creationLanguageId,
 	errors,
 	filterOperators,
 	handleChange,
@@ -180,18 +168,6 @@ export function BasicInfo({
 						/>
 					)}
 				</ObjectFieldFormBase>
-
-				{!Liferay.FeatureFlags['LPS-163716'] && values.state && (
-					<PicklistDefaultValueSelect
-						creationLanguageId={creationLanguageId}
-						defaultValue={values.defaultValue}
-						error={errors.defaultValue}
-						label={Liferay.Language.get('default-value')}
-						required
-						setValues={setValues}
-						values={values}
-					/>
-				)}
 			</Card>
 
 			{values.businessType === 'Aggregation' && (
@@ -230,7 +206,7 @@ export function BasicInfo({
 				/>
 			)}
 
-			{Liferay.FeatureFlags['LPS-146755'] && (
+			{Liferay.FeatureFlags['LPS-172017'] && (
 				<TranslationOptionsContainer
 					objectDefinition={objectDefinition}
 					published={isApproved}

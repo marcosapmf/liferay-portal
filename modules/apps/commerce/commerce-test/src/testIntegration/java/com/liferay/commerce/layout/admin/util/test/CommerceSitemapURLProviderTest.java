@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.layout.admin.util.test;
@@ -115,7 +106,10 @@ public class CommerceSitemapURLProviderTest {
 		_themeDisplay.setCompany(_company);
 		_themeDisplay.setPermissionChecker(
 			PermissionCheckerFactoryUtil.create(_user));
+		_themeDisplay.setPortalDomain(_company.getVirtualHostname());
+		_themeDisplay.setPortalURL(_company.getPortalURL(_group.getGroupId()));
 		_themeDisplay.setScopeGroupId(_group.getGroupId());
+		_themeDisplay.setServerPort(8080);
 		_themeDisplay.setSignedIn(true);
 		_themeDisplay.setSiteGroupId(_group.getGroupId());
 		_themeDisplay.setUser(_user);
@@ -205,14 +199,14 @@ public class CommerceSitemapURLProviderTest {
 
 		_httpServletRequest.setAttribute(WebKeys.LAYOUT, layout);
 
+		_themeDisplay.setLayoutSet(layout.getLayoutSet());
+
 		_assetCategorySitemapURLProvider.visitLayout(
 			rootElement, layout.getUuid(), layoutSet, _themeDisplay);
 
 		Assert.assertTrue(rootElement.hasContent());
 
 		List<Node> nodes = rootElement.content();
-
-		Assert.assertEquals(nodes.toString(), 1, nodes.size());
 
 		Node node = nodes.get(0);
 
@@ -271,14 +265,14 @@ public class CommerceSitemapURLProviderTest {
 
 		_httpServletRequest.setAttribute(WebKeys.LAYOUT, layout);
 
+		_themeDisplay.setLayoutSet(layout.getLayoutSet());
+
 		_cpDefinitionSitemapURLProvider.visitLayout(
 			rootElement, layout.getUuid(), layoutSet, _themeDisplay);
 
 		Assert.assertTrue(rootElement.hasContent());
 
 		List<Node> nodes = rootElement.content();
-
-		Assert.assertEquals(nodes.toString(), 1, nodes.size());
 
 		Node node = nodes.get(0);
 

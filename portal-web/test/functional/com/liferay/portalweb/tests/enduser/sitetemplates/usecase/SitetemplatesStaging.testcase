@@ -14,9 +14,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -24,9 +24,13 @@ definition {
 		}
 	}
 
-	@description = "User can enable local staging on site which is based on Masterclass site template."
+	@description = "User can enable local staging on site which is based on Masterclass site template. Blocked by LPS-176242."
+	@ignore = "true"
 	@priority = 4
 	test CanEnableLocalStagingOnMasterclassSiteTemplate {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
 		task ("Given: Add a new site based on Masterclass site template") {
 			Site.openSitesAdmin();
 
@@ -98,6 +102,9 @@ definition {
 	@description = "User can enable local staging on site which is based on Raylife site template."
 	@priority = 4
 	test CanEnableLocalStagingOnRaylifeSiteTemplate {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
 		task ("Given: Add a new site based on Raylife site template") {
 			Site.openSitesAdmin();
 

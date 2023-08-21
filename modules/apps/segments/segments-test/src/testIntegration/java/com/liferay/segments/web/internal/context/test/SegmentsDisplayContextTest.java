@@ -1,22 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.segments.web.internal.context.test;
 
 import com.liferay.analytics.settings.configuration.AnalyticsConfiguration;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
-import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.test.util.CompanyConfigurationTemporarySwapper;
@@ -25,8 +15,6 @@ import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
-import com.liferay.portal.kernel.model.ResourceConstants;
-import com.liferay.portal.kernel.model.Role;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.portlet.PortletConfigFactoryUtil;
@@ -34,7 +22,6 @@ import com.liferay.portal.kernel.portlet.bridges.mvc.constants.MVCRenderConstant
 import com.liferay.portal.kernel.security.permission.PermissionCheckerFactoryUtil;
 import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.GroupLocalService;
-import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.service.PortletLocalService;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
@@ -63,7 +50,6 @@ import com.liferay.roles.admin.role.type.contributor.RoleTypeContributor;
 import com.liferay.roles.admin.role.type.contributor.provider.RoleTypeContributorProvider;
 import com.liferay.segments.configuration.SegmentsCompanyConfiguration;
 import com.liferay.segments.configuration.SegmentsConfiguration;
-import com.liferay.segments.constants.SegmentsActionKeys;
 import com.liferay.segments.constants.SegmentsEntryConstants;
 import com.liferay.segments.constants.SegmentsPortletKeys;
 import com.liferay.segments.criteria.Criteria;
@@ -76,7 +62,6 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 
 import java.util.Dictionary;
-import java.util.List;
 import java.util.Map;
 
 import javax.portlet.Portlet;
@@ -131,13 +116,6 @@ public class SegmentsDisplayContextTest {
 	@After
 	public void tearDown() {
 		_serviceTracker.close();
-	}
-
-	@Test
-	public void testGetActionDropdownItems() throws Exception {
-		List<DropdownItem> dropdownItems = _getActionDropdownItems();
-
-		Assert.assertEquals(dropdownItems.toString(), 1, dropdownItems.size());
 	}
 
 	@Test
@@ -557,30 +535,6 @@ public class SegmentsDisplayContextTest {
 	}
 
 	@Test
-	public void testIsShowCreationMenuWithoutPermissions() throws Exception {
-		Assert.assertFalse(_isShowCreationMenu());
-	}
-
-	@Test
-	public void testIsShowCreationMenuWithPermissions() throws Exception {
-		Role siteMemberRole = _roleLocalService.getRole(
-			_company.getCompanyId(), RoleConstants.SITE_MEMBER);
-
-		_resourcePermissionLocalService.addResourcePermission(
-			_company.getCompanyId(), "com.liferay.segments",
-			ResourceConstants.SCOPE_GROUP, String.valueOf(_group.getGroupId()),
-			siteMemberRole.getRoleId(),
-			SegmentsActionKeys.MANAGE_SEGMENTS_ENTRIES);
-
-		_groupLocalService.addUserGroup(_user.getUserId(), _group.getGroupId());
-
-		Assert.assertTrue(_isShowCreationMenu());
-
-		GroupLocalServiceUtil.deleteUserGroup(
-			_user.getUserId(), _group.getGroupId());
-	}
-
-	@Test
 	public void testIsShowDeleteActionDifferentSites() throws Exception {
 		SegmentsEntry segmentsEntry = SegmentsTestUtil.addSegmentsEntry(
 			ServiceContextTestUtil.getServiceContext(
@@ -658,16 +612,6 @@ public class SegmentsDisplayContextTest {
 				_group.getGroupId(), _user.getUserId()));
 
 		Assert.assertTrue(_isShowViewAction(segmentsEntry));
-	}
-
-	private List<DropdownItem> _getActionDropdownItems() throws Exception {
-		MockLiferayPortletRenderRequest mockLiferayPortletRenderRequest =
-			_renderPortlet();
-
-		return ReflectionTestUtil.invoke(
-			mockLiferayPortletRenderRequest.getAttribute(
-				_SEGMENTS_DISPLAY_CONTEXT),
-			"getActionDropdownItems", new Class<?>[0]);
 	}
 
 	private Map<String, Object> _getAssignUserRolesDataMap(
@@ -891,16 +835,6 @@ public class SegmentsDisplayContextTest {
 				_SEGMENTS_DISPLAY_CONTEXT),
 			"isShowAssignUserRolesAction", new Class<?>[] {SegmentsEntry.class},
 			segmentsEntry);
-	}
-
-	private boolean _isShowCreationMenu() throws Exception {
-		MockLiferayPortletRenderRequest mockLiferayPortletRenderRequest =
-			_renderPortlet();
-
-		return ReflectionTestUtil.invoke(
-			mockLiferayPortletRenderRequest.getAttribute(
-				_SEGMENTS_DISPLAY_CONTEXT),
-			"isShowCreationMenu", new Class<?>[0]);
 	}
 
 	private boolean _isShowDeleteAction(SegmentsEntry segmentsEntry)

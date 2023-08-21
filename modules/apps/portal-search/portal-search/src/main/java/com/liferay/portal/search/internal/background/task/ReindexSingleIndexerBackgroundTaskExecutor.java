@@ -1,21 +1,13 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.internal.background.task;
 
 import com.liferay.osgi.service.tracker.collections.list.ServiceTrackerList;
 import com.liferay.osgi.service.tracker.collections.list.ServiceTrackerListFactory;
+import com.liferay.osgi.util.service.Snapshot;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.backgroundtask.BackgroundTask;
 import com.liferay.portal.kernel.backgroundtask.BackgroundTaskExecutor;
@@ -33,9 +25,12 @@ import com.liferay.portal.kernel.search.background.task.ReindexBackgroundTaskCon
 import com.liferay.portal.kernel.search.background.task.ReindexStatusMessageSender;
 import com.liferay.portal.kernel.util.ServiceProxyFactory;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.search.index.SyncReindexManager;
 
 import java.io.Serializable;
 
+import java.util.Collections;
+import java.util.Date;
 import java.util.Map;
 
 import org.osgi.framework.BundleContext;
@@ -124,7 +119,8 @@ public class ReindexSingleIndexerBackgroundTaskExecutor
 				_log.info(
 					StringBundler.concat(
 						"Start reindexing company ", companyId,
-						" for class name ", className));
+						" for class name ", className, " with execution mode ",
+						executionMode));
 			}
 
 			CTSQLModeThreadLocal.CTSQLMode ctSQLMode =
@@ -136,10 +132,27 @@ public class ReindexSingleIndexerBackgroundTaskExecutor
 
 				searchEngine.initialize(companyId);
 
-				indexWriterHelper.deleteEntityDocuments(
-					companyId, className, true);
+				Date date = null;
+
+				if (_isExecuteSyncReindex(executionMode)) {
+					date = new Date();
+
+					Thread.sleep(1000);
+				}
+				else {
+					indexWriterHelper.deleteEntityDocuments(
+						companyId, className, true);
+				}
 
 				indexer.reindex(new String[] {String.valueOf(companyId)});
+
+				if (_isExecuteSyncReindex(executionMode)) {
+					SyncReindexManager syncReindexManager =
+						_syncReindexManagerSnapshot.get();
+
+					syncReindexManager.deleteStaleDocuments(
+						companyId, date, Collections.singleton(className));
+				}
 			}
 			catch (Exception exception) {
 				_log.error(exception);
@@ -155,7 +168,8 @@ public class ReindexSingleIndexerBackgroundTaskExecutor
 					_log.info(
 						StringBundler.concat(
 							"Finished reindexing company ", companyId,
-							" for class name ", className));
+							" for class name ", className,
+							" with execution mode ", executionMode));
 				}
 			}
 		}
@@ -178,6 +192,16 @@ public class ReindexSingleIndexerBackgroundTaskExecutor
 
 	protected ServiceTrackerList<Indexer<?>> systemIndexers;
 
+	private boolean _isExecuteSyncReindex(String executionMode) {
+		if ((_syncReindexManagerSnapshot.get() != null) &&
+			(executionMode != null) && executionMode.equals("sync")) {
+
+			return true;
+		}
+
+		return false;
+	}
+
 	private boolean _isSystemIndexer(Indexer<?> indexer) {
 		if (systemIndexers.size() > 0) {
 			for (Indexer<?> systemIndexer : systemIndexers) {
@@ -192,5 +216,10 @@ public class ReindexSingleIndexerBackgroundTaskExecutor
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		ReindexSingleIndexerBackgroundTaskExecutor.class);
+
+	private static final Snapshot<SyncReindexManager>
+		_syncReindexManagerSnapshot = new Snapshot<>(
+			ReindexSingleIndexerBackgroundTaskExecutor.class,
+			SyncReindexManager.class, null, true);
 
 }

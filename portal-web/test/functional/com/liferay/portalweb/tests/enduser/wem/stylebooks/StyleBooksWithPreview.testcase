@@ -1,6 +1,7 @@
 @component-name = "portal-wcm"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Style Books";
@@ -18,9 +19,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -1512,7 +1513,8 @@ definition {
 	@priority = 4
 	test ViewEmptyStateWhenSiteIsEmpty {
 		property portal.release = "false";
-		property test.name.skip.portal.instance = "StyleBooksWithPreview#ViewEmptyStateWhenSiteIsEmpty";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Deactivate the Default fragment sets") {
 			ApplicationsMenu.gotoPortlet(

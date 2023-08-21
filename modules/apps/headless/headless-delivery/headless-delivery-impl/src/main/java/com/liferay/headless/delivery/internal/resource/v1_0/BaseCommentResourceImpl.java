@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.delivery.internal.resource.v1_0;
@@ -32,6 +23,7 @@ import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.SetUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.odata.filter.ExpressionConvert;
@@ -1819,23 +1811,24 @@ public abstract class BaseCommentResourceImpl
 			Collection<Comment> comments, Map<String, Serializable> parameters)
 		throws Exception {
 
-		UnsafeConsumer<Comment, Exception> commentUnsafeConsumer = null;
+		UnsafeFunction<Comment, Comment, Exception> commentUnsafeFunction =
+			null;
 
 		String createStrategy = (String)parameters.getOrDefault(
 			"createStrategy", "INSERT");
 
-		if ("INSERT".equalsIgnoreCase(createStrategy)) {
+		if (StringUtil.equalsIgnoreCase(createStrategy, "INSERT")) {
 			if (parameters.containsKey("blogPostingId")) {
-				commentUnsafeConsumer = comment -> postBlogPostingComment(
+				commentUnsafeFunction = comment -> postBlogPostingComment(
 					_parseLong((String)parameters.get("blogPostingId")),
 					comment);
 			}
 			else if (parameters.containsKey("documentId")) {
-				commentUnsafeConsumer = comment -> postDocumentComment(
+				commentUnsafeFunction = comment -> postDocumentComment(
 					_parseLong((String)parameters.get("documentId")), comment);
 			}
 			else if (parameters.containsKey("structuredContentId")) {
-				commentUnsafeConsumer = comment -> postStructuredContentComment(
+				commentUnsafeFunction = comment -> postStructuredContentComment(
 					_parseLong((String)parameters.get("structuredContentId")),
 					comment);
 			}
@@ -1845,18 +1838,23 @@ public abstract class BaseCommentResourceImpl
 			}
 		}
 
-		if (commentUnsafeConsumer == null) {
+		if (commentUnsafeFunction == null) {
 			throw new NotSupportedException(
 				"Create strategy \"" + createStrategy +
 					"\" is not supported for Comment");
 		}
 
-		if (contextBatchUnsafeConsumer != null) {
-			contextBatchUnsafeConsumer.accept(comments, commentUnsafeConsumer);
+		if (contextBatchUnsafeBiConsumer != null) {
+			contextBatchUnsafeBiConsumer.accept(
+				comments, commentUnsafeFunction);
+		}
+		else if (contextBatchUnsafeConsumer != null) {
+			contextBatchUnsafeConsumer.accept(
+				comments, commentUnsafeFunction::apply);
 		}
 		else {
 			for (Comment comment : comments) {
-				commentUnsafeConsumer.accept(comment);
+				commentUnsafeFunction.apply(comment);
 			}
 		}
 	}
@@ -1952,30 +1950,36 @@ public abstract class BaseCommentResourceImpl
 			Collection<Comment> comments, Map<String, Serializable> parameters)
 		throws Exception {
 
-		UnsafeConsumer<Comment, Exception> commentUnsafeConsumer = null;
+		UnsafeFunction<Comment, Comment, Exception> commentUnsafeFunction =
+			null;
 
 		String updateStrategy = (String)parameters.getOrDefault(
 			"updateStrategy", "UPDATE");
 
-		if ("UPDATE".equalsIgnoreCase(updateStrategy)) {
-			commentUnsafeConsumer = comment -> putComment(
+		if (StringUtil.equalsIgnoreCase(updateStrategy, "UPDATE")) {
+			commentUnsafeFunction = comment -> putComment(
 				comment.getId() != null ? comment.getId() :
 					_parseLong((String)parameters.get("commentId")),
 				comment);
 		}
 
-		if (commentUnsafeConsumer == null) {
+		if (commentUnsafeFunction == null) {
 			throw new NotSupportedException(
 				"Update strategy \"" + updateStrategy +
 					"\" is not supported for Comment");
 		}
 
-		if (contextBatchUnsafeConsumer != null) {
-			contextBatchUnsafeConsumer.accept(comments, commentUnsafeConsumer);
+		if (contextBatchUnsafeBiConsumer != null) {
+			contextBatchUnsafeBiConsumer.accept(
+				comments, commentUnsafeFunction);
+		}
+		else if (contextBatchUnsafeConsumer != null) {
+			contextBatchUnsafeConsumer.accept(
+				comments, commentUnsafeFunction::apply);
 		}
 		else {
 			for (Comment comment : comments) {
-				commentUnsafeConsumer.accept(comment);
+				commentUnsafeFunction.apply(comment);
 			}
 		}
 	}
@@ -1990,6 +1994,14 @@ public abstract class BaseCommentResourceImpl
 
 	public void setContextAcceptLanguage(AcceptLanguage contextAcceptLanguage) {
 		this.contextAcceptLanguage = contextAcceptLanguage;
+	}
+
+	public void setContextBatchUnsafeBiConsumer(
+		UnsafeBiConsumer
+			<Collection<Comment>, UnsafeFunction<Comment, Comment, Exception>,
+			 Exception> contextBatchUnsafeBiConsumer) {
+
+		this.contextBatchUnsafeBiConsumer = contextBatchUnsafeBiConsumer;
 	}
 
 	public void setContextBatchUnsafeConsumer(
@@ -2250,6 +2262,9 @@ public abstract class BaseCommentResourceImpl
 	}
 
 	protected AcceptLanguage contextAcceptLanguage;
+	protected UnsafeBiConsumer
+		<Collection<Comment>, UnsafeFunction<Comment, Comment, Exception>,
+		 Exception> contextBatchUnsafeBiConsumer;
 	protected UnsafeBiConsumer
 		<Collection<Comment>, UnsafeConsumer<Comment, Exception>, Exception>
 			contextBatchUnsafeConsumer;

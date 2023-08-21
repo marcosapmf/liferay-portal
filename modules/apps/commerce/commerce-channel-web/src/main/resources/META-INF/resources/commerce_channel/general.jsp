@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -30,6 +21,9 @@ Map<String, String> contextParams = HashMapBuilder.<String, String>put(
 ).build();
 %>
 
+<liferay-ui:error embed="<%= false %>" exception="<%= AccountEntryStatusException.class %>" message="please-select-a-valid-supplier" />
+<liferay-ui:error embed="<%= false %>" exception="<%= AccountEntryTypeException.class %>" message="please-select-a-valid-supplier" />
+<liferay-ui:error embed="<%= false %>" exception="<%= DuplicateCommerceChannelAccountEntryIdException.class %>" message="a-supplier-account-can-be-linked-only-to-one-channel" />
 <liferay-ui:error embed="<%= false %>" exception="<%= FileExtensionException.class %>" message="please-select-a-valid-jrxml-file" />
 <liferay-ui:error embed="<%= false %>" exception="<%= InvalidFileException.class %>" message="please-select-a-valid-jrxml-file" />
 
@@ -43,9 +37,10 @@ Map<String, String> contextParams = HashMapBuilder.<String, String>put(
 	<aui:model-context bean="<%= commerceChannel %>" model="<%= CommerceChannel.class %>" />
 
 	<div class="row">
-		<div class="col-lg-6">
+		<div class="col-lg-6 d-flex">
 			<commerce-ui:panel
 				bodyClasses="flex-fill"
+				elementClasses="flex-fill"
 				title='<%= LanguageUtil.get(request, "details") %>'
 			>
 				<aui:input name="name" />
@@ -67,22 +62,39 @@ Map<String, String> contextParams = HashMapBuilder.<String, String>put(
 				<aui:select label="commerce-site-type" name="settings--commerceSiteType--">
 
 					<%
-					for (int commerceSiteType : CommerceAccountConstants.SITE_TYPES) {
+					for (int commerceSiteType : CommerceChannelConstants.SITE_TYPES) {
 					%>
 
-						<aui:option label="<%= CommerceAccountConstants.getSiteTypeLabel(commerceSiteType) %>" selected="<%= commerceSiteType == commerceChannelDisplayContext.getCommerceSiteType() %>" value="<%= commerceSiteType %>" />
+						<aui:option label="<%= CommerceChannelConstants.getSiteTypeLabel(commerceSiteType) %>" selected="<%= commerceSiteType == commerceChannelDisplayContext.getCommerceSiteType() %>" value="<%= commerceSiteType %>" />
 
 					<%
 					}
 					%>
 
 				</aui:select>
+
+				<c:if test='<%= FeatureFlagManagerUtil.isEnabled("COMMERCE-10890") %>'>
+					<aui:select disabled="<%= !commerceChannelDisplayContext.hasManageLinkSupplierPermission() %>" label="link-channel-to-a-supplier" name="accountEntryId" showEmptyOption="<%= true %>">
+
+						<%
+						for (AccountEntry accountEntry : commerceChannelDisplayContext.getSupplierAccountEntries()) {
+						%>
+
+							<aui:option label="<%= accountEntry.getName() %>" selected="<%= (commerceChannel != null) && (accountEntry.getAccountEntryId() == commerceChannel.getAccountEntryId()) %>" value="<%= accountEntry.getAccountEntryId() %>" />
+
+						<%
+						}
+						%>
+
+					</aui:select>
+				</c:if>
 			</commerce-ui:panel>
 		</div>
 
-		<div class="col-lg-6">
+		<div class="col-lg-6 d-flex">
 			<commerce-ui:panel
 				bodyClasses="flex-fill"
+				elementClasses="flex-fill"
 				title='<%= LanguageUtil.get(request, "prices") %>'
 			>
 				<label class="control-label" for="shippingTaxSettings--taxCategoryId--"><liferay-ui:message key="shipping-tax-category" /></label>
@@ -204,7 +216,7 @@ Map<String, String> contextParams = HashMapBuilder.<String, String>put(
 	</div>
 </aui:form>
 
-<c:if test="<%= (commerceChannel.getSiteGroupId() > 0) && commerceChannelDisplayContext.hasUnsatisfiedCommerceHealthChecks() %>">
+<c:if test="<%= (commerceChannel.getSiteGroupId() > 0) && commerceChannelDisplayContext.hasAddLayoutPermission() && commerceChannelDisplayContext.hasUnsatisfiedCommerceHealthChecks() %>">
 	<commerce-ui:panel
 		bodyClasses="p-0"
 		title='<%= LanguageUtil.get(request, "health-checks") %>'

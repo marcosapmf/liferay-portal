@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {useMemo, useState} from 'react';
@@ -61,35 +52,41 @@ const chartSelectData = [
 const useCaseResultsChart = ({buildId}: {buildId: number}) => {
 	const [entity, setEntity] = useState(chartSelectData[0].value);
 
-	const resources: TestrayChartResources = {
-		components: {
-			fetchParameters: {
-				fields,
-				filter: SearchBuilder.eq(
-					'componentToCaseResult/r_buildToCaseResult_c_buildId',
-					buildId
-				),
+	const resources: TestrayChartResources = useMemo(
+		() => ({
+			components: {
+				fetchParameters: {
+					fields,
+					filter: SearchBuilder.eq(
+						'componentToCaseResult/r_buildToCaseResult_c_buildId',
+						buildId
+					),
+				},
+				url: testrayComponentImpl.resource,
 			},
-			url: testrayComponentImpl.resource,
-		},
-		runs: {
-			fetchParameters: {
-				fields,
-				filter: SearchBuilder.eq('r_buildToRuns_c_buildId', buildId),
+			runs: {
+				fetchParameters: {
+					fields,
+					filter: SearchBuilder.eq(
+						'r_buildToRuns_c_buildId',
+						buildId
+					),
+				},
+				url: testrayRunImpl.resource,
 			},
-			url: testrayRunImpl.resource,
-		},
-		teams: {
-			fetchParameters: {
-				fields,
-				filter: SearchBuilder.eq(
-					'componentToCaseResult/r_buildToCaseResult_c_buildId',
-					buildId
-				),
+			teams: {
+				fetchParameters: {
+					fields,
+					filter: SearchBuilder.eq(
+						'componentToCaseResult/r_buildToCaseResult_c_buildId',
+						buildId
+					),
+				},
+				url: testrayComponentImpl.resource,
 			},
-			url: testrayComponentImpl.resource,
-		},
-	};
+		}),
+		[buildId]
+	);
 
 	const {data} = useFetch<APIResponse<any>>(
 		resources[entity as keyof TestrayChartResources].url,
@@ -103,12 +100,16 @@ const useCaseResultsChart = ({buildId}: {buildId: number}) => {
 
 	const responseItems = useMemo(() => data?.items || [], [data?.items]);
 
-	const chartData = Object.entries(statususes).map(([key, value]) => [
-		key,
-		...responseItems.map(
-			(caseResult) => caseResult[value] ?? getRandom(1000)
-		),
-	]);
+	const chartData = useMemo(
+		() =>
+			Object.entries(statususes).map(([key, value]) => [
+				key,
+				...responseItems.map(
+					(caseResult) => caseResult[value] ?? getRandom(1000)
+				),
+			]),
+		[responseItems]
+	);
 
 	return {
 		chart: {

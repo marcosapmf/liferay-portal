@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.batch.planner.web.internal.portlet.action;
@@ -75,22 +66,23 @@ public class EditBatchPlannerPlanMVCRenderCommand implements MVCRenderCommand {
 	}
 
 	private Map<String, String> _getInternalClassNameCategories(
-		boolean export) {
+		long companyId, boolean export) {
 
 		Map<String, String> internalClassNameCategories = new HashMap<>();
 
 		for (String entityClassName :
-				_vulcanBatchEngineTaskItemDelegateRegistry.
-					getEntityClassNames()) {
+				_vulcanBatchEngineTaskItemDelegateRegistry.getEntityClassNames(
+					companyId)) {
 
-			if (!_isBatchPlannerEnabled(entityClassName, export)) {
+			if (!_isBatchPlannerEnabled(companyId, entityClassName, export)) {
 				continue;
 			}
 
 			VulcanBatchEngineTaskItemDelegate
 				vulcanBatchEngineTaskItemDelegate =
 					_vulcanBatchEngineTaskItemDelegateRegistry.
-						getVulcanBatchEngineTaskItemDelegate(entityClassName);
+						getVulcanBatchEngineTaskItemDelegate(
+							companyId, entityClassName);
 
 			internalClassNameCategories.put(
 				entityClassName,
@@ -114,15 +106,15 @@ public class EditBatchPlannerPlanMVCRenderCommand implements MVCRenderCommand {
 	}
 
 	private boolean _isBatchPlannerEnabled(
-		String entityClassName, boolean export) {
+		long companyId, String entityClassName, boolean export) {
 
 		if (export) {
 			return _vulcanBatchEngineTaskItemDelegateRegistry.
-				isBatchPlannerExportEnabled(entityClassName);
+				isBatchPlannerExportEnabled(companyId, entityClassName);
 		}
 
 		return _vulcanBatchEngineTaskItemDelegateRegistry.
-			isBatchPlannerImportEnabled(entityClassName);
+			isBatchPlannerImportEnabled(companyId, entityClassName);
 	}
 
 	private boolean _isExport(String value) {
@@ -134,11 +126,13 @@ public class EditBatchPlannerPlanMVCRenderCommand implements MVCRenderCommand {
 	}
 
 	private String _render(RenderRequest renderRequest) throws PortalException {
+		long companyId = _portal.getCompanyId(renderRequest);
+
 		boolean export = _isExport(
 			ParamUtil.getString(renderRequest, "navigation"));
 
 		Map<String, String> internalClassNameCategories =
-			_getInternalClassNameCategories(export);
+			_getInternalClassNameCategories(companyId, export);
 
 		long batchPlannerPlanId = ParamUtil.getLong(
 			renderRequest, "batchPlannerPlanId");
@@ -149,8 +143,8 @@ public class EditBatchPlannerPlanMVCRenderCommand implements MVCRenderCommand {
 					WebKeys.PORTLET_DISPLAY_CONTEXT,
 					new EditBatchPlannerPlanDisplayContext(
 						_batchPlannerPlanService.getBatchPlannerPlans(
-							_portal.getCompanyId(renderRequest), true, true,
-							QueryUtil.ALL_POS, QueryUtil.ALL_POS, null),
+							companyId, true, true, QueryUtil.ALL_POS,
+							QueryUtil.ALL_POS, null),
 						internalClassNameCategories, renderRequest, null));
 
 				return "/export/edit_batch_planner_plan.jsp";

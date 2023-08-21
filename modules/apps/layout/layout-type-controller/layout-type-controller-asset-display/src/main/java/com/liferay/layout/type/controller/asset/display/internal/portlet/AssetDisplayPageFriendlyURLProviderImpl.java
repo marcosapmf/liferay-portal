@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.layout.type.controller.asset.display.internal.portlet;
@@ -50,21 +41,36 @@ public class AssetDisplayPageFriendlyURLProviderImpl
 
 	@Override
 	public String getFriendlyURL(
-			String className, long classPK, Locale locale,
+			InfoItemReference infoItemReference, Locale locale,
+			ThemeDisplay themeDisplay)
+		throws PortalException {
+
+		return _getFriendlyURL(infoItemReference, locale, themeDisplay);
+	}
+
+	@Override
+	public String getFriendlyURL(
+			InfoItemReference infoItemReference, ThemeDisplay themeDisplay)
+		throws PortalException {
+
+		return _getFriendlyURL(
+			infoItemReference, themeDisplay.getLocale(), themeDisplay);
+	}
+
+	private String _getFriendlyURL(
+			InfoItemReference infoItemReference, Locale locale,
 			ThemeDisplay themeDisplay)
 		throws PortalException {
 
 		LayoutDisplayPageProvider<?> layoutDisplayPageProvider =
 			_layoutDisplayPageProviderRegistry.
 				getLayoutDisplayPageProviderByClassName(
-					_infoSearchClassMapperRegistry.getClassName(className));
+					_infoSearchClassMapperRegistry.getClassName(
+						infoItemReference.getClassName()));
 
 		if (layoutDisplayPageProvider == null) {
 			return null;
 		}
-
-		InfoItemReference infoItemReference = new InfoItemReference(
-			className, classPK);
 
 		LayoutDisplayPageObjectProvider<?> layoutDisplayPageObjectProvider =
 			layoutDisplayPageProvider.getLayoutDisplayPageObjectProvider(
@@ -92,15 +98,6 @@ public class AssetDisplayPageFriendlyURLProviderImpl
 		return _getFriendlyURL(
 			groupId, layoutDisplayPageProvider, layoutDisplayPageObjectProvider,
 			locale, themeDisplay);
-	}
-
-	@Override
-	public String getFriendlyURL(
-			String className, long classPK, ThemeDisplay themeDisplay)
-		throws PortalException {
-
-		return getFriendlyURL(
-			className, classPK, themeDisplay.getLocale(), themeDisplay);
 	}
 
 	private String _getFriendlyURL(

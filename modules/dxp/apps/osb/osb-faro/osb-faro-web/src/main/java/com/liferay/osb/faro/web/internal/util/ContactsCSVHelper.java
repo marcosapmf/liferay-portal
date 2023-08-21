@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.osb.faro.web.internal.util;
@@ -24,17 +15,17 @@ import com.liferay.osb.faro.contacts.model.constants.ContactsConstants;
 import com.liferay.osb.faro.engine.client.model.DataSource;
 import com.liferay.osb.faro.engine.client.model.DataSourceField;
 import com.liferay.osb.faro.web.internal.exception.FaroException;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.io.unsync.UnsyncBufferedReader;
 import com.liferay.portal.kernel.io.unsync.UnsyncBufferedWriter;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Repository;
-import com.liferay.portal.kernel.portletfilerepository.PortletFileRepositoryUtil;
+import com.liferay.portal.kernel.portletfilerepository.PortletFileRepository;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.FileUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
@@ -133,7 +124,7 @@ public class ContactsCSVHelper {
 	public void deleteFileEntry(long groupId, String dataSourceId)
 		throws Exception {
 
-		Repository repository = _portletFileRepositoryUtil.getPortletRepository(
+		Repository repository = _portletFileRepository.getPortletRepository(
 			groupId, ContactsConstants.SERVICE_NAME);
 
 		_dlFileEntryLocalService.deleteFileEntry(
@@ -329,9 +320,8 @@ public class ContactsCSVHelper {
 				dlFileEntry.getReviewDate(), serviceContext);
 		}
 		else {
-			Repository repository =
-				_portletFileRepositoryUtil.addPortletRepository(
-					groupId, ContactsConstants.SERVICE_NAME, serviceContext);
+			Repository repository = _portletFileRepository.addPortletRepository(
+				groupId, ContactsConstants.SERVICE_NAME, serviceContext);
 
 			dlFileEntry = _dlFileEntryLocalService.addFileEntry(
 				null, userId, groupId, repository.getRepositoryId(),
@@ -374,6 +364,6 @@ public class ContactsCSVHelper {
 	private DLFileVersionLocalService _dlFileVersionLocalService;
 
 	@Reference
-	private PortletFileRepositoryUtil _portletFileRepositoryUtil;
+	private PortletFileRepository _portletFileRepository;
 
 }

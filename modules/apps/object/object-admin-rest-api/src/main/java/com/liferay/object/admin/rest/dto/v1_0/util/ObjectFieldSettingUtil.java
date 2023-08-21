@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.admin.rest.dto.v1_0.util;
@@ -20,7 +11,6 @@ import com.liferay.object.filter.util.ObjectFilterUtil;
 import com.liferay.object.model.ObjectField;
 import com.liferay.object.model.ObjectFieldSetting;
 import com.liferay.object.service.ObjectStateFlowLocalServiceUtil;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONException;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
@@ -86,26 +76,14 @@ public class ObjectFieldSettingUtil {
 
 		ListUtil.isNotEmptyForEach(
 			objectField.getObjectFieldSettings(),
-			objectFieldSetting -> {
-				if (!FeatureFlagManagerUtil.isEnabled("LPS-163716") &&
-					(objectFieldSetting.compareName(
-						ObjectFieldSettingConstants.NAME_DEFAULT_VALUE) ||
-					 objectFieldSetting.compareName(
-						 ObjectFieldSettingConstants.
-							 NAME_DEFAULT_VALUE_TYPE))) {
-
-					return;
-				}
-
-				jsonArray.put(
-					JSONUtil.put(
-						"name", objectFieldSetting.getName()
-					).put(
-						"objectFieldId", objectFieldSetting.getObjectFieldId()
-					).put(
-						"value", getValue(objectFieldSetting)
-					));
-			});
+			objectFieldSetting -> jsonArray.put(
+				JSONUtil.put(
+					"name", objectFieldSetting.getName()
+				).put(
+					"objectFieldId", objectFieldSetting.getObjectFieldId()
+				).put(
+					"value", getValue(objectFieldSetting)
+				)));
 
 		return jsonArray;
 	}

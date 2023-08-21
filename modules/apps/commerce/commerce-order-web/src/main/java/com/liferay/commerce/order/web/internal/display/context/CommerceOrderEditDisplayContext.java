@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.order.web.internal.display.context;
@@ -458,22 +449,6 @@ public class CommerceOrderEditDisplayContext {
 			QueryUtil.ALL_POS, null);
 	}
 
-	public BigDecimal getDecimalQuantity(CommerceOrderItem commerceOrderItem) {
-		BigDecimal decimalQuantity = commerceOrderItem.getDecimalQuantity();
-
-		if ((decimalQuantity == null) ||
-			decimalQuantity.equals(BigDecimal.ZERO)) {
-
-			decimalQuantity = BigDecimal.valueOf(
-				commerceOrderItem.getQuantity());
-		}
-
-		return decimalQuantity.setScale(
-			_commerceOrderItemDecimalQuantityConfiguration.
-				maximumFractionDigits(),
-			_commerceOrderItemDecimalQuantityConfiguration.roundingMode());
-	}
-
 	public List<CommerceTermEntry> getDeliveryTermsEntries() {
 		return _commerceTermEntryLocalService.getCommerceTermEntries(
 			_commerceOrder.getCompanyId(),
@@ -618,8 +593,15 @@ public class CommerceOrderEditDisplayContext {
 				buttonCssClass = "btn-secondary";
 			}
 
-			portletURL.setParameter(
-				"transitionName", String.valueOf(commerceOrderStatus.getKey()));
+			int key = commerceOrderStatus.getKey();
+
+			if (currentCommerceOrderStatus.getKey() ==
+					CommerceOrderConstants.ORDER_STATUS_ON_HOLD) {
+
+				key = CommerceOrderConstants.ORDER_STATUS_PROCESSING;
+			}
+
+			portletURL.setParameter("transitionName", String.valueOf(key));
 
 			headerActionModels.add(
 				new HeaderActionModel(
@@ -655,7 +637,8 @@ public class CommerceOrderEditDisplayContext {
 		}
 
 		List<CommerceOrderStatus> commerceOrderStatuses =
-			_commerceOrderStatusRegistry.getCommerceOrderStatuses();
+			_commerceOrderStatusRegistry.getCommerceOrderStatuses(
+				_commerceOrder);
 
 		for (CommerceOrderStatus commerceOrderStatus : commerceOrderStatuses) {
 			if (((commerceOrderStatus.getKey() ==
@@ -682,7 +665,9 @@ public class CommerceOrderEditDisplayContext {
 
 			if (commerceOrderStatus.equals(currentCommerceOrderStatus) &&
 				(commerceOrderStatus.getKey() !=
-					CommerceOrderConstants.ORDER_STATUS_COMPLETED)) {
+					CommerceOrderConstants.ORDER_STATUS_COMPLETED) &&
+				(commerceOrderStatus.getKey() !=
+					CommerceOrderConstants.ORDER_STATUS_QUOTE_PROCESSED)) {
 
 				step.setState("active");
 			}
@@ -707,6 +692,15 @@ public class CommerceOrderEditDisplayContext {
 		return _commerceTermEntryLocalService.getCommerceTermEntries(
 			_commerceOrder.getCompanyId(),
 			CommerceTermEntryConstants.TYPE_PAYMENT_TERMS);
+	}
+
+	public BigDecimal getQuantity(CommerceOrderItem commerceOrderItem) {
+		BigDecimal quantity = commerceOrderItem.getQuantity();
+
+		return quantity.setScale(
+			_commerceOrderItemDecimalQuantityConfiguration.
+				maximumFractionDigits(),
+			_commerceOrderItemDecimalQuantityConfiguration.roundingMode());
 	}
 
 	public PortletURL getTransitionOrderPortletURL() {

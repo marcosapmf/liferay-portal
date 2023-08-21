@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.gradle.plugins.workspace;
@@ -26,10 +17,13 @@ import java.nio.file.FileSystem;
 import java.nio.file.Path;
 import java.nio.file.PathMatcher;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
+
+import net.saliman.gradle.plugin.properties.PropertiesPlugin;
 
 import org.gradle.StartParameter;
 import org.gradle.api.Action;
@@ -41,6 +35,7 @@ import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
 import org.gradle.api.plugins.ExtensionAware;
 import org.gradle.api.plugins.ExtensionContainer;
+import org.gradle.api.plugins.PluginAware;
 
 /**
  * @author David Truong
@@ -57,6 +52,8 @@ public class WorkspacePlugin implements Plugin<Settings> {
 	public void apply(Settings settings) {
 		Gradle gradle = settings.getGradle();
 		File rootDir = settings.getRootDir();
+
+		_applyPlugins(settings, settings);
 
 		final WorkspaceExtension workspaceExtension = _addWorkspaceExtension(
 			settings);
@@ -79,6 +76,8 @@ public class WorkspacePlugin implements Plugin<Settings> {
 					Plugin<Project> plugin = null;
 
 					if (project.getParent() == null) {
+						_applyPlugins(project, settings);
+
 						for (ProjectConfigurator projectConfigurator :
 								workspaceExtension.getProjectConfigurators()) {
 
@@ -178,6 +177,18 @@ public class WorkspacePlugin implements Plugin<Settings> {
 
 		return extensionContainer.create(
 			EXTENSION_NAME, WorkspaceExtension.class, settings);
+	}
+
+	private void _applyPlugins(PluginAware pluginAware, Settings settings) {
+		if (GradleUtil.getProperty(
+				settings,
+				WorkspacePlugin.PROPERTY_PREFIX +
+					"feature.net.saliman.properties.plugin.enabled",
+				true)) {
+
+			pluginAware.apply(
+				Collections.singletonMap("plugin", PropertiesPlugin.class));
+		}
 	}
 
 	private void _setPortalVersion(

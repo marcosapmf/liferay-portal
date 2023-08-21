@@ -14,9 +14,9 @@ definition {
 	tearDown {
 		ObjectAdmin.deleteAllCustomObjectsViaAPI();
 
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 	}
@@ -95,9 +95,10 @@ definition {
 
 		ObjectAdmin.openObjectAdmin();
 
-		ObjectAdmin.assertObjectStatus(
-			label = "Custom Object 290",
-			status = "Approved");
+		AssertTextEquals(
+			key_label = "Custom Object 290",
+			locator1 = "ObjectAdmin#OBJECT_STATUS",
+			value1 = "Approved");
 
 		ObjectAdmin.deleteObjectEntryViaUI(
 			labelName = "Custom Object 290",
@@ -624,6 +625,14 @@ definition {
 				labelName = "Custom Object 178761",
 				objectName = "CustomObject178761",
 				pluralLabelName = "Custom Objects 178761");
+
+			ObjectAdmin.addObjectFieldViaAPI(
+				fieldBusinessType = "Text",
+				fieldLabelName = "Custom Field",
+				fieldName = "customObjectField",
+				fieldType = "String",
+				isRequired = "false",
+				objectName = "CustomObject178761");
 
 			ObjectAdmin.addObjectRelationshipViaAPI(
 				objectName_1 = "AccountEntry",

@@ -1,21 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.product.definitions.web.internal.frontend.data.set.provider;
 
 import com.liferay.commerce.currency.model.CommerceCurrency;
-import com.liferay.commerce.currency.service.CommerceCurrencyService;
+import com.liferay.commerce.currency.service.CommerceCurrencyLocalService;
 import com.liferay.commerce.currency.util.CommercePriceFormatter;
 import com.liferay.commerce.product.definitions.web.internal.constants.CommerceProductFDSNames;
 import com.liferay.commerce.product.definitions.web.internal.model.ProductOptionValue;
@@ -34,6 +25,7 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.search.BaseModelSearchResult;
 import com.liferay.portal.kernel.search.Sort;
+import com.liferay.portal.kernel.util.BigDecimalUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Validator;
@@ -145,7 +137,7 @@ public class CommerceProductOptionValueFDSDataProvider
 			_commerceCatalogService.fetchCommerceCatalogByGroupId(
 				cpDefinitionOptionRel.getGroupId());
 
-		return _commerceCurrencyService.getCommerceCurrency(
+		return _commerceCurrencyLocalService.getCommerceCurrency(
 			commerceCatalog.getCompanyId(),
 			commerceCatalog.getCommerceCurrencyCode());
 	}
@@ -163,12 +155,13 @@ public class CommerceProductOptionValueFDSDataProvider
 			return BigDecimal.ZERO;
 		}
 
-		if (cpDefinitionOptionValueRel.getQuantity() == 0) {
+		if (BigDecimalUtil.eq(
+				cpDefinitionOptionValueRel.getQuantity(), BigDecimal.ZERO)) {
+
 			return cpDefinitionOptionValueRel.getPrice();
 		}
 
-		BigDecimal quantity = new BigDecimal(
-			cpDefinitionOptionValueRel.getQuantity());
+		BigDecimal quantity = cpDefinitionOptionValueRel.getQuantity();
 
 		return quantity.multiply(cpDefinitionOptionValueRel.getPrice());
 	}
@@ -193,7 +186,7 @@ public class CommerceProductOptionValueFDSDataProvider
 	private CommerceCatalogService _commerceCatalogService;
 
 	@Reference
-	private CommerceCurrencyService _commerceCurrencyService;
+	private CommerceCurrencyLocalService _commerceCurrencyLocalService;
 
 	@Reference
 	private CommercePriceFormatter _commercePriceFormatter;

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.admin.catalog.internal.graphql.servlet.v1_0;
@@ -376,6 +367,11 @@ public class ServletDataImpl implements ServletData {
 						new ObjectValuePair<>(
 							DiagramResourceImpl.class, "postProductIdDiagram"));
 					put(
+						"mutation#createProductIdDiagramBatch",
+						new ObjectValuePair<>(
+							DiagramResourceImpl.class,
+							"postProductIdDiagramBatch"));
+					put(
 						"mutation#deleteGroupedProduct",
 						new ObjectValuePair<>(
 							GroupedProductResourceImpl.class,
@@ -400,6 +396,11 @@ public class ServletDataImpl implements ServletData {
 						new ObjectValuePair<>(
 							GroupedProductResourceImpl.class,
 							"postProductIdGroupedProduct"));
+					put(
+						"mutation#createProductIdGroupedProductBatch",
+						new ObjectValuePair<>(
+							GroupedProductResourceImpl.class,
+							"postProductIdGroupedProductBatch"));
 					put(
 						"mutation#createLowStockActionsPageExportBatch",
 						new ObjectValuePair<>(
@@ -430,6 +431,11 @@ public class ServletDataImpl implements ServletData {
 						new ObjectValuePair<>(
 							MappedProductResourceImpl.class,
 							"postProductIdMappedProduct"));
+					put(
+						"mutation#createProductIdMappedProductBatch",
+						new ObjectValuePair<>(
+							MappedProductResourceImpl.class,
+							"postProductIdMappedProductBatch"));
 					put(
 						"mutation#createOptionsPageExportBatch",
 						new ObjectValuePair<>(
@@ -555,6 +561,10 @@ public class ServletDataImpl implements ServletData {
 						"mutation#createProductIdPin",
 						new ObjectValuePair<>(
 							PinResourceImpl.class, "postProductIdPin"));
+					put(
+						"mutation#createProductIdPinBatch",
+						new ObjectValuePair<>(
+							PinResourceImpl.class, "postProductIdPinBatch"));
 					put(
 						"mutation#createProductsPageExportBatch",
 						new ObjectValuePair<>(
@@ -986,10 +996,10 @@ public class ServletDataImpl implements ServletData {
 							MappedProductResourceImpl.class,
 							"getProductIdMappedProductsPage"));
 					put(
-						"query#productMappedProductBySequence",
+						"query#productIdMappedProductBySequence",
 						new ObjectValuePair<>(
 							MappedProductResourceImpl.class,
-							"getProductMappedProductBySequence"));
+							"getProductIdMappedProductBySequence"));
 					put(
 						"query#options",
 						new ObjectValuePair<>(
@@ -1239,10 +1249,10 @@ public class ServletDataImpl implements ServletData {
 							SkuSubscriptionConfigurationResourceImpl.class,
 							"getSkuByExternalReferenceCodeSkuSubscriptionConfiguration"));
 					put(
-						"query#idSkuSubscriptionConfiguration",
+						"query#skuIdSkuSubscriptionConfiguration",
 						new ObjectValuePair<>(
 							SkuSubscriptionConfigurationResourceImpl.class,
-							"getIdSkuSubscriptionConfiguration"));
+							"getSkuIdSkuSubscriptionConfiguration"));
 					put(
 						"query#skuByExternalReferenceCodeSkuVirtualSettings",
 						new ObjectValuePair<>(
@@ -1355,24 +1365,10 @@ public class ServletDataImpl implements ServletData {
 							AttachmentResourceImpl.class,
 							"getProductByExternalReferenceCodeAttachmentsPage"));
 					put(
-						"query#Diagram.productIdPins",
-						new ObjectValuePair<>(
-							PinResourceImpl.class, "getProductIdPinsPage"));
-					put(
 						"query#Catalog.optionByExternalReferenceCodeOptionValues",
 						new ObjectValuePair<>(
 							OptionValueResourceImpl.class,
 							"getOptionByExternalReferenceCodeOptionValuesPage"));
-					put(
-						"query#Sku.productMappedProductBySequence",
-						new ObjectValuePair<>(
-							MappedProductResourceImpl.class,
-							"getProductMappedProductBySequence"));
-					put(
-						"query#Diagram.productIdGroupedProducts",
-						new ObjectValuePair<>(
-							GroupedProductResourceImpl.class,
-							"getProductIdGroupedProductsPage"));
 					put(
 						"query#Catalog.productGroupByExternalReferenceCodeProductGroupProducts",
 						new ObjectValuePair<>(
@@ -1393,11 +1389,6 @@ public class ServletDataImpl implements ServletData {
 						new ObjectValuePair<>(
 							MappedProductResourceImpl.class,
 							"getProductByExternalReferenceCodeMappedProductBySequence"));
-					put(
-						"query#Diagram.productIdMappedProducts",
-						new ObjectValuePair<>(
-							MappedProductResourceImpl.class,
-							"getProductIdMappedProductsPage"));
 					put(
 						"query#Catalog.productByExternalReferenceCodeTaxConfiguration",
 						new ObjectValuePair<>(
@@ -1433,11 +1424,6 @@ public class ServletDataImpl implements ServletData {
 						new ObjectValuePair<>(
 							ProductVirtualSettingsResourceImpl.class,
 							"getProductByExternalReferenceCodeProductVirtualSettings"));
-					put(
-						"query#Diagram.productIdLinkedProducts",
-						new ObjectValuePair<>(
-							LinkedProductResourceImpl.class,
-							"getProductIdLinkedProductsPage"));
 				}
 			};
 

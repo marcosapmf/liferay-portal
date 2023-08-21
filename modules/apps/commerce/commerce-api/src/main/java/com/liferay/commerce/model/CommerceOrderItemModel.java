@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.model;
@@ -327,6 +318,21 @@ public interface CommerceOrderItemModel
 	public void setCProductId(long CProductId);
 
 	/**
+	 * Returns the customer commerce order item ID of this commerce order item.
+	 *
+	 * @return the customer commerce order item ID of this commerce order item
+	 */
+	public long getCustomerCommerceOrderItemId();
+
+	/**
+	 * Sets the customer commerce order item ID of this commerce order item.
+	 *
+	 * @param customerCommerceOrderItemId the customer commerce order item ID of this commerce order item
+	 */
+	public void setCustomerCommerceOrderItemId(
+		long customerCommerceOrderItemId);
+
+	/**
 	 * Returns the parent commerce order item ID of this commerce order item.
 	 *
 	 * @return the parent commerce order item ID of this commerce order item
@@ -353,20 +359,6 @@ public interface CommerceOrderItemModel
 	 * @param shippingAddressId the shipping address ID of this commerce order item
 	 */
 	public void setShippingAddressId(long shippingAddressId);
-
-	/**
-	 * Returns the decimal quantity of this commerce order item.
-	 *
-	 * @return the decimal quantity of this commerce order item
-	 */
-	public BigDecimal getDecimalQuantity();
-
-	/**
-	 * Sets the decimal quantity of this commerce order item.
-	 *
-	 * @param decimalQuantity the decimal quantity of this commerce order item
-	 */
-	public void setDecimalQuantity(BigDecimal decimalQuantity);
 
 	/**
 	 * Returns the delivery group of this commerce order item.
@@ -860,6 +852,27 @@ public interface CommerceOrderItemModel
 	public void setPriceManuallyAdjusted(boolean priceManuallyAdjusted);
 
 	/**
+	 * Returns the price on application of this commerce order item.
+	 *
+	 * @return the price on application of this commerce order item
+	 */
+	public boolean getPriceOnApplication();
+
+	/**
+	 * Returns <code>true</code> if this commerce order item is price on application.
+	 *
+	 * @return <code>true</code> if this commerce order item is price on application; <code>false</code> otherwise
+	 */
+	public boolean isPriceOnApplication();
+
+	/**
+	 * Sets whether this commerce order item is price on application.
+	 *
+	 * @param priceOnApplication the price on application of this commerce order item
+	 */
+	public void setPriceOnApplication(boolean priceOnApplication);
+
+	/**
 	 * Returns the printed note of this commerce order item.
 	 *
 	 * @return the printed note of this commerce order item
@@ -907,14 +920,14 @@ public interface CommerceOrderItemModel
 	 *
 	 * @return the quantity of this commerce order item
 	 */
-	public int getQuantity();
+	public BigDecimal getQuantity();
 
 	/**
 	 * Sets the quantity of this commerce order item.
 	 *
 	 * @param quantity the quantity of this commerce order item
 	 */
-	public void setQuantity(int quantity);
+	public void setQuantity(BigDecimal quantity);
 
 	/**
 	 * Returns the replaced cp instance ID of this commerce order item.
@@ -1108,6 +1121,21 @@ public interface CommerceOrderItemModel
 	 * @param subscriptionTypeSettings the subscription type settings of this commerce order item
 	 */
 	public void setSubscriptionTypeSettings(String subscriptionTypeSettings);
+
+	/**
+	 * Returns the unit of measure key of this commerce order item.
+	 *
+	 * @return the unit of measure key of this commerce order item
+	 */
+	@AutoEscape
+	public String getUnitOfMeasureKey();
+
+	/**
+	 * Sets the unit of measure key of this commerce order item.
+	 *
+	 * @param unitOfMeasureKey the unit of measure key of this commerce order item
+	 */
+	public void setUnitOfMeasureKey(String unitOfMeasureKey);
 
 	/**
 	 * Returns the unit price of this commerce order item.

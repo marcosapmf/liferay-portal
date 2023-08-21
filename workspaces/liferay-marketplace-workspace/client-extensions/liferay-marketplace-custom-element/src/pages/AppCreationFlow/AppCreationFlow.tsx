@@ -1,3 +1,8 @@
+/**
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
+ */
+
 import {useState} from 'react';
 
 import {Footer} from '../../components/Footer/Footer';
@@ -15,9 +20,9 @@ import {CustomizeAppStorefrontPage} from '../StorefrontPage/CustomizeAppStorefro
 import {initialFLowListItems} from './AppCreationFlowUtil';
 
 import './AppCreationFlow.scss';
+import {Liferay} from '../../liferay/liferay';
 import {useAppContext} from '../../manage-app-state/AppManageState';
 import {DefineAppProfilePage} from '../DefineAppProfilePage/DefineAppProfilePage';
-import {Liferay} from '../../liferay/liferay';
 
 type SetAppFlowListStateProps = {
 	checkedItems?: string[];
@@ -25,7 +30,7 @@ type SetAppFlowListStateProps = {
 };
 
 export function AppCreationFlow() {
-	const [{priceModel}] = useAppContext();
+	const [{appERC, appProductId, priceModel}] = useAppContext();
 	const [appFlowListItems, setAppFlowListItems] =
 		useState(initialFLowListItems);
 	const [currentFlow, setCurrentFlow] = useState('create');
@@ -392,6 +397,8 @@ export function AppCreationFlow() {
 								'/publisher-dashboard'
 							)}`;
 						}}
+						productERC={appERC}
+						productId={appProductId}
 					/>
 				)}
 			</div>

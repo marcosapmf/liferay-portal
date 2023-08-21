@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.dynamic.data.mapping.internal.info.item.provider;
@@ -46,11 +37,15 @@ import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.sanitizer.Sanitizer;
 import com.liferay.portal.kernel.sanitizer.SanitizerUtil;
 import com.liferay.portal.kernel.service.LayoutLocalService;
+import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
+import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.DateUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.text.DateFormat;
@@ -349,17 +344,30 @@ public class DDMFormValuesInfoFieldValuesProviderImpl
 				JSONObject jsonObject = _jsonFactory.createJSONObject(
 					valueString);
 
-				long layoutId = jsonObject.getLong("layoutId");
-
 				Layout layout = _layoutLocalService.fetchLayout(
 					jsonObject.getLong("groupId"),
-					jsonObject.getBoolean("privateLayout"), layoutId);
+					jsonObject.getBoolean("privateLayout"),
+					jsonObject.getLong("layoutId"));
 
 				if (layout == null) {
 					return StringPool.BLANK;
 				}
 
-				return layout.getFriendlyURL(locale);
+				ServiceContext serviceContext =
+					ServiceContextThreadLocal.getServiceContext();
+
+				if (serviceContext == null) {
+					return StringPool.BLANK;
+				}
+
+				ThemeDisplay themeDisplay = serviceContext.getThemeDisplay();
+
+				if (themeDisplay == null) {
+					return StringPool.BLANK;
+				}
+
+				return _portal.getLayoutFriendlyURL(
+					layout, themeDisplay, locale);
 			}
 
 			if (Objects.equals(
@@ -425,5 +433,8 @@ public class DDMFormValuesInfoFieldValuesProviderImpl
 
 	@Reference
 	private LayoutLocalService _layoutLocalService;
+
+	@Reference
+	private Portal _portal;
 
 }

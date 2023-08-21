@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayAlert from '@clayui/alert';
@@ -20,6 +11,7 @@ import {API, Input} from '@liferay/object-js-components-web';
 import {fetch} from 'frontend-js-web';
 import React, {FormEvent, useEffect, useRef, useState} from 'react';
 
+import {FormDataJSONFormat, jsonToFormData} from '../utils/formData';
 import {ModalImportWarning} from './ModalImportWarning';
 interface ModalImportObjectDefinitionProps {
 	importObjectDefinitionURL: string;
@@ -30,7 +22,6 @@ interface ModalImportObjectDefinitionProps {
 type TFile = {
 	fileName?: string;
 	inputFile?: File | null;
-	inputFileValue?: string;
 };
 
 export default function ModalImportObjectDefinition({
@@ -51,9 +42,7 @@ export default function ModalImportObjectDefinition({
 	const importObjectDefinitionFormId = `${portletNamespace}importObjectDefinitionForm`;
 	const nameInputId = `${portletNamespace}name`;
 	const objectDefinitionJSONInputId = `${portletNamespace}objectDefinitionJSON`;
-	const [{fileName, inputFile, inputFileValue}, setFile] = useState<TFile>(
-		{}
-	);
+	const [{fileName, inputFile}, setFile] = useState<TFile>({});
 
 	const warningModalBody: string[] = [
 		Liferay.Language.get(
@@ -72,7 +61,6 @@ export default function ModalImportObjectDefinition({
 			setFile({
 				fileName: '',
 				inputFile: null,
-				inputFileValue: '',
 			});
 			setName('');
 			setImportFormData(undefined);
@@ -94,15 +82,30 @@ export default function ModalImportObjectDefinition({
 		event.preventDefault();
 
 		const formData = new FormData(event.currentTarget);
+		const formDataObject: FormDataJSONFormat = {};
+		formData.forEach((value, key) => {
+			if (key.includes('objectDefinitionJSON')) {
+				formDataObject[key] = inputFile as File;
+
+				return;
+			}
+
+			formDataObject[key] = value;
+
+			return;
+		});
+
+		const newFormData = jsonToFormData(formDataObject);
+
 		const response = await fetch(
 			`/o/object-admin/v1.0/object-definitions/by-external-reference-code/${externalReferenceCode}`
 		);
 
 		if (response.status === 204) {
-			handleImport(formData);
+			handleImport(newFormData);
 		}
 		else {
-			setImportFormData(formData);
+			setImportFormData(newFormData);
 			setVisible(false);
 			setWarningModalVisible(true);
 		}
@@ -133,9 +136,6 @@ export default function ModalImportObjectDefinition({
 
 			<ClayModal.Body>
 				<ClayForm
-
-					// @ts-ignore
-
 					id={importObjectDefinitionFormId}
 					onSubmit={handleSubmit}
 				>
@@ -200,7 +200,6 @@ export default function ModalImportObjectDefinition({
 											setFile({
 												fileName: '',
 												inputFile: null,
-												inputFileValue: '',
 											});
 										}}
 									>
@@ -232,33 +231,34 @@ export default function ModalImportObjectDefinition({
 						onChange={({target}) => {
 							const inputFile = target.files?.item(0);
 
-							setFile({
-								fileName: inputFile?.name,
-								inputFile,
-								inputFileValue: target.value,
-							});
+							if (inputFile) {
+								setFile({
+									fileName: inputFile?.name,
+									inputFile,
+								});
 
-							const fileReader = new FileReader();
+								const fileReader = new FileReader();
 
-							fileReader.onload = () => {
-								try {
-									const objectDefinitionJSON = JSON.parse(
-										fileReader.result as string
-									) as {externalReferenceCode: string};
+								fileReader.readAsText(inputFile);
 
-									setExternalReferenceCode(
-										objectDefinitionJSON.externalReferenceCode
-									);
-								}
-								catch (error) {
-									setExternalReferenceCode('');
-								}
-							};
-							fileReader.readAsText(inputFile!);
+								fileReader.onload = () => {
+									try {
+										const objectDefinitionJSON = JSON.parse(
+											fileReader.result as string
+										) as {externalReferenceCode: string};
+
+										setExternalReferenceCode(
+											objectDefinitionJSON.externalReferenceCode
+										);
+									}
+									catch (error) {
+										setExternalReferenceCode('');
+									}
+								};
+							}
 						}}
 						ref={inputFileRef}
 						type="file"
-						value={inputFileValue}
 					/>
 				</ClayForm>
 			</ClayModal.Body>

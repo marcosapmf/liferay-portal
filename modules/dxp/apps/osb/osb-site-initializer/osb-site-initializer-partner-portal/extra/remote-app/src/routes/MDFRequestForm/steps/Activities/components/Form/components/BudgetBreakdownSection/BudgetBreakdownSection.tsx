@@ -1,12 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import Button, {ClayButtonWithIcon} from '@clayui/button';
@@ -27,6 +21,7 @@ import getNewBudget from './utils/getNewBudget';
 interface IProps {
 	arrayHelpers: ArrayHelpers;
 	budgets: MDFRequestBudget[];
+	claimPercent: number;
 	currency: LiferayPicklist;
 	currentActivityIndex: number;
 	expenseEntries: React.OptionHTMLAttributes<HTMLOptionElement>[];
@@ -40,6 +35,7 @@ interface IProps {
 const BudgetBreakdownSection = ({
 	arrayHelpers,
 	budgets = [],
+	claimPercent,
 	currency,
 	currentActivityIndex,
 	expenseEntries,
@@ -68,10 +64,10 @@ const BudgetBreakdownSection = ({
 
 				setFieldValue(
 					`activities[${currentActivityIndex}].mdfRequestAmount`,
-					amountValue * 0.5
+					amountValue * claimPercent
 				);
 			},
-			[currentActivityIndex, setFieldValue]
+			[claimPercent, currentActivityIndex, setFieldValue]
 		)
 	);
 
@@ -157,7 +153,7 @@ const BudgetBreakdownSection = ({
 				<ResumeCard
 					className="mt-3"
 					leftContent="Claim Percent"
-					rightContent={`${0.5 * 100}%`}
+					rightContent={`${claimPercent * 100}%`}
 				/>
 			</div>
 

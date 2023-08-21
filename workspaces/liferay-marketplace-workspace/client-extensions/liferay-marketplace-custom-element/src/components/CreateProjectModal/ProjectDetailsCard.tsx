@@ -1,3 +1,8 @@
+/**
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
+ */
+
 import calendarIcon from '../../assets/icons/calendar_month_icon.svg';
 import githubIcon from '../../assets/icons/github_icon.svg';
 import guideIcon from '../../assets/icons/guide_icon.svg';
@@ -67,8 +72,11 @@ export function ProjectDetailsCard({
 			</span>
 
 			<div className="create-project-modal-project-details-card-info-block-container">
-				{projectDetailsCardValues.map((cardValues) => (
-					<div className="create-project-modal-project-details-card-info-block">
+				{projectDetailsCardValues.map((cardValues, i) => (
+					<div
+						className="create-project-modal-project-details-card-info-block"
+						key={cardValues.title + i}
+					>
 						<div className="create-project-modal-project-details-card-info-block-icon-container">
 							<img src={cardValues.icon} />
 						</div>

@@ -1,23 +1,16 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.search.experiences.rest.internal.resource.v1_0;
 
 import com.liferay.petra.string.StringBundler;
-import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONUtil;
+import com.liferay.portal.kernel.language.Language;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.search.filter.Filter;
@@ -35,22 +28,27 @@ import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.portal.vulcan.util.LocalizedMapUtil;
 import com.liferay.search.experiences.constants.SXPActionKeys;
 import com.liferay.search.experiences.constants.SXPConstants;
+import com.liferay.search.experiences.exception.DuplicateSXPElementExternalReferenceCodeException;
+import com.liferay.search.experiences.rest.dto.v1_0.ElementDefinition;
+import com.liferay.search.experiences.rest.dto.v1_0.FieldSet;
 import com.liferay.search.experiences.rest.dto.v1_0.SXPElement;
+import com.liferay.search.experiences.rest.dto.v1_0.UiConfiguration;
 import com.liferay.search.experiences.rest.dto.v1_0.util.ElementDefinitionUtil;
 import com.liferay.search.experiences.rest.dto.v1_0.util.SXPElementUtil;
 import com.liferay.search.experiences.rest.internal.odata.entity.v1_0.SXPElementEntityModel;
 import com.liferay.search.experiences.rest.internal.resource.v1_0.util.SearchUtil;
 import com.liferay.search.experiences.rest.internal.resource.v1_0.util.TitleMapUtil;
 import com.liferay.search.experiences.rest.resource.v1_0.SXPElementResource;
+import com.liferay.search.experiences.service.SXPElementLocalService;
 import com.liferay.search.experiences.service.SXPElementService;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
 
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
-
-import org.apache.commons.lang.StringUtils;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -85,6 +83,25 @@ public class SXPElementResourceImpl extends BaseSXPElementResourceImpl {
 				contextAcceptLanguage.getPreferredLocale(), contextUriInfo,
 				contextUser),
 			_sxpElementService.getSXPElement(sxpElementId));
+	}
+
+	@Override
+	public SXPElement getSXPElementByExternalReferenceCode(
+			String externalReferenceCode)
+		throws Exception {
+
+		com.liferay.search.experiences.model.SXPElement sxpElement =
+			_sxpElementService.getSXPElementByExternalReferenceCode(
+				externalReferenceCode, contextCompany.getCompanyId());
+
+		return _sxpElementDTOConverter.toDTO(
+			new DefaultDTOConverterContext(
+				contextAcceptLanguage.isAcceptAllLanguages(), new HashMap<>(),
+				_dtoConverterRegistry, contextHttpServletRequest,
+				sxpElement.getSXPElementId(),
+				contextAcceptLanguage.getPreferredLocale(), contextUriInfo,
+				contextUser),
+			sxpElement);
 	}
 
 	@Override
@@ -274,8 +291,45 @@ public class SXPElementResourceImpl extends BaseSXPElementResourceImpl {
 	}
 
 	@Override
+	public SXPElement postSXPElementPreview(SXPElement sxpElement)
+		throws Exception {
+
+		sxpElement.setDescription(
+			_getLocalization(sxpElement.getDescription_i18n()));
+		sxpElement.setElementDefinition(
+			_getLocalizedElementDefinition(sxpElement.getElementDefinition()));
+		sxpElement.setTitle(_getLocalization(sxpElement.getTitle_i18n()));
+
+		return sxpElement;
+	}
+
+	@Override
 	public SXPElement postSXPElementValidate(String json) throws Exception {
-		return SXPElementUtil.toSXPElement(json);
+		SXPElement sxpElement = SXPElementUtil.toSXPElement(json);
+
+		_validateSXPElementExternalReferenceCode(sxpElement);
+
+		return sxpElement;
+	}
+
+	@Override
+	public SXPElement putSXPElementByExternalReferenceCode(
+			String externalReferenceCode, SXPElement sxpElement)
+		throws Exception {
+
+		com.liferay.search.experiences.model.SXPElement
+			serviceBuilderSxpElement =
+				_sxpElementService.fetchSXPElementByExternalReferenceCode(
+					externalReferenceCode, contextCompany.getCompanyId());
+
+		sxpElement.setExternalReferenceCode(externalReferenceCode);
+
+		if (serviceBuilderSxpElement != null) {
+			return patchSXPElement(
+				serviceBuilderSxpElement.getSXPElementId(), sxpElement);
+		}
+
+		return postSXPElement(sxpElement);
 	}
 
 	private String _getElementDefinitionJSON(SXPElement sxpElement) {
@@ -287,10 +341,91 @@ public class SXPElementResourceImpl extends BaseSXPElementResourceImpl {
 			ElementDefinitionUtil.unpack(sxpElement.getElementDefinition()));
 	}
 
-	private String _getSchemaVersion() {
-		return StringUtils.substringBetween(
-			contextUriInfo.getPath(), "v", StringPool.SLASH);
+	private String _getLocalization(Map<String, String> localizationMap) {
+		return _language.get(
+			contextHttpServletRequest,
+			localizationMap.get(
+				contextAcceptLanguage.getPreferredLanguageId()));
 	}
+
+	private ElementDefinition _getLocalizedElementDefinition(
+		ElementDefinition elementDefinition) {
+
+		try {
+			UiConfiguration uiConfiguration =
+				elementDefinition.getUiConfiguration();
+
+			if (uiConfiguration == null) {
+				return elementDefinition;
+			}
+
+			FieldSet[] fieldSets = uiConfiguration.getFieldSets();
+
+			if (fieldSets == null) {
+				return elementDefinition;
+			}
+
+			for (FieldSet fieldSet : fieldSets) {
+				com.liferay.search.experiences.rest.dto.v1_0.Field[] fields =
+					fieldSet.getFields();
+
+				for (com.liferay.search.experiences.rest.dto.v1_0.Field field :
+						fields) {
+
+					if (!Validator.isBlank(field.getHelpText())) {
+						field.setHelpTextLocalized(
+							_language.get(
+								contextHttpServletRequest,
+								field.getHelpText()));
+					}
+
+					if (!Validator.isBlank(field.getLabel())) {
+						field.setLabelLocalized(
+							_language.get(
+								contextHttpServletRequest, field.getLabel()));
+					}
+				}
+			}
+
+			return elementDefinition;
+		}
+		catch (Exception exception) {
+			if (_log.isWarnEnabled()) {
+				_log.warn(exception);
+			}
+
+			return null;
+		}
+	}
+
+	private String _getSchemaVersion() {
+		return "1.0";
+	}
+
+	private void _validateSXPElementExternalReferenceCode(SXPElement sxpElement)
+		throws Exception {
+
+		if (Validator.isBlank(sxpElement.getExternalReferenceCode())) {
+			return;
+		}
+
+		com.liferay.search.experiences.model.SXPElement
+			serviceBuilderSXPElement =
+				_sxpElementLocalService.fetchSXPElementByExternalReferenceCode(
+					sxpElement.getExternalReferenceCode(),
+					contextCompany.getCompanyId());
+
+		if ((serviceBuilderSXPElement != null) &&
+			!Objects.equals(
+				serviceBuilderSXPElement.getSXPElementId(),
+				sxpElement.getId())) {
+
+			throw new DuplicateSXPElementExternalReferenceCodeException();
+		}
+	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		SXPElementResourceImpl.class);
 
 	@Reference
 	private DTOConverterRegistry _dtoConverterRegistry;
@@ -301,12 +436,18 @@ public class SXPElementResourceImpl extends BaseSXPElementResourceImpl {
 	@Reference
 	private JSONFactory _jsonFactory;
 
+	@Reference
+	private Language _language;
+
 	@Reference(
 		target = "(component.name=com.liferay.search.experiences.rest.internal.dto.v1_0.converter.SXPElementDTOConverter)"
 	)
 	private DTOConverter
 		<com.liferay.search.experiences.model.SXPElement, SXPElement>
 			_sxpElementDTOConverter;
+
+	@Reference
+	private SXPElementLocalService _sxpElementLocalService;
 
 	@Reference
 	private SXPElementService _sxpElementService;

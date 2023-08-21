@@ -1,17 +1,9 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
+import ClayAlert from '@clayui/alert';
 import ClayButton from '@clayui/button';
 import ClayForm, {ClayCheckbox} from '@clayui/form';
 import ClayLayout from '@clayui/layout';
@@ -20,6 +12,7 @@ import {useForm} from 'react-hook-form';
 import {useLocation, useNavigate, useOutletContext} from 'react-router-dom';
 import {KeyedMutator} from 'swr';
 import {TestrayContext} from '~/context/TestrayContext';
+import {withPagePermission} from '~/hoc/withPagePermission';
 
 import Form from '../../../components/Form';
 import Container from '../../../components/Layout/Container';
@@ -77,6 +70,7 @@ const UserForm = () => {
 
 	const {mutateUser = () => {}, userAccount} =
 		useOutletContext<OutletContext>() || {};
+
 	const {
 		form: {onClose, onError, onSave, onSubmit, onSuccess},
 	} = useFormActions();
@@ -155,7 +149,6 @@ const UserForm = () => {
 
 		setValue('roles', rolesFiltered);
 	};
-
 	const inputProps = {
 		errors,
 		register,
@@ -306,8 +299,8 @@ const UserForm = () => {
 									displayType="danger"
 									onClick={() =>
 										liferayUserAccountsImpl
-											.remove(userAccount?.id)
-											.then(() => {
+											.removeResource(userAccount?.id)
+											?.then(() => {
 												navigate('/manage/user');
 												onSuccess();
 											})
@@ -324,11 +317,23 @@ const UserForm = () => {
 				<Form.Footer
 					onClose={onClose}
 					onSubmit={handleSubmit(_onSubmit)}
-					primaryButtonProps={{loading: isSubmitting}}
+					primaryButtonProps={{
+						loading: isSubmitting,
+					}}
 				/>
 			</ClayForm>
 		</Container>
 	);
 };
 
-export default UserForm;
+export default withPagePermission(UserForm, {
+	createPath: 'manage/user/create',
+	deniedChildren: (
+		<ClayAlert displayType="danger">
+			{i18n.translate(
+				'you-do-not-have-permission-to-access-the-requested-resource.'
+			)}
+		</ClayAlert>
+	),
+	restImpl: liferayUserAccountsImpl,
+});

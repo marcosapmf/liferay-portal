@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.internal.object.system;
@@ -22,6 +13,9 @@ import com.liferay.commerce.product.service.CProductLocalService;
 import com.liferay.headless.commerce.admin.catalog.dto.v1_0.Product;
 import com.liferay.headless.commerce.admin.catalog.resource.v1_0.ProductResource;
 import com.liferay.object.constants.ObjectDefinitionConstants;
+import com.liferay.object.field.builder.BooleanObjectFieldBuilder;
+import com.liferay.object.field.builder.LongIntegerObjectFieldBuilder;
+import com.liferay.object.field.builder.TextObjectFieldBuilder;
 import com.liferay.object.model.ObjectField;
 import com.liferay.object.system.BaseSystemObjectDefinitionManager;
 import com.liferay.object.system.JaxRsApplicationDescriptor;
@@ -82,17 +76,26 @@ public class CPDefinitionSystemObjectDefinitionManager
 			String externalReferenceCode, long companyId)
 		throws PortalException {
 
-		return _cProductLocalService.getCProductByExternalReferenceCode(
-			externalReferenceCode, companyId);
+		CProduct cProduct =
+			_cProductLocalService.getCProductByExternalReferenceCode(
+				externalReferenceCode, companyId);
+
+		return _cpDefinitionLocalService.getCProductCPDefinition(
+			cProduct.getCProductId(), cProduct.getLatestVersion());
 	}
 
 	@Override
-	public String getExternalReferenceCode(long primaryKey)
+	public String getBaseModelExternalReferenceCode(long primaryKey)
 		throws PortalException {
 
 		CProduct cProduct = _cProductLocalService.getCProduct(primaryKey);
 
 		return cProduct.getExternalReferenceCode();
+	}
+
+	@Override
+	public String getExternalReferenceCode() {
+		return "L_COMMERCE_PRODUCT_DEFINITION";
 	}
 
 	@Override
@@ -115,26 +118,96 @@ public class CPDefinitionSystemObjectDefinitionManager
 	@Override
 	public List<ObjectField> getObjectFields() {
 		return Arrays.asList(
-			createObjectField(
-				"Boolean", "Boolean", "active", "active", true, true),
-			createObjectField(
-				"LongInteger", "Long", "catalog-id", "catalogId", true, true),
-			createObjectField(
-				"Text", "String", "description", "description", false, true),
-			createObjectField("Text", "String", "name", "name", true, true),
-			createObjectField(
-				"Text", "CPDefinitionId", "String", "product-id", "productId",
-				false, true),
-			createObjectField(
-				"Text", "String", "product-type", "productType", true, true),
-			createObjectField(
-				"Text", "String", "short-description", "shortDescription",
-				false, true),
-			createObjectField(
-				"Text", "String", "sku", "skuFormatted", false, true),
-			createObjectField(
-				"Text", "String", "thumbnail", "thumbnail", false, true),
-			createObjectField("Text", "String", "uuid", "uuid", false, true));
+			new BooleanObjectFieldBuilder(
+			).labelMap(
+				createLabelMap("active")
+			).name(
+				"active"
+			).required(
+				true
+			).system(
+				true
+			).build(),
+			new LongIntegerObjectFieldBuilder(
+			).labelMap(
+				createLabelMap("catalog-id")
+			).name(
+				"catalogId"
+			).required(
+				true
+			).system(
+				true
+			).build(),
+			new TextObjectFieldBuilder(
+			).labelMap(
+				createLabelMap("description")
+			).name(
+				"description"
+			).system(
+				true
+			).build(),
+			new TextObjectFieldBuilder(
+			).labelMap(
+				createLabelMap("name")
+			).name(
+				"name"
+			).required(
+				true
+			).system(
+				true
+			).build(),
+			new TextObjectFieldBuilder(
+			).dbColumnName(
+				"CPDefinitionId"
+			).labelMap(
+				createLabelMap("product-id")
+			).name(
+				"productId"
+			).system(
+				true
+			).build(),
+			new TextObjectFieldBuilder(
+			).labelMap(
+				createLabelMap("product-type")
+			).name(
+				"productType"
+			).required(
+				true
+			).system(
+				true
+			).build(),
+			new TextObjectFieldBuilder(
+			).labelMap(
+				createLabelMap("short-description")
+			).name(
+				"shortDescription"
+			).system(
+				true
+			).build(),
+			new TextObjectFieldBuilder(
+			).labelMap(
+				createLabelMap("sku")
+			).name(
+				"skuFormatted"
+			).system(
+				true
+			).build(),
+			new TextObjectFieldBuilder(
+			).labelMap(
+				createLabelMap("thumbnail")
+			).name(
+				"thumbnail"
+			).system(
+				true
+			).build(),
+			new TextObjectFieldBuilder(
+			).labelMap(
+				createLabelMap("uuid")
+			).name(
+				"uuid"
+			).system(
+				true
+			).build());
 	}
 
 	@Override

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.internal.related.models;
@@ -17,6 +8,7 @@ package com.liferay.object.internal.related.models;
 import com.liferay.object.constants.ObjectDefinitionConstants;
 import com.liferay.object.constants.ObjectRelationshipConstants;
 import com.liferay.object.exception.RequiredObjectRelationshipException;
+import com.liferay.object.internal.entry.util.ObjectEntrySearchUtil;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectRelationship;
 import com.liferay.object.petra.sql.dsl.DynamicObjectDefinitionTable;
@@ -75,11 +67,11 @@ public class SystemObjectMtoMObjectRelatedModelsProviderImpl
 	@Override
 	public void deleteRelatedModel(
 			long userId, long groupId, long objectRelationshipId,
-			long primaryKey)
+			long primaryKey, String deletionType)
 		throws PortalException {
 
 		List<T> relatedModels = getRelatedModels(
-			groupId, objectRelationshipId, primaryKey, QueryUtil.ALL_POS,
+			groupId, objectRelationshipId, primaryKey, null, QueryUtil.ALL_POS,
 			QueryUtil.ALL_POS);
 
 		if (relatedModels.isEmpty()) {
@@ -91,7 +83,7 @@ public class SystemObjectMtoMObjectRelatedModelsProviderImpl
 				objectRelationshipId);
 
 		if (Objects.equals(
-				objectRelationship.getDeletionType(),
+				deletionType,
 				ObjectRelationshipConstants.DELETION_TYPE_PREVENT) &&
 			!objectRelationship.isReverse()) {
 
@@ -107,7 +99,7 @@ public class SystemObjectMtoMObjectRelatedModelsProviderImpl
 				objectRelationshipId, primaryKey);
 
 		if (Objects.equals(
-				objectRelationship.getDeletionType(),
+				deletionType,
 				ObjectRelationshipConstants.DELETION_TYPE_CASCADE) &&
 			!objectRelationship.isReverse()) {
 
@@ -150,8 +142,8 @@ public class SystemObjectMtoMObjectRelatedModelsProviderImpl
 
 	@Override
 	public List<T> getRelatedModels(
-			long groupId, long objectRelationshipId, long primaryKey, int start,
-			int end)
+			long groupId, long objectRelationshipId, long primaryKey,
+			String search, int start, int end)
 		throws PortalException {
 
 		PersistedModelLocalService persistedModelLocalService =
@@ -160,8 +152,8 @@ public class SystemObjectMtoMObjectRelatedModelsProviderImpl
 
 		return persistedModelLocalService.dslQuery(
 			_getGroupByStep(
-				groupId, objectRelationshipId, primaryKey,
-				DSLQueryFactoryUtil.selectDistinct(_table)
+				DSLQueryFactoryUtil.selectDistinct(_table), groupId,
+				objectRelationshipId, primaryKey, search
 			).limit(
 				start, end
 			));
@@ -169,7 +161,8 @@ public class SystemObjectMtoMObjectRelatedModelsProviderImpl
 
 	@Override
 	public int getRelatedModelsCount(
-			long groupId, long objectRelationshipId, long primaryKey)
+			long groupId, long objectRelationshipId, long primaryKey,
+			String search)
 		throws PortalException {
 
 		PersistedModelLocalService persistedModelLocalService =
@@ -178,10 +171,10 @@ public class SystemObjectMtoMObjectRelatedModelsProviderImpl
 
 		return persistedModelLocalService.dslQueryCount(
 			_getGroupByStep(
-				groupId, objectRelationshipId, primaryKey,
 				DSLQueryFactoryUtil.countDistinct(
 					_table.getColumn(
-						_objectDefinition.getPKObjectFieldDBColumnName()))));
+						_objectDefinition.getPKObjectFieldDBColumnName())),
+				groupId, objectRelationshipId, primaryKey, search));
 	}
 
 	@Override
@@ -270,8 +263,8 @@ public class SystemObjectMtoMObjectRelatedModelsProviderImpl
 	}
 
 	private GroupByStep _getGroupByStep(
-			long groupId, long objectRelationshipId, long primaryKey,
-			FromStep fromStep)
+			FromStep fromStep, long groupId, long objectRelationshipId,
+			long primaryKey, String search)
 		throws PortalException {
 
 		ObjectRelationship objectRelationship =
@@ -341,6 +334,10 @@ public class SystemObjectMtoMObjectRelatedModelsProviderImpl
 					return companyIdColumn.eq(
 						objectRelationship.getCompanyId());
 				}
+			).and(
+				ObjectEntrySearchUtil.getRelatedModelsPredicate(
+					dynamicObjectDefinitionTable, objectDefinition2,
+					_objectFieldLocalService, search)
 			)
 		);
 	}

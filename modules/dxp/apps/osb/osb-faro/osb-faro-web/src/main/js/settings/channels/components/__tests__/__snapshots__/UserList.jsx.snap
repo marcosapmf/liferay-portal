@@ -73,6 +73,7 @@ exports[`ChannelUserList should render 1`] = `
                 class="input-group-inset-item input-group-inset-item-after"
               >
                 <button
+                  aria-label="Search"
                   class="button-root btn btn-unstyled"
                   type="button"
                 >
@@ -195,6 +196,7 @@ exports[`ChannelUserList should render 1`] = `
                   aria-controls="clay-dropdown-menu-1"
                   aria-expanded="false"
                   aria-haspopup="true"
+                  aria-label="Menu"
                   class="dropdown-toggle component-action btn btn-unstyled"
                   type="button"
                 >
@@ -253,16 +255,16 @@ exports[`ChannelUserList should render 1`] = `
           class="page-item disabled"
         >
           <a
-            class="button-root page-link btn btn-unstyled"
+            class="button-root btn btn-unstyled page-link"
             disabled=""
             href="/?page=0"
           >
             <svg
-              class="lexicon-icon lexicon-icon-angle-left icon-root"
+              class="lexicon-icon lexicon-icon-angle-left-small icon-root"
               role="presentation"
             >
               <use
-                xlink:href="#angle-left"
+                xlink:href="#angle-left-small"
               />
             </svg>
           </a>
@@ -271,7 +273,7 @@ exports[`ChannelUserList should render 1`] = `
           class="page-item active"
         >
           <a
-            class="button-root page-link btn btn-unstyled"
+            class="button-root btn btn-unstyled page-link"
             href="/?page=1"
           >
             1
@@ -281,16 +283,16 @@ exports[`ChannelUserList should render 1`] = `
           class="page-item disabled"
         >
           <a
-            class="button-root page-link btn btn-unstyled"
+            class="button-root btn btn-unstyled page-link"
             disabled=""
             href="/?page=2"
           >
             <svg
-              class="lexicon-icon lexicon-icon-angle-right icon-root"
+              class="lexicon-icon lexicon-icon-angle-right-small icon-root"
               role="presentation"
             >
               <use
-                xlink:href="#angle-right"
+                xlink:href="#angle-right-small"
               />
             </svg>
           </a>

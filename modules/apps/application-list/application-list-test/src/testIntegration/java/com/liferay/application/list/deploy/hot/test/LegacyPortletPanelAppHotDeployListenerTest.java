@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.application.list.deploy.hot.test;
@@ -27,7 +18,6 @@ import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
 import com.liferay.portal.kernel.service.PortletLocalService;
 import com.liferay.portal.kernel.servlet.ServletContextClassLoaderPool;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
-import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.model.impl.PortletAppImpl;
 import com.liferay.portal.model.impl.PortletImpl;
@@ -81,7 +71,7 @@ public class LegacyPortletPanelAppHotDeployListenerTest {
 			"classpath:/com/liferay/application/list/deploy/hot/test" +
 				"/dependencies/control-panel-entry-liferay-portlet.xml");
 
-		_testPortlet = new PortletImpl() {
+		Portlet testPortlet = new PortletImpl() {
 			{
 				setPortletApp(
 					new PortletAppImpl(StringPool.BLANK) {
@@ -101,16 +91,21 @@ public class LegacyPortletPanelAppHotDeployListenerTest {
 			hotDeployEvent.getServletContextName(),
 			hotDeployEvent.getContextClassLoader());
 
-		_portletLocalService.deployPortlet(_testPortlet);
+		try {
+			_portletLocalService.deployPortlet(testPortlet);
 
-		int initialServiceRegistrationsSize =
-			_hotDeployListener.getServiceRegistrationsSize();
+			int initialServiceRegistrationsSize =
+				_hotDeployListener.getServiceRegistrationsSize();
 
-		_hotDeployListener.invokeDeploy(hotDeployEvent);
+			_hotDeployListener.invokeDeploy(hotDeployEvent);
 
-		Assert.assertEquals(
-			initialServiceRegistrationsSize + 1,
-			_hotDeployListener.getServiceRegistrationsSize());
+			Assert.assertEquals(
+				initialServiceRegistrationsSize + 1,
+				_hotDeployListener.getServiceRegistrationsSize());
+		}
+		finally {
+			_portletLocalService.destroyPortlet(testPortlet);
+		}
 	}
 
 	@Test
@@ -170,9 +165,6 @@ public class LegacyPortletPanelAppHotDeployListenerTest {
 
 	@Inject
 	private PortletLocalService _portletLocalService;
-
-	@DeleteAfterTestRun
-	private Portlet _testPortlet;
 
 	private static class TestResourceLoader extends DefaultResourceLoader {
 

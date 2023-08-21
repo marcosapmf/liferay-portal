@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.payment.engine.test;
@@ -116,8 +107,8 @@ public class CommercePaymentEngineTest {
 			addCommercePaymentMethodGroupRel(
 				_user.getUserId(), _commerceChannel.getGroupId(),
 				RandomTestUtil.randomLocaleStringMap(),
-				RandomTestUtil.randomLocaleStringMap(), null,
-				TestCommercePaymentMethod.KEY, 99, true);
+				RandomTestUtil.randomLocaleStringMap(), true, null,
+				TestCommercePaymentMethod.KEY, 99, null);
 
 		_httpServletRequest = new MockHttpServletRequest("GET", "");
 
@@ -154,7 +145,8 @@ public class CommercePaymentEngineTest {
 		commerceOrder.setCommercePaymentMethodKey(
 			TestCommercePaymentMethod.KEY);
 
-		_commerceOrderLocalService.updateCommerceOrder(commerceOrder);
+		commerceOrder = _commerceOrderLocalService.updateCommerceOrder(
+			commerceOrder);
 
 		CommerceCatalog commerceCatalog =
 			CommerceCatalogLocalServiceUtil.addCommerceCatalog(
@@ -173,9 +165,9 @@ public class CommercePaymentEngineTest {
 		CPDefinition cpDefinition = cpInstance.getCPDefinition();
 
 		_commercePriceEntryLocalService.addCommercePriceEntry(
-			cpDefinition.getCProductId(), cpInstance.getCPInstanceUuid(),
-			commercePriceList.getCommercePriceListId(), BigDecimal.ZERO,
-			BigDecimal.ZERO,
+			null, cpDefinition.getCProductId(), cpInstance.getCPInstanceUuid(),
+			commercePriceList.getCommercePriceListId(), BigDecimal.ZERO, false,
+			BigDecimal.ZERO, null,
 			ServiceContextTestUtil.getServiceContext(_user.getGroupId()));
 
 		CommerceInventoryWarehouse commerceInventoryWarehouse =
@@ -192,7 +184,7 @@ public class CommercePaymentEngineTest {
 
 		CommerceTestUtil.addCommerceOrderItem(
 			commerceOrder.getCommerceOrderId(), cpInstance.getCPInstanceId(),
-			1);
+			BigDecimal.ONE);
 
 		CommerceOrder checkoutOrder =
 			_commerceOrderEngine.checkoutCommerceOrder(
@@ -245,7 +237,8 @@ public class CommercePaymentEngineTest {
 		commerceOrder.setCommercePaymentMethodKey(
 			TestCommercePaymentMethod.KEY);
 
-		_commerceOrderLocalService.updateCommerceOrder(commerceOrder);
+		commerceOrder = _commerceOrderLocalService.updateCommerceOrder(
+			commerceOrder);
 
 		CommerceCatalog commerceCatalog =
 			CommerceCatalogLocalServiceUtil.addCommerceCatalog(
@@ -265,9 +258,9 @@ public class CommercePaymentEngineTest {
 		CPDefinition cpDefinition = cpInstance.getCPDefinition();
 
 		_commercePriceEntryLocalService.addCommercePriceEntry(
-			cpDefinition.getCProductId(), cpInstance.getCPInstanceUuid(),
-			commercePriceList.getCommercePriceListId(), BigDecimal.ZERO,
-			BigDecimal.ZERO,
+			null, cpDefinition.getCProductId(), cpInstance.getCPInstanceUuid(),
+			commercePriceList.getCommercePriceListId(), BigDecimal.ZERO, false,
+			BigDecimal.ZERO, null,
 			ServiceContextTestUtil.getServiceContext(_user.getGroupId()));
 
 		CommerceInventoryWarehouse commerceInventoryWarehouse =
@@ -284,7 +277,7 @@ public class CommercePaymentEngineTest {
 
 		CommerceTestUtil.addCommerceOrderItem(
 			commerceOrder.getCommerceOrderId(), cpInstance.getCPInstanceId(),
-			1);
+			BigDecimal.ONE);
 
 		CommerceOrder checkoutOrder =
 			_commerceOrderEngine.checkoutCommerceOrder(

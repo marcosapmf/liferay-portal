@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.shipment.web.internal.frontend.data.set.provider;
@@ -18,10 +9,13 @@ import com.liferay.commerce.constants.CommercePortletKeys;
 import com.liferay.commerce.constants.CommerceShipmentFDSNames;
 import com.liferay.commerce.inventory.model.CommerceInventoryWarehouse;
 import com.liferay.commerce.inventory.model.CommerceInventoryWarehouseItem;
+import com.liferay.commerce.inventory.service.CommerceInventoryWarehouseItemLocalService;
 import com.liferay.commerce.inventory.service.CommerceInventoryWarehouseItemService;
-import com.liferay.commerce.inventory.service.CommerceInventoryWarehouseService;
+import com.liferay.commerce.inventory.service.CommerceInventoryWarehouseLocalService;
 import com.liferay.commerce.model.CommerceOrderItem;
 import com.liferay.commerce.model.CommerceShipmentItem;
+import com.liferay.commerce.product.model.CommerceChannel;
+import com.liferay.commerce.product.service.CommerceChannelLocalService;
 import com.liferay.commerce.service.CommerceOrderItemService;
 import com.liferay.commerce.service.CommerceShipmentItemLocalService;
 import com.liferay.commerce.service.CommerceShipmentItemService;
@@ -33,8 +27,13 @@ import com.liferay.frontend.data.set.provider.search.FDSPagination;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.search.Sort;
+import com.liferay.portal.kernel.security.permission.ActionKeys;
+import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
+import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
+
+import java.math.BigDecimal;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -75,9 +74,18 @@ public class CommerceInventoryWarehouseItemFDSDataProvider
 			_commerceOrderItemService.getCommerceOrderItem(
 				commerceShipmentItem.getCommerceOrderItemId());
 
+		CommerceChannel commerceChannel =
+			_commerceChannelLocalService.fetchCommerceChannelByGroupClassPK(
+				commerceOrderItem.getGroupId());
+
+		_commerceChannelModelResourcePermission.check(
+			PermissionThreadLocal.getPermissionChecker(),
+			commerceChannel.getCommerceChannelId(), ActionKeys.VIEW);
+
 		List<CommerceInventoryWarehouse> commerceInventoryWarehouses =
-			_commerceInventoryWarehouseService.getCommerceInventoryWarehouses(
-				companyId, commerceOrderItem.getGroupId(), true);
+			_commerceInventoryWarehouseLocalService.
+				getCommerceInventoryWarehouses(
+					companyId, commerceOrderItem.getGroupId(), true);
 
 		for (CommerceInventoryWarehouse commerceInventoryWarehouse :
 				commerceInventoryWarehouses) {
@@ -85,20 +93,17 @@ public class CommerceInventoryWarehouseItemFDSDataProvider
 			long commerceInventoryWarehouseId =
 				commerceInventoryWarehouse.getCommerceInventoryWarehouseId();
 
-			CommerceInventoryWarehouseItem commerceInventoryWarehouseItem =
-				_commerceInventoryWarehouseItemService.
-					fetchCommerceInventoryWarehouseItem(
-						commerceInventoryWarehouseId,
-						commerceOrderItem.getSku());
-
 			String portletNamespace = _portal.getPortletNamespace(
 				CommercePortletKeys.COMMERCE_SHIPMENT);
 
 			String inputName =
 				portletNamespace + commerceInventoryWarehouseId + "_quantity";
 
+			BigDecimal commerceOrderItemQuantity =
+				commerceOrderItem.getQuantity();
+
 			int maxShippableQuantity =
-				commerceOrderItem.getQuantity() -
+				commerceOrderItemQuantity.intValue() -
 					commerceOrderItem.getShippedQuantity();
 
 			int shipmentItemWarehouseItemQuantity = 0;
@@ -120,12 +125,24 @@ public class CommerceInventoryWarehouseItemFDSDataProvider
 					maxShippableQuantity + commerceShipmentItem.getQuantity();
 			}
 
-			if (commerceInventoryWarehouseItem != null) {
-				if (maxShippableQuantity >
-						commerceInventoryWarehouseItem.getQuantity()) {
+			CommerceInventoryWarehouseItem commerceInventoryWarehouseItem =
+				_commerceInventoryWarehouseItemService.
+					fetchCommerceInventoryWarehouseItem(
+						commerceInventoryWarehouseId,
+						commerceOrderItem.getSku());
 
-					maxShippableQuantity =
-						commerceInventoryWarehouseItem.getQuantity();
+			if (commerceInventoryWarehouseItem != null) {
+				int quantity = 0;
+				BigDecimal commerceInventoryWarehouseItemQuantity =
+					commerceInventoryWarehouseItem.getQuantity();
+
+				if (commerceInventoryWarehouseItemQuantity != null) {
+					quantity =
+						commerceInventoryWarehouseItemQuantity.intValue();
+				}
+
+				if (maxShippableQuantity > quantity) {
+					maxShippableQuantity = quantity;
 				}
 
 				warehouses.add(
@@ -134,8 +151,7 @@ public class CommerceInventoryWarehouseItemFDSDataProvider
 						new WarehouseItem(
 							inputName, maxShippableQuantity, 0,
 							shipmentItemWarehouseItemQuantity),
-						commerceInventoryWarehouseItem.getQuantity(),
-						StringPool.BLANK,
+						quantity, StringPool.BLANK,
 						commerceInventoryWarehouse.getName(
 							_portal.getLocale(httpServletRequest))));
 			}
@@ -171,19 +187,40 @@ public class CommerceInventoryWarehouseItemFDSDataProvider
 			_commerceOrderItemService.getCommerceOrderItem(
 				commerceShipmentItem.getCommerceOrderItemId());
 
-		return _commerceInventoryWarehouseItemService.
+		CommerceChannel commerceChannel =
+			_commerceChannelLocalService.fetchCommerceChannelByGroupClassPK(
+				commerceOrderItem.getGroupId());
+
+		_commerceChannelModelResourcePermission.check(
+			PermissionThreadLocal.getPermissionChecker(),
+			commerceChannel.getCommerceChannelId(), ActionKeys.VIEW);
+
+		return _commerceInventoryWarehouseItemLocalService.
 			getCommerceInventoryWarehouseItemsCount(
 				_portal.getCompanyId(httpServletRequest),
-				commerceOrderItem.getSku());
+				commerceOrderItem.getGroupId(), commerceOrderItem.getSku());
 	}
+
+	@Reference
+	private CommerceChannelLocalService _commerceChannelLocalService;
+
+	@Reference(
+		target = "(model.class.name=com.liferay.commerce.product.model.CommerceChannel)"
+	)
+	private ModelResourcePermission<CommerceChannel>
+		_commerceChannelModelResourcePermission;
+
+	@Reference
+	private CommerceInventoryWarehouseItemLocalService
+		_commerceInventoryWarehouseItemLocalService;
 
 	@Reference
 	private CommerceInventoryWarehouseItemService
 		_commerceInventoryWarehouseItemService;
 
 	@Reference
-	private CommerceInventoryWarehouseService
-		_commerceInventoryWarehouseService;
+	private CommerceInventoryWarehouseLocalService
+		_commerceInventoryWarehouseLocalService;
 
 	@Reference
 	private CommerceOrderItemService _commerceOrderItemService;

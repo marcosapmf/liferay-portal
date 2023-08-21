@@ -1,19 +1,11 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.admin.order.resource.v1_0.test;
 
+import com.liferay.account.constants.AccountConstants;
 import com.liferay.account.model.AccountEntry;
 import com.liferay.account.service.AccountEntryLocalService;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
@@ -103,7 +95,8 @@ public class OrderItemResourceTest extends BaseOrderItemResourceTestCase {
 			_user.getUserId(), _commerceCurrency.getCode());
 
 		_commerceChannel = _commerceChannelLocalService.addCommerceChannel(
-			RandomTestUtil.randomString(), testGroup.getGroupId(),
+			RandomTestUtil.randomString(),
+			AccountConstants.ACCOUNT_ENTRY_ID_DEFAULT, testGroup.getGroupId(),
 			RandomTestUtil.randomString(),
 			CommerceChannelConstants.CHANNEL_TYPE_SITE, null,
 			_commerceCurrency.getCode(), _serviceContext);
@@ -129,7 +122,7 @@ public class OrderItemResourceTest extends BaseOrderItemResourceTestCase {
 
 	@Test
 	public void testGetdOrderItemWithURL() throws Exception {
-		String url = "http://www.example.com/myfiles/download";
+		String url = "https://liferay.com/myfiles/download";
 
 		OrderItem postOrderItem = _addCommerceOrderItem(_getOrderItem(0, url));
 
@@ -208,7 +201,8 @@ public class OrderItemResourceTest extends BaseOrderItemResourceTestCase {
 
 	@Override
 	protected OrderItem randomOrderItem() throws Exception {
-		return _getOrderItem(0, RandomTestUtil.randomString());
+		return _getOrderItem(
+			0, "https://liferay.com/" + RandomTestUtil.randomString());
 	}
 
 	@Override
@@ -324,8 +318,9 @@ public class OrderItemResourceTest extends BaseOrderItemResourceTestCase {
 		CommerceOrderItem commerceOrderItem =
 			_commerceOrderItemLocalService.addCommerceOrderItem(
 				_user.getUserId(), _commerceOrder.getCommerceOrderId(),
-				orderItem.getSkuId(), null, orderItem.getQuantity(), 0,
-				orderItem.getQuantity(),
+				orderItem.getSkuId(), null,
+				BigDecimal.valueOf(orderItem.getQuantity()), 0,
+				orderItem.getQuantity(), StringPool.BLANK,
 				new TestCommerceContext(
 					_accountEntry, _commerceCurrency, _commerceChannel, _user,
 					testGroup, _commerceOrder),
@@ -349,7 +344,6 @@ public class OrderItemResourceTest extends BaseOrderItemResourceTestCase {
 				priceManuallyAdjusted =
 					commerceOrderItem.isPriceManuallyAdjusted();
 				printedNote = commerceOrderItem.getPrintedNote();
-				quantity = commerceOrderItem.getQuantity();
 				requestedDeliveryDate =
 					commerceOrderItem.getRequestedDeliveryDate();
 				shippedQuantity = commerceOrderItem.getShippedQuantity();
@@ -360,6 +354,12 @@ public class OrderItemResourceTest extends BaseOrderItemResourceTestCase {
 				skuId = commerceOrderItem.getCPInstanceId();
 				subscription = commerceOrderItem.isSubscription();
 
+				setQuantity(
+					() -> {
+						BigDecimal quantity = commerceOrderItem.getQuantity();
+
+						return quantity.intValue();
+					});
 				setVirtualItemURLs(
 					() -> {
 						CommerceVirtualOrderItem commerceVirtualOrderItem =
@@ -391,8 +391,8 @@ public class OrderItemResourceTest extends BaseOrderItemResourceTestCase {
 		_cpDefinitionVirtualSettingLocalService.addCPDefinitionVirtualSetting(
 			cpDefinition.getModelClassName(), cpDefinition.getCPDefinitionId(),
 			fileEntryId, url, CommerceOrderConstants.ORDER_STATUS_PENDING, 0,
-			RandomTestUtil.randomInt(), true, 0, "sampleUrl", false, null, 0,
-			_serviceContext);
+			RandomTestUtil.randomInt(), true, 0, "https://liferay.com", false,
+			null, 0, _serviceContext);
 
 		CommerceTestUtil.updateBackOrderCPDefinitionInventory(cpDefinition);
 

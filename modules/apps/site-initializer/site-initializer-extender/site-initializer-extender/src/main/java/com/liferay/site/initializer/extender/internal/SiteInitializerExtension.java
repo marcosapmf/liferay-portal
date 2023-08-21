@@ -1,19 +1,14 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.site.initializer.extender.internal;
 
+import com.liferay.account.service.AccountEntryLocalService;
+import com.liferay.account.service.AccountEntryOrganizationRelLocalService;
+import com.liferay.account.service.AccountGroupLocalService;
+import com.liferay.account.service.AccountGroupRelService;
 import com.liferay.account.service.AccountRoleLocalService;
 import com.liferay.asset.kernel.service.AssetCategoryLocalService;
 import com.liferay.asset.list.service.AssetListEntryLocalService;
@@ -44,7 +39,6 @@ import com.liferay.layout.page.template.service.LayoutPageTemplateStructureLocal
 import com.liferay.layout.page.template.service.LayoutPageTemplateStructureRelLocalService;
 import com.liferay.layout.util.LayoutCopyHelper;
 import com.liferay.layout.utility.page.service.LayoutUtilityPageEntryLocalService;
-import com.liferay.list.type.service.ListTypeDefinitionLocalService;
 import com.liferay.list.type.service.ListTypeEntryLocalService;
 import com.liferay.notification.rest.resource.v1_0.NotificationTemplateResource;
 import com.liferay.object.admin.rest.resource.v1_0.ObjectDefinitionResource;
@@ -72,10 +66,13 @@ import com.liferay.portal.kernel.service.WorkflowDefinitionLinkLocalService;
 import com.liferay.portal.kernel.settings.SettingsFactory;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.language.override.service.PLOEntryLocalService;
 import com.liferay.portal.security.service.access.policy.service.SAPEntryLocalService;
 import com.liferay.segments.service.SegmentsEntryLocalService;
 import com.liferay.segments.service.SegmentsExperienceLocalService;
 import com.liferay.site.initializer.SiteInitializer;
+import com.liferay.site.initializer.extender.CommerceSiteInitializer;
+import com.liferay.site.initializer.extender.OSBSiteInitializer;
 import com.liferay.site.navigation.service.SiteNavigationMenuItemLocalService;
 import com.liferay.site.navigation.service.SiteNavigationMenuLocalService;
 import com.liferay.site.navigation.type.SiteNavigationMenuItemTypeRegistry;
@@ -96,6 +93,11 @@ import org.osgi.framework.Bundle;
 public class SiteInitializerExtension {
 
 	public SiteInitializerExtension(
+		AccountEntryLocalService accountEntryLocalService,
+		AccountEntryOrganizationRelLocalService
+			accountEntryOrganizationRelLocalService,
+		AccountGroupLocalService accountGroupLocalService,
+		AccountGroupRelService accountGroupRelService,
 		AccountResource.Factory accountResourceFactory,
 		AccountRoleLocalService accountRoleLocalService,
 		AccountRoleResource.Factory accountRoleResourceFactory,
@@ -106,7 +108,7 @@ public class SiteInitializerExtension {
 		DDMStructureLocalService ddmStructureLocalService,
 		DDMTemplateLocalService ddmTemplateLocalService,
 		DefaultDDMStructureHelper defaultDDMStructureHelper,
-		DLURLHelper dlURLHelper,
+		DependencyManager dependencyManager, DLURLHelper dlURLHelper,
 		DocumentFolderResource.Factory documentFolderResourceFactory,
 		DocumentResource.Factory documentResourceFactory,
 		FragmentsImporter fragmentsImporter,
@@ -126,7 +128,6 @@ public class SiteInitializerExtension {
 		LayoutSetLocalService layoutSetLocalService,
 		LayoutsImporter layoutsImporter,
 		LayoutUtilityPageEntryLocalService layoutUtilityPageEntryLocalService,
-		ListTypeDefinitionLocalService listTypeDefinitionLocalService,
 		ListTypeDefinitionResource listTypeDefinitionResource,
 		ListTypeDefinitionResource.Factory listTypeDefinitionResourceFactory,
 		ListTypeEntryLocalService listTypeEntryLocalService,
@@ -144,7 +145,8 @@ public class SiteInitializerExtension {
 		ObjectRelationshipLocalService objectRelationshipLocalService,
 		ObjectRelationshipResource.Factory objectRelationshipResourceFactory,
 		OrganizationLocalService organizationLocalService,
-		OrganizationResource.Factory organizationResourceFactory, Portal portal,
+		OrganizationResource.Factory organizationResourceFactory,
+		PLOEntryLocalService ploEntryLocalService, Portal portal,
 		ResourceActionLocalService resourceActionLocalService,
 		ResourcePermissionLocalService resourcePermissionLocalService,
 		RoleLocalService roleLocalService,
@@ -168,11 +170,13 @@ public class SiteInitializerExtension {
 		WorkflowDefinitionLinkLocalService workflowDefinitionLinkLocalService,
 		WorkflowDefinitionResource.Factory workflowDefinitionResourceFactory) {
 
-		_dependencyManager = new DependencyManager(bundle.getBundleContext());
+		_dependencyManager = dependencyManager;
 
-		_component = _dependencyManager.createComponent();
+		_component = dependencyManager.createComponent();
 
 		BundleSiteInitializer bundleSiteInitializer = new BundleSiteInitializer(
+			accountEntryLocalService, accountEntryOrganizationRelLocalService,
+			accountGroupLocalService, accountGroupRelService,
 			accountResourceFactory, accountRoleLocalService,
 			accountRoleResourceFactory, assetCategoryLocalService,
 			assetListEntryLocalService, bundle,
@@ -186,16 +190,16 @@ public class SiteInitializerExtension {
 			layoutLocalService, layoutPageTemplateEntryLocalService,
 			layoutsImporter, layoutPageTemplateStructureLocalService,
 			layoutPageTemplateStructureRelLocalService, layoutSetLocalService,
-			layoutUtilityPageEntryLocalService, listTypeDefinitionLocalService,
-			listTypeDefinitionResource, listTypeDefinitionResourceFactory,
-			listTypeEntryLocalService, listTypeEntryResource,
-			listTypeEntryResourceFactory, notificationTemplateResourceFactory,
-			objectActionLocalService, objectDefinitionLocalService,
-			objectDefinitionResourceFactory, objectEntryLocalService,
-			objectEntryManager, objectFieldLocalService,
-			objectFieldResourceFactory, objectRelationshipLocalService,
-			objectRelationshipResourceFactory, organizationLocalService,
-			organizationResourceFactory, portal, resourceActionLocalService,
+			layoutUtilityPageEntryLocalService, listTypeDefinitionResource,
+			listTypeDefinitionResourceFactory, listTypeEntryLocalService,
+			listTypeEntryResource, listTypeEntryResourceFactory,
+			notificationTemplateResourceFactory, objectActionLocalService,
+			objectDefinitionLocalService, objectDefinitionResourceFactory,
+			objectEntryLocalService, objectEntryManager,
+			objectFieldLocalService, objectFieldResourceFactory,
+			objectRelationshipLocalService, objectRelationshipResourceFactory,
+			organizationLocalService, organizationResourceFactory,
+			ploEntryLocalService, portal, resourceActionLocalService,
 			resourcePermissionLocalService, roleLocalService,
 			sapEntryLocalService, segmentsEntryLocalService,
 			segmentsExperienceLocalService, settingsFactory,
@@ -221,6 +225,14 @@ public class SiteInitializerExtension {
 		serviceDependency.setCallbacks("setCommerceSiteInitializer", null);
 		serviceDependency.setRequired(false);
 		serviceDependency.setService(CommerceSiteInitializer.class);
+
+		_component.add(serviceDependency);
+
+		serviceDependency = _dependencyManager.createServiceDependency();
+
+		serviceDependency.setCallbacks("setOSBSiteInitializer", null);
+		serviceDependency.setRequired(false);
+		serviceDependency.setService(OSBSiteInitializer.class);
 
 		_component.add(serviceDependency);
 

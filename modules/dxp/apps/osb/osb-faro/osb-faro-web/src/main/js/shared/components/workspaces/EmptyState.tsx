@@ -1,5 +1,6 @@
 import ClayButton from '@clayui/button';
 import ClayIcon from '@clayui/icon';
+import ClayLink from '@clayui/link';
 import getCN from 'classnames';
 import React from 'react';
 import {close, modalTypes, open} from 'shared/actions/modals';
@@ -23,7 +24,7 @@ const EmptyState: React.FC<IEmptyStateProps> = ({
 		<div className={PROD_MODE ? 'col-xl-12' : 'col-xl-6'}>
 			<CardEmpty
 				buttonProps={{
-					displayType: 'secondary',
+					displayType: 'primary',
 					label: Liferay.Language.get('contact-sales'),
 					onClick: () =>
 						open(modalTypes.CONTACT_SALES_MODAL, {
@@ -41,7 +42,6 @@ const EmptyState: React.FC<IEmptyStateProps> = ({
 			<div className='col-xl-6'>
 				<CardEmpty
 					buttonProps={{
-						displayType: 'secondary',
 						href: toRoute(Routes.WORKSPACE_ADD_TRIAL),
 						label: Liferay.Language.get('start-free-trial')
 					}}
@@ -71,13 +71,31 @@ export const CardEmpty: React.FC<ICardItemProps> = ({
 	description,
 	icon
 }) => {
-	const {label, ...otherButtonProps} = buttonProps;
+	const {
+		displayType = 'secondary',
+		href,
+		label,
+		...otherButtonProps
+	} = buttonProps;
 
 	return (
 		<div className='empty-card'>
 			<ClayIcon className='icon-root' symbol={icon} />
 			<p>{description}</p>
-			<ClayButton {...otherButtonProps}>{label}</ClayButton>
+			{href ? (
+				<ClayLink
+					button
+					displayType='secondary'
+					href={href}
+					{...otherButtonProps}
+				>
+					{label}
+				</ClayLink>
+			) : (
+				<ClayButton displayType={displayType} {...otherButtonProps}>
+					{label}
+				</ClayButton>
+			)}
 		</div>
 	);
 };

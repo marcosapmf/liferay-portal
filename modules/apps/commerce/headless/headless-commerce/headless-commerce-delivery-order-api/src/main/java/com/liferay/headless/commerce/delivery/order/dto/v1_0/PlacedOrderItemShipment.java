@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.delivery.order.dto.v1_0;
@@ -460,6 +451,34 @@ public class PlacedOrderItemShipment implements Serializable {
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Status status;
 
+	@Schema
+	public Boolean getSupplierShipment() {
+		return supplierShipment;
+	}
+
+	public void setSupplierShipment(Boolean supplierShipment) {
+		this.supplierShipment = supplierShipment;
+	}
+
+	@JsonIgnore
+	public void setSupplierShipment(
+		UnsafeSupplier<Boolean, Exception> supplierShipmentUnsafeSupplier) {
+
+		try {
+			supplierShipment = supplierShipmentUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected Boolean supplierShipment;
+
 	@Schema(example = "123AD-asd")
 	public String getTrackingNumber() {
 		return trackingNumber;
@@ -487,6 +506,34 @@ public class PlacedOrderItemShipment implements Serializable {
 	@GraphQLField
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected String trackingNumber;
+
+	@Schema
+	public String getTrackingURL() {
+		return trackingURL;
+	}
+
+	public void setTrackingURL(String trackingURL) {
+		this.trackingURL = trackingURL;
+	}
+
+	@JsonIgnore
+	public void setTrackingURL(
+		UnsafeSupplier<String, Exception> trackingURLUnsafeSupplier) {
+
+		try {
+			trackingURL = trackingURLUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected String trackingURL;
 
 	@Override
 	public boolean equals(Object object) {
@@ -687,6 +734,16 @@ public class PlacedOrderItemShipment implements Serializable {
 			sb.append(String.valueOf(status));
 		}
 
+		if (supplierShipment != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"supplierShipment\": ");
+
+			sb.append(supplierShipment);
+		}
+
 		if (trackingNumber != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -697,6 +754,20 @@ public class PlacedOrderItemShipment implements Serializable {
 			sb.append("\"");
 
 			sb.append(_escape(trackingNumber));
+
+			sb.append("\"");
+		}
+
+		if (trackingURL != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"trackingURL\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(trackingURL));
 
 			sb.append("\"");
 		}
@@ -795,5 +866,7 @@ public class PlacedOrderItemShipment implements Serializable {
 		{"\\", "\"", "\b", "\f", "\n", "\r", "\t"},
 		{"\\\\", "\\\"", "\\b", "\\f", "\\n", "\\r", "\\t"}
 	};
+
+	private Map<String, Serializable> _extendedProperties;
 
 }

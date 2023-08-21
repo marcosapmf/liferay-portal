@@ -1,72 +1,91 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.jethr0.jenkins;
 
-import com.liferay.jethr0.build.Build;
-import com.liferay.jethr0.build.queue.BuildQueue;
-import com.liferay.jethr0.build.repository.BuildRepository;
-import com.liferay.jethr0.build.repository.BuildRunRepository;
-import com.liferay.jethr0.build.run.BuildRun;
+import com.liferay.jethr0.bui1d.Build;
+import com.liferay.jethr0.bui1d.queue.BuildQueue;
+import com.liferay.jethr0.bui1d.repository.BuildRepository;
+import com.liferay.jethr0.bui1d.repository.BuildRunRepository;
+import com.liferay.jethr0.bui1d.run.BuildRun;
 import com.liferay.jethr0.jenkins.node.JenkinsNode;
+import com.liferay.jethr0.jenkins.repository.JenkinsCohortRepository;
 import com.liferay.jethr0.jenkins.repository.JenkinsNodeRepository;
 import com.liferay.jethr0.jenkins.repository.JenkinsServerRepository;
 import com.liferay.jethr0.jenkins.server.JenkinsServer;
 import com.liferay.jethr0.jms.JMSEventHandler;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.scheduling.annotation.Scheduled;
 
 /**
  * @author Michael Hashimoto
  */
 @Configuration
+@EnableScheduling
 public class JenkinsQueue {
 
 	public void initialize() {
-		if ((_jenkinsServerURLs != null) && !_jenkinsServerURLs.isEmpty()) {
-			for (String jenkinsServerURL : _jenkinsServerURLs.split(",")) {
-				JenkinsServer jenkinsServer = _jenkinsServerRepository.getByURL(
-					jenkinsServerURL);
+		_jenkinsCohortRepository.initialize();
+		_jenkinsNodeRepository.initialize();
+		_jenkinsServerRepository.initialize();
 
-				if (jenkinsServer != null) {
-					continue;
-				}
+		_jenkinsCohortRepository.setJenkinsServerRepository(
+			_jenkinsServerRepository);
 
-				jenkinsServer = _jenkinsServerRepository.add(jenkinsServerURL);
+		_jenkinsNodeRepository.setJenkinsServerRepository(
+			_jenkinsServerRepository);
 
-				_jenkinsNodeRepository.addAll(jenkinsServer);
-			}
-		}
+		_jenkinsServerRepository.setJenkinsCohortRepository(
+			_jenkinsCohortRepository);
+		_jenkinsServerRepository.setJenkinsNodeRepository(
+			_jenkinsNodeRepository);
 
-		for (JenkinsServer jenkinsServer : _jenkinsServerRepository.getAll()) {
-			for (JenkinsNode jenkinsNode :
-					_jenkinsNodeRepository.getAll(jenkinsServer)) {
-
-				jenkinsServer.addJenkinsNode(jenkinsNode);
-
-				jenkinsNode.setJenkinsServer(jenkinsServer);
-			}
-
-			jenkinsServer.update();
-		}
+		_jenkinsCohortRepository.initializeRelationships();
+		_jenkinsNodeRepository.initializeRelationships();
+		_jenkinsServerRepository.initializeRelationships();
 
 		invoke();
+
+		_initialized = true;
 	}
 
 	public void invoke() {
+		update();
+	}
+
+	public boolean isInitialized() {
+		return _initialized;
+	}
+
+	@Scheduled(cron = "${liferay.jethr0.jenkins.queue.update.cron}")
+	public void scheduledUpdate() {
+		if (_log.isInfoEnabled()) {
+			_log.info("Updating Jenkins queue");
+		}
+
+		update();
+	}
+
+	public void setJmsEventHandler(JMSEventHandler jmsEventHandler) {
+		_jmsEventHandler = jmsEventHandler;
+	}
+
+	public void update() {
+		for (JenkinsServer jenkinsServer : _jenkinsServerRepository.getAll()) {
+			jenkinsServer.update();
+		}
+
+		_buildQueue.sort();
+
 		for (JenkinsServer jenkinsServer : _jenkinsServerRepository.getAll()) {
 			for (JenkinsNode jenkinsNode : jenkinsServer.getJenkinsNodes()) {
 				if (!jenkinsNode.isAvailable()) {
@@ -85,7 +104,8 @@ public class JenkinsQueue {
 					build, BuildRun.State.QUEUED);
 
 				_jmsEventHandler.send(
-					String.valueOf(buildRun.getInvokeJSONObject()));
+					jenkinsServer,
+					String.valueOf(buildRun.getInvokeJSONObject(jenkinsNode)));
 
 				_buildRepository.update(build);
 				_buildRunRepository.update(buildRun);
@@ -93,9 +113,7 @@ public class JenkinsQueue {
 		}
 	}
 
-	public void setJmsEventHandler(JMSEventHandler jmsEventHandler) {
-		_jmsEventHandler = jmsEventHandler;
-	}
+	private static final Log _log = LogFactory.getLog(JenkinsQueue.class);
 
 	@Autowired
 	private BuildQueue _buildQueue;
@@ -105,6 +123,11 @@ public class JenkinsQueue {
 
 	@Autowired
 	private BuildRunRepository _buildRunRepository;
+
+	private boolean _initialized;
+
+	@Autowired
+	private JenkinsCohortRepository _jenkinsCohortRepository;
 
 	@Autowired
 	private JenkinsNodeRepository _jenkinsNodeRepository;

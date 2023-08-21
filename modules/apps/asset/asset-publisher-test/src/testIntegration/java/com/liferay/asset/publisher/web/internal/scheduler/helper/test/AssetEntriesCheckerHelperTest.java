@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.asset.publisher.web.internal.scheduler.helper.test;
@@ -33,6 +24,7 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.module.configuration.ConfigurationProvider;
+import com.liferay.portal.kernel.module.util.BundleUtil;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
@@ -66,7 +58,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
 
 /**
@@ -258,20 +249,8 @@ public class AssetEntriesCheckerHelperTest {
 		Bundle bundle = FrameworkUtil.getBundle(
 			AssetEntriesCheckerHelperTest.class);
 
-		BundleContext bundleContext = bundle.getBundleContext();
-
-		Bundle assetPublisherWebBundle = null;
-
-		for (Bundle curBundle : bundleContext.getBundles()) {
-			if (Objects.equals(
-					curBundle.getSymbolicName(),
-					"com.liferay.asset.publisher.web")) {
-
-				assetPublisherWebBundle = curBundle;
-
-				break;
-			}
-		}
+		Bundle assetPublisherWebBundle = BundleUtil.getBundle(
+			bundle.getBundleContext(), "com.liferay.asset.publisher.web");
 
 		Assert.assertNotNull(
 			"Unable to find asset-publisher-web bundle",

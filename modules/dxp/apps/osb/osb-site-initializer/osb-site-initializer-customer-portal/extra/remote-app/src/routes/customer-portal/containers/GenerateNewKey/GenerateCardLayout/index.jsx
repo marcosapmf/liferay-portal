@@ -1,25 +1,25 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayCard from '@clayui/card';
 import i18n from '../../../../../common/I18n';
 import {FORMAT_DATE_TYPES} from '../../../../../common/utils/constants';
 import getDateCustomFormat from '../../../../../common/utils/getDateCustomFormat';
+import {getLicenseKeyEndDatesByLicenseType} from '../utils/licenseKeyEndDateUtil';
 
 const GenerateCardLayout = ({infoSelectedKey}) => {
+	const startDate = infoSelectedKey?.selectedSubscription?.startDate;
+
+	const endDate = infoSelectedKey?.selectedSubscription?.endDate;
+	const licenseEndDate = getLicenseKeyEndDatesByLicenseType(infoSelectedKey);
+
 	const currentDate = `${getDateCustomFormat(
-		infoSelectedKey?.selectedSubscription?.startDate,
+		startDate,
 		FORMAT_DATE_TYPES.day2DMonthSYearN
 	)} - ${getDateCustomFormat(
-		infoSelectedKey?.selectedSubscription?.endDate,
+		licenseEndDate ?? endDate,
 		FORMAT_DATE_TYPES.day2DMonthSYearN
 	)}`;
 
@@ -40,13 +40,15 @@ const GenerateCardLayout = ({infoSelectedKey}) => {
 							{infoSelectedKey?.productVersion}
 						</p>
 
-						<p className="m-0">{i18n.translate('license-type')}</p>
+						<p className="m-0">{i18n.translate('key-type')}</p>
 
 						<p className="font-weight-normal">
 							{infoSelectedKey?.licenseEntryType}{' '}
 						</p>
 
-						<p className="m-0">{i18n.translate('subscription')}</p>
+						<p className="m-0">
+							{i18n.translate('start-date-exp-date')}
+						</p>
 
 						<p className="font-weight-normal">{currentDate}</p>
 

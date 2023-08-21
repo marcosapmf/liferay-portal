@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2023 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.asset.categories.admin.web.internal.display.context;
@@ -26,6 +17,7 @@ import com.liferay.asset.kernel.model.AssetCategoryConstants;
 import com.liferay.asset.kernel.model.AssetCategoryDisplay;
 import com.liferay.asset.kernel.model.AssetRendererFactory;
 import com.liferay.asset.kernel.model.AssetVocabulary;
+import com.liferay.asset.kernel.model.AssetVocabularyConstants;
 import com.liferay.asset.kernel.model.AssetVocabularyDisplay;
 import com.liferay.asset.kernel.model.ClassType;
 import com.liferay.asset.kernel.model.ClassTypeReader;
@@ -38,6 +30,11 @@ import com.liferay.depot.service.DepotEntryServiceUtil;
 import com.liferay.exportimport.kernel.staging.permission.StagingPermissionUtil;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuilder;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.IconItem;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.VerticalNavItemList;
+import com.liferay.item.selector.ItemSelector;
+import com.liferay.item.selector.criteria.InfoItemItemSelectorReturnType;
+import com.liferay.item.selector.criteria.info.item.criterion.InfoItemItemSelectorCriterion;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.bean.BeanParamUtil;
@@ -53,9 +50,9 @@ import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.module.configuration.ConfigurationProviderUtil;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
-import com.liferay.portal.kernel.portlet.PortletProvider;
-import com.liferay.portal.kernel.portlet.PortletProviderUtil;
 import com.liferay.portal.kernel.portlet.PortletURLUtil;
+import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactory;
+import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactoryUtil;
 import com.liferay.portal.kernel.portlet.SearchDisplayStyleUtil;
 import com.liferay.portal.kernel.portlet.SearchOrderByUtil;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
@@ -64,6 +61,7 @@ import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.ResourceActionsUtil;
 import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.LocalizationUtil;
@@ -382,32 +380,31 @@ public class AssetCategoriesDisplayContext {
 	}
 
 	public String getCategorySelectorURL() {
-		try {
-			PortletURL portletURL = PortletProviderUtil.getPortletURL(
-				_httpServletRequest, AssetCategory.class.getName(),
-				PortletProvider.Action.BROWSE);
+		ItemSelector itemSelector =
+			(ItemSelector)_httpServletRequest.getAttribute(
+				ItemSelector.class.getName());
 
-			if (portletURL == null) {
-				return null;
-			}
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)_httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
-			portletURL.setParameter(
-				"eventName", _renderResponse.getNamespace() + "selectCategory");
-			portletURL.setParameter(
-				"selectedCategories", "{selectedCategories}");
-			portletURL.setParameter("singleSelect", "{singleSelect}");
-			portletURL.setParameter("vocabularyIds", "{vocabularyIds}");
-			portletURL.setWindowState(LiferayWindowState.POP_UP);
+		RequestBackedPortletURLFactory requestBackedPortletURLFactory =
+			RequestBackedPortletURLFactoryUtil.create(_renderRequest);
 
-			return portletURL.toString();
-		}
-		catch (Exception exception) {
-			if (_log.isDebugEnabled()) {
-				_log.debug(exception);
-			}
-		}
+		InfoItemItemSelectorCriterion itemSelectorCriterion =
+			new InfoItemItemSelectorCriterion();
 
-		return null;
+		itemSelectorCriterion.setDesiredItemSelectorReturnTypes(
+			new InfoItemItemSelectorReturnType());
+		itemSelectorCriterion.setItemType(AssetCategory.class.getName());
+
+		return PortletURLBuilder.create(
+			itemSelector.getItemSelectorURL(
+				requestBackedPortletURLFactory, themeDisplay.getScopeGroup(),
+				themeDisplay.getScopeGroupId(),
+				_renderResponse.getNamespace() + "selectCategory",
+				itemSelectorCriterion)
+		).buildString();
 	}
 
 	public String getDefaultLanguageId(AssetCategory assetCategory) {
@@ -585,6 +582,59 @@ public class AssetCategoriesDisplayContext {
 		_selectedLanguageId = selectedLanguageId;
 
 		return _selectedLanguageId;
+	}
+
+	public VerticalNavItemList getVerticalNavItemList(
+		List<AssetVocabulary> vocabularies) {
+
+		VerticalNavItemList verticalNavItemList = new VerticalNavItemList();
+
+		for (AssetVocabulary vocabulary : vocabularies) {
+			verticalNavItemList.add(
+				verticalNavItem -> {
+					if (vocabulary.getGroupId() !=
+							_themeDisplay.getScopeGroupId()) {
+
+						verticalNavItem.addIcon(
+							IconItem.of(
+								"lock",
+								LanguageUtil.get(
+									_themeDisplay.getLocale(),
+									"this-vocabulary-can-only-be-edited-from-" +
+										"the-global-site")));
+					}
+
+					if (vocabulary.getVisibilityType() ==
+							AssetVocabularyConstants.VISIBILITY_TYPE_INTERNAL) {
+
+						verticalNavItem.addIcon(
+							IconItem.of(
+								"low-vision",
+								LanguageUtil.get(
+									_themeDisplay.getLocale(),
+									"for-internal-use-only")));
+					}
+
+					verticalNavItem.setActive(
+						getVocabularyId() == vocabulary.getVocabularyId());
+					verticalNavItem.setHref(
+						PortletURLBuilder.createRenderURL(
+							_renderResponse
+						).setMVCPath(
+							"/view.jsp"
+						).setParameter(
+							"vocabularyId", vocabulary.getVocabularyId()
+						).buildString());
+
+					String name = HtmlUtil.escape(
+						vocabulary.getTitle(_httpServletRequest.getLocale()));
+
+					verticalNavItem.setId(name);
+					verticalNavItem.setLabel(name);
+				});
+		}
+
+		return verticalNavItemList;
 	}
 
 	public List<AssetVocabulary> getVocabularies() throws PortalException {

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.admin.rest.internal.resource.v1_0;
@@ -20,6 +11,7 @@ import com.liferay.petra.function.UnsafeBiConsumer;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.petra.function.transform.TransformUtil;
+import com.liferay.portal.kernel.exception.NoSuchModelException;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.GroupedModel;
 import com.liferay.portal.kernel.search.Sort;
@@ -31,6 +23,7 @@ import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.SetUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.odata.filter.ExpressionConvert;
@@ -217,7 +210,7 @@ public abstract class BaseObjectDefinitionResourceImpl
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'POST' 'http://localhost:8080/o/object-admin/v1.0/object-definitions' -d $'{"accountEntryRestricted": ___, "accountEntryRestrictedObjectFieldName": ___, "active": ___, "defaultLanguageId": ___, "enableCategorization": ___, "enableComments": ___, "enableLocalization": ___, "enableObjectEntryHistory": ___, "externalReferenceCode": ___, "label": ___, "modifiable": ___, "name": ___, "objectActions": ___, "objectFields": ___, "objectLayouts": ___, "objectRelationships": ___, "objectValidationRules": ___, "objectViews": ___, "panelAppOrder": ___, "panelCategoryKey": ___, "pluralLabel": ___, "portlet": ___, "scope": ___, "status": ___, "storageType": ___, "system": ___, "titleObjectFieldName": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 * curl -X 'POST' 'http://localhost:8080/o/object-admin/v1.0/object-definitions' -d $'{"accountEntryRestricted": ___, "accountEntryRestrictedObjectFieldName": ___, "active": ___, "defaultLanguageId": ___, "enableCategorization": ___, "enableComments": ___, "enableLocalization": ___, "enableObjectEntryHistory": ___, "externalReferenceCode": ___, "label": ___, "modifiable": ___, "name": ___, "objectActions": ___, "objectFields": ___, "objectFolderExternalReferenceCode": ___, "objectLayouts": ___, "objectRelationships": ___, "objectValidationRules": ___, "objectViews": ___, "panelAppOrder": ___, "panelCategoryKey": ___, "pluralLabel": ___, "portlet": ___, "scope": ___, "status": ___, "storageType": ___, "system": ___, "titleObjectFieldName": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.tags.Tags(
 		value = {
@@ -319,7 +312,7 @@ public abstract class BaseObjectDefinitionResourceImpl
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'PUT' 'http://localhost:8080/o/object-admin/v1.0/object-definitions/by-external-reference-code/{externalReferenceCode}' -d $'{"accountEntryRestricted": ___, "accountEntryRestrictedObjectFieldName": ___, "active": ___, "defaultLanguageId": ___, "enableCategorization": ___, "enableComments": ___, "enableLocalization": ___, "enableObjectEntryHistory": ___, "externalReferenceCode": ___, "label": ___, "modifiable": ___, "name": ___, "objectActions": ___, "objectFields": ___, "objectLayouts": ___, "objectRelationships": ___, "objectValidationRules": ___, "objectViews": ___, "panelAppOrder": ___, "panelCategoryKey": ___, "pluralLabel": ___, "portlet": ___, "scope": ___, "status": ___, "storageType": ___, "system": ___, "titleObjectFieldName": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 * curl -X 'PUT' 'http://localhost:8080/o/object-admin/v1.0/object-definitions/by-external-reference-code/{externalReferenceCode}' -d $'{"accountEntryRestricted": ___, "accountEntryRestrictedObjectFieldName": ___, "active": ___, "defaultLanguageId": ___, "enableCategorization": ___, "enableComments": ___, "enableLocalization": ___, "enableObjectEntryHistory": ___, "externalReferenceCode": ___, "label": ___, "modifiable": ___, "name": ___, "objectActions": ___, "objectFields": ___, "objectFolderExternalReferenceCode": ___, "objectLayouts": ___, "objectRelationships": ___, "objectValidationRules": ___, "objectViews": ___, "panelAppOrder": ___, "panelCategoryKey": ___, "pluralLabel": ___, "portlet": ___, "scope": ___, "status": ___, "storageType": ___, "system": ___, "titleObjectFieldName": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
@@ -463,7 +456,7 @@ public abstract class BaseObjectDefinitionResourceImpl
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'PATCH' 'http://localhost:8080/o/object-admin/v1.0/object-definitions/{objectDefinitionId}' -d $'{"accountEntryRestricted": ___, "accountEntryRestrictedObjectFieldName": ___, "active": ___, "defaultLanguageId": ___, "enableCategorization": ___, "enableComments": ___, "enableLocalization": ___, "enableObjectEntryHistory": ___, "externalReferenceCode": ___, "label": ___, "modifiable": ___, "name": ___, "objectActions": ___, "objectFields": ___, "objectLayouts": ___, "objectRelationships": ___, "objectValidationRules": ___, "objectViews": ___, "panelAppOrder": ___, "panelCategoryKey": ___, "pluralLabel": ___, "portlet": ___, "scope": ___, "status": ___, "storageType": ___, "system": ___, "titleObjectFieldName": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 * curl -X 'PATCH' 'http://localhost:8080/o/object-admin/v1.0/object-definitions/{objectDefinitionId}' -d $'{"accountEntryRestricted": ___, "accountEntryRestrictedObjectFieldName": ___, "active": ___, "defaultLanguageId": ___, "enableCategorization": ___, "enableComments": ___, "enableLocalization": ___, "enableObjectEntryHistory": ___, "externalReferenceCode": ___, "label": ___, "modifiable": ___, "name": ___, "objectActions": ___, "objectFields": ___, "objectFolderExternalReferenceCode": ___, "objectLayouts": ___, "objectRelationships": ___, "objectValidationRules": ___, "objectViews": ___, "panelAppOrder": ___, "panelCategoryKey": ___, "pluralLabel": ___, "portlet": ___, "scope": ___, "status": ___, "storageType": ___, "system": ___, "titleObjectFieldName": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
@@ -553,6 +546,11 @@ public abstract class BaseObjectDefinitionResourceImpl
 			existingObjectDefinition.setName(objectDefinition.getName());
 		}
 
+		if (objectDefinition.getObjectFolderExternalReferenceCode() != null) {
+			existingObjectDefinition.setObjectFolderExternalReferenceCode(
+				objectDefinition.getObjectFolderExternalReferenceCode());
+		}
+
 		if (objectDefinition.getPanelAppOrder() != null) {
 			existingObjectDefinition.setPanelAppOrder(
 				objectDefinition.getPanelAppOrder());
@@ -599,7 +597,7 @@ public abstract class BaseObjectDefinitionResourceImpl
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'PUT' 'http://localhost:8080/o/object-admin/v1.0/object-definitions/{objectDefinitionId}' -d $'{"accountEntryRestricted": ___, "accountEntryRestrictedObjectFieldName": ___, "active": ___, "defaultLanguageId": ___, "enableCategorization": ___, "enableComments": ___, "enableLocalization": ___, "enableObjectEntryHistory": ___, "externalReferenceCode": ___, "label": ___, "modifiable": ___, "name": ___, "objectActions": ___, "objectFields": ___, "objectLayouts": ___, "objectRelationships": ___, "objectValidationRules": ___, "objectViews": ___, "panelAppOrder": ___, "panelCategoryKey": ___, "pluralLabel": ___, "portlet": ___, "scope": ___, "status": ___, "storageType": ___, "system": ___, "titleObjectFieldName": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 * curl -X 'PUT' 'http://localhost:8080/o/object-admin/v1.0/object-definitions/{objectDefinitionId}' -d $'{"accountEntryRestricted": ___, "accountEntryRestrictedObjectFieldName": ___, "active": ___, "defaultLanguageId": ___, "enableCategorization": ___, "enableComments": ___, "enableLocalization": ___, "enableObjectEntryHistory": ___, "externalReferenceCode": ___, "label": ___, "modifiable": ___, "name": ___, "objectActions": ___, "objectFields": ___, "objectFolderExternalReferenceCode": ___, "objectLayouts": ___, "objectRelationships": ___, "objectValidationRules": ___, "objectViews": ___, "panelAppOrder": ___, "panelCategoryKey": ___, "pluralLabel": ___, "portlet": ___, "scope": ___, "status": ___, "storageType": ___, "system": ___, "titleObjectFieldName": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
@@ -713,37 +711,73 @@ public abstract class BaseObjectDefinitionResourceImpl
 			Map<String, Serializable> parameters)
 		throws Exception {
 
-		UnsafeConsumer<ObjectDefinition, Exception>
-			objectDefinitionUnsafeConsumer = null;
+		UnsafeFunction<ObjectDefinition, ObjectDefinition, Exception>
+			objectDefinitionUnsafeFunction = null;
 
 		String createStrategy = (String)parameters.getOrDefault(
 			"createStrategy", "INSERT");
 
-		if ("INSERT".equalsIgnoreCase(createStrategy)) {
-			objectDefinitionUnsafeConsumer =
+		if (StringUtil.equalsIgnoreCase(createStrategy, "INSERT")) {
+			objectDefinitionUnsafeFunction =
 				objectDefinition -> postObjectDefinition(objectDefinition);
 		}
 
-		if ("UPSERT".equalsIgnoreCase(createStrategy)) {
-			objectDefinitionUnsafeConsumer =
-				objectDefinition -> putObjectDefinitionByExternalReferenceCode(
-					objectDefinition.getExternalReferenceCode(),
-					objectDefinition);
+		if (StringUtil.equalsIgnoreCase(createStrategy, "UPSERT")) {
+			String updateStrategy = (String)parameters.getOrDefault(
+				"updateStrategy", "UPDATE");
+
+			if (StringUtil.equalsIgnoreCase(updateStrategy, "UPDATE")) {
+				objectDefinitionUnsafeFunction =
+					objectDefinition ->
+						putObjectDefinitionByExternalReferenceCode(
+							objectDefinition.getExternalReferenceCode(),
+							objectDefinition);
+			}
+
+			if (StringUtil.equalsIgnoreCase(updateStrategy, "PARTIAL_UPDATE")) {
+				objectDefinitionUnsafeFunction = objectDefinition -> {
+					ObjectDefinition persistedObjectDefinition = null;
+
+					try {
+						ObjectDefinition getObjectDefinition =
+							getObjectDefinitionByExternalReferenceCode(
+								objectDefinition.getExternalReferenceCode());
+
+						persistedObjectDefinition = patchObjectDefinition(
+							getObjectDefinition.getId() != null ?
+								getObjectDefinition.getId() :
+									_parseLong(
+										(String)parameters.get(
+											"objectDefinitionId")),
+							objectDefinition);
+					}
+					catch (NoSuchModelException noSuchModelException) {
+						persistedObjectDefinition = postObjectDefinition(
+							objectDefinition);
+					}
+
+					return persistedObjectDefinition;
+				};
+			}
 		}
 
-		if (objectDefinitionUnsafeConsumer == null) {
+		if (objectDefinitionUnsafeFunction == null) {
 			throw new NotSupportedException(
 				"Create strategy \"" + createStrategy +
 					"\" is not supported for ObjectDefinition");
 		}
 
-		if (contextBatchUnsafeConsumer != null) {
+		if (contextBatchUnsafeBiConsumer != null) {
+			contextBatchUnsafeBiConsumer.accept(
+				objectDefinitions, objectDefinitionUnsafeFunction);
+		}
+		else if (contextBatchUnsafeConsumer != null) {
 			contextBatchUnsafeConsumer.accept(
-				objectDefinitions, objectDefinitionUnsafeConsumer);
+				objectDefinitions, objectDefinitionUnsafeFunction::apply);
 		}
 		else {
 			for (ObjectDefinition objectDefinition : objectDefinitions) {
-				objectDefinitionUnsafeConsumer.accept(objectDefinition);
+				objectDefinitionUnsafeFunction.apply(objectDefinition);
 			}
 		}
 	}
@@ -824,14 +858,14 @@ public abstract class BaseObjectDefinitionResourceImpl
 			Map<String, Serializable> parameters)
 		throws Exception {
 
-		UnsafeConsumer<ObjectDefinition, Exception>
-			objectDefinitionUnsafeConsumer = null;
+		UnsafeFunction<ObjectDefinition, ObjectDefinition, Exception>
+			objectDefinitionUnsafeFunction = null;
 
 		String updateStrategy = (String)parameters.getOrDefault(
 			"updateStrategy", "UPDATE");
 
-		if ("PARTIAL_UPDATE".equalsIgnoreCase(updateStrategy)) {
-			objectDefinitionUnsafeConsumer =
+		if (StringUtil.equalsIgnoreCase(updateStrategy, "PARTIAL_UPDATE")) {
+			objectDefinitionUnsafeFunction =
 				objectDefinition -> patchObjectDefinition(
 					objectDefinition.getId() != null ?
 						objectDefinition.getId() :
@@ -840,8 +874,8 @@ public abstract class BaseObjectDefinitionResourceImpl
 					objectDefinition);
 		}
 
-		if ("UPDATE".equalsIgnoreCase(updateStrategy)) {
-			objectDefinitionUnsafeConsumer =
+		if (StringUtil.equalsIgnoreCase(updateStrategy, "UPDATE")) {
+			objectDefinitionUnsafeFunction =
 				objectDefinition -> putObjectDefinition(
 					objectDefinition.getId() != null ?
 						objectDefinition.getId() :
@@ -850,19 +884,23 @@ public abstract class BaseObjectDefinitionResourceImpl
 					objectDefinition);
 		}
 
-		if (objectDefinitionUnsafeConsumer == null) {
+		if (objectDefinitionUnsafeFunction == null) {
 			throw new NotSupportedException(
 				"Update strategy \"" + updateStrategy +
 					"\" is not supported for ObjectDefinition");
 		}
 
-		if (contextBatchUnsafeConsumer != null) {
+		if (contextBatchUnsafeBiConsumer != null) {
+			contextBatchUnsafeBiConsumer.accept(
+				objectDefinitions, objectDefinitionUnsafeFunction);
+		}
+		else if (contextBatchUnsafeConsumer != null) {
 			contextBatchUnsafeConsumer.accept(
-				objectDefinitions, objectDefinitionUnsafeConsumer);
+				objectDefinitions, objectDefinitionUnsafeFunction::apply);
 		}
 		else {
 			for (ObjectDefinition objectDefinition : objectDefinitions) {
-				objectDefinitionUnsafeConsumer.accept(objectDefinition);
+				objectDefinitionUnsafeFunction.apply(objectDefinition);
 			}
 		}
 	}
@@ -877,6 +915,15 @@ public abstract class BaseObjectDefinitionResourceImpl
 
 	public void setContextAcceptLanguage(AcceptLanguage contextAcceptLanguage) {
 		this.contextAcceptLanguage = contextAcceptLanguage;
+	}
+
+	public void setContextBatchUnsafeBiConsumer(
+		UnsafeBiConsumer
+			<Collection<ObjectDefinition>,
+			 UnsafeFunction<ObjectDefinition, ObjectDefinition, Exception>,
+			 Exception> contextBatchUnsafeBiConsumer) {
+
+		this.contextBatchUnsafeBiConsumer = contextBatchUnsafeBiConsumer;
 	}
 
 	public void setContextBatchUnsafeConsumer(
@@ -1143,6 +1190,10 @@ public abstract class BaseObjectDefinitionResourceImpl
 	}
 
 	protected AcceptLanguage contextAcceptLanguage;
+	protected UnsafeBiConsumer
+		<Collection<ObjectDefinition>,
+		 UnsafeFunction<ObjectDefinition, ObjectDefinition, Exception>,
+		 Exception> contextBatchUnsafeBiConsumer;
 	protected UnsafeBiConsumer
 		<Collection<ObjectDefinition>,
 		 UnsafeConsumer<ObjectDefinition, Exception>, Exception>

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.document.library.web.internal.info.item.provider;
@@ -22,6 +13,7 @@ import com.liferay.document.library.kernel.service.DLFileEntryTypeLocalService;
 import com.liferay.info.item.InfoItemFormVariation;
 import com.liferay.info.item.provider.InfoItemFormVariationsProvider;
 import com.liferay.info.localized.InfoLocalizedValue;
+import com.liferay.osgi.util.service.Snapshot;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.repository.model.FileEntry;
@@ -37,9 +29,6 @@ import java.util.List;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
-import org.osgi.service.component.annotations.ReferenceCardinality;
-import org.osgi.service.component.annotations.ReferencePolicy;
-import org.osgi.service.component.annotations.ReferencePolicyOption;
 
 /**
  * @author Adolfo Pérez
@@ -98,10 +87,9 @@ public class FileEntryInfoItemFormVariationsProvider
 
 		infoItemFormVariations.add(_getBasicDocumentInfoItemFormVariation());
 
-		List<DLFileEntryType> dlFileEntryTypes =
-			_dlFileEntryTypeLocalService.getFileEntryTypes(groupIds);
+		for (DLFileEntryType dlFileEntryType :
+				_dlFileEntryTypeLocalService.getFileEntryTypes(groupIds)) {
 
-		for (DLFileEntryType dlFileEntryType : dlFileEntryTypes) {
 			infoItemFormVariations.add(
 				new InfoItemFormVariation(
 					dlFileEntryType.getGroupId(),
@@ -134,7 +122,8 @@ public class FileEntryInfoItemFormVariationsProvider
 	private long[] _getCurrentAndAncestorSiteGroupIds(long groupId)
 		throws PortalException {
 
-		DepotEntryLocalService depotEntryLocalService = _depotEntryLocalService;
+		DepotEntryLocalService depotEntryLocalService =
+			_depotEntryLocalServiceSnapshot.get();
 
 		if (depotEntryLocalService == null) {
 			return _portal.getCurrentAndAncestorSiteGroupIds(groupId);
@@ -148,12 +137,10 @@ public class FileEntryInfoItemFormVariationsProvider
 				DepotEntry::getGroupId));
 	}
 
-	@Reference(
-		cardinality = ReferenceCardinality.OPTIONAL,
-		policy = ReferencePolicy.DYNAMIC,
-		policyOption = ReferencePolicyOption.GREEDY
-	)
-	private volatile DepotEntryLocalService _depotEntryLocalService;
+	private static final Snapshot<DepotEntryLocalService>
+		_depotEntryLocalServiceSnapshot = new Snapshot<>(
+			FileEntryInfoItemFormVariationsProvider.class,
+			DepotEntryLocalService.class, null, true);
 
 	@Reference
 	private DLFileEntryTypeLocalService _dlFileEntryTypeLocalService;

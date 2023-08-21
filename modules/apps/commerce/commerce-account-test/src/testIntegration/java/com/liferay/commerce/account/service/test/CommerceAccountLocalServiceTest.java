@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.account.service.test;
@@ -18,9 +9,9 @@ import com.liferay.account.constants.AccountConstants;
 import com.liferay.account.model.AccountEntry;
 import com.liferay.account.service.AccountEntryLocalService;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
-import com.liferay.commerce.account.constants.CommerceAccountConstants;
 import com.liferay.commerce.account.test.util.CommerceAccountTestUtil;
-import com.liferay.commerce.account.util.CommerceAccountHelper;
+import com.liferay.commerce.product.constants.CommerceChannelConstants;
+import com.liferay.commerce.util.CommerceAccountHelper;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -97,7 +88,7 @@ public class CommerceAccountLocalServiceTest {
 				AccountConstants.PARENT_ACCOUNT_ENTRY_ID_DEFAULT,
 				StringPool.BLANK,
 				_commerceAccountHelper.toAccountEntryTypes(
-					CommerceAccountConstants.SITE_TYPE_B2B),
+					CommerceChannelConstants.SITE_TYPE_B2B),
 				WorkflowConstants.STATUS_ANY, QueryUtil.ALL_POS,
 				QueryUtil.ALL_POS);
 
@@ -107,7 +98,7 @@ public class CommerceAccountLocalServiceTest {
 				AccountConstants.PARENT_ACCOUNT_ENTRY_ID_DEFAULT,
 				StringPool.BLANK,
 				_commerceAccountHelper.toAccountEntryTypes(
-					CommerceAccountConstants.SITE_TYPE_B2B));
+					CommerceChannelConstants.SITE_TYPE_B2B));
 
 		Assert.assertEquals(
 			_user.toString(), accountEntries.size(), accountEntriesCount);
@@ -152,7 +143,7 @@ public class CommerceAccountLocalServiceTest {
 				AccountConstants.PARENT_ACCOUNT_ENTRY_ID_DEFAULT,
 				StringPool.BLANK,
 				_commerceAccountHelper.toAccountEntryTypes(
-					CommerceAccountConstants.SITE_TYPE_B2C),
+					CommerceChannelConstants.SITE_TYPE_B2C),
 				WorkflowConstants.STATUS_ANY, QueryUtil.ALL_POS,
 				QueryUtil.ALL_POS);
 
@@ -162,7 +153,7 @@ public class CommerceAccountLocalServiceTest {
 				AccountConstants.PARENT_ACCOUNT_ENTRY_ID_DEFAULT,
 				StringPool.BLANK,
 				_commerceAccountHelper.toAccountEntryTypes(
-					CommerceAccountConstants.SITE_TYPE_B2C));
+					CommerceChannelConstants.SITE_TYPE_B2C));
 
 		Assert.assertEquals(
 			_user.toString(), accountEntries.size(), accountEntriesCount);
@@ -238,7 +229,7 @@ public class CommerceAccountLocalServiceTest {
 				AccountConstants.PARENT_ACCOUNT_ENTRY_ID_DEFAULT,
 				StringPool.BLANK,
 				_commerceAccountHelper.toAccountEntryTypes(
-					CommerceAccountConstants.SITE_TYPE_B2B),
+					CommerceChannelConstants.SITE_TYPE_B2B),
 				QueryUtil.ALL_POS, QueryUtil.ALL_POS);
 
 		int organizationUserAccountEntriesCount1 =
@@ -247,7 +238,7 @@ public class CommerceAccountLocalServiceTest {
 				AccountConstants.PARENT_ACCOUNT_ENTRY_ID_DEFAULT,
 				StringPool.BLANK,
 				_commerceAccountHelper.toAccountEntryTypes(
-					CommerceAccountConstants.SITE_TYPE_B2B));
+					CommerceChannelConstants.SITE_TYPE_B2B));
 
 		Assert.assertEquals(
 			organizationUser1.toString(),
@@ -271,7 +262,7 @@ public class CommerceAccountLocalServiceTest {
 				AccountConstants.PARENT_ACCOUNT_ENTRY_ID_DEFAULT,
 				StringPool.BLANK,
 				_commerceAccountHelper.toAccountEntryTypes(
-					CommerceAccountConstants.SITE_TYPE_B2B),
+					CommerceChannelConstants.SITE_TYPE_B2B),
 				QueryUtil.ALL_POS, QueryUtil.ALL_POS);
 
 		int organizationUserAccountEntriesCount2 =
@@ -280,7 +271,7 @@ public class CommerceAccountLocalServiceTest {
 				AccountConstants.PARENT_ACCOUNT_ENTRY_ID_DEFAULT,
 				StringPool.BLANK,
 				_commerceAccountHelper.toAccountEntryTypes(
-					CommerceAccountConstants.SITE_TYPE_B2B));
+					CommerceChannelConstants.SITE_TYPE_B2B));
 
 		Assert.assertEquals(
 			organizationUser2.toString(),
@@ -343,7 +334,7 @@ public class CommerceAccountLocalServiceTest {
 				AccountConstants.PARENT_ACCOUNT_ENTRY_ID_DEFAULT,
 				StringPool.BLANK,
 				_commerceAccountHelper.toAccountEntryTypes(
-					CommerceAccountConstants.SITE_TYPE_B2B),
+					CommerceChannelConstants.SITE_TYPE_B2B),
 				QueryUtil.ALL_POS, QueryUtil.ALL_POS);
 
 		int businessUserAccountEntriesCount1 =
@@ -352,7 +343,7 @@ public class CommerceAccountLocalServiceTest {
 				AccountConstants.PARENT_ACCOUNT_ENTRY_ID_DEFAULT,
 				StringPool.BLANK,
 				_commerceAccountHelper.toAccountEntryTypes(
-					CommerceAccountConstants.SITE_TYPE_B2B));
+					CommerceChannelConstants.SITE_TYPE_B2B));
 
 		Assert.assertEquals(
 			businessUser1.toString(), businessUserAccountEntries1.size(),
@@ -373,7 +364,7 @@ public class CommerceAccountLocalServiceTest {
 				AccountConstants.PARENT_ACCOUNT_ENTRY_ID_DEFAULT,
 				StringPool.BLANK,
 				_commerceAccountHelper.toAccountEntryTypes(
-					CommerceAccountConstants.SITE_TYPE_B2B),
+					CommerceChannelConstants.SITE_TYPE_B2B),
 				QueryUtil.ALL_POS, QueryUtil.ALL_POS);
 
 		int businessUserAccountEntriesCount2 =
@@ -382,7 +373,7 @@ public class CommerceAccountLocalServiceTest {
 				AccountConstants.PARENT_ACCOUNT_ENTRY_ID_DEFAULT,
 				StringPool.BLANK,
 				_commerceAccountHelper.toAccountEntryTypes(
-					CommerceAccountConstants.SITE_TYPE_B2B));
+					CommerceChannelConstants.SITE_TYPE_B2B));
 
 		Assert.assertEquals(
 			businessUser2.toString(), businessUserAccountEntries2.size(),
@@ -538,7 +529,7 @@ public class CommerceAccountLocalServiceTest {
 				AccountConstants.PARENT_ACCOUNT_ENTRY_ID_DEFAULT,
 				StringPool.BLANK,
 				_commerceAccountHelper.toAccountEntryTypes(
-					CommerceAccountConstants.SITE_TYPE_B2B),
+					CommerceChannelConstants.SITE_TYPE_B2B),
 				QueryUtil.ALL_POS, QueryUtil.ALL_POS);
 
 		int userAccountEntriesCount1 =
@@ -547,7 +538,7 @@ public class CommerceAccountLocalServiceTest {
 				AccountConstants.PARENT_ACCOUNT_ENTRY_ID_DEFAULT,
 				StringPool.BLANK,
 				_commerceAccountHelper.toAccountEntryTypes(
-					CommerceAccountConstants.SITE_TYPE_B2B));
+					CommerceChannelConstants.SITE_TYPE_B2B));
 
 		Assert.assertEquals(
 			userAccountEntries1.toString(), userAccountEntries1.size(),
@@ -568,7 +559,7 @@ public class CommerceAccountLocalServiceTest {
 				AccountConstants.PARENT_ACCOUNT_ENTRY_ID_DEFAULT,
 				StringPool.BLANK,
 				_commerceAccountHelper.toAccountEntryTypes(
-					CommerceAccountConstants.SITE_TYPE_B2B),
+					CommerceChannelConstants.SITE_TYPE_B2B),
 				QueryUtil.ALL_POS, QueryUtil.ALL_POS);
 
 		int userAccountEntriesCount2 =
@@ -577,7 +568,7 @@ public class CommerceAccountLocalServiceTest {
 				AccountConstants.PARENT_ACCOUNT_ENTRY_ID_DEFAULT,
 				StringPool.BLANK,
 				_commerceAccountHelper.toAccountEntryTypes(
-					CommerceAccountConstants.SITE_TYPE_B2B));
+					CommerceChannelConstants.SITE_TYPE_B2B));
 
 		Assert.assertEquals(
 			userAccountEntries2.toString(), userAccountEntries2.size(),
@@ -604,7 +595,7 @@ public class CommerceAccountLocalServiceTest {
 				AccountConstants.PARENT_ACCOUNT_ENTRY_ID_DEFAULT,
 				StringPool.BLANK,
 				_commerceAccountHelper.toAccountEntryTypes(
-					CommerceAccountConstants.SITE_TYPE_B2B),
+					CommerceChannelConstants.SITE_TYPE_B2B),
 				QueryUtil.ALL_POS, QueryUtil.ALL_POS);
 
 		int userAccountEntriesCount3 =
@@ -613,7 +604,7 @@ public class CommerceAccountLocalServiceTest {
 				AccountConstants.PARENT_ACCOUNT_ENTRY_ID_DEFAULT,
 				StringPool.BLANK,
 				_commerceAccountHelper.toAccountEntryTypes(
-					CommerceAccountConstants.SITE_TYPE_B2B));
+					CommerceChannelConstants.SITE_TYPE_B2B));
 
 		Assert.assertEquals(
 			userAccountEntries3.toString(), userAccountEntries3.size(),
@@ -644,7 +635,7 @@ public class CommerceAccountLocalServiceTest {
 				AccountConstants.PARENT_ACCOUNT_ENTRY_ID_DEFAULT,
 				StringPool.BLANK,
 				_commerceAccountHelper.toAccountEntryTypes(
-					CommerceAccountConstants.SITE_TYPE_B2B),
+					CommerceChannelConstants.SITE_TYPE_B2B),
 				QueryUtil.ALL_POS, QueryUtil.ALL_POS);
 
 		int userAccountEntriesCount4 =
@@ -653,7 +644,7 @@ public class CommerceAccountLocalServiceTest {
 				AccountConstants.PARENT_ACCOUNT_ENTRY_ID_DEFAULT,
 				StringPool.BLANK,
 				_commerceAccountHelper.toAccountEntryTypes(
-					CommerceAccountConstants.SITE_TYPE_B2B));
+					CommerceChannelConstants.SITE_TYPE_B2B));
 
 		Assert.assertEquals(
 			userAccountEntries4.toString(), userAccountEntries4.size(),
@@ -674,7 +665,7 @@ public class CommerceAccountLocalServiceTest {
 				AccountConstants.PARENT_ACCOUNT_ENTRY_ID_DEFAULT,
 				StringPool.BLANK,
 				_commerceAccountHelper.toAccountEntryTypes(
-					CommerceAccountConstants.SITE_TYPE_B2B),
+					CommerceChannelConstants.SITE_TYPE_B2B),
 				QueryUtil.ALL_POS, QueryUtil.ALL_POS);
 
 		int userAccountEntriesCount5 =
@@ -683,7 +674,7 @@ public class CommerceAccountLocalServiceTest {
 				AccountConstants.PARENT_ACCOUNT_ENTRY_ID_DEFAULT,
 				StringPool.BLANK,
 				_commerceAccountHelper.toAccountEntryTypes(
-					CommerceAccountConstants.SITE_TYPE_B2B));
+					CommerceChannelConstants.SITE_TYPE_B2B));
 
 		Assert.assertEquals(
 			userAccountEntries5.toString(), userAccountEntries5.size(),

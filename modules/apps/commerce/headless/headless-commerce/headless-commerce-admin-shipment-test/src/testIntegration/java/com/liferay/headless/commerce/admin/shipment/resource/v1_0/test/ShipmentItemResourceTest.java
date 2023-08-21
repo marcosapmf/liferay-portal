@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.admin.shipment.resource.v1_0.test;
@@ -90,7 +81,7 @@ public class ShipmentItemResourceTest extends BaseShipmentItemResourceTestCase {
 		_cpInstance = CPTestUtil.addCPInstanceWithRandomSku(
 			_commerceOrder.getGroupId(), price);
 
-		CPInstanceLocalServiceUtil.updateCPInstance(_cpInstance);
+		_cpInstance = CPInstanceLocalServiceUtil.updateCPInstance(_cpInstance);
 
 		_commerceInventoryWarehouse =
 			CommerceInventoryTestUtil.addCommerceInventoryWarehouse(
@@ -151,7 +142,7 @@ public class ShipmentItemResourceTest extends BaseShipmentItemResourceTestCase {
 		CommerceOrderItem commerceOrderItem =
 			CommerceTestUtil.addCommerceOrderItem(
 				_commerceOrder.getCommerceOrderId(),
-				_cpInstance.getCPInstanceId(), 5);
+				_cpInstance.getCPInstanceId(), BigDecimal.valueOf(5));
 
 		return new ShipmentItem() {
 			{
@@ -159,12 +150,18 @@ public class ShipmentItemResourceTest extends BaseShipmentItemResourceTestCase {
 				externalReferenceCode = RandomTestUtil.randomString();
 				modifiedDate = RandomTestUtil.nextDate();
 				orderItemId = commerceOrderItem.getCommerceOrderItemId();
-				quantity = commerceOrderItem.getQuantity();
 				shipmentId = _commerceShipment.getCommerceShipmentId();
 				userName = commerceOrderItem.getUserName();
 				warehouseId =
 					_commerceInventoryWarehouse.
 						getCommerceInventoryWarehouseId();
+
+				setQuantity(
+					() -> {
+						BigDecimal quantity = commerceOrderItem.getQuantity();
+
+						return quantity.intValue();
+					});
 			}
 		};
 	}
@@ -267,7 +264,7 @@ public class ShipmentItemResourceTest extends BaseShipmentItemResourceTestCase {
 		CommerceOrderItem commerceOrderItem =
 			CommerceTestUtil.addCommerceOrderItem(
 				_commerceOrder.getCommerceOrderId(),
-				_cpInstance.getCPInstanceId(), 5);
+				_cpInstance.getCPInstanceId(), BigDecimal.valueOf(5));
 
 		return _addShipmentItem(
 			RandomTestUtil.randomString(),
@@ -284,7 +281,7 @@ public class ShipmentItemResourceTest extends BaseShipmentItemResourceTestCase {
 			CommerceShipmentItemLocalServiceUtil.addCommerceShipmentItem(
 				externalReferenceCode, commerceShipmentId, commerceOrderItemId,
 				_commerceInventoryWarehouse.getCommerceInventoryWarehouseId(),
-				5, true, _serviceContext);
+				5, null, true, _serviceContext);
 
 		_commerceShipmentItems.add(_commerceShipmentItem);
 

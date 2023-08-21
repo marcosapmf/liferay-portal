@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.source.formatter.check;
@@ -28,9 +19,12 @@ import com.liferay.source.formatter.util.SourceFormatterUtil;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.StringReader;
 
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.List;
+import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -53,7 +47,37 @@ public class PropertiesFeatureFlagsCheck extends BaseFileCheck {
 			return content;
 		}
 
+		_checkUnnecessaryFeatureFlags(fileName, content);
+
 		return _generateFeatureFlags(content);
+	}
+
+	private void _checkUnnecessaryFeatureFlags(String fileName, String content)
+		throws IOException {
+
+		Properties properties = new Properties();
+
+		properties.load(new StringReader(content));
+
+		Enumeration<String> enumeration =
+			(Enumeration<String>)properties.propertyNames();
+
+		while (enumeration.hasMoreElements()) {
+			String key = enumeration.nextElement();
+
+			if (!key.startsWith("feature.flag.") || !key.endsWith(".type")) {
+				continue;
+			}
+
+			String value = properties.getProperty(key);
+
+			if (StringUtil.equals(value, "dev")) {
+				addMessage(
+					fileName,
+					"Remove unnecessary property '" + key +
+						"', since 'dev' is the default value");
+			}
+		}
 	}
 
 	private String _generateFeatureFlags(String content) throws IOException {
@@ -62,8 +86,8 @@ public class PropertiesFeatureFlagsCheck extends BaseFileCheck {
 		List<String> fileNames = SourceFormatterUtil.filterFileNames(
 			_allFileNames, new String[] {"**/test/**"},
 			new String[] {
-				"**/bnd.bnd", "**/*.java", "**/*.js", "**/*.jsp", "**/*.jspf",
-				"**/*.jsx", "**/*.ts", "**/*.tsx"
+				"**/bnd.bnd", "**/*.java", "**/*.js", "**/*.json", "**/*.jsp",
+				"**/*.jspf", "**/*.jsx", "**/*.ts", "**/*.tsx"
 			},
 			getSourceFormatterExcludes(), true);
 
@@ -88,6 +112,10 @@ public class PropertiesFeatureFlagsCheck extends BaseFileCheck {
 				featureFlags.addAll(
 					_getFeatureFlags(fileContent, _featureFlagPattern1));
 				featureFlags.addAll(_getFeatureFlags(fileContent));
+			}
+			else if (fileName.endsWith(".json")) {
+				featureFlags.addAll(
+					_getFeatureFlags(fileContent, _featureFlagPattern4));
 			}
 			else {
 				featureFlags.addAll(
@@ -195,11 +223,13 @@ public class PropertiesFeatureFlagsCheck extends BaseFileCheck {
 	}
 
 	private static final Pattern _featureFlagPattern1 = Pattern.compile(
-		"\\.feature\\.flag=(.+?)\"");
+		"feature\\.flag[.=]([A-Z]+-\\d+)");
 	private static final Pattern _featureFlagPattern2 = Pattern.compile(
 		"FeatureFlagManagerUtil\\.isEnabled\\(");
 	private static final Pattern _featureFlagPattern3 = Pattern.compile(
 		"Liferay\\.FeatureFlags\\['(.+?)'\\]");
+	private static final Pattern _featureFlagPattern4 = Pattern.compile(
+		"\"featureFlag\": \"(.+?)\"");
 	private static final Pattern _featureFlagsPattern = Pattern.compile(
 		"(\n|\\A)##\n## Feature Flag\n##(\n\n[\\s\\S]*?)(?=(\n\n##|\\Z))");
 

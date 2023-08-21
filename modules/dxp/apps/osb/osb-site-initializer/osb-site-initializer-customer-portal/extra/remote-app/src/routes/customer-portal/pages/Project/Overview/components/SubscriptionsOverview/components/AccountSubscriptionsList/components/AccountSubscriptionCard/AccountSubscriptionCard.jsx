@@ -1,35 +1,41 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayCard from '@clayui/card';
 import classNames from 'classnames';
-import {memo} from 'react';
+import {memo, useMemo} from 'react';
+import {useAppPropertiesContext} from '~/common/contexts/AppPropertiesContext';
+
+import PopoverIconButton from '~/routes/customer-portal/components/PopoverIconButton';
 import i18n from '../../../../../../../../../../../common/I18n';
 import {
 	Skeleton,
 	StatusTag,
 } from '../../../../../../../../../../../common/components';
-
+import {useGetAccountSubscriptionUsage} from '../../../../../../../../../../../common/services/liferay/graphql/account-subscription-usage';
 import {
 	FORMAT_DATE_TYPES,
 	SLA_STATUS_TYPES,
 } from '../../../../../../../../../../../common/utils/constants';
+import {
+	PRODUCT_DISPLAY_EXCEPTION,
+	SUBSCRIPTION_TYPES,
+} from '../../../../../../../../../../../common/utils/constants/subscriptionCardsCount';
 import getDateCustomFormat from '../../../../../../../../../../../common/utils/getDateCustomFormat';
 
 const AccountSubscriptionCard = ({
 	loading,
 	logoPath: IconSVG,
 	onClick,
+	selectedAccountSubscriptionGroup,
 	...accountSubscription
 }) => {
+	const instanceSize = Number(accountSubscription.instanceSize ?? 0);
+
+	const {articleWhatIsMyInstanceSizingValueURL} = useAppPropertiesContext();
+
 	const getDatesDisplay = () =>
 		`${getDateCustomFormat(
 			accountSubscription.startDate,
@@ -38,6 +44,65 @@ const AccountSubscriptionCard = ({
 			accountSubscription.endDate,
 			FORMAT_DATE_TYPES.day2DMonth2DYearN
 		)}`;
+
+	const {data: accountSubscriptionUsageData} = useGetAccountSubscriptionUsage(
+		accountSubscription?.accountKey,
+		accountSubscription?.productKey
+	);
+
+	const currentConsumption = useMemo(
+		() =>
+			accountSubscriptionUsageData?.getAccountSubscriptionUsage
+				?.currentConsumption,
+		[accountSubscriptionUsageData]
+	);
+
+	const DisplayOnCard = {
+		Blank: null,
+		Purchased: (
+			<>
+				{accountSubscription?.quantity && (
+					<span className="align-items-center d-flex justify-content-center m-0">
+						{accountSubscription?.quantity}
+					</span>
+				)}
+			</>
+		),
+		PurchasedAndProvisioned: (
+			<p className="d-flex justify-content-center m-0">
+				{currentConsumption !== undefined
+					? `${currentConsumption}/${accountSubscription?.quantity}`
+					: `0/${accountSubscription?.quantity}`}
+			</p>
+		),
+	};
+
+	const displayQuantityOnCard = (subscriptionType, productName) => {
+		const isPurchasedAndProvisioned = SUBSCRIPTION_TYPES.PurchasedAndProvisioned.includes(
+			subscriptionType
+		);
+		const isPurchased = SUBSCRIPTION_TYPES.Purchased.includes(
+			subscriptionType
+		);
+
+		if (isPurchasedAndProvisioned) {
+			return PRODUCT_DISPLAY_EXCEPTION.purchasedProduct.includes(
+				productName
+			)
+				? DisplayOnCard.Purchased
+				: DisplayOnCard.PurchasedAndProvisioned;
+		}
+
+		if (isPurchased) {
+			return PRODUCT_DISPLAY_EXCEPTION.blankProducts.includes(productName)
+				? DisplayOnCard.Blank
+				: DisplayOnCard.Purchased;
+		}
+
+		return PRODUCT_DISPLAY_EXCEPTION.nonBlankProducts.includes(productName)
+			? DisplayOnCard.Purchased
+			: DisplayOnCard.Blank;
+	};
 
 	return (
 		<ClayCard
@@ -53,9 +118,11 @@ const AccountSubscriptionCard = ({
 				{loading ? (
 					<Skeleton className="mb-3 py-1" height={45} width={48} />
 				) : (
-					<div className="mb-3 py-1 text-center">
-						<IconSVG height={45} width={45} />
-					</div>
+					IconSVG && (
+						<div className="mb-3 py-1 text-center">
+							<IconSVG height={45} width={45} />
+						</div>
+					)
 				)}
 
 				{loading ? (
@@ -70,15 +137,31 @@ const AccountSubscriptionCard = ({
 					</h5>
 				)}
 
+				{displayQuantityOnCard(
+					selectedAccountSubscriptionGroup?.name,
+					accountSubscription?.name
+				)}
+
 				<div>
 					{loading ? (
 						<Skeleton className="mb-1" height={13} width={80} />
 					) : (
-						<p className="mb-1 text-center text-neutral-7 text-paragraph-sm">
-							{`${i18n.translate('instance-size')}: `}
+						instanceSize > 0 && (
+							<p className="mb-1 text-center text-neutral-7 text-paragraph-sm">
+								{`${i18n.translate('instance-size')}: `}
 
-							{accountSubscription.instanceSize}
-						</p>
+								{accountSubscription.instanceSize}
+
+								<PopoverIconButton
+									popoverLink={{
+										textLink: i18n.translate(
+											'learn-more-about-instance-sizing'
+										),
+										url: articleWhatIsMyInstanceSizingValueURL,
+									}}
+								/>
+							</p>
+						)
 					)}
 
 					{loading ? (

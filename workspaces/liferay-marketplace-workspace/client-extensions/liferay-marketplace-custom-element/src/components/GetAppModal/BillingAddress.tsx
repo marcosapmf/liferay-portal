@@ -1,3 +1,8 @@
+/**
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
+ */
+
 import ClayIcon from '@clayui/icon';
 import {useEffect} from 'react';
 
@@ -50,18 +55,19 @@ export function BillingAddress({
 		else {
 			setEnablePurchaseButton(false);
 		}
-	}, [billingAddress]);
+	}, [billingAddress, setEnablePurchaseButton]);
 
 	return (
 		<Section className="get-app-modal-section" label="Billing Address">
 			<div className="get-app-modal-section-card-addresses">
-				{addresses.map((address) => {
+				{addresses.map((address, i) => {
 					const {description, title} =
 						getPostalAddressDescription(address);
 
 					return (
 						<RadioCard
 							description={description}
+							key={i}
 							onChange={() => {
 								setSelectedAddress(address.name as string);
 

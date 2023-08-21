@@ -1,18 +1,13 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
+
+<%@ page import="javax.portlet.WindowState" %>
+
+<%@ taglib uri="http://liferay.com/tld/aui" prefix="aui" %>
 
 <%@ include file="/init.jsp" %>
 
@@ -183,7 +178,7 @@
 
 					<span id="<portlet:namespace />passwordCapsLockSpan" style="display: none;"><liferay-ui:message key="caps-lock-is-on" /></span>
 
-					<c:if test="<%= company.isAutoLogin() && !PropsValues.SESSION_DISABLED %>">
+					<c:if test="<%= company.isAutoLogin() %>">
 						<aui:input checked="<%= rememberMe %>" name="rememberMe" type="checkbox" />
 					</c:if>
 				</aui:fieldset>
@@ -197,23 +192,25 @@
 		</div>
 
 		<aui:script sandbox="<%= true %>">
-			var form = AUI.$(document.<portlet:namespace /><%= formName %>);
+			var form = document.querySelector(
+				'[name=<portlet:namespace /><%= formName %>]'
+			);
 
-			form.on('submit', (event) => {
+			form.addEventListener('submit', (event) => {
 				<c:if test="<%= Validator.isNotNull(redirect) %>">
-					var redirect = form.fm('redirect');
+					var redirect = form.querySelector('[name=<portlet:namespace />redirect');
 
 					if (redirect) {
-						var redirectVal = redirect.val();
-
-						redirect.val(redirectVal + window.location.hash);
+						redirect.value = redirect.value + window.location.hash;
 					}
 				</c:if>
 
 				submitForm(form);
 			});
 
-			form.fm('password').on('keypress', (event) => {
+			var password = form.querySelector('[name=<portlet:namespace />password');
+
+			password.addEventListener('keypress', (event) => {
 				Liferay.Util.showCapsLock(
 					event,
 					'<portlet:namespace />passwordCapsLockSpan'

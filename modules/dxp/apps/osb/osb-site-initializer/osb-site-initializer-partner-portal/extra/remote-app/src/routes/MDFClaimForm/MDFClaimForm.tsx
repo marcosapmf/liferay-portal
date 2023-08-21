@@ -1,18 +1,19 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
+import ClayAlert from '@clayui/alert';
+import ClayButton from '@clayui/button';
 import ClayLoadingIndicator from '@clayui/loading-indicator';
+import {useMemo} from 'react';
 
+import PRMForm from '../../common/components/PRMForm/PRMForm';
 import PRMFormik from '../../common/components/PRMFormik';
+import {ObjectActionName} from '../../common/enums/objectActionName';
+import {PermissionActionType} from '../../common/enums/permissionActionType';
 import useLiferayNavigate from '../../common/hooks/useLiferayNavigate';
+import usePermissionActions from '../../common/hooks/usePermissionActions';
 import MDFClaimDTO from '../../common/interfaces/dto/mdfClaimDTO';
 import {Liferay} from '../../common/services/liferay';
 import useGetDocumentFolder from '../../common/services/liferay/headless-delivery/useGetDocumentFolders';
@@ -50,6 +51,36 @@ const MDFClaimForm = () => {
 		isValidating: isValidatingMDFClaimById,
 	} = useGetMDFClaimById(Number(mdfClaimId));
 
+	const actions = usePermissionActions(ObjectActionName.MDF_CLAIM);
+
+	const hasPermissionToAccess = useMemo(
+		() =>
+			actions?.some(
+				(action) =>
+					action === PermissionActionType.CREATE ||
+					action === PermissionActionType.UPDATE
+			),
+		[actions]
+	);
+
+	const hasPermissionToByPass = useMemo(
+		() =>
+			actions?.some(
+				(action) =>
+					action === PermissionActionType.UPDATE_WO_CHANGE_STATUS
+			),
+		[actions]
+	);
+
+	const currentMDFClaimHasValidStatus =
+		mdfClaimDTO?.mdfClaimStatus.key === Status.DRAFT.key ||
+		mdfClaimDTO?.mdfClaimStatus.key === Status.REQUEST_MORE_INFO.key;
+
+	const hasPermissionShowForm = mdfClaimId
+		? (hasPermissionToAccess && currentMDFClaimHasValidStatus) ||
+		  hasPermissionToByPass
+		: hasPermissionToAccess;
+
 	const siteURL = useLiferayNavigate();
 
 	const onCancel = () =>
@@ -66,9 +97,38 @@ const MDFClaimForm = () => {
 		isValidatingMDFRequestById ||
 		(mdfClaimId && isValidatingMDFClaimById) ||
 		isValidatingClaimFolder ||
-		!claimParentFolderId
+		!claimParentFolderId ||
+		!actions
 	) {
 		return <ClayLoadingIndicator />;
+	}
+
+	if (!hasPermissionShowForm) {
+		return (
+			<PRMForm name="" title="MDF Claim">
+				<div className="d-flex justify-content-center mt-4">
+					<ClayAlert
+						className="m-0 w-100"
+						displayType="info"
+						title="Info:"
+					>
+						This MDF Claim can not be edited.
+					</ClayAlert>
+				</div>
+
+				<PRMForm.Footer>
+					<div className="d-flex mr-auto">
+						<ClayButton
+							className="mr-4"
+							displayType="secondary"
+							onClick={() => onCancel()}
+						>
+							Cancel
+						</ClayButton>
+					</div>
+				</PRMForm.Footer>
+			</PRMForm>
+		);
 	}
 
 	return (
@@ -84,9 +144,17 @@ const MDFClaimForm = () => {
 				submitForm(
 					values,
 					formikHelpers,
-					mdfRequest,
 					claimParentFolderId,
-					siteURL
+					mdfRequest,
+					siteURL,
+					Status.PENDING,
+					mdfClaimId
+						? actions.every(
+								(action) =>
+									action !==
+									PermissionActionType.UPDATE_WO_CHANGE_STATUS
+						  )
+						: true
 				)
 			}
 		>
@@ -97,10 +165,17 @@ const MDFClaimForm = () => {
 					submitForm(
 						values,
 						formikHelpers,
-						mdfRequest,
 						claimParentFolderId,
+						mdfRequest,
 						siteURL,
-						Status.DRAFT
+						Status.DRAFT,
+						mdfClaimId
+							? actions.every(
+									(action) =>
+										action !==
+										PermissionActionType.UPDATE_WO_CHANGE_STATUS
+							  )
+							: true
 					)
 				}
 				validationSchema={claimSchema}

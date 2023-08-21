@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.message.boards.service.impl;
@@ -46,6 +37,7 @@ import com.liferay.message.boards.model.MBCategory;
 import com.liferay.message.boards.model.MBDiscussion;
 import com.liferay.message.boards.model.MBMessage;
 import com.liferay.message.boards.model.MBMessageDisplay;
+import com.liferay.message.boards.model.MBMessageTable;
 import com.liferay.message.boards.model.MBThread;
 import com.liferay.message.boards.model.impl.MBCategoryImpl;
 import com.liferay.message.boards.model.impl.MBMessageDisplayImpl;
@@ -59,6 +51,9 @@ import com.liferay.message.boards.social.MBActivityKeys;
 import com.liferay.message.boards.util.comparator.MessageCreateDateComparator;
 import com.liferay.message.boards.util.comparator.MessageThreadComparator;
 import com.liferay.petra.lang.SafeCloseable;
+import com.liferay.petra.sql.dsl.DSLFunctionFactoryUtil;
+import com.liferay.petra.sql.dsl.DSLQueryFactoryUtil;
+import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.aop.AopService;
@@ -68,7 +63,6 @@ import com.liferay.portal.kernel.comment.Comment;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.Language;
@@ -519,7 +513,7 @@ public class MBMessageLocalServiceImpl extends MBMessageLocalServiceBaseImpl {
 
 			thread.setPriority(priority);
 
-			_mbThreadLocalService.updateMBThread(thread);
+			thread = _mbThreadLocalService.updateMBThread(thread);
 
 			_updatePriorities(thread.getThreadId(), priority);
 		}
@@ -817,7 +811,7 @@ public class MBMessageLocalServiceImpl extends MBMessageLocalServiceBaseImpl {
 					thread.setRootMessageId(childMessage.getMessageId());
 					thread.setRootMessageUserId(childMessage.getUserId());
 
-					_mbThreadLocalService.updateMBThread(thread);
+					thread = _mbThreadLocalService.updateMBThread(thread);
 				}
 			}
 			else {
@@ -1310,6 +1304,116 @@ public class MBMessageLocalServiceImpl extends MBMessageLocalServiceBaseImpl {
 		}
 
 		return mbMessagePersistence.countByG_U_S(groupId, userId, status);
+	}
+
+	@Override
+	public List<MBMessage> getGroupUserMessageBoardMessagesActivity(
+		long groupId, long userId, int start, int end) {
+
+		MBMessageTable aliasMBMessageTable = MBMessageTable.INSTANCE.as(
+			"aliasMBMessageTable");
+
+		DSLQuery dslQuery = DSLQueryFactoryUtil.select(
+			MBMessageTable.INSTANCE
+		).from(
+			MBMessageTable.INSTANCE
+		).where(
+			MBMessageTable.INSTANCE.modifiedDate.in(
+				DSLQueryFactoryUtil.select(
+					DSLFunctionFactoryUtil.max(
+						MBMessageTable.INSTANCE.modifiedDate)
+				).from(
+					aliasMBMessageTable
+				).where(
+					MBMessageTable.INSTANCE.rootMessageId.eq(
+						MBMessageTable.INSTANCE.parentMessageId
+					).and(
+						MBMessageTable.INSTANCE.categoryId.eq(
+							aliasMBMessageTable.categoryId)
+					).and(
+						MBMessageTable.INSTANCE.groupId.eq(groupId)
+					).and(
+						MBMessageTable.INSTANCE.userId.eq(userId)
+					)
+				)
+			).or(
+				MBMessageTable.INSTANCE.parentMessageId.eq(
+					0L
+				).and(
+					MBMessageTable.INSTANCE.rootMessageId.notIn(
+						DSLQueryFactoryUtil.select(
+							MBMessageTable.INSTANCE.parentMessageId
+						).from(
+							MBMessageTable.INSTANCE
+						).where(
+							MBMessageTable.INSTANCE.rootMessageId.eq(
+								MBMessageTable.INSTANCE.parentMessageId)
+						))
+				).and(
+					MBMessageTable.INSTANCE.groupId.eq(groupId)
+				).and(
+					MBMessageTable.INSTANCE.userId.eq(userId)
+				)
+			)
+		).orderBy(
+			MBMessageTable.INSTANCE.modifiedDate.descending()
+		).limit(
+			start, end
+		);
+
+		return mbMessagePersistence.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int getGroupUserMessageBoardMessagesActivityCount(
+		long groupId, long userId) {
+
+		MBMessageTable aliasMBMessageTable = MBMessageTable.INSTANCE.as(
+			"aliasMBMessageTable");
+
+		return mbMessagePersistence.dslQueryCount(
+			DSLQueryFactoryUtil.count(
+			).from(
+				MBMessageTable.INSTANCE
+			).where(
+				MBMessageTable.INSTANCE.modifiedDate.in(
+					DSLQueryFactoryUtil.select(
+						DSLFunctionFactoryUtil.max(
+							MBMessageTable.INSTANCE.modifiedDate)
+					).from(
+						aliasMBMessageTable
+					).where(
+						MBMessageTable.INSTANCE.rootMessageId.eq(
+							MBMessageTable.INSTANCE.parentMessageId
+						).and(
+							MBMessageTable.INSTANCE.categoryId.eq(
+								aliasMBMessageTable.categoryId)
+						).and(
+							MBMessageTable.INSTANCE.groupId.eq(groupId)
+						).and(
+							MBMessageTable.INSTANCE.userId.eq(userId)
+						)
+					)
+				).or(
+					MBMessageTable.INSTANCE.parentMessageId.eq(
+						0L
+					).and(
+						MBMessageTable.INSTANCE.groupId.eq(groupId)
+					).and(
+						MBMessageTable.INSTANCE.rootMessageId.notIn(
+							DSLQueryFactoryUtil.select(
+								MBMessageTable.INSTANCE.parentMessageId
+							).from(
+								MBMessageTable.INSTANCE
+							).where(
+								MBMessageTable.INSTANCE.rootMessageId.eq(
+									MBMessageTable.INSTANCE.parentMessageId)
+							))
+					).and(
+						MBMessageTable.INSTANCE.userId.eq(userId)
+					)
+				)
+			));
 	}
 
 	@Override
@@ -2144,6 +2248,12 @@ public class MBMessageLocalServiceImpl extends MBMessageLocalServiceBaseImpl {
 		subscriptionSender.setCompanyId(message.getCompanyId());
 		subscriptionSender.setContextAttribute(
 			"[$MESSAGE_BODY$]", messageBody, false);
+		subscriptionSender.setContextAttribute(
+			"[$MESSAGE_PARENT$]", messageParentMessageContent, false);
+		subscriptionSender.setContextAttribute(
+			"[$MESSAGE_SIBLINGS$]", messageSiblingMessagesContent, false);
+		subscriptionSender.setContextAttribute(
+			"[$ROOT_MESSAGE_BODY$]", rootMessageBody, false);
 
 		long groupId = message.getGroupId();
 
@@ -2168,16 +2278,6 @@ public class MBMessageLocalServiceImpl extends MBMessageLocalServiceBaseImpl {
 			"[$MESSAGE_SUBJECT_PREFIX$]", messageSubjectPrefix,
 			"[$MESSAGE_URL$]", messageURL, "[$MESSAGE_USER_ADDRESS$]",
 			emailAddress, "[$MESSAGE_USER_NAME$]", fullName);
-
-		if (FeatureFlagManagerUtil.isEnabled("LPS-182020")) {
-			subscriptionSender.setContextAttribute(
-				"[$MESSAGE_PARENT$]", messageParentMessageContent, false);
-			subscriptionSender.setContextAttribute(
-				"[$MESSAGE_SIBLINGS$]", messageSiblingMessagesContent, false);
-			subscriptionSender.setContextAttribute(
-				"[$ROOT_MESSAGE_BODY$]", rootMessageBody, false);
-		}
-
 		subscriptionSender.setCreatorUserId(message.getUserId());
 		subscriptionSender.setCurrentUserId(userId);
 		subscriptionSender.setEntryTitle(entryTitle);
@@ -2233,6 +2333,10 @@ public class MBMessageLocalServiceImpl extends MBMessageLocalServiceBaseImpl {
 		String urlSubject = _getUrlSubject(mbMessageId, subject);
 
 		String uniqueUrlSubject = urlSubject;
+
+		if (Objects.equals(StringPool.DASH, urlSubject)) {
+			uniqueUrlSubject = urlSubject + mbMessageId;
+		}
 
 		MBMessage mbMessage = mbMessagePersistence.fetchByG_US(
 			groupId, uniqueUrlSubject);

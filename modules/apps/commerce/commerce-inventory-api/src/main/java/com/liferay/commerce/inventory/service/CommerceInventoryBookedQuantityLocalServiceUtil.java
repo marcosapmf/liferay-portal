@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.inventory.service;
@@ -46,12 +37,13 @@ public class CommerceInventoryBookedQuantityLocalServiceUtil {
 	 * Never modify this class directly. Add custom service methods to <code>com.liferay.commerce.inventory.service.impl.CommerceInventoryBookedQuantityLocalServiceImpl</code> and rerun ServiceBuilder to regenerate this class.
 	 */
 	public static CommerceInventoryBookedQuantity addCommerceBookedQuantity(
-			long userId, String sku, int quantity,
-			java.util.Date expirationDate, Map<String, String> context)
+			long userId, java.util.Date expirationDate,
+			java.math.BigDecimal quantity, String sku, String unitOfMeasureKey,
+			Map<String, String> context)
 		throws PortalException {
 
 		return getService().addCommerceBookedQuantity(
-			userId, sku, quantity, expirationDate, context);
+			userId, expirationDate, quantity, sku, unitOfMeasureKey, context);
 	}
 
 	/**
@@ -77,7 +69,7 @@ public class CommerceInventoryBookedQuantityLocalServiceUtil {
 	}
 
 	public static CommerceInventoryBookedQuantity consumeCommerceBookedQuantity(
-			long commerceBookedQuantityId, int quantity)
+			long commerceBookedQuantityId, java.math.BigDecimal quantity)
 		throws com.liferay.commerce.inventory.exception.
 			NoSuchInventoryBookedQuantityException {
 
@@ -256,7 +248,16 @@ public class CommerceInventoryBookedQuantityLocalServiceUtil {
 		return getService().getActionableDynamicQuery();
 	}
 
-	public static int getCommerceBookedQuantity(long companyId, String sku) {
+	public static java.math.BigDecimal getCommerceBookedQuantity(
+		long companyId, long commerceChannelGroupId, String sku) {
+
+		return getService().getCommerceBookedQuantity(
+			companyId, commerceChannelGroupId, sku);
+	}
+
+	public static java.math.BigDecimal getCommerceBookedQuantity(
+		long companyId, String sku) {
+
 		return getService().getCommerceBookedQuantity(companyId, sku);
 	}
 
@@ -360,13 +361,13 @@ public class CommerceInventoryBookedQuantityLocalServiceUtil {
 	}
 
 	public static CommerceInventoryBookedQuantity resetCommerceBookedQuantity(
-			long commerceBookedQuantityId, long userId, String sku,
-			int quantity, java.util.Date expirationDate,
-			Map<String, String> context)
+			long commerceBookedQuantityId, long userId,
+			java.util.Date expirationDate, java.math.BigDecimal quantity,
+			String sku, Map<String, String> context)
 		throws PortalException {
 
 		return getService().resetCommerceBookedQuantity(
-			commerceBookedQuantityId, userId, sku, quantity, expirationDate,
+			commerceBookedQuantityId, userId, expirationDate, quantity, sku,
 			context);
 	}
 
@@ -420,7 +421,8 @@ public class CommerceInventoryBookedQuantityLocalServiceUtil {
 	public static CommerceInventoryBookedQuantity
 			updateCommerceInventoryBookedQuantity(
 				long userId, long commerceInventoryBookedQuantityId,
-				int quantity, Map<String, String> context, long mvccVersion)
+				java.math.BigDecimal quantity, Map<String, String> context,
+				long mvccVersion)
 		throws PortalException {
 
 		return getService().updateCommerceInventoryBookedQuantity(
@@ -430,6 +432,12 @@ public class CommerceInventoryBookedQuantityLocalServiceUtil {
 
 	public static CommerceInventoryBookedQuantityLocalService getService() {
 		return _service;
+	}
+
+	public static void setService(
+		CommerceInventoryBookedQuantityLocalService service) {
+
+		_service = service;
 	}
 
 	private static volatile CommerceInventoryBookedQuantityLocalService

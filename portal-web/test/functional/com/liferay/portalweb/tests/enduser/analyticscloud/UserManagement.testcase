@@ -17,7 +17,7 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
 		// It is not possible to delete properties and data source after LRAC-13389. This functionality should return after LRAC-8040
 
@@ -25,7 +25,7 @@ definition {
 
 		ACUtils.tearDownDXP();
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 	}
@@ -916,12 +916,12 @@ definition {
 			ACSettings.addUser(userInvite = "ac@liferay.com");
 		}
 
-		task ("Select the 5 Items in Pagination") {
-			ACUtils.changePagination(itemsPerPage = 5);
+		task ("Select the 4 Items in Pagination") {
+			ACUtils.changePagination(itemsPerPage = 4);
 		}
 
-		task ("View only 5 users are shown in page 1") {
-			for (var emailList : list "bryan.cheung@faro.io,corbin.murakami@faro.io,michelle.hoshi@faro.io,test@faro.io,ac@liferay.com") {
+		task ("View only 4 users are shown in page 1") {
+			for (var emailList : list "bryan.cheung@faro.io,corbin.murakami@faro.io,michelle.hoshi@faro.io,ac@liferay.com") {
 				ACSettings.assertUsersListByEmail(userEmail = ${emailList});
 			}
 

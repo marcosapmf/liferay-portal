@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.kernel.util;
@@ -153,6 +144,9 @@ public interface PropsKeys {
 
 	public static final String ASSET_CATEGORIES_SELECTOR_MAX_ENTRIES =
 		"asset.categories.selector.max.entries";
+
+	public static final String ASSET_ENTRY_INCREMENT_VIEW_COUNTER_ENABLED =
+		"asset.entry.increment.view.counter.enabled";
 
 	public static final String ASSET_FILTER_SEARCH_LIMIT =
 		"asset.filter.search.limit";
@@ -375,9 +369,6 @@ public interface PropsKeys {
 	public static final String CDN_HOST_HTTP = "cdn.host.http";
 
 	public static final String CDN_HOST_HTTPS = "cdn.host.https";
-
-	public static final String CHANGE_TRACKING_SQL_TRANSFORMER_CACHE_SIZE =
-		"change.tracking.sql.transformer.cache.size";
 
 	public static final String CLUSTER_LINK_AUTODETECT_ADDRESS =
 		"cluster.link.autodetect.address";
@@ -1040,6 +1031,9 @@ public interface PropsKeys {
 	public static final String GZIP_COMPRESSION_LEVEL =
 		"gzip.compression.level";
 
+	public static final String HEALTH_CHECK_DATA_SOURCE_ENABLED =
+		"health.check.data.source.enabled";
+
 	public static final String HIBERNATE_CONFIGS = "hibernate.configs";
 
 	public static final String HIBERNATE_DIALECT = "hibernate.dialect";
@@ -1377,6 +1371,9 @@ public interface PropsKeys {
 
 	public static final String LAYOUT_URL_FRIENDLIABLE =
 		"layout.url.friendliable";
+
+	public static final String LAYOUT_USER_ACCESS_VIA_PLID_ENABLED =
+		"layout.user.access.via.plid.enabled";
 
 	public static final String LAYOUT_USER_PRIVATE_LAYOUTS_AUTO_CREATE =
 		"layout.user.private.layouts.auto.create";
@@ -1764,11 +1761,19 @@ public interface PropsKeys {
 	public static final String NETVIBES_SERVLET_MAPPING =
 		"netvibes.servlet.mapping";
 
-	public static final String NOTIFICATION_EMAIL_TEMPLATE_RESTRICTED =
-		"notification.email.template.restricted";
+	public static final String NOTIFICATION_EMAIL_TEMPLATE_ENABLED =
+		"notification.email.template.enabled";
 
 	public static final String NOTIFICATIONS_MAX_EVENTS =
 		"notifications.max.events";
+
+	public static final String OBJECT_ENCRYPTION_ALGORITHM =
+		"object.encryption.algorithm";
+
+	public static final String OBJECT_ENCRYPTION_ENABLED =
+		"object.encryption.enabled";
+
+	public static final String OBJECT_ENCRYPTION_KEY = "object.encryption.key";
 
 	public static final String OBJECT_NESTED_FIELDS_MAX_QUERY_DEPTH =
 		"object.nested.fields.max.query.depth";

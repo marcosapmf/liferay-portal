@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.fragment.entry.processor.internal.util;
@@ -24,6 +15,7 @@ import com.liferay.info.field.type.TextInfoFieldType;
 import com.liferay.info.formatter.InfoCollectionTextFormatter;
 import com.liferay.info.formatter.InfoTextFormatter;
 import com.liferay.info.item.ClassPKInfoItemIdentifier;
+import com.liferay.info.item.ERCInfoItemIdentifier;
 import com.liferay.info.item.InfoItemFieldValues;
 import com.liferay.info.item.InfoItemIdentifier;
 import com.liferay.info.item.InfoItemReference;
@@ -46,7 +38,6 @@ import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.trash.TrashHandler;
 import com.liferay.portal.kernel.trash.TrashHandlerRegistryUtil;
 import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
-import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.Html;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Portal;
@@ -91,13 +82,13 @@ public class FragmentEntryProcessorHelperImpl
 
 		return jsonObject.getString(
 			_language.getLanguageId(LocaleUtil.getSiteDefault()),
-			jsonObject.getString("defaultValue"));
+			jsonObject.getString("defaultValue", null));
 	}
 
 	@Override
 	public Object getFieldValue(
 			JSONObject editableValueJSONObject,
-			Map<Long, InfoItemFieldValues> infoDisplaysFieldValues,
+			Map<InfoItemReference, InfoItemFieldValues> infoDisplaysFieldValues,
 			FragmentEntryProcessorContext fragmentEntryProcessorContext)
 		throws PortalException {
 
@@ -108,20 +99,28 @@ public class FragmentEntryProcessorHelperImpl
 			return null;
 		}
 
-		long classPK = 0;
-		String className = StringPool.BLANK;
 		String fieldName = StringPool.BLANK;
+		InfoItemReference infoItemReference = null;
 		Object object = null;
 
 		if (isMapped(editableValueJSONObject)) {
-			className = _portal.getClassName(
+			String className = _portal.getClassName(
 				editableValueJSONObject.getLong("classNameId"));
-			classPK = editableValueJSONObject.getLong("classPK");
+			String externalReferenceCode = editableValueJSONObject.getString(
+				"externalReferenceCode");
 
 			fieldName = editableValueJSONObject.getString("fieldId");
 
-			InfoItemIdentifier infoItemIdentifier =
-				new ClassPKInfoItemIdentifier(classPK);
+			InfoItemIdentifier infoItemIdentifier = null;
+
+			if (Validator.isNotNull(externalReferenceCode)) {
+				infoItemIdentifier = new ERCInfoItemIdentifier(
+					externalReferenceCode);
+			}
+			else {
+				infoItemIdentifier = new ClassPKInfoItemIdentifier(
+					editableValueJSONObject.getLong("classPK"));
+			}
 
 			if (fragmentEntryProcessorContext.getPreviewClassPK() > 0) {
 				infoItemIdentifier = new ClassPKInfoItemIdentifier(
@@ -135,18 +134,18 @@ public class FragmentEntryProcessorHelperImpl
 				}
 			}
 
-			object = _getInfoItem(className, infoItemIdentifier);
+			infoItemReference = new InfoItemReference(
+				className, infoItemIdentifier);
+
+			object = _getInfoItem(infoItemReference);
 		}
 		else if (isMappedCollection(editableValueJSONObject)) {
-			InfoItemReference infoItemReference =
+			infoItemReference =
 				fragmentEntryProcessorContext.getContextInfoItemReference();
 
 			if (infoItemReference == null) {
 				return null;
 			}
-
-			className = infoItemReference.getClassName();
-			classPK = infoItemReference.getClassPK();
 
 			fieldName = editableValueJSONObject.getString("collectionFieldId");
 
@@ -170,8 +169,23 @@ public class FragmentEntryProcessorHelperImpl
 				return null;
 			}
 
-			className = layoutDisplayPageObjectProvider.getClassName();
-			classPK = layoutDisplayPageObjectProvider.getClassPK();
+			InfoItemIdentifier infoItemIdentifier = null;
+
+			if (Validator.isNotNull(
+					layoutDisplayPageObjectProvider.
+						getExternalReferenceCode())) {
+
+				infoItemIdentifier = new ERCInfoItemIdentifier(
+					layoutDisplayPageObjectProvider.getExternalReferenceCode());
+			}
+			else {
+				infoItemIdentifier = new ClassPKInfoItemIdentifier(
+					layoutDisplayPageObjectProvider.getClassPK());
+			}
+
+			infoItemReference = new InfoItemReference(
+				layoutDisplayPageObjectProvider.getClassName(),
+				infoItemIdentifier);
 
 			fieldName = editableValueJSONObject.getString("mappedField");
 
@@ -179,32 +193,44 @@ public class FragmentEntryProcessorHelperImpl
 		}
 
 		TrashHandler trashHandler = TrashHandlerRegistryUtil.getTrashHandler(
-			className);
+			infoItemReference.getClassName());
 
-		if ((trashHandler != null) && trashHandler.isInTrash(classPK)) {
-			return null;
+		InfoItemIdentifier infoItemIdentifier =
+			infoItemReference.getInfoItemIdentifier();
+
+		if ((trashHandler != null) &&
+			(infoItemIdentifier instanceof ClassPKInfoItemIdentifier)) {
+
+			ClassPKInfoItemIdentifier classPKInfoItemIdentifier =
+				(ClassPKInfoItemIdentifier)infoItemIdentifier;
+
+			if (trashHandler.isInTrash(
+					classPKInfoItemIdentifier.getClassPK())) {
+
+				return null;
+			}
 		}
 
 		InfoItemFieldValuesProvider infoItemFieldValuesProvider =
-			_getInfoItemFieldValuesProvider(className);
+			_getInfoItemFieldValuesProvider(infoItemReference.getClassName());
 
 		if (infoItemFieldValuesProvider == null) {
 			return null;
 		}
 
 		InfoItemFieldValues infoItemFieldValues = infoDisplaysFieldValues.get(
-			classPK);
+			infoItemReference);
 
-		if (infoItemFieldValues == null) {
+		if ((object != null) && (infoItemFieldValues == null)) {
 			infoItemFieldValues =
 				infoItemFieldValuesProvider.getInfoItemFieldValues(object);
 
-			infoDisplaysFieldValues.put(classPK, infoItemFieldValues);
+			infoDisplaysFieldValues.put(infoItemReference, infoItemFieldValues);
 		}
 
 		return _getMappedInfoItemFieldValue(
-			editableValueJSONObject, fieldName, infoItemFieldValuesProvider,
-			fragmentEntryProcessorContext.getLocale(), object);
+			editableValueJSONObject, fieldName, infoItemFieldValues,
+			fragmentEntryProcessorContext.getLocale());
 	}
 
 	@Override
@@ -286,9 +312,12 @@ public class FragmentEntryProcessorHelperImpl
 	public boolean isMapped(JSONObject jsonObject) {
 		long classNameId = jsonObject.getLong("classNameId");
 		long classPK = jsonObject.getLong("classPK");
+		String externalReferenceCode = jsonObject.getString(
+			"externalReferenceCode");
 		String fieldId = jsonObject.getString("fieldId");
 
-		if ((classNameId > 0) && (classPK > 0) &&
+		if ((classNameId > 0) &&
+			((classPK > 0) || Validator.isNotNull(externalReferenceCode)) &&
 			Validator.isNotNull(fieldId)) {
 
 			return true;
@@ -444,22 +473,17 @@ public class FragmentEntryProcessorHelperImpl
 	}
 
 	private Object _getInfoItem(InfoItemReference infoItemReference) {
-		if (infoItemReference == null) {
-			return null;
-		}
-
-		return _getInfoItem(
-			infoItemReference.getClassName(),
-			infoItemReference.getInfoItemIdentifier());
-	}
-
-	private Object _getInfoItem(
-		String className, InfoItemIdentifier infoItemIdentifier) {
+		InfoItemIdentifier infoItemIdentifier =
+			infoItemReference.getInfoItemIdentifier();
 
 		InfoItemObjectProvider<Object> infoItemObjectProvider =
 			_infoItemServiceRegistry.getFirstInfoItemService(
-				InfoItemObjectProvider.class, className,
+				InfoItemObjectProvider.class, infoItemReference.getClassName(),
 				infoItemIdentifier.getInfoItemServiceFilter());
+
+		if (infoItemObjectProvider == null) {
+			return null;
+		}
 
 		try {
 			return infoItemObjectProvider.getInfoItem(infoItemIdentifier);
@@ -497,11 +521,10 @@ public class FragmentEntryProcessorHelperImpl
 
 	private Object _getMappedInfoItemFieldValue(
 		JSONObject editableValueJSONObject, String fieldName,
-		InfoItemFieldValuesProvider infoItemFieldValuesProvider, Locale locale,
-		Object object) {
+		InfoItemFieldValues infoItemFieldValues, Locale locale) {
 
 		InfoFieldValue<Object> infoFieldValue =
-			infoItemFieldValuesProvider.getInfoFieldValue(object, fieldName);
+			infoItemFieldValues.getInfoFieldValue(fieldName);
 
 		if (infoFieldValue == null) {
 			return null;
@@ -604,11 +627,7 @@ public class FragmentEntryProcessorHelperImpl
 			else if (infoField.getInfoFieldType() instanceof
 						TextInfoFieldType) {
 
-				if (!GetterUtil.getBoolean(
-						infoField.getAttribute(TextInfoFieldType.HTML))) {
-
-					return _html.escape((String)value);
-				}
+				return _html.escape((String)value);
 			}
 
 			return (String)value;

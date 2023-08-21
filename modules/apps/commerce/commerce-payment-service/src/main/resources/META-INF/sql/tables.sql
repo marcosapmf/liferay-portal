@@ -21,11 +21,15 @@ create table CommercePaymentEntry (
 	modifiedDate DATE null,
 	classNameId LONG,
 	classPK LONG,
-	amount DECIMAL(30, 16) null,
+	commerceChannelId LONG,
+	amount BIGDECIMAL null,
+	callbackURL TEXT null,
 	currencyCode VARCHAR(75) null,
-	paymentMethodName VARCHAR(75) null,
+	paymentIntegrationKey VARCHAR(75) null,
+	paymentIntegrationType INTEGER,
 	paymentStatus INTEGER,
-	transactionCode VARCHAR(75) null
+	redirectURL TEXT null,
+	transactionCode VARCHAR(255) null
 );
 
 create table CommercePaymentEntryAudit (
@@ -37,7 +41,7 @@ create table CommercePaymentEntryAudit (
 	createDate DATE null,
 	modifiedDate DATE null,
 	commercePaymentEntryId LONG,
-	amount DECIMAL(30, 16) null,
+	amount BIGDECIMAL null,
 	currencyCode VARCHAR(75) null,
 	logType VARCHAR(75) null,
 	logTypeSettings TEXT null
@@ -54,8 +58,9 @@ create table CommercePaymentMethodGroupRel (
 	modifiedDate DATE null,
 	name STRING null,
 	description STRING null,
+	active_ BOOLEAN,
 	imageId LONG,
-	engineKey VARCHAR(75) null,
+	paymentIntegrationKey VARCHAR(75) null,
 	priority DOUBLE,
-	active_ BOOLEAN
+	typeSettings TEXT null
 );

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portlet.asset.service.impl;
@@ -22,6 +13,7 @@ import com.liferay.asset.kernel.model.AssetLink;
 import com.liferay.asset.kernel.model.AssetLinkConstants;
 import com.liferay.asset.kernel.model.AssetRenderer;
 import com.liferay.asset.kernel.model.AssetTag;
+import com.liferay.asset.kernel.search.AssetSearcherFactoryUtil;
 import com.liferay.asset.kernel.service.AssetCategoryLocalService;
 import com.liferay.asset.kernel.service.AssetLinkLocalService;
 import com.liferay.asset.kernel.service.AssetTagLocalService;
@@ -40,6 +32,7 @@ import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.SystemEventConstants;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.module.util.SystemBundleUtil;
+import com.liferay.portal.kernel.search.BaseSearcher;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.Hits;
 import com.liferay.portal.kernel.search.Indexer;
@@ -65,9 +58,9 @@ import com.liferay.portal.kernel.util.RenderLayoutContentThreadLocal;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.view.count.ViewCountManagerUtil;
+import com.liferay.portal.util.PropsValues;
 import com.liferay.portlet.asset.service.base.AssetEntryLocalServiceBaseImpl;
 import com.liferay.portlet.asset.service.permission.AssetCategoryPermission;
-import com.liferay.portlet.asset.util.AssetSearcher;
 import com.liferay.social.kernel.model.SocialActivityConstants;
 import com.liferay.social.kernel.service.SocialActivityCounterLocalService;
 
@@ -439,7 +432,9 @@ public class AssetEntryLocalServiceImpl extends AssetEntryLocalServiceBaseImpl {
 	public void incrementViewCounter(long userId, AssetEntry assetEntry)
 		throws PortalException {
 
-		if (RenderLayoutContentThreadLocal.isRenderLayoutContent()) {
+		if (!PropsValues.ASSET_ENTRY_INCREMENT_VIEW_COUNTER_ENABLED ||
+			RenderLayoutContentThreadLocal.isRenderLayoutContent()) {
+
 			return;
 		}
 
@@ -461,6 +456,10 @@ public class AssetEntryLocalServiceImpl extends AssetEntryLocalServiceBaseImpl {
 	public AssetEntry incrementViewCounter(
 			long companyId, long userId, String className, long classPK)
 		throws PortalException {
+
+		if (!PropsValues.ASSET_ENTRY_INCREMENT_VIEW_COUNTER_ENABLED) {
+			return getEntry(className, classPK);
+		}
 
 		User user = _userLocalService.getUser(userId);
 
@@ -484,7 +483,9 @@ public class AssetEntryLocalServiceImpl extends AssetEntryLocalServiceBaseImpl {
 		long companyId, long userId, String className, long classPK,
 		int increment) {
 
-		if (ExportImportThreadLocal.isImportInProcess() || (classPK <= 0)) {
+		if (!PropsValues.ASSET_ENTRY_INCREMENT_VIEW_COUNTER_ENABLED ||
+			ExportImportThreadLocal.isImportInProcess() || (classPK <= 0)) {
+
 			return;
 		}
 
@@ -1194,10 +1195,6 @@ public class AssetEntryLocalServiceImpl extends AssetEntryLocalServiceBaseImpl {
 	protected Hits doSearch(long[] classNameIds, SearchContext searchContext)
 		throws Exception {
 
-		Indexer<?> indexer = AssetSearcher.getInstance();
-
-		AssetSearcher assetSearcher = (AssetSearcher)indexer;
-
 		AssetEntryQuery assetEntryQuery = new AssetEntryQuery();
 
 		assetEntryQuery.setClassNameIds(classNameIds);
@@ -1209,14 +1206,15 @@ public class AssetEntryLocalServiceImpl extends AssetEntryLocalServiceBaseImpl {
 			searchContext.getGroupIds(), searchContext.getAssetTagNames(),
 			searchContext.isAndSearch(), assetEntryQuery);
 
+		BaseSearcher baseSearcher = AssetSearcherFactoryUtil.createBaseSearcher(
+			assetEntryQuery);
+
 		QueryConfig queryConfig = searchContext.getQueryConfig();
 
 		queryConfig.setHighlightEnabled(false);
 		queryConfig.setScoreEnabled(_hasScoreSort(searchContext));
 
-		assetSearcher.setAssetEntryQuery(assetEntryQuery);
-
-		return assetSearcher.search(searchContext);
+		return baseSearcher.search(searchContext);
 	}
 
 	protected long doSearchCount(
@@ -1231,10 +1229,6 @@ public class AssetEntryLocalServiceImpl extends AssetEntryLocalServiceBaseImpl {
 			long[] classNameIds, SearchContext searchContext)
 		throws Exception {
 
-		Indexer<?> indexer = AssetSearcher.getInstance();
-
-		AssetSearcher assetSearcher = (AssetSearcher)indexer;
-
 		AssetEntryQuery assetEntryQuery = new AssetEntryQuery();
 
 		assetEntryQuery.setClassNameIds(classNameIds);
@@ -1246,14 +1240,15 @@ public class AssetEntryLocalServiceImpl extends AssetEntryLocalServiceBaseImpl {
 			searchContext.getGroupIds(), searchContext.getAssetTagNames(),
 			searchContext.isAndSearch(), assetEntryQuery);
 
+		BaseSearcher baseSearcher = AssetSearcherFactoryUtil.createBaseSearcher(
+			assetEntryQuery);
+
 		QueryConfig queryConfig = searchContext.getQueryConfig();
 
 		queryConfig.setHighlightEnabled(false);
 		queryConfig.setScoreEnabled(false);
 
-		assetSearcher.setAssetEntryQuery(assetEntryQuery);
-
-		return assetSearcher.searchCount(searchContext);
+		return baseSearcher.searchCount(searchContext);
 	}
 
 	protected AssetEntryQuery getAssetEntryQuery(

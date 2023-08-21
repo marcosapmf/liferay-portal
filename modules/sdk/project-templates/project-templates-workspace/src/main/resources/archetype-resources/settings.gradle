@@ -1,10 +1,12 @@
 buildscript {
 	dependencies {
+		classpath group: "org.yaml", name: "snakeyaml", version: "1.32"
+
 		classpath group: "biz.aQute.bnd", name: "biz.aQute.bnd", version: "@biz.aQute.bnd.version@"
-		classpath(group: "com.liferay", name: "com.liferay.gradle.plugins.workspace", version: "@com.liferay.gradle.plugins.workspace.version@") {
+		classpath group: "com.github.docker-java", name: "docker-java-transport", version: "3.2.8"
+		classpath(group: "com.liferay", name: "com.liferay.gradle.plugins.workspace", version: "8.0.2") {
 			exclude group: "biz.aQute.bnd", module: "biz.aQute.bnd"
 		}
-		classpath group: "net.saliman", name: "gradle-properties-plugin", version: "1.4.6"
 	}
 
 	repositories {
@@ -17,4 +19,3 @@ buildscript {
 }
 
 apply plugin: "com.liferay.workspace"
-apply plugin: "net.saliman.properties"

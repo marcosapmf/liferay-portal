@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.util;
@@ -145,6 +136,11 @@ public class PropsValues {
 	public static final int ASSET_CATEGORIES_SELECTOR_MAX_ENTRIES =
 		GetterUtil.getInteger(
 			PropsUtil.get(PropsKeys.ASSET_CATEGORIES_SELECTOR_MAX_ENTRIES));
+
+	public static final boolean ASSET_ENTRY_INCREMENT_VIEW_COUNTER_ENABLED =
+		GetterUtil.getBoolean(
+			PropsUtil.get(
+				PropsKeys.ASSET_ENTRY_INCREMENT_VIEW_COUNTER_ENABLED));
 
 	public static final int ASSET_FILTER_SEARCH_LIMIT = GetterUtil.getInteger(
 		PropsUtil.get(PropsKeys.ASSET_FILTER_SEARCH_LIMIT));
@@ -328,11 +324,6 @@ public class PropsValues {
 
 	public static final String CDN_HOST_HTTPS = PropsUtil.get(
 		PropsKeys.CDN_HOST_HTTPS);
-
-	public static int CHANGE_TRACKING_SQL_TRANSFORMER_CACHE_SIZE =
-		GetterUtil.getInteger(
-			PropsUtil.get(
-				PropsKeys.CHANGE_TRACKING_SQL_TRANSFORMER_CACHE_SIZE));
 
 	public static final boolean CLUSTER_LINK_ENABLED = GetterUtil.getBoolean(
 		PropsUtil.get(PropsKeys.CLUSTER_LINK_ENABLED));
@@ -885,6 +876,10 @@ public class PropsValues {
 	public static final int GZIP_COMPRESSION_LEVEL = GetterUtil.getInteger(
 		PropsUtil.get(PropsKeys.GZIP_COMPRESSION_LEVEL));
 
+	public static final boolean HEALTH_CHECK_DATA_SOURCE_ENABLED =
+		GetterUtil.getBoolean(
+			PropsUtil.get(PropsKeys.HEALTH_CHECK_DATA_SOURCE_ENABLED));
+
 	public static final String HIBERNATE_DIALECT = PropsUtil.get(
 		PropsKeys.HIBERNATE_DIALECT);
 
@@ -1134,6 +1129,10 @@ public class PropsValues {
 
 	public static boolean LAYOUT_TEMPLATE_CACHE_ENABLED = GetterUtil.getBoolean(
 		PropsUtil.get(PropsKeys.LAYOUT_TEMPLATE_CACHE_ENABLED));
+
+	public static boolean LAYOUT_USER_ACCESS_VIA_PLID_ENABLED =
+		GetterUtil.getBoolean(
+			PropsUtil.get(PropsKeys.LAYOUT_USER_ACCESS_VIA_PLID_ENABLED));
 
 	public static boolean LAYOUT_USER_PRIVATE_LAYOUTS_AUTO_CREATE =
 		GetterUtil.getBoolean(
@@ -1491,12 +1490,21 @@ public class PropsValues {
 	public static final String NETVIBES_SERVLET_MAPPING = PropsUtil.get(
 		PropsKeys.NETVIBES_SERVLET_MAPPING);
 
-	public static final boolean NOTIFICATION_EMAIL_TEMPLATE_RESTRICTED =
+	public static final boolean NOTIFICATION_EMAIL_TEMPLATE_ENABLED =
 		GetterUtil.getBoolean(
-			PropsUtil.get(PropsKeys.NOTIFICATION_EMAIL_TEMPLATE_RESTRICTED));
+			PropsUtil.get(PropsKeys.NOTIFICATION_EMAIL_TEMPLATE_ENABLED));
 
 	public static final int NOTIFICATIONS_MAX_EVENTS = GetterUtil.getInteger(
 		PropsUtil.get(PropsKeys.NOTIFICATIONS_MAX_EVENTS));
+
+	public static String OBJECT_ENCRYPTION_ALGORITHM = PropsUtil.get(
+		PropsKeys.OBJECT_ENCRYPTION_ALGORITHM);
+
+	public static boolean OBJECT_ENCRYPTION_ENABLED = GetterUtil.getBoolean(
+		PropsUtil.get(PropsKeys.OBJECT_ENCRYPTION_ENABLED));
+
+	public static String OBJECT_ENCRYPTION_KEY = PropsUtil.get(
+		PropsKeys.OBJECT_ENCRYPTION_KEY);
 
 	public static final int OBJECT_NESTED_FIELDS_MAX_QUERY_DEPTH =
 		GetterUtil.getInteger(
@@ -2377,8 +2385,6 @@ public class PropsValues {
 	public static final String UNICODE_TEXT_NORMALIZER_FORM = PropsUtil.get(
 		PropsKeys.UNICODE_TEXT_NORMALIZER_FORM);
 
-	public static final boolean UPGRADE_DATABASE_AUTO_RUN;
-
 	public static final boolean UPGRADE_DATABASE_TRANSACTIONS_DISABLED =
 		GetterUtil.getBoolean(
 			PropsUtil.get(PropsKeys.UPGRADE_DATABASE_TRANSACTIONS_DISABLED));
@@ -2511,21 +2517,21 @@ public class PropsValues {
 	public static final boolean WEB_SERVER_DISPLAY_NODE = GetterUtil.getBoolean(
 		PropsUtil.get(PropsKeys.WEB_SERVER_DISPLAY_NODE));
 
-	public static final boolean WEB_SERVER_FORWARDED_HOST_ENABLED =
+	public static boolean WEB_SERVER_FORWARDED_HOST_ENABLED =
 		GetterUtil.getBoolean(
 			PropsUtil.get(PropsKeys.WEB_SERVER_FORWARDED_HOST_ENABLED));
 
 	public static final String WEB_SERVER_FORWARDED_HOST_HEADER = PropsUtil.get(
 		PropsKeys.WEB_SERVER_FORWARDED_HOST_HEADER);
 
-	public static final boolean WEB_SERVER_FORWARDED_PORT_ENABLED =
+	public static boolean WEB_SERVER_FORWARDED_PORT_ENABLED =
 		GetterUtil.getBoolean(
 			PropsUtil.get(PropsKeys.WEB_SERVER_FORWARDED_PORT_ENABLED));
 
 	public static final String WEB_SERVER_FORWARDED_PORT_HEADER = PropsUtil.get(
 		PropsKeys.WEB_SERVER_FORWARDED_PORT_HEADER);
 
-	public static final boolean WEB_SERVER_FORWARDED_PROTOCOL_ENABLED =
+	public static boolean WEB_SERVER_FORWARDED_PROTOCOL_ENABLED =
 		GetterUtil.getBoolean(
 			PropsUtil.get(PropsKeys.WEB_SERVER_FORWARDED_PROTOCOL_ENABLED));
 
@@ -2617,14 +2623,6 @@ public class PropsValues {
 		for (int i = 0; i < LOGIN_FORM_NAVIGATION_PRE.length; i++) {
 			LOGIN_FORM_NAVIGATION_PRE[i] = TextFormatter.format(
 				LOGIN_FORM_NAVIGATION_PRE[i], TextFormatter.N);
-		}
-
-		if (JDBC_DEFAULT_DRIVER_CLASS_NAME.contains("hsql")) {
-			UPGRADE_DATABASE_AUTO_RUN = false;
-		}
-		else {
-			UPGRADE_DATABASE_AUTO_RUN = GetterUtil.getBoolean(
-				PropsUtil.get(PropsKeys.UPGRADE_DATABASE_AUTO_RUN));
 		}
 	}
 

@@ -1,6 +1,7 @@
 @component-name = "portal-wcm"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testcase.url = "http://localhost:8080";
@@ -43,8 +44,6 @@ definition {
 		}
 
 		task ("Then the page creator accesses to the Look and Feel settings") {
-			Navigator.gotoNavTab(navTab = "Design");
-
 			AssertElementPresent(
 				key_title = "Design",
 				locator1 = "Header#H2_TITLE");
@@ -134,6 +133,9 @@ definition {
 	@description = "This is a test for LPS-158746. Could add and remove fragment to Favorites session on content page in card view."
 	@priority = 3
 	test CouldAddAndRemoveFragmentInCardView {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
 		task ("Given go to edit content page") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name",
@@ -213,8 +215,10 @@ definition {
 
 	@description = "This is a test for LPS-158746. Could add and remove fragment to Favorites session and widget to Highlighted session on content page."
 	@priority = 5
-	test CouldAddAndRemoveFragmentToFavoritesSessionAndWidgetToighlightedSession {
+	test CouldAddAndRemoveFragmentToFavoritesSessionAndWidgetToHighlightedSession {
 		property portal.release = "false";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("When go to edit content page") {
 			ContentPagesNavigator.openEditContentPage(
@@ -290,10 +294,7 @@ definition {
 			task ("Go to add and remove favorite widget") {
 				Navigator.gotoNavTab(navTab = "Widgets");
 
-				AssertClick(
-					key_collectionName = "Collaboration",
-					locator1 = "PageEditor#FRAGMENT_SIDEBAR_COLLECTION_PANEL_COLLAPSED",
-					value1 = "Collaboration");
+				PageEditor.expandWidgetCategory(categoryName = "Collaboration");
 
 				MouseOver(
 					key_collectionName = "Collaboration",
@@ -337,8 +338,10 @@ definition {
 
 	@description = "This is a test for LPS-158746. Could add and remove fragment to Favorites session and widget to Highlighted session on content page."
 	@priority = 5
-	test CouldAddAndRemoveFragmentToFavoritesSessionAndWidgetToighlightedSessionOnReleaseBundle {
+	test CouldAddAndRemoveFragmentToFavoritesSessionAndWidgetToHighlightedSessionOnReleaseBundle {
 		property portal.upstream = "false";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("When go to edit content page") {
 			ContentPagesNavigator.openEditContentPage(
@@ -413,6 +416,8 @@ definition {
 
 			task ("Go to add and remove favorite widget") {
 				Navigator.gotoNavTab(navTab = "Widgets");
+
+				PageEditor.expandWidgetCategory(categoryName = "Collaboration");
 
 				MouseOver(
 					key_collectionName = "Collaboration",
@@ -618,15 +623,42 @@ definition {
 				siteName = ${randomSiteName});
 		}
 
-		task ("When the page designer adds a fragment to page") {
-			PageEditor.addFragment(
-				collectionName = "Basic Components",
-				fragmentName = "Button");
+		task ("When the page designer adds a fragment with intercept requests") {
+			var map = MapUtil.newHashMap();
+
+			ExecuteCDPCommand(
+				value1 = "Fetch.enable",
+				value2 = ${map});
+
+			Navigator.gotoNavTab(navTab = "Fragments");
+
+			PageEditor.expandFragmentCollection(collectionName = "Basic Components");
+
+			DragAndDrop.javaScriptDragAndDropToObject(
+				key_collectionName = "Basic Components",
+				key_fragmentName = "Button",
+				locator1 = "PageEditor#FRAGMENTS_AND_WIDGETS_TAB_FRAGMENT",
+				locator2 = "PageEditor#FRAGMENT_DROP_TARGET");
+		}
+
+		task ("Then the page designer see the styles of loading icon") {
+			MouseOver.javaScriptFocus(locator1 = "//span[@aria-label='Saving'][contains(@class,'loading-animation')]");
+
+			AssertVisible(
+				key_content = "Saving",
+				locator1 = "Tooltip#FLOATING_TOOLTIP_CONTENT");
+		}
+
+		task ("When the page designer forwards the request") {
+			var map = MapUtil.newHashMap();
+
+			ExecuteCDPCommand(
+				value1 = "Fetch.disable",
+				value2 = ${map});
 		}
 
 		task ("Then the page designer sees the styles of autosave icon") {
-
-			// View the tooltip for saving status wait for POSHI-464 implemented
+			PageEditor.waitForAutoSave();
 
 			MouseOver.javaScriptFocus(locator1 = "//*[name()='svg'][contains(@class,'lexicon-icon-check-circle')]");
 
@@ -664,7 +696,7 @@ definition {
 
 			Panel.collapsePanel(panel = "Frame");
 
-			AssertElementNotPresent(locator1 = "//div[contains(@class,'fieldset')]");
+			AssertNotVisible(locator1 = "//div[contains(@class,'fieldset')]");
 
 			Panel.expandPanel(panel = "Dropdown Options");
 
@@ -678,7 +710,7 @@ definition {
 				Panel.collapsePanel(panel = ${key_panel});
 			}
 
-			AssertElementNotPresent(locator1 = "//div[contains(@class,'fieldset')]");
+			AssertNotVisible(locator1 = "//div[contains(@class,'fieldset')]");
 
 			for (var key_panel : list "Spacing,Text,Background,Borders,Effects") {
 				Panel.expandPanel(panel = ${key_panel});
@@ -689,6 +721,9 @@ definition {
 	@description = "This is a test for LPS-158746. The favorite fragment is hidden if it is not allowed on master page."
 	@priority = 3
 	test ViewFavoriteFragmentIsHiddenWhenItIsNotAllowedOnMasterPage {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
 		task ("Given go to edit content page") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name",
@@ -810,6 +845,8 @@ definition {
 	@priority = 4
 	test ViewFavoritesListInDifferentUsers {
 		property custom.properties = "jsonws.web.service.paths.excludes=";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Given having 2 users") {
 			var userEmailAddress = StringUtil.randomString(8);
@@ -1111,9 +1148,11 @@ definition {
 	@description = "This is a test for LPS-153650. The portal version info should be shown on the Home page."
 	@priority = 4
 	test ViewPortalVersionInfoOnHomePage {
+		takeScreenshot();
+
 		var portalVersionInfo = selenium.getText("//div[contains(@id,'fragment-')][.//*[contains(@class,'paragraph')]]//*[contains(@data-lfr-editable-id,'element-text')]");
 
-		var match = StringUtil.matches(${portalVersionInfo}, "Liferay Digital Experience Platform \d+\.\d+\.\d+ Update \d+ \(\w+ \/ Build \d+ \/ \w+ \d+, \d+\)");
+		var match = StringUtil.matches(${portalVersionInfo}, "Liferay Digital Experience Platform \/ \d+\.\d+\.\d{1,2} \([A-Z]\w+\)");
 
 		if (${match} == "true") {
 			echo("The portal version info ${portalVersionInfo} is shown on the Home page");

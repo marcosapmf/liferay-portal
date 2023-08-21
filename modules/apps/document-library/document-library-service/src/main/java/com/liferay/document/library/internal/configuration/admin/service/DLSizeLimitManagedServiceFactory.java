@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.document.library.internal.configuration.admin.service;
@@ -66,6 +57,13 @@ public class DLSizeLimitManagedServiceFactory implements ManagedServiceFactory {
 		return dlSizeLimitConfiguration.fileMaxSize();
 	}
 
+	public long getCompanyMaxSizeToCopy(long companyId) {
+		DLSizeLimitConfiguration dlSizeLimitConfiguration =
+			_getCompanyDLSizeLimitConfiguration(companyId);
+
+		return dlSizeLimitConfiguration.maxSizeToCopy();
+	}
+
 	public Map<String, Long> getCompanyMimeTypeSizeLimit(long companyId) {
 		return _companyMimeTypeSizeLimitsMap.computeIfAbsent(
 			companyId, this::_computeCompanyMimeTypeSizeLimit);
@@ -95,6 +93,13 @@ public class DLSizeLimitManagedServiceFactory implements ManagedServiceFactory {
 			_getGroupDLSizeLimitConfiguration(groupId);
 
 		return dlSizeLimitConfiguration.fileMaxSize();
+	}
+
+	public long getGroupMaxSizeToCopy(long groupId) {
+		DLSizeLimitConfiguration dlSizeLimitConfiguration =
+			_getGroupDLSizeLimitConfiguration(groupId);
+
+		return dlSizeLimitConfiguration.maxSizeToCopy();
 	}
 
 	public Map<String, Long> getGroupMimeTypeSizeLimit(long groupId) {
@@ -129,6 +134,10 @@ public class DLSizeLimitManagedServiceFactory implements ManagedServiceFactory {
 
 	public long getSystemFileMaxSize() {
 		return _systemDLSizeLimitConfiguration.fileMaxSize();
+	}
+
+	public long getSystemMaxSizeToCopy() {
+		return _systemDLSizeLimitConfiguration.maxSizeToCopy();
 	}
 
 	public Map<String, Long> getSystemMimeTypeSizeLimit() {

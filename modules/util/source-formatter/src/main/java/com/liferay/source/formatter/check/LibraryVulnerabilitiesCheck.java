@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.source.formatter.check;
@@ -32,8 +23,6 @@ import com.liferay.source.formatter.util.GradleBuildFile;
 import com.liferay.source.formatter.util.GradleDependency;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.StringReader;
@@ -95,6 +84,8 @@ public class LibraryVulnerabilitiesCheck extends BaseFileCheck {
 			return content;
 		}
 
+		_githubAccessToken = _getGithubAccessToken(sourceFormatterArgs);
+
 		if (fileName.endsWith(".gradle")) {
 			_checkGradleLibraryVulnerabilities(fileName, absolutePath, content);
 		}
@@ -140,11 +131,7 @@ public class LibraryVulnerabilitiesCheck extends BaseFileCheck {
 
 		gradleDependencies.addAll(gradleBuildFile.getBuildScriptDependencies());
 
-		Iterator<GradleDependency> iterator = gradleDependencies.iterator();
-
-		while (iterator.hasNext()) {
-			GradleDependency gradleDependency = iterator.next();
-
+		for (GradleDependency gradleDependency : gradleDependencies) {
 			String gradleDependencyGroup = gradleDependency.getGroup();
 			String gradleDependencyName = gradleDependency.getName();
 			String gradleDependencyVersion = gradleDependency.getVersion();
@@ -172,6 +159,10 @@ public class LibraryVulnerabilitiesCheck extends BaseFileCheck {
 		}
 
 		Document document = SourceUtil.readXML(content);
+
+		if (document == null) {
+			return;
+		}
 
 		Element rootElement = document.getRootElement();
 
@@ -232,6 +223,10 @@ public class LibraryVulnerabilitiesCheck extends BaseFileCheck {
 		}
 
 		Document document = SourceUtil.readXML(content);
+
+		if (document == null) {
+			return;
+		}
 
 		Element rootElement = document.getRootElement();
 
@@ -393,7 +388,13 @@ public class LibraryVulnerabilitiesCheck extends BaseFileCheck {
 			SecurityAdvisoryEcosystemEnum securityAdvisoryEcosystemEnum)
 		throws Exception {
 
-		if (!version.matches("(\\d|v).+")) {
+		List<String> allowedVulnerabilities = getAttributeValues(
+			_ALLOWED_VULNERABILITIES_KEY, absolutePath);
+
+		if (allowedVulnerabilities.contains(
+				packageName + StringPool.COLON + version) ||
+			!version.matches("(\\d|v).+")) {
+
 			return;
 		}
 
@@ -425,26 +426,12 @@ public class LibraryVulnerabilitiesCheck extends BaseFileCheck {
 			}
 		}
 
+		if (Validator.isNull(_githubAccessToken)) {
+			return;
+		}
+
 		if (!_cachedVulnerableVersionMap.containsKey(
 				securityAdvisoryEcosystemEnum + ":" + packageName)) {
-
-			SourceProcessor sourceProcessor = getSourceProcessor();
-
-			SourceFormatterArgs sourceFormatterArgs =
-				sourceProcessor.getSourceFormatterArgs();
-
-			if (sourceFormatterArgs.isUseCiGithubAccessToken() ||
-				_isGenerateVulnerableLibrariesCacheFile()) {
-
-				_githubAccessToken = _getCiGithubAccessToken();
-			}
-			else {
-				_githubAccessToken = _getLocalGithubAccessToken();
-			}
-
-			if (Validator.isNull(_githubAccessToken)) {
-				return;
-			}
 
 			_generateVulnerableVersionMap(
 				packageName, securityAdvisoryEcosystemEnum,
@@ -525,7 +512,7 @@ public class LibraryVulnerabilitiesCheck extends BaseFileCheck {
 		return _cachedKnownVulnerabilities;
 	}
 
-	private String _getCiGithubAccessToken() throws Exception {
+	private String _getCiGithubAccessToken() {
 		Properties properties = new Properties();
 
 		try {
@@ -546,6 +533,26 @@ public class LibraryVulnerabilitiesCheck extends BaseFileCheck {
 		return properties.getProperty("github.access.token");
 	}
 
+	private synchronized String _getGithubAccessToken(
+			SourceFormatterArgs sourceFormatterArgs)
+		throws Exception {
+
+		if (Validator.isNotNull(_githubAccessToken)) {
+			return _githubAccessToken;
+		}
+
+		if (sourceFormatterArgs.isUseCiGithubAccessToken() ||
+			_isGenerateVulnerableLibrariesCacheFile()) {
+
+			_githubAccessToken = _getCiGithubAccessToken();
+		}
+		else {
+			_githubAccessToken = _getLocalGithubAccessToken();
+		}
+
+		return _githubAccessToken;
+	}
+
 	private String _getLocalGithubAccessToken() throws Exception {
 		File file = getPortalDir();
 
@@ -557,26 +564,20 @@ public class LibraryVulnerabilitiesCheck extends BaseFileCheck {
 			file.getAbsolutePath(), _BUILD_PROPERTIES_FILE_NAME);
 
 		if (!buildPropertiesFile.exists()) {
-			throw new FileNotFoundException(
-				StringBundler.concat(
-					_BUILD_PROPERTIES_FILE_NAME,
-					" does not exist, place your github access token in ",
-					"'github.access.token' in ", file.getCanonicalPath(), "/",
-					_BUILD_PROPERTIES_FILE_NAME));
+			return null;
 		}
 
 		Properties properties = new Properties();
 
-		properties.load(new FileInputStream(buildPropertiesFile));
+		properties.load(Files.newInputStream(buildPropertiesFile.toPath()));
 
 		return properties.getProperty("github.access.token");
 	}
 
 	private List<SecurityVulnerabilityNode> _getSecurityVulnerabilityNodes(
-			String packageName, String cursor,
-			SecurityAdvisoryEcosystemEnum securityAdvisoryEcosystemEnum,
-			List<String> severities, String githubToken)
-		throws Exception {
+		String packageName, String cursor,
+		SecurityAdvisoryEcosystemEnum securityAdvisoryEcosystemEnum,
+		List<String> severities, String githubToken) {
 
 		HttpClientBuilder httpClientBuilder = HttpClientBuilder.create();
 
@@ -615,10 +616,7 @@ public class LibraryVulnerabilitiesCheck extends BaseFileCheck {
 			StatusLine statusLine = closeableHttpResponse.getStatusLine();
 
 			if (statusLine.getStatusCode() != HttpStatus.SC_OK) {
-				throw new Exception(
-					"Unable to access GitHub GraphQL API, check " +
-						"'github.asscess.token' in " +
-							_BUILD_PROPERTIES_FILE_NAME);
+				return Collections.emptyList();
 			}
 
 			JSONObject jsonObject = new JSONObjectImpl(
@@ -688,6 +686,9 @@ public class LibraryVulnerabilitiesCheck extends BaseFileCheck {
 				return securityVulnerabilityNodes;
 			}
 		}
+		catch (Exception exception) {
+			_log.error(exception);
+		}
 
 		return Collections.emptyList();
 	}
@@ -700,6 +701,9 @@ public class LibraryVulnerabilitiesCheck extends BaseFileCheck {
 			outputStream.write(content.getBytes());
 		}
 	}
+
+	private static final String _ALLOWED_VULNERABILITIES_KEY =
+		"allowedVulnerabilities";
 
 	private static final String _BUILD_PROPERTIES_FILE_NAME =
 		"build." + System.getProperty("user.name") + ".properties";

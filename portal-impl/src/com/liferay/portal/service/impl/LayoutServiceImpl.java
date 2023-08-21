@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.service.impl;
@@ -19,9 +10,11 @@ import com.liferay.exportimport.kernel.configuration.constants.ExportImportConfi
 import com.liferay.exportimport.kernel.model.ExportImportConfiguration;
 import com.liferay.exportimport.kernel.service.ExportImportConfigurationLocalService;
 import com.liferay.exportimport.kernel.staging.MergeLayoutPrototypesThreadLocal;
+import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.bean.BeanReference;
 import com.liferay.portal.kernel.cache.thread.local.ThreadLocalCachable;
+import com.liferay.portal.kernel.change.tracking.CTCollectionThreadLocal;
 import com.liferay.portal.kernel.exception.NoSuchLayoutException;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
@@ -884,8 +877,19 @@ public class LayoutServiceImpl extends LayoutServiceBaseImpl {
 	public int getLayoutsCount(
 		long groupId, boolean privateLayout, long parentLayoutId) {
 
-		return layoutPersistence.filterCountByG_P_P(
-			groupId, privateLayout, parentLayoutId);
+		try {
+			List<Layout> layouts = getLayouts(
+				groupId, privateLayout, parentLayoutId);
+
+			return layouts.size();
+		}
+		catch (PortalException portalException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(portalException);
+			}
+		}
+
+		return 0;
 	}
 
 	@Override
@@ -943,12 +947,19 @@ public class LayoutServiceImpl extends LayoutServiceBaseImpl {
 	public String[] getTempFileNames(long groupId, String folderName)
 		throws PortalException {
 
-		GroupPermissionUtil.check(
-			getPermissionChecker(), groupId, ActionKeys.EXPORT_IMPORT_LAYOUTS);
+		Group group = _groupLocalService.getGroup(groupId);
 
-		return TempFileEntryUtil.getTempFileNames(
-			groupId, getUserId(),
-			DigesterUtil.digestHex(Digester.SHA_256, folderName));
+		GroupPermissionUtil.check(
+			getPermissionChecker(), group, ActionKeys.EXPORT_IMPORT_LAYOUTS);
+
+		try (SafeCloseable safeCloseable =
+				CTCollectionThreadLocal.setCTCollectionIdWithSafeCloseable(
+					group.getCtCollectionId())) {
+
+			return TempFileEntryUtil.getTempFileNames(
+				groupId, getUserId(),
+				DigesterUtil.digestHex(Digester.SHA_256, folderName));
+		}
 	}
 
 	/**
@@ -1207,8 +1218,8 @@ public class LayoutServiceImpl extends LayoutServiceBaseImpl {
 	public Layout updateIconImage(long plid, byte[] bytes)
 		throws PortalException {
 
-		LayoutPermissionUtil.check(
-			getPermissionChecker(), plid, ActionKeys.UPDATE);
+		LayoutPermissionUtil.checkLayoutUpdatePermission(
+			getPermissionChecker(), plid);
 
 		return layoutLocalService.updateIconImage(plid, bytes);
 	}
@@ -1260,8 +1271,8 @@ public class LayoutServiceImpl extends LayoutServiceBaseImpl {
 		Layout layout = layoutLocalService.getLayout(
 			groupId, privateLayout, layoutId);
 
-		LayoutPermissionUtil.check(
-			getPermissionChecker(), layout, ActionKeys.UPDATE);
+		LayoutPermissionUtil.checkLayoutUpdatePermission(
+			getPermissionChecker(), layout);
 
 		Layout updatedLayout = layoutLocalService.updateLayout(
 			groupId, privateLayout, layoutId, parentLayoutId, localeNamesMap,
@@ -1298,8 +1309,8 @@ public class LayoutServiceImpl extends LayoutServiceBaseImpl {
 		Layout layout = layoutLocalService.getLayout(
 			groupId, privateLayout, layoutId);
 
-		LayoutPermissionUtil.check(
-			getPermissionChecker(), layout, ActionKeys.UPDATE);
+		LayoutPermissionUtil.checkLayoutUpdatePermission(
+			getPermissionChecker(), layout);
 
 		checkLayoutTypeSettings(layout, layout.getTypeSettings(), typeSettings);
 
@@ -1325,9 +1336,9 @@ public class LayoutServiceImpl extends LayoutServiceBaseImpl {
 			String colorSchemeId, String css)
 		throws PortalException {
 
-		LayoutPermissionUtil.check(
-			getPermissionChecker(), groupId, privateLayout, layoutId,
-			ActionKeys.UPDATE);
+		LayoutPermissionUtil.checkLayoutUpdatePermission(
+			getPermissionChecker(),
+			layoutLocalService.getLayout(groupId, privateLayout, layoutId));
 
 		if (Validator.isNotNull(themeId)) {
 			_pluginSettingLocalService.checkPermission(
@@ -1357,9 +1368,9 @@ public class LayoutServiceImpl extends LayoutServiceBaseImpl {
 			String languageId)
 		throws PortalException {
 
-		LayoutPermissionUtil.check(
-			getPermissionChecker(), groupId, privateLayout, layoutId,
-			ActionKeys.UPDATE);
+		LayoutPermissionUtil.checkLayoutUpdatePermission(
+			getPermissionChecker(),
+			layoutLocalService.getLayout(groupId, privateLayout, layoutId));
 
 		return layoutLocalService.updateName(
 			groupId, privateLayout, layoutId, name, languageId);
@@ -1379,8 +1390,8 @@ public class LayoutServiceImpl extends LayoutServiceBaseImpl {
 	public Layout updateName(long plid, String name, String languageId)
 		throws PortalException {
 
-		LayoutPermissionUtil.check(
-			getPermissionChecker(), plid, ActionKeys.UPDATE);
+		LayoutPermissionUtil.checkLayoutUpdatePermission(
+			getPermissionChecker(), plid);
 
 		return layoutLocalService.updateName(plid, name, languageId);
 	}
@@ -1402,9 +1413,9 @@ public class LayoutServiceImpl extends LayoutServiceBaseImpl {
 			long parentLayoutId)
 		throws PortalException {
 
-		LayoutPermissionUtil.check(
-			getPermissionChecker(), groupId, privateLayout, layoutId,
-			ActionKeys.UPDATE);
+		LayoutPermissionUtil.checkLayoutUpdatePermission(
+			getPermissionChecker(),
+			layoutLocalService.getLayout(groupId, privateLayout, layoutId));
 
 		return layoutLocalService.updateParentLayoutId(
 			groupId, privateLayout, layoutId, parentLayoutId);
@@ -1425,8 +1436,8 @@ public class LayoutServiceImpl extends LayoutServiceBaseImpl {
 	public Layout updateParentLayoutId(long plid, long parentPlid)
 		throws PortalException {
 
-		LayoutPermissionUtil.check(
-			getPermissionChecker(), plid, ActionKeys.UPDATE);
+		LayoutPermissionUtil.checkLayoutUpdatePermission(
+			getPermissionChecker(), plid);
 
 		return layoutLocalService.updateParentLayoutId(plid, parentPlid);
 	}
@@ -1445,8 +1456,8 @@ public class LayoutServiceImpl extends LayoutServiceBaseImpl {
 			long plid, long parentPlid, int priority)
 		throws PortalException {
 
-		LayoutPermissionUtil.check(
-			getPermissionChecker(), plid, ActionKeys.UPDATE);
+		LayoutPermissionUtil.checkLayoutUpdatePermission(
+			getPermissionChecker(), plid);
 
 		return layoutLocalService.updateParentLayoutIdAndPriority(
 			plid, parentPlid, priority);
@@ -1468,9 +1479,9 @@ public class LayoutServiceImpl extends LayoutServiceBaseImpl {
 			long groupId, boolean privateLayout, long layoutId, int priority)
 		throws PortalException {
 
-		LayoutPermissionUtil.check(
-			getPermissionChecker(), groupId, privateLayout, layoutId,
-			ActionKeys.UPDATE);
+		LayoutPermissionUtil.checkLayoutUpdatePermission(
+			getPermissionChecker(),
+			layoutLocalService.getLayout(groupId, privateLayout, layoutId));
 
 		return layoutLocalService.updatePriority(
 			groupId, privateLayout, layoutId, priority);
@@ -1495,9 +1506,9 @@ public class LayoutServiceImpl extends LayoutServiceBaseImpl {
 			long nextLayoutId, long previousLayoutId)
 		throws PortalException {
 
-		LayoutPermissionUtil.check(
-			getPermissionChecker(), groupId, privateLayout, layoutId,
-			ActionKeys.UPDATE);
+		LayoutPermissionUtil.checkLayoutUpdatePermission(
+			getPermissionChecker(),
+			layoutLocalService.getLayout(groupId, privateLayout, layoutId));
 
 		return layoutLocalService.updatePriority(
 			groupId, privateLayout, layoutId, nextLayoutId, previousLayoutId);
@@ -1515,17 +1526,16 @@ public class LayoutServiceImpl extends LayoutServiceBaseImpl {
 	public Layout updatePriority(long plid, int priority)
 		throws PortalException {
 
-		LayoutPermissionUtil.check(
-			getPermissionChecker(), plid, ActionKeys.UPDATE);
+		LayoutPermissionUtil.checkLayoutUpdatePermission(
+			getPermissionChecker(), plid);
 
 		return layoutLocalService.updatePriority(plid, priority);
 	}
 
 	@Override
 	public Layout updateType(long plid, String type) throws PortalException {
-		LayoutPermissionUtil.check(
-			getPermissionChecker(), layoutLocalService.getLayout(plid),
-			ActionKeys.UPDATE);
+		LayoutPermissionUtil.checkLayoutUpdatePermission(
+			getPermissionChecker(), plid);
 
 		return layoutLocalService.updateType(plid, type);
 	}

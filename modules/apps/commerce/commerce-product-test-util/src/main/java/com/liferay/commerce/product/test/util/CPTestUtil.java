@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.product.test.util;
@@ -33,6 +24,7 @@ import com.liferay.commerce.product.model.CPDefinition;
 import com.liferay.commerce.product.model.CPDefinitionOptionRel;
 import com.liferay.commerce.product.model.CPDefinitionOptionValueRel;
 import com.liferay.commerce.product.model.CPInstance;
+import com.liferay.commerce.product.model.CPInstanceUnitOfMeasure;
 import com.liferay.commerce.product.model.CPOption;
 import com.liferay.commerce.product.model.CPOptionValue;
 import com.liferay.commerce.product.model.CommerceCatalog;
@@ -40,6 +32,7 @@ import com.liferay.commerce.product.service.CPDefinitionLocalServiceUtil;
 import com.liferay.commerce.product.service.CPDefinitionOptionRelLocalServiceUtil;
 import com.liferay.commerce.product.service.CPDefinitionOptionValueRelLocalServiceUtil;
 import com.liferay.commerce.product.service.CPInstanceLocalServiceUtil;
+import com.liferay.commerce.product.service.CPInstanceUnitOfMeasureLocalServiceUtil;
 import com.liferay.commerce.product.service.CPOptionLocalServiceUtil;
 import com.liferay.commerce.product.service.CPOptionValueLocalServiceUtil;
 import com.liferay.commerce.product.service.CommerceCatalogLocalServiceUtil;
@@ -61,6 +54,7 @@ import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.util.CalendarFactoryUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LinkedHashMapBuilder;
+import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.kernel.util.Validator;
@@ -310,7 +304,7 @@ public class CPTestUtil {
 			addCPDefinitionOptionValueRelWithPrice(
 				long groupId, long cpDefinitionId, long cpInstanceId,
 				long cpOptionId, String priceType, BigDecimal price,
-				int quantity, boolean required, boolean skuContributor,
+				BigDecimal quantity, boolean required, boolean skuContributor,
 				ServiceContext serviceContext)
 		throws PortalException {
 
@@ -333,9 +327,9 @@ public class CPTestUtil {
 			CPDefinitionOptionValueRelLocalServiceUtil.
 				addCPDefinitionOptionValueRel(
 					cpDefinitionOptionRel.getCPDefinitionOptionRelId(),
+					RandomTestUtil.randomString(),
 					RandomTestUtil.randomLocaleStringMap(),
-					RandomTestUtil.randomDouble(),
-					RandomTestUtil.randomString(), serviceContext);
+					RandomTestUtil.randomDouble(), serviceContext);
 
 		if ((cpInstanceId == 0) && (priceType != null)) {
 			CPInstance cpInstance = addCPInstanceFromCatalog(
@@ -347,10 +341,11 @@ public class CPTestUtil {
 		return CPDefinitionOptionValueRelLocalServiceUtil.
 			updateCPDefinitionOptionValueRel(
 				cpDefinitionOptionValueRel.getCPDefinitionOptionValueRelId(),
-				cpDefinitionOptionValueRel.getNameMap(),
-				cpDefinitionOptionValueRel.getPriority(),
-				cpDefinitionOptionValueRel.getKey(), cpInstanceId, quantity,
-				false, price, serviceContext);
+				cpInstanceId, cpDefinitionOptionValueRel.getKey(),
+				cpDefinitionOptionValueRel.getNameMap(), false, price,
+				cpDefinitionOptionValueRel.getPriority(), quantity,
+				cpDefinitionOptionValueRel.getUnitOfMeasureKey(),
+				serviceContext);
 	}
 
 	public static CPDefinition addCPDefinitionWithChildCPDefinitions(
@@ -523,6 +518,24 @@ public class CPTestUtil {
 		_addCommercePriceEntry(cpInstance);
 
 		return cpInstance;
+	}
+
+	public static CPInstanceUnitOfMeasure addCPInstanceUnitOfMeasure(
+			long groupId, long cpInstanceId, String key,
+			BigDecimal incrementalOrderQuantity, String sku)
+		throws PortalException {
+
+		ServiceContext serviceContext =
+			ServiceContextTestUtil.getServiceContext(groupId);
+
+		return CPInstanceUnitOfMeasureLocalServiceUtil.
+			addCPInstanceUnitOfMeasure(
+				serviceContext.getUserId(), cpInstanceId, true,
+				incrementalOrderQuantity, key,
+				HashMapBuilder.put(
+					LocaleUtil.getDefault(), "NOME"
+				).build(),
+				2, true, 0.0, BigDecimal.ONE, sku);
 	}
 
 	public static CPInstance addCPInstanceWithRandomSku(long groupId)
@@ -784,7 +797,7 @@ public class CPTestUtil {
 			StringPool.BLANK, cpDefinition.getCProductId(),
 			cpInstance.getCPInstanceUuid(),
 			commercePriceList.getCommercePriceListId(), cpInstance.getPrice(),
-			null,
+			false, null, null,
 			ServiceContextTestUtil.getServiceContext(cpInstance.getGroupId()));
 	}
 
@@ -1215,9 +1228,9 @@ public class CPTestUtil {
 				CPDefinitionOptionValueRelLocalServiceUtil.
 					addCPDefinitionOptionValueRel(
 						cpDefinitionOptionRel.getCPDefinitionOptionRelId(),
+						RandomTestUtil.randomString(),
 						RandomTestUtil.randomLocaleStringMap(),
-						RandomTestUtil.nextDouble(),
-						RandomTestUtil.randomString(), serviceContext);
+						RandomTestUtil.nextDouble(), serviceContext);
 
 			BigDecimal price = null;
 
@@ -1232,10 +1245,12 @@ public class CPTestUtil {
 					updateCPDefinitionOptionValueRel(
 						cpInstanceOptionValueRel.
 							getCPDefinitionOptionValueRelId(),
-						cpInstanceOptionValueRel.getNameMap(),
-						cpInstanceOptionValueRel.getPriority(),
+						cpInstance.getCPInstanceId(),
 						cpInstanceOptionValueRel.getKey(),
-						cpInstance.getCPInstanceId(), 2, false, price,
+						cpInstanceOptionValueRel.getNameMap(), false, price,
+						cpInstanceOptionValueRel.getPriority(),
+						BigDecimal.valueOf(2),
+						cpInstanceOptionValueRel.getUnitOfMeasureKey(),
 						serviceContext));
 		}
 

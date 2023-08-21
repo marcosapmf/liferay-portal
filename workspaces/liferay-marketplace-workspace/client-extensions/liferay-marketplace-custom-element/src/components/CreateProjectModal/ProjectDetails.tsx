@@ -1,3 +1,8 @@
+/**
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
+ */
+
 import {Input} from '../Input/Input';
 import {ProjectDetailsCard} from './ProjectDetailsCard';
 
@@ -24,9 +29,9 @@ export function ProjectDetails({
 				<div className="create-project-modal-inputs-container">
 					<Input
 						label="Project name"
-						onChange={(e) =>
+						onChange={(event) =>
 							onProjectNameChange &&
-							onProjectNameChange(e.target.value)
+							onProjectNameChange(event.target.value)
 						}
 						placeholder="Type your environment name"
 						required
@@ -35,9 +40,9 @@ export function ProjectDetails({
 
 					<Input
 						label="Github username"
-						onChange={(e) =>
+						onChange={(event) =>
 							onGithubUsernameChange &&
-							onGithubUsernameChange(e.target.value)
+							onGithubUsernameChange(event.target.value)
 						}
 						placeholder="Type your github username"
 						required

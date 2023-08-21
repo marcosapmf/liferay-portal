@@ -20,6 +20,7 @@
 
 		<!-- Other fields -->
 
+		<column name="accountEntryId" type="long" />
 		<column name="name" type="String" />
 		<column name="commerceCurrencyCode" type="String" />
 		<column name="catalogDefaultLanguageId" type="String" />
@@ -35,6 +36,9 @@
 
 		<finder name="CompanyId" return-type="Collection">
 			<finder-column name="companyId" />
+		</finder>
+		<finder name="AccountEntryId" return-type="Collection">
+			<finder-column name="accountEntryId" />
 		</finder>
 		<finder name="C_S" return-type="Collection">
 			<finder-column name="companyId" />
@@ -57,6 +61,7 @@
 
 		<!-- Other fields -->
 
+		<column name="accountEntryId" type="long" />
 		<column name="siteGroupId" type="long" />
 		<column name="name" type="String" />
 		<column name="type" type="String" />
@@ -75,6 +80,9 @@
 
 		<finder name="CompanyId" return-type="Collection">
 			<finder-column name="companyId" />
+		</finder>
+		<finder name="AccountEntryId" return-type="Collection">
+			<finder-column name="accountEntryId" />
 		</finder>
 		<finder name="SiteGroupId" return-type="CommerceChannel">
 			<finder-column name="siteGroupId" />
@@ -410,8 +418,15 @@
 
 		<column name="CPDefinitionId" type="long" />
 		<column name="CProductId" type="long" />
+		<column name="displayDate" type="Date" />
+		<column name="expirationDate" type="Date" />
 		<column name="priority" type="double" />
 		<column name="type" type="String" />
+		<column name="lastPublishDate" type="Date" />
+		<column name="status" type="int" />
+		<column name="statusByUserId" type="long" />
+		<column name="statusByUserName" type="String" />
+		<column name="statusDate" type="Date" />
 
 		<!-- Order -->
 
@@ -431,14 +446,40 @@
 			<finder-column name="CPDefinitionId" />
 			<finder-column name="type" />
 		</finder>
+		<finder name="CPD_S" return-type="Collection">
+			<finder-column name="CPDefinitionId" />
+			<finder-column name="status" />
+		</finder>
 		<finder name="CP_T" return-type="Collection">
 			<finder-column name="CProductId" />
 			<finder-column name="type" />
+		</finder>
+		<finder name="CP_S" return-type="Collection">
+			<finder-column name="CProductId" />
+			<finder-column name="status" />
+		</finder>
+		<finder name="LtD_S" return-type="Collection">
+			<finder-column comparator="&lt;" name="displayDate" />
+			<finder-column name="status" />
+		</finder>
+		<finder name="LtE_S" return-type="Collection">
+			<finder-column comparator="&lt;" name="expirationDate" />
+			<finder-column name="status" />
 		</finder>
 		<finder name="C_C_T" return-type="CPDefinitionLink" unique="true">
 			<finder-column name="CPDefinitionId" />
 			<finder-column name="CProductId" />
 			<finder-column name="type" />
+		</finder>
+		<finder name="CPD_T_S" return-type="Collection">
+			<finder-column name="CPDefinitionId" />
+			<finder-column name="type" />
+			<finder-column name="status" />
+		</finder>
+		<finder name="CP_T_S" return-type="Collection">
+			<finder-column name="CProductId" />
+			<finder-column name="type" />
+			<finder-column name="status" />
 		</finder>
 	</entity>
 	<entity local-service="true" name="CPDefinitionOptionRel" remote-service="true" uuid="true">
@@ -530,17 +571,19 @@
 		<column name="CPDefinitionOptionRelId" type="long" />
 		<column name="CPInstanceUuid" type="String" />
 		<column name="CProductId" type="long" />
-		<column localized="true" name="name" type="String" />
-		<column name="priority" type="double" />
 		<column name="key" type="String" />
-		<column name="quantity" type="int" />
+		<column localized="true" name="name" type="String" />
 		<column name="preselected" type="boolean" />
 		<column name="price" type="BigDecimal" />
+		<column name="priority" type="double" />
+		<column name="quantity" type="BigDecimal" />
+		<column name="unitOfMeasureKey" type="String" />
 
 		<!-- Order -->
 
 		<order by="asc">
 			<order-column name="priority" />
+			<order-column name="createDate" />
 		</order>
 
 		<!-- Finder methods -->
@@ -772,7 +815,7 @@
 			<finder-column name="groupId" />
 			<finder-column name="status" />
 		</finder>
-		<finder name="C_SKU" return-type="Collection">
+		<finder name="C_S" return-type="Collection">
 			<finder-column name="companyId" />
 			<finder-column name="sku" />
 		</finder>
@@ -780,7 +823,7 @@
 			<finder-column name="CPDefinitionId" />
 			<finder-column name="CPInstanceUuid" />
 		</finder>
-		<finder name="CPDI_SKU" return-type="CPInstance" unique="true">
+		<finder name="CPDI_S" return-type="CPInstance" unique="true">
 			<finder-column name="CPDefinitionId" />
 			<finder-column name="sku" />
 		</finder>
@@ -842,6 +885,56 @@
 			<finder-column name="CPDefinitionOptionRelId" />
 			<finder-column name="CPDefinitionOptionValueRelId" />
 			<finder-column name="CPInstanceId" />
+		</finder>
+	</entity>
+	<entity local-service="true" name="CPInstanceUnitOfMeasure" remote-service="true" table="CPInstanceUOM" uuid="true">
+
+		<!-- PK fields -->
+
+		<column db-name="CPInstanceUOMId" name="CPInstanceUnitOfMeasureId" primary="true" type="long" />
+
+		<!-- Audit fields -->
+
+		<column name="companyId" type="long" />
+		<column name="userId" type="long" />
+		<column name="userName" type="String" />
+		<column name="createDate" type="Date" />
+		<column name="modifiedDate" type="Date" />
+
+		<!-- Other fields -->
+
+		<column name="CPInstanceId" type="long" />
+		<column name="active" type="boolean" />
+		<column name="incrementalOrderQuantity" type="BigDecimal" />
+		<column name="key" type="String" />
+		<column localized="true" name="name" type="String" />
+		<column name="precision" type="int" />
+		<column name="primary" type="boolean" />
+		<column name="priority" type="double" />
+		<column name="rate" type="BigDecimal" />
+		<column name="sku" type="String" />
+
+		<!-- Finder methods -->
+
+		<finder name="CPInstanceId" return-type="Collection">
+			<finder-column name="CPInstanceId" />
+		</finder>
+		<finder name="C_S" return-type="Collection">
+			<finder-column name="companyId" />
+			<finder-column name="sku" />
+		</finder>
+		<finder name="C_K" return-type="CPInstanceUnitOfMeasure" unique="true">
+			<finder-column name="CPInstanceId" />
+			<finder-column name="key" />
+		</finder>
+		<finder name="C_P" return-type="Collection">
+			<finder-column name="CPInstanceId" />
+			<finder-column name="primary" />
+		</finder>
+		<finder name="C_K_S" return-type="Collection">
+			<finder-column name="companyId" />
+			<finder-column name="key" />
+			<finder-column name="sku" />
 		</finder>
 	</entity>
 	<entity external-reference-code="company" local-service="true" name="CPMeasurementUnit" remote-service="true" uuid="true">
@@ -1143,6 +1236,8 @@
 		<exception>CPDefinitionDisplayDate</exception>
 		<exception>CPDefinitionExpirationDate</exception>
 		<exception>CPDefinitionIgnoreSKUCombinations</exception>
+		<exception>CPDefinitionLinkDisplayDate</exception>
+		<exception>CPDefinitionLinkExpirationDate</exception>
 		<exception>CPDefinitionMaxSubscriptionCycles</exception>
 		<exception>CPDefinitionMetaDescription</exception>
 		<exception>CPDefinitionMetaKeywords</exception>
@@ -1167,20 +1262,27 @@
 		<exception>CPInstanceReplacementCPInstanceUuid</exception>
 		<exception>CPInstanceSku</exception>
 		<exception>CPInstanceSubscriptionLength</exception>
+		<exception>CPInstanceUnitOfMeasureIncrementalOrderQuantity</exception>
+		<exception>CPInstanceUnitOfMeasureKey</exception>
+		<exception>CPInstanceUnitOfMeasureRate</exception>
+		<exception>CPInstanceUnitOfMeasureSku</exception>
 		<exception>CPMeasurementUnitType</exception>
 		<exception>CPOptionCategoryKey</exception>
 		<exception>CPOptionKey</exception>
 		<exception>CPOptionSKUContributor</exception>
 		<exception>CPOptionValueKey</exception>
+		<exception>CPOptionValueName</exception>
 		<exception>CPSpecificationOptionKey</exception>
 		<exception>CPSpecificationOptionTitle</exception>
 		<exception>CPTaxCategoryName</exception>
 		<exception>DuplicateCommerceChannel</exception>
+		<exception>DuplicateCommerceChannelAccountEntryId</exception>
 		<exception>DuplicateCommerceChannelAccountEntryRel</exception>
 		<exception>DuplicateCommerceChannelRel</exception>
 		<exception>DuplicateCPAttachmentFileEntry</exception>
 		<exception>DuplicateCPDefinitionOptionRelKey</exception>
 		<exception>DuplicateCPInstance</exception>
+		<exception>DuplicateCPInstanceUnitOfMeasureKey</exception>
 		<exception>DuplicateCPMeasurementUnitExternalReferenceCode</exception>
 		<exception>DuplicateCPMeasurementUnitKey</exception>
 		<exception>DuplicateCProduct</exception>

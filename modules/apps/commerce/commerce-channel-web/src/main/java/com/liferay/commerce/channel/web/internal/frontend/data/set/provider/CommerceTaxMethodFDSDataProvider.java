@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.channel.web.internal.frontend.data.set.provider;
@@ -21,7 +12,7 @@ import com.liferay.commerce.product.model.CommerceChannel;
 import com.liferay.commerce.product.service.CommerceChannelService;
 import com.liferay.commerce.tax.CommerceTaxEngine;
 import com.liferay.commerce.tax.model.CommerceTaxMethod;
-import com.liferay.commerce.tax.service.CommerceTaxMethodService;
+import com.liferay.commerce.tax.service.CommerceTaxMethodLocalService;
 import com.liferay.commerce.util.CommerceTaxEngineRegistry;
 import com.liferay.frontend.data.set.provider.FDSDataProvider;
 import com.liferay.frontend.data.set.provider.search.FDSKeywords;
@@ -78,7 +69,7 @@ public class CommerceTaxMethodFDSDataProvider
 			CommerceTaxEngine commerceTaxEngine = entry.getValue();
 
 			CommerceTaxMethod commerceTaxMethod =
-				_commerceTaxMethodService.fetchCommerceTaxMethod(
+				_commerceTaxMethodLocalService.fetchCommerceTaxMethod(
 					commerceChannel.getGroupId(), entry.getKey());
 
 			String commerceTaxDescription = commerceTaxEngine.getDescription(
@@ -130,6 +121,6 @@ public class CommerceTaxMethodFDSDataProvider
 	private CommerceTaxEngineRegistry _commerceTaxEngineRegistry;
 
 	@Reference
-	private CommerceTaxMethodService _commerceTaxMethodService;
+	private CommerceTaxMethodLocalService _commerceTaxMethodLocalService;
 
 }

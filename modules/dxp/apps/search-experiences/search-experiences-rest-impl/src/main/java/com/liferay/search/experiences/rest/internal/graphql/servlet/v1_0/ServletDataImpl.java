@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.search.experiences.rest.internal.graphql.servlet.v1_0;
@@ -192,6 +183,11 @@ public class ServletDataImpl implements ServletData {
 							SXPBlueprintResourceImpl.class,
 							"postSXPBlueprintBatch"));
 					put(
+						"mutation#updateSXPBlueprintByExternalReferenceCode",
+						new ObjectValuePair<>(
+							SXPBlueprintResourceImpl.class,
+							"putSXPBlueprintByExternalReferenceCode"));
+					put(
 						"mutation#createSXPBlueprintValidate",
 						new ObjectValuePair<>(
 							SXPBlueprintResourceImpl.class,
@@ -230,6 +226,16 @@ public class ServletDataImpl implements ServletData {
 						new ObjectValuePair<>(
 							SXPElementResourceImpl.class,
 							"postSXPElementBatch"));
+					put(
+						"mutation#updateSXPElementByExternalReferenceCode",
+						new ObjectValuePair<>(
+							SXPElementResourceImpl.class,
+							"putSXPElementByExternalReferenceCode"));
+					put(
+						"mutation#createSXPElementPreview",
+						new ObjectValuePair<>(
+							SXPElementResourceImpl.class,
+							"postSXPElementPreview"));
 					put(
 						"mutation#createSXPElementValidate",
 						new ObjectValuePair<>(
@@ -304,6 +310,11 @@ public class ServletDataImpl implements ServletData {
 							SXPBlueprintResourceImpl.class,
 							"getSXPBlueprintsPage"));
 					put(
+						"query#sXPBlueprintByExternalReferenceCode",
+						new ObjectValuePair<>(
+							SXPBlueprintResourceImpl.class,
+							"getSXPBlueprintByExternalReferenceCode"));
+					put(
 						"query#sXPBlueprint",
 						new ObjectValuePair<>(
 							SXPBlueprintResourceImpl.class, "getSXPBlueprint"));
@@ -317,6 +328,11 @@ public class ServletDataImpl implements ServletData {
 						new ObjectValuePair<>(
 							SXPElementResourceImpl.class,
 							"getSXPElementsPage"));
+					put(
+						"query#sXPElementByExternalReferenceCode",
+						new ObjectValuePair<>(
+							SXPElementResourceImpl.class,
+							"getSXPElementByExternalReferenceCode"));
 					put(
 						"query#sXPElement",
 						new ObjectValuePair<>(
@@ -348,6 +364,11 @@ public class ServletDataImpl implements ServletData {
 							"getSearchableAssetNameLanguagePage"));
 
 					put(
+						"query#SXPBlueprint.sXPElementByExternalReferenceCode",
+						new ObjectValuePair<>(
+							SXPElementResourceImpl.class,
+							"getSXPElementByExternalReferenceCode"));
+					put(
 						"query#SXPElement.export",
 						new ObjectValuePair<>(
 							SXPElementResourceImpl.class,
@@ -356,6 +377,11 @@ public class ServletDataImpl implements ServletData {
 						"query#ElementInstance.sXPElement",
 						new ObjectValuePair<>(
 							SXPElementResourceImpl.class, "getSXPElement"));
+					put(
+						"query#SXPElement.sXPBlueprintByExternalReferenceCode",
+						new ObjectValuePair<>(
+							SXPBlueprintResourceImpl.class,
+							"getSXPBlueprintByExternalReferenceCode"));
 					put(
 						"query#SXPBlueprint.export",
 						new ObjectValuePair<>(

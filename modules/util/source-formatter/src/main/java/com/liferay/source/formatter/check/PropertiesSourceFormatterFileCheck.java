@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.source.formatter.check;
@@ -23,9 +14,11 @@ import com.liferay.source.formatter.check.comparator.PropertyValueComparator;
 import com.liferay.source.formatter.check.util.SourceUtil;
 
 import java.io.File;
+import java.io.InputStream;
 import java.io.StringReader;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Objects;
@@ -145,12 +138,13 @@ public class PropertiesSourceFormatterFileCheck extends BaseFileCheck {
 	}
 
 	private List<String> _getCheckstyleCheckNames() throws Exception {
-		List<String> checkstyleCheckNames = new ArrayList<>();
+		Element element = _getRootElement("checkstyle.xml");
 
-		checkstyleCheckNames.addAll(
-			_getCheckstyleCheckNames(_getRootElement("checkstyle.xml")));
+		if (element == null) {
+			return Collections.emptyList();
+		}
 
-		return checkstyleCheckNames;
+		return _getCheckstyleCheckNames(element);
 	}
 
 	private List<String> _getCheckstyleCheckNames(Element moduleElement) {
@@ -181,10 +175,23 @@ public class PropertiesSourceFormatterFileCheck extends BaseFileCheck {
 		ClassLoader classLoader =
 			PropertiesSourceFormatterFileCheck.class.getClassLoader();
 
-		String content = StringUtil.read(
-			classLoader.getResourceAsStream(fileName));
+		if (classLoader == null) {
+			return null;
+		}
+
+		InputStream inputStream = classLoader.getResourceAsStream(fileName);
+
+		if (inputStream == null) {
+			return null;
+		}
+
+		String content = StringUtil.read(inputStream);
 
 		Document document = SourceUtil.readXML(content);
+
+		if (document == null) {
+			return null;
+		}
 
 		return document.getRootElement();
 	}
@@ -193,6 +200,10 @@ public class PropertiesSourceFormatterFileCheck extends BaseFileCheck {
 		List<String> sourceCheckCheckNames = new ArrayList<>();
 
 		Element rootElement = _getRootElement("sourcechecks.xml");
+
+		if (rootElement == null) {
+			return sourceCheckCheckNames;
+		}
 
 		for (Element sourceProcessorElement :
 				(List<Element>)rootElement.elements("source-processor")) {

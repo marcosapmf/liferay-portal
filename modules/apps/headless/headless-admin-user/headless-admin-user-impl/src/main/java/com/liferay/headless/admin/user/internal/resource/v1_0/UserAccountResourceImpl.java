@@ -1,21 +1,13 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.admin.user.internal.resource.v1_0;
 
 import com.liferay.account.model.AccountEntry;
 import com.liferay.account.model.AccountEntryUserRel;
+import com.liferay.account.service.AccountEntryLocalService;
 import com.liferay.account.service.AccountEntryUserRelLocalService;
 import com.liferay.account.service.AccountEntryUserRelService;
 import com.liferay.announcements.kernel.service.AnnouncementsDeliveryLocalService;
@@ -29,9 +21,7 @@ import com.liferay.headless.admin.user.dto.v1_0.PostalAddress;
 import com.liferay.headless.admin.user.dto.v1_0.UserAccount;
 import com.liferay.headless.admin.user.dto.v1_0.UserAccountContactInformation;
 import com.liferay.headless.admin.user.dto.v1_0.WebUrl;
-import com.liferay.headless.admin.user.internal.dto.v1_0.converter.AccountResourceDTOConverter;
-import com.liferay.headless.admin.user.internal.dto.v1_0.converter.OrganizationResourceDTOConverter;
-import com.liferay.headless.admin.user.internal.dto.v1_0.converter.UserResourceDTOConverter;
+import com.liferay.headless.admin.user.internal.dto.v1_0.converter.constants.DTOConverterConstants;
 import com.liferay.headless.admin.user.internal.dto.v1_0.util.CustomFieldsUtil;
 import com.liferay.headless.admin.user.internal.dto.v1_0.util.ServiceBuilderAddressUtil;
 import com.liferay.headless.admin.user.internal.dto.v1_0.util.ServiceBuilderEmailAddressUtil;
@@ -91,9 +81,11 @@ import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.TextFormatter;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.odata.entity.EntityModel;
+import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterContext;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterRegistry;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
+import com.liferay.portal.vulcan.dto.converter.util.DTOConverterUtil;
 import com.liferay.portal.vulcan.fields.NestedField;
 import com.liferay.portal.vulcan.fields.NestedFieldSupport;
 import com.liferay.portal.vulcan.multipart.MultipartBody;
@@ -144,9 +136,20 @@ public class UserAccountResourceImpl
 			externalReferenceCode, contextCompany.getCompanyId());
 
 		_accountEntryUserRelService.deleteAccountEntryUserRelByEmailAddress(
-			_accountResourceDTOConverter.getAccountEntryId(
-				accountExternalReferenceCode),
+			DTOConverterUtil.getModelPrimaryKey(
+				_accountResourceDTOConverter, accountExternalReferenceCode),
 			user.getEmailAddress());
+	}
+
+	@Override
+	public void deleteAccountUserAccount(Long accountId, Long userAccountId)
+		throws Exception {
+
+		User user = _userLocalService.getUserById(
+			contextCompany.getCompanyId(), userAccountId);
+
+		deleteAccountUserAccountByEmailAddress(
+			accountId, user.getEmailAddress());
 	}
 
 	@Override
@@ -164,8 +167,8 @@ public class UserAccountResourceImpl
 		throws Exception {
 
 		deleteAccountUserAccountByEmailAddress(
-			_accountResourceDTOConverter.getAccountEntryId(
-				externalReferenceCode),
+			DTOConverterUtil.getModelPrimaryKey(
+				_accountResourceDTOConverter, externalReferenceCode),
 			emailAddress);
 	}
 
@@ -200,10 +203,39 @@ public class UserAccountResourceImpl
 			String externalReferenceCode)
 		throws Exception {
 
-		User user = _userLocalService.getUserByExternalReferenceCode(
-			externalReferenceCode, contextCompany.getCompanyId());
+		deleteUserAccount(
+			DTOConverterUtil.getModelPrimaryKey(
+				_userResourceDTOConverter, externalReferenceCode));
+	}
 
-		deleteUserAccount(user.getUserId());
+	@Override
+	public UserAccount
+			getAccountByExternalReferenceCodeUserAccountByExternalReferenceCode(
+				String accountExternalReferenceCode,
+				String externalReferenceCode)
+		throws Exception {
+
+		AccountEntryUserRel accountEntryUserRel =
+			_accountEntryUserRelLocalService.getAccountEntryUserRel(
+				DTOConverterUtil.getModelPrimaryKey(
+					_accountResourceDTOConverter, accountExternalReferenceCode),
+				DTOConverterUtil.getModelPrimaryKey(
+					_userResourceDTOConverter, externalReferenceCode));
+
+		return _toUserAccount(
+			_userService.getUserById(accountEntryUserRel.getAccountUserId()));
+	}
+
+	@Override
+	public UserAccount getAccountUserAccount(Long accountId, Long userAccountId)
+		throws Exception {
+
+		AccountEntryUserRel accountEntryUserRel =
+			_accountEntryUserRelLocalService.getAccountEntryUserRel(
+				accountId, userAccountId);
+
+		return _toUserAccount(
+			_userService.getUserById(accountEntryUserRel.getAccountUserId()));
 	}
 
 	@Override
@@ -213,8 +245,8 @@ public class UserAccountResourceImpl
 		throws Exception {
 
 		return getAccountUserAccountsPage(
-			_accountResourceDTOConverter.getAccountEntryId(
-				externalReferenceCode),
+			DTOConverterUtil.getModelPrimaryKey(
+				_accountResourceDTOConverter, externalReferenceCode),
 			search, filter, pagination, sorts);
 	}
 
@@ -292,15 +324,13 @@ public class UserAccountResourceImpl
 			Pagination pagination, Sort[] sorts)
 		throws Exception {
 
-		Organization organization = _organizationResourceDTOConverter.getObject(
-			organizationId);
-
 		return _getUserAccountsPage(
 			_getModelActions(
 				Collections.singletonMap(
 					ActionKeys.MANAGE_USERS,
 					new String[] {"getOrganizationUserAccountsPage"}),
-				organization.getOrganizationId(),
+				DTOConverterUtil.getModelPrimaryKey(
+					_organizationOrganizationDTOConverter, organizationId),
 				_organizationModelResourcePermission),
 			booleanQuery -> {
 				BooleanFilter booleanFilter =
@@ -309,7 +339,10 @@ public class UserAccountResourceImpl
 				booleanFilter.add(
 					new TermFilter(
 						"organizationIds",
-						String.valueOf(organization.getOrganizationId())),
+						String.valueOf(
+							DTOConverterUtil.getModelPrimaryKey(
+								_organizationOrganizationDTOConverter,
+								organizationId))),
 					BooleanClauseOccur.MUST);
 			},
 			filter, search, pagination, sorts);
@@ -394,8 +427,8 @@ public class UserAccountResourceImpl
 			externalReferenceCode, contextCompany.getCompanyId());
 
 		_accountEntryUserRelService.addAccountEntryUserRelByEmailAddress(
-			_accountResourceDTOConverter.getAccountEntryId(
-				accountExternalReferenceCode),
+			DTOConverterUtil.getModelPrimaryKey(
+				_accountResourceDTOConverter, accountExternalReferenceCode),
 			user.getEmailAddress(), new long[0], null,
 			new ServiceContext() {
 				{
@@ -506,8 +539,8 @@ public class UserAccountResourceImpl
 		throws Exception {
 
 		return postAccountUserAccount(
-			_accountResourceDTOConverter.getAccountEntryId(
-				externalReferenceCode),
+			DTOConverterUtil.getModelPrimaryKey(
+				_accountResourceDTOConverter, externalReferenceCode),
 			userAccount);
 	}
 
@@ -517,8 +550,8 @@ public class UserAccountResourceImpl
 		throws Exception {
 
 		postAccountUserAccountByEmailAddress(
-			_accountResourceDTOConverter.getAccountEntryId(
-				externalReferenceCode),
+			DTOConverterUtil.getModelPrimaryKey(
+				_accountResourceDTOConverter, externalReferenceCode),
 			emailAddress);
 	}
 
@@ -1243,6 +1276,9 @@ public class UserAccountResourceImpl
 	private static final EntityModel _entityModel =
 		new UserAccountEntityModel();
 
+	@Reference
+	private AccountEntryLocalService _accountEntryLocalService;
+
 	@Reference(
 		policy = ReferencePolicy.DYNAMIC,
 		policyOption = ReferencePolicyOption.GREEDY,
@@ -1257,8 +1293,8 @@ public class UserAccountResourceImpl
 	@Reference
 	private AccountEntryUserRelService _accountEntryUserRelService;
 
-	@Reference
-	private AccountResourceDTOConverter _accountResourceDTOConverter;
+	@Reference(target = DTOConverterConstants.ACCOUNT_RESOURCE_DTO_CONVERTER)
+	private DTOConverter<AccountEntry, Account> _accountResourceDTOConverter;
 
 	@Reference
 	private AccountRoleResource _accountRoleResource;
@@ -1285,8 +1321,12 @@ public class UserAccountResourceImpl
 	private ModelResourcePermission<Organization>
 		_organizationModelResourcePermission;
 
-	@Reference
-	private OrganizationResourceDTOConverter _organizationResourceDTOConverter;
+	@Reference(
+		target = DTOConverterConstants.ORGANIZATION_RESOURCE_DTO_CONVERTER
+	)
+	private DTOConverter
+		<Organization, com.liferay.headless.admin.user.dto.v1_0.Organization>
+			_organizationOrganizationDTOConverter;
 
 	@Reference
 	private PermissionCheckerFactory _permissionCheckerFactory;
@@ -1305,8 +1345,8 @@ public class UserAccountResourceImpl
 	)
 	private ModelResourcePermission<User> _userModelResourcePermission;
 
-	@Reference
-	private UserResourceDTOConverter _userResourceDTOConverter;
+	@Reference(target = DTOConverterConstants.USER_RESOURCE_DTO_CONVERTER)
+	private DTOConverter<User, UserAccount> _userResourceDTOConverter;
 
 	@Reference
 	private UsersAdmin _usersAdmin;

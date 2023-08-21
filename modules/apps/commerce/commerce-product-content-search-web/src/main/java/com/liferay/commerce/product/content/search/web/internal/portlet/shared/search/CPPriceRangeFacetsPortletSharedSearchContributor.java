@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.product.content.search.web.internal.portlet.shared.search;
@@ -17,7 +8,6 @@ package com.liferay.commerce.product.content.search.web.internal.portlet.shared.
 import com.liferay.commerce.product.constants.CPField;
 import com.liferay.commerce.product.constants.CPPortletKeys;
 import com.liferay.commerce.product.content.search.web.internal.configuration.CPPriceRangeFacetsPortletInstanceConfiguration;
-import com.liferay.commerce.search.facet.SerializableFacet;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.json.JSONObjectImpl;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -26,18 +16,16 @@ import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.search.SearchContext;
-import com.liferay.portal.kernel.search.facet.Facet;
-import com.liferay.portal.kernel.search.facet.RangeFacet;
 import com.liferay.portal.kernel.search.facet.config.FacetConfiguration;
 import com.liferay.portal.kernel.theme.PortletDisplay;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.portal.search.facet.Facet;
+import com.liferay.portal.search.facet.date.range.DateRangeFacetFactory;
 import com.liferay.portal.search.web.portlet.shared.search.PortletSharedSearchContributor;
 import com.liferay.portal.search.web.portlet.shared.search.PortletSharedSearchSettings;
-
-import java.util.Optional;
 
 import javax.portlet.PortletPreferences;
 import javax.portlet.RenderRequest;
@@ -73,14 +61,8 @@ public class CPPriceRangeFacetsPortletSharedSearchContributor
 				portletSharedSearchSettings.getParameterValues(
 					facet.getFieldName());
 
-			SerializableFacet serializableFacet = new SerializableFacet(
-				facet.getFieldName(), searchContext);
-
 			if (ArrayUtil.isNotEmpty(parameterValues)) {
-				serializableFacet.select(parameterValues);
-
-				searchContext.setAttribute(
-					facet.getFieldName(), parameterValues);
+				facet.select(parameterValues);
 			}
 
 			portletSharedSearchSettings.addFacet(facet);
@@ -105,7 +87,7 @@ public class CPPriceRangeFacetsPortletSharedSearchContributor
 				portletDisplay.getPortletInstanceConfiguration(
 					CPPriceRangeFacetsPortletInstanceConfiguration.class);
 
-		Facet facet = new RangeFacet(searchContext);
+		Facet facet = _dateRangeFacetFactory.newInstance(searchContext);
 
 		FacetConfiguration facetConfiguration = new FacetConfiguration();
 
@@ -115,13 +97,10 @@ public class CPPriceRangeFacetsPortletSharedSearchContributor
 			cpPriceRangeFacetsPortletInstanceConfiguration.
 				rangesJSONArrayString();
 
-		Optional<PortletPreferences> portletPreferencesOptional =
-			portletSharedSearchSettings.getPortletPreferencesOptional();
+		PortletPreferences portletPreferences =
+			portletSharedSearchSettings.getPortletPreferences();
 
-		if (portletPreferencesOptional.isPresent()) {
-			PortletPreferences portletPreferences =
-				portletPreferencesOptional.get();
-
+		if (portletPreferences != null) {
 			rangesJSONArrayString = portletPreferences.getValue(
 				"rangesJSONArrayString", rangesJSONArrayString);
 		}
@@ -144,6 +123,9 @@ public class CPPriceRangeFacetsPortletSharedSearchContributor
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		CPPriceRangeFacetsPortletSharedSearchContributor.class);
+
+	@Reference
+	private DateRangeFacetFactory _dateRangeFacetFactory;
 
 	@Reference
 	private JSONFactory _jsonFactory;

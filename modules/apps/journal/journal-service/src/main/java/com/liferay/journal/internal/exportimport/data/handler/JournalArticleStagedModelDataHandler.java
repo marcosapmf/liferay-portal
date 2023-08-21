@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.journal.internal.exportimport.data.handler;
@@ -251,14 +242,13 @@ public class JournalArticleStagedModelDataHandler
 			ExportImportRuntimeException exportImportRuntimeException =
 				new ExportImportRuntimeException(StringPool.BLANK, exception);
 
+			exportImportRuntimeException.setClassName(
+				JournalArticleStagedModelDataHandler.class.getName());
+			exportImportRuntimeException.setData(
+				String.valueOf(article.getArticleId()));
 			exportImportRuntimeException.setMessageKey(
 				"unable-to-find-article-resource-x-while-gathering-reference-" +
 					"attributes");
-			exportImportRuntimeException.setData(
-				String.valueOf(article.getArticleId()));
-
-			exportImportRuntimeException.setClassName(
-				JournalArticleStagedModelDataHandler.class.getName());
 
 			throw exportImportRuntimeException;
 		}
@@ -929,6 +919,7 @@ public class JournalArticleStagedModelDataHandler
 						reviewDateMonth, reviewDateDay, reviewDateYear,
 						reviewDateHour, reviewDateMinute, neverReview,
 						article.isIndexable(), article.isSmallImage(),
+						article.getSmallImageSource(),
 						article.getSmallImageURL(), smallFile, null, articleURL,
 						serviceContext);
 				}
@@ -946,6 +937,7 @@ public class JournalArticleStagedModelDataHandler
 						reviewDateMonth, reviewDateDay, reviewDateYear,
 						reviewDateHour, reviewDateMinute, neverReview,
 						article.isIndexable(), article.isSmallImage(),
+						article.getSmallImageSource(),
 						article.getSmallImageURL(), smallFile, null, articleURL,
 						serviceContext);
 
@@ -955,8 +947,9 @@ public class JournalArticleStagedModelDataHandler
 					if (!articleUuid.equals(importedArticleUuid)) {
 						importedArticle.setUuid(articleUuid);
 
-						_journalArticleLocalService.updateJournalArticle(
-							importedArticle);
+						importedArticle =
+							_journalArticleLocalService.updateJournalArticle(
+								importedArticle);
 					}
 				}
 			}
@@ -987,6 +980,7 @@ public class JournalArticleStagedModelDataHandler
 						reviewDateMonth, reviewDateDay, reviewDateYear,
 						reviewDateHour, reviewDateMinute, neverReview,
 						article.isIndexable(), article.isSmallImage(),
+						article.getSmallImageSource(),
 						article.getSmallImageURL(), smallFile, null, articleURL,
 						serviceContext);
 				}
@@ -1003,6 +997,7 @@ public class JournalArticleStagedModelDataHandler
 						reviewDateMonth, reviewDateDay, reviewDateYear,
 						reviewDateHour, reviewDateMinute, neverReview,
 						article.isIndexable(), article.isSmallImage(),
+						article.getSmallImageSource(),
 						article.getSmallImageURL(), smallFile, null, articleURL,
 						serviceContext);
 				}
@@ -1052,8 +1047,8 @@ public class JournalArticleStagedModelDataHandler
 					reviewDateMonth, reviewDateDay, reviewDateYear,
 					reviewDateHour, reviewDateMinute, neverReview,
 					article.isIndexable(), article.isSmallImage(),
-					article.getSmallImageURL(), smallFile, null, articleURL,
-					serviceContext);
+					article.getSmallImageSource(), article.getSmallImageURL(),
+					smallFile, null, articleURL, serviceContext);
 			}
 
 			_journalArticleLocalService.updateAsset(
@@ -1568,7 +1563,6 @@ public class JournalArticleStagedModelDataHandler
 					);
 
 					userNotificationEvent.setPayload(jsonObject.toString());
-
 					userNotificationEvent.setTimestamp(
 						System.currentTimeMillis());
 
@@ -1626,7 +1620,6 @@ public class JournalArticleStagedModelDataHandler
 
 					subscriptionSender.setLocalizedSubjectMap(
 						localizedSubjectMap);
-
 					subscriptionSender.setMailId(
 						"journal_article", article.getId());
 					subscriptionSender.setNotificationType(

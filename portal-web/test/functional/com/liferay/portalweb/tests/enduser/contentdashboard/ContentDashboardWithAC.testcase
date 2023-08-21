@@ -1,9 +1,11 @@
 @component-name = "portal-content-dashboard"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property property.group = "analytics.cloud.profile";
+	property test.liferay.virtual.instance = "false";
 	property testray.main.component.name = "Content Dashboard";
 
 	setUp {
@@ -26,29 +28,10 @@ definition {
 		}
 
 		task ("Connect and synchronyze with Analytics Cloud") {
-			ACDXPSettings.connectDXPtoAnalyticsCloud(siteName = "Test Site Name");
+			ACDXPSettings.connectDXPtoAnalyticsCloudWithTryAgain(siteName = "Test Site Name");
 		}
 
 		Navigator.openURL();
-	}
-
-	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
-
-		Navigator.openURL();
-
-		ACDXPSettings.disconnectDXPFromAnalyticsCloud();
-
-		if (${testPortalInstance} == "true") {
-			PortalInstances.tearDownCP();
-		}
-		else {
-			JSONGroup.deleteGroupByName(groupName = "Test Site Name");
-		}
-
-		JSONUser.tearDownNonAdminUsers();
-
-		JSONRole.deleteTestRoles();
 	}
 
 	@description = "LPS-136512 Given The Content Performance panel of a document is opened When the user clicks on the times icon ( X ) Then the Content Performance panel is closed"
@@ -96,8 +79,6 @@ definition {
 	@description = "LPS-132509 Given a blog with an associated Display Page Template When the user with permissions clicks on the Metrics button Then the user is led to the metrics panel"
 	@priority = 4
 	test ViewMetricsButtonKebabWhenBlogHasDPT {
-		property osgi.module.configuration.file.names = "com.liferay.content.dashboard.web.internal.configuration.FFBlogsEntryContentDashboardItemConfiguration.config";
-		property osgi.module.configurations = "blogsEntryEnabled=B\"true\"";
 		property portal.acceptance = "true";
 
 		task ("Create a default Display Page Template") {

@@ -15,6 +15,20 @@ liferay-marketplace-custom-element-create-app:
     urls:
         - "*.js"
     useESM: true
+liferay-marketplace-custom-element-customer-gate:
+    cssURLs:
+        - "**/*.css"
+    friendlyURLMapping: liferay-marketplace-custom-element-customer-gate
+    htmlElementName: liferay-marketplace-custom-element
+    instanceable: false
+    name: Liferay Marketplace Customer Gate
+    portletCategoryName: category.client-extensions
+    properties:
+        route: customer-gate
+    type: customElement
+    urls:
+        - "*.js"
+    useESM: true
 liferay-marketplace-custom-element-get-app:
     cssURLs:
         - "**/*.css"
@@ -67,6 +81,20 @@ liferay-marketplace-custom-element-purchased-apps:
     portletCategoryName: category.client-extensions
     properties:
         route: purchased-apps
+    type: customElement
+    urls:
+        - "*.js"
+    useESM: true
+liferay-marketplace-custom-element-purchased-solutions:
+    cssURLs:
+        - "**/*.css"
+    friendlyURLMapping: liferay-marketplace-custom-element-purchased-solutions
+    htmlElementName: liferay-marketplace-custom-element
+    instanceable: false
+    name: Liferay Marketplace Purchased Solutions
+    portletCategoryName: category.client-extensions
+    properties:
+        route: purchased-solutions
     type: customElement
     urls:
         - "*.js"

@@ -9,7 +9,7 @@ definition {
 	setUp {
 		TestCase.setUpPortalInstance();
 
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
 		User.firstLoginPG();
 
@@ -22,9 +22,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 	}
@@ -364,24 +364,6 @@ definition {
 		WorkflowMetrics.viewDateRangeErrorMessage(errorMessage = "The start date cannot be later than the end date.");
 
 		WorkflowMetrics.viewDateRangeErrorMessage(errorMessage = "The end date cannot be earlier than the start date.");
-	}
-
-	@description = "LPS-86650 - Verify that the unexpected error state appear when unexpected error happen"
-	@ignore = "Test Stub"
-	@priority = 2
-	test UnexpectedErrorState {
-
-		// TODO LRQA-67648 UnexpectedErrorState pending implementation
-
-	}
-
-	@description = "LPS-86650 - Verify that, for numbers greater than 3 digits, use abbreviation standards considering localization specifications (example for English: replace 1,220 for 1.2K)"
-	@ignore = "Test Stub"
-	@priority = 2
-	test UseAbreviationForGreaterThan3DigitsNumber {
-
-		// TODO LRQA-67645 UseAbreviationForGreaterThan3DigitsNumber pending implementation
-
 	}
 
 }

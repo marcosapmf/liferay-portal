@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.payment.internal.upgrade.registry;
@@ -26,6 +17,7 @@ import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ResourceActionLocalService;
 import com.liferay.portal.kernel.service.ResourceLocalService;
 import com.liferay.portal.kernel.upgrade.MVCCVersionUpgradeProcess;
+import com.liferay.portal.kernel.upgrade.UpgradeProcessFactory;
 import com.liferay.portal.upgrade.registry.UpgradeStepRegistrator;
 
 import org.osgi.service.component.annotations.Component;
@@ -75,6 +67,23 @@ public class CommercePaymentServiceUpgradeStepRegistrator
 			CommercePaymentEntryAuditTable.create(),
 			new CommercePaymentEntryUpgradeProcess(
 				_resourceActionLocalService));
+
+		registry.register(
+			"1.4.0", "1.5.0",
+			UpgradeProcessFactory.alterColumnName(
+				"CommercePaymentEntry", "paymentMethodName",
+				"paymentIntegrationKey VARCHAR(75) null"),
+			UpgradeProcessFactory.alterColumnType(
+				"CommercePaymentEntry", "transactionCode", "VARCHAR(255) null"),
+			UpgradeProcessFactory.addColumns(
+				"CommercePaymentEntry", "callbackURL TEXT null",
+				"commerceChannelId LONG", "paymentIntegrationType INTEGER",
+				"redirectURL TEXT null"),
+			UpgradeProcessFactory.alterColumnName(
+				"CommercePaymentMethodGroupRel", "engineKey",
+				"paymentIntegrationKey VARCHAR(75) null"),
+			UpgradeProcessFactory.addColumns(
+				"CommercePaymentMethodGroupRel", "typeSettings TEXT null"));
 
 		if (_log.isInfoEnabled()) {
 			_log.info("Commerce payment upgrade step registrator finished");

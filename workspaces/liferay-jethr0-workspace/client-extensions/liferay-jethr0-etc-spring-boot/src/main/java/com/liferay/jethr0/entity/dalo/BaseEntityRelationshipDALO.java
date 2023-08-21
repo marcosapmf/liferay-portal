@@ -1,28 +1,23 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.jethr0.entity.dalo;
 
+import com.liferay.client.extension.util.spring.boot.LiferayOAuth2AccessTokenConfiguration;
 import com.liferay.jethr0.entity.Entity;
 import com.liferay.jethr0.entity.factory.EntityFactory;
+import com.liferay.jethr0.util.BaseRetryable;
+import com.liferay.jethr0.util.Retryable;
 import com.liferay.jethr0.util.StringUtil;
-import com.liferay.jethr0.util.ThreadUtil;
 
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -33,7 +28,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.MediaType;
-import org.springframework.security.oauth2.core.OAuth2AccessToken;
 import org.springframework.web.reactive.function.client.WebClient;
 
 /**
@@ -171,22 +165,34 @@ public abstract class BaseEntityRelationshipDALO
 			_liferayPortalURL, objectDefinitionURLPath, "/", objectEntryId, "/",
 			getObjectRelationshipName(), "/", relatedObjectEntryId);
 
-		for (int i = 0; i <= _RETRY_COUNT; i++) {
-			try {
-				String response = WebClient.create(
-					objectRelationshipURL
-				).put(
-				).accept(
-					MediaType.APPLICATION_JSON
-				).contentType(
-					MediaType.APPLICATION_JSON
-				).header(
-					"Authorization",
-					"Bearer " + _oAuth2AccessToken.getTokenValue()
-				).retrieve(
-				).bodyToMono(
-					String.class
-				).block();
+		Retryable<Void> retryable = new BaseRetryable<Void>() {
+
+			@Override
+			public Void execute() {
+				String response;
+
+				try {
+					response = WebClient.create(
+						objectRelationshipURL
+					).put(
+					).accept(
+						MediaType.APPLICATION_JSON
+					).contentType(
+						MediaType.APPLICATION_JSON
+					).header(
+						"Authorization",
+						_liferayOAuth2AccessTokenConfiguration.
+							getAuthorization()
+					).retrieve(
+					).bodyToMono(
+						String.class
+					).block();
+				}
+				catch (Exception exception) {
+					_liferayOAuth2AccessTokenConfiguration.refresh();
+
+					throw new RuntimeException(exception);
+				}
 
 				if (response == null) {
 					throw new RuntimeException("No response");
@@ -201,21 +207,20 @@ public abstract class BaseEntityRelationshipDALO
 							objectRelationshipURL));
 				}
 
-				return;
+				return null;
 			}
-			catch (Exception exception) {
-				if (_log.isWarnEnabled()) {
-					_log.warn(
-						StringUtil.combine(
-							"Unable to create relationship with ",
-							objectRelationshipURL, ". Retry in ",
-							_RETRY_DELAY_DURATION, "ms: ",
-							exception.getMessage()));
-				}
 
-				ThreadUtil.sleep(_RETRY_DELAY_DURATION);
+			@Override
+			protected String getRetryMessage(int retryCount) {
+				return StringUtil.combine(
+					"Unable to create relationship with ",
+					objectRelationshipURL, ". Retry attempt ", retryCount,
+					" of ", maxRetries);
 			}
-		}
+
+		};
+
+		retryable.executeWithRetries();
 	}
 
 	private void _delete(
@@ -226,20 +231,30 @@ public abstract class BaseEntityRelationshipDALO
 			_liferayPortalURL, objectDefinitionURLPath, "/", objectEntryId, "/",
 			getObjectRelationshipName(), "/", relatedObjectEntryId);
 
-		for (int i = 0; i <= _RETRY_COUNT; i++) {
-			try {
-				WebClient.create(
-					objectRelationshipURL
-				).delete(
-				).accept(
-					MediaType.APPLICATION_JSON
-				).header(
-					"Authorization",
-					"Bearer " + _oAuth2AccessToken.getTokenValue()
-				).retrieve(
-				).bodyToMono(
-					String.class
-				).block();
+		Retryable<Void> retryable = new BaseRetryable<Void>() {
+
+			@Override
+			public Void execute() {
+				try {
+					WebClient.create(
+						objectRelationshipURL
+					).delete(
+					).accept(
+						MediaType.APPLICATION_JSON
+					).header(
+						"Authorization",
+						_liferayOAuth2AccessTokenConfiguration.
+							getAuthorization()
+					).retrieve(
+					).bodyToMono(
+						String.class
+					).block();
+				}
+				catch (Exception exception) {
+					_liferayOAuth2AccessTokenConfiguration.refresh();
+
+					throw new RuntimeException(exception);
+				}
 
 				if (_log.isDebugEnabled()) {
 					_log.debug(
@@ -247,20 +262,21 @@ public abstract class BaseEntityRelationshipDALO
 							"Deleted relationship with ",
 							objectRelationshipURL));
 				}
-			}
-			catch (Exception exception) {
-				if (_log.isWarnEnabled()) {
-					_log.warn(
-						StringUtil.combine(
-							"Unable to delete relationship with ",
-							objectRelationshipURL, ". Retry in ",
-							_RETRY_DELAY_DURATION, "ms: ",
-							exception.getMessage()));
-				}
 
-				ThreadUtil.sleep(_RETRY_DELAY_DURATION);
+				return null;
 			}
-		}
+
+			@Override
+			protected String getRetryMessage(int retryCount) {
+				return StringUtil.combine(
+					"Unable to delete relationship with ",
+					objectRelationshipURL, ". Retry attempt ", retryCount,
+					" of ", maxRetries);
+			}
+
+		};
+
+		retryable.executeWithRetries();
 	}
 
 	private Set<JSONObject> _get(
@@ -278,58 +294,82 @@ public abstract class BaseEntityRelationshipDALO
 		while (true) {
 			int finalCurrentPage = currentPage;
 
-			for (int i = 0; i <= _RETRY_COUNT; i++) {
-				try {
-					String response = WebClient.create(
-						objectRelationshipURL
-					).get(
-					).uri(
-						uriBuilder -> uriBuilder.queryParam(
-							"page", String.valueOf(finalCurrentPage)
-						).build()
-					).accept(
-						MediaType.APPLICATION_JSON
-					).header(
-						"Authorization",
-						"Bearer " + _oAuth2AccessToken.getTokenValue()
-					).retrieve(
-					).bodyToMono(
-						String.class
-					).block();
+			Retryable<Pair<Integer, Set<JSONObject>>> retryable =
+				new BaseRetryable<Pair<Integer, Set<JSONObject>>>() {
 
-					if (response == null) {
-						throw new RuntimeException("No response");
+					@Override
+					public Pair<Integer, Set<JSONObject>> execute() {
+						String response;
+
+						try {
+							response = WebClient.create(
+								objectRelationshipURL
+							).get(
+							).uri(
+								uriBuilder -> uriBuilder.queryParam(
+									"page", String.valueOf(finalCurrentPage)
+								).build()
+							).accept(
+								MediaType.APPLICATION_JSON
+							).header(
+								"Authorization",
+								_liferayOAuth2AccessTokenConfiguration.
+									getAuthorization()
+							).retrieve(
+							).bodyToMono(
+								String.class
+							).block();
+						}
+						catch (Exception exception) {
+							_liferayOAuth2AccessTokenConfiguration.refresh();
+
+							throw new RuntimeException(exception);
+						}
+
+						if (response == null) {
+							throw new RuntimeException("No response");
+						}
+
+						JSONObject responseJSONObject = new JSONObject(
+							response);
+
+						Integer lastPage = responseJSONObject.getInt(
+							"lastPage");
+
+						JSONArray itemsJSONArray =
+							responseJSONObject.getJSONArray("items");
+
+						Set<JSONObject> jsonObjects = new HashSet<>();
+
+						if (itemsJSONArray != null) {
+							for (int i = 0; i < itemsJSONArray.length(); i++) {
+								jsonObjects.add(
+									itemsJSONArray.getJSONObject(i));
+							}
+						}
+
+						return new ImmutablePair<>(lastPage, jsonObjects);
 					}
 
-					JSONObject responseJSONObject = new JSONObject(response);
-
-					lastPage = responseJSONObject.getInt("lastPage");
-
-					JSONArray itemsJSONArray = responseJSONObject.getJSONArray(
-						"items");
-
-					if (itemsJSONArray.isEmpty()) {
-						break;
+					@Override
+					protected String getRetryMessage(int retryCount) {
+						return StringUtil.combine(
+							"Unable to retrieve object relationships. ",
+							"Retry attempt ", retryCount, " of ", maxRetries);
 					}
 
-					for (int j = 0; j < itemsJSONArray.length(); j++) {
-						jsonObjects.add(itemsJSONArray.getJSONObject(j));
-					}
+				};
 
-					break;
-				}
-				catch (Exception exception) {
-					if (_log.isWarnEnabled()) {
-						_log.warn(
-							StringUtil.combine(
-								"Unable to retrieve objects. Retry in ",
-								_RETRY_DELAY_DURATION, "ms: ",
-								exception.getMessage()));
-					}
+			Pair<Integer, Set<JSONObject>> pair =
+				retryable.executeWithRetries();
 
-					ThreadUtil.sleep(_RETRY_DELAY_DURATION);
-				}
+			if (pair == null) {
+				break;
 			}
+
+			lastPage = pair.getKey();
+
+			jsonObjects.addAll(pair.getValue());
 
 			if ((currentPage >= lastPage) || (lastPage == -1)) {
 				break;
@@ -363,17 +403,14 @@ public abstract class BaseEntityRelationshipDALO
 			StringUtil.toLowerCase(parentEntityFactory.getEntityPluralLabel()));
 	}
 
-	private static final long _RETRY_COUNT = 3;
-
-	private static final long _RETRY_DELAY_DURATION = 1000;
-
 	private static final Log _log = LogFactory.getLog(
 		BaseEntityRelationshipDALO.class);
 
+	@Autowired
+	private LiferayOAuth2AccessTokenConfiguration
+		_liferayOAuth2AccessTokenConfiguration;
+
 	@Value("${liferay.portal.url}")
 	private String _liferayPortalURL;
-
-	@Autowired
-	private OAuth2AccessToken _oAuth2AccessToken;
 
 }

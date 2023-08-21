@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.util;
@@ -23,6 +14,8 @@ import com.liferay.expando.kernel.model.ExpandoBridge;
 import com.liferay.expando.kernel.model.ExpandoColumnConstants;
 import com.liferay.exportimport.kernel.staging.StagingUtil;
 import com.liferay.layout.admin.kernel.model.LayoutTypePortletConstants;
+import com.liferay.layout.utility.page.kernel.StatusLayoutUtilityPageEntryRequestContributorRegistryUtil;
+import com.liferay.layout.utility.page.kernel.request.contributor.StatusLayoutUtilityPageEntryRequestContributor;
 import com.liferay.osgi.service.tracker.collections.list.ServiceTrackerList;
 import com.liferay.osgi.service.tracker.collections.list.ServiceTrackerListFactory;
 import com.liferay.petra.string.CharPool;
@@ -138,7 +131,6 @@ import com.liferay.portal.kernel.service.LayoutLocalServiceUtil;
 import com.liferay.portal.kernel.service.LayoutSetLocalServiceUtil;
 import com.liferay.portal.kernel.service.OrganizationLocalServiceUtil;
 import com.liferay.portal.kernel.service.PortletLocalServiceUtil;
-import com.liferay.portal.kernel.service.PortletPreferencesLocalServiceUtil;
 import com.liferay.portal.kernel.service.ResourceLocalServiceUtil;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalServiceUtil;
 import com.liferay.portal.kernel.service.TicketLocalServiceUtil;
@@ -223,7 +215,6 @@ import com.liferay.portlet.PortletPreferencesImpl;
 import com.liferay.portlet.PortletPreferencesWrapper;
 import com.liferay.portlet.admin.util.OmniadminUtil;
 import com.liferay.sites.kernel.util.Sites;
-import com.liferay.sites.kernel.util.SitesUtil;
 import com.liferay.social.kernel.model.SocialRelationConstants;
 import com.liferay.util.JS;
 
@@ -2597,16 +2588,6 @@ public class PortalImpl implements Portal {
 		}
 
 		return value;
-	}
-
-	@Override
-	public Serializable getExpandoValue(
-			PortletRequest portletRequest, String name, int type,
-			String displayType)
-		throws PortalException {
-
-		return getExpandoValue(
-			getHttpServletRequest(portletRequest), name, type, displayType);
 	}
 
 	@Override
@@ -5543,12 +5524,12 @@ public class PortalImpl implements Portal {
 		LiferayPortletRequest liferayPortletRequest =
 			LiferayPortletUtil.getLiferayPortletRequest(portletRequest);
 
-		DynamicServletRequest dynamicRequest =
+		DynamicServletRequest dynamicServletRequest =
 			(DynamicServletRequest)
 				liferayPortletRequest.getHttpServletRequest();
 
 		HttpServletRequestWrapper requestWrapper =
-			(HttpServletRequestWrapper)dynamicRequest.getRequest();
+			(HttpServletRequestWrapper)dynamicServletRequest.getRequest();
 
 		return new UploadPortletRequestImpl(
 			getUploadServletRequest(requestWrapper), liferayPortletRequest,
@@ -6807,20 +6788,31 @@ public class PortalImpl implements Portal {
 				NoSuchLayoutException.class.getName(), Boolean.TRUE);
 		}
 		else if (PropsValues.LAYOUT_SHOW_HTTP_STATUS) {
-			DynamicServletRequest dynamicRequest = new DynamicServletRequest(
-				httpServletRequest);
+			DynamicServletRequest dynamicServletRequest =
+				new DynamicServletRequest(httpServletRequest);
 
-			dynamicRequest.setAttribute("status_code", status);
+			dynamicServletRequest.setAttribute("status_code", status);
 
 			// Reset layout params or there will be an infinite loop
 
-			dynamicRequest.setParameter("p_l_id", StringPool.BLANK);
+			dynamicServletRequest.setParameter("p_l_id", StringPool.BLANK);
+			dynamicServletRequest.setParameter("groupId", StringPool.BLANK);
+			dynamicServletRequest.setParameter("layoutId", StringPool.BLANK);
+			dynamicServletRequest.setParameter(
+				"privateLayout", StringPool.BLANK);
 
-			dynamicRequest.setParameter("groupId", StringPool.BLANK);
-			dynamicRequest.setParameter("layoutId", StringPool.BLANK);
-			dynamicRequest.setParameter("privateLayout", StringPool.BLANK);
+			StatusLayoutUtilityPageEntryRequestContributor
+				statusLayoutUtilityPageEntryRequestContributor =
+					StatusLayoutUtilityPageEntryRequestContributorRegistryUtil.
+						getStatusLayoutUtilityPageEntryRequestContributor(
+							status);
 
-			httpServletRequest = dynamicRequest;
+			if (statusLayoutUtilityPageEntryRequestContributor != null) {
+				statusLayoutUtilityPageEntryRequestContributor.
+					addAttributesAndParameters(dynamicServletRequest);
+			}
+
+			httpServletRequest = dynamicServletRequest;
 
 			redirect = PATH_MAIN + "/portal/status";
 		}
@@ -7488,7 +7480,7 @@ public class PortalImpl implements Portal {
 
 		for (Group group : siteGroup.getAncestors()) {
 			if (checkContentSharingWithChildrenEnabled &&
-				!SitesUtil.isContentSharingWithChildrenEnabled(group)) {
+				!group.isContentSharingWithChildrenEnabled()) {
 
 				continue;
 			}
@@ -8243,40 +8235,6 @@ public class PortalImpl implements Portal {
 		return i18nErrorPath.concat(redirect);
 	}
 
-	private List<Portlet> _getAllNonembeddedPortlets(
-		Layout layout, LayoutTypePortlet layoutTypePortlet) {
-
-		List<Portlet> staticPortlets = layoutTypePortlet.getStaticPortlets(
-			PropsKeys.LAYOUT_STATIC_PORTLETS_ALL);
-
-		List<Portlet> explicitlyAddedPortlets = new ArrayList<>();
-
-		if (layout.isTypeAssetDisplay() || layout.isTypeContent()) {
-			List<com.liferay.portal.kernel.model.PortletPreferences>
-				portletPreferencesList =
-					PortletPreferencesLocalServiceUtil.
-						getPortletPreferencesByPlid(layout.getPlid());
-
-			for (com.liferay.portal.kernel.model.PortletPreferences
-					portletPreferences : portletPreferencesList) {
-
-				Portlet portlet = PortletLocalServiceUtil.getPortletById(
-					layout.getCompanyId(), portletPreferences.getPortletId());
-
-				if (portlet != null) {
-					explicitlyAddedPortlets.add(portlet);
-				}
-			}
-		}
-		else {
-			explicitlyAddedPortlets =
-				layoutTypePortlet.getExplicitlyAddedPortlets(false);
-		}
-
-		return layoutTypePortlet.addStaticPortlets(
-			explicitlyAddedPortlets, staticPortlets, null);
-	}
-
 	private String _getDefaultVirtualHostname(Company company) {
 		if ((company != null) &&
 			Validator.isNotNull(company.getVirtualHostname())) {
@@ -8853,9 +8811,7 @@ public class PortalImpl implements Portal {
 		LayoutTypePortlet layoutTypePortlet =
 			(LayoutTypePortlet)layout.getLayoutType();
 
-		for (Portlet portlet :
-				_getAllNonembeddedPortlets(layout, layoutTypePortlet)) {
-
+		for (Portlet portlet : layoutTypePortlet.getAllNonembeddedPortlets()) {
 			if (portletId.equals(portlet.getPortletId()) ||
 				portletId.equals(portlet.getRootPortletId())) {
 

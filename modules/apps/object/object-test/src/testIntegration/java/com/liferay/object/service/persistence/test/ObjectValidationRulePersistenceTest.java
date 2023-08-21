@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.service.persistence.test;
@@ -150,6 +141,8 @@ public class ObjectValidationRulePersistenceTest {
 
 		newObjectValidationRule.setName(RandomTestUtil.randomString());
 
+		newObjectValidationRule.setOutputType(RandomTestUtil.randomString());
+
 		newObjectValidationRule.setScript(RandomTestUtil.randomString());
 
 		_objectValidationRules.add(
@@ -201,6 +194,9 @@ public class ObjectValidationRulePersistenceTest {
 			existingObjectValidationRule.getName(),
 			newObjectValidationRule.getName());
 		Assert.assertEquals(
+			existingObjectValidationRule.getOutputType(),
+			newObjectValidationRule.getOutputType());
+		Assert.assertEquals(
 			existingObjectValidationRule.getScript(),
 			newObjectValidationRule.getScript());
 	}
@@ -239,6 +235,15 @@ public class ObjectValidationRulePersistenceTest {
 	}
 
 	@Test
+	public void testCountByODI_O() throws Exception {
+		_persistence.countByODI_O(RandomTestUtil.nextLong(), "");
+
+		_persistence.countByODI_O(0L, "null");
+
+		_persistence.countByODI_O(0L, (String)null);
+	}
+
+	@Test
 	public void testFindByPrimaryKeyExisting() throws Exception {
 		ObjectValidationRule newObjectValidationRule =
 			addObjectValidationRule();
@@ -270,7 +275,7 @@ public class ObjectValidationRulePersistenceTest {
 			"objectValidationRuleId", true, "companyId", true, "userId", true,
 			"userName", true, "createDate", true, "modifiedDate", true,
 			"objectDefinitionId", true, "active", true, "engine", true,
-			"errorLabel", true, "name", true);
+			"errorLabel", true, "name", true, "outputType", true);
 	}
 
 	@Test
@@ -535,6 +540,8 @@ public class ObjectValidationRulePersistenceTest {
 		objectValidationRule.setErrorLabel(RandomTestUtil.randomString());
 
 		objectValidationRule.setName(RandomTestUtil.randomString());
+
+		objectValidationRule.setOutputType(RandomTestUtil.randomString());
 
 		objectValidationRule.setScript(RandomTestUtil.randomString());
 

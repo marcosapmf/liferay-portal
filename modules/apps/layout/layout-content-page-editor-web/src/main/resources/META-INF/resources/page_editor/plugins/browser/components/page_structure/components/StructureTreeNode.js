@@ -1,20 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayButton from '@clayui/button';
 import ClayIcon from '@clayui/icon';
 import {useEventListener} from '@liferay/frontend-js-react-web';
+import {useControlledState} from '@liferay/layout-js-components-web';
 import classNames from 'classnames';
 import {sub} from 'frontend-js-web';
 import PropTypes from 'prop-types';
@@ -42,6 +34,7 @@ import {
 	useMovementSource,
 	useMovementTarget,
 	useSetMovementSource,
+	useSetMovementText,
 } from '../../../../../app/contexts/KeyboardMovementContext';
 import {
 	useDispatch,
@@ -76,7 +69,6 @@ import {formIsUnavailable} from '../../../../../app/utils/formIsUnavailable';
 import getFirstControlsId from '../../../../../app/utils/getFirstControlsId';
 import getMappingFieldsKey from '../../../../../app/utils/getMappingFieldsKey';
 import isItemWidget from '../../../../../app/utils/isItemWidget';
-import useControlledState from '../../../../../common/hooks/useControlledState';
 
 const HOVER_EXPAND_DELAY = 1000;
 
@@ -130,14 +122,13 @@ export default function StructureTreeNode({node, setEditingNodeId}) {
 
 			const {
 				classNameId,
-				classPK,
 				itemSubtype,
 				itemType,
 				key: collectionKey,
 			} = item.config.collection;
 
 			const key = classNameId
-				? getMappingFieldsKey(classNameId, classPK)
+				? getMappingFieldsKey(item.config.collection)
 				: collectionKey;
 
 			if (!mappingFields[key]) {
@@ -192,6 +183,7 @@ function StructureTreeNodeContent({
 		(state) => state.selectedViewportSize
 	);
 	const selectItem = useSelectItem();
+	const setText = useSetMovementText();
 
 	const layoutDataRef = useSelectorRef((store) => store.layoutData);
 
@@ -277,6 +269,7 @@ function StructureTreeNodeContent({
 		}
 
 		setEditingNodeId(null);
+		setText(Liferay.Language.get('name-saved'));
 	};
 
 	const handleButtonsKeyDown = (event) => {
@@ -325,6 +318,15 @@ function StructureTreeNodeContent({
 			clearTimeout(timeoutId);
 		};
 	}, [isOverTarget, node]);
+
+	useEffect(() => {
+		if (
+			isActive &&
+			activationOrigin === ITEM_ACTIVATION_ORIGINS.itemActions
+		) {
+			document.querySelector(`[data-id*="${node.id}"]`).focus();
+		}
+	}, [activationOrigin, isActive, node.id, node.hidden]);
 
 	return (
 		<div
@@ -408,6 +410,12 @@ function StructureTreeNodeContent({
 					formIsUnavailable(item)
 				}
 			/>
+
+			{node.hidden ? (
+				<span className="sr-only">
+					{Liferay.Language.get('hidden-item')}
+				</span>
+			) : null}
 		</div>
 	);
 }
@@ -471,8 +479,14 @@ const NameLabel = React.forwardRef(
 							event.stopPropagation();
 						}}
 						onKeyDown={(event) => {
-							if (event.key === 'Enter') {
-								onEditName(name);
+							if (
+								event.key === 'Enter' ||
+								event.key === 'Escape' ||
+								event.key === 'Tab'
+							) {
+								inputRef.current
+									.closest('.treeview-link')
+									.focus();
 							}
 
 							if (!event.key.match(/[a-z0-9-_ ]/gi)) {
@@ -569,6 +583,7 @@ const MoveButton = ({
 			className="mr-2 sr-only sr-only-focusable"
 			disabled={node.isMasterItem || node.hiddenAncestor}
 			displayType="unstyled"
+			onBlur={(event) => event.stopPropagation()}
 			onClick={() =>
 				setMovementSource({
 					fragmentEntryType,
@@ -579,9 +594,19 @@ const MoveButton = ({
 					type: node.type,
 				})
 			}
-			onFocus={(event) => event.stopPropagation()}
+			onFocus={(event) => {
+				buttonRef.current
+					?.closest('.treeview-link')
+					?.classList.remove('focus');
+				event.stopPropagation();
+			}}
 			onKeyDown={onKeyDown}
 			ref={buttonRef}
+			tabIndex={
+				document.activeElement.dataset.id?.includes(node.id)
+					? '0'
+					: '-1'
+			}
 			title={sub(Liferay.Language.get('move-x'), [node.name])}
 		>
 			<ClayIcon symbol="drag" />

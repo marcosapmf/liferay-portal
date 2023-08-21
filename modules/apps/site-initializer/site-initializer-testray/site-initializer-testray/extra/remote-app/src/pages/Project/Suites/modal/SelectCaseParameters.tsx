@@ -1,18 +1,11 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import React, {useCallback} from 'react';
+import {useParams} from 'react-router-dom';
+import SearchBuilder from '~/core/SearchBuilder';
 
 import DualListBox, {
 	BoxItem,
@@ -52,21 +45,35 @@ const SelectCaseParameters: React.FC<SelectCaseParametersProps> = ({
 	setState,
 	state,
 }) => {
+	const {projectId} = useParams();
 	const {data: casetypes} = useFetch<APIResponse<TestrayCaseType>>(
 		'/casetypes',
 		{params: {fields: 'id,name', pageSize: 1000}}
 	);
 	const {data: components} = useFetch<APIResponse<TestrayComponent>>(
 		'/components',
-		{params: {fields: 'id,name', pageSize: 1000}}
+		{
+			params: {
+				fields: 'id,name',
+				filter: SearchBuilder.eq('projectId', projectId as string),
+				pageSize: 1000,
+			},
+		}
 	);
 	const {data: requirements} = useFetch<APIResponse<TestrayRequirement>>(
 		'/requirements',
-		{params: {fields: 'key,summary,id', pageSize: 1000}}
+		{
+			params: {
+				fields: 'key,summary,id',
+				filter: SearchBuilder.eq('projectId', projectId as string),
+				pageSize: 1000,
+			},
+		}
 	);
 	const {data: teams} = useFetch<APIResponse<TestrayTeam>>('/teams', {
 		params: {
 			fields: 'id,name',
+			filter: SearchBuilder.eq('projectId', projectId as string),
 			pageSize: 1000,
 		},
 	});
@@ -83,34 +90,50 @@ const SelectCaseParameters: React.FC<SelectCaseParametersProps> = ({
 		const testrayRequirements = requirements.items || [];
 		const testrayTeams = teams?.items || [];
 
+		const getMatrixWithoutDuplications = (
+			boxLeftItems: BoxItem[],
+			boxRightItems: BoxItem[]
+		): [BoxItem[], BoxItem[]] => [
+			boxLeftItems.filter(
+				(boxLeft) =>
+					!boxRightItems.some(
+						(boxRight) => boxRight.value === boxLeft.value
+					)
+			),
+			boxRightItems,
+		];
+
 		return {
-			testrayCaseTypes: [
+			testrayCaseTypes: getMatrixWithoutDuplications(
 				testrayCaseTypes.map(onMapDefault),
-				state?.testrayCaseTypes || defaultBox,
-			],
-			testrayComponents: [
+				state?.testrayCaseTypes || defaultBox
+			),
+			testrayComponents: getMatrixWithoutDuplications(
 				testrayComponents.map(onMapDefault),
-				state?.testrayComponents || defaultBox,
-			],
-			testrayPriorities: [
+				state?.testrayComponents || defaultBox
+			),
+			testrayPriorities: getMatrixWithoutDuplications(
 				[...new Array(5)].map((_, index) => ({
 					label: String(index + 1),
 					value: String(index + 1),
 				})),
-				state?.testrayPriorities || defaultBox,
-			],
-			testrayRequirements: [
+				state?.testrayPriorities || defaultBox
+			),
+			testrayRequirements: getMatrixWithoutDuplications(
 				testrayRequirements.map(({id, key, summary}) => ({
 					label: `${key} (${summary})`,
 					value: id.toString(),
 				})),
-				state?.testrayRequirements || defaultBox,
-			],
-			testraySubComponents: [
+				state?.testrayRequirements || defaultBox
+			),
+			testraySubComponents: getMatrixWithoutDuplications(
 				testrayComponents.map(onMapDefault),
-				state?.testraySubComponents || defaultBox,
-			],
-			testrayTeams: [testrayTeams.map(onMapDefault), defaultBox],
+				state?.testraySubComponents || defaultBox
+			),
+			testrayTeams: getMatrixWithoutDuplications(
+				testrayTeams.map(onMapDefault),
+				state?.testrayTeams || defaultBox
+			),
 		};
 	}, [casetypes, components, requirements, state, teams]);
 

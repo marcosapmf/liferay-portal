@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.segments.constants;
@@ -34,6 +25,8 @@ public class SegmentsExperimentConstants {
 	public static final int NOTIFICATION_TYPE_UPDATE_STATUS = 0;
 
 	public static final int STATUS_COMPLETED = 2;
+
+	public static final int STATUS_DELETING_ON_DXP_ONLY = 8;
 
 	public static final int STATUS_DRAFT = 0;
 
@@ -85,6 +78,9 @@ public class SegmentsExperimentConstants {
 		COMPLETED(
 			STATUS_COMPLETED, "COMPLETED", "completed", true, false, true,
 			false),
+		DELETING_ON_DXP_ONLY(
+			STATUS_DELETING_ON_DXP_ONLY, "DELETING_ON_DXP_ONLY",
+			"deleting-on-dxp-only", true),
 		DRAFT(STATUS_DRAFT, "DRAFT", "draft", true) {
 
 			@Override

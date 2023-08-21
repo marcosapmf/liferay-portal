@@ -42,7 +42,7 @@
 </tr>
 <tr>
 	<td>NEXT_LINK</td>
-	<td>//ul[contains(@class,'pagination')]/li/a[contains(.,'Next')] | //ul[contains(@class,'pagination')]/li[@class='']/a/span[contains(@class,'icon-caret-right')] | //a[contains(@class, 'page-link')]//*[contains(@class,'right')]</td>
+	<td>//ul[contains(@class,'pagination')]/li/a[contains(.,'Next')] | //ul[contains(@class,'pagination')]/li[@class='']/a/span[contains(@class,'icon-caret-right')] | //*[self::a or self::div][contains(@class, 'page-link')]//*[contains(@class,'right')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -83,6 +83,11 @@
 <tr>
 	<td>ANY_PAGE</td>
 	<td>//ul[contains(@class,'pagination')]//li[contains(@class,'page-item')]//*[contains(@class,'page-link')][normalize-space(text())='${key_pageNumber}']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>ANY_PAGE_MODAL</td>
+	<td>//*[contains(@class,'modal-body')]//ul[contains(@class,'pagination')]//li[contains(@class,'page-item')]//*[contains(@class,'page-link')][normalize-space(text())='${key_pageNumber}']</td>
 	<td></td>
 </tr>
 <tr>

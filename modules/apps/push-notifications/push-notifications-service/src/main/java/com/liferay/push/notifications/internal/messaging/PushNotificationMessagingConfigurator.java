@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.push.notifications.internal.messaging;
@@ -23,9 +14,9 @@ import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 import com.liferay.push.notifications.constants.PushNotificationsDestinationNames;
 import com.liferay.push.notifications.service.PushNotificationsDeviceLocalService;
 
+import java.util.ArrayList;
 import java.util.Dictionary;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
@@ -79,14 +70,9 @@ public class PushNotificationMessagingConfigurator {
 	protected void deactivate() {
 		if (!_serviceRegistrations.isEmpty()) {
 			for (ServiceRegistration<Destination> serviceRegistration :
-					_serviceRegistrations.values()) {
-
-				Destination destination = _bundleContext.getService(
-					serviceRegistration.getReference());
+					_serviceRegistrations) {
 
 				serviceRegistration.unregister();
-
-				destination.destroy();
 			}
 
 			_serviceRegistrations.clear();
@@ -106,11 +92,9 @@ public class PushNotificationMessagingConfigurator {
 				"destination.name", destination.getName()
 			).build();
 
-		ServiceRegistration<Destination> serviceRegistration =
+		_serviceRegistrations.add(
 			_bundleContext.registerService(
-				Destination.class, destination, properties);
-
-		_serviceRegistrations.put(destination.getName(), serviceRegistration);
+				Destination.class, destination, properties));
 
 		return destination;
 	}
@@ -127,7 +111,7 @@ public class PushNotificationMessagingConfigurator {
 	private PushNotificationsDeviceLocalService
 		_pushNotificationsDeviceLocalService;
 
-	private final Map<String, ServiceRegistration<Destination>>
-		_serviceRegistrations = new HashMap<>();
+	private final List<ServiceRegistration<Destination>> _serviceRegistrations =
+		new ArrayList<>();
 
 }

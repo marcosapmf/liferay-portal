@@ -1,21 +1,15 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.jethr0.project.queue;
 
-import com.liferay.jethr0.build.Build;
-import com.liferay.jethr0.build.repository.BuildRepository;
+import com.liferay.jethr0.bui1d.Build;
+import com.liferay.jethr0.bui1d.repository.BuildParameterRepository;
+import com.liferay.jethr0.bui1d.repository.BuildRepository;
+import com.liferay.jethr0.bui1d.repository.BuildRunRepository;
+import com.liferay.jethr0.bui1d.run.BuildRun;
 import com.liferay.jethr0.gitbranch.repository.GitBranchRepository;
 import com.liferay.jethr0.project.Project;
 import com.liferay.jethr0.project.comparator.BaseProjectComparator;
@@ -34,14 +28,20 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.scheduling.annotation.Scheduled;
 
 /**
  * @author Michael Hashimoto
  */
 @Configuration
+@EnableScheduling
 public class ProjectQueue {
 
 	public void addProject(Project project) {
@@ -81,38 +81,72 @@ public class ProjectQueue {
 	}
 
 	public List<Project> getProjects() {
-		return _projects;
+		synchronized (_projects) {
+			return _projects;
+		}
 	}
 
 	public void initialize() {
-		for (ProjectPrioritizer projectPrioritizer :
-				_projectPrioritizerRepository.getAll()) {
+		_projectComparatorRepository.initialize();
+		_projectPrioritizerRepository.initialize();
 
-			_projectComparatorRepository.getAll(projectPrioritizer);
-		}
+		_projectComparatorRepository.setProjectPrioritizerRepository(
+			_projectPrioritizerRepository);
+
+		_projectPrioritizerRepository.setProjectComparatorRepository(
+			_projectComparatorRepository);
+
+		_projectComparatorRepository.initializeRelationships();
+		_projectPrioritizerRepository.initializeRelationships();
+
+		_buildParameterRepository.initialize();
+		_buildRepository.initialize();
+		_buildRunRepository.initialize();
+		_projectRepository.initialize();
+
+		_buildRepository.setBuildParameterRepository(_buildParameterRepository);
+		_buildRepository.setBuildRunRepository(_buildRunRepository);
+		_buildRepository.setProjectRepository(_projectRepository);
+
+		_buildRunRepository.setBuildRepository(_buildRepository);
+
+		_buildParameterRepository.setBuildRepository(_buildRepository);
+
+		_projectRepository.setBuildRepository(_buildRepository);
+
+		_buildParameterRepository.initializeRelationships();
+		_buildRepository.initializeRelationships();
+		_buildRunRepository.initializeRelationships();
+		_projectRepository.initializeRelationships();
 
 		setProjectPrioritizer(_getDefaultProjectPrioritizer());
 
-		Set<Project> projects = new HashSet<>();
+		addProjects(_projectRepository.getAll());
 
-		for (Project project : _projectRepository.getAll()) {
-			_buildRepository.getAll(project);
-			_gitBranchRepository.getAll(project);
-			_taskRepository.getAll(project);
-			_testSuiteRepository.getAll(project);
+		update();
+	}
 
-			projects.add(project);
+	public void removeProjects(Set<Project> projects) {
+		if (projects == null) {
+			return;
 		}
 
-		addProjects(projects);
+		projects.removeAll(Collections.singleton(null));
 
-		for (Project project : getProjects()) {
-			System.out.println(project);
-
-			for (Build build : project.getBuilds()) {
-				System.out.println("> " + build);
-			}
+		if (projects.isEmpty()) {
+			return;
 		}
+
+		_projects.removeAll(projects);
+	}
+
+	@Scheduled(cron = "${liferay.jethr0.project.queue.update.cron}")
+	public void scheduledUpdate() {
+		if (_log.isInfoEnabled()) {
+			_log.info("Updating project queue");
+		}
+
+		update();
 	}
 
 	public void setProjectPrioritizer(ProjectPrioritizer projectPrioritizer) {
@@ -126,34 +160,88 @@ public class ProjectQueue {
 			return;
 		}
 
-		_projects.removeAll(Collections.singleton(null));
+		synchronized (_projects) {
+			_projects.removeAll(Collections.singleton(null));
 
-		for (Project project : new ArrayList<>(_projects)) {
-			boolean keepProject = false;
+			for (Project project : new ArrayList<>(_projects)) {
+				boolean keepProject = false;
 
-			for (Build build : project.getBuilds()) {
-				if (build.getState() != Build.State.COMPLETED) {
-					keepProject = true;
+				for (Build build : project.getBuilds()) {
+					if (build.getState() != Build.State.COMPLETED) {
+						keepProject = true;
 
-					break;
+						break;
+					}
+				}
+
+				if (!keepProject) {
+					_projects.remove(project);
 				}
 			}
 
-			if (!keepProject) {
-				_projects.remove(project);
+			_sortedProjectComparators.clear();
+
+			_sortedProjectComparators.addAll(
+				_projectPrioritizer.getProjectComparators());
+
+			Collections.sort(
+				_sortedProjectComparators,
+				Comparator.comparingInt(ProjectComparator::getPosition));
+
+			_projects.sort(new PrioritizedProjectComparator());
+
+			for (int i = 0; i < _projects.size(); i++) {
+				Project project = _projects.get(i);
+
+				project.setPosition(i + 1);
+
+				_projectRepository.update(project);
 			}
 		}
+	}
 
-		_sortedProjectComparators.clear();
+	public void update() {
+		synchronized (_projects) {
+			Set<Project> completedProjects = new HashSet<>();
 
-		_sortedProjectComparators.addAll(
-			_projectPrioritizer.getProjectComparators());
+			for (Project project : getProjects()) {
+				if (project.getState() == Project.State.COMPLETED) {
+					completedProjects.add(project);
 
-		Collections.sort(
-			_sortedProjectComparators,
-			Comparator.comparingInt(ProjectComparator::getPosition));
+					continue;
+				}
 
-		_projects.sort(new PrioritizedProjectComparator());
+				System.out.println(project);
+
+				for (Build build : project.getBuilds()) {
+					if (build.getState() == Build.State.COMPLETED) {
+						continue;
+					}
+
+					Set<BuildRun> buildRuns = _buildRunRepository.getAll(build);
+
+					boolean blocked = false;
+
+					for (BuildRun buildRun : buildRuns) {
+						if (buildRun.isBlocked()) {
+							blocked = true;
+
+							break;
+						}
+					}
+
+					if (blocked) {
+						build.setState(Build.State.BLOCKED);
+
+						_buildRepository.update(build);
+					}
+
+					System.out.println("> " + build);
+				}
+			}
+
+			removeProjects(completedProjects);
+		}
 	}
 
 	private ProjectPrioritizer _getDefaultProjectPrioritizer() {
@@ -168,16 +256,27 @@ public class ProjectQueue {
 			_liferayProjectPrioritizer);
 
 		_projectComparatorRepository.add(
-			projectPrioritizer, 1, ProjectComparator.Type.PROJECT_PRIORITY,
+			projectPrioritizer, 1, ProjectComparator.Type.PROJECT_START_DATE,
 			null);
 		_projectComparatorRepository.add(
-			projectPrioritizer, 2, ProjectComparator.Type.FIFO, null);
+			projectPrioritizer, 2, ProjectComparator.Type.PROJECT_PRIORITY,
+			null);
+		_projectComparatorRepository.add(
+			projectPrioritizer, 3, ProjectComparator.Type.FIFO, null);
 
 		return projectPrioritizer;
 	}
 
+	private static final Log _log = LogFactory.getLog(ProjectQueue.class);
+
+	@Autowired
+	private BuildParameterRepository _buildParameterRepository;
+
 	@Autowired
 	private BuildRepository _buildRepository;
+
+	@Autowired
+	private BuildRunRepository _buildRunRepository;
 
 	@Autowired
 	private GitBranchRepository _gitBranchRepository;

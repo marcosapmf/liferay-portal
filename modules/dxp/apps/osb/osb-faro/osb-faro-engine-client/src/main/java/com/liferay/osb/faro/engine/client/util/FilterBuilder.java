@@ -1,22 +1,13 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.osb.faro.engine.client.util;
 
 import com.liferay.osb.faro.engine.client.constants.FilterConstants;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 
@@ -67,6 +58,13 @@ public class FilterBuilder implements Cloneable {
 		String fieldName, String operator, Object value, boolean negate,
 		boolean required) {
 
+		addFilter(fieldName, operator, value, negate, required, false);
+	}
+
+	public void addFilter(
+		String fieldName, String operator, Object value, boolean negate,
+		boolean required, boolean useDoubleApostrophe) {
+
 		if (Validator.isNull(fieldName) || Validator.isNull(operator) ||
 			Validator.isNull(value)) {
 
@@ -77,7 +75,8 @@ public class FilterBuilder implements Cloneable {
 			value = getValue(operator, value);
 		}
 
-		String filterString = FilterUtil.getFilter(fieldName, operator, value);
+		String filterString = FilterUtil.getFilter(
+			fieldName, operator, useDoubleApostrophe, value);
 
 		if (negate) {
 			filterString = FilterUtil.negate(filterString);

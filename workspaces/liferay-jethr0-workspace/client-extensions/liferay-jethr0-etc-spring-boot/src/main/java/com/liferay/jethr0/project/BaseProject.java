@@ -1,25 +1,19 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.jethr0.project;
 
-import com.liferay.jethr0.build.Build;
+import com.liferay.jethr0.bui1d.Build;
 import com.liferay.jethr0.entity.BaseEntity;
 import com.liferay.jethr0.gitbranch.GitBranch;
+import com.liferay.jethr0.jenkins.cohort.JenkinsCohort;
 import com.liferay.jethr0.task.Task;
 import com.liferay.jethr0.testsuite.TestSuite;
+import com.liferay.jethr0.util.StringUtil;
 
+import java.util.Date;
 import java.util.Set;
 
 import org.json.JSONObject;
@@ -32,15 +26,11 @@ public abstract class BaseProject extends BaseEntity implements Project {
 	@Override
 	public void addBuild(Build build) {
 		addRelatedEntity(build);
-
-		build.setProject(this);
 	}
 
 	@Override
 	public void addBuilds(Set<Build> builds) {
-		for (Build build : builds) {
-			addBuild(build);
-		}
+		addRelatedEntities(builds);
 	}
 
 	@Override
@@ -51,6 +41,16 @@ public abstract class BaseProject extends BaseEntity implements Project {
 	@Override
 	public void addGitBranches(Set<GitBranch> gitBranches) {
 		addRelatedEntities(gitBranches);
+	}
+
+	@Override
+	public void addJenkinsCohort(JenkinsCohort jenkinsCohort) {
+		addRelatedEntity(jenkinsCohort);
+	}
+
+	@Override
+	public void addJenkinsCohorts(Set<JenkinsCohort> jenkinsCohorts) {
+		addRelatedEntities(jenkinsCohorts);
 	}
 
 	@Override
@@ -84,6 +84,11 @@ public abstract class BaseProject extends BaseEntity implements Project {
 	}
 
 	@Override
+	public Set<JenkinsCohort> getJenkinsCohorts() {
+		return getRelatedEntities(JenkinsCohort.class);
+	}
+
+	@Override
 	public JSONObject getJSONObject() {
 		JSONObject jsonObject = super.getJSONObject();
 
@@ -93,7 +98,11 @@ public abstract class BaseProject extends BaseEntity implements Project {
 		jsonObject.put(
 			"name", getName()
 		).put(
+			"position", getPosition()
+		).put(
 			"priority", getPriority()
+		).put(
+			"startDate", StringUtil.toString(getStartDate())
 		).put(
 			"state", state.getJSONObject()
 		).put(
@@ -109,8 +118,18 @@ public abstract class BaseProject extends BaseEntity implements Project {
 	}
 
 	@Override
+	public int getPosition() {
+		return _position;
+	}
+
+	@Override
 	public int getPriority() {
 		return _priority;
+	}
+
+	@Override
+	public Date getStartDate() {
+		return _startDate;
 	}
 
 	@Override
@@ -154,6 +173,16 @@ public abstract class BaseProject extends BaseEntity implements Project {
 	}
 
 	@Override
+	public void removeJenkinsCohort(JenkinsCohort jenkinsCohort) {
+		removeRelatedEntity(jenkinsCohort);
+	}
+
+	@Override
+	public void removeJenkinsCohorts(Set<JenkinsCohort> jenkinsCohorts) {
+		removeRelatedEntities(jenkinsCohorts);
+	}
+
+	@Override
 	public void removeTask(Task task) {
 		removeRelatedEntity(task);
 	}
@@ -178,8 +207,22 @@ public abstract class BaseProject extends BaseEntity implements Project {
 	}
 
 	@Override
+	public void setPosition(int position) {
+		if (position <= 0) {
+			position = Integer.MAX_VALUE;
+		}
+
+		_position = position;
+	}
+
+	@Override
 	public void setPriority(int priority) {
 		_priority = priority;
+	}
+
+	@Override
+	public void setStartDate(Date startDate) {
+		_startDate = startDate;
 	}
 
 	@Override
@@ -191,13 +234,25 @@ public abstract class BaseProject extends BaseEntity implements Project {
 		super(jsonObject);
 
 		_name = jsonObject.getString("name");
+
+		int position = jsonObject.optInt("position", Integer.MAX_VALUE);
+
+		if (position <= 0) {
+			position = Integer.MAX_VALUE;
+		}
+
+		_position = position;
+
 		_priority = jsonObject.optInt("priority");
+		_startDate = StringUtil.toDate(jsonObject.optString("startDate"));
 		_state = State.get(jsonObject.getJSONObject("state"));
 		_type = Type.get(jsonObject.getJSONObject("type"));
 	}
 
 	private String _name;
+	private int _position;
 	private int _priority;
+	private Date _startDate;
 	private State _state;
 	private final Type _type;
 

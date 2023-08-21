@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.service.impl;
@@ -27,6 +18,7 @@ import com.liferay.object.constants.ObjectFieldConstants;
 import com.liferay.object.exception.DuplicateObjectActionExternalReferenceCodeException;
 import com.liferay.object.exception.ObjectActionConditionExpressionException;
 import com.liferay.object.exception.ObjectActionErrorMessageException;
+import com.liferay.object.exception.ObjectActionExecutorKeyException;
 import com.liferay.object.exception.ObjectActionLabelException;
 import com.liferay.object.exception.ObjectActionNameException;
 import com.liferay.object.exception.ObjectActionParametersException;
@@ -36,6 +28,8 @@ import com.liferay.object.internal.security.permission.resource.util.ObjectDefin
 import com.liferay.object.model.ObjectAction;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectField;
+import com.liferay.object.scope.CompanyScoped;
+import com.liferay.object.scope.ObjectDefinitionScoped;
 import com.liferay.object.scripting.exception.ObjectScriptingException;
 import com.liferay.object.scripting.validator.ObjectScriptingValidator;
 import com.liferay.object.service.ObjectFieldLocalService;
@@ -128,7 +122,6 @@ public class ObjectActionLocalServiceImpl
 		}
 
 		objectAction.setExternalReferenceCode(externalReferenceCode);
-
 		objectAction.setCompanyId(user.getCompanyId());
 		objectAction.setUserId(user.getUserId());
 		objectAction.setUserName(user.getFullName());
@@ -449,10 +442,39 @@ public class ObjectActionLocalServiceImpl
 
 		ObjectActionExecutor objectActionExecutor =
 			_objectActionExecutorRegistry.getObjectActionExecutor(
-				objectActionExecutorKey);
+				objectDefinition.getCompanyId(), objectActionExecutorKey);
 
-		objectActionExecutor.validate(
-			objectDefinition.getCompanyId(), objectDefinition.getName());
+		if (objectActionExecutor instanceof CompanyScoped) {
+			CompanyScoped objectActionExecutorCompanyScoped =
+				(CompanyScoped)objectActionExecutor;
+
+			if (!objectActionExecutorCompanyScoped.isAllowedCompany(
+					objectDefinition.getCompanyId())) {
+
+				throw new ObjectActionExecutorKeyException(
+					StringBundler.concat(
+						"The object action executor key ",
+						objectActionExecutor.getKey(),
+						" is not allowed for company ",
+						objectDefinition.getCompanyId()));
+			}
+		}
+
+		if (objectActionExecutor instanceof ObjectDefinitionScoped) {
+			ObjectDefinitionScoped objectActionExecutorObjectDefinitionScoped =
+				(ObjectDefinitionScoped)objectActionExecutor;
+
+			if (!objectActionExecutorObjectDefinitionScoped.
+					isAllowedObjectDefinition(objectDefinition.getName())) {
+
+				throw new ObjectActionExecutorKeyException(
+					StringBundler.concat(
+						"The object action executor key ",
+						objectActionExecutor.getKey(),
+						" is not allowed for object definition ",
+						objectDefinition.getName()));
+			}
+		}
 	}
 
 	private void _validateObjectActionTriggerKey(
@@ -580,8 +602,12 @@ public class ObjectActionLocalServiceImpl
 				}
 			}
 
-			if ((objectDefinition == null) || !objectDefinition.isActive() ||
-				!objectDefinition.isApproved()) {
+			if ((objectDefinition == null) ||
+				(Objects.equals(
+					objectActionExecutorKey,
+					ObjectActionExecutorConstants.KEY_ADD_OBJECT_ENTRY) &&
+				 (!objectDefinition.isActive() ||
+				  !objectDefinition.isApproved()))) {
 
 				errorMessageKeys.put("objectDefinitionId", "invalid");
 			}
@@ -682,6 +708,13 @@ public class ObjectActionLocalServiceImpl
 				predefinedValuesErrorMessageKeys.put(name, "invalid");
 
 				continue;
+			}
+
+			if (objectField.isLocalized()) {
+				predefinedValuesErrorMessageKeys.put(
+					objectField.getName(),
+					"localized-object-fields-must-not-be-used-in-object-" +
+						"actions");
 			}
 
 			String value = predefinedValueJSONObject.getString("value");

@@ -1,3 +1,10 @@
+/**
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
+ */
+
+/* eslint-disable react/no-unescaped-entities */
+
 import circleFill from '../../assets/icons/circle_fill_icon.svg';
 import radioSelected from '../../assets/icons/radio_button_checked_2_icon.svg';
 import timeline from '../../assets/images/timeline.png';

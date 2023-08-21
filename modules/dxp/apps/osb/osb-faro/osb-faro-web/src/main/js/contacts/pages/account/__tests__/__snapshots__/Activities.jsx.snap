@@ -78,6 +78,7 @@ exports[`Activities should render 1`] = `
                       class="input-group-inset-item input-group-inset-item-after"
                     >
                       <button
+                        aria-label="Search"
                         class="button-root btn btn-unstyled"
                         type="button"
                       >
@@ -264,48 +265,51 @@ exports[`Activities should render 1`] = `
               <li
                 class="page-item disabled"
               >
-                <a
-                  class="button-root page-link btn btn-unstyled"
+                <button
+                  class="button-root btn btn-unstyled page-link btn btn-primary"
                   disabled=""
                   href=""
+                  type="button"
                 >
                   <svg
-                    class="lexicon-icon lexicon-icon-angle-left icon-root"
+                    class="lexicon-icon lexicon-icon-angle-left-small icon-root"
                     role="presentation"
                   >
                     <use
-                      xlink:href="#angle-left"
+                      xlink:href="#angle-left-small"
                     />
                   </svg>
-                </a>
+                </button>
               </li>
               <li
                 class="page-item active"
               >
-                <a
-                  class="button-root page-link btn btn-unstyled"
+                <button
+                  class="button-root btn btn-unstyled page-link btn btn-primary"
                   href=""
+                  type="button"
                 >
                   1
-                </a>
+                </button>
               </li>
               <li
                 class="page-item disabled"
               >
-                <a
-                  class="button-root page-link btn btn-unstyled"
+                <button
+                  class="button-root btn btn-unstyled page-link btn btn-primary"
                   disabled=""
                   href=""
+                  type="button"
                 >
                   <svg
-                    class="lexicon-icon lexicon-icon-angle-right icon-root"
+                    class="lexicon-icon lexicon-icon-angle-right-small icon-root"
                     role="presentation"
                   >
                     <use
-                      xlink:href="#angle-right"
+                      xlink:href="#angle-right-small"
                     />
                   </svg>
-                </a>
+                </button>
               </li>
             </ul>
           </div>

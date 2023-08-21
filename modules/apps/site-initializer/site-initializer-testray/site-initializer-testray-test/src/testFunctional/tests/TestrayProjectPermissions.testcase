@@ -8,8 +8,8 @@ definition {
 	property release.feature.flags.disable.DISABLE_PRIVATE_LAYOUTS = "true";
 	property testray.main.component.name = "Site Initializer Testray";
 
-	var testSiteName = "Testray 2";
 	var projectName = "Project 1";
+	var testSiteName = "Testray 2";
 
 	setUp {
 		task ("Set up instance and sign in") {
@@ -19,7 +19,10 @@ definition {
 		}
 
 		task ("Create a new Testray Site") {
-			Testray.addTestraySite(siteName = ${testSiteName});
+			HeadlessSite.addSite(
+				siteName = ${testSiteName},
+				templateName = "Testray",
+				templateType = "Site Initializer");
 		}
 
 		task ("Create a Project via API") {
@@ -30,21 +33,21 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
-
 		task ("Logout And Login with test user") {
 			User.logoutAndLoginPG(
 				userLoginEmailAddress = "test@liferay.com",
 				userLoginFullName = "test test");
 		}
 
-		task ("Delete all objects, Testray Site and Client Extensions") {
+		task ("Delete project, Testray Site and Client Extensions") {
 			JSONTestrayAPI.deleteProject(projectName = ${projectName});
 
 			Testray.testrayApisTearDown();
 		}
 
-		if (${testPortalInstance} == "true") {
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
+
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 	}
@@ -52,6 +55,9 @@ definition {
 	@description = "Story ID: LPS-178266 | Test Summary: Verify that the User with the 'Testray Analyst' role should not be able to create/edit/delete the project but can view"
 	@priority = 3
 	test AnalystRoleCanNotCreateEditAndDeleteProject {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
 		task ("Given that the user login with the Testray Analyst role") {
 			User.logoutAndLoginPG(
 				userLoginEmailAddress = "analyst@testray.com",
@@ -112,6 +118,9 @@ definition {
 	@description = "Story ID: LPS-178266 | Test Summary: Verify that the User with the 'Testray Lead' role should not be able to create/edit/delete the project but can view"
 	@priority = 3
 	test LeadRoleCanNotCreateEditAndDeleteProject {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
 		task ("Given that the user login with the Testray Lead role") {
 			User.logoutAndLoginPG(
 				userLoginEmailAddress = "lead@testray.com",
@@ -172,6 +181,9 @@ definition {
 	@description = "Story ID: LPS-178266 | Test Summary: Verify that the User with the 'Testray User' role should not be able to create/edit/delete the project but can view"
 	@priority = 3
 	test UserRoleCanNotCreateEditAndDeleteProject {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
 		task ("Given that the user login with the Testray User role") {
 			User.logoutAndLoginPG(
 				userLoginEmailAddress = "user@testray.com",

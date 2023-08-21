@@ -10,11 +10,11 @@ exports[`InterestDetails should render 1`] = `
       href="/workspace/23/contacts/individuals/known-individuals/test/interests"
     >
       <svg
-        class="lexicon-icon lexicon-icon-angle-left icon-root mr-2"
+        class="lexicon-icon lexicon-icon-angle-left-small icon-root mr-2"
         role="presentation"
       >
         <use
-          xlink:href="#angle-left"
+          xlink:href="#angle-left-small"
         />
       </svg>
       Back to Interests
@@ -40,39 +40,74 @@ exports[`InterestDetails should render 1`] = `
     <div
       class="card-header"
     >
-      <ul
-        class="nav-root page-subnav nav nav-underline"
-        role="tablist"
+      <nav
+        class="page-subnav navbar navbar-collapse-relative navbar-expand-md navbar-underline navigation-bar navigation-bar-light"
       >
-        <li
-          class="nav-item active"
-          role="presentation"
+        <div
+          class="container-fluid container-fluid-max-xl"
         >
-          <a
-            class="nav-link active"
-            href="/workspace/23/contacts/individuals/known-individuals/test/interests/1?active=true"
-            role="tab"
+          <button
+            aria-expanded="false"
+            class="navbar-toggler navbar-toggler-link collapsed btn btn-unstyled"
+            type="button"
           >
-            <h4>
-              Active Pages
-            </h4>
-          </a>
-        </li>
-        <li
-          class="nav-item"
-          role="presentation"
-        >
-          <a
-            class="nav-link"
-            href="/workspace/23/contacts/individuals/known-individuals/test/interests/1?active=false"
-            role="tab"
+            <span
+              class="navbar-text-truncate"
+            >
+              label
+            </span>
+            <svg
+              class="lexicon-icon lexicon-icon-caret-bottom"
+              role="presentation"
+            >
+              <use
+                xlink:href="#caret-bottom"
+              />
+            </svg>
+          </button>
+          <div
+            class="navbar-collapse collapse"
           >
-            <h4>
-              Inactive Pages
-            </h4>
-          </a>
-        </li>
-      </ul>
+            <div
+              class="container-fluid container-fluid-max-xl"
+            >
+              <ul
+                class="navbar-nav"
+              >
+                <li
+                  class="nav-item"
+                >
+                  <a
+                    aria-current="page"
+                    class="nav-link active"
+                    href="/workspace/23/contacts/individuals/known-individuals/test/interests/1?active=true"
+                  >
+                    <span
+                      class="navbar-text-truncate"
+                    >
+                      Active Pages
+                    </span>
+                  </a>
+                </li>
+                <li
+                  class="nav-item"
+                >
+                  <a
+                    class="nav-link"
+                    href="/workspace/23/contacts/individuals/known-individuals/test/interests/1?active=false"
+                  >
+                    <span
+                      class="navbar-text-truncate"
+                    >
+                      Inactive Pages
+                    </span>
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </nav>
     </div>
     <div
       class="base-results-root d-flex flex-column flex-grow-1 searchable-table-root interest-history-table searchable-table-borderless"
@@ -154,6 +189,7 @@ exports[`InterestDetails should render 1`] = `
                     class="input-group-inset-item input-group-inset-item-after"
                   >
                     <button
+                      aria-label="Search"
                       class="button-root btn btn-unstyled"
                       type="button"
                     >
@@ -331,16 +367,16 @@ exports[`InterestDetails should render 1`] = `
               class="page-item disabled"
             >
               <a
-                class="button-root page-link btn btn-unstyled"
+                class="button-root btn btn-unstyled page-link"
                 disabled=""
                 href="/?page=0"
               >
                 <svg
-                  class="lexicon-icon lexicon-icon-angle-left icon-root"
+                  class="lexicon-icon lexicon-icon-angle-left-small icon-root"
                   role="presentation"
                 >
                   <use
-                    xlink:href="#angle-left"
+                    xlink:href="#angle-left-small"
                   />
                 </svg>
               </a>
@@ -349,7 +385,7 @@ exports[`InterestDetails should render 1`] = `
               class="page-item active"
             >
               <a
-                class="button-root page-link btn btn-unstyled"
+                class="button-root btn btn-unstyled page-link"
                 href="/?page=1"
               >
                 1
@@ -359,16 +395,16 @@ exports[`InterestDetails should render 1`] = `
               class="page-item disabled"
             >
               <a
-                class="button-root page-link btn btn-unstyled"
+                class="button-root btn btn-unstyled page-link"
                 disabled=""
                 href="/?page=2"
               >
                 <svg
-                  class="lexicon-icon lexicon-icon-angle-right icon-root"
+                  class="lexicon-icon lexicon-icon-angle-right-small icon-root"
                   role="presentation"
                 >
                   <use
-                    xlink:href="#angle-right"
+                    xlink:href="#angle-right-small"
                   />
                 </svg>
               </a>

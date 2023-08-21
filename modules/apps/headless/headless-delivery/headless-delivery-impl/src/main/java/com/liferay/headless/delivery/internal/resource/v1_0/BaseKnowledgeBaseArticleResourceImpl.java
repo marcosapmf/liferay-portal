@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.delivery.internal.resource.v1_0;
@@ -22,6 +13,7 @@ import com.liferay.petra.function.UnsafeBiConsumer;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.petra.function.transform.TransformUtil;
+import com.liferay.portal.kernel.exception.NoSuchModelException;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.GroupedModel;
 import com.liferay.portal.kernel.model.Resource;
@@ -1844,22 +1836,22 @@ public abstract class BaseKnowledgeBaseArticleResourceImpl
 			Map<String, Serializable> parameters)
 		throws Exception {
 
-		UnsafeConsumer<KnowledgeBaseArticle, Exception>
-			knowledgeBaseArticleUnsafeConsumer = null;
+		UnsafeFunction<KnowledgeBaseArticle, KnowledgeBaseArticle, Exception>
+			knowledgeBaseArticleUnsafeFunction = null;
 
 		String createStrategy = (String)parameters.getOrDefault(
 			"createStrategy", "INSERT");
 
-		if ("INSERT".equalsIgnoreCase(createStrategy)) {
+		if (StringUtil.equalsIgnoreCase(createStrategy, "INSERT")) {
 			if (parameters.containsKey("knowledgeBaseFolderId")) {
-				knowledgeBaseArticleUnsafeConsumer = knowledgeBaseArticle ->
+				knowledgeBaseArticleUnsafeFunction = knowledgeBaseArticle ->
 					postKnowledgeBaseFolderKnowledgeBaseArticle(
 						_parseLong(
 							(String)parameters.get("knowledgeBaseFolderId")),
 						knowledgeBaseArticle);
 			}
 			else if (parameters.containsKey("siteId")) {
-				knowledgeBaseArticleUnsafeConsumer =
+				knowledgeBaseArticleUnsafeFunction =
 					knowledgeBaseArticle -> postSiteKnowledgeBaseArticle(
 						(Long)parameters.get("siteId"), knowledgeBaseArticle);
 			}
@@ -1869,31 +1861,88 @@ public abstract class BaseKnowledgeBaseArticleResourceImpl
 			}
 		}
 
-		if ("UPSERT".equalsIgnoreCase(createStrategy)) {
-			knowledgeBaseArticleUnsafeConsumer = knowledgeBaseArticle ->
-				putSiteKnowledgeBaseArticleByExternalReferenceCode(
-					knowledgeBaseArticle.getSiteId() != null ?
-						knowledgeBaseArticle.getSiteId() :
-							(Long)parameters.get("siteId"),
-					knowledgeBaseArticle.getExternalReferenceCode(),
-					knowledgeBaseArticle);
+		if (StringUtil.equalsIgnoreCase(createStrategy, "UPSERT")) {
+			String updateStrategy = (String)parameters.getOrDefault(
+				"updateStrategy", "UPDATE");
+
+			if (StringUtil.equalsIgnoreCase(updateStrategy, "UPDATE")) {
+				knowledgeBaseArticleUnsafeFunction = knowledgeBaseArticle ->
+					putSiteKnowledgeBaseArticleByExternalReferenceCode(
+						knowledgeBaseArticle.getSiteId() != null ?
+							knowledgeBaseArticle.getSiteId() :
+								(Long)parameters.get("siteId"),
+						knowledgeBaseArticle.getExternalReferenceCode(),
+						knowledgeBaseArticle);
+			}
+
+			if (StringUtil.equalsIgnoreCase(updateStrategy, "PARTIAL_UPDATE")) {
+				knowledgeBaseArticleUnsafeFunction = knowledgeBaseArticle -> {
+					KnowledgeBaseArticle persistedKnowledgeBaseArticle = null;
+
+					try {
+						KnowledgeBaseArticle getKnowledgeBaseArticle =
+							getSiteKnowledgeBaseArticleByExternalReferenceCode(
+								knowledgeBaseArticle.getSiteId() != null ?
+									knowledgeBaseArticle.getSiteId() :
+										(Long)parameters.get("siteId"),
+								knowledgeBaseArticle.
+									getExternalReferenceCode());
+
+						persistedKnowledgeBaseArticle =
+							patchKnowledgeBaseArticle(
+								getKnowledgeBaseArticle.getId() != null ?
+									getKnowledgeBaseArticle.getId() :
+										_parseLong(
+											(String)parameters.get(
+												"knowledgeBaseArticleId")),
+								knowledgeBaseArticle);
+					}
+					catch (NoSuchModelException noSuchModelException) {
+						if (parameters.containsKey("knowledgeBaseFolderId")) {
+							persistedKnowledgeBaseArticle =
+								postKnowledgeBaseFolderKnowledgeBaseArticle(
+									_parseLong(
+										(String)parameters.get(
+											"knowledgeBaseFolderId")),
+									knowledgeBaseArticle);
+						}
+						else if (parameters.containsKey("siteId")) {
+							persistedKnowledgeBaseArticle =
+								postSiteKnowledgeBaseArticle(
+									(Long)parameters.get("siteId"),
+									knowledgeBaseArticle);
+						}
+						else {
+							throw new NotSupportedException(
+								"One of the following parameters must be specified: [knowledgeBaseFolderId, siteId, knowledgeBaseFolderId]");
+						}
+					}
+
+					return persistedKnowledgeBaseArticle;
+				};
+			}
 		}
 
-		if (knowledgeBaseArticleUnsafeConsumer == null) {
+		if (knowledgeBaseArticleUnsafeFunction == null) {
 			throw new NotSupportedException(
 				"Create strategy \"" + createStrategy +
 					"\" is not supported for KnowledgeBaseArticle");
 		}
 
-		if (contextBatchUnsafeConsumer != null) {
+		if (contextBatchUnsafeBiConsumer != null) {
+			contextBatchUnsafeBiConsumer.accept(
+				knowledgeBaseArticles, knowledgeBaseArticleUnsafeFunction);
+		}
+		else if (contextBatchUnsafeConsumer != null) {
 			contextBatchUnsafeConsumer.accept(
-				knowledgeBaseArticles, knowledgeBaseArticleUnsafeConsumer);
+				knowledgeBaseArticles,
+				knowledgeBaseArticleUnsafeFunction::apply);
 		}
 		else {
 			for (KnowledgeBaseArticle knowledgeBaseArticle :
 					knowledgeBaseArticles) {
 
-				knowledgeBaseArticleUnsafeConsumer.accept(knowledgeBaseArticle);
+				knowledgeBaseArticleUnsafeFunction.apply(knowledgeBaseArticle);
 			}
 		}
 	}
@@ -1990,14 +2039,14 @@ public abstract class BaseKnowledgeBaseArticleResourceImpl
 			Map<String, Serializable> parameters)
 		throws Exception {
 
-		UnsafeConsumer<KnowledgeBaseArticle, Exception>
-			knowledgeBaseArticleUnsafeConsumer = null;
+		UnsafeFunction<KnowledgeBaseArticle, KnowledgeBaseArticle, Exception>
+			knowledgeBaseArticleUnsafeFunction = null;
 
 		String updateStrategy = (String)parameters.getOrDefault(
 			"updateStrategy", "UPDATE");
 
-		if ("PARTIAL_UPDATE".equalsIgnoreCase(updateStrategy)) {
-			knowledgeBaseArticleUnsafeConsumer =
+		if (StringUtil.equalsIgnoreCase(updateStrategy, "PARTIAL_UPDATE")) {
+			knowledgeBaseArticleUnsafeFunction =
 				knowledgeBaseArticle -> patchKnowledgeBaseArticle(
 					knowledgeBaseArticle.getId() != null ?
 						knowledgeBaseArticle.getId() :
@@ -2007,8 +2056,8 @@ public abstract class BaseKnowledgeBaseArticleResourceImpl
 					knowledgeBaseArticle);
 		}
 
-		if ("UPDATE".equalsIgnoreCase(updateStrategy)) {
-			knowledgeBaseArticleUnsafeConsumer =
+		if (StringUtil.equalsIgnoreCase(updateStrategy, "UPDATE")) {
+			knowledgeBaseArticleUnsafeFunction =
 				knowledgeBaseArticle -> putKnowledgeBaseArticle(
 					knowledgeBaseArticle.getId() != null ?
 						knowledgeBaseArticle.getId() :
@@ -2018,21 +2067,26 @@ public abstract class BaseKnowledgeBaseArticleResourceImpl
 					knowledgeBaseArticle);
 		}
 
-		if (knowledgeBaseArticleUnsafeConsumer == null) {
+		if (knowledgeBaseArticleUnsafeFunction == null) {
 			throw new NotSupportedException(
 				"Update strategy \"" + updateStrategy +
 					"\" is not supported for KnowledgeBaseArticle");
 		}
 
-		if (contextBatchUnsafeConsumer != null) {
+		if (contextBatchUnsafeBiConsumer != null) {
+			contextBatchUnsafeBiConsumer.accept(
+				knowledgeBaseArticles, knowledgeBaseArticleUnsafeFunction);
+		}
+		else if (contextBatchUnsafeConsumer != null) {
 			contextBatchUnsafeConsumer.accept(
-				knowledgeBaseArticles, knowledgeBaseArticleUnsafeConsumer);
+				knowledgeBaseArticles,
+				knowledgeBaseArticleUnsafeFunction::apply);
 		}
 		else {
 			for (KnowledgeBaseArticle knowledgeBaseArticle :
 					knowledgeBaseArticles) {
 
-				knowledgeBaseArticleUnsafeConsumer.accept(knowledgeBaseArticle);
+				knowledgeBaseArticleUnsafeFunction.apply(knowledgeBaseArticle);
 			}
 		}
 	}
@@ -2218,6 +2272,16 @@ public abstract class BaseKnowledgeBaseArticleResourceImpl
 
 	public void setContextAcceptLanguage(AcceptLanguage contextAcceptLanguage) {
 		this.contextAcceptLanguage = contextAcceptLanguage;
+	}
+
+	public void setContextBatchUnsafeBiConsumer(
+		UnsafeBiConsumer
+			<Collection<KnowledgeBaseArticle>,
+			 UnsafeFunction
+				 <KnowledgeBaseArticle, KnowledgeBaseArticle, Exception>,
+			 Exception> contextBatchUnsafeBiConsumer) {
+
+		this.contextBatchUnsafeBiConsumer = contextBatchUnsafeBiConsumer;
 	}
 
 	public void setContextBatchUnsafeConsumer(
@@ -2484,6 +2548,10 @@ public abstract class BaseKnowledgeBaseArticleResourceImpl
 	}
 
 	protected AcceptLanguage contextAcceptLanguage;
+	protected UnsafeBiConsumer
+		<Collection<KnowledgeBaseArticle>,
+		 UnsafeFunction<KnowledgeBaseArticle, KnowledgeBaseArticle, Exception>,
+		 Exception> contextBatchUnsafeBiConsumer;
 	protected UnsafeBiConsumer
 		<Collection<KnowledgeBaseArticle>,
 		 UnsafeConsumer<KnowledgeBaseArticle, Exception>, Exception>

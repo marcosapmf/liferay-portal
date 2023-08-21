@@ -52,6 +52,8 @@ definition {
 	}
 
 	macro addCP {
+		WaitForVisible(locator1 = "Button#PLUS");
+
 		if (isSet(kbTemplateTitle)) {
 			LexiconEntry.gotoAddMenuItem(menuItem = ${kbTemplateTitle});
 		}
@@ -206,30 +208,13 @@ definition {
 			}
 
 			if (isSet(extendedMinutes)) {
-				if (isSet(getExpirationDateByPortal)) {
-					var expirationDateHour = selenium.getAttribute("//input[contains(@id,'expirationDateHour')]@value");
-					var expirationDateAmpmValue = selenium.getAttribute("//input[contains(@id,'expirationDateAmPm')]@value");
-					var expirationDateMinute = selenium.getAttribute("//input[contains(@id,'expirationDateMinute')]@value");
-
-					if (${expirationDateAmpmValue} == 0) {
-						var expirationDateAmpm = "AM";
-					}
-
-					if (${expirationDateAmpmValue} == 1) {
-						var expirationDateAmpm = "PM";
-					}
-
-					var expirationDateMinuteFuture = ${expirationDateMinute} + ${extendedMinutes};
-
-					var expirationDateTime = "${expirationDateHour}:${expirationDateMinuteFuture} ${expirationDateAmpm}";
-				}
-				else {
-					var expirationDateTime = DateUtil.getDateOffsetByMinutes(${extendedMinutes}, "hh:mm a");
-				}
+				var expirationDateTime = DateUtil.getDateOffsetByMinutes(${extendedMinutes}, "hh:mm a");
 
 				echo("## * expirationDateTime: ${expirationDateTime}");
 
-				Type(
+				var expirationDateTime = StringUtil.removeSpaces(${expirationDateTime});
+
+				Type.sendKeys(
 					locator1 = "TextInput#EXPIRATION_DATE_TIME",
 					value1 = ${expirationDateTime});
 			}
@@ -648,7 +633,9 @@ definition {
 
 				echo("## * expirationDateTime: ${expirationDateTime}");
 
-				Type(
+				var expirationDateTime = StringUtil.removeSpaces(${expirationDateTime});
+
+				Type.sendKeys(
 					locator1 = "TextInput#EXPIRATION_DATE_TIME",
 					value1 = ${expirationDateTime});
 			}
@@ -670,7 +657,7 @@ definition {
 			portletName = ${portletName},
 			portletOption = "Configuration");
 
-		SelectFrame.selectFrameNoLoading(locator1 = "IFrame#CONFIGURATION_DIALOG");
+		SelectFrame.selectFrameNoLoading(locator1 = "IFrame#CONFIGURATION");
 
 		if ((${portletName} == "Knowledge Base Search") || (${portletName} == "Knowledge Base Section")) {
 			Navigator.gotoNavTab(navTab = "Display Settings");
@@ -1151,7 +1138,9 @@ definition {
 			locator1 = "TextInput#REVIEW_DATE",
 			value1 = ${reviewDate});
 
-		Type(
+		var reviewDateTime = StringUtil.removeSpaces(${reviewDateTime});
+
+		Type.sendKeys(
 			locator1 = "TextInput#REVIEW_DATE_TIME",
 			value1 = ${reviewDateTime});
 	}

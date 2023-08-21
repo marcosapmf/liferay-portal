@@ -33,6 +33,7 @@ create table ObjectDefinition (
 	modifiedDate DATE null,
 	accountERObjectFieldId LONG,
 	descriptionObjectFieldId LONG,
+	objectFolderId LONG,
 	titleObjectFieldId LONG,
 	accountEntryRestricted BOOLEAN,
 	active_ BOOLEAN,
@@ -99,6 +100,8 @@ create table ObjectField (
 	label STRING null,
 	localized BOOLEAN,
 	name VARCHAR(75) null,
+	readOnly VARCHAR(75) null,
+	readOnlyConditionExpression TEXT null,
 	relationshipType VARCHAR(75) null,
 	required BOOLEAN,
 	state_ BOOLEAN,
@@ -132,6 +135,20 @@ create table ObjectFilter (
 	filterBy VARCHAR(75) null,
 	filterType VARCHAR(75) null,
 	json VARCHAR(75) null
+);
+
+create table ObjectFolder (
+	mvccVersion LONG default 0 not null,
+	uuid_ VARCHAR(75) null,
+	externalReferenceCode VARCHAR(75) null,
+	objectFolderId LONG not null primary key,
+	companyId LONG,
+	userId LONG,
+	userName VARCHAR(75) null,
+	createDate DATE null,
+	modifiedDate DATE null,
+	label STRING null,
+	name VARCHAR(75) null
 );
 
 create table ObjectLayout (
@@ -281,7 +298,22 @@ create table ObjectValidationRule (
 	engine VARCHAR(75) null,
 	errorLabel STRING null,
 	name STRING null,
+	outputType VARCHAR(75) null,
 	script TEXT null
+);
+
+create table ObjectValidationRuleSetting (
+	mvccVersion LONG default 0 not null,
+	uuid_ VARCHAR(75) null,
+	objectValidationRuleSettingId LONG not null primary key,
+	companyId LONG,
+	userId LONG,
+	userName VARCHAR(75) null,
+	createDate DATE null,
+	modifiedDate DATE null,
+	objectValidationRuleId LONG,
+	name VARCHAR(75) null,
+	value VARCHAR(75) null
 );
 
 create table ObjectView (

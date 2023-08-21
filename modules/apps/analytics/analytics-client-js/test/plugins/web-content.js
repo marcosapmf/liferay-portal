@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import userEvent from '@testing-library/user-event';
@@ -22,11 +13,12 @@ const applicationId = 'WebContent';
 
 const googleUrl = 'http://google.com/';
 
-const createWebContentElement = () => {
+const createWebContentElement = (assetId, assetTitle) => {
 	const webContentElement = document.createElement('div');
 
-	webContentElement.dataset.analyticsAssetId = 'assetId';
-	webContentElement.dataset.analyticsAssetTitle = 'Web Content Title 1';
+	webContentElement.dataset.analyticsAssetId = assetId || 'assetId';
+	webContentElement.dataset.analyticsAssetTitle =
+		assetTitle || 'Web Content Title 1';
 	webContentElement.dataset.analyticsAssetType = 'web-content';
 	webContentElement.innerText =
 		'Lorem ipsum dolor, sit amet consectetur adipisicing elit.';
@@ -127,6 +119,50 @@ describe('WebContent Plugin', () => {
 			);
 
 			expect(events.length).toBeGreaterThanOrEqual(0);
+
+			document.body.removeChild(webContentElement);
+		});
+
+		it('remove spaces between assetTitle and assetId', async () => {
+			const webContentElement = createWebContentElement(
+				' myAssetId ',
+				' my asset title '
+			);
+
+			jest.spyOn(
+				webContentElement,
+				'getBoundingClientRect'
+			).mockImplementation(() => ({
+				bottom: 500,
+				height: 500,
+				left: 0,
+				right: 500,
+				top: 0,
+				width: 500,
+			}));
+
+			const domContentLoaded = new Event('DOMContentLoaded');
+
+			await document.dispatchEvent(domContentLoaded);
+
+			await wait(250);
+
+			const events = Analytics.getEvents().filter(
+				({eventId}) => eventId === 'webContentViewed'
+			);
+
+			expect(events.length).toBeGreaterThanOrEqual(1);
+
+			expect(events[0]).toEqual(
+				expect.objectContaining({
+					applicationId,
+					eventId: 'webContentViewed',
+					properties: expect.objectContaining({
+						articleId: 'myAssetId',
+						title: 'my asset title',
+					}),
+				})
+			);
 
 			document.body.removeChild(webContentElement);
 		});

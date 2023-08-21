@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.document.library.web.internal.display.context;
@@ -25,6 +16,7 @@ import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Repository;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactoryUtil;
+import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.service.RepositoryLocalServiceUtil;
 import com.liferay.portal.kernel.theme.PortletDisplay;
@@ -41,10 +33,21 @@ import javax.servlet.http.HttpServletRequest;
 public class DLCopyFolderDisplayContext {
 
 	public DLCopyFolderDisplayContext(
-		HttpServletRequest httpServletRequest, ThemeDisplay themeDisplay) {
+		HttpServletRequest httpServletRequest,
+		LiferayPortletResponse liferayPortletResponse,
+		ThemeDisplay themeDisplay) {
 
 		_httpServletRequest = httpServletRequest;
+		_liferayPortletResponse = liferayPortletResponse;
 		_themeDisplay = themeDisplay;
+	}
+
+	public String getActionURL() {
+		return PortletURLBuilder.createActionURL(
+			_liferayPortletResponse
+		).setActionName(
+			"/document_library/copy_folder"
+		).buildString();
 	}
 
 	public String getRedirect() {
@@ -160,6 +163,7 @@ public class DLCopyFolderDisplayContext {
 	}
 
 	private final HttpServletRequest _httpServletRequest;
+	private final LiferayPortletResponse _liferayPortletResponse;
 	private String _redirect;
 	private long _sourceFolderId = -1;
 	private String _sourceFolderName;

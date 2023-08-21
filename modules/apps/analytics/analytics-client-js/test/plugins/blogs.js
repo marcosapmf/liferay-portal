@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import userEvent from '@testing-library/user-event';
@@ -21,11 +12,11 @@ const applicationId = 'Blog';
 
 const googleUrl = 'http://google.com/';
 
-const createBlogElement = () => {
+const createBlogElement = (assetId, assetTitle) => {
 	const blogElement = document.createElement('div');
 
-	blogElement.dataset.analyticsAssetId = 'assetId';
-	blogElement.dataset.analyticsAssetTitle = 'Blog Title 1';
+	blogElement.dataset.analyticsAssetId = assetId || 'assetId';
+	blogElement.dataset.analyticsAssetTitle = assetTitle || 'Blog Title 1';
 	blogElement.dataset.analyticsAssetType = 'blog';
 	blogElement.innerText =
 		'Lorem ipsum dolor, sit amet consectetur adipisicing elit.';
@@ -79,6 +70,36 @@ describe('Blogs Plugin', () => {
 					eventId: 'blogViewed',
 					properties: expect.objectContaining({
 						entryId: 'assetId',
+					}),
+				})
+			);
+
+			document.body.removeChild(blogElement);
+		});
+
+		it('remove spaces between assetTitle and assetId', async () => {
+			const blogElement = createBlogElement(
+				' myAssetId ',
+				' my asset title '
+			);
+
+			const domContentLoaded = new Event('DOMContentLoaded');
+
+			await document.dispatchEvent(domContentLoaded);
+
+			const events = Analytics.getEvents().filter(
+				({eventId}) => eventId === 'blogViewed'
+			);
+
+			expect(events.length).toBeGreaterThanOrEqual(1);
+
+			expect(events[0]).toEqual(
+				expect.objectContaining({
+					applicationId,
+					eventId: 'blogViewed',
+					properties: expect.objectContaining({
+						entryId: 'myAssetId',
+						title: 'my asset title',
 					}),
 				})
 			);

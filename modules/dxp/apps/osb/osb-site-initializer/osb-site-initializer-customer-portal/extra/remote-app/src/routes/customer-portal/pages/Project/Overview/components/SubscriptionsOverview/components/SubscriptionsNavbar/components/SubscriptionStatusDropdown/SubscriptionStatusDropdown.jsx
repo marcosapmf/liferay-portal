@@ -1,12 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {Button} from '@clayui/core';
@@ -57,8 +51,7 @@ const SubscriptionStatusDropdown = ({disabled, loading, onClick}) => {
 
 		if (currentActiveItems.length !== MAX_SUBSCRIPTION_STATUS) {
 			onClick(currentActiveItems.map((item) => item.label));
-		}
-		else {
+		} else {
 			onClick();
 		}
 
@@ -72,37 +65,6 @@ const SubscriptionStatusDropdown = ({disabled, loading, onClick}) => {
 
 		onClick(items.map((item) => item.label));
 	};
-
-	const getDropdownItems = () => (
-		<>
-			{items.map((item, index) => (
-				<DropDown.Item
-					className="pr-6"
-					disabled={
-						(item.active && activeItems.length < 2) || disabled
-					}
-					key={`${item.label}-${index}`}
-					onClick={() => handleOnClick(index)}
-					symbolRight={item.active && 'check'}
-				>
-					{i18n.translate(getKebabCase(item.label))}
-				</DropDown.Item>
-			))}
-
-			<DropDown.Item
-				className="pr-6"
-				disabled={
-					activeItems.length === MAX_SUBSCRIPTION_STATUS || disabled
-				}
-				onClick={() => handleClickAll()}
-				symbolRight={
-					activeItems.length === MAX_SUBSCRIPTION_STATUS && 'check'
-				}
-			>
-				{i18n.translate('all')}
-			</DropDown.Item>
-		</>
-	);
 
 	return (
 		<div className="align-items-center d-flex ml-2 mt-2">
@@ -124,7 +86,7 @@ const SubscriptionStatusDropdown = ({disabled, loading, onClick}) => {
 						borderless
 						className="align-items-center d-flex px-2"
 						disabled={disabled || loading}
-						small
+						size="sm"
 					>
 						{loading ? (
 							<Skeleton height={18} width={46} />
@@ -132,13 +94,43 @@ const SubscriptionStatusDropdown = ({disabled, loading, onClick}) => {
 							getTriggerLabel()
 						)}
 
-						<span className="inline-item inline-item-after">
+						<span className="inline-item-after">
 							<ClayIcon symbol="caret-bottom" />
 						</span>
 					</Button>
 				}
 			>
-				{getDropdownItems()}
+				<>
+					{items.map((item, index) => (
+						<DropDown.Item
+							className="pr-6"
+							disabled={
+								(item.active && activeItems.length < 2) ||
+								disabled
+							}
+							key={`${item.label}-${index}`}
+							onClick={() => handleOnClick(index)}
+							symbolRight={item.active && 'check'}
+						>
+							{i18n.translate(getKebabCase(item.label))}
+						</DropDown.Item>
+					))}
+
+					<DropDown.Item
+						className="pr-6"
+						disabled={
+							activeItems.length === MAX_SUBSCRIPTION_STATUS ||
+							disabled
+						}
+						onClick={() => handleClickAll()}
+						symbolRight={
+							activeItems.length === MAX_SUBSCRIPTION_STATUS &&
+							'check'
+						}
+					>
+						{i18n.translate('all')}
+					</DropDown.Item>
+				</>
 			</DropDown>
 		</div>
 	);

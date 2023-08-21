@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.data.engine.rest.internal.resource.v2_0;
@@ -32,6 +23,7 @@ import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.SetUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.odata.filter.ExpressionConvert;
@@ -821,20 +813,21 @@ public abstract class BaseDataRecordResourceImpl
 			Map<String, Serializable> parameters)
 		throws Exception {
 
-		UnsafeConsumer<DataRecord, Exception> dataRecordUnsafeConsumer = null;
+		UnsafeFunction<DataRecord, DataRecord, Exception>
+			dataRecordUnsafeFunction = null;
 
 		String createStrategy = (String)parameters.getOrDefault(
 			"createStrategy", "INSERT");
 
-		if ("INSERT".equalsIgnoreCase(createStrategy)) {
+		if (StringUtil.equalsIgnoreCase(createStrategy, "INSERT")) {
 			if (parameters.containsKey("dataDefinitionId")) {
-				dataRecordUnsafeConsumer =
+				dataRecordUnsafeFunction =
 					dataRecord -> postDataDefinitionDataRecord(
 						_parseLong((String)parameters.get("dataDefinitionId")),
 						dataRecord);
 			}
 			else if (parameters.containsKey("dataRecordCollectionId")) {
-				dataRecordUnsafeConsumer =
+				dataRecordUnsafeFunction =
 					dataRecord -> postDataRecordCollectionDataRecord(
 						_parseLong(
 							(String)parameters.get("dataRecordCollectionId")),
@@ -846,19 +839,23 @@ public abstract class BaseDataRecordResourceImpl
 			}
 		}
 
-		if (dataRecordUnsafeConsumer == null) {
+		if (dataRecordUnsafeFunction == null) {
 			throw new NotSupportedException(
 				"Create strategy \"" + createStrategy +
 					"\" is not supported for DataRecord");
 		}
 
-		if (contextBatchUnsafeConsumer != null) {
+		if (contextBatchUnsafeBiConsumer != null) {
+			contextBatchUnsafeBiConsumer.accept(
+				dataRecords, dataRecordUnsafeFunction);
+		}
+		else if (contextBatchUnsafeConsumer != null) {
 			contextBatchUnsafeConsumer.accept(
-				dataRecords, dataRecordUnsafeConsumer);
+				dataRecords, dataRecordUnsafeFunction::apply);
 		}
 		else {
 			for (DataRecord dataRecord : dataRecords) {
-				dataRecordUnsafeConsumer.accept(dataRecord);
+				dataRecordUnsafeFunction.apply(dataRecord);
 			}
 		}
 	}
@@ -953,38 +950,43 @@ public abstract class BaseDataRecordResourceImpl
 			Map<String, Serializable> parameters)
 		throws Exception {
 
-		UnsafeConsumer<DataRecord, Exception> dataRecordUnsafeConsumer = null;
+		UnsafeFunction<DataRecord, DataRecord, Exception>
+			dataRecordUnsafeFunction = null;
 
 		String updateStrategy = (String)parameters.getOrDefault(
 			"updateStrategy", "UPDATE");
 
-		if ("PARTIAL_UPDATE".equalsIgnoreCase(updateStrategy)) {
-			dataRecordUnsafeConsumer = dataRecord -> patchDataRecord(
+		if (StringUtil.equalsIgnoreCase(updateStrategy, "PARTIAL_UPDATE")) {
+			dataRecordUnsafeFunction = dataRecord -> patchDataRecord(
 				dataRecord.getId() != null ? dataRecord.getId() :
 					_parseLong((String)parameters.get("dataRecordId")),
 				dataRecord);
 		}
 
-		if ("UPDATE".equalsIgnoreCase(updateStrategy)) {
-			dataRecordUnsafeConsumer = dataRecord -> putDataRecord(
+		if (StringUtil.equalsIgnoreCase(updateStrategy, "UPDATE")) {
+			dataRecordUnsafeFunction = dataRecord -> putDataRecord(
 				dataRecord.getId() != null ? dataRecord.getId() :
 					_parseLong((String)parameters.get("dataRecordId")),
 				dataRecord);
 		}
 
-		if (dataRecordUnsafeConsumer == null) {
+		if (dataRecordUnsafeFunction == null) {
 			throw new NotSupportedException(
 				"Update strategy \"" + updateStrategy +
 					"\" is not supported for DataRecord");
 		}
 
-		if (contextBatchUnsafeConsumer != null) {
+		if (contextBatchUnsafeBiConsumer != null) {
+			contextBatchUnsafeBiConsumer.accept(
+				dataRecords, dataRecordUnsafeFunction);
+		}
+		else if (contextBatchUnsafeConsumer != null) {
 			contextBatchUnsafeConsumer.accept(
-				dataRecords, dataRecordUnsafeConsumer);
+				dataRecords, dataRecordUnsafeFunction::apply);
 		}
 		else {
 			for (DataRecord dataRecord : dataRecords) {
-				dataRecordUnsafeConsumer.accept(dataRecord);
+				dataRecordUnsafeFunction.apply(dataRecord);
 			}
 		}
 	}
@@ -999,6 +1001,15 @@ public abstract class BaseDataRecordResourceImpl
 
 	public void setContextAcceptLanguage(AcceptLanguage contextAcceptLanguage) {
 		this.contextAcceptLanguage = contextAcceptLanguage;
+	}
+
+	public void setContextBatchUnsafeBiConsumer(
+		UnsafeBiConsumer
+			<Collection<DataRecord>,
+			 UnsafeFunction<DataRecord, DataRecord, Exception>, Exception>
+				contextBatchUnsafeBiConsumer) {
+
+		this.contextBatchUnsafeBiConsumer = contextBatchUnsafeBiConsumer;
 	}
 
 	public void setContextBatchUnsafeConsumer(
@@ -1263,6 +1274,10 @@ public abstract class BaseDataRecordResourceImpl
 	}
 
 	protected AcceptLanguage contextAcceptLanguage;
+	protected UnsafeBiConsumer
+		<Collection<DataRecord>,
+		 UnsafeFunction<DataRecord, DataRecord, Exception>, Exception>
+			contextBatchUnsafeBiConsumer;
 	protected UnsafeBiConsumer
 		<Collection<DataRecord>, UnsafeConsumer<DataRecord, Exception>,
 		 Exception> contextBatchUnsafeConsumer;

@@ -17,9 +17,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -152,6 +152,10 @@ definition {
 			userLoginEmailAddress = "test@liferay.com",
 			userLoginFullName = "Test Test");
 
+		Site.openSiteSettingsAdmin(siteURLKey = "site-name");
+
+		Site.manageMembershipOptions(allowManualMembershipManagement = "true");
+
 		User.openUsersAdmin();
 
 		User.editUserSiteCP(
@@ -214,7 +218,7 @@ definition {
 
 		Role.removePermissionPG(
 			permissionDefinitionKey = "INLINE_PERMISSIONS_VIEW_CHECKBOX",
-			roleTitle = "user");
+			roleTitle = "User");
 
 		User.logoutAndLoginPG(
 			userLoginEmailAddress = "user1@liferay.com",

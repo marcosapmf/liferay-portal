@@ -1,20 +1,11 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.osb.faro.engine.client.http.client;
 
-import com.liferay.osb.faro.engine.client.constants.TokenConstants;
+import com.liferay.osb.faro.engine.client.util.TokenUtil;
 import com.liferay.osb.faro.model.FaroProject;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ListUtil;
@@ -57,11 +48,13 @@ public class AuthenticationClientHttpRequestInterceptor
 
 			httpHeaders.add(
 				_ASAH_PROJECT_ID_HEADER, _faroProject.getProjectId());
+
+			String originalURL = HttpRequestUtil.getOriginalURL(httpRequest);
+
 			httpHeaders.add(
 				_ASAH_SECURITY_SIGNATURE_HEADER,
 				DigestUtils.sha256Hex(
-					TokenConstants.OSB_ASAH_SECURITY_TOKEN.concat(
-						HttpRequestUtil.getOriginalURL(httpRequest))));
+					TokenUtil.getOSBAsahSecurityToken() + originalURL));
 		}
 		catch (Exception exception) {
 			throw new RuntimeException(exception);

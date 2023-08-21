@@ -1,3 +1,8 @@
+/**
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
+ */
+
 import {ReactNode} from 'react';
 
 import {AppProps} from '../../components/DashboardTable/DashboardTable';
@@ -6,7 +11,6 @@ import {Header} from '../../components/Header/Header';
 import {AppDetailsPage} from '../AppDetailsPage/AppDetailsPage';
 
 import './DashboardPage.scss';
-import {Liferay} from '../../liferay/liferay';
 
 export interface DashboardListItems {
 	itemIcon: string;
@@ -31,8 +35,8 @@ interface DashBoardPageProps {
 		title: string;
 	};
 	onButtonClick?: () => void;
-	setSelectedApp?: (value: AppProps | undefined) => void;
 	selectedApp?: AppProps;
+	setSelectedApp?: (value: AppProps | undefined) => void;
 }
 
 export function DashboardPage({

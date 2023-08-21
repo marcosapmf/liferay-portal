@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.admin.catalog.internal.resource.v1_0;
@@ -31,6 +22,7 @@ import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.SetUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.odata.filter.ExpressionConvert;
@@ -427,30 +419,34 @@ public abstract class BaseSpecificationResourceImpl
 			Map<String, Serializable> parameters)
 		throws Exception {
 
-		UnsafeConsumer<Specification, Exception> specificationUnsafeConsumer =
-			null;
+		UnsafeFunction<Specification, Specification, Exception>
+			specificationUnsafeFunction = null;
 
 		String createStrategy = (String)parameters.getOrDefault(
 			"createStrategy", "INSERT");
 
-		if ("INSERT".equalsIgnoreCase(createStrategy)) {
-			specificationUnsafeConsumer = specification -> postSpecification(
+		if (StringUtil.equalsIgnoreCase(createStrategy, "INSERT")) {
+			specificationUnsafeFunction = specification -> postSpecification(
 				specification);
 		}
 
-		if (specificationUnsafeConsumer == null) {
+		if (specificationUnsafeFunction == null) {
 			throw new NotSupportedException(
 				"Create strategy \"" + createStrategy +
 					"\" is not supported for Specification");
 		}
 
-		if (contextBatchUnsafeConsumer != null) {
+		if (contextBatchUnsafeBiConsumer != null) {
+			contextBatchUnsafeBiConsumer.accept(
+				specifications, specificationUnsafeFunction);
+		}
+		else if (contextBatchUnsafeConsumer != null) {
 			contextBatchUnsafeConsumer.accept(
-				specifications, specificationUnsafeConsumer);
+				specifications, specificationUnsafeFunction::apply);
 		}
 		else {
 			for (Specification specification : specifications) {
-				specificationUnsafeConsumer.accept(specification);
+				specificationUnsafeFunction.apply(specification);
 			}
 		}
 	}
@@ -530,32 +526,40 @@ public abstract class BaseSpecificationResourceImpl
 			Map<String, Serializable> parameters)
 		throws Exception {
 
-		UnsafeConsumer<Specification, Exception> specificationUnsafeConsumer =
-			null;
+		UnsafeFunction<Specification, Specification, Exception>
+			specificationUnsafeFunction = null;
 
 		String updateStrategy = (String)parameters.getOrDefault(
 			"updateStrategy", "UPDATE");
 
-		if ("PARTIAL_UPDATE".equalsIgnoreCase(updateStrategy)) {
-			specificationUnsafeConsumer = specification -> patchSpecification(
-				specification.getId() != null ? specification.getId() :
-					_parseLong((String)parameters.get("specificationId")),
-				specification);
+		if (StringUtil.equalsIgnoreCase(updateStrategy, "PARTIAL_UPDATE")) {
+			specificationUnsafeFunction = specification -> {
+				patchSpecification(
+					specification.getId() != null ? specification.getId() :
+						_parseLong((String)parameters.get("specificationId")),
+					specification);
+
+				return null;
+			};
 		}
 
-		if (specificationUnsafeConsumer == null) {
+		if (specificationUnsafeFunction == null) {
 			throw new NotSupportedException(
 				"Update strategy \"" + updateStrategy +
 					"\" is not supported for Specification");
 		}
 
-		if (contextBatchUnsafeConsumer != null) {
+		if (contextBatchUnsafeBiConsumer != null) {
+			contextBatchUnsafeBiConsumer.accept(
+				specifications, specificationUnsafeFunction);
+		}
+		else if (contextBatchUnsafeConsumer != null) {
 			contextBatchUnsafeConsumer.accept(
-				specifications, specificationUnsafeConsumer);
+				specifications, specificationUnsafeFunction::apply);
 		}
 		else {
 			for (Specification specification : specifications) {
-				specificationUnsafeConsumer.accept(specification);
+				specificationUnsafeFunction.apply(specification);
 			}
 		}
 	}
@@ -570,6 +574,15 @@ public abstract class BaseSpecificationResourceImpl
 
 	public void setContextAcceptLanguage(AcceptLanguage contextAcceptLanguage) {
 		this.contextAcceptLanguage = contextAcceptLanguage;
+	}
+
+	public void setContextBatchUnsafeBiConsumer(
+		UnsafeBiConsumer
+			<Collection<Specification>,
+			 UnsafeFunction<Specification, Specification, Exception>, Exception>
+				contextBatchUnsafeBiConsumer) {
+
+		this.contextBatchUnsafeBiConsumer = contextBatchUnsafeBiConsumer;
 	}
 
 	public void setContextBatchUnsafeConsumer(
@@ -831,6 +844,10 @@ public abstract class BaseSpecificationResourceImpl
 	}
 
 	protected AcceptLanguage contextAcceptLanguage;
+	protected UnsafeBiConsumer
+		<Collection<Specification>,
+		 UnsafeFunction<Specification, Specification, Exception>, Exception>
+			contextBatchUnsafeBiConsumer;
 	protected UnsafeBiConsumer
 		<Collection<Specification>, UnsafeConsumer<Specification, Exception>,
 		 Exception> contextBatchUnsafeConsumer;

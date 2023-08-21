@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.service;
@@ -51,7 +42,8 @@ public class ObjectFieldLocalServiceUtil {
 			String businessType, String dbType, boolean indexed,
 			boolean indexedAsKeyword, String indexedLanguageId,
 			Map<java.util.Locale, String> labelMap, boolean localized,
-			String name, boolean required, boolean state,
+			String name, String readOnly, String readOnlyConditionExpression,
+			boolean required, boolean state,
 			List<com.liferay.object.model.ObjectFieldSetting>
 				objectFieldSettings)
 		throws PortalException {
@@ -59,8 +51,8 @@ public class ObjectFieldLocalServiceUtil {
 		return getService().addCustomObjectField(
 			externalReferenceCode, userId, listTypeDefinitionId,
 			objectDefinitionId, businessType, dbType, indexed, indexedAsKeyword,
-			indexedLanguageId, labelMap, localized, name, required, state,
-			objectFieldSettings);
+			indexedLanguageId, labelMap, localized, name, readOnly,
+			readOnlyConditionExpression, required, state, objectFieldSettings);
 	}
 
 	/**
@@ -83,7 +75,8 @@ public class ObjectFieldLocalServiceUtil {
 			String businessType, String dbType, boolean indexed,
 			boolean indexedAsKeyword, String indexedLanguageId,
 			Map<java.util.Locale, String> labelMap, boolean localized,
-			String name, boolean required, boolean state,
+			String name, String readOnly, String readOnlyConditionExpression,
+			boolean required, boolean state,
 			List<com.liferay.object.model.ObjectFieldSetting>
 				objectFieldSettings)
 		throws PortalException {
@@ -91,8 +84,8 @@ public class ObjectFieldLocalServiceUtil {
 		return getService().addOrUpdateCustomObjectField(
 			externalReferenceCode, objectFieldId, userId, listTypeDefinitionId,
 			objectDefinitionId, businessType, dbType, indexed, indexedAsKeyword,
-			indexedLanguageId, labelMap, localized, name, required, state,
-			objectFieldSettings);
+			indexedLanguageId, labelMap, localized, name, readOnly,
+			readOnlyConditionExpression, required, state, objectFieldSettings);
 	}
 
 	public static ObjectField addOrUpdateSystemObjectField(
@@ -335,8 +328,10 @@ public class ObjectFieldLocalServiceUtil {
 		return getService().getColumn(objectDefinitionId, name);
 	}
 
-	public static List<ObjectField> getCustomObjectFields(long objectFieldId) {
-		return getService().getCustomObjectFields(objectFieldId);
+	public static List<ObjectField> getCustomObjectFields(
+		long objectDefinitionId) {
+
+		return getService().getCustomObjectFields(objectDefinitionId);
 	}
 
 	public static com.liferay.portal.kernel.dao.orm.ExportActionableDynamicQuery
@@ -361,6 +356,12 @@ public class ObjectFieldLocalServiceUtil {
 			listTypeDefinitionId, state);
 	}
 
+	public static List<ObjectField> getLocalizedObjectFields(
+		long objectDefinitionId) {
+
+		return getService().getLocalizedObjectFields(objectDefinitionId);
+	}
+
 	/**
 	 * Returns the object field with the primary key.
 	 *
@@ -379,6 +380,14 @@ public class ObjectFieldLocalServiceUtil {
 		throws PortalException {
 
 		return getService().getObjectField(objectDefinitionId, name);
+	}
+
+	public static ObjectField getObjectField(
+			String externalReferenceCode, long objectDefinitionId)
+		throws PortalException {
+
+		return getService().getObjectField(
+			externalReferenceCode, objectDefinitionId);
 	}
 
 	/**
@@ -440,6 +449,12 @@ public class ObjectFieldLocalServiceUtil {
 		return getService().getObjectFieldsCount(objectDefinitionId);
 	}
 
+	public static int getObjectFieldsCount(
+		long objectDefinitionId, boolean system) {
+
+		return getService().getObjectFieldsCount(objectDefinitionId, system);
+	}
+
 	public static int getObjectFieldsCountByListTypeDefinitionId(
 		long listTypeDefinitionId) {
 
@@ -477,7 +492,8 @@ public class ObjectFieldLocalServiceUtil {
 			long listTypeDefinitionId, String businessType, String dbType,
 			boolean indexed, boolean indexedAsKeyword, String indexedLanguageId,
 			Map<java.util.Locale, String> labelMap, boolean localized,
-			String name, boolean required, boolean state,
+			String name, String readOnly, String readOnlyConditionExpression,
+			boolean required, boolean state,
 			List<com.liferay.object.model.ObjectFieldSetting>
 				objectFieldSettings)
 		throws PortalException {
@@ -485,7 +501,8 @@ public class ObjectFieldLocalServiceUtil {
 		return getService().updateCustomObjectField(
 			externalReferenceCode, objectFieldId, listTypeDefinitionId,
 			businessType, dbType, indexed, indexedAsKeyword, indexedLanguageId,
-			labelMap, localized, name, required, state, objectFieldSettings);
+			labelMap, localized, name, readOnly, readOnlyConditionExpression,
+			required, state, objectFieldSettings);
 	}
 
 	/**
@@ -508,7 +525,8 @@ public class ObjectFieldLocalServiceUtil {
 			String businessType, String dbColumnName, String dbTableName,
 			String dbType, boolean indexed, boolean indexedAsKeyword,
 			String indexedLanguageId, Map<java.util.Locale, String> labelMap,
-			boolean localized, String name, boolean required, boolean state,
+			boolean localized, String name, String readOnly,
+			String readOnlyConditionExpression, boolean required, boolean state,
 			boolean system,
 			List<com.liferay.object.model.ObjectFieldSetting>
 				objectFieldSettings)
@@ -518,7 +536,8 @@ public class ObjectFieldLocalServiceUtil {
 			externalReferenceCode, objectFieldId, userId, listTypeDefinitionId,
 			objectDefinitionId, businessType, dbColumnName, dbTableName, dbType,
 			indexed, indexedAsKeyword, indexedLanguageId, labelMap, localized,
-			name, required, state, system, objectFieldSettings);
+			name, readOnly, readOnlyConditionExpression, required, state,
+			system, objectFieldSettings);
 	}
 
 	public static ObjectField updateRequired(
@@ -530,6 +549,10 @@ public class ObjectFieldLocalServiceUtil {
 
 	public static ObjectFieldLocalService getService() {
 		return _service;
+	}
+
+	public static void setService(ObjectFieldLocalService service) {
+		_service = service;
 	}
 
 	private static volatile ObjectFieldLocalService _service;

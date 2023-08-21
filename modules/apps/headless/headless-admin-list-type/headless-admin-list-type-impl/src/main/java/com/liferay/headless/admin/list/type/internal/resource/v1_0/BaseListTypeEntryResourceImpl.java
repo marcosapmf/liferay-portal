@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.admin.list.type.internal.resource.v1_0;
@@ -31,6 +22,7 @@ import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.SetUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.odata.filter.ExpressionConvert;
@@ -626,15 +618,15 @@ public abstract class BaseListTypeEntryResourceImpl
 			Map<String, Serializable> parameters)
 		throws Exception {
 
-		UnsafeConsumer<ListTypeEntry, Exception> listTypeEntryUnsafeConsumer =
-			null;
+		UnsafeFunction<ListTypeEntry, ListTypeEntry, Exception>
+			listTypeEntryUnsafeFunction = null;
 
 		String createStrategy = (String)parameters.getOrDefault(
 			"createStrategy", "INSERT");
 
-		if ("INSERT".equalsIgnoreCase(createStrategy)) {
+		if (StringUtil.equalsIgnoreCase(createStrategy, "INSERT")) {
 			if (parameters.containsKey("listTypeDefinitionId")) {
-				listTypeEntryUnsafeConsumer =
+				listTypeEntryUnsafeFunction =
 					listTypeEntry -> postListTypeDefinitionListTypeEntry(
 						_parseLong(
 							(String)parameters.get("listTypeDefinitionId")),
@@ -646,19 +638,23 @@ public abstract class BaseListTypeEntryResourceImpl
 			}
 		}
 
-		if (listTypeEntryUnsafeConsumer == null) {
+		if (listTypeEntryUnsafeFunction == null) {
 			throw new NotSupportedException(
 				"Create strategy \"" + createStrategy +
 					"\" is not supported for ListTypeEntry");
 		}
 
-		if (contextBatchUnsafeConsumer != null) {
+		if (contextBatchUnsafeBiConsumer != null) {
+			contextBatchUnsafeBiConsumer.accept(
+				listTypeEntries, listTypeEntryUnsafeFunction);
+		}
+		else if (contextBatchUnsafeConsumer != null) {
 			contextBatchUnsafeConsumer.accept(
-				listTypeEntries, listTypeEntryUnsafeConsumer);
+				listTypeEntries, listTypeEntryUnsafeFunction::apply);
 		}
 		else {
 			for (ListTypeEntry listTypeEntry : listTypeEntries) {
-				listTypeEntryUnsafeConsumer.accept(listTypeEntry);
+				listTypeEntryUnsafeFunction.apply(listTypeEntry);
 			}
 		}
 	}
@@ -746,32 +742,36 @@ public abstract class BaseListTypeEntryResourceImpl
 			Map<String, Serializable> parameters)
 		throws Exception {
 
-		UnsafeConsumer<ListTypeEntry, Exception> listTypeEntryUnsafeConsumer =
-			null;
+		UnsafeFunction<ListTypeEntry, ListTypeEntry, Exception>
+			listTypeEntryUnsafeFunction = null;
 
 		String updateStrategy = (String)parameters.getOrDefault(
 			"updateStrategy", "UPDATE");
 
-		if ("UPDATE".equalsIgnoreCase(updateStrategy)) {
-			listTypeEntryUnsafeConsumer = listTypeEntry -> putListTypeEntry(
+		if (StringUtil.equalsIgnoreCase(updateStrategy, "UPDATE")) {
+			listTypeEntryUnsafeFunction = listTypeEntry -> putListTypeEntry(
 				listTypeEntry.getId() != null ? listTypeEntry.getId() :
 					_parseLong((String)parameters.get("listTypeEntryId")),
 				listTypeEntry);
 		}
 
-		if (listTypeEntryUnsafeConsumer == null) {
+		if (listTypeEntryUnsafeFunction == null) {
 			throw new NotSupportedException(
 				"Update strategy \"" + updateStrategy +
 					"\" is not supported for ListTypeEntry");
 		}
 
-		if (contextBatchUnsafeConsumer != null) {
+		if (contextBatchUnsafeBiConsumer != null) {
+			contextBatchUnsafeBiConsumer.accept(
+				listTypeEntries, listTypeEntryUnsafeFunction);
+		}
+		else if (contextBatchUnsafeConsumer != null) {
 			contextBatchUnsafeConsumer.accept(
-				listTypeEntries, listTypeEntryUnsafeConsumer);
+				listTypeEntries, listTypeEntryUnsafeFunction::apply);
 		}
 		else {
 			for (ListTypeEntry listTypeEntry : listTypeEntries) {
-				listTypeEntryUnsafeConsumer.accept(listTypeEntry);
+				listTypeEntryUnsafeFunction.apply(listTypeEntry);
 			}
 		}
 	}
@@ -786,6 +786,15 @@ public abstract class BaseListTypeEntryResourceImpl
 
 	public void setContextAcceptLanguage(AcceptLanguage contextAcceptLanguage) {
 		this.contextAcceptLanguage = contextAcceptLanguage;
+	}
+
+	public void setContextBatchUnsafeBiConsumer(
+		UnsafeBiConsumer
+			<Collection<ListTypeEntry>,
+			 UnsafeFunction<ListTypeEntry, ListTypeEntry, Exception>, Exception>
+				contextBatchUnsafeBiConsumer) {
+
+		this.contextBatchUnsafeBiConsumer = contextBatchUnsafeBiConsumer;
 	}
 
 	public void setContextBatchUnsafeConsumer(
@@ -1047,6 +1056,10 @@ public abstract class BaseListTypeEntryResourceImpl
 	}
 
 	protected AcceptLanguage contextAcceptLanguage;
+	protected UnsafeBiConsumer
+		<Collection<ListTypeEntry>,
+		 UnsafeFunction<ListTypeEntry, ListTypeEntry, Exception>, Exception>
+			contextBatchUnsafeBiConsumer;
 	protected UnsafeBiConsumer
 		<Collection<ListTypeEntry>, UnsafeConsumer<ListTypeEntry, Exception>,
 		 Exception> contextBatchUnsafeConsumer;

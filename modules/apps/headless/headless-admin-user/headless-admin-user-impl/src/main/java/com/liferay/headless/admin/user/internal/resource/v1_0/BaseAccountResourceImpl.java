@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.admin.user.internal.resource.v1_0;
@@ -20,6 +11,7 @@ import com.liferay.petra.function.UnsafeBiConsumer;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.petra.function.transform.TransformUtil;
+import com.liferay.portal.kernel.exception.NoSuchModelException;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.GroupedModel;
 import com.liferay.portal.kernel.search.Sort;
@@ -31,6 +23,7 @@ import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.SetUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.odata.filter.ExpressionConvert;
@@ -209,7 +202,7 @@ public abstract class BaseAccountResourceImpl
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'POST' 'http://localhost:8080/o/headless-admin-user/v1.0/accounts' -d $'{"accountUserAccounts": ___, "customFields": ___, "description": ___, "domains": ___, "externalReferenceCode": ___, "name": ___, "organizationIds": ___, "parentAccountId": ___, "status": ___, "type": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 * curl -X 'POST' 'http://localhost:8080/o/headless-admin-user/v1.0/accounts' -d $'{"accountUserAccounts": ___, "customFields": ___, "defaultBillingAddressId": ___, "defaultShippingAddressId": ___, "description": ___, "domains": ___, "externalReferenceCode": ___, "logoId": ___, "logoURL": ___, "name": ___, "organizationIds": ___, "parentAccountId": ___, "postalAddresses": ___, "status": ___, "taxId": ___, "type": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Operation(
 		description = "Creates a new account"
@@ -338,7 +331,7 @@ public abstract class BaseAccountResourceImpl
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'PATCH' 'http://localhost:8080/o/headless-admin-user/v1.0/accounts/by-external-reference-code/{externalReferenceCode}' -d $'{"accountUserAccounts": ___, "customFields": ___, "description": ___, "domains": ___, "externalReferenceCode": ___, "name": ___, "organizationIds": ___, "parentAccountId": ___, "status": ___, "type": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 * curl -X 'PATCH' 'http://localhost:8080/o/headless-admin-user/v1.0/accounts/by-external-reference-code/{externalReferenceCode}' -d $'{"accountUserAccounts": ___, "customFields": ___, "defaultBillingAddressId": ___, "defaultShippingAddressId": ___, "description": ___, "domains": ___, "externalReferenceCode": ___, "logoId": ___, "logoURL": ___, "name": ___, "organizationIds": ___, "parentAccountId": ___, "postalAddresses": ___, "status": ___, "taxId": ___, "type": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Operation(
 		description = "Updates the account with information sent in the request body. Only the provided fields are updated."
@@ -374,6 +367,16 @@ public abstract class BaseAccountResourceImpl
 
 		existingAccount.setCustomFields(account.getCustomFields());
 
+		if (account.getDefaultBillingAddressId() != null) {
+			existingAccount.setDefaultBillingAddressId(
+				account.getDefaultBillingAddressId());
+		}
+
+		if (account.getDefaultShippingAddressId() != null) {
+			existingAccount.setDefaultShippingAddressId(
+				account.getDefaultShippingAddressId());
+		}
+
 		if (account.getDescription() != null) {
 			existingAccount.setDescription(account.getDescription());
 		}
@@ -385,6 +388,14 @@ public abstract class BaseAccountResourceImpl
 		if (account.getExternalReferenceCode() != null) {
 			existingAccount.setExternalReferenceCode(
 				account.getExternalReferenceCode());
+		}
+
+		if (account.getLogoId() != null) {
+			existingAccount.setLogoId(account.getLogoId());
+		}
+
+		if (account.getLogoURL() != null) {
+			existingAccount.setLogoURL(account.getLogoURL());
 		}
 
 		if (account.getName() != null) {
@@ -403,6 +414,10 @@ public abstract class BaseAccountResourceImpl
 			existingAccount.setStatus(account.getStatus());
 		}
 
+		if (account.getTaxId() != null) {
+			existingAccount.setTaxId(account.getTaxId());
+		}
+
 		if (account.getType() != null) {
 			existingAccount.setType(account.getType());
 		}
@@ -416,7 +431,7 @@ public abstract class BaseAccountResourceImpl
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'PUT' 'http://localhost:8080/o/headless-admin-user/v1.0/accounts/by-external-reference-code/{externalReferenceCode}' -d $'{"accountUserAccounts": ___, "customFields": ___, "description": ___, "domains": ___, "externalReferenceCode": ___, "name": ___, "organizationIds": ___, "parentAccountId": ___, "status": ___, "type": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 * curl -X 'PUT' 'http://localhost:8080/o/headless-admin-user/v1.0/accounts/by-external-reference-code/{externalReferenceCode}' -d $'{"accountUserAccounts": ___, "customFields": ___, "defaultBillingAddressId": ___, "defaultShippingAddressId": ___, "description": ___, "domains": ___, "externalReferenceCode": ___, "logoId": ___, "logoURL": ___, "name": ___, "organizationIds": ___, "parentAccountId": ___, "postalAddresses": ___, "status": ___, "taxId": ___, "type": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Operation(
 		description = "Replaces the account with information sent in the request body. Any missing fields are deleted unless they are required."
@@ -558,7 +573,7 @@ public abstract class BaseAccountResourceImpl
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'PATCH' 'http://localhost:8080/o/headless-admin-user/v1.0/accounts/{accountId}' -d $'{"accountUserAccounts": ___, "customFields": ___, "description": ___, "domains": ___, "externalReferenceCode": ___, "name": ___, "organizationIds": ___, "parentAccountId": ___, "status": ___, "type": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 * curl -X 'PATCH' 'http://localhost:8080/o/headless-admin-user/v1.0/accounts/{accountId}' -d $'{"accountUserAccounts": ___, "customFields": ___, "defaultBillingAddressId": ___, "defaultShippingAddressId": ___, "description": ___, "domains": ___, "externalReferenceCode": ___, "logoId": ___, "logoURL": ___, "name": ___, "organizationIds": ___, "parentAccountId": ___, "postalAddresses": ___, "status": ___, "taxId": ___, "type": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Operation(
 		description = "Updates the account with information sent in the request body. Only the provided fields are updated."
@@ -591,6 +606,16 @@ public abstract class BaseAccountResourceImpl
 
 		existingAccount.setCustomFields(account.getCustomFields());
 
+		if (account.getDefaultBillingAddressId() != null) {
+			existingAccount.setDefaultBillingAddressId(
+				account.getDefaultBillingAddressId());
+		}
+
+		if (account.getDefaultShippingAddressId() != null) {
+			existingAccount.setDefaultShippingAddressId(
+				account.getDefaultShippingAddressId());
+		}
+
 		if (account.getDescription() != null) {
 			existingAccount.setDescription(account.getDescription());
 		}
@@ -602,6 +627,14 @@ public abstract class BaseAccountResourceImpl
 		if (account.getExternalReferenceCode() != null) {
 			existingAccount.setExternalReferenceCode(
 				account.getExternalReferenceCode());
+		}
+
+		if (account.getLogoId() != null) {
+			existingAccount.setLogoId(account.getLogoId());
+		}
+
+		if (account.getLogoURL() != null) {
+			existingAccount.setLogoURL(account.getLogoURL());
 		}
 
 		if (account.getName() != null) {
@@ -620,6 +653,10 @@ public abstract class BaseAccountResourceImpl
 			existingAccount.setStatus(account.getStatus());
 		}
 
+		if (account.getTaxId() != null) {
+			existingAccount.setTaxId(account.getTaxId());
+		}
+
 		if (account.getType() != null) {
 			existingAccount.setType(account.getType());
 		}
@@ -632,7 +669,7 @@ public abstract class BaseAccountResourceImpl
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'PUT' 'http://localhost:8080/o/headless-admin-user/v1.0/accounts/{accountId}' -d $'{"accountUserAccounts": ___, "customFields": ___, "description": ___, "domains": ___, "externalReferenceCode": ___, "name": ___, "organizationIds": ___, "parentAccountId": ___, "status": ___, "type": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 * curl -X 'PUT' 'http://localhost:8080/o/headless-admin-user/v1.0/accounts/{accountId}' -d $'{"accountUserAccounts": ___, "customFields": ___, "defaultBillingAddressId": ___, "defaultShippingAddressId": ___, "description": ___, "domains": ___, "externalReferenceCode": ___, "logoId": ___, "logoURL": ___, "name": ___, "organizationIds": ___, "parentAccountId": ___, "postalAddresses": ___, "status": ___, "taxId": ___, "type": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Operation(
 		description = "Replaces the account with information sent in the request body. Any missing fields are deleted unless they are required."
@@ -1062,33 +1099,65 @@ public abstract class BaseAccountResourceImpl
 			Collection<Account> accounts, Map<String, Serializable> parameters)
 		throws Exception {
 
-		UnsafeConsumer<Account, Exception> accountUnsafeConsumer = null;
+		UnsafeFunction<Account, Account, Exception> accountUnsafeFunction =
+			null;
 
 		String createStrategy = (String)parameters.getOrDefault(
 			"createStrategy", "INSERT");
 
-		if ("INSERT".equalsIgnoreCase(createStrategy)) {
-			accountUnsafeConsumer = account -> postAccount(account);
+		if (StringUtil.equalsIgnoreCase(createStrategy, "INSERT")) {
+			accountUnsafeFunction = account -> postAccount(account);
 		}
 
-		if ("UPSERT".equalsIgnoreCase(createStrategy)) {
-			accountUnsafeConsumer =
-				account -> putAccountByExternalReferenceCode(
-					account.getExternalReferenceCode(), account);
+		if (StringUtil.equalsIgnoreCase(createStrategy, "UPSERT")) {
+			String updateStrategy = (String)parameters.getOrDefault(
+				"updateStrategy", "UPDATE");
+
+			if (StringUtil.equalsIgnoreCase(updateStrategy, "UPDATE")) {
+				accountUnsafeFunction =
+					account -> putAccountByExternalReferenceCode(
+						account.getExternalReferenceCode(), account);
+			}
+
+			if (StringUtil.equalsIgnoreCase(updateStrategy, "PARTIAL_UPDATE")) {
+				accountUnsafeFunction = account -> {
+					Account persistedAccount = null;
+
+					try {
+						Account getAccount = getAccountByExternalReferenceCode(
+							account.getExternalReferenceCode());
+
+						persistedAccount = patchAccount(
+							getAccount.getId() != null ? getAccount.getId() :
+								_parseLong((String)parameters.get("accountId")),
+							account);
+					}
+					catch (NoSuchModelException noSuchModelException) {
+						persistedAccount = postAccount(account);
+					}
+
+					return persistedAccount;
+				};
+			}
 		}
 
-		if (accountUnsafeConsumer == null) {
+		if (accountUnsafeFunction == null) {
 			throw new NotSupportedException(
 				"Create strategy \"" + createStrategy +
 					"\" is not supported for Account");
 		}
 
-		if (contextBatchUnsafeConsumer != null) {
-			contextBatchUnsafeConsumer.accept(accounts, accountUnsafeConsumer);
+		if (contextBatchUnsafeBiConsumer != null) {
+			contextBatchUnsafeBiConsumer.accept(
+				accounts, accountUnsafeFunction);
+		}
+		else if (contextBatchUnsafeConsumer != null) {
+			contextBatchUnsafeConsumer.accept(
+				accounts, accountUnsafeFunction::apply);
 		}
 		else {
 			for (Account account : accounts) {
-				accountUnsafeConsumer.accept(account);
+				accountUnsafeFunction.apply(account);
 			}
 		}
 	}
@@ -1173,37 +1242,43 @@ public abstract class BaseAccountResourceImpl
 			Collection<Account> accounts, Map<String, Serializable> parameters)
 		throws Exception {
 
-		UnsafeConsumer<Account, Exception> accountUnsafeConsumer = null;
+		UnsafeFunction<Account, Account, Exception> accountUnsafeFunction =
+			null;
 
 		String updateStrategy = (String)parameters.getOrDefault(
 			"updateStrategy", "UPDATE");
 
-		if ("PARTIAL_UPDATE".equalsIgnoreCase(updateStrategy)) {
-			accountUnsafeConsumer = account -> patchAccount(
+		if (StringUtil.equalsIgnoreCase(updateStrategy, "PARTIAL_UPDATE")) {
+			accountUnsafeFunction = account -> patchAccount(
 				account.getId() != null ? account.getId() :
 					_parseLong((String)parameters.get("accountId")),
 				account);
 		}
 
-		if ("UPDATE".equalsIgnoreCase(updateStrategy)) {
-			accountUnsafeConsumer = account -> putAccount(
+		if (StringUtil.equalsIgnoreCase(updateStrategy, "UPDATE")) {
+			accountUnsafeFunction = account -> putAccount(
 				account.getId() != null ? account.getId() :
 					_parseLong((String)parameters.get("accountId")),
 				account);
 		}
 
-		if (accountUnsafeConsumer == null) {
+		if (accountUnsafeFunction == null) {
 			throw new NotSupportedException(
 				"Update strategy \"" + updateStrategy +
 					"\" is not supported for Account");
 		}
 
-		if (contextBatchUnsafeConsumer != null) {
-			contextBatchUnsafeConsumer.accept(accounts, accountUnsafeConsumer);
+		if (contextBatchUnsafeBiConsumer != null) {
+			contextBatchUnsafeBiConsumer.accept(
+				accounts, accountUnsafeFunction);
+		}
+		else if (contextBatchUnsafeConsumer != null) {
+			contextBatchUnsafeConsumer.accept(
+				accounts, accountUnsafeFunction::apply);
 		}
 		else {
 			for (Account account : accounts) {
-				accountUnsafeConsumer.accept(account);
+				accountUnsafeFunction.apply(account);
 			}
 		}
 	}
@@ -1218,6 +1293,14 @@ public abstract class BaseAccountResourceImpl
 
 	public void setContextAcceptLanguage(AcceptLanguage contextAcceptLanguage) {
 		this.contextAcceptLanguage = contextAcceptLanguage;
+	}
+
+	public void setContextBatchUnsafeBiConsumer(
+		UnsafeBiConsumer
+			<Collection<Account>, UnsafeFunction<Account, Account, Exception>,
+			 Exception> contextBatchUnsafeBiConsumer) {
+
+		this.contextBatchUnsafeBiConsumer = contextBatchUnsafeBiConsumer;
 	}
 
 	public void setContextBatchUnsafeConsumer(
@@ -1481,6 +1564,9 @@ public abstract class BaseAccountResourceImpl
 	}
 
 	protected AcceptLanguage contextAcceptLanguage;
+	protected UnsafeBiConsumer
+		<Collection<Account>, UnsafeFunction<Account, Account, Exception>,
+		 Exception> contextBatchUnsafeBiConsumer;
 	protected UnsafeBiConsumer
 		<Collection<Account>, UnsafeConsumer<Account, Exception>, Exception>
 			contextBatchUnsafeConsumer;

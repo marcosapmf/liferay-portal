@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.osb.faro.web.internal.servlet;
@@ -20,6 +11,7 @@ import com.liferay.osb.faro.model.FaroUser;
 import com.liferay.osb.faro.service.FaroEmailLocalService;
 import com.liferay.osb.faro.service.FaroUserLocalService;
 import com.liferay.osb.faro.util.EmailUtil;
+import com.liferay.osb.faro.util.FaroPropsValues;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.language.Language;
@@ -74,7 +66,8 @@ public class EmailServlet extends BaseAsahServlet {
 	}
 
 	private String _getDownloadURL(String batchId, long groupId) {
-		String url = _FARO_URL + "/o/proxy/download/data-control-tasks";
+		String url =
+			FaroPropsValues.FARO_URL + "/o/proxy/download/data-control-tasks";
 
 		url = HttpComponentsUtil.addParameter(url, "projectGroupId", groupId);
 
@@ -126,8 +119,6 @@ public class EmailServlet extends BaseAsahServlet {
 
 		_mailService.sendEmail(new MailMessage(from, to, subject, body, true));
 	}
-
-	private static final String _FARO_URL = System.getenv("FARO_URL");
 
 	@Reference
 	private FaroEmailLocalService _faroEmailLocalService;

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.change.tracking.service.http;
@@ -170,43 +161,6 @@ public class CTCollectionServiceHttp {
 		}
 	}
 
-	public static void discardCTEntries(
-			HttpPrincipal httpPrincipal, long ctCollectionId,
-			long modelClassNameId, long modelClassPK)
-		throws com.liferay.portal.kernel.exception.PortalException {
-
-		try {
-			MethodKey methodKey = new MethodKey(
-				CTCollectionServiceUtil.class, "discardCTEntries",
-				_discardCTEntriesParameterTypes3);
-
-			MethodHandler methodHandler = new MethodHandler(
-				methodKey, ctCollectionId, modelClassNameId, modelClassPK);
-
-			try {
-				TunnelUtil.invoke(httpPrincipal, methodHandler);
-			}
-			catch (Exception exception) {
-				if (exception instanceof
-						com.liferay.portal.kernel.exception.PortalException) {
-
-					throw (com.liferay.portal.kernel.exception.PortalException)
-						exception;
-				}
-
-				throw new com.liferay.portal.kernel.exception.SystemException(
-					exception);
-			}
-		}
-		catch (com.liferay.portal.kernel.exception.SystemException
-					systemException) {
-
-			_log.error(systemException, systemException);
-
-			throw systemException;
-		}
-	}
-
 	public static void discardCTEntry(
 			HttpPrincipal httpPrincipal, long ctCollectionId,
 			long modelClassNameId, long modelClassPK)
@@ -215,7 +169,7 @@ public class CTCollectionServiceHttp {
 		try {
 			MethodKey methodKey = new MethodKey(
 				CTCollectionServiceUtil.class, "discardCTEntry",
-				_discardCTEntryParameterTypes4);
+				_discardCTEntryParameterTypes3);
 
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, ctCollectionId, modelClassNameId, modelClassPK);
@@ -255,7 +209,7 @@ public class CTCollectionServiceHttp {
 		try {
 			MethodKey methodKey = new MethodKey(
 				CTCollectionServiceUtil.class, "getCTCollections",
-				_getCTCollectionsParameterTypes5);
+				_getCTCollectionsParameterTypes4);
 
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, companyId, statuses, start, end, orderByComparator);
@@ -293,7 +247,7 @@ public class CTCollectionServiceHttp {
 		try {
 			MethodKey methodKey = new MethodKey(
 				CTCollectionServiceUtil.class, "getCTCollections",
-				_getCTCollectionsParameterTypes6);
+				_getCTCollectionsParameterTypes5);
 
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, companyId, statuses, keywords, start, end,
@@ -328,7 +282,7 @@ public class CTCollectionServiceHttp {
 		try {
 			MethodKey methodKey = new MethodKey(
 				CTCollectionServiceUtil.class, "getCTCollectionsCount",
-				_getCTCollectionsCountParameterTypes7);
+				_getCTCollectionsCountParameterTypes6);
 
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, companyId, statuses, keywords);
@@ -362,7 +316,7 @@ public class CTCollectionServiceHttp {
 		try {
 			MethodKey methodKey = new MethodKey(
 				CTCollectionServiceUtil.class, "moveCTEntries",
-				_moveCTEntriesParameterTypes8);
+				_moveCTEntriesParameterTypes7);
 
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, fromCTCollectionId, toCTCollectionId, ctEntryIds);
@@ -402,7 +356,7 @@ public class CTCollectionServiceHttp {
 		try {
 			MethodKey methodKey = new MethodKey(
 				CTCollectionServiceUtil.class, "publishCTCollection",
-				_publishCTCollectionParameterTypes9);
+				_publishCTCollectionParameterTypes8);
 
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, userId, ctCollectionId);
@@ -440,7 +394,7 @@ public class CTCollectionServiceHttp {
 		try {
 			MethodKey methodKey = new MethodKey(
 				CTCollectionServiceUtil.class, "undoCTCollection",
-				_undoCTCollectionParameterTypes10);
+				_undoCTCollectionParameterTypes9);
 
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, ctCollectionId, userId, name, description);
@@ -482,7 +436,7 @@ public class CTCollectionServiceHttp {
 		try {
 			MethodKey methodKey = new MethodKey(
 				CTCollectionServiceUtil.class, "updateCTCollection",
-				_updateCTCollectionParameterTypes11);
+				_updateCTCollectionParameterTypes10);
 
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, userId, ctCollectionId, name, description);
@@ -524,29 +478,27 @@ public class CTCollectionServiceHttp {
 		new Class[] {long.class};
 	private static final Class<?>[] _deleteCTCollectionParameterTypes2 =
 		new Class[] {com.liferay.change.tracking.model.CTCollection.class};
-	private static final Class<?>[] _discardCTEntriesParameterTypes3 =
+	private static final Class<?>[] _discardCTEntryParameterTypes3 =
 		new Class[] {long.class, long.class, long.class};
-	private static final Class<?>[] _discardCTEntryParameterTypes4 =
-		new Class[] {long.class, long.class, long.class};
-	private static final Class<?>[] _getCTCollectionsParameterTypes5 =
+	private static final Class<?>[] _getCTCollectionsParameterTypes4 =
 		new Class[] {
 			long.class, int[].class, int.class, int.class,
 			com.liferay.portal.kernel.util.OrderByComparator.class
 		};
-	private static final Class<?>[] _getCTCollectionsParameterTypes6 =
+	private static final Class<?>[] _getCTCollectionsParameterTypes5 =
 		new Class[] {
 			long.class, int[].class, String.class, int.class, int.class,
 			com.liferay.portal.kernel.util.OrderByComparator.class
 		};
-	private static final Class<?>[] _getCTCollectionsCountParameterTypes7 =
+	private static final Class<?>[] _getCTCollectionsCountParameterTypes6 =
 		new Class[] {long.class, int[].class, String.class};
-	private static final Class<?>[] _moveCTEntriesParameterTypes8 =
+	private static final Class<?>[] _moveCTEntriesParameterTypes7 =
 		new Class[] {long.class, long.class, long[].class};
-	private static final Class<?>[] _publishCTCollectionParameterTypes9 =
+	private static final Class<?>[] _publishCTCollectionParameterTypes8 =
 		new Class[] {long.class, long.class};
-	private static final Class<?>[] _undoCTCollectionParameterTypes10 =
+	private static final Class<?>[] _undoCTCollectionParameterTypes9 =
 		new Class[] {long.class, long.class, String.class, String.class};
-	private static final Class<?>[] _updateCTCollectionParameterTypes11 =
+	private static final Class<?>[] _updateCTCollectionParameterTypes10 =
 		new Class[] {long.class, long.class, String.class, String.class};
 
 }

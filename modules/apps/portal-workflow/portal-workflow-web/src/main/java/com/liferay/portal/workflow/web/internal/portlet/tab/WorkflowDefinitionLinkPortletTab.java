@@ -1,22 +1,15 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.workflow.web.internal.portlet.tab;
 
+import com.liferay.osgi.util.service.Snapshot;
 import com.liferay.portal.kernel.resource.bundle.ResourceBundleLoaderUtil;
 import com.liferay.portal.kernel.service.WorkflowDefinitionLinkLocalService;
 import com.liferay.portal.kernel.workflow.WorkflowHandlerVisibleFilter;
+import com.liferay.portal.workflow.comparator.WorkflowComparatorFactory;
 import com.liferay.portal.workflow.constants.WorkflowWebKeys;
 import com.liferay.portal.workflow.portlet.tab.BaseWorkflowPortletTab;
 import com.liferay.portal.workflow.portlet.tab.WorkflowPortletTab;
@@ -30,9 +23,6 @@ import javax.servlet.ServletContext;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
-import org.osgi.service.component.annotations.ReferenceCardinality;
-import org.osgi.service.component.annotations.ReferencePolicy;
-import org.osgi.service.component.annotations.ReferencePolicyOption;
 
 /**
  * @author Adam Brandizzi
@@ -68,7 +58,8 @@ public class WorkflowDefinitionLinkPortletTab extends BaseWorkflowPortletTab {
 				renderRequest, renderResponse,
 				workflowDefinitionLinkLocalService,
 				ResourceBundleLoaderUtil.getPortalResourceBundleLoader(),
-				_workflowHandlerVisibleFilter);
+				_workflowHandlerVisibleFilterSnapshot.get(),
+				_workflowComparatorFactory);
 
 		renderRequest.setAttribute(
 			WorkflowWebKeys.WORKFLOW_DEFINITION_LINK_DISPLAY_CONTEXT,
@@ -84,16 +75,17 @@ public class WorkflowDefinitionLinkPortletTab extends BaseWorkflowPortletTab {
 	protected WorkflowDefinitionLinkLocalService
 		workflowDefinitionLinkLocalService;
 
+	private static final Snapshot<WorkflowHandlerVisibleFilter>
+		_workflowHandlerVisibleFilterSnapshot = new Snapshot<>(
+			WorkflowDefinitionLinkPortletTab.class,
+			WorkflowHandlerVisibleFilter.class, null, true);
+
 	@Reference(
 		target = "(osgi.web.symbolicname=com.liferay.portal.workflow.web)"
 	)
 	private ServletContext _servletContext;
 
-	@Reference(
-		cardinality = ReferenceCardinality.OPTIONAL,
-		policy = ReferencePolicy.DYNAMIC,
-		policyOption = ReferencePolicyOption.GREEDY
-	)
-	private volatile WorkflowHandlerVisibleFilter _workflowHandlerVisibleFilter;
+	@Reference
+	private WorkflowComparatorFactory _workflowComparatorFactory;
 
 }

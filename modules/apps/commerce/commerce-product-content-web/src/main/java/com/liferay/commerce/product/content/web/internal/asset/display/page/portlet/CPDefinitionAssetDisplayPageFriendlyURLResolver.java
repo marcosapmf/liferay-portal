@@ -1,19 +1,11 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.product.content.web.internal.asset.display.page.portlet;
 
+import com.liferay.account.constants.AccountConstants;
 import com.liferay.account.model.AccountEntry;
 import com.liferay.asset.display.page.configuration.AssetDisplayPageConfiguration;
 import com.liferay.asset.display.page.portlet.BaseAssetDisplayPageFriendlyURLResolver;
@@ -24,8 +16,6 @@ import com.liferay.asset.kernel.model.AssetRendererFactory;
 import com.liferay.asset.kernel.model.AssetTag;
 import com.liferay.asset.kernel.service.AssetTagLocalService;
 import com.liferay.asset.util.LinkedAssetEntryIdsUtil;
-import com.liferay.commerce.account.constants.CommerceAccountConstants;
-import com.liferay.commerce.account.util.CommerceAccountHelper;
 import com.liferay.commerce.product.catalog.CPCatalogEntry;
 import com.liferay.commerce.product.configuration.CPDisplayLayoutConfiguration;
 import com.liferay.commerce.product.constants.CPConstants;
@@ -41,6 +31,7 @@ import com.liferay.commerce.product.service.CProductLocalService;
 import com.liferay.commerce.product.service.CommerceChannelLocalService;
 import com.liferay.commerce.product.url.CPFriendlyURL;
 import com.liferay.commerce.product.util.CPDefinitionHelper;
+import com.liferay.commerce.util.CommerceAccountHelper;
 import com.liferay.friendly.url.model.FriendlyURLEntry;
 import com.liferay.friendly.url.service.FriendlyURLEntryLocalService;
 import com.liferay.info.constants.InfoDisplayWebKeys;
@@ -166,7 +157,6 @@ public class CPDefinitionAssetDisplayPageFriendlyURLResolver
 			httpServletRequest.setAttribute(
 				LayoutDisplayPageWebKeys.LAYOUT_DISPLAY_PAGE_OBJECT_PROVIDER,
 				layoutDisplayPageObjectProvider);
-
 			httpServletRequest.setAttribute(
 				LayoutDisplayPageWebKeys.LAYOUT_DISPLAY_PAGE_PROVIDER,
 				_getLayoutDisplayPageProvider(friendlyURL));
@@ -393,7 +383,7 @@ public class CPDefinitionAssetDisplayPageFriendlyURLResolver
 			long groupId, HttpServletRequest httpServletRequest)
 		throws PortalException {
 
-		long commerceAccountId = CommerceAccountConstants.ACCOUNT_ID_GUEST;
+		long commerceAccountId = AccountConstants.ACCOUNT_ENTRY_ID_GUEST;
 
 		AccountEntry accountEntry =
 			_commerceAccountHelper.getCurrentAccountEntry(

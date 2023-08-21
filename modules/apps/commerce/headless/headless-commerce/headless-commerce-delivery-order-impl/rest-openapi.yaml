@@ -393,8 +393,14 @@ components:
                     allOf:
                         - $ref: "#/components/schemas/Status"
                     readOnly: true
+                supplierShipment:
+                    readOnly: true
+                    type: boolean
                 trackingNumber:
                     example: "123AD-asd"
+                    readOnly: true
+                    type: string
+                trackingURL:
                     readOnly: true
                     type: string
             type: object
@@ -602,7 +608,7 @@ components:
 info:
     description:
         "Headless Delivery Commerce Order API. A Java client JAR is available for use with the group ID 'com.liferay',
-        artifact ID 'com.liferay.headless.commerce.delivery.order.client', and version '1.0.8'."
+        artifact ID 'com.liferay.headless.commerce.delivery.order.client', and version '1.0.11'."
     license:
         name: Apache 2.0
         url: http://www.apache.org/licenses/LICENSE-2.0.html

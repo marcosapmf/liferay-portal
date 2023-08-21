@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.product.service.test;
@@ -29,7 +20,6 @@ import com.liferay.commerce.product.service.CPDefinitionLocalService;
 import com.liferay.commerce.product.service.CPDefinitionOptionRelLocalService;
 import com.liferay.commerce.product.service.CPInstanceLocalService;
 import com.liferay.commerce.product.service.CPOptionLocalService;
-import com.liferay.commerce.product.service.CommerceCatalogLocalService;
 import com.liferay.commerce.product.service.CommerceCatalogLocalServiceUtil;
 import com.liferay.commerce.product.test.util.CPTestUtil;
 import com.liferay.commerce.product.type.simple.constants.SimpleCPTypeConstants;
@@ -367,6 +357,62 @@ public class CPDefinitionLocalServiceTest {
 	}
 
 	@Test
+	public void testClonedProductPriceChangeDoesNotAffectParent()
+		throws PortalException {
+
+		frutillaRule.scenario(
+			"Change Price of a cloned product sku"
+		).given(
+			"A product definition and its clone"
+		).when(
+			"changing the price of the cloned"
+		).then(
+			"the product price of the parent product is different from " +
+				"cloned product"
+		);
+
+		CPInstance cpInstance = CPTestUtil.addCPInstanceWithRandomSku(
+			_commerceCatalog.getGroupId(), new BigDecimal(5));
+
+		Assert.assertEquals(
+			WorkflowConstants.STATUS_APPROVED, cpInstance.getStatus());
+
+		CPDefinition duplicateCPDefinition =
+			_cpDefinitionLocalService.cloneCPDefinition(
+				_user.getUserId(), cpInstance.getCPDefinitionId(),
+				cpInstance.getGroupId(), _serviceContext);
+
+		CPInstance duplicateCPInstance = _cpInstanceLocalService.getCPInstance(
+			duplicateCPDefinition.getCPDefinitionId(), cpInstance.getSku());
+
+		CommercePriceList commercePriceList =
+			_commercePriceListLocalService.fetchCatalogBaseCommercePriceList(
+				duplicateCPInstance.getGroupId());
+
+		CommercePriceEntry duplicateCommercePriceEntry =
+			_commercePriceEntryLocalService.fetchCommercePriceEntry(
+				commercePriceList.getCommercePriceListId(),
+				duplicateCPInstance.getCPInstanceUuid());
+
+		duplicateCommercePriceEntry =
+			_commercePriceEntryLocalService.updateCommercePriceEntry(
+				duplicateCommercePriceEntry.getCommercePriceEntryId(),
+				BigDecimal.TEN, false, BigDecimal.ZERO, null, _serviceContext);
+
+		CommercePriceEntry commercePriceEntry =
+			_commercePriceEntryLocalService.fetchCommercePriceEntry(
+				commercePriceList.getCommercePriceListId(),
+				cpInstance.getCPInstanceUuid());
+
+		Assert.assertEquals(
+			BigDecimal.TEN, duplicateCommercePriceEntry.getPrice());
+
+		Assert.assertNotEquals(
+			commercePriceEntry.getPrice(),
+			duplicateCommercePriceEntry.getPrice());
+	}
+
+	@Test
 	public void testDeleteCPDefinitionWithIgnoreSKUCombinationsAndDefaultInstance()
 		throws Exception {
 
@@ -451,7 +497,8 @@ public class CPDefinitionLocalServiceTest {
 		commercePriceEntry =
 			_commercePriceEntryLocalService.updateCommercePriceEntry(
 				commercePriceEntry.getCommercePriceEntryId(), newPrice,
-				promoPrice, _serviceContext);
+				commercePriceEntry.isPriceOnApplication(), promoPrice, null,
+				_serviceContext);
 
 		CommercePriceEntry parentPriceEntry =
 			_commercePriceEntryLocalService.fetchCommercePriceEntry(
@@ -502,9 +549,6 @@ public class CPDefinitionLocalServiceTest {
 	private static User _user;
 
 	private CommerceCatalog _commerceCatalog;
-
-	@Inject
-	private CommerceCatalogLocalService _commerceCatalogLocalService;
 
 	@Inject
 	private CommercePriceEntryLocalService _commercePriceEntryLocalService;

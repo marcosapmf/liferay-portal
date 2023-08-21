@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.document.library.internal.configuration;
@@ -43,6 +34,12 @@ public class DLSizeLimitConfigurationProviderImpl
 	}
 
 	@Override
+	public long getCompanyMaxSizeToCopy(long companyId) {
+		return _dlSizeLimitManagedServiceFactory.getCompanyMaxSizeToCopy(
+			companyId);
+	}
+
+	@Override
 	public Map<String, Long> getCompanyMimeTypeSizeLimit(long companyId) {
 		return _dlSizeLimitManagedServiceFactory.getCompanyMimeTypeSizeLimit(
 			companyId);
@@ -51,6 +48,11 @@ public class DLSizeLimitConfigurationProviderImpl
 	@Override
 	public long getGroupFileMaxSize(long groupId) {
 		return _dlSizeLimitManagedServiceFactory.getGroupFileMaxSize(groupId);
+	}
+
+	@Override
+	public long getGroupMaxSizeToCopy(long groupId) {
+		return _dlSizeLimitManagedServiceFactory.getGroupMaxSizeToCopy(groupId);
 	}
 
 	@Override
@@ -65,13 +67,18 @@ public class DLSizeLimitConfigurationProviderImpl
 	}
 
 	@Override
+	public long getSystemMaxSizeToCopy() {
+		return _dlSizeLimitManagedServiceFactory.getSystemMaxSizeToCopy();
+	}
+
+	@Override
 	public Map<String, Long> getSystemMimeTypeSizeLimit() {
 		return _dlSizeLimitManagedServiceFactory.getSystemMimeTypeSizeLimit();
 	}
 
 	@Override
 	public void updateCompanySizeLimit(
-			long companyId, long fileMaxSize,
+			long companyId, long fileMaxSize, long maxSizeToCopy,
 			Map<String, Long> mimeTypeSizeLimit)
 		throws Exception {
 
@@ -97,13 +104,15 @@ public class DLSizeLimitConfigurationProviderImpl
 		_updateMimeTypeSizeLimitProperty(properties, mimeTypeSizeLimit);
 
 		properties.put("fileMaxSize", fileMaxSize);
+		properties.put("maxSizeToCopy", maxSizeToCopy);
 
 		configuration.update(properties);
 	}
 
 	@Override
 	public void updateGroupSizeLimit(
-			long groupId, long fileMaxSize, Map<String, Long> mimeTypeSizeLimit)
+			long groupId, long fileMaxSize, long maxSizeToCopy,
+			Map<String, Long> mimeTypeSizeLimit)
 		throws Exception {
 
 		Dictionary<String, Object> properties = null;
@@ -128,13 +137,15 @@ public class DLSizeLimitConfigurationProviderImpl
 		_updateMimeTypeSizeLimitProperty(properties, mimeTypeSizeLimit);
 
 		properties.put("fileMaxSize", fileMaxSize);
+		properties.put("maxSizeToCopy", maxSizeToCopy);
 
 		configuration.update(properties);
 	}
 
 	@Override
 	public void updateSystemSizeLimit(
-			long fileMaxSize, Map<String, Long> mimeTypeSizeLimit)
+			long fileMaxSize, long maxSizeToCopy,
+			Map<String, Long> mimeTypeSizeLimit)
 		throws Exception {
 
 		Configuration configuration = _configurationAdmin.getConfiguration(
@@ -149,6 +160,7 @@ public class DLSizeLimitConfigurationProviderImpl
 		_updateMimeTypeSizeLimitProperty(properties, mimeTypeSizeLimit);
 
 		properties.put("fileMaxSize", fileMaxSize);
+		properties.put("maxSizeToCopy", maxSizeToCopy);
 
 		configuration.update(properties);
 	}

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.osb.faro.web.internal.controller.main;
@@ -37,6 +28,7 @@ import com.liferay.osb.faro.service.FaroNotificationLocalService;
 import com.liferay.osb.faro.service.FaroProjectEmailDomainLocalService;
 import com.liferay.osb.faro.service.FaroProjectLocalService;
 import com.liferay.osb.faro.service.FaroUserLocalService;
+import com.liferay.osb.faro.util.FaroPropsValues;
 import com.liferay.osb.faro.web.internal.annotations.Unauthenticated;
 import com.liferay.osb.faro.web.internal.controller.BaseFaroController;
 import com.liferay.osb.faro.web.internal.controller.contacts.FieldMappingController;
@@ -400,7 +392,8 @@ public class ProjectController extends BaseFaroController {
 								faroProject.getCorpProjectUuid()))));
 			}
 
-			_faroProjectLocalService.updateFaroProject(faroProject);
+			faroProject = _faroProjectLocalService.updateFaroProject(
+				faroProject);
 		}
 
 		if (updateLastAccess &&
@@ -408,7 +401,8 @@ public class ProjectController extends BaseFaroController {
 
 			faroProject.setLastAccessTime(now);
 
-			_faroProjectLocalService.updateFaroProject(faroProject);
+			faroProject = _faroProjectLocalService.updateFaroProject(
+				faroProject);
 		}
 
 		return _getProjectDisplay(faroProject);
@@ -664,7 +658,6 @@ public class ProjectController extends BaseFaroController {
 				}
 
 				osbOfferingEntry.setQuantity(1);
-
 				osbOfferingEntry.setStartDate(new Date());
 
 				setOfferingEntries(Collections.singletonList(osbOfferingEntry));
@@ -719,8 +712,9 @@ public class ProjectController extends BaseFaroController {
 					groupFriendlyURLException.getType()));
 		}
 
-		if (corpProjectUuid.equals(_PROJECT_ID)) {
-			faroProject.setWeDeployKey(_DEFAULT_WE_DEPLOY_KEY);
+		if (corpProjectUuid.equals(FaroPropsValues.FARO_PROJECT_ID)) {
+			faroProject.setWeDeployKey(
+				FaroPropsValues.FARO_DEFAULT_WE_DEPLOY_KEY);
 		}
 
 		String weDeployKey =
@@ -994,9 +988,7 @@ public class ProjectController extends BaseFaroController {
 
 			faroProject.setState(FaroProjectConstants.STATE_READY);
 
-			_faroProjectLocalService.updateFaroProject(faroProject);
-
-			return faroProject;
+			return _faroProjectLocalService.updateFaroProject(faroProject);
 		}
 		finally {
 			_initializingGroupIds.remove(groupId);
@@ -1020,7 +1012,10 @@ public class ProjectController extends BaseFaroController {
 	private void _refreshProjectState(FaroProject faroProject)
 		throws Exception {
 
-		if (StringUtil.equals(faroProject.getCorpProjectUuid(), _PROJECT_ID)) {
+		if (StringUtil.equals(
+				faroProject.getCorpProjectUuid(),
+				FaroPropsValues.FARO_PROJECT_ID)) {
+
 			_initializeFaroProject(faroProject);
 
 			return;
@@ -1129,11 +1124,6 @@ public class ProjectController extends BaseFaroController {
 				"timeZoneId", _getTimeZoneIdErrorMessage(getUser()));
 		}
 	}
-
-	private static final String _DEFAULT_WE_DEPLOY_KEY = System.getenv(
-		"FARO_DEFAULT_WE_DEPLOY_KEY");
-
-	private static final String _PROJECT_ID = System.getenv("FARO_PROJECT_ID");
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		ProjectController.class);

@@ -1,26 +1,17 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.order.content.web.internal.frontend.data.set.provider;
 
+import com.liferay.commerce.constants.CommercePriceConstants;
 import com.liferay.commerce.constants.CommerceWebKeys;
 import com.liferay.commerce.context.CommerceContext;
 import com.liferay.commerce.currency.model.CommerceMoney;
 import com.liferay.commerce.model.CommerceOrder;
 import com.liferay.commerce.model.CommerceOrderItem;
 import com.liferay.commerce.order.content.web.internal.constants.CommerceOrderFDSNames;
-import com.liferay.commerce.order.content.web.internal.frontend.data.set.provider.search.OrderFDSKeywordsImpl;
 import com.liferay.commerce.order.content.web.internal.model.OrderItem;
 import com.liferay.commerce.price.CommerceOrderItemPrice;
 import com.liferay.commerce.price.CommerceOrderPriceCalculation;
@@ -44,6 +35,7 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.search.BaseModelSearchResult;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.BigDecimalUtil;
 import com.liferay.portal.kernel.util.KeyValuePair;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
@@ -99,16 +91,20 @@ public class PlacedCommerceOrderItemFDSDataProvider
 			FDSKeywords fdsKeywords, HttpServletRequest httpServletRequest)
 		throws PortalException {
 
-		OrderFDSKeywordsImpl orderFDSKeywordsImpl =
-			(OrderFDSKeywordsImpl)fdsKeywords;
+		BaseModelSearchResult<CommerceOrderItem> baseModelSearchResult =
+			_getBaseModelSearchResult(
+				fdsKeywords, null, httpServletRequest, null);
 
-		return _commerceOrderItemService.getCommerceOrderItemsCount(
-			orderFDSKeywordsImpl.getCommerceOrderId());
+		return baseModelSearchResult.getLength();
 	}
 
 	private String _formatDiscountAmount(
 			CommerceOrderItemPrice commerceOrderItemPrice, Locale locale)
 		throws Exception {
+
+		if (commerceOrderItemPrice.isPriceOnApplication()) {
+			return StringPool.DASH;
+		}
 
 		if (commerceOrderItemPrice.getDiscountAmount() == null) {
 			return StringPool.BLANK;
@@ -124,6 +120,10 @@ public class PlacedCommerceOrderItemFDSDataProvider
 			CommerceOrderItemPrice commerceOrderItemPrice, Locale locale)
 		throws Exception {
 
+		if (commerceOrderItemPrice.isPriceOnApplication()) {
+			return StringPool.DASH;
+		}
+
 		if (commerceOrderItemPrice.getFinalPrice() == null) {
 			return StringPool.BLANK;
 		}
@@ -137,6 +137,10 @@ public class PlacedCommerceOrderItemFDSDataProvider
 	private String _formatPromoPrice(
 			CommerceOrderItemPrice commerceOrderItemPrice, Locale locale)
 		throws Exception {
+
+		if (commerceOrderItemPrice.isPriceOnApplication()) {
+			return StringPool.DASH;
+		}
 
 		CommerceMoney promoPriceCommerceMoney =
 			commerceOrderItemPrice.getPromoPrice();
@@ -196,12 +200,32 @@ public class PlacedCommerceOrderItemFDSDataProvider
 			CommerceOrderItemPrice commerceOrderItemPrice, Locale locale)
 		throws Exception {
 
-		if (commerceOrderItemPrice.getUnitPrice() == null) {
-			return StringPool.BLANK;
+		if (commerceOrderItemPrice.isPriceOnApplication()) {
+			return _language.get(
+				locale,
+				CommercePriceConstants.PRICE_VALUE_PRICE_ON_APPLICATION);
 		}
 
 		CommerceMoney unitPriceCommerceMoney =
 			commerceOrderItemPrice.getUnitPrice();
+
+		if (unitPriceCommerceMoney == null) {
+			return StringPool.BLANK;
+		}
+
+		CommerceMoney promoPriceCommerceMoney =
+			commerceOrderItemPrice.getPromoPrice();
+
+		if (BigDecimalUtil.eq(
+				unitPriceCommerceMoney.getPrice(), BigDecimal.ZERO) &&
+			(promoPriceCommerceMoney != null) &&
+			BigDecimalUtil.gt(
+				promoPriceCommerceMoney.getPrice(), BigDecimal.ZERO)) {
+
+			return _language.get(
+				locale,
+				CommercePriceConstants.PRICE_VALUE_PRICE_ON_APPLICATION);
+		}
 
 		return unitPriceCommerceMoney.format(locale);
 	}

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.journal.internal.upgrade.v4_4_3.test;
@@ -137,8 +128,6 @@ public class JournalArticleLayoutClassedModelUsageUpgradeProcessTest {
 
 		_runUpgrade();
 
-		_assertDefaultLayoutClassedModelUsage(
-			_journalArticle.getResourcePrimKey());
 		_assertLayoutClassedModelUsagesCount(
 			_journalArticle.getResourcePrimKey(), 4);
 
@@ -198,12 +187,10 @@ public class JournalArticleLayoutClassedModelUsageUpgradeProcessTest {
 		_assertLayoutClassedModelUsagesCount(
 			_journalArticle.getResourcePrimKey(), 0);
 
-		_layoutClassedModelUsageLocalService.addDefaultLayoutClassedModelUsage(
+		_layoutClassedModelUsageLocalService.addLayoutClassedModelUsage(
 			_journalArticle.getGroupId(), _journalArticleClassNameId,
-			_journalArticle.getResourcePrimKey(), new ServiceContext());
-
-		_assertDefaultLayoutClassedModelUsage(
-			_journalArticle.getResourcePrimKey());
+			_journalArticle.getResourcePrimKey(), StringPool.BLANK,
+			StringPool.BLANK, 0, 0, new ServiceContext());
 
 		_runUpgrade();
 
@@ -256,10 +243,6 @@ public class JournalArticleLayoutClassedModelUsageUpgradeProcessTest {
 
 		_runUpgrade();
 
-		_assertDefaultLayoutClassedModelUsage(
-			_journalArticle.getResourcePrimKey(),
-			journalArticle1.getResourcePrimKey(),
-			journalArticle2.getResourcePrimKey());
 		_assertLayoutClassedModelUsagesCount(
 			_journalArticle.getResourcePrimKey(), 2);
 		_assertLayoutClassedModelUsagesCount(
@@ -334,15 +317,6 @@ public class JournalArticleLayoutClassedModelUsageUpgradeProcessTest {
 			portletPreferences.toString(), count, portletPreferences.size());
 	}
 
-	private void _assertDefaultLayoutClassedModelUsage(long... classPKs) {
-		for (long classPK : classPKs) {
-			Assert.assertTrue(
-				_layoutClassedModelUsageLocalService.
-					hasDefaultLayoutClassedModelUsage(
-						_journalArticleClassNameId, classPK));
-		}
-	}
-
 	private void _assertJournalContentSearchesCount(
 		String articleId, int count) {
 
@@ -362,8 +336,8 @@ public class JournalArticleLayoutClassedModelUsageUpgradeProcessTest {
 			Assert.assertNotNull(
 				_layoutClassedModelUsageLocalService.
 					fetchLayoutClassedModelUsage(
-						_journalArticleClassNameId, classPK, containerKey,
-						containerType, plid));
+						_journalArticleClassNameId, classPK, StringPool.BLANK,
+						containerKey, containerType, plid));
 		}
 	}
 

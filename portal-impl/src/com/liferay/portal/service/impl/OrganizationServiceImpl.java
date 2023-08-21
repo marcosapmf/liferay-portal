@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.service.impl;
@@ -39,6 +30,7 @@ import com.liferay.portal.kernel.service.permission.OrganizationPermissionUtil;
 import com.liferay.portal.kernel.service.permission.PasswordPolicyPermissionUtil;
 import com.liferay.portal.kernel.service.permission.PortalPermissionUtil;
 import com.liferay.portal.kernel.service.permission.UserPermissionUtil;
+import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.comparator.OrganizationIdComparator;
 import com.liferay.portal.service.base.OrganizationServiceBaseImpl;
@@ -533,6 +525,22 @@ public class OrganizationServiceImpl extends OrganizationServiceBaseImpl {
 
 	@Override
 	public List<Organization> getOrganizations(
+		long companyId, long parentOrganizationId, int start, int end,
+		OrderByComparator<Organization> orderByComparator) {
+
+		if (parentOrganizationId ==
+				OrganizationConstants.ANY_PARENT_ORGANIZATION_ID) {
+
+			return organizationPersistence.filterFindByCompanyId(
+				companyId, start, end, orderByComparator);
+		}
+
+		return organizationPersistence.filterFindByC_P(
+			companyId, parentOrganizationId, start, end, orderByComparator);
+	}
+
+	@Override
+	public List<Organization> getOrganizations(
 		long companyId, long parentOrganizationId, String name, int start,
 		int end) {
 
@@ -549,6 +557,28 @@ public class OrganizationServiceImpl extends OrganizationServiceBaseImpl {
 
 		return organizationPersistence.filterFindByC_P_LikeN(
 			companyId, parentOrganizationId, name, start, end);
+	}
+
+	@Override
+	public List<Organization> getOrganizations(
+		long companyId, long parentOrganizationId, String name, int start,
+		int end, OrderByComparator<Organization> orderByComparator) {
+
+		if (Validator.isNull(name)) {
+			return getOrganizations(
+				companyId, parentOrganizationId, start, end, orderByComparator);
+		}
+
+		if (parentOrganizationId ==
+				OrganizationConstants.ANY_PARENT_ORGANIZATION_ID) {
+
+			return organizationPersistence.filterFindByC_LikeN(
+				companyId, name, start, end, orderByComparator);
+		}
+
+		return organizationPersistence.filterFindByC_P_LikeN(
+			companyId, parentOrganizationId, name, start, end,
+			orderByComparator);
 	}
 
 	/**

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.admin.channel.resource.v1_0.test;
@@ -337,46 +328,40 @@ public abstract class BasePaymentMethodGroupRelOrderTypeResourceTestCase {
 	public void testGetPaymentMethodGroupRelIdPaymentMethodGroupRelOrderTypesPageWithFilterDoubleEquals()
 		throws Exception {
 
-		List<EntityField> entityFields = getEntityFields(
-			EntityField.Type.DOUBLE);
+		testGetPaymentMethodGroupRelIdPaymentMethodGroupRelOrderTypesPageWithFilter(
+			"eq", EntityField.Type.DOUBLE);
+	}
 
-		if (entityFields.isEmpty()) {
-			return;
-		}
+	@Test
+	public void testGetPaymentMethodGroupRelIdPaymentMethodGroupRelOrderTypesPageWithFilterStringContains()
+		throws Exception {
 
-		Long id =
-			testGetPaymentMethodGroupRelIdPaymentMethodGroupRelOrderTypesPage_getId();
-
-		PaymentMethodGroupRelOrderType paymentMethodGroupRelOrderType1 =
-			testGetPaymentMethodGroupRelIdPaymentMethodGroupRelOrderTypesPage_addPaymentMethodGroupRelOrderType(
-				id, randomPaymentMethodGroupRelOrderType());
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		PaymentMethodGroupRelOrderType paymentMethodGroupRelOrderType2 =
-			testGetPaymentMethodGroupRelIdPaymentMethodGroupRelOrderTypesPage_addPaymentMethodGroupRelOrderType(
-				id, randomPaymentMethodGroupRelOrderType());
-
-		for (EntityField entityField : entityFields) {
-			Page<PaymentMethodGroupRelOrderType> page =
-				paymentMethodGroupRelOrderTypeResource.
-					getPaymentMethodGroupRelIdPaymentMethodGroupRelOrderTypesPage(
-						id, null,
-						getFilterString(
-							entityField, "eq", paymentMethodGroupRelOrderType1),
-						Pagination.of(1, 2), null);
-
-			assertEquals(
-				Collections.singletonList(paymentMethodGroupRelOrderType1),
-				(List<PaymentMethodGroupRelOrderType>)page.getItems());
-		}
+		testGetPaymentMethodGroupRelIdPaymentMethodGroupRelOrderTypesPageWithFilter(
+			"contains", EntityField.Type.STRING);
 	}
 
 	@Test
 	public void testGetPaymentMethodGroupRelIdPaymentMethodGroupRelOrderTypesPageWithFilterStringEquals()
 		throws Exception {
 
-		List<EntityField> entityFields = getEntityFields(
-			EntityField.Type.STRING);
+		testGetPaymentMethodGroupRelIdPaymentMethodGroupRelOrderTypesPageWithFilter(
+			"eq", EntityField.Type.STRING);
+	}
+
+	@Test
+	public void testGetPaymentMethodGroupRelIdPaymentMethodGroupRelOrderTypesPageWithFilterStringStartsWith()
+		throws Exception {
+
+		testGetPaymentMethodGroupRelIdPaymentMethodGroupRelOrderTypesPageWithFilter(
+			"startswith", EntityField.Type.STRING);
+	}
+
+	protected void
+			testGetPaymentMethodGroupRelIdPaymentMethodGroupRelOrderTypesPageWithFilter(
+				String operator, EntityField.Type type)
+		throws Exception {
+
+		List<EntityField> entityFields = getEntityFields(type);
 
 		if (entityFields.isEmpty()) {
 			return;
@@ -400,7 +385,8 @@ public abstract class BasePaymentMethodGroupRelOrderTypeResourceTestCase {
 					getPaymentMethodGroupRelIdPaymentMethodGroupRelOrderTypesPage(
 						id, null,
 						getFilterString(
-							entityField, "eq", paymentMethodGroupRelOrderType1),
+							entityField, operator,
+							paymentMethodGroupRelOrderType1),
 						Pagination.of(1, 2), null);
 
 			assertEquals(
@@ -896,14 +882,19 @@ public abstract class BasePaymentMethodGroupRelOrderTypeResourceTestCase {
 
 		Assert.assertTrue(valid);
 
-		Map<String, Map<String, String>> actions = page.getActions();
+		assertValid(page.getActions(), expectedActions);
+	}
 
-		for (String key : expectedActions.keySet()) {
-			Map action = actions.get(key);
+	protected void assertValid(
+		Map<String, Map<String, String>> actions1,
+		Map<String, Map<String, String>> actions2) {
+
+		for (String key : actions2.keySet()) {
+			Map action = actions1.get(key);
 
 			Assert.assertNotNull(key + " does not contain an action", action);
 
-			Map expectedAction = expectedActions.get(key);
+			Map<String, String> expectedAction = actions2.get(key);
 
 			Assert.assertEquals(
 				expectedAction.get("method"), action.get("method"));
@@ -1190,12 +1181,49 @@ public abstract class BasePaymentMethodGroupRelOrderTypeResourceTestCase {
 		}
 
 		if (entityFieldName.equals("orderTypeExternalReferenceCode")) {
-			sb.append("'");
-			sb.append(
-				String.valueOf(
-					paymentMethodGroupRelOrderType.
-						getOrderTypeExternalReferenceCode()));
-			sb.append("'");
+			Object object =
+				paymentMethodGroupRelOrderType.
+					getOrderTypeExternalReferenceCode();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}

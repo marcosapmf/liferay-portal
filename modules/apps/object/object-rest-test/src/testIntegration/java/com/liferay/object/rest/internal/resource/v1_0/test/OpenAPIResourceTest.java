@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.rest.internal.resource.v1_0.test;
@@ -23,9 +14,8 @@ import com.liferay.object.field.util.ObjectFieldUtil;
 import com.liferay.object.model.ObjectAction;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectRelationship;
-import com.liferay.object.rest.internal.resource.v1_0.test.util.HTTPTestUtil;
-import com.liferay.object.rest.internal.resource.v1_0.test.util.ObjectDefinitionTestUtil;
-import com.liferay.object.rest.internal.resource.v1_0.test.util.ObjectRelationshipTestUtil;
+import com.liferay.object.rest.test.util.ObjectDefinitionTestUtil;
+import com.liferay.object.rest.test.util.ObjectRelationshipTestUtil;
 import com.liferay.object.service.ObjectActionLocalService;
 import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.petra.string.StringPool;
@@ -37,6 +27,7 @@ import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.CompanyTestUtil;
+import com.liferay.portal.kernel.test.util.HTTPTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
@@ -152,7 +143,7 @@ public class OpenAPIResourceTest {
 					RandomTestUtil.randomString(), _OBJECT_FIELD_NAME, false)),
 			ObjectDefinitionConstants.SCOPE_COMPANY, _user.getUserId());
 
-		JSONObject jsonObject = HTTPTestUtil.invoke(
+		JSONObject jsonObject = HTTPTestUtil.invokeToJSONObject(
 			null, "/openapi", Http.Method.GET);
 
 		JSONArray jsonArray = jsonObject.getJSONArray(
@@ -164,7 +155,7 @@ public class OpenAPIResourceTest {
 				_objectDefinition1.getRESTContextPath() + "/openapi.yaml",
 			jsonArray.get(0));
 
-		jsonObject = HTTPTestUtil.invoke(
+		jsonObject = HTTPTestUtil.invokeToJSONObject(
 			null, _objectDefinition1.getRESTContextPath() + "/openapi.json",
 			Http.Method.GET);
 
@@ -193,7 +184,7 @@ public class OpenAPIResourceTest {
 		Assert.assertNotNull(
 			propertiesJSONObject.getJSONObject("taxonomyCategoryIds"));
 
-		jsonObject = HTTPTestUtil.invoke(
+		jsonObject = HTTPTestUtil.invokeToJSONObject(
 			null, _objectDefinition2.getRESTContextPath() + "/openapi.json",
 			Http.Method.GET);
 
@@ -211,7 +202,7 @@ public class OpenAPIResourceTest {
 		try {
 			_user = UserTestUtil.addUser(_company);
 
-			JSONObject jsonObject = HTTPTestUtil.invoke(
+			JSONObject jsonObject = HTTPTestUtil.invokeToJSONObject(
 				null, _objectDefinition1.getRESTContextPath() + "/openapi.json",
 				Http.Method.GET);
 
@@ -287,7 +278,7 @@ public class OpenAPIResourceTest {
 	private void _testGetActionsOpenAPI(List<String> actions, String schemaName)
 		throws Exception {
 
-		JSONObject jsonObject = HTTPTestUtil.invoke(
+		JSONObject jsonObject = HTTPTestUtil.invokeToJSONObject(
 			null, _objectDefinition1.getRESTContextPath() + "/openapi.json",
 			Http.Method.GET);
 
@@ -328,7 +319,7 @@ public class OpenAPIResourceTest {
 				_objectDefinition1, _objectDefinition2,
 				TestPropsValues.getUserId(), objectRelationshipType);
 
-		JSONObject jsonObject = HTTPTestUtil.invoke(
+		JSONObject jsonObject = HTTPTestUtil.invokeToJSONObject(
 			null, _objectDefinition1.getRESTContextPath() + "/openapi.json",
 			Http.Method.GET);
 
@@ -339,7 +330,7 @@ public class OpenAPIResourceTest {
 				jsonObject, objectRelationship, _objectDefinition1),
 			_objectDefinition2.getShortName());
 
-		jsonObject = HTTPTestUtil.invoke(
+		jsonObject = HTTPTestUtil.invokeToJSONObject(
 			null, _objectDefinition2.getRESTContextPath() + "/openapi.json",
 			Http.Method.GET);
 

@@ -1,20 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.osb.faro.service;
 
 import com.liferay.portal.kernel.service.ServiceWrapper;
+import com.liferay.portal.kernel.service.persistence.BasePersistence;
 
 /**
  * Provides a wrapper for {@link FaroUserLocalService}.
@@ -320,6 +312,20 @@ public class FaroUserLocalServiceWrapper
 	}
 
 	@Override
+	public java.util.List<com.liferay.osb.faro.model.FaroUser> getFaroUsers(
+			long groupId, boolean available, String query,
+			java.util.List<Integer> statuses, long workspaceGroupId, int start,
+			int end,
+			com.liferay.portal.kernel.util.OrderByComparator
+				<com.liferay.osb.faro.model.FaroUser> orderByComparator)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _faroUserLocalService.getFaroUsers(
+			groupId, available, query, statuses, workspaceGroupId, start, end,
+			orderByComparator);
+	}
+
+	@Override
 	public java.util.List<com.liferay.osb.faro.model.FaroUser>
 		getFaroUsersByLiveUserId(long liveUserId, int status) {
 
@@ -349,6 +355,16 @@ public class FaroUserLocalServiceWrapper
 	@Override
 	public int getFaroUsersCount() {
 		return _faroUserLocalService.getFaroUsersCount();
+	}
+
+	@Override
+	public int getFaroUsersCount(
+			long groupId, boolean available, String query,
+			java.util.List<Integer> statuses, long workspaceGroupId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _faroUserLocalService.getFaroUsersCount(
+			groupId, available, query, statuses, workspaceGroupId);
 	}
 
 	@Override
@@ -419,6 +435,11 @@ public class FaroUserLocalServiceWrapper
 		com.liferay.osb.faro.model.FaroUser faroUser) {
 
 		return _faroUserLocalService.updateFaroUser(faroUser);
+	}
+
+	@Override
+	public BasePersistence<?> getBasePersistence() {
+		return _faroUserLocalService.getBasePersistence();
 	}
 
 	@Override

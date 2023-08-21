@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.change.tracking.model.impl;
@@ -18,6 +9,7 @@ import com.liferay.change.tracking.model.CTCollection;
 import com.liferay.change.tracking.model.CTCollectionModel;
 import com.liferay.expando.kernel.model.ExpandoBridge;
 import com.liferay.expando.kernel.util.ExpandoBridgeFactoryUtil;
+import com.liferay.exportimport.kernel.lar.StagedModelType;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.bean.AutoEscapeBeanHandler;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -30,6 +22,7 @@ import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalServiceUtil;
 import com.liferay.portal.kernel.util.DateUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 
@@ -72,12 +65,14 @@ public class CTCollectionModelImpl
 	public static final String TABLE_NAME = "CTCollection";
 
 	public static final Object[][] TABLE_COLUMNS = {
-		{"mvccVersion", Types.BIGINT}, {"ctCollectionId", Types.BIGINT},
-		{"companyId", Types.BIGINT}, {"userId", Types.BIGINT},
-		{"createDate", Types.TIMESTAMP}, {"modifiedDate", Types.TIMESTAMP},
-		{"schemaVersionId", Types.BIGINT}, {"name", Types.VARCHAR},
-		{"description", Types.VARCHAR}, {"status", Types.INTEGER},
-		{"statusByUserId", Types.BIGINT}, {"statusDate", Types.TIMESTAMP}
+		{"mvccVersion", Types.BIGINT}, {"uuid_", Types.VARCHAR},
+		{"externalReferenceCode", Types.VARCHAR},
+		{"ctCollectionId", Types.BIGINT}, {"companyId", Types.BIGINT},
+		{"userId", Types.BIGINT}, {"createDate", Types.TIMESTAMP},
+		{"modifiedDate", Types.TIMESTAMP}, {"schemaVersionId", Types.BIGINT},
+		{"name", Types.VARCHAR}, {"description", Types.VARCHAR},
+		{"status", Types.INTEGER}, {"statusByUserId", Types.BIGINT},
+		{"statusDate", Types.TIMESTAMP}
 	};
 
 	public static final Map<String, Integer> TABLE_COLUMNS_MAP =
@@ -85,6 +80,8 @@ public class CTCollectionModelImpl
 
 	static {
 		TABLE_COLUMNS_MAP.put("mvccVersion", Types.BIGINT);
+		TABLE_COLUMNS_MAP.put("uuid_", Types.VARCHAR);
+		TABLE_COLUMNS_MAP.put("externalReferenceCode", Types.VARCHAR);
 		TABLE_COLUMNS_MAP.put("ctCollectionId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("companyId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("userId", Types.BIGINT);
@@ -99,7 +96,7 @@ public class CTCollectionModelImpl
 	}
 
 	public static final String TABLE_SQL_CREATE =
-		"create table CTCollection (mvccVersion LONG default 0 not null,ctCollectionId LONG not null primary key,companyId LONG,userId LONG,createDate DATE null,modifiedDate DATE null,schemaVersionId LONG,name VARCHAR(75) null,description VARCHAR(200) null,status INTEGER,statusByUserId LONG,statusDate DATE null)";
+		"create table CTCollection (mvccVersion LONG default 0 not null,uuid_ VARCHAR(75) null,externalReferenceCode VARCHAR(75) null,ctCollectionId LONG not null primary key,companyId LONG,userId LONG,createDate DATE null,modifiedDate DATE null,schemaVersionId LONG,name VARCHAR(75) null,description VARCHAR(200) null,status INTEGER,statusByUserId LONG,statusDate DATE null)";
 
 	public static final String TABLE_SQL_DROP = "drop table CTCollection";
 
@@ -125,20 +122,32 @@ public class CTCollectionModelImpl
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
-	public static final long SCHEMAVERSIONID_COLUMN_BITMASK = 2L;
+	public static final long EXTERNALREFERENCECODE_COLUMN_BITMASK = 2L;
 
 	/**
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
-	public static final long STATUS_COLUMN_BITMASK = 4L;
+	public static final long SCHEMAVERSIONID_COLUMN_BITMASK = 4L;
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
+	public static final long STATUS_COLUMN_BITMASK = 8L;
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
+	public static final long UUID_COLUMN_BITMASK = 16L;
 
 	/**
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
 	 *		#getColumnBitmask(String)}
 	 */
 	@Deprecated
-	public static final long CREATEDATE_COLUMN_BITMASK = 8L;
+	public static final long CREATEDATE_COLUMN_BITMASK = 32L;
 
 	/**
 	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
@@ -251,6 +260,10 @@ public class CTCollectionModelImpl
 
 			attributeGetterFunctions.put(
 				"mvccVersion", CTCollection::getMvccVersion);
+			attributeGetterFunctions.put("uuid", CTCollection::getUuid);
+			attributeGetterFunctions.put(
+				"externalReferenceCode",
+				CTCollection::getExternalReferenceCode);
 			attributeGetterFunctions.put(
 				"ctCollectionId", CTCollection::getCtCollectionId);
 			attributeGetterFunctions.put(
@@ -290,6 +303,13 @@ public class CTCollectionModelImpl
 			attributeSetterBiConsumers.put(
 				"mvccVersion",
 				(BiConsumer<CTCollection, Long>)CTCollection::setMvccVersion);
+			attributeSetterBiConsumers.put(
+				"uuid",
+				(BiConsumer<CTCollection, String>)CTCollection::setUuid);
+			attributeSetterBiConsumers.put(
+				"externalReferenceCode",
+				(BiConsumer<CTCollection, String>)
+					CTCollection::setExternalReferenceCode);
 			attributeSetterBiConsumers.put(
 				"ctCollectionId",
 				(BiConsumer<CTCollection, Long>)
@@ -346,6 +366,64 @@ public class CTCollectionModelImpl
 		}
 
 		_mvccVersion = mvccVersion;
+	}
+
+	@JSON
+	@Override
+	public String getUuid() {
+		if (_uuid == null) {
+			return "";
+		}
+		else {
+			return _uuid;
+		}
+	}
+
+	@Override
+	public void setUuid(String uuid) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_uuid = uuid;
+	}
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
+	public String getOriginalUuid() {
+		return getColumnOriginalValue("uuid_");
+	}
+
+	@JSON
+	@Override
+	public String getExternalReferenceCode() {
+		if (_externalReferenceCode == null) {
+			return "";
+		}
+		else {
+			return _externalReferenceCode;
+		}
+	}
+
+	@Override
+	public void setExternalReferenceCode(String externalReferenceCode) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_externalReferenceCode = externalReferenceCode;
+	}
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
+	public String getOriginalExternalReferenceCode() {
+		return getColumnOriginalValue("externalReferenceCode");
 	}
 
 	@JSON
@@ -591,6 +669,12 @@ public class CTCollectionModelImpl
 		_statusDate = statusDate;
 	}
 
+	@Override
+	public StagedModelType getStagedModelType() {
+		return new StagedModelType(
+			PortalUtil.getClassNameId(CTCollection.class.getName()));
+	}
+
 	public long getColumnBitmask() {
 		if (_columnBitmask > 0) {
 			return _columnBitmask;
@@ -648,6 +732,8 @@ public class CTCollectionModelImpl
 		CTCollectionImpl ctCollectionImpl = new CTCollectionImpl();
 
 		ctCollectionImpl.setMvccVersion(getMvccVersion());
+		ctCollectionImpl.setUuid(getUuid());
+		ctCollectionImpl.setExternalReferenceCode(getExternalReferenceCode());
 		ctCollectionImpl.setCtCollectionId(getCtCollectionId());
 		ctCollectionImpl.setCompanyId(getCompanyId());
 		ctCollectionImpl.setUserId(getUserId());
@@ -671,6 +757,9 @@ public class CTCollectionModelImpl
 
 		ctCollectionImpl.setMvccVersion(
 			this.<Long>getColumnOriginalValue("mvccVersion"));
+		ctCollectionImpl.setUuid(this.<String>getColumnOriginalValue("uuid_"));
+		ctCollectionImpl.setExternalReferenceCode(
+			this.<String>getColumnOriginalValue("externalReferenceCode"));
 		ctCollectionImpl.setCtCollectionId(
 			this.<Long>getColumnOriginalValue("ctCollectionId"));
 		ctCollectionImpl.setCompanyId(
@@ -769,6 +858,26 @@ public class CTCollectionModelImpl
 			new CTCollectionCacheModel();
 
 		ctCollectionCacheModel.mvccVersion = getMvccVersion();
+
+		ctCollectionCacheModel.uuid = getUuid();
+
+		String uuid = ctCollectionCacheModel.uuid;
+
+		if ((uuid != null) && (uuid.length() == 0)) {
+			ctCollectionCacheModel.uuid = null;
+		}
+
+		ctCollectionCacheModel.externalReferenceCode =
+			getExternalReferenceCode();
+
+		String externalReferenceCode =
+			ctCollectionCacheModel.externalReferenceCode;
+
+		if ((externalReferenceCode != null) &&
+			(externalReferenceCode.length() == 0)) {
+
+			ctCollectionCacheModel.externalReferenceCode = null;
+		}
 
 		ctCollectionCacheModel.ctCollectionId = getCtCollectionId();
 
@@ -887,6 +996,8 @@ public class CTCollectionModelImpl
 	}
 
 	private long _mvccVersion;
+	private String _uuid;
+	private String _externalReferenceCode;
 	private long _ctCollectionId;
 	private long _companyId;
 	private long _userId;
@@ -901,6 +1012,8 @@ public class CTCollectionModelImpl
 	private Date _statusDate;
 
 	public <T> T getColumnValue(String columnName) {
+		columnName = _attributeNames.getOrDefault(columnName, columnName);
+
 		Function<CTCollection, Object> function =
 			AttributeGetterFunctionsHolder._attributeGetterFunctions.get(
 				columnName);
@@ -929,6 +1042,9 @@ public class CTCollectionModelImpl
 		_columnOriginalValues = new HashMap<String, Object>();
 
 		_columnOriginalValues.put("mvccVersion", _mvccVersion);
+		_columnOriginalValues.put("uuid_", _uuid);
+		_columnOriginalValues.put(
+			"externalReferenceCode", _externalReferenceCode);
 		_columnOriginalValues.put("ctCollectionId", _ctCollectionId);
 		_columnOriginalValues.put("companyId", _companyId);
 		_columnOriginalValues.put("userId", _userId);
@@ -940,6 +1056,16 @@ public class CTCollectionModelImpl
 		_columnOriginalValues.put("status", _status);
 		_columnOriginalValues.put("statusByUserId", _statusByUserId);
 		_columnOriginalValues.put("statusDate", _statusDate);
+	}
+
+	private static final Map<String, String> _attributeNames;
+
+	static {
+		Map<String, String> attributeNames = new HashMap<>();
+
+		attributeNames.put("uuid_", "uuid");
+
+		_attributeNames = Collections.unmodifiableMap(attributeNames);
 	}
 
 	private transient Map<String, Object> _columnOriginalValues;
@@ -955,27 +1081,31 @@ public class CTCollectionModelImpl
 
 		columnBitmasks.put("mvccVersion", 1L);
 
-		columnBitmasks.put("ctCollectionId", 2L);
+		columnBitmasks.put("uuid_", 2L);
 
-		columnBitmasks.put("companyId", 4L);
+		columnBitmasks.put("externalReferenceCode", 4L);
 
-		columnBitmasks.put("userId", 8L);
+		columnBitmasks.put("ctCollectionId", 8L);
 
-		columnBitmasks.put("createDate", 16L);
+		columnBitmasks.put("companyId", 16L);
 
-		columnBitmasks.put("modifiedDate", 32L);
+		columnBitmasks.put("userId", 32L);
 
-		columnBitmasks.put("schemaVersionId", 64L);
+		columnBitmasks.put("createDate", 64L);
 
-		columnBitmasks.put("name", 128L);
+		columnBitmasks.put("modifiedDate", 128L);
 
-		columnBitmasks.put("description", 256L);
+		columnBitmasks.put("schemaVersionId", 256L);
 
-		columnBitmasks.put("status", 512L);
+		columnBitmasks.put("name", 512L);
 
-		columnBitmasks.put("statusByUserId", 1024L);
+		columnBitmasks.put("description", 1024L);
 
-		columnBitmasks.put("statusDate", 2048L);
+		columnBitmasks.put("status", 2048L);
+
+		columnBitmasks.put("statusByUserId", 4096L);
+
+		columnBitmasks.put("statusDate", 8192L);
 
 		_columnBitmasks = Collections.unmodifiableMap(columnBitmasks);
 	}

@@ -1,24 +1,35 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 import ClayAlert from '@clayui/alert';
+import {ClayToggle} from '@clayui/form';
+import ClayLoadingIndicator from '@clayui/loading-indicator';
 import ClayModal from '@clayui/modal';
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import i18n from '../../../../../../common/I18n';
 import Button from '../../../../../../common/components/Button';
 import {useAppPropertiesContext} from '../../../../../../common/contexts/AppPropertiesContext';
+import {Liferay} from '../../../../../../common/services/liferay';
+import {
+	deleteSubscriptionInKey,
+	getSubscriptionInKey,
+	putSubscriptionInKey,
+} from '../../../../../../common/services/liferay/rest/raysource/LicenseKeys';
 import {ALERT_DOWNLOAD_TYPE} from '../../../../utils/constants/alertDownloadType';
 import {AUTO_CLOSE_ALERT_TIME} from '../../../../utils/constants/autoCloseAlertTime';
 import {ALERT_ACTIVATION_AGGREGATED_KEYS_DOWNLOAD_TEXT} from '../../utils/constants/alertAggregateKeysDownloadText';
 import {downloadActivationLicenseKey} from '../../utils/downloadActivationLicenseKey';
 import TableKeyDetails from '../TableKeyDetails';
+
+const openToast = (title, message, {type = 'success'} = {}) =>
+	Liferay.Util.openToast({
+		message: i18n.translate(message),
+		title: i18n.translate(title),
+		type,
+	});
+
+const YEAR_FOR_PERMANENT_KEYS = 2100;
 
 const ModalKeyDetails = ({
 	currentActivationKey,
@@ -28,13 +39,14 @@ const ModalKeyDetails = ({
 	sessionId,
 }) => {
 	const {provisioningServerAPI} = useAppPropertiesContext();
-
-	const [valueToCopyToClipboard, setValueToCopyToClipboard] = useState('');
-
+	const [clipboardValue, setClipboardValue] = useState('');
+	const [isLoading, setIsLoading] = useState(false);
 	const [
 		activationKeysDownloadStatusModal,
 		setActivationKeysDownloadStatusModal,
 	] = useState('');
+	const [toggledSubscription, setToggleSubscription] = useState(false);
+	const [hasErrorSubscription, setHasErrorSubscription] = useState(false);
 
 	const handleAlertStatus = (hasSuccessfullyDownloadedKeys) => {
 		setActivationKeysDownloadStatusModal(
@@ -42,6 +54,55 @@ const ModalKeyDetails = ({
 				? ALERT_DOWNLOAD_TYPE.success
 				: ALERT_DOWNLOAD_TYPE.danger
 		);
+	};
+
+	const keyIsPermanent =
+		new Date(currentActivationKey.expirationDate).getFullYear() >
+		YEAR_FOR_PERMANENT_KEYS;
+
+	const {featureFlags} = useAppPropertiesContext();
+
+	useEffect(() => {
+		setIsLoading(true);
+
+		getSubscriptionInKey(
+			provisioningServerAPI,
+			currentActivationKey.id,
+			sessionId
+		)
+			.then((result) => {
+				setToggleSubscription(result);
+				setHasErrorSubscription(false);
+			})
+			.catch(() => {
+				openToast('error', 'get-subscription-failed', {type: 'danger'});
+
+				setHasErrorSubscription(true);
+			})
+			.finally(() => {
+				setIsLoading(false);
+			});
+	}, [currentActivationKey.id, provisioningServerAPI, sessionId]);
+
+	const handleToggle = () => setToggleSubscription((toggled) => !toggled);
+
+	const handleSubscriptionInKey = async (status) => {
+		handleToggle();
+
+		const fn = status ? deleteSubscriptionInKey : putSubscriptionInKey;
+
+		try {
+			await fn(provisioningServerAPI, currentActivationKey.id, sessionId);
+
+			openToast('success', 'your-request-completed-successfully', {
+				type: 'success',
+			});
+		} catch {
+			setTimeout(() => {
+				handleToggle();
+				openToast('error', 'subscription-failed', {type: 'danger'});
+			}, 500);
+		}
 	};
 
 	return (
@@ -71,9 +132,45 @@ const ModalKeyDetails = ({
 
 				<TableKeyDetails
 					currentActivationKey={currentActivationKey}
-					setValueToCopyToClipboard={setValueToCopyToClipboard}
+					setValueToCopyToClipboard={setClipboardValue}
 				/>
+			</div>
 
+			{featureFlags.includes('LPS-185063') &&
+				!keyIsPermanent &&
+				(isLoading ? (
+					<ClayLoadingIndicator />
+				) : (
+					<>
+						<div className="dropdown-divider"></div>
+
+						<div className="pt-3 px-4">
+							<ClayToggle
+								disabled={hasErrorSubscription}
+								label={
+									<span className="text-neutral-10">
+										{i18n.sub('expiration-notifications')}
+									</span>
+								}
+								onClick={() =>
+									handleSubscriptionInKey(toggledSubscription)
+								}
+								toggled={toggledSubscription}
+							/>
+
+							<p className="pt-2 text-neutral-8">
+								{i18n.sub(
+									'enable-notifications-through-email-when-this-activation-key-is-about-to-expire-x-days-before-x-days-before-and-on-the-day-of-expiration-you-can-unsubscribe-at-any-time',
+									[30, 15]
+								)}
+							</p>
+						</div>
+
+						<div className="dropdown-divider"></div>
+					</>
+				))}
+
+			<div className="pr-4">
 				<div className="d-flex justify-content-end my-4">
 					<Button displayType="secondary" onClick={onClose}>
 						{i18n.translate('close')}
@@ -91,6 +188,7 @@ const ModalKeyDetails = ({
 								currentActivationKey.productVersion,
 								project.name
 							);
+
 							handleAlertStatus(isAbleToDownloadKey);
 						}}
 					>
@@ -99,16 +197,14 @@ const ModalKeyDetails = ({
 				</div>
 			</div>
 
-			{valueToCopyToClipboard && (
+			{clipboardValue && (
 				<ClayAlert.ToastContainer>
 					<ClayAlert
 						autoClose={AUTO_CLOSE_ALERT_TIME.success}
 						displayType="success"
-						onClose={() => setValueToCopyToClipboard(false)}
+						onClose={() => setClipboardValue(false)}
 					>
-						{i18n.sub('x-copied-to-clipboard', [
-							valueToCopyToClipboard,
-						])}
+						{i18n.sub('x-copied-to-clipboard', [clipboardValue])}
 					</ClayAlert>
 				</ClayAlert.ToastContainer>
 			)}
@@ -140,4 +236,5 @@ const ModalKeyDetails = ({
 		</ClayModal>
 	);
 };
+
 export default ModalKeyDetails;

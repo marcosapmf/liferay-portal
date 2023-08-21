@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.oauth2.provider.internal.configuration;
@@ -17,6 +8,7 @@ package com.liferay.oauth2.provider.internal.configuration;
 import com.liferay.oauth2.provider.model.OAuth2Application;
 import com.liferay.oauth2.provider.scope.spi.scope.finder.ScopeFinder;
 import com.liferay.oauth2.provider.service.OAuth2ApplicationLocalService;
+import com.liferay.osgi.util.service.Snapshot;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.k8s.agent.PortalK8sConfigMapModifier;
@@ -36,7 +28,6 @@ import java.util.Map;
 import org.osgi.service.component.ComponentConstants;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
-import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicyOption;
 
 /**
@@ -63,6 +54,9 @@ public abstract class BaseConfigurationFactory {
 			oAuth2Application);
 
 		if (Validator.isNotNull(_configMapName)) {
+			PortalK8sConfigMapModifier portalK8sConfigMapModifier =
+				_portalK8sConfigMapModifierSnapshot.get();
+
 			portalK8sConfigMapModifier.modifyConfigMap(
 				configMapModel -> _extensionProperties.forEach(
 					configMapModel.data()::remove),
@@ -100,6 +94,9 @@ public abstract class BaseConfigurationFactory {
 
 		String serviceId = GetterUtil.getString(
 			properties.get("ext.lxc.liferay.com.serviceId"));
+
+		PortalK8sConfigMapModifier portalK8sConfigMapModifier =
+			_portalK8sConfigMapModifierSnapshot.get();
 
 		if ((portalK8sConfigMapModifier == null) ||
 			Validator.isNull(serviceId)) {
@@ -154,14 +151,16 @@ public abstract class BaseConfigurationFactory {
 	@Reference
 	protected OAuth2ApplicationLocalService oAuth2ApplicationLocalService;
 
-	@Reference(cardinality = ReferenceCardinality.OPTIONAL)
-	protected PortalK8sConfigMapModifier portalK8sConfigMapModifier;
-
 	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	protected Collection<ScopeFinder> scopeFinders;
 
 	@Reference
 	protected UserLocalService userLocalService;
+
+	private static final Snapshot<PortalK8sConfigMapModifier>
+		_portalK8sConfigMapModifierSnapshot = new Snapshot<>(
+			BaseConfigurationFactory.class, PortalK8sConfigMapModifier.class,
+			null, true);
 
 	private volatile String _configMapName;
 	private volatile Map<String, String> _extensionProperties;

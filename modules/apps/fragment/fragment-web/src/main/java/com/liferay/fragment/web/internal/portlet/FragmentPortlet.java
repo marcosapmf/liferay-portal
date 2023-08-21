@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.fragment.web.internal.portlet;
@@ -17,6 +8,7 @@ package com.liferay.fragment.web.internal.portlet;
 import com.liferay.fragment.constants.FragmentActionKeys;
 import com.liferay.fragment.constants.FragmentPortletKeys;
 import com.liferay.fragment.contributor.FragmentCollectionContributorRegistry;
+import com.liferay.fragment.helper.DefaultInputFragmentEntryConfigurationProvider;
 import com.liferay.fragment.model.FragmentCollection;
 import com.liferay.fragment.processor.FragmentEntryProcessorRegistry;
 import com.liferay.fragment.renderer.FragmentRendererController;
@@ -109,6 +101,9 @@ public class FragmentPortlet extends MVCPortlet {
 		}
 
 		renderRequest.setAttribute(
+			DefaultInputFragmentEntryConfigurationProvider.class.getName(),
+			_defaultInputFragmentEntryConfigurationProvider);
+		renderRequest.setAttribute(
 			FragmentWebKeys.FRAGMENT_COLLECTION_CONTRIBUTOR_TRACKER,
 			_fragmentCollectionContributorRegistry);
 		renderRequest.setAttribute(
@@ -180,6 +175,10 @@ public class FragmentPortlet extends MVCPortlet {
 
 	@Reference
 	private ConfigurationProvider _configurationProvider;
+
+	@Reference
+	private DefaultInputFragmentEntryConfigurationProvider
+		_defaultInputFragmentEntryConfigurationProvider;
 
 	@Reference
 	private FragmentCollectionContributorRegistry

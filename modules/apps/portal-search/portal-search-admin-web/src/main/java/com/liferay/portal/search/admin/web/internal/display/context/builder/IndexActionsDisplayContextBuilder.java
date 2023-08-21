@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.admin.web.internal.display.context.builder;
@@ -31,11 +22,11 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.search.admin.web.internal.display.context.IndexActionsDisplayContext;
 import com.liferay.portal.search.capabilities.SearchCapabilities;
+import com.liferay.portal.search.configuration.ReindexConfiguration;
 
 import java.util.Map;
 
 import javax.portlet.RenderRequest;
-import javax.portlet.RenderResponse;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -45,13 +36,14 @@ import javax.servlet.http.HttpServletRequest;
 public class IndexActionsDisplayContextBuilder {
 
 	public IndexActionsDisplayContextBuilder(
-		Language language, Portal portal, RenderRequest renderRequest,
-		RenderResponse renderResponse, SearchCapabilities searchCapabilities) {
+		Language language, Portal portal,
+		ReindexConfiguration reindexConfiguration, RenderRequest renderRequest,
+		SearchCapabilities searchCapabilities) {
 
 		_language = language;
 		_portal = portal;
+		_reindexConfiguration = reindexConfiguration;
 		_renderRequest = renderRequest;
-		_renderResponse = renderResponse;
 		_searchCapabilities = searchCapabilities;
 
 		_httpServletRequest = portal.getHttpServletRequest(renderRequest);
@@ -87,7 +79,9 @@ public class IndexActionsDisplayContextBuilder {
 	}
 
 	private String _getInitialExecutionMode() {
-		return ParamUtil.getString(_httpServletRequest, "executionMode");
+		return ParamUtil.getString(
+			_httpServletRequest, "executionMode",
+			_reindexConfiguration.defaultReindexExecutionMode());
 	}
 
 	private String _getInitialScope() {
@@ -137,8 +131,8 @@ public class IndexActionsDisplayContextBuilder {
 	private final HttpServletRequest _httpServletRequest;
 	private final Language _language;
 	private final Portal _portal;
+	private final ReindexConfiguration _reindexConfiguration;
 	private final RenderRequest _renderRequest;
-	private final RenderResponse _renderResponse;
 	private final SearchCapabilities _searchCapabilities;
 
 }

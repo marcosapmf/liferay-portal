@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {
@@ -45,6 +36,7 @@ export const ACTIONS = {
 			basePortletURL: itemData.basePortletURL,
 			organizationId: itemData.organizationId,
 			portletNamespace,
+			selectUsersURL: itemData.selectUsersURL,
 		});
 	},
 
@@ -169,17 +161,12 @@ export const ACTIONS = {
 		submitForm(document.hrefFm, itemData.removeUserURL);
 	},
 
-	selectUsers({basePortletURL, organizationId, portletNamespace}) {
-		if (!organizationId) {
-			return;
-		}
-
-		const selectUsersURL = createRenderURL(basePortletURL, {
-			mvcPath: '/select_organization_users.jsp',
-			organizationId,
-			p_p_state: 'pop_up',
-		});
-
+	selectUsers({
+		basePortletURL,
+		organizationId,
+		portletNamespace,
+		selectUsersURL,
+	}) {
 		openSelectionModal({
 			buttonAddLabel: Liferay.Language.get('done'),
 			multiple: true,
@@ -195,7 +182,11 @@ export const ACTIONS = {
 						}
 					);
 
-					const values = selectedItems.map((item) => item.value);
+					const values = selectedItems.map((selectedItem) => {
+						const item = JSON.parse(selectedItem.value);
+
+						return item.id;
+					});
 
 					const editAssignmentURL = createActionURL(basePortletURL, {
 						'addUserIds': values.join(','),
@@ -203,6 +194,7 @@ export const ACTIONS = {
 						'javax.portlet.action':
 							'/users_admin/edit_organization_assignments',
 						organizationId,
+						'p_auth': Liferay.authToken,
 					});
 
 					const form = document.getElementById(
@@ -217,7 +209,7 @@ export const ACTIONS = {
 				}
 			},
 			title: Liferay.Language.get('assign-users'),
-			url: selectUsersURL.toString(),
+			url: selectUsersURL,
 		});
 	},
 };

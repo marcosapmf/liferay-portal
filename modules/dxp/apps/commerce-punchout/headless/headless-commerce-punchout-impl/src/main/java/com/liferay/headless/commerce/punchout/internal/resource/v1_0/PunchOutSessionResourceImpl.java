@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.punchout.internal.resource.v1_0;
@@ -17,7 +8,6 @@ package com.liferay.headless.commerce.punchout.internal.resource.v1_0;
 import com.liferay.account.model.AccountEntry;
 import com.liferay.account.service.AccountEntryLocalService;
 import com.liferay.account.service.AccountEntryUserRelLocalService;
-import com.liferay.commerce.account.util.CommerceAccountHelper;
 import com.liferay.commerce.context.CommerceContext;
 import com.liferay.commerce.context.CommerceContextFactory;
 import com.liferay.commerce.model.CommerceOrder;
@@ -30,6 +20,7 @@ import com.liferay.commerce.punchout.oauth2.provider.PunchOutAccessTokenProvider
 import com.liferay.commerce.punchout.oauth2.provider.model.PunchOutAccessToken;
 import com.liferay.commerce.service.CommerceOrderItemLocalService;
 import com.liferay.commerce.service.CommerceOrderLocalService;
+import com.liferay.commerce.util.CommerceAccountHelper;
 import com.liferay.headless.commerce.core.util.ServiceContextHelper;
 import com.liferay.headless.commerce.punchout.dto.v1_0.Cart;
 import com.liferay.headless.commerce.punchout.dto.v1_0.CartItem;
@@ -59,6 +50,8 @@ import com.liferay.portal.kernel.util.Base64;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
+
+import java.math.BigDecimal;
 
 import java.net.URLEncoder;
 
@@ -399,7 +392,8 @@ public class PunchOutSessionResourceImpl
 						_commerceOrderItemLocalService.updateCommerceOrderItem(
 							commerceOrder.getUserId(),
 							commerceOrderItem.getCommerceOrderItemId(),
-							cartItem.getQuantity(), commerceContext,
+							BigDecimal.valueOf(cartItem.getQuantity()),
+							commerceContext,
 							_serviceContextHelper.getServiceContext(groupId));
 
 						break;
@@ -413,8 +407,10 @@ public class PunchOutSessionResourceImpl
 
 			_commerceOrderItemLocalService.addCommerceOrderItem(
 				commerceOrder.getUserId(), commerceOrder.getCommerceOrderId(),
-				cartItem.getSkuId(), null, cartItem.getQuantity(), 0,
-				cartItem.getShippedQuantity(), commerceContext,
+				cartItem.getSkuId(), null,
+				BigDecimal.valueOf(cartItem.getQuantity()), 0,
+				cartItem.getShippedQuantity(), StringPool.BLANK,
+				commerceContext,
 				_serviceContextHelper.getServiceContext(groupId));
 		}
 

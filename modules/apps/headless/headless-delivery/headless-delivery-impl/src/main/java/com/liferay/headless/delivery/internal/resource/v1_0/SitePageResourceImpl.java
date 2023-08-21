@@ -1,19 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.delivery.internal.resource.v1_0;
 
+import com.liferay.asset.kernel.model.AssetCategory;
+import com.liferay.asset.kernel.service.AssetCategoryLocalService;
 import com.liferay.client.extension.constants.ClientExtensionEntryConstants;
 import com.liferay.client.extension.service.ClientExtensionEntryRelLocalService;
 import com.liferay.client.extension.type.CET;
@@ -30,6 +23,7 @@ import com.liferay.headless.delivery.dto.v1_0.CustomMetaTag;
 import com.liferay.headless.delivery.dto.v1_0.MasterPage;
 import com.liferay.headless.delivery.dto.v1_0.OpenGraphSettings;
 import com.liferay.headless.delivery.dto.v1_0.PageDefinition;
+import com.liferay.headless.delivery.dto.v1_0.PageElement;
 import com.liferay.headless.delivery.dto.v1_0.PagePermission;
 import com.liferay.headless.delivery.dto.v1_0.PageSettings;
 import com.liferay.headless.delivery.dto.v1_0.ParentSitePage;
@@ -39,15 +33,21 @@ import com.liferay.headless.delivery.dto.v1_0.SiteMapSettings;
 import com.liferay.headless.delivery.dto.v1_0.SitePage;
 import com.liferay.headless.delivery.dto.v1_0.SitePageNavigationMenuSettings;
 import com.liferay.headless.delivery.dto.v1_0.StyleBook;
+import com.liferay.headless.delivery.dto.v1_0.TaxonomyCategoryBrief;
+import com.liferay.headless.delivery.dto.v1_0.TaxonomyCategoryReference;
 import com.liferay.headless.delivery.dto.v1_0.util.CustomFieldsUtil;
 import com.liferay.headless.delivery.internal.odata.entity.v1_0.SitePageEntityModel;
 import com.liferay.headless.delivery.resource.v1_0.SitePageResource;
 import com.liferay.layout.admin.kernel.model.LayoutTypePortletConstants;
+import com.liferay.layout.importer.LayoutsImporter;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
+import com.liferay.layout.page.template.model.LayoutPageTemplateStructure;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalService;
+import com.liferay.layout.page.template.service.LayoutPageTemplateStructureLocalService;
 import com.liferay.layout.seo.model.LayoutSEOEntry;
 import com.liferay.layout.seo.service.LayoutSEOEntryService;
 import com.liferay.layout.util.LayoutCopyHelper;
+import com.liferay.layout.util.structure.LayoutStructure;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.events.ServicePreAction;
@@ -79,10 +79,12 @@ import com.liferay.portal.kernel.search.filter.TermFilter;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.ResourceActionsUtil;
 import com.liferay.portal.kernel.service.CompanyLocalService;
+import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.LayoutService;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.service.TeamLocalService;
 import com.liferay.portal.kernel.service.ThemeLocalService;
 import com.liferay.portal.kernel.service.permission.ModelPermissions;
@@ -127,6 +129,7 @@ import com.liferay.style.book.service.StyleBookEntryLocalService;
 
 import java.io.Serializable;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -298,6 +301,10 @@ public class SitePageResourceImpl extends BaseSitePageResourceImpl {
 				contextAcceptLanguage.getPreferredLocale(), contextUriInfo,
 				contextUser);
 
+		dtoConverterContext.setAttribute(
+			"embeddedPageDefinition", Boolean.TRUE);
+		dtoConverterContext.setAttribute("groupId", layout.getGroupId());
+
 		return _sitePageDTOConverter.toDTO(dtoConverterContext, layout);
 	}
 
@@ -448,11 +455,18 @@ public class SitePageResourceImpl extends BaseSitePageResourceImpl {
 				pageSettings.getHiddenFromNavigation());
 		}
 
+		ServiceContext serviceContext = _createServiceContext(siteId, sitePage);
+
 		Layout layout = _layoutService.addLayout(
 			siteId, false, parentLayoutId, nameMap, titleMap, descriptionMap,
 			keywordsMap, robotsMap, LayoutConstants.TYPE_CONTENT,
 			typeSettingsUnicodeProperties.toString(), hidden, friendlyUrlMap, 0,
-			_createServiceContext(siteId, sitePage));
+			serviceContext);
+
+		_importPageDefinition(
+			layout, sitePage.getPageDefinition(), serviceContext);
+
+		layout = _layoutLocalService.getLayout(layout.getPlid());
 
 		layout = _updateLayoutSettings(layout, sitePage.getPageDefinition());
 
@@ -476,10 +490,14 @@ public class SitePageResourceImpl extends BaseSitePageResourceImpl {
 	private ServiceContext _createServiceContext(
 		long groupId, SitePage sitePage) {
 
-		Long[] assetCategoryIds = {};
+		Long[] assetCategoryIds = null;
 
-		if (sitePage.getTaxonomyCategoryIds() != null) {
-			assetCategoryIds = sitePage.getTaxonomyCategoryIds();
+		if (sitePage.getTaxonomyCategoryBriefs() != null) {
+			assetCategoryIds = transformToArray(
+				Arrays.asList(sitePage.getTaxonomyCategoryBriefs()),
+				taxonomyCategoryBrief -> _toAssetCategoryId(
+					groupId, taxonomyCategoryBrief),
+				Long.class);
 		}
 
 		String[] assetTagNames = new String[0];
@@ -703,6 +721,7 @@ public class SitePageResourceImpl extends BaseSitePageResourceImpl {
 				WebKeys.THEME_DISPLAY);
 
 		themeDisplay.setLayout(layout);
+		themeDisplay.setResponse(httpServletResponse);
 		themeDisplay.setScopeGroupId(layout.getGroupId());
 		themeDisplay.setSiteGroupId(layout.getGroupId());
 
@@ -749,6 +768,46 @@ public class SitePageResourceImpl extends BaseSitePageResourceImpl {
 			segmentsExperienceIds[0]);
 	}
 
+	private void _importPageDefinition(
+			Layout layout, PageDefinition pageDefinition,
+			ServiceContext serviceContext)
+		throws Exception {
+
+		if (pageDefinition == null) {
+			return;
+		}
+
+		LayoutPageTemplateStructure layoutPageTemplateStructure =
+			_layoutPageTemplateStructureLocalService.
+				fetchLayoutPageTemplateStructure(
+					layout.getGroupId(), layout.getPlid());
+
+		LayoutStructure layoutStructure = LayoutStructure.of(
+			layoutPageTemplateStructure.getDefaultSegmentsExperienceData());
+
+		PageElement pageElement = pageDefinition.getPageElement();
+
+		if ((layoutStructure == null) || (pageElement == null)) {
+			return;
+		}
+
+		contextHttpServletRequest.setAttribute(
+			WebKeys.THEME_DISPLAY, _getThemeDisplay(layout));
+
+		serviceContext.setRequest(contextHttpServletRequest);
+
+		ServiceContextThreadLocal.pushServiceContext(serviceContext);
+
+		try {
+			_layoutsImporter.importPageElement(
+				layout, layoutStructure, layoutStructure.getMainItemId(),
+				pageElement.toString(), 0);
+		}
+		finally {
+			ServiceContextThreadLocal.popServiceContext();
+		}
+	}
+
 	private boolean _isEmbeddedPageDefinition() {
 		MultivaluedMap<String, String> queryParameters =
 			contextUriInfo.getQueryParameters();
@@ -760,6 +819,61 @@ public class SitePageResourceImpl extends BaseSitePageResourceImpl {
 		}
 
 		return nestedFields.contains("pageDefinition");
+	}
+
+	private Long _toAssetCategoryId(
+		long groupId, TaxonomyCategoryBrief taxonomyCategoryBrief) {
+
+		TaxonomyCategoryReference taxonomyCategoryReference =
+			taxonomyCategoryBrief.getTaxonomyCategoryReference();
+
+		if (taxonomyCategoryReference == null) {
+			return null;
+		}
+
+		long assetCategoryGroupId = groupId;
+
+		String siteKey = taxonomyCategoryReference.getSiteKey();
+
+		if (siteKey != null) {
+			Group group = _groupLocalService.fetchGroup(
+				contextCompany.getCompanyId(), siteKey);
+
+			if (group == null) {
+				if (_log.isWarnEnabled()) {
+					_log.warn(
+						StringBundler.concat(
+							"No group exists with company ID ",
+							contextCompany.getCompanyId(), " and site key ",
+							siteKey));
+				}
+
+				return null;
+			}
+
+			assetCategoryGroupId = group.getGroupId();
+		}
+
+		AssetCategory assetCategory =
+			_assetCategoryLocalService.
+				fetchAssetCategoryByExternalReferenceCode(
+					taxonomyCategoryReference.getExternalReferenceCode(),
+					assetCategoryGroupId);
+
+		if (assetCategory == null) {
+			if (_log.isWarnEnabled()) {
+				_log.warn(
+					StringBundler.concat(
+						"No asset category exists with external reference ",
+						"code ",
+						taxonomyCategoryReference.getExternalReferenceCode(),
+						" and group ID ", assetCategoryGroupId));
+			}
+
+			return null;
+		}
+
+		return assetCategory.getCategoryId();
 	}
 
 	private String _toHTML(
@@ -835,6 +949,7 @@ public class SitePageResourceImpl extends BaseSitePageResourceImpl {
 
 		dtoConverterContext.setAttribute(
 			"embeddedPageDefinition", embeddedPageDefinition);
+		dtoConverterContext.setAttribute("groupId", layout.getGroupId());
 
 		if (Validator.isNotNull(segmentsExperienceKey)) {
 			dtoConverterContext.setAttribute(
@@ -874,7 +989,6 @@ public class SitePageResourceImpl extends BaseSitePageResourceImpl {
 			(pageDefinition.getSettings() == null)) {
 
 			layout.setThemeId(null);
-
 			layout.setColorSchemeId(null);
 
 			return _layoutLocalService.updateLayout(layout);
@@ -1122,6 +1236,9 @@ public class SitePageResourceImpl extends BaseSitePageResourceImpl {
 	private static final EntityModel _entityModel = new SitePageEntityModel();
 
 	@Reference
+	private AssetCategoryLocalService _assetCategoryLocalService;
+
+	@Reference
 	private CETManager _cetManager;
 
 	@Reference
@@ -1144,6 +1261,9 @@ public class SitePageResourceImpl extends BaseSitePageResourceImpl {
 	private FriendlyURLEntryLocalService _friendlyURLEntryLocalService;
 
 	@Reference
+	private GroupLocalService _groupLocalService;
+
+	@Reference
 	private JSONFactory _jsonFactory;
 
 	@Reference
@@ -1157,10 +1277,17 @@ public class SitePageResourceImpl extends BaseSitePageResourceImpl {
 		_layoutPageTemplateEntryLocalService;
 
 	@Reference
+	private LayoutPageTemplateStructureLocalService
+		_layoutPageTemplateStructureLocalService;
+
+	@Reference
 	private LayoutSEOEntryService _layoutSEOEntryService;
 
 	@Reference
 	private LayoutService _layoutService;
+
+	@Reference
+	private LayoutsImporter _layoutsImporter;
 
 	@Reference
 	private Portal _portal;

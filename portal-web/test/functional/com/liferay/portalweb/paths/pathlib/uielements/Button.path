@@ -192,7 +192,7 @@
 </tr>
 <tr>
 	<td>BUTTON_LABEL</td>
-	<td>//div[./label[normalize-space(text())='${fieldLabel}']]//button[normalize-space()='${text}']</td>
+	<td>//div[./label[normalize-space(text())='${fieldLabel}']]//button[normalize-space()='${text}'] | //div[contains(@class,'form-group')][.//label[normalize-space(text())='${fieldLabel}']]//button[normalize-space()='${text}']</td>
 	<td></td>
 </tr>
 <tr>
@@ -728,11 +728,6 @@
 <tr>
 	<td>RESET_CHANGES</td>
 	<td>//a[contains(@class,'btn')][contains(.,'Reset Changes')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>RESET_VALUES</td>
-	<td>//button/span[contains(.,'Reset Values')]</td>
 	<td></td>
 </tr>
 <tr>

@@ -12,7 +12,7 @@ import {
 	applyTimeZone,
 	DATE_MASK,
 	DATE_TIME_MASK,
-	FORMAT
+	DEFAULT_DATE_FORMAT
 } from 'shared/util/date';
 import {noop} from 'lodash';
 
@@ -35,7 +35,7 @@ export type OverlayAlignment = 'bottomLeft' | 'rightCenter';
 const DateInput: React.FC<IDateInputProps> = ({
 	className,
 	displayFormat,
-	format = FORMAT,
+	format = DEFAULT_DATE_FORMAT,
 	id,
 	name,
 	onDateInputBlur = noop,
@@ -128,6 +128,7 @@ const DateInput: React.FC<IDateInputProps> = ({
 
 					<Input.Inset position='after'>
 						<ClayButton
+							aria-label={Liferay.Language.get('choose-a-date')}
 							className='button-root'
 							displayType='unstyled'
 							onClick={handleClick}

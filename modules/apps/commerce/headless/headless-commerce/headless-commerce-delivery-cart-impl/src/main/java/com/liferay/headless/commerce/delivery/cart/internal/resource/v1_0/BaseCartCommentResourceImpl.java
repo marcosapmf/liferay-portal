@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.delivery.cart.internal.resource.v1_0;
@@ -31,6 +22,7 @@ import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.SetUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.odata.filter.ExpressionConvert;
@@ -458,38 +450,43 @@ public abstract class BaseCartCommentResourceImpl
 			Map<String, Serializable> parameters)
 		throws Exception {
 
-		UnsafeConsumer<CartComment, Exception> cartCommentUnsafeConsumer = null;
+		UnsafeFunction<CartComment, CartComment, Exception>
+			cartCommentUnsafeFunction = null;
 
 		String updateStrategy = (String)parameters.getOrDefault(
 			"updateStrategy", "UPDATE");
 
-		if ("PARTIAL_UPDATE".equalsIgnoreCase(updateStrategy)) {
-			cartCommentUnsafeConsumer = cartComment -> patchCartComment(
+		if (StringUtil.equalsIgnoreCase(updateStrategy, "PARTIAL_UPDATE")) {
+			cartCommentUnsafeFunction = cartComment -> patchCartComment(
 				cartComment.getId() != null ? cartComment.getId() :
 					_parseLong((String)parameters.get("cartCommentId")),
 				cartComment);
 		}
 
-		if ("UPDATE".equalsIgnoreCase(updateStrategy)) {
-			cartCommentUnsafeConsumer = cartComment -> putCartComment(
+		if (StringUtil.equalsIgnoreCase(updateStrategy, "UPDATE")) {
+			cartCommentUnsafeFunction = cartComment -> putCartComment(
 				cartComment.getId() != null ? cartComment.getId() :
 					_parseLong((String)parameters.get("cartCommentId")),
 				cartComment);
 		}
 
-		if (cartCommentUnsafeConsumer == null) {
+		if (cartCommentUnsafeFunction == null) {
 			throw new NotSupportedException(
 				"Update strategy \"" + updateStrategy +
 					"\" is not supported for CartComment");
 		}
 
-		if (contextBatchUnsafeConsumer != null) {
+		if (contextBatchUnsafeBiConsumer != null) {
+			contextBatchUnsafeBiConsumer.accept(
+				cartComments, cartCommentUnsafeFunction);
+		}
+		else if (contextBatchUnsafeConsumer != null) {
 			contextBatchUnsafeConsumer.accept(
-				cartComments, cartCommentUnsafeConsumer);
+				cartComments, cartCommentUnsafeFunction::apply);
 		}
 		else {
 			for (CartComment cartComment : cartComments) {
-				cartCommentUnsafeConsumer.accept(cartComment);
+				cartCommentUnsafeFunction.apply(cartComment);
 			}
 		}
 	}
@@ -504,6 +501,15 @@ public abstract class BaseCartCommentResourceImpl
 
 	public void setContextAcceptLanguage(AcceptLanguage contextAcceptLanguage) {
 		this.contextAcceptLanguage = contextAcceptLanguage;
+	}
+
+	public void setContextBatchUnsafeBiConsumer(
+		UnsafeBiConsumer
+			<Collection<CartComment>,
+			 UnsafeFunction<CartComment, CartComment, Exception>, Exception>
+				contextBatchUnsafeBiConsumer) {
+
+		this.contextBatchUnsafeBiConsumer = contextBatchUnsafeBiConsumer;
 	}
 
 	public void setContextBatchUnsafeConsumer(
@@ -768,6 +774,10 @@ public abstract class BaseCartCommentResourceImpl
 	}
 
 	protected AcceptLanguage contextAcceptLanguage;
+	protected UnsafeBiConsumer
+		<Collection<CartComment>,
+		 UnsafeFunction<CartComment, CartComment, Exception>, Exception>
+			contextBatchUnsafeBiConsumer;
 	protected UnsafeBiConsumer
 		<Collection<CartComment>, UnsafeConsumer<CartComment, Exception>,
 		 Exception> contextBatchUnsafeConsumer;

@@ -1,6 +1,7 @@
 @component-name = "portal-segmentation"
 definition {
 
+	property ci.retries.disabled = "true";
 	property custom.properties = "jsonws.web.service.paths.excludes=";
 	property portal.release = "true";
 	property portal.upstream = "true";
@@ -16,9 +17,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -149,7 +150,8 @@ definition {
 	@priority = 5
 	test CombineContentForMultisegmentDynamicCollectionWithoutPagination {
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "Collections#CombineContentForMultisegmentDynamicCollectionWithoutPagination";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Create a public page") {
 			JSONLayout.addPublicLayout(
@@ -283,7 +285,8 @@ definition {
 	@priority = 5
 	test CombineContentForMultisegmentDynamicCollectionWithPagination {
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "Collections#CombineContentForMultisegmentDynamicCollectionWithPagination";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Create a public page") {
 			JSONLayout.addPublicLayout(
@@ -434,7 +437,8 @@ definition {
 	@priority = 5
 	test CombineContentForMultisegmentManualCollectionWithoutPagination {
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "Collections#CombineContentForMultisegmentManualCollectionWithoutPagination";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Create a public page") {
 			JSONLayout.addPublicLayout(
@@ -535,7 +539,8 @@ definition {
 	@priority = 5
 	test CombineContentForMultisegmentManualCollectionWithPagination {
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "Collections#CombineContentForMultisegmentManualCollectionWithPagination";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Create a public page") {
 			JSONLayout.addPublicLayout(
@@ -1901,6 +1906,68 @@ definition {
 			AssertTextEquals(
 				locator1 = "Fragment#CONTENT_DISPLAY_ASSET_BULLET_LIST_TEXT",
 				value1 = "Blog_1");
+		}
+	}
+
+	@description = "This is a test for LPS-98466. Editing a collection fails after deleting a segment used by it."
+	@priority = 3
+	test EditManualCollectionAfterDeletingASegmentUsedByIt {
+		task ("Given a manual collection with variation") {
+			task ("Create web content articles") {
+				for (var i : list "1,2") {
+					JSONWebcontent.addWebContent(
+						content = "WC Content",
+						groupName = "Test Site Name",
+						title = "WC_Title_${i}");
+				}
+			}
+
+			task ("Create a segment") {
+				JSONSegmentsentry.addSegment(
+					fieldName = "Signed In",
+					groupName = "Test Site Name",
+					operator = "equals",
+					segmentName = "Segment Name",
+					text = "false");
+			}
+
+			task ("Create a manual Collection") {
+				JSONAssetlist.addManualAssetListEntryWithItemType(
+					groupName = "Test Site Name",
+					itemSubtype = "All Subtypes",
+					itemType = "Web Content Article",
+					title = "Manual Collection Test");
+			}
+
+			task ("Create a variation for the collection and select a web content") {
+				AssetListsAdmin.openAssetListsAdmin(siteURLKey = "test-site-name");
+
+				AssetListsAdmin.editAssetList(assetListTitle = "Manual Collection Test");
+
+				AssetListsAdmin.addPersonalizedVariation(segmentName = "Segment Name");
+
+				AssetListsAdmin.selectAsset(
+					assetListTitle = "Manual Collection Test",
+					assetType = "Basic Web Content",
+					entryList = "WC_Title_2");
+			}
+		}
+
+		task ("When delete the segment") {
+			JSONSegmentsentry.deleteSegment(
+				groupName = "Test Site Name",
+				segmentName = "Segment Name");
+		}
+
+		task ("Then assert user is able to edit the manual collection") {
+			AssetListsAdmin.openAssetListsAdmin(siteURLKey = "test-site-name");
+
+			AssetListsAdmin.editAssetList(assetListTitle = "Manual Collection Test");
+
+			AssetListsAdmin.selectAsset(
+				assetListTitle = "Manual Collection Test",
+				assetType = "Basic Web Content",
+				entryList = "WC_Title_1");
 		}
 	}
 
@@ -3689,7 +3756,8 @@ definition {
 	@description = "LPS-169312: https://issues.liferay.com/browse/LPS-169312"
 	@priority = 3
 	test ViewCombineContentForMultisegmentDynamicCollectionInAssetPublisher {
-		property test.name.skip.portal.instance = "Collections#ViewCombineContentForMultisegmentDynamicCollectionInAssetPublisher";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Create a public page") {
 			JSONLayout.addPublicLayout(
@@ -3790,7 +3858,8 @@ definition {
 	@description = "LPS-169312: https://issues.liferay.com/browse/LPS-169312"
 	@priority = 3
 	test ViewCombineContentForMultisegmentDynamicCollectionInCollectionDisplayFragment {
-		property test.name.skip.portal.instance = "Collections#ViewCombineContentForMultisegmentDynamicCollectionInCollectionDisplayFragment";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Create web content articles") {
 			JSONWebcontent.addWebContent(
@@ -3901,7 +3970,8 @@ definition {
 	@description = "LPS-169312: https://issues.liferay.com/browse/LPS-169312"
 	@priority = 3
 	test ViewCombineContentForMultisegmentManualCollectionInAssetPublisher {
-		property test.name.skip.portal.instance = "Collections#ViewCombineContentForMultisegmentManualCollectionInAssetPublisher";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Create a public page") {
 			JSONLayout.addPublicLayout(
@@ -4003,7 +4073,8 @@ definition {
 	@description = "LPS-169312: https://issues.liferay.com/browse/LPS-169312"
 	@priority = 3
 	test ViewCombineContentForMultisegmentManualCollectionInCollectionDisplayFragment {
-		property test.name.skip.portal.instance = "Collections#ViewCombineContentForMultisegmentManualCollectionInCollectionDisplayFragment";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Create web content articles") {
 			JSONWebcontent.addWebContent(
@@ -4116,7 +4187,8 @@ definition {
 	@description = "LPS-169312: https://issues.liferay.com/browse/LPS-169312"
 	@priority = 3
 	test ViewCombineContentOrderForMultisegmentDynamicCollection {
-		property test.name.skip.portal.instance = "Collections#ViewCombineContentOrderForMultisegmentDynamicCollection";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Create web content articles") {
 			for (var i : list "1,2,3,4") {
@@ -4239,7 +4311,8 @@ definition {
 	@description = "LPS-169312: https://issues.liferay.com/browse/LPS-169312"
 	@priority = 3
 	test ViewCombineContentOrderForMultisegmentManualCollection {
-		property test.name.skip.portal.instance = "Collections#ViewCombineContentOrderForMultisegmentManualCollection";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Create a public page") {
 			JSONLayout.addPublicLayout(

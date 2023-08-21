@@ -1,20 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.frontend.internal.util;
 
 import com.liferay.commerce.constants.CPDefinitionInventoryConstants;
+import com.liferay.commerce.constants.CommercePriceConstants;
 import com.liferay.commerce.context.CommerceContext;
 import com.liferay.commerce.currency.model.CommerceCurrency;
 import com.liferay.commerce.currency.model.CommerceMoney;
@@ -36,7 +28,6 @@ import com.liferay.commerce.product.option.CommerceOptionValueHelper;
 import com.liferay.commerce.product.service.CPInstanceLocalService;
 import com.liferay.commerce.product.service.CommerceChannelLocalService;
 import com.liferay.commerce.service.CPDefinitionInventoryLocalService;
-import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
@@ -61,7 +52,7 @@ import org.osgi.service.component.annotations.Reference;
 public class ProductHelperImpl implements ProductHelper {
 
 	@Override
-	public PriceModel getMinPrice(
+	public PriceModel getMinPriceModel(
 			long cpDefinitionId, CommerceContext commerceContext, Locale locale)
 		throws PortalException {
 
@@ -69,35 +60,24 @@ public class ProductHelperImpl implements ProductHelper {
 			_commerceProductPriceCalculation.getCPDefinitionMinimumPrice(
 				cpDefinitionId, commerceContext);
 
-		ResourceBundle resourceBundle = ResourceBundleUtil.getBundle(
-			"content.Language", locale, getClass());
+		PriceModel priceModel = null;
 
-		return new PriceModel(
-			_language.format(
-				resourceBundle, "from-x",
-				cpDefinitionMinimumPriceCommerceMoney.format(locale), false));
-	}
+		if (cpDefinitionMinimumPriceCommerceMoney.isPriceOnApplication()) {
+			priceModel = new PriceModel(
+				CommercePriceConstants.PRICE_VALUE_PRICE_ON_APPLICATION);
+		}
+		else {
+			ResourceBundle resourceBundle = ResourceBundleUtil.getBundle(
+				"content.Language", locale, getClass());
 
-	/**
-	 * @param      cpInstanceId
-	 * @param      quantity
-	 * @param      commerceContext
-	 * @param      locale
-	 * @return
-	 *
-	 * @throws     PortalException
-	 * @deprecated As of Athanasius (7.3.x), use {@link
-	 *             #getPriceModel(long, int, CommerceContext, String, Locale)}
-	 */
-	@Deprecated
-	@Override
-	public PriceModel getPrice(
-			long cpInstanceId, int quantity, CommerceContext commerceContext,
-			Locale locale)
-		throws PortalException {
+			priceModel = new PriceModel(
+				_language.format(
+					resourceBundle, "from-x",
+					cpDefinitionMinimumPriceCommerceMoney.format(locale),
+					false));
+		}
 
-		return getPriceModel(
-			cpInstanceId, quantity, commerceContext, StringPool.BLANK, locale);
+		return priceModel;
 	}
 
 	@Override
@@ -231,18 +211,33 @@ public class ProductHelperImpl implements ProductHelper {
 			CommerceDiscountValue commerceDiscountValue, Locale locale)
 		throws PortalException {
 
-		PriceModel priceModel = new PriceModel(
-			unitPriceCommerceMoney.format(locale));
+		PriceModel priceModel = null;
+
+		if (unitPriceCommerceMoney.isPriceOnApplication()) {
+			priceModel = new PriceModel(
+				CommercePriceConstants.PRICE_VALUE_PRICE_ON_APPLICATION);
+		}
+		else {
+			priceModel = new PriceModel(unitPriceCommerceMoney.format(locale));
+		}
 
 		if (!unitPromoPriceCommerceMoney.isEmpty()) {
+			BigDecimal unitPrice = unitPriceCommerceMoney.getPrice();
 			BigDecimal unitPromoPrice = unitPromoPriceCommerceMoney.getPrice();
 
 			if ((unitPromoPrice.compareTo(BigDecimal.ZERO) > 0) &&
-				(unitPromoPrice.compareTo(unitPriceCommerceMoney.getPrice()) <
-					0)) {
+				((unitPromoPrice.compareTo(unitPrice) < 0) ||
+				 unitPriceCommerceMoney.isPriceOnApplication())) {
 
-				priceModel.setPromoPrice(
-					unitPromoPriceCommerceMoney.format(locale));
+				if (unitPromoPriceCommerceMoney.isPriceOnApplication()) {
+					priceModel.setPromoPrice(
+						CommercePriceConstants.
+							PRICE_VALUE_PRICE_ON_APPLICATION);
+				}
+				else {
+					priceModel.setPromoPrice(
+						unitPromoPriceCommerceMoney.format(locale));
+				}
 			}
 		}
 

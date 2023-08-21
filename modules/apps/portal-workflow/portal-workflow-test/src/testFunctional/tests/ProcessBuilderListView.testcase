@@ -12,9 +12,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -29,7 +29,8 @@ definition {
 	@description = "Verify that the user can select Duplicate option in the kebab menu for a Not Published process"
 	@priority = 4
 	test CanDuplicateNonPublishedProcess {
-		property test.name.skip.portal.instance = "ProcessBuilderListView#CanDuplicateNonPublishedProcess";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		ApplicationsMenu.gotoPortlet(
 			category = "Workflow",
@@ -54,7 +55,8 @@ definition {
 	@description = "Verify that the user can select Duplicate option in the kebab menu for a particular row"
 	@priority = 4
 	test CanDuplicateProcess {
-		property test.name.skip.portal.instance = "ProcessBuilderListView#CanDuplicateProcess";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		Workflow.duplicateSingleApproverWorkflow(workflowName = "Copy of Single Approver");
 
@@ -68,10 +70,12 @@ definition {
 	@description = "Verify that, when duplicating a process, the user is able to edit its title"
 	@priority = 4
 	test CanEditTitleOfDuplicatedProcess {
-		property portal.upstream = "quarantine";
-		property test.name.skip.portal.instance = "ProcessBuilderListView#CanEditTitleOfDuplicatedProcess";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
-		Workflow.duplicateSingleApproverWorkflow(workflowName = "Single Approver 2");
+		Workflow.duplicateSingleApproverWorkflow();
+
+		Workflow.updateDefinition(workflowDefinitionTitle = "Single Approver 2");
 
 		Navigator.gotoBack();
 
@@ -83,7 +87,8 @@ definition {
 	@description = "Verify that the user is able to filter by Not Published processes"
 	@priority = 3
 	test CanFilterByNonPublishedProcesses {
-		property test.name.skip.portal.instance = "ProcessBuilderListView#CanFilterByNonPublishedProcesses";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		ApplicationsMenu.gotoPortlet(
 			category = "Workflow",
@@ -106,7 +111,8 @@ definition {
 	@description = "Verify that the user is able to filter by Published processes"
 	@priority = 3
 	test CanFilterByPublishedProcesses {
-		property test.name.skip.portal.instance = "ProcessBuilderListView#CanFilterByPublishedProcesses";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		ApplicationsMenu.gotoPortlet(
 			category = "Workflow",
@@ -186,7 +192,8 @@ definition {
 	@description = "Verify that the user is able to order by Last Modified"
 	@priority = 2
 	test CanOrderByLastModified {
-		property test.name.skip.portal.instance = "ProcessBuilderListView#CanOrderByLastModified";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		Workflow.duplicateSingleApproverWorkflow(workflowName = "Copy of Single Approver");
 
@@ -208,7 +215,8 @@ definition {
 	@description = "Verify that the user is able to order by Title"
 	@priority = 3
 	test CanOrderByTitle {
-		property test.name.skip.portal.instance = "ProcessBuilderListView#CanOrderByTitle";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		ApplicationsMenu.gotoPortlet(
 			category = "Workflow",
@@ -257,7 +265,8 @@ definition {
 	@description = "Verify that the user is able to reverse sort direction"
 	@priority = 2
 	test CanReverseSortDirection {
-		property test.name.skip.portal.instance = "ProcessBuilderListView#CanReverseSortDirection";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		Workflow.duplicateSingleApproverWorkflow(workflowName = "Copy of Single Approver");
 
@@ -328,7 +337,8 @@ definition {
 	@description = "Verify that search can be done using non-ASCII character"
 	@priority = 4
 	test CanSearchNonAsciiChar {
-		property test.name.skip.portal.instance = "ProcessBuilderListView#CanSearchNonAsciiChar";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		Workflow.duplicateSingleApproverWorkflow(workflowName = "単一承認者");
 
@@ -345,7 +355,8 @@ definition {
 	@description = "Verify that the user can select Edit option in the kebab menu for a particular row"
 	@priority = 4
 	test CanSelectEditOption {
-		property test.name.skip.portal.instance = "ProcessBuilderListView#CanSelectEditOption";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		ApplicationsMenu.gotoPortlet(
 			category = "Workflow",
@@ -356,10 +367,7 @@ definition {
 
 		Workflow.updateDefinition(workflowDefinitionTitle = "New Process Title");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Workflow",
-			panel = "Applications",
-			portlet = "Process Builder");
+		Navigator.gotoBack();
 
 		Workflow.viewDefinitionPublished(workflowDefinitionTitle = "New Process Title");
 	}
@@ -367,8 +375,9 @@ definition {
 	@description = "Verify that the user can select Edit option in the kebab menu for a Not Published process"
 	@priority = 4
 	test CanSelectEditOptionForNonPublishedProcess {
-		property test.name.skip.portal.instance = "ProcessBuilderListView#CanSelectEditOptionForNonPublishedProcess";
+		property test.liferay.virtual.instance = "false";
 		property test.run.environment = "EE";
+		property test.run.type = "single";
 
 		ApplicationsMenu.gotoPortlet(
 			category = "Workflow",
@@ -395,8 +404,9 @@ definition {
 	@description = "Verify that the user can select Permissions option in the kebab menu for a particular row"
 	@priority = 4
 	test CanSelectPermissionsOption {
-		property test.name.skip.portal.instance = "ProcessBuilderListView#CanSelectPermissionsOption";
+		property test.liferay.virtual.instance = "false";
 		property test.run.environment = "EE";
+		property test.run.type = "single";
 
 		ApplicationsMenu.gotoPortlet(
 			category = "Workflow",
@@ -409,8 +419,9 @@ definition {
 	@description = "Verify that the user can select Permissions option in the kebab menu for a Not Published process"
 	@priority = 4
 	test CanSelectPermissionsOptionForNonPublishedProcess {
-		property test.name.skip.portal.instance = "ProcessBuilderListView#CanSelectPermissionsOptionForNonPublishedProcess";
+		property test.liferay.virtual.instance = "false";
 		property test.run.environment = "EE";
+		property test.run.type = "single";
 
 		ApplicationsMenu.gotoPortlet(
 			category = "Workflow",
@@ -439,7 +450,8 @@ definition {
 	@description = "Verify that a duplicated definition can be Unpublished"
 	@priority = 3
 	test CanUnpublishDuplicatedDefinition {
-		property test.name.skip.portal.instance = "ProcessBuilderListView#CanUnpublishDuplicatedDefinition";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		Workflow.duplicateSingleApproverWorkflow(workflowName = "Copy of Single Approver");
 
@@ -533,7 +545,8 @@ definition {
 	@description = "Verify that hovering the + button will display the text New Workflow"
 	@priority = 2
 	test DisplaysText {
-		property test.name.skip.portal.instance = "ProcessBuilderListView#DisplaysText";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		ApplicationsMenu.gotoPortlet(
 			category = "Workflow",
@@ -548,7 +561,8 @@ definition {
 	@description = "Verify that the pagination component is displayed when the table has 5 items or more"
 	@priority = 3
 	test PaginationComponentIsDisplayed {
-		property test.name.skip.portal.instance = "ProcessBuilderListView#PaginationComponentIsDisplayed";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		ApplicationsMenu.gotoPortlet(
 			category = "Workflow",
@@ -581,7 +595,8 @@ definition {
 	@description = "Verify that the users are able to click on the + button and be directed to the New Workflow page"
 	@priority = 5
 	test RedirectToNewWorkflowPage {
-		property test.name.skip.portal.instance = "ProcessBuilderListView#RedirectToNewWorkflowPage";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		ApplicationsMenu.gotoPortlet(
 			category = "Workflow",

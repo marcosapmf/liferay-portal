@@ -1,12 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 import ClayModal from '@clayui/modal';
 import {useMemo, useState} from 'react';
@@ -42,13 +36,6 @@ const AnalyticsCloudModal = ({
 	const [formAlreadySubmitted, setFormAlreadySubmitted] = useState(false);
 	const {client} = useAppPropertiesContext();
 
-	const handleChangeForm = (isSuccess) => {
-		if (isSuccess) {
-			return setCurrentProcess(ANALYTICS_STEPS_TYPES.confirmationForm);
-		}
-		onClose();
-	};
-
 	const currentModalForm = useMemo(
 		() => ({
 			[ANALYTICS_STEPS_TYPES.confirmationForm]: (
@@ -57,7 +44,15 @@ const AnalyticsCloudModal = ({
 			[ANALYTICS_STEPS_TYPES.setupForm]: (
 				<SetupAnalyticsCloudForm
 					client={client}
-					handlePage={handleChangeForm}
+					handlePage={(isSuccess) => {
+						if (isSuccess) {
+							return setCurrentProcess(
+								ANALYTICS_STEPS_TYPES.confirmationForm
+							);
+						}
+
+						onClose();
+					}}
 					leftButton={i18n.translate('cancel')}
 					project={project}
 					setFormAlreadySubmitted={setFormAlreadySubmitted}
@@ -65,9 +60,7 @@ const AnalyticsCloudModal = ({
 				/>
 			),
 		}),
-
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-		[onClose, project, subscriptionGroupId]
+		[client, onClose, project, subscriptionGroupId]
 	);
 
 	return (
@@ -83,4 +76,5 @@ const AnalyticsCloudModal = ({
 		</ClayModal>
 	);
 };
+
 export default AnalyticsCloudModal;

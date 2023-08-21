@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.layout.seo.service.test;
@@ -153,36 +144,7 @@ public class LayoutSEOEntryLocalServiceTest {
 				true, Collections.singletonMap(LocaleUtil.US, "title"),
 				serviceContext);
 
-		DDMFormValues ddmFormValues = _ddmStorageEngineManager.getDDMFormValues(
-			layoutSEOEntry.getDDMStorageId());
-
-		Assert.assertNotNull(ddmFormValues);
-
-		List<DDMFormFieldValue> ddmFormFieldValues =
-			ddmFormValues.getDDMFormFieldValues();
-
-		Assert.assertEquals(
-			ddmFormFieldValues.toString(), 2, ddmFormFieldValues.size());
-
-		DDMFormFieldValue firstDDMFormFieldValue = ddmFormFieldValues.get(0);
-
-		_assertDDMFormFieldValueEquals("property1", firstDDMFormFieldValue);
-
-		List<DDMFormFieldValue> firstNestedDDMFormFieldValues =
-			firstDDMFormFieldValue.getNestedDDMFormFieldValues();
-
-		_assertDDMFormFieldValueEquals(
-			"content1", firstNestedDDMFormFieldValues.get(0));
-
-		DDMFormFieldValue secondDDMFormFieldValue = ddmFormFieldValues.get(1);
-
-		_assertDDMFormFieldValueEquals("property2", secondDDMFormFieldValue);
-
-		List<DDMFormFieldValue> secondNestedDDMFormFieldValues =
-			secondDDMFormFieldValue.getNestedDDMFormFieldValues();
-
-		_assertDDMFormFieldValueEquals(
-			"content2", secondNestedDDMFormFieldValues.get(0));
+		_assertDDMFormValues(layoutSEOEntry.getDDMStorageId());
 	}
 
 	@Test
@@ -302,6 +264,42 @@ public class LayoutSEOEntryLocalServiceTest {
 	}
 
 	@Test
+	public void testUpdateLayoutSEOEntryWithCustomTags() throws Exception {
+		ServiceContext serviceContext =
+			ServiceContextTestUtil.getServiceContext(_group.getGroupId());
+
+		LayoutSEOEntry layoutSEOEntry =
+			_layoutSEOEntryLocalService.updateLayoutSEOEntry(
+				TestPropsValues.getUserId(), _group.getGroupId(), false,
+				_layout.getLayoutId(), false,
+				Collections.singletonMap(LocaleUtil.US, "http://example.com"),
+				true, Collections.singletonMap(LocaleUtil.US, "description"),
+				Collections.singletonMap(LocaleUtil.US, "image alt"), 12345,
+				true, Collections.singletonMap(LocaleUtil.US, "title"),
+				serviceContext);
+
+		Assert.assertEquals(0, layoutSEOEntry.getDDMStorageId());
+
+		serviceContext.setAttribute(
+			_getDDMStructureId() + "ddmFormValues",
+			new String(
+				FileUtil.getBytes(
+					getClass(),
+					"dependencies/custom_meta_tags_ddm_form_values.json"),
+				StandardCharsets.UTF_8));
+
+		layoutSEOEntry = _layoutSEOEntryLocalService.updateLayoutSEOEntry(
+			TestPropsValues.getUserId(), _group.getGroupId(), false,
+			_layout.getLayoutId(), false,
+			Collections.singletonMap(LocaleUtil.US, "http://example.com"), true,
+			Collections.singletonMap(LocaleUtil.US, "description"),
+			Collections.singletonMap(LocaleUtil.US, "image alt"), 12345, true,
+			Collections.singletonMap(LocaleUtil.US, "title"), serviceContext);
+
+		_assertDDMFormValues(layoutSEOEntry.getDDMStorageId());
+	}
+
+	@Test
 	public void testUpdateLayoutSEOEntryWithEmptyCustomTags() throws Exception {
 		ServiceContext serviceContext =
 			ServiceContextTestUtil.getServiceContext(_group.getGroupId());
@@ -347,6 +345,39 @@ public class LayoutSEOEntryLocalServiceTest {
 		Value value = ddmFormFieldValue.getValue();
 
 		Assert.assertEquals(expected, value.getString(LocaleUtil.US));
+	}
+
+	private void _assertDDMFormValues(long ddmStorageId) throws Exception {
+		DDMFormValues ddmFormValues = _ddmStorageEngineManager.getDDMFormValues(
+			ddmStorageId);
+
+		Assert.assertNotNull(ddmFormValues);
+
+		List<DDMFormFieldValue> ddmFormFieldValues =
+			ddmFormValues.getDDMFormFieldValues();
+
+		Assert.assertEquals(
+			ddmFormFieldValues.toString(), 2, ddmFormFieldValues.size());
+
+		DDMFormFieldValue firstDDMFormFieldValue = ddmFormFieldValues.get(0);
+
+		_assertDDMFormFieldValueEquals("property1", firstDDMFormFieldValue);
+
+		List<DDMFormFieldValue> firstNestedDDMFormFieldValues =
+			firstDDMFormFieldValue.getNestedDDMFormFieldValues();
+
+		_assertDDMFormFieldValueEquals(
+			"content1", firstNestedDDMFormFieldValues.get(0));
+
+		DDMFormFieldValue secondDDMFormFieldValue = ddmFormFieldValues.get(1);
+
+		_assertDDMFormFieldValueEquals("property2", secondDDMFormFieldValue);
+
+		List<DDMFormFieldValue> secondNestedDDMFormFieldValues =
+			secondDDMFormFieldValue.getNestedDDMFormFieldValues();
+
+		_assertDDMFormFieldValueEquals(
+			"content2", secondNestedDDMFormFieldValues.get(0));
 	}
 
 	private long _getDDMStructureId() throws Exception {

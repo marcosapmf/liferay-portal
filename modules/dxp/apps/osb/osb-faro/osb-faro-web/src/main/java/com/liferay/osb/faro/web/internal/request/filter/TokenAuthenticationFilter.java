@@ -1,20 +1,11 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.osb.faro.web.internal.request.filter;
 
-import com.liferay.osb.faro.engine.client.constants.TokenConstants;
+import com.liferay.osb.faro.engine.client.util.TokenUtil;
 import com.liferay.osb.faro.web.internal.annotations.TokenAuthentication;
 import com.liferay.osb.faro.web.internal.util.ServletRequestUtil;
 import com.liferay.portal.kernel.log.Log;
@@ -54,12 +45,13 @@ public class TokenAuthenticationFilter implements ContainerRequestFilter {
 		String faroBackendSecuritySignature = _httpServletRequest.getHeader(
 			_ASAH_SECURITY_SIGNATURE_HEADER);
 
+		String originalURL = ServletRequestUtil.getOriginalURL(
+			_httpServletRequest);
+
 		if (Objects.equals(
 				faroBackendSecuritySignature,
 				DigestUtils.sha256Hex(
-					TokenConstants.OSB_ASAH_SECURITY_TOKEN.concat(
-						ServletRequestUtil.getOriginalURL(
-							_httpServletRequest))))) {
+					TokenUtil.getOSBAsahSecurityToken() + originalURL))) {
 
 			return;
 		}

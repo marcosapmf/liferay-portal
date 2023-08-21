@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.content.dashboard.web.internal.servlet.taglib.util;
@@ -20,6 +11,8 @@ import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemBuilder;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemList;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuilder;
+import com.liferay.info.item.ClassPKInfoItemIdentifier;
+import com.liferay.info.item.InfoItemIdentifier;
 import com.liferay.info.item.InfoItemReference;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.language.Language;
@@ -73,13 +66,15 @@ public class ContentDashboardDropdownItemsProvider {
 					InfoItemReference infoItemReference =
 						contentDashboardItem.getInfoItemReference();
 
+					long classPK = _getClassPK(infoItemReference);
+
 					return DropdownItemBuilder.setData(
 						HashMapBuilder.<String, Object>put(
 							"action", "showInfo"
 						).put(
 							"className", infoItemReference.getClassName()
 						).put(
-							"classPK", infoItemReference.getClassPK()
+							"classPK", classPK
 						).put(
 							"fetchURL",
 							ResourceURLBuilder.createResourceURL(
@@ -89,7 +84,7 @@ public class ContentDashboardDropdownItemsProvider {
 							).setParameter(
 								"className", infoItemReference.getClassName()
 							).setParameter(
-								"classPK", infoItemReference.getClassPK()
+								"classPK", classPK
 							).setResourceID(
 								"/content_dashboard" +
 									"/get_content_dashboard_item_info"
@@ -111,6 +106,21 @@ public class ContentDashboardDropdownItemsProvider {
 				contentDashboardItemAction -> _toViewInPanelDropdownItem(
 					contentDashboardItem, contentDashboardItemAction, locale))
 		).build();
+	}
+
+	private long _getClassPK(InfoItemReference infoItemReference) {
+		InfoItemIdentifier infoItemIdentifier =
+			infoItemReference.getInfoItemIdentifier();
+
+		if (infoItemIdentifier instanceof ClassPKInfoItemIdentifier) {
+			ClassPKInfoItemIdentifier classPKInfoItemIdentifier =
+				(ClassPKInfoItemIdentifier)
+					infoItemReference.getInfoItemIdentifier();
+
+			return classPKInfoItemIdentifier.getClassPK();
+		}
+
+		return 0;
 	}
 
 	private DropdownItem _toDropdownItem(
@@ -144,7 +154,7 @@ public class ContentDashboardDropdownItemsProvider {
 			).put(
 				"className", infoItemReference.getClassName()
 			).put(
-				"classPK", infoItemReference.getClassPK()
+				"classPK", _getClassPK(infoItemReference)
 			).put(
 				"fetchURL", contentDashboardItemAction.getURL(locale)
 			).build()

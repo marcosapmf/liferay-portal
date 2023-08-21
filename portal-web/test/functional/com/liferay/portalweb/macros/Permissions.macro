@@ -3,12 +3,20 @@ definition {
 	macro definePermissionsViaJSONAPI {
 		var groupId = JSONPermissionSetter.setGroupId(
 			groupName = ${groupName},
-			noSelenium = "true");
+			noSelenium = "true",
+			specificURL = ${specificURL});
 		var roleType = JSONPermissionSetter.setRoleType(roleType = ${roleType});
 
 		var primKey = JSONPermissionSetter.setPrimKey(roleType = ${roleType});
-		var roleId = JSONPermissionSetter.setRoleId(roleTitle = ${roleTitle});
+		var roleId = JSONPermissionSetter.setRoleId(
+			roleTitle = ${roleTitle},
+			specificURL = ${specificURL});
 		var scope = JSONPermissionSetter.setScope(roleType = ${roleType});
+
+		if (!(isSet(portalInstanceName))) {
+			var companyId = JSONCompany.getCompanyIdNoSelenium();
+		}
+
 		var list1 = ListUtil.newListFromString(${resourceNameActionList}, ":");
 
 		var size1 = ListUtil.size(${list1});
@@ -28,11 +36,14 @@ definition {
 
 				JSONPermissionAPI._addResourcePermission(
 					actionId = ${actionId},
+					companyId = ${companyId},
 					groupId = ${groupId},
 					name = ${name},
+					portalInstanceName = ${portalInstanceName},
 					primKey = ${primKey},
 					roleId = ${roleId},
-					scope = ${scope});
+					scope = ${scope},
+					specificURL = ${specificURL});
 
 				var j = ${j} + 1;
 
@@ -51,7 +62,8 @@ definition {
 			groupName = ${groupName},
 			name = ${resourceName},
 			roleTitle = ${roleTitle},
-			roleType = ${roleType});
+			roleType = ${roleType},
+			specificURL = ${specificURL});
 	}
 
 	macro removePermissionViaAPI {

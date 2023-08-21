@@ -1,21 +1,13 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.jethr0.project.repository;
 
 import com.liferay.jethr0.entity.repository.BaseEntityRepository;
 import com.liferay.jethr0.project.dalo.ProjectPrioritizerDALO;
+import com.liferay.jethr0.project.dalo.ProjectPrioritizerToProjectComparatorsDALO;
 import com.liferay.jethr0.project.prioritizer.ProjectPrioritizer;
 import com.liferay.jethr0.project.prioritizer.ProjectPrioritizerFactory;
 
@@ -38,7 +30,7 @@ public class ProjectPrioritizerRepository
 
 		jsonObject.put("name", name);
 
-		return add(_projectPrioritizerFactory.newEntity(jsonObject));
+		return add(jsonObject);
 	}
 
 	public ProjectPrioritizer getByName(String name) {
@@ -58,10 +50,39 @@ public class ProjectPrioritizerRepository
 		return _projectPrioritizerDALO;
 	}
 
+	@Override
+	public void initializeRelationships() {
+		for (ProjectPrioritizer projectPrioritizer : getAll()) {
+			for (long projectComparatorId :
+					_projectPrioritizerToProjectComparatorsDALO.
+						getChildEntityIds(projectPrioritizer)) {
+
+				if (projectComparatorId == 0) {
+					continue;
+				}
+
+				projectPrioritizer.addProjectComparator(
+					_projectComparatorRepository.getById(projectComparatorId));
+			}
+		}
+	}
+
+	public void setProjectComparatorRepository(
+		ProjectComparatorRepository projectComparatorRepository) {
+
+		_projectComparatorRepository = projectComparatorRepository;
+	}
+
+	private ProjectComparatorRepository _projectComparatorRepository;
+
 	@Autowired
 	private ProjectPrioritizerDALO _projectPrioritizerDALO;
 
 	@Autowired
 	private ProjectPrioritizerFactory _projectPrioritizerFactory;
+
+	@Autowired
+	private ProjectPrioritizerToProjectComparatorsDALO
+		_projectPrioritizerToProjectComparatorsDALO;
 
 }

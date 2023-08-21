@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.delivery.catalog.internal.resource.v1_0;
@@ -24,6 +15,7 @@ import com.liferay.headless.commerce.delivery.catalog.dto.v1_0.RelatedProduct;
 import com.liferay.headless.commerce.delivery.catalog.resource.v1_0.RelatedProductResource;
 import com.liferay.portal.kernel.change.tracking.CTAware;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.fields.NestedField;
@@ -80,22 +72,26 @@ public class RelatedProductResourceImpl
 			cpDefinitionLinks =
 				_cpDefinitionLinkLocalService.getCPDefinitionLinks(
 					cpDefinition.getCPDefinitionId(),
+					WorkflowConstants.STATUS_APPROVED,
 					pagination.getStartPosition(), pagination.getEndPosition());
 
 			totalItems =
 				_cpDefinitionLinkLocalService.getCPDefinitionLinksCount(
-					cpDefinition.getCPDefinitionId());
+					cpDefinition.getCPDefinitionId(),
+					WorkflowConstants.STATUS_APPROVED);
 		}
 		else {
 			cpDefinitionLinks =
 				_cpDefinitionLinkLocalService.getCPDefinitionLinks(
 					cpDefinition.getCPDefinitionId(), type,
+					WorkflowConstants.STATUS_APPROVED,
 					pagination.getStartPosition(), pagination.getEndPosition(),
 					null);
 
 			totalItems =
 				_cpDefinitionLinkLocalService.getCPDefinitionLinksCount(
-					cpDefinition.getCPDefinitionId(), type);
+					cpDefinition.getCPDefinitionId(), type,
+					WorkflowConstants.STATUS_APPROVED);
 		}
 
 		return Page.of(

@@ -1,3 +1,8 @@
+/**
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
+ */
+
 import ClayIcon from '@clayui/icon';
 import ClayTable from '@clayui/table';
 
@@ -8,6 +13,7 @@ import React, {ReactNode} from 'react';
 import {DashboardEmptyTable} from './DashboardEmptyTable';
 
 export type AppProps = {
+	attachments: Partial<ProductAttachment>[];
 	catalogId: number;
 	externalReferenceCode: string;
 	lastUpdatedBy?: string;
@@ -23,8 +29,8 @@ export type AppProps = {
 
 export type TableHeaders = {
 	iconSymbol?: string;
-	title: string;
 	style?: {width: string};
+	title: string;
 }[];
 
 interface DashboardTableProps<T> {
@@ -34,6 +40,7 @@ interface DashboardTableProps<T> {
 		description2: string;
 		title: string;
 	};
+	icon: string;
 	items: T[];
 	tableHeaders: TableHeaders;
 }
@@ -41,6 +48,7 @@ interface DashboardTableProps<T> {
 export function DashboardTable<T>({
 	children,
 	emptyStateMessage,
+	icon,
 	items,
 	tableHeaders,
 }: DashboardTableProps<T>) {
@@ -51,6 +59,7 @@ export function DashboardTable<T>({
 			<DashboardEmptyTable
 				description1={description1}
 				description2={description2}
+				icon={icon}
 				title={title}
 			/>
 		);

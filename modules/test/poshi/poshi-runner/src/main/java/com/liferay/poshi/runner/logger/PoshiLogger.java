@@ -1,27 +1,18 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.poshi.runner.logger;
 
 import com.liferay.poshi.core.PoshiContext;
 import com.liferay.poshi.core.PoshiGetterUtil;
+import com.liferay.poshi.core.PoshiProperties;
 import com.liferay.poshi.core.PoshiStackTrace;
 import com.liferay.poshi.core.elements.PoshiElement;
 import com.liferay.poshi.core.util.Dom4JUtil;
 import com.liferay.poshi.core.util.FileUtil;
 import com.liferay.poshi.core.util.GetterUtil;
-import com.liferay.poshi.core.util.PropsValues;
 import com.liferay.poshi.core.util.StringUtil;
 import com.liferay.poshi.runner.exception.PoshiRunnerLoggerException;
 
@@ -44,6 +35,8 @@ public class PoshiLogger {
 		_syntaxLogger = _getSyntaxLogger(testNamespacedClassCommandName);
 
 		_testNamespacedClassCommandName = testNamespacedClassCommandName;
+
+		_poshiProperties = PoshiProperties.getPoshiProperties();
 
 		_poshiStackTrace = PoshiStackTrace.getPoshiStackTrace(
 			testNamespacedClassCommandName);
@@ -73,7 +66,7 @@ public class PoshiLogger {
 					"></ul>",
 				_syntaxLogger.getSyntaxLogText());
 
-			if (PropsValues.TEST_RUN_LOCALLY) {
+			if (_poshiProperties.testRunLocally) {
 				FileUtil.copyFileFromResource(
 					"META-INF/resources/css/main.css",
 					currentDirName + "/test-results/css/main.css");
@@ -90,22 +83,24 @@ public class PoshiLogger {
 			else {
 				indexHTMLContent = StringUtil.replace(
 					indexHTMLContent, "<link href=\"../css/main.css\"",
-					"<link href=\"" + PropsValues.LOGGER_RESOURCES_URL +
+					"<link href=\"" + _poshiProperties.loggerResourcesURL +
 						"/css/main.css\"");
 				indexHTMLContent = StringUtil.replace(
 					indexHTMLContent,
 					"<script defer src=\"../js/component.js\"",
-					"<script defer src=\"" + PropsValues.LOGGER_RESOURCES_URL +
-						"/js/component.js\"");
+					"<script defer src=\"" +
+						_poshiProperties.loggerResourcesURL +
+							"/js/component.js\"");
 				indexHTMLContent = StringUtil.replace(
 					indexHTMLContent, "<script defer src=\"../js/main.js\"",
-					"<script defer src=\"" + PropsValues.LOGGER_RESOURCES_URL +
-						"/js/main.js\"");
+					"<script defer src=\"" +
+						_poshiProperties.loggerResourcesURL + "/js/main.js\"");
 				indexHTMLContent = StringUtil.replace(
 					indexHTMLContent,
 					"<script defer src=\"../js/update_images.js\"",
-					"<script defer src=\"" + PropsValues.LOGGER_RESOURCES_URL +
-						"/js/update_images.js\"");
+					"<script defer src=\"" +
+						_poshiProperties.loggerResourcesURL +
+							"/js/update_images.js\"");
 			}
 		}
 		catch (OutOfMemoryError outOfMemoryError) {
@@ -276,7 +271,7 @@ public class PoshiLogger {
 
 	private LoggerElement _getSyntaxLoggerElement() {
 		return _syntaxLogger.getSyntaxLoggerElement(
-			_poshiStackTrace.getSimpleStackTrace());
+			_poshiStackTrace.getSimpleStackTraceMessage());
 	}
 
 	private void _linkLoggerElements(
@@ -302,6 +297,7 @@ public class PoshiLogger {
 
 	private final CommandLogger _commandLogger;
 	private int _functionLinkId;
+	private final PoshiProperties _poshiProperties;
 	private final PoshiStackTrace _poshiStackTrace;
 	private final SyntaxLogger _syntaxLogger;
 	private final String _testNamespacedClassCommandName;

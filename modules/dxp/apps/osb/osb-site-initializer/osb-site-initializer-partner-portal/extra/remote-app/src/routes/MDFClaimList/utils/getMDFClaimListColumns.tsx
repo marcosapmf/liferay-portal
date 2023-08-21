@@ -1,12 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {KeyedMutator, mutate} from 'swr';
@@ -23,8 +17,8 @@ import {MDFClaimListItem} from '../../../common/interfaces/mdfClaimListItem';
 import TableColumn from '../../../common/interfaces/tableColumn';
 import {Liferay} from '../../../common/services/liferay';
 import LiferayItems from '../../../common/services/liferay/common/interfaces/liferayItems';
+import deleteObjectEntry from '../../../common/services/liferay/object/deleteObjectEntry/deleteObjectEntry';
 import {ResourceName} from '../../../common/services/liferay/object/enum/resourceName';
-import deleteMDFClaim from '../../../common/services/liferay/object/mdf-claim/deleteMDFClaim';
 import {Status} from '../../../common/utils/constants/status';
 
 export default function getMDFClaimListColumns(
@@ -90,7 +84,7 @@ export default function getMDFClaimListColumns(
 								onConfirm: async (isConfirmed: boolean) => {
 									if (isConfirmed) {
 										try {
-											await deleteMDFClaim(
+											await deleteObjectEntry(
 												ResourceName.MDF_CLAIM_DXP,
 												Number(
 													row[

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.webserver;
@@ -335,7 +326,6 @@ public class WebServerServlet extends HttpServlet {
 			}
 
 			PrincipalThreadLocal.setName(user.getUserId());
-
 			PrincipalThreadLocal.setPassword(
 				PortalUtil.getUserPassword(httpServletRequest));
 
@@ -1177,7 +1167,12 @@ public class WebServerServlet extends HttpServlet {
 		}
 
 		if (converted && (contentLength == 0)) {
-			throw new NoSuchFileException("The converted file is empty");
+			PortalUtil.sendError(
+				HttpServletResponse.SC_NOT_FOUND,
+				new NoSuchFileException("The converted file is empty"),
+				httpServletRequest, httpServletResponse);
+
+			return;
 		}
 
 		// Determine proper content type
@@ -1537,6 +1532,34 @@ public class WebServerServlet extends HttpServlet {
 			group.getGroupId(), pathArray[2]);
 	}
 
+	private void _checkCompanyAndGroup(
+			long groupId, HttpServletRequest httpServletRequest)
+		throws Exception {
+
+		Group group = GroupLocalServiceUtil.fetchGroup(groupId);
+
+		if (group == null) {
+			if (_log.isWarnEnabled()) {
+				_log.warn("No group exists group ID " + groupId);
+			}
+
+			throw new NoSuchFileEntryException();
+		}
+
+		long companyId = PortalUtil.getCompanyId(httpServletRequest);
+
+		if (group.getCompanyId() != companyId) {
+			if (_log.isWarnEnabled()) {
+				_log.warn(
+					StringBundler.concat(
+						"Group ", groupId, " does not belong to company ",
+						companyId));
+			}
+
+			throw new NoSuchFileEntryException();
+		}
+	}
+
 	private void _checkFileEntry(
 			FileEntry fileEntry, HttpServletRequest httpServletRequest)
 		throws Exception {
@@ -1544,6 +1567,8 @@ public class WebServerServlet extends HttpServlet {
 		if (fileEntry == null) {
 			return;
 		}
+
+		_checkCompanyAndGroup(fileEntry.getGroupId(), httpServletRequest);
 
 		PermissionChecker permissionChecker = _getPermissionChecker(
 			httpServletRequest);

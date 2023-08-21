@@ -1,20 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.inventory.service;
 
 import com.liferay.portal.kernel.service.ServiceWrapper;
+import com.liferay.portal.kernel.service.persistence.BasePersistence;
 
 /**
  * Provides a wrapper for {@link CommerceInventoryWarehouseItemLocalService}.
@@ -62,51 +54,31 @@ public class CommerceInventoryWarehouseItemLocalServiceWrapper
 	@Override
 	public com.liferay.commerce.inventory.model.CommerceInventoryWarehouseItem
 			addCommerceInventoryWarehouseItem(
-				long userId, long commerceInventoryWarehouseId, String sku,
-				int quantity)
-		throws com.liferay.portal.kernel.exception.PortalException {
-
-		return _commerceInventoryWarehouseItemLocalService.
-			addCommerceInventoryWarehouseItem(
-				userId, commerceInventoryWarehouseId, sku, quantity);
-	}
-
-	@Override
-	public com.liferay.commerce.inventory.model.CommerceInventoryWarehouseItem
-			addCommerceInventoryWarehouseItem(
 				String externalReferenceCode, long userId,
-				long commerceInventoryWarehouseId, String sku, int quantity)
+				long commerceInventoryWarehouseId,
+				java.math.BigDecimal quantity, String sku,
+				String unitOfMeasureKey)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _commerceInventoryWarehouseItemLocalService.
 			addCommerceInventoryWarehouseItem(
 				externalReferenceCode, userId, commerceInventoryWarehouseId,
-				sku, quantity);
-	}
-
-	@Override
-	public com.liferay.commerce.inventory.model.CommerceInventoryWarehouseItem
-			addOrUpdateCommerceInventoryWarehouseItem(
-				long userId, long commerceInventoryWarehouseId, String sku,
-				int quantity)
-		throws com.liferay.portal.kernel.exception.PortalException {
-
-		return _commerceInventoryWarehouseItemLocalService.
-			addOrUpdateCommerceInventoryWarehouseItem(
-				userId, commerceInventoryWarehouseId, sku, quantity);
+				quantity, sku, unitOfMeasureKey);
 	}
 
 	@Override
 	public com.liferay.commerce.inventory.model.CommerceInventoryWarehouseItem
 			addOrUpdateCommerceInventoryWarehouseItem(
 				String externalReferenceCode, long companyId, long userId,
-				long commerceInventoryWarehouseId, String sku, int quantity)
+				long commerceInventoryWarehouseId,
+				java.math.BigDecimal quantity, String sku,
+				String unitOfMeasureKey)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _commerceInventoryWarehouseItemLocalService.
 			addOrUpdateCommerceInventoryWarehouseItem(
 				externalReferenceCode, companyId, userId,
-				commerceInventoryWarehouseId, sku, quantity);
+				commerceInventoryWarehouseId, quantity, sku, unitOfMeasureKey);
 	}
 
 	@Override
@@ -422,17 +394,6 @@ public class CommerceInventoryWarehouseItemLocalServiceWrapper
 				externalReferenceCode, companyId);
 	}
 
-	@Override
-	public com.liferay.commerce.inventory.model.CommerceInventoryWarehouseItem
-			getCommerceInventoryWarehouseItemByReferenceCode(
-				String externalReferenceCode, long companyId)
-		throws com.liferay.portal.kernel.exception.PortalException {
-
-		return _commerceInventoryWarehouseItemLocalService.
-			getCommerceInventoryWarehouseItemByReferenceCode(
-				externalReferenceCode, companyId);
-	}
-
 	/**
 	 * Returns the commerce inventory warehouse item with the matching UUID and company.
 	 *
@@ -481,16 +442,6 @@ public class CommerceInventoryWarehouseItemLocalServiceWrapper
 		return _commerceInventoryWarehouseItemLocalService.
 			getCommerceInventoryWarehouseItems(
 				commerceInventoryWarehouseId, start, end);
-	}
-
-	@Override
-	public java.util.List
-		<com.liferay.commerce.inventory.model.CommerceInventoryWarehouseItem>
-			getCommerceInventoryWarehouseItems(
-				long companyId, String sku, int start, int end) {
-
-		return _commerceInventoryWarehouseItemLocalService.
-			getCommerceInventoryWarehouseItems(companyId, sku, start, end);
 	}
 
 	@Override
@@ -545,6 +496,14 @@ public class CommerceInventoryWarehouseItemLocalServiceWrapper
 		return _commerceInventoryWarehouseItemLocalService.
 			getCommerceInventoryWarehouseItemsCount(
 				commerceInventoryWarehouseId);
+	}
+
+	@Override
+	public int getCommerceInventoryWarehouseItemsCount(
+		long companyId, long groupId, String sku) {
+
+		return _commerceInventoryWarehouseItemLocalService.
+			getCommerceInventoryWarehouseItemsCount(companyId, groupId, sku);
 	}
 
 	@Override
@@ -622,13 +581,15 @@ public class CommerceInventoryWarehouseItemLocalServiceWrapper
 	}
 
 	@Override
-	public int getStockQuantity(long companyId, long groupId, String sku) {
+	public java.math.BigDecimal getStockQuantity(
+		long companyId, long groupId, String sku) {
+
 		return _commerceInventoryWarehouseItemLocalService.getStockQuantity(
 			companyId, groupId, sku);
 	}
 
 	@Override
-	public int getStockQuantity(long companyId, String sku) {
+	public java.math.BigDecimal getStockQuantity(long companyId, String sku) {
 		return _commerceInventoryWarehouseItemLocalService.getStockQuantity(
 			companyId, sku);
 	}
@@ -637,7 +598,7 @@ public class CommerceInventoryWarehouseItemLocalServiceWrapper
 	public com.liferay.commerce.inventory.model.CommerceInventoryWarehouseItem
 			increaseCommerceInventoryWarehouseItemQuantity(
 				long userId, long commerceInventoryWarehouseItemId,
-				int quantity)
+				java.math.BigDecimal quantity)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _commerceInventoryWarehouseItemLocalService.
@@ -648,13 +609,14 @@ public class CommerceInventoryWarehouseItemLocalServiceWrapper
 	@Override
 	public void moveQuantitiesBetweenWarehouses(
 			long userId, long fromCommerceInventoryWarehouseId,
-			long toCommerceInventoryWarehouseId, String sku, int quantity)
+			long toCommerceInventoryWarehouseId, java.math.BigDecimal quantity,
+			String sku)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		_commerceInventoryWarehouseItemLocalService.
 			moveQuantitiesBetweenWarehouses(
 				userId, fromCommerceInventoryWarehouseId,
-				toCommerceInventoryWarehouseId, sku, quantity);
+				toCommerceInventoryWarehouseId, quantity, sku);
 	}
 
 	/**
@@ -682,7 +644,8 @@ public class CommerceInventoryWarehouseItemLocalServiceWrapper
 	public com.liferay.commerce.inventory.model.CommerceInventoryWarehouseItem
 			updateCommerceInventoryWarehouseItem(
 				long userId, long commerceInventoryWarehouseItemId,
-				int quantity, int reservedQuantity, long mvccVersion)
+				java.math.BigDecimal quantity,
+				java.math.BigDecimal reservedQuantity, long mvccVersion)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _commerceInventoryWarehouseItemLocalService.
@@ -695,13 +658,19 @@ public class CommerceInventoryWarehouseItemLocalServiceWrapper
 	public com.liferay.commerce.inventory.model.CommerceInventoryWarehouseItem
 			updateCommerceInventoryWarehouseItem(
 				long userId, long commerceInventoryWarehouseItemId,
-				int quantity, long mvccVersion)
+				long mvccVersion, java.math.BigDecimal quantity,
+				String unitOfMeasureKey)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _commerceInventoryWarehouseItemLocalService.
 			updateCommerceInventoryWarehouseItem(
-				userId, commerceInventoryWarehouseItemId, quantity,
-				mvccVersion);
+				userId, commerceInventoryWarehouseItemId, mvccVersion, quantity,
+				unitOfMeasureKey);
+	}
+
+	@Override
+	public BasePersistence<?> getBasePersistence() {
+		return _commerceInventoryWarehouseItemLocalService.getBasePersistence();
 	}
 
 	@Override

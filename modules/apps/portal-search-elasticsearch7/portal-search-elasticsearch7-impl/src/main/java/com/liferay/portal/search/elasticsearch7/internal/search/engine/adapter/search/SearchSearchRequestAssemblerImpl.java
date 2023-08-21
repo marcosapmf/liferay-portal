@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.elasticsearch7.internal.search.engine.adapter.search;
@@ -24,13 +15,13 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.search.elasticsearch7.internal.groupby.GroupByTranslator;
 import com.liferay.portal.search.elasticsearch7.internal.highlight.HighlightTranslator;
 import com.liferay.portal.search.elasticsearch7.internal.highlight.HighlighterTranslator;
-import com.liferay.portal.search.elasticsearch7.internal.query.QueryToQueryBuilderTranslator;
 import com.liferay.portal.search.elasticsearch7.internal.sort.SortTranslator;
 import com.liferay.portal.search.elasticsearch7.internal.stats.StatsTranslator;
 import com.liferay.portal.search.engine.adapter.search.SearchSearchRequest;
 import com.liferay.portal.search.groupby.GroupByRequest;
 import com.liferay.portal.search.legacy.groupby.GroupByRequestFactory;
 import com.liferay.portal.search.legacy.stats.StatsRequestBuilderFactory;
+import com.liferay.portal.search.query.QueryTranslator;
 import com.liferay.portal.search.sort.Sort;
 import com.liferay.portal.search.sort.SortFieldTranslator;
 import com.liferay.portal.search.stats.StatsRequest;
@@ -41,6 +32,7 @@ import java.util.Map;
 
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.core.TimeValue;
+import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.sort.SortBuilder;
 
@@ -158,8 +150,7 @@ public class SearchSearchRequestAssemblerImpl
 		if (searchSearchRequest.getHighlight() != null) {
 			searchSourceBuilder.highlighter(
 				_highlightTranslator.translate(
-					searchSearchRequest.getHighlight(),
-					_queryToQueryBuilderTranslator));
+					searchSearchRequest.getHighlight(), _queryTranslator));
 		}
 		else if (searchSearchRequest.isHighlightEnabled()) {
 			_highlighterTranslator.translate(
@@ -293,8 +284,8 @@ public class SearchSearchRequestAssemblerImpl
 	private final HighlightTranslator _highlightTranslator =
 		new HighlightTranslator();
 
-	@Reference
-	private QueryToQueryBuilderTranslator _queryToQueryBuilderTranslator;
+	@Reference(target = "(search.engine.impl=Elasticsearch)")
+	private QueryTranslator<QueryBuilder> _queryTranslator;
 
 	@Reference
 	private SortFieldTranslator<SortBuilder<?>> _sortFieldTranslator;

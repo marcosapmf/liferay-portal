@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.admin.catalog.resource.v1_0.test;
@@ -421,23 +412,23 @@ public abstract class BaseGroupedProductResourceTestCase {
 
 	@Test
 	public void testGetProductIdGroupedProductsPage() throws Exception {
-		Long productId = testGetProductIdGroupedProductsPage_getProductId();
-		Long irrelevantProductId =
-			testGetProductIdGroupedProductsPage_getIrrelevantProductId();
+		Long id = testGetProductIdGroupedProductsPage_getId();
+		Long irrelevantId =
+			testGetProductIdGroupedProductsPage_getIrrelevantId();
 
 		Page<GroupedProduct> page =
 			groupedProductResource.getProductIdGroupedProductsPage(
-				productId, Pagination.of(1, 10));
+				id, Pagination.of(1, 10));
 
 		Assert.assertEquals(0, page.getTotalCount());
 
-		if (irrelevantProductId != null) {
+		if (irrelevantId != null) {
 			GroupedProduct irrelevantGroupedProduct =
 				testGetProductIdGroupedProductsPage_addGroupedProduct(
-					irrelevantProductId, randomIrrelevantGroupedProduct());
+					irrelevantId, randomIrrelevantGroupedProduct());
 
 			page = groupedProductResource.getProductIdGroupedProductsPage(
-				irrelevantProductId, Pagination.of(1, 2));
+				irrelevantId, Pagination.of(1, 2));
 
 			Assert.assertEquals(1, page.getTotalCount());
 
@@ -447,19 +438,19 @@ public abstract class BaseGroupedProductResourceTestCase {
 			assertValid(
 				page,
 				testGetProductIdGroupedProductsPage_getExpectedActions(
-					irrelevantProductId));
+					irrelevantId));
 		}
 
 		GroupedProduct groupedProduct1 =
 			testGetProductIdGroupedProductsPage_addGroupedProduct(
-				productId, randomGroupedProduct());
+				id, randomGroupedProduct());
 
 		GroupedProduct groupedProduct2 =
 			testGetProductIdGroupedProductsPage_addGroupedProduct(
-				productId, randomGroupedProduct());
+				id, randomGroupedProduct());
 
 		page = groupedProductResource.getProductIdGroupedProductsPage(
-			productId, Pagination.of(1, 10));
+			id, Pagination.of(1, 10));
 
 		Assert.assertEquals(2, page.getTotalCount());
 
@@ -467,8 +458,7 @@ public abstract class BaseGroupedProductResourceTestCase {
 			Arrays.asList(groupedProduct1, groupedProduct2),
 			(List<GroupedProduct>)page.getItems());
 		assertValid(
-			page,
-			testGetProductIdGroupedProductsPage_getExpectedActions(productId));
+			page, testGetProductIdGroupedProductsPage_getExpectedActions(id));
 
 		groupedProductResource.deleteGroupedProduct(groupedProduct1.getId());
 
@@ -476,8 +466,7 @@ public abstract class BaseGroupedProductResourceTestCase {
 	}
 
 	protected Map<String, Map<String, String>>
-			testGetProductIdGroupedProductsPage_getExpectedActions(
-				Long productId)
+			testGetProductIdGroupedProductsPage_getExpectedActions(Long id)
 		throws Exception {
 
 		Map<String, Map<String, String>> expectedActions = new HashMap<>();
@@ -489,23 +478,23 @@ public abstract class BaseGroupedProductResourceTestCase {
 	public void testGetProductIdGroupedProductsPageWithPagination()
 		throws Exception {
 
-		Long productId = testGetProductIdGroupedProductsPage_getProductId();
+		Long id = testGetProductIdGroupedProductsPage_getId();
 
 		GroupedProduct groupedProduct1 =
 			testGetProductIdGroupedProductsPage_addGroupedProduct(
-				productId, randomGroupedProduct());
+				id, randomGroupedProduct());
 
 		GroupedProduct groupedProduct2 =
 			testGetProductIdGroupedProductsPage_addGroupedProduct(
-				productId, randomGroupedProduct());
+				id, randomGroupedProduct());
 
 		GroupedProduct groupedProduct3 =
 			testGetProductIdGroupedProductsPage_addGroupedProduct(
-				productId, randomGroupedProduct());
+				id, randomGroupedProduct());
 
 		Page<GroupedProduct> page1 =
 			groupedProductResource.getProductIdGroupedProductsPage(
-				productId, Pagination.of(1, 2));
+				id, Pagination.of(1, 2));
 
 		List<GroupedProduct> groupedProducts1 =
 			(List<GroupedProduct>)page1.getItems();
@@ -515,7 +504,7 @@ public abstract class BaseGroupedProductResourceTestCase {
 
 		Page<GroupedProduct> page2 =
 			groupedProductResource.getProductIdGroupedProductsPage(
-				productId, Pagination.of(2, 2));
+				id, Pagination.of(2, 2));
 
 		Assert.assertEquals(3, page2.getTotalCount());
 
@@ -527,7 +516,7 @@ public abstract class BaseGroupedProductResourceTestCase {
 
 		Page<GroupedProduct> page3 =
 			groupedProductResource.getProductIdGroupedProductsPage(
-				productId, Pagination.of(1, 3));
+				id, Pagination.of(1, 3));
 
 		assertEqualsIgnoringOrder(
 			Arrays.asList(groupedProduct1, groupedProduct2, groupedProduct3),
@@ -536,21 +525,21 @@ public abstract class BaseGroupedProductResourceTestCase {
 
 	protected GroupedProduct
 			testGetProductIdGroupedProductsPage_addGroupedProduct(
-				Long productId, GroupedProduct groupedProduct)
+				Long id, GroupedProduct groupedProduct)
 		throws Exception {
 
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
 	}
 
-	protected Long testGetProductIdGroupedProductsPage_getProductId()
+	protected Long testGetProductIdGroupedProductsPage_getId()
 		throws Exception {
 
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
 	}
 
-	protected Long testGetProductIdGroupedProductsPage_getIrrelevantProductId()
+	protected Long testGetProductIdGroupedProductsPage_getIrrelevantId()
 		throws Exception {
 
 		return null;
@@ -766,14 +755,19 @@ public abstract class BaseGroupedProductResourceTestCase {
 
 		Assert.assertTrue(valid);
 
-		Map<String, Map<String, String>> actions = page.getActions();
+		assertValid(page.getActions(), expectedActions);
+	}
 
-		for (String key : expectedActions.keySet()) {
-			Map action = actions.get(key);
+	protected void assertValid(
+		Map<String, Map<String, String>> actions1,
+		Map<String, Map<String, String>> actions2) {
+
+		for (String key : actions2.keySet()) {
+			Map action = actions1.get(key);
 
 			Assert.assertNotNull(key + " does not contain an action", action);
 
-			Map expectedAction = expectedActions.get(key);
+			Map<String, String> expectedAction = actions2.get(key);
 
 			Assert.assertEquals(
 				expectedAction.get("method"), action.get("method"));
@@ -1059,11 +1053,48 @@ public abstract class BaseGroupedProductResourceTestCase {
 		sb.append(" ");
 
 		if (entityFieldName.equals("entryProductExternalReferenceCode")) {
-			sb.append("'");
-			sb.append(
-				String.valueOf(
-					groupedProduct.getEntryProductExternalReferenceCode()));
-			sb.append("'");
+			Object object =
+				groupedProduct.getEntryProductExternalReferenceCode();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
@@ -1090,11 +1121,47 @@ public abstract class BaseGroupedProductResourceTestCase {
 		}
 
 		if (entityFieldName.equals("productExternalReferenceCode")) {
-			sb.append("'");
-			sb.append(
-				String.valueOf(
-					groupedProduct.getProductExternalReferenceCode()));
-			sb.append("'");
+			Object object = groupedProduct.getProductExternalReferenceCode();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}

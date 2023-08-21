@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.admin.catalog.internal.graphql.mutation.v1_0;
@@ -646,15 +637,27 @@ public class Mutation {
 
 	@GraphQLField
 	public Diagram createProductIdDiagram(
-			@GraphQLName("productId") Long productId,
-			@GraphQLName("diagram") Diagram diagram)
+			@GraphQLName("id") Long id, @GraphQLName("diagram") Diagram diagram)
 		throws Exception {
 
 		return _applyComponentServiceObjects(
 			_diagramResourceComponentServiceObjects,
 			this::_populateResourceContext,
 			diagramResource -> diagramResource.postProductIdDiagram(
-				productId, diagram));
+				id, diagram));
+	}
+
+	@GraphQLField
+	public Response createProductIdDiagramBatch(
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("object") Object object)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_diagramResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			diagramResource -> diagramResource.postProductIdDiagramBatch(
+				callbackURL, object));
 	}
 
 	@GraphQLField
@@ -716,7 +719,7 @@ public class Mutation {
 
 	@GraphQLField
 	public GroupedProduct createProductIdGroupedProduct(
-			@GraphQLName("productId") Long productId,
+			@GraphQLName("id") Long id,
 			@GraphQLName("groupedProduct") GroupedProduct groupedProduct)
 		throws Exception {
 
@@ -725,7 +728,21 @@ public class Mutation {
 			this::_populateResourceContext,
 			groupedProductResource ->
 				groupedProductResource.postProductIdGroupedProduct(
-					productId, groupedProduct));
+					id, groupedProduct));
+	}
+
+	@GraphQLField
+	public Response createProductIdGroupedProductBatch(
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("object") Object object)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_groupedProductResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			groupedProductResource ->
+				groupedProductResource.postProductIdGroupedProductBatch(
+					callbackURL, object));
 	}
 
 	@GraphQLField
@@ -801,7 +818,7 @@ public class Mutation {
 
 	@GraphQLField
 	public MappedProduct createProductIdMappedProduct(
-			@GraphQLName("productId") Long productId,
+			@GraphQLName("id") Long id,
 			@GraphQLName("mappedProduct") MappedProduct mappedProduct)
 		throws Exception {
 
@@ -810,7 +827,21 @@ public class Mutation {
 			this::_populateResourceContext,
 			mappedProductResource ->
 				mappedProductResource.postProductIdMappedProduct(
-					productId, mappedProduct));
+					id, mappedProduct));
+	}
+
+	@GraphQLField
+	public Response createProductIdMappedProductBatch(
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("object") Object object)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_mappedProductResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			mappedProductResource ->
+				mappedProductResource.postProductIdMappedProductBatch(
+					callbackURL, object));
 	}
 
 	@GraphQLField
@@ -1148,13 +1179,24 @@ public class Mutation {
 
 	@GraphQLField
 	public Pin createProductIdPin(
-			@GraphQLName("productId") Long productId,
-			@GraphQLName("pin") Pin pin)
+			@GraphQLName("id") Long id, @GraphQLName("pin") Pin pin)
 		throws Exception {
 
 		return _applyComponentServiceObjects(
 			_pinResourceComponentServiceObjects, this::_populateResourceContext,
-			pinResource -> pinResource.postProductIdPin(productId, pin));
+			pinResource -> pinResource.postProductIdPin(id, pin));
+	}
+
+	@GraphQLField
+	public Response createProductIdPinBatch(
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("object") Object object)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_pinResourceComponentServiceObjects, this::_populateResourceContext,
+			pinResource -> pinResource.postProductIdPinBatch(
+				callbackURL, object));
 	}
 
 	@GraphQLField
@@ -2238,6 +2280,12 @@ public class Mutation {
 		diagramResource.setContextUser(_user);
 		diagramResource.setGroupLocalService(_groupLocalService);
 		diagramResource.setRoleLocalService(_roleLocalService);
+
+		diagramResource.setVulcanBatchEngineExportTaskResource(
+			_vulcanBatchEngineExportTaskResource);
+
+		diagramResource.setVulcanBatchEngineImportTaskResource(
+			_vulcanBatchEngineImportTaskResource);
 	}
 
 	private void _populateResourceContext(

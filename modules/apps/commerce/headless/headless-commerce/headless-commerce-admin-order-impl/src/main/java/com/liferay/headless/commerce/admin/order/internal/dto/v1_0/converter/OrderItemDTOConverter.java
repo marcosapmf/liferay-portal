@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.admin.order.internal.dto.v1_0.converter;
@@ -22,6 +13,7 @@ import com.liferay.commerce.product.model.CPMeasurementUnit;
 import com.liferay.commerce.product.service.CPMeasurementUnitService;
 import com.liferay.commerce.product.type.virtual.order.model.CommerceVirtualOrderItem;
 import com.liferay.commerce.product.type.virtual.order.service.CommerceVirtualOrderItemService;
+import com.liferay.commerce.service.CommerceOrderItemLocalService;
 import com.liferay.commerce.service.CommerceOrderItemService;
 import com.liferay.commerce.util.CommerceOrderItemQuantityFormatter;
 import com.liferay.headless.commerce.admin.order.dto.v1_0.OrderItem;
@@ -31,9 +23,12 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterContext;
+
+import java.math.BigDecimal;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -57,9 +52,8 @@ public class OrderItemDTOConverter
 	public OrderItem toDTO(DTOConverterContext dtoConverterContext)
 		throws Exception {
 
-		CommerceOrderItem commerceOrderItem =
-			_commerceOrderItemService.getCommerceOrderItem(
-				(Long)dtoConverterContext.getId());
+		CommerceOrderItem commerceOrderItem = _getCommerceOrderItem(
+			dtoConverterContext);
 
 		CommerceOrder commerceOrder = commerceOrderItem.getCommerceOrder();
 		CPInstance cpInstance = commerceOrderItem.fetchCPInstance();
@@ -73,7 +67,7 @@ public class OrderItemDTOConverter
 					commerceOrderItem.getCommerceOrderItemId(),
 					commerceOrderItem.getCompanyId(),
 					dtoConverterContext.getLocale());
-				decimalQuantity = commerceOrderItem.getDecimalQuantity();
+				decimalQuantity = commerceOrderItem.getQuantity();
 				deliveryGroup = commerceOrderItem.getDeliveryGroup();
 				discountAmount = commerceOrderItem.getDiscountAmount();
 				discountManuallyAdjusted =
@@ -120,7 +114,6 @@ public class OrderItemDTOConverter
 				promoPrice = commerceOrderItem.getPromoPrice();
 				promoPriceWithTaxAmount =
 					commerceOrderItem.getPromoPriceWithTaxAmount();
-				quantity = commerceOrderItem.getQuantity();
 				replacedSku = commerceOrderItem.getReplacedSku();
 				replacedSkuId = commerceOrderItem.getReplacedCPInstanceId();
 				requestedDeliveryDate =
@@ -136,6 +129,12 @@ public class OrderItemDTOConverter
 				unitPriceWithTaxAmount =
 					commerceOrderItem.getUnitPriceWithTaxAmount();
 
+				setQuantity(
+					() -> {
+						BigDecimal quantity = commerceOrderItem.getQuantity();
+
+						return quantity.intValue();
+					});
 				setUnitOfMeasure(
 					() -> {
 						if (commerceOrderItem.getCPMeasurementUnitId() <= 0) {
@@ -185,6 +184,28 @@ public class OrderItemDTOConverter
 		};
 	}
 
+	private CommerceOrderItem _getCommerceOrderItem(
+			DTOConverterContext dtoConverterContext)
+		throws Exception {
+
+		CommerceOrderItem commerceOrderItem = null;
+
+		boolean secure = GetterUtil.getBoolean(
+			dtoConverterContext.getAttribute("secure"), true);
+
+		if (secure) {
+			commerceOrderItem = _commerceOrderItemService.getCommerceOrderItem(
+				(Long)dtoConverterContext.getId());
+		}
+		else {
+			commerceOrderItem =
+				_commerceOrderItemLocalService.getCommerceOrderItem(
+					(Long)dtoConverterContext.getId());
+		}
+
+		return commerceOrderItem;
+	}
+
 	private String _getSkuExternalReferenceCode(CPInstance cpInstance) {
 		if (cpInstance == null) {
 			return StringPool.BLANK;
@@ -206,6 +227,9 @@ public class OrderItemDTOConverter
 
 	@Reference
 	private CommerceMediaResolver _commerceMediaResolver;
+
+	@Reference
+	private CommerceOrderItemLocalService _commerceOrderItemLocalService;
 
 	@Reference
 	private CommerceOrderItemQuantityFormatter

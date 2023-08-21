@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.delivery.catalog.internal.dto.v1_0.converter;
@@ -35,7 +26,7 @@ import com.liferay.commerce.product.service.CPDefinitionOptionRelLocalService;
 import com.liferay.commerce.product.service.CPInstanceLocalService;
 import com.liferay.commerce.product.service.CProductLocalService;
 import com.liferay.commerce.product.util.CPInstanceHelper;
-import com.liferay.commerce.product.util.JsonHelper;
+import com.liferay.commerce.product.util.CPJSONUtil;
 import com.liferay.commerce.shop.by.diagram.model.CSDiagramEntry;
 import com.liferay.commerce.shop.by.diagram.service.CSDiagramEntryLocalService;
 import com.liferay.commerce.util.CommerceUtil;
@@ -345,7 +336,7 @@ public class MappedProductDTOConverter
 							return null;
 						}
 
-						JSONArray jsonArray = _jsonHelper.toJSONArray(
+						JSONArray jsonArray = CPJSONUtil.toJSONArray(
 							_cpDefinitionOptionRelLocalService.
 								getCPDefinitionOptionRelKeysCPDefinitionOptionValueRelKeys(
 									cpInstance.getCPInstanceId()));
@@ -354,8 +345,7 @@ public class MappedProductDTOConverter
 							_cpInstanceHelper.getCPDefinitionOptionValueRelsMap(
 								cpInstance.getCPDefinitionId(),
 								jsonArray.toString()),
-							_language.getLanguageId(
-								mappedProductDTOConverterContext.getLocale()));
+							_cpInstanceLocalService);
 					});
 				setThumbnail(
 					() -> {
@@ -559,9 +549,6 @@ public class MappedProductDTOConverter
 
 	@Reference
 	private DTOConverterRegistry _dtoConverterRegistry;
-
-	@Reference
-	private JsonHelper _jsonHelper;
 
 	@Reference
 	private Language _language;

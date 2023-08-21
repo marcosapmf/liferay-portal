@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.osb.faro.service.persistence.impl;
@@ -45,7 +36,6 @@ import com.liferay.portal.kernel.util.SetUtil;
 
 import java.io.Serializable;
 
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 
 import java.util.HashMap;
@@ -2410,30 +2400,14 @@ public class FaroProjectPersistenceImpl
 			new String[] {String.class.getName()}, new String[] {"weDeployKey"},
 			false);
 
-		_setFaroProjectUtilPersistence(this);
+		FaroProjectUtil.setPersistence(this);
 	}
 
 	@Deactivate
 	public void deactivate() {
-		_setFaroProjectUtilPersistence(null);
+		FaroProjectUtil.setPersistence(null);
 
 		entityCache.removeCache(FaroProjectImpl.class.getName());
-	}
-
-	private void _setFaroProjectUtilPersistence(
-		FaroProjectPersistence faroProjectPersistence) {
-
-		try {
-			Field field = FaroProjectUtil.class.getDeclaredField(
-				"_persistence");
-
-			field.setAccessible(true);
-
-			field.set(null, faroProjectPersistence);
-		}
-		catch (ReflectiveOperationException reflectiveOperationException) {
-			throw new RuntimeException(reflectiveOperationException);
-		}
 	}
 
 	@Override

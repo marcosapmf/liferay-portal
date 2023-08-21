@@ -1,21 +1,13 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.kernel.service;
 
 import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.portal.kernel.model.Organization;
+import com.liferay.portal.kernel.service.persistence.BasePersistence;
 import com.liferay.portal.kernel.service.persistence.change.tracking.CTPersistence;
 
 /**
@@ -40,25 +32,30 @@ public class OrganizationLocalServiceWrapper
 	}
 
 	@Override
-	public void addGroupOrganization(long groupId, long organizationId) {
-		_organizationLocalService.addGroupOrganization(groupId, organizationId);
+	public boolean addGroupOrganization(long groupId, long organizationId) {
+		return _organizationLocalService.addGroupOrganization(
+			groupId, organizationId);
 	}
 
 	@Override
-	public void addGroupOrganization(long groupId, Organization organization) {
-		_organizationLocalService.addGroupOrganization(groupId, organization);
+	public boolean addGroupOrganization(
+		long groupId, Organization organization) {
+
+		return _organizationLocalService.addGroupOrganization(
+			groupId, organization);
 	}
 
 	@Override
-	public void addGroupOrganizations(
+	public boolean addGroupOrganizations(
 		long groupId, java.util.List<Organization> organizations) {
 
-		_organizationLocalService.addGroupOrganizations(groupId, organizations);
+		return _organizationLocalService.addGroupOrganizations(
+			groupId, organizations);
 	}
 
 	@Override
-	public void addGroupOrganizations(long groupId, long[] organizationIds) {
-		_organizationLocalService.addGroupOrganizations(
+	public boolean addGroupOrganizations(long groupId, long[] organizationIds) {
+		return _organizationLocalService.addGroupOrganizations(
 			groupId, organizationIds);
 	}
 
@@ -199,13 +196,15 @@ public class OrganizationLocalServiceWrapper
 	}
 
 	@Override
-	public void addUserOrganization(long userId, long organizationId) {
-		_organizationLocalService.addUserOrganization(userId, organizationId);
+	public boolean addUserOrganization(long userId, long organizationId) {
+		return _organizationLocalService.addUserOrganization(
+			userId, organizationId);
 	}
 
 	@Override
-	public void addUserOrganization(long userId, Organization organization) {
-		_organizationLocalService.addUserOrganization(userId, organization);
+	public boolean addUserOrganization(long userId, Organization organization) {
+		return _organizationLocalService.addUserOrganization(
+			userId, organization);
 	}
 
 	@Override
@@ -218,15 +217,17 @@ public class OrganizationLocalServiceWrapper
 	}
 
 	@Override
-	public void addUserOrganizations(
+	public boolean addUserOrganizations(
 		long userId, java.util.List<Organization> organizations) {
 
-		_organizationLocalService.addUserOrganizations(userId, organizations);
+		return _organizationLocalService.addUserOrganizations(
+			userId, organizations);
 	}
 
 	@Override
-	public void addUserOrganizations(long userId, long[] organizationIds) {
-		_organizationLocalService.addUserOrganizations(userId, organizationIds);
+	public boolean addUserOrganizations(long userId, long[] organizationIds) {
+		return _organizationLocalService.addUserOrganizations(
+			userId, organizationIds);
 	}
 
 	@Override
@@ -1767,6 +1768,11 @@ public class OrganizationLocalServiceWrapper
 	@Override
 	public Organization updateOrganization(Organization organization) {
 		return _organizationLocalService.updateOrganization(organization);
+	}
+
+	@Override
+	public BasePersistence<?> getBasePersistence() {
+		return _organizationLocalService.getBasePersistence();
 	}
 
 	@Override

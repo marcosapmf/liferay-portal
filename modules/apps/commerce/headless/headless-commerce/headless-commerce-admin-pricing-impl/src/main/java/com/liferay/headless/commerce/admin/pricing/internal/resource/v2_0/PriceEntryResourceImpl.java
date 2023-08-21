@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.admin.pricing.internal.resource.v2_0;
@@ -36,6 +27,7 @@ import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.util.BigDecimalUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.Validator;
@@ -277,7 +269,6 @@ public class PriceEntryResourceImpl extends BasePriceEntryResourceImpl {
 				priceEntry.getExternalReferenceCode(),
 				GetterUtil.getLong(priceEntry.getPriceEntryId()), cProductId,
 				cpInstanceUuid, commercePriceList.getCommercePriceListId(),
-				BigDecimal.valueOf(priceEntry.getPrice()),
 				GetterUtil.getBoolean(priceEntry.getDiscountDiscovery(), true),
 				priceEntry.getDiscountLevel1(), priceEntry.getDiscountLevel2(),
 				priceEntry.getDiscountLevel3(), priceEntry.getDiscountLevel4(),
@@ -288,7 +279,10 @@ public class PriceEntryResourceImpl extends BasePriceEntryResourceImpl {
 				expirationDateConfig.getHour(),
 				expirationDateConfig.getMinute(),
 				GetterUtil.getBoolean(priceEntry.getNeverExpire(), true),
-				priceEntry.getSkuExternalReferenceCode(), serviceContext);
+				BigDecimal.valueOf(priceEntry.getPrice()),
+				GetterUtil.getBoolean(priceEntry.getPriceOnApplication()),
+				priceEntry.getSkuExternalReferenceCode(),
+				priceEntry.getUnitOfMeasure(), serviceContext);
 
 		// Update nested resources
 
@@ -373,11 +367,24 @@ public class PriceEntryResourceImpl extends BasePriceEntryResourceImpl {
 		commercePriceEntry =
 			_commercePriceEntryService.updateCommercePriceEntry(
 				commercePriceEntry.getCommercePriceEntryId(),
-				BigDecimal.valueOf(priceEntry.getPrice()),
-				priceEntry.getDiscountDiscovery(),
-				priceEntry.getDiscountLevel1(), priceEntry.getDiscountLevel2(),
-				priceEntry.getDiscountLevel3(), priceEntry.getDiscountLevel4(),
-				GetterUtil.getBoolean(priceEntry.getBulkPricing(), true),
+				GetterUtil.getBoolean(
+					priceEntry.getBulkPricing(),
+					commercePriceEntry.isBulkPricing()),
+				GetterUtil.getBoolean(
+					priceEntry.getDiscountDiscovery(),
+					commercePriceEntry.isDiscountDiscovery()),
+				BigDecimalUtil.get(
+					priceEntry.getDiscountLevel1(),
+					commercePriceEntry.getDiscountLevel1()),
+				BigDecimalUtil.get(
+					priceEntry.getDiscountLevel2(),
+					commercePriceEntry.getDiscountLevel2()),
+				BigDecimalUtil.get(
+					priceEntry.getDiscountLevel3(),
+					commercePriceEntry.getDiscountLevel3()),
+				BigDecimalUtil.get(
+					priceEntry.getDiscountLevel4(),
+					commercePriceEntry.getDiscountLevel4()),
 				displayDateConfig.getMonth(), displayDateConfig.getDay(),
 				displayDateConfig.getYear(), displayDateConfig.getHour(),
 				displayDateConfig.getMinute(), expirationDateConfig.getMonth(),
@@ -385,6 +392,14 @@ public class PriceEntryResourceImpl extends BasePriceEntryResourceImpl {
 				expirationDateConfig.getHour(),
 				expirationDateConfig.getMinute(),
 				GetterUtil.getBoolean(priceEntry.getNeverExpire(), true),
+				BigDecimalUtil.get(
+					priceEntry.getPrice(), commercePriceEntry.getPrice()),
+				GetterUtil.getBoolean(
+					priceEntry.getPriceOnApplication(),
+					commercePriceEntry.isPriceOnApplication()),
+				GetterUtil.get(
+					priceEntry.getUnitOfMeasure(),
+					commercePriceEntry.getUnitOfMeasureKey()),
 				serviceContext);
 
 		// Update nested resources

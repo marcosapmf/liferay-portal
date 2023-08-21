@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.inventory.service.impl;
@@ -23,11 +14,15 @@ import com.liferay.commerce.inventory.service.CommerceInventoryAuditLocalService
 import com.liferay.commerce.inventory.service.base.CommerceInventoryBookedQuantityLocalServiceBaseImpl;
 import com.liferay.commerce.inventory.type.CommerceInventoryAuditType;
 import com.liferay.commerce.inventory.type.CommerceInventoryAuditTypeRegistry;
+import com.liferay.commerce.model.CommerceOrderItemTable;
+import com.liferay.commerce.product.model.CommerceChannel;
 import com.liferay.petra.sql.dsl.DSLFunctionFactoryUtil;
 import com.liferay.petra.sql.dsl.DSLQueryFactoryUtil;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.model.GroupTable;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.search.BaseModelSearchResult;
 import com.liferay.portal.kernel.search.Document;
@@ -42,7 +37,10 @@ import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.search.SearchException;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Validator;
+
+import java.math.BigDecimal;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -66,8 +64,8 @@ public class CommerceInventoryBookedQuantityLocalServiceImpl
 	@Indexable(type = IndexableType.REINDEX)
 	@Override
 	public CommerceInventoryBookedQuantity addCommerceBookedQuantity(
-			long userId, String sku, int quantity, Date expirationDate,
-			Map<String, String> context)
+			long userId, Date expirationDate, BigDecimal quantity, String sku,
+			String unitOfMeasureKey, Map<String, String> context)
 		throws PortalException {
 
 		User user = _userLocalService.getUser(userId);
@@ -82,17 +80,19 @@ public class CommerceInventoryBookedQuantityLocalServiceImpl
 		commerceInventoryBookedQuantity.setCompanyId(user.getCompanyId());
 		commerceInventoryBookedQuantity.setUserId(user.getUserId());
 		commerceInventoryBookedQuantity.setUserName(user.getFullName());
-		commerceInventoryBookedQuantity.setSku(sku);
-		commerceInventoryBookedQuantity.setQuantity(quantity);
 		commerceInventoryBookedQuantity.setExpirationDate(expirationDate);
+		commerceInventoryBookedQuantity.setQuantity(quantity);
+		commerceInventoryBookedQuantity.setSku(sku);
+		commerceInventoryBookedQuantity.setUnitOfMeasureKey(unitOfMeasureKey);
 
 		CommerceInventoryAuditType commerceInventoryAuditType =
 			_commerceInventoryAuditTypeRegistry.getCommerceInventoryAuditType(
 				CommerceInventoryConstants.AUDIT_TYPE_BOOKED_QUANTITY);
 
 		_commerceInventoryAuditLocalService.addCommerceInventoryAudit(
-			userId, sku, commerceInventoryAuditType.getType(),
-			commerceInventoryAuditType.getLog(context), quantity);
+			userId, commerceInventoryAuditType.getType(),
+			commerceInventoryAuditType.getLog(context), quantity, sku,
+			StringPool.BLANK);
 
 		return commerceInventoryBookedQuantityPersistence.update(
 			commerceInventoryBookedQuantity);
@@ -106,18 +106,31 @@ public class CommerceInventoryBookedQuantityLocalServiceImpl
 
 	@Override
 	public CommerceInventoryBookedQuantity consumeCommerceBookedQuantity(
-			long commerceBookedQuantityId, int quantity)
+			long commerceBookedQuantityId, BigDecimal quantity)
 		throws NoSuchInventoryBookedQuantityException {
 
 		CommerceInventoryBookedQuantity commerceInventoryBookedQuantity =
 			commerceInventoryBookedQuantityPersistence.findByPrimaryKey(
 				commerceBookedQuantityId);
 
-		if (quantity < commerceInventoryBookedQuantity.getQuantity()) {
-			int newQuantity =
-				commerceInventoryBookedQuantity.getQuantity() - quantity;
+		int bookedQuantity = 0;
 
-			commerceInventoryBookedQuantity.setQuantity(newQuantity);
+		if (quantity != null) {
+			bookedQuantity = quantity.intValue();
+		}
+
+		BigDecimal commerceInventoryWarehouseItemQuantity =
+			commerceInventoryBookedQuantity.getQuantity();
+
+		if (bookedQuantity <
+				commerceInventoryWarehouseItemQuantity.intValue()) {
+
+			int newQuantity =
+				commerceInventoryWarehouseItemQuantity.intValue() -
+					bookedQuantity;
+
+			commerceInventoryBookedQuantity.setQuantity(
+				BigDecimal.valueOf(newQuantity));
 
 			return commerceInventoryBookedQuantityPersistence.update(
 				commerceInventoryBookedQuantity);
@@ -128,8 +141,51 @@ public class CommerceInventoryBookedQuantityLocalServiceImpl
 	}
 
 	@Override
-	public int getCommerceBookedQuantity(long companyId, String sku) {
-		List<Integer> result = dslQuery(
+	public BigDecimal getCommerceBookedQuantity(
+		long companyId, long commerceChannelGroupId, String sku) {
+
+		List<BigDecimal> result = dslQuery(
+			DSLQueryFactoryUtil.select(
+				DSLFunctionFactoryUtil.sum(
+					CommerceInventoryBookedQuantityTable.INSTANCE.quantity
+				).as(
+					"SUM_VALUE"
+				)
+			).from(
+				CommerceInventoryBookedQuantityTable.INSTANCE
+			).innerJoinON(
+				CommerceOrderItemTable.INSTANCE,
+				CommerceInventoryBookedQuantityTable.INSTANCE.
+					commerceInventoryBookedQuantityId.eq(
+						CommerceOrderItemTable.INSTANCE.bookedQuantityId)
+			).innerJoinON(
+				GroupTable.INSTANCE,
+				CommerceOrderItemTable.INSTANCE.groupId.eq(
+					GroupTable.INSTANCE.groupId
+				).and(
+					GroupTable.INSTANCE.classNameId.eq(
+						_portal.getClassNameId(CommerceChannel.class.getName()))
+				)
+			).where(
+				CommerceInventoryBookedQuantityTable.INSTANCE.companyId.eq(
+					companyId
+				).and(
+					CommerceInventoryBookedQuantityTable.INSTANCE.sku.eq(sku)
+				).and(
+					GroupTable.INSTANCE.groupId.eq(commerceChannelGroupId)
+				)
+			));
+
+		if (result.get(0) == null) {
+			return BigDecimal.ZERO;
+		}
+
+		return result.get(0);
+	}
+
+	@Override
+	public BigDecimal getCommerceBookedQuantity(long companyId, String sku) {
+		List<BigDecimal> result = dslQuery(
 			DSLQueryFactoryUtil.select(
 				DSLFunctionFactoryUtil.sum(
 					CommerceInventoryBookedQuantityTable.INSTANCE.quantity
@@ -147,7 +203,7 @@ public class CommerceInventoryBookedQuantityLocalServiceImpl
 			));
 
 		if (result.get(0) == null) {
-			return 0;
+			return BigDecimal.ZERO;
 		}
 
 		return result.get(0);
@@ -200,8 +256,8 @@ public class CommerceInventoryBookedQuantityLocalServiceImpl
 
 	@Override
 	public CommerceInventoryBookedQuantity resetCommerceBookedQuantity(
-			long commerceBookedQuantityId, long userId, String sku,
-			int quantity, Date expirationDate, Map<String, String> context)
+			long commerceBookedQuantityId, long userId, Date expirationDate,
+			BigDecimal quantity, String sku, Map<String, String> context)
 		throws PortalException {
 
 		CommerceInventoryBookedQuantity commerceBookedQuantity =
@@ -218,14 +274,14 @@ public class CommerceInventoryBookedQuantityLocalServiceImpl
 			commerceBookedQuantity.setCompanyId(user.getCompanyId());
 			commerceBookedQuantity.setUserId(userId);
 			commerceBookedQuantity.setUserName(user.getFullName());
-			commerceBookedQuantity.setSku(sku);
 			commerceBookedQuantity.setExpirationDate(expirationDate);
+			commerceBookedQuantity.setSku(sku);
 		}
 		else {
-			quantity = commerceBookedQuantity.getQuantity() + quantity;
+			quantity = quantity.add(commerceBookedQuantity.getQuantity());
 
-			if (quantity < 0) {
-				quantity = 0;
+			if (quantity.compareTo(BigDecimal.ZERO) == -1) {
+				quantity = BigDecimal.ZERO;
 			}
 		}
 
@@ -236,8 +292,9 @@ public class CommerceInventoryBookedQuantityLocalServiceImpl
 				CommerceInventoryConstants.AUDIT_TYPE_RESTORE_QUANTITY);
 
 		_commerceInventoryAuditLocalService.addCommerceInventoryAudit(
-			userId, sku, commerceInventoryAuditType.getType(),
-			commerceInventoryAuditType.getLog(context), quantity);
+			userId, commerceInventoryAuditType.getType(),
+			commerceInventoryAuditType.getLog(context), quantity, sku,
+			StringPool.BLANK);
 
 		return commerceInventoryBookedQuantityPersistence.update(
 			commerceBookedQuantity);
@@ -259,10 +316,10 @@ public class CommerceInventoryBookedQuantityLocalServiceImpl
 				CommerceInventoryConstants.AUDIT_TYPE_RESTOCK_QUANTITY);
 
 		_commerceInventoryAuditLocalService.addCommerceInventoryAudit(
-			userId, commerceInventoryBookedQuantity.getSku(),
-			commerceInventoryAuditType.getType(),
+			userId, commerceInventoryAuditType.getType(),
 			commerceInventoryAuditType.getLog(context),
-			commerceInventoryBookedQuantity.getQuantity());
+			commerceInventoryBookedQuantity.getQuantity(),
+			commerceInventoryBookedQuantity.getSku(), StringPool.BLANK);
 
 		return commerceInventoryBookedQuantity;
 	}
@@ -309,7 +366,8 @@ public class CommerceInventoryBookedQuantityLocalServiceImpl
 	public CommerceInventoryBookedQuantity
 			updateCommerceInventoryBookedQuantity(
 				long userId, long commerceInventoryBookedQuantityId,
-				int quantity, Map<String, String> context, long mvccVersion)
+				BigDecimal quantity, Map<String, String> context,
+				long mvccVersion)
 		throws PortalException {
 
 		CommerceInventoryBookedQuantity commerceInventoryBookedQuantity =
@@ -328,9 +386,10 @@ public class CommerceInventoryBookedQuantityLocalServiceImpl
 				CommerceInventoryConstants.AUDIT_TYPE_UPDATE_BOOKED_QUANTITY);
 
 		_commerceInventoryAuditLocalService.addCommerceInventoryAudit(
-			userId, commerceInventoryBookedQuantity.getSku(),
-			commerceInventoryAuditType.getType(),
-			commerceInventoryAuditType.getLog(context), quantity);
+			userId, commerceInventoryAuditType.getType(),
+			commerceInventoryAuditType.getLog(context), quantity,
+			commerceInventoryBookedQuantity.getSku(),
+			commerceInventoryBookedQuantity.getUnitOfMeasureKey());
 
 		return commerceInventoryBookedQuantityLocalService.
 			updateCommerceInventoryBookedQuantity(
@@ -409,6 +468,9 @@ public class CommerceInventoryBookedQuantityLocalServiceImpl
 
 	@Reference
 	private IndexerRegistry _indexerRegistry;
+
+	@Reference
+	private Portal _portal;
 
 	@Reference
 	private UserLocalService _userLocalService;

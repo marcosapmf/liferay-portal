@@ -1,33 +1,25 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayButton from '@clayui/button';
 import ClayLoadingIndicator from '@clayui/loading-indicator';
 import ClayNavigationBar from '@clayui/navigation-bar';
-import {fetch, openToast} from 'frontend-js-web';
+import {IClientExtensionRenderer, fetch, openToast} from 'frontend-js-web';
 import React, {useEffect, useState} from 'react';
 
 import '../css/FDSView.scss';
 import {API_URL, OBJECT_RELATIONSHIP} from './Constants';
 import {FDSViewType} from './FDSViews';
+import Actions from './fds_view/Actions';
 import Details from './fds_view/Details';
 import Fields from './fds_view/Fields';
 import Filters from './fds_view/Filters';
 import Pagination from './fds_view/Pagination';
 import Sorting from './fds_view/Sorting';
 
-const NAVIGATION_BAR_ITEMS = [
+let NAVIGATION_BAR_ITEMS = [
 	{
 		Component: Details,
 		label: Liferay.Language.get('details'),
@@ -36,14 +28,34 @@ const NAVIGATION_BAR_ITEMS = [
 		Component: Fields,
 		label: Liferay.Language.get('fields'),
 	},
-	{
-		Component: Sorting,
-		label: Liferay.Language.get('sorting'),
-	},
-	{
-		Component: Filters,
-		label: Liferay.Language.get('filters'),
-	},
+];
+
+if (Liferay.FeatureFlags['LPS-188645']) {
+	NAVIGATION_BAR_ITEMS = [
+		...NAVIGATION_BAR_ITEMS,
+		{
+			Component: Filters,
+			label: Liferay.Language.get('filters'),
+		},
+		{
+			Component: Sorting,
+			label: Liferay.Language.get('sorting'),
+		},
+	];
+}
+
+if (Liferay.FeatureFlags['LPS-192282']) {
+	NAVIGATION_BAR_ITEMS = [
+		...NAVIGATION_BAR_ITEMS,
+		{
+			Component: Actions,
+			label: Liferay.Language.get('actions'),
+		},
+	];
+}
+
+NAVIGATION_BAR_ITEMS = [
+	...NAVIGATION_BAR_ITEMS,
 	{
 		Component: Pagination,
 		label: Liferay.Language.get('pagination'),
@@ -51,13 +63,16 @@ const NAVIGATION_BAR_ITEMS = [
 ];
 
 interface IFDSViewSectionInterface {
+	fdsClientExtensionCellRenderers: IClientExtensionRenderer[];
 	fdsView: FDSViewType;
 	fdsViewsURL: string;
 	namespace: string;
+	onFDSViewUpdate: (data: FDSViewType) => void;
 	saveFDSFieldsURL: string;
 }
 
 interface IFDSViewInterface {
+	fdsClientExtensionCellRenderers: IClientExtensionRenderer[];
 	fdsViewId: string;
 	fdsViewsURL: string;
 	namespace: string;
@@ -65,6 +80,7 @@ interface IFDSViewInterface {
 }
 
 const FDSView = ({
+	fdsClientExtensionCellRenderers,
 	fdsViewId,
 	fdsViewsURL,
 	namespace,
@@ -129,9 +145,15 @@ const FDSView = ({
 			) : (
 				fdsView && (
 					<Content
+						fdsClientExtensionCellRenderers={
+							fdsClientExtensionCellRenderers
+						}
 						fdsView={fdsView}
 						fdsViewsURL={fdsViewsURL}
 						namespace={namespace}
+						onFDSViewUpdate={(updatedFdsViewData) => {
+							setFDSView({...fdsView, ...updatedFdsViewData});
+						}}
 						saveFDSFieldsURL={saveFDSFieldsURL}
 					/>
 				)
@@ -140,5 +162,5 @@ const FDSView = ({
 	);
 };
 
-export {IFDSViewSectionInterface as FDSViewSectionInterface};
+export {IFDSViewSectionInterface};
 export default FDSView;

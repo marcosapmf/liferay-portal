@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.segments.experiment.web.internal.processor.test;
@@ -21,7 +12,6 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.test.util.CompanyConfigurationTemporarySwapper;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
-import com.liferay.portal.kernel.service.ClassNameLocalService;
 import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.settings.SettingsFactoryUtil;
@@ -95,7 +85,6 @@ public class SegmentsExperimentSegmentsExperienceRequestProcessorTest {
 		SegmentsExperiment segmentsExperiment =
 			_segmentsExperimentLocalService.addSegmentsExperiment(
 				segmentsExperience.getSegmentsExperienceId(),
-				_classNameLocalService.getClassNameId(Layout.class.getName()),
 				segmentsExperience.getPlid(), RandomTestUtil.randomString(),
 				RandomTestUtil.randomString(),
 				SegmentsExperimentConstants.Goal.BOUNCE_RATE.getLabel(),
@@ -157,7 +146,6 @@ public class SegmentsExperimentSegmentsExperienceRequestProcessorTest {
 		SegmentsExperiment segmentsExperiment =
 			_segmentsExperimentLocalService.addSegmentsExperiment(
 				segmentsExperience.getSegmentsExperienceId(),
-				_classNameLocalService.getClassNameId(Layout.class.getName()),
 				segmentsExperience.getPlid(), RandomTestUtil.randomString(),
 				RandomTestUtil.randomString(),
 				SegmentsExperimentConstants.Goal.BOUNCE_RATE.getLabel(),
@@ -192,7 +180,7 @@ public class SegmentsExperimentSegmentsExperienceRequestProcessorTest {
 
 			mockHttpServletRequest.setCookies(
 				new Cookie(
-					"ab_test_variant_id",
+					"ab_test_variant_id_" + _layout.getPlid(),
 					segmentsExperiment.getSegmentsExperienceKey()));
 
 			long[] segmentsExperienceIds =
@@ -299,7 +287,6 @@ public class SegmentsExperimentSegmentsExperienceRequestProcessorTest {
 		SegmentsExperiment segmentsExperiment =
 			_segmentsExperimentLocalService.addSegmentsExperiment(
 				segmentsExperience.getSegmentsExperienceId(),
-				_classNameLocalService.getClassNameId(Layout.class.getName()),
 				segmentsExperience.getPlid(), RandomTestUtil.randomString(),
 				RandomTestUtil.randomString(),
 				SegmentsExperimentConstants.Goal.BOUNCE_RATE.getLabel(),
@@ -480,7 +467,6 @@ public class SegmentsExperimentSegmentsExperienceRequestProcessorTest {
 		SegmentsExperiment segmentsExperiment =
 			_segmentsExperimentLocalService.addSegmentsExperiment(
 				segmentsExperience.getSegmentsExperienceId(),
-				_classNameLocalService.getClassNameId(Layout.class.getName()),
 				segmentsExperience.getPlid(), RandomTestUtil.randomString(),
 				RandomTestUtil.randomString(),
 				SegmentsExperimentConstants.Goal.BOUNCE_RATE.getLabel(),
@@ -554,9 +540,6 @@ public class SegmentsExperimentSegmentsExperienceRequestProcessorTest {
 	}
 
 	@Inject
-	private ClassNameLocalService _classNameLocalService;
-
-	@Inject
 	private CompanyLocalService _companyLocalService;
 
 	@DeleteAfterTestRun
@@ -571,7 +554,7 @@ public class SegmentsExperimentSegmentsExperienceRequestProcessorTest {
 	private SegmentsExperienceLocalService _segmentsExperienceLocalService;
 
 	@Inject(
-		filter = "component.name=*.SegmentsExperimentSegmentsExperienceRequestProcessor"
+		filter = "component.name=com.liferay.segments.experiment.web.internal.processor.SegmentsExperimentSegmentsExperienceRequestProcessor"
 	)
 	private SegmentsExperienceRequestProcessor
 		_segmentsExperienceRequestProcessor;

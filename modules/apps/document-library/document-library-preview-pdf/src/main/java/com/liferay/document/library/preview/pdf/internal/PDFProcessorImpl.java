@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.document.library.preview.pdf.internal;
@@ -17,11 +8,12 @@ package com.liferay.document.library.preview.pdf.internal;
 import com.liferay.document.library.kernel.document.conversion.DocumentConversionUtil;
 import com.liferay.document.library.kernel.exception.NoSuchFileEntryException;
 import com.liferay.document.library.kernel.model.DLProcessorConstants;
-import com.liferay.document.library.kernel.store.DLStoreUtil;
+import com.liferay.document.library.kernel.store.Store;
 import com.liferay.document.library.kernel.util.DLPreviewableProcessor;
 import com.liferay.document.library.kernel.util.DLProcessor;
 import com.liferay.document.library.kernel.util.DLUtil;
 import com.liferay.document.library.kernel.util.PDFProcessor;
+import com.liferay.document.library.preview.pdf.internal.background.task.PDFPreviewBackgroundTaskExecutor;
 import com.liferay.document.library.preview.pdf.internal.configuration.admin.service.PDFPreviewManagedServiceFactory;
 import com.liferay.document.library.preview.pdf.internal.util.ProcessConfigUtil;
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
@@ -32,13 +24,20 @@ import com.liferay.petra.process.ProcessExecutor;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.metatype.annotations.ExtendedObjectClassDefinition;
+import com.liferay.portal.kernel.backgroundtask.BackgroundTaskManager;
+import com.liferay.portal.kernel.backgroundtask.constants.BackgroundTaskContextMapConstants;
+import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.image.Ghostscript;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.messaging.DestinationNames;
+import com.liferay.portal.kernel.model.CompanyConstants;
+import com.liferay.portal.kernel.model.UserConstants;
 import com.liferay.portal.kernel.repository.event.FileVersionPreviewEventListener;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.repository.model.FileVersion;
+import com.liferay.portal.kernel.service.CompanyLocalService;
+import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
@@ -46,6 +45,7 @@ import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.MimeTypesUtil;
 import com.liferay.portal.kernel.util.SystemEnv;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.kernel.uuid.PortalUUID;
 import com.liferay.portal.kernel.xml.Element;
 import com.liferay.portal.util.PropsUtil;
 import com.liferay.portal.util.PropsValues;
@@ -53,6 +53,7 @@ import com.liferay.portal.util.PropsValues;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Serializable;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -118,6 +119,34 @@ public class PDFProcessorImpl
 
 		_generateImages(
 			sourceFileVersion, destinationFileVersion, maxNumberOfPages);
+	}
+
+	@Override
+	public void generatePreviews() {
+		_companyLocalService.forEachCompanyId(
+			companyId -> {
+				try {
+					String jobName = "generatePreviews-".concat(
+						_portalUUID.generate());
+
+					_backgroundTaskManager.addBackgroundTask(
+						UserConstants.USER_ID_DEFAULT, CompanyConstants.SYSTEM,
+						jobName,
+						PDFPreviewBackgroundTaskExecutor.class.getName(),
+						HashMapBuilder.<String, Serializable>put(
+							BackgroundTaskContextMapConstants.DELETE_ON_SUCCESS,
+							true
+						).put(
+							"companyId", companyId
+						).build(),
+						new ServiceContext());
+				}
+				catch (PortalException portalException) {
+					if (_log.isWarnEnabled()) {
+						_log.warn(portalException);
+					}
+				}
+			});
 	}
 
 	@Override
@@ -348,9 +377,9 @@ public class PDFProcessorImpl
 	protected boolean hasPreview(FileVersion fileVersion, String type)
 		throws Exception {
 
-		return DLStoreUtil.hasFile(
+		return _store.hasFile(
 			fileVersion.getCompanyId(), REPOSITORY_ID,
-			getPreviewFilePath(fileVersion, 1));
+			getPreviewFilePath(fileVersion, 1), Store.VERSION_DEFAULT);
 	}
 
 	protected void importPreviews(
@@ -1073,6 +1102,12 @@ public class PDFProcessorImpl
 	private static final Log _log = LogFactoryUtil.getLog(
 		PDFProcessorImpl.class);
 
+	@Reference
+	private BackgroundTaskManager _backgroundTaskManager;
+
+	@Reference
+	private CompanyLocalService _companyLocalService;
+
 	private final List<Long> _fileVersionIds = new Vector<>();
 
 	@Reference
@@ -1087,7 +1122,13 @@ public class PDFProcessorImpl
 	private PDFPreviewManagedServiceFactory _pdfPreviewManagedServiceFactory;
 
 	@Reference
+	private PortalUUID _portalUUID;
+
+	@Reference
 	private ProcessExecutor _processExecutor;
+
+	@Reference(target = "(default=true)")
+	private Store _store;
 
 	private static class LiferayPDFBoxProcessCallable
 		implements ProcessCallable<String> {

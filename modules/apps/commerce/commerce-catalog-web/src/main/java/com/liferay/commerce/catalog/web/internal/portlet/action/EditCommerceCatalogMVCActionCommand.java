@@ -1,19 +1,13 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.catalog.web.internal.portlet.action;
 
+import com.liferay.account.constants.AccountConstants;
+import com.liferay.account.exception.AccountEntryStatusException;
+import com.liferay.account.exception.AccountEntryTypeException;
 import com.liferay.commerce.inventory.constants.CommerceInventoryConstants;
 import com.liferay.commerce.media.constants.CommerceMediaConstants;
 import com.liferay.commerce.price.list.constants.CommercePriceListConstants;
@@ -93,7 +87,9 @@ public class EditCommerceCatalogMVCActionCommand extends BaseMVCActionCommand {
 			}
 		}
 		catch (Throwable throwable) {
-			if (throwable instanceof CommerceCatalogProductsException ||
+			if (throwable instanceof AccountEntryStatusException ||
+				throwable instanceof AccountEntryTypeException ||
+				throwable instanceof CommerceCatalogProductsException ||
 				throwable instanceof CommerceCatalogSystemException ||
 				throwable instanceof NoSuchPriceListException) {
 
@@ -189,20 +185,24 @@ public class EditCommerceCatalogMVCActionCommand extends BaseMVCActionCommand {
 		String catalogDefaultLanguageId = ParamUtil.getString(
 			actionRequest, "catalogDefaultLanguageId");
 
-		CommerceCatalog commerceCatalog = null;
+		CommerceCatalog commerceCatalog =
+			_commerceCatalogService.fetchCommerceCatalog(commerceCatalogId);
 
-		if (commerceCatalogId <= 0) {
+		if (commerceCatalog == null) {
 			ServiceContext serviceContext = ServiceContextFactory.getInstance(
 				CommerceCatalog.class.getName(), actionRequest);
 
 			commerceCatalog = _commerceCatalogService.addCommerceCatalog(
-				null, name, commerceCurrencyCode, catalogDefaultLanguageId,
-				serviceContext);
+				null, AccountConstants.ACCOUNT_ENTRY_ID_DEFAULT, name,
+				commerceCurrencyCode, catalogDefaultLanguageId, serviceContext);
 		}
 		else {
 			commerceCatalog = _commerceCatalogService.updateCommerceCatalog(
-				commerceCatalogId, name, commerceCurrencyCode,
-				catalogDefaultLanguageId);
+				commerceCatalog.getCommerceCatalogId(),
+				ParamUtil.getLong(
+					actionRequest, "accountEntryId",
+					AccountConstants.ACCOUNT_ENTRY_ID_DEFAULT),
+				name, commerceCurrencyCode, catalogDefaultLanguageId);
 		}
 
 		return commerceCatalog;

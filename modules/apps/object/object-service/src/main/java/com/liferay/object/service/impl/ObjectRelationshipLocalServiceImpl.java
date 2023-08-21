@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.service.impl;
@@ -24,12 +15,14 @@ import com.liferay.object.exception.ObjectRelationshipNameException;
 import com.liferay.object.exception.ObjectRelationshipParameterObjectFieldIdException;
 import com.liferay.object.exception.ObjectRelationshipReverseException;
 import com.liferay.object.exception.ObjectRelationshipTypeException;
+import com.liferay.object.internal.dao.db.ObjectDBManagerUtil;
 import com.liferay.object.internal.info.collection.provider.RelatedInfoCollectionProviderFactory;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectField;
+import com.liferay.object.model.ObjectFieldSetting;
 import com.liferay.object.model.ObjectRelationship;
 import com.liferay.object.model.ObjectRelationshipTable;
-import com.liferay.object.petra.sql.dsl.DynamicObjectDefinitionTable;
+import com.liferay.object.petra.sql.dsl.DynamicObjectDefinitionTableUtil;
 import com.liferay.object.petra.sql.dsl.DynamicObjectRelationshipMappingTable;
 import com.liferay.object.relationship.util.ObjectRelationshipUtil;
 import com.liferay.object.service.ObjectDefinitionLocalService;
@@ -43,14 +36,14 @@ import com.liferay.object.service.persistence.ObjectLayoutTabPersistence;
 import com.liferay.object.system.JaxRsApplicationDescriptor;
 import com.liferay.object.system.SystemObjectDefinitionManager;
 import com.liferay.object.system.SystemObjectDefinitionManagerRegistry;
+import com.liferay.osgi.util.service.Snapshot;
 import com.liferay.petra.sql.dsl.Column;
 import com.liferay.petra.sql.dsl.DSLQueryFactoryUtil;
 import com.liferay.petra.sql.dsl.expression.Predicate;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.aop.AopService;
-import com.liferay.portal.kernel.dao.db.IndexMetadata;
-import com.liferay.portal.kernel.dao.db.IndexMetadataFactoryUtil;
+import com.liferay.portal.kernel.dao.jdbc.CurrentConnection;
 import com.liferay.portal.kernel.dao.orm.FinderCacheUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
@@ -75,6 +68,8 @@ import com.liferay.portal.kernel.util.Validator;
 
 import java.io.Serializable;
 
+import java.sql.Connection;
+
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -87,9 +82,6 @@ import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
-import org.osgi.service.component.annotations.ReferenceCardinality;
-import org.osgi.service.component.annotations.ReferencePolicy;
-import org.osgi.service.component.annotations.ReferencePolicyOption;
 
 /**
  * @author Marco Leo
@@ -251,18 +243,15 @@ public class ObjectRelationshipLocalServiceImpl
 				pkObjectFieldDBColumnName1, ", ", pkObjectFieldDBColumnName2,
 				"))"));
 
-		IndexMetadata indexMetadata =
-			IndexMetadataFactoryUtil.createIndexMetadata(
-				false, objectRelationship.getDBTableName(),
-				pkObjectFieldDBColumnName1);
+		Connection connection = _currentConnection.getConnection(
+			objectRelationshipPersistence.getDataSource());
 
-		runSQL(indexMetadata.getCreateSQL(null));
-
-		indexMetadata = IndexMetadataFactoryUtil.createIndexMetadata(
-			false, objectRelationship.getDBTableName(),
-			pkObjectFieldDBColumnName2);
-
-		runSQL(indexMetadata.getCreateSQL(null));
+		ObjectDBManagerUtil.createIndexMetadata(
+			pkObjectFieldDBColumnName1, connection,
+			objectRelationship.getDBTableName(), false);
+		ObjectDBManagerUtil.createIndexMetadata(
+			pkObjectFieldDBColumnName2, connection,
+			objectRelationship.getDBTableName(), false);
 
 		return objectRelationship;
 	}
@@ -296,6 +285,11 @@ public class ObjectRelationshipLocalServiceImpl
 
 		objectRelationship = objectRelationshipPersistence.remove(
 			objectRelationship);
+
+		_deleteObjectFields(
+			objectRelationship.getObjectDefinitionId1(), objectRelationship);
+		_deleteObjectFields(
+			objectRelationship.getObjectDefinitionId2(), objectRelationship);
 
 		_objectLayoutTabPersistence.removeByObjectRelationshipId(
 			objectRelationship.getObjectRelationshipId());
@@ -658,12 +652,8 @@ public class ObjectRelationshipLocalServiceImpl
 				objectDefinition1.getObjectDefinitionId());
 
 		for (ObjectRelationship objectRelationship : objectRelationships) {
-			if (!Objects.equals(
-					objectRelationship.getType(),
-					ObjectRelationshipConstants.TYPE_MANY_TO_MANY) &&
-				!Objects.equals(
-					objectRelationship.getType(),
-					ObjectRelationshipConstants.TYPE_ONE_TO_MANY)) {
+			if (!objectRelationship.isAllowedObjectRelationshipType(
+					objectRelationship.getType())) {
 
 				continue;
 			}
@@ -714,9 +704,11 @@ public class ObjectRelationshipLocalServiceImpl
 		}
 
 		_validateParameterObjectFieldId(
-			objectRelationship.getObjectDefinitionId1(),
-			objectRelationship.getObjectDefinitionId2(), parameterObjectFieldId,
-			objectRelationship.getType());
+			_objectDefinitionPersistence.findByPrimaryKey(
+				objectRelationship.getObjectDefinitionId1()),
+			_objectDefinitionPersistence.findByPrimaryKey(
+				objectRelationship.getObjectDefinitionId2()),
+			parameterObjectFieldId, objectRelationship.getType());
 
 		if (Objects.equals(
 				objectRelationship.getType(),
@@ -797,6 +789,8 @@ public class ObjectRelationshipLocalServiceImpl
 		objectField.setIndexedLanguageId(null);
 		objectField.setLabelMap(labelMap, LocaleUtil.getSiteDefault());
 		objectField.setName(dbColumnName);
+		objectField.setReadOnly(ObjectFieldConstants.READ_ONLY_FALSE);
+		objectField.setReadOnlyConditionExpression(StringPool.BLANK);
 		objectField.setRelationshipType(type);
 		objectField.setRequired(false);
 
@@ -813,15 +807,26 @@ public class ObjectRelationshipLocalServiceImpl
 				NAME_OBJECT_RELATIONSHIP_ERC_OBJECT_FIELD_NAME,
 			StringUtil.replaceLast(objectField.getName(), "Id", "ERC"));
 
-		if (objectDefinition2.isApproved()) {
-			runSQL(
-				DynamicObjectDefinitionTable.getAlterTableAddColumnSQL(
-					dbTableName, objectField.getDBColumnName(), "Long"));
+		if (!objectDefinition2.isApproved()) {
+			return objectField;
+		}
 
-			if (_objectDefinitionLocalService != null) {
-				_objectDefinitionLocalService.deployObjectDefinition(
-					objectDefinition2);
-			}
+		runSQL(
+			DynamicObjectDefinitionTableUtil.getAlterTableAddColumnSQL(
+				dbTableName, objectField.getDBColumnName(), "Long"));
+
+		ObjectDBManagerUtil.createIndexMetadata(
+			objectField.getDBColumnName(),
+			_currentConnection.getConnection(
+				objectRelationshipPersistence.getDataSource()),
+			dbTableName, false);
+
+		ObjectDefinitionLocalService objectDefinitionLocalService =
+			_objectDefinitionLocalServiceSnapshot.get();
+
+		if (objectDefinitionLocalService != null) {
+			objectDefinitionLocalService.deployObjectDefinition(
+				objectDefinition2);
 		}
 
 		return objectField;
@@ -834,9 +839,16 @@ public class ObjectRelationshipLocalServiceImpl
 			String type)
 		throws PortalException {
 
-		_validate(
-			objectDefinitionId1, objectDefinitionId2, parameterObjectFieldId,
-			name, type);
+		_validateName(objectDefinitionId1, name);
+
+		ObjectDefinition objectDefinition1 =
+			_objectDefinitionPersistence.findByPrimaryKey(objectDefinitionId1);
+		ObjectDefinition objectDefinition2 =
+			_objectDefinitionPersistence.findByPrimaryKey(objectDefinitionId2);
+
+		_validateType(
+			objectDefinition1, objectDefinition2, name, parameterObjectFieldId,
+			type);
 
 		ObjectRelationship objectRelationship =
 			objectRelationshipPersistence.create(
@@ -859,13 +871,6 @@ public class ObjectRelationshipLocalServiceImpl
 		objectRelationship.setName(name);
 		objectRelationship.setReverse(reverse);
 		objectRelationship.setType(type);
-
-		ObjectDefinition objectDefinition1 =
-			_objectDefinitionLocalService.getObjectDefinition(
-				objectDefinitionId1);
-		ObjectDefinition objectDefinition2 =
-			_objectDefinitionLocalService.getObjectDefinition(
-				objectDefinitionId2);
 
 		if (Objects.equals(type, ObjectRelationshipConstants.TYPE_ONE_TO_ONE) ||
 			Objects.equals(
@@ -900,6 +905,29 @@ public class ObjectRelationshipLocalServiceImpl
 
 		return objectRelationshipLocalService.updateObjectRelationship(
 			objectRelationship);
+	}
+
+	private void _deleteObjectFields(
+			long objectDefinitionId, ObjectRelationship objectRelationship)
+		throws PortalException {
+
+		for (ObjectField objectField :
+				_objectFieldPersistence.findByObjectDefinitionId(
+					objectDefinitionId)) {
+
+			ObjectFieldSetting objectFieldSetting =
+				_objectFieldSettingLocalService.fetchObjectFieldSetting(
+					objectField.getObjectFieldId(), "objectRelationshipName");
+
+			if ((objectFieldSetting != null) &&
+				StringUtil.equals(
+					objectFieldSetting.getValue(),
+					objectRelationship.getName())) {
+
+				_objectFieldLocalService.deleteObjectField(
+					objectField.getObjectFieldId());
+			}
+		}
 	}
 
 	private String _getServiceRegistrationKey(
@@ -990,9 +1018,7 @@ public class ObjectRelationshipLocalServiceImpl
 		return objectRelationshipPersistence.update(objectRelationship);
 	}
 
-	private void _validate(
-			long objectDefinitionId1, long objectDefinitionId2,
-			long parameterObjectFieldId, String name, String type)
+	private void _validateName(long objectDefinitionId1, String name)
 		throws PortalException {
 
 		if (Validator.isNull(name)) {
@@ -1025,53 +1051,6 @@ public class ObjectRelationshipLocalServiceImpl
 			throw new DuplicateObjectRelationshipException(
 				"Duplicate name " + name);
 		}
-
-		if (!Objects.equals(
-				type, ObjectRelationshipConstants.TYPE_MANY_TO_MANY) &&
-			!Objects.equals(
-				type, ObjectRelationshipConstants.TYPE_ONE_TO_MANY) &&
-			!Objects.equals(
-				type, ObjectRelationshipConstants.TYPE_ONE_TO_ONE)) {
-
-			throw new ObjectRelationshipTypeException("Invalid type " + type);
-		}
-
-		ObjectDefinition objectDefinition1 =
-			_objectDefinitionPersistence.fetchByPrimaryKey(objectDefinitionId1);
-		ObjectDefinition objectDefinition2 =
-			_objectDefinitionPersistence.fetchByPrimaryKey(objectDefinitionId2);
-
-		if (objectDefinition1.isUnmodifiableSystemObject() &&
-			objectDefinition2.isUnmodifiableSystemObject()) {
-
-			throw new ObjectRelationshipTypeException(
-				"Relationships are not allowed between system objects");
-		}
-
-		if (objectDefinition1.isUnmodifiableSystemObject() &&
-			Objects.equals(type, ObjectRelationshipConstants.TYPE_ONE_TO_ONE)) {
-
-			throw new ObjectRelationshipTypeException(
-				"Invalid type for system object definition " +
-					objectDefinitionId1);
-		}
-
-		if (Objects.equals(
-				type, ObjectRelationshipConstants.TYPE_MANY_TO_MANY) ||
-			Objects.equals(type, ObjectRelationshipConstants.TYPE_ONE_TO_ONE)) {
-
-			count = objectRelationshipPersistence.countByODI1_ODI2_N_T(
-				objectDefinitionId2, objectDefinitionId1, name, type);
-
-			if (count > 0) {
-				throw new ObjectRelationshipTypeException(
-					"Inverse type already exists");
-			}
-		}
-
-		_validateParameterObjectFieldId(
-			objectDefinitionId1, objectDefinitionId2, parameterObjectFieldId,
-			type);
 	}
 
 	private void _validateObjectEntryId(
@@ -1084,7 +1063,8 @@ public class ObjectRelationshipLocalServiceImpl
 					getSystemObjectDefinitionManager(
 						objectDefinition.getName());
 
-			systemObjectDefinitionManager.getExternalReferenceCode(primaryKey);
+			systemObjectDefinitionManager.getBaseModelExternalReferenceCode(
+				primaryKey);
 		}
 		else {
 			_objectEntryLocalService.getObjectEntry(primaryKey);
@@ -1092,12 +1072,10 @@ public class ObjectRelationshipLocalServiceImpl
 	}
 
 	private void _validateParameterObjectFieldId(
-			long objectDefinitionId1, long objectDefinitionId2,
-			long parameterObjectFieldId, String type)
+			ObjectDefinition objectDefinition1,
+			ObjectDefinition objectDefinition2, long parameterObjectFieldId,
+			String type)
 		throws PortalException {
-
-		ObjectDefinition objectDefinition1 =
-			_objectDefinitionPersistence.fetchByPrimaryKey(objectDefinitionId1);
 
 		String restContextPath = StringPool.BLANK;
 
@@ -1152,10 +1130,6 @@ public class ObjectRelationshipLocalServiceImpl
 						" does not exist");
 			}
 
-			ObjectDefinition objectDefinition2 =
-				_objectDefinitionPersistence.fetchByPrimaryKey(
-					objectDefinitionId2);
-
 			if (objectDefinition2.getObjectDefinitionId() !=
 					objectField.getObjectDefinitionId()) {
 
@@ -1177,17 +1151,71 @@ public class ObjectRelationshipLocalServiceImpl
 		}
 	}
 
+	private void _validateType(
+			ObjectDefinition objectDefinition1,
+			ObjectDefinition objectDefinition2, String name,
+			long parameterObjectFieldId, String type)
+		throws PortalException {
+
+		Set<String> defaultObjectRelationshipTypes =
+			ObjectRelationshipUtil.getDefaultObjectRelationshipTypes();
+
+		if (!defaultObjectRelationshipTypes.contains(type)) {
+			throw new ObjectRelationshipTypeException("Invalid type " + type);
+		}
+
+		if (Objects.equals(
+				type, ObjectRelationshipConstants.TYPE_MANY_TO_MANY) ||
+			Objects.equals(type, ObjectRelationshipConstants.TYPE_ONE_TO_ONE)) {
+
+			int count = objectRelationshipPersistence.countByODI1_ODI2_N_T(
+				objectDefinition2.getObjectDefinitionId(),
+				objectDefinition1.getObjectDefinitionId(), name, type);
+
+			if (count > 0) {
+				throw new ObjectRelationshipTypeException(
+					"Inverse type already exists");
+			}
+		}
+
+		if (objectDefinition1.isUnmodifiableSystemObject()) {
+			if (objectDefinition2.isUnmodifiableSystemObject()) {
+				throw new ObjectRelationshipTypeException(
+					"Relationships are not allowed between system objects");
+			}
+
+			SystemObjectDefinitionManager systemObjectDefinitionManager =
+				_systemObjectDefinitionManagerRegistry.
+					getSystemObjectDefinitionManager(
+						objectDefinition1.getName());
+
+			Set<String> allowedObjectRelationshipTypes =
+				systemObjectDefinitionManager.
+					getAllowedObjectRelationshipTypes();
+
+			if (!allowedObjectRelationshipTypes.contains(type)) {
+				throw new ObjectRelationshipTypeException(
+					"Invalid type for system object definition " +
+						objectDefinition1.getObjectDefinitionId());
+			}
+		}
+
+		_validateParameterObjectFieldId(
+			objectDefinition1, objectDefinition2, parameterObjectFieldId, type);
+	}
+
 	private static final Log _log = LogFactoryUtil.getLog(
 		ObjectRelationshipLocalServiceImpl.class);
 
+	private static final Snapshot<ObjectDefinitionLocalService>
+		_objectDefinitionLocalServiceSnapshot = new Snapshot<>(
+			ObjectRelationshipLocalServiceImpl.class,
+			ObjectDefinitionLocalService.class, null, true);
+
 	private BundleContext _bundleContext;
 
-	@Reference(
-		cardinality = ReferenceCardinality.OPTIONAL,
-		policy = ReferencePolicy.DYNAMIC,
-		policyOption = ReferencePolicyOption.GREEDY
-	)
-	private volatile ObjectDefinitionLocalService _objectDefinitionLocalService;
+	@Reference
+	private CurrentConnection _currentConnection;
 
 	@Reference
 	private ObjectDefinitionPersistence _objectDefinitionPersistence;

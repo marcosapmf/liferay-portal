@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.storage.salesforce.internal.rest.manager.v1_0.test;
@@ -17,6 +8,8 @@ package com.liferay.object.storage.salesforce.internal.rest.manager.v1_0.test;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.object.constants.ObjectDefinitionConstants;
 import com.liferay.object.constants.ObjectFieldConstants;
+import com.liferay.object.field.builder.TextObjectFieldBuilder;
+import com.liferay.object.field.util.ObjectFieldUtil;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectField;
 import com.liferay.object.rest.dto.v1_0.ObjectEntry;
@@ -115,27 +108,31 @@ public class SalesforceObjectEntryManagerImplTest {
 
 		_objectDefinition =
 			_objectDefinitionLocalService.addCustomObjectDefinition(
-				_user.getUserId(), false, false,
+				_user.getUserId(), 0, false, false,
 				LocalizedMapUtil.getLocalizedMap("Ticket"), "Ticket", null,
-				null, LocalizedMapUtil.getLocalizedMap("Tickets"),
+				null, LocalizedMapUtil.getLocalizedMap("Tickets"), true,
 				ObjectDefinitionConstants.SCOPE_COMPANY,
 				ObjectDefinitionConstants.STORAGE_TYPE_SALESFORCE,
 				Collections.emptyList());
 
-		ObjectField objectField = _objectFieldLocalService.addCustomObjectField(
-			null, _user.getUserId(), 0,
-			_objectDefinition.getObjectDefinitionId(),
-			ObjectFieldConstants.BUSINESS_TYPE_TEXT,
-			ObjectFieldConstants.DB_TYPE_STRING, false, false, null,
-			LocalizedMapUtil.getLocalizedMap("Title"), false, "title", false,
-			false, Collections.emptyList());
+		ObjectField objectField = ObjectFieldUtil.addCustomObjectField(
+			new TextObjectFieldBuilder(
+			).userId(
+				_user.getUserId()
+			).labelMap(
+				LocalizedMapUtil.getLocalizedMap("Title")
+			).name(
+				"title"
+			).objectDefinitionId(
+				_objectDefinition.getObjectDefinitionId()
+			).build());
 
 		_objectFieldLocalService.updateCustomObjectField(
 			"Title__c", objectField.getObjectFieldId(), 0,
 			objectField.getBusinessType(), objectField.getDBType(), false,
 			false, null, objectField.getLabelMap(), false,
-			objectField.getName(), false, false,
-			objectField.getObjectFieldSettings());
+			objectField.getName(), ObjectFieldConstants.READ_ONLY_FALSE, null,
+			false, false, objectField.getObjectFieldSettings());
 
 		_objectDefinition.setExternalReferenceCode("Ticket__c");
 		_objectDefinition.setTitleObjectFieldId(objectField.getObjectFieldId());

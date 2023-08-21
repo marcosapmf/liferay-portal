@@ -1,3 +1,11 @@
+/**
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
+ */
+
+// This is imported via "import maps". See how that client extension is
+// declared in `client-extension.yaml`.
+
 import {getBye, getHello} from 'my-utils';
 
 class CustomElement extends HTMLElement {
@@ -7,7 +15,7 @@ class CustomElement extends HTMLElement {
 		const root = document.createElement('pre');
 
 		root.innerHTML = `
-Grettings in:
+Greetings in:
 
  · English:    ${getHello('en')}
  · French:     ${getHello('fr')}

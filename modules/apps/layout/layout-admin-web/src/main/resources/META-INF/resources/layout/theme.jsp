@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -24,8 +15,6 @@ LayoutSet layoutSet = layoutsAdminDisplayContext.getSelLayoutSet();
 Theme rootTheme = layoutSet.getTheme();
 
 Layout selLayout = layoutsAdminDisplayContext.getSelLayout();
-
-PortletURL redirectURL = layoutsAdminDisplayContext.getRedirectURL();
 %>
 
 <liferay-ui:error-marker
@@ -35,22 +24,6 @@ PortletURL redirectURL = layoutsAdminDisplayContext.getRedirectURL();
 
 <aui:model-context bean="<%= selLayout %>" model="<%= Layout.class %>" />
 
-<liferay-util:buffer
-	var="rootNodeNameLink"
->
-	<c:choose>
-		<c:when test="<%= themeDisplay.isStateExclusive() %>">
-			<liferay-ui:message key="see-theme-configuration" />
-		</c:when>
-		<c:otherwise>
-			<clay:link
-				href="<%= redirectURL.toString() %>"
-				label='<%= LanguageUtil.get(request, "see-theme-configuration") %>'
-			/>
-		</c:otherwise>
-	</c:choose>
-</liferay-util:buffer>
-
 <%
 String taglibLabel = null;
 
@@ -58,13 +31,14 @@ if (group.isLayoutPrototype()) {
 	taglibLabel = LanguageUtil.get(request, "use-the-same-look-and-feel-of-the-pages-in-which-this-template-is-used");
 }
 else {
-	taglibLabel = LanguageUtil.format(request, "use-the-inherited-theme-x", rootNodeNameLink, false);
+	taglibLabel = LanguageUtil.get(request, "use-the-inherited-theme");
 }
 %>
 
 <div id="<portlet:namespace />themeContainer">
 	<clay:radio
 		checked="<%= selLayout.isInheritLookAndFeel() %>"
+		disabled="<%= layoutsAdminDisplayContext.isReadOnly() %>"
 		id='<%= liferayPortletResponse.getNamespace() + "regularInheritLookAndFeel" %>'
 		label="<%= taglibLabel %>"
 		name='<%= liferayPortletResponse.getNamespace() + "regularInheritLookAndFeel" %>'
@@ -73,6 +47,7 @@ else {
 
 	<clay:radio
 		checked="<%= !selLayout.isInheritLookAndFeel() %>"
+		disabled="<%= layoutsAdminDisplayContext.isReadOnly() %>"
 		id='<%= liferayPortletResponse.getNamespace() + "regularUniqueLookAndFeel" %>'
 		label='<%= LanguageUtil.get(request, "define-a-custom-theme-for-this-page") %>'
 		name='<%= liferayPortletResponse.getNamespace() + "regularInheritLookAndFeel" %>'
@@ -96,6 +71,9 @@ else {
 
 <aui:script sandbox="<%= true %>">
 	const regularCss = document.getElementById('<portlet:namespace />regularCss');
+	const regularCssAlert = document.getElementById(
+		'<portlet:namespace />regularCssAlert'
+	);
 	const regularCssLabel = document.querySelector(
 		'[for="<portlet:namespace />regularCss"]'
 	);
@@ -116,11 +94,11 @@ else {
 		'<portlet:namespace />themeContainer'
 	);
 
-	const sheetSection = themeContainer.closest('.sheet-section');
+	const sheet = themeContainer.closest('.sheet');
 
-	if ('<%= selLayout.getMasterLayoutPlid() > 0 %>') {
-		sheetSection.classList.add('hide');
-		sheetSection.setAttribute('aria-hidden', 'true');
+	if (<%= selLayout.getMasterLayoutPlid() > 0 %>) {
+		sheet.classList.add('hide');
+		sheet.setAttribute('aria-hidden', 'true');
 	}
 
 	if (regularInheritLookAndFeel) {
@@ -136,6 +114,7 @@ else {
 				themeOptions.classList.toggle('hide');
 			}
 
+			regularCssAlert.classList.toggle('d-none', false);
 			Liferay.Util.toggleDisabled([regularCss, regularCssLabel], true);
 		});
 	}
@@ -153,6 +132,7 @@ else {
 				themeOptions.classList.toggle('hide');
 			}
 
+			regularCssAlert.classList.toggle('d-none', true);
 			Liferay.Util.toggleDisabled([regularCss, regularCssLabel], false);
 		});
 	}

@@ -15,15 +15,20 @@ definition {
 	var testSiteName = "Testray 2";
 
 	setUp {
-		task ("Login and create a Testray Site") {
+		task ("Set up instance and sign in") {
 			TestCase.setUpPortalInstance();
 
 			User.firstLoginPG();
-
-			Testray.addTestraySite(siteName = ${testSiteName});
 		}
 
-		task ("create all objects: projects, teams, components, cases") {
+		task ("Create a new Testray Site") {
+			HeadlessSite.addSite(
+				siteName = ${testSiteName},
+				templateName = "Testray",
+				templateType = "Site Initializer");
+		}
+
+		task ("create project, team, component and case via API") {
 			JSONTestray.addProject(
 				projectDescription = "Project Description 1",
 				projectName = ${projectName});
@@ -58,7 +63,7 @@ definition {
 				steps = "Steps 2");
 		}
 
-		task ("Go to the Cases page") {
+		task ("Go to the Cases tab") {
 			ApplicationsMenu.gotoSite(site = ${testSiteName});
 
 			Testray.changePagination(
@@ -72,17 +77,19 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		task ("Delete case type and project via API, Testray Site and Client Extensions") {
+			JSONTestrayAPI.deleteObjectViaAPI(
+				object = "casetypes",
+				objectName = ${caseType});
 
-		JSONTestrayAPI.deleteObjectViaAPI(
-			object = "casetypes",
-			objectName = ${caseType});
+			JSONTestrayAPI.deleteProject(projectName = ${projectName});
 
-		JSONTestrayAPI.deleteProject(projectName = ${projectName});
+			Testray.testrayApisTearDown();
+		}
 
-		Testray.testrayApisTearDown();
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 	}
@@ -90,6 +97,9 @@ definition {
 	@description = "Story ID: LPS-173517 | Test Summary: Verify if as an Administrator I should be able to filter the case by case name"
 	@priority = 4
 	test AdminCanFilterCaseByCaseName {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
 		task ("When the user filter a case by name") {
 			TestrayFilter.clickFilter();
 
@@ -114,6 +124,9 @@ definition {
 	@description = "Story ID: LPS-173517 | Test Summary: Verify if as an Administrator I should be able to filter the case by case type"
 	@priority = 3
 	test AdminCanFilterCaseByCaseType {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
 		task ("When the user filter a case by case type") {
 			TestrayFilter.clickColumn();
 
@@ -143,6 +156,9 @@ definition {
 	@description = "Story ID: LPS-173517 | Test Summary: Verify if as an Administrator I should be able to filter the case by component"
 	@priority = 3
 	test AdminCanFilterCaseByComponent {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
 		task ("When the user filter a case by component") {
 			TestrayFilter.clickFilter();
 
@@ -166,6 +182,9 @@ definition {
 	@description = "Story ID: LPS-173517 | Test Summary: Verify if as an Administrator I should be able to filter the case by description"
 	@priority = 2
 	test AdminCanFilterCaseByDescription {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
 		task ("Given the user selects the description column") {
 			TestrayFilter.clickColumn();
 
@@ -197,6 +216,9 @@ definition {
 	@description = "Story ID: LPS-173517 | Test Summary: Verify if as an Administrator I should be able to filter the case by priority"
 	@priority = 3
 	test AdminCanFilterCaseByPriority {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
 		task ("When the user filter a case by priority") {
 			TestrayFilter.clickFilter();
 
@@ -221,6 +243,9 @@ definition {
 	@description = "Story ID: LPS-173517 | Test Summary: Verify if as an Administrator I should be able to filter the case by steps"
 	@priority = 2
 	test AdminCanFilterCaseBySteps {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
 		task ("When the user filter a case by steps") {
 			TestrayFilter.clickFilter();
 
@@ -244,6 +269,9 @@ definition {
 	@description = "Story ID: LPS-173517 | Test Summary: Verify if as an Administrator I should be able to filter the case by team"
 	@priority = 3
 	test AdminCanFilterCaseByTeam {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
 		task ("When the user filter a case by team") {
 			TestrayFilter.clickColumn();
 
@@ -271,6 +299,9 @@ definition {
 	@description = "Story ID: LPS-173517 | Test Summary: Verify if as an Administrator I should be able to filter case using multiple filtering options"
 	@priority = 4
 	test AdminCanFilterCasesWithMultipleOptions {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
 		task ("Given that the user selects the columns") {
 			TestrayFilter.clickColumn();
 
@@ -331,7 +362,10 @@ definition {
 
 	@description = "Story ID: LPS-173517 | Test Summary: Verify if as an Administrator I should not see case that don't exist when I try filtering for them"
 	@priority = 3
-	test AdminCanFilterForNonexistantCase {
+	test AdminCanFilterForNonexistentCase {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
 		task ("When the user filters a case by its non-existent name") {
 			TestrayFilter.clickFilter();
 
@@ -351,6 +385,9 @@ definition {
 	@description = "Story ID: LPS-173517 | Test Summary: Verify if as an Administrator I should be able to filter the filter options"
 	@priority = 2
 	test AdminCanFilterOptionsToFilter {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
 		task ("When the user search filter called priority") {
 			TestrayFilter.clickFilter();
 
@@ -377,6 +414,9 @@ definition {
 	@description = "Story ID: LPS-176898 | Test Summary: Verify that can clean the filter results"
 	@priority = 2
 	test CanClearFilterResults {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
 		task ("When the user filters a case by its non-existent name") {
 			TestrayFilter.clickFilter();
 
@@ -408,6 +448,9 @@ definition {
 	@description = "Story ID: LPS-176898 | Test Summary: Verify that can clear the filter results with the close button"
 	@priority = 2
 	test CanClearFilterWithCloseButton {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
 		task ("When the user filters a filter by its non-existent name") {
 			TestrayFilter.clickFilter();
 
@@ -428,6 +471,9 @@ definition {
 	@description = "Story ID: LPS-177202 | Test Summary: Verify that the user can pin filters"
 	@priority = 3
 	test CanPinFilterResults {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
 		task ("Given that can see two different cases in the table") {
 			AssertElementPresent(
 				key_projectName = "Case 1",
@@ -450,6 +496,10 @@ definition {
 		}
 
 		task ("When the user pin a result in the filter") {
+			WaitForElementPresent(
+				key_projectName = "Case 1",
+				locator1 = "Testray#ITEM_NAME");
+
 			TestrayFilter.pinResult();
 
 			Refresh();
@@ -471,6 +521,9 @@ definition {
 	@description = "Story ID: LPS-177202 | Test Summary: Verify that the user can unpin filters"
 	@priority = 3
 	test CanUnpinFilterResults {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
 		task ("Given that can see two different cases in the table") {
 			AssertElementPresent(
 				key_projectName = "Case 1",
@@ -514,7 +567,14 @@ definition {
 	@description = "Story ID: LPS-177202 | Test Summary: Verify that the error message appears when pining without selected filters"
 	@priority = 2
 	test CanViewMessageError {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
 		task ("When the user pin a result without filtering") {
+			WaitForElementPresent(
+				key_projectName = "Case 1",
+				locator1 = "Testray#ITEM_NAME");
+
 			Click.javaScriptClick(locator1 = "TestrayFilter#PIN_ICON");
 		}
 

@@ -20,7 +20,7 @@ const IndividualAttributesModal: React.FC<IIndividualAttributesModalInterface> =
 	<Modal>
 		<Modal.Header onClose={onClose} title={fieldName} />
 
-		<Modal.Body className='mt-3'>
+		<Modal.Body>
 			<h5>{Liferay.Language.get('data-sources')}</h5>
 
 			<Table
@@ -32,7 +32,7 @@ const IndividualAttributesModal: React.FC<IIndividualAttributesModalInterface> =
 					},
 					{
 						accessor: 'dataSourceFieldName',
-						label: Liferay.Language.get('attribute'),
+						label: Liferay.Language.get('attribute[noun]'),
 						sortable: false
 					}
 				]}

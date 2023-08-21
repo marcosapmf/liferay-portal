@@ -1,3 +1,8 @@
+/**
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
+ */
+
 import ClayLoadingIndicator from '@clayui/loading-indicator';
 import {useEffect, useState} from 'react';
 
@@ -8,8 +13,10 @@ import {
 	TableHeaders,
 } from '../../components/DashboardTable/DashboardTable';
 import {getChannels, getPlacedOrders} from '../../utils/api';
-import {DashboardListItems} from '../DashBoardPage/DashboardPage';
-import {DashboardPage} from '../DashBoardPage/DashboardPage';
+import {
+	DashboardListItems,
+	DashboardPage,
+} from '../DashBoardPage/DashboardPage';
 import {NextStepPage} from '../NextStepPage/NextStepPage';
 import {ProjectsTableRow} from './ProjectsTableRow';
 
@@ -17,6 +24,7 @@ import './ProjectsPage.scss';
 
 interface ProjectsPageProps {
 	dashboardNavigationItems: DashboardListItems[];
+	icon: string;
 	selectedAccount: Account;
 	setShowDashboardNavigation: (value: boolean) => void;
 }
@@ -44,6 +52,7 @@ const projectsTableHeaders: TableHeaders = [
 
 export function ProjectsPage({
 	dashboardNavigationItems,
+	icon,
 	selectedAccount,
 	setShowDashboardNavigation,
 }: ProjectsPageProps) {
@@ -107,6 +116,7 @@ export function ProjectsPage({
 										'Click on “New Projects” to start.',
 									title: 'No projects yet',
 								}}
+								icon={icon}
 								items={projectOrders}
 								tableHeaders={projectsTableHeaders}
 							>
@@ -116,9 +126,9 @@ export function ProjectsPage({
 									);
 									const options: Intl.DateTimeFormatOptions =
 										{
-											year: 'numeric',
-											month: 'short',
 											day: 'numeric',
+											month: 'short',
+											year: 'numeric',
 										};
 									const formattedCreateDate =
 										date.toLocaleDateString(

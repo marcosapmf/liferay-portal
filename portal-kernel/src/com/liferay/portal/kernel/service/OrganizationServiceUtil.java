@@ -1,21 +1,13 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.kernel.service;
 
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Organization;
+import com.liferay.portal.kernel.util.OrderByComparator;
 
 import java.util.List;
 
@@ -314,11 +306,28 @@ public class OrganizationServiceUtil {
 	}
 
 	public static List<Organization> getOrganizations(
+		long companyId, long parentOrganizationId, int start, int end,
+		OrderByComparator<Organization> orderByComparator) {
+
+		return getService().getOrganizations(
+			companyId, parentOrganizationId, start, end, orderByComparator);
+	}
+
+	public static List<Organization> getOrganizations(
 		long companyId, long parentOrganizationId, String name, int start,
 		int end) {
 
 		return getService().getOrganizations(
 			companyId, parentOrganizationId, name, start, end);
+	}
+
+	public static List<Organization> getOrganizations(
+		long companyId, long parentOrganizationId, String name, int start,
+		int end, OrderByComparator<Organization> orderByComparator) {
+
+		return getService().getOrganizations(
+			companyId, parentOrganizationId, name, start, end,
+			orderByComparator);
 	}
 
 	/**
@@ -498,6 +507,10 @@ public class OrganizationServiceUtil {
 
 	public static OrganizationService getService() {
 		return _service;
+	}
+
+	public static void setService(OrganizationService service) {
+		_service = service;
 	}
 
 	private static volatile OrganizationService _service;

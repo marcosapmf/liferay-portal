@@ -1,19 +1,11 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.osb.faro.web.internal.controller.api;
 
+import com.liferay.oauth2.provider.scope.RequiresNoScope;
 import com.liferay.osb.faro.model.FaroProject;
 import com.liferay.osb.faro.util.FaroThreadLocal;
 import com.liferay.osb.faro.web.internal.context.GroupInfo;
@@ -31,6 +23,7 @@ import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -56,6 +49,7 @@ import org.osgi.service.component.annotations.Component;
 @Component(service = ReportController.class)
 @Path("/reports")
 @Produces(MediaType.APPLICATION_JSON)
+@RequiresNoScope
 public class ReportController extends BaseFaroController {
 
 	@GET
@@ -82,6 +76,14 @@ public class ReportController extends BaseFaroController {
 			@QueryParam("toDate") String toDateString,
 			@PathParam("type") String type)
 		throws Exception {
+
+		if (!_exportTypes.contains(type)) {
+			return _reportControllerResponseFactory.create(
+				"The \"type\" query parameter must be either \"event\", " +
+					"\"identity\", \"individual\", \"membership\", \"page\", " +
+						"or \"segment\".",
+				Response.Status.BAD_REQUEST);
+		}
 
 		if (Validator.isBlank(fromDateString) ||
 			Validator.isBlank(toDateString)) {
@@ -170,7 +172,7 @@ public class ReportController extends BaseFaroController {
 		};
 
 		return Response.ok(
-			streamingOutput
+			streamingOutput, "applization/zip"
 		).build();
 	}
 
@@ -201,6 +203,16 @@ public class ReportController extends BaseFaroController {
 
 	private static final DateTimeFormatter _dateTimeFormatter =
 		DateTimeFormatter.ofPattern(_ISO_8601_FORMAT);
+	private static final List<String> _exportTypes = new ArrayList<String>() {
+		{
+			add("event");
+			add("identity");
+			add("individual");
+			add("membership");
+			add("page");
+			add("segment");
+		}
+	};
 	private static final ReportControllerResponseFactory
 		_reportControllerResponseFactory =
 			new ReportControllerResponseFactory();

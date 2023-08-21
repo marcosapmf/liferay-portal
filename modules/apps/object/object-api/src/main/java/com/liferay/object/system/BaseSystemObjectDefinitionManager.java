@@ -1,21 +1,10 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.system;
 
-import com.liferay.object.field.util.ObjectFieldUtil;
-import com.liferay.object.model.ObjectField;
 import com.liferay.petra.sql.dsl.Table;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.model.BaseModel;
@@ -96,24 +85,8 @@ public abstract class BaseSystemObjectDefinitionManager
 	}
 
 	protected Map<Locale, String> createLabelMap(String labelKey) {
-		return LocalizedMapUtil.getLocalizedMap(_translate(labelKey));
-	}
-
-	protected ObjectField createObjectField(
-		String businessType, String dbType, String labelKey, String name,
-		boolean required, boolean system) {
-
-		return createObjectField(
-			businessType, null, dbType, labelKey, name, required, system);
-	}
-
-	protected ObjectField createObjectField(
-		String businessType, String dbColumnName, String dbType,
-		String labelKey, String name, boolean required, boolean system) {
-
-		return ObjectFieldUtil.createObjectField(
-			0, businessType, dbColumnName, dbType, false, false, null,
-			_translate(labelKey), name, required, system);
+		return LocalizedMapUtil.getLocalizedMap(
+			LanguageUtil.get(LocaleUtil.getDefault(), labelKey));
 	}
 
 	protected Map<String, String> getLanguageIdMap(
@@ -172,9 +145,5 @@ public abstract class BaseSystemObjectDefinitionManager
 
 	@Reference
 	protected ExtensionProviderRegistry extensionProviderRegistry;
-
-	private String _translate(String labelKey) {
-		return LanguageUtil.get(LocaleUtil.getDefault(), labelKey);
-	}
 
 }

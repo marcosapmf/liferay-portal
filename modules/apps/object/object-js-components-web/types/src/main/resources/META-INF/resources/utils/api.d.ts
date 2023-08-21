@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 interface HTTPMethod {
@@ -21,6 +12,15 @@ interface Actions {
 	get: HTTPMethod;
 	permissions: HTTPMethod;
 	update: HTTPMethod;
+}
+interface Folder {
+	actions: [];
+	dateCreated: string;
+	dateModified: string;
+	externalReferenceCode: string;
+	id: number;
+	label: LocalizedValue<string>;
+	name: string;
 }
 interface PickListItem {
 	externalReferenceCode: string;
@@ -84,6 +84,8 @@ declare type Recipients = {
 	to: LocalizedValue<string>;
 };
 export declare function deleteObjectDefinitions(id: number): Promise<void>;
+export declare function deleteFolder(id: number): Promise<void>;
+export declare function deleteObjectField(id: number): Promise<void>;
 export declare function deleteObjectRelationships(id: number): Promise<void>;
 export declare function deletePickList(pickListId: number): Promise<void>;
 export declare function deletePickListItem(id: number): Promise<void>;
@@ -92,6 +94,7 @@ export declare function fetchJSON<T>(
 	init?: RequestInit
 ): Promise<T>;
 export declare function getAllObjectDefinitions(): Promise<ObjectDefinition[]>;
+export declare function getAllObjectFolders(): Promise<Folder[]>;
 export declare function getList<T>(url: string): Promise<T[]>;
 export declare function getNotificationTemplateByExternalReferenceCode(
 	notificationTemplateExternalReferenceCode: string
@@ -134,6 +137,9 @@ export declare function getPickLists(): Promise<PickList[]>;
 export declare function getRelationship<T>(
 	objectRelationshipId: number
 ): Promise<T>;
+export declare function getObjectValidationRuleById<T>(
+	objectValidationRuleId: number
+): Promise<T>;
 export declare function publishObjectDefinitionById(
 	objectDefinitionId: number
 ): Promise<Response>;
@@ -143,7 +149,7 @@ export declare function putObjectDefinitionByExternalReferenceCode(
 export declare function save(
 	url: string,
 	item: unknown,
-	method?: 'PUT' | 'POST'
+	method?: 'PATCH' | 'POST' | 'PUT'
 ): Promise<void>;
 export declare function addPickListItem({
 	id,

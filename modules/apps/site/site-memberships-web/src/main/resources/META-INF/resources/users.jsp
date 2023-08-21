@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -81,15 +72,97 @@ Role role = usersDisplayContext.getRole();
 						<%
 						String displayStyle = usersDisplayContext.getDisplayStyle();
 
-						boolean selectUsers = false;
-
 						row.setData(
 							HashMapBuilder.<String, Object>put(
 								"actions", usersManagementToolbarDisplayContext.getAvailableActions(user2)
 							).build());
+
+						Set<String> names = new TreeSet<String>();
+
+						names.addAll(ListUtil.toList(RoleLocalServiceUtil.getUserGroupGroupRoles(user2.getUserId(), siteMembershipsDisplayContext.getGroupId()), Role.TITLE_ACCESSOR));
+
+						names.addAll(ListUtil.toList(UserGroupRoleLocalServiceUtil.getUserGroupRoles(user2.getUserId(), siteMembershipsDisplayContext.getGroupId()), UsersAdmin.USER_GROUP_ROLE_TITLE_ACCESSOR));
+
+						List<Team> teams = TeamLocalServiceUtil.getUserOrUserGroupTeams(siteMembershipsDisplayContext.getGroupId(), user2.getUserId());
+
+						names.addAll(ListUtil.toList(teams, Team.NAME_ACCESSOR));
 						%>
 
-						<%@ include file="/user_columns.jspf" %>
+						<c:choose>
+							<c:when test='<%= displayStyle.equals("icon") %>'>
+								<liferay-ui:search-container-column-text>
+									<clay:user-card
+										propsTransformer="js/UserCardPropsTransformer"
+										userCard="<%= new UsersUserCard(user2, renderRequest, renderResponse, searchContainer.getRowChecker()) %>"
+									/>
+								</liferay-ui:search-container-column-text>
+							</c:when>
+							<c:when test='<%= displayStyle.equals("descriptive") %>'>
+								<liferay-ui:search-container-column-text>
+									<liferay-ui:user-portrait
+										userId="<%= user2.getUserId() %>"
+									/>
+								</liferay-ui:search-container-column-text>
+
+								<liferay-ui:search-container-column-text
+									colspan="<%= 2 %>"
+								>
+									<h5><%= user2.getFullName() %></h5>
+
+									<h6 class="text-default">
+										<span><%= user2.getScreenName() %></span>
+									</h6>
+
+									<h6>
+										<%= HtmlUtil.escape(StringUtil.merge(names, StringPool.COMMA_AND_SPACE)) %>
+									</h6>
+								</liferay-ui:search-container-column-text>
+
+								<%
+								UserActionDropdownItemsProvider userActionDropdownItemsProvider = new UserActionDropdownItemsProvider(user2, renderRequest, renderResponse);
+								%>
+
+								<liferay-ui:search-container-column-text>
+									<clay:dropdown-actions
+										aria-label='<%= LanguageUtil.get(request, "show-actions") %>'
+										dropdownItems="<%= userActionDropdownItemsProvider.getActionDropdownItems() %>"
+										propsTransformer="js/UserDropdownDefaultPropsTransformer"
+									/>
+								</liferay-ui:search-container-column-text>
+							</c:when>
+							<c:otherwise>
+								<liferay-ui:search-container-column-text
+									cssClass="table-cell-expand table-cell-minw-200 table-title"
+									name="name"
+									value="<%= user2.getFullName() %>"
+								/>
+
+								<liferay-ui:search-container-column-text
+									cssClass="table-cell-expand table-cell-minw-200"
+									name="screen-name"
+									orderable="<%= true %>"
+									property="screenName"
+								/>
+
+								<liferay-ui:search-container-column-text
+									cssClass="table-cell-expand table-cell-minw-200"
+									name="roles-and-teams"
+									value="<%= HtmlUtil.escape(StringUtil.merge(names, StringPool.COMMA_AND_SPACE)) %>"
+								/>
+
+								<%
+								UserActionDropdownItemsProvider userActionDropdownItemsProvider = new UserActionDropdownItemsProvider(user2, renderRequest, renderResponse);
+								%>
+
+								<liferay-ui:search-container-column-text>
+									<clay:dropdown-actions
+										aria-label='<%= LanguageUtil.get(request, "show-actions") %>'
+										dropdownItems="<%= userActionDropdownItemsProvider.getActionDropdownItems() %>"
+										propsTransformer="js/UserDropdownDefaultPropsTransformer"
+									/>
+								</liferay-ui:search-container-column-text>
+							</c:otherwise>
+						</c:choose>
 					</liferay-ui:search-container-row>
 
 					<liferay-ui:search-iterator

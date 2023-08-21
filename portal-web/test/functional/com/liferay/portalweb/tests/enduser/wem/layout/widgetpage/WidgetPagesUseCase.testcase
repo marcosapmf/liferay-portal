@@ -1,6 +1,7 @@
 @component-name = "portal-wcm"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testcase.url = "http://localhost:8080";
@@ -152,7 +153,7 @@ definition {
 		task ("Change embedded type URL") {
 			PagesAdmin.configurePage(
 				pageName = "Test Page Name 1",
-				pageTypeURL = "http://iscaliforniaonfire.com/",
+				pageTypeURL = "http://whereiscaliforniaonfire.com",
 				sitePageType = "Embedded");
 		}
 
@@ -180,7 +181,7 @@ definition {
 			SelectFrame.selectFrameNoLoading(locator1 = "IFrame#EMBEDDED_IFRAME");
 
 			AssertVisible(
-				key_title = "Yes",
+				key_title = "Fires",
 				locator1 = "Header#H1_TITLE");
 		}
 

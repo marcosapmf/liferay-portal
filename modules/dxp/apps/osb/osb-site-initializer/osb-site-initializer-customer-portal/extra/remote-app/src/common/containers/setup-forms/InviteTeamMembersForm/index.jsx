@@ -1,12 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {useMutation} from '@apollo/client';
@@ -14,20 +8,21 @@ import ClayForm from '@clayui/form';
 import classNames from 'classnames';
 import {FieldArray, Formik} from 'formik';
 import {useEffect, useState} from 'react';
+import SearchBuilder from '~/common/core/SearchBuilder';
 import i18n from '../../../I18n';
 import {Badge, Button} from '../../../components';
 import {useAppPropertiesContext} from '../../../contexts/AppPropertiesContext';
 import {
 	addTeamMembersInvitation,
+	associateUserAccountWithAccount,
 	associateUserAccountWithAccountAndAccountRole,
-	createAndAssociateUserAccountWithAccountAndAccountRole,
 	getUserAccountByEmail,
+	patchUserAccount,
 } from '../../../services/liferay/graphql/queries';
 import {associateContactRoleNameByEmailByProject} from '../../../services/liferay/rest/raysource/LicenseKeys';
 import {ROLE_TYPES, SLA_TYPES} from '../../../utils/constants';
 import getInitialInvite from '../../../utils/getInitialInvite';
 import getProjectRoles from '../../../utils/getProjectRoles';
-import {getRandomUUID} from '../../../utils/getRandomUUID';
 import Layout from '../Layout';
 import TeamMemberInputs from './TeamMemberInputs';
 
@@ -61,30 +56,22 @@ const InviteTeamMembersPage = ({
 		provisioningServerAPI,
 	} = useAppPropertiesContext();
 
-	const [addTeamMemberInvitation, {error: addTeamMemberError}] = useMutation(
-		addTeamMembersInvitation
+	const [addTeamMemberInvitation] = useMutation(addTeamMembersInvitation);
+	const [updateUserAccount] = useMutation(patchUserAccount);
+	const [associateUserWithAccount] = useMutation(
+		associateUserAccountWithAccount
 	);
-
+	const [associateUserAccountWithAccountRole] = useMutation(
+		associateUserAccountWithAccountAndAccountRole,
+		{
+			awaitRefetchQueries: true,
+			refetchQueries: ['getUserAccountsByAccountExternalReferenceCode'],
+		}
+	);
 	const [
 		isSelectdAdministratorOrRequestorRole,
 		setIsSelectedAdministratorOrRequestorRole,
 	] = useState(false);
-
-	const [
-		associateUserAccount,
-		{error: associateUserAccountError},
-	] = useMutation(associateUserAccountWithAccountAndAccountRole, {
-		awaitRefetchQueries: true,
-		refetchQueries: ['getUserAccountsByAccountExternalReferenceCode'],
-	});
-
-	const [
-		createAndAssociateUserAccount,
-		{error: createAndAssociateUserAccountError},
-	] = useMutation(createAndAssociateUserAccountWithAccountAndAccountRole, {
-		awaitRefetchQueries: true,
-		refetchQueries: ['getUserAccountsByAccountExternalReferenceCode'],
-	});
 
 	const [baseButtonDisabled, setBaseButtonDisabled] = useState(true);
 	const [hasInitialError, setInitialError] = useState();
@@ -107,7 +94,7 @@ const InviteTeamMembersPage = ({
 
 			if (roles) {
 				const accountMember = roles?.find(
-					({name}) => name === ROLE_TYPES.member.name
+					({name}) => name === ROLE_TYPES?.member.name
 				);
 
 				setAccountMemberRole(accountMember);
@@ -118,8 +105,8 @@ const InviteTeamMembersPage = ({
 						? accountMember
 						: roles?.find(
 								({name}) =>
-									name === ROLE_TYPES.requester.name ||
-									name === ROLE_TYPES.admin.name
+									name === ROLE_TYPES?.requester.name ||
+									name === ROLE_TYPES?.admin.name
 						  )
 				);
 
@@ -147,8 +134,9 @@ const InviteTeamMembersPage = ({
 			const totalAdmins = values.invites?.reduce(
 				(totalInvites, currentInvite) => {
 					if (
-						currentInvite.role.name === ROLE_TYPES.requester.name ||
-						currentInvite.role.name === ROLE_TYPES.admin.name
+						currentInvite?.role?.name ===
+							ROLE_TYPES.requester.name ||
+						currentInvite?.role?.name === ROLE_TYPES.admin.name
 					) {
 						return ++totalInvites;
 					}
@@ -168,13 +156,13 @@ const InviteTeamMembersPage = ({
 	}, [values, project, accountRoles, availableAdministratorAssets]);
 
 	useEffect(() => {
-		const filledEmails =
+		const inviteMembers =
 			values?.invites?.filter(({email}) => email)?.length || 0;
 		const totalEmails = values?.invites?.length || 0;
 		const failedEmails =
 			errors?.invites?.filter((email) => email)?.length || 0;
 
-		if (filledEmails) {
+		if (inviteMembers) {
 			const sucessfullyEmails = totalEmails - failedEmails;
 
 			if (
@@ -183,14 +171,12 @@ const InviteTeamMembersPage = ({
 				isSelectdAdministratorOrRequestorRole
 			) {
 				setBaseButtonDisabled(true);
-			}
-			else {
+			} else {
 				setInitialError(false);
 				setBaseButtonDisabled(sucessfullyEmails !== totalEmails);
 				setshowEmptyEmailError(false);
 			}
-		}
-		else if (touched['invites']?.some((field) => field?.email)) {
+		} else if (touched['invites']?.some((field) => field?.email)) {
 			setInitialError(true);
 			setBaseButtonDisabled(true);
 		}
@@ -204,113 +190,145 @@ const InviteTeamMembersPage = ({
 	]);
 
 	const handleSubmit = async () => {
-		const filledEmails = values?.invites?.filter(({email}) => email) || [];
+		const inviteMembers = values?.invites?.filter(({email}) => email) || [];
 
-		if (filledEmails.length) {
-			setIsLoadingUserInvitation(true);
-			let displaySuccess = true;
-
-			const filledEmailsPromises = filledEmails.map(
-				async (filledEmail) => {
-					const getUserAccount = await client.query({
-						query: getUserAccountByEmail,
-						variables: {
-							filter: `emailAddress eq '${filledEmail.email}'`,
-						},
-					});
-
-					const userInvitedAlreadyExists = !!getUserAccount?.data
-						.userAccounts.items.length;
-
-					const inviteNewMember = userInvitedAlreadyExists
-						? associateUserAccount
-						: createAndAssociateUserAccount;
-
-					try {
-						await inviteNewMember({
-							context: {
-								displaySuccess: false,
-							},
-							variables: {
-								accountKey: project.accountKey,
-								accountRoleId: filledEmail.role.id,
-								emailAddress: filledEmail.email,
-								...(!userInvitedAlreadyExists && {
-									userAccount: {
-										alternateName: getRandomUUID(),
-										emailAddress: filledEmail.email,
-										familyName: filledEmail.familyName,
-										givenName: filledEmail.givenName,
-									},
-								}),
-							},
-						});
-
-						await associateContactRoleNameByEmailByProject(
-							project.accountKey,
-							provisioningServerAPI,
-							sessionId,
-							encodeURI(filledEmail.email),
-							filledEmail.role.raysourceName
-						);
-
-						return filledEmail;
-					}
-					catch (error) {
-						displaySuccess = false;
-						Liferay.Util.openToast(DEFAULT_WARNING);
-					}
-				}
-			);
-
-			const filledEmailsData = await Promise.all(filledEmailsPromises);
-
-			const filledEmailsDataFiltered = filledEmailsData.filter(
-				(filledEmail) => filledEmail
-			);
-
-			if (filledEmailsDataFiltered.length) {
-				const newMembersData = await addTeamMemberInvitation({
-					context: {
-						displaySuccess,
-						type: 'liferay-rest',
-					},
-					variables: {
-						TeamMembersInvitation: filledEmailsDataFiltered.map(
-							({email, familyName, givenName, role}) => ({
-								email,
-								familyName,
-								givenName,
-								r_accountEntryToDXPCloudEnvironment_accountEntryId:
-									project?.id,
-								role: role.key,
-							})
-						),
-					},
-				});
-
-				if (
-					!addTeamMemberError &&
-					!associateUserAccountError &&
-					!createAndAssociateUserAccountError &&
-					newMembersData
-				) {
-					if (mutateUserData) {
-						mutateUserData(newMembersData);
-					}
-					handlePage();
-				}
-			}
-
-			setIsLoadingUserInvitation(false);
-		}
-		else {
+		if (!inviteMembers.length) {
 			setInitialError(true);
 			setBaseButtonDisabled(true);
 			setTouched({
 				invites: [{email: true}],
 			});
 		}
+
+		setIsLoadingUserInvitation(true);
+
+		let displaySuccess = true;
+		const invitedAccounts = [];
+
+		const context = {
+			displayErrors: false,
+			displayServerError: false,
+			displaySuccess: false,
+		};
+
+		const _getUserAccountByEmails = async (emails) => {
+			const getUserAccount = await client.query({
+				context,
+				query: getUserAccountByEmail,
+				variables: {
+					filter: Array.isArray(emails)
+						? SearchBuilder.in('emailAddress', emails)
+						: SearchBuilder.eq('emailAddress', emails),
+				},
+			});
+
+			return getUserAccount?.data?.userAccounts?.items ?? [];
+		};
+
+		const userAccounts = await _getUserAccountByEmails(
+			values?.invites?.map(({email}) => email)
+		);
+
+		for (const inviteMember of inviteMembers) {
+			try {
+				await associateUserWithAccount({
+					context,
+					variables: {
+						accountKey: project.accountKey,
+						emailAddress: inviteMember.email,
+					},
+				});
+
+				const currentUserAccount = userAccounts.find(
+					({emailAddress}) => emailAddress === inviteMember.email
+				);
+
+				const isCurrentUserAccountWithSameNames =
+					currentUserAccount?.familyName ===
+						inviteMember.familyName &&
+					currentUserAccount?.givenName === inviteMember.givenName;
+
+				if (!isCurrentUserAccountWithSameNames) {
+					const [
+						invitedMemberUserAccount,
+					] = await _getUserAccountByEmails(inviteMember.email);
+
+					if (invitedMemberUserAccount) {
+						try {
+							await updateUserAccount({
+								context,
+								variables: {
+									userAccount: {
+										emailAddress: inviteMember.email,
+										familyName: inviteMember.familyName,
+										givenName: inviteMember.givenName,
+									},
+									userAccountId: invitedMemberUserAccount.id,
+								},
+							});
+						} catch (error) {}
+					}
+				}
+
+				await associateUserAccountWithAccountRole({
+					context,
+					variables: {
+						accountKey: project.accountKey,
+						accountRoleId: inviteMember.role.id,
+						emailAddress: inviteMember.email,
+					},
+				});
+
+				await associateContactRoleNameByEmailByProject({
+					accountKey: project.accountKey,
+					emailURI: encodeURI(inviteMember.email),
+					firstName: inviteMember.givenName,
+					lastName: inviteMember.familyName,
+					provisioningServerAPI,
+					roleName: inviteMember.role.raysourceName,
+					sessionId,
+				});
+
+				invitedAccounts.push(inviteMember);
+			} catch (error) {
+				console.error(error);
+				displaySuccess = false;
+				Liferay.Util.openToast({
+					...DEFAULT_WARNING,
+					message: `Unable to invite ${inviteMember.givenName}`,
+				});
+			}
+		}
+		if (invitedAccounts.length) {
+			const newMembersData = await addTeamMemberInvitation({
+				context: {
+					displaySuccess,
+					type: 'liferay-rest',
+				},
+				notifyOnNetworkStatusChange: false,
+				variables: {
+					TeamMembersInvitation: invitedAccounts.map(
+						({email, familyName, givenName, role}) => ({
+							email,
+							familyName,
+							givenName,
+							r_accountEntryToDXPCloudEnvironment_accountEntryId:
+								project?.id,
+							role: role.key,
+						})
+					),
+				},
+			});
+
+			if (newMembersData) {
+				if (mutateUserData) {
+					mutateUserData(newMembersData);
+				}
+				handlePage();
+			}
+		}
+
+		setIsLoadingUserInvitation(false);
 	};
 
 	const isAnyEmptyEmail = () => {

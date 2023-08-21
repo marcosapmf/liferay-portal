@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.change.tracking.internal;
@@ -25,6 +16,9 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.change.tracking.registry.CTModelRegistration;
 import com.liferay.portal.change.tracking.registry.CTModelRegistry;
 import com.liferay.portal.change.tracking.sql.CTSQLTransformer;
+import com.liferay.portal.kernel.cache.PortalCache;
+import com.liferay.portal.kernel.cache.PortalCacheHelperUtil;
+import com.liferay.portal.kernel.cache.PortalCacheManagerNames;
 import com.liferay.portal.kernel.change.tracking.CTCollectionThreadLocal;
 import com.liferay.portal.kernel.change.tracking.sql.CTSQLModeThreadLocal;
 import com.liferay.portal.kernel.log.Log;
@@ -34,9 +28,7 @@ import com.liferay.portal.kernel.service.ClassNameLocalServiceUtil;
 import com.liferay.portal.kernel.service.change.tracking.CTService;
 import com.liferay.portal.kernel.service.persistence.change.tracking.CTPersistence;
 import com.liferay.portal.kernel.util.FileUtil;
-import com.liferay.portal.kernel.util.LRUMap;
 import com.liferay.portal.kernel.util.StringUtil;
-import com.liferay.portal.util.PropsValues;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -48,11 +40,9 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Deque;
-import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
@@ -197,10 +187,13 @@ public class CTSQLTransformerImpl implements CTSQLTransformer {
 	public void activate(BundleContext bundleContext) throws Exception {
 		_bundleContext = bundleContext;
 
-		_ctTransformedSQLs = new LRUMap<>(
-			PropsValues.CHANGE_TRACKING_SQL_TRANSFORMER_CACHE_SIZE);
-		_productionTransformedSQLs = new LRUMap<>(
-			PropsValues.CHANGE_TRACKING_SQL_TRANSFORMER_CACHE_SIZE);
+		_ctTransformedSQLsPortalCache = PortalCacheHelperUtil.getPortalCache(
+			PortalCacheManagerNames.SINGLE_VM,
+			_CT_TRANSFORMED_SQLS_PORTAL_CACHE_NAME);
+		_productionTransformedSQLsPortalCache =
+			PortalCacheHelperUtil.getPortalCache(
+				PortalCacheManagerNames.SINGLE_VM,
+				_PRODUCTION_TRANSFORMED_SQLS_PORTAL_CACHE_NAME);
 
 		_readTransformedSQLsFile();
 
@@ -249,10 +242,10 @@ public class CTSQLTransformerImpl implements CTSQLTransformer {
 		if (ctCollectionId ==
 				CTCollectionThreadLocal.CT_COLLECTION_ID_PRODUCTION) {
 
-			transformedSQL = _productionTransformedSQLs.get(key);
+			transformedSQL = _productionTransformedSQLsPortalCache.get(key);
 		}
 		else {
-			transformedSQL = _ctTransformedSQLs.get(key);
+			transformedSQL = _ctTransformedSQLsPortalCache.get(key);
 		}
 
 		if (transformedSQL != null) {
@@ -270,7 +263,7 @@ public class CTSQLTransformerImpl implements CTSQLTransformer {
 		}
 
 		if (!foundTable) {
-			_productionTransformedSQLs.put(key, sql);
+			_productionTransformedSQLsPortalCache.put(key, sql);
 
 			return sql;
 		}
@@ -300,10 +293,10 @@ public class CTSQLTransformerImpl implements CTSQLTransformer {
 			if (ctCollectionId ==
 					CTCollectionThreadLocal.CT_COLLECTION_ID_PRODUCTION) {
 
-				_productionTransformedSQLs.put(key, transformedSQL);
+				_productionTransformedSQLsPortalCache.put(key, transformedSQL);
 			}
 			else {
-				_ctTransformedSQLs.put(key, transformedSQL);
+				_ctTransformedSQLsPortalCache.put(key, transformedSQL);
 			}
 
 			return transformedSQL;
@@ -353,7 +346,7 @@ public class CTSQLTransformerImpl implements CTSQLTransformer {
 			int size = deserializer.readInt();
 
 			for (int i = 0; i < size; i++) {
-				_productionTransformedSQLs.put(
+				_productionTransformedSQLsPortalCache.put(
 					deserializer.readString(), deserializer.readString());
 			}
 		}
@@ -375,7 +368,10 @@ public class CTSQLTransformerImpl implements CTSQLTransformer {
 	}
 
 	private void _writeTransformedSQLsFile() {
-		if (_productionTransformedSQLs.isEmpty()) {
+		List<String> transformedSQLKeys =
+			_productionTransformedSQLsPortalCache.getKeys();
+
+		if (transformedSQLKeys.isEmpty()) {
 			return;
 		}
 
@@ -385,17 +381,13 @@ public class CTSQLTransformerImpl implements CTSQLTransformer {
 
 		serializer.writeLong(bundle.getLastModified());
 
-		Map<String, String> snapshotTransformedSQLs = new HashMap<>(
-			_productionTransformedSQLs);
+		serializer.writeInt(transformedSQLKeys.size());
 
-		serializer.writeInt(snapshotTransformedSQLs.size());
+		for (String key : transformedSQLKeys) {
+			serializer.writeString(key);
 
-		for (Map.Entry<String, String> entry :
-				snapshotTransformedSQLs.entrySet()) {
-
-			serializer.writeString(entry.getKey());
-
-			serializer.writeString(entry.getValue());
+			serializer.writeString(
+				_productionTransformedSQLsPortalCache.get(key));
 		}
 
 		File transformedSQLsFile = _bundleContext.getDataFile(
@@ -414,6 +406,13 @@ public class CTSQLTransformerImpl implements CTSQLTransformer {
 		}
 	}
 
+	private static final String _CT_TRANSFORMED_SQLS_PORTAL_CACHE_NAME =
+		CTSQLTransformerImpl.class.getName() + "._ctTransformedSQLsPortalCache";
+
+	private static final String _PRODUCTION_TRANSFORMED_SQLS_PORTAL_CACHE_NAME =
+		CTSQLTransformerImpl.class.getName() +
+			"._productionTransformedSQLsPortalCache";
+
 	private static final String _TRANSFORMED_SQLS_FILE_NAME =
 		"transformedSQLsFile";
 
@@ -425,8 +424,8 @@ public class CTSQLTransformerImpl implements CTSQLTransformer {
 	private BundleContext _bundleContext;
 	private ServiceTrackerMap<Class<?>, CTService<?>>
 		_ctServiceServiceTrackerMap;
-	private LRUMap<String, String> _ctTransformedSQLs;
-	private LRUMap<String, String> _productionTransformedSQLs;
+	private PortalCache<String, String> _ctTransformedSQLsPortalCache;
+	private PortalCache<String, String> _productionTransformedSQLsPortalCache;
 	private ServiceTracker<?, ?> _releaseServiceTracker;
 
 	private abstract static class BaseStatementVisitor
@@ -487,14 +486,15 @@ public class CTSQLTransformerImpl implements CTSQLTransformer {
 
 			leftExpression.accept(this);
 
-			Expression betweenExpressionStart =
+			Expression betweenExpressionStartExpression =
 				between.getBetweenExpressionStart();
 
-			betweenExpressionStart.accept(this);
+			betweenExpressionStartExpression.accept(this);
 
-			Expression betweenExpressionEnd = between.getBetweenExpressionEnd();
+			Expression betweenExpressionEndExpression =
+				between.getBetweenExpressionEnd();
 
-			betweenExpressionEnd.accept(this);
+			betweenExpressionEndExpression.accept(this);
 		}
 
 		@Override
@@ -909,10 +909,10 @@ public class CTSQLTransformerImpl implements CTSQLTransformer {
 
 			plainSelect.setWhere(_visit(plainSelect.getWhere()));
 
-			Expression having = plainSelect.getHaving();
+			Expression havingExpression = plainSelect.getHaving();
 
-			if (having != null) {
-				having.accept(this);
+			if (havingExpression != null) {
+				havingExpression.accept(this);
 			}
 
 			OracleHierarchicalExpression oracleHierarchicalExpression =

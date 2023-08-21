@@ -1,21 +1,10 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.events;
 
-import com.liferay.document.library.kernel.document.conversion.DocumentConversionUtil;
-import com.liferay.petra.executor.PortalExecutorManager;
 import com.liferay.petra.lang.CentralizedThreadLocal;
 import com.liferay.portal.kernel.dao.db.DB;
 import com.liferay.portal.kernel.dao.db.DBManagerUtil;
@@ -31,11 +20,9 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.messaging.MessageBusUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
-import com.liferay.portal.kernel.util.ServiceProxyFactory;
 import com.liferay.portal.struts.AuthPublicPathRegistry;
 import com.liferay.portal.util.PropsUtil;
 import com.liferay.portal.util.PropsValues;
-import com.liferay.util.ThirdPartyThreadLocalRegistry;
 
 import java.sql.Connection;
 import java.sql.Statement;
@@ -90,10 +77,6 @@ public class GlobalShutdownAction extends SimpleAction {
 		// Authentication
 
 		AuthPublicPathRegistry.unregister(PropsValues.AUTH_PUBLIC_PATHS);
-
-		// OpenOffice
-
-		DocumentConversionUtil.disconnect();
 	}
 
 	protected void shutdownLevel2() {
@@ -133,10 +116,6 @@ public class GlobalShutdownAction extends SimpleAction {
 	}
 
 	protected void shutdownLevel5() {
-
-		// Portal executors
-
-		_portalExecutorManager.shutdown(true);
 	}
 
 	protected void shutdownLevel6() {
@@ -156,7 +135,6 @@ public class GlobalShutdownAction extends SimpleAction {
 
 		// Thread local registry
 
-		ThirdPartyThreadLocalRegistry.resetThreadLocals();
 		CentralizedThreadLocal.clearShortLivedThreadLocals();
 	}
 
@@ -194,10 +172,5 @@ public class GlobalShutdownAction extends SimpleAction {
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		GlobalShutdownAction.class);
-
-	private static volatile PortalExecutorManager _portalExecutorManager =
-		ServiceProxyFactory.newServiceTrackedInstance(
-			PortalExecutorManager.class, GlobalShutdownAction.class,
-			"_portalExecutorManager", true);
 
 }

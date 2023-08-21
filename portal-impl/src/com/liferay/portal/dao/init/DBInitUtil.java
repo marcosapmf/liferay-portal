@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.dao.init;
@@ -22,13 +13,11 @@ import com.liferay.portal.events.StartupHelperUtil;
 import com.liferay.portal.kernel.dao.db.DB;
 import com.liferay.portal.kernel.dao.db.DBManagerUtil;
 import com.liferay.portal.kernel.dao.jdbc.DataSourceFactoryUtil;
-import com.liferay.portal.kernel.dependency.manager.DependencyManagerSync;
+import com.liferay.portal.kernel.dependency.manager.DependencyManagerSyncUtil;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.ReleaseConstants;
-import com.liferay.portal.kernel.module.util.ServiceLatch;
-import com.liferay.portal.kernel.module.util.SystemBundleUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.ReleaseInfo;
@@ -98,11 +87,9 @@ public class DBInitUtil {
 
 			preparedStatement.setString(
 				3, ReleaseConstants.DEFAULT_SERVLET_CONTEXT_NAME);
-
 			preparedStatement.setString(
 				4,
 				String.valueOf(PortalUpgradeProcess.getLatestSchemaVersion()));
-
 			preparedStatement.setInt(5, ReleaseInfo.getBuildNumber());
 			preparedStatement.setBoolean(6, false);
 			preparedStatement.setString(7, ReleaseConstants.TEST_STRING);
@@ -261,19 +248,11 @@ public class DBInitUtil {
 	private static void _setDBNew() {
 		StartupHelperUtil.setDBNew(true);
 
-		ServiceLatch serviceLatch = SystemBundleUtil.newServiceLatch();
-
-		serviceLatch.waitFor(
-			DependencyManagerSync.class,
-			dependencyManagerSync -> dependencyManagerSync.registerSyncCallable(
-				() -> {
-					StartupHelperUtil.setDBNew(false);
-
-					return null;
-				}));
-
-		serviceLatch.openOn(
+		DependencyManagerSyncUtil.registerSyncCallable(
 			() -> {
+				StartupHelperUtil.setDBNew(false);
+
+				return null;
 			});
 	}
 

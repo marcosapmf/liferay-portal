@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.tools;
@@ -35,8 +26,10 @@ import com.liferay.portal.kernel.module.framework.ModuleServiceLifecycle;
 import com.liferay.portal.kernel.module.util.ServiceLatch;
 import com.liferay.portal.kernel.module.util.SystemBundleUtil;
 import com.liferay.portal.kernel.service.ClassNameLocalServiceUtil;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
+import com.liferay.portal.kernel.util.PortalRunMode;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.ReleaseInfo;
 import com.liferay.portal.kernel.util.Time;
@@ -131,6 +124,15 @@ public class DBUpgrader {
 		return _upgradeClient;
 	}
 
+	public static boolean isUpgradeDatabaseAutoRunEnabled() {
+		if (PortalRunMode.isTestMode()) {
+			return GetterUtil.getBoolean(
+				PropsUtil.get(PropsKeys.UPGRADE_DATABASE_AUTO_RUN));
+		}
+
+		return _UPGRADE_DATABASE_AUTO_RUN;
+	}
+
 	public static void main(String[] args) {
 		String result = "Completed";
 
@@ -152,7 +154,7 @@ public class DBUpgrader {
 
 			InitUtil.registerContext();
 
-			upgradeModules();
+			upgradeModules(false);
 
 			BundleContext bundleContext = SystemBundleUtil.getBundleContext();
 
@@ -215,10 +217,12 @@ public class DBUpgrader {
 		}
 	}
 
-	public static void upgradeModules() {
+	public static void upgradeModules(boolean autoUpgrade) {
 		_registerModuleServiceLifecycle("portal.initialized");
 
-		DependencyManagerSyncUtil.sync();
+		if (!autoUpgrade) {
+			DependencyManagerSyncUtil.sync();
+		}
 
 		PortalCacheHelperUtil.clearPortalCaches(
 			PortalCacheManagerNames.MULTI_VM);
@@ -439,6 +443,8 @@ public class DBUpgrader {
 		}
 	}
 
+	private static final boolean _UPGRADE_DATABASE_AUTO_RUN;
+
 	private static final Version _VERSION_7010 = new Version(0, 0, 6);
 
 	private static final Log _log = LogFactoryUtil.getLog(DBUpgrader.class);
@@ -448,5 +454,15 @@ public class DBUpgrader {
 		_appenderServiceReference;
 	private static volatile StopWatch _stopWatch;
 	private static volatile boolean _upgradeClient;
+
+	static {
+		if (PropsValues.JDBC_DEFAULT_DRIVER_CLASS_NAME.contains("hsql")) {
+			_UPGRADE_DATABASE_AUTO_RUN = false;
+		}
+		else {
+			_UPGRADE_DATABASE_AUTO_RUN = GetterUtil.getBoolean(
+				PropsUtil.get(PropsKeys.UPGRADE_DATABASE_AUTO_RUN));
+		}
+	}
 
 }

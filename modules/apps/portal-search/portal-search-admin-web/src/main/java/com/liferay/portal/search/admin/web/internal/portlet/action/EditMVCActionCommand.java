@@ -1,22 +1,16 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.admin.web.internal.portlet.action;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.instances.service.PortalInstancesLocalService;
 import com.liferay.portal.kernel.backgroundtask.constants.BackgroundTaskConstants;
 import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.messaging.Destination;
 import com.liferay.portal.kernel.messaging.DestinationNames;
 import com.liferay.portal.kernel.messaging.MessageBus;
@@ -129,7 +123,9 @@ public class EditMVCActionCommand extends BaseMVCActionCommand {
 
 		Map<String, Serializable> taskContextMap = new HashMap<>();
 
-		if (FeatureFlagManagerUtil.isEnabled("LPS-177664")) {
+		if (FeatureFlagManagerUtil.isEnabled("LPS-177664") ||
+			FeatureFlagManagerUtil.isEnabled("LPS-177668")) {
+
 			taskContextMap.put(
 				ReindexBackgroundTaskConstants.EXECUTION_MODE,
 				ParamUtil.getString(actionRequest, "executionMode"));
@@ -210,11 +206,19 @@ public class EditMVCActionCommand extends BaseMVCActionCommand {
 
 		String className = ParamUtil.getString(actionRequest, "className");
 
+		if (_log.isInfoEnabled()) {
+			_log.info(
+				StringBundler.concat(
+					"Reindexing ", className, " with execution mode ",
+					ParamUtil.getString(actionRequest, "executionMode")));
+		}
+
 		IndexReindexer indexReindexer =
 			_indexReindexerRegistry.getIndexReindexer(className);
 
 		indexReindexer.reindex(
-			ParamUtil.getLongValues(actionRequest, "companyIds"));
+			ParamUtil.getLongValues(actionRequest, "companyIds"),
+			ParamUtil.getString(actionRequest, "executionMode"));
 	}
 
 	private void _reindexIndexReindexers(ActionRequest actionRequest)
@@ -223,10 +227,23 @@ public class EditMVCActionCommand extends BaseMVCActionCommand {
 		for (IndexReindexer indexReindexer :
 				_indexReindexerRegistry.getIndexReindexers()) {
 
+			if (_log.isInfoEnabled()) {
+				Class<?> clazz = indexReindexer.getClass();
+
+				_log.info(
+					StringBundler.concat(
+						"Reindexing ", clazz.getName(), " with execution mode ",
+						ParamUtil.getString(actionRequest, "executionMode")));
+			}
+
 			indexReindexer.reindex(
-				ParamUtil.getLongValues(actionRequest, "companyIds"));
+				ParamUtil.getLongValues(actionRequest, "companyIds"),
+				ParamUtil.getString(actionRequest, "executionMode"));
 		}
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		EditMVCActionCommand.class);
 
 	@Reference
 	private IndexReindexerRegistry _indexReindexerRegistry;

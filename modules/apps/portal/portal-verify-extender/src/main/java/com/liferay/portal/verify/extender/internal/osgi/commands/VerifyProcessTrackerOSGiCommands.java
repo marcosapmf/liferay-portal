@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.verify.extender.internal.osgi.commands;
@@ -20,6 +11,8 @@ import com.liferay.osgi.service.tracker.collections.EagerServiceTrackerCustomize
 import com.liferay.osgi.service.tracker.collections.map.ServiceReferenceMapper;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMap;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMapFactory;
+import com.liferay.petra.string.StringBundler;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.events.StartupHelperUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -31,7 +24,6 @@ import com.liferay.portal.kernel.util.ClassUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapDictionary;
 import com.liferay.portal.kernel.util.NotificationThreadLocal;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.workflow.WorkflowThreadLocal;
 import com.liferay.portal.upgrade.log.UpgradeLogContext;
 import com.liferay.portal.verify.VerifyException;
@@ -228,7 +220,9 @@ public class VerifyProcessTrackerOSGiCommands {
 
 						_executeVerifyProcess(verifyProcess, release);
 					}
-					else if (release == null) {
+					else if ((release == null) &&
+							 !_isServiceBundle(serviceReference.getBundle())) {
+
 						release = _releaseLocalService.createRelease(
 							_counterLocalService.increment());
 
@@ -295,7 +289,7 @@ public class VerifyProcessTrackerOSGiCommands {
 		try {
 			Bundle bundle = FrameworkUtil.getBundle(verifyProcess.getClass());
 
-			if (release == null) {
+			if ((release == null) && !_isServiceBundle(bundle)) {
 
 				// Verification state must be persisted even though not all
 				// verifiers are associated with a database service
@@ -304,7 +298,6 @@ public class VerifyProcessTrackerOSGiCommands {
 					_counterLocalService.increment());
 
 				release.setServletContextName(bundle.getSymbolicName());
-
 				release.setVerified(false);
 			}
 
@@ -316,20 +309,26 @@ public class VerifyProcessTrackerOSGiCommands {
 
 				verifyProcess.verify();
 
-				release.setVerified(true);
-				release.setState(ReleaseConstants.STATE_GOOD);
+				if (release != null) {
+					release.setVerified(true);
+					release.setState(ReleaseConstants.STATE_GOOD);
+				}
 			}
 			catch (VerifyException verifyException) {
 				_log.error(verifyException);
 
-				release.setVerified(false);
-				release.setState(ReleaseConstants.STATE_VERIFY_FAILURE);
+				if (release != null) {
+					release.setVerified(false);
+					release.setState(ReleaseConstants.STATE_VERIFY_FAILURE);
+				}
 			}
 			finally {
 				UpgradeLogContext.clearContext();
 			}
 
-			_releaseLocalService.updateRelease(release);
+			if (release != null) {
+				_releaseLocalService.updateRelease(release);
+			}
 		}
 		finally {
 			NotificationThreadLocal.setEnabled(true);
@@ -383,6 +382,19 @@ public class VerifyProcessTrackerOSGiCommands {
 		}
 
 		return false;
+	}
+
+	private boolean _isServiceBundle(Bundle bundle) {
+		Dictionary<String, String> headers = bundle.getHeaders(
+			StringPool.BLANK);
+
+		if ((headers.get("Liferay-Service") == null) &&
+			(headers.get("Liferay-Spring-Context") == null)) {
+
+			return false;
+		}
+
+		return true;
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

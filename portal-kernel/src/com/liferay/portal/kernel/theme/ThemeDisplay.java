@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.kernel.theme;
@@ -48,12 +39,14 @@ import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.service.LayoutFriendlyURLLocalServiceUtil;
 import com.liferay.portal.kernel.service.LayoutLocalServiceUtil;
 import com.liferay.portal.kernel.service.PortletPreferencesLocalServiceUtil;
+import com.liferay.portal.kernel.service.ThemeLocalServiceUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleThreadLocal;
 import com.liferay.portal.kernel.util.Mergeable;
 import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.PrefsPropsUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.TimeZoneThreadLocal;
@@ -1507,11 +1500,16 @@ public class ThemeDisplay
 			cdnBaseURL + themeStaticResourcePath +
 				colorScheme.getColorSchemeImagesPath());
 
-		String claySpritemapPath = StringBundler.concat(
-			cdnBaseURL, themeStaticResourcePath, theme.getImagesPath(),
-			"/clay/icons.svg");
+		Theme controlPanelTheme = ThemeLocalServiceUtil.getTheme(
+			_company.getCompanyId(),
+			PrefsPropsUtil.getString(
+				_company.getCompanyId(),
+				PropsKeys.CONTROL_PANEL_LAYOUT_REGULAR_THEME_ID));
 
-		setPathControlPanelSpritemap(claySpritemapPath);
+		setPathControlPanelSpritemap(
+			StringBundler.concat(
+				cdnBaseURL, controlPanelTheme.getStaticResourcePath(),
+				controlPanelTheme.getImagesPath(), "/clay/icons.svg"));
 
 		String dynamicResourcesHost = getCDNDynamicResourcesHost();
 
@@ -1546,7 +1544,10 @@ public class ThemeDisplay
 			setPathThemeRoot(themeStaticResourcePath + rootPath);
 		}
 
-		setPathThemeSpritemap(claySpritemapPath);
+		setPathThemeSpritemap(
+			StringBundler.concat(
+				cdnBaseURL, themeStaticResourcePath, theme.getImagesPath(),
+				"/clay/icons.svg"));
 		setPathThemeTemplates(
 			cdnBaseURL + themeStaticResourcePath + theme.getTemplatesPath());
 	}

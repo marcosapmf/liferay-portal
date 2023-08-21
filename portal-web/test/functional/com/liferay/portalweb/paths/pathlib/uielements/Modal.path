@@ -17,7 +17,7 @@
 </tr>
 <tr>
 	<td>BODY_MESSAGE</td>
-	<td>//*[contains(@class,'modal-dialog')]//*[contains(@class,'modal-body')]/p</td>
+	<td>xpath=(//*[contains(@class,'modal-dialog')]//*[contains(@class,'modal-body')]/p)[${index}]</td>
 	<td></td>
 </tr>
 <tr>
@@ -43,6 +43,11 @@
 <tr>
 	<td>INPUT_WITH_LABEL</td>
 	<td>//*[contains(@class,'modal-body')]//label[text()='${key_fieldLabel}']//following-sibling::input</td>
+	<td></td>
+</tr>
+<tr>
+	<td>LOADING_ANIMATION</td>
+	<td>//div[@role='alert'][.//span[contains(@class,'loading-animation')]]</td>
 	<td></td>
 </tr>
 <tr>

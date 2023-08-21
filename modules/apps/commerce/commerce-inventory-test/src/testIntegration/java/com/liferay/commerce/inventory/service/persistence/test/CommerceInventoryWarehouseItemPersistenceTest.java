@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.inventory.service.persistence.test;
@@ -41,6 +32,8 @@ import com.liferay.portal.test.rule.PersistenceTestRule;
 import com.liferay.portal.test.rule.TransactionalTestRule;
 
 import java.io.Serializable;
+
+import java.math.BigDecimal;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -157,12 +150,16 @@ public class CommerceInventoryWarehouseItemPersistenceTest {
 		newCommerceInventoryWarehouseItem.setCommerceInventoryWarehouseId(
 			RandomTestUtil.nextLong());
 
-		newCommerceInventoryWarehouseItem.setSku(RandomTestUtil.randomString());
-
-		newCommerceInventoryWarehouseItem.setQuantity(RandomTestUtil.nextInt());
+		newCommerceInventoryWarehouseItem.setQuantity(
+			new BigDecimal(RandomTestUtil.nextDouble()));
 
 		newCommerceInventoryWarehouseItem.setReservedQuantity(
-			RandomTestUtil.nextInt());
+			new BigDecimal(RandomTestUtil.nextDouble()));
+
+		newCommerceInventoryWarehouseItem.setSku(RandomTestUtil.randomString());
+
+		newCommerceInventoryWarehouseItem.setUnitOfMeasureKey(
+			RandomTestUtil.randomString());
 
 		_commerceInventoryWarehouseItems.add(
 			_persistence.update(newCommerceInventoryWarehouseItem));
@@ -210,14 +207,17 @@ public class CommerceInventoryWarehouseItemPersistenceTest {
 			newCommerceInventoryWarehouseItem.
 				getCommerceInventoryWarehouseId());
 		Assert.assertEquals(
-			existingCommerceInventoryWarehouseItem.getSku(),
-			newCommerceInventoryWarehouseItem.getSku());
-		Assert.assertEquals(
 			existingCommerceInventoryWarehouseItem.getQuantity(),
 			newCommerceInventoryWarehouseItem.getQuantity());
 		Assert.assertEquals(
 			existingCommerceInventoryWarehouseItem.getReservedQuantity(),
 			newCommerceInventoryWarehouseItem.getReservedQuantity());
+		Assert.assertEquals(
+			existingCommerceInventoryWarehouseItem.getSku(),
+			newCommerceInventoryWarehouseItem.getSku());
+		Assert.assertEquals(
+			existingCommerceInventoryWarehouseItem.getUnitOfMeasureKey(),
+			newCommerceInventoryWarehouseItem.getUnitOfMeasureKey());
 	}
 
 	@Test(
@@ -341,8 +341,8 @@ public class CommerceInventoryWarehouseItemPersistenceTest {
 			"externalReferenceCode", true, "commerceInventoryWarehouseItemId",
 			true, "companyId", true, "userId", true, "userName", true,
 			"createDate", true, "modifiedDate", true,
-			"commerceInventoryWarehouseId", true, "sku", true, "quantity", true,
-			"reservedQuantity", true);
+			"commerceInventoryWarehouseId", true, "quantity", true,
+			"reservedQuantity", true, "sku", true, "unitOfMeasureKey", true);
 	}
 
 	@Test
@@ -708,12 +708,16 @@ public class CommerceInventoryWarehouseItemPersistenceTest {
 		commerceInventoryWarehouseItem.setCommerceInventoryWarehouseId(
 			RandomTestUtil.nextLong());
 
-		commerceInventoryWarehouseItem.setSku(RandomTestUtil.randomString());
-
-		commerceInventoryWarehouseItem.setQuantity(RandomTestUtil.nextInt());
+		commerceInventoryWarehouseItem.setQuantity(
+			new BigDecimal(RandomTestUtil.nextDouble()));
 
 		commerceInventoryWarehouseItem.setReservedQuantity(
-			RandomTestUtil.nextInt());
+			new BigDecimal(RandomTestUtil.nextDouble()));
+
+		commerceInventoryWarehouseItem.setSku(RandomTestUtil.randomString());
+
+		commerceInventoryWarehouseItem.setUnitOfMeasureKey(
+			RandomTestUtil.randomString());
 
 		_commerceInventoryWarehouseItems.add(
 			_persistence.update(commerceInventoryWarehouseItem));

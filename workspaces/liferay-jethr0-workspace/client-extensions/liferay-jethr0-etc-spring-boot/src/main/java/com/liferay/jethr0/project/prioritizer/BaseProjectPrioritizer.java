@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.jethr0.project.prioritizer;
@@ -30,17 +21,13 @@ public abstract class BaseProjectPrioritizer
 	@Override
 	public void addProjectComparator(ProjectComparator projectComparator) {
 		addRelatedEntity(projectComparator);
-
-		projectComparator.setProjectPrioritizer(this);
 	}
 
 	@Override
 	public void addProjectComparators(
 		Set<ProjectComparator> projectComparators) {
 
-		for (ProjectComparator projectComparator : projectComparators) {
-			addProjectComparator(projectComparator);
-		}
+		addRelatedEntities(projectComparators);
 	}
 
 	@Override
@@ -65,6 +52,13 @@ public abstract class BaseProjectPrioritizer
 	@Override
 	public void removeProjectComparator(ProjectComparator projectComparator) {
 		removeRelatedEntity(projectComparator);
+	}
+
+	@Override
+	public void removeProjectComparators(
+		Set<ProjectComparator> projectComparators) {
+
+		removeRelatedEntities(projectComparators);
 	}
 
 	@Override

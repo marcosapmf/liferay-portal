@@ -1,26 +1,20 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.channel.web.internal.portlet.action;
 
+import com.liferay.account.constants.AccountConstants;
+import com.liferay.account.exception.AccountEntryStatusException;
+import com.liferay.account.exception.AccountEntryTypeException;
 import com.liferay.account.settings.AccountEntryGroupSettings;
-import com.liferay.commerce.account.configuration.CommerceAccountGroupServiceConfiguration;
-import com.liferay.commerce.account.constants.CommerceAccountConstants;
+import com.liferay.commerce.configuration.CommerceAccountGroupServiceConfiguration;
 import com.liferay.commerce.constants.CommerceConstants;
 import com.liferay.commerce.constants.CommerceOrderConstants;
 import com.liferay.commerce.model.CommerceOrder;
 import com.liferay.commerce.product.constants.CPPortletKeys;
+import com.liferay.commerce.product.exception.DuplicateCommerceChannelAccountEntryIdException;
 import com.liferay.commerce.product.model.CommerceChannel;
 import com.liferay.commerce.product.permission.CommerceChannelPermission;
 import com.liferay.commerce.product.service.CommerceChannelService;
@@ -101,7 +95,11 @@ public class EditCommerceChannelMVCActionCommand
 			}
 		}
 		catch (Exception exception) {
-			if (exception instanceof FileExtensionException ||
+			if (exception instanceof AccountEntryStatusException ||
+				exception instanceof AccountEntryTypeException ||
+				exception instanceof
+					DuplicateCommerceChannelAccountEntryIdException ||
+				exception instanceof FileExtensionException ||
 				exception instanceof InvalidFileException) {
 
 				SessionMessages.add(
@@ -154,7 +152,7 @@ public class EditCommerceChannelMVCActionCommand
 					CommerceAccountGroupServiceConfiguration.class,
 					new GroupServiceSettingsLocator(
 						commerceChannelGroupId,
-						CommerceAccountConstants.SERVICE_NAME));
+						CommerceConstants.SERVICE_NAME_COMMERCE_ACCOUNT));
 
 		return AccountEntryAllowedTypesUtil.getAllowedTypes(
 			commerceAccountGroupServiceConfiguration.commerceSiteType());
@@ -181,10 +179,13 @@ public class EditCommerceChannelMVCActionCommand
 			_commerceChannelService.getCommerceChannel(commerceChannelId);
 
 		commerceChannel = _commerceChannelService.updateCommerceChannel(
-			commerceChannel.getCommerceChannelId(), siteGroupId,
+			commerceChannel.getCommerceChannelId(),
+			commerceChannel.getAccountEntryId(), siteGroupId,
 			commerceChannel.getName(), commerceChannel.getType(),
 			commerceChannel.getTypeSettingsUnicodeProperties(),
-			commerceChannel.getCommerceCurrencyCode());
+			commerceChannel.getCommerceCurrencyCode(),
+			commerceChannel.getPriceDisplayType(),
+			commerceChannel.isDiscountsTargetNetPrice());
 
 		_accountEntryGroupSettings.setAllowedTypes(
 			commerceChannel.getSiteGroupId(),
@@ -221,17 +222,6 @@ public class EditCommerceChannelMVCActionCommand
 		long commerceChannelId = ParamUtil.getLong(
 			actionRequest, "commerceChannelId");
 
-		String name = ParamUtil.getString(actionRequest, "name");
-
-		String commerceCurrencyCode = ParamUtil.getString(
-			actionRequest, "commerceCurrencyCode");
-
-		String priceDisplayType = ParamUtil.getString(
-			actionRequest, "priceDisplayType");
-
-		boolean discountsTargetNetPrice = ParamUtil.getBoolean(
-			actionRequest, "discountsTargetNetPrice");
-
 		CommerceChannel commerceChannel =
 			_commerceChannelService.getCommerceChannel(commerceChannelId);
 
@@ -243,10 +233,17 @@ public class EditCommerceChannelMVCActionCommand
 		_updateWorkflowDefinitionLinks(actionRequest, commerceChannel);
 
 		return _commerceChannelService.updateCommerceChannel(
-			commerceChannelId, commerceChannel.getSiteGroupId(), name,
+			commerceChannelId,
+			ParamUtil.getLong(
+				actionRequest, "accountEntryId",
+				AccountConstants.ACCOUNT_ENTRY_ID_DEFAULT),
+			commerceChannel.getSiteGroupId(),
+			ParamUtil.getString(actionRequest, "name"),
 			commerceChannel.getType(),
 			commerceChannel.getTypeSettingsUnicodeProperties(),
-			commerceCurrencyCode, priceDisplayType, discountsTargetNetPrice);
+			ParamUtil.getString(actionRequest, "commerceCurrencyCode"),
+			ParamUtil.getString(actionRequest, "priceDisplayType"),
+			ParamUtil.getBoolean(actionRequest, "discountsTargetNetPrice"));
 	}
 
 	private void _updatePurchaseOrderNumber(
@@ -323,7 +320,7 @@ public class EditCommerceChannelMVCActionCommand
 		Settings settings = _settingsFactory.getSettings(
 			new GroupServiceSettingsLocator(
 				commerceChannel.getGroupId(),
-				CommerceAccountConstants.SERVICE_NAME));
+				CommerceConstants.SERVICE_NAME_COMMERCE_ACCOUNT));
 
 		ModifiableSettings modifiableSettings =
 			settings.getModifiableSettings();

@@ -1,12 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {useQuery} from '@apollo/client';
@@ -15,6 +9,9 @@ import ClayIcon from '@clayui/icon';
 import {FieldArray, Formik} from 'formik';
 
 import {useEffect, useMemo, useState} from 'react';
+import {useAppPropertiesContext} from '~/common/contexts/AppPropertiesContext';
+import SearchBuilder from '~/common/core/SearchBuilder';
+import NotificationQueueService from '~/common/services/actions/notificationAction';
 import {
 	addAdminDXPCloud,
 	addDXPCloudEnvironment,
@@ -28,12 +25,17 @@ import {STATUS_TAG_TYPE_NAMES} from '../../../../routes/customer-portal/utils/co
 import i18n from '../../../I18n';
 import {Button, Input, Select} from '../../../components';
 import getInitialDXPAdmin from '../../../utils/getInitialDXPAdmin';
+
 import getKebabCase from '../../../utils/getKebabCase';
+
 import Layout from '../Layout';
 import AdminInputs from './AdminInputs';
 
 const INITIAL_SETUP_ADMIN_COUNT = 1;
 const MAXIMUM_NUMBER_OF_CHARACTERS = 77;
+
+const HA_DR_FILTER = 'HA DR';
+const STD_DR_FILTER = 'Std DR';
 
 const SetupDXPCloudPage = ({
 	client,
@@ -54,19 +56,23 @@ const SetupDXPCloudPage = ({
 	const [selectedVersion, setSelectedVersion] = useState(dxpVersion || '');
 	const {data} = useQuery(getDXPCloudPageInfo, {
 		variables: {
-			accountSubscriptionsFilter: `(accountKey eq '${project.accountKey}') and (hasDisasterDataCenterRegion eq true)`,
+			accountSubscriptionsFilter: `(accountKey eq '${project.accountKey}') and (hasDisasterDataCenterRegion eq true or (name eq '${HA_DR_FILTER}' or name eq '${STD_DR_FILTER}'))`,
 		},
 	});
+	const {featureFlags} = useAppPropertiesContext();
+
 	useEffect(() => {
 		const fetchListTypeDefinitions = async () => {
-			const {data} = await client.query({
+			const {data: typeDefinitionResponse} = await client.query({
 				query: getListTypeDefinitions,
 				variables: {
-					filter: `name eq '${listType}'`,
+					filter: SearchBuilder.eq('name', listType),
 				},
 			});
 
-			const items = data?.listTypeDefinitions?.items[0]?.listTypeEntries;
+			const items =
+				typeDefinitionResponse?.listTypeDefinitions?.items[0]
+					?.listTypeEntries;
 
 			if (items?.length) {
 				const sortedItems = [...items].sort();
@@ -91,7 +97,7 @@ const SetupDXPCloudPage = ({
 		[data]
 	);
 
-	const hasDisasterRecovery = !!data?.c?.accountSubscriptions?.items?.length;
+	const hasDisasterRecovery = data?.c?.accountSubscriptions?.totalCount > 0;
 
 	useEffect(() => {
 		if (dXPCDataCenterRegions.length) {
@@ -103,11 +109,10 @@ const SetupDXPCloudPage = ({
 			if (hasDisasterRecovery) {
 				setFieldValue(
 					'dxp.disasterDataCenterRegion',
-					dXPCDataCenterRegions[0].value
+					dXPCDataCenterRegions[1].value
 				);
 			}
 		}
-
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [dXPCDataCenterRegions, hasDisasterRecovery]);
 
@@ -122,14 +127,16 @@ const SetupDXPCloudPage = ({
 		const dxp = values?.dxp;
 
 		const getDXPCloudActivationSubmitedStatus = async (accountKey) => {
-			const {data} = await client.query({
+			const {data: dxpCloudEnvironmentData} = await client.query({
 				query: getDXPCloudEnvironment,
 				variables: {
-					filter: `accountKey eq '${accountKey}'`,
+					filter: SearchBuilder.eq('accountKey', accountKey),
 				},
 			});
-			if (data) {
-				const status = !!data.c?.dXPCloudEnvironments?.items?.length;
+
+			if (dxpCloudEnvironmentData) {
+				const status = !!dxpCloudEnvironmentData.c?.dXPCloudEnvironments
+					?.items?.length;
 
 				return status;
 			}
@@ -140,12 +147,13 @@ const SetupDXPCloudPage = ({
 		const alreadySubmitted = await getDXPCloudActivationSubmitedStatus(
 			project.accountKey
 		);
+
 		if (alreadySubmitted) {
 			setFormAlreadySubmitted(true);
 		}
 
 		if (!alreadySubmitted && dxp) {
-			const {data} = await client.mutate({
+			const {data: addDXPCloudEnvironmentResponse} = await client.mutate({
 				context: {
 					displaySuccess: false,
 					type: 'liferay-rest',
@@ -163,9 +171,11 @@ const SetupDXPCloudPage = ({
 				},
 			});
 
-			if (data) {
+			if (addDXPCloudEnvironmentResponse) {
 				const dxpCloudEnvironmentId =
-					data?.createDXPCloudEnvironment?.id;
+					addDXPCloudEnvironmentResponse?.createDXPCloudEnvironment
+						?.id;
+
 				await Promise.all(
 					dxp.admins.map(({email, firstName, github, lastName}) =>
 						client.mutate({
@@ -204,6 +214,36 @@ const SetupDXPCloudPage = ({
 						id: subscriptionGroupId,
 					},
 				});
+
+				if (featureFlags.includes('LPS-187767')) {
+					const notificationTemplateService = new NotificationQueueService(
+						client
+					);
+
+					try {
+						await notificationTemplateService.send(
+							'SETUP-DXP-CLOUD-ENVIRONMENT-NOTIFICATION-TEMPLATE',
+							{
+								'[%DATE_AND_TIME_SUBMITTED%]': new Date().toUTCString(),
+								'[%PROJECT_CODE%]': project.code,
+								'[%PROJECT_DATA_CENTER_REGION%]':
+									dxp?.dataCenterRegion,
+								'[%PROJECT_DISASTER_CENTER_REGION%]': dxp?.disasterDataCenterRegion
+									? `Primary Disaster Center Region - ${dxp?.disasterDataCenterRegion}`
+									: '',
+								'[%PROJECT_ID%]': dxp?.projectId,
+								'[%PROJECT_VERSION%]': dxpVersion,
+								'[%USER_EMAIL%]': dxp?.admins[0]?.email,
+								'[%USER_FIRST_NAME%]':
+									dxp?.admins[0]?.firstName,
+								'[%USER_GITHUB]': dxp?.admins[0]?.github,
+								'[%USER_LAST_NAME%]': dxp?.admins[0]?.lastName,
+							}
+						);
+					} catch (error) {
+						console.error(error);
+					}
+				}
 
 				handlePage(true);
 			}
@@ -308,16 +348,32 @@ const SetupDXPCloudPage = ({
 										'primary-data-center-region'
 									)}
 									name="dxp.dataCenterRegion"
-									options={dXPCDataCenterRegions}
+									options={dXPCDataCenterRegions.map(
+										(option) => ({
+											...option,
+											disabled:
+												option.value ===
+												values.dxp
+													.disasterDataCenterRegion,
+										})
+									)}
 									required
 								/>
 
 								{!!hasDisasterRecovery && (
 									<Select
 										groupStyle="mb-0 pt-2"
+										id="disasterRecovery"
 										label="Disaster Recovery Data Center Region"
 										name="dxp.disasterDataCenterRegion"
-										options={dXPCDataCenterRegions}
+										options={dXPCDataCenterRegions.map(
+											(option) => ({
+												...option,
+												disabled:
+													option.value ===
+													values.dxp.dataCenterRegion,
+											})
+										)}
 										required
 									/>
 								)}

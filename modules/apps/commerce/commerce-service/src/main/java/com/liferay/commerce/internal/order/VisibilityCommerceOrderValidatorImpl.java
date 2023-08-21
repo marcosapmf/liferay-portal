@@ -1,22 +1,13 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.internal.order;
 
 import com.liferay.account.model.AccountGroupRel;
+import com.liferay.account.service.AccountGroupLocalService;
 import com.liferay.account.service.AccountGroupRelLocalService;
-import com.liferay.commerce.account.util.CommerceAccountHelper;
 import com.liferay.commerce.model.CommerceOrder;
 import com.liferay.commerce.model.CommerceOrderItem;
 import com.liferay.commerce.order.CommerceOrderValidator;
@@ -31,6 +22,8 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
+
+import java.math.BigDecimal;
 
 import java.util.List;
 import java.util.Locale;
@@ -62,7 +55,7 @@ public class VisibilityCommerceOrderValidatorImpl
 	@Override
 	public CommerceOrderValidatorResult validate(
 			Locale locale, CommerceOrder commerceOrder, CPInstance cpInstance,
-			int quantity)
+			BigDecimal quantity)
 		throws PortalException {
 
 		if (cpInstance == null) {
@@ -138,9 +131,8 @@ public class VisibilityCommerceOrderValidatorImpl
 			_accountGroupRelLocalService.getAccountGroupRels(
 				CPDefinition.class.getName(), cpDefinition.getCPDefinitionId());
 
-		long[] accountGroupIds =
-			_commerceAccountHelper.getCommerceAccountGroupIds(
-				commerceOrder.getCommerceAccountId());
+		long[] accountGroupIds = _accountGroupLocalService.getAccountGroupIds(
+			commerceOrder.getCommerceAccountId());
 
 		for (AccountGroupRel accountGroupRel : accountGroupRels) {
 			if (ArrayUtil.contains(
@@ -177,10 +169,10 @@ public class VisibilityCommerceOrderValidatorImpl
 	}
 
 	@Reference
-	private AccountGroupRelLocalService _accountGroupRelLocalService;
+	private AccountGroupLocalService _accountGroupLocalService;
 
 	@Reference
-	private CommerceAccountHelper _commerceAccountHelper;
+	private AccountGroupRelLocalService _accountGroupRelLocalService;
 
 	@Reference
 	private CommerceChannelLocalService _commerceChannelLocalService;

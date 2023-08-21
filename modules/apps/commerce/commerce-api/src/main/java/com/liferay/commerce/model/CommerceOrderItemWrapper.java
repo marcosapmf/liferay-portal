@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.model;
@@ -62,9 +53,10 @@ public class CommerceOrderItemWrapper
 		attributes.put("CPMeasurementUnitId", getCPMeasurementUnitId());
 		attributes.put("CProductId", getCProductId());
 		attributes.put(
+			"customerCommerceOrderItemId", getCustomerCommerceOrderItemId());
+		attributes.put(
 			"parentCommerceOrderItemId", getParentCommerceOrderItemId());
 		attributes.put("shippingAddressId", getShippingAddressId());
-		attributes.put("decimalQuantity", getDecimalQuantity());
 		attributes.put("deliveryGroup", getDeliveryGroup());
 		attributes.put(
 			"deliveryMaxSubscriptionCycles",
@@ -110,6 +102,7 @@ public class CommerceOrderItemWrapper
 		attributes.put("maxSubscriptionCycles", getMaxSubscriptionCycles());
 		attributes.put("name", getName());
 		attributes.put("priceManuallyAdjusted", isPriceManuallyAdjusted());
+		attributes.put("priceOnApplication", isPriceOnApplication());
 		attributes.put("printedNote", getPrintedNote());
 		attributes.put("promoPrice", getPromoPrice());
 		attributes.put("promoPriceWithTaxAmount", getPromoPriceWithTaxAmount());
@@ -127,6 +120,7 @@ public class CommerceOrderItemWrapper
 		attributes.put("subscriptionType", getSubscriptionType());
 		attributes.put(
 			"subscriptionTypeSettings", getSubscriptionTypeSettings());
+		attributes.put("unitOfMeasureKey", getUnitOfMeasureKey());
 		attributes.put("unitPrice", getUnitPrice());
 		attributes.put("unitPriceWithTaxAmount", getUnitPriceWithTaxAmount());
 		attributes.put("weight", getWeight());
@@ -234,6 +228,13 @@ public class CommerceOrderItemWrapper
 			setCProductId(CProductId);
 		}
 
+		Long customerCommerceOrderItemId = (Long)attributes.get(
+			"customerCommerceOrderItemId");
+
+		if (customerCommerceOrderItemId != null) {
+			setCustomerCommerceOrderItemId(customerCommerceOrderItemId);
+		}
+
 		Long parentCommerceOrderItemId = (Long)attributes.get(
 			"parentCommerceOrderItemId");
 
@@ -245,13 +246,6 @@ public class CommerceOrderItemWrapper
 
 		if (shippingAddressId != null) {
 			setShippingAddressId(shippingAddressId);
-		}
-
-		BigDecimal decimalQuantity = (BigDecimal)attributes.get(
-			"decimalQuantity");
-
-		if (decimalQuantity != null) {
-			setDecimalQuantity(decimalQuantity);
 		}
 
 		String deliveryGroup = (String)attributes.get("deliveryGroup");
@@ -433,6 +427,13 @@ public class CommerceOrderItemWrapper
 			setPriceManuallyAdjusted(priceManuallyAdjusted);
 		}
 
+		Boolean priceOnApplication = (Boolean)attributes.get(
+			"priceOnApplication");
+
+		if (priceOnApplication != null) {
+			setPriceOnApplication(priceOnApplication);
+		}
+
 		String printedNote = (String)attributes.get("printedNote");
 
 		if (printedNote != null) {
@@ -452,7 +453,7 @@ public class CommerceOrderItemWrapper
 			setPromoPriceWithTaxAmount(promoPriceWithTaxAmount);
 		}
 
-		Integer quantity = (Integer)attributes.get("quantity");
+		BigDecimal quantity = (BigDecimal)attributes.get("quantity");
 
 		if (quantity != null) {
 			setQuantity(quantity);
@@ -533,6 +534,12 @@ public class CommerceOrderItemWrapper
 
 		if (subscriptionTypeSettings != null) {
 			setSubscriptionTypeSettings(subscriptionTypeSettings);
+		}
+
+		String unitOfMeasureKey = (String)attributes.get("unitOfMeasureKey");
+
+		if (unitOfMeasureKey != null) {
+			setUnitOfMeasureKey(unitOfMeasureKey);
 		}
 
 		BigDecimal unitPrice = (BigDecimal)attributes.get("unitPrice");
@@ -725,13 +732,13 @@ public class CommerceOrderItemWrapper
 	}
 
 	/**
-	 * Returns the decimal quantity of this commerce order item.
+	 * Returns the customer commerce order item ID of this commerce order item.
 	 *
-	 * @return the decimal quantity of this commerce order item
+	 * @return the customer commerce order item ID of this commerce order item
 	 */
 	@Override
-	public BigDecimal getDecimalQuantity() {
-		return model.getDecimalQuantity();
+	public long getCustomerCommerceOrderItemId() {
+		return model.getCustomerCommerceOrderItemId();
 	}
 
 	@Override
@@ -1153,6 +1160,16 @@ public class CommerceOrderItemWrapper
 	}
 
 	/**
+	 * Returns the price on application of this commerce order item.
+	 *
+	 * @return the price on application of this commerce order item
+	 */
+	@Override
+	public boolean getPriceOnApplication() {
+		return model.getPriceOnApplication();
+	}
+
+	/**
 	 * Returns the primary key of this commerce order item.
 	 *
 	 * @return the primary key of this commerce order item
@@ -1214,7 +1231,7 @@ public class CommerceOrderItemWrapper
 	 * @return the quantity of this commerce order item
 	 */
 	@Override
-	public int getQuantity() {
+	public BigDecimal getQuantity() {
 		return model.getQuantity();
 	}
 
@@ -1346,6 +1363,16 @@ public class CommerceOrderItemWrapper
 	@Override
 	public String getSubscriptionTypeSettings() {
 		return model.getSubscriptionTypeSettings();
+	}
+
+	/**
+	 * Returns the unit of measure key of this commerce order item.
+	 *
+	 * @return the unit of measure key of this commerce order item
+	 */
+	@Override
+	public String getUnitOfMeasureKey() {
+		return model.getUnitOfMeasureKey();
 	}
 
 	/**
@@ -1489,6 +1516,16 @@ public class CommerceOrderItemWrapper
 	}
 
 	/**
+	 * Returns <code>true</code> if this commerce order item is price on application.
+	 *
+	 * @return <code>true</code> if this commerce order item is price on application; <code>false</code> otherwise
+	 */
+	@Override
+	public boolean isPriceOnApplication() {
+		return model.isPriceOnApplication();
+	}
+
+	/**
 	 * Returns <code>true</code> if this commerce order item is shippable.
 	 *
 	 * @return <code>true</code> if this commerce order item is shippable; <code>false</code> otherwise
@@ -1629,13 +1666,15 @@ public class CommerceOrderItemWrapper
 	}
 
 	/**
-	 * Sets the decimal quantity of this commerce order item.
+	 * Sets the customer commerce order item ID of this commerce order item.
 	 *
-	 * @param decimalQuantity the decimal quantity of this commerce order item
+	 * @param customerCommerceOrderItemId the customer commerce order item ID of this commerce order item
 	 */
 	@Override
-	public void setDecimalQuantity(BigDecimal decimalQuantity) {
-		model.setDecimalQuantity(decimalQuantity);
+	public void setCustomerCommerceOrderItemId(
+		long customerCommerceOrderItemId) {
+
+		model.setCustomerCommerceOrderItemId(customerCommerceOrderItemId);
 	}
 
 	/**
@@ -2027,6 +2066,16 @@ public class CommerceOrderItemWrapper
 	}
 
 	/**
+	 * Sets whether this commerce order item is price on application.
+	 *
+	 * @param priceOnApplication the price on application of this commerce order item
+	 */
+	@Override
+	public void setPriceOnApplication(boolean priceOnApplication) {
+		model.setPriceOnApplication(priceOnApplication);
+	}
+
+	/**
 	 * Sets the primary key of this commerce order item.
 	 *
 	 * @param primaryKey the primary key of this commerce order item
@@ -2072,7 +2121,7 @@ public class CommerceOrderItemWrapper
 	 * @param quantity the quantity of this commerce order item
 	 */
 	@Override
-	public void setQuantity(int quantity) {
+	public void setQuantity(BigDecimal quantity) {
 		model.setQuantity(quantity);
 	}
 
@@ -2204,6 +2253,16 @@ public class CommerceOrderItemWrapper
 	@Override
 	public void setSubscriptionTypeSettings(String subscriptionTypeSettings) {
 		model.setSubscriptionTypeSettings(subscriptionTypeSettings);
+	}
+
+	/**
+	 * Sets the unit of measure key of this commerce order item.
+	 *
+	 * @param unitOfMeasureKey the unit of measure key of this commerce order item
+	 */
+	@Override
+	public void setUnitOfMeasureKey(String unitOfMeasureKey) {
+		model.setUnitOfMeasureKey(unitOfMeasureKey);
 	}
 
 	/**

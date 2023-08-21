@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.poshi.core;
@@ -19,9 +10,9 @@ import com.liferay.poshi.core.elements.PoshiElementException;
 import com.liferay.poshi.core.script.PoshiScriptParserUtil;
 import com.liferay.poshi.core.selenium.LiferaySeleniumMethod;
 import com.liferay.poshi.core.util.Dom4JUtil;
+import com.liferay.poshi.core.util.ListUtil;
 import com.liferay.poshi.core.util.OSDetector;
 import com.liferay.poshi.core.util.PropsUtil;
-import com.liferay.poshi.core.util.PropsValues;
 import com.liferay.poshi.core.util.StringUtil;
 import com.liferay.poshi.core.util.Validator;
 
@@ -80,8 +71,10 @@ public class PoshiValidation {
 
 		long start = System.currentTimeMillis();
 
+		PoshiProperties poshiProperties = PoshiProperties.getPoshiProperties();
+
 		ExecutorService executorService = Executors.newFixedThreadPool(
-			PropsValues.POSHI_FILE_READ_THREAD_POOL);
+			poshiProperties.poshiFileReadThreadPool);
 
 		for (final String finalFilePath : PoshiContext.getFilePaths()) {
 			executorService.execute(
@@ -276,7 +269,7 @@ public class PoshiValidation {
 		String filePath = _getFilePath(poshiElement);
 
 		List<String> possibleAttributeNames = Arrays.asList(
-			"line-number", "name", "prose", "return", "summary",
+			"arguments", "line-number", "name", "prose", "return", "summary",
 			"summary-ignore");
 
 		validatePossibleAttributeNames(poshiElement, possibleAttributeNames);
@@ -1096,8 +1089,49 @@ public class PoshiValidation {
 		}
 	}
 
+	protected static void validateMacroArguments(
+		PoshiElement poshiElement, String macroName, String namespace) {
+
+		Element commandElement = PoshiContext.getMacroCommandElement(
+			macroName, namespace);
+
+		String argumentsValue = commandElement.attributeValue("arguments");
+
+		if (Validator.isNotNull(argumentsValue)) {
+			List<String> arguments = ListUtil.newListFromString(argumentsValue);
+
+			List<PoshiElement> varPoshiElements = poshiElement.toPoshiElements(
+				poshiElement.elements("var"));
+			List<String> variableNames = new ArrayList<>();
+
+			for (PoshiElement varPoshiElement : varPoshiElements) {
+				variableNames.add(varPoshiElement.attributeValue("name"));
+			}
+
+			for (String argument : arguments) {
+				if (argument.matches("[\\w]+[\\s]*=[\\s]*null")) {
+					continue;
+				}
+
+				if (!variableNames.contains(argument)) {
+					_exceptions.add(
+						new PoshiElementException(
+							poshiElement, "Macro missing required variable ",
+							argument));
+				}
+			}
+		}
+	}
+
 	protected static void validateMacroCommandName(PoshiElement poshiElement) {
 		String attributeName = poshiElement.attributeValue("name");
+
+		PoshiProperties poshiProperties = PoshiProperties.getPoshiProperties();
+
+		if (poshiProperties.generateCommandSignature) {
+			validateRequiredAttributeNames(
+				poshiElement, Arrays.asList("summary"), poshiElement.getPath());
+		}
 
 		if (attributeName.contains("Url")) {
 			_exceptions.add(
@@ -1110,8 +1144,22 @@ public class PoshiValidation {
 	protected static void validateMacroContext(
 		PoshiElement poshiElement, String macroType) {
 
-		validateNamespacedClassCommandName(
-			poshiElement, poshiElement.attributeValue(macroType), "macro");
+		String macroName = poshiElement.attributeValue(macroType);
+
+		String namespace =
+			PoshiGetterUtil.getNamespaceFromNamespacedClassCommandName(
+				macroName);
+
+		if (Validator.isNull(namespace)) {
+			namespace = PoshiContext.getNamespaceFromFilePath(
+				_getFilePath(poshiElement));
+		}
+
+		if (PoshiContext.isCommandElement("macro", macroName, namespace)) {
+			validateMacroArguments(poshiElement, macroName, namespace);
+		}
+
+		validateNamespacedClassCommandName(poshiElement, macroName, "macro");
 	}
 
 	protected static void validateMacroFile(PoshiElement poshiElement) {
@@ -2042,6 +2090,14 @@ public class PoshiValidation {
 			{
 				put("antCommand", "\"AntCommands.runCommand\"");
 				put("assertAlert", "\"selenium.assertAlertText\"");
+				put("assertNotPartialText", "\"selenium.assertTextMatches\"");
+				put("assertPartialText", "\"selenium.assertTextMatches\"");
+				put(
+					"assertPartialTextCaseInsensitive",
+					"\"selenium.assertTextMatches\"");
+				put(
+					"assertTextCaseInsensitive",
+					"\"selenium.assertTextMatches\"");
 				put("copyText", "\"selenium.getText\" (stored as a variable)");
 				put(
 					"copyValue",
@@ -2056,6 +2112,14 @@ public class PoshiValidation {
 				put("runScript", "\"selenium.executeJavaScript\"");
 				put("typeAlloyEditor", "\"selenium.typeEditor\"");
 				put("typeCKEditor", "\"selenium.typeEditor\"");
+				put("waitForNotPartialText", "\"selenium.waitForTextMatches\"");
+				put("waitForPartialText", "\"selenium.waitForTextMatches\"");
+				put(
+					"waitForPartialTextCaseInsensitive",
+					"\"selenium.waitForTextMatches\"");
+				put(
+					"waitForTextCaseInsensitive",
+					"\"selenium.waitForTextMatches\"");
 			}
 		};
 	private static final Set<Exception> _exceptions = new HashSet<>();

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.service.test;
@@ -24,6 +15,7 @@ import com.liferay.object.exception.DefaultObjectLayoutException;
 import com.liferay.object.exception.ObjectDefinitionModifiableException;
 import com.liferay.object.exception.ObjectLayoutBoxCategorizationTypeException;
 import com.liferay.object.exception.ObjectLayoutColumnSizeException;
+import com.liferay.object.field.builder.TextObjectFieldBuilder;
 import com.liferay.object.field.util.ObjectFieldUtil;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectField;
@@ -40,8 +32,8 @@ import com.liferay.object.service.persistence.ObjectLayoutColumnPersistence;
 import com.liferay.object.service.persistence.ObjectLayoutRowPersistence;
 import com.liferay.object.service.persistence.ObjectLayoutTabPersistence;
 import com.liferay.object.service.test.util.ObjectDefinitionTestUtil;
-import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
+import com.liferay.portal.kernel.test.AssertUtils;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
@@ -88,7 +80,7 @@ public class ObjectLayoutLocalServiceTest {
 
 	@Test
 	public void testAddObjectLayout() throws Exception {
-		_assertFailure(
+		AssertUtils.assertFailure(
 			DefaultObjectLayoutException.class,
 			"All required object fields must be associated to the first tab " +
 				"of a default object layout",
@@ -103,7 +95,7 @@ public class ObjectLayoutLocalServiceTest {
 
 		_objectDefinition =
 			ObjectDefinitionTestUtil.addUnmodifiableSystemObjectDefinition(
-				TestPropsValues.getUserId(), "Test", null,
+				null, TestPropsValues.getUserId(), "Test", null,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				"Test", null, null,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
@@ -115,7 +107,7 @@ public class ObjectLayoutLocalServiceTest {
 						ObjectFieldConstants.DB_TYPE_STRING,
 						RandomTestUtil.randomString(), StringUtil.randomId())));
 
-		_assertFailure(
+		AssertUtils.assertFailure(
 			ObjectDefinitionModifiableException.class,
 			"A modifiable object definition is required",
 			() -> _objectLayoutLocalService.addObjectLayout(
@@ -134,7 +126,7 @@ public class ObjectLayoutLocalServiceTest {
 
 		_objectDefinitionLocalService.updateObjectDefinition(_objectDefinition);
 
-		_assertFailure(
+		AssertUtils.assertFailure(
 			ObjectLayoutBoxCategorizationTypeException.class,
 			"Categorization layout box can only be used in object " +
 				"definitions with a default storage type",
@@ -145,7 +137,6 @@ public class ObjectLayoutLocalServiceTest {
 				objectLayoutTab.setNameMap(
 					LocalizedMapUtil.getLocalizedMap(
 						RandomTestUtil.randomString()));
-
 				objectLayoutTab.setPriority(0);
 				objectLayoutTab.setObjectLayoutBoxes(
 					Arrays.asList(
@@ -153,7 +144,7 @@ public class ObjectLayoutLocalServiceTest {
 						_addObjectLayoutBox(
 							ObjectLayoutBoxConstants.TYPE_CATEGORIZATION)));
 
-				return _objectLayoutLocalService.addObjectLayout(
+				_objectLayoutLocalService.addObjectLayout(
 					TestPropsValues.getUserId(),
 					_objectDefinition.getObjectDefinitionId(), false,
 					LocalizedMapUtil.getLocalizedMap(
@@ -171,7 +162,7 @@ public class ObjectLayoutLocalServiceTest {
 
 		_objectDefinitionLocalService.updateObjectDefinition(_objectDefinition);
 
-		_assertFailure(
+		AssertUtils.assertFailure(
 			ObjectLayoutBoxCategorizationTypeException.class,
 			"Categorization layout box must be enabled to be used",
 			() -> {
@@ -181,16 +172,14 @@ public class ObjectLayoutLocalServiceTest {
 				objectLayoutTab.setNameMap(
 					LocalizedMapUtil.getLocalizedMap(
 						RandomTestUtil.randomString()));
-
 				objectLayoutTab.setObjectLayoutBoxes(
 					Arrays.asList(
 						_addObjectLayoutBox(),
 						_addObjectLayoutBox(
 							ObjectLayoutBoxConstants.TYPE_CATEGORIZATION)));
-
 				objectLayoutTab.setPriority(0);
 
-				return _objectLayoutLocalService.addObjectLayout(
+				_objectLayoutLocalService.addObjectLayout(
 					TestPropsValues.getUserId(),
 					_objectDefinition.getObjectDefinitionId(), false,
 					LocalizedMapUtil.getLocalizedMap(
@@ -204,7 +193,7 @@ public class ObjectLayoutLocalServiceTest {
 		_objectDefinition = ObjectDefinitionTestUtil.addObjectDefinition(
 			_objectDefinitionLocalService);
 
-		_assertFailure(
+		AssertUtils.assertFailure(
 			ObjectLayoutBoxCategorizationTypeException.class,
 			"Categorization layout box must not have layout rows",
 			() -> {
@@ -225,7 +214,7 @@ public class ObjectLayoutLocalServiceTest {
 				objectLayoutTab.setObjectLayoutBoxes(
 					Arrays.asList(_addObjectLayoutBox(), objectLayoutBox));
 
-				return _objectLayoutLocalService.addObjectLayout(
+				_objectLayoutLocalService.addObjectLayout(
 					TestPropsValues.getUserId(),
 					_objectDefinition.getObjectDefinitionId(), false,
 					LocalizedMapUtil.getLocalizedMap(
@@ -239,7 +228,7 @@ public class ObjectLayoutLocalServiceTest {
 		_objectDefinition = ObjectDefinitionTestUtil.addObjectDefinition(
 			_objectDefinitionLocalService);
 
-		_assertFailure(
+		AssertUtils.assertFailure(
 			ObjectLayoutBoxCategorizationTypeException.class,
 			"Object layout box must have a type",
 			() -> {
@@ -254,7 +243,7 @@ public class ObjectLayoutLocalServiceTest {
 					Arrays.asList(
 						_addObjectLayoutBox(), _addObjectLayoutBox(null)));
 
-				return _objectLayoutLocalService.addObjectLayout(
+				_objectLayoutLocalService.addObjectLayout(
 					TestPropsValues.getUserId(),
 					_objectDefinition.getObjectDefinitionId(), false,
 					LocalizedMapUtil.getLocalizedMap(
@@ -262,7 +251,7 @@ public class ObjectLayoutLocalServiceTest {
 					Collections.singletonList(objectLayoutTab));
 			});
 
-		_assertFailure(
+		AssertUtils.assertFailure(
 			ObjectLayoutColumnSizeException.class,
 			"Object layout column size must be more than 0 and less than 12",
 			() -> {
@@ -286,7 +275,7 @@ public class ObjectLayoutLocalServiceTest {
 
 				objectLayoutColumn.setSize(13);
 
-				return _objectLayoutLocalService.addObjectLayout(
+				_objectLayoutLocalService.addObjectLayout(
 					TestPropsValues.getUserId(),
 					_objectDefinition.getObjectDefinitionId(), false,
 					LocalizedMapUtil.getLocalizedMap(
@@ -300,7 +289,7 @@ public class ObjectLayoutLocalServiceTest {
 		_objectDefinition = ObjectDefinitionTestUtil.addObjectDefinition(
 			_objectDefinitionLocalService);
 
-		_assertFailure(
+		AssertUtils.assertFailure(
 			ObjectLayoutBoxCategorizationTypeException.class,
 			"There can only be one categorization layout box per layout",
 			() -> {
@@ -329,7 +318,7 @@ public class ObjectLayoutLocalServiceTest {
 						_addObjectLayoutBox(
 							ObjectLayoutBoxConstants.TYPE_CATEGORIZATION)));
 
-				return _objectLayoutLocalService.addObjectLayout(
+				_objectLayoutLocalService.addObjectLayout(
 					TestPropsValues.getUserId(),
 					_objectDefinition.getObjectDefinitionId(), false,
 					LocalizedMapUtil.getLocalizedMap(
@@ -339,7 +328,7 @@ public class ObjectLayoutLocalServiceTest {
 
 		_deleteObjectFields();
 
-		_assertFailure(
+		AssertUtils.assertFailure(
 			DefaultObjectLayoutException.class,
 			"There can only be one default object layout",
 			() -> {
@@ -352,7 +341,7 @@ public class ObjectLayoutLocalServiceTest {
 						RandomTestUtil.randomString()),
 					Collections.singletonList(objectLayoutTab));
 
-				return _objectLayoutLocalService.addObjectLayout(
+				_objectLayoutLocalService.addObjectLayout(
 					TestPropsValues.getUserId(),
 					_objectDefinition.getObjectDefinitionId(), true,
 					LocalizedMapUtil.getLocalizedMap(
@@ -509,13 +498,19 @@ public class ObjectLayoutLocalServiceTest {
 	private long _addObjectField() throws Exception {
 		String name = RandomTestUtil.randomString();
 
-		ObjectField objectField = _objectFieldLocalService.addCustomObjectField(
-			null, TestPropsValues.getUserId(), 0,
-			_objectDefinition.getObjectDefinitionId(),
-			ObjectFieldConstants.BUSINESS_TYPE_TEXT,
-			ObjectFieldConstants.DB_TYPE_STRING, false, false, null,
-			LocalizedMapUtil.getLocalizedMap(name), false,
-			StringUtil.randomId(), true, false, Collections.emptyList());
+		ObjectField objectField = ObjectFieldUtil.addCustomObjectField(
+			new TextObjectFieldBuilder(
+			).userId(
+				TestPropsValues.getUserId()
+			).labelMap(
+				LocalizedMapUtil.getLocalizedMap(name)
+			).name(
+				StringUtil.randomId()
+			).objectDefinitionId(
+				_objectDefinition.getObjectDefinitionId()
+			).required(
+				true
+			).build());
 
 		return objectField.getObjectFieldId();
 	}
@@ -584,21 +579,6 @@ public class ObjectLayoutLocalServiceTest {
 		return objectLayoutTab;
 	}
 
-	private void _assertFailure(
-		Class<?> clazz, String message,
-		UnsafeSupplier<Object, Exception> unsafeSupplier) {
-
-		try {
-			unsafeSupplier.get();
-
-			Assert.fail();
-		}
-		catch (Exception exception) {
-			Assert.assertTrue(clazz.isInstance(exception));
-			Assert.assertEquals(message, exception.getMessage());
-		}
-	}
-
 	private void _assertObjectLayout(ObjectLayout objectLayout) {
 		List<ObjectLayoutTab> objectLayoutTabs =
 			objectLayout.getObjectLayoutTabs();
@@ -634,7 +614,7 @@ public class ObjectLayoutLocalServiceTest {
 	private void _deleteObjectFields() throws Exception {
 		List<ObjectField> objectFields =
 			_objectFieldLocalService.getObjectFields(
-				_objectDefinition.getObjectDefinitionId());
+				_objectDefinition.getObjectDefinitionId(), false);
 
 		for (ObjectField objectField : objectFields) {
 			_objectFieldLocalService.deleteObjectField(objectField);

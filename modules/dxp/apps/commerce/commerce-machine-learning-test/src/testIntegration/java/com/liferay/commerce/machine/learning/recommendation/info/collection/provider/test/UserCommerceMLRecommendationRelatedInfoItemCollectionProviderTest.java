@@ -1,19 +1,11 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.machine.learning.recommendation.info.collection.provider.test;
 
+import com.liferay.account.constants.AccountConstants;
 import com.liferay.account.model.AccountEntry;
 import com.liferay.account.service.AccountEntryLocalService;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
@@ -90,7 +82,8 @@ public class UserCommerceMLRecommendationRelatedInfoItemCollectionProviderTest
 			_group.getGroupId());
 
 		_commerceChannel = CommerceChannelLocalServiceUtil.addCommerceChannel(
-			null, _group.getGroupId(), "Test Channel",
+			null, AccountConstants.ACCOUNT_ENTRY_ID_DEFAULT,
+			_group.getGroupId(), "Test Channel",
 			CommerceChannelConstants.CHANNEL_TYPE_SITE, null,
 			_commerceCurrency.getCode(), _serviceContext);
 
@@ -162,7 +155,7 @@ public class UserCommerceMLRecommendationRelatedInfoItemCollectionProviderTest
 		return StringBundler.concat(
 			"com.liferay.commerce.machine.learning.internal.recommendation.",
 			"info.collection.provider.",
-			"UserCommerceMLRecommendationRelatedInfoItemCollectionProvider");
+			"UserCommerceMLRecommendationInfoItemCollectionProvider");
 	}
 
 	@Override
@@ -242,6 +235,13 @@ public class UserCommerceMLRecommendationRelatedInfoItemCollectionProviderTest
 		return userCommerceMLRecommendations;
 	}
 
+	private String _getRelatedInfoItemCollectionProviderName() {
+		return StringBundler.concat(
+			"com.liferay.commerce.machine.learning.internal.recommendation.",
+			"info.collection.provider.",
+			"UserCommerceMLRecommendationRelatedInfoItemCollectionProvider");
+	}
+
 	private ServiceContext _getServiceContext(long commerceAccountId)
 		throws Exception {
 
@@ -269,7 +269,7 @@ public class UserCommerceMLRecommendationRelatedInfoItemCollectionProviderTest
 			relatedInfoItemCollectionProvider =
 				infoItemServiceRegistry.getInfoItemService(
 					RelatedInfoItemCollectionProvider.class,
-					getInfoItemCollectionProviderName());
+					_getRelatedInfoItemCollectionProviderName());
 
 		Assert.assertNotNull(relatedInfoItemCollectionProvider);
 

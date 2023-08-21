@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.notification.internal.type;
@@ -29,7 +20,6 @@ import com.liferay.notification.constants.NotificationQueueEntryConstants;
 import com.liferay.notification.constants.NotificationTemplateConstants;
 import com.liferay.notification.context.NotificationContext;
 import com.liferay.notification.exception.NotificationRecipientSettingValueException;
-import com.liferay.notification.exception.NotificationTemplateFromException;
 import com.liferay.notification.model.NotificationQueueEntry;
 import com.liferay.notification.model.NotificationQueueEntryAttachment;
 import com.liferay.notification.model.NotificationRecipient;
@@ -43,8 +33,10 @@ import com.liferay.notification.type.NotificationType;
 import com.liferay.notification.util.NotificationRecipientSettingUtil;
 import com.liferay.object.model.ObjectField;
 import com.liferay.object.service.ObjectFieldLocalService;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.messaging.DestinationNames;
@@ -68,6 +60,7 @@ import com.liferay.portal.kernel.templateparser.TemplateNode;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.transaction.TransactionCommitCallbackUtil;
 import com.liferay.portal.kernel.util.FileUtil;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -227,6 +220,22 @@ public class EmailNotificationType extends BaseNotificationType {
 						notificationContext);
 				}
 			).put(
+				"singleRecipient",
+				() -> {
+					if (!FeatureFlagManagerUtil.isEnabled("LPS-187854")) {
+						return StringPool.TRUE;
+					}
+
+					NotificationRecipientSetting notificationRecipientSetting =
+						notificationRecipientSettingLocalService.
+							getNotificationRecipientSetting(
+								notificationRecipient.
+									getNotificationRecipientId(),
+								"singleRecipient");
+
+					return notificationRecipientSetting.getValue();
+				}
+			).put(
 				"to",
 				() -> {
 					NotificationRecipientSetting notificationRecipientSetting =
@@ -251,40 +260,42 @@ public class EmailNotificationType extends BaseNotificationType {
 				}
 			).build();
 
-		for (String emailAddress :
-				StringUtil.split(
-					evaluatedNotificationRecipientSettings.get("to"))) {
+		String validEmailAddresses = _getValidEmailAddresses(
+			user.getCompanyId(),
+			evaluatedNotificationRecipientSettings.get("to"));
 
-			EmailAddressValidator emailAddressValidator =
-				EmailAddressValidatorFactory.getInstance();
+		if (FeatureFlagManagerUtil.isEnabled("LPS-187854") &&
+			!GetterUtil.getBoolean(
+				evaluatedNotificationRecipientSettings.get(
+					"singleRecipient"))) {
 
-			if (!emailAddressValidator.validate(
-					user.getCompanyId(), emailAddress)) {
+			prepareNotificationContext(
+				user, body, notificationContext,
+				HashMapBuilder.putAll(
+					evaluatedNotificationRecipientSettings
+				).put(
+					"to", validEmailAddresses
+				).build(),
+				subject);
 
-				if (_log.isInfoEnabled()) {
-					_log.info("Invalid email address " + emailAddress);
-				}
+			_sendEmail(
+				notificationQueueEntryLocalService.addNotificationQueueEntry(
+					notificationContext));
 
-				continue;
-			}
+			return;
+		}
 
-			User creatorUser = user;
-
-			User toUser = userLocalService.fetchUserByEmailAddress(
+		for (String emailAddress : StringUtil.split(validEmailAddresses)) {
+			User emailAddressUser = userLocalService.fetchUserByEmailAddress(
 				user.getCompanyId(), emailAddress);
 
-			if (toUser == null) {
-				if (_log.isInfoEnabled()) {
-					_log.info(
-						"No user exists with email address " + emailAddress);
-				}
-
-				creatorUser = userLocalService.getGuestUser(
+			if (emailAddressUser == null) {
+				emailAddressUser = userLocalService.getGuestUser(
 					CompanyThreadLocal.getCompanyId());
 			}
 
 			prepareNotificationContext(
-				creatorUser, body, notificationContext,
+				emailAddressUser, body, notificationContext,
 				HashMapBuilder.putAll(
 					evaluatedNotificationRecipientSettings
 				).put(
@@ -309,30 +320,27 @@ public class EmailNotificationType extends BaseNotificationType {
 	}
 
 	@Override
+	public void validateNotificationQueueEntry(
+			NotificationContext notificationContext)
+		throws PortalException {
+
+		super.validateNotificationQueueEntry(notificationContext);
+
+		_validateNotificationRecipientSettings(
+			NotificationRecipientSettingUtil.toMap(
+				notificationContext.getNotificationRecipientSettings()));
+	}
+
+	@Override
 	public void validateNotificationTemplate(
 			NotificationContext notificationContext)
 		throws PortalException {
 
 		super.validateNotificationTemplate(notificationContext);
 
-		Map<String, Object> notificationRecipientSettingsMap =
+		_validateNotificationRecipientSettings(
 			NotificationRecipientSettingUtil.toMap(
-				notificationContext.getNotificationRecipientSettings());
-
-		if (Validator.isNull(notificationRecipientSettingsMap.get("from"))) {
-			throw new NotificationTemplateFromException("From is null");
-		}
-
-		if (Validator.isNull(
-				notificationRecipientSettingsMap.get("fromName"))) {
-
-			throw new NotificationRecipientSettingValueException(
-				"From name is null");
-		}
-
-		if (Validator.isNull(notificationRecipientSettingsMap.get("to"))) {
-			throw new NotificationRecipientSettingValueException("To is null");
-		}
+				notificationContext.getNotificationRecipientSettings()));
 	}
 
 	private void _addFileAttachments(
@@ -389,7 +397,7 @@ public class EmailNotificationType extends BaseNotificationType {
 				NotificationTemplate.class.getName() + StringPool.POUND +
 					notificationTemplate.getNotificationTemplateId(),
 				body),
-			PropsValues.NOTIFICATION_EMAIL_TEMPLATE_RESTRICTED);
+			!PropsValues.NOTIFICATION_EMAIL_TEMPLATE_ENABLED);
 
 		ThemeDisplay themeDisplay = new ThemeDisplay();
 
@@ -524,6 +532,33 @@ public class EmailNotificationType extends BaseNotificationType {
 		}
 	}
 
+	private String _getValidEmailAddresses(
+		long companyId, String emailAddresses) {
+
+		StringBundler sb = new StringBundler();
+
+		for (String emailAddress : StringUtil.split(emailAddresses)) {
+			EmailAddressValidator emailAddressValidator =
+				EmailAddressValidatorFactory.getInstance();
+
+			if (!emailAddressValidator.validate(companyId, emailAddress)) {
+				if (_log.isInfoEnabled()) {
+					_log.info("Invalid email address " + emailAddress);
+				}
+
+				continue;
+			}
+
+			if (sb.index() > 0) {
+				sb.append(StringPool.COMMA);
+			}
+
+			sb.append(emailAddress);
+		}
+
+		return sb.toString();
+	}
+
 	private void _sendEmail(NotificationQueueEntry notificationQueueEntry) {
 		TransactionCommitCallbackUtil.registerCallback(
 			() -> {
@@ -543,9 +578,6 @@ public class EmailNotificationType extends BaseNotificationType {
 							String.valueOf(
 								notificationRecipientSettingsMap.get(
 									"fromName"))),
-						new InternetAddress(
-							String.valueOf(
-								notificationRecipientSettingsMap.get("to"))),
 						notificationQueueEntry.getSubject(),
 						notificationQueueEntry.getBody(), true);
 
@@ -561,6 +593,10 @@ public class EmailNotificationType extends BaseNotificationType {
 						_toInternetAddresses(
 							String.valueOf(
 								notificationRecipientSettingsMap.get("cc"))));
+					mailMessage.setTo(
+						_toInternetAddresses(
+							String.valueOf(
+								notificationRecipientSettingsMap.get("to"))));
 
 					MessageBusUtil.sendMessage(
 						DestinationNames.MAIL, mailMessage);
@@ -598,6 +634,28 @@ public class EmailNotificationType extends BaseNotificationType {
 		}
 
 		return internetAddresses.toArray(new InternetAddress[0]);
+	}
+
+	private void _validateNotificationRecipientSettings(
+			Map<String, Object> notificationRecipientSettingsMap)
+		throws PortalException {
+
+		if (Validator.isNull(notificationRecipientSettingsMap.get("from"))) {
+			throw new NotificationRecipientSettingValueException.
+				FromMustNotBeNull();
+		}
+
+		if (Validator.isNull(
+				notificationRecipientSettingsMap.get("fromName"))) {
+
+			throw new NotificationRecipientSettingValueException.
+				FromNameMustNotBeNull();
+		}
+
+		if (Validator.isNull(notificationRecipientSettingsMap.get("to"))) {
+			throw new NotificationRecipientSettingValueException.
+				ToMustNotBeNull();
+		}
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.inventory.web.internal.portlet.action;
@@ -20,6 +11,7 @@ import com.liferay.commerce.inventory.model.CommerceInventoryWarehouseItem;
 import com.liferay.commerce.inventory.service.CommerceInventoryReplenishmentItemService;
 import com.liferay.commerce.inventory.service.CommerceInventoryWarehouseItemService;
 import com.liferay.commerce.product.constants.CPPortletKeys;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -29,6 +21,8 @@ import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
+
+import java.math.BigDecimal;
 
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
@@ -91,13 +85,13 @@ public class EditCommerceInventoryWarehouseMVCActionCommand
 		long commerceInventoryWarehouseId = ParamUtil.getLong(
 			actionRequest, "commerceInventoryWarehouseId");
 
-		String sku = ParamUtil.getString(actionRequest, "sku");
-
 		int quantity = ParamUtil.getInteger(actionRequest, "quantity");
+		String sku = ParamUtil.getString(actionRequest, "sku");
 
 		_commerceInventoryWarehouseItemService.
 			addCommerceInventoryWarehouseItem(
-				commerceInventoryWarehouseId, sku, quantity);
+				StringPool.BLANK, commerceInventoryWarehouseId,
+				BigDecimal.valueOf(quantity), sku, StringPool.BLANK);
 	}
 
 	private void _deleteCommerceInventoryWarehouse(ActionRequest actionRequest)
@@ -132,14 +126,15 @@ public class EditCommerceInventoryWarehouseMVCActionCommand
 		if (commerceInventoryWarehouseItem == null) {
 			_commerceInventoryWarehouseItemService.
 				addCommerceInventoryWarehouseItem(
-					commerceInventoryWarehouseId, sku, quantity);
+					StringPool.BLANK, commerceInventoryWarehouseId,
+					BigDecimal.valueOf(quantity), sku, StringPool.BLANK);
 		}
 		else {
 			_commerceInventoryWarehouseItemService.
 				increaseCommerceInventoryWarehouseItemQuantity(
 					commerceInventoryWarehouseItem.
 						getCommerceInventoryWarehouseItemId(),
-					quantity);
+					BigDecimal.valueOf(quantity));
 		}
 	}
 

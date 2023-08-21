@@ -1,26 +1,19 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.jethr0;
 
 import com.liferay.client.extension.util.spring.boot.ClientExtensionUtilSpringBootComponentScan;
-import com.liferay.client.extension.util.spring.boot.LiferayOAuth2Util;
-import com.liferay.jethr0.build.queue.BuildQueue;
+import com.liferay.jethr0.bui1d.queue.BuildQueue;
 import com.liferay.jethr0.entity.repository.EntityRepository;
+import com.liferay.jethr0.event.handler.EventHandlerContext;
 import com.liferay.jethr0.jenkins.JenkinsQueue;
 import com.liferay.jethr0.jms.JMSEventHandler;
 import com.liferay.jethr0.project.queue.ProjectQueue;
+
+import java.util.Map;
 
 import javax.jms.ConnectionFactory;
 
@@ -34,9 +27,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.jms.config.DefaultJmsListenerContainerFactory;
 import org.springframework.jms.config.JmsListenerContainerFactory;
+import org.springframework.jms.config.JmsListenerEndpointRegistry;
 import org.springframework.jms.core.JmsTemplate;
-import org.springframework.security.oauth2.client.AuthorizedClientServiceOAuth2AuthorizedClientManager;
-import org.springframework.security.oauth2.core.OAuth2AccessToken;
 
 /**
  * @author Michael Hashimoto
@@ -49,17 +41,18 @@ public class Jethr0SpringBootApplication {
 		ConfigurableApplicationContext configurableApplicationContext =
 			SpringApplication.run(Jethr0SpringBootApplication.class, args);
 
-		for (String beanDefinitionName :
-				configurableApplicationContext.getBeanDefinitionNames()) {
+		EventHandlerContext eventHandlerContext =
+			configurableApplicationContext.getBean(EventHandlerContext.class);
 
-			Object bean = configurableApplicationContext.getBean(
-				beanDefinitionName);
+		eventHandlerContext.setJMSEventHandler(
+			configurableApplicationContext.getBean(JMSEventHandler.class));
 
-			if (bean instanceof EntityRepository) {
-				EntityRepository entityRepository = (EntityRepository)bean;
+		Map<String, EntityRepository> entityRepositories =
+			configurableApplicationContext.getBeansOfType(
+				EntityRepository.class);
 
-				entityRepository.initialize();
-			}
+		for (EntityRepository entityRepository : entityRepositories.values()) {
+			entityRepository.initialize();
 		}
 
 		ProjectQueue projectQueue = configurableApplicationContext.getBean(
@@ -71,6 +64,12 @@ public class Jethr0SpringBootApplication {
 			BuildQueue.class);
 
 		buildQueue.initialize();
+
+		JmsListenerEndpointRegistry jmsListenerEndpointRegistry =
+			configurableApplicationContext.getBean(
+				JmsListenerEndpointRegistry.class);
+
+		jmsListenerEndpointRegistry.start();
 
 		JenkinsQueue jenkinsQueue = configurableApplicationContext.getBean(
 			JenkinsQueue.class);
@@ -111,34 +110,18 @@ public class Jethr0SpringBootApplication {
 		JmsTemplate jmsTemplate = new JmsTemplate();
 
 		jmsTemplate.setConnectionFactory(connectionFactory);
-		jmsTemplate.setDefaultDestinationName(_jmsJenkinsBuildQueue);
+		jmsTemplate.setDefaultDestinationName("default");
 
 		return jmsTemplate;
 	}
 
-	@Bean
-	public OAuth2AccessToken getOAuth2AccessToken(
-		AuthorizedClientServiceOAuth2AuthorizedClientManager
-			authorizedClientServiceOAuth2AuthorizedClientManager) {
-
-		return LiferayOAuth2Util.getOAuth2AccessToken(
-			authorizedClientServiceOAuth2AuthorizedClientManager,
-			_liferayOAuthApplicationExternalReferenceCodes);
-	}
-
 	@Value("${jms.broker.url}")
 	private String _jmsBrokerURL;
-
-	@Value("${jms.jenkins.build.queue}")
-	private String _jmsJenkinsBuildQueue;
 
 	@Value("${jms.user.name}")
 	private String _jmsUserName;
 
 	@Value("${jms.user.password}")
 	private String _jmsUserPassword;
-
-	@Value("${liferay.oauth.application.external.reference.codes}")
-	private String _liferayOAuthApplicationExternalReferenceCodes;
 
 }

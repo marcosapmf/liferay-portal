@@ -31,9 +31,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -72,6 +72,8 @@ definition {
 	@refactordone
 	test CanAddAnnouncementsEntryFutureDate {
 		property custom.properties = "company.default.time.zone=America/Los_Angeles";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		AnnouncementsNavigator.openToEntriesTab(
 			layoutName = "announcements-page",
@@ -82,7 +84,8 @@ definition {
 			distributionScope = "General",
 			entryContent = "Announcements Entry Content",
 			entryTitle = "Announcements Entry Title",
-			entryURL = "http://www.liferay.com");
+			entryURL = "http://www.liferay.com",
+			minutesAdjustmentValue = 2);
 
 		var currentTime = DateUtil.getFormattedCurrentDate("h:mm", "UTC");
 

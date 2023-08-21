@@ -1,27 +1,22 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portlet.asset.service.impl;
 
 import com.liferay.asset.kernel.exception.NoSuchLinkException;
 import com.liferay.asset.kernel.model.AssetEntry;
+import com.liferay.asset.kernel.model.AssetEntryTable;
 import com.liferay.asset.kernel.model.AssetLink;
 import com.liferay.asset.kernel.model.AssetLinkConstants;
+import com.liferay.asset.kernel.model.AssetLinkTable;
 import com.liferay.asset.kernel.model.adapter.StagedAssetLink;
 import com.liferay.asset.kernel.service.AssetEntryLocalService;
 import com.liferay.asset.kernel.service.persistence.AssetEntryPersistence;
 import com.liferay.exportimport.kernel.lar.StagedModelType;
+import com.liferay.petra.sql.dsl.DSLQueryFactoryUtil;
+import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.bean.BeanReference;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
@@ -131,10 +126,11 @@ public class AssetLinkLocalServiceImpl extends AssetLinkLocalServiceBaseImpl {
 
 	@Override
 	public void deleteGroupLinks(long groupId) {
-		List<AssetLink> assetLinks = assetLinkFinder.findByAssetEntryGroupId(
-			groupId, QueryUtil.ALL_POS, QueryUtil.ALL_POS);
+		for (AssetLink assetLink :
+				getLinks(
+					groupId, null, null, QueryUtil.ALL_POS,
+					QueryUtil.ALL_POS)) {
 
-		for (AssetLink assetLink : assetLinks) {
 			deleteAssetLink(assetLink);
 		}
 	}
@@ -285,8 +281,50 @@ public class AssetLinkLocalServiceImpl extends AssetLinkLocalServiceBaseImpl {
 	public List<AssetLink> getLinks(
 		long groupId, Date startDate, Date endDate, int start, int end) {
 
-		return assetLinkFinder.findByG_C(
-			groupId, startDate, endDate, start, end);
+		DSLQuery dslQuery = DSLQueryFactoryUtil.select(
+			AssetEntryTable.INSTANCE.entryId
+		).from(
+			AssetEntryTable.INSTANCE
+		).where(
+			AssetEntryTable.INSTANCE.groupId.eq(
+				groupId
+			).and(
+				() -> {
+					if ((startDate == null) && (endDate == null)) {
+						return null;
+					}
+
+					if ((startDate != null) && (endDate == null)) {
+						return AssetLinkTable.INSTANCE.createDate.gt(startDate);
+					}
+
+					if (startDate == null) {
+						return AssetLinkTable.INSTANCE.createDate.lt(startDate);
+					}
+
+					return AssetLinkTable.INSTANCE.createDate.gt(
+						startDate
+					).and(
+						AssetLinkTable.INSTANCE.createDate.lt(startDate)
+					);
+				}
+			)
+		);
+
+		return assetLinkPersistence.dslQuery(
+			DSLQueryFactoryUtil.select(
+				AssetLinkTable.INSTANCE
+			).from(
+				AssetLinkTable.INSTANCE
+			).where(
+				AssetLinkTable.INSTANCE.entryId1.in(
+					dslQuery
+				).or(
+					AssetLinkTable.INSTANCE.entryId2.in(dslQuery)
+				)
+			).limit(
+				start, end
+			));
 	}
 
 	/**
@@ -327,7 +365,25 @@ public class AssetLinkLocalServiceImpl extends AssetLinkLocalServiceBaseImpl {
 	 */
 	@Override
 	public List<AssetLink> getLinks(long classNameId, long classPK) {
-		return assetLinkFinder.findByC_C(classNameId, classPK);
+		AssetEntry assetEntry = _assetEntryLocalService.fetchEntry(
+			classNameId, classPK);
+
+		if (assetEntry == null) {
+			return Collections.emptyList();
+		}
+
+		return assetLinkPersistence.dslQuery(
+			DSLQueryFactoryUtil.select(
+				AssetLinkTable.INSTANCE
+			).from(
+				AssetLinkTable.INSTANCE
+			).where(
+				AssetLinkTable.INSTANCE.entryId1.eq(
+					assetEntry.getEntryId()
+				).or(
+					AssetLinkTable.INSTANCE.entryId2.eq(assetEntry.getEntryId())
+				)
+			));
 	}
 
 	/**

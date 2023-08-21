@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.spring.context;
@@ -26,6 +17,7 @@ import com.liferay.portal.deploy.hot.ServiceWrapperRegistry;
 import com.liferay.portal.events.StartupHelperUtil;
 import com.liferay.portal.kernel.bean.PortalBeanLocatorUtil;
 import com.liferay.portal.kernel.cache.thread.local.ThreadLocalCacheManager;
+import com.liferay.portal.kernel.concurrent.SystemExecutorServiceUtil;
 import com.liferay.portal.kernel.dao.db.DB;
 import com.liferay.portal.kernel.dao.db.DBManagerUtil;
 import com.liferay.portal.kernel.dao.db.DBType;
@@ -82,6 +74,7 @@ import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.FutureTask;
 
 import javax.servlet.ServletContext;
@@ -183,6 +176,13 @@ public class PortalContextLoaderListener extends ContextLoaderListener {
 		}
 
 		Log4JUtil.shutdownLog4J();
+
+		try {
+			SystemExecutorServiceUtil.shutdown();
+		}
+		catch (InterruptedException interruptedException) {
+			_log.error(interruptedException);
+		}
 	}
 
 	@Override
@@ -272,13 +272,12 @@ public class PortalContextLoaderListener extends ContextLoaderListener {
 					return null;
 				});
 
-			Thread springInitThread = new Thread(
-				springInitTask, "Portal Spring Init Thread");
+			ExecutorService executorService =
+				SystemExecutorServiceUtil.getExecutorService();
 
-			springInitThread.setContextClassLoader(portalClassLoader);
-			springInitThread.setDaemon(true);
-
-			springInitThread.start();
+			executorService.submit(
+				SystemExecutorServiceUtil.renameThread(
+					springInitTask, "Portal Spring Init Thread"));
 		}
 
 		try {
@@ -330,7 +329,7 @@ public class PortalContextLoaderListener extends ContextLoaderListener {
 
 		dynamicProxyCreator.clear();
 
-		if (PropsValues.UPGRADE_DATABASE_AUTO_RUN) {
+		if (DBUpgrader.isUpgradeDatabaseAutoRunEnabled()) {
 			StartupHelperUtil.setUpgrading(true);
 
 			try {

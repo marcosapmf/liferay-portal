@@ -1,19 +1,11 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.delivery.order.resource.v1_0.test;
 
+import com.liferay.account.constants.AccountConstants;
 import com.liferay.account.model.AccountEntry;
 import com.liferay.account.service.AccountEntryLocalService;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
@@ -39,6 +31,7 @@ import com.liferay.commerce.service.CommerceShipmentLocalService;
 import com.liferay.commerce.test.util.CommerceTestUtil;
 import com.liferay.commerce.test.util.context.TestCommerceContext;
 import com.liferay.headless.commerce.delivery.order.client.dto.v1_0.PlacedOrderItemShipment;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.model.Address;
 import com.liferay.portal.kernel.model.Country;
 import com.liferay.portal.kernel.model.Region;
@@ -94,7 +87,8 @@ public class PlacedOrderItemShipmentResourceTest
 			2, "HALF_EVEN", false, RandomTestUtil.nextDouble(), true);
 
 		_commerceChannel = _commerceChannelLocalService.addCommerceChannel(
-			RandomTestUtil.randomString(), testGroup.getGroupId(),
+			RandomTestUtil.randomString(),
+			AccountConstants.ACCOUNT_ENTRY_ID_DEFAULT, testGroup.getGroupId(),
 			RandomTestUtil.randomString(),
 			CommerceChannelConstants.CHANNEL_TYPE_SITE, null,
 			_commerceCurrency.getCode(), _serviceContext);
@@ -107,7 +101,8 @@ public class PlacedOrderItemShipmentResourceTest
 		_commerceOrder.setOrderStatus(
 			CommerceOrderConstants.ORDER_STATUS_COMPLETED);
 
-		_commerceOrderLocalService.updateCommerceOrder(_commerceOrder);
+		_commerceOrder = _commerceOrderLocalService.updateCommerceOrder(
+			_commerceOrder);
 
 		_commercePriceList =
 			_commercePriceListLocalService.addCommercePriceList(
@@ -124,8 +119,8 @@ public class PlacedOrderItemShipmentResourceTest
 			_commerceOrderItemLocalService.addCommerceOrderItem(
 				_user.getUserId(), _commerceOrder.getCommerceOrderId(),
 				_cpInstance.getCPInstanceId(), null,
-				RandomTestUtil.randomInt(1, 10), 0,
-				RandomTestUtil.randomInt(1, 10),
+				BigDecimal.valueOf(RandomTestUtil.randomInt(1, 10)), 0,
+				RandomTestUtil.randomInt(1, 10), StringPool.BLANK,
 				new TestCommerceContext(
 					_accountEntry, _commerceCurrency, _commerceChannel, _user,
 					testGroup, _commerceOrder),
@@ -225,7 +220,8 @@ public class PlacedOrderItemShipmentResourceTest
 				RandomTestUtil.randomString(),
 				commerceShipment.getCommerceShipmentId(),
 				_commerceOrderItem.getCommerceOrderItemId(), 0,
-				placedOrderItemShipment.getQuantity(), false, _serviceContext);
+				placedOrderItemShipment.getQuantity(), null, false,
+				_serviceContext);
 
 		_commerceShipmentItems.add(commerceShipmentItem);
 

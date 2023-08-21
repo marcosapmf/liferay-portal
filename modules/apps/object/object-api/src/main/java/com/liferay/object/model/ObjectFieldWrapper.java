@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.model;
@@ -64,6 +55,9 @@ public class ObjectFieldWrapper
 		attributes.put("label", getLabel());
 		attributes.put("localized", isLocalized());
 		attributes.put("name", getName());
+		attributes.put("readOnly", getReadOnly());
+		attributes.put(
+			"readOnlyConditionExpression", getReadOnlyConditionExpression());
 		attributes.put("relationshipType", getRelationshipType());
 		attributes.put("required", isRequired());
 		attributes.put("state", isState());
@@ -202,6 +196,19 @@ public class ObjectFieldWrapper
 			setName(name);
 		}
 
+		String readOnly = (String)attributes.get("readOnly");
+
+		if (readOnly != null) {
+			setReadOnly(readOnly);
+		}
+
+		String readOnlyConditionExpression = (String)attributes.get(
+			"readOnlyConditionExpression");
+
+		if (readOnlyConditionExpression != null) {
+			setReadOnlyConditionExpression(readOnlyConditionExpression);
+		}
+
 		String relationshipType = (String)attributes.get("relationshipType");
 
 		if (relationshipType != null) {
@@ -315,6 +322,11 @@ public class ObjectFieldWrapper
 	@Override
 	public String getExternalReferenceCode() {
 		return model.getExternalReferenceCode();
+	}
+
+	@Override
+	public String getI18nObjectFieldName() {
+		return model.getI18nObjectFieldName();
 	}
 
 	/**
@@ -516,6 +528,26 @@ public class ObjectFieldWrapper
 	}
 
 	/**
+	 * Returns the read only of this object field.
+	 *
+	 * @return the read only of this object field
+	 */
+	@Override
+	public String getReadOnly() {
+		return model.getReadOnly();
+	}
+
+	/**
+	 * Returns the read only condition expression of this object field.
+	 *
+	 * @return the read only condition expression of this object field
+	 */
+	@Override
+	public String getReadOnlyConditionExpression() {
+		return model.getReadOnlyConditionExpression();
+	}
+
+	/**
 	 * Returns the relationship type of this object field.
 	 *
 	 * @return the relationship type of this object field
@@ -593,6 +625,13 @@ public class ObjectFieldWrapper
 	@Override
 	public String getUuid() {
 		return model.getUuid();
+	}
+
+	@Override
+	public boolean isDeletionAllowed()
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return model.isDeletionAllowed();
 	}
 
 	/**
@@ -924,6 +963,28 @@ public class ObjectFieldWrapper
 	@Override
 	public void setPrimaryKey(long primaryKey) {
 		model.setPrimaryKey(primaryKey);
+	}
+
+	/**
+	 * Sets the read only of this object field.
+	 *
+	 * @param readOnly the read only of this object field
+	 */
+	@Override
+	public void setReadOnly(String readOnly) {
+		model.setReadOnly(readOnly);
+	}
+
+	/**
+	 * Sets the read only condition expression of this object field.
+	 *
+	 * @param readOnlyConditionExpression the read only condition expression of this object field
+	 */
+	@Override
+	public void setReadOnlyConditionExpression(
+		String readOnlyConditionExpression) {
+
+		model.setReadOnlyConditionExpression(readOnlyConditionExpression);
 	}
 
 	/**

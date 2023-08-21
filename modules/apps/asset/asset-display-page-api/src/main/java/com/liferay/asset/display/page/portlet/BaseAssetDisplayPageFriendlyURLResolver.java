@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.asset.display.page.portlet;
@@ -93,12 +84,11 @@ public abstract class BaseAssetDisplayPageFriendlyURLResolver
 			(HttpServletRequest)requestContext.get("request");
 
 		LayoutDisplayPageProvider<?> layoutDisplayPageProvider =
-			_getLayoutDisplayPageProvider(friendlyURL);
+			getLayoutDisplayPageProvider(friendlyURL, params);
 
 		LayoutDisplayPageObjectProvider<?> layoutDisplayPageObjectProvider =
-			_getLayoutDisplayPageObjectProvider(
-				layoutDisplayPageProvider, groupId, friendlyURL,
-				_getVersion(params));
+			getLayoutDisplayPageObjectProvider(
+				layoutDisplayPageProvider, groupId, friendlyURL, params);
 
 		Object infoItem = _getInfoItem(layoutDisplayPageObjectProvider, params);
 
@@ -130,9 +120,9 @@ public abstract class BaseAssetDisplayPageFriendlyURLResolver
 		}
 
 		Locale locale = portal.getLocale(httpServletRequest);
-		Layout layout = _getLayoutDisplayPageObjectProviderLayout(
-			groupId, layoutDisplayPageObjectProvider,
-			layoutDisplayPageProvider);
+		Layout layout = getLayoutDisplayPageObjectProviderLayout(
+			groupId, layoutDisplayPageObjectProvider, layoutDisplayPageProvider,
+			params);
 
 		InfoItemFieldValuesProvider<Object> infoItemFieldValuesProvider =
 			infoItemServiceRegistry.getFirstInfoItemService(
@@ -182,20 +172,19 @@ public abstract class BaseAssetDisplayPageFriendlyURLResolver
 		throws PortalException {
 
 		LayoutDisplayPageProvider<?> layoutDisplayPageProvider =
-			_getLayoutDisplayPageProvider(friendlyURL);
+			getLayoutDisplayPageProvider(friendlyURL, params);
 
 		LayoutDisplayPageObjectProvider<?> layoutDisplayPageObjectProvider =
-			_getLayoutDisplayPageObjectProvider(
-				layoutDisplayPageProvider, groupId, friendlyURL,
-				_getVersion(params));
+			getLayoutDisplayPageObjectProvider(
+				layoutDisplayPageProvider, groupId, friendlyURL, params);
 
 		if (layoutDisplayPageObjectProvider == null) {
 			throw new PortalException();
 		}
 
-		Layout layout = _getLayoutDisplayPageObjectProviderLayout(
-			groupId, layoutDisplayPageObjectProvider,
-			layoutDisplayPageProvider);
+		Layout layout = getLayoutDisplayPageObjectProviderLayout(
+			groupId, layoutDisplayPageObjectProvider, layoutDisplayPageProvider,
+			params);
 
 		String originalFriendlyURL = _getOriginalFriendlyURL(friendlyURL);
 
@@ -223,6 +212,34 @@ public abstract class BaseAssetDisplayPageFriendlyURLResolver
 		return assetDisplayPageEntryLocalService.fetchAssetDisplayPageEntry(
 			groupId, layoutDisplayPageObjectProvider.getClassNameId(),
 			layoutDisplayPageObjectProvider.getClassPK());
+	}
+
+	protected LayoutDisplayPageObjectProvider<?>
+		getLayoutDisplayPageObjectProvider(
+			LayoutDisplayPageProvider<?> layoutDisplayPageProvider,
+			long groupId, String friendlyURL, Map<String, String[]> params) {
+
+		return _getLayoutDisplayPageObjectProvider(
+			layoutDisplayPageProvider, groupId, friendlyURL,
+			_getVersion(params));
+	}
+
+	protected Layout getLayoutDisplayPageObjectProviderLayout(
+		long groupId,
+		LayoutDisplayPageObjectProvider<?> layoutDisplayPageObjectProvider,
+		LayoutDisplayPageProvider<?> layoutDisplayPageProvider,
+		Map<String, String[]> params) {
+
+		return _getLayoutDisplayPageObjectProviderLayout(
+			groupId, layoutDisplayPageObjectProvider,
+			layoutDisplayPageProvider);
+	}
+
+	protected LayoutDisplayPageProvider<?> getLayoutDisplayPageProvider(
+			String friendlyURL, Map<String, String[]> params)
+		throws PortalException {
+
+		return _getLayoutDisplayPageProvider(friendlyURL);
 	}
 
 	protected Locale getLocale(Map<String, Object> requestContext) {

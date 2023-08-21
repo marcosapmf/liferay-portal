@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {SidebarCategory} from '@liferay/object-js-components-web';
@@ -22,6 +13,9 @@ import {ReadOnlyContainer} from './ReadOnlyContainer';
 interface AdvancedTabProps {
 	creationLanguageId: Liferay.Language.Locale;
 	errors: ObjectFieldErrors;
+	isDefaultStorageType: boolean;
+	learnResources: object;
+	readOnlySidebarElements: SidebarCategory[];
 	setValues: (value: Partial<ObjectField>) => void;
 	sidebarElements: SidebarCategory[];
 	values: Partial<ObjectField>;
@@ -30,43 +24,45 @@ interface AdvancedTabProps {
 export function AdvancedTab({
 	creationLanguageId,
 	errors,
+	isDefaultStorageType,
+	learnResources,
+	readOnlySidebarElements,
 	setValues,
 	sidebarElements,
 	values,
 }: AdvancedTabProps) {
 	return (
 		<>
-			{Liferay.FeatureFlags['LPS-159913'] && (
+			{Liferay.FeatureFlags['LPS-170122'] && isDefaultStorageType && (
 				<ReadOnlyContainer
 					disabled={
 						values.system ||
 						values.businessType === 'Aggregation' ||
 						values.businessType === 'Formula'
 					}
-					objectFieldSettings={
-						values.objectFieldSettings as ObjectFieldSetting[]
-					}
+					readOnlySidebarElements={readOnlySidebarElements}
 					requiredField={values.required as boolean}
 					setValues={setValues}
+					values={values}
 				/>
 			)}
 
-			{Liferay.FeatureFlags['LPS-163716'] &&
-				values.businessType === 'Picklist' && (
-					<DefaultValueContainer
-						creationLanguageId={creationLanguageId}
-						errors={errors}
-						objectFieldBusinessType={
-							values.businessType as ObjectFieldBusinessType
-						}
-						objectFieldSettings={
-							values.objectFieldSettings as ObjectFieldSetting[]
-						}
-						setValues={setValues}
-						sidebarElements={sidebarElements}
-						values={values}
-					/>
-				)}
+			{values.businessType === 'Picklist' && (
+				<DefaultValueContainer
+					creationLanguageId={creationLanguageId}
+					errors={errors}
+					learnResources={learnResources}
+					objectFieldBusinessType={
+						values.businessType as ObjectFieldBusinessType
+					}
+					objectFieldSettings={
+						values.objectFieldSettings as ObjectFieldSetting[]
+					}
+					setValues={setValues}
+					sidebarElements={sidebarElements}
+					values={values}
+				/>
+			)}
 		</>
 	);
 }

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.security.audit.web.internal.display.context;
@@ -100,17 +91,17 @@ public class AuditDisplayContext {
 
 			_searchContainer.setResultsAndTotal(
 				() -> AuditEventManagerUtil.getAuditEvents(
-					_themeDisplay.getCompanyId(), _getUserId(), _getUserName(),
-					startDate, endDate, _getEventType(), _getClassName(),
-					_getClassPK(), _getClientHost(), _getClientIP(),
-					_getServerName(), _getServerPort(), null,
+					_themeDisplay.getCompanyId(), _getGroupId(), _getUserId(),
+					_getUserName(), startDate, endDate, _getEventType(),
+					_getClassName(), _getClassPK(), _getClientHost(),
+					_getClientIP(), _getServerName(), _getServerPort(), null,
 					displayTerms.isAndOperator(), range[0], range[1],
 					new AuditEventCreateDateComparator()),
 				AuditEventManagerUtil.getAuditEventsCount(
-					_themeDisplay.getCompanyId(), _getUserId(), _getUserName(),
-					startDate, endDate, _getEventType(), _getClassName(),
-					_getClassPK(), _getClientHost(), _getClientIP(),
-					_getServerName(), _getServerPort(), null,
+					_themeDisplay.getCompanyId(), _getGroupId(), _getUserId(),
+					_getUserName(), startDate, endDate, _getEventType(),
+					_getClassName(), _getClassPK(), _getClientHost(),
+					_getClientIP(), _getServerName(), _getServerPort(), null,
 					displayTerms.isAndOperator()));
 		}
 		else {
@@ -121,16 +112,16 @@ public class AuditDisplayContext {
 
 			_searchContainer.setResultsAndTotal(
 				() -> AuditEventManagerUtil.getAuditEvents(
-					_themeDisplay.getCompanyId(), Long.valueOf(number),
-					keywords, null, null, keywords, keywords, keywords,
-					keywords, keywords, keywords, Integer.valueOf(number), null,
-					false, range[0], range[1],
+					_themeDisplay.getCompanyId(), _getGroupId(),
+					Long.valueOf(number), keywords, null, null, keywords,
+					keywords, keywords, keywords, keywords, keywords,
+					Integer.valueOf(number), null, false, range[0], range[1],
 					new AuditEventCreateDateComparator()),
 				AuditEventManagerUtil.getAuditEventsCount(
-					_themeDisplay.getCompanyId(), Long.valueOf(number),
-					keywords, null, null, keywords, keywords, keywords,
-					keywords, keywords, keywords, Integer.valueOf(number), null,
-					false));
+					_themeDisplay.getCompanyId(), _getGroupId(),
+					Long.valueOf(number), keywords, null, null, keywords,
+					keywords, keywords, keywords, keywords, keywords,
+					Integer.valueOf(number), null, false));
 		}
 
 		return _searchContainer;
@@ -256,6 +247,16 @@ public class AuditDisplayContext {
 		return _eventType;
 	}
 
+	private long _getGroupId() {
+		if (_groupId != null) {
+			return _groupId;
+		}
+
+		_groupId = ParamUtil.getInteger(_httpServletRequest, "groupId");
+
+		return _groupId;
+	}
+
 	private PortletURL _getPortletURL() throws Exception {
 		if (_portletURL != null) {
 			return _portletURL;
@@ -288,6 +289,8 @@ public class AuditDisplayContext {
 			"endDateYear", _getEndDateYear()
 		).setParameter(
 			"eventType", _getEventType()
+		).setParameter(
+			"groupId", _getGroupId()
 		).setParameter(
 			"serverName", _getServerName()
 		).setParameter(
@@ -431,6 +434,7 @@ public class AuditDisplayContext {
 	private Integer _endDateMonth;
 	private Integer _endDateYear;
 	private String _eventType;
+	private Integer _groupId;
 	private final HttpServletRequest _httpServletRequest;
 	private final LiferayPortletRequest _liferayPortletRequest;
 	private final LiferayPortletResponse _liferayPortletResponse;

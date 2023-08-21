@@ -9,16 +9,16 @@ exports[`Pagination should render 1`] = `
       class="page-item disabled"
     >
       <a
-        class="button-root page-link btn btn-unstyled"
+        class="button-root btn btn-unstyled page-link"
         disabled=""
         href="/?page=0"
       >
         <svg
-          class="lexicon-icon lexicon-icon-angle-left icon-root"
+          class="lexicon-icon lexicon-icon-angle-left-small icon-root"
           role="presentation"
         >
           <use
-            xlink:href="#angle-left"
+            xlink:href="#angle-left-small"
           />
         </svg>
       </a>
@@ -27,7 +27,7 @@ exports[`Pagination should render 1`] = `
       class="page-item active"
     >
       <a
-        class="button-root page-link btn btn-unstyled"
+        class="button-root btn btn-unstyled page-link"
         href="/?page=1"
       >
         1
@@ -37,16 +37,16 @@ exports[`Pagination should render 1`] = `
       class="page-item disabled"
     >
       <a
-        class="button-root page-link btn btn-unstyled"
+        class="button-root btn btn-unstyled page-link"
         disabled=""
         href="/?page=2"
       >
         <svg
-          class="lexicon-icon lexicon-icon-angle-right icon-root"
+          class="lexicon-icon lexicon-icon-angle-right-small icon-root"
           role="presentation"
         >
           <use
-            xlink:href="#angle-right"
+            xlink:href="#angle-right-small"
           />
         </svg>
       </a>
@@ -64,15 +64,15 @@ exports[`Pagination should render a lot of pages with a middle page active 1`] =
       class="page-item"
     >
       <a
-        class="button-root page-link btn btn-unstyled"
+        class="button-root btn btn-unstyled page-link"
         href="/?page=49"
       >
         <svg
-          class="lexicon-icon lexicon-icon-angle-left icon-root"
+          class="lexicon-icon lexicon-icon-angle-left-small icon-root"
           role="presentation"
         >
           <use
-            xlink:href="#angle-left"
+            xlink:href="#angle-left-small"
           />
         </svg>
       </a>
@@ -81,7 +81,7 @@ exports[`Pagination should render a lot of pages with a middle page active 1`] =
       class="page-item"
     >
       <a
-        class="button-root page-link btn btn-unstyled"
+        class="button-root btn btn-unstyled page-link"
         href="/?page=1"
       >
         1
@@ -97,6 +97,7 @@ exports[`Pagination should render a lot of pages with a middle page active 1`] =
           aria-controls="clay-dropdown-menu-2"
           aria-expanded="false"
           aria-haspopup="true"
+          aria-label="See more"
           class="dropdown-toggle page-link btn btn-unstyled"
           type="button"
         >
@@ -108,7 +109,7 @@ exports[`Pagination should render a lot of pages with a middle page active 1`] =
       class="page-item"
     >
       <a
-        class="button-root page-link btn btn-unstyled"
+        class="button-root btn btn-unstyled page-link"
         href="/?page=48"
       >
         48
@@ -118,7 +119,7 @@ exports[`Pagination should render a lot of pages with a middle page active 1`] =
       class="page-item"
     >
       <a
-        class="button-root page-link btn btn-unstyled"
+        class="button-root btn btn-unstyled page-link"
         href="/?page=49"
       >
         49
@@ -128,7 +129,7 @@ exports[`Pagination should render a lot of pages with a middle page active 1`] =
       class="page-item active"
     >
       <a
-        class="button-root page-link btn btn-unstyled"
+        class="button-root btn btn-unstyled page-link"
         href="/?page=50"
       >
         50
@@ -138,7 +139,7 @@ exports[`Pagination should render a lot of pages with a middle page active 1`] =
       class="page-item"
     >
       <a
-        class="button-root page-link btn btn-unstyled"
+        class="button-root btn btn-unstyled page-link"
         href="/?page=51"
       >
         51
@@ -148,7 +149,7 @@ exports[`Pagination should render a lot of pages with a middle page active 1`] =
       class="page-item"
     >
       <a
-        class="button-root page-link btn btn-unstyled"
+        class="button-root btn btn-unstyled page-link"
         href="/?page=52"
       >
         52
@@ -164,6 +165,7 @@ exports[`Pagination should render a lot of pages with a middle page active 1`] =
           aria-controls="clay-dropdown-menu-3"
           aria-expanded="false"
           aria-haspopup="true"
+          aria-label="See more"
           class="dropdown-toggle page-link btn btn-unstyled"
           type="button"
         >
@@ -175,7 +177,7 @@ exports[`Pagination should render a lot of pages with a middle page active 1`] =
       class="page-item"
     >
       <a
-        class="button-root page-link btn btn-unstyled"
+        class="button-root btn btn-unstyled page-link"
         href="/?page=100"
       >
         100
@@ -185,15 +187,15 @@ exports[`Pagination should render a lot of pages with a middle page active 1`] =
       class="page-item"
     >
       <a
-        class="button-root page-link btn btn-unstyled"
+        class="button-root btn btn-unstyled page-link"
         href="/?page=51"
       >
         <svg
-          class="lexicon-icon lexicon-icon-angle-right icon-root"
+          class="lexicon-icon lexicon-icon-angle-right-small icon-root"
           role="presentation"
         >
           <use
-            xlink:href="#angle-right"
+            xlink:href="#angle-right-small"
           />
         </svg>
       </a>
@@ -211,15 +213,15 @@ exports[`Pagination should render a lot of pages with the end page active 1`] = 
       class="page-item"
     >
       <a
-        class="button-root page-link btn btn-unstyled"
+        class="button-root btn btn-unstyled page-link"
         href="/?page=99"
       >
         <svg
-          class="lexicon-icon lexicon-icon-angle-left icon-root"
+          class="lexicon-icon lexicon-icon-angle-left-small icon-root"
           role="presentation"
         >
           <use
-            xlink:href="#angle-left"
+            xlink:href="#angle-left-small"
           />
         </svg>
       </a>
@@ -228,7 +230,7 @@ exports[`Pagination should render a lot of pages with the end page active 1`] = 
       class="page-item"
     >
       <a
-        class="button-root page-link btn btn-unstyled"
+        class="button-root btn btn-unstyled page-link"
         href="/?page=1"
       >
         1
@@ -244,6 +246,7 @@ exports[`Pagination should render a lot of pages with the end page active 1`] = 
           aria-controls="clay-dropdown-menu-4"
           aria-expanded="false"
           aria-haspopup="true"
+          aria-label="See more"
           class="dropdown-toggle page-link btn btn-unstyled"
           type="button"
         >
@@ -255,7 +258,7 @@ exports[`Pagination should render a lot of pages with the end page active 1`] = 
       class="page-item"
     >
       <a
-        class="button-root page-link btn btn-unstyled"
+        class="button-root btn btn-unstyled page-link"
         href="/?page=98"
       >
         98
@@ -265,7 +268,7 @@ exports[`Pagination should render a lot of pages with the end page active 1`] = 
       class="page-item"
     >
       <a
-        class="button-root page-link btn btn-unstyled"
+        class="button-root btn btn-unstyled page-link"
         href="/?page=99"
       >
         99
@@ -275,7 +278,7 @@ exports[`Pagination should render a lot of pages with the end page active 1`] = 
       class="page-item active"
     >
       <a
-        class="button-root page-link btn btn-unstyled"
+        class="button-root btn btn-unstyled page-link"
         href="/?page=100"
       >
         100
@@ -285,16 +288,16 @@ exports[`Pagination should render a lot of pages with the end page active 1`] = 
       class="page-item disabled"
     >
       <a
-        class="button-root page-link btn btn-unstyled"
+        class="button-root btn btn-unstyled page-link"
         disabled=""
         href="/?page=101"
       >
         <svg
-          class="lexicon-icon lexicon-icon-angle-right icon-root"
+          class="lexicon-icon lexicon-icon-angle-right-small icon-root"
           role="presentation"
         >
           <use
-            xlink:href="#angle-right"
+            xlink:href="#angle-right-small"
           />
         </svg>
       </a>
@@ -312,16 +315,16 @@ exports[`Pagination should render with a lot of pages 1`] = `
       class="page-item disabled"
     >
       <a
-        class="button-root page-link btn btn-unstyled"
+        class="button-root btn btn-unstyled page-link"
         disabled=""
         href="/?page=0"
       >
         <svg
-          class="lexicon-icon lexicon-icon-angle-left icon-root"
+          class="lexicon-icon lexicon-icon-angle-left-small icon-root"
           role="presentation"
         >
           <use
-            xlink:href="#angle-left"
+            xlink:href="#angle-left-small"
           />
         </svg>
       </a>
@@ -330,7 +333,7 @@ exports[`Pagination should render with a lot of pages 1`] = `
       class="page-item active"
     >
       <a
-        class="button-root page-link btn btn-unstyled"
+        class="button-root btn btn-unstyled page-link"
         href="/?page=1"
       >
         1
@@ -340,7 +343,7 @@ exports[`Pagination should render with a lot of pages 1`] = `
       class="page-item"
     >
       <a
-        class="button-root page-link btn btn-unstyled"
+        class="button-root btn btn-unstyled page-link"
         href="/?page=2"
       >
         2
@@ -350,7 +353,7 @@ exports[`Pagination should render with a lot of pages 1`] = `
       class="page-item"
     >
       <a
-        class="button-root page-link btn btn-unstyled"
+        class="button-root btn btn-unstyled page-link"
         href="/?page=3"
       >
         3
@@ -366,6 +369,7 @@ exports[`Pagination should render with a lot of pages 1`] = `
           aria-controls="clay-dropdown-menu-1"
           aria-expanded="false"
           aria-haspopup="true"
+          aria-label="See more"
           class="dropdown-toggle page-link btn btn-unstyled"
           type="button"
         >
@@ -377,7 +381,7 @@ exports[`Pagination should render with a lot of pages 1`] = `
       class="page-item"
     >
       <a
-        class="button-root page-link btn btn-unstyled"
+        class="button-root btn btn-unstyled page-link"
         href="/?page=100"
       >
         100
@@ -387,15 +391,15 @@ exports[`Pagination should render with a lot of pages 1`] = `
       class="page-item"
     >
       <a
-        class="button-root page-link btn btn-unstyled"
+        class="button-root btn btn-unstyled page-link"
         href="/?page=2"
       >
         <svg
-          class="lexicon-icon lexicon-icon-angle-right icon-root"
+          class="lexicon-icon lexicon-icon-angle-right-small icon-root"
           role="presentation"
         >
           <use
-            xlink:href="#angle-right"
+            xlink:href="#angle-right-small"
           />
         </svg>
       </a>
@@ -412,48 +416,51 @@ exports[`Pagination should render with buttons if passed an onChange handler 1`]
     <li
       class="page-item disabled"
     >
-      <a
-        class="button-root page-link btn btn-unstyled"
+      <button
+        class="button-root btn btn-unstyled page-link btn btn-primary"
         disabled=""
         href=""
+        type="button"
       >
         <svg
-          class="lexicon-icon lexicon-icon-angle-left icon-root"
+          class="lexicon-icon lexicon-icon-angle-left-small icon-root"
           role="presentation"
         >
           <use
-            xlink:href="#angle-left"
+            xlink:href="#angle-left-small"
           />
         </svg>
-      </a>
+      </button>
     </li>
     <li
       class="page-item active"
     >
-      <a
-        class="button-root page-link btn btn-unstyled"
+      <button
+        class="button-root btn btn-unstyled page-link btn btn-primary"
         href=""
+        type="button"
       >
         1
-      </a>
+      </button>
     </li>
     <li
       class="page-item disabled"
     >
-      <a
-        class="button-root page-link btn btn-unstyled"
+      <button
+        class="button-root btn btn-unstyled page-link btn btn-primary"
         disabled=""
         href=""
+        type="button"
       >
         <svg
-          class="lexicon-icon lexicon-icon-angle-right icon-root"
+          class="lexicon-icon lexicon-icon-angle-right-small icon-root"
           role="presentation"
         >
           <use
-            xlink:href="#angle-right"
+            xlink:href="#angle-right-small"
           />
         </svg>
-      </a>
+      </button>
     </li>
   </ul>
 </div>

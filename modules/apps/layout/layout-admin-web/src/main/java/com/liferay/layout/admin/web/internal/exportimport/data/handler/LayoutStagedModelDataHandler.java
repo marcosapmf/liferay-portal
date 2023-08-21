@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.layout.admin.web.internal.exportimport.data.handler;
@@ -88,6 +79,7 @@ import com.liferay.portal.kernel.model.LayoutFriendlyURL;
 import com.liferay.portal.kernel.model.LayoutPrototype;
 import com.liferay.portal.kernel.model.LayoutRevision;
 import com.liferay.portal.kernel.model.LayoutRevisionConstants;
+import com.liferay.portal.kernel.model.LayoutSet;
 import com.liferay.portal.kernel.model.LayoutSetBranch;
 import com.liferay.portal.kernel.model.LayoutStagingHandler;
 import com.liferay.portal.kernel.model.LayoutTemplate;
@@ -567,8 +559,7 @@ public class LayoutStagedModelDataHandler
 				Layout mergeFailFriendlyURLLayout =
 					_layoutLocalService.getLayout(layoutFriendlyURL.getPlid());
 
-				_sites.addMergeFailFriendlyURLLayout(
-					mergeFailFriendlyURLLayout);
+				_addMergeFailFriendlyURLLayout(mergeFailFriendlyURLLayout);
 
 				if (!_log.isWarnEnabled()) {
 					return;
@@ -710,7 +701,7 @@ public class LayoutStagedModelDataHandler
 			draftLayout.setClassNameId(_portal.getClassNameId(Layout.class));
 			draftLayout.setClassPK(importedLayout.getPlid());
 
-			_layoutLocalService.updateLayout(draftLayout);
+			draftLayout = _layoutLocalService.updateLayout(draftLayout);
 
 			importedLayout.setPublishDate(draftLayout.getModifiedDate());
 		}
@@ -1129,6 +1120,35 @@ public class LayoutStagedModelDataHandler
 		}
 	}
 
+	private void _addMergeFailFriendlyURLLayout(Layout layout)
+		throws Exception {
+
+		LayoutSet layoutSet = layout.getLayoutSet();
+
+		layoutSet = _layoutSetLocalService.getLayoutSet(
+			layoutSet.getGroupId(), layoutSet.isPrivateLayout());
+
+		UnicodeProperties settingsUnicodeProperties =
+			layoutSet.getSettingsProperties();
+
+		String oldMergeFailFriendlyURLLayouts =
+			settingsUnicodeProperties.getProperty(
+				Sites.MERGE_FAIL_FRIENDLY_URL_LAYOUTS, StringPool.BLANK);
+
+		String newMergeFailFriendlyURLLayouts = StringUtil.add(
+			oldMergeFailFriendlyURLLayouts, layout.getUuid());
+
+		if (!oldMergeFailFriendlyURLLayouts.equals(
+				newMergeFailFriendlyURLLayouts)) {
+
+			settingsUnicodeProperties.setProperty(
+				Sites.MERGE_FAIL_FRIENDLY_URL_LAYOUTS,
+				newMergeFailFriendlyURLLayouts);
+
+			_layoutSetLocalService.updateLayoutSet(layoutSet);
+		}
+	}
+
 	private String[] _appendPortletIds(
 		String[] portletIds, String[] newPortletIds, String portletsMergeMode) {
 
@@ -1149,6 +1169,30 @@ public class LayoutStagedModelDataHandler
 		}
 
 		return portletIds;
+	}
+
+	private void _deleteMissingFriendlyURLEntries(
+		Layout layout, PortletDataContext portletDataContext) {
+
+		Map<Long, Long> friendlyURLEntryIds =
+			(Map<Long, Long>)portletDataContext.getNewPrimaryKeysMap(
+				FriendlyURLEntry.class);
+
+		List<FriendlyURLEntry> friendlyURLEntries =
+			_friendlyURLEntryLocalService.getFriendlyURLEntries(
+				layout.getGroupId(),
+				_layoutFriendlyURLEntryHelper.getClassNameId(
+					portletDataContext.isPrivateLayout()),
+				layout.getPlid());
+
+		for (FriendlyURLEntry friendlyURLEntry : friendlyURLEntries) {
+			if (!friendlyURLEntryIds.containsValue(
+					friendlyURLEntry.getFriendlyURLEntryId())) {
+
+				_friendlyURLEntryLocalService.deleteFriendlyURLEntry(
+					friendlyURLEntry);
+			}
+		}
 	}
 
 	private void _deleteMissingLayoutFriendlyURLs(
@@ -1407,13 +1451,6 @@ public class LayoutStagedModelDataHandler
 			_layoutPageTemplateStructureLocalService.
 				fetchLayoutPageTemplateStructure(
 					layout.getGroupId(), layout.getPlid());
-
-		if (layoutPageTemplateStructure == null) {
-			layoutPageTemplateStructure =
-				_layoutPageTemplateStructureLocalService.
-					rebuildLayoutPageTemplateStructure(
-						layout.getGroupId(), layout.getPlid());
-		}
 
 		StagedModelDataHandlerUtil.exportReferenceStagedModel(
 			portletDataContext, layout, layoutPageTemplateStructure,
@@ -2058,6 +2095,8 @@ public class LayoutStagedModelDataHandler
 			StagedModelDataHandlerUtil.importStagedModel(
 				portletDataContext, friendlyURLEntryElement);
 		}
+
+		_deleteMissingFriendlyURLEntries(importedLayout, portletDataContext);
 	}
 
 	private void _importLayoutClassedModelUsages(
@@ -2216,7 +2255,6 @@ public class LayoutStagedModelDataHandler
 			}
 
 			portletDataContext.setPlid(layout.getPlid());
-
 			portletDataContext.setPortletId(portletId);
 
 			if (BackgroundTaskThreadLocal.hasBackgroundTask()) {

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.upgrade.internal.executor;
@@ -23,11 +14,11 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Release;
 import com.liferay.portal.kernel.model.ReleaseConstants;
+import com.liferay.portal.kernel.module.util.BundleUtil;
 import com.liferay.portal.kernel.service.ReleaseLocalService;
 import com.liferay.portal.kernel.upgrade.UpgradeStep;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.version.Version;
-import com.liferay.portal.module.util.BundleUtil;
 import com.liferay.portal.upgrade.internal.graph.ReleaseGraphManager;
 import com.liferay.portal.upgrade.internal.registry.UpgradeInfo;
 import com.liferay.portal.upgrade.internal.registry.UpgradeStepRegistratorTracker;
@@ -41,7 +32,6 @@ import java.util.Objects;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
-import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
@@ -142,36 +132,27 @@ public class UpgradeExecutor {
 		try {
 			UpgradeLogContext.setContext(bundleSymbolicName);
 
+			_executeUpgradeInfos(bundleSymbolicName, upgradeInfos);
+
 			Release release = _releaseLocalService.fetchRelease(
 				bundleSymbolicName);
 
-			ServiceRegistration<Release> oldServiceRegistration = null;
-
 			if (release != null) {
-				oldServiceRegistration = _releasePublisher.publishInProgress(
-					release);
-			}
-
-			_executeUpgradeInfos(bundleSymbolicName, upgradeInfos);
-
-			release = _releaseLocalService.fetchRelease(bundleSymbolicName);
-
-			ServiceRegistration<Release> inProgressServiceRegistration = null;
-
-			if (release != null) {
-				inProgressServiceRegistration = _releasePublisher.publish(
+				_releasePublisher.publish(
 					release, _isInitialRelease(upgradeInfos));
 			}
 
-			if (inProgressServiceRegistration != null) {
-				inProgressServiceRegistration.unregister();
-			}
-
-			if (oldServiceRegistration != null) {
-				oldServiceRegistration.unregister();
-			}
-
 			return release;
+		}
+		catch (Exception exception) {
+			Release release = _releaseLocalService.fetchRelease(
+				bundleSymbolicName);
+
+			if (release != null) {
+				_releasePublisher.unpublish(release);
+			}
+
+			return ReflectionUtil.throwException(exception);
 		}
 		finally {
 			UpgradeLogContext.clearContext();
@@ -229,7 +210,6 @@ public class UpgradeExecutor {
 				}
 
 				release.setVerified(_isInitialRelease(upgradeInfos));
-
 				release.setState(state);
 
 				_releaseLocalService.updateRelease(release);
@@ -238,6 +218,12 @@ public class UpgradeExecutor {
 
 		Bundle bundle = BundleUtil.getBundle(
 			_bundleContext, bundleSymbolicName);
+
+		if (bundle == null) {
+			throw new IllegalArgumentException(
+				"Module with symbolic name " + bundleSymbolicName +
+					" does not exist");
+		}
 
 		if (_requiresUpdateIndexes(bundle, upgradeInfos)) {
 			try {

@@ -1,6 +1,7 @@
 @component-name = "portal-wcm"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testcase.url = "http://localhost:8080";
@@ -8,7 +9,7 @@ definition {
 
 	static var randomSiteName = StringUtil.randomString(8);
 
-	var siteURLKey = StringUtil.toLowerCase(${randomSiteName});
+	static var randomSiteURLKey = StringUtil.toLowerCase(${randomSiteName});
 
 	setUp {
 		task ("Sign in") {
@@ -20,10 +21,9 @@ definition {
 		}
 
 		task ("Activate local live staging") {
-			JSONStaging.enableLocalStaging(
-				branchingPrivate = "false",
-				branchingPublic = "false",
-				groupName = ${randomSiteName});
+			Staging.openStagingAdmin(siteURLKey = ${randomSiteURLKey});
+
+			Staging.activateStagingCP(siteName = ${randomSiteName});
 		}
 	}
 
@@ -139,7 +139,7 @@ definition {
 		}
 
 		task ("Publish to Live") {
-			Staging.openStagingAdmin(siteURLKey = "${siteURLKey}-staging");
+			Staging.openStagingAdmin(siteURLKey = "${randomSiteURLKey}-staging");
 
 			Staging.publishCustomPublication();
 		}
@@ -149,7 +149,7 @@ definition {
 		}
 
 		task ("Navigate to the Pages admin in live site") {
-			PagesAdmin.openPagesAdmin(siteURLKey = ${siteURLKey});
+			PagesAdmin.openPagesAdmin(siteURLKey = ${randomSiteURLKey});
 		}
 
 		task ("View the Preview and Discard Draft actions are invisible") {
@@ -184,7 +184,7 @@ definition {
 		}
 
 		task ("Navigate to the Pages admin in staging site") {
-			PagesAdmin.openPagesAdmin(siteURLKey = "${siteURLKey}-staging");
+			PagesAdmin.openPagesAdmin(siteURLKey = "${randomSiteURLKey}-staging");
 		}
 
 		task ("View the Preview and Discard Draft actions are invisible") {
@@ -228,7 +228,8 @@ definition {
 	@description = "This is a test for LPS-109854. Cannot view the sitemap of staging site as Guest."
 	@priority = 4
 	test CannotViewSiteMapOfStagingSiteAsGuest {
-		property test.name.skip.portal.instance = "ContentPagesWithStaging#CannotViewSiteMapOfStagingSiteAsGuest";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Add a content page") {
 			JSONLayout.addPublicLayout(
@@ -244,7 +245,7 @@ definition {
 		}
 
 		task ("Configure the Staging Public Pages in site configuration") {
-			Site.openSiteSettingsAdmin(siteURLKey = "${siteURLKey}-staging");
+			Site.openSiteSettingsAdmin(siteURLKey = "${randomSiteURLKey}-staging");
 
 			Site.addVirtualHostsURLCP(stagingPages = "www.able.com");
 		}
@@ -301,7 +302,7 @@ definition {
 		}
 
 		task ("View the content page template shown in Page Templates admin") {
-			PageTemplatesAdmin.openPageTemplatesAdmin(siteURLKey = "${siteURLKey}-staging");
+			PageTemplatesAdmin.openPageTemplatesAdmin(siteURLKey = "${randomSiteURLKey}-staging");
 
 			Navigator.gotoNavNested(navNested = "Page Template Collection");
 
@@ -354,7 +355,7 @@ definition {
 		}
 
 		task ("Publish the site to live") {
-			Staging.openStagingAdmin(siteURLKey = "${siteURLKey}-staging");
+			Staging.openStagingAdmin(siteURLKey = "${randomSiteURLKey}-staging");
 
 			Staging.publishCustomPublication();
 		}
@@ -484,7 +485,7 @@ definition {
 		task ("View selected page is linked to Heading fragment") {
 			AssertVisible(
 				key_append = "[normalize-space(text())='Heading Example']",
-				key_url = "/web/${siteURLKey}-staging/test-widget-page-name",
+				key_url = "/web/${randomSiteURLKey}-staging/test-widget-page-name",
 				locator1 = "Fragment#FRAGMENT_LINK");
 		}
 
@@ -509,14 +510,14 @@ definition {
 
 			Click(
 				key_append = "[normalize-space(text())='Heading Example']",
-				key_url = "/web/${siteURLKey}-staging/test-widget-page-name",
+				key_url = "/web/${randomSiteURLKey}-staging/test-widget-page-name",
 				locator1 = "Fragment#FRAGMENT_LINK");
 		}
 
 		task ("Assert redirect to widget page in staging site") {
 			ControlMenu.viewHeaderTitle(headerTitle = "Test Widget Page Name");
 
-			AssertLocation.assertPartialLocation(value1 = "web/${siteURLKey}-staging/test-widget-page-name");
+			AssertLocation.assertPartialLocation(value1 = "web/${randomSiteURLKey}-staging/test-widget-page-name");
 		}
 
 		task ("Navigate to content page in live site") {
@@ -526,14 +527,14 @@ definition {
 
 			Click(
 				key_append = "[normalize-space(text())='Heading Example']",
-				key_url = "/web/${siteURLKey}/test-widget-page-name",
+				key_url = "/web/${randomSiteURLKey}/test-widget-page-name",
 				locator1 = "Fragment#FRAGMENT_LINK");
 		}
 
 		task ("Assert redirect to widget page in live site") {
 			ControlMenu.viewHeaderTitle(headerTitle = "Test Widget Page Name");
 
-			AssertLocation.assertPartialLocation(value1 = "web/${siteURLKey}/test-widget-page-name");
+			AssertLocation.assertPartialLocation(value1 = "web/${randomSiteURLKey}/test-widget-page-name");
 		}
 	}
 
@@ -543,7 +544,7 @@ definition {
 		property timeout.explicit.wait = "20";
 
 		task ("Add a web content structure with an Image field") {
-			WebContentNavigator.openWebContentAdmin(siteURLKey = "${siteURLKey}-staging");
+			WebContentNavigator.openWebContentAdmin(siteURLKey = "${randomSiteURLKey}-staging");
 
 			NavItem.gotoStructures();
 
@@ -722,6 +723,8 @@ definition {
 	@description = "This is a test for LPS-140136. As a page creator with page update permissions, the draft actions are only visible in staging site."
 	@priority = 4
 	test PreviewAndDiscardDraftInStagingSite {
+		property portal.acceptance = "true";
+
 		task ("Add a content page") {
 			JSONLayout.addPublicLayout(
 				groupName = "${randomSiteName} (Staging)",
@@ -754,13 +757,13 @@ definition {
 		}
 
 		task ("Publish to Live") {
-			Staging.openStagingAdmin(siteURLKey = "${siteURLKey}-staging");
+			Staging.openStagingAdmin(siteURLKey = "${randomSiteURLKey}-staging");
 
 			Staging.publishCustomPublication();
 		}
 
 		task ("Navigate to the Pages admin in live site") {
-			PagesAdmin.openPagesAdmin(siteURLKey = ${siteURLKey});
+			PagesAdmin.openPagesAdmin(siteURLKey = ${randomSiteURLKey});
 		}
 
 		task ("View the Preview and Discard Draft actions are invisible") {
@@ -795,7 +798,7 @@ definition {
 		}
 
 		task ("Preview the draft content page via Pages admin in staging site") {
-			PagesAdmin.openPagesAdmin(siteURLKey = "${siteURLKey}-staging");
+			PagesAdmin.openPagesAdmin(siteURLKey = "${randomSiteURLKey}-staging");
 
 			PagesAdmin.gotoPageEllipsisMenuItem(
 				menuItem = "Preview Draft",
@@ -843,7 +846,7 @@ definition {
 		}
 
 		task ("Discard the draft content page via Pages admin in staging site") {
-			PagesAdmin.openPagesAdmin(siteURLKey = "${siteURLKey}-staging");
+			PagesAdmin.openPagesAdmin(siteURLKey = "${randomSiteURLKey}-staging");
 
 			PagesAdmin.openPageEllipsisMenu(pageName = "Test Page Name");
 
@@ -932,7 +935,7 @@ definition {
 		}
 
 		task ("Publish the site to live") {
-			Staging.openStagingAdmin(siteURLKey = "${siteURLKey}-staging");
+			Staging.openStagingAdmin(siteURLKey = "${randomSiteURLKey}-staging");
 
 			Staging.publishCustomPublication();
 		}
@@ -970,13 +973,13 @@ definition {
 		}
 
 		task ("Publish to live") {
-			Staging.openStagingAdmin(siteURLKey = "${siteURLKey}-staging");
+			Staging.openStagingAdmin(siteURLKey = "${randomSiteURLKey}-staging");
 
 			Staging.publishCustomPublication();
 		}
 
 		task ("View draft page is shown in pages admin in live site") {
-			PagesAdmin.openPagesAdmin(siteURLKey = ${siteURLKey});
+			PagesAdmin.openPagesAdmin(siteURLKey = ${randomSiteURLKey});
 
 			PagesAdmin.viewPageStatus(
 				pageName = "Test Content Page Name",
@@ -1004,13 +1007,13 @@ definition {
 		}
 
 		task ("Publish to live") {
-			Staging.openStagingAdmin(siteURLKey = "${siteURLKey}-staging");
+			Staging.openStagingAdmin(siteURLKey = "${randomSiteURLKey}-staging");
 
 			Staging.publishCustomPublication();
 		}
 
 		task ("View draft page is shown in pages admin in live site after republish with an edition") {
-			PagesAdmin.openPagesAdmin(siteURLKey = ${siteURLKey});
+			PagesAdmin.openPagesAdmin(siteURLKey = ${randomSiteURLKey});
 
 			PagesAdmin.viewPageStatus(
 				pageName = "Test Content Page Name",
@@ -1063,7 +1066,7 @@ definition {
 		}
 
 		task ("Publish the site to live") {
-			Staging.openStagingAdmin(siteURLKey = "${siteURLKey}-staging");
+			Staging.openStagingAdmin(siteURLKey = "${randomSiteURLKey}-staging");
 
 			Staging.publishCustomPublication();
 		}
@@ -1142,7 +1145,7 @@ definition {
 		}
 
 		task ("Publish the site to live") {
-			Staging.openStagingAdmin(siteURLKey = "${siteURLKey}-staging");
+			Staging.openStagingAdmin(siteURLKey = "${randomSiteURLKey}-staging");
 
 			Staging.publishCustomPublication();
 		}
@@ -1511,8 +1514,6 @@ definition {
 		}
 
 		task ("Define the custom CSS") {
-			Navigator.gotoNavTab(navTab = "Design");
-
 			Theme.configureLookAndFeelSpecificLook();
 
 			Theme.configureLookAndFeelCustomCSS(cssText = '''div.component-paragraph {background-color: red; color:white;}''');
@@ -1569,8 +1570,6 @@ definition {
 		}
 
 		task ("Change the custom CSS") {
-			Navigator.gotoNavTab(navTab = "Design");
-
 			Theme.configureLookAndFeelCustomCSS(cssText = '''div.component-paragraph {background-color: blue; color:black;}''');
 
 			PortletEntry.save();
@@ -1809,25 +1808,18 @@ definition {
 		}
 
 		task ("Activate local live staging") {
-			JSONStaging.enableLocalStaging(
-				branchingPrivate = "false",
-				branchingPublic = "false",
-				groupName = ${siteName});
+			Staging.openStagingAdmin(siteURLKey = ${siteURLKey});
+
+			Staging.activateStagingCP(siteName = ${siteName});
 		}
 
 		task ("When adding a web content with email and telephone") {
 			task ("Create a web content structure") {
 				WebContentStructures.openWebContentStructuresAdmin(siteURLKey = "${siteURLKey}-staging");
 
-				WebContentStructures.addCP(structureName = "Contact Information");
-
-				for (var fieldFieldLabel : list "Name,Email,Phone,Personal Web") {
-					DataEngine.addField(
-						fieldFieldLabel = ${fieldFieldLabel},
-						fieldName = "Text");
-				}
-
-				WebContentStructures.saveCP();
+				WebContentStructures.importStructure(
+					structureName = "Contact Information",
+					uploadFileName = "Structure_Contact_Information_Fields.json");
 			}
 
 			task ("Create a Web Content from Contact Information") {

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.service.test.util;
@@ -42,36 +33,37 @@ public class ObjectDefinitionTestUtil {
 		throws Exception {
 
 		return objectDefinitionLocalService.addSystemObjectDefinition(
-			userId, null, dbTableName, false, labelMap, true, name, null, null,
-			pkObjectFieldDBColumnName, pkObjectFieldName, pluralLabelMap, scope,
-			titleObjectFieldName, version, WorkflowConstants.STATUS_DRAFT,
-			objectFields);
+			null, userId, 0, null, dbTableName, false, labelMap, true, name,
+			null, null, pkObjectFieldDBColumnName, pkObjectFieldName,
+			pluralLabelMap, scope, titleObjectFieldName, version,
+			WorkflowConstants.STATUS_DRAFT, objectFields);
+	}
+
+	public static ObjectDefinition addObjectDefinition(
+			boolean enableLocalization,
+			ObjectDefinitionLocalService objectDefinitionLocalService,
+			List<ObjectField> objectFields)
+		throws Exception {
+
+		return objectDefinitionLocalService.addCustomObjectDefinition(
+			TestPropsValues.getUserId(), 0, false, enableLocalization,
+			LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
+			"A" + RandomTestUtil.randomString(), null, null,
+			LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
+			true, ObjectDefinitionConstants.SCOPE_COMPANY,
+			ObjectDefinitionConstants.STORAGE_TYPE_DEFAULT, objectFields);
 	}
 
 	public static ObjectDefinition addObjectDefinition(
 			ObjectDefinitionLocalService objectDefinitionLocalService)
 		throws Exception {
 
-		return addObjectDefinition(objectDefinitionLocalService, null);
-	}
-
-	public static ObjectDefinition addObjectDefinition(
-			ObjectDefinitionLocalService objectDefinitionLocalService,
-			List<ObjectField> objectFields)
-		throws Exception {
-
-		return objectDefinitionLocalService.addCustomObjectDefinition(
-			TestPropsValues.getUserId(), false, false,
-			LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
-			"A" + RandomTestUtil.randomString(), null, null,
-			LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
-			ObjectDefinitionConstants.SCOPE_COMPANY,
-			ObjectDefinitionConstants.STORAGE_TYPE_DEFAULT, objectFields);
+		return addObjectDefinition(false, objectDefinitionLocalService, null);
 	}
 
 	public static ObjectDefinition addUnmodifiableSystemObjectDefinition(
-			long userId, String className, String dbTableName,
-			Map<Locale, String> labelMap, String name,
+			String externalReferenceCode, long userId, String className,
+			String dbTableName, Map<Locale, String> labelMap, String name,
 			String pkObjectFieldDBColumnName, String pkObjectFieldName,
 			Map<Locale, String> pluralLabelMap, String scope,
 			String titleObjectFieldName, int version,
@@ -80,10 +72,10 @@ public class ObjectDefinitionTestUtil {
 		throws Exception {
 
 		return objectDefinitionLocalService.addSystemObjectDefinition(
-			userId, className, dbTableName, false, labelMap, false, name, null,
-			null, pkObjectFieldDBColumnName, pkObjectFieldName, pluralLabelMap,
-			scope, titleObjectFieldName, version,
-			WorkflowConstants.STATUS_APPROVED, objectFields);
+			externalReferenceCode, userId, 0, className, dbTableName, false,
+			labelMap, false, name, null, null, pkObjectFieldDBColumnName,
+			pkObjectFieldName, pluralLabelMap, scope, titleObjectFieldName,
+			version, WorkflowConstants.STATUS_APPROVED, objectFields);
 	}
 
 }

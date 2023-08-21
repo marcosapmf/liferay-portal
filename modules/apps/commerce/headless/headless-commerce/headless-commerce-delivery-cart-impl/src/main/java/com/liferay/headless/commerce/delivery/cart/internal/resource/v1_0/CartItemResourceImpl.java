@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.delivery.cart.internal.resource.v1_0;
@@ -23,9 +14,10 @@ import com.liferay.commerce.service.CommerceOrderService;
 import com.liferay.headless.commerce.core.util.ServiceContextHelper;
 import com.liferay.headless.commerce.delivery.cart.dto.v1_0.Cart;
 import com.liferay.headless.commerce.delivery.cart.dto.v1_0.CartItem;
-import com.liferay.headless.commerce.delivery.cart.internal.dto.v1_0.CartItemDTOConverterContext;
-import com.liferay.headless.commerce.delivery.cart.internal.dto.v1_0.constants.DTOConverterConstants;
+import com.liferay.headless.commerce.delivery.cart.internal.dto.v1_0.converter.CartItemDTOConverterContext;
+import com.liferay.headless.commerce.delivery.cart.internal.dto.v1_0.converter.constants.DTOConverterConstants;
 import com.liferay.headless.commerce.delivery.cart.resource.v1_0.CartItemResource;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
@@ -35,6 +27,8 @@ import com.liferay.portal.vulcan.fields.NestedFieldId;
 import com.liferay.portal.vulcan.fields.NestedFieldSupport;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
+
+import java.math.BigDecimal;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -143,8 +137,9 @@ public class CartItemResourceImpl
 			_commerceOrderItemService.addOrUpdateCommerceOrderItem(
 				commerceOrder.getCommerceOrderId(), cartItem.getSkuId(),
 				cartItem.getOptions(),
-				GetterUtil.get(cartItem.getQuantity(), 1),
+				BigDecimal.valueOf(GetterUtil.get(cartItem.getQuantity(), 1)),
 				GetterUtil.getLong(cartItem.getReplacedSkuId()), 0,
+				StringPool.BLANK,
 				_commerceContextFactory.create(
 					contextCompany.getCompanyId(), commerceOrder.getGroupId(),
 					contextUser.getUserId(), cartId,
@@ -166,7 +161,7 @@ public class CartItemResourceImpl
 			commerceOrder.getCommerceAccountId(),
 			_commerceOrderItemService.updateCommerceOrderItem(
 				commerceOrderItem.getCommerceOrderItemId(),
-				cartItem.getQuantity(),
+				BigDecimal.valueOf(cartItem.getQuantity()),
 				_commerceContextFactory.create(
 					contextCompany.getCompanyId(), commerceOrder.getGroupId(),
 					contextUser.getUserId(), commerceOrder.getCommerceOrderId(),

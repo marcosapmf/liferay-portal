@@ -1,16 +1,7 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
-
-import {isEdge} from 'react-flow-renderer';
 
 import {defaultLanguageId} from '../constants';
 import {removeNewLine, replaceTabSpaces} from '../util/utils';
@@ -43,7 +34,12 @@ DeserializeUtil.prototype = {
 
 		instance.definition.forEachField((_, fieldData) => {
 			fieldData.results.forEach((node) => {
-				nodesNames.push(node.name);
+				if (node.name) {
+					nodesNames.push(node.name);
+				}
+				else if (node.id) {
+					nodesNames.push(node.id);
+				}
 			});
 		});
 
@@ -142,8 +138,14 @@ DeserializeUtil.prototype = {
 					type,
 				});
 
-				if (node.transitions) {
-					node.transitions.forEach((transition) => {
+				const transitions = node.transitions;
+
+				if (transitions) {
+					let hasDefaultEdge = transitions?.find(
+						(transition) => transition?.default === 'true'
+					);
+
+					transitions.forEach((transition) => {
 						let label = {};
 
 						if (Array.isArray(transition.labels)) {
@@ -182,22 +184,15 @@ DeserializeUtil.prototype = {
 						else {
 							transitionsNames.push(transitionName);
 						}
-
-						const hasDefaultEdge = elements.find(
-							(element) =>
-								isEdge(element) &&
-								element.source === nodeName &&
-								element.data.defaultEdge
-						);
+						const defaultEdge =
+							transition?.default === 'true' || !hasDefaultEdge
+								? true
+								: false;
 
 						elements.push({
 							arrowHeadType: 'arrowclosed',
 							data: {
-								defaultEdge:
-									transition?.default === 'true' ||
-									!hasDefaultEdge
-										? true
-										: false,
+								defaultEdge,
 								label,
 							},
 							id: transitionName,
@@ -205,6 +200,10 @@ DeserializeUtil.prototype = {
 							target: transition.target,
 							type: 'transition',
 						});
+
+						if (defaultEdge && !hasDefaultEdge) {
+							hasDefaultEdge = true;
+						}
 					});
 				}
 			});

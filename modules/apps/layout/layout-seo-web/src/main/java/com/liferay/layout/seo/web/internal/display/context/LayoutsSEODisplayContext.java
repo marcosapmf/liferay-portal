@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.layout.seo.web.internal.display.context;
@@ -44,6 +35,7 @@ import com.liferay.layout.seo.model.LayoutSEOEntry;
 import com.liferay.layout.seo.model.LayoutSEOSite;
 import com.liferay.layout.seo.service.LayoutSEOEntryLocalServiceUtil;
 import com.liferay.layout.seo.service.LayoutSEOSiteLocalService;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONUtil;
@@ -75,7 +67,6 @@ import com.liferay.site.display.context.GroupDisplayContextHelper;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import javax.portlet.MimeResponse;
 import javax.portlet.PortletRequest;
@@ -486,25 +477,26 @@ public class LayoutsSEODisplayContext {
 			"defaultLanguageId", _selLayout.getDefaultLanguageId()
 		).put(
 			"fields",
-			infoForm.getAllInfoFields(
-			).stream(
-			).filter(
-				infoField -> !StringUtil.startsWith(
-					infoField.getName(),
-					PortletDisplayTemplate.DISPLAY_STYLE_PREFIX)
-			).map(
-				infoField -> JSONUtil.put(
-					"key", infoField.getName()
-				).put(
-					"label", infoField.getLabel(_themeDisplay.getLocale())
-				).put(
-					"type",
-					infoField.getInfoFieldType(
-					).getName()
-				)
-			).collect(
-				Collectors.toList()
-			)
+			TransformUtil.transform(
+				infoForm.getAllInfoFields(),
+				infoField -> {
+					if (StringUtil.startsWith(
+							infoField.getName(),
+							PortletDisplayTemplate.DISPLAY_STYLE_PREFIX)) {
+
+						return null;
+					}
+
+					return JSONUtil.put(
+						"key", infoField.getName()
+					).put(
+						"label", infoField.getLabel(_themeDisplay.getLocale())
+					).put(
+						"type",
+						infoField.getInfoFieldType(
+						).getName()
+					);
+				})
 		).put(
 			"selectedSource",
 			JSONUtil.put(
@@ -539,7 +531,7 @@ public class LayoutsSEODisplayContext {
 				InfoItemFormProvider.class, _getClassName());
 
 		return infoItemFormProvider.getInfoForm(
-			String.valueOf(_getClassTypeId()));
+			String.valueOf(_getClassTypeId()), _themeDisplay.getScopeGroupId());
 	}
 
 	private LayoutPageTemplateEntry _getLayoutPageTemplateEntry() {

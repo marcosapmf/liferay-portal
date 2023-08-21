@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.delivery.cart.internal.resource.v1_0;
@@ -33,6 +24,7 @@ import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.SetUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.odata.filter.ExpressionConvert;
@@ -637,37 +629,40 @@ public abstract class BaseCartResourceImpl
 			Collection<Cart> carts, Map<String, Serializable> parameters)
 		throws Exception {
 
-		UnsafeConsumer<Cart, Exception> cartUnsafeConsumer = null;
+		UnsafeFunction<Cart, Cart, Exception> cartUnsafeFunction = null;
 
 		String updateStrategy = (String)parameters.getOrDefault(
 			"updateStrategy", "UPDATE");
 
-		if ("PARTIAL_UPDATE".equalsIgnoreCase(updateStrategy)) {
-			cartUnsafeConsumer = cart -> patchCart(
+		if (StringUtil.equalsIgnoreCase(updateStrategy, "PARTIAL_UPDATE")) {
+			cartUnsafeFunction = cart -> patchCart(
 				cart.getId() != null ? cart.getId() :
 					_parseLong((String)parameters.get("cartId")),
 				cart);
 		}
 
-		if ("UPDATE".equalsIgnoreCase(updateStrategy)) {
-			cartUnsafeConsumer = cart -> putCart(
+		if (StringUtil.equalsIgnoreCase(updateStrategy, "UPDATE")) {
+			cartUnsafeFunction = cart -> putCart(
 				cart.getId() != null ? cart.getId() :
 					_parseLong((String)parameters.get("cartId")),
 				cart);
 		}
 
-		if (cartUnsafeConsumer == null) {
+		if (cartUnsafeFunction == null) {
 			throw new NotSupportedException(
 				"Update strategy \"" + updateStrategy +
 					"\" is not supported for Cart");
 		}
 
-		if (contextBatchUnsafeConsumer != null) {
-			contextBatchUnsafeConsumer.accept(carts, cartUnsafeConsumer);
+		if (contextBatchUnsafeBiConsumer != null) {
+			contextBatchUnsafeBiConsumer.accept(carts, cartUnsafeFunction);
+		}
+		else if (contextBatchUnsafeConsumer != null) {
+			contextBatchUnsafeConsumer.accept(carts, cartUnsafeFunction::apply);
 		}
 		else {
 			for (Cart cart : carts) {
-				cartUnsafeConsumer.accept(cart);
+				cartUnsafeFunction.apply(cart);
 			}
 		}
 	}
@@ -682,6 +677,14 @@ public abstract class BaseCartResourceImpl
 
 	public void setContextAcceptLanguage(AcceptLanguage contextAcceptLanguage) {
 		this.contextAcceptLanguage = contextAcceptLanguage;
+	}
+
+	public void setContextBatchUnsafeBiConsumer(
+		UnsafeBiConsumer
+			<Collection<Cart>, UnsafeFunction<Cart, Cart, Exception>, Exception>
+				contextBatchUnsafeBiConsumer) {
+
+		this.contextBatchUnsafeBiConsumer = contextBatchUnsafeBiConsumer;
 	}
 
 	public void setContextBatchUnsafeConsumer(
@@ -945,6 +948,9 @@ public abstract class BaseCartResourceImpl
 	}
 
 	protected AcceptLanguage contextAcceptLanguage;
+	protected UnsafeBiConsumer
+		<Collection<Cart>, UnsafeFunction<Cart, Cart, Exception>, Exception>
+			contextBatchUnsafeBiConsumer;
 	protected UnsafeBiConsumer
 		<Collection<Cart>, UnsafeConsumer<Cart, Exception>, Exception>
 			contextBatchUnsafeConsumer;

@@ -1,3 +1,8 @@
+/**
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
+ */
+
 import {ClayToggle} from '@clayui/form';
 import classNames from 'classnames';
 
@@ -6,9 +11,6 @@ import radioUnchecked from '../../assets/icons/radio_button_unchecked_icon.svg';
 import paypal from '../../assets/images/paypal.png';
 
 import './RadioCard.scss';
-
-import {useState} from 'react';
-
 import {Tooltip} from '../Tooltip/Tooltip';
 
 interface RadioCardProps {
@@ -86,7 +88,7 @@ export function RadioCard({
 					{small ? (
 						<div className="radio-card-main-info-small">
 							<div className="radio-card-main-info-small-background">
-								<img src={paypal} alt="paypal" />
+								<img alt="paypal" src={paypal} />
 							</div>
 
 							<span className="radio-card-main-info-small-text-small">

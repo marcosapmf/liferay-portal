@@ -6,10 +6,14 @@ exports[`Data Privacy Overview should render 1`] = `
     class="settings-base-page-root data-privacy-overview-root"
   >
     <div
+      aria-hidden="true"
       class="maintenance-alert-root"
+      data-aria-hidden="true"
     />
     <div
+      aria-hidden="true"
       class="content-header"
+      data-aria-hidden="true"
     >
       <div
         class="header-text"
@@ -54,7 +58,9 @@ exports[`Data Privacy Overview should render 1`] = `
                   class="row justify-content-between"
                 >
                   <div
+                    aria-hidden="true"
                     class="col-lg-8"
+                    data-aria-hidden="true"
                   >
                     <h4>
                       Retention Period
@@ -68,26 +74,30 @@ exports[`Data Privacy Overview should render 1`] = `
                   <div
                     class="col-lg-auto align-self-center"
                   >
-                    <select
-                      class="form-control"
+                    <button
+                      aria-activedescendant="18144000000"
+                      aria-expanded="true"
+                      aria-haspopup="listbox"
+                      aria-owns="clay-id-2"
+                      class="form-control form-control-select form-control-select-secondary show"
                       data-testid="data-retention-period-select-input"
+                      role="combobox"
+                      style=""
+                      tabindex="0"
+                      type="button"
                     >
-                      <option
-                        value="18144000000"
-                      >
-                        7 Months
-                      </option>
-                      <option
-                        value="33696000000"
-                      >
-                        13 Months
-                      </option>
-                    </select>
+                      Select an option
+                    </button>
                   </div>
                 </div>
-                <hr />
+                <hr
+                  aria-hidden="true"
+                  data-aria-hidden="true"
+                />
                 <div
+                  aria-hidden="true"
                   class="row mt-3 justify-content-between"
+                  data-aria-hidden="true"
                 >
                   <div
                     class="col-lg-8"
@@ -98,7 +108,7 @@ exports[`Data Privacy Overview should render 1`] = `
                     <p
                       class="text-secondary"
                     >
-                      Data subjects and your organization can request access, deletion and suppression of their data in Analytics Cloud. Some requests may take up to 7 days to complete. We will notify the requestor by email once the download is ready.
+                      Data subjects and your organization can request access, deletion, and suppression of their data in Analytics Cloud. Some requests may take up to 7 days to complete. We will notify the requestor by email once the download is ready.
                     </p>
                   </div>
                   <div
@@ -118,9 +128,14 @@ exports[`Data Privacy Overview should render 1`] = `
                     </button>
                   </div>
                 </div>
-                <hr />
+                <hr
+                  aria-hidden="true"
+                  data-aria-hidden="true"
+                />
                 <div
+                  aria-hidden="true"
                   class="row mt-3 justify-content-between"
+                  data-aria-hidden="true"
                 >
                   <div
                     class="col-lg-8"
@@ -131,7 +146,7 @@ exports[`Data Privacy Overview should render 1`] = `
                     <p
                       class="text-secondary"
                     >
-                      Suppressed data subjects will be excluded in further identity resolution activity. Deleted data subjects will automatically be suppressed by their user ID and their identity will not be resolveable.
+                      Suppressed data subjects will be excluded in further identity resolution activity. Deleted data subjects will automatically be suppressed by their user ID and their identity will not be resolvable.
                     </p>
                   </div>
                   <div

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.content.dashboard.web.internal.portlet.action.test;
@@ -30,11 +21,14 @@ import com.liferay.content.dashboard.item.type.ContentDashboardItemSubtype;
 import com.liferay.content.dashboard.web.test.util.ContentDashboardTestUtil;
 import com.liferay.document.library.kernel.model.DLFolderConstants;
 import com.liferay.document.library.kernel.service.DLAppLocalServiceUtil;
+import com.liferay.info.item.ClassPKInfoItemIdentifier;
+import com.liferay.info.item.InfoItemIdentifier;
 import com.liferay.info.item.InfoItemReference;
 import com.liferay.journal.constants.JournalFolderConstants;
 import com.liferay.journal.model.JournalArticle;
 import com.liferay.journal.test.util.JournalTestUtil;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.configuration.test.util.GroupConfigurationTemporarySwapper;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
@@ -46,6 +40,8 @@ import com.liferay.portal.kernel.portlet.bridges.mvc.MVCResourceCommand;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.servlet.PortletServlet;
+import com.liferay.portal.kernel.settings.SettingsFactoryUtil;
+import com.liferay.portal.kernel.test.portlet.MockLiferayPortletRenderResponse;
 import com.liferay.portal.kernel.test.portlet.MockLiferayPortletURL;
 import com.liferay.portal.kernel.test.portlet.MockLiferayResourceRequest;
 import com.liferay.portal.kernel.test.portlet.MockLiferayResourceResponse;
@@ -57,6 +53,8 @@ import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.CalendarFactoryUtil;
+import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
+import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.WebKeys;
@@ -159,11 +157,22 @@ public class GetContentDashboardItemInfoMVCResourceCommandTest {
 		InfoItemReference infoItemReference =
 			contentDashboardItem.getInfoItemReference();
 
+		InfoItemIdentifier infoItemIdentifier =
+			infoItemReference.getInfoItemIdentifier();
+
+		Assert.assertTrue(
+			infoItemIdentifier instanceof ClassPKInfoItemIdentifier);
+
+		ClassPKInfoItemIdentifier classPKInfoItemIdentifier =
+			(ClassPKInfoItemIdentifier)
+				infoItemReference.getInfoItemIdentifier();
+
 		Assert.assertEquals(
 			infoItemReference.getClassName(),
 			jsonObject.getString("className"));
 		Assert.assertEquals(
-			infoItemReference.getClassPK(), jsonObject.getLong("classPK"), 0);
+			classPKInfoItemIdentifier.getClassPK(),
+			jsonObject.getLong("classPK"), 0);
 
 		Assert.assertEquals(
 			contentDashboardItem.getDescription(LocaleUtil.US),
@@ -236,23 +245,48 @@ public class GetContentDashboardItemInfoMVCResourceCommandTest {
 
 	@Test
 	public void testServeResourceWithoutSharingButtonAction() throws Exception {
-		JSONObject jsonObject = _serveResource(
-			_createContentDashboardFileItem());
+		try (GroupConfigurationTemporarySwapper
+				groupConfigurationTemporarySwapper =
+					new GroupConfigurationTemporarySwapper(
+						_group.getGroupId(),
+						"com.liferay.sharing.internal.configuration." +
+							"SharingGroupConfiguration",
+						HashMapDictionaryBuilder.<String, Object>put(
+							"enabled", false
+						).build(),
+						SettingsFactoryUtil.getSettingsFactory())) {
 
-		Assert.assertEquals(
-			StringPool.BLANK, jsonObject.getString("fetchSharingButtonURL"));
+			JSONObject jsonObject = _serveResource(
+				_createContentDashboardFileItem());
+
+			Assert.assertEquals(
+				StringPool.BLANK,
+				jsonObject.getString("fetchSharingButtonURL"));
+		}
 	}
 
 	@Test
 	public void testServeResourceWithoutSharingCollaboratorsAction()
 		throws Exception {
 
-		JSONObject jsonObject = _serveResource(
-			_createContentDashboardFileItem());
+		try (GroupConfigurationTemporarySwapper
+				groupConfigurationTemporarySwapper =
+					new GroupConfigurationTemporarySwapper(
+						_group.getGroupId(),
+						"com.liferay.sharing.internal.configuration." +
+							"SharingGroupConfiguration",
+						HashMapDictionaryBuilder.<String, Object>put(
+							"enabled", false
+						).build(),
+						SettingsFactoryUtil.getSettingsFactory())) {
 
-		Assert.assertEquals(
-			StringPool.BLANK,
-			jsonObject.getString("fetchSharingCollaboratorsURL"));
+			JSONObject jsonObject = _serveResource(
+				_createContentDashboardFileItem());
+
+			Assert.assertEquals(
+				StringPool.BLANK,
+				jsonObject.getString("fetchSharingCollaboratorsURL"));
+		}
 	}
 
 	@Test
@@ -355,6 +389,9 @@ public class GetContentDashboardItemInfoMVCResourceCommandTest {
 			_group);
 
 		mockHttpServletRequest.setAttribute(
+			JavaConstants.JAVAX_PORTLET_RESPONSE,
+			new MockLiferayPortletRenderResponse());
+		mockHttpServletRequest.setAttribute(
 			WebKeys.THEME_DISPLAY, themeDisplay);
 
 		mockLiferayResourceRequest.setAttribute(
@@ -364,8 +401,19 @@ public class GetContentDashboardItemInfoMVCResourceCommandTest {
 			WebKeys.THEME_DISPLAY, themeDisplay);
 		mockLiferayResourceRequest.setParameter(
 			"className", infoItemReference.getClassName());
+
+		InfoItemIdentifier infoItemIdentifier =
+			infoItemReference.getInfoItemIdentifier();
+
+		Assert.assertTrue(
+			infoItemIdentifier instanceof ClassPKInfoItemIdentifier);
+
+		ClassPKInfoItemIdentifier classPKInfoItemIdentifier =
+			(ClassPKInfoItemIdentifier)
+				infoItemReference.getInfoItemIdentifier();
+
 		mockLiferayResourceRequest.setParameter(
-			"classPK", String.valueOf(infoItemReference.getClassPK()));
+			"classPK", String.valueOf(classPKInfoItemIdentifier.getClassPK()));
 
 		return mockLiferayResourceRequest;
 	}
@@ -385,7 +433,6 @@ public class GetContentDashboardItemInfoMVCResourceCommandTest {
 
 		_serviceContext.setAssetCategoryIds(
 			new long[] {assetCategory.getCategoryId()});
-
 		_serviceContext.setAssetTagNames(new String[] {"tag1"});
 	}
 

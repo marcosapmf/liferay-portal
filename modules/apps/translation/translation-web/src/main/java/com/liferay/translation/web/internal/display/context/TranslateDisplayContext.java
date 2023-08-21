@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.translation.web.internal.display.context;
@@ -18,6 +9,7 @@ import com.liferay.info.field.InfoField;
 import com.liferay.info.field.InfoFieldSet;
 import com.liferay.info.field.InfoFieldSetEntry;
 import com.liferay.info.field.InfoFieldValue;
+import com.liferay.info.field.type.HTMLInfoFieldType;
 import com.liferay.info.field.type.InfoFieldType;
 import com.liferay.info.field.type.TextInfoFieldType;
 import com.liferay.info.form.InfoForm;
@@ -178,9 +170,9 @@ public class TranslateDisplayContext {
 
 							Map<String, Object> editorConfiguration = null;
 
-							if (getBooleanValue(
-									infoField, TextInfoFieldType.HTML)) {
+							boolean html = isHTMLInfoFieldType(infoField);
 
+							if (html) {
 								editorConfiguration = _getInfoFieldEditorConfig(
 									infoFieldId);
 							}
@@ -188,9 +180,7 @@ public class TranslateDisplayContext {
 							return HashMapBuilder.<String, Object>put(
 								"editorConfiguration", editorConfiguration
 							).put(
-								"html",
-								getBooleanValue(
-									infoField, TextInfoFieldType.HTML)
+								"html", html
 							).put(
 								"id", infoFieldId
 							).put(
@@ -198,6 +188,7 @@ public class TranslateDisplayContext {
 								infoField.getLabel(_themeDisplay.getLocale())
 							).put(
 								"multiline",
+								html ||
 								getBooleanValue(
 									infoField, TextInfoFieldType.MULTILINE)
 							).put(
@@ -420,6 +411,14 @@ public class TranslateDisplayContext {
 
 	public boolean isAutoTranslateEnabled() throws PortalException {
 		if (_booleanUnsafeSupplier.get() && hasTranslationPermission()) {
+			return true;
+		}
+
+		return false;
+	}
+
+	public boolean isHTMLInfoFieldType(InfoField infoField) {
+		if (infoField.getInfoFieldType() instanceof HTMLInfoFieldType) {
 			return true;
 		}
 

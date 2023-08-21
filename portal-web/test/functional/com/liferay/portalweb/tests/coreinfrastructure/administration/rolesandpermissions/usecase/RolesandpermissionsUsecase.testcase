@@ -12,9 +12,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -144,7 +144,9 @@ definition {
 				userLoginEmailAddress = "userea@liferay.com",
 				userLoginFullName = "userfn userln");
 
-			SiteTemplatesNavigator.gotoSiteTemplatesPage(
+			// Workaround for LPS-190847
+
+			SiteTemplatesNavigator.gotoSiteTemplatesPageViaUI(
 				pageName = "Home",
 				siteName = ${siteName},
 				siteTemplateName = "Site Template Name");
@@ -237,7 +239,8 @@ definition {
 
 	@priority = 4
 	test EditTeamPermissions {
-		property test.name.skip.portal.instance = "RolesandpermissionsUsecase#EditTeamPermissions";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		Permissions.definePermissionViaJSONAPI(
 			resourceAction = "VIEW_CONTROL_PANEL",
@@ -307,6 +310,10 @@ definition {
 		User.editPasswordCP(
 			userEmailAddress = "userea@liferay.com",
 			userScreenName = "usersn");
+
+		Site.openSiteSettingsAdmin(siteURLKey = "site-name");
+
+		Site.manageMembershipOptions(allowManualMembershipManagement = "true");
 
 		ApplicationsMenu.gotoPortlet(
 			category = "Users",
@@ -474,7 +481,8 @@ definition {
 		property custom.properties = "jsonws.web.service.paths.excludes=";
 		property osgi.app.includes = "bookmarks";
 		property portal.release = "false";
-		property test.name.skip.portal.instance = "RolesandpermissionsUsecase#GroupScopePermissionCheck";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		var siteName = TestCase.getSiteName(siteName = ${siteName});
 
@@ -554,6 +562,10 @@ definition {
 			agreeToTermsAndAnswerReminderQuery = "true",
 			requireReset = "false",
 			userEmailAddress = "userea@liferay.com");
+
+		Site.openSiteSettingsAdmin(siteURLKey = "google.com-name");
+
+		Site.manageMembershipOptions(allowManualMembershipManagement = "true");
 
 		User.openUsersAdmin();
 
@@ -781,6 +793,10 @@ definition {
 			User.editPasswordCP(
 				userEmailAddress = "userea${userNumber}@liferay.com",
 				userScreenName = "usersn${userNumber}");
+
+			Site.openSiteSettingsAdmin(siteURLKey = "site-name");
+
+			Site.manageMembershipOptions(allowManualMembershipManagement = "true");
 
 			ApplicationsMenu.gotoPortlet(
 				category = "Users",
@@ -1324,7 +1340,8 @@ definition {
 	@priority = 4
 	test ViewRegRolePermissionsDefaultView {
 		property release.feature.flags.disable.DISABLE_PRIVATE_LAYOUTS = "true";
-		property test.name.skip.portal.instance = "RolesandpermissionsUsecase#ViewRegRolePermissionsDefaultView";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		JSONRole.addRegularRole(
 			roleKey = "Roles Regrole Name",
@@ -1389,6 +1406,10 @@ definition {
 		User.editPasswordCP(
 			userEmailAddress = "userea@liferay.com",
 			userScreenName = "usersn");
+
+		Site.openSiteSettingsAdmin(siteURLKey = "site-name");
+
+		Site.manageMembershipOptions(allowManualMembershipManagement = "true");
 
 		ApplicationsMenu.gotoPortlet(
 			category = "Users",

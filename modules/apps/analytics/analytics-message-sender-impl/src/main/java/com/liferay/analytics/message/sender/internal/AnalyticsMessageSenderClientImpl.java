@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.analytics.message.sender.internal;
@@ -160,14 +151,26 @@ public class AnalyticsMessageSenderClientImpl
 			JSONObject responseJSONObject = null;
 
 			try {
-				responseJSONObject = _jsonFactory.createJSONObject(
-					EntityUtils.toString(
-						closeableHttpResponse.getEntity(),
-						Charset.defaultCharset()));
+				String response = EntityUtils.toString(
+					closeableHttpResponse.getEntity(),
+					Charset.defaultCharset());
+
+				if (Validator.isNull(response)) {
+					throw new Exception("Response is null");
+				}
+
+				responseJSONObject = _jsonFactory.createJSONObject(response);
 			}
 			catch (Exception exception) {
 				_log.error(
 					"Unable to check Analytics Cloud endpoints", exception);
+
+				return;
+			}
+
+			if ((responseJSONObject == null) ||
+				!responseJSONObject.has("liferayAnalyticsEndpointURL") ||
+				!responseJSONObject.has("liferayAnalyticsFaroBackendURL")) {
 
 				return;
 			}
@@ -177,36 +180,46 @@ public class AnalyticsMessageSenderClientImpl
 			String liferayAnalyticsFaroBackendURL =
 				responseJSONObject.getString("liferayAnalyticsFaroBackendURL");
 
-			if (liferayAnalyticsEndpointURL.equals(
+			if (!liferayAnalyticsEndpointURL.equals(
 					PrefsPropsUtil.getString(
-						companyId, "liferayAnalyticsEndpointURL")) &&
-				liferayAnalyticsFaroBackendURL.equals(
+						companyId, "liferayAnalyticsEndpointURL")) ||
+				!liferayAnalyticsFaroBackendURL.equals(
 					PrefsPropsUtil.getString(
 						companyId, "liferayAnalyticsFaroBackendURL"))) {
 
-				return;
+				companyLocalService.updatePreferences(
+					companyId,
+					UnicodePropertiesBuilder.create(
+						true
+					).put(
+						"liferayAnalyticsEndpointURL",
+						liferayAnalyticsEndpointURL
+					).put(
+						"liferayAnalyticsFaroBackendURL",
+						liferayAnalyticsFaroBackendURL
+					).build());
 			}
-
-			companyLocalService.updatePreferences(
-				companyId,
-				UnicodePropertiesBuilder.create(
-					true
-				).put(
-					"liferayAnalyticsEndpointURL", liferayAnalyticsEndpointURL
-				).put(
-					"liferayAnalyticsFaroBackendURL",
-					liferayAnalyticsFaroBackendURL
-				).build());
 
 			Dictionary<String, Object> configurationProperties =
 				_getConfigurationProperties(companyId);
 
-			configurationProperties.put(
-				"liferayAnalyticsEndpointURL", liferayAnalyticsEndpointURL);
+			if (!liferayAnalyticsEndpointURL.equals(
+					configurationProperties.get(
+						"liferayAnalyticsEndpointURL")) ||
+				!liferayAnalyticsFaroBackendURL.equals(
+					configurationProperties.get(
+						"liferayAnalyticsFaroBackendURL"))) {
 
-			configurationProvider.saveCompanyConfiguration(
-				AnalyticsConfiguration.class, companyId,
-				configurationProperties);
+				configurationProperties.put(
+					"liferayAnalyticsEndpointURL", liferayAnalyticsEndpointURL);
+				configurationProperties.put(
+					"liferayAnalyticsFaroBackendURL",
+					liferayAnalyticsFaroBackendURL);
+
+				configurationProvider.saveCompanyConfiguration(
+					AnalyticsConfiguration.class, companyId,
+					configurationProperties);
+			}
 		}
 	}
 

@@ -1,10 +1,11 @@
 import Breadcrumbs from 'shared/components/Breadcrumbs';
+import classNames from 'classnames';
 import ClayButton from '@clayui/button';
 import ClayDropDown, {Align} from '@clayui/drop-down';
 import ClayIcon from '@clayui/icon';
 import ClayLink from '@clayui/link';
+import ClayNavigationBar from '@clayui/navigation-bar';
 import getCN from 'classnames';
-import Nav from 'shared/components/Nav';
 import NotificationAlertList, {
 	useNotificationsAPI
 } from '../NotificationAlertList';
@@ -13,7 +14,7 @@ import Row from './Row';
 import TextTruncate from 'shared/components/TextTruncate';
 import {getMatchedRoute, setUriQueryValues, toRoute} from 'shared/util/router';
 import {IBreadcrumbArgs} from 'shared/util/breadcrumbs';
-import {noop, pickBy} from 'lodash';
+import {pickBy} from 'lodash';
 
 type NavBarItem = {
 	exact: boolean;
@@ -29,32 +30,36 @@ interface INavBarProps extends React.HTMLAttributes<HTMLDivElement> {
 
 const NavBar: React.FC<INavBarProps> = ({
 	items,
-	onClick = noop,
 	routeParams = {},
 	routeQueries = {}
 }) => {
 	const matchedRoute = getMatchedRoute(items);
 
 	return (
-		<Nav className='page-subnav' display='underline'>
-			{items.map(({label, route}) => (
-				<Nav.Item
-					active={matchedRoute === route}
-					href={setUriQueryValues(
-						pickBy(routeQueries),
-						toRoute(route, routeParams)
-					)}
-					key={label}
-					onClick={onClick}
-				>
-					<span className='title'>{label}</span>
-				</Nav.Item>
-			))}
-		</Nav>
+		<div className='row'>
+			<ClayNavigationBar triggerLabel={matchedRoute}>
+				{items.map(({label, route}) => (
+					<ClayNavigationBar.Item
+						active={matchedRoute === route}
+						key={label}
+					>
+						<ClayLink
+							href={setUriQueryValues(
+								pickBy(routeQueries),
+								toRoute(route, routeParams)
+							)}
+						>
+							{label}
+						</ClayLink>
+					</ClayNavigationBar.Item>
+				))}
+			</ClayNavigationBar>
+		</div>
 	);
 };
 
 interface Action extends React.HTMLAttributes<HTMLElement> {
+	disabled: boolean;
 	label: string;
 	href: string;
 }
@@ -80,7 +85,11 @@ const PageActions: React.FC<IPageActionsProps> = ({
 				return (
 					<Button
 						button
-						className='button-root'
+						className={classNames(
+							getCN('button-root', {
+								disabled: props.disabled
+							})
+						)}
 						displayType='secondary'
 						key={label}
 						{...props}
@@ -95,6 +104,7 @@ const PageActions: React.FC<IPageActionsProps> = ({
 				alignmentPosition={Align.BottomRight}
 				trigger={
 					<ClayButton
+						aria-label={label && Liferay.Language.get('menu')}
 						disabled={disabled}
 						displayType={label.length ? 'primary' : 'unstyled'}
 					>
@@ -136,6 +146,16 @@ interface ITitleSectionProps extends React.HTMLAttributes<HTMLDivElement> {
 	title?: string;
 }
 
+interface IActionProps extends React.HTMLAttributes<HTMLDivElement> {
+	displayType: string;
+	label: string;
+	redirectURL: string;
+}
+
+interface IActionsProps extends React.HTMLAttributes<HTMLDivElement> {
+	actions: IActionProps[];
+}
+
 const TitleSection: React.FC<ITitleSectionProps> = ({
 	children,
 	className,
@@ -155,6 +175,22 @@ const TitleSection: React.FC<ITitleSectionProps> = ({
 	</Section>
 );
 
+const Actions: React.FC<IActionsProps> = ({actions = []}) => (
+	<div className='header-actions'>
+		{actions.map(({displayType, label, redirectURL}, index) => (
+			<a
+				className={getCN(`btn btn-${displayType}`, 'ml-2')}
+				href={redirectURL}
+				key={index}
+				target='_blank'
+			>
+				<ClayIcon className='mr-2' symbol='shortcut' />
+				{label}
+			</a>
+		))}
+	</div>
+);
+
 interface IHeaderProps extends React.HTMLAttributes<HTMLDivElement> {
 	breadcrumbs: IBreadcrumbArgs[];
 	groupId: string;
@@ -163,6 +199,7 @@ interface IHeaderProps extends React.HTMLAttributes<HTMLDivElement> {
 const Header: React.FC<IHeaderProps> & {
 	NavBar: typeof NavBar;
 	PageActions: typeof PageActions;
+	Actions: typeof Actions;
 	Section: typeof Section;
 	TitleSection: typeof TitleSection;
 } = ({breadcrumbs, children, groupId}) => {
@@ -189,6 +226,7 @@ const Header: React.FC<IHeaderProps> & {
 	);
 };
 
+Header.Actions = Actions;
 Header.NavBar = NavBar;
 Header.PageActions = PageActions;
 Header.Section = Section;

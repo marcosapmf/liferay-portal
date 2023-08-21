@@ -1,6 +1,7 @@
 @component-name = "portal-wcm"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Asset Publisher";
@@ -23,9 +24,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -505,8 +506,6 @@ definition {
 	@description = "Order web contents by modified date in Asset Publisher."
 	@priority = 3
 	test OrderWebContentsByModifiedDate {
-		property timeout.explicit.wait = "10";
-
 		task ("Add three web contents") {
 			for (var n : list "1,2,3") {
 				JSONWebcontent.addWebContent(
@@ -1000,7 +999,8 @@ definition {
 	@description = "LPS-135554 This test asserts that the Web Content Article Structures should appear after uncheck Search With Index configuration."
 	@priority = 4
 	test WebContentArticleStructuresCanAppearAfterUncheckingSearchWithIndexConfiguration {
-		property test.name.skip.portal.instance = "AssetPublisher#WebContentArticleStructuresCanAppearAfterUncheckingSearchWithIndexConfiguration";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Uncheck Search with Index Configuration") {
 			APNavigator.openToConfigInSystemSettings(portlet = "Asset Publisher");

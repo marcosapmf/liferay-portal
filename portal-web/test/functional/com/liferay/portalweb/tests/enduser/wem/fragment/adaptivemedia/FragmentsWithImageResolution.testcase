@@ -1,6 +1,7 @@
 @component-name = "portal-wcm"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Fragments";
@@ -25,9 +26,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -80,10 +81,21 @@ definition {
 		}
 
 		task ("Take down the File Size of image resolution") {
+			PageEditor.gotoConfiguration(fragmentName = "Image");
+
+			PageEditor.gotoImageSource(
+				fragmentName = "Image",
+				id = "image-square");
+
 			var fileSizeAuto = PageEditor.getFileSizeOfSelectedImageResolution();
 		}
 
 		task ("Select the Preview-1000x0 image resolution") {
+			WaitForElementPresent(
+				key_fieldLabel = "Resolution",
+				key_value = "Preview-1000x0",
+				locator1 = "Select#GENERIC_SELECT_VALUE");
+
 			Select(
 				key_fieldLabel = "Resolution",
 				locator1 = "Select#GENERIC_SELECT_FIELD",
@@ -345,6 +357,7 @@ definition {
 	@uitest
 	test ViewAutoImageResolutionForImageMappedToWebContent {
 		property portal.acceptance = "true";
+		property timeout.explicit.wait = "20";
 
 		task ("Add an Image Resolution with 2000px Max Width") {
 			ApplicationsMenu.gotoPortlet(
@@ -455,6 +468,8 @@ definition {
 		}
 
 		task ("Mapping an image with width greater than 2000px to background image of Banner Center") {
+			SetWindowSize.maximizeWindow();
+
 			PageEditor.editLayoutContainer(
 				backgroundImage = "Mapping",
 				entryTitle = "high_resolution_photo.jpg",
@@ -488,16 +503,20 @@ definition {
 		}
 
 		task ("Change to the Portrait Phone viewport") {
-			Click(
-				key_deviceType = "Portrait Phone",
-				locator1 = "PageEditor#DEVICE_TYPE");
+			PageEditor.switchViewport(deviceType = "Portrait Phone");
 
-			WaitForElementPresent(
-				key_deviceType = "Portrait Phone",
-				locator1 = "PageEditor#DEVICE_TYPE_ACTIVE");
+			SelectFrame.selectFrameNoLoading(locator1 = "IFrame#PAGE_EDITOR_GLOBAL_CONTEXT_IFRAME");
+
+			PageEditor.viewContainerStyle(backgroundImage = "high_resolution_photo\.jpg");
+
+			SelectFrameTop();
 		}
 
 		task ("Take down the Width and File Size of image resolution in Portrait Phone viewport") {
+			Navigator.gotoNavTab(navTab = "General");
+
+			Navigator.gotoNavTab(navTab = "Styles");
+
 			var fileSizePortraitPhone = PageEditor.getFileSizeOfSelectedImageResolution();
 			var width = PageEditor.getWidthOfSelectedImageResolution();
 		}
@@ -609,6 +628,8 @@ definition {
 		}
 
 		task ("Mapping an image with width greater than 2000px to background image of Container") {
+			SetWindowSize.maximizeWindow();
+
 			PageEditor.editLayoutContainer(
 				backgroundImage = "Mapping",
 				entryTitle = "high_resolution_photo.jpg",
@@ -648,16 +669,20 @@ definition {
 		}
 
 		task ("Change to the Tablet viewport") {
-			Click(
-				key_deviceType = "Tablet",
-				locator1 = "PageEditor#DEVICE_TYPE");
+			PageEditor.switchViewport(deviceType = "Tablet");
 
-			WaitForElementPresent(
-				key_deviceType = "Tablet",
-				locator1 = "PageEditor#DEVICE_TYPE_ACTIVE");
+			SelectFrame.selectFrameNoLoading(locator1 = "IFrame#PAGE_EDITOR_GLOBAL_CONTEXT_IFRAME");
+
+			PageEditor.viewContainerStyle(backgroundImage = "high_resolution_photo\.jpg");
+
+			SelectFrameTop();
 		}
 
 		task ("Take down the Width and File Size of image resolution in Tablet viewport") {
+			Navigator.gotoNavTab(navTab = "General");
+
+			Navigator.gotoNavTab(navTab = "Styles");
+
 			var fileSizeTablet = PageEditor.getFileSizeOfSelectedImageResolution();
 			var width = PageEditor.getWidthOfSelectedImageResolution();
 		}

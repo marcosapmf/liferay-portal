@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.order.content.web.internal.frontend.data.set.provider;
@@ -20,6 +11,7 @@ import com.liferay.commerce.order.content.web.internal.constants.CommerceOrderFD
 import com.liferay.commerce.order.content.web.internal.frontend.data.set.util.CommerceOrderFDSUtil;
 import com.liferay.commerce.order.content.web.internal.model.Order;
 import com.liferay.commerce.order.content.web.internal.portlet.configuration.CommerceOrderContentPortletInstanceConfiguration;
+import com.liferay.commerce.order.status.CommerceOrderStatusRegistry;
 import com.liferay.commerce.product.display.context.helper.CPRequestHelper;
 import com.liferay.commerce.product.model.CommerceChannel;
 import com.liferay.commerce.product.service.CommerceChannelLocalService;
@@ -97,8 +89,8 @@ public class PlacedCommerceOrderFDSDataProvider
 
 		return CommerceOrderFDSUtil.getOrders(
 			commerceChannel.getGroupId(), commerceOrders,
-			_commerceOrderTypeService, _groupLocalService,
-			commerceChannel.getPriceDisplayType(),
+			_commerceOrderStatusRegistry, _commerceOrderTypeService,
+			_groupLocalService, commerceChannel.getPriceDisplayType(),
 			commerceOrderContentPortletInstanceConfiguration.
 				showCommerceOrderCreateTime(),
 			themeDisplay);
@@ -131,6 +123,9 @@ public class PlacedCommerceOrderFDSDataProvider
 
 	@Reference
 	private CommerceOrderService _commerceOrderService;
+
+	@Reference
+	private CommerceOrderStatusRegistry _commerceOrderStatusRegistry;
 
 	@Reference
 	private CommerceOrderTypeService _commerceOrderTypeService;

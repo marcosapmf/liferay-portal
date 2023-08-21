@@ -1,6 +1,7 @@
 @component-name = "portal-wcm"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Fragments";
@@ -35,9 +36,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -55,20 +56,20 @@ definition {
 				entry = "Fragment Name",
 				item = "Edit");
 
-			var htmlSnippet = '''
-<div class="test">
-CSS
+			var htmlSnippet = '''<div class="test">
+	CSS
 </div>
 <div>
-NO CSS
-</div>
-		''';
-			var cssSnippet = '''
-.test
-{ font-size: 40px; }
-		''';
+	NO CSS
+</div>''';
+			var cssSnippet = '''.test
+{
+	font-size: 40px;
+}''';
 
 			FragmentsEditor.typeHtmlEditor(content = ${htmlSnippet});
+
+			FragmentsEditor.waitForAutoSave();
 
 			FragmentsEditor.typeCssEditor(content = ${cssSnippet});
 

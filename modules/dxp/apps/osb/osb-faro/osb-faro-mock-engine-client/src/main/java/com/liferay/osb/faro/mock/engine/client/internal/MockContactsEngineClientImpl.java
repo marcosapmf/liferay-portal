@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.osb.faro.mock.engine.client.internal;
@@ -26,10 +17,9 @@ import com.liferay.osb.faro.engine.client.util.OrderByField;
 import com.liferay.osb.faro.model.FaroProject;
 import com.liferay.portal.kernel.util.ListUtil;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.osgi.service.component.annotations.Component;
 
@@ -67,18 +57,13 @@ public class MockContactsEngineClientImpl
 			faroProject, field.getName(), field.getValue(), query, fields, cur,
 			delta, orderByFields);
 
-		List<Individual> individuals = results.getItems();
-
-		Stream<Individual> stream = individuals.stream();
-
-		stream = stream.filter(
+		List<Individual> individuals = ListUtil.filter(
+			results.getItems(),
 			curIndividual -> {
 				String id = curIndividual.getId();
 
 				return !id.equals(individual.getId());
 			});
-
-		individuals = stream.collect(Collectors.toList());
 
 		return new Results<>(individuals, individuals.size());
 	}
@@ -130,6 +115,14 @@ public class MockContactsEngineClientImpl
 	}
 
 	@Override
+	public long getIndividualsCreatedSinceCount(
+		FaroProject faroProject, Date startDate) {
+
+		return contactsEngineClient.getIndividualsCreatedSinceCount(
+			faroProject, startDate);
+	}
+
+	@Override
 	public Results<Individual> getSimilarIndividuals(
 		FaroProject faroProject, String individualId, String query,
 		List<String> fields, int cur, int delta,
@@ -153,18 +146,13 @@ public class MockContactsEngineClientImpl
 			faroProject, field.getName(), field.getValue(), query, fields, cur,
 			delta, orderByFields);
 
-		List<Individual> individuals = results.getItems();
-
-		Stream<Individual> stream = individuals.stream();
-
-		stream = stream.filter(
+		List<Individual> individuals = ListUtil.filter(
+			results.getItems(),
 			curIndividual -> {
 				String id = curIndividual.getId();
 
 				return !id.equals(individual.getId());
 			});
-
-		individuals = stream.collect(Collectors.toList());
 
 		return new Results<>(individuals, individuals.size());
 	}

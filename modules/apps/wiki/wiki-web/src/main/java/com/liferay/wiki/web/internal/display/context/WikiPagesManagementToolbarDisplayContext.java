@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.wiki.web.internal.display.context;
@@ -188,6 +179,12 @@ public class WikiPagesManagementToolbarDisplayContext {
 	}
 
 	public List<DropdownItem> getFilterDropdownItems() {
+		if (Validator.isNotNull(
+				ParamUtil.getString(_httpServletRequest, "keywords"))) {
+
+			return null;
+		}
+
 		return DropdownItemListBuilder.addGroup(
 			dropdownGroupItem -> {
 				dropdownGroupItem.setDropdownItems(
@@ -197,8 +194,6 @@ public class WikiPagesManagementToolbarDisplayContext {
 						_httpServletRequest, "filter-by-navigation"));
 			}
 		).addGroup(
-			() -> Validator.isNull(
-				ParamUtil.getString(_httpServletRequest, "keywords")),
 			dropdownGroupItem -> {
 				dropdownGroupItem.setDropdownItems(_getOrderByDropdownItems());
 				dropdownGroupItem.setLabel(
@@ -223,7 +218,6 @@ public class WikiPagesManagementToolbarDisplayContext {
 					).buildString());
 
 				labelItem.setCloseable(true);
-
 				labelItem.setLabel(
 					LanguageUtil.get(_httpServletRequest, navigation));
 			}
@@ -304,12 +298,6 @@ public class WikiPagesManagementToolbarDisplayContext {
 
 	private List<DropdownItem> _getFilterNavigationDropdownItems()
 		throws PortletException {
-
-		String keywords = ParamUtil.getString(_httpServletRequest, "keywords");
-
-		if (Validator.isNotNull(keywords)) {
-			return null;
-		}
 
 		return new DropdownItemList() {
 			{

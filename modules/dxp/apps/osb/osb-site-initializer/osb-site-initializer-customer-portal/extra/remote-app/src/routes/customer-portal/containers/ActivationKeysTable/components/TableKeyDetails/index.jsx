@@ -1,18 +1,14 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayIcon from '@clayui/icon';
 import classNames from 'classnames';
 import {useEffect, useState} from 'react';
 
+import {useAppPropertiesContext} from '~/common/contexts/AppPropertiesContext';
+import PopoverIconButton from '~/routes/customer-portal/components/PopoverIconButton';
 import i18n from '../../../../../../common/I18n';
 import {
 	DXPIcon,
@@ -34,11 +30,13 @@ const HOST_NAME = i18n.translate('host-name');
 const IP_ADDRESSES = i18n.translate('ip-addresses');
 const MAC_ADDRESSES = i18n.translate('mac-addresses');
 
-const NO_EXPIRATION_DATE = 100;
+const YEARS_FOR_PERMANENT_KEYS = 90;
 
 const TableKeyDetails = ({currentActivationKey, setValueToCopyToClipboard}) => {
 	const [actionToCopy, setActionToCopy] = useState('');
 	const instanceSizeFormated = getInstanceSize(currentActivationKey.sizing);
+
+	const {articleWhatIsMyInstanceSizingValueURL} = useAppPropertiesContext();
 
 	const now = new Date();
 
@@ -48,7 +46,7 @@ const TableKeyDetails = ({currentActivationKey, setValueToCopyToClipboard}) => {
 	const statusActivationTag = getStatusActivationTag(currentActivationKey);
 
 	const unlimitedLicenseDate = now.setFullYear(
-		now.getFullYear() + NO_EXPIRATION_DATE
+		now.getFullYear() + YEARS_FOR_PERMANENT_KEYS
 	);
 
 	const formatedProductName = getFormatedProductName(
@@ -230,6 +228,15 @@ const TableKeyDetails = ({currentActivationKey, setValueToCopyToClipboard}) => {
 					{!!currentActivationKey.sizing && (
 						<p className="text-neutral-8 text-paragraph-sm">
 							{i18n.translate('instance-size')}
+
+							<PopoverIconButton
+								popoverLink={{
+									textLink: i18n.translate(
+										'learn-more-about-instance-sizing'
+									),
+									url: articleWhatIsMyInstanceSizingValueURL,
+								}}
+							/>
 						</p>
 					)}
 				</div>

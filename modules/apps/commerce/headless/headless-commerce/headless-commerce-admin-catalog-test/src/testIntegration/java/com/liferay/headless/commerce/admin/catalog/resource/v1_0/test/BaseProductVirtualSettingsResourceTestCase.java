@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.admin.catalog.resource.v1_0.test;
@@ -188,7 +179,7 @@ public abstract class BaseProductVirtualSettingsResourceTestCase {
 		productVirtualSettings.setAttachment(regex);
 		productVirtualSettings.setSampleAttachment(regex);
 		productVirtualSettings.setSampleSrc(regex);
-		productVirtualSettings.setSampleUrl(regex);
+		productVirtualSettings.setSampleURL(regex);
 		productVirtualSettings.setSrc(regex);
 		productVirtualSettings.setUrl(regex);
 
@@ -203,7 +194,7 @@ public abstract class BaseProductVirtualSettingsResourceTestCase {
 		Assert.assertEquals(
 			regex, productVirtualSettings.getSampleAttachment());
 		Assert.assertEquals(regex, productVirtualSettings.getSampleSrc());
-		Assert.assertEquals(regex, productVirtualSettings.getSampleUrl());
+		Assert.assertEquals(regex, productVirtualSettings.getSampleURL());
 		Assert.assertEquals(regex, productVirtualSettings.getSrc());
 		Assert.assertEquals(regex, productVirtualSettings.getUrl());
 	}
@@ -398,8 +389,8 @@ public abstract class BaseProductVirtualSettingsResourceTestCase {
 				continue;
 			}
 
-			if (Objects.equals("sampleUrl", additionalAssertFieldName)) {
-				if (productVirtualSettings.getSampleUrl() == null) {
+			if (Objects.equals("sampleURL", additionalAssertFieldName)) {
+				if (productVirtualSettings.getSampleURL() == null) {
 					valid = false;
 				}
 
@@ -494,14 +485,19 @@ public abstract class BaseProductVirtualSettingsResourceTestCase {
 
 		Assert.assertTrue(valid);
 
-		Map<String, Map<String, String>> actions = page.getActions();
+		assertValid(page.getActions(), expectedActions);
+	}
 
-		for (String key : expectedActions.keySet()) {
-			Map action = actions.get(key);
+	protected void assertValid(
+		Map<String, Map<String, String>> actions1,
+		Map<String, Map<String, String>> actions2) {
+
+		for (String key : actions2.keySet()) {
+			Map action = actions1.get(key);
 
 			Assert.assertNotNull(key + " does not contain an action", action);
 
-			Map expectedAction = expectedActions.get(key);
+			Map<String, String> expectedAction = actions2.get(key);
 
 			Assert.assertEquals(
 				expectedAction.get("method"), action.get("method"));
@@ -657,10 +653,10 @@ public abstract class BaseProductVirtualSettingsResourceTestCase {
 				continue;
 			}
 
-			if (Objects.equals("sampleUrl", additionalAssertFieldName)) {
+			if (Objects.equals("sampleURL", additionalAssertFieldName)) {
 				if (!Objects.deepEquals(
-						productVirtualSettings1.getSampleUrl(),
-						productVirtualSettings2.getSampleUrl())) {
+						productVirtualSettings1.getSampleURL(),
+						productVirtualSettings2.getSampleURL())) {
 
 					return false;
 				}
@@ -858,9 +854,47 @@ public abstract class BaseProductVirtualSettingsResourceTestCase {
 		}
 
 		if (entityFieldName.equals("attachment")) {
-			sb.append("'");
-			sb.append(String.valueOf(productVirtualSettings.getAttachment()));
-			sb.append("'");
+			Object object = productVirtualSettings.getAttachment();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
@@ -877,34 +911,185 @@ public abstract class BaseProductVirtualSettingsResourceTestCase {
 		}
 
 		if (entityFieldName.equals("sampleAttachment")) {
-			sb.append("'");
-			sb.append(
-				String.valueOf(productVirtualSettings.getSampleAttachment()));
-			sb.append("'");
+			Object object = productVirtualSettings.getSampleAttachment();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
 
 		if (entityFieldName.equals("sampleSrc")) {
-			sb.append("'");
-			sb.append(String.valueOf(productVirtualSettings.getSampleSrc()));
-			sb.append("'");
+			Object object = productVirtualSettings.getSampleSrc();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
 
-		if (entityFieldName.equals("sampleUrl")) {
-			sb.append("'");
-			sb.append(String.valueOf(productVirtualSettings.getSampleUrl()));
-			sb.append("'");
+		if (entityFieldName.equals("sampleURL")) {
+			Object object = productVirtualSettings.getSampleURL();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
 
 		if (entityFieldName.equals("src")) {
-			sb.append("'");
-			sb.append(String.valueOf(productVirtualSettings.getSrc()));
-			sb.append("'");
+			Object object = productVirtualSettings.getSrc();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
@@ -925,9 +1110,47 @@ public abstract class BaseProductVirtualSettingsResourceTestCase {
 		}
 
 		if (entityFieldName.equals("url")) {
-			sb.append("'");
-			sb.append(String.valueOf(productVirtualSettings.getUrl()));
-			sb.append("'");
+			Object object = productVirtualSettings.getUrl();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
@@ -992,7 +1215,7 @@ public abstract class BaseProductVirtualSettingsResourceTestCase {
 					RandomTestUtil.randomString());
 				sampleSrc = StringUtil.toLowerCase(
 					RandomTestUtil.randomString());
-				sampleUrl = StringUtil.toLowerCase(
+				sampleURL = StringUtil.toLowerCase(
 					RandomTestUtil.randomString());
 				src = StringUtil.toLowerCase(RandomTestUtil.randomString());
 				termsOfUseJournalArticleId = RandomTestUtil.randomLong();

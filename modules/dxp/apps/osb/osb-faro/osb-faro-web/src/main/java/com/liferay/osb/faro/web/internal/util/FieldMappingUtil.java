@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.osb.faro.web.internal.util;
@@ -19,13 +10,12 @@ import com.liferay.osb.faro.engine.client.model.FieldMapping;
 import com.liferay.osb.faro.engine.client.model.FieldMappingMap;
 import com.liferay.osb.faro.engine.client.model.Results;
 import com.liferay.osb.faro.model.FaroProject;
+import com.liferay.petra.function.transform.TransformUtil;
 
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * @author Matthew Kong
@@ -38,27 +28,16 @@ public class FieldMappingUtil {
 
 		List<FieldMappingMap> newFieldMappingMaps = new ArrayList<>();
 
-		Stream<FieldMappingMap> fieldMappingMapsStream =
-			fieldMappingMaps.stream();
-
 		Results<FieldMapping> results = contactsEngineClient.getFieldMappings(
 			faroProject, context,
-			fieldMappingMapsStream.map(
-				FieldMappingMap::getName
-			).collect(
-				Collectors.toList()
-			),
+			TransformUtil.transform(fieldMappingMaps, FieldMappingMap::getName),
 			1, 10000, null);
 
-		List<FieldMapping> fieldMappings = results.getItems();
+		Set<String> currentFieldNames = new HashSet<>();
 
-		Stream<FieldMapping> fieldMappingsStream = fieldMappings.stream();
-
-		Set<String> currentFieldNames = fieldMappingsStream.map(
-			FieldMapping::getFieldName
-		).collect(
-			Collectors.toSet()
-		);
+		for (FieldMapping fieldMapping : results.getItems()) {
+			currentFieldNames.add(fieldMapping.getFieldName());
+		}
 
 		Set<String> newFieldMappingNames = new HashSet<>();
 

@@ -382,7 +382,7 @@
 			<finder-column name="primary" />
 		</finder>
 	</entity>
-	<entity change-tracking-enabled="true" local-service="true" name="Group" remote-service="true" uuid="true">
+	<entity change-tracking-enabled="true" external-reference-code="company" local-service="true" name="Group" remote-service="true" uuid="true">
 
 		<!-- PK fields -->
 
@@ -3212,6 +3212,7 @@
 		<exception>LayoutSetBranchName</exception>
 		<exception>LayoutSetVirtualHost</exception>
 		<exception>LayoutType</exception>
+		<exception>LockedLayout</exception>
 		<exception>MasterLayout</exception>
 		<exception>MembershipRequestComments</exception>
 		<exception>OldServiceComponent</exception>

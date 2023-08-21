@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.product.definitions.web.internal.option;
@@ -21,7 +12,7 @@ import com.liferay.commerce.product.option.CommerceOptionValue;
 import com.liferay.commerce.product.option.CommerceOptionValueHelper;
 import com.liferay.commerce.product.service.CPDefinitionOptionRelLocalService;
 import com.liferay.commerce.product.service.CPDefinitionOptionValueRelLocalService;
-import com.liferay.commerce.product.util.JsonHelper;
+import com.liferay.commerce.product.util.CPJSONUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONException;
@@ -106,6 +97,7 @@ public class CommerceOptionValueHelperImpl
 
 				commerceOptionValueBuilder.price(
 					cpDefinitionOptionValueRel.getPrice());
+
 				commerceOptionValueBuilder.quantity(
 					cpDefinitionOptionValueRel.getQuantity());
 
@@ -142,15 +134,14 @@ public class CommerceOptionValueHelperImpl
 
 		List<CommerceOptionValue> commerceOptionValues = new ArrayList<>();
 
-		JSONArray commerceOptionValuesJSONArray = _jsonHelper.getJSONArray(
-			json);
+		JSONArray commerceOptionValuesJSONArray = CPJSONUtil.toJSONArray(json);
 
 		for (int i = 0; i < commerceOptionValuesJSONArray.length(); i++) {
 			JSONObject jsonObject = commerceOptionValuesJSONArray.getJSONObject(
 				i);
 
-			JSONArray valueJSONArray = _jsonHelper.getValueAsJSONArray(
-				"value", jsonObject);
+			JSONArray valueJSONArray = CPJSONUtil.getJSONArray(
+				jsonObject, "value");
 
 			if (valueJSONArray.length() > 0) {
 				for (int j = 0; j < valueJSONArray.length(); j++) {
@@ -176,8 +167,7 @@ public class CommerceOptionValueHelperImpl
 
 		commerceOptionValueBuilder.optionKey(jsonObject.getString("key"));
 
-		JSONArray valueJSONArray = _jsonHelper.getValueAsJSONArray(
-			"value", jsonObject);
+		JSONArray valueJSONArray = CPJSONUtil.getJSONArray(jsonObject, "value");
 
 		if (valueJSONArray.length() > 0) {
 			commerceOptionValueBuilder.optionValueKey(
@@ -195,7 +185,8 @@ public class CommerceOptionValueHelperImpl
 		}
 
 		if (jsonObject.has("quantity")) {
-			commerceOptionValueBuilder.quantity(jsonObject.getInt("quantity"));
+			commerceOptionValueBuilder.quantity(
+				BigDecimal.valueOf(jsonObject.getInt("quantity")));
 		}
 
 		if (jsonObject.has("cpInstanceId")) {
@@ -216,8 +207,5 @@ public class CommerceOptionValueHelperImpl
 
 	@Reference
 	private JSONFactory _jsonFactory;
-
-	@Reference
-	private JsonHelper _jsonHelper;
 
 }

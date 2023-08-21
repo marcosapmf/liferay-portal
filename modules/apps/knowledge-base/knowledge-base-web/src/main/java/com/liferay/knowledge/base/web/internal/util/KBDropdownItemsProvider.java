@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.knowledge.base.web.internal.util;
@@ -119,9 +110,7 @@ public class KBDropdownItemsProvider {
 			dropdownGroupItem -> {
 				dropdownGroupItem.setDropdownItems(
 					DropdownItemListBuilder.add(
-						() ->
-							_hasExpirationPermission(kbArticle) &&
-							!kbArticle.isExpired(),
+						() -> _hasExpirationPermission(kbArticle),
 						_getExpireArticleActionConsumer(kbArticle)
 					).add(
 						() ->
@@ -141,7 +130,6 @@ public class KBDropdownItemsProvider {
 							_hasHistoryPermission(kbArticle),
 						_getHistoryActionUnsafeConsumer(kbArticle)
 					).build());
-
 				dropdownGroupItem.setSeparator(true);
 			}
 		).addGroup(
@@ -157,7 +145,6 @@ public class KBDropdownItemsProvider {
 						() -> _hasMovePermission(kbArticle),
 						_getMoveActionUnsafeConsumer(kbArticle)
 					).build());
-
 				dropdownGroupItem.setSeparator(true);
 			}
 		).addGroup(
@@ -171,7 +158,6 @@ public class KBDropdownItemsProvider {
 						_getDeleteActionUnsafeConsumer(
 							kbArticle, selectedItemAncestorIds)
 					).build());
-
 				dropdownGroupItem.setSeparator(true);
 			}
 		).build();
@@ -247,7 +233,6 @@ public class KBDropdownItemsProvider {
 						_getDeleteActionUnsafeConsumer(
 							kbFolder, selectedItemAncestorIds)
 					).build());
-
 				dropdownGroupItem.setSeparator(true);
 			}
 		).build();
@@ -741,26 +726,29 @@ public class KBDropdownItemsProvider {
 			return dropdownItem -> {
 				dropdownItem.putData("action", "move");
 				dropdownItem.putData(
-					"itemClassNameId",
+					"kbObjectClassNameId",
 					String.valueOf(kbArticle.getClassNameId()));
 				dropdownItem.putData(
-					"itemId", String.valueOf(kbArticle.getResourcePrimKey()));
-				dropdownItem.putData("itemType", "article");
+					"kbObjectId",
+					String.valueOf(kbArticle.getResourcePrimKey()));
+				dropdownItem.putData("kbObjectTitle", kbArticle.getTitle());
 				dropdownItem.putData(
-					"moveKBItemActionURL",
+					"kbObjectType", KBArticle.class.getSimpleName());
+				dropdownItem.putData(
+					"moveKBObjectActionURL",
 					PortletURLBuilder.createActionURL(
 						_liferayPortletResponse
 					).setActionName(
 						"/knowledge_base/move_kb_object"
 					).buildString());
 				dropdownItem.putData(
-					"moveKBItemModalURL",
+					"moveKBObjectModalURL",
 					PortletURLBuilder.createRenderURL(
 						_liferayPortletResponse
 					).setMVCPath(
 						"/admin/common/move_kb_object_modal.jsp"
 					).setParameter(
-						"itemToMoveId", kbArticle.getResourcePrimKey()
+						"kbObjectVersion", kbArticle.getVersion()
 					).setWindowState(
 						LiferayWindowState.POP_UP
 					).buildString());
@@ -808,26 +796,26 @@ public class KBDropdownItemsProvider {
 			return dropdownItem -> {
 				dropdownItem.putData("action", "move");
 				dropdownItem.putData(
-					"itemClassNameId",
+					"kbObjectClassNameId",
 					String.valueOf(kbFolder.getClassNameId()));
 				dropdownItem.putData(
-					"itemId", String.valueOf(kbFolder.getKbFolderId()));
-				dropdownItem.putData("itemType", "folder");
+					"kbObjectId", String.valueOf(kbFolder.getKbFolderId()));
+				dropdownItem.putData("kbObjectTitle", kbFolder.getName());
 				dropdownItem.putData(
-					"moveKBItemActionURL",
+					"kbObjectType", KBFolder.class.getSimpleName());
+				dropdownItem.putData(
+					"moveKBObjectActionURL",
 					PortletURLBuilder.createActionURL(
 						_liferayPortletResponse
 					).setActionName(
 						"/knowledge_base/move_kb_object"
 					).buildString());
 				dropdownItem.putData(
-					"moveKBItemModalURL",
+					"moveKBObjectModalURL",
 					PortletURLBuilder.createRenderURL(
 						_liferayPortletResponse
 					).setMVCPath(
 						"/admin/common/move_kb_object_modal.jsp"
-					).setParameter(
-						"itemToMoveId", kbFolder.getKbFolderId()
 					).setWindowState(
 						LiferayWindowState.POP_UP
 					).buildString());

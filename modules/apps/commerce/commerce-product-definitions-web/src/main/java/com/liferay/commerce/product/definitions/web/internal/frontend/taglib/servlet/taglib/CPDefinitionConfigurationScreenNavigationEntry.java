@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.product.definitions.web.internal.frontend.taglib.servlet.taglib;
@@ -17,13 +8,14 @@ package com.liferay.commerce.product.definitions.web.internal.frontend.taglib.se
 import com.liferay.account.service.AccountGroupRelLocalService;
 import com.liferay.commerce.currency.service.CommerceCurrencyLocalService;
 import com.liferay.commerce.inventory.CPDefinitionInventoryEngineRegistry;
+import com.liferay.commerce.product.constants.CPConstants;
 import com.liferay.commerce.product.definitions.web.internal.display.context.CPDefinitionConfigurationDisplayContext;
 import com.liferay.commerce.product.model.CPDefinition;
 import com.liferay.commerce.product.model.CommerceCatalog;
 import com.liferay.commerce.product.portlet.action.ActionHelper;
 import com.liferay.commerce.product.service.CPDefinitionService;
 import com.liferay.commerce.product.service.CPMeasurementUnitLocalService;
-import com.liferay.commerce.product.service.CPTaxCategoryService;
+import com.liferay.commerce.product.service.CPTaxCategoryLocalService;
 import com.liferay.commerce.product.service.CommerceCatalogService;
 import com.liferay.commerce.product.service.CommerceChannelRelService;
 import com.liferay.commerce.product.type.CPType;
@@ -31,7 +23,7 @@ import com.liferay.commerce.product.type.CPTypeRegistry;
 import com.liferay.commerce.product.url.CPFriendlyURL;
 import com.liferay.commerce.service.CPDAvailabilityEstimateService;
 import com.liferay.commerce.service.CPDefinitionInventoryService;
-import com.liferay.commerce.service.CommerceAvailabilityEstimateService;
+import com.liferay.commerce.service.CommerceAvailabilityEstimateLocalService;
 import com.liferay.commerce.stock.activity.CommerceLowStockActivityRegistry;
 import com.liferay.frontend.taglib.servlet.taglib.ScreenNavigationEntry;
 import com.liferay.frontend.taglib.servlet.taglib.util.JSPRenderer;
@@ -45,6 +37,7 @@ import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
+import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermission;
 import com.liferay.portal.kernel.util.WebKeys;
 
 import java.io.IOException;
@@ -111,15 +104,15 @@ public class CPDefinitionConfigurationScreenNavigationEntry
 				new CPDefinitionConfigurationDisplayContext(
 					_actionHelper, httpServletRequest,
 					_accountGroupRelLocalService,
-					_commerceAvailabilityEstimateService,
+					_commerceAvailabilityEstimateLocalService,
 					_commerceCatalogService, _commerceChannelRelService,
 					_commerceCurrencyLocalService,
 					_commerceLowStockActivityRegistry, _configurationProvider,
 					_cpdAvailabilityEstimateService,
 					_cpDefinitionInventoryEngineRegistry,
 					_cpDefinitionInventoryService, _cpDefinitionService,
-					_cpMeasurementUnitLocalService, _cpTaxCategoryService,
-					_cpFriendlyURL, _itemSelector);
+					_cpMeasurementUnitLocalService, _cpTaxCategoryLocalService,
+					_cpFriendlyURL, _itemSelector, _portletResourcePermission);
 
 		httpServletRequest.setAttribute(
 			WebKeys.PORTLET_DISPLAY_CONTEXT,
@@ -140,8 +133,8 @@ public class CPDefinitionConfigurationScreenNavigationEntry
 	private ActionHelper _actionHelper;
 
 	@Reference
-	private CommerceAvailabilityEstimateService
-		_commerceAvailabilityEstimateService;
+	private CommerceAvailabilityEstimateLocalService
+		_commerceAvailabilityEstimateLocalService;
 
 	@Reference(
 		target = "(model.class.name=com.liferay.commerce.product.model.CommerceCatalog)"
@@ -184,7 +177,7 @@ public class CPDefinitionConfigurationScreenNavigationEntry
 	private CPMeasurementUnitLocalService _cpMeasurementUnitLocalService;
 
 	@Reference
-	private CPTaxCategoryService _cpTaxCategoryService;
+	private CPTaxCategoryLocalService _cpTaxCategoryLocalService;
 
 	@Reference
 	private CPTypeRegistry _cpTypeRegistry;
@@ -194,6 +187,11 @@ public class CPDefinitionConfigurationScreenNavigationEntry
 
 	@Reference
 	private JSPRenderer _jspRenderer;
+
+	@Reference(
+		target = "(resource.name=" + CPConstants.RESOURCE_NAME_PRODUCT + ")"
+	)
+	private PortletResourcePermission _portletResourcePermission;
 
 	@Reference(
 		target = "(osgi.web.symbolicname=com.liferay.commerce.product.definitions.web)"

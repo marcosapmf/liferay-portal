@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.source.formatter.check;
@@ -182,6 +173,33 @@ public class IllegalImportsCheck extends BaseFileCheck {
 					"org.slf4j.Logger");
 		}
 
+		if (!absolutePath.contains("/modules/etl/") &&
+			!absolutePath.contains("/modules/sdk/")) {
+
+			if (isAttributeValue(_AVOID_OPTIONAL_KEY, absolutePath) &&
+				content.contains("java.util.Optional") &&
+				!_isAllowedFileName(
+					absolutePath,
+					getAttributeValues(
+						_ALLOWED_OPTIONAL_FILE_NAMES_KEY, absolutePath))) {
+
+				addMessage(
+					fileName, "Do not use java.util.Optional, see LPS-170503");
+			}
+
+			if (isAttributeValue(_AVOID_STREAM_KEY, absolutePath) &&
+				content.contains("java.util.stream") &&
+				!_isAllowedFileName(
+					absolutePath,
+					getAttributeValues(
+						_ALLOWED_STREAM_FILE_NAMES_KEY, absolutePath))) {
+
+				addMessage(
+					fileName,
+					"Do not use java.util.stream.Stream, see LPS-170503");
+			}
+		}
+
 		SourceProcessor sourceProcessor = getSourceProcessor();
 
 		SourceFormatterArgs sourceFormatterArgs =
@@ -218,27 +236,29 @@ public class IllegalImportsCheck extends BaseFileCheck {
 						break;
 					}
 				}
-
-				if (isAttributeValue(_AVOID_OPTIONAL_KEY, absolutePath) &&
-					line.contains("java.util.Optional")) {
-
-					addMessage(
-						fileName,
-						"Do not use java.util.Optional, see LPS-170503");
-				}
-
-				if (isAttributeValue(_AVOID_STREAM_KEY, absolutePath) &&
-					line.contains("java.util.stream")) {
-
-					addMessage(
-						fileName,
-						"Do not use java.util.stream.Stream, see LPS-170503");
-				}
 			}
 		}
 
 		return content;
 	}
+
+	private boolean _isAllowedFileName(
+		String absolutePath, List<String> allowedFileNames) {
+
+		for (String allowedFileName : allowedFileNames) {
+			if (absolutePath.endsWith(allowedFileName)) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	private static final String _ALLOWED_OPTIONAL_FILE_NAMES_KEY =
+		"allowedOptionalFileNames";
+
+	private static final String _ALLOWED_STREAM_FILE_NAMES_KEY =
+		"allowedStreamFileNames";
 
 	private static final String _AVOID_OPTIONAL_KEY = "avoidOptional";
 

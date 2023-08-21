@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.kernel.service;
@@ -44,26 +35,28 @@ public class OrganizationLocalServiceUtil {
 	 *
 	 * Never modify this class directly. Add custom service methods to <code>com.liferay.portal.service.impl.OrganizationLocalServiceImpl</code> and rerun ServiceBuilder to regenerate this class.
 	 */
-	public static void addGroupOrganization(long groupId, long organizationId) {
-		getService().addGroupOrganization(groupId, organizationId);
+	public static boolean addGroupOrganization(
+		long groupId, long organizationId) {
+
+		return getService().addGroupOrganization(groupId, organizationId);
 	}
 
-	public static void addGroupOrganization(
+	public static boolean addGroupOrganization(
 		long groupId, Organization organization) {
 
-		getService().addGroupOrganization(groupId, organization);
+		return getService().addGroupOrganization(groupId, organization);
 	}
 
-	public static void addGroupOrganizations(
+	public static boolean addGroupOrganizations(
 		long groupId, List<Organization> organizations) {
 
-		getService().addGroupOrganizations(groupId, organizations);
+		return getService().addGroupOrganizations(groupId, organizations);
 	}
 
-	public static void addGroupOrganizations(
+	public static boolean addGroupOrganizations(
 		long groupId, long[] organizationIds) {
 
-		getService().addGroupOrganizations(groupId, organizationIds);
+		return getService().addGroupOrganizations(groupId, organizationIds);
 	}
 
 	/**
@@ -195,14 +188,16 @@ public class OrganizationLocalServiceUtil {
 			passwordPolicyId, organizationIds);
 	}
 
-	public static void addUserOrganization(long userId, long organizationId) {
-		getService().addUserOrganization(userId, organizationId);
+	public static boolean addUserOrganization(
+		long userId, long organizationId) {
+
+		return getService().addUserOrganization(userId, organizationId);
 	}
 
-	public static void addUserOrganization(
+	public static boolean addUserOrganization(
 		long userId, Organization organization) {
 
-		getService().addUserOrganization(userId, organization);
+		return getService().addUserOrganization(userId, organization);
 	}
 
 	public static void addUserOrganizationByEmailAddress(
@@ -213,16 +208,16 @@ public class OrganizationLocalServiceUtil {
 			emailAddress, organizationId);
 	}
 
-	public static void addUserOrganizations(
+	public static boolean addUserOrganizations(
 		long userId, List<Organization> organizations) {
 
-		getService().addUserOrganizations(userId, organizations);
+		return getService().addUserOrganizations(userId, organizations);
 	}
 
-	public static void addUserOrganizations(
+	public static boolean addUserOrganizations(
 		long userId, long[] organizationIds) {
 
-		getService().addUserOrganizations(userId, organizationIds);
+		return getService().addUserOrganizations(userId, organizationIds);
 	}
 
 	public static void clearGroupOrganizations(long groupId) {
@@ -1644,6 +1639,10 @@ public class OrganizationLocalServiceUtil {
 
 	public static OrganizationLocalService getService() {
 		return _service;
+	}
+
+	public static void setService(OrganizationLocalService service) {
+		_service = service;
 	}
 
 	private static volatile OrganizationLocalService _service;

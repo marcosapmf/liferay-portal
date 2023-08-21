@@ -355,7 +355,6 @@ definition {
 	}
 
 	@description = "COMMERCE-10881 | As a Buyer user, Commerce Facet Widgets work without the Category Facet widget deployed on the page"
-	@ignore = "true"
 	@priority = 3
 	test CanFacetWidgetsWorkWithoutCategoryFacet {
 		property portal.acceptance = "false";
@@ -452,6 +451,136 @@ definition {
 					key_productName = ${productName},
 					locator1 = "CommerceAccelerators#PRODUCT_CARD_NAME");
 			}
+		}
+	}
+
+	@description = "This is a test for COMMERCE-11957. Admin cannot view the specification entry's key is set with dots"
+	@priority = 5
+	test CannotAddSpecificationKeyWithDots {
+		property portal.acceptance = "true";
+
+		task ("When a specification entry is created using a dot for the key via JSON") {
+			CommerceJSONSpecificationsAPI._addCommerceSpecification(
+				specificationLabelFacetable = "true",
+				specificationLabelKey = "test.specification",
+				specificationLabelTitle = "Test Specification");
+		}
+
+		task ("Then the admin can view the key of the specification entry is applied to the horizontal line, not a dot") {
+			CommerceNavigator.goToSpecificationsAdmin();
+
+			Click(
+				key_entry = "Test Specification",
+				locator1 = "CommerceNavigation#ANY_ENTRY_NAME");
+
+			AssertTextEquals(
+				key_fieldLabel = "Key",
+				locator1 = "TextInput#GENERIC_TEXT_INPUT",
+				value1 = "test-specification");
+
+			AssertTextNotEquals(
+				key_fieldLabel = "Key",
+				locator1 = "TextInput#GENERIC_TEXT_INPUT",
+				value1 = "test.specification");
+		}
+
+		task ("When the specification entry is updated using a dot for the key on UI") {
+			Type(
+				key_fieldLabel = "Key",
+				locator1 = "TextInput#GENERIC_TEXT_INPUT",
+				value1 = "test.specification");
+		}
+
+		task ("Then the admin can view the new key of the specification entry is applied without a dot on UI") {
+			AssertTextEquals(
+				key_fieldLabel = "Key",
+				locator1 = "TextInput#GENERIC_TEXT_INPUT",
+				value1 = "testspecification");
+
+			AssertTextNotEquals(
+				key_fieldLabel = "Key",
+				locator1 = "TextInput#GENERIC_TEXT_INPUT",
+				value1 = "test.specification");
+		}
+	}
+
+	@description = "This is a test for COMMERCE-11472. User can not view a product with an expired SKU using the price range facet"
+	@priority = 5
+	test CannotViewExpiredProductSKUByPriceRangeFacet {
+		property portal.acceptance = "true";
+
+		task ("Given an account with a buyer user is created") {
+			CommerceEntry.addAccountEntryUser(
+				accountName = "Commerce Account",
+				accountType = "Business",
+				agreeToTermsAndAnswerReminderQuery = "true",
+				createNewAccount = "true",
+				requireReset = "false",
+				userEmailAddress = "buyer@liferay.com",
+				userFirstName = "Buyer",
+				userLastName = "User",
+				userRole = "Buyer",
+				userScreenName = "buyeruser",
+				userSiteMembership = "Minium");
+		}
+
+		task ("And the SKU of 'ABS Sensor' is updated to be expired") {
+			CommerceProducts.openProductsAdmin();
+
+			CommerceProducts.searchAndGoToProductEntry(entryProductName = "ABS Sensor");
+
+			CommerceEntry.gotoMenuTab(menuTab = "SKUs");
+
+			CommerceNavigator.gotoEntry(entryName = "MIN93015");
+
+			SelectFrame.selectFrameNoLoading(locator1 = "CommerceEntry#IFRAME_SIDE_PANEL");
+
+			Uncheck.uncheckToggleSwitch(
+				checkboxName = "Never Expire",
+				locator1 = "Checkbox#ANY_CHECKBOX");
+
+			Click(
+				key_text = "Save as Draft",
+				locator1 = "Button#ANY");
+
+			Alert.viewSuccessMessage();
+
+			Click(locator1 = "Icon#CLOSE");
+
+			SelectFrameTop();
+
+			AssertElementPresent(
+				locator1 = "CommerceWidget#TAG_FACET_LABEL_LAYOUT",
+				tagName = "Expired");
+		}
+
+		task ("When the buyer navigates to the Minium Catalog") {
+			User.logoutPG();
+
+			CommerceLogin.miniumLogin(
+				password = "test",
+				urlAppend = "web/minium",
+				userEmailAddress = "buyer@liferay.com");
+		}
+
+		task ("And selects the price range of the expired SKU") {
+			Check.checkToggleSwitch(
+				key_fieldName = "$ 50.00 - $ 99.99",
+				locator1 = "FormFields#CHECKBOX");
+		}
+
+		task ("Then the product with an expired SKU is not shown") {
+			var productNames = "CV Axles,Wheel Bearing Grease,Shock Absorber,Oil Pump,Bearings,Master Cylinder,Calipers,Wear Sensors,Premium Brake Fluid,Brake Fluid";
+
+			for (var productName : list ${productNames}) {
+				AssertElementPresent(
+					key_productName = ${productName},
+					locator1 = "CommerceAccelerators#PRODUCT_CARD_NAME");
+			}
+
+			AssertElementNotPresent(
+				key_productName = "ABS Sensor",
+				locator1 = "CommerceAccelerators#PRODUCT_CARD_NAME");
 		}
 	}
 
@@ -759,6 +888,62 @@ definition {
 			AssertElementNotPresent(
 				key_value = "U-Joint",
 				locator1 = "CommerceAccelerators#PRODUCT_CARD_NAME");
+		}
+	}
+
+	@description = "This is a test case for COMMERCE-11970. As an admin, I want that the term count of price range facet fields doesn't change to 0 when I check a price range facet field"
+	@priority = 4
+	test CanViewTermCountOfPriceRangeFacetPersists {
+		property portal.acceptance = "false";
+
+		task ("Given the admin navigates to Minium site") {
+			var portalURL = PropsUtil.get("portal.url");
+
+			ApplicationsMenu.gotoSite(site = "Minium");
+		}
+
+		task ("When the admin checks a price range facet value") {
+			Check.checkToggleSwitch(
+				key_fieldName = "$ 50.00 - $ 99.99",
+				locator1 = "FormFields#CHECKBOX");
+		}
+
+		task ("Then the term count of that value doesn't change") {
+			AssertTextEquals.assertPartialText(
+				key_facetType = "Price Range Facet",
+				key_termValue = "$ 50.00 - $ 99.99",
+				locator1 = "Search#FACET_TERM_FREQUENCIES",
+				value1 = "(12)");
+		}
+
+		task ("And the term count of the other values doesn't change either") {
+			for (var priceRangeValueAndCount : list "$ 0.00 - $ 49.99:(21),$ 100.00 - $ 199.99:(10),$ 200.00 - $ 499.99:(4),$ 500.00 - $ 999.99:(2),000.00+:(0)") {
+				var priceRangeValue = StringUtil.extractFirst(${priceRangeValueAndCount}, ":");
+				var priceRangeCount = StringUtil.extractLast(${priceRangeValueAndCount}, ":");
+
+				AssertTextEquals.assertPartialText(
+					key_facetType = "Price Range Facet",
+					key_termValue = ${priceRangeValue},
+					locator1 = "Search#FACET_TERM_FREQUENCIES",
+					value1 = ${priceRangeCount});
+			}
+		}
+
+		task ("When the admin checks all the price range facet values") {
+			Navigator.openSpecificURL(url = "${portalURL}/web/minium/catalog?basePrice=%5B0%20TO%2049.99%5D&basePrice=%5B50%20TO%2099.99%5D&basePrice=%5B100%20TO%20199.99%5D&basePrice=%5B200%20TO%20499.99%5D&basePrice=%5B500%20TO%20999.99%5D&basePrice=%5B1000%20TO%201.7976931348623157E308%5D");
+		}
+
+		task ("Then the term count of all values doesn't change") {
+			for (var priceRangeValueAndCount : list "$ 0.00 - $ 49.99:(21),$ 50.00 - $ 99.99:(12),$ 100.00 - $ 199.99:(10),$ 200.00 - $ 499.99:(4),$ 500.00 - $ 999.99:(2),000.00+:(0)") {
+				var priceRangeValue = StringUtil.extractFirst(${priceRangeValueAndCount}, ":");
+				var priceRangeCount = StringUtil.extractLast(${priceRangeValueAndCount}, ":");
+
+				AssertTextEquals.assertPartialText(
+					key_facetType = "Price Range Facet",
+					key_termValue = ${priceRangeValue},
+					locator1 = "Search#FACET_TERM_FREQUENCIES",
+					value1 = ${priceRangeCount});
+			}
 		}
 	}
 

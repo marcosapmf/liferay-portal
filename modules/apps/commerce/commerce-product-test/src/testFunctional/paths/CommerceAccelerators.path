@@ -201,8 +201,18 @@
 	<td></td>
 </tr>
 <tr>
+	<td>PRODUCT_CARD_PRICE_ON_APPLICATION</td>
+	<td>//p[@title='${key_productName}']/..//span[(@class='price-value')][normalize-space(text())='Price on Application']</td>
+	<td></td>
+</tr>
+<tr>
 	<td>PRODUCT_CARD_PRICE_VALUE</td>
 	<td>//p[@title='${key_productName}']/..//span[@class='price-value'][normalize-space(text())='$ ${key_productPrice}']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>MINIUM_PAGE_TITLE</td>
+	<td>//h1[contains(@class,'lfr-portal-tooltip') and contains(.,'${key_title}')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -266,6 +276,11 @@
 	<td></td>
 </tr>
 <tr>
+	<td>PRODUCT_CARD_QUANTITY_SELECTOR_SELECT_FIELD_DISABLED</td>
+	<td>//p[@title='${key_productName}']//..//..//select[contains(@class,"quantity-selector") and @disabled]</td>
+	<td></td>
+</tr>
+<tr>
 	<td>PRODUCT_CARD_QUANTITY_SELECTOR_INPUT_FIELD_OPTION_VALUE</td>
 	<td>//p[@title='${key_productName}']//..//..//input[contains(@class,"quantity-selector") and @value='${key_optionValue}']</td>
 	<td></td>
@@ -308,6 +323,11 @@
 <tr>
 	<td>PRODUCT_DETAILS_NET_PRICE</td>
 	<td>//div[contains(@class,'price')]//span[contains(@class,'price-value-final')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>PRODUCT_DETAILS_PRICE_ON_APPLICATION</td>
+	<td>//div[contains(@class,'price')]//span[(@class='price-on-application price-value')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -585,6 +605,11 @@
 	<td></td>
 </tr>
 <tr>
+	<td>MINI_CART_ITEM_PRICE_ON_APPLICATION</td>
+	<td>//p[@class='item-sku' and contains(.,'${key_cartItemSku}')]//../../../..//div[contains(@class,'price')]//span[(@class='price-on-application price-value')]</td>
+	<td></td>
+</tr>
+<tr>
 	<td>MINI_CART_ITEM_ERROR_THE_PRODUCT_QUANTITY_IS_NOT_VALID</td>
 	<td>//p[@class='item-sku' and contains(.,'${key_cartItemSku}')]/../../../../div[contains(@class,'mini-cart-item-errors')]//div[text()='The product quantity is not valid.']</td>
 	<td></td>
@@ -640,6 +665,11 @@
 <tr>
 	<td>QUICK_ADD_TO_CART_SEARCH_RESULT</td>
 	<td>//div[contains(@class,'autofit-col') and contains(.,"${key_productSku}")]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>QUICK_ADD_TO_CART_INFO_ICON</td>
+	<td>//span[contains(@data-tooltip-align,'left')]//*[contains(@class, 'lexicon-icon lexicon-icon-info-circle')]</td>
 	<td></td>
 </tr>
 <tr>

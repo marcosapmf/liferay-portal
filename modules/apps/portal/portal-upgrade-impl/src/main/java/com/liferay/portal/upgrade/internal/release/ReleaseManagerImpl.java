@@ -1,28 +1,19 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.upgrade.internal.release;
 
+import com.liferay.osgi.service.tracker.collections.EagerServiceTrackerCustomizer;
 import com.liferay.osgi.service.tracker.collections.map.PropertyServiceReferenceComparator;
 import com.liferay.osgi.service.tracker.collections.map.PropertyServiceReferenceMapper;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMap;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMapFactory;
-import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMapListener;
+import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.jdbc.DataAccess;
-import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Release;
@@ -39,8 +30,6 @@ import com.liferay.portal.upgrade.PortalUpgradeProcess;
 import com.liferay.portal.upgrade.internal.executor.UpgradeExecutor;
 import com.liferay.portal.upgrade.internal.graph.ReleaseGraphManager;
 import com.liferay.portal.upgrade.internal.registry.UpgradeInfo;
-import com.liferay.portal.upgrade.internal.registry.UpgradeStepRegistratorThreadLocal;
-import com.liferay.portal.util.PropsValues;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -67,7 +56,7 @@ import org.osgi.util.tracker.ServiceTrackerCustomizer;
 public class ReleaseManagerImpl implements ReleaseManager {
 
 	public Set<String> getBundleSymbolicNames() {
-		return _serviceTrackerMap.keySet();
+		return new HashSet<>(_serviceTrackerMap.keySet());
 	}
 
 	public String getSchemaVersionString(String bundleSymbolicName) {
@@ -180,58 +169,28 @@ public class ReleaseManagerImpl implements ReleaseManager {
 
 	@Activate
 	protected void activate(BundleContext bundleContext) {
+		_initialUpgradeStepServiceTrackerMap =
+			ServiceTrackerMapFactory.openSingleValueMap(
+				bundleContext, UpgradeStep.class,
+				"(upgrade.initial.database.creation=true)",
+				new PropertyServiceReferenceMapper<>(
+					"upgrade.bundle.symbolic.name"),
+				new InitialUpgradeStepServiceTrackerCustomizer(bundleContext));
+
 		_serviceTrackerMap = ServiceTrackerMapFactory.openMultiValueMap(
 			bundleContext, UpgradeStep.class, null,
-			new PropertyServiceReferenceMapper<String, UpgradeStep>(
+			new PropertyServiceReferenceMapper<>(
 				"upgrade.bundle.symbolic.name"),
-			new ReleaseManagerImpl.UpgradeServiceTrackerCustomizer(
-				bundleContext),
+			new UpgradeServiceTrackerCustomizer(bundleContext),
 			Collections.reverseOrder(
-				new PropertyServiceReferenceComparator<UpgradeStep>(
-					"upgrade.from.schema.version")),
-			new ReleaseManagerImpl.UpgradeInfoServiceTrackerMapListener());
-
-		synchronized (this) {
-			Set<String> bundleSymbolicNames = null;
-
-			if (!PropsValues.UPGRADE_DATABASE_AUTO_RUN) {
-				bundleSymbolicNames = new HashSet<>();
-
-				for (Release release :
-						_releaseLocalService.getReleases(
-							QueryUtil.ALL_POS, QueryUtil.ALL_POS)) {
-
-					bundleSymbolicNames.add(release.getBundleSymbolicName());
-				}
-			}
-
-			for (String bundleSymbolicName : _serviceTrackerMap.keySet()) {
-				if ((bundleSymbolicNames != null) &&
-					bundleSymbolicNames.contains(bundleSymbolicName)) {
-
-					continue;
-				}
-
-				List<UpgradeInfo> upgradeSteps = _serviceTrackerMap.getService(
-					bundleSymbolicName);
-
-				try {
-					_upgradeExecutor.execute(bundleSymbolicName, upgradeSteps);
-				}
-				catch (Throwable throwable) {
-					_log.error(
-						"Failed upgrade process for module " +
-							bundleSymbolicName,
-						throwable);
-				}
-			}
-
-			_activated = true;
-		}
+				new PropertyServiceReferenceComparator<>(
+					"upgrade.from.schema.version")));
 	}
 
 	@Deactivate
 	protected void deactivate() {
+		_initialUpgradeStepServiceTrackerMap.close();
+
 		_serviceTrackerMap.close();
 	}
 
@@ -453,10 +412,14 @@ public class ReleaseManagerImpl implements ReleaseManager {
 	private static final Log _log = LogFactoryUtil.getLog(
 		ReleaseManagerImpl.class);
 
-	private boolean _activated;
+	private ServiceTrackerMap<String, Release>
+		_initialUpgradeStepServiceTrackerMap;
 
 	@Reference
 	private ReleaseLocalService _releaseLocalService;
+
+	@Reference
+	private ReleasePublisher _releasePublisher;
 
 	private ServiceTrackerMap<String, List<UpgradeInfo>> _serviceTrackerMap;
 
@@ -470,10 +433,6 @@ public class ReleaseManagerImpl implements ReleaseManager {
 
 	private static class UpgradeServiceTrackerCustomizer
 		implements ServiceTrackerCustomizer<UpgradeStep, UpgradeInfo> {
-
-		public UpgradeServiceTrackerCustomizer(BundleContext bundleContext) {
-			_bundleContext = bundleContext;
-		}
 
 		@Override
 		public UpgradeInfo addingService(
@@ -506,37 +465,71 @@ public class ReleaseManagerImpl implements ReleaseManager {
 			_bundleContext.ungetService(serviceReference);
 		}
 
+		private UpgradeServiceTrackerCustomizer(BundleContext bundleContext) {
+			_bundleContext = bundleContext;
+		}
+
 		private final BundleContext _bundleContext;
 
 	}
 
-	private class UpgradeInfoServiceTrackerMapListener
-		implements ServiceTrackerMapListener
-			<String, UpgradeInfo, List<UpgradeInfo>> {
+	private class InitialUpgradeStepServiceTrackerCustomizer
+		implements EagerServiceTrackerCustomizer<UpgradeStep, Release> {
 
 		@Override
-		public void keyEmitted(
-			ServiceTrackerMap<String, List<UpgradeInfo>> serviceTrackerMap,
-			String key, UpgradeInfo upgradeInfo,
-			List<UpgradeInfo> upgradeInfos) {
+		public Release addingService(
+			ServiceReference<UpgradeStep> serviceReference) {
 
-			synchronized (ReleaseManagerImpl.this) {
-				if (_activated &&
-					UpgradeStepRegistratorThreadLocal.isEnabled() &&
-					(PropsValues.UPGRADE_DATABASE_AUTO_RUN ||
-					 (_releaseLocalService.fetchRelease(key) == null))) {
+			String bundleSymbolicName = (String)serviceReference.getProperty(
+				"upgrade.bundle.symbolic.name");
 
-					_upgradeExecutor.execute(key, upgradeInfos);
+			Release release = _releaseLocalService.fetchRelease(
+				bundleSymbolicName);
+
+			if (release == null) {
+				UpgradeStep initialUpgradeStep = _bundleContext.getService(
+					serviceReference);
+
+				try {
+					initialUpgradeStep.upgrade();
+
+					release = _releaseLocalService.updateRelease(
+						bundleSymbolicName,
+						(String)serviceReference.getProperty(
+							"upgrade.to.schema.version"),
+						"0.0.0");
+
+					release.setVerified(true);
+
+					release = _releaseLocalService.updateRelease(release);
+
+					_releasePublisher.publish(release, true);
+				}
+				catch (Exception exception) {
+					ReflectionUtil.throwException(exception);
 				}
 			}
+
+			return release;
 		}
 
 		@Override
-		public void keyRemoved(
-			ServiceTrackerMap<String, List<UpgradeInfo>> serviceTrackerMap,
-			String key, UpgradeInfo upgradeInfo,
-			List<UpgradeInfo> upgradeInfos) {
+		public void modifiedService(
+			ServiceReference<UpgradeStep> serviceReference, Release release) {
 		}
+
+		@Override
+		public void removedService(
+			ServiceReference<UpgradeStep> serviceReference, Release release) {
+		}
+
+		private InitialUpgradeStepServiceTrackerCustomizer(
+			BundleContext bundleContext) {
+
+			_bundleContext = bundleContext;
+		}
+
+		private final BundleContext _bundleContext;
 
 	}
 

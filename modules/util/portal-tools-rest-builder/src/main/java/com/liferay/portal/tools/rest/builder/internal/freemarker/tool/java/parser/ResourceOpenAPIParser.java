@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.tools.rest.builder.internal.freemarker.tool.java.parser;
@@ -257,6 +248,38 @@ public class ResourceOpenAPIParser {
 		}
 
 		return sb.toString();
+	}
+
+	public static String getResourceMethodName(
+		List<JavaMethodSignature> javaMethodSignatures, String propertyName) {
+
+		for (JavaMethodSignature javaMethodSignature : javaMethodSignatures) {
+			String methodName = javaMethodSignature.getMethodName();
+			String schemaName = javaMethodSignature.getSchemaName();
+
+			if (StringUtil.equals(propertyName, "delete")) {
+				if (StringUtil.equals(methodName, "delete" + schemaName)) {
+					return methodName;
+				}
+			}
+			else if (StringUtil.equals(propertyName, "get")) {
+				if (StringUtil.equals(methodName, "get" + schemaName)) {
+					return methodName;
+				}
+			}
+			else if (StringUtil.equals(propertyName, "update")) {
+				if (StringUtil.equals(methodName, "patch" + schemaName)) {
+					return methodName;
+				}
+			}
+			else if (StringUtil.equals(propertyName, "replace")) {
+				if (StringUtil.equals(methodName, "put" + schemaName)) {
+					return methodName;
+				}
+			}
+		}
+
+		return null;
 	}
 
 	public static Set<String> getVulcanBatchImplementationCreateStrategies(

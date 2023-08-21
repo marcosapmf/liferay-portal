@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.change.tracking.service.test;
@@ -18,7 +9,6 @@ import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.change.tracking.closure.CTClosureFactory;
 import com.liferay.change.tracking.constants.CTActionKeys;
 import com.liferay.change.tracking.constants.CTConstants;
-import com.liferay.change.tracking.exception.CTEnclosureException;
 import com.liferay.change.tracking.model.CTCollection;
 import com.liferay.change.tracking.model.CTProcess;
 import com.liferay.change.tracking.service.CTCollectionLocalService;
@@ -136,23 +126,11 @@ public class CTCollectionServiceTest {
 				_ctCollection.getCtCollectionId(), articleClassNameId,
 				article.getPrimaryKey()));
 
-		try {
-			_ctCollectionService.discardCTEntry(
-				_ctCollection.getCtCollectionId(), articleClassNameId,
-				article.getPrimaryKey());
+		_ctCollectionService.discardCTEntry(
+			_ctCollection.getCtCollectionId(), articleClassNameId,
+			article.getPrimaryKey());
 
-			Assert.fail();
-		}
-		catch (CTEnclosureException ctEnclosureException) {
-			Assert.assertEquals(
-				StringBundler.concat(
-					"{classNameId=", folderClassNameId, ", classPK=",
-					folder.getPrimaryKey(), ", ctCollectionId=",
-					_ctCollection.getCtCollectionId(), "}"),
-				ctEnclosureException.getMessage());
-		}
-
-		Assert.assertNotNull(
+		Assert.assertNull(
 			_ctEntryLocalService.fetchCTEntry(
 				_ctCollection.getCtCollectionId(), articleClassNameId,
 				article.getPrimaryKey()));

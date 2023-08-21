@@ -1,22 +1,19 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.journal.exportimport.data.handler.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.asset.display.page.constants.AssetDisplayPageConstants;
+import com.liferay.asset.display.page.service.AssetDisplayPageEntryLocalService;
 import com.liferay.asset.kernel.model.AssetEntry;
 import com.liferay.asset.kernel.service.AssetEntryLocalServiceUtil;
+import com.liferay.document.library.kernel.model.DLFileEntry;
+import com.liferay.document.library.kernel.model.DLFolder;
+import com.liferay.document.library.kernel.service.DLFileEntryLocalService;
+import com.liferay.document.library.test.util.DLTestUtil;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.dynamic.data.mapping.model.DDMTemplate;
 import com.liferay.dynamic.data.mapping.service.DDMStructureLocalService;
@@ -31,8 +28,11 @@ import com.liferay.exportimport.kernel.lar.StagedModelDataHandler;
 import com.liferay.exportimport.kernel.lar.StagedModelDataHandlerRegistryUtil;
 import com.liferay.exportimport.kernel.lar.StagedModelDataHandlerUtil;
 import com.liferay.exportimport.test.util.lar.BaseWorkflowedStagedModelDataHandlerTestCase;
+import com.liferay.friendly.url.model.FriendlyURLEntry;
+import com.liferay.friendly.url.service.FriendlyURLEntryLocalService;
 import com.liferay.journal.constants.JournalArticleConstants;
 import com.liferay.journal.constants.JournalFolderConstants;
+import com.liferay.journal.constants.JournalPortletKeys;
 import com.liferay.journal.model.JournalArticle;
 import com.liferay.journal.model.JournalArticleResource;
 import com.liferay.journal.model.JournalFolder;
@@ -42,13 +42,19 @@ import com.liferay.journal.service.JournalArticleResourceLocalServiceUtil;
 import com.liferay.journal.service.JournalFolderLocalServiceUtil;
 import com.liferay.journal.service.persistence.JournalArticleResourceUtil;
 import com.liferay.journal.test.util.JournalTestUtil;
+import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
+import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
+import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalService;
 import com.liferay.layout.test.util.LayoutTestUtil;
+import com.liferay.petra.string.StringBundler;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.StagedModel;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalServiceUtil;
@@ -60,6 +66,7 @@ import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.kernel.xml.Element;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
@@ -315,6 +322,157 @@ public class JournalArticleStagedModelDataHandlerTest
 			liveGroup.getGroupId());
 
 		Assert.assertEquals(articles.toString(), 2, articles.size());
+	}
+
+	@Test
+	public void testExpiredArticleWithLastVersionDraftStatus()
+		throws Exception {
+
+		initExport();
+
+		JournalArticle journalArticle = JournalTestUtil.addArticleWithWorkflow(
+			stagingGroup.getGroupId(), true);
+
+		DDMStructure ddmStructure = journalArticle.getDDMStructure();
+
+		ServiceContext serviceContext =
+			ServiceContextTestUtil.getServiceContext(stagingGroup.getGroupId());
+
+		LayoutPageTemplateEntry layoutPageTemplateEntry =
+			_layoutPageTemplateEntryLocalService.addLayoutPageTemplateEntry(
+				stagingGroup.getCreatorUserId(), stagingGroup.getGroupId(), 0,
+				_portal.getClassNameId(JournalArticle.class.getName()),
+				ddmStructure.getStructureId(), RandomTestUtil.randomString(),
+				LayoutPageTemplateEntryTypeConstants.TYPE_DISPLAY_PAGE, 0, true,
+				0, 0, 0, 0, serviceContext);
+
+		_assetDisplayPageEntryLocalService.addAssetDisplayPageEntry(
+			journalArticle.getUserId(), stagingGroup.getGroupId(),
+			_portal.getClassNameId(JournalArticle.class.getName()),
+			journalArticle.getResourcePrimKey(),
+			layoutPageTemplateEntry.getLayoutPageTemplateEntryId(),
+			AssetDisplayPageConstants.TYPE_DEFAULT, serviceContext);
+
+		journalArticle = updateArticleStatus(
+			journalArticle, WorkflowConstants.STATUS_APPROVED,
+			journalArticle.getUserId());
+
+		journalArticle = _journalArticleLocalService.expireArticle(
+			journalArticle.getUserId(), stagingGroup.getGroupId(),
+			journalArticle.getArticleId(), journalArticle.getVersion(),
+			journalArticle.getUrlTitle(), serviceContext);
+
+		// Do not assign to the "journalArticle" variable because the draft
+		// status is not exportable
+
+		updateArticleStatus(
+			journalArticle, WorkflowConstants.STATUS_DRAFT,
+			journalArticle.getUserId());
+
+		portletDataContext.setPortletId(JournalPortletKeys.JOURNAL);
+
+		StagedModelDataHandlerUtil.exportStagedModel(
+			portletDataContext, journalArticle);
+
+		initImport();
+
+		StagedModel exportedStagedModel = readExportedStagedModel(
+			journalArticle);
+
+		Assert.assertNotNull(exportedStagedModel);
+
+		boolean portletImportInProcess =
+			ExportImportThreadLocal.isPortletImportInProcess();
+
+		try {
+			ExportImportThreadLocal.setPortletImportInProcess(true);
+
+			StagedModelDataHandlerUtil.importStagedModel(
+				portletDataContext, exportedStagedModel);
+		}
+		finally {
+			ExportImportThreadLocal.setPortletImportInProcess(
+				portletImportInProcess);
+		}
+
+		JournalArticle importJournalArticle =
+			JournalArticleLocalServiceUtil.fetchJournalArticleByUuidAndGroupId(
+				journalArticle.getUuid(), liveGroup.getGroupId());
+
+		Assert.assertNotNull(importJournalArticle);
+
+		Assert.assertEquals(
+			WorkflowConstants.STATUS_EXPIRED, importJournalArticle.getStatus());
+	}
+
+	@Test
+	public void testFileEntryFriendlyURLRetained() throws Exception {
+		initExport();
+
+		DLFolder dlFolder = DLTestUtil.addDLFolder(stagingGroup.getGroupId());
+
+		DLFileEntry dlFileEntry = DLTestUtil.addDLFileEntry(
+			dlFolder.getFolderId());
+
+		_dlFileEntryLocalService.updateStatus(
+			TestPropsValues.getUserId(), dlFileEntry,
+			dlFileEntry.getLatestFileVersion(true),
+			WorkflowConstants.STATUS_APPROVED,
+			ServiceContextTestUtil.getServiceContext(dlFolder.getGroupId()),
+			new HashMap<>());
+
+		FriendlyURLEntry mainFriendlyURLEntry =
+			_friendlyURLEntryLocalService.getMainFriendlyURLEntry(
+				_portal.getClassNameId(FileEntry.class),
+				dlFileEntry.getFileEntryId());
+
+		String stagingGroupDLFileEntryFriendlyURL = StringBundler.concat(
+			"http://localhost:8080/documents/d", stagingGroup.getFriendlyURL(),
+			StringPool.SLASH, mainFriendlyURLEntry.getUrlTitle());
+
+		JournalArticle journalArticle = JournalTestUtil.addArticle(
+			stagingGroup.getGroupId(),
+			JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID,
+			RandomTestUtil.randomString(),
+			"<a href=\"" + stagingGroupDLFileEntryFriendlyURL + "\">Link</a>");
+
+		StagedModelDataHandlerUtil.exportStagedModel(
+			portletDataContext, journalArticle);
+
+		initImport();
+
+		StagedModel exportedStagedModel = readExportedStagedModel(
+			journalArticle);
+
+		Assert.assertNotNull(exportedStagedModel);
+
+		ExportImportThreadLocal.setPortletImportInProcess(true);
+
+		try {
+			StagedModelDataHandlerUtil.importStagedModel(
+				portletDataContext, exportedStagedModel);
+		}
+		finally {
+			ExportImportThreadLocal.setPortletImportInProcess(false);
+		}
+
+		JournalArticle importedJournalArticle =
+			JournalArticleLocalServiceUtil.fetchJournalArticleByUuidAndGroupId(
+				journalArticle.getUuid(), liveGroup.getGroupId());
+
+		Assert.assertNotNull(importedJournalArticle);
+
+		String content = journalArticle.getContent();
+
+		String liveGroupDLFileEntryFriendlyURL = StringBundler.concat(
+			"http://localhost:8080/documents/d", liveGroup.getFriendlyURL(),
+			StringPool.SLASH, mainFriendlyURLEntry.getUrlTitle());
+
+		Assert.assertEquals(
+			content.replaceAll(
+				stagingGroupDLFileEntryFriendlyURL,
+				liveGroupDLFileEntryFriendlyURL),
+			importedJournalArticle.getContent());
 	}
 
 	@Test
@@ -679,6 +837,26 @@ public class JournalArticleStagedModelDataHandlerTest
 		return true;
 	}
 
+	protected JournalArticle updateArticleStatus(
+			JournalArticle article, int status, long userId)
+		throws Exception {
+
+		ServiceContext serviceContext =
+			ServiceContextTestUtil.getServiceContext();
+
+		if (status == WorkflowConstants.STATUS_DRAFT) {
+			serviceContext.setWorkflowAction(
+				WorkflowConstants.ACTION_SAVE_DRAFT);
+		}
+		else {
+			serviceContext.setWorkflowAction(WorkflowConstants.ACTION_PUBLISH);
+		}
+
+		return JournalTestUtil.updateArticle(
+			userId, article, article.getTitleMap(), article.getContent(), false,
+			true, serviceContext);
+	}
+
 	protected void validateCompanyDependenciesImport(
 			Map<String, List<StagedModel>> dependentStagedModelsMap,
 			Group group)
@@ -857,10 +1035,24 @@ public class JournalArticleStagedModelDataHandlerTest
 	}
 
 	@Inject
+	private AssetDisplayPageEntryLocalService
+		_assetDisplayPageEntryLocalService;
+
+	@Inject
 	private DDMStructureLocalService _ddmStructureLocalService;
 
 	@Inject
+	private DLFileEntryLocalService _dlFileEntryLocalService;
+
+	@Inject
+	private FriendlyURLEntryLocalService _friendlyURLEntryLocalService;
+
+	@Inject
 	private JournalArticleLocalService _journalArticleLocalService;
+
+	@Inject
+	private LayoutPageTemplateEntryLocalService
+		_layoutPageTemplateEntryLocalService;
 
 	@Inject
 	private Portal _portal;

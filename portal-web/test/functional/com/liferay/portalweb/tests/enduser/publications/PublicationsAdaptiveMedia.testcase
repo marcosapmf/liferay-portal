@@ -15,9 +15,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -47,9 +47,9 @@ definition {
 
 		AdaptiveMedia.adaptAllImages();
 
-		JSONPublications.publishPublication(publicationName = "Publication Name");
-
-		Publications.viewPublicationPublished(publicationName = "Publication Name");
+		Publications.publishPublication(
+			gotoPublicationsAdmin = "true",
+			publicationName = "Publication Name");
 	}
 
 	@priority = 3
@@ -72,7 +72,7 @@ definition {
 
 		AdaptiveMedia.selectAdaptiveMediaImage(imageName = "Test Resolution");
 
-		AdaptiveMedia.viewNumberOfAdaptedImages(numberOfAdaptedImages = "1/7");
+		AdaptiveMedia.viewNumberOfAdaptedImages(numberOfAdaptedImages = "1/8");
 
 		JSONPublications.addPublication(publicationName = "Publication Name");
 
@@ -95,15 +95,15 @@ definition {
 
 		AdaptiveMedia.selectAdaptiveMediaImage(imageName = "Test Resolution");
 
-		AdaptiveMedia.viewNumberOfAdaptedImages(numberOfAdaptedImages = "1/8");
+		AdaptiveMedia.viewNumberOfAdaptedImages(numberOfAdaptedImages = "1/9");
 
 		AdaptiveMedia.openAdaptiveMediaAdmin();
 
 		AdaptiveMedia.deleteImageResolution(imageName = "Test Resolution");
 
-		JSONPublications.publishPublication(publicationName = "Publication Name");
-
-		Publications.viewPublicationPublished(publicationName = "Publication Name");
+		Publications.publishPublication(
+			gotoPublicationsAdmin = "true",
+			publicationName = "Publication Name");
 	}
 
 	@priority = 3
@@ -129,7 +129,7 @@ definition {
 
 		AdaptiveMedia.selectAdaptiveMediaImage(imageName = "Test Resolution Edit");
 
-		AdaptiveMedia.viewNumberOfAdaptedImages(numberOfAdaptedImages = "0/6");
+		AdaptiveMedia.viewNumberOfAdaptedImages(numberOfAdaptedImages = "0/7");
 
 		JSONDocument.addFileWithUploadedFile(
 			dmDocumentDescription = "DM Document Description",
@@ -142,11 +142,11 @@ definition {
 
 		AdaptiveMedia.selectAdaptiveMediaImage(imageName = "Test Resolution Edit");
 
-		AdaptiveMedia.viewNumberOfAdaptedImages(numberOfAdaptedImages = "1/7");
+		AdaptiveMedia.viewNumberOfAdaptedImages(numberOfAdaptedImages = "1/8");
 
-		JSONPublications.publishPublication(publicationName = "Publication Name");
-
-		Publications.viewPublicationPublished(publicationName = "Publication Name");
+		Publications.publishPublication(
+			gotoPublicationsAdmin = "true",
+			publicationName = "Publication Name");
 	}
 
 }

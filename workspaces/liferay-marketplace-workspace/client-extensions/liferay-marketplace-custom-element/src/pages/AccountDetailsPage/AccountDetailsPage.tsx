@@ -1,3 +1,8 @@
+/**
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
+ */
+
 import {AccountHeaderButton} from './AccountHeaderButton';
 
 import './AccountDetailsPage.scss';
@@ -11,9 +16,8 @@ import phoneIcon from '../../assets/icons/phone_icon.svg';
 import userIcon from '../../assets/icons/user_icon.svg';
 import {DetailedCard} from '../../components/DetailedCard/DetailedCard';
 import {getAccountPostalAddressesByAccountId} from '../../utils/api';
-import {showAccountImage} from '../../utils/util';
-
 import {getCustomFieldValue} from '../../utils/customFieldUtil';
+import {removeProtocolURL, showAccountImage} from '../../utils/util';
 import {DashboardListItems} from '../DashBoardPage/DashboardPage';
 
 interface AccountDetailsPageProps {
@@ -220,11 +224,17 @@ export function AccountDetailsPage({
 
 								<td className="account-details-body-table-description">
 									<a
-										href={getCustomFieldValue(
-											selectedAccount.customFields ?? [],
-											'Homepage URL'
-										)}
-										target="__blank"
+										href={
+											`https://` +
+											removeProtocolURL(
+												getCustomFieldValue(
+													selectedAccount.customFields ??
+														[],
+													'Homepage URL'
+												)
+											)
+										}
+										target="_blank"
 									>
 										{getCustomFieldValue(
 											selectedAccount.customFields ?? [],
@@ -242,8 +252,11 @@ export function AccountDetailsPage({
 						cardTitle="Address"
 					>
 						<table className="account-details-body-table">
-							{selectedAccountAddress?.map((address) => (
-								<tr className="account-details-body-table-row">
+							{selectedAccountAddress?.map((address, i) => (
+								<tr
+									className="account-details-body-table-row"
+									key={i}
+								>
 									<th>Business Address</th>
 
 									<td className="account-details-body-table-description">

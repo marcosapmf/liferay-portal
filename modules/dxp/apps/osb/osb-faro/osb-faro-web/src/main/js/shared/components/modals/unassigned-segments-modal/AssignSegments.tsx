@@ -1,6 +1,6 @@
 import * as API from 'shared/api';
 import ClayButton from '@clayui/button';
-import ClayLoadingIndicator from '@clayui/loading-indicator';
+import Loading, {Align} from 'shared/components/Loading';
 import Modal from 'shared/components/modal';
 import React, {useState} from 'react';
 import Table from 'shared/components/table';
@@ -8,8 +8,8 @@ import {
 	ActionType,
 	useUnassignedSegmentsContext
 } from 'shared/context/unassignedSegments';
-import {ClaySelectWithOption} from '@clayui/select';
 import {createOrderIOMap, NAME} from 'shared/util/pagination';
+import {Option, Picker} from '@clayui/core';
 import {partition} from 'lodash';
 import {Segment} from 'shared/util/records';
 import {sequence} from 'shared/util/promise';
@@ -82,21 +82,23 @@ const AssignSegments: React.FC<IAssignSegmentsProps> = ({groupId, onClose}) => {
 		}))
 	];
 
-	const updateSegment = (segmentId: string) => ({
-		target: {value}
-	}: React.ChangeEvent<HTMLSelectElement>): void => {
+	const updateSegment = (segmentId: string, value: string) => {
 		setChannelMappings({...channelMappings, [segmentId]: value});
 	};
 
 	const ChannelSelect = ({data: {id}, options}) => (
 		<td>
-			<ClaySelectWithOption
+			<Picker
 				data-testid={`select-${id}`}
-				onChange={updateSegment(id)}
-				options={options}
+				items={options}
+				onSelectionChange={selectedValue =>
+					updateSegment(id, selectedValue)
+				}
 				required
-				value={channelMappings[id]}
-			/>
+				selectedKey={channelMappings[id]}
+			>
+				{({label, value}) => <Option key={value}>{label}</Option>}
+			</Picker>
 		</td>
 	);
 
@@ -209,13 +211,7 @@ const AssignSegments: React.FC<IAssignSegmentsProps> = ({groupId, onClose}) => {
 					displayType='primary'
 					onClick={handleSubmit}
 				>
-					{isSubmitting && (
-						<ClayLoadingIndicator
-							className='d-inline-block mr-2'
-							displayType='secondary'
-							size='sm'
-						/>
-					)}
+					{isSubmitting && <Loading align={Align.Left} />}
 
 					{isSubmitting
 						? Liferay.Language.get('saving')

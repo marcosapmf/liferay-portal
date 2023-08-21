@@ -3,7 +3,7 @@ definition {
 
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property testray.main.component.name = "Headless";
+	property testray.main.component.name = "Headless Batch Engine API";
 
 	setUp {
 		TestCase.setUpPortalInstanceNoSelenium();
@@ -18,9 +18,9 @@ definition {
 			depotName = "Test Depot Name",
 			noSelenium = "true");
 
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCPNoSelenium();
 		}
 	}
@@ -96,9 +96,9 @@ definition {
 			var response = ExportTask.getExportTaskById(exportTaskId = ${exportTaskId});
 		}
 
-		task ("Then processedItemsCount is 7 with executeStatus "COMPLETED"") {
+		task ("Then processedItemsCount is 8 with executeStatus "COMPLETED"") {
 			ExportTask.assertProcessedItemsCountWithCompletedStatus(
-				expectedCount = 7,
+				expectedCount = 8,
 				response = ${response});
 		}
 	}

@@ -14,9 +14,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if (${testPortalInstance} == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -108,11 +108,9 @@ definition {
 			password = "test",
 			userEmailAddress = "userea@liferay.com");
 
-		PublicationsNavigator.gotoPublish(
+		Publications.publishPublication(
 			gotoPublicationsAdmin = "true",
 			publicationName = "Publication Name");
-
-		Publications.publishPublication(publicationName = "Publication Name");
 
 		Publications.createNewPublication(
 			gotoPublicationsAdmin = "true",
@@ -247,7 +245,7 @@ definition {
 	@description = "This is the use case for LPS-158789. Allow you to change publication via URL parameter"
 	@priority = 4
 	test CanChangePublicationViaURLParameter {
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		JSONLayout.addPublicLayout(
 			groupName = "Site Name",
@@ -287,6 +285,24 @@ definition {
 			webContentTitle = "Web Content Title");
 	}
 
+	@description = "This is a use case for LPS-174721 - Create Publications Form does not submit on Enter keypress."
+	@priority = 3
+	test CanCreatePublicationViaKeyboard {
+		PublicationsNavigator.openPublicationsAdmin();
+
+		Click(locator1 = "Button#PLUS");
+
+		Type(
+			locator1 = "Publications#PUBLICATION_NAME",
+			value1 = "Test Publication");
+
+		KeyPress(
+			locator1 = "Publications#PUBLICATION_NAME",
+			value1 = "\ENTER");
+
+		Alert.viewSuccessMessage();
+	}
+
 	@description = "Filter Publications Changes."
 	@priority = 4
 	test CanFilterChangesInReview {
@@ -303,7 +319,7 @@ definition {
 			mimeType = "image/jpeg",
 			sourceFileName = "Document_1.jpg");
 
-		JSONGroup.addGroup(groupName = "Test Site Name");
+		HeadlessSite.addSite(siteName = "Test Site Name");
 
 		JSONPublications.addPublication(publicationName = "Publication Name");
 
@@ -476,7 +492,7 @@ definition {
 	@description = "This is the use case for LPS-158789."
 	@priority = 4
 	test CannotChangePublicationViaURLWithNonexistentCollectionId {
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		JSONLayout.addPublicLayout(
 			groupName = "Site Name",
@@ -519,7 +535,7 @@ definition {
 	@description = "This is the use case for LPS-183473."
 	@priority = 4
 	test CannotEmptyRecycleBinWithinPublication {
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		JSONWebcontent.addWebContent(
 			content = "WC WebContent Content",
@@ -599,14 +615,16 @@ definition {
 
 		PublicationsChangeDetails.viewChangeDetailsInDisplay(
 			changeType = "Added",
-			contentValueInPublication = "Web Content");
+			contentValueInPublication = "Web Content",
+			publicationName = "Publication Name");
 
 		PublicationsNavigator.gotoNavbar(navBarTitle = "Data");
 
 		PublicationsChangeDetails.viewChangeDetailsInData(
 			changeType = "Added",
 			columnName = "Name",
-			columnValueInPublication = "Web Content Title");
+			columnValueInPublication = "Web Content Title",
+			publicationName = "Publication Name");
 
 		Click(
 			key_currentLocale = StringUtil.lowerCase("en-US"),
@@ -619,13 +637,15 @@ definition {
 		PublicationsChangeDetails.viewChangeDetailsInData(
 			changeType = "Added",
 			columnName = "名称",
-			columnValueInPublication = "网页内容标题");
+			columnValueInPublication = "网页内容标题",
+			publicationName = "Publication Name");
 
 		PublicationsNavigator.gotoNavbar(navBarTitle = "Display");
 
 		PublicationsChangeDetails.viewChangeDetailsInDisplay(
 			changeType = "Added",
-			contentValueInPublication = "网页内容");
+			contentValueInPublication = "网页内容",
+			publicationName = "Publication Name");
 	}
 
 	@description = "This is the use case for LPS-181668."
@@ -680,17 +700,9 @@ definition {
 
 			PagesAdmin.deletePage(pageName = "Home");
 
-			PublicationsNavigator.gotoReviewChanges();
-
-			Button.clickPublish();
-
-			AssertTextEquals.assertPartialText(
-				locator1 = "Message#SUCCESS",
-				value1 = "No unresolved conflicts, ready to publish.");
-
-			Publications.publishPublication(publicationName = "Publication Name");
-
-			Publications.viewPublicationPublished(publicationName = "Publication Name");
+			Publications.publishPublication(
+				gotoPublicationsAdmin = "true",
+				publicationName = "Publication Name");
 		}
 	}
 
@@ -747,7 +759,8 @@ definition {
 	@priority = 4
 	test CanReviewChangesWithManyDocuments {
 		property test.assert.warning.exceptions = "true";
-		property test.name.skip.portal.instance = "Publications#CanReviewChangesWithManyDocuments";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		ApplicationsMenu.gotoPortlet(
 			category = "System",
@@ -779,6 +792,81 @@ definition {
 			changeTitle = "DM Document Title",
 			changeType = "Added",
 			changeUser = "Test Test");
+	}
+
+	@description = "This is a use case for LPS-161618 - As a publication user, I would like to track changes to addresses"
+	@priority = 3
+	test CanTrackChangesToAddresses {
+		task ("Add an Organization and Create a Publication") {
+			JSONOrganization.addOrganization(organizationName = "Organization Name");
+
+			JSONPublications.addPublication(publicationName = "Test Publication");
+
+			JSONPublications.selectPublication(publicationName = "Test Publication");
+		}
+
+		task ("Add address for the organization") {
+			Organization.openOrganizationsAdmin();
+
+			Organization.gotoEdit(orgName = "Organization Name");
+
+			Navigator.gotoNavTab(navTab = "Contact");
+
+			Organization.addContactInformation(
+				addressType = "Billing",
+				city = "Diamond Bar",
+				contactType = "add-address-link",
+				country = "United States",
+				postalCode = 91765,
+				region = "California",
+				street1 = "1400 Montefino Ave");
+		}
+
+		task ("Review changes and publish the publication") {
+			PublicationsNavigator.gotoReviewChanges(
+				gotoPublicationsAdmin = "true",
+				publicationName = "Test Publication");
+
+			PublicationsChanges.viewChanges(
+				changeCategory = "Address",
+				changeSite = "Global",
+				changeTitle = "Address",
+				changeType = "Added",
+				changeUser = "Test Test");
+
+			Publications.publishPublication(publicationName = "Test Publication");
+		}
+
+		task ("Revert publication and publish it again") {
+			PublicationsNavigator.openPublicationsHistory();
+
+			Publications.revertPublication(
+				publicationName = "Test Publication",
+				publishNow = "true");
+
+			PublicationsNavigator.gotoReviewChanges(
+				gotoPublicationsAdmin = "true",
+				publicationName = "Revert \"Test Publication\"");
+
+			PublicationsChanges.viewChanges(
+				changeCategory = "Address",
+				changeSite = "Global",
+				changeTitle = "Address",
+				changeType = "Deleted",
+				changeUser = "Test Test");
+
+			Publications.publishPublication(publicationName = "Revert \"Test Publication\"");
+		}
+
+		task ("Assert there is no address in the Organization") {
+			Organization.openOrganizationsAdmin();
+
+			Organization.gotoEdit(orgName = "Organization Name");
+
+			Navigator.gotoNavTab(navTab = "Contact");
+
+			AssertElementPresent(locator1 = "//*[contains(text(), 'This organization does not have any addresses.')]");
+		}
 	}
 
 	@description = "This is a use case for LPS-161618 - As a publication user, I would like to track changes to email addresses"
@@ -818,10 +906,6 @@ definition {
 				changeType = "Added",
 				changeUser = "Test Test");
 
-			PublicationsNavigator.gotoPublish(
-				gotoPublicationsAdmin = "true",
-				publicationName = "Test Publication");
-
 			Publications.publishPublication(publicationName = "Test Publication");
 		}
 
@@ -843,10 +927,6 @@ definition {
 				changeType = "Deleted",
 				changeUser = "Test Test");
 
-			PublicationsNavigator.gotoPublish(
-				gotoPublicationsAdmin = "true",
-				publicationName = "Revert \"Test Publication\"");
-
 			Publications.publishPublication(publicationName = "Revert \"Test Publication\"");
 		}
 
@@ -860,6 +940,80 @@ definition {
 			Navigator.gotoNavNested(navNested = "Contact Information");
 
 			AssertElementPresent(locator1 = "//*[contains(text(), 'This organization does not have any additional email addresses.')]");
+		}
+	}
+
+	@description = "This is a use case for LPS-161618 - As a publication user, I would like to track changes to phone numbers"
+	@priority = 3
+	test CanTrackChangesToPhoneNumbers {
+		task ("Add an Organization and Create a Publication") {
+			JSONOrganization.addOrganization(organizationName = "Organization Name");
+
+			JSONPublications.addPublication(publicationName = "Test Publication");
+
+			JSONPublications.selectPublication(publicationName = "Test Publication");
+		}
+
+		task ("Add phone number for the organization") {
+			Organization.openOrganizationsAdmin();
+
+			Organization.gotoEdit(orgName = "Organization Name");
+
+			Navigator.gotoNavTab(navTab = "Contact");
+
+			Navigator.gotoNavNested(navNested = "Contact Information");
+
+			Organization.addContactInformation(
+				contactType = "add-phone-number-link",
+				number = "1-877-543-3729");
+		}
+
+		task ("Review changes and publish the publication") {
+			PublicationsNavigator.gotoReviewChanges(
+				gotoPublicationsAdmin = "true",
+				publicationName = "Test Publication");
+
+			PublicationsChanges.viewChanges(
+				changeCategory = "Phone",
+				changeSite = "Global",
+				changeTitle = "1-877-543-3729",
+				changeType = "Added",
+				changeUser = "Test Test");
+
+			Publications.publishPublication(publicationName = "Test Publication");
+		}
+
+		task ("Revert publication and publish it again") {
+			PublicationsNavigator.openPublicationsHistory();
+
+			Publications.revertPublication(
+				publicationName = "Test Publication",
+				publishNow = "true");
+
+			PublicationsNavigator.gotoReviewChanges(
+				gotoPublicationsAdmin = "true",
+				publicationName = "Revert \"Test Publication\"");
+
+			PublicationsChanges.viewChanges(
+				changeCategory = "Phone",
+				changeSite = "Global",
+				changeTitle = "1-877-543-3729",
+				changeType = "Deleted",
+				changeUser = "Test Test");
+
+			Publications.publishPublication(publicationName = "Revert \"Test Publication\"");
+		}
+
+		task ("Assert there is no phone number in the Organization") {
+			Organization.openOrganizationsAdmin();
+
+			Organization.gotoEdit(orgName = "Organization Name");
+
+			Navigator.gotoNavTab(navTab = "Contact");
+
+			Navigator.gotoNavNested(navNested = "Contact Information");
+
+			AssertElementPresent(locator1 = "//*[contains(text(), 'This organization does not have any phone numbers.')]");
 		}
 	}
 
@@ -897,6 +1051,107 @@ definition {
 		AssertChecked.assertCheckedNotVisible(
 			key_roleTitle = "publications-user",
 			locator1 = "Permissions#CONFIGURATION_PERMISSIONS_VIEW_CHECKBOX");
+	}
+
+	@description = "This is a use case for LPS-186677 - As a publication user, I would like to configure the context view to display production entities."
+	@priority = 4
+	test ConfigureContextViewToDisplayProductionEntities {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		task ("Create a Publication and make a change to the Home Page") {
+			JSONPublications.addPublication(publicationName = "Publication Name");
+
+			JSONPublications.selectPublication(publicationName = "Publication Name");
+
+			ContentPagesNavigator.openEditContentPage(
+				pageName = "Home Page",
+				siteName = "Guest");
+
+			PageEditor.addFragment(
+				collectionName = "Basic Components",
+				fragmentName = "Button",
+				targetFragmentName = "Image");
+
+			PageEditor.publish();
+		}
+
+		task ("Go to review changes and view change to Home Page") {
+			PublicationsNavigator.gotoReviewChanges(
+				gotoPublicationsAdmin = "true",
+				publicationName = "Publication Name");
+
+			PublicationsChanges.viewChanges(
+				changeCategory = "Page",
+				changeSite = "Guest",
+				changeTitle = "Home",
+				changeType = "Modified",
+				changeUser = "Test Test");
+		}
+
+		task ("View Parents is available to view") {
+			PublicationsNavigator.gotoViewChangeDetails(
+				changeCategory = "Page",
+				changeTitle = "Home");
+
+			AssertElementPresent(
+				key_navBarTitle = "Parents",
+				locator1 = "Publications#MANAGE_PUBLICATIONS_NAVBAR_TITLE");
+		}
+
+		task ("Go to Publications System Settings and uncheck the Context View checkbox") {
+			ApplicationsMenu.gotoPortlet(
+				category = "Configuration",
+				panel = "Control Panel",
+				portlet = "System Settings");
+
+			SystemSettings.gotoConfiguration(
+				configurationCategory = "Publications",
+				configurationName = "Publications View Changes",
+				configurationScope = "Virtual Instance Scope");
+
+			FormFields.disableCheckbox(fieldName = "Context View Include Production");
+
+			SystemSettings.saveConfiguration();
+		}
+
+		task ("Assert that the Show All Items toggle shows up and Parents not") {
+			PublicationsNavigator.gotoReviewChanges(
+				gotoPublicationsAdmin = "true",
+				publicationName = "Publication Name");
+
+			PublicationsNavigator.gotoViewChangeDetails(
+				changeCategory = "Page",
+				changeTitle = "Home");
+
+			AssertElementPresent(
+				key_toggleSwitchLabel = "Show All Items",
+				locator1 = "ToggleSwitch#ANY_TOGGLE_SWITCH");
+
+			AssertElementNotPresent(
+				key_navBarTitle = "Parents",
+				locator1 = "Publications#MANAGE_PUBLICATIONS_NAVBAR_TITLE");
+		}
+	}
+
+	@description = "This is a use case for LPS-179997 - Content Page Editor Control Panel Preferences is not created in Production."
+	@priority = 2
+	test ContentPageEditorControlPanelPreferencesCannotBeCreatedInProduction {
+		JSONPublications.addPublication(publicationName = "Publication Name");
+
+		JSONPublications.selectPublication(publicationName = "Publication Name");
+
+		ContentPagesNavigator.openEditContentPage(
+			pageName = "Home",
+			siteName = "Guest");
+
+		GoBack();
+
+		PublicationsNavigator.gotoReviewChanges(
+			gotoPublicationsAdmin = "true",
+			publicationName = "Publication Name");
+
+		AssertElementPresent(locator1 = "PublicationsChanges#MESSAGE_NO_CHANGES");
 	}
 
 	@priority = 4
@@ -966,9 +1221,9 @@ definition {
 			key_tableEntry = "WC Template Name",
 			locator1 = "LexiconTable#TABLE_ENTRY");
 
-		JSONPublications.publishPublication(publicationName = "Publication Name");
-
-		Publications.viewPublicationPublished(publicationName = "Publication Name");
+		Publications.publishPublication(
+			gotoPublicationsAdmin = "true",
+			publicationName = "Publication Name");
 
 		WebContentNavigator.openWebContentAdmin(siteURLKey = "guest");
 
@@ -992,7 +1247,8 @@ definition {
 	@priority = 4
 	test IsBrowserHistoryPreserved {
 		property test.assert.warning.exceptions = "true";
-		property test.name.skip.portal.instance = "Publications#IsBrowserHistoryPreserved";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		JSONPublications.addPublication(publicationName = "Publication Name");
 
@@ -1003,11 +1259,9 @@ definition {
 			groupName = "Guest",
 			title = "WC WebContent Title");
 
-		PublicationsNavigator.gotoPublish(
+		Publications.publishPublication(
 			gotoPublicationsAdmin = "true",
 			publicationName = "Publication Name");
-
-		Publications.publishPublication(publicationName = "Publication Name");
 
 		Masterclass.goBackUsingBrowserHistory();
 
@@ -1032,7 +1286,8 @@ definition {
 
 	@priority = 4
 	test IsLocalizedInPublicationsAdmin {
-		property test.name.skip.portal.instance = "Publications#IsLocalizedInPublicationsAdmin";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		User.openUsersAdmin();
 
@@ -1091,6 +1346,41 @@ definition {
 			userFirstName = "Test",
 			userLastName = "Test",
 			userScreenName = "testscreen");
+	}
+
+	@description = "This is a use case for LPS-175323 - FragmentEntryLink table definition references defined incorrectly."
+	@priority = 3
+	test NoChangesCanBeFoundAfterDiscardingHomePageChange {
+		task ("Create Publication and modify Home Page") {
+			JSONPublications.addPublication(publicationName = "Test Publication");
+
+			JSONPublications.selectPublication(publicationName = "Test Publication");
+
+			ContentPagesNavigator.openEditContentPage(
+				pageName = "Home",
+				siteName = "Guest");
+
+			PageEditor.addFragment(
+				collectionName = "Basic Components",
+				fragmentName = "Button",
+				targetFragmentName = "Image");
+
+			PageEditor.publish();
+		}
+
+		task ("Discard change and assert no changes were found") {
+			PublicationsNavigator.gotoReviewChanges();
+
+			PublicationsChanges.discardChanges(
+				changeCategory = "Page",
+				changeTitle = "Home");
+
+			PublicationsNavigator.gotoReviewChanges(
+				gotoPublicationsAdmin = "true",
+				publicationName = "Test Publication");
+
+			AssertElementPresent(locator1 = "PublicationsChanges#MESSAGE_NO_CHANGES");
+		}
 	}
 
 	@description = "Assert publications changes can search and sort"
@@ -1202,17 +1492,15 @@ definition {
 
 		PortletEntry.publish();
 
-		PublicationsNavigator.gotoPublish(
+		Publications.publishPublication(
 			gotoPublicationsAdmin = "true",
 			publicationName = "Publication 2 Name");
 
-		Publications.publishPublication(publicationName = "Publication 2 Name");
-
 		Publications.selectPublication(publicationName = "Publication Name");
 
-		PublicationsNavigator.gotoPublish(publicationName = "Publication Name");
-
-		Publications.publishPublication(publicationName = "Publication Name");
+		Publications.publishPublication(
+			gotoPublicationsAdmin = "true",
+			publicationName = "Publication Name");
 
 		Navigator.openURL();
 
@@ -1274,9 +1562,9 @@ definition {
 			groupName = "Guest",
 			title = "WC WebContent Title");
 
-		JSONPublications.publishPublication(publicationName = "Publication Name");
-
-		Publications.viewPublicationPublished(publicationName = "Publication Name");
+		Publications.publishPublication(
+			gotoPublicationsAdmin = "true",
+			publicationName = "Publication Name");
 
 		WebContentNavigator.openWebContentAdmin(siteURLKey = "guest");
 
@@ -1290,13 +1578,77 @@ definition {
 			publicationName = "Publication Name",
 			publishNow = "true");
 
-		JSONPublications.publishPublication(publicationName = "Revert \"Publication Name\"");
+		Publications.publishPublication(
+			gotoPublicationsAdmin = "true",
+			publicationName = "Revert \"Publication Name\"");
 
 		WebContentNavigator.openWebContentAdmin(siteURLKey = "guest");
 
 		AssertTextEquals.assertPartialText(
 			locator1 = "Message#EMPTY_INFO",
 			value1 = "No web content was found.");
+	}
+
+	@description = "This is use case for LPS-176351. Can review changes when publication is published"
+	@priority = 3
+	test ReviewChangesForPublishedPage {
+		task ("Add new Publication and use it") {
+			JSONPublications.addPublication(publicationName = "Publication Name");
+
+			JSONPublications.selectPublication(publicationName = "Publication Name");
+		}
+
+		task ("Make a change to the Home Page by adding a button fragment in it") {
+			ContentPagesNavigator.openEditContentPage(
+				pageName = "Home Page",
+				siteName = "Guest");
+
+			PageEditor.addFragment(
+				collectionName = "Basic Components",
+				fragmentName = "Button",
+				targetFragmentName = "Image");
+
+			PageEditor.publish();
+		}
+
+		task ("Publish Publication") {
+			Publications.publishPublication(
+				gotoPublicationsAdmin = "true",
+				publicationName = "Publication Name");
+		}
+
+		task ("View Publication history and confirm that the changes were made") {
+			PublicationsNavigator.openPublicationsHistory();
+
+			Click(
+				key_publicationName = "Publication Name",
+				locator1 = "Publications#PUBLISHED_PUBLICATION_NAME");
+
+			PublicationsChanges.viewChanges(
+				changeCategory = "Page",
+				changeSite = "Guest",
+				changeTitle = "Home",
+				changeType = "Modified",
+				changeUser = "Test Test");
+
+			PublicationsChanges.viewChanges(
+				changeCategory = "Fragment Entry Link",
+				changeSite = "Guest",
+				changeTitle = "Button for Home.",
+				changeType = "Added",
+				changeUser = "Test Test");
+		}
+
+		task ("Assert that the fragment button is present at the home page") {
+			Navigator.gotoPage(pageName = "Home");
+
+			AssertTextEquals(
+				fragmentName = "button",
+				id = "link",
+				index = 1,
+				locator1 = "Fragment#CONTRIBUTED_FRAGMENT_TEXT",
+				value1 = "Go Somewhere");
+		}
 	}
 
 	@description = "Assert that we can schedule a asset inside a publication and publish it."
@@ -1320,17 +1672,9 @@ definition {
 
 		PortletEntry.publish();
 
-		PublicationsNavigator.gotoReviewChanges(
+		Publications.publishPublication(
 			gotoPublicationsAdmin = "true",
 			publicationName = "Publication Name");
-
-		Button.clickPublish();
-
-		AssertTextEquals.assertPartialText(
-			locator1 = "Message#SUCCESS",
-			value1 = "No unresolved conflicts, ready to publish.");
-
-		Publications.publishPublication(publicationName = "Publication Name");
 	}
 
 	@priority = 5
@@ -1400,7 +1744,9 @@ definition {
 				groupName = "Guest",
 				layoutName = ${publicationName});
 
-			JSONPublications.publishPublication(publicationName = ${publicationName});
+			Publications.publishPublication(
+				gotoPublicationsAdmin = "true",
+				publicationName = ${publicationName});
 		}
 
 		Navigator.gotoNavTab(navTab = "History");
@@ -1413,7 +1759,7 @@ definition {
 	@description = "This is the use case for LPS-158789."
 	@priority = 4
 	test UserWithoutAccessCannotChangePublicationViaURL {
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		JSONLayout.addPublicLayout(
 			groupName = "Site Name",
@@ -1458,7 +1804,8 @@ definition {
 	@description = "Assert that items are being properly indexed if they exists both in Production and in a Publication"
 	@priority = 3
 	test ViewItemsAreProperlyIndexedInProductionAndPublication {
-		property test.name.skip.portal.instance = "Publications#ViewItemsAreProperlyIndexedInProductionAndPublication";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Create a new tag") {
 			JSONAssettag.addTag(
@@ -1564,7 +1911,8 @@ definition {
 			changeType = "Modified",
 			contentValueInProduction = "WC WebContent Content",
 			contentValueInPublication = "WC WebContent Content Edited",
-			diffAddedValue = "Edited");
+			diffAddedValue = "Edited",
+			publicationName = "Publication Name");
 
 		PublicationsNavigator.gotoNavbar(navBarTitle = "Data");
 
@@ -1573,7 +1921,8 @@ definition {
 			columnName = "Name",
 			columnValueInProduction = "WC WebContent Title",
 			columnValueInPublication = "WC WebContent Title Edited",
-			diffAddedValue = "Edited");
+			diffAddedValue = "Edited",
+			publicationName = "Publication Name");
 
 		PublicationsNavigator.gotoNavbar(navBarTitle = "Parents");
 
@@ -1601,7 +1950,9 @@ definition {
 				groupName = "Guest",
 				title = "WC Title ${count}");
 
-			JSONPublications.publishPublication(publicationName = "Publication Name ${count}");
+			Publications.publishPublication(
+				gotoPublicationsAdmin = "true",
+				publicationName = "Publication Name ${count}");
 		}
 
 		PublicationsNavigator.openPublicationsHistory();
@@ -1625,6 +1976,133 @@ definition {
 		Publications.viewPublicationOrderInHistory(
 			paginationView = "true",
 			publicationList = "Publication Name 3,Publication Name 2,Publication Name 1");
+	}
+
+	@description = "This is use case for LPS-186230. Assert Publication History uses Dataset Display"
+	@priority = 4
+	test ViewPublicationsHistoryTableUsingDatasetDisplay {
+		property custom.properties = "feature.flag.LPS-180155=true";
+
+		task ("Add a new Publication") {
+			JSONPublications.addPublication(publicationName = "Publication Name");
+
+			JSONPublications.selectPublication(publicationName = "Publication Name");
+		}
+
+		JSONWebcontent.addWebContent(
+			content = "WC Content Title",
+			groupName = "Guest",
+			title = "WC Title Title");
+
+		task ("Publish the Publication") {
+			Refresh();
+
+			Publications.publishPublication(publicationName = "Publication Name");
+		}
+
+		task ("Assert Publications History table uses dataset display") {
+			PublicationsNavigator.openPublicationsHistory();
+
+			AssertElementPresent(locator1 = "//button[contains(text(),'Publication')]");
+
+			AssertElementPresent(locator1 = "//button[contains(text(),'Published Date')]");
+
+			AssertElementPresent(locator1 = "//div[contains(text(),'Published By')]");
+
+			AssertElementPresent(locator1 = "//div[contains(text(),'Status')]");
+		}
+
+		task ("Assert Revert and Review Changes under Ellipsis Item") {
+			PublicationsNavigator.openPublicationsHistory();
+
+			Click(
+				key_publicationName = "Publication Name",
+				locator1 = "Publications#ELLIPSIS_IN_DATASET_DIAPLAY");
+
+			MenuItem.clickNoError(menuItem = "Revert");
+
+			AssertTextEquals(
+				locator1 = "Publications#PUBLICATION_NAME",
+				value1 = "Revert \"Publication Name\"");
+
+			PublicationsNavigator.openPublicationsHistory();
+
+			Click(
+				key_publicationName = "Publication Name",
+				locator1 = "Publications#ELLIPSIS_IN_DATASET_DIAPLAY");
+
+			MenuItem.clickNoError(menuItem = "Review Changes");
+
+			AssertElementPresent(locator1 = "PublicationsChanges#CHANGE_HEADER");
+		}
+
+		task ("Filter and view published publication") {
+			PublicationsNavigator.openPublicationsHistory();
+
+			Publications.filterPublishedPublicationInDatasetDisplay(statusList = "Published");
+
+			AssertTextEquals.assertPartialText(
+				key_publicationName = "Publication Name",
+				locator1 = "Publications#PUBLICATION_NAME_IN_DATASET_DIAPLAY",
+				value1 = "Publication Name");
+		}
+	}
+
+	@description = "Assert Publications table can be viewed using dataset display."
+	@priority = 4
+	test ViewPublicationsTableUsingDatasetDisplay {
+		property custom.properties = "feature.flag.LPS-180155=true";
+
+		task ("Add a Publication and navigate to Publications Admin") {
+			JSONPublications.addPublication(publicationName = "Publication 1 Name");
+
+			PublicationsNavigator.openPublicationsAdmin();
+		}
+
+		task ("Assert Publications table uses dataset display") {
+			AssertElementPresent(locator1 = "//button[contains(text(),'Publication')]");
+
+			AssertElementPresent(locator1 = "//div[contains(text(),'Description')]");
+
+			AssertElementPresent(locator1 = "//button[contains(text(),'Last Modified')]");
+
+			AssertElementPresent(locator1 = "//button[contains(text(),'Create Date')]");
+
+			AssertElementPresent(locator1 = "//button[contains(text(),'Status')]");
+
+			AssertElementPresent(locator1 = "//button[contains(text(),'Owner')]");
+		}
+
+		task ("Scheduled a Publication and navigate to Publications Admin") {
+			JSONPublications.addPublication(publicationName = "Publication 2 Name");
+
+			JSONPublications.selectPublication(publicationName = "Publication 2 Name");
+
+			JSONWebcontent.addWebContent(
+				content = "WC WebContent Content",
+				groupName = "Guest",
+				title = "WC WebContent Title");
+
+			Refresh();
+
+			Publications.schedulePublication(publicationName = "Publication 2 Name");
+
+			PublicationsNavigator.openPublicationsScheduled();
+		}
+
+		task ("Assert Publications table uses dataset display") {
+			AssertElementPresent(locator1 = "//button[contains(text(),'Publication')]");
+
+			AssertElementPresent(locator1 = "//div[contains(text(),'Description')]");
+
+			AssertElementPresent(locator1 = "//button[contains(text(),'Publishing')]");
+
+			AssertElementPresent(locator1 = "//button[contains(text(),'Last Modified')]");
+
+			AssertElementPresent(locator1 = "//button[contains(text(),'Create Date')]");
+
+			AssertElementPresent(locator1 = "//button[contains(text(),'Owner')]");
+		}
 	}
 
 }

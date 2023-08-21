@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.admin.pricing.resource.v2_0.test;
@@ -188,6 +179,7 @@ public abstract class BasePriceEntryResourceTestCase {
 		priceEntry.setPriceFormatted(regex);
 		priceEntry.setPriceListExternalReferenceCode(regex);
 		priceEntry.setSkuExternalReferenceCode(regex);
+		priceEntry.setUnitOfMeasure(regex);
 
 		String json = PriceEntrySerDes.toJSON(priceEntry);
 
@@ -201,6 +193,7 @@ public abstract class BasePriceEntryResourceTestCase {
 		Assert.assertEquals(
 			regex, priceEntry.getPriceListExternalReferenceCode());
 		Assert.assertEquals(regex, priceEntry.getSkuExternalReferenceCode());
+		Assert.assertEquals(regex, priceEntry.getUnitOfMeasure());
 	}
 
 	@Test
@@ -375,45 +368,40 @@ public abstract class BasePriceEntryResourceTestCase {
 	public void testGetPriceListByExternalReferenceCodePriceEntriesPageWithFilterDoubleEquals()
 		throws Exception {
 
-		List<EntityField> entityFields = getEntityFields(
-			EntityField.Type.DOUBLE);
+		testGetPriceListByExternalReferenceCodePriceEntriesPageWithFilter(
+			"eq", EntityField.Type.DOUBLE);
+	}
 
-		if (entityFields.isEmpty()) {
-			return;
-		}
+	@Test
+	public void testGetPriceListByExternalReferenceCodePriceEntriesPageWithFilterStringContains()
+		throws Exception {
 
-		String externalReferenceCode =
-			testGetPriceListByExternalReferenceCodePriceEntriesPage_getExternalReferenceCode();
-
-		PriceEntry priceEntry1 =
-			testGetPriceListByExternalReferenceCodePriceEntriesPage_addPriceEntry(
-				externalReferenceCode, randomPriceEntry());
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		PriceEntry priceEntry2 =
-			testGetPriceListByExternalReferenceCodePriceEntriesPage_addPriceEntry(
-				externalReferenceCode, randomPriceEntry());
-
-		for (EntityField entityField : entityFields) {
-			Page<PriceEntry> page =
-				priceEntryResource.
-					getPriceListByExternalReferenceCodePriceEntriesPage(
-						externalReferenceCode, null,
-						getFilterString(entityField, "eq", priceEntry1),
-						Pagination.of(1, 2), null);
-
-			assertEquals(
-				Collections.singletonList(priceEntry1),
-				(List<PriceEntry>)page.getItems());
-		}
+		testGetPriceListByExternalReferenceCodePriceEntriesPageWithFilter(
+			"contains", EntityField.Type.STRING);
 	}
 
 	@Test
 	public void testGetPriceListByExternalReferenceCodePriceEntriesPageWithFilterStringEquals()
 		throws Exception {
 
-		List<EntityField> entityFields = getEntityFields(
-			EntityField.Type.STRING);
+		testGetPriceListByExternalReferenceCodePriceEntriesPageWithFilter(
+			"eq", EntityField.Type.STRING);
+	}
+
+	@Test
+	public void testGetPriceListByExternalReferenceCodePriceEntriesPageWithFilterStringStartsWith()
+		throws Exception {
+
+		testGetPriceListByExternalReferenceCodePriceEntriesPageWithFilter(
+			"startswith", EntityField.Type.STRING);
+	}
+
+	protected void
+			testGetPriceListByExternalReferenceCodePriceEntriesPageWithFilter(
+				String operator, EntityField.Type type)
+		throws Exception {
+
+		List<EntityField> entityFields = getEntityFields(type);
 
 		if (entityFields.isEmpty()) {
 			return;
@@ -436,7 +424,7 @@ public abstract class BasePriceEntryResourceTestCase {
 				priceEntryResource.
 					getPriceListByExternalReferenceCodePriceEntriesPage(
 						externalReferenceCode, null,
-						getFilterString(entityField, "eq", priceEntry1),
+						getFilterString(entityField, operator, priceEntry1),
 						Pagination.of(1, 2), null);
 
 			assertEquals(
@@ -786,42 +774,39 @@ public abstract class BasePriceEntryResourceTestCase {
 	public void testGetPriceListIdPriceEntriesPageWithFilterDoubleEquals()
 		throws Exception {
 
-		List<EntityField> entityFields = getEntityFields(
-			EntityField.Type.DOUBLE);
+		testGetPriceListIdPriceEntriesPageWithFilter(
+			"eq", EntityField.Type.DOUBLE);
+	}
 
-		if (entityFields.isEmpty()) {
-			return;
-		}
+	@Test
+	public void testGetPriceListIdPriceEntriesPageWithFilterStringContains()
+		throws Exception {
 
-		Long id = testGetPriceListIdPriceEntriesPage_getId();
-
-		PriceEntry priceEntry1 =
-			testGetPriceListIdPriceEntriesPage_addPriceEntry(
-				id, randomPriceEntry());
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		PriceEntry priceEntry2 =
-			testGetPriceListIdPriceEntriesPage_addPriceEntry(
-				id, randomPriceEntry());
-
-		for (EntityField entityField : entityFields) {
-			Page<PriceEntry> page =
-				priceEntryResource.getPriceListIdPriceEntriesPage(
-					id, null, getFilterString(entityField, "eq", priceEntry1),
-					Pagination.of(1, 2), null);
-
-			assertEquals(
-				Collections.singletonList(priceEntry1),
-				(List<PriceEntry>)page.getItems());
-		}
+		testGetPriceListIdPriceEntriesPageWithFilter(
+			"contains", EntityField.Type.STRING);
 	}
 
 	@Test
 	public void testGetPriceListIdPriceEntriesPageWithFilterStringEquals()
 		throws Exception {
 
-		List<EntityField> entityFields = getEntityFields(
-			EntityField.Type.STRING);
+		testGetPriceListIdPriceEntriesPageWithFilter(
+			"eq", EntityField.Type.STRING);
+	}
+
+	@Test
+	public void testGetPriceListIdPriceEntriesPageWithFilterStringStartsWith()
+		throws Exception {
+
+		testGetPriceListIdPriceEntriesPageWithFilter(
+			"startswith", EntityField.Type.STRING);
+	}
+
+	protected void testGetPriceListIdPriceEntriesPageWithFilter(
+			String operator, EntityField.Type type)
+		throws Exception {
+
+		List<EntityField> entityFields = getEntityFields(type);
 
 		if (entityFields.isEmpty()) {
 			return;
@@ -841,7 +826,8 @@ public abstract class BasePriceEntryResourceTestCase {
 		for (EntityField entityField : entityFields) {
 			Page<PriceEntry> page =
 				priceEntryResource.getPriceListIdPriceEntriesPage(
-					id, null, getFilterString(entityField, "eq", priceEntry1),
+					id, null,
+					getFilterString(entityField, operator, priceEntry1),
 					Pagination.of(1, 2), null);
 
 			assertEquals(
@@ -1318,6 +1304,16 @@ public abstract class BasePriceEntryResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals(
+					"priceOnApplication", additionalAssertFieldName)) {
+
+				if (priceEntry.getPriceOnApplication() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("product", additionalAssertFieldName)) {
 				if (priceEntry.getProduct() == null) {
 					valid = false;
@@ -1360,6 +1356,14 @@ public abstract class BasePriceEntryResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals("unitOfMeasure", additionalAssertFieldName)) {
+				if (priceEntry.getUnitOfMeasure() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
 			throw new IllegalArgumentException(
 				"Invalid additional assert field name " +
 					additionalAssertFieldName);
@@ -1391,14 +1395,19 @@ public abstract class BasePriceEntryResourceTestCase {
 
 		Assert.assertTrue(valid);
 
-		Map<String, Map<String, String>> actions = page.getActions();
+		assertValid(page.getActions(), expectedActions);
+	}
 
-		for (String key : expectedActions.keySet()) {
-			Map action = actions.get(key);
+	protected void assertValid(
+		Map<String, Map<String, String>> actions1,
+		Map<String, Map<String, String>> actions2) {
+
+		for (String key : actions2.keySet()) {
+			Map action = actions1.get(key);
 
 			Assert.assertNotNull(key + " does not contain an action", action);
 
-			Map expectedAction = expectedActions.get(key);
+			Map<String, String> expectedAction = actions2.get(key);
 
 			Assert.assertEquals(
 				expectedAction.get("method"), action.get("method"));
@@ -1699,6 +1708,19 @@ public abstract class BasePriceEntryResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals(
+					"priceOnApplication", additionalAssertFieldName)) {
+
+				if (!Objects.deepEquals(
+						priceEntry1.getPriceOnApplication(),
+						priceEntry2.getPriceOnApplication())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("product", additionalAssertFieldName)) {
 				if (!Objects.deepEquals(
 						priceEntry1.getProduct(), priceEntry2.getProduct())) {
@@ -1746,6 +1768,17 @@ public abstract class BasePriceEntryResourceTestCase {
 				if (!Objects.deepEquals(
 						priceEntry1.getTierPrices(),
 						priceEntry2.getTierPrices())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("unitOfMeasure", additionalAssertFieldName)) {
+				if (!Objects.deepEquals(
+						priceEntry1.getUnitOfMeasure(),
+						priceEntry2.getUnitOfMeasure())) {
 
 					return false;
 				}
@@ -1902,9 +1935,47 @@ public abstract class BasePriceEntryResourceTestCase {
 		}
 
 		if (entityFieldName.equals("discountLevelsFormatted")) {
-			sb.append("'");
-			sb.append(String.valueOf(priceEntry.getDiscountLevelsFormatted()));
-			sb.append("'");
+			Object object = priceEntry.getDiscountLevelsFormatted();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
@@ -1974,9 +2045,47 @@ public abstract class BasePriceEntryResourceTestCase {
 		}
 
 		if (entityFieldName.equals("externalReferenceCode")) {
-			sb.append("'");
-			sb.append(String.valueOf(priceEntry.getExternalReferenceCode()));
-			sb.append("'");
+			Object object = priceEntry.getExternalReferenceCode();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
@@ -2003,23 +2112,103 @@ public abstract class BasePriceEntryResourceTestCase {
 		}
 
 		if (entityFieldName.equals("priceFormatted")) {
-			sb.append("'");
-			sb.append(String.valueOf(priceEntry.getPriceFormatted()));
-			sb.append("'");
+			Object object = priceEntry.getPriceFormatted();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
 
 		if (entityFieldName.equals("priceListExternalReferenceCode")) {
-			sb.append("'");
-			sb.append(
-				String.valueOf(priceEntry.getPriceListExternalReferenceCode()));
-			sb.append("'");
+			Object object = priceEntry.getPriceListExternalReferenceCode();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
 
 		if (entityFieldName.equals("priceListId")) {
+			throw new IllegalArgumentException(
+				"Invalid entity field " + entityFieldName);
+		}
+
+		if (entityFieldName.equals("priceOnApplication")) {
 			throw new IllegalArgumentException(
 				"Invalid entity field " + entityFieldName);
 		}
@@ -2035,9 +2224,47 @@ public abstract class BasePriceEntryResourceTestCase {
 		}
 
 		if (entityFieldName.equals("skuExternalReferenceCode")) {
-			sb.append("'");
-			sb.append(String.valueOf(priceEntry.getSkuExternalReferenceCode()));
-			sb.append("'");
+			Object object = priceEntry.getSkuExternalReferenceCode();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
@@ -2050,6 +2277,52 @@ public abstract class BasePriceEntryResourceTestCase {
 		if (entityFieldName.equals("tierPrices")) {
 			throw new IllegalArgumentException(
 				"Invalid entity field " + entityFieldName);
+		}
+
+		if (entityFieldName.equals("unitOfMeasure")) {
+			Object object = priceEntry.getUnitOfMeasure();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
+
+			return sb.toString();
 		}
 
 		throw new IllegalArgumentException(
@@ -2114,9 +2387,12 @@ public abstract class BasePriceEntryResourceTestCase {
 				priceListExternalReferenceCode = StringUtil.toLowerCase(
 					RandomTestUtil.randomString());
 				priceListId = RandomTestUtil.randomLong();
+				priceOnApplication = RandomTestUtil.randomBoolean();
 				skuExternalReferenceCode = StringUtil.toLowerCase(
 					RandomTestUtil.randomString());
 				skuId = RandomTestUtil.randomLong();
+				unitOfMeasure = StringUtil.toLowerCase(
+					RandomTestUtil.randomString());
 			}
 		};
 	}

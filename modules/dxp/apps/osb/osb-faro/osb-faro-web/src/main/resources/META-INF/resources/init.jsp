@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -28,6 +19,7 @@ page import="com.liferay.osb.faro.engine.client.constants.FieldMappingConstants"
 page import="com.liferay.osb.faro.engine.client.constants.LCPProjectConstants" %><%@
 page import="com.liferay.osb.faro.engine.client.constants.SegmentConstants" %><%@
 page import="com.liferay.osb.faro.engine.client.constants.TimeConstants" %><%@
+page import="com.liferay.osb.faro.util.FaroPropsValues" %><%@
 page import="com.liferay.osb.faro.web.internal.constants.FaroConstants" %><%@
 page import="com.liferay.osb.faro.web.internal.constants.FaroPaginationConstants" %><%@
 page import="com.liferay.osb.faro.web.internal.constants.FaroPortletKeys" %><%@
@@ -37,6 +29,7 @@ page import="com.liferay.osb.faro.web.internal.constants.FaroWebKeys" %><%@
 page import="com.liferay.osb.faro.web.internal.constants.UserConstants" %><%@
 page import="com.liferay.osb.faro.web.internal.util.JSONUtil" %><%@
 page import="com.liferay.portal.kernel.model.User" %><%@
+page import="com.liferay.portal.kernel.util.HashMapBuilder" %><%@
 page import="com.liferay.portal.kernel.util.PortalUtil" %>
 
 <liferay-frontend:defineObjects />
@@ -44,10 +37,15 @@ page import="com.liferay.portal.kernel.util.PortalUtil" %>
 <liferay-theme:defineObjects />
 
 <aui:script position="inline">
+
+	<%
+	User currentUser = themeDisplay.getUser();
+	%>
+
 	window.faroConstants = <%=
 	JSONUtil.writeValueAsString(
 		HashMapBuilder.<String, Object>put(
-		"activityActions", ActivityConstants.getActions()).
+		"activityActions", ActivityConstants.getActions())
 		.put("applications", FaroConstants.getApplications())
 		.put("cerebroAssetsURL", (String)request.getAttribute(FaroWebKeys.CEREBRO_ASSETS_URL))
 		.put("cerebroTouchpointsURL", (String)request.getAttribute(FaroWebKeys.CEREBRO_TOUCHPOINTS_URL))
@@ -59,7 +57,7 @@ page import="com.liferay.portal.kernel.util.PortalUtil" %>
 		.put("dataSourceTypes", DataSourceConstants.getTypes())
 		.put("documentationURLs", DocumentationConstants.getURLs())
 		.put("entityTypes", FaroConstants.getTypes())
-		.put("faroURL", System.getenv("FARO_URL"))
+		.put("faroURL", FaroPropsValues.FARO_URL)
 		.put("fieldContexts", FieldMappingConstants.getContexts())
 		.put("fieldOwnerTypes", FieldMappingConstants.getOwnerTypes())
 		.put("fieldTypes", FieldMappingConstants.getFieldTypes())
@@ -76,11 +74,7 @@ page import="com.liferay.portal.kernel.util.PortalUtil" %>
 		.put("subscriptionStatuses", FaroSubscriptionConstants.getStatuses())
 		.put("timeIntervals", TimeConstants.getIntervals())
 		.put("timeSpans", TimeConstants.getTimeSpans())
-		.put("userName", () -> {
-			User currentUser = themeDisplay.getUser();
-
-			return currentUser.getFullName();
-		})
+		.put("userName", currentUser.getFullName())
 		.put("userRoleNames", UserConstants.getRoleNames())
-		.put("userStatuses", UserConstants.getStatuses()).build();) %>;
+		.put("userStatuses", UserConstants.getStatuses()).build()) %>;
 </aui:script>

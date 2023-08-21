@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayBadge from '@clayui/badge';
@@ -22,18 +13,21 @@ import {FrontendDataSet} from '@liferay/frontend-data-set-web';
 import classNames from 'classnames';
 import {fetch, navigate, openModal, openToast} from 'frontend-js-web';
 import fuzzy from 'fuzzy';
-import React, {useRef, useState} from 'react';
+import React, {useState} from 'react';
 
 import '../css/FDSEntries.scss';
 import {
+	ALLOWED_ENDPOINTS_PARAMETERS,
 	API_URL,
+	FDS_DEFAULT_PROPS,
 	FUZZY_OPTIONS,
 	OBJECT_RELATIONSHIP,
-	PAGINATION_PROPS,
 } from './Constants';
 import {FDSViewType} from './FDSViews';
 import RequiredMark from './components/RequiredMark';
 import ValidationFeedback from './components/ValidationFeedback';
+
+const VIEWS_COUNT_TABLE_CELL_RENDERER_NAME = 'viewsCountTableCellRenderer';
 
 type FDSEntryType = {
 	[OBJECT_RELATIONSHIP.FDS_ENTRY_FDS_VIEW]: Array<FDSViewType>;
@@ -42,7 +36,12 @@ type FDSEntryType = {
 			href: string;
 			method: string;
 		};
+		update: {
+			href: string;
+			method: string;
+		};
 	};
+	externalReferenceCode: string;
 	id: string;
 	label: string;
 	restApplication: string;
@@ -74,7 +73,7 @@ const RESTApplicationItem = ({
 	);
 };
 
-const ViewsCountRenderer = ({itemData}: {itemData: FDSEntryType}) => {
+const ViewsCountTableCell = ({itemData}: {itemData: FDSEntryType}) => {
 	const count = itemData[OBJECT_RELATIONSHIP.FDS_ENTRY_FDS_VIEW].length;
 
 	return (
@@ -256,11 +255,47 @@ const RestEndpointDropdownMenu = ({
 	);
 };
 
+const FDSEntryLabelInput = ({
+	handleOnBlur,
+	labelValidationError,
+	namespace,
+	onChange,
+	value,
+}: {
+	handleOnBlur: () => void;
+	labelValidationError: boolean;
+	namespace: string;
+	onChange: Function;
+	value: string;
+}) => (
+	<ClayForm.Group
+		className={classNames({
+			'has-error': labelValidationError,
+		})}
+	>
+		<label htmlFor={`${namespace}fdsEntryLabelInput`}>
+			{Liferay.Language.get('name')}
+
+			<RequiredMark />
+		</label>
+
+		<ClayInput
+			id={`${namespace}fdsEntryLabelInput`}
+			onBlur={handleOnBlur}
+			onChange={(event) => onChange(event.target.value)}
+			type="text"
+			value={value}
+		/>
+
+		{labelValidationError && <ValidationFeedback />}
+	</ClayForm.Group>
+);
+
 interface IAddFDSEntryModalContentInterface {
 	closeModal: Function;
 	loadData: Function;
 	namespace: string;
-	restApplications: Array<string>;
+	restApplications?: Array<string>;
 }
 
 const AddFDSEntryModalContent = ({
@@ -269,6 +304,8 @@ const AddFDSEntryModalContent = ({
 	namespace,
 	restApplications,
 }: IAddFDSEntryModalContentInterface) => {
+	const [fdsEntryLabel, setFDSEntryLabel] = useState('');
+	const [saveButtonDisabled, setSaveButtonDisabled] = useState(false);
 	const [labelValidationError, setLabelValidationError] = useState(false);
 	const [
 		requiredRESTApplicationValidationError,
@@ -298,8 +335,6 @@ const AddFDSEntryModalContent = ({
 		string | null
 	>();
 
-	const fdsEntryLabelRef = useRef<HTMLInputElement>(null);
-
 	const addFDSEntry = async () => {
 		if (!selectedRESTApplication) {
 			return;
@@ -308,7 +343,7 @@ const AddFDSEntryModalContent = ({
 		selectedRESTApplication;
 
 		const body = {
-			label: fdsEntryLabelRef.current?.value,
+			label: fdsEntryLabel,
 			restApplication: selectedRESTApplication,
 			restEndpoint: selectedRESTEndpoint,
 			restSchema: selectedRESTSchema,
@@ -338,6 +373,7 @@ const AddFDSEntryModalContent = ({
 			loadData();
 		}
 		else {
+			setSaveButtonDisabled(false);
 			openToast({
 				message: Liferay.Language.get(
 					'your-request-failed-to-complete'
@@ -345,6 +381,22 @@ const AddFDSEntryModalContent = ({
 				type: 'danger',
 			});
 		}
+	};
+
+	const isPathValid = (
+		path: string,
+		allowedParameters: string[]
+	): boolean => {
+		const paramsMatcher = RegExp('{(.*?)}', 'g');
+		let matches;
+
+		while ((matches = paramsMatcher.exec(path)) !== null) {
+			if (!allowedParameters.includes(matches[1])) {
+				return false;
+			}
+		}
+
+		return true;
 	};
 
 	const getRESTSchemas = async (restApplication: string) => {
@@ -366,7 +418,7 @@ const AddFDSEntryModalContent = ({
 
 			schemaNames.forEach((schemaName) => {
 				paths.forEach((path: string) => {
-					if (path.includes('{')) {
+					if (!isPathValid(path, ALLOWED_ENDPOINTS_PARAMETERS)) {
 						return;
 					}
 
@@ -429,7 +481,7 @@ const AddFDSEntryModalContent = ({
 	};
 
 	const validate = () => {
-		if (!fdsEntryLabelRef.current?.value) {
+		if (!fdsEntryLabel) {
 			setLabelValidationError(true);
 
 			return false;
@@ -491,7 +543,7 @@ const AddFDSEntryModalContent = ({
 
 					getRESTSchemas(item);
 				}}
-				restApplications={restApplications}
+				restApplications={restApplications!}
 			/>
 		</ClayDropDown>
 	);
@@ -566,65 +618,52 @@ const AddFDSEntryModalContent = ({
 	return (
 		<>
 			<ClayModal.Header>
-				{Liferay.Language.get('new-dataset')}
+				{Liferay.Language.get('new-data-set')}
 			</ClayModal.Header>
 
 			<ClayModal.Body>
-				<ClayForm.Group
-					className={classNames({
-						'has-error': labelValidationError,
-					})}
-				>
-					<label htmlFor={`${namespace}fdsEntryLabelInput`}>
-						{Liferay.Language.get('name')}
+				<FDSEntryLabelInput
+					handleOnBlur={() => {
+						setLabelValidationError(!fdsEntryLabel);
+					}}
+					labelValidationError={labelValidationError}
+					namespace={namespace}
+					onChange={setFDSEntryLabel}
+					value={fdsEntryLabel}
+				/>
 
-						<RequiredMark />
-					</label>
-
-					<ClayInput
-						id={`${namespace}fdsEntryLabelInput`}
-						onBlur={() => {
-							setLabelValidationError(
-								!fdsEntryLabelRef.current?.value
-							);
-						}}
-						ref={fdsEntryLabelRef}
-						type="text"
-					/>
-
-					{labelValidationError && <ValidationFeedback />}
-				</ClayForm.Group>
-
-				<ClayForm.Group
-					className={classNames({
-						'has-error':
-							requiredRESTApplicationValidationError ||
-							noEnpointsRESTApplicationValidationError,
-					})}
-				>
-					<label
-						htmlFor={`${namespace}restApplicationsSelect`}
-						id={`${namespace}restApplicationsLabel`}
+				{restApplications && (
+					<ClayForm.Group
+						className={classNames({
+							'has-error':
+								requiredRESTApplicationValidationError ||
+								noEnpointsRESTApplicationValidationError,
+						})}
 					>
-						{Liferay.Language.get('rest-application')}
+						<label
+							htmlFor={`${namespace}restApplicationsSelect`}
+							id={`${namespace}restApplicationsLabel`}
+						>
+							{Liferay.Language.get('rest-application')}
 
-						<RequiredMark />
-					</label>
+							<RequiredMark />
+						</label>
 
-					<RestApplicationDropdown />
+						<RestApplicationDropdown />
 
-					{requiredRESTApplicationValidationError && (
-						<ValidationFeedback />
-					)}
+						{requiredRESTApplicationValidationError && (
+							<ValidationFeedback />
+						)}
 
-					{noEnpointsRESTApplicationValidationError && (
-						<ValidationFeedback
-							message={Liferay.Language.get(
-								'there-are-no-usable-endpoints'
-							)}
-						/>
-					)}
-				</ClayForm.Group>
+						{noEnpointsRESTApplicationValidationError && (
+							<ValidationFeedback
+								message={Liferay.Language.get(
+									'there-are-no-usable-endpoints'
+								)}
+							/>
+						)}
+					</ClayForm.Group>
+				)}
 
 				{restSchemaEndpoints.size > 0 && (
 					<ClayForm.Group
@@ -673,14 +712,106 @@ const AddFDSEntryModalContent = ({
 				last={
 					<ClayButton.Group spaced>
 						<ClayButton
+							disabled={saveButtonDisabled}
 							onClick={() => {
+								setSaveButtonDisabled(true);
+
 								const success = validate();
 
 								if (success) {
 									addFDSEntry();
 								}
+								else {
+									setSaveButtonDisabled(false);
+								}
 							}}
 						>
+							{Liferay.Language.get('save')}
+						</ClayButton>
+
+						<ClayButton
+							displayType="secondary"
+							onClick={() => closeModal()}
+						>
+							{Liferay.Language.get('cancel')}
+						</ClayButton>
+					</ClayButton.Group>
+				}
+			/>
+		</>
+	);
+};
+
+const RenameFDSEntryModalContent = ({
+	closeModal,
+	itemData,
+	loadData,
+	namespace,
+}: {
+	closeModal: Function;
+	itemData: FDSEntryType;
+	loadData: Function;
+	namespace: string;
+}) => {
+	const [fdsEntryLabel, setFDSEntryLabel] = useState(itemData.label);
+	const [labelValidationError, setLabelValidationError] = useState(false);
+
+	function saveFDSEntryRename() {
+		fetch(itemData.actions.update.href, {
+			body: JSON.stringify({
+				externalReferenceCode: itemData.externalReferenceCode,
+				label: fdsEntryLabel,
+			}),
+			headers: {
+				'Accept': 'application/json',
+				'Content-Type': 'application/json',
+			},
+			method: itemData.actions.update.method,
+		})
+			.then(() => {
+				closeModal();
+
+				openToast({
+					message: Liferay.Language.get(
+						'your-request-completed-successfully'
+					),
+					type: 'success',
+				});
+
+				loadData();
+			})
+			.catch(() =>
+				openToast({
+					message: Liferay.Language.get(
+						'your-request-failed-to-complete'
+					),
+					type: 'danger',
+				})
+			);
+	}
+
+	return (
+		<>
+			<ClayModal.Header>
+				{Liferay.Language.get('rename-data-set')}
+			</ClayModal.Header>
+
+			<ClayModal.Body>
+				<FDSEntryLabelInput
+					handleOnBlur={() => {
+						setLabelValidationError(!fdsEntryLabel);
+					}}
+					labelValidationError={labelValidationError}
+					namespace={namespace}
+					onChange={setFDSEntryLabel}
+					value={fdsEntryLabel}
+				/>
+			</ClayModal.Body>
+
+			<ClayModal.Footer
+				last={
+					<ClayButton.Group spaced>
+						<ClayButton onClick={saveFDSEntryRename}>
 							{Liferay.Language.get('save')}
 						</ClayButton>
 
@@ -711,7 +842,7 @@ const FDSEntries = ({
 	const creationMenu = {
 		primaryItems: [
 			{
-				label: Liferay.Language.get('new-dataset'),
+				label: Liferay.Language.get('new-data-set'),
 				onClick: ({loadData}: {loadData: Function}) => {
 					openModal({
 						contentComponent: ({
@@ -732,13 +863,17 @@ const FDSEntries = ({
 		],
 	};
 
-	const onViewClick = ({itemData}: {itemData: FDSEntryType}) => {
+	const getViewURL = (itemData: FDSEntryType) => {
 		const url = new URL(fdsViewsURL);
 
 		url.searchParams.set(`${namespace}fdsEntryId`, itemData.id);
 		url.searchParams.set(`${namespace}fdsEntryLabel`, itemData.label);
 
-		navigate(url);
+		return url;
+	};
+
+	const onViewClick = ({itemData}: {itemData: FDSEntryType}) => {
+		navigate(getViewURL(itemData));
 	};
 
 	const onDeleteClick = ({
@@ -750,7 +885,7 @@ const FDSEntries = ({
 	}) => {
 		openModal({
 			bodyHTML: Liferay.Language.get(
-				'deleting-a-dataset-is-an-action-that-cannot-be-reversed'
+				'deleting-a-data-set-is-an-action-that-cannot-be-reversed'
 			),
 			buttons: [
 				{
@@ -790,7 +925,26 @@ const FDSEntries = ({
 				},
 			],
 			status: 'danger',
-			title: Liferay.Language.get('delete-dataset'),
+			title: Liferay.Language.get('delete-data-set'),
+		});
+	};
+
+	const onRenameClick = ({
+		itemData,
+		loadData,
+	}: {
+		itemData: FDSEntryType;
+		loadData: Function;
+	}) => {
+		openModal({
+			contentComponent: ({closeModal}: {closeModal: Function}) => (
+				<RenameFDSEntryModalContent
+					closeModal={closeModal}
+					itemData={itemData}
+					loadData={loadData}
+					namespace={namespace}
+				/>
+			),
 		});
 	};
 
@@ -800,21 +954,30 @@ const FDSEntries = ({
 			name: 'table',
 			schema: {
 				fields: [
-					{fieldName: 'label', label: Liferay.Language.get('name')},
+					{
+						actionId: 'view',
+						contentRenderer: 'actionLink',
+						fieldName: 'label',
+						label: Liferay.Language.get('name'),
+						sortable: true,
+					},
 					{
 						fieldName: 'restApplication',
 						label: Liferay.Language.get('rest-application'),
+						sortable: true,
 					},
 					{
 						fieldName: 'restSchema',
 						label: Liferay.Language.get('rest-schema'),
+						sortable: true,
 					},
 					{
 						fieldName: 'restEndpoint',
 						label: Liferay.Language.get('rest-endpoint'),
+						sortable: true,
 					},
 					{
-						contentRenderer: 'viewsCount',
+						contentRenderer: VIEWS_COUNT_TABLE_CELL_RENDERER_NAME,
 						fieldName: OBJECT_RELATIONSHIP.FDS_ENTRY_FDS_VIEW,
 						label: Liferay.Language.get('views'),
 					},
@@ -822,6 +985,7 @@ const FDSEntries = ({
 						contentRenderer: 'dateTime',
 						fieldName: 'dateModified',
 						label: Liferay.Language.get('modified-date'),
+						sortable: true,
 					},
 				],
 			},
@@ -831,17 +995,39 @@ const FDSEntries = ({
 	return (
 		<div className="fds-entries">
 			<FrontendDataSet
+				{...FDS_DEFAULT_PROPS}
 				apiURL={`${API_URL.FDS_ENTRIES}?nestedFields=${OBJECT_RELATIONSHIP.FDS_ENTRY_FDS_VIEW}`}
 				creationMenu={creationMenu}
-				customDataRenderers={{
-					viewsCount: ViewsCountRenderer,
+				customRenderers={{
+					tableCell: [
+						{
+							component: ViewsCountTableCell,
+							name: VIEWS_COUNT_TABLE_CELL_RENDERER_NAME,
+							type: 'internal',
+						},
+					],
+				}}
+				emptyState={{
+					description: Liferay.Language.get(
+						'start-creating-one-to-show-your-data'
+					),
+					image: '/states/empty_state.gif',
+					title: Liferay.Language.get('no-data-sets-created'),
 				}}
 				id={`${namespace}FDSEntries`}
 				itemsActions={[
 					{
+						data: {
+							id: 'view',
+						},
 						icon: 'view',
 						label: Liferay.Language.get('view'),
 						onClick: onViewClick,
+					},
+					{
+						icon: 'pencil',
+						label: Liferay.Language.get('rename'),
+						onClick: onRenameClick,
 					},
 					{
 						icon: 'trash',
@@ -849,9 +1035,8 @@ const FDSEntries = ({
 						onClick: onDeleteClick,
 					},
 				]}
-				style="fluid"
+				sorting={[{direction: 'desc', key: 'dateCreated'}]}
 				views={views}
-				{...PAGINATION_PROPS}
 			/>
 		</div>
 	);

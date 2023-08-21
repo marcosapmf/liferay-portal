@@ -1,23 +1,16 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2023 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.content.dashboard.web.internal.display.context;
 
 import com.liferay.asset.kernel.model.AssetCategory;
-import com.liferay.asset.kernel.model.AssetTag;
+import com.liferay.asset.kernel.model.AssetVocabulary;
 import com.liferay.asset.kernel.service.AssetCategoryLocalService;
 import com.liferay.asset.kernel.service.AssetVocabularyLocalService;
+import com.liferay.asset.tags.item.selector.AssetTagsItemSelectorReturnType;
+import com.liferay.asset.tags.item.selector.criterion.AssetTagsItemSelectorCriterion;
 import com.liferay.content.dashboard.item.action.exception.ContentDashboardItemActionException;
 import com.liferay.content.dashboard.item.filter.ContentDashboardItemFilter;
 import com.liferay.content.dashboard.item.filter.provider.ContentDashboardItemFilterProvider;
@@ -31,6 +24,9 @@ import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuil
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.LabelItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.LabelItemListBuilder;
 import com.liferay.info.item.InfoItemReference;
+import com.liferay.item.selector.ItemSelector;
+import com.liferay.item.selector.criteria.InfoItemItemSelectorReturnType;
+import com.liferay.item.selector.criteria.info.item.criterion.InfoItemItemSelectorCriterion;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
@@ -43,10 +39,9 @@ import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
-import com.liferay.portal.kernel.portlet.LiferayWindowState;
-import com.liferay.portal.kernel.portlet.PortletProvider;
-import com.liferay.portal.kernel.portlet.PortletProviderUtil;
 import com.liferay.portal.kernel.portlet.PortletURLUtil;
+import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactory;
+import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactoryUtil;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
@@ -81,8 +76,8 @@ public class ContentDashboardAdminManagementToolbarDisplayContext
 		ContentDashboardItemFilterProviderRegistry
 			contentDashboardItemFilterProviderRegistry,
 		GroupLocalService groupLocalService,
-		HttpServletRequest httpServletRequest, Language language,
-		LiferayPortletRequest liferayPortletRequest,
+		HttpServletRequest httpServletRequest, ItemSelector itemSelector,
+		Language language, LiferayPortletRequest liferayPortletRequest,
 		LiferayPortletResponse liferayPortletResponse, Locale locale,
 		UserLocalService userLocalService) {
 
@@ -97,6 +92,7 @@ public class ContentDashboardAdminManagementToolbarDisplayContext
 		_contentDashboardItemFilterProviderRegistry =
 			contentDashboardItemFilterProviderRegistry;
 		_groupLocalService = groupLocalService;
+		_itemSelector = itemSelector;
 		_language = language;
 		_liferayPortletRequest = liferayPortletRequest;
 		_liferayPortletResponse = liferayPortletResponse;
@@ -519,70 +515,56 @@ public class ContentDashboardAdminManagementToolbarDisplayContext
 		}
 	}
 
-	private PortletURL _getAssetCategorySelectorURL() throws PortalException {
+	private String _getAssetCategorySelectorURL() throws PortalException {
+		RequestBackedPortletURLFactory requestBackedPortletURLFactory =
+			RequestBackedPortletURLFactoryUtil.create(_liferayPortletRequest);
+
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)_liferayPortletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
+
+		InfoItemItemSelectorCriterion itemSelectorCriterion =
+			new InfoItemItemSelectorCriterion();
+
+		itemSelectorCriterion.setDesiredItemSelectorReturnTypes(
+			new InfoItemItemSelectorReturnType());
+		itemSelectorCriterion.setItemType(AssetCategory.class.getName());
+		itemSelectorCriterion.setMultiSelection(true);
+
 		return PortletURLBuilder.create(
-			PortletProviderUtil.getPortletURL(
-				_liferayPortletRequest, AssetCategory.class.getName(),
-				PortletProvider.Action.BROWSE)
+			_itemSelector.getItemSelectorURL(
+				requestBackedPortletURLFactory, themeDisplay.getScopeGroup(),
+				themeDisplay.getScopeGroupId(),
+				_liferayPortletResponse.getNamespace() +
+					"selectedAssetCategory",
+				itemSelectorCriterion)
 		).setParameter(
-			"eventName",
-			_liferayPortletResponse.getNamespace() + "selectedAssetCategory"
-		).setParameter(
-			"selectedCategories",
+			"selectedCategoryIds",
 			StringUtil.merge(
 				_contentDashboardAdminDisplayContext.getAssetCategoryIds(),
 				StringPool.COMMA)
 		).setParameter(
-			"showSelectedCounter", true
-		).setParameter(
-			"singleSelect", false
-		).setParameter(
 			"vocabularyIds",
-			() -> {
-				ThemeDisplay themeDisplay =
-					(ThemeDisplay)_liferayPortletRequest.getAttribute(
-						WebKeys.THEME_DISPLAY);
-
-				return StringUtil.merge(
-					_assetVocabularyLocalService.getCompanyVocabularies(
-						themeDisplay.getCompanyId()),
-					assetVocabulary -> String.valueOf(
-						assetVocabulary.getVocabularyId()),
-					StringPool.COMMA);
-			}
-		).setWindowState(
-			LiferayWindowState.POP_UP
-		).buildPortletURL();
+			() -> ListUtil.toString(
+				_assetVocabularyLocalService.getCompanyVocabularies(
+					themeDisplay.getCompanyId()),
+				AssetVocabulary.VOCABULARY_ID_ACCESSOR)
+		).buildString();
 	}
 
-	private PortletURL _getAssetTagSelectorURL() throws PortalException {
-		return PortletURLBuilder.create(
-			PortletProviderUtil.getPortletURL(
-				_liferayPortletRequest, AssetTag.class.getName(),
-				PortletProvider.Action.BROWSE)
-		).setParameter(
-			"eventName",
-			_liferayPortletResponse.getNamespace() + "selectedAssetTag"
-		).setParameter(
-			"groupIds",
-			() -> {
-				ThemeDisplay themeDisplay =
-					(ThemeDisplay)_liferayPortletRequest.getAttribute(
-						WebKeys.THEME_DISPLAY);
+	private PortletURL _getAssetTagSelectorURL() {
+		AssetTagsItemSelectorCriterion assetTagsItemSelectorCriterion =
+			new AssetTagsItemSelectorCriterion();
 
-				return StringUtil.merge(
-					_groupLocalService.getGroupIds(
-						themeDisplay.getCompanyId(), true),
-					StringPool.COMMA);
-			}
-		).setParameter(
-			"selectedTagNames",
-			StringUtil.merge(
-				_contentDashboardAdminDisplayContext.getAssetTagIds(),
-				StringPool.COMMA)
-		).setWindowState(
-			LiferayWindowState.POP_UP
-		).buildPortletURL();
+		assetTagsItemSelectorCriterion.setAllGroupIds(true);
+		assetTagsItemSelectorCriterion.setDesiredItemSelectorReturnTypes(
+			new AssetTagsItemSelectorReturnType());
+		assetTagsItemSelectorCriterion.setMultiSelection(true);
+
+		return _itemSelector.getItemSelectorURL(
+			RequestBackedPortletURLFactoryUtil.create(_liferayPortletRequest),
+			_liferayPortletResponse.getNamespace() + "selectTag",
+			assetTagsItemSelectorCriterion);
 	}
 
 	private List<DropdownItem>
@@ -661,9 +643,7 @@ public class ContentDashboardAdminManagementToolbarDisplayContext
 				).buildString()
 			).putData(
 				"selectAuthorURL",
-				String.valueOf(
-					_contentDashboardAdminDisplayContext.
-						getAuthorItemSelectorURL())
+				_contentDashboardAdminDisplayContext.getAuthorItemSelectorURL()
 			).setActive(
 				() -> {
 					if (((authorIds.size() == 1) &&
@@ -719,8 +699,7 @@ public class ContentDashboardAdminManagementToolbarDisplayContext
 					"assetCategoryId", (String)null
 				).buildString()
 			).putData(
-				"selectAssetCategoryURL",
-				String.valueOf(_getAssetCategorySelectorURL())
+				"selectAssetCategoryURL", _getAssetCategorySelectorURL()
 			).setActive(
 				ListUtil.isNotEmpty(
 					_contentDashboardAdminDisplayContext.getAssetCategoryIds())
@@ -929,6 +908,7 @@ public class ContentDashboardAdminManagementToolbarDisplayContext
 	private final ContentDashboardItemFilterProviderRegistry
 		_contentDashboardItemFilterProviderRegistry;
 	private final GroupLocalService _groupLocalService;
+	private final ItemSelector _itemSelector;
 	private final Language _language;
 	private final LiferayPortletRequest _liferayPortletRequest;
 	private final LiferayPortletResponse _liferayPortletResponse;

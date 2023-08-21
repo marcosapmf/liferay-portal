@@ -1,24 +1,13 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayAlert from '@clayui/alert';
 import ClayButton from '@clayui/button';
 import ClayForm from '@clayui/form';
-import ClayIcon from '@clayui/icon';
 import ClayModal, {ClayModalProvider, useModal} from '@clayui/modal';
 import {Observer} from '@clayui/modal/lib/types';
-import {ClayTooltipProvider} from '@clayui/tooltip';
 import {API, Input, Toggle} from '@liferay/object-js-components-web';
 import React, {useEffect, useState} from 'react';
 
@@ -63,10 +52,25 @@ function ModalAddObjectField({
 		indexedLanguageId: null,
 		listTypeDefinitionExternalReferenceCode: '',
 		listTypeDefinitionId: 0,
+		readOnly: 'false',
+		readOnlyConditionExpression: '',
 		required: false,
 	};
 
 	const onSubmit = async (field: Partial<ObjectField>) => {
+		if (
+			field.businessType === 'Aggregation' ||
+			field.businessType === 'Formula'
+		) {
+			field.readOnly = 'true';
+			delete field.readOnlyConditionExpression;
+		}
+
+		if (!Liferay.FeatureFlags['LPS-170122']) {
+			delete field.readOnly;
+			delete field.readOnlyConditionExpression;
+		}
+
 		if (field.label) {
 			field = {
 				...field,
@@ -118,7 +122,7 @@ function ModalAddObjectField({
 			makeFetch();
 		}
 
-		if (Liferay.FeatureFlags['LPS-146755']) {
+		if (Liferay.FeatureFlags['LPS-172017']) {
 			if (
 				objectDefinition?.enableLocalization &&
 				showEnableTranslationToggle
@@ -174,7 +178,7 @@ function ModalAddObjectField({
 						objectName={objectName}
 						setValues={setValues}
 					>
-						{Liferay.FeatureFlags['LPS-146755'] &&
+						{Liferay.FeatureFlags['LPS-172017'] &&
 							showEnableTranslationToggle && (
 								<div className="lfr-objects-add-object-field-enable-translations-toggle">
 									<Toggle
@@ -184,26 +188,22 @@ function ModalAddObjectField({
 										label={Liferay.Language.get(
 											'enable-entry-translations'
 										)}
-										onToggle={() =>
+										onToggle={(localized) =>
 											setValues({
-												localized: !values.localized,
+												localized,
+												required: Liferay.FeatureFlags[
+													'LPS-172017'
+												]
+													? !localized &&
+													  values.required
+													: values.required,
 											})
 										}
 										toggled={values.localized}
+										tooltip={Liferay.Language.get(
+											'users-will-be-able-to-add-translations-for-the-entries-of-this-field'
+										)}
 									/>
-
-									<ClayTooltipProvider>
-										<span
-											title={Liferay.Language.get(
-												'users-will-be-able-to-add-translations-for-the-entries-of-this-field'
-											)}
-										>
-											<ClayIcon
-												className="lfr-objects-add-object-field-enable-translations-toggle-icon"
-												symbol="question-circle-full"
-											/>
-										</span>
-									</ClayTooltipProvider>
 								</div>
 							)}
 					</ObjectFieldFormBase>
@@ -212,12 +212,9 @@ function ModalAddObjectField({
 						<PicklistDefaultValueSelect
 							creationLanguageId={creationLanguageId}
 							defaultValue={
-								Liferay.FeatureFlags['LPS-163716']
-									? values.objectFieldSettings?.find(
-											(setting) =>
-												setting.name === 'defaultValue'
-									  )?.value
-									: values.defaultValue
+								values.objectFieldSettings?.find(
+									(setting) => setting.name === 'defaultValue'
+								)?.value
 							}
 							error={errors.defaultValue}
 							label={Liferay.Language.get('default-value')}

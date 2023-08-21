@@ -1,6 +1,7 @@
 @component-name = "portal-wcm"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testcase.url = "http://localhost:8080";
@@ -570,7 +571,8 @@ definition {
 	@description = "This is a test for LPS-159751. The page editor should be rendered after reset changes from site template."
 	@priority = 4
 	test EditContentPageAfterResetChangesFromSiteTemplate {
-		property ci.retries.disabled = "true";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		var siteName = StringUtil.randomString(8);
 
@@ -653,8 +655,6 @@ definition {
 
 				WaitForPageLoad();
 
-				Navigator.gotoNavTab(navTab = "Design");
-
 				Click(
 					ariaLabel = "Edit Master",
 					locator1 = "Link#ANY_WITH_ARIA_LABEL");
@@ -679,6 +679,8 @@ definition {
 			ContentPagesNavigator.openViewContentPage(
 				pageName = "Home",
 				siteName = ${siteName});
+
+			WaitForPageLoad();
 
 			SiteTemplates.resetPageChanges();
 		}
@@ -1274,9 +1276,7 @@ definition {
 		}
 
 		task ("When the page creator closes the sidebar and selects the Heading on Breadcrumb") {
-			Click(
-				key_text = "times",
-				locator1 = "Icon#ANY");
+			PageEditor.closeSidebar(tabName = "Browser");
 
 			Click(
 				key_breadcrumbName = "Heading",
@@ -1313,7 +1313,8 @@ definition {
 	@description = "This is a test for LPS-129536. View the configuration settings of widget after execute Clean Up Orphaned Theme Portlet Preferences."
 	@priority = 4
 	test ViewConfigurationSettingsOfWidgetAfterCleanUpOrphanedThemePortletPreferences {
-		property test.name.skip.portal.instance = "ContentPages#ViewConfigurationSettingsOfWidgetAfterCleanUpOrphanedThemePortletPreferences";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Add a web content") {
 			JSONWebcontent.addWebContent(
@@ -1389,6 +1390,180 @@ definition {
 				locator1 = "Relatedassets#ASSET_ROW_ENTRY_TITLE",
 				rowNumber = 1,
 				value1 = "Web Content Title");
+		}
+	}
+
+	@description = "This is a test for LPS-175136. View no alert for draft when design changes on content page being published in page editor."
+	@priority = 3
+	test ViewDesignChangesSavedInDraftViaPageDesignOptions {
+		task ("Given a page creator accesses to the configuration page of a content page via Page Design Options") {
+			ContentPagesNavigator.openEditContentPage(
+				pageName = "Test Content Page Name",
+				siteName = ${randomSiteName});
+
+			PageEditor.gotoTab(tabName = "Page Design Options");
+
+			Click(locator1 = "PageEditor#MORE_LINK");
+
+			WaitForPageLoad();
+		}
+
+		task ("When the page creator changes the current theme") {
+			Theme.configureLookAndFeelSpecificLook();
+
+			Theme.changeCurrentTheme(themeName = "Speedwell");
+
+			PortletEntry.save();
+		}
+
+		task ("Then the page creator sees the design changes saved in draft message") {
+			PagesAdmin.viewCurrentTheme(themeName = "Speedwell");
+
+			Alert.viewInfoMessageSpecific(infoMessage = "These design configurations are now saved in a draft. To fully apply them, the page needs to be published.");
+
+			Alert.viewInfoMessageSpecific(infoMessage = "See current published configuration here.");
+
+			Navigator.viewNavTab(navTab = "Design Draft");
+		}
+
+		task ("When the page creator clicks the link of See current published configuration here") {
+			Click(
+				key_text = "See current published configuration here.",
+				locator1 = "Link#ANY");
+		}
+
+		task ("Then the page creator sees the published configuration") {
+			PagesAdmin.viewCurrentTheme(themeName = "Classic");
+
+			AssertNotEditable(
+				key_text = "Change Current Theme",
+				locator1 = "Button#ANY");
+
+			Navigator.viewNoNavTab(navTab = "Design");
+
+			Button.viewNotPresent(button = "Save");
+
+			Button.viewNotPresent(button = "Cancel");
+		}
+
+		task ("When the page creator publishes the content page") {
+			Navigator.gotoBack();
+
+			Navigator.gotoBack();
+
+			PageEditor.assertFragmentSidebarLoaded();
+
+			PageEditor.publish();
+		}
+
+		task ("Then the page creator cannot see the design changes saved in draft message") {
+			ContentPagesNavigator.openEditContentPage(
+				pageName = "Test Content Page Name",
+				siteName = ${randomSiteName});
+
+			PageEditor.gotoTab(tabName = "Page Design Options");
+
+			Click(locator1 = "PageEditor#MORE_LINK");
+
+			WaitForPageLoad();
+
+			PagesAdmin.viewCurrentTheme(themeName = "Speedwell");
+
+			AssertElementNotPresent(
+				key_infoMessage = "These design configurations are now saved in a draft. To fully apply them, the page needs to be published.",
+				locator1 = "Message#INFO_SPECIFIC");
+
+			AssertElementNotPresent(
+				key_infoMessage = "See current published configuration here.",
+				locator1 = "Message#INFO_SPECIFIC");
+
+			Navigator.viewNoNavTab(navTab = "Design Draft");
+		}
+	}
+
+	@description = "This is a test for LPS-175136. View no alert for draft when design changes on content page being published in page admin."
+	@priority = 3
+	test ViewDesignChangesSavedInDraftViaPagesAdmin {
+		task ("Given a page creator accesses to the configuration page of a content page via Pages admin") {
+			PagesAdmin.openPagesAdmin(siteURLKey = ${siteURLKey});
+
+			PagesAdmin.gotoPageEllipsisMenuItem(
+				menuItem = "Configure",
+				pageName = "Test Content Page Name");
+
+			Navigator.gotoNavTab(navTab = "Design");
+		}
+
+		task ("When the page creator changes the current theme") {
+			Theme.configureLookAndFeelSpecificLook();
+
+			Theme.changeCurrentTheme(themeName = "Speedwell");
+
+			PortletEntry.save();
+		}
+
+		task ("Then the page creator sees the design changes saved in draft message") {
+			PagesAdmin.viewCurrentTheme(themeName = "Speedwell");
+
+			Alert.viewInfoMessageSpecific(infoMessage = "These design configurations are now saved in a draft. To fully apply them, the page needs to be published.");
+
+			Alert.viewInfoMessageSpecific(infoMessage = "See current published configuration here.");
+
+			Navigator.viewNavTab(navTab = "Design Draft");
+		}
+
+		task ("When the page creator clicks the link of See current published configuration here") {
+			Click(
+				key_text = "See current published configuration here.",
+				locator1 = "Link#ANY");
+		}
+
+		task ("Then the page creator sees the published configuration") {
+			PagesAdmin.viewCurrentTheme(themeName = "Classic");
+
+			AssertNotEditable(
+				key_text = "Change Current Theme",
+				locator1 = "Button#ANY");
+
+			Navigator.viewNoNavTab(navTab = "Design");
+
+			Button.viewNotPresent(button = "Save");
+
+			Button.viewNotPresent(button = "Cancel");
+		}
+
+		task ("When the page creator publishes the content page") {
+			Navigator.gotoBack();
+
+			Navigator.gotoBack();
+
+			PagesAdmin.gotoPageEllipsisMenuItem(
+				menuItem = "Edit",
+				pageName = "Test Content Page Name");
+
+			PageEditor.assertFragmentSidebarLoaded();
+
+			PageEditor.publish();
+		}
+
+		task ("Then the page creator cannot see the design changes saved in draft message") {
+			PagesAdmin.gotoPageEllipsisMenuItem(
+				menuItem = "Configure",
+				pageName = "Test Content Page Name");
+
+			Navigator.gotoNavTab(navTab = "Design");
+
+			PagesAdmin.viewCurrentTheme(themeName = "Speedwell");
+
+			AssertElementNotPresent(
+				key_infoMessage = "These design configurations are now saved in a draft. To fully apply them, the page needs to be published.",
+				locator1 = "Message#INFO_SPECIFIC");
+
+			AssertElementNotPresent(
+				key_infoMessage = "See current published configuration here.",
+				locator1 = "Message#INFO_SPECIFIC");
+
+			Navigator.viewNoNavTab(navTab = "Design Draft");
 		}
 	}
 
@@ -1575,6 +1750,29 @@ definition {
 					key_fragmentName = ${fragmentName},
 					locator1 = "Fragment#FRAGMENT_HEADER_ELLIPSIS");
 			}
+		}
+	}
+
+	@description = "This is a test for LPS-167430. Fragment Menu difficult to Display"
+	@priority = 3
+	test ViewEllipsisIconWhenHoverOnBodyOfWidget {
+		task ("Given a content page with a Search Results widget") {
+			ContentPagesNavigator.openEditContentPage(
+				pageName = "Test Content Page Name",
+				siteName = ${randomSiteName});
+
+			PageEditor.addWidget(portletName = "Search Results");
+		}
+
+		task ("When the mouse passes over the fragment") {
+			MouseOver(
+				fragmentName = "Search",
+				index = 1,
+				locator1 = "Fragment#FRAGMENT_BODY");
+		}
+
+		task ("Then you should easily see the ellipsis icon") {
+			AssertVisible(locator1 = "Portlet#OPTIONS_ICON");
 		}
 	}
 

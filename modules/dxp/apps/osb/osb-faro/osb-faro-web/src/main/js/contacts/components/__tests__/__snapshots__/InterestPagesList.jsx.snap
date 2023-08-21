@@ -82,6 +82,7 @@ exports[`InterestPagesList should render 1`] = `
                   class="input-group-inset-item input-group-inset-item-after"
                 >
                   <button
+                    aria-label="Search"
                     class="button-root btn btn-unstyled"
                     type="button"
                   >
@@ -158,10 +159,11 @@ exports[`InterestPagesList should render 1`] = `
         </thead>
       </table>
       <div
-        class="spinner-root spinner-overlay"
+        class="loading-root overlay"
       >
         <span
-          class="loading-animation loading-animation-dotted"
+          aria-hidden="true"
+          class="loading-root center loading-animation"
         />
       </div>
     </div>

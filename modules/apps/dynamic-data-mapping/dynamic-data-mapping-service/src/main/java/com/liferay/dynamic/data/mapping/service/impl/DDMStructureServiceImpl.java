@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.dynamic.data.mapping.service.impl;
@@ -18,10 +9,16 @@ import com.liferay.dynamic.data.mapping.internal.search.helper.DDMSearchHelper;
 import com.liferay.dynamic.data.mapping.model.DDMForm;
 import com.liferay.dynamic.data.mapping.model.DDMFormLayout;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
+import com.liferay.dynamic.data.mapping.model.DDMStructureTable;
 import com.liferay.dynamic.data.mapping.security.permission.DDMPermissionSupport;
 import com.liferay.dynamic.data.mapping.service.base.DDMStructureServiceBaseImpl;
+import com.liferay.petra.sql.dsl.DSLFunctionFactoryUtil;
+import com.liferay.petra.sql.dsl.DSLQueryFactoryUtil;
+import com.liferay.petra.sql.dsl.Table;
+import com.liferay.petra.sql.dsl.expression.Predicate;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.aop.AopService;
+import com.liferay.portal.dao.orm.custom.sql.CustomSQL;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
@@ -29,6 +26,7 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
+import com.liferay.portal.kernel.security.permission.InlineSQLHelper;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.util.OrderByComparator;
@@ -356,9 +354,9 @@ public class DDMStructureServiceImpl extends DDMStructureServiceBaseImpl {
 		long companyId, long[] groupIds, long classNameId, int start, int end,
 		OrderByComparator<DDMStructure> orderByComparator) {
 
-		return ddmStructureFinder.filterFindByC_G_C_S(
-			companyId, groupIds, classNameId, WorkflowConstants.STATUS_ANY,
-			start, end, orderByComparator);
+		return getStructures(
+			companyId, groupIds, classNameId, StringPool.BLANK,
+			WorkflowConstants.STATUS_ANY, start, end, orderByComparator);
 	}
 
 	@Override
@@ -367,17 +365,39 @@ public class DDMStructureServiceImpl extends DDMStructureServiceBaseImpl {
 		int status, int start, int end,
 		OrderByComparator<DDMStructure> orderByComparator) {
 
-		return ddmStructureLocalService.getStructures(
-			companyId, groupIds, classNameId, keywords, status, start, end,
-			orderByComparator);
+		Table<?> tempDDMStructureTable = DSLQueryFactoryUtil.selectDistinct(
+			DDMStructureTable.INSTANCE.structureId
+		).from(
+			DDMStructureTable.INSTANCE
+		).where(
+			_getPredicate(companyId, groupIds, classNameId, keywords)
+		).as(
+			"tempDDMStructure", DDMStructureTable.INSTANCE
+		);
+
+		return ddmStructurePersistence.dslQuery(
+			DSLQueryFactoryUtil.select(
+				DDMStructureTable.INSTANCE
+			).from(
+				tempDDMStructureTable
+			).innerJoinON(
+				DDMStructureTable.INSTANCE,
+				DDMStructureTable.INSTANCE.structureId.eq(
+					tempDDMStructureTable.getColumn("structureId", Long.class))
+			).orderBy(
+				DDMStructureTable.INSTANCE, orderByComparator
+			).limit(
+				start, end
+			));
 	}
 
 	@Override
 	public int getStructuresCount(
 		long companyId, long[] groupIds, long classNameId) {
 
-		return ddmStructureFinder.filterCountByC_G_C_S(
-			companyId, groupIds, classNameId, WorkflowConstants.STATUS_ANY);
+		return getStructuresCount(
+			companyId, groupIds, classNameId, StringPool.BLANK,
+			WorkflowConstants.STATUS_ANY);
 	}
 
 	@Override
@@ -385,8 +405,14 @@ public class DDMStructureServiceImpl extends DDMStructureServiceBaseImpl {
 		long companyId, long[] groupIds, long classNameId, String keywords,
 		int status) {
 
-		return ddmStructureLocalService.getStructuresCount(
-			companyId, groupIds, classNameId, keywords, status);
+		return ddmStructurePersistence.dslQueryCount(
+			DSLQueryFactoryUtil.countDistinct(
+				DDMStructureTable.INSTANCE.structureId
+			).from(
+				DDMStructureTable.INSTANCE
+			).where(
+				_getPredicate(companyId, groupIds, classNameId, keywords)
+			));
 	}
 
 	@Override
@@ -779,8 +805,80 @@ public class DDMStructureServiceImpl extends DDMStructureServiceBaseImpl {
 			descriptionMap, ddmForm, ddmFormLayout, serviceContext);
 	}
 
+	private Predicate _getPredicate(
+		long companyId, long[] groupIds, long classNameId, String keywords) {
+
+		Predicate predicate = DDMStructureTable.INSTANCE.companyId.eq(
+			companyId
+		).and(
+			DDMStructureTable.INSTANCE.classNameId.eq(classNameId)
+		).and(
+			DDMStructureTable.INSTANCE.type.eq(0)
+		).and(
+			_inlineSQLHelper.getPermissionWherePredicate(
+				_ddmPermissionSupport.getStructureModelResourceName(
+					classNameId),
+				DDMStructureTable.INSTANCE.structureId, groupIds)
+		);
+
+		Predicate groupIdsPredicate = null;
+
+		for (long groupId : groupIds) {
+			Predicate groupIdPredicate = DDMStructureTable.INSTANCE.groupId.eq(
+				groupId);
+
+			if (groupIdsPredicate == null) {
+				groupIdsPredicate = groupIdPredicate;
+			}
+			else {
+				groupIdsPredicate = groupIdsPredicate.or(groupIdPredicate);
+			}
+		}
+
+		if (groupIdsPredicate != null) {
+			predicate = predicate.and(groupIdsPredicate.withParentheses());
+		}
+
+		Predicate keywordsPredicate = null;
+
+		for (String keyword : _customSQL.keywords(keywords, true)) {
+			if (keyword == null) {
+				continue;
+			}
+
+			Predicate keywordPredicate = DSLFunctionFactoryUtil.lower(
+				DSLFunctionFactoryUtil.castText(DDMStructureTable.INSTANCE.name)
+			).like(
+				keyword
+			).or(
+				DSLFunctionFactoryUtil.lower(
+					DSLFunctionFactoryUtil.castClobText(
+						DDMStructureTable.INSTANCE.description)
+				).like(
+					keyword
+				)
+			);
+
+			if (keywordsPredicate == null) {
+				keywordsPredicate = keywordPredicate;
+			}
+			else {
+				keywordsPredicate = keywordsPredicate.or(keywordPredicate);
+			}
+		}
+
+		if (keywordsPredicate != null) {
+			predicate = predicate.and(keywordsPredicate.withParentheses());
+		}
+
+		return predicate;
+	}
+
 	private static final Log _log = LogFactoryUtil.getLog(
 		DDMStructureServiceImpl.class);
+
+	@Reference
+	private CustomSQL _customSQL;
 
 	@Reference
 	private DDMPermissionSupport _ddmPermissionSupport;
@@ -793,5 +891,8 @@ public class DDMStructureServiceImpl extends DDMStructureServiceBaseImpl {
 	)
 	private ModelResourcePermission<DDMStructure>
 		_ddmStructureModelResourcePermission;
+
+	@Reference
+	private InlineSQLHelper _inlineSQLHelper;
 
 }
