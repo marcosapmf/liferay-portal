@@ -65,8 +65,15 @@ AUI.add(
 				return firstField;
 			},
 
-			getFormTitle: function() {
-				var formTitle = document.querySelector('[data-form-title]');
+			getFormTitle: function(form) {
+				var formTitle;
+
+				if (form) {
+					formTitle = form.querySelector('[data-form-title]');
+				}
+				else {
+					 formTitle = document.querySelector('[data-form-title]');
+				}
 				
 				if(!formTitle) {
 					return
@@ -276,7 +283,7 @@ AUI.add(
 							formId: formId,
 							formPageTitle: pageContext.title,
 							page: page - 1,
-							title: this.getFormTitle()
+							title: this.getFormTitle(document.querySelector('[data-ddmforminstanceid="' + formId + '"]'))
 						}
 					);
 				}

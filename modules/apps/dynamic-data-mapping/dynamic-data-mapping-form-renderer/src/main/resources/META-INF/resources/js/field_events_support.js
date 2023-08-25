@@ -63,8 +63,15 @@ AUI.add(
 				return 'change';
 			},
 
-			getFormPageTitle: function() {
-				var formPageTitle = document.querySelector('.lfr-ddm-form-page.active .lfr-ddm-form-page-title');
+			getFormPageTitle: function(form) {
+				var formPageTitle;
+				
+				if (form) {
+					formPageTitle = form.querySelector('.lfr-ddm-form-page.active .lfr-ddm-form-page-title');
+				}
+				else {
+					formPageTitle = document.querySelector('.lfr-ddm-form-page.active .lfr-ddm-form-page-title');
+				}
 
 				if(!formPageTitle) {
 					return; 
@@ -73,8 +80,15 @@ AUI.add(
 				return formPageTitle.innerText;
 			},
 
-			getFormTitle: function() {
-				var formTitle = document.querySelector('[data-form-title]');
+			getFormTitle: function(form) {
+				var formTitle;
+
+				if (form) {
+					formTitle = form.querySelector('[data-form-title]');
+				}
+				else {
+					formTitle = document.querySelector('[data-form-title]');
+				}
 				
 				if(!formTitle) {
 					return
@@ -121,14 +135,16 @@ AUI.add(
 				if (root) {
 					var now = new Date();
 
+					var form = document.querySelector('[data-ddmforminstanceid="' + root.getFormId() + '"]');
+
 					Liferay.fire(
 						'ddmFieldBlur',
 						{
 							fieldName: instance.get('fieldName'),
 							focusDuration: (now - (instance.get('fieldFocusDate') || now)),
 							formId: root.getFormId(),
-							formPageTitle: this.getFormPageTitle(),
-							title: this.getFormTitle(),
+							formPageTitle: this.getFormPageTitle(form),
+							title: this.getFormTitle(form),
 							page: root.getCurrentPage() || 1
 						}
 					);
@@ -143,13 +159,15 @@ AUI.add(
 				if (root) {
 					instance.set('fieldFocusDate', new Date());
 
+					var form = document.querySelector('[data-ddmforminstanceid="' + root.getFormId() + '"]');
+
 					Liferay.fire(
 						'ddmFieldFocus',
 						{
 							fieldName: instance.get('fieldName'),
 							formId: root.getFormId(),
-							formPageTitle: this.getFormPageTitle(),
-							title: this.getFormTitle(),
+							formPageTitle: this.getFormPageTitle(form),
+							title: this.getFormTitle(form),
 							page: root.getCurrentPage() || 1
 						}
 					);
