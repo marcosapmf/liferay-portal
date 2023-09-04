@@ -14,7 +14,7 @@ import React, {useContext, useState} from 'react';
 import SegmentsExperimentsContext from '../../../context.es';
 import {navigateToExperience} from '../../../util/navigation.es';
 import {indexToPercentageString} from '../../../util/percentages.es';
-import {DeleteModal} from '../../DeleteModal.es';
+import {ConfirmModal} from '../../ConfirmModal';
 
 function Variant({
 	active,
@@ -23,7 +23,6 @@ function Variant({
 	name,
 	onVariantDeletion,
 	onVariantEdition,
-	onVariantPublish,
 	publishable,
 	segmentsExperienceId,
 	showSplit,
@@ -44,7 +43,11 @@ function Variant({
 	return (
 		<>
 			<ClayList.Item active={active} flex>
-				<ClayList.ItemField expand>
+				<ClayList.ItemField
+					className="mr-2 text-truncate"
+					expand={!publishable}
+					style={{width: 102}}
+				>
 					<ClayList.ItemTitle>
 						<ClayButton
 							className="lfr-portal-tooltip text-truncate"
@@ -75,6 +78,16 @@ function Variant({
 						</ClayButton>
 					</ClayList.ItemTitle>
 				</ClayList.ItemField>
+
+				{/* TODO: LRAC-14463 - Render lift for each variant */}
+
+				{/* {publishable && (
+					<ClayList.ItemField>
+						<ClayList.ItemTitle className="text-success">
+							{sub(Liferay.Language.get('x-lift'), [10])}
+						</ClayList.ItemTitle>
+					</ClayList.ItemField>
+				)} */}
 
 				{!control && editable && (
 					<>
@@ -134,7 +147,7 @@ function Variant({
 					</>
 				)}
 
-				{showSplit && (
+				{showSplit && !publishable && (
 					<ClayList.ItemField>
 						<span
 							aria-label={Liferay.Language.get('traffic-split')}
@@ -144,31 +157,18 @@ function Variant({
 						</span>
 					</ClayList.ItemField>
 				)}
-
-				{publishable && (
-					<ClayList.ItemField>
-						<ClayButton
-							displayType={winner ? 'primary' : 'secondary'}
-							onClick={() =>
-								onVariantPublish(segmentsExperienceId)
-							}
-							small
-						>
-							{Liferay.Language.get('publish')}
-						</ClayButton>
-					</ClayList.ItemField>
-				)}
 			</ClayList.Item>
 
 			{deleteModalActive && (
-				<DeleteModal
+				<ConfirmModal
 					modalObserver={observer}
 					onCancel={onClose}
-					onDelete={() => {
+					onConfirm={() => {
 						onVariantDeletion(variantId);
 
 						onClose();
 					}}
+					submitTitle={Liferay.Language.get('delete')}
 					title={Liferay.Language.get('delete-variant')}
 				>
 					<p className="font-weight-bold text-secondary">
@@ -176,7 +176,7 @@ function Variant({
 							'are-you-sure-you-want-to-delete-this'
 						)}
 					</p>
-				</DeleteModal>
+				</ConfirmModal>
 			)}
 		</>
 	);
