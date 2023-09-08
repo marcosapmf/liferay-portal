@@ -540,6 +540,14 @@ public class ObjectDefinitionLocalServiceWrapper
 			companyId);
 	}
 
+	@Override
+	public java.util.List<com.liferay.object.model.ObjectDefinition>
+		getObjectFolderObjectDefinitions(long objectFolderId) {
+
+		return _objectDefinitionLocalService.getObjectFolderObjectDefinitions(
+			objectFolderId);
+	}
+
 	/**
 	 * Returns the OSGi service identifier.
 	 *

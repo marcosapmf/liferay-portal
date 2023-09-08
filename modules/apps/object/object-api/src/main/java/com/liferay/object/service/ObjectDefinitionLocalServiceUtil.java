@@ -464,6 +464,12 @@ public class ObjectDefinitionLocalServiceUtil {
 		return getService().getObjectDefinitionsCount(companyId);
 	}
 
+	public static List<ObjectDefinition> getObjectFolderObjectDefinitions(
+		long objectFolderId) {
+
+		return getService().getObjectFolderObjectDefinitions(objectFolderId);
+	}
+
 	/**
 	 * Returns the OSGi service identifier.
 	 *

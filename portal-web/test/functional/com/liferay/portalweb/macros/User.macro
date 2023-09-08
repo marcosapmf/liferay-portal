@@ -1845,8 +1845,14 @@ definition {
 
 	macro firstLoginPG {
 		var appServerType = PropsUtil.get("app.server.type");
-		var password = JSONUtil2.getDefaultUserPassword();
-		var userEmailAddress = JSONUtil2.getDefaultUserEmail();
+
+		if (!(isSet(userEmailAddress))) {
+			var userEmailAddress = JSONUtil2.getDefaultUserEmail();
+		}
+
+		if (!(isSet(password))) {
+			var password = JSONUtil2.getDefaultUserPassword();
+		}
 
 		if (${appServerType} == "weblogic") {
 
@@ -2251,7 +2257,7 @@ definition {
 	macro logoutAndLoginPG {
 		Navigator.openURL();
 
-		UserBar.signOut();
+		UserBar.signOut(signOutLocalizationName = ${signOutLocalizationName});
 
 		User.loginPG(
 			authenticationMethod = ${authenticationMethod},

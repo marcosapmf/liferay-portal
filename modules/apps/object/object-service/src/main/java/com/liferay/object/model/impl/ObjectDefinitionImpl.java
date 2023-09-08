@@ -164,6 +164,32 @@ public class ObjectDefinitionImpl extends ObjectDefinitionBaseImpl {
 	}
 
 	@Override
+	public boolean isRootDescendantNode() {
+		if (!FeatureFlagManagerUtil.isEnabled("LPS-187142")) {
+			return false;
+		}
+
+		if ((getRootObjectDefinitionId() > 0) && !isRootNode()) {
+			return true;
+		}
+
+		return false;
+	}
+
+	@Override
+	public boolean isRootNode() {
+		if (!FeatureFlagManagerUtil.isEnabled("LPS-187142")) {
+			return false;
+		}
+
+		if (getObjectDefinitionId() == getRootObjectDefinitionId()) {
+			return true;
+		}
+
+		return false;
+	}
+
+	@Override
 	public boolean isUnmodifiableSystemObject() {
 		if (FeatureFlagManagerUtil.isEnabled("LPS-167253")) {
 			if (!isModifiable() && isSystem()) {

@@ -365,6 +365,10 @@ public interface ObjectDefinitionLocalService
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public int getObjectDefinitionsCount(long companyId) throws PortalException;
 
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<ObjectDefinition> getObjectFolderObjectDefinitions(
+		long objectFolderId);
+
 	/**
 	 * Returns the OSGi service identifier.
 	 *

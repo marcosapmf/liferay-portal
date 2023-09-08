@@ -94,7 +94,7 @@ public class JournalArticleInfoItemFieldValuesProvider
 						JournalArticle.class.getName(),
 						journalArticle.getResourcePrimKey()),
 					String.valueOf(journalArticle.getDDMStructureId()),
-					_getThemeDisplay())
+					JournalArticle.class.getSimpleName(), _getThemeDisplay())
 			).infoFieldValues(
 				_expandoInfoItemFieldSetProvider.getInfoFieldValues(
 					JournalArticle.class.getName(), journalArticle)
@@ -300,7 +300,7 @@ public class JournalArticleInfoItemFieldValuesProvider
 					journalArticle.getDisplayDate()));
 
 			if ((themeDisplay != null) &&
-				!FeatureFlagManagerUtil.isEnabled("LPS-183727")) {
+				!FeatureFlagManagerUtil.isEnabled("LPS-195205")) {
 
 				journalArticleFieldValues.add(
 					new InfoFieldValue<>(

@@ -91,17 +91,18 @@ public class CommerceShipmentItemFDSDataProvider
 			}
 
 			BigDecimal quantity = commerceOrderItem.getQuantity();
+			BigDecimal shipmentItemQuantity =
+				commerceShipmentItem.getQuantity();
+			BigDecimal shippedQuantity = commerceOrderItem.getShippedQuantity();
 
 			shipmentItems.add(
 				new ShipmentItem(
 					commerceShipmentItem.getExternalReferenceCode(),
 					commerceOrderItem.getCommerceOrderId(),
-					quantity.intValue() -
-						commerceOrderItem.getShippedQuantity(),
+					quantity.intValue() - shippedQuantity.intValue(),
 					commerceShipmentItem.getCommerceShipmentItemId(),
-					commerceOrderItem.getShippedQuantity(),
-					commerceOrderItem.getSku(),
-					commerceShipmentItem.getQuantity(),
+					shippedQuantity.intValue(), commerceOrderItem.getSku(),
+					shipmentItemQuantity.intValue(),
 					commerceInventoryWarehouseName));
 		}
 

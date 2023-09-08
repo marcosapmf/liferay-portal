@@ -14,7 +14,6 @@ import com.liferay.layout.service.LayoutClassedModelUsageLocalService;
 import com.liferay.object.constants.ObjectDefinitionConstants;
 import com.liferay.object.constants.ObjectFieldConstants;
 import com.liferay.object.constants.ObjectFieldSettingConstants;
-import com.liferay.object.constants.ObjectFolderConstants;
 import com.liferay.object.constants.ObjectRelationshipConstants;
 import com.liferay.object.definition.tree.Edge;
 import com.liferay.object.definition.tree.Node;
@@ -33,7 +32,9 @@ import com.liferay.object.exception.ObjectDefinitionExternalReferenceCodeExcepti
 import com.liferay.object.exception.ObjectDefinitionLabelException;
 import com.liferay.object.exception.ObjectDefinitionModifiableException;
 import com.liferay.object.exception.ObjectDefinitionNameException;
+import com.liferay.object.exception.ObjectDefinitionPanelCategoryKeyException;
 import com.liferay.object.exception.ObjectDefinitionPluralLabelException;
+import com.liferay.object.exception.ObjectDefinitionPortletException;
 import com.liferay.object.exception.ObjectDefinitionRootObjectDefinitionIdException;
 import com.liferay.object.exception.ObjectDefinitionScopeException;
 import com.liferay.object.exception.ObjectDefinitionStatusException;
@@ -64,6 +65,7 @@ import com.liferay.object.service.ObjectEntryLocalService;
 import com.liferay.object.service.ObjectEntryService;
 import com.liferay.object.service.ObjectFieldLocalService;
 import com.liferay.object.service.ObjectFolderItemLocalService;
+import com.liferay.object.service.ObjectFolderLocalService;
 import com.liferay.object.service.ObjectLayoutLocalService;
 import com.liferay.object.service.ObjectLayoutTabLocalService;
 import com.liferay.object.service.ObjectRelationshipLocalService;
@@ -757,6 +759,13 @@ public class ObjectDefinitionLocalServiceImpl
 	}
 
 	@Override
+	public List<ObjectDefinition> getObjectFolderObjectDefinitions(
+		long objectFolderId) {
+
+		return objectDefinitionPersistence.findByObjectFolderId(objectFolderId);
+	}
+
+	@Override
 	public List<ObjectDefinition> getSystemObjectDefinitions() {
 		return objectDefinitionPersistence.findBySystem(true);
 	}
@@ -791,7 +800,28 @@ public class ObjectDefinitionLocalServiceImpl
 			throw new ObjectDefinitionStatusException();
 		}
 
-		return _publishObjectDefinition(userId, objectDefinition);
+		if (objectDefinition.getRootObjectDefinitionId() == 0) {
+			return _publishObjectDefinition(userId, objectDefinition);
+		}
+
+		if (objectDefinition.isRootDescendantNode()) {
+			throw new ObjectDefinitionStatusException(
+				"Nonroot object definitions within a hierarchical structure " +
+					"are ineligible for publication");
+		}
+
+		Tree tree = _treeFactory.create(objectDefinitionId);
+
+		Iterator<Node> iterator = tree.iterator();
+
+		while (iterator.hasNext()) {
+			Node node = iterator.next();
+
+			_publishObjectDefinition(
+				userId, getObjectDefinition(node.getObjectDefinitionId()));
+		}
+
+		return getObjectDefinition(objectDefinitionId);
 	}
 
 	@Override
@@ -830,7 +860,7 @@ public class ObjectDefinitionLocalServiceImpl
 				_objectRelationshipLocalService, _objectScopeProviderRegistry,
 				_objectViewLocalService, _organizationLocalService,
 				_persistedModelLocalServiceRegistry, _ploEntryLocalService,
-				_portal, _portletLocalService, _resourceActions,
+				_portal, _portletLocalService, _resourceActions, _treeFactory,
 				_userLocalService, _resourcePermissionLocalService,
 				_workflowStatusModelPreFilterContributor,
 				_userGroupRoleLocalService);
@@ -1016,11 +1046,48 @@ public class ObjectDefinitionLocalServiceImpl
 		throws PortalException {
 
 		ObjectDefinition objectDefinition =
-			objectDefinitionPersistence.fetchByPrimaryKey(objectDefinitionId);
+			objectDefinitionPersistence.findByPrimaryKey(objectDefinitionId);
 
 		if (objectDefinition.isUnmodifiableSystemObject()) {
 			throw new ObjectDefinitionStatusException(
 				"Object definition " + objectDefinition);
+		}
+
+		if (objectDefinition.isRootDescendantNode()) {
+			String errorMessage =
+				"cannot be changed when the object definition is a root " +
+					"descendant node";
+
+			if (!Objects.equals(
+					objectDefinition.getAccountEntryRestrictedObjectFieldId(),
+					accountEntryRestrictedObjectFieldId)) {
+
+				throw new ObjectDefinitionAccountEntryRestrictedObjectFieldIdException(
+					"Account entry restriction object field ID " +
+						errorMessage);
+			}
+			else if (!Objects.equals(
+						objectDefinition.isAccountEntryRestricted(),
+						accountEntryRestricted)) {
+
+				throw new ObjectDefinitionAccountEntryRestrictedException(
+					"Account entry restriction " + errorMessage);
+			}
+			else if (!Objects.equals(
+						objectDefinition.getPanelCategoryKey(),
+						panelCategoryKey)) {
+
+				throw new ObjectDefinitionPanelCategoryKeyException(
+					"Panel category key " + errorMessage);
+			}
+			else if (!Objects.equals(objectDefinition.isPortlet(), portlet)) {
+				throw new ObjectDefinitionPortletException(
+					"Portlet " + errorMessage);
+			}
+			else if (!Objects.equals(objectDefinition.getScope(), scope)) {
+				throw new ObjectDefinitionScopeException(
+					"Scope " + errorMessage);
+			}
 		}
 
 		return _updateObjectDefinition(
@@ -1521,7 +1588,9 @@ public class ObjectDefinitionLocalServiceImpl
 		String prefix = "O_";
 
 		if (modifiable && system) {
-			prefix = "L_";
+			prefix =
+				ObjectDefinitionConstants.
+					EXTERNAL_REFERENCE_CODE_PREFIX_SYSTEM_OBJECT_DEFINITION;
 		}
 
 		return StringBundler.concat(
@@ -1542,8 +1611,9 @@ public class ObjectDefinitionLocalServiceImpl
 		throws PortalException {
 
 		if (objectFolderId == 0) {
-			ObjectFolder objectFolder = _objectFolderPersistence.findByC_N(
-				companyId, ObjectFolderConstants.NAME_UNCATEGORIZED);
+			ObjectFolder objectFolder =
+				_objectFolderLocalService.addOrGetUncategorizedObjectFolder(
+					companyId);
 
 			return objectFolder.getObjectFolderId();
 		}
@@ -2026,8 +2096,22 @@ public class ObjectDefinitionLocalServiceImpl
 					externalReferenceCode);
 		}
 
-		if (!system && (externalReferenceCode != null) &&
-			externalReferenceCode.startsWith("L_")) {
+		if (Validator.isNull(externalReferenceCode)) {
+			return;
+		}
+
+		char[] externalReferenceCodeCharArray =
+			externalReferenceCode.toCharArray();
+
+		if (externalReferenceCodeCharArray.length > 75) {
+			throw new ObjectDefinitionExternalReferenceCodeException.
+				MustBeLessThan75Characters();
+		}
+
+		if (!system &&
+			externalReferenceCode.startsWith(
+				ObjectDefinitionConstants.
+					EXTERNAL_REFERENCE_CODE_PREFIX_SYSTEM_OBJECT_DEFINITION)) {
 
 			throw new ObjectDefinitionExternalReferenceCodeException.
 				MustNotStartWithPrefix();
@@ -2292,6 +2376,9 @@ public class ObjectDefinitionLocalServiceImpl
 
 	@Reference
 	private ObjectFolderItemLocalService _objectFolderItemLocalService;
+
+	@Reference
+	private ObjectFolderLocalService _objectFolderLocalService;
 
 	@Reference
 	private ObjectFolderPersistence _objectFolderPersistence;
