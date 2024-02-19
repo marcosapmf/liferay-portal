@@ -16,6 +16,8 @@ public class LayoutUtilityPageEntryConstants {
 	public static final String TYPE_SC_NOT_FOUND = "SC_NOT_FOUND";
 
 	public static final String TYPE_STATUS = "STATUS";
+	
+	public static final String TYPE_TEST = "TEST";
 
 	public static final String TYPE_TERMS_OF_USE = "TERMS_OF_USE";
 
