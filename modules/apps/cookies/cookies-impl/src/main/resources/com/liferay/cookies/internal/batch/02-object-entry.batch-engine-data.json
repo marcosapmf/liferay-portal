@@ -1,0 +1,21 @@
+{
+	"configuration": {
+		"className": "com.liferay.object.rest.dto.v1_0.ObjectEntry",
+		"parameters": {
+			"containsHeaders": "true",
+			"createStrategy": "UPSERT",
+			"onErrorFail": "false",
+			"updateStrategy": "UPDATE"
+		},
+		"taskItemDelegateName": "DEFAULT",
+		"version": "v1.0"
+	},
+	"items": [
+		{
+			"cookieType": "functional",
+			"expirationDays": 1,
+			"externalReferenceCode": "COOKIE-ENTRY-1",
+			"name": "test"
+		}
+	]
+}
