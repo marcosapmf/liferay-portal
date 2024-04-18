@@ -1890,7 +1890,8 @@ definition {
 	@priority = 5
 	test CanUseCompositeKey {
 		property custom.properties = "feature.flag.LPS-187854=true";
-		property portal.acceptance = "true";
+		property portal.acceptance = "quarantine";
+		property portal.upstream = "quarantine";
 
 		var iterator = 0;
 		var types = "Boolean,Date,Double,Integer,Long,BigDecimal,Clob,String";

@@ -1398,6 +1398,10 @@ components:
                     description:
                         The document's file name.
                     type: string
+                friendlyUrlPath:
+                    description:
+                        The document's file relative URL.
+                    type: string
                 id:
                     description:
                         The document's ID.
@@ -5443,16 +5447,26 @@ components:
                     description:
                         The utility page template external reference code.
                     type: string
+                friendlyURL:
+                    # @review
+                    description:
+                        The utility page template friendly URL.
+                    type: string
                 name:
                     # @review
                     description:
                         The utility page template name.
                     type: string
+                privateLayout:
+                    # @review
+                    description:
+                        Specifies if the utility page template layout should be private.
+                    type: boolean
                 type:
                     # @review
                     description:
                         The utility page template type.
-                    enum: [Error, ErrorCode404, ErrorCode500, Login, TermsOfUse]
+                    enum: [CookiePolicy, CreateAccount, Error, ErrorCode404, ErrorCode500, ForgotPassword, Login, TermsOfUse]
                     type: string
             type: object
         WidgetInstance:
@@ -5772,7 +5786,7 @@ components:
 info:
     description:
         "A Java client JAR is available for use with the group ID 'com.liferay', artifact ID
-        'com.liferay.headless.delivery.client', and version '4.0.74'."
+        'com.liferay.headless.delivery.client', and version '4.0.77'."
     license:
         name: "Apache 2.0"
         url: "http://www.apache.org/licenses/LICENSE-2.0.html"

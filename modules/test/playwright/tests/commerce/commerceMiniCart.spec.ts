@@ -35,20 +35,22 @@ test('mini cart bundle with UOM', async ({
 	commerceMiniCartPage,
 	page,
 }) => {
-	const site = await apiHelpers.headlessSite.createSite(getRandomString());
+	const site = await apiHelpers.headlessSite.createSite({
+		name: getRandomString(),
+	});
 
 	apiHelpers.data.push({id: site.id, type: 'site'});
 
-	const layout = await apiHelpers.headlessDelivery.createSitePage(
-		site.id,
-		getRandomString(),
-		getPageDefinition([
+	const layout = await apiHelpers.headlessDelivery.createSitePage({
+		pageDefinition: getPageDefinition([
 			getFragmentDefinition(
 				getRandomString(),
 				'COMMERCE_CART_FRAGMENTS-mini-cart'
 			),
-		])
-	);
+		]),
+		siteId: site.id,
+		title: getRandomString(),
+	});
 
 	await apiHelpers.headlessCommerceAdminChannel.postChannel({
 		name: 'Mini Cart Channel',
@@ -309,20 +311,22 @@ test('LPD-3496 mini cart bundle without enough quantity', async ({
 	commerceMiniCartPage,
 	page,
 }) => {
-	const site = await apiHelpers.headlessSite.createSite(getRandomString());
+	const site = await apiHelpers.headlessSite.createSite({
+		name: getRandomString(),
+	});
 
 	apiHelpers.data.push({id: site.id, type: 'site'});
 
-	const layout = await apiHelpers.headlessDelivery.createSitePage(
-		site.id,
-		getRandomString(),
-		getPageDefinition([
+	const layout = await apiHelpers.headlessDelivery.createSitePage({
+		pageDefinition: getPageDefinition([
 			getFragmentDefinition(
 				getRandomString(),
 				'COMMERCE_CART_FRAGMENTS-mini-cart'
 			),
-		])
-	);
+		]),
+		siteId: site.id,
+		title: getRandomString(),
+	});
 
 	await apiHelpers.headlessCommerceAdminChannel.postChannel({
 		siteGroupId: site.id,

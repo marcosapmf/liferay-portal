@@ -530,6 +530,8 @@ public abstract class BasePriceListResourceTestCase {
 			new GraphQLField("items", getGraphQLFields()),
 			new GraphQLField("page"), new GraphQLField("totalCount"));
 
+		// No namespace
+
 		JSONObject priceListsJSONObject = JSONUtil.getValueAsJSONObject(
 			invokeGraphQLQuery(graphQLField), "JSONObject/data",
 			"JSONObject/priceLists");
@@ -541,6 +543,29 @@ public abstract class BasePriceListResourceTestCase {
 
 		priceListsJSONObject = JSONUtil.getValueAsJSONObject(
 			invokeGraphQLQuery(graphQLField), "JSONObject/data",
+			"JSONObject/priceLists");
+
+		Assert.assertEquals(
+			totalCount + 2, priceListsJSONObject.getLong("totalCount"));
+
+		assertContains(
+			priceList1,
+			Arrays.asList(
+				PriceListSerDes.toDTOs(
+					priceListsJSONObject.getString("items"))));
+		assertContains(
+			priceList2,
+			Arrays.asList(
+				PriceListSerDes.toDTOs(
+					priceListsJSONObject.getString("items"))));
+
+		// Using the namespace headlessCommerceAdminPricing_v2_0
+
+		priceListsJSONObject = JSONUtil.getValueAsJSONObject(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"headlessCommerceAdminPricing_v2_0", graphQLField)),
+			"JSONObject/data", "JSONObject/headlessCommerceAdminPricing_v2_0",
 			"JSONObject/priceLists");
 
 		Assert.assertEquals(
@@ -640,6 +665,8 @@ public abstract class BasePriceListResourceTestCase {
 		PriceList priceList =
 			testGraphQLGetPriceListByExternalReferenceCode_addPriceList();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				priceList,
@@ -661,6 +688,33 @@ public abstract class BasePriceListResourceTestCase {
 								getGraphQLFields())),
 						"JSONObject/data",
 						"Object/priceListByExternalReferenceCode"))));
+
+		// Using the namespace headlessCommerceAdminPricing_v2_0
+
+		Assert.assertTrue(
+			equals(
+				priceList,
+				PriceListSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessCommerceAdminPricing_v2_0",
+								new GraphQLField(
+									"priceListByExternalReferenceCode",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"externalReferenceCode",
+												"\"" +
+													priceList.
+														getExternalReferenceCode() +
+															"\"");
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessCommerceAdminPricing_v2_0",
+						"Object/priceListByExternalReferenceCode"))));
 	}
 
 	@Test
@@ -669,6 +723,8 @@ public abstract class BasePriceListResourceTestCase {
 
 		String irrelevantExternalReferenceCode =
 			"\"" + RandomTestUtil.randomString() + "\"";
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -684,6 +740,27 @@ public abstract class BasePriceListResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessCommerceAdminPricing_v2_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessCommerceAdminPricing_v2_0",
+						new GraphQLField(
+							"priceListByExternalReferenceCode",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"externalReferenceCode",
+										irrelevantExternalReferenceCode);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}
@@ -750,7 +827,10 @@ public abstract class BasePriceListResourceTestCase {
 
 	@Test
 	public void testGraphQLDeletePriceList() throws Exception {
-		PriceList priceList = testGraphQLDeletePriceList_addPriceList();
+
+		// No namespace
+
+		PriceList priceList1 = testGraphQLDeletePriceList_addPriceList();
 
 		Assert.assertTrue(
 			JSONUtil.getValueAsBoolean(
@@ -759,23 +839,60 @@ public abstract class BasePriceListResourceTestCase {
 						"deletePriceList",
 						new HashMap<String, Object>() {
 							{
-								put("id", priceList.getId());
+								put("id", priceList1.getId());
 							}
 						})),
 				"JSONObject/data", "Object/deletePriceList"));
-		JSONArray errorsJSONArray = JSONUtil.getValueAsJSONArray(
+
+		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
 			invokeGraphQLQuery(
 				new GraphQLField(
 					"priceList",
 					new HashMap<String, Object>() {
 						{
-							put("id", priceList.getId());
+							put("id", priceList1.getId());
 						}
 					},
 					new GraphQLField("id"))),
 			"JSONArray/errors");
 
-		Assert.assertTrue(errorsJSONArray.length() > 0);
+		Assert.assertTrue(errorsJSONArray1.length() > 0);
+
+		// Using the namespace headlessCommerceAdminPricing_v2_0
+
+		PriceList priceList2 = testGraphQLDeletePriceList_addPriceList();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"headlessCommerceAdminPricing_v2_0",
+						new GraphQLField(
+							"deletePriceList",
+							new HashMap<String, Object>() {
+								{
+									put("id", priceList2.getId());
+								}
+							}))),
+				"JSONObject/data",
+				"JSONObject/headlessCommerceAdminPricing_v2_0",
+				"Object/deletePriceList"));
+
+		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"headlessCommerceAdminPricing_v2_0",
+					new GraphQLField(
+						"priceList",
+						new HashMap<String, Object>() {
+							{
+								put("id", priceList2.getId());
+							}
+						},
+						new GraphQLField("id")))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray2.length() > 0);
 	}
 
 	protected PriceList testGraphQLDeletePriceList_addPriceList()
@@ -804,6 +921,8 @@ public abstract class BasePriceListResourceTestCase {
 	public void testGraphQLGetPriceList() throws Exception {
 		PriceList priceList = testGraphQLGetPriceList_addPriceList();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				priceList,
@@ -819,11 +938,35 @@ public abstract class BasePriceListResourceTestCase {
 								},
 								getGraphQLFields())),
 						"JSONObject/data", "Object/priceList"))));
+
+		// Using the namespace headlessCommerceAdminPricing_v2_0
+
+		Assert.assertTrue(
+			equals(
+				priceList,
+				PriceListSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessCommerceAdminPricing_v2_0",
+								new GraphQLField(
+									"priceList",
+									new HashMap<String, Object>() {
+										{
+											put("id", priceList.getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessCommerceAdminPricing_v2_0",
+						"Object/priceList"))));
 	}
 
 	@Test
 	public void testGraphQLGetPriceListNotFound() throws Exception {
 		Long irrelevantId = RandomTestUtil.randomLong();
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -837,6 +980,25 @@ public abstract class BasePriceListResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessCommerceAdminPricing_v2_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessCommerceAdminPricing_v2_0",
+						new GraphQLField(
+							"priceList",
+							new HashMap<String, Object>() {
+								{
+									put("id", irrelevantId);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}

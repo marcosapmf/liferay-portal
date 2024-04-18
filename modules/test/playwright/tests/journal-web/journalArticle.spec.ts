@@ -6,8 +6,10 @@
 import {APIResponse, expect as baseExpect, mergeTests} from '@playwright/test';
 
 import {apiHelpersTest} from '../../fixtures/apiHelpersTest';
+import {applicationsMenuPageTest} from '../../fixtures/applicationsMenuPageTest';
 import {featureFlagsTest} from '../../fixtures/featureFlagsTest';
 import {isolatedSiteTest} from '../../fixtures/isolatedSiteTest';
+import {loginTest} from '../../fixtures/loginTest';
 import {workflowPagesTest} from '../../fixtures/workflowPagesTest';
 import {clickAndExpectToBeVisible} from '../../utils/clickAndExpectToBeVisible';
 import fillAndClickOutside from '../../utils/fillAndClickOutside';
@@ -40,8 +42,10 @@ const translateNameAndMetadataFields = async (
 
 const baseTest = mergeTests(
 	apiHelpersTest,
+	applicationsMenuPageTest,
 	isolatedSiteTest,
 	journalPagesTest,
+	loginTest(),
 	workflowPagesTest
 );
 
@@ -61,6 +65,8 @@ const expect = baseExpect.extend({
 		pass: response.ok(),
 	}),
 });
+
+const keepTitlesUntranslated = mergeTests(baseTest);
 
 const prefixUrlTest = mergeTests(
 	baseTest,
@@ -91,6 +97,122 @@ const aiCreateImageTest = mergeTests(
 	})
 );
 
+const privateContentIconTest = mergeTests(baseTest);
+
+keepTitlesUntranslated(
+	'LPD-20723: Clay link is translating asset titles/names by default in vertical card',
+	async ({apiHelpers, journalPage, page, site}) => {
+		const contentStructureId = await getBasicWebContentStructureId(
+			apiHelpers
+		);
+
+		const title = 'add-web-content';
+
+		await addApprovedStructuredContent({
+			apiHelpers,
+			contentStructureId,
+			siteId: site.id,
+			title,
+		});
+
+		await journalPage.goto(site.friendlyUrlPath);
+
+		await journalPage.changeView('cards');
+
+		await expect(page.getByRole('link', {name: title})).toBeVisible({
+			timeout: 1000,
+		});
+
+		await journalPage.changeView('list');
+
+		await expect(page.getByRole('link', {name: title})).toBeVisible({
+			timeout: 1000,
+		});
+
+		await journalPage.changeView('table');
+
+		await expect(page.getByRole('link', {name: title})).toBeVisible({
+			timeout: 1000,
+		});
+	}
+);
+
+privateContentIconTest(
+	'LPD-15807: Identify at a glance if a Web Content is visible for guests in content management',
+	async ({apiHelpers, journalEditArticlePage, journalPage, site}) => {
+		const contentStructureId = await getBasicWebContentStructureId(
+			apiHelpers
+		);
+
+		const title = getRandomString();
+
+		await addApprovedStructuredContent({
+			apiHelpers,
+			contentStructureId,
+			siteId: site.id,
+			title,
+		});
+
+		await journalPage.goto(site.friendlyUrlPath);
+
+		await journalPage.assertPrivateContentIcon();
+
+		await journalPage.changeView('table');
+
+		await journalPage.assertPrivateContentIcon();
+
+		await journalPage.changeView('list');
+
+		await journalEditArticlePage.editArticle(title);
+
+		await journalPage.assertPrivateContentIcon();
+	}
+);
+
+privateContentIconTest(
+	'LPD-15807: Identify at a glance if a Web Content is visible for guests in the item selector',
+	async ({apiHelpers, journalEditArticlePage, journalPage, site}) => {
+		const contentStructureId = await getBasicWebContentStructureId(
+			apiHelpers
+		);
+
+		await addApprovedStructuredContent({
+			apiHelpers,
+			contentStructureId,
+			siteId: site.id,
+			title: getRandomString(),
+		});
+
+		const title = getRandomString();
+
+		await addApprovedStructuredContent({
+			apiHelpers,
+			contentStructureId,
+			siteId: site.id,
+			title,
+		});
+
+		await journalPage.goto(site.friendlyUrlPath);
+
+		await journalEditArticlePage.editArticle(title);
+
+		await journalEditArticlePage.openRelatedAsset('Basic Web Content');
+
+		await journalEditArticlePage.assertPrivateContentIconInRelatedAssetPopUp(
+			'Basic Web Content'
+		);
+
+		await journalEditArticlePage.changeViewInRelatedAssetPopUp(
+			'Basic Web Content',
+			'table'
+		);
+
+		await journalEditArticlePage.assertPrivateContentIconInRelatedAssetPopUp(
+			'Basic Web Content'
+		);
+	}
+);
+
 prefixUrlTest(
 	'LPD-6813: Make prefix URLs configurable',
 	async ({
@@ -106,12 +228,12 @@ prefixUrlTest(
 			apiHelpers
 		);
 
-		await addApprovedStructuredContent(
+		await addApprovedStructuredContent({
 			apiHelpers,
-			site.id,
 			contentStructureId,
-			articleTitle
-		);
+			siteId: site.id,
+			title: articleTitle,
+		});
 
 		await displayPageTemplatesPage.goto(site.friendlyUrlPath);
 
@@ -159,12 +281,12 @@ prefixUrlTest(
 
 translationTest(
 	'LPD-13732: This is a test for reset translations button in web content',
-	async ({journalEditArticlePage, page, site}) => {
-		const title = getRandomString();
+	async ({journalEditArticlePage, journalPage, page, site}) => {
+		await journalPage.goto();
 
 		await journalEditArticlePage.goto({siteUrl: site.friendlyUrlPath});
 
-		await journalEditArticlePage.fillTitle(title);
+		await journalEditArticlePage.fillTitle(getRandomString());
 
 		const translationButton = page.getByRole('combobox', {
 			name: 'Select a language',
@@ -195,6 +317,8 @@ translationTest(
 		const resetTranslationButton = page.getByRole('button', {
 			name: 'Reset Translation',
 		});
+
+		await expect(resetTranslationButton).toBeEnabled();
 
 		await resetTranslationButton.click();
 
@@ -229,12 +353,12 @@ translationTest(
 
 		const title = getRandomString();
 
-		await addApprovedStructuredContent(
+		await addApprovedStructuredContent({
 			apiHelpers,
-			site.id,
 			contentStructureId,
-			title
-		);
+			siteId: site.id,
+			title,
+		});
 
 		await journalPage.goto(site.friendlyUrlPath);
 
@@ -267,19 +391,19 @@ bulkTest(
 		const title1 = getRandomString();
 		const title2 = getRandomString();
 
-		await addApprovedStructuredContent(
+		await addApprovedStructuredContent({
 			apiHelpers,
-			site.id,
 			contentStructureId,
-			title1
-		);
+			siteId: site.id,
+			title: title1,
+		});
 
-		await addApprovedStructuredContent(
+		await addApprovedStructuredContent({
 			apiHelpers,
-			site.id,
 			contentStructureId,
-			title2
-		);
+			siteId: site.id,
+			title: title2,
+		});
 
 		await journalPage.goto(site.friendlyUrlPath);
 
@@ -609,7 +733,9 @@ scheduleTest(
 		workflowPage,
 		workflowTasksPage,
 	}) => {
-		const site = await apiHelpers.headlessSite.createSite('papite');
+		const site = await apiHelpers.headlessSite.createSite({
+			name: 'papite',
+		});
 
 		await workflowPage.goto(site.friendlyUrlPath);
 

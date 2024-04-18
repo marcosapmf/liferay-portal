@@ -541,6 +541,8 @@ public abstract class BaseCTCollectionResourceTestCase {
 		CTCollection ctCollection =
 			testGraphQLGetCTCollectionByExternalReferenceCode_addCTCollection();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				ctCollection,
@@ -562,6 +564,32 @@ public abstract class BaseCTCollectionResourceTestCase {
 								getGraphQLFields())),
 						"JSONObject/data",
 						"Object/cTCollectionByExternalReferenceCode"))));
+
+		// Using the namespace changeTracking_v1_0
+
+		Assert.assertTrue(
+			equals(
+				ctCollection,
+				CTCollectionSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"changeTracking_v1_0",
+								new GraphQLField(
+									"cTCollectionByExternalReferenceCode",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"externalReferenceCode",
+												"\"" +
+													ctCollection.
+														getExternalReferenceCode() +
+															"\"");
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data", "JSONObject/changeTracking_v1_0",
+						"Object/cTCollectionByExternalReferenceCode"))));
 	}
 
 	@Test
@@ -570,6 +598,8 @@ public abstract class BaseCTCollectionResourceTestCase {
 
 		String irrelevantExternalReferenceCode =
 			"\"" + RandomTestUtil.randomString() + "\"";
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -585,6 +615,27 @@ public abstract class BaseCTCollectionResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace changeTracking_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"changeTracking_v1_0",
+						new GraphQLField(
+							"cTCollectionByExternalReferenceCode",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"externalReferenceCode",
+										irrelevantExternalReferenceCode);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}
@@ -775,7 +826,10 @@ public abstract class BaseCTCollectionResourceTestCase {
 
 	@Test
 	public void testGraphQLDeleteCTCollection() throws Exception {
-		CTCollection ctCollection =
+
+		// No namespace
+
+		CTCollection ctCollection1 =
 			testGraphQLDeleteCTCollection_addCTCollection();
 
 		Assert.assertTrue(
@@ -785,23 +839,62 @@ public abstract class BaseCTCollectionResourceTestCase {
 						"deleteCTCollection",
 						new HashMap<String, Object>() {
 							{
-								put("ctCollectionId", ctCollection.getId());
+								put("ctCollectionId", ctCollection1.getId());
 							}
 						})),
 				"JSONObject/data", "Object/deleteCTCollection"));
-		JSONArray errorsJSONArray = JSONUtil.getValueAsJSONArray(
+
+		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
 			invokeGraphQLQuery(
 				new GraphQLField(
 					"cTCollection",
 					new HashMap<String, Object>() {
 						{
-							put("ctCollectionId", ctCollection.getId());
+							put("ctCollectionId", ctCollection1.getId());
 						}
 					},
 					new GraphQLField("id"))),
 			"JSONArray/errors");
 
-		Assert.assertTrue(errorsJSONArray.length() > 0);
+		Assert.assertTrue(errorsJSONArray1.length() > 0);
+
+		// Using the namespace changeTracking_v1_0
+
+		CTCollection ctCollection2 =
+			testGraphQLDeleteCTCollection_addCTCollection();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"changeTracking_v1_0",
+						new GraphQLField(
+							"deleteCTCollection",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"ctCollectionId",
+										ctCollection2.getId());
+								}
+							}))),
+				"JSONObject/data", "JSONObject/changeTracking_v1_0",
+				"Object/deleteCTCollection"));
+
+		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"changeTracking_v1_0",
+					new GraphQLField(
+						"cTCollection",
+						new HashMap<String, Object>() {
+							{
+								put("ctCollectionId", ctCollection2.getId());
+							}
+						},
+						new GraphQLField("id")))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray2.length() > 0);
 	}
 
 	protected CTCollection testGraphQLDeleteCTCollection_addCTCollection()
@@ -833,6 +926,8 @@ public abstract class BaseCTCollectionResourceTestCase {
 		CTCollection ctCollection =
 			testGraphQLGetCTCollection_addCTCollection();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				ctCollection,
@@ -850,11 +945,36 @@ public abstract class BaseCTCollectionResourceTestCase {
 								},
 								getGraphQLFields())),
 						"JSONObject/data", "Object/cTCollection"))));
+
+		// Using the namespace changeTracking_v1_0
+
+		Assert.assertTrue(
+			equals(
+				ctCollection,
+				CTCollectionSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"changeTracking_v1_0",
+								new GraphQLField(
+									"cTCollection",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"ctCollectionId",
+												ctCollection.getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data", "JSONObject/changeTracking_v1_0",
+						"Object/cTCollection"))));
 	}
 
 	@Test
 	public void testGraphQLGetCTCollectionNotFound() throws Exception {
 		Long irrelevantCtCollectionId = RandomTestUtil.randomLong();
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -868,6 +988,27 @@ public abstract class BaseCTCollectionResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace changeTracking_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"changeTracking_v1_0",
+						new GraphQLField(
+							"cTCollection",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"ctCollectionId",
+										irrelevantCtCollectionId);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}

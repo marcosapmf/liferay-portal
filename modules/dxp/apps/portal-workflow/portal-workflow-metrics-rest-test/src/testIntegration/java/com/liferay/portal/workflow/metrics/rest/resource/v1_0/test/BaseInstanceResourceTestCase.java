@@ -567,6 +567,8 @@ public abstract class BaseInstanceResourceTestCase {
 	public void testGraphQLGetProcessInstance() throws Exception {
 		Instance instance = testGraphQLGetProcessInstance_addInstance();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				instance,
@@ -587,6 +589,33 @@ public abstract class BaseInstanceResourceTestCase {
 								},
 								getGraphQLFields())),
 						"JSONObject/data", "Object/processInstance"))));
+
+		// Using the namespace portalWorkflowMetrics_v1_0
+
+		Assert.assertTrue(
+			equals(
+				instance,
+				InstanceSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"portalWorkflowMetrics_v1_0",
+								new GraphQLField(
+									"processInstance",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"processId",
+												testGraphQLGetProcessInstance_getProcessId(
+													instance));
+
+											put("instanceId", instance.getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/portalWorkflowMetrics_v1_0",
+						"Object/processInstance"))));
 	}
 
 	protected Long testGraphQLGetProcessInstance_getProcessId(Instance instance)
@@ -599,6 +628,8 @@ public abstract class BaseInstanceResourceTestCase {
 	public void testGraphQLGetProcessInstanceNotFound() throws Exception {
 		Long irrelevantProcessId = RandomTestUtil.randomLong();
 		Long irrelevantInstanceId = RandomTestUtil.randomLong();
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -613,6 +644,26 @@ public abstract class BaseInstanceResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace portalWorkflowMetrics_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"portalWorkflowMetrics_v1_0",
+						new GraphQLField(
+							"processInstance",
+							new HashMap<String, Object>() {
+								{
+									put("processId", irrelevantProcessId);
+									put("instanceId", irrelevantInstanceId);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}

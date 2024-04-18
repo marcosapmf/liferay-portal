@@ -24,7 +24,7 @@ const TABS = [
 ];
 
 interface ObjectActionContainerProps {
-	allowScriptContentBeExecutedOrIncluded: boolean;
+	allowScriptContentToBeExecutedOrIncluded: boolean;
 	editingObjectAction?: boolean;
 	isApproved?: boolean;
 	objectAction: Partial<ObjectAction>;
@@ -39,6 +39,7 @@ interface ObjectActionContainerProps {
 		method: 'POST' | 'PUT';
 		url: string;
 	};
+	scriptManagementConfigurationPortletURL: string;
 	successMessage: string;
 	systemObject: boolean;
 	title: string;
@@ -60,7 +61,7 @@ export type ActionError = FormError<ObjectAction & ObjectActionParameters> & {
 };
 
 export function ObjectActionContainer({
-	allowScriptContentBeExecutedOrIncluded,
+	allowScriptContentToBeExecutedOrIncluded,
 	editingObjectAction = false,
 	isApproved,
 	objectAction: initialValues,
@@ -72,6 +73,7 @@ export function ObjectActionContainer({
 	objectDefinitionsRelationshipsURL,
 	readOnly,
 	requestParams: {method, url},
+	scriptManagementConfigurationPortletURL,
 	successMessage,
 	systemObject,
 	validateExpressionURL,
@@ -152,15 +154,14 @@ export function ObjectActionContainer({
 
 	const disableGroovyAction =
 		Liferay.FeatureFlags['LPD-11179'] &&
-		!allowScriptContentBeExecutedOrIncluded &&
-		editingObjectAction &&
+		!allowScriptContentToBeExecutedOrIncluded &&
 		values.objectActionExecutorKey === 'groovy';
 
 	let newObjectActionExecutors = [...objectActionExecutors];
 
 	if (
 		Liferay.FeatureFlags['LPD-11179'] &&
-		!allowScriptContentBeExecutedOrIncluded
+		!allowScriptContentToBeExecutedOrIncluded
 	) {
 		const shouldFilterGroovyExecutor =
 			!editingObjectAction ||
@@ -202,6 +203,9 @@ export function ObjectActionContainer({
 						handleChange={handleChange}
 						isApproved={isApproved!}
 						readOnly={readOnly}
+						scriptManagementConfigurationPortletURL={
+							scriptManagementConfigurationPortletURL
+						}
 						setValues={setValues}
 						values={values}
 					/>
@@ -228,6 +232,9 @@ export function ObjectActionContainer({
 						}
 						objectDefinitionsRelationshipsURL={
 							objectDefinitionsRelationshipsURL
+						}
+						scriptManagementConfigurationPortletURL={
+							scriptManagementConfigurationPortletURL
 						}
 						setValues={setValues}
 						systemObject={systemObject}

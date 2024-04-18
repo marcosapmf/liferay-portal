@@ -22,7 +22,6 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.metatype.annotations.ExtendedObjectClassDefinition;
 import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.exception.NoSuchModelException;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -917,8 +916,8 @@ public class GraphQLServletExtender {
 					for (Method method : methodsTreeSet) {
 						GraphQLFieldDefinition field =
 							_liferayGraphQLFieldRetriever.getField(
-								FeatureFlagManagerUtil.isEnabled("LPD-10789"),
-								method, mutation, processingElementsContainer);
+								true, method, mutation,
+								processingElementsContainer);
 
 						if (firstMethod == method) {
 							graphQLObjectTypeBuilder.field(field);
@@ -1063,14 +1062,18 @@ public class GraphQLServletExtender {
 				graphQLSchemaBuilder, processingElementsContainer,
 				queryGraphQLObjectTypeBuilder);
 
-			_registerNamespace(
-				ServletData::getMutation, mutationGraphQLObjectTypeBuilder,
-				graphQLSchemaBuilder, true, processingElementsContainer,
-				servletDatas);
-			_registerNamespace(
-				ServletData::getQuery, queryGraphQLObjectTypeBuilder,
-				graphQLSchemaBuilder, false, processingElementsContainer,
-				servletDatas);
+			Set<String> graphQLNamespaces = new HashSet<>();
+
+			graphQLNamespaces.addAll(
+				_registerNamespace(
+					ServletData::getMutation, mutationGraphQLObjectTypeBuilder,
+					graphQLSchemaBuilder, true, processingElementsContainer,
+					servletDatas));
+			graphQLNamespaces.addAll(
+				_registerNamespace(
+					ServletData::getQuery, queryGraphQLObjectTypeBuilder,
+					graphQLSchemaBuilder, false, processingElementsContainer,
+					servletDatas));
 
 			graphQLSchemaBuilder.mutation(
 				mutationGraphQLObjectTypeBuilder.build());
@@ -1102,7 +1105,7 @@ public class GraphQLServletExtender {
 				GraphQLObjectMapper.newBuilder();
 
 			objectMapperBuilder.withGraphQLErrorHandler(
-				new LiferayGraphQLErrorHandler());
+				new LiferayGraphQLErrorHandler(graphQLNamespaces));
 			objectMapperBuilder.withObjectMapperProvider(
 				() -> {
 					ObjectMapper objectMapper = new ObjectMapper();
@@ -1682,29 +1685,30 @@ public class GraphQLServletExtender {
 		}
 	}
 
-	private void _registerNamespace(
+	private Set<String> _registerNamespace(
 		Function<ServletData, Object> function,
 		GraphQLObjectType.Builder graphQLObjectTypeBuilder,
 		GraphQLSchema.Builder graphQLSchemaBuilder, boolean mutation,
 		ProcessingElementsContainer processingElementsContainer,
 		List<ServletData> servletDatas) {
 
+		Set<String> graphQLNamespaces = new HashSet<>();
+
 		for (ServletData servletData : servletDatas) {
-			Set<String> graphQLNamespaces = new HashSet<>();
+			Set<String> servletDataGraphQLNamespaces = new HashSet<>();
 
-			if (FeatureFlagManagerUtil.isEnabled("LPD-10789")) {
-				String graphQLNamespace = _getGraphQLNamespace(servletData);
+			String namespace = _getGraphQLNamespace(servletData);
 
-				if (graphQLNamespace != null) {
-					graphQLNamespaces.add(graphQLNamespace);
-				}
+			if (namespace != null) {
+				servletDataGraphQLNamespaces.add(namespace);
 			}
 
 			if (servletData.getGraphQLNamespace() != null) {
-				graphQLNamespaces.add(servletData.getGraphQLNamespace());
+				servletDataGraphQLNamespaces.add(
+					servletData.getGraphQLNamespace());
 			}
 
-			if (graphQLNamespaces.isEmpty()) {
+			if (servletDataGraphQLNamespaces.isEmpty()) {
 				continue;
 			}
 
@@ -1733,7 +1737,7 @@ public class GraphQLServletExtender {
 			Map<Method, LiferayMethodDataFetcher> liferayMethodDataFetchers =
 				new HashMap<>();
 
-			for (String graphQLNamespace : graphQLNamespaces) {
+			for (String graphQLNamespace : servletDataGraphQLNamespaces) {
 				GraphQLObjectType.Builder builder =
 					new GraphQLObjectType.Builder();
 
@@ -1749,8 +1753,7 @@ public class GraphQLServletExtender {
 				boolean deprecated = false;
 
 				if (StringUtil.equals(
-						graphQLNamespace, servletData.getGraphQLNamespace()) &&
-					FeatureFlagManagerUtil.isEnabled("LPD-10789")) {
+						graphQLNamespace, servletData.getGraphQLNamespace())) {
 
 					deprecated = true;
 				}
@@ -1798,8 +1801,12 @@ public class GraphQLServletExtender {
 						(DataFetcher<Object>)
 							dataFetchingEnvironment -> new Object()
 					).build());
+
+				graphQLNamespaces.add(graphQLNamespace);
 			}
 		}
+
+		return graphQLNamespaces;
 	}
 
 	private void _replaceFieldDefinition(
@@ -2344,6 +2351,10 @@ public class GraphQLServletExtender {
 	private static class LiferayGraphQLErrorHandler
 		implements GraphQLErrorHandler {
 
+		public LiferayGraphQLErrorHandler(Set<String> graphQLNamespaces) {
+			_graphQLNamespaces = graphQLNamespaces;
+		}
+
 		@Override
 		public List<GraphQLError> processErrors(
 			List<GraphQLError> graphQLErrors) {
@@ -2480,6 +2491,10 @@ public class GraphQLServletExtender {
 				path = Collections.emptyList();
 			}
 
+			if (!path.isEmpty() && _graphQLNamespaces.contains(path.get(0))) {
+				path = ListUtil.subList(path, 1, path.size());
+			}
+
 			if (path.size() <= 1) {
 				return true;
 			}
@@ -2487,6 +2502,8 @@ public class GraphQLServletExtender {
 			return StringUtil.containsIgnoreCase(
 				(String)path.get(path.size() - 1), "parent");
 		}
+
+		private final Set<String> _graphQLNamespaces;
 
 	}
 

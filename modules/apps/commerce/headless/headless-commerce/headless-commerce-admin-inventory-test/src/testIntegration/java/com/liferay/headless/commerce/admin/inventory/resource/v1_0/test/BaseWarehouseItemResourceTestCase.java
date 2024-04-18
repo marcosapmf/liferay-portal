@@ -252,6 +252,8 @@ public abstract class BaseWarehouseItemResourceTestCase {
 		WarehouseItem warehouseItem =
 			testGraphQLGetWarehouseItemByExternalReferenceCode_addWarehouseItem();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				warehouseItem,
@@ -273,6 +275,33 @@ public abstract class BaseWarehouseItemResourceTestCase {
 								getGraphQLFields())),
 						"JSONObject/data",
 						"Object/warehouseItemByExternalReferenceCode"))));
+
+		// Using the namespace headlessCommerceAdminInventory_v1_0
+
+		Assert.assertTrue(
+			equals(
+				warehouseItem,
+				WarehouseItemSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessCommerceAdminInventory_v1_0",
+								new GraphQLField(
+									"warehouseItemByExternalReferenceCode",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"externalReferenceCode",
+												"\"" +
+													warehouseItem.
+														getExternalReferenceCode() +
+															"\"");
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessCommerceAdminInventory_v1_0",
+						"Object/warehouseItemByExternalReferenceCode"))));
 	}
 
 	@Test
@@ -281,6 +310,8 @@ public abstract class BaseWarehouseItemResourceTestCase {
 
 		String irrelevantExternalReferenceCode =
 			"\"" + RandomTestUtil.randomString() + "\"";
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -296,6 +327,27 @@ public abstract class BaseWarehouseItemResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessCommerceAdminInventory_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessCommerceAdminInventory_v1_0",
+						new GraphQLField(
+							"warehouseItemByExternalReferenceCode",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"externalReferenceCode",
+										irrelevantExternalReferenceCode);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}
@@ -514,7 +566,10 @@ public abstract class BaseWarehouseItemResourceTestCase {
 
 	@Test
 	public void testGraphQLDeleteWarehouseItem() throws Exception {
-		WarehouseItem warehouseItem =
+
+		// No namespace
+
+		WarehouseItem warehouseItem1 =
 			testGraphQLDeleteWarehouseItem_addWarehouseItem();
 
 		Assert.assertTrue(
@@ -524,23 +579,61 @@ public abstract class BaseWarehouseItemResourceTestCase {
 						"deleteWarehouseItem",
 						new HashMap<String, Object>() {
 							{
-								put("id", warehouseItem.getId());
+								put("id", warehouseItem1.getId());
 							}
 						})),
 				"JSONObject/data", "Object/deleteWarehouseItem"));
-		JSONArray errorsJSONArray = JSONUtil.getValueAsJSONArray(
+
+		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
 			invokeGraphQLQuery(
 				new GraphQLField(
 					"warehouseItem",
 					new HashMap<String, Object>() {
 						{
-							put("id", warehouseItem.getId());
+							put("id", warehouseItem1.getId());
 						}
 					},
 					new GraphQLField("id"))),
 			"JSONArray/errors");
 
-		Assert.assertTrue(errorsJSONArray.length() > 0);
+		Assert.assertTrue(errorsJSONArray1.length() > 0);
+
+		// Using the namespace headlessCommerceAdminInventory_v1_0
+
+		WarehouseItem warehouseItem2 =
+			testGraphQLDeleteWarehouseItem_addWarehouseItem();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"headlessCommerceAdminInventory_v1_0",
+						new GraphQLField(
+							"deleteWarehouseItem",
+							new HashMap<String, Object>() {
+								{
+									put("id", warehouseItem2.getId());
+								}
+							}))),
+				"JSONObject/data",
+				"JSONObject/headlessCommerceAdminInventory_v1_0",
+				"Object/deleteWarehouseItem"));
+
+		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"headlessCommerceAdminInventory_v1_0",
+					new GraphQLField(
+						"warehouseItem",
+						new HashMap<String, Object>() {
+							{
+								put("id", warehouseItem2.getId());
+							}
+						},
+						new GraphQLField("id")))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray2.length() > 0);
 	}
 
 	protected WarehouseItem testGraphQLDeleteWarehouseItem_addWarehouseItem()
@@ -573,6 +666,8 @@ public abstract class BaseWarehouseItemResourceTestCase {
 		WarehouseItem warehouseItem =
 			testGraphQLGetWarehouseItem_addWarehouseItem();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				warehouseItem,
@@ -588,11 +683,35 @@ public abstract class BaseWarehouseItemResourceTestCase {
 								},
 								getGraphQLFields())),
 						"JSONObject/data", "Object/warehouseItem"))));
+
+		// Using the namespace headlessCommerceAdminInventory_v1_0
+
+		Assert.assertTrue(
+			equals(
+				warehouseItem,
+				WarehouseItemSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessCommerceAdminInventory_v1_0",
+								new GraphQLField(
+									"warehouseItem",
+									new HashMap<String, Object>() {
+										{
+											put("id", warehouseItem.getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessCommerceAdminInventory_v1_0",
+						"Object/warehouseItem"))));
 	}
 
 	@Test
 	public void testGraphQLGetWarehouseItemNotFound() throws Exception {
 		Long irrelevantId = RandomTestUtil.randomLong();
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -606,6 +725,25 @@ public abstract class BaseWarehouseItemResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessCommerceAdminInventory_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessCommerceAdminInventory_v1_0",
+						new GraphQLField(
+							"warehouseItem",
+							new HashMap<String, Object>() {
+								{
+									put("id", irrelevantId);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}

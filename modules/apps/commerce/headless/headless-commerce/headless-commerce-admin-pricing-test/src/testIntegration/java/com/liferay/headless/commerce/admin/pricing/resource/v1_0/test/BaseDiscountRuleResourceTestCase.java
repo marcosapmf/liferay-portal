@@ -439,7 +439,10 @@ public abstract class BaseDiscountRuleResourceTestCase {
 
 	@Test
 	public void testGraphQLDeleteDiscountRule() throws Exception {
-		DiscountRule discountRule =
+
+		// No namespace
+
+		DiscountRule discountRule1 =
 			testGraphQLDeleteDiscountRule_addDiscountRule();
 
 		Assert.assertTrue(
@@ -449,23 +452,61 @@ public abstract class BaseDiscountRuleResourceTestCase {
 						"deleteDiscountRule",
 						new HashMap<String, Object>() {
 							{
-								put("id", discountRule.getId());
+								put("id", discountRule1.getId());
 							}
 						})),
 				"JSONObject/data", "Object/deleteDiscountRule"));
-		JSONArray errorsJSONArray = JSONUtil.getValueAsJSONArray(
+
+		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
 			invokeGraphQLQuery(
 				new GraphQLField(
 					"discountRule",
 					new HashMap<String, Object>() {
 						{
-							put("id", discountRule.getId());
+							put("id", discountRule1.getId());
 						}
 					},
 					new GraphQLField("id"))),
 			"JSONArray/errors");
 
-		Assert.assertTrue(errorsJSONArray.length() > 0);
+		Assert.assertTrue(errorsJSONArray1.length() > 0);
+
+		// Using the namespace headlessCommerceAdminPricing_v1_0
+
+		DiscountRule discountRule2 =
+			testGraphQLDeleteDiscountRule_addDiscountRule();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"headlessCommerceAdminPricing_v1_0",
+						new GraphQLField(
+							"deleteDiscountRule",
+							new HashMap<String, Object>() {
+								{
+									put("id", discountRule2.getId());
+								}
+							}))),
+				"JSONObject/data",
+				"JSONObject/headlessCommerceAdminPricing_v1_0",
+				"Object/deleteDiscountRule"));
+
+		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"headlessCommerceAdminPricing_v1_0",
+					new GraphQLField(
+						"discountRule",
+						new HashMap<String, Object>() {
+							{
+								put("id", discountRule2.getId());
+							}
+						},
+						new GraphQLField("id")))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray2.length() > 0);
 	}
 
 	protected DiscountRule testGraphQLDeleteDiscountRule_addDiscountRule()
@@ -497,6 +538,8 @@ public abstract class BaseDiscountRuleResourceTestCase {
 		DiscountRule discountRule =
 			testGraphQLGetDiscountRule_addDiscountRule();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				discountRule,
@@ -512,11 +555,35 @@ public abstract class BaseDiscountRuleResourceTestCase {
 								},
 								getGraphQLFields())),
 						"JSONObject/data", "Object/discountRule"))));
+
+		// Using the namespace headlessCommerceAdminPricing_v1_0
+
+		Assert.assertTrue(
+			equals(
+				discountRule,
+				DiscountRuleSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessCommerceAdminPricing_v1_0",
+								new GraphQLField(
+									"discountRule",
+									new HashMap<String, Object>() {
+										{
+											put("id", discountRule.getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessCommerceAdminPricing_v1_0",
+						"Object/discountRule"))));
 	}
 
 	@Test
 	public void testGraphQLGetDiscountRuleNotFound() throws Exception {
 		Long irrelevantId = RandomTestUtil.randomLong();
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -530,6 +597,25 @@ public abstract class BaseDiscountRuleResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessCommerceAdminPricing_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessCommerceAdminPricing_v1_0",
+						new GraphQLField(
+							"discountRule",
+							new HashMap<String, Object>() {
+								{
+									put("id", irrelevantId);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}

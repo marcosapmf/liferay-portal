@@ -14,16 +14,15 @@ import Jethr0Card from '../../components/Jethr0Card/Jethr0Card';
 import Jethr0ContainerFluid from '../../components/Jethr0ContainerFluid/Jethr0ContainerFluid';
 import Jethr0NavigationBar from '../../components/Jethr0NavigationBar/Jethr0NavigationBar';
 import Jethr0Table from '../../components/Jethr0Table/Jethr0Table';
+import {getJobs} from '../../objects/jobs/JobUtil';
 import {toLocaleString} from '../../services/DateUtil';
-import useSpringBootData from '../../services/useSpringBootData';
 
 function Jobs() {
 	const [jobs, setJobs] = useState(null);
 
-	useSpringBootData({
-		setData: setJobs,
-		urlPath: '/jobs',
-	});
+	if (!jobs) {
+		getJobs({setJobs});
+	}
 
 	if (!jobs) {
 		return <div>Loading...</div>;
@@ -44,25 +43,24 @@ function Jobs() {
 				</tr>
 			</thead>
 			<tbody>
-				{jobs &&
-					jobs.map((job) => {
-						return (
-							<tr key={job.id}>
-								<th className="font-weight-semi-bold">
-									<Link title={job.id} to={'/jobs/' + job.id}>
-										{job.id}
-									</Link>
-								</th>
-								<td>{job.name}</td>
-								<td>{job.priority}</td>
-								<td>{toLocaleString(job.dateCreated)}</td>
-								<td>{toLocaleString(job.dateModified)}</td>
-								<td>{toLocaleString(job.startDate)}</td>
-								<td>{job.state.name}</td>
-								<td>{job.type.name}</td>
-							</tr>
-						);
-					})}
+				{jobs?.map((job) => {
+					return (
+						<tr key={job.id}>
+							<th className="font-weight-semi-bold">
+								<Link title={job.id} to={'/jobs/' + job.id}>
+									{job.id}
+								</Link>
+							</th>
+							<td>{job.name}</td>
+							<td>{job.priority}</td>
+							<td>{toLocaleString(job.dateCreated)}</td>
+							<td>{toLocaleString(job.dateModified)}</td>
+							<td>{toLocaleString(job.startDate)}</td>
+							<td>{job.state.name}</td>
+							<td>{job.type.name}</td>
+						</tr>
+					);
+				})}
 			</tbody>
 		</Jethr0Table>
 	);

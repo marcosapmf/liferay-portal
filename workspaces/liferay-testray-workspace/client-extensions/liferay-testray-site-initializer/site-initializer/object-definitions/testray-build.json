@@ -60,6 +60,23 @@
 			"type": "Date"
 		},
 		{
+			"DBType": "DateTime",
+			"indexed": true,
+			"indexedAsKeyword": false,
+			"label": {
+				"en_US": "Date Archived"
+			},
+			"name": "dateArchived",
+			"objectFieldSettings": [
+				{
+					"name": "timeStorage",
+					"value": "convertToUTC"
+				}
+			],
+			"required": false,
+			"type": "DateTime"
+		},
+		{
 			"DBType": "String",
 			"indexed": true,
 			"indexedAsKeyword": true,

@@ -5,16 +5,21 @@
 
 /// <reference types="react" />
 
+import './ModalImportWarning.scss';
 interface ModalImportWarningProps {
 	errorMessage: string;
+	existingObjectDefinitions?: ObjectDefinition[];
 	handleImport: () => void;
 	handleOnClose: () => void;
+	importLoading: boolean;
 	modalImportKey: string;
 }
 export declare function ModalImportWarning({
 	errorMessage,
+	existingObjectDefinitions,
 	handleImport,
 	handleOnClose,
+	importLoading,
 	modalImportKey,
 }: ModalImportWarningProps): JSX.Element;
 export {};

@@ -659,6 +659,8 @@ public abstract class BaseStructuredContentResourceTestCase {
 			new GraphQLField("items", getGraphQLFields()),
 			new GraphQLField("page"), new GraphQLField("totalCount"));
 
+		// No namespace
+
 		JSONObject structuredContentsJSONObject = JSONUtil.getValueAsJSONObject(
 			invokeGraphQLQuery(graphQLField), "JSONObject/data",
 			"JSONObject/structuredContents");
@@ -672,6 +674,28 @@ public abstract class BaseStructuredContentResourceTestCase {
 
 		structuredContentsJSONObject = JSONUtil.getValueAsJSONObject(
 			invokeGraphQLQuery(graphQLField), "JSONObject/data",
+			"JSONObject/structuredContents");
+
+		Assert.assertEquals(
+			totalCount + 2, structuredContentsJSONObject.getLong("totalCount"));
+
+		assertContains(
+			structuredContent1,
+			Arrays.asList(
+				StructuredContentSerDes.toDTOs(
+					structuredContentsJSONObject.getString("items"))));
+		assertContains(
+			structuredContent2,
+			Arrays.asList(
+				StructuredContentSerDes.toDTOs(
+					structuredContentsJSONObject.getString("items"))));
+
+		// Using the namespace headlessAdminContent_v1_0
+
+		structuredContentsJSONObject = JSONUtil.getValueAsJSONObject(
+			invokeGraphQLQuery(
+				new GraphQLField("headlessAdminContent_v1_0", graphQLField)),
+			"JSONObject/data", "JSONObject/headlessAdminContent_v1_0",
 			"JSONObject/structuredContents");
 
 		Assert.assertEquals(
@@ -791,6 +815,8 @@ public abstract class BaseStructuredContentResourceTestCase {
 		StructuredContent structuredContent =
 			testGraphQLGetStructuredContentByVersion_addStructuredContent();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				structuredContent,
@@ -813,6 +839,34 @@ public abstract class BaseStructuredContentResourceTestCase {
 								getGraphQLFields())),
 						"JSONObject/data",
 						"Object/structuredContentByVersion"))));
+
+		// Using the namespace headlessAdminContent_v1_0
+
+		Assert.assertTrue(
+			equals(
+				structuredContent,
+				StructuredContentSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessAdminContent_v1_0",
+								new GraphQLField(
+									"structuredContentByVersion",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"structuredContentId",
+												structuredContent.getId());
+
+											put(
+												"version",
+												testGraphQLGetStructuredContentByVersion_getVersion());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessAdminContent_v1_0",
+						"Object/structuredContentByVersion"))));
 	}
 
 	protected Double testGraphQLGetStructuredContentByVersion_getVersion()
@@ -829,6 +883,8 @@ public abstract class BaseStructuredContentResourceTestCase {
 		Long irrelevantStructuredContentId = RandomTestUtil.randomLong();
 		Double irrelevantVersion = RandomTestUtil.randomDouble();
 
+		// No namespace
+
 		Assert.assertEquals(
 			"Not Found",
 			JSONUtil.getValueAsString(
@@ -844,6 +900,28 @@ public abstract class BaseStructuredContentResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessAdminContent_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessAdminContent_v1_0",
+						new GraphQLField(
+							"structuredContentByVersion",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"structuredContentId",
+										irrelevantStructuredContentId);
+									put("version", irrelevantVersion);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}

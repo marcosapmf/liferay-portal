@@ -61,6 +61,10 @@ function default_set_up {
 
 	deploy_project_deploy_folder
 
+	deploy_parent_project_osgi_configs
+
+	deploy_project_osgi_configs
+
 	deploy_parent_project_client_extensions
 
 	deploy_project_client_extensions
@@ -209,10 +213,7 @@ function get_absolute_dir {
 }
 
 function get_gradlew {
-	if [[ -e ${_PORTAL_PROJECT_DIR}/gradlew ]]
-	then
-		echo ${_PORTAL_PROJECT_DIR}/gradlew
-	elif [[ -e ./gradlew ]]
+	if [[ -e ./gradlew ]]
 	then
 		echo "$(pwd)/gradlew"
 	elif [[ $(pwd) == / ]]

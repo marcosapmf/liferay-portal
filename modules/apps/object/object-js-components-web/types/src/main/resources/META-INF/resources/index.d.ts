@@ -32,6 +32,7 @@ export {RichTextLocalized} from './components/RichTextLocalized';
 export {
 	MultipleSelect,
 	MultiSelectItem,
+	MultiSelectItemChild,
 } from './components/Select/MultipleSelect';
 export {SingleSelect} from './components/Select/SingleSelect';
 export {
@@ -58,3 +59,4 @@ export * as stringUtils from './utils/string';
 export * as arrayUtils from './utils/array';
 export * as constantsUtils from './utils/constants';
 export * as datetimeUtils from './utils/datetime';
+export * as errorsUtils from './utils/errors';

@@ -948,7 +948,10 @@ public abstract class BaseObjectViewResourceTestCase {
 
 	@Test
 	public void testGraphQLDeleteObjectView() throws Exception {
-		ObjectView objectView = testGraphQLDeleteObjectView_addObjectView();
+
+		// No namespace
+
+		ObjectView objectView1 = testGraphQLDeleteObjectView_addObjectView();
 
 		Assert.assertTrue(
 			JSONUtil.getValueAsBoolean(
@@ -957,23 +960,59 @@ public abstract class BaseObjectViewResourceTestCase {
 						"deleteObjectView",
 						new HashMap<String, Object>() {
 							{
-								put("objectViewId", objectView.getId());
+								put("objectViewId", objectView1.getId());
 							}
 						})),
 				"JSONObject/data", "Object/deleteObjectView"));
-		JSONArray errorsJSONArray = JSONUtil.getValueAsJSONArray(
+
+		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
 			invokeGraphQLQuery(
 				new GraphQLField(
 					"objectView",
 					new HashMap<String, Object>() {
 						{
-							put("objectViewId", objectView.getId());
+							put("objectViewId", objectView1.getId());
 						}
 					},
 					new GraphQLField("id"))),
 			"JSONArray/errors");
 
-		Assert.assertTrue(errorsJSONArray.length() > 0);
+		Assert.assertTrue(errorsJSONArray1.length() > 0);
+
+		// Using the namespace objectAdmin_v1_0
+
+		ObjectView objectView2 = testGraphQLDeleteObjectView_addObjectView();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"objectAdmin_v1_0",
+						new GraphQLField(
+							"deleteObjectView",
+							new HashMap<String, Object>() {
+								{
+									put("objectViewId", objectView2.getId());
+								}
+							}))),
+				"JSONObject/data", "JSONObject/objectAdmin_v1_0",
+				"Object/deleteObjectView"));
+
+		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"objectAdmin_v1_0",
+					new GraphQLField(
+						"objectView",
+						new HashMap<String, Object>() {
+							{
+								put("objectViewId", objectView2.getId());
+							}
+						},
+						new GraphQLField("id")))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray2.length() > 0);
 	}
 
 	protected ObjectView testGraphQLDeleteObjectView_addObjectView()
@@ -1002,6 +1041,8 @@ public abstract class BaseObjectViewResourceTestCase {
 	public void testGraphQLGetObjectView() throws Exception {
 		ObjectView objectView = testGraphQLGetObjectView_addObjectView();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				objectView,
@@ -1017,11 +1058,36 @@ public abstract class BaseObjectViewResourceTestCase {
 								},
 								getGraphQLFields())),
 						"JSONObject/data", "Object/objectView"))));
+
+		// Using the namespace objectAdmin_v1_0
+
+		Assert.assertTrue(
+			equals(
+				objectView,
+				ObjectViewSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"objectAdmin_v1_0",
+								new GraphQLField(
+									"objectView",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"objectViewId",
+												objectView.getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data", "JSONObject/objectAdmin_v1_0",
+						"Object/objectView"))));
 	}
 
 	@Test
 	public void testGraphQLGetObjectViewNotFound() throws Exception {
 		Long irrelevantObjectViewId = RandomTestUtil.randomLong();
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -1035,6 +1101,25 @@ public abstract class BaseObjectViewResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace objectAdmin_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"objectAdmin_v1_0",
+						new GraphQLField(
+							"objectView",
+							new HashMap<String, Object>() {
+								{
+									put("objectViewId", irrelevantObjectViewId);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}

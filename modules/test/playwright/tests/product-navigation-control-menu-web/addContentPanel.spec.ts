@@ -7,6 +7,7 @@ import {expect, mergeTests} from '@playwright/test';
 
 import {apiHelpersTest} from '../../fixtures/apiHelpersTest';
 import {isolatedSiteTest} from '../../fixtures/isolatedSiteTest';
+import {loginTest} from '../../fixtures/loginTest';
 import {widgetPagesTest} from '../../fixtures/widgetPagesTest';
 import getRandomString from '../../utils/getRandomString';
 import addApprovedStructuredContent from '../../utils/structured-content/addApprovedStructuredContent';
@@ -19,6 +20,7 @@ import getBasicWebContentStructureId from '../../utils/structured-content/getBas
 export const test = mergeTests(
 	apiHelpersTest,
 	isolatedSiteTest,
+	loginTest(),
 	widgetPagesTest
 );
 
@@ -39,18 +41,19 @@ test('LPD-15256 Approved and scheduled web contents should be displayed in the "
 			apiHelpers
 		);
 
-		await addApprovedStructuredContent(
+		await addApprovedStructuredContent({
 			apiHelpers,
-			site.id,
 			contentStructureId,
-			approvedWebContentTitle
-		);
-		await addDraftStructuredContent(
+			siteId: site.id,
+			title: approvedWebContentTitle,
+		});
+
+		await addDraftStructuredContent({
 			apiHelpers,
-			site.id,
 			contentStructureId,
-			draftWebContentTitle
-		);
+			siteId: site.id,
+			title: draftWebContentTitle,
+		});
 		await addExpiredStructuredContent(
 			apiHelpers,
 			site.id,

@@ -71,11 +71,12 @@ public class ObjectDefinitionLocalServiceUtil {
 
 	public static ObjectDefinition addObjectDefinition(
 			String externalReferenceCode, long userId, long objectFolderId,
-			boolean modifiable, boolean system)
+			long rootObjectDefinitionId, boolean modifiable, boolean system)
 		throws PortalException {
 
 		return getService().addObjectDefinition(
-			externalReferenceCode, userId, objectFolderId, modifiable, system);
+			externalReferenceCode, userId, objectFolderId,
+			rootObjectDefinitionId, modifiable, system);
 	}
 
 	public static ObjectDefinition addOrUpdateSystemObjectDefinition(
@@ -94,8 +95,8 @@ public class ObjectDefinitionLocalServiceUtil {
 			Map<java.util.Locale, String> labelMap, boolean modifiable,
 			String name, String panelAppOrder, String panelCategoryKey,
 			String pkObjectFieldDBColumnName, String pkObjectFieldName,
-			Map<java.util.Locale, String> pluralLabelMap, String scope,
-			String titleObjectFieldName, int version, int status,
+			Map<java.util.Locale, String> pluralLabelMap, boolean portlet,
+			String scope, String titleObjectFieldName, int version, int status,
 			List<com.liferay.object.model.ObjectField> objectFields)
 		throws PortalException {
 
@@ -103,8 +104,8 @@ public class ObjectDefinitionLocalServiceUtil {
 			externalReferenceCode, userId, objectFolderId, className,
 			dbTableName, enableComments, labelMap, modifiable, name,
 			panelAppOrder, panelCategoryKey, pkObjectFieldDBColumnName,
-			pkObjectFieldName, pluralLabelMap, scope, titleObjectFieldName,
-			version, status, objectFields);
+			pkObjectFieldName, pluralLabelMap, portlet, scope,
+			titleObjectFieldName, version, status, objectFields);
 	}
 
 	public static void bindObjectDefinitions(long[] objectRelationshipIds)
@@ -606,6 +607,12 @@ public class ObjectDefinitionLocalServiceUtil {
 
 		return getService().updateObjectFolderId(
 			objectDefinitionId, objectFolderId);
+	}
+
+	public static ObjectDefinition updatePortlet(long objectDefinitionId)
+		throws PortalException {
+
+		return getService().updatePortlet(objectDefinitionId);
 	}
 
 	public static ObjectDefinition updateRootObjectDefinitionId(

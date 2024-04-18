@@ -209,6 +209,7 @@ import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.Dictionary;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 
@@ -1508,10 +1509,14 @@ public class BundleSiteInitializerTest {
 
 		expandoBridge = siteNavigationMenuItem.getExpandoBridge();
 
+		Map<Locale, String[]> expandoBridgeAttribute =
+			(Map<Locale, String[]>)expandoBridge.getAttribute(
+				"Test Expando Column 6");
+
 		Assert.assertTrue(
 			ArrayUtil.containsAll(
-				new int[] {32, 40},
-				(int[])expandoBridge.getAttribute("Test Expando Column 6")));
+				new String[] {"Test Value 1", "Test Value 2"},
+				expandoBridgeAttribute.get(LocaleUtil.getSiteDefault())));
 	}
 
 	private void _assertFragmentEntries() throws Exception {
@@ -2647,6 +2652,7 @@ public class BundleSiteInitializerTest {
 		Assert.assertEquals(
 			"Test Private Child Layout 1",
 			privateChildLayout.getName(LocaleUtil.getSiteDefault()));
+		Assert.assertEquals("portlet", privateChildLayout.getType());
 	}
 
 	private void _assertPrivateLayouts2() {
@@ -2675,12 +2681,14 @@ public class BundleSiteInitializerTest {
 		Assert.assertEquals(
 			"Test Private Child Layout 1 Update",
 			privateChildLayout.getName(LocaleUtil.getSiteDefault()));
+		Assert.assertEquals("content", privateChildLayout.getType());
 
 		privateChildLayout = privateChildLayouts.get(1);
 
 		Assert.assertEquals(
 			"Test Private Child Layout 2",
 			privateChildLayout.getName(LocaleUtil.getSiteDefault()));
+		Assert.assertEquals("content", privateChildLayout.getType());
 	}
 
 	private void _assertPublicLayouts1() throws Exception {

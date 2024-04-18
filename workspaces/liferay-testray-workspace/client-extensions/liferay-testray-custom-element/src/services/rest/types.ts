@@ -37,6 +37,10 @@ export type ObjectActionsItems = {
 	update?: ActionPermissionProperties;
 };
 
+export type Results<Query = any> = {
+	results: Query[];
+};
+
 export type APIResponse<Query = any> = {
 	actions: ObjectActions;
 	facets: Facets[];
@@ -44,6 +48,7 @@ export type APIResponse<Query = any> = {
 	lastPage: number;
 	page: number;
 	pageSize: number;
+	results?: Results[];
 	totalCount: number;
 };
 
@@ -110,6 +115,7 @@ export type TestrayBuild = {
 	creator: {
 		name: string;
 	};
+	dateArchived: string;
 	dateCreated: string;
 	description: string;
 	dueStatus: PickList;
@@ -166,7 +172,6 @@ export type TestrayCaseResult = {
 	attachments: string;
 	build?: TestrayBuild;
 	case?: TestrayCase;
-	caseResultToCaseResultsIssues: TestrayCaseResultIssue[];
 	closedDate: string;
 	comment: string;
 	component?: TestrayComponent;
@@ -175,7 +180,7 @@ export type TestrayCaseResult = {
 	dueStatus: PickList;
 	errors: string;
 	id: number;
-	issues: TestrayCaseResultIssue[];
+	issues: string;
 	key: string;
 	mbMessageId: number;
 	mbThreadId: number;
@@ -193,16 +198,6 @@ export type TestrayCaseResult = {
 	user?: UserAccount;
 	warnings: number;
 } & CaseResultAggregation;
-
-export type TestrayCaseResultIssue = {
-	caseResult?: TestrayCaseResult;
-	id: number;
-	issue?: TestrayIssue;
-	issueToCaseResultsIssues?: TestrayIssue;
-	name: string;
-	r_caseResultToCaseResultsIssues_c_caseResult?: TestrayCaseResult;
-	r_issueToCaseResultsIssues_c_issue?: TestrayIssue;
-};
 
 export type TestrayCaseType = {
 	caseTypeToCases: TestrayCase[];
@@ -234,13 +229,6 @@ export type TestrayFactorOption = {
 
 export type TestrayOptionsByCategory = {
 	[key: string]: any;
-};
-
-export type TestrayIssue = {
-	dateCreated: number;
-	dateModified: number;
-	id: number;
-	name: string;
 };
 
 export type TestrayJiraImportRequirement = {
@@ -316,11 +304,13 @@ export type TestrayRun = {
 
 export type TestraySubTask = {
 	actions: ObjectActionsItems;
+	caseResultIssues: string[];
 	dateCreated: string;
 	dateModified: string;
 	dueStatus: PickList;
 	errors: string;
 	id: number;
+	issues: string;
 	mbMessageId: number;
 	mbThreadId: number;
 	mergedToSubtaskId: TestraySubTask;
@@ -346,15 +336,6 @@ export type TestraySubTaskCaseResult = {
 	name: string;
 	r_caseResultToSubtasksCasesResults_c_caseResult?: TestrayCaseResult;
 	r_subtaskToSubtasksCasesResults_c_subtask?: TestraySubTask;
-	subTask?: TestraySubTask;
-};
-
-export type TestraySubTaskIssue = {
-	id: number;
-	issue?: TestrayIssue;
-	name: string;
-	r_issueToSubtasksIssues_c_issue?: TestrayIssue;
-	r_subtaskToSubtasksIssues_c_subtask?: TestraySubTask;
 	subTask?: TestraySubTask;
 };
 

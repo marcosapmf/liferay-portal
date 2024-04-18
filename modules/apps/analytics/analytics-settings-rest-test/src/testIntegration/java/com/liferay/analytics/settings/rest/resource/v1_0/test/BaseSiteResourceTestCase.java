@@ -431,6 +431,8 @@ public abstract class BaseSiteResourceTestCase {
 			new GraphQLField("items", getGraphQLFields()),
 			new GraphQLField("page"), new GraphQLField("totalCount"));
 
+		// No namespace
+
 		JSONObject sitesJSONObject = JSONUtil.getValueAsJSONObject(
 			invokeGraphQLQuery(graphQLField), "JSONObject/data",
 			"JSONObject/sites");
@@ -442,6 +444,26 @@ public abstract class BaseSiteResourceTestCase {
 
 		sitesJSONObject = JSONUtil.getValueAsJSONObject(
 			invokeGraphQLQuery(graphQLField), "JSONObject/data",
+			"JSONObject/sites");
+
+		Assert.assertEquals(
+			totalCount + 2, sitesJSONObject.getLong("totalCount"));
+
+		assertContains(
+			site1,
+			Arrays.asList(
+				SiteSerDes.toDTOs(sitesJSONObject.getString("items"))));
+		assertContains(
+			site2,
+			Arrays.asList(
+				SiteSerDes.toDTOs(sitesJSONObject.getString("items"))));
+
+		// Using the namespace analyticsSettings_v1_0
+
+		sitesJSONObject = JSONUtil.getValueAsJSONObject(
+			invokeGraphQLQuery(
+				new GraphQLField("analyticsSettings_v1_0", graphQLField)),
+			"JSONObject/data", "JSONObject/analyticsSettings_v1_0",
 			"JSONObject/sites");
 
 		Assert.assertEquals(

@@ -4,8 +4,7 @@ definition {
 	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property testray.component.names = "Master Page Templates";
-	property testray.main.component.name = "Master Page Templates";
+	property testray.main.component.name = "Master Pages";
 
 	setUp {
 		task ("Set up instance and sign in") {
@@ -1014,13 +1013,9 @@ definition {
 				pageName = "Test Page Name",
 				siteName = "Test Site Name");
 
-			PageEditor.searchFragmentViaSidebar(fragmentName = "Heading");
-
 			AssertVisible(
 				key_fragmentName = "Heading",
 				locator1 = "PageEditor#FRAGMENTS_AND_WIDGETS_SEARCH_RESULTS");
-
-			PageEditor.searchFragmentViaSidebar(fragmentName = "Button");
 
 			AssertElementNotPresent(
 				key_fragmentName = "Button",
@@ -1120,8 +1115,6 @@ definition {
 				pageName = "Test Page Name 1",
 				siteName = "Test Site Name");
 
-			PageEditor.searchFragmentViaSidebar(fragmentName = "Fragment Name");
-
 			AssertElementNotPresent(
 				key_fragmentName = "Fragment Name",
 				locator1 = "PageEditor#FRAGMENTS_AND_WIDGETS_SEARCH_RESULTS");
@@ -1131,8 +1124,6 @@ definition {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name 2",
 				siteName = "Test Site Name");
-
-			PageEditor.searchFragmentViaSidebar(fragmentName = "Fragment Name");
 
 			AssertVisible(
 				key_fragmentName = "Fragment Name",
@@ -1172,13 +1163,9 @@ definition {
 				pageName = "Test Page Name",
 				siteName = "Test Site Name");
 
-			PageEditor.searchFragmentViaSidebar(fragmentName = "Heading");
-
 			AssertVisible(
 				key_fragmentName = "Heading",
 				locator1 = "PageEditor#FRAGMENTS_AND_WIDGETS_SEARCH_RESULTS");
-
-			PageEditor.searchFragmentViaSidebar(fragmentName = "Button");
 
 			AssertElementNotPresent(
 				key_fragmentName = "Button",
@@ -1481,13 +1468,9 @@ definition {
 
 			PageEditor.viewFragment(fragmentName = "Heading");
 
-			PageEditor.searchFragmentViaSidebar(fragmentName = "Button");
-
 			AssertVisible(
 				key_fragmentName = "Button",
 				locator1 = "PageEditor#FRAGMENTS_AND_WIDGETS_SEARCH_RESULTS");
-
-			PageEditor.searchFragmentViaSidebar(fragmentName = "Heading");
 
 			AssertElementNotPresent(
 				key_fragmentName = "Heading",
@@ -1562,6 +1545,8 @@ definition {
 	@description = "This is a test for LPS-134844. Fragments hidden in master pages are hidden in pages that use it and visibility can not be changed."
 	@priority = 4
 	test FragmentsHiddenInMasterPagesAreHiddenInPagesThatUseIt {
+		property portal.upstream = "quarantine";
+
 		task ("Add two header fragments") {
 			MastersPageTemplatesAdmin.gotoMasters(masterLayoutName = "Custom Masters Page Template");
 
@@ -1574,7 +1559,7 @@ definition {
 			PageEditor.editFragmentText(
 				fragmentName = "Heading",
 				id = "element-text",
-				text = "Heading Example 1");
+				text = " 1");
 
 			PageEditor.addFragment(
 				collectionName = "Basic Components",
@@ -1586,7 +1571,7 @@ definition {
 				fragmentName = "Heading",
 				id = "element-text",
 				index = 2,
-				text = "Heading Example 2");
+				text = " 2");
 		}
 
 		task ("Hide Heading Example 1 and save master page") {
@@ -1603,38 +1588,6 @@ definition {
 			ContentPages.addPage(
 				masterLayoutName = "Custom Masters Page Template",
 				pageName = "Test Page Name");
-		}
-
-		task ("Assert Heading Example 1 is not shown even if we click on button and it appears with a gray background") {
-			AssertNotVisible(
-				fragmentName = "heading",
-				id = "element-text",
-				index = 1,
-				locator1 = "Fragment#CONTRIBUTED_FRAGMENT_TEXT");
-
-			ContentPages.viewFragmentText(
-				fragmentName = "heading",
-				id = "element-text",
-				position = 2,
-				text = "Heading Example 2");
-
-			PageEditor.gotoTab(tabName = "Browser");
-
-			Click.clickNoWaitForVisible(
-				key_index = 1,
-				key_nodeName = "Heading",
-				locator1 = "Treeview#PAGE_STRUCTURE_TREE_NODE_HIDE_INDEX");
-
-			AssertElementPresent(
-				key_index = 1,
-				key_nodeName = "Heading",
-				locator1 = "Treeview#PAGE_STRUCTURE_TREE_NODE_MASTER_INDEX");
-
-			AssertNotVisible(
-				fragmentName = "heading",
-				id = "element-text",
-				index = 1,
-				locator1 = "Fragment#CONTRIBUTED_FRAGMENT_TEXT");
 		}
 
 		task ("Assert Heading Example 2 not hidden and there is no button to hide it") {

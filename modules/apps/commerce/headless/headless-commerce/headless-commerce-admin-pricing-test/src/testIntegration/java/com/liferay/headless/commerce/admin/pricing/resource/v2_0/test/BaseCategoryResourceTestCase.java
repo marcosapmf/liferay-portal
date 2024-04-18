@@ -212,6 +212,8 @@ public abstract class BaseCategoryResourceTestCase {
 		Category category =
 			testGraphQLGetDiscountCategoryCategory_addCategory();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				category,
@@ -230,6 +232,30 @@ public abstract class BaseCategoryResourceTestCase {
 								getGraphQLFields())),
 						"JSONObject/data",
 						"Object/discountCategoryCategory"))));
+
+		// Using the namespace headlessCommerceAdminPricing_v2_0
+
+		Assert.assertTrue(
+			equals(
+				category,
+				CategorySerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessCommerceAdminPricing_v2_0",
+								new GraphQLField(
+									"discountCategoryCategory",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"discountCategoryId",
+												testGraphQLGetDiscountCategoryCategory_getDiscountCategoryId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessCommerceAdminPricing_v2_0",
+						"Object/discountCategoryCategory"))));
 	}
 
 	protected Long
@@ -246,6 +272,8 @@ public abstract class BaseCategoryResourceTestCase {
 
 		Long irrelevantDiscountCategoryId = RandomTestUtil.randomLong();
 
+		// No namespace
+
 		Assert.assertEquals(
 			"Not Found",
 			JSONUtil.getValueAsString(
@@ -260,6 +288,27 @@ public abstract class BaseCategoryResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessCommerceAdminPricing_v2_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessCommerceAdminPricing_v2_0",
+						new GraphQLField(
+							"discountCategoryCategory",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"discountCategoryId",
+										irrelevantDiscountCategoryId);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}
@@ -303,6 +352,8 @@ public abstract class BaseCategoryResourceTestCase {
 		Category category =
 			testGraphQLGetPriceModifierCategoryCategory_addCategory();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				category,
@@ -321,6 +372,30 @@ public abstract class BaseCategoryResourceTestCase {
 								getGraphQLFields())),
 						"JSONObject/data",
 						"Object/priceModifierCategoryCategory"))));
+
+		// Using the namespace headlessCommerceAdminPricing_v2_0
+
+		Assert.assertTrue(
+			equals(
+				category,
+				CategorySerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessCommerceAdminPricing_v2_0",
+								new GraphQLField(
+									"priceModifierCategoryCategory",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"priceModifierCategoryId",
+												testGraphQLGetPriceModifierCategoryCategory_getPriceModifierCategoryId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessCommerceAdminPricing_v2_0",
+						"Object/priceModifierCategoryCategory"))));
 	}
 
 	protected Long
@@ -337,6 +412,8 @@ public abstract class BaseCategoryResourceTestCase {
 
 		Long irrelevantPriceModifierCategoryId = RandomTestUtil.randomLong();
 
+		// No namespace
+
 		Assert.assertEquals(
 			"Not Found",
 			JSONUtil.getValueAsString(
@@ -351,6 +428,27 @@ public abstract class BaseCategoryResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessCommerceAdminPricing_v2_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessCommerceAdminPricing_v2_0",
+						new GraphQLField(
+							"priceModifierCategoryCategory",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"priceModifierCategoryId",
+										irrelevantPriceModifierCategoryId);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}

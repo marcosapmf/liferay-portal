@@ -119,7 +119,7 @@ public class ObjectDefinitionTestUtil {
 		return objectDefinitionLocalService.addSystemObjectDefinition(
 			null, userId, 0, null, dbTableName, false, labelMap, true, name,
 			null, null, pkObjectFieldDBColumnName, pkObjectFieldName,
-			pluralLabelMap, scope, titleObjectFieldName, version,
+			pluralLabelMap, false, scope, titleObjectFieldName, version,
 			WorkflowConstants.STATUS_DRAFT, objectFields);
 	}
 
@@ -136,12 +136,31 @@ public class ObjectDefinitionTestUtil {
 		return objectDefinitionLocalService.addSystemObjectDefinition(
 			externalReferenceCode, userId, 0, className, dbTableName, false,
 			labelMap, false, name, null, null, pkObjectFieldDBColumnName,
-			pkObjectFieldName, pluralLabelMap, scope, titleObjectFieldName,
-			version, WorkflowConstants.STATUS_APPROVED, objectFields);
+			pkObjectFieldName, pluralLabelMap, false, scope,
+			titleObjectFieldName, version, WorkflowConstants.STATUS_APPROVED,
+			objectFields);
 	}
 
 	public static String getRandomName() {
 		return "A" + RandomTestUtil.randomString();
+	}
+
+	public static ObjectDefinition publishObjectDefinition(
+			boolean localized, String name, List<ObjectField> objectFields,
+			String scope, long userId)
+		throws Exception {
+
+		ObjectDefinition objectDefinition =
+			ObjectDefinitionLocalServiceUtil.addCustomObjectDefinition(
+				userId, 0, false, localized, false,
+				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
+				name, null, null,
+				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
+				true, scope, ObjectDefinitionConstants.STORAGE_TYPE_DEFAULT,
+				objectFields);
+
+		return ObjectDefinitionLocalServiceUtil.publishCustomObjectDefinition(
+			userId, objectDefinition.getObjectDefinitionId());
 	}
 
 	public static ObjectDefinition publishObjectDefinition(
@@ -182,17 +201,8 @@ public class ObjectDefinitionTestUtil {
 			long userId)
 		throws Exception {
 
-		ObjectDefinition objectDefinition =
-			ObjectDefinitionLocalServiceUtil.addCustomObjectDefinition(
-				userId, 0, false, false, false,
-				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
-				name, null, null,
-				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
-				true, scope, ObjectDefinitionConstants.STORAGE_TYPE_DEFAULT,
-				objectFields);
-
-		return ObjectDefinitionLocalServiceUtil.publishCustomObjectDefinition(
-			userId, objectDefinition.getObjectDefinitionId());
+		return publishObjectDefinition(
+			false, name, objectFields, scope, userId);
 	}
 
 }

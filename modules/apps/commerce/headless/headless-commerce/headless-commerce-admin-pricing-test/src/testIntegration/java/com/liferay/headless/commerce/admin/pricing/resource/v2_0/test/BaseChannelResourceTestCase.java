@@ -213,6 +213,8 @@ public abstract class BaseChannelResourceTestCase {
 	public void testGraphQLGetDiscountChannelChannel() throws Exception {
 		Channel channel = testGraphQLGetDiscountChannelChannel_addChannel();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				channel,
@@ -230,6 +232,30 @@ public abstract class BaseChannelResourceTestCase {
 								},
 								getGraphQLFields())),
 						"JSONObject/data", "Object/discountChannelChannel"))));
+
+		// Using the namespace headlessCommerceAdminPricing_v2_0
+
+		Assert.assertTrue(
+			equals(
+				channel,
+				ChannelSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessCommerceAdminPricing_v2_0",
+								new GraphQLField(
+									"discountChannelChannel",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"discountChannelId",
+												testGraphQLGetDiscountChannelChannel_getDiscountChannelId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessCommerceAdminPricing_v2_0",
+						"Object/discountChannelChannel"))));
 	}
 
 	protected Long testGraphQLGetDiscountChannelChannel_getDiscountChannelId()
@@ -245,6 +271,8 @@ public abstract class BaseChannelResourceTestCase {
 
 		Long irrelevantDiscountChannelId = RandomTestUtil.randomLong();
 
+		// No namespace
+
 		Assert.assertEquals(
 			"Not Found",
 			JSONUtil.getValueAsString(
@@ -259,6 +287,27 @@ public abstract class BaseChannelResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessCommerceAdminPricing_v2_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessCommerceAdminPricing_v2_0",
+						new GraphQLField(
+							"discountChannelChannel",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"discountChannelId",
+										irrelevantDiscountChannelId);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}
@@ -298,6 +347,8 @@ public abstract class BaseChannelResourceTestCase {
 	public void testGraphQLGetPriceListChannelChannel() throws Exception {
 		Channel channel = testGraphQLGetPriceListChannelChannel_addChannel();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				channel,
@@ -315,6 +366,30 @@ public abstract class BaseChannelResourceTestCase {
 								},
 								getGraphQLFields())),
 						"JSONObject/data", "Object/priceListChannelChannel"))));
+
+		// Using the namespace headlessCommerceAdminPricing_v2_0
+
+		Assert.assertTrue(
+			equals(
+				channel,
+				ChannelSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessCommerceAdminPricing_v2_0",
+								new GraphQLField(
+									"priceListChannelChannel",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"priceListChannelId",
+												testGraphQLGetPriceListChannelChannel_getPriceListChannelId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessCommerceAdminPricing_v2_0",
+						"Object/priceListChannelChannel"))));
 	}
 
 	protected Long testGraphQLGetPriceListChannelChannel_getPriceListChannelId()
@@ -330,6 +405,8 @@ public abstract class BaseChannelResourceTestCase {
 
 		Long irrelevantPriceListChannelId = RandomTestUtil.randomLong();
 
+		// No namespace
+
 		Assert.assertEquals(
 			"Not Found",
 			JSONUtil.getValueAsString(
@@ -344,6 +421,27 @@ public abstract class BaseChannelResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessCommerceAdminPricing_v2_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessCommerceAdminPricing_v2_0",
+						new GraphQLField(
+							"priceListChannelChannel",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"priceListChannelId",
+										irrelevantPriceListChannelId);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}

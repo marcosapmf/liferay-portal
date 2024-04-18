@@ -945,6 +945,8 @@ public abstract class BasePriceModifierResourceTestCase {
 		PriceModifier priceModifier =
 			testGraphQLGetPriceModifierByExternalReferenceCode_addPriceModifier();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				priceModifier,
@@ -966,6 +968,33 @@ public abstract class BasePriceModifierResourceTestCase {
 								getGraphQLFields())),
 						"JSONObject/data",
 						"Object/priceModifierByExternalReferenceCode"))));
+
+		// Using the namespace headlessCommerceAdminPricing_v2_0
+
+		Assert.assertTrue(
+			equals(
+				priceModifier,
+				PriceModifierSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessCommerceAdminPricing_v2_0",
+								new GraphQLField(
+									"priceModifierByExternalReferenceCode",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"externalReferenceCode",
+												"\"" +
+													priceModifier.
+														getExternalReferenceCode() +
+															"\"");
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessCommerceAdminPricing_v2_0",
+						"Object/priceModifierByExternalReferenceCode"))));
 	}
 
 	@Test
@@ -974,6 +1003,8 @@ public abstract class BasePriceModifierResourceTestCase {
 
 		String irrelevantExternalReferenceCode =
 			"\"" + RandomTestUtil.randomString() + "\"";
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -989,6 +1020,27 @@ public abstract class BasePriceModifierResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessCommerceAdminPricing_v2_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessCommerceAdminPricing_v2_0",
+						new GraphQLField(
+							"priceModifierByExternalReferenceCode",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"externalReferenceCode",
+										irrelevantExternalReferenceCode);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}
@@ -1038,7 +1090,10 @@ public abstract class BasePriceModifierResourceTestCase {
 
 	@Test
 	public void testGraphQLDeletePriceModifier() throws Exception {
-		PriceModifier priceModifier =
+
+		// No namespace
+
+		PriceModifier priceModifier1 =
 			testGraphQLDeletePriceModifier_addPriceModifier();
 
 		Assert.assertTrue(
@@ -1048,23 +1103,61 @@ public abstract class BasePriceModifierResourceTestCase {
 						"deletePriceModifier",
 						new HashMap<String, Object>() {
 							{
-								put("id", priceModifier.getId());
+								put("id", priceModifier1.getId());
 							}
 						})),
 				"JSONObject/data", "Object/deletePriceModifier"));
-		JSONArray errorsJSONArray = JSONUtil.getValueAsJSONArray(
+
+		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
 			invokeGraphQLQuery(
 				new GraphQLField(
 					"priceModifier",
 					new HashMap<String, Object>() {
 						{
-							put("id", priceModifier.getId());
+							put("id", priceModifier1.getId());
 						}
 					},
 					new GraphQLField("id"))),
 			"JSONArray/errors");
 
-		Assert.assertTrue(errorsJSONArray.length() > 0);
+		Assert.assertTrue(errorsJSONArray1.length() > 0);
+
+		// Using the namespace headlessCommerceAdminPricing_v2_0
+
+		PriceModifier priceModifier2 =
+			testGraphQLDeletePriceModifier_addPriceModifier();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"headlessCommerceAdminPricing_v2_0",
+						new GraphQLField(
+							"deletePriceModifier",
+							new HashMap<String, Object>() {
+								{
+									put("id", priceModifier2.getId());
+								}
+							}))),
+				"JSONObject/data",
+				"JSONObject/headlessCommerceAdminPricing_v2_0",
+				"Object/deletePriceModifier"));
+
+		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"headlessCommerceAdminPricing_v2_0",
+					new GraphQLField(
+						"priceModifier",
+						new HashMap<String, Object>() {
+							{
+								put("id", priceModifier2.getId());
+							}
+						},
+						new GraphQLField("id")))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray2.length() > 0);
 	}
 
 	protected PriceModifier testGraphQLDeletePriceModifier_addPriceModifier()
@@ -1097,6 +1190,8 @@ public abstract class BasePriceModifierResourceTestCase {
 		PriceModifier priceModifier =
 			testGraphQLGetPriceModifier_addPriceModifier();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				priceModifier,
@@ -1112,11 +1207,35 @@ public abstract class BasePriceModifierResourceTestCase {
 								},
 								getGraphQLFields())),
 						"JSONObject/data", "Object/priceModifier"))));
+
+		// Using the namespace headlessCommerceAdminPricing_v2_0
+
+		Assert.assertTrue(
+			equals(
+				priceModifier,
+				PriceModifierSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessCommerceAdminPricing_v2_0",
+								new GraphQLField(
+									"priceModifier",
+									new HashMap<String, Object>() {
+										{
+											put("id", priceModifier.getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessCommerceAdminPricing_v2_0",
+						"Object/priceModifier"))));
 	}
 
 	@Test
 	public void testGraphQLGetPriceModifierNotFound() throws Exception {
 		Long irrelevantId = RandomTestUtil.randomLong();
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -1130,6 +1249,25 @@ public abstract class BasePriceModifierResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessCommerceAdminPricing_v2_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessCommerceAdminPricing_v2_0",
+						new GraphQLField(
+							"priceModifier",
+							new HashMap<String, Object>() {
+								{
+									put("id", irrelevantId);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}

@@ -226,7 +226,10 @@ public abstract class BaseMessageBoardSectionResourceTestCase {
 
 	@Test
 	public void testGraphQLDeleteMessageBoardSection() throws Exception {
-		MessageBoardSection messageBoardSection =
+
+		// No namespace
+
+		MessageBoardSection messageBoardSection1 =
 			testGraphQLDeleteMessageBoardSection_addMessageBoardSection();
 
 		Assert.assertTrue(
@@ -238,11 +241,12 @@ public abstract class BaseMessageBoardSectionResourceTestCase {
 							{
 								put(
 									"messageBoardSectionId",
-									messageBoardSection.getId());
+									messageBoardSection1.getId());
 							}
 						})),
 				"JSONObject/data", "Object/deleteMessageBoardSection"));
-		JSONArray errorsJSONArray = JSONUtil.getValueAsJSONArray(
+
+		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
 			invokeGraphQLQuery(
 				new GraphQLField(
 					"messageBoardSection",
@@ -250,13 +254,53 @@ public abstract class BaseMessageBoardSectionResourceTestCase {
 						{
 							put(
 								"messageBoardSectionId",
-								messageBoardSection.getId());
+								messageBoardSection1.getId());
 						}
 					},
 					new GraphQLField("id"))),
 			"JSONArray/errors");
 
-		Assert.assertTrue(errorsJSONArray.length() > 0);
+		Assert.assertTrue(errorsJSONArray1.length() > 0);
+
+		// Using the namespace headlessDelivery_v1_0
+
+		MessageBoardSection messageBoardSection2 =
+			testGraphQLDeleteMessageBoardSection_addMessageBoardSection();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"headlessDelivery_v1_0",
+						new GraphQLField(
+							"deleteMessageBoardSection",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"messageBoardSectionId",
+										messageBoardSection2.getId());
+								}
+							}))),
+				"JSONObject/data", "JSONObject/headlessDelivery_v1_0",
+				"Object/deleteMessageBoardSection"));
+
+		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"headlessDelivery_v1_0",
+					new GraphQLField(
+						"messageBoardSection",
+						new HashMap<String, Object>() {
+							{
+								put(
+									"messageBoardSectionId",
+									messageBoardSection2.getId());
+							}
+						},
+						new GraphQLField("id")))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray2.length() > 0);
 	}
 
 	protected MessageBoardSection
@@ -292,6 +336,8 @@ public abstract class BaseMessageBoardSectionResourceTestCase {
 		MessageBoardSection messageBoardSection =
 			testGraphQLGetMessageBoardSection_addMessageBoardSection();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				messageBoardSection,
@@ -309,11 +355,36 @@ public abstract class BaseMessageBoardSectionResourceTestCase {
 								},
 								getGraphQLFields())),
 						"JSONObject/data", "Object/messageBoardSection"))));
+
+		// Using the namespace headlessDelivery_v1_0
+
+		Assert.assertTrue(
+			equals(
+				messageBoardSection,
+				MessageBoardSectionSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessDelivery_v1_0",
+								new GraphQLField(
+									"messageBoardSection",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"messageBoardSectionId",
+												messageBoardSection.getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data", "JSONObject/headlessDelivery_v1_0",
+						"Object/messageBoardSection"))));
 	}
 
 	@Test
 	public void testGraphQLGetMessageBoardSectionNotFound() throws Exception {
 		Long irrelevantMessageBoardSectionId = RandomTestUtil.randomLong();
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -329,6 +400,27 @@ public abstract class BaseMessageBoardSectionResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessDelivery_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessDelivery_v1_0",
+						new GraphQLField(
+							"messageBoardSection",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"messageBoardSectionId",
+										irrelevantMessageBoardSectionId);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}
@@ -1086,6 +1178,8 @@ public abstract class BaseMessageBoardSectionResourceTestCase {
 		MessageBoardSection messageBoardSection =
 			testGraphQLGetSiteMessageBoardSectionByFriendlyUrlPath_addMessageBoardSection();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				messageBoardSection,
@@ -1114,6 +1208,39 @@ public abstract class BaseMessageBoardSectionResourceTestCase {
 								getGraphQLFields())),
 						"JSONObject/data",
 						"Object/messageBoardSectionByFriendlyUrlPath"))));
+
+		// Using the namespace headlessDelivery_v1_0
+
+		Assert.assertTrue(
+			equals(
+				messageBoardSection,
+				MessageBoardSectionSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessDelivery_v1_0",
+								new GraphQLField(
+									"messageBoardSectionByFriendlyUrlPath",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"siteKey",
+												"\"" +
+													testGraphQLGetSiteMessageBoardSectionByFriendlyUrlPath_getSiteId(
+														messageBoardSection) +
+															"\"");
+
+											put(
+												"friendlyUrlPath",
+												"\"" +
+													messageBoardSection.
+														getFriendlyUrlPath() +
+															"\"");
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data", "JSONObject/headlessDelivery_v1_0",
+						"Object/messageBoardSectionByFriendlyUrlPath"))));
 	}
 
 	protected Long
@@ -1130,6 +1257,8 @@ public abstract class BaseMessageBoardSectionResourceTestCase {
 
 		String irrelevantFriendlyUrlPath =
 			"\"" + RandomTestUtil.randomString() + "\"";
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -1148,6 +1277,31 @@ public abstract class BaseMessageBoardSectionResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessDelivery_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessDelivery_v1_0",
+						new GraphQLField(
+							"messageBoardSectionByFriendlyUrlPath",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"siteKey",
+										"\"" + irrelevantGroup.getGroupId() +
+											"\"");
+									put(
+										"friendlyUrlPath",
+										irrelevantFriendlyUrlPath);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}
@@ -1645,6 +1799,8 @@ public abstract class BaseMessageBoardSectionResourceTestCase {
 			new GraphQLField("items", getGraphQLFields()),
 			new GraphQLField("page"), new GraphQLField("totalCount"));
 
+		// No namespace
+
 		JSONObject messageBoardSectionsJSONObject =
 			JSONUtil.getValueAsJSONObject(
 				invokeGraphQLQuery(graphQLField), "JSONObject/data",
@@ -1659,6 +1815,29 @@ public abstract class BaseMessageBoardSectionResourceTestCase {
 
 		messageBoardSectionsJSONObject = JSONUtil.getValueAsJSONObject(
 			invokeGraphQLQuery(graphQLField), "JSONObject/data",
+			"JSONObject/messageBoardSections");
+
+		Assert.assertEquals(
+			totalCount + 2,
+			messageBoardSectionsJSONObject.getLong("totalCount"));
+
+		assertContains(
+			messageBoardSection1,
+			Arrays.asList(
+				MessageBoardSectionSerDes.toDTOs(
+					messageBoardSectionsJSONObject.getString("items"))));
+		assertContains(
+			messageBoardSection2,
+			Arrays.asList(
+				MessageBoardSectionSerDes.toDTOs(
+					messageBoardSectionsJSONObject.getString("items"))));
+
+		// Using the namespace headlessDelivery_v1_0
+
+		messageBoardSectionsJSONObject = JSONUtil.getValueAsJSONObject(
+			invokeGraphQLQuery(
+				new GraphQLField("headlessDelivery_v1_0", graphQLField)),
+			"JSONObject/data", "JSONObject/headlessDelivery_v1_0",
 			"JSONObject/messageBoardSections");
 
 		Assert.assertEquals(

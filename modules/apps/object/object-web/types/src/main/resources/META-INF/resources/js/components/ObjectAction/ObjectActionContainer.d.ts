@@ -7,7 +7,7 @@
 
 import {FormError, SidebarCategory} from '@liferay/object-js-components-web';
 interface ObjectActionContainerProps {
-	allowScriptContentBeExecutedOrIncluded: boolean;
+	allowScriptContentToBeExecutedOrIncluded: boolean;
 	editingObjectAction?: boolean;
 	isApproved?: boolean;
 	objectAction: Partial<ObjectAction>;
@@ -22,6 +22,7 @@ interface ObjectActionContainerProps {
 		method: 'POST' | 'PUT';
 		url: string;
 	};
+	scriptManagementConfigurationPortletURL: string;
 	successMessage: string;
 	systemObject: boolean;
 	title: string;
@@ -35,7 +36,7 @@ export declare type ActionError = FormError<
 	};
 };
 export declare function ObjectActionContainer({
-	allowScriptContentBeExecutedOrIncluded,
+	allowScriptContentToBeExecutedOrIncluded,
 	editingObjectAction,
 	isApproved,
 	objectAction: initialValues,
@@ -47,6 +48,7 @@ export declare function ObjectActionContainer({
 	objectDefinitionsRelationshipsURL,
 	readOnly,
 	requestParams: {method, url},
+	scriptManagementConfigurationPortletURL,
 	successMessage,
 	systemObject,
 	validateExpressionURL,

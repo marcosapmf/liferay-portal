@@ -49,7 +49,7 @@ const zodSchema = {
 			.min(1, {message: i18n.translate('this-field-is-required')}),
 		requestDescription: z
 			.string()
-			.max(500, {message: 'Request Description is required'}),
+			.min(3, {message: 'Request Description is required'}),
 	}),
 	billingAddress: z.object({
 		city: z.string().min(1),
@@ -80,6 +80,7 @@ const zodSchema = {
 			.object({
 				name: z.string(),
 				productPurchasedKey: z.string(),
+				productVersion: z.string(),
 				skuId: z.number(),
 			})
 			.optional(),

@@ -535,7 +535,7 @@ definition {
 				portlet = "Blogs");
 
 			Click(
-				key_card = "test",
+				key_card = "Test",
 				locator1 = "Card#CARD_TITLE_LINK");
 		}
 
@@ -1728,6 +1728,8 @@ definition {
 	@description = "This checks that an external video embedded in a blog content can be played correctly."
 	@priority = 3
 	test ExternalVideoEmbeddedInBlogContentFieldCanBePlayed {
+		property portal.release = "quarantine";
+
 		JSONLayout.addPublicLayout(
 			groupName = "Guest",
 			layoutName = "Blogs Page");

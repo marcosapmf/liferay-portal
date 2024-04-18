@@ -21,8 +21,13 @@ import com.liferay.commerce.pricing.constants.CommercePricingPortletKeys;
 import com.liferay.commerce.product.constants.CPActionKeys;
 import com.liferay.commerce.product.constants.CPPortletKeys;
 import com.liferay.commerce.util.CommerceAccountRoleHelper;
+import com.liferay.object.constants.ObjectActionKeys;
+import com.liferay.object.model.ObjectDefinition;
+import com.liferay.object.service.ObjectDefinitionLocalService;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.db.partition.util.DBPartitionUtil;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.model.GroupConstants;
 import com.liferay.portal.kernel.model.ResourceConstants;
 import com.liferay.portal.kernel.model.Role;
@@ -71,6 +76,13 @@ public class CommerceAccountRoleHelperImpl
 			serviceContext);
 		_checkAccountRole(
 			AccountRoleConstants.ROLE_NAME_ACCOUNT_SUPPLIER, serviceContext);
+
+		if (FeatureFlagManagerUtil.isEnabled("LPD-10562")) {
+			_checkRole(
+				AccountRoleConstants.ROLE_NAME_RETURNS_MANAGER,
+				RoleConstants.TYPE_REGULAR, serviceContext);
+		}
+
 		_checkRole(
 			AccountRoleConstants.ROLE_NAME_SUPPLIER, RoleConstants.TYPE_REGULAR,
 			serviceContext);
@@ -344,6 +356,47 @@ public class CommerceAccountRoleHelperImpl
 				"com.liferay.expando.kernel.model.ExpandoColumn",
 				new String[] {ActionKeys.VIEW});
 		}
+		else if (name.equals(AccountRoleConstants.ROLE_NAME_RETURNS_MANAGER)) {
+			for (String portletId :
+					_RETURNS_MANAGER_CONTROL_PANEL_PORTLET_IDS) {
+
+				companyResourceActionIds.put(
+					portletId,
+					new String[] {ActionKeys.ACCESS_IN_CONTROL_PANEL});
+			}
+
+			companyResourceActionIds.put(
+				PortletKeys.PORTAL,
+				new String[] {ActionKeys.VIEW_CONTROL_PANEL});
+
+			for (String objectDefinitionName :
+					_RETURNS_MANAGER_OBJECT_DEFINITION_NAMES) {
+
+				ObjectDefinition objectDefinition =
+					_objectDefinitionLocalService.fetchObjectDefinition(
+						role.getCompanyId(), objectDefinitionName);
+
+				if (objectDefinition != null) {
+					companyResourceActionIds.put(
+						"com.liferay.object#" +
+							objectDefinition.getObjectDefinitionId(),
+						new String[] {ObjectActionKeys.ADD_OBJECT_ENTRY});
+					companyResourceActionIds.put(
+						"com.liferay.object.model.ObjectDefinition#" +
+							objectDefinition.getObjectDefinitionId(),
+						new String[] {
+							ActionKeys.DELETE, ActionKeys.PERMISSIONS,
+							ActionKeys.UPDATE, ActionKeys.VIEW
+						});
+					companyResourceActionIds.put(
+						StringBundler.concat(
+							"com_liferay_object_web_internal_object_",
+							"definitions_portlet_ObjectDefinitionsPortlet_",
+							objectDefinition.getObjectDefinitionId()),
+						new String[] {ActionKeys.VIEW});
+				}
+			}
+		}
 
 		_setRolePermissions(
 			serviceContext.getCompanyId(),
@@ -356,6 +409,14 @@ public class CommerceAccountRoleHelperImpl
 			ResourceConstants.SCOPE_GROUP_TEMPLATE);
 	}
 
+	private static final String[] _RETURNS_MANAGER_CONTROL_PANEL_PORTLET_IDS = {
+		CommercePortletKeys.COMMERCE_RETURN
+	};
+
+	private static final String[] _RETURNS_MANAGER_OBJECT_DEFINITION_NAMES = {
+		"CommerceReturn", "CommerceReturnItem"
+	};
+
 	private static final String[] _SUPPLIER_CONTROL_PANEL_PORTLET_IDS = {
 		CommercePortletKeys.COMMERCE_ORDER,
 		CommercePricingPortletKeys.COMMERCE_PRICE_LIST,
@@ -366,6 +427,9 @@ public class CommerceAccountRoleHelperImpl
 
 	@Reference
 	private AccountRoleLocalService _accountRoleLocalService;
+
+	@Reference
+	private ObjectDefinitionLocalService _objectDefinitionLocalService;
 
 	@Reference
 	private ResourceActionLocalService _resourceActionLocalService;

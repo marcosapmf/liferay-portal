@@ -98,6 +98,8 @@ public class PlacedOrderItemDTOConverter
 					});
 				setErrorMessages(
 					() -> _getErrorMessages(commerceOrderItem, locale));
+				setExternalReferenceCode(
+					commerceOrderItem::getExternalReferenceCode);
 				setId(commerceOrderItem::getCommerceOrderItemId);
 				setName(
 					() -> commerceOrderItem.getName(
@@ -233,7 +235,7 @@ public class PlacedOrderItemDTOConverter
 		CommerceCurrency commerceCurrency = commerceOrder.getCommerceCurrency();
 
 		CommerceOrderItemPrice commerceOrderItemPrice =
-			_commerceOrderPriceCalculation.getCommerceOrderItemPricePerUnit(
+			_commerceOrderPriceCalculation.getCommerceOrderItemPrice(
 				commerceCurrency, commerceOrderItem);
 
 		CommerceMoney unitPriceCommerceMoney =

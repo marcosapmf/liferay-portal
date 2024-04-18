@@ -6,3 +6,22 @@
 --%>
 
 <%@ include file="/init.jsp" %>
+
+<%
+ScriptManagementConfigurationDisplayContext scriptManagementConfigurationDisplayContext = (ScriptManagementConfigurationDisplayContext)request.getAttribute(ScriptManagementConfigurationDisplayContext.class.getName());
+%>
+
+<liferay-portlet:resourceURL copyCurrentRenderParameters="<%= false %>" var="baseResourceURL" />
+
+<react:component
+	module="{ScriptManagementContainer} from portal-security-script-management-web"
+	props='<%=
+		HashMapBuilder.<String, Object>put(
+			"allowScriptContentToBeExecutedOrIncluded", scriptManagementConfigurationDisplayContext.isAllowScriptContentToBeExecutedOrIncluded()
+		).put(
+			"baseResourceURL", String.valueOf(baseResourceURL)
+		).put(
+			"scriptManagementConfigurationDefined", scriptManagementConfigurationDisplayContext.isScriptManagementConfigurationDefined()
+		).build()
+	%>'
+/>

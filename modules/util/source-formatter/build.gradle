@@ -4,6 +4,9 @@ apply plugin: "com.liferay.maven.plugin.builder"
 
 task installDistCache(type: Copy)
 
+sourceCompatibility = "1.8"
+targetCompatibility = "1.8"
+
 File userHomeDistDir = new File(System.getProperty("user.home"), ".liferay/install/dist")
 
 buildPluginDescriptor {
@@ -15,6 +18,10 @@ buildPluginDescriptor {
 
 	forcedExclusions "com.ibm.icu:icu4j:2.6.1"
 	goalPrefix = "source-formatter"
+}
+
+copyCSS {
+	mustRunAfter buildPluginDescriptor
 }
 
 dependencies {
@@ -41,7 +48,7 @@ dependencies {
 	compileInclude group: "com.liferay", name: "com.liferay.petra.lang", version: "1.0.0"
 	compileInclude group: "com.liferay", name: "com.liferay.petra.nio", version: "1.0.0"
 	compileInclude group: "com.liferay", name: "com.liferay.petra.string", version: "5.3.0"
-	compileInclude group: "com.liferay", name: "com.liferay.poshi.core", version: "1.0.156"
+	compileInclude group: "com.liferay", name: "com.liferay.poshi.core", version: "1.0.158"
 	compileInclude group: "org.apache.httpcomponents", name: "httpclient", version: "4.5.13"
 	compileInclude group: "org.apache.httpcomponents", name: "httpcore", version: "4.4.14"
 	compileInclude group: "org.codehaus.groovy", name: "groovy", version: "2.4.21"

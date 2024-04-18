@@ -548,6 +548,8 @@ public abstract class BaseProductGroupResourceTestCase {
 			new GraphQLField("items", getGraphQLFields()),
 			new GraphQLField("page"), new GraphQLField("totalCount"));
 
+		// No namespace
+
 		JSONObject productGroupsJSONObject = JSONUtil.getValueAsJSONObject(
 			invokeGraphQLQuery(graphQLField), "JSONObject/data",
 			"JSONObject/productGroups");
@@ -561,6 +563,29 @@ public abstract class BaseProductGroupResourceTestCase {
 
 		productGroupsJSONObject = JSONUtil.getValueAsJSONObject(
 			invokeGraphQLQuery(graphQLField), "JSONObject/data",
+			"JSONObject/productGroups");
+
+		Assert.assertEquals(
+			totalCount + 2, productGroupsJSONObject.getLong("totalCount"));
+
+		assertContains(
+			productGroup1,
+			Arrays.asList(
+				ProductGroupSerDes.toDTOs(
+					productGroupsJSONObject.getString("items"))));
+		assertContains(
+			productGroup2,
+			Arrays.asList(
+				ProductGroupSerDes.toDTOs(
+					productGroupsJSONObject.getString("items"))));
+
+		// Using the namespace headlessCommerceAdminCatalog_v1_0
+
+		productGroupsJSONObject = JSONUtil.getValueAsJSONObject(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"headlessCommerceAdminCatalog_v1_0", graphQLField)),
+			"JSONObject/data", "JSONObject/headlessCommerceAdminCatalog_v1_0",
 			"JSONObject/productGroups");
 
 		Assert.assertEquals(
@@ -666,6 +691,8 @@ public abstract class BaseProductGroupResourceTestCase {
 		ProductGroup productGroup =
 			testGraphQLGetProductGroupByExternalReferenceCode_addProductGroup();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				productGroup,
@@ -687,6 +714,33 @@ public abstract class BaseProductGroupResourceTestCase {
 								getGraphQLFields())),
 						"JSONObject/data",
 						"Object/productGroupByExternalReferenceCode"))));
+
+		// Using the namespace headlessCommerceAdminCatalog_v1_0
+
+		Assert.assertTrue(
+			equals(
+				productGroup,
+				ProductGroupSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessCommerceAdminCatalog_v1_0",
+								new GraphQLField(
+									"productGroupByExternalReferenceCode",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"externalReferenceCode",
+												"\"" +
+													productGroup.
+														getExternalReferenceCode() +
+															"\"");
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessCommerceAdminCatalog_v1_0",
+						"Object/productGroupByExternalReferenceCode"))));
 	}
 
 	@Test
@@ -695,6 +749,8 @@ public abstract class BaseProductGroupResourceTestCase {
 
 		String irrelevantExternalReferenceCode =
 			"\"" + RandomTestUtil.randomString() + "\"";
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -710,6 +766,27 @@ public abstract class BaseProductGroupResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessCommerceAdminCatalog_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessCommerceAdminCatalog_v1_0",
+						new GraphQLField(
+							"productGroupByExternalReferenceCode",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"externalReferenceCode",
+										irrelevantExternalReferenceCode);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}
@@ -758,7 +835,10 @@ public abstract class BaseProductGroupResourceTestCase {
 
 	@Test
 	public void testGraphQLDeleteProductGroup() throws Exception {
-		ProductGroup productGroup =
+
+		// No namespace
+
+		ProductGroup productGroup1 =
 			testGraphQLDeleteProductGroup_addProductGroup();
 
 		Assert.assertTrue(
@@ -768,23 +848,61 @@ public abstract class BaseProductGroupResourceTestCase {
 						"deleteProductGroup",
 						new HashMap<String, Object>() {
 							{
-								put("id", productGroup.getId());
+								put("id", productGroup1.getId());
 							}
 						})),
 				"JSONObject/data", "Object/deleteProductGroup"));
-		JSONArray errorsJSONArray = JSONUtil.getValueAsJSONArray(
+
+		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
 			invokeGraphQLQuery(
 				new GraphQLField(
 					"productGroup",
 					new HashMap<String, Object>() {
 						{
-							put("id", productGroup.getId());
+							put("id", productGroup1.getId());
 						}
 					},
 					new GraphQLField("id"))),
 			"JSONArray/errors");
 
-		Assert.assertTrue(errorsJSONArray.length() > 0);
+		Assert.assertTrue(errorsJSONArray1.length() > 0);
+
+		// Using the namespace headlessCommerceAdminCatalog_v1_0
+
+		ProductGroup productGroup2 =
+			testGraphQLDeleteProductGroup_addProductGroup();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"headlessCommerceAdminCatalog_v1_0",
+						new GraphQLField(
+							"deleteProductGroup",
+							new HashMap<String, Object>() {
+								{
+									put("id", productGroup2.getId());
+								}
+							}))),
+				"JSONObject/data",
+				"JSONObject/headlessCommerceAdminCatalog_v1_0",
+				"Object/deleteProductGroup"));
+
+		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"headlessCommerceAdminCatalog_v1_0",
+					new GraphQLField(
+						"productGroup",
+						new HashMap<String, Object>() {
+							{
+								put("id", productGroup2.getId());
+							}
+						},
+						new GraphQLField("id")))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray2.length() > 0);
 	}
 
 	protected ProductGroup testGraphQLDeleteProductGroup_addProductGroup()
@@ -816,6 +934,8 @@ public abstract class BaseProductGroupResourceTestCase {
 		ProductGroup productGroup =
 			testGraphQLGetProductGroup_addProductGroup();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				productGroup,
@@ -831,11 +951,35 @@ public abstract class BaseProductGroupResourceTestCase {
 								},
 								getGraphQLFields())),
 						"JSONObject/data", "Object/productGroup"))));
+
+		// Using the namespace headlessCommerceAdminCatalog_v1_0
+
+		Assert.assertTrue(
+			equals(
+				productGroup,
+				ProductGroupSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessCommerceAdminCatalog_v1_0",
+								new GraphQLField(
+									"productGroup",
+									new HashMap<String, Object>() {
+										{
+											put("id", productGroup.getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessCommerceAdminCatalog_v1_0",
+						"Object/productGroup"))));
 	}
 
 	@Test
 	public void testGraphQLGetProductGroupNotFound() throws Exception {
 		Long irrelevantId = RandomTestUtil.randomLong();
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -849,6 +993,25 @@ public abstract class BaseProductGroupResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessCommerceAdminCatalog_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessCommerceAdminCatalog_v1_0",
+						new GraphQLField(
+							"productGroup",
+							new HashMap<String, Object>() {
+								{
+									put("id", irrelevantId);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}

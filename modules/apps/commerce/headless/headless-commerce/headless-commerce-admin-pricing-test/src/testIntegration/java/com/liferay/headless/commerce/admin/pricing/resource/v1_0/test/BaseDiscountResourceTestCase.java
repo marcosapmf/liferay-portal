@@ -310,6 +310,8 @@ public abstract class BaseDiscountResourceTestCase {
 			new GraphQLField("items", getGraphQLFields()),
 			new GraphQLField("page"), new GraphQLField("totalCount"));
 
+		// No namespace
+
 		JSONObject discountsJSONObject = JSONUtil.getValueAsJSONObject(
 			invokeGraphQLQuery(graphQLField), "JSONObject/data",
 			"JSONObject/discounts");
@@ -321,6 +323,27 @@ public abstract class BaseDiscountResourceTestCase {
 
 		discountsJSONObject = JSONUtil.getValueAsJSONObject(
 			invokeGraphQLQuery(graphQLField), "JSONObject/data",
+			"JSONObject/discounts");
+
+		Assert.assertEquals(
+			totalCount + 2, discountsJSONObject.getLong("totalCount"));
+
+		assertContains(
+			discount1,
+			Arrays.asList(
+				DiscountSerDes.toDTOs(discountsJSONObject.getString("items"))));
+		assertContains(
+			discount2,
+			Arrays.asList(
+				DiscountSerDes.toDTOs(discountsJSONObject.getString("items"))));
+
+		// Using the namespace headlessCommerceAdminPricing_v1_0
+
+		discountsJSONObject = JSONUtil.getValueAsJSONObject(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"headlessCommerceAdminPricing_v1_0", graphQLField)),
+			"JSONObject/data", "JSONObject/headlessCommerceAdminPricing_v1_0",
 			"JSONObject/discounts");
 
 		Assert.assertEquals(
@@ -415,6 +438,8 @@ public abstract class BaseDiscountResourceTestCase {
 		Discount discount =
 			testGraphQLGetDiscountByExternalReferenceCode_addDiscount();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				discount,
@@ -436,6 +461,33 @@ public abstract class BaseDiscountResourceTestCase {
 								getGraphQLFields())),
 						"JSONObject/data",
 						"Object/discountByExternalReferenceCode"))));
+
+		// Using the namespace headlessCommerceAdminPricing_v1_0
+
+		Assert.assertTrue(
+			equals(
+				discount,
+				DiscountSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessCommerceAdminPricing_v1_0",
+								new GraphQLField(
+									"discountByExternalReferenceCode",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"externalReferenceCode",
+												"\"" +
+													discount.
+														getExternalReferenceCode() +
+															"\"");
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessCommerceAdminPricing_v1_0",
+						"Object/discountByExternalReferenceCode"))));
 	}
 
 	@Test
@@ -444,6 +496,8 @@ public abstract class BaseDiscountResourceTestCase {
 
 		String irrelevantExternalReferenceCode =
 			"\"" + RandomTestUtil.randomString() + "\"";
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -459,6 +513,27 @@ public abstract class BaseDiscountResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessCommerceAdminPricing_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessCommerceAdminPricing_v1_0",
+						new GraphQLField(
+							"discountByExternalReferenceCode",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"externalReferenceCode",
+										irrelevantExternalReferenceCode);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}
@@ -497,7 +572,10 @@ public abstract class BaseDiscountResourceTestCase {
 
 	@Test
 	public void testGraphQLDeleteDiscount() throws Exception {
-		Discount discount = testGraphQLDeleteDiscount_addDiscount();
+
+		// No namespace
+
+		Discount discount1 = testGraphQLDeleteDiscount_addDiscount();
 
 		Assert.assertTrue(
 			JSONUtil.getValueAsBoolean(
@@ -506,23 +584,60 @@ public abstract class BaseDiscountResourceTestCase {
 						"deleteDiscount",
 						new HashMap<String, Object>() {
 							{
-								put("id", discount.getId());
+								put("id", discount1.getId());
 							}
 						})),
 				"JSONObject/data", "Object/deleteDiscount"));
-		JSONArray errorsJSONArray = JSONUtil.getValueAsJSONArray(
+
+		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
 			invokeGraphQLQuery(
 				new GraphQLField(
 					"discount",
 					new HashMap<String, Object>() {
 						{
-							put("id", discount.getId());
+							put("id", discount1.getId());
 						}
 					},
 					new GraphQLField("id"))),
 			"JSONArray/errors");
 
-		Assert.assertTrue(errorsJSONArray.length() > 0);
+		Assert.assertTrue(errorsJSONArray1.length() > 0);
+
+		// Using the namespace headlessCommerceAdminPricing_v1_0
+
+		Discount discount2 = testGraphQLDeleteDiscount_addDiscount();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"headlessCommerceAdminPricing_v1_0",
+						new GraphQLField(
+							"deleteDiscount",
+							new HashMap<String, Object>() {
+								{
+									put("id", discount2.getId());
+								}
+							}))),
+				"JSONObject/data",
+				"JSONObject/headlessCommerceAdminPricing_v1_0",
+				"Object/deleteDiscount"));
+
+		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"headlessCommerceAdminPricing_v1_0",
+					new GraphQLField(
+						"discount",
+						new HashMap<String, Object>() {
+							{
+								put("id", discount2.getId());
+							}
+						},
+						new GraphQLField("id")))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray2.length() > 0);
 	}
 
 	protected Discount testGraphQLDeleteDiscount_addDiscount()
@@ -551,6 +666,8 @@ public abstract class BaseDiscountResourceTestCase {
 	public void testGraphQLGetDiscount() throws Exception {
 		Discount discount = testGraphQLGetDiscount_addDiscount();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				discount,
@@ -566,11 +683,35 @@ public abstract class BaseDiscountResourceTestCase {
 								},
 								getGraphQLFields())),
 						"JSONObject/data", "Object/discount"))));
+
+		// Using the namespace headlessCommerceAdminPricing_v1_0
+
+		Assert.assertTrue(
+			equals(
+				discount,
+				DiscountSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessCommerceAdminPricing_v1_0",
+								new GraphQLField(
+									"discount",
+									new HashMap<String, Object>() {
+										{
+											put("id", discount.getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessCommerceAdminPricing_v1_0",
+						"Object/discount"))));
 	}
 
 	@Test
 	public void testGraphQLGetDiscountNotFound() throws Exception {
 		Long irrelevantId = RandomTestUtil.randomLong();
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -584,6 +725,25 @@ public abstract class BaseDiscountResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessCommerceAdminPricing_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessCommerceAdminPricing_v1_0",
+						new GraphQLField(
+							"discount",
+							new HashMap<String, Object>() {
+								{
+									put("id", irrelevantId);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}

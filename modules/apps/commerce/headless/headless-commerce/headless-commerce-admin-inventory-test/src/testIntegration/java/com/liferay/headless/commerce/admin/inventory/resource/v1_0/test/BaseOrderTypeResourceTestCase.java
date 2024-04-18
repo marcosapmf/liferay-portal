@@ -206,6 +206,8 @@ public abstract class BaseOrderTypeResourceTestCase {
 		OrderType orderType =
 			testGraphQLGetWarehouseOrderTypeOrderType_addOrderType();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				orderType,
@@ -224,6 +226,30 @@ public abstract class BaseOrderTypeResourceTestCase {
 								getGraphQLFields())),
 						"JSONObject/data",
 						"Object/warehouseOrderTypeOrderType"))));
+
+		// Using the namespace headlessCommerceAdminInventory_v1_0
+
+		Assert.assertTrue(
+			equals(
+				orderType,
+				OrderTypeSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessCommerceAdminInventory_v1_0",
+								new GraphQLField(
+									"warehouseOrderTypeOrderType",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"warehouseOrderTypeId",
+												testGraphQLGetWarehouseOrderTypeOrderType_getWarehouseOrderTypeId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessCommerceAdminInventory_v1_0",
+						"Object/warehouseOrderTypeOrderType"))));
 	}
 
 	protected Long
@@ -240,6 +266,8 @@ public abstract class BaseOrderTypeResourceTestCase {
 
 		Long irrelevantWarehouseOrderTypeId = RandomTestUtil.randomLong();
 
+		// No namespace
+
 		Assert.assertEquals(
 			"Not Found",
 			JSONUtil.getValueAsString(
@@ -254,6 +282,27 @@ public abstract class BaseOrderTypeResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessCommerceAdminInventory_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessCommerceAdminInventory_v1_0",
+						new GraphQLField(
+							"warehouseOrderTypeOrderType",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"warehouseOrderTypeId",
+										irrelevantWarehouseOrderTypeId);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}

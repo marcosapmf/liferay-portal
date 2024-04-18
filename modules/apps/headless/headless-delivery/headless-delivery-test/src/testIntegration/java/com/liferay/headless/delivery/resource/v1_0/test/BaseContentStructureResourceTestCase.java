@@ -752,6 +752,8 @@ public abstract class BaseContentStructureResourceTestCase {
 		ContentStructure contentStructure =
 			testGraphQLGetContentStructure_addContentStructure();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				contentStructure,
@@ -769,11 +771,36 @@ public abstract class BaseContentStructureResourceTestCase {
 								},
 								getGraphQLFields())),
 						"JSONObject/data", "Object/contentStructure"))));
+
+		// Using the namespace headlessDelivery_v1_0
+
+		Assert.assertTrue(
+			equals(
+				contentStructure,
+				ContentStructureSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessDelivery_v1_0",
+								new GraphQLField(
+									"contentStructure",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"contentStructureId",
+												contentStructure.getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data", "JSONObject/headlessDelivery_v1_0",
+						"Object/contentStructure"))));
 	}
 
 	@Test
 	public void testGraphQLGetContentStructureNotFound() throws Exception {
 		Long irrelevantContentStructureId = RandomTestUtil.randomLong();
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -789,6 +816,27 @@ public abstract class BaseContentStructureResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessDelivery_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessDelivery_v1_0",
+						new GraphQLField(
+							"contentStructure",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"contentStructureId",
+										irrelevantContentStructureId);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}
@@ -1324,6 +1372,8 @@ public abstract class BaseContentStructureResourceTestCase {
 			new GraphQLField("items", getGraphQLFields()),
 			new GraphQLField("page"), new GraphQLField("totalCount"));
 
+		// No namespace
+
 		JSONObject contentStructuresJSONObject = JSONUtil.getValueAsJSONObject(
 			invokeGraphQLQuery(graphQLField), "JSONObject/data",
 			"JSONObject/contentStructures");
@@ -1337,6 +1387,28 @@ public abstract class BaseContentStructureResourceTestCase {
 
 		contentStructuresJSONObject = JSONUtil.getValueAsJSONObject(
 			invokeGraphQLQuery(graphQLField), "JSONObject/data",
+			"JSONObject/contentStructures");
+
+		Assert.assertEquals(
+			totalCount + 2, contentStructuresJSONObject.getLong("totalCount"));
+
+		assertContains(
+			contentStructure1,
+			Arrays.asList(
+				ContentStructureSerDes.toDTOs(
+					contentStructuresJSONObject.getString("items"))));
+		assertContains(
+			contentStructure2,
+			Arrays.asList(
+				ContentStructureSerDes.toDTOs(
+					contentStructuresJSONObject.getString("items"))));
+
+		// Using the namespace headlessDelivery_v1_0
+
+		contentStructuresJSONObject = JSONUtil.getValueAsJSONObject(
+			invokeGraphQLQuery(
+				new GraphQLField("headlessDelivery_v1_0", graphQLField)),
+			"JSONObject/data", "JSONObject/headlessDelivery_v1_0",
 			"JSONObject/contentStructures");
 
 		Assert.assertEquals(

@@ -215,7 +215,10 @@ public abstract class BaseFormDocumentResourceTestCase {
 
 	@Test
 	public void testGraphQLDeleteFormDocument() throws Exception {
-		FormDocument formDocument =
+
+		// No namespace
+
+		FormDocument formDocument1 =
 			testGraphQLDeleteFormDocument_addFormDocument();
 
 		Assert.assertTrue(
@@ -225,23 +228,62 @@ public abstract class BaseFormDocumentResourceTestCase {
 						"deleteFormDocument",
 						new HashMap<String, Object>() {
 							{
-								put("formDocumentId", formDocument.getId());
+								put("formDocumentId", formDocument1.getId());
 							}
 						})),
 				"JSONObject/data", "Object/deleteFormDocument"));
-		JSONArray errorsJSONArray = JSONUtil.getValueAsJSONArray(
+
+		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
 			invokeGraphQLQuery(
 				new GraphQLField(
 					"formDocument",
 					new HashMap<String, Object>() {
 						{
-							put("formDocumentId", formDocument.getId());
+							put("formDocumentId", formDocument1.getId());
 						}
 					},
 					new GraphQLField("id"))),
 			"JSONArray/errors");
 
-		Assert.assertTrue(errorsJSONArray.length() > 0);
+		Assert.assertTrue(errorsJSONArray1.length() > 0);
+
+		// Using the namespace headlessForm_v1_0
+
+		FormDocument formDocument2 =
+			testGraphQLDeleteFormDocument_addFormDocument();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"headlessForm_v1_0",
+						new GraphQLField(
+							"deleteFormDocument",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"formDocumentId",
+										formDocument2.getId());
+								}
+							}))),
+				"JSONObject/data", "JSONObject/headlessForm_v1_0",
+				"Object/deleteFormDocument"));
+
+		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"headlessForm_v1_0",
+					new GraphQLField(
+						"formDocument",
+						new HashMap<String, Object>() {
+							{
+								put("formDocumentId", formDocument2.getId());
+							}
+						},
+						new GraphQLField("id")))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray2.length() > 0);
 	}
 
 	protected FormDocument testGraphQLDeleteFormDocument_addFormDocument()
@@ -273,6 +315,8 @@ public abstract class BaseFormDocumentResourceTestCase {
 		FormDocument formDocument =
 			testGraphQLGetFormDocument_addFormDocument();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				formDocument,
@@ -290,11 +334,36 @@ public abstract class BaseFormDocumentResourceTestCase {
 								},
 								getGraphQLFields())),
 						"JSONObject/data", "Object/formDocument"))));
+
+		// Using the namespace headlessForm_v1_0
+
+		Assert.assertTrue(
+			equals(
+				formDocument,
+				FormDocumentSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessForm_v1_0",
+								new GraphQLField(
+									"formDocument",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"formDocumentId",
+												formDocument.getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data", "JSONObject/headlessForm_v1_0",
+						"Object/formDocument"))));
 	}
 
 	@Test
 	public void testGraphQLGetFormDocumentNotFound() throws Exception {
 		Long irrelevantFormDocumentId = RandomTestUtil.randomLong();
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -308,6 +377,27 @@ public abstract class BaseFormDocumentResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessForm_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessForm_v1_0",
+						new GraphQLField(
+							"formDocument",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"formDocumentId",
+										irrelevantFormDocumentId);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}

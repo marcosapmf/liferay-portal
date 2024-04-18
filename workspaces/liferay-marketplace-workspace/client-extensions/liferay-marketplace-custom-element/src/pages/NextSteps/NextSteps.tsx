@@ -99,12 +99,11 @@ export function NextSteps({
 								Your Order ID is: <strong>{orderId}</strong>
 							</p>
 							<p>
-								To license your app, you can click Continue
-								Configuration below. Find your Order ID and
-								choose Create License Key. To create a license,
-								you must have at least one of your instance
-								details available - IP address, MAC address or
-								hostname.
+								To license your app, you can click Go to
+								Dashboard below. Find your Order ID and choose
+								Create License Key. To create a license, you
+								must have at least one of your instance details
+								available - IP address, MAC address or hostname.
 							</p>
 						</p>
 					) : (
@@ -117,8 +116,9 @@ export function NextSteps({
 							<p>
 								To download your app, you can click &quot;Go to
 								Dashboard&quot; button below. To find your app
-								download, find your Order ID and click Manage →
-								Download App.
+								download, find your Order ID and click on
+								<ClayIcon className="m-1" symbol="ellipsis-v" />
+								→ Download App.
 							</p>
 						</p>
 					)
@@ -139,12 +139,11 @@ export function NextSteps({
 								Your Order ID is: <strong>{orderId}</strong>
 							</p>
 							<p>
-								To license your app, you can click Continue
-								Configuration below. Find your Order ID and
-								choose Create License Key. To create a license,
-								you must have at least one of your instance
-								details available - IP address, MAC address or
-								hostname.
+								To license your app, you can click Go to
+								Dashboard below. Find your Order ID and choose
+								Create License Key. To create a license, you
+								must have at least one of your instance details
+								available - IP address, MAC address or hostname.
 							</p>
 						</>
 					) : (

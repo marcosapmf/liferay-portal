@@ -22,8 +22,8 @@ export const test = mergeTests(
 		'LPS-178052': true,
 	}),
 	fragmentsPagesTest,
-	loginTest(),
 	isolatedSiteTest,
+	loginTest(),
 	pageEditorPagesTest
 );
 
@@ -45,11 +45,11 @@ test('checks that the fragment is hidden from Site Search Results', async ({
 			'com_liferay_portal_search_web_search_bar_portlet_SearchBarPortlet',
 	});
 
-	layouts.searchBar = await apiHelpers.headlessDelivery.createSitePage(
-		site.id,
-		widgetLayoutId,
-		getPageDefinition([widgetDefinition])
-	);
+	layouts.searchBar = await apiHelpers.headlessDelivery.createSitePage({
+		pageDefinition: getPageDefinition([widgetDefinition]),
+		siteId: site.id,
+		title: widgetLayoutId,
+	});
 
 	// Create a page with a fragment and publish it
 
@@ -60,11 +60,11 @@ test('checks that the fragment is hidden from Site Search Results', async ({
 		'BASIC_COMPONENT-heading'
 	);
 
-	layouts.fragment = await apiHelpers.headlessDelivery.createSitePage(
-		site.id,
-		getRandomString(),
-		getPageDefinition([headingFragmentDefinition])
-	);
+	layouts.fragment = await apiHelpers.headlessDelivery.createSitePage({
+		pageDefinition: getPageDefinition([headingFragmentDefinition]),
+		siteId: site.id,
+		title: getRandomString(),
+	});
 
 	await pageEditorPage.goToEditMode(layouts.fragment, site.friendlyUrlPath);
 
@@ -141,7 +141,10 @@ test('checks that the advanced configuration of a fragment appears in its corres
 	// Add a new fragment set and a fragment inside it
 
 	const setName = getRandomString();
+
 	await fragmentsPage.createFragmentSet(setName);
+
+	await fragmentsPage.goto(site.friendlyUrlPath);
 
 	await fragmentsPage.createFragment(setName, 'My Fragment');
 
@@ -169,6 +172,8 @@ test('checks that the advanced configuration of a fragment appears in its corres
 			],
 		})
 	);
+
+	await fragmentEditorPage.publish();
 
 	// Create a content page with the fragment previously created
 

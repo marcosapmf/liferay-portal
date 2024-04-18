@@ -370,14 +370,14 @@ public class LockedLayoutsDisplayContextTest {
 	}
 
 	private Layout _getDraftLayoutUtilityPageEntry() throws Exception {
-		Layout draftLayout = _getDraftLayout();
+		Layout draftLayout = _getDraftLayout(LayoutConstants.TYPE_UTILITY);
 
 		_layoutUtilityPageEntryLocalService.addLayoutUtilityPageEntry(
 			null, _serviceContext.getUserId(),
 			_serviceContext.getScopeGroupId(), draftLayout.getClassPK(), 0,
 			false, RandomTestUtil.randomString(),
 			LayoutUtilityPageEntryConstants.TYPE_SC_INTERNAL_SERVER_ERROR, 0,
-			_serviceContext);
+			null, true, _serviceContext);
 
 		return draftLayout;
 	}

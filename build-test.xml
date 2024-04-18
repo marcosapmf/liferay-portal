@@ -2116,10 +2116,20 @@ war.path=${app.server.portal.dir}/</echo>
 						</else>
 					</if>
 
-					<mirrors-get
-						dest="@{patching.tool.dir}/patches"
-						src="http://files.liferay.com/private/ee/fix-packs/${patch.portal.version}/dxp/liferay-fix-pack-${fixpack.build.name}.zip"
-					/>
+					<if>
+						<and>
+							<isset property="patch.portal.version" />
+							<not>
+								<matches pattern="\d{4}.q[1234].\d+" string="${patch.portal.version}" />
+							</not>
+						</and>
+						<then>
+							<mirrors-get
+								dest="@{patching.tool.dir}/patches"
+								src="http://files.liferay.com/private/ee/fix-packs/${patch.portal.version}/dxp/liferay-fix-pack-${fixpack.build.name}.zip"
+							/>
+						</then>
+					</if>
 				</then>
 			</if>
 		</sequential>
@@ -6894,7 +6904,7 @@ go</echo>
 					</then>
 				</elseif>
 				<else>
-					<var name="app.server.tomcat.version" value="9.0.83" />
+					<var name="app.server.tomcat.version" value="9.0.87" />
 				</else>
 			</if>
 
@@ -7600,6 +7610,8 @@ ${docker.start.error}</fail>
 				<try>
 					<retry retrycount="2">
 						<sequential>
+							<stop-docker-database />
+
 							<start-docker-database-cmd />
 						</sequential>
 					</retry>
@@ -12551,6 +12563,9 @@ auto.deploy.dest.dir=C:/WINDOWS/system32/config/systemprofile/liferay/websphere-
 			</then>
 		</if>
 
+		<echo append="true" file="portal-impl/src/portal-ext.properties">
+captcha.enforce.disabled=true</echo>
+
 		<apply-portal-ext-properties />
 	</target>
 
@@ -15427,7 +15442,10 @@ if (ppstate.equals("normal")) {
 			</else>
 		</if>
 
-		<poshi-execute task="writePoshiProperties" />
+		<gradle-execute dir="portal-web" task="generatePoshiReport">
+			<arg value="--build-file=build-test.gradle" />
+			<arg value="-Dreport.type=test-properties" />
+		</gradle-execute>
 
 		<local name="report.csv.file" />
 		<local name="report.csv.file.name" />

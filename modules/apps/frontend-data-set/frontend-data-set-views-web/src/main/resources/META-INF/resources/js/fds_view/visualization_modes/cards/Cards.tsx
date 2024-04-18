@@ -4,7 +4,6 @@
  */
 
 import ClayAlert from '@clayui/alert';
-import {ClayButtonWithIcon} from '@clayui/button';
 import {ClayInput} from '@clayui/form';
 import ClayLayout from '@clayui/layout';
 import ClayTable from '@clayui/table';
@@ -19,6 +18,7 @@ import {API_URL, OBJECT_RELATIONSHIP} from '../../../utils/constants';
 import openDefaultFailureToast from '../../../utils/openDefaultFailureToast';
 import openDefaultSuccessToast from '../../../utils/openDefaultSuccessToast';
 import {IField} from '../../../utils/types';
+import FieldAssignmentControls from '../components/FieldAssignmentControls';
 
 interface IFDSCardsSection {
 	externalReferenceCode: string;
@@ -73,7 +73,7 @@ export default function Cards(props: IFDSViewSectionProps) {
 				);
 
 				if (!fdsCardsSection) {
-					return cardsSection;
+					return {label: cardsSection.label, name: cardsSection.name};
 				}
 
 				return {
@@ -86,6 +86,58 @@ export default function Cards(props: IFDSViewSectionProps) {
 				};
 			})
 		);
+	};
+
+	const clearFDSCardSection = async ({
+		cardsSection,
+		closeModal,
+	}: {
+		cardsSection: ICardsSection;
+		closeModal?: Function;
+	}) => {
+		if (!cardsSection.externalReferenceCode) {
+			if (closeModal) {
+				closeModal();
+			}
+
+			return;
+		}
+
+		setSaveButtonDisabled(true);
+
+		const response = await fetch(
+			`${API_URL.FDS_CARDS_SECTIONS}/by-external-reference-code/${cardsSection.externalReferenceCode}`,
+			{method: 'DELETE'}
+		);
+
+		setSaveButtonDisabled(false);
+
+		if (!response.ok) {
+			openDefaultFailureToast();
+
+			return;
+		}
+
+		if (closeModal) {
+			closeModal();
+		}
+
+		setCardsSections(
+			cardsSections.map((section) => {
+				if (section.name !== cardsSection.name) {
+					return section;
+				}
+
+				const nextCardSection = {...cardsSection};
+
+				delete nextCardSection.externalReferenceCode;
+				delete nextCardSection.field;
+
+				return nextCardSection;
+			})
+		);
+
+		openDefaultSuccessToast();
 	};
 
 	const saveFDSCardsSection = async ({
@@ -129,22 +181,21 @@ export default function Cards(props: IFDSViewSectionProps) {
 			return;
 		}
 
-		const fdsCardsSection: IFDSCardsSection = await response.json();
+		const fdsCardSection: IFDSCardsSection = await response.json();
 
 		closeModal();
 
 		setCardsSections(
-			cardsSections.map((cardsSection) => {
-				if (cardsSection.name !== fdsCardsSection.name) {
-					return cardsSection;
+			cardsSections.map((cardSection) => {
+				if (cardSection.name !== fdsCardSection.name) {
+					return cardSection;
 				}
 
 				return {
-					...cardsSection,
-					externalReferenceCode:
-						fdsCardsSection.externalReferenceCode,
+					...cardSection,
+					externalReferenceCode: fdsCardSection.externalReferenceCode,
 					field: {
-						name: fdsCardsSection.fieldName,
+						name: fdsCardSection.fieldName,
 					},
 				};
 			})
@@ -193,12 +244,20 @@ export default function Cards(props: IFDSViewSectionProps) {
 							cardsSection={cardsSection}
 							key={cardsSection.name}
 							modalProps={props}
+							onClearSelection={() => {
+								clearFDSCardSection({cardsSection});
+							}}
 							onSelect={({closeModal, selectedField}) => {
-								saveFDSCardsSection({
-									cardsSection,
-									closeModal,
-									field: selectedField,
-								});
+								selectedField
+									? saveFDSCardsSection({
+											cardsSection,
+											closeModal,
+											field: selectedField,
+									  })
+									: clearFDSCardSection({
+											cardsSection,
+											closeModal,
+									  });
 							}}
 							saveButtonDisabled={saveButtonDisabled}
 						/>
@@ -212,6 +271,7 @@ export default function Cards(props: IFDSViewSectionProps) {
 interface ICardsSectionProps {
 	cardsSection: ICardsSection;
 	modalProps: IFDSViewSectionProps;
+	onClearSelection: () => void;
 	onSelect: ({
 		closeModal,
 		selectedField,
@@ -225,12 +285,13 @@ interface ICardsSectionProps {
 function CardsSection({
 	cardsSection,
 	modalProps,
+	onClearSelection,
 	onSelect,
 	saveButtonDisabled,
 }: ICardsSectionProps) {
 	const {field, label} = cardsSection;
 
-	const onClick = () => {
+	const openSelectFieldModal = () => {
 		openModal({
 			contentComponent: ({closeModal}: {closeModal: Function}) => (
 				<FieldSelectModalContent
@@ -250,6 +311,7 @@ function CardsSection({
 					selectedFields={field ? [field] : []}
 				/>
 			),
+			size: 'full-screen',
 		});
 	};
 
@@ -268,18 +330,18 @@ function CardsSection({
 								{'text-secondary': !field}
 							)}
 						>
-							{field?.name ||
-								Liferay.Language.get('not-assigned')}
+							{field
+								? field.label || field.name
+								: Liferay.Language.get('not-assigned')}
 						</p>
 					</ClayInput.GroupItem>
 
 					<ClayInput.GroupItem shrink>
-						<ClayButtonWithIcon
-							aria-label={Liferay.Language.get('assign-field')}
-							displayType="secondary"
-							onClick={onClick}
-							symbol="plus"
-							title={Liferay.Language.get('assign-field')}
+						<FieldAssignmentControls
+							field={field}
+							label={label}
+							onClearSelection={onClearSelection}
+							openSelectFieldModal={openSelectFieldModal}
 						/>
 					</ClayInput.GroupItem>
 				</ClayInput.Group>

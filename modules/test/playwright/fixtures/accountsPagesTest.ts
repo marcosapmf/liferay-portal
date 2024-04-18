@@ -7,19 +7,35 @@
 
 import {test} from '@playwright/test';
 
+import {AccountContactAddressPage} from '../pages/account-admin-web/AccountContactAddressPage';
 import {AccountsPage} from '../pages/account-admin-web/AccountsPage';
+import {EditAccountContactAddressPage} from '../pages/account-admin-web/EditAccountContactAddressPage';
 import {EditAccountContactInformationPage} from '../pages/account-admin-web/EditAccountContactInformationPage';
 import {EditAccountContactPage} from '../pages/account-admin-web/EditAccountContactPage';
+import {EditAccountEmailAddressPage} from '../pages/account-admin-web/EditAccountEmailAddressPage';
 import {EditAccountPage} from '../pages/account-admin-web/EditAccountPage';
+import {EditAccountPhonePage} from '../pages/account-admin-web/EditAccountPhonePage';
+import {EditAccountWebsitePage} from '../pages/account-admin-web/EditAccountWebsitePage';
 
 const accountsPagesTest = test.extend<{
+	accountContactAddressPage: AccountContactAddressPage;
 	accountsPage: AccountsPage;
+	editAccountContactAddressPage: EditAccountContactAddressPage;
 	editAccountContactInformationPage: EditAccountContactInformationPage;
 	editAccountContactPage: EditAccountContactPage;
+	editAccountEmailAddressPage: EditAccountEmailAddressPage;
 	editAccountPage: EditAccountPage;
+	editAccountPhonePage: EditAccountPhonePage;
+	editAccountWebsitePage: EditAccountWebsitePage;
 }>({
+	accountContactAddressPage: async ({page}, use) => {
+		await use(new AccountContactAddressPage(page));
+	},
 	accountsPage: async ({page}, use) => {
 		await use(new AccountsPage(page));
+	},
+	editAccountContactAddressPage: async ({page}, use) => {
+		await use(new EditAccountContactAddressPage(page));
 	},
 	editAccountContactInformationPage: async ({page}, use) => {
 		await use(new EditAccountContactInformationPage(page));
@@ -27,8 +43,17 @@ const accountsPagesTest = test.extend<{
 	editAccountContactPage: async ({page}, use) => {
 		await use(new EditAccountContactPage(page));
 	},
+	editAccountEmailAddressPage: async ({page}, use) => {
+		await use(new EditAccountEmailAddressPage(page));
+	},
 	editAccountPage: async ({page}, use) => {
 		await use(new EditAccountPage(page));
+	},
+	editAccountPhonePage: async ({page}, use) => {
+		await use(new EditAccountPhonePage(page));
+	},
+	editAccountWebsitePage: async ({page}, use) => {
+		await use(new EditAccountWebsitePage(page));
 	},
 });
 

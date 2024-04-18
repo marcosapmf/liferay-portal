@@ -182,6 +182,215 @@ public abstract class BaseWishListResourceTestCase {
 	}
 
 	@Test
+	public void testGetChannelByExternalReferenceCodeWishListsPage()
+		throws Exception {
+
+		String externalReferenceCode =
+			testGetChannelByExternalReferenceCodeWishListsPage_getExternalReferenceCode();
+		String irrelevantExternalReferenceCode =
+			testGetChannelByExternalReferenceCodeWishListsPage_getIrrelevantExternalReferenceCode();
+
+		Page<WishList> page =
+			wishListResource.getChannelByExternalReferenceCodeWishListsPage(
+				externalReferenceCode, null, Pagination.of(1, 10));
+
+		long totalCount = page.getTotalCount();
+
+		if (irrelevantExternalReferenceCode != null) {
+			WishList irrelevantWishList =
+				testGetChannelByExternalReferenceCodeWishListsPage_addWishList(
+					irrelevantExternalReferenceCode,
+					randomIrrelevantWishList());
+
+			page =
+				wishListResource.getChannelByExternalReferenceCodeWishListsPage(
+					irrelevantExternalReferenceCode, null,
+					Pagination.of(1, (int)totalCount + 1));
+
+			Assert.assertEquals(totalCount + 1, page.getTotalCount());
+
+			assertContains(irrelevantWishList, (List<WishList>)page.getItems());
+			assertValid(
+				page,
+				testGetChannelByExternalReferenceCodeWishListsPage_getExpectedActions(
+					irrelevantExternalReferenceCode));
+		}
+
+		WishList wishList1 =
+			testGetChannelByExternalReferenceCodeWishListsPage_addWishList(
+				externalReferenceCode, randomWishList());
+
+		WishList wishList2 =
+			testGetChannelByExternalReferenceCodeWishListsPage_addWishList(
+				externalReferenceCode, randomWishList());
+
+		page = wishListResource.getChannelByExternalReferenceCodeWishListsPage(
+			externalReferenceCode, null, Pagination.of(1, 10));
+
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
+
+		assertContains(wishList1, (List<WishList>)page.getItems());
+		assertContains(wishList2, (List<WishList>)page.getItems());
+		assertValid(
+			page,
+			testGetChannelByExternalReferenceCodeWishListsPage_getExpectedActions(
+				externalReferenceCode));
+
+		wishListResource.deleteWishList(wishList1.getId());
+
+		wishListResource.deleteWishList(wishList2.getId());
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetChannelByExternalReferenceCodeWishListsPage_getExpectedActions(
+				String externalReferenceCode)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
+	}
+
+	@Test
+	public void testGetChannelByExternalReferenceCodeWishListsPageWithPagination()
+		throws Exception {
+
+		String externalReferenceCode =
+			testGetChannelByExternalReferenceCodeWishListsPage_getExternalReferenceCode();
+
+		Page<WishList> wishListPage =
+			wishListResource.getChannelByExternalReferenceCodeWishListsPage(
+				externalReferenceCode, null, null);
+
+		int totalCount = GetterUtil.getInteger(wishListPage.getTotalCount());
+
+		WishList wishList1 =
+			testGetChannelByExternalReferenceCodeWishListsPage_addWishList(
+				externalReferenceCode, randomWishList());
+
+		WishList wishList2 =
+			testGetChannelByExternalReferenceCodeWishListsPage_addWishList(
+				externalReferenceCode, randomWishList());
+
+		WishList wishList3 =
+			testGetChannelByExternalReferenceCodeWishListsPage_addWishList(
+				externalReferenceCode, randomWishList());
+
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
+
+		int pageSizeLimit = 500;
+
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<WishList> page1 =
+				wishListResource.getChannelByExternalReferenceCodeWishListsPage(
+					externalReferenceCode, null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+						pageSizeLimit));
+
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
+
+			assertContains(wishList1, (List<WishList>)page1.getItems());
+
+			Page<WishList> page2 =
+				wishListResource.getChannelByExternalReferenceCodeWishListsPage(
+					externalReferenceCode, null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+						pageSizeLimit));
+
+			assertContains(wishList2, (List<WishList>)page2.getItems());
+
+			Page<WishList> page3 =
+				wishListResource.getChannelByExternalReferenceCodeWishListsPage(
+					externalReferenceCode, null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+						pageSizeLimit));
+
+			assertContains(wishList3, (List<WishList>)page3.getItems());
+		}
+		else {
+			Page<WishList> page1 =
+				wishListResource.getChannelByExternalReferenceCodeWishListsPage(
+					externalReferenceCode, null,
+					Pagination.of(1, totalCount + 2));
+
+			List<WishList> wishLists1 = (List<WishList>)page1.getItems();
+
+			Assert.assertEquals(
+				wishLists1.toString(), totalCount + 2, wishLists1.size());
+
+			Page<WishList> page2 =
+				wishListResource.getChannelByExternalReferenceCodeWishListsPage(
+					externalReferenceCode, null,
+					Pagination.of(2, totalCount + 2));
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<WishList> wishLists2 = (List<WishList>)page2.getItems();
+
+			Assert.assertEquals(wishLists2.toString(), 1, wishLists2.size());
+
+			Page<WishList> page3 =
+				wishListResource.getChannelByExternalReferenceCodeWishListsPage(
+					externalReferenceCode, null,
+					Pagination.of(1, (int)totalCount + 3));
+
+			assertContains(wishList1, (List<WishList>)page3.getItems());
+			assertContains(wishList2, (List<WishList>)page3.getItems());
+			assertContains(wishList3, (List<WishList>)page3.getItems());
+		}
+	}
+
+	protected WishList
+			testGetChannelByExternalReferenceCodeWishListsPage_addWishList(
+				String externalReferenceCode, WishList wishList)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected String
+			testGetChannelByExternalReferenceCodeWishListsPage_getExternalReferenceCode()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected String
+			testGetChannelByExternalReferenceCodeWishListsPage_getIrrelevantExternalReferenceCode()
+		throws Exception {
+
+		return null;
+	}
+
+	@Test
+	public void testPostChannelByExternalReferenceCodeWishList()
+		throws Exception {
+
+		WishList randomWishList = randomWishList();
+
+		WishList postWishList =
+			testPostChannelByExternalReferenceCodeWishList_addWishList(
+				randomWishList);
+
+		assertEquals(randomWishList, postWishList);
+		assertValid(postWishList);
+	}
+
+	protected WishList
+			testPostChannelByExternalReferenceCodeWishList_addWishList(
+				WishList wishList)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
 	public void testGetChannelWishListsPage() throws Exception {
 		Long channelId = testGetChannelWishListsPage_getChannelId();
 		Long irrelevantChannelId =
@@ -375,7 +584,10 @@ public abstract class BaseWishListResourceTestCase {
 
 	@Test
 	public void testGraphQLDeleteWishList() throws Exception {
-		WishList wishList = testGraphQLDeleteWishList_addWishList();
+
+		// No namespace
+
+		WishList wishList1 = testGraphQLDeleteWishList_addWishList();
 
 		Assert.assertTrue(
 			JSONUtil.getValueAsBoolean(
@@ -384,23 +596,60 @@ public abstract class BaseWishListResourceTestCase {
 						"deleteWishList",
 						new HashMap<String, Object>() {
 							{
-								put("wishListId", wishList.getId());
+								put("wishListId", wishList1.getId());
 							}
 						})),
 				"JSONObject/data", "Object/deleteWishList"));
-		JSONArray errorsJSONArray = JSONUtil.getValueAsJSONArray(
+
+		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
 			invokeGraphQLQuery(
 				new GraphQLField(
 					"wishList",
 					new HashMap<String, Object>() {
 						{
-							put("wishListId", wishList.getId());
+							put("wishListId", wishList1.getId());
 						}
 					},
 					new GraphQLField("id"))),
 			"JSONArray/errors");
 
-		Assert.assertTrue(errorsJSONArray.length() > 0);
+		Assert.assertTrue(errorsJSONArray1.length() > 0);
+
+		// Using the namespace headlessCommerceDeliveryCatalog_v1_0
+
+		WishList wishList2 = testGraphQLDeleteWishList_addWishList();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"headlessCommerceDeliveryCatalog_v1_0",
+						new GraphQLField(
+							"deleteWishList",
+							new HashMap<String, Object>() {
+								{
+									put("wishListId", wishList2.getId());
+								}
+							}))),
+				"JSONObject/data",
+				"JSONObject/headlessCommerceDeliveryCatalog_v1_0",
+				"Object/deleteWishList"));
+
+		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"headlessCommerceDeliveryCatalog_v1_0",
+					new GraphQLField(
+						"wishList",
+						new HashMap<String, Object>() {
+							{
+								put("wishListId", wishList2.getId());
+							}
+						},
+						new GraphQLField("id")))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray2.length() > 0);
 	}
 
 	protected WishList testGraphQLDeleteWishList_addWishList()
@@ -429,6 +678,8 @@ public abstract class BaseWishListResourceTestCase {
 	public void testGraphQLGetWishList() throws Exception {
 		WishList wishList = testGraphQLGetWishList_addWishList();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				wishList,
@@ -444,11 +695,35 @@ public abstract class BaseWishListResourceTestCase {
 								},
 								getGraphQLFields())),
 						"JSONObject/data", "Object/wishList"))));
+
+		// Using the namespace headlessCommerceDeliveryCatalog_v1_0
+
+		Assert.assertTrue(
+			equals(
+				wishList,
+				WishListSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessCommerceDeliveryCatalog_v1_0",
+								new GraphQLField(
+									"wishList",
+									new HashMap<String, Object>() {
+										{
+											put("wishListId", wishList.getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessCommerceDeliveryCatalog_v1_0",
+						"Object/wishList"))));
 	}
 
 	@Test
 	public void testGraphQLGetWishListNotFound() throws Exception {
 		Long irrelevantWishListId = RandomTestUtil.randomLong();
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -462,6 +737,25 @@ public abstract class BaseWishListResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessCommerceDeliveryCatalog_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessCommerceDeliveryCatalog_v1_0",
+						new GraphQLField(
+							"wishList",
+							new HashMap<String, Object>() {
+								{
+									put("wishListId", irrelevantWishListId);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}

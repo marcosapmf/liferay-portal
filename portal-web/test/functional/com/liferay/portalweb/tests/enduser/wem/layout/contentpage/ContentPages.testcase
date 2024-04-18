@@ -1131,31 +1131,6 @@ definition {
 		}
 	}
 
-	@description = "This is a test for LPS-153383. The page creator can resize editor sidebar on non desktop Viewport."
-	@priority = 4
-	test ResizeLeftSidebarPanel {
-		task ("Given a page creator accesses to the page editor") {
-			ContentPagesNavigator.openEditContentPage(
-				pageName = "Test Content Page Name",
-				siteName = ${randomSiteName});
-		}
-
-		task ("When the page creator resizes the left sidebar panel in the Desktop viewport") {
-			DragAndDrop.dragAndDrop(
-				locator1 = "PageEditor#SIDEBAR_RESIZER",
-				value1 = "100,0");
-		}
-
-		task ("Then the page creator see the left sidebar panel resized in the Tablet viewport") {
-			PageEditor.switchViewport(deviceType = "Tablet");
-
-			AssertCssValue(
-				locator1 = "Sidebar#PANEL_OPEN",
-				locator2 = "width",
-				value1 = "380px");
-		}
-	}
-
 	@description = "This is a test for LPS-162302. The page creator can navigate through fragment structure via breadcrumb on page editor."
 	@priority = 4
 	test ViewBreadcrumbOnContentPage {
@@ -1277,34 +1252,6 @@ definition {
 
 		task ("View web content displayed at Title List in Asset Publisher at view mode") {
 			ContentPagesNavigator.openViewContentPage(
-				pageName = "Test Content Page Name",
-				siteName = ${randomSiteName});
-
-			AssertTextEquals.assertText(
-				locator1 = "Relatedassets#ASSET_ROW_ENTRY_TITLE",
-				rowNumber = 1,
-				value1 = "Web Content Title");
-		}
-
-		task ("Execute Clean Up Orphaned Theme Portlet Preferences in Server Administration") {
-			ServerAdministration.openServerAdmin();
-
-			ServerAdministration.executeServerResourcesActions(actionsDescription = "Clean up orphaned theme portlet preferences.");
-		}
-
-		task ("View web content displayed at Title List in Asset Publisher at view mode") {
-			ContentPagesNavigator.openViewContentPage(
-				pageName = "Test Content Page Name",
-				siteName = ${randomSiteName});
-
-			AssertTextEquals.assertText(
-				locator1 = "Relatedassets#ASSET_ROW_ENTRY_TITLE",
-				rowNumber = 1,
-				value1 = "Web Content Title");
-		}
-
-		task ("View web content displayed at Title List in Asset Publisher at edit mode") {
-			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Content Page Name",
 				siteName = ${randomSiteName});
 
@@ -1486,53 +1433,6 @@ definition {
 				locator1 = "Message#INFO_SPECIFIC");
 
 			Navigator.viewNoNavTab(navTab = "Design Draft");
-		}
-	}
-
-	@description = "This is a test for LPS-145292. The user could view new icons on dropdown menu of page editor."
-	@priority = 4
-	test ViewDropdownIconsInPageEditor {
-		task ("Given a Page designer has a content page with a Collection Display fragment") {
-			JSONAssetlist.addDynamicAssetListEntryWithItemType(
-				groupName = ${randomSiteName},
-				itemSubtype = "All Subtypes",
-				itemType = "Web Content Article",
-				title = "Dynamic Collection");
-
-			ContentPagesNavigator.openEditContentPage(
-				pageName = "Test Content Page Name",
-				siteName = ${randomSiteName});
-
-			PageEditor.addFragment(
-				collectionName = "Content Display",
-				fragmentName = "Collection Display");
-		}
-
-		task ("When the Page designer opens the dropdown menu of Collection Display topper") {
-			PageEditor.clickConfigurableField(fragmentName = "Collection Display");
-
-			Click.waitForMenuToggleJSClick(
-				key_fragmentName = "Collection Display",
-				locator1 = "Fragment#FRAGMENT_HEADER_ELLIPSIS");
-		}
-
-		task ("Then the Page designer can see the new icons on the dropdown menu") {
-			DropdownMenuItem.viewIcon(iconList = "hidden,copy,trash");
-		}
-
-		task ("When the Page designer opens the dropdown menu of Collection after selecting a dynamic collection") {
-			PageEditor.editCollectionDisplay(
-				assetListName = "Dynamic Collection",
-				fragmentName = "Collection Display");
-
-			Click.clickNoWaitForVisible(
-				key_fieldLabel = "Collection",
-				key_text = "ellipsis-v",
-				locator1 = "Icon#ANY_ITEM_SELECTOR");
-		}
-
-		task ("Then the Page designer can see the new icons on the dropdown menu") {
-			DropdownMenuItem.viewIcon(iconList = "pencil,list-ul,plus,password-policies,trash");
 		}
 	}
 

@@ -9,7 +9,7 @@ import React from 'react';
 import {ObjectActionContainer} from './ObjectActionContainer';
 
 interface AddObjectActionProps {
-	allowScriptContentBeExecutedOrIncluded: boolean;
+	allowScriptContentToBeExecutedOrIncluded: boolean;
 	apiURL: string;
 	objectActionCodeEditorElements: SidebarCategory[];
 	objectActionExecutors: ObjectActionTriggerExecutorItem[];
@@ -17,12 +17,13 @@ interface AddObjectActionProps {
 	objectDefinitionExternalReferenceCode: string;
 	objectDefinitionId: number;
 	objectDefinitionsRelationshipsURL: string;
+	scriptManagementConfigurationPortletURL: string;
 	systemObject: boolean;
 	validateExpressionURL: string;
 }
 
 export default function AddObjectAction({
-	allowScriptContentBeExecutedOrIncluded,
+	allowScriptContentToBeExecutedOrIncluded,
 	apiURL,
 	objectActionCodeEditorElements,
 	objectActionExecutors = [],
@@ -30,13 +31,14 @@ export default function AddObjectAction({
 	objectDefinitionExternalReferenceCode,
 	objectDefinitionId,
 	objectDefinitionsRelationshipsURL,
+	scriptManagementConfigurationPortletURL,
 	systemObject,
 	validateExpressionURL,
 }: AddObjectActionProps) {
 	return (
 		<ObjectActionContainer
-			allowScriptContentBeExecutedOrIncluded={
-				allowScriptContentBeExecutedOrIncluded
+			allowScriptContentToBeExecutedOrIncluded={
+				allowScriptContentToBeExecutedOrIncluded
 			}
 			objectAction={{active: true, system: false}}
 			objectActionCodeEditorElements={objectActionCodeEditorElements}
@@ -53,6 +55,9 @@ export default function AddObjectAction({
 				method: 'POST',
 				url: apiURL,
 			}}
+			scriptManagementConfigurationPortletURL={
+				scriptManagementConfigurationPortletURL
+			}
 			successMessage={Liferay.Language.get(
 				'the-object-action-was-created-successfully'
 			)}

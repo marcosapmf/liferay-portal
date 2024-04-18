@@ -8,15 +8,30 @@ import {Locator, Page, expect} from '@playwright/test';
 import {ViewPage} from '../ViewPage';
 
 export class VisualizationModesPage {
+	private readonly addFieldsButton: Locator;
+	private readonly addFieldsDialog: {
+		cancelButton: Locator;
+		fields: Locator;
+		fieldsTreeview: Locator;
+		saveButton: Locator;
+	};
 	readonly cardsVisualizationModeContainer: Locator;
 	private readonly container: Locator;
 	readonly fieldSelectModalContainer: Locator;
 	readonly listVisualizationModeContainer: Locator;
 	readonly page: Page;
+	private tableVisualizationModeContainer: Locator;
 	private readonly toastContainer: Locator;
 	private readonly viewPage: ViewPage;
 
 	constructor(page: Page) {
+		this.addFieldsButton = page.getByLabel('Add Fields');
+		this.addFieldsDialog = {
+			cancelButton: page.getByRole('button', {name: 'Cancel'}),
+			fields: page.locator('.treeview-item'),
+			fieldsTreeview: page.locator('.treeview'),
+			saveButton: page.getByRole('button', {name: 'Save'}),
+		};
 		this.cardsVisualizationModeContainer = page.locator(
 			'.cards-visualization-mode'
 		);
@@ -26,8 +41,30 @@ export class VisualizationModesPage {
 		);
 		this.fieldSelectModalContainer = page.locator('.field-select-modal');
 		this.page = page;
+		this.tableVisualizationModeContainer = page.locator(
+			'.orderable-table-sheet'
+		);
 		this.toastContainer = page.locator('.alert-container');
 		this.viewPage = new ViewPage(page);
+	}
+
+	async addChildField(path: string[], field: string) {
+		this.openParentField(path);
+
+		await this.page
+			.locator(`[data-id$="${path.join('.')}.${field}"]`)
+			.getByText(field, {exact: true})
+			.check();
+	}
+
+	async addRootField(field: string) {
+		await this.addFieldsDialog.fields
+			.getByText(field, {exact: true})
+			.click();
+	}
+
+	async cancelAddFieldsModal() {
+		await this.addFieldsDialog.cancelButton.click();
 	}
 
 	async getAssignedFieldLocator({
@@ -43,6 +80,12 @@ export class VisualizationModesPage {
 			.locator('td.field-name');
 	}
 
+	getRowByText(text: string) {
+		return this.page.locator('tr').filter({
+			has: this.page.getByText(text, {exact: true}).first(),
+		});
+	}
+
 	async goto({
 		dataSetLabel,
 		viewLabel,
@@ -56,6 +99,12 @@ export class VisualizationModesPage {
 		});
 
 		await this.viewPage.selectTab('Visualization Modes');
+	}
+
+	async openAddFieldsModal() {
+		await this.addFieldsButton.click();
+
+		await this.addFieldsDialog.fields.first().waitFor();
 	}
 
 	async openAssignFieldModal({
@@ -75,7 +124,7 @@ export class VisualizationModesPage {
 			this.fieldSelectModalContainer
 				.locator('.custom-control-input')
 				.first()
-		).toBeEditable();
+		).toBeVisible();
 
 		await expect(
 			this.fieldSelectModalContainer
@@ -109,6 +158,22 @@ export class VisualizationModesPage {
 			.waitFor();
 	}
 
+	async openParentField(path: string[]) {
+		let fullPath = '';
+
+		path.forEach(async (item) => {
+			fullPath += item;
+			const expandButton = this.page.locator(
+				`button[aria-controls='${fullPath}.*']`
+			);
+			fullPath += '.';
+
+			if (!(await expandButton.getAttribute('aria-expanded'))) {
+				await expandButton.click();
+			}
+		});
+	}
+
 	async selectTab(tabLabel: string) {
 		const tab = this.container.getByRole('tab', {
 			exact: true,
@@ -116,6 +181,10 @@ export class VisualizationModesPage {
 		});
 
 		await tab.click();
+	}
+
+	async saveAddFieldsModal() {
+		await this.addFieldsDialog.saveButton.click();
 	}
 
 	async saveFieldSelection() {

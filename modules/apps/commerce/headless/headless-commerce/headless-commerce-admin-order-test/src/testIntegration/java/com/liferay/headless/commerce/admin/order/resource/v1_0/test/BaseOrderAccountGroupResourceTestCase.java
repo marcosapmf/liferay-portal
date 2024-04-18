@@ -216,6 +216,8 @@ public abstract class BaseOrderAccountGroupResourceTestCase {
 		OrderAccountGroup orderAccountGroup =
 			testGraphQLGetOrderRuleAccountGroupAccountGroup_addOrderAccountGroup();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				orderAccountGroup,
@@ -234,6 +236,30 @@ public abstract class BaseOrderAccountGroupResourceTestCase {
 								getGraphQLFields())),
 						"JSONObject/data",
 						"Object/orderRuleAccountGroupAccountGroup"))));
+
+		// Using the namespace headlessCommerceAdminOrder_v1_0
+
+		Assert.assertTrue(
+			equals(
+				orderAccountGroup,
+				OrderAccountGroupSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessCommerceAdminOrder_v1_0",
+								new GraphQLField(
+									"orderRuleAccountGroupAccountGroup",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"orderRuleAccountGroupId",
+												testGraphQLGetOrderRuleAccountGroupAccountGroup_getOrderRuleAccountGroupId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessCommerceAdminOrder_v1_0",
+						"Object/orderRuleAccountGroupAccountGroup"))));
 	}
 
 	protected Long
@@ -250,6 +276,8 @@ public abstract class BaseOrderAccountGroupResourceTestCase {
 
 		Long irrelevantOrderRuleAccountGroupId = RandomTestUtil.randomLong();
 
+		// No namespace
+
 		Assert.assertEquals(
 			"Not Found",
 			JSONUtil.getValueAsString(
@@ -264,6 +292,27 @@ public abstract class BaseOrderAccountGroupResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessCommerceAdminOrder_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessCommerceAdminOrder_v1_0",
+						new GraphQLField(
+							"orderRuleAccountGroupAccountGroup",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"orderRuleAccountGroupId",
+										irrelevantOrderRuleAccountGroupId);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}

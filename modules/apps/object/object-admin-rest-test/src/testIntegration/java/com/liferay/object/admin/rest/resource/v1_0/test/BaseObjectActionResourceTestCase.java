@@ -221,7 +221,10 @@ public abstract class BaseObjectActionResourceTestCase {
 
 	@Test
 	public void testGraphQLDeleteObjectAction() throws Exception {
-		ObjectAction objectAction =
+
+		// No namespace
+
+		ObjectAction objectAction1 =
 			testGraphQLDeleteObjectAction_addObjectAction();
 
 		Assert.assertTrue(
@@ -231,23 +234,62 @@ public abstract class BaseObjectActionResourceTestCase {
 						"deleteObjectAction",
 						new HashMap<String, Object>() {
 							{
-								put("objectActionId", objectAction.getId());
+								put("objectActionId", objectAction1.getId());
 							}
 						})),
 				"JSONObject/data", "Object/deleteObjectAction"));
-		JSONArray errorsJSONArray = JSONUtil.getValueAsJSONArray(
+
+		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
 			invokeGraphQLQuery(
 				new GraphQLField(
 					"objectAction",
 					new HashMap<String, Object>() {
 						{
-							put("objectActionId", objectAction.getId());
+							put("objectActionId", objectAction1.getId());
 						}
 					},
 					new GraphQLField("id"))),
 			"JSONArray/errors");
 
-		Assert.assertTrue(errorsJSONArray.length() > 0);
+		Assert.assertTrue(errorsJSONArray1.length() > 0);
+
+		// Using the namespace objectAdmin_v1_0
+
+		ObjectAction objectAction2 =
+			testGraphQLDeleteObjectAction_addObjectAction();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"objectAdmin_v1_0",
+						new GraphQLField(
+							"deleteObjectAction",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"objectActionId",
+										objectAction2.getId());
+								}
+							}))),
+				"JSONObject/data", "JSONObject/objectAdmin_v1_0",
+				"Object/deleteObjectAction"));
+
+		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"objectAdmin_v1_0",
+					new GraphQLField(
+						"objectAction",
+						new HashMap<String, Object>() {
+							{
+								put("objectActionId", objectAction2.getId());
+							}
+						},
+						new GraphQLField("id")))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray2.length() > 0);
 	}
 
 	protected ObjectAction testGraphQLDeleteObjectAction_addObjectAction()
@@ -279,6 +321,8 @@ public abstract class BaseObjectActionResourceTestCase {
 		ObjectAction objectAction =
 			testGraphQLGetObjectAction_addObjectAction();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				objectAction,
@@ -296,11 +340,36 @@ public abstract class BaseObjectActionResourceTestCase {
 								},
 								getGraphQLFields())),
 						"JSONObject/data", "Object/objectAction"))));
+
+		// Using the namespace objectAdmin_v1_0
+
+		Assert.assertTrue(
+			equals(
+				objectAction,
+				ObjectActionSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"objectAdmin_v1_0",
+								new GraphQLField(
+									"objectAction",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"objectActionId",
+												objectAction.getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data", "JSONObject/objectAdmin_v1_0",
+						"Object/objectAction"))));
 	}
 
 	@Test
 	public void testGraphQLGetObjectActionNotFound() throws Exception {
 		Long irrelevantObjectActionId = RandomTestUtil.randomLong();
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -314,6 +383,27 @@ public abstract class BaseObjectActionResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace objectAdmin_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"objectAdmin_v1_0",
+						new GraphQLField(
+							"objectAction",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"objectActionId",
+										irrelevantObjectActionId);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}

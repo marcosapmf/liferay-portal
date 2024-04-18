@@ -17,6 +17,7 @@ import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
+import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.test.util.HTTPTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.util.Http;
@@ -113,6 +114,12 @@ public class NotificationTemplateResourceTest
 				JSONUtil.putAll(
 					JSONUtil.put(
 						NotificationRecipientSettingConstants.NAME_ROLE_NAME,
+						RoleConstants.ORGANIZATION_ADMINISTRATOR),
+					JSONUtil.put(
+						NotificationRecipientSettingConstants.NAME_ROLE_NAME,
+						RoleConstants.ORGANIZATION_OWNER),
+					JSONUtil.put(
+						NotificationRecipientSettingConstants.NAME_ROLE_NAME,
 						AccountRoleConstants.
 							REQUIRED_ROLE_NAME_ACCOUNT_ADMINISTRATOR),
 					JSONUtil.put(
@@ -144,6 +151,43 @@ public class NotificationTemplateResourceTest
 		JSONAssert.assertEquals(
 			jsonArray.toString(), jsonObject.getString("recipients"),
 			JSONCompareMode.NON_EXTENSIBLE);
+
+		HTTPTestUtil.invokeToJSONObject(
+			JSONUtil.put(
+				"editorType",
+				NotificationTemplateConstants.EDITOR_TYPE_RICH_TEXT
+			).put(
+				"name", RandomTestUtil.randomString()
+			).put(
+				"recipients",
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"from", RandomTestUtil.randomString()
+					).put(
+						"fromName",
+						JSONUtil.put("en_US", RandomTestUtil.randomString())
+					).put(
+						"singleRecipient", false
+					).put(
+						"to",
+						JSONUtil.put("en_US", RandomTestUtil.randomString())
+					))
+			).put(
+				"recipientType", NotificationRecipientConstants.TYPE_EMAIL
+			).put(
+				"subject", JSONUtil.put("en_US", RandomTestUtil.randomString())
+			).put(
+				"system", false
+			).put(
+				"type", NotificationConstants.TYPE_EMAIL
+			).toString(),
+			"notification/v1.0/notification-templates", Http.Method.POST);
+
+		HTTPTestUtil.invokeToJSONObject(
+			null,
+			"headless-batch-engine/v1.0/export-task/com.liferay.notification." +
+				"rest.dto.v1_0.NotificationTemplate/json",
+			Http.Method.POST);
 	}
 
 	@Override

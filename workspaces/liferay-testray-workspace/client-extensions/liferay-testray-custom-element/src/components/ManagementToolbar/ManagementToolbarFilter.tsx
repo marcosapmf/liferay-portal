@@ -104,7 +104,6 @@ const FilterBody: React.FC<FilterBodyProps> = ({
 
 	const handleRemoveItemFromFilter = useCallback(() => {
 		const searchParams = new URLSearchParams(location.search);
-
 		searchParams.delete('filter');
 		searchParams.delete('filterSchema');
 
@@ -159,6 +158,7 @@ const FilterBody: React.FC<FilterBodyProps> = ({
 			updateUrlParams({
 				filter: JSON.stringify(formattedFilter),
 				filterSchema: filterSchema?.name as string,
+				page: '1',
 			});
 		}
 
@@ -182,6 +182,14 @@ const FilterBody: React.FC<FilterBodyProps> = ({
 		setIsVisible,
 		updateUrlParams,
 	]);
+
+	useEffect(() => {
+		const searchParams = new URLSearchParams(location.search);
+
+		if (!searchParams.get('filter')) {
+			setForm(initialFilters);
+		}
+	}, [initialFilters, location.search]);
 
 	useHotkeys('enter', onApply, {enabled: true}, [fields, form]);
 
@@ -231,12 +239,11 @@ const FilterBody: React.FC<FilterBodyProps> = ({
 			</div>
 
 			<ClayDropDown.Section className="dropdown-footer">
-				<Form.Divider />
-				<ClayButton onClick={onApply}>
+				<ClayButton className="mt-2" onClick={onApply}>
 					{i18n.translate('apply')}
 				</ClayButton>
 				<ClayButton
-					className="ml-3"
+					className="ml-3 mt-2"
 					disabled={clearDisabled}
 					displayType="secondary"
 					onClick={onClear}
@@ -275,15 +282,11 @@ const ManagementToolbarFilter: React.FC<ManagementToolbarFilterProps> = ({
 				displayType="unstyled"
 				onClick={handleExpand}
 			>
-				<span className="navbar-breakpoint-down-d-none">
+				<span>
 					<ClayIcon
 						className="inline-item inline-item-after inline-item-before"
 						symbol="filter"
 					/>
-				</span>
-
-				<span className="navbar-breakpoint-d-none">
-					<ClayIcon symbol="filter" />
 				</span>
 			</ClayButton>
 

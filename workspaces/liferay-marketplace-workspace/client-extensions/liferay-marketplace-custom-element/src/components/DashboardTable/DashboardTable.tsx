@@ -37,6 +37,7 @@ export type TableHeaders = {
 interface DashboardTableProps<T> {
 	children?: (item: T) => ReactNode;
 	emptyStateMessage: {
+		className?: string;
 		description1?: string;
 		description2?: string;
 		title: string;
@@ -49,7 +50,7 @@ interface DashboardTableProps<T> {
 export function DashboardTable<T>({
 	children = () => null,
 	emptyStateMessage,
-	icon,
+	icon = 'grid',
 	items = [],
 	tableHeaders = [],
 }: DashboardTableProps<T>) {
@@ -85,6 +86,7 @@ export function DashboardTable<T>({
 
 	return (
 		<DashboardEmptyTable
+			className={emptyStateMessage?.className}
 			description1={description1 ?? ''}
 			description2={description2 ?? ''}
 			icon={icon}

@@ -1114,6 +1114,8 @@ public abstract class BaseContentTemplateResourceTestCase {
 			new GraphQLField("items", getGraphQLFields()),
 			new GraphQLField("page"), new GraphQLField("totalCount"));
 
+		// No namespace
+
 		JSONObject contentTemplatesJSONObject = JSONUtil.getValueAsJSONObject(
 			invokeGraphQLQuery(graphQLField), "JSONObject/data",
 			"JSONObject/contentTemplates");
@@ -1127,6 +1129,28 @@ public abstract class BaseContentTemplateResourceTestCase {
 
 		contentTemplatesJSONObject = JSONUtil.getValueAsJSONObject(
 			invokeGraphQLQuery(graphQLField), "JSONObject/data",
+			"JSONObject/contentTemplates");
+
+		Assert.assertEquals(
+			totalCount + 2, contentTemplatesJSONObject.getLong("totalCount"));
+
+		assertContains(
+			contentTemplate1,
+			Arrays.asList(
+				ContentTemplateSerDes.toDTOs(
+					contentTemplatesJSONObject.getString("items"))));
+		assertContains(
+			contentTemplate2,
+			Arrays.asList(
+				ContentTemplateSerDes.toDTOs(
+					contentTemplatesJSONObject.getString("items"))));
+
+		// Using the namespace headlessDelivery_v1_0
+
+		contentTemplatesJSONObject = JSONUtil.getValueAsJSONObject(
+			invokeGraphQLQuery(
+				new GraphQLField("headlessDelivery_v1_0", graphQLField)),
+			"JSONObject/data", "JSONObject/headlessDelivery_v1_0",
 			"JSONObject/contentTemplates");
 
 		Assert.assertEquals(
@@ -1184,6 +1208,8 @@ public abstract class BaseContentTemplateResourceTestCase {
 		ContentTemplate contentTemplate =
 			testGraphQLGetSiteContentTemplate_addContentTemplate();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				contentTemplate,
@@ -1208,6 +1234,37 @@ public abstract class BaseContentTemplateResourceTestCase {
 								},
 								getGraphQLFields())),
 						"JSONObject/data", "Object/contentTemplate"))));
+
+		// Using the namespace headlessDelivery_v1_0
+
+		Assert.assertTrue(
+			equals(
+				contentTemplate,
+				ContentTemplateSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessDelivery_v1_0",
+								new GraphQLField(
+									"contentTemplate",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"siteKey",
+												"\"" +
+													testGraphQLGetSiteContentTemplate_getSiteId(
+														contentTemplate) +
+															"\"");
+
+											put(
+												"contentTemplateId",
+												"\"" + contentTemplate.getId() +
+													"\"");
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data", "JSONObject/headlessDelivery_v1_0",
+						"Object/contentTemplate"))));
 	}
 
 	protected Long testGraphQLGetSiteContentTemplate_getSiteId(
@@ -1221,6 +1278,8 @@ public abstract class BaseContentTemplateResourceTestCase {
 	public void testGraphQLGetSiteContentTemplateNotFound() throws Exception {
 		String irrelevantContentTemplateId =
 			"\"" + RandomTestUtil.randomString() + "\"";
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -1239,6 +1298,31 @@ public abstract class BaseContentTemplateResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessDelivery_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessDelivery_v1_0",
+						new GraphQLField(
+							"contentTemplate",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"siteKey",
+										"\"" + irrelevantGroup.getGroupId() +
+											"\"");
+									put(
+										"contentTemplateId",
+										irrelevantContentTemplateId);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}

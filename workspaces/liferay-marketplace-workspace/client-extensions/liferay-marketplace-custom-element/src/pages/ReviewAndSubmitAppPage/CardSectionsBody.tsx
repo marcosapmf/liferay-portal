@@ -12,7 +12,6 @@ import scheduleIcon from '../../assets/icons/schedule_icon.svg';
 import taskCheckedIcon from '../../assets/icons/task_checked_icon.svg';
 import {CardLink} from '../../components/Card/CardLink';
 import {CardView} from '../../components/Card/CardView';
-import {LicensePriceChildren} from '../../components/LicensePriceCard/LicensePriceChildren';
 import {Tag} from '../../components/Tag/Tag';
 import {removeUnnecessaryURLString} from '../../utils/string';
 import {CardSection} from './CardSection';
@@ -22,6 +21,7 @@ import './CardSectionsBody.scss';
 
 import DOMPurify from 'dompurify';
 
+import LicensePriceChildren from '../../components/LicensePriceCard/LicensePriceChildren';
 import i18n from '../../i18n';
 
 interface CardSectionsBodyProps {
@@ -53,12 +53,7 @@ export function CardSectionsBody({
 				></p>
 			</CardSection>
 
-			<CardSection
-				required
-				sectionName={
-					isApp ? 'Categories' : 'Marketplace Solution Categories'
-				}
-			>
+			<CardSection required sectionName="Categories">
 				<div className="card-section-body-section-tags">
 					{app?.categories?.map((tag, index) => {
 						return <Tag key={index} label={tag}></Tag>;
@@ -178,17 +173,9 @@ export function CardSectionsBody({
 						>
 							{app?.['price-model'] === 'Paid' && (
 								<LicensePriceChildren
-									currency="USD"
-									quantity={{
-										from: '1',
-										to: '1',
-									}}
-									value={
-										app?.price?.toLocaleString('en-US', {
-											currency: 'USD',
-											style: 'currency',
-										}) as string
-									}
+									app={app}
+									isCloud={isCloud}
+									tierPrices={app.tierPrice}
 								/>
 							)}
 						</CardView>
@@ -268,7 +255,7 @@ export function CardSectionsBody({
 								/>
 							)
 						)}
-					</CardSection>{' '}
+					</CardSection>
 				</>
 			)}
 		</>

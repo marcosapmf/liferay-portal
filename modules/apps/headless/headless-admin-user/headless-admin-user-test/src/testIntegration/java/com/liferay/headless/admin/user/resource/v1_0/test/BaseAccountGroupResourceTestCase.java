@@ -552,6 +552,8 @@ public abstract class BaseAccountGroupResourceTestCase {
 			new GraphQLField("items", getGraphQLFields()),
 			new GraphQLField("page"), new GraphQLField("totalCount"));
 
+		// No namespace
+
 		JSONObject accountGroupsJSONObject = JSONUtil.getValueAsJSONObject(
 			invokeGraphQLQuery(graphQLField), "JSONObject/data",
 			"JSONObject/accountGroups");
@@ -565,6 +567,28 @@ public abstract class BaseAccountGroupResourceTestCase {
 
 		accountGroupsJSONObject = JSONUtil.getValueAsJSONObject(
 			invokeGraphQLQuery(graphQLField), "JSONObject/data",
+			"JSONObject/accountGroups");
+
+		Assert.assertEquals(
+			totalCount + 2, accountGroupsJSONObject.getLong("totalCount"));
+
+		assertContains(
+			accountGroup1,
+			Arrays.asList(
+				AccountGroupSerDes.toDTOs(
+					accountGroupsJSONObject.getString("items"))));
+		assertContains(
+			accountGroup2,
+			Arrays.asList(
+				AccountGroupSerDes.toDTOs(
+					accountGroupsJSONObject.getString("items"))));
+
+		// Using the namespace headlessAdminUser_v1_0
+
+		accountGroupsJSONObject = JSONUtil.getValueAsJSONObject(
+			invokeGraphQLQuery(
+				new GraphQLField("headlessAdminUser_v1_0", graphQLField)),
+			"JSONObject/data", "JSONObject/headlessAdminUser_v1_0",
 			"JSONObject/accountGroups");
 
 		Assert.assertEquals(
@@ -731,6 +755,8 @@ public abstract class BaseAccountGroupResourceTestCase {
 		AccountGroup accountGroup =
 			testGraphQLGetAccountGroupByExternalReferenceCode_addAccountGroup();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				accountGroup,
@@ -752,6 +778,32 @@ public abstract class BaseAccountGroupResourceTestCase {
 								getGraphQLFields())),
 						"JSONObject/data",
 						"Object/accountGroupByExternalReferenceCode"))));
+
+		// Using the namespace headlessAdminUser_v1_0
+
+		Assert.assertTrue(
+			equals(
+				accountGroup,
+				AccountGroupSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessAdminUser_v1_0",
+								new GraphQLField(
+									"accountGroupByExternalReferenceCode",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"externalReferenceCode",
+												"\"" +
+													accountGroup.
+														getExternalReferenceCode() +
+															"\"");
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data", "JSONObject/headlessAdminUser_v1_0",
+						"Object/accountGroupByExternalReferenceCode"))));
 	}
 
 	@Test
@@ -760,6 +812,8 @@ public abstract class BaseAccountGroupResourceTestCase {
 
 		String irrelevantExternalReferenceCode =
 			"\"" + RandomTestUtil.randomString() + "\"";
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -775,6 +829,27 @@ public abstract class BaseAccountGroupResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessAdminUser_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessAdminUser_v1_0",
+						new GraphQLField(
+							"accountGroupByExternalReferenceCode",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"externalReferenceCode",
+										irrelevantExternalReferenceCode);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}
@@ -908,7 +983,10 @@ public abstract class BaseAccountGroupResourceTestCase {
 
 	@Test
 	public void testGraphQLDeleteAccountGroup() throws Exception {
-		AccountGroup accountGroup =
+
+		// No namespace
+
+		AccountGroup accountGroup1 =
 			testGraphQLDeleteAccountGroup_addAccountGroup();
 
 		Assert.assertTrue(
@@ -918,23 +996,62 @@ public abstract class BaseAccountGroupResourceTestCase {
 						"deleteAccountGroup",
 						new HashMap<String, Object>() {
 							{
-								put("accountGroupId", accountGroup.getId());
+								put("accountGroupId", accountGroup1.getId());
 							}
 						})),
 				"JSONObject/data", "Object/deleteAccountGroup"));
-		JSONArray errorsJSONArray = JSONUtil.getValueAsJSONArray(
+
+		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
 			invokeGraphQLQuery(
 				new GraphQLField(
 					"accountGroup",
 					new HashMap<String, Object>() {
 						{
-							put("accountGroupId", accountGroup.getId());
+							put("accountGroupId", accountGroup1.getId());
 						}
 					},
 					new GraphQLField("id"))),
 			"JSONArray/errors");
 
-		Assert.assertTrue(errorsJSONArray.length() > 0);
+		Assert.assertTrue(errorsJSONArray1.length() > 0);
+
+		// Using the namespace headlessAdminUser_v1_0
+
+		AccountGroup accountGroup2 =
+			testGraphQLDeleteAccountGroup_addAccountGroup();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"headlessAdminUser_v1_0",
+						new GraphQLField(
+							"deleteAccountGroup",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"accountGroupId",
+										accountGroup2.getId());
+								}
+							}))),
+				"JSONObject/data", "JSONObject/headlessAdminUser_v1_0",
+				"Object/deleteAccountGroup"));
+
+		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"headlessAdminUser_v1_0",
+					new GraphQLField(
+						"accountGroup",
+						new HashMap<String, Object>() {
+							{
+								put("accountGroupId", accountGroup2.getId());
+							}
+						},
+						new GraphQLField("id")))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray2.length() > 0);
 	}
 
 	protected AccountGroup testGraphQLDeleteAccountGroup_addAccountGroup()
@@ -966,6 +1083,8 @@ public abstract class BaseAccountGroupResourceTestCase {
 		AccountGroup accountGroup =
 			testGraphQLGetAccountGroup_addAccountGroup();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				accountGroup,
@@ -983,11 +1102,36 @@ public abstract class BaseAccountGroupResourceTestCase {
 								},
 								getGraphQLFields())),
 						"JSONObject/data", "Object/accountGroup"))));
+
+		// Using the namespace headlessAdminUser_v1_0
+
+		Assert.assertTrue(
+			equals(
+				accountGroup,
+				AccountGroupSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessAdminUser_v1_0",
+								new GraphQLField(
+									"accountGroup",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"accountGroupId",
+												accountGroup.getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data", "JSONObject/headlessAdminUser_v1_0",
+						"Object/accountGroup"))));
 	}
 
 	@Test
 	public void testGraphQLGetAccountGroupNotFound() throws Exception {
 		Long irrelevantAccountGroupId = RandomTestUtil.randomLong();
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -1001,6 +1145,27 @@ public abstract class BaseAccountGroupResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessAdminUser_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessAdminUser_v1_0",
+						new GraphQLField(
+							"accountGroup",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"accountGroupId",
+										irrelevantAccountGroupId);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}

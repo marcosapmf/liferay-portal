@@ -198,7 +198,10 @@ public abstract class BasePinResourceTestCase {
 
 	@Test
 	public void testGraphQLDeletePin() throws Exception {
-		Pin pin = testGraphQLDeletePin_addPin();
+
+		// No namespace
+
+		Pin pin1 = testGraphQLDeletePin_addPin();
 
 		Assert.assertTrue(
 			JSONUtil.getValueAsBoolean(
@@ -207,10 +210,30 @@ public abstract class BasePinResourceTestCase {
 						"deletePin",
 						new HashMap<String, Object>() {
 							{
-								put("pinId", pin.getId());
+								put("pinId", pin1.getId());
 							}
 						})),
 				"JSONObject/data", "Object/deletePin"));
+
+		// Using the namespace headlessCommerceAdminCatalog_v1_0
+
+		Pin pin2 = testGraphQLDeletePin_addPin();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"headlessCommerceAdminCatalog_v1_0",
+						new GraphQLField(
+							"deletePin",
+							new HashMap<String, Object>() {
+								{
+									put("pinId", pin2.getId());
+								}
+							}))),
+				"JSONObject/data",
+				"JSONObject/headlessCommerceAdminCatalog_v1_0",
+				"Object/deletePin"));
 	}
 
 	protected Pin testGraphQLDeletePin_addPin() throws Exception {

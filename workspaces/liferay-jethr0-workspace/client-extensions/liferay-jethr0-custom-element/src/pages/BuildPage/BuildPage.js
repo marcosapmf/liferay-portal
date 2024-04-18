@@ -13,9 +13,10 @@ import Jethr0Breadcrumbs from '../../components/Jethr0Breadcrumbs/Jethr0Breadcru
 import Jethr0Card from '../../components/Jethr0Card/Jethr0Card';
 import Jethr0NavigationBar from '../../components/Jethr0NavigationBar/Jethr0NavigationBar';
 import Jethr0Table from '../../components/Jethr0Table/Jethr0Table';
+import {getBuildRunsByBuildId} from '../../objects/buildruns/BuildRunUtil';
+import {getBuildById} from '../../objects/builds/BuildUtil';
 import {toLocaleString} from '../../services/DateUtil';
 import {toDurationString} from '../../services/DurationUtil';
-import useSpringBootData from '../../services/useSpringBootData';
 
 function BuildInformation({build}) {
 	if (!build) {
@@ -58,6 +59,7 @@ function BuildInformation({build}) {
 			{parameters && (
 				<ClayPanel
 					collapsable
+					defaultExpanded
 					displayTitle="Build Parameters"
 					displayType="secondary"
 					showCollapseIcon={true}
@@ -94,10 +96,23 @@ function BuildPage() {
 	const {id} = useParams();
 	const [build, setBuild] = useState(null);
 
-	useSpringBootData({
-		setData: setBuild,
-		urlPath: '/builds/' + id,
-	});
+	if (!build) {
+		getBuildById({id, setBuild});
+	}
+
+	if (!build) {
+		return (
+			<ClayLayout.Container>
+				<Jethr0Card>
+					<Jethr0NavigationBar active="Jobs" />
+					<Jethr0Breadcrumbs breadcrumbs={breadcrumbs} />
+					<Heading level={3} weight="lighter">
+						{'Build #' + id}
+					</Heading>
+				</Jethr0Card>
+			</ClayLayout.Container>
+		);
+	}
 
 	let buildName = 'Build #' + id;
 	let jobId = 0;
@@ -137,10 +152,9 @@ function BuildPage() {
 function BuildRuns({buildId}) {
 	const [buildRuns, setBuildRuns] = useState(null);
 
-	useSpringBootData({
-		setData: setBuildRuns,
-		urlPath: '/builds/' + buildId + '/runs',
-	});
+	if (!buildRuns) {
+		getBuildRunsByBuildId({buildId, setBuildRuns});
+	}
 
 	if (!buildRuns) {
 		return <div>Loading...</div>;
@@ -167,48 +181,39 @@ function BuildRuns({buildId}) {
 						</tr>
 					</thead>
 					<tbody>
-						{buildRuns &&
-							buildRuns.map((buildRun) => {
-								return (
-									<tr key={buildRun.id}>
-										<th
-											className="font-weight-semi-bold"
-											title={buildRun.id}
-										>
-											{buildRun.id}
-										</th>
-										<td>
-											{toLocaleString(
-												buildRun.dateCreated
-											)}
-										</td>
-										<td>{buildRun.state.name}</td>
-										<td>
-											{buildRun.result
-												? buildRun.result.name
-												: '-'}
-										</td>
-										<td>
-											{toDurationString(
-												buildRun.duration
-											)}
-										</td>
-										<td>
-											{buildRun.jenkinsBuildURL ? (
-												<a
-													href={
-														buildRun.jenkinsBuildURL
-													}
-												>
-													Jenkins Build
-												</a>
-											) : (
-												<div>-</div>
-											)}
-										</td>
-									</tr>
-								);
-							})}
+						{buildRuns?.map((buildRun) => {
+							return (
+								<tr key={buildRun.id}>
+									<th
+										className="font-weight-semi-bold"
+										title={buildRun.id}
+									>
+										{buildRun.id}
+									</th>
+									<td>
+										{toLocaleString(buildRun.dateCreated)}
+									</td>
+									<td>{buildRun.state.name}</td>
+									<td>
+										{buildRun.result
+											? buildRun.result.name
+											: '-'}
+									</td>
+									<td>
+										{toDurationString(buildRun.duration)}
+									</td>
+									<td>
+										{buildRun.jenkinsBuildURL ? (
+											<a href={buildRun.jenkinsBuildURL}>
+												Jenkins Build
+											</a>
+										) : (
+											<div>-</div>
+										)}
+									</td>
+								</tr>
+							);
+						})}
 					</tbody>
 				</Jethr0Table>
 			</ClayPanel.Body>

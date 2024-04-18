@@ -1351,7 +1351,10 @@ public abstract class BaseObjectRelationshipResourceTestCase {
 
 	@Test
 	public void testGraphQLDeleteObjectRelationship() throws Exception {
-		ObjectRelationship objectRelationship =
+
+		// No namespace
+
+		ObjectRelationship objectRelationship1 =
 			testGraphQLDeleteObjectRelationship_addObjectRelationship();
 
 		Assert.assertTrue(
@@ -1363,11 +1366,12 @@ public abstract class BaseObjectRelationshipResourceTestCase {
 							{
 								put(
 									"objectRelationshipId",
-									objectRelationship.getId());
+									objectRelationship1.getId());
 							}
 						})),
 				"JSONObject/data", "Object/deleteObjectRelationship"));
-		JSONArray errorsJSONArray = JSONUtil.getValueAsJSONArray(
+
+		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
 			invokeGraphQLQuery(
 				new GraphQLField(
 					"objectRelationship",
@@ -1375,13 +1379,53 @@ public abstract class BaseObjectRelationshipResourceTestCase {
 						{
 							put(
 								"objectRelationshipId",
-								objectRelationship.getId());
+								objectRelationship1.getId());
 						}
 					},
 					new GraphQLField("id"))),
 			"JSONArray/errors");
 
-		Assert.assertTrue(errorsJSONArray.length() > 0);
+		Assert.assertTrue(errorsJSONArray1.length() > 0);
+
+		// Using the namespace objectAdmin_v1_0
+
+		ObjectRelationship objectRelationship2 =
+			testGraphQLDeleteObjectRelationship_addObjectRelationship();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"objectAdmin_v1_0",
+						new GraphQLField(
+							"deleteObjectRelationship",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"objectRelationshipId",
+										objectRelationship2.getId());
+								}
+							}))),
+				"JSONObject/data", "JSONObject/objectAdmin_v1_0",
+				"Object/deleteObjectRelationship"));
+
+		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"objectAdmin_v1_0",
+					new GraphQLField(
+						"objectRelationship",
+						new HashMap<String, Object>() {
+							{
+								put(
+									"objectRelationshipId",
+									objectRelationship2.getId());
+							}
+						},
+						new GraphQLField("id")))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray2.length() > 0);
 	}
 
 	protected ObjectRelationship
@@ -1417,6 +1461,8 @@ public abstract class BaseObjectRelationshipResourceTestCase {
 		ObjectRelationship objectRelationship =
 			testGraphQLGetObjectRelationship_addObjectRelationship();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				objectRelationship,
@@ -1434,11 +1480,36 @@ public abstract class BaseObjectRelationshipResourceTestCase {
 								},
 								getGraphQLFields())),
 						"JSONObject/data", "Object/objectRelationship"))));
+
+		// Using the namespace objectAdmin_v1_0
+
+		Assert.assertTrue(
+			equals(
+				objectRelationship,
+				ObjectRelationshipSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"objectAdmin_v1_0",
+								new GraphQLField(
+									"objectRelationship",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"objectRelationshipId",
+												objectRelationship.getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data", "JSONObject/objectAdmin_v1_0",
+						"Object/objectRelationship"))));
 	}
 
 	@Test
 	public void testGraphQLGetObjectRelationshipNotFound() throws Exception {
 		Long irrelevantObjectRelationshipId = RandomTestUtil.randomLong();
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -1454,6 +1525,27 @@ public abstract class BaseObjectRelationshipResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace objectAdmin_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"objectAdmin_v1_0",
+						new GraphQLField(
+							"objectRelationship",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"objectRelationshipId",
+										irrelevantObjectRelationshipId);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}

@@ -183,6 +183,247 @@ public abstract class BasePhoneResourceTestCase {
 	}
 
 	@Test
+	public void testGetAccountByExternalReferenceCodePhonesPage()
+		throws Exception {
+
+		String externalReferenceCode =
+			testGetAccountByExternalReferenceCodePhonesPage_getExternalReferenceCode();
+		String irrelevantExternalReferenceCode =
+			testGetAccountByExternalReferenceCodePhonesPage_getIrrelevantExternalReferenceCode();
+
+		Page<Phone> page =
+			phoneResource.getAccountByExternalReferenceCodePhonesPage(
+				externalReferenceCode);
+
+		long totalCount = page.getTotalCount();
+
+		if (irrelevantExternalReferenceCode != null) {
+			Phone irrelevantPhone =
+				testGetAccountByExternalReferenceCodePhonesPage_addPhone(
+					irrelevantExternalReferenceCode, randomIrrelevantPhone());
+
+			page = phoneResource.getAccountByExternalReferenceCodePhonesPage(
+				irrelevantExternalReferenceCode);
+
+			Assert.assertEquals(totalCount + 1, page.getTotalCount());
+
+			assertContains(irrelevantPhone, (List<Phone>)page.getItems());
+			assertValid(
+				page,
+				testGetAccountByExternalReferenceCodePhonesPage_getExpectedActions(
+					irrelevantExternalReferenceCode));
+		}
+
+		Phone phone1 = testGetAccountByExternalReferenceCodePhonesPage_addPhone(
+			externalReferenceCode, randomPhone());
+
+		Phone phone2 = testGetAccountByExternalReferenceCodePhonesPage_addPhone(
+			externalReferenceCode, randomPhone());
+
+		page = phoneResource.getAccountByExternalReferenceCodePhonesPage(
+			externalReferenceCode);
+
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
+
+		assertContains(phone1, (List<Phone>)page.getItems());
+		assertContains(phone2, (List<Phone>)page.getItems());
+		assertValid(
+			page,
+			testGetAccountByExternalReferenceCodePhonesPage_getExpectedActions(
+				externalReferenceCode));
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetAccountByExternalReferenceCodePhonesPage_getExpectedActions(
+				String externalReferenceCode)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
+	}
+
+	protected Phone testGetAccountByExternalReferenceCodePhonesPage_addPhone(
+			String externalReferenceCode, Phone phone)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected String
+			testGetAccountByExternalReferenceCodePhonesPage_getExternalReferenceCode()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected String
+			testGetAccountByExternalReferenceCodePhonesPage_getIrrelevantExternalReferenceCode()
+		throws Exception {
+
+		return null;
+	}
+
+	@Test
+	public void testGetAccountPhonesPage() throws Exception {
+		Long accountId = testGetAccountPhonesPage_getAccountId();
+		Long irrelevantAccountId =
+			testGetAccountPhonesPage_getIrrelevantAccountId();
+
+		Page<Phone> page = phoneResource.getAccountPhonesPage(accountId);
+
+		long totalCount = page.getTotalCount();
+
+		if (irrelevantAccountId != null) {
+			Phone irrelevantPhone = testGetAccountPhonesPage_addPhone(
+				irrelevantAccountId, randomIrrelevantPhone());
+
+			page = phoneResource.getAccountPhonesPage(irrelevantAccountId);
+
+			Assert.assertEquals(totalCount + 1, page.getTotalCount());
+
+			assertContains(irrelevantPhone, (List<Phone>)page.getItems());
+			assertValid(
+				page,
+				testGetAccountPhonesPage_getExpectedActions(
+					irrelevantAccountId));
+		}
+
+		Phone phone1 = testGetAccountPhonesPage_addPhone(
+			accountId, randomPhone());
+
+		Phone phone2 = testGetAccountPhonesPage_addPhone(
+			accountId, randomPhone());
+
+		page = phoneResource.getAccountPhonesPage(accountId);
+
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
+
+		assertContains(phone1, (List<Phone>)page.getItems());
+		assertContains(phone2, (List<Phone>)page.getItems());
+		assertValid(
+			page, testGetAccountPhonesPage_getExpectedActions(accountId));
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetAccountPhonesPage_getExpectedActions(Long accountId)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
+	}
+
+	protected Phone testGetAccountPhonesPage_addPhone(
+			Long accountId, Phone phone)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected Long testGetAccountPhonesPage_getAccountId() throws Exception {
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected Long testGetAccountPhonesPage_getIrrelevantAccountId()
+		throws Exception {
+
+		return null;
+	}
+
+	@Test
+	public void testGetOrganizationByExternalReferenceCodePhonesPage()
+		throws Exception {
+
+		String externalReferenceCode =
+			testGetOrganizationByExternalReferenceCodePhonesPage_getExternalReferenceCode();
+		String irrelevantExternalReferenceCode =
+			testGetOrganizationByExternalReferenceCodePhonesPage_getIrrelevantExternalReferenceCode();
+
+		Page<Phone> page =
+			phoneResource.getOrganizationByExternalReferenceCodePhonesPage(
+				externalReferenceCode);
+
+		long totalCount = page.getTotalCount();
+
+		if (irrelevantExternalReferenceCode != null) {
+			Phone irrelevantPhone =
+				testGetOrganizationByExternalReferenceCodePhonesPage_addPhone(
+					irrelevantExternalReferenceCode, randomIrrelevantPhone());
+
+			page =
+				phoneResource.getOrganizationByExternalReferenceCodePhonesPage(
+					irrelevantExternalReferenceCode);
+
+			Assert.assertEquals(totalCount + 1, page.getTotalCount());
+
+			assertContains(irrelevantPhone, (List<Phone>)page.getItems());
+			assertValid(
+				page,
+				testGetOrganizationByExternalReferenceCodePhonesPage_getExpectedActions(
+					irrelevantExternalReferenceCode));
+		}
+
+		Phone phone1 =
+			testGetOrganizationByExternalReferenceCodePhonesPage_addPhone(
+				externalReferenceCode, randomPhone());
+
+		Phone phone2 =
+			testGetOrganizationByExternalReferenceCodePhonesPage_addPhone(
+				externalReferenceCode, randomPhone());
+
+		page = phoneResource.getOrganizationByExternalReferenceCodePhonesPage(
+			externalReferenceCode);
+
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
+
+		assertContains(phone1, (List<Phone>)page.getItems());
+		assertContains(phone2, (List<Phone>)page.getItems());
+		assertValid(
+			page,
+			testGetOrganizationByExternalReferenceCodePhonesPage_getExpectedActions(
+				externalReferenceCode));
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetOrganizationByExternalReferenceCodePhonesPage_getExpectedActions(
+				String externalReferenceCode)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
+	}
+
+	protected Phone
+			testGetOrganizationByExternalReferenceCodePhonesPage_addPhone(
+				String externalReferenceCode, Phone phone)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected String
+			testGetOrganizationByExternalReferenceCodePhonesPage_getExternalReferenceCode()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected String
+			testGetOrganizationByExternalReferenceCodePhonesPage_getIrrelevantExternalReferenceCode()
+		throws Exception {
+
+		return null;
+	}
+
+	@Test
 	public void testGetOrganizationPhonesPage() throws Exception {
 		String organizationId =
 			testGetOrganizationPhonesPage_getOrganizationId();
@@ -277,6 +518,8 @@ public abstract class BasePhoneResourceTestCase {
 	public void testGraphQLGetPhone() throws Exception {
 		Phone phone = testGraphQLGetPhone_addPhone();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				phone,
@@ -292,11 +535,34 @@ public abstract class BasePhoneResourceTestCase {
 								},
 								getGraphQLFields())),
 						"JSONObject/data", "Object/phone"))));
+
+		// Using the namespace headlessAdminUser_v1_0
+
+		Assert.assertTrue(
+			equals(
+				phone,
+				PhoneSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessAdminUser_v1_0",
+								new GraphQLField(
+									"phone",
+									new HashMap<String, Object>() {
+										{
+											put("phoneId", phone.getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data", "JSONObject/headlessAdminUser_v1_0",
+						"Object/phone"))));
 	}
 
 	@Test
 	public void testGraphQLGetPhoneNotFound() throws Exception {
 		Long irrelevantPhoneId = RandomTestUtil.randomLong();
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -312,10 +578,117 @@ public abstract class BasePhoneResourceTestCase {
 						getGraphQLFields())),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
+
+		// Using the namespace headlessAdminUser_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessAdminUser_v1_0",
+						new GraphQLField(
+							"phone",
+							new HashMap<String, Object>() {
+								{
+									put("phoneId", irrelevantPhoneId);
+								}
+							},
+							getGraphQLFields()))),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
 	}
 
 	protected Phone testGraphQLGetPhone_addPhone() throws Exception {
 		return testGraphQLPhone_addPhone();
+	}
+
+	@Test
+	public void testGetUserAccountByExternalReferenceCodePhonesPage()
+		throws Exception {
+
+		String externalReferenceCode =
+			testGetUserAccountByExternalReferenceCodePhonesPage_getExternalReferenceCode();
+		String irrelevantExternalReferenceCode =
+			testGetUserAccountByExternalReferenceCodePhonesPage_getIrrelevantExternalReferenceCode();
+
+		Page<Phone> page =
+			phoneResource.getUserAccountByExternalReferenceCodePhonesPage(
+				externalReferenceCode);
+
+		long totalCount = page.getTotalCount();
+
+		if (irrelevantExternalReferenceCode != null) {
+			Phone irrelevantPhone =
+				testGetUserAccountByExternalReferenceCodePhonesPage_addPhone(
+					irrelevantExternalReferenceCode, randomIrrelevantPhone());
+
+			page =
+				phoneResource.getUserAccountByExternalReferenceCodePhonesPage(
+					irrelevantExternalReferenceCode);
+
+			Assert.assertEquals(totalCount + 1, page.getTotalCount());
+
+			assertContains(irrelevantPhone, (List<Phone>)page.getItems());
+			assertValid(
+				page,
+				testGetUserAccountByExternalReferenceCodePhonesPage_getExpectedActions(
+					irrelevantExternalReferenceCode));
+		}
+
+		Phone phone1 =
+			testGetUserAccountByExternalReferenceCodePhonesPage_addPhone(
+				externalReferenceCode, randomPhone());
+
+		Phone phone2 =
+			testGetUserAccountByExternalReferenceCodePhonesPage_addPhone(
+				externalReferenceCode, randomPhone());
+
+		page = phoneResource.getUserAccountByExternalReferenceCodePhonesPage(
+			externalReferenceCode);
+
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
+
+		assertContains(phone1, (List<Phone>)page.getItems());
+		assertContains(phone2, (List<Phone>)page.getItems());
+		assertValid(
+			page,
+			testGetUserAccountByExternalReferenceCodePhonesPage_getExpectedActions(
+				externalReferenceCode));
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetUserAccountByExternalReferenceCodePhonesPage_getExpectedActions(
+				String externalReferenceCode)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
+	}
+
+	protected Phone
+			testGetUserAccountByExternalReferenceCodePhonesPage_addPhone(
+				String externalReferenceCode, Phone phone)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected String
+			testGetUserAccountByExternalReferenceCodePhonesPage_getExternalReferenceCode()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected String
+			testGetUserAccountByExternalReferenceCodePhonesPage_getIrrelevantExternalReferenceCode()
+		throws Exception {
+
+		return null;
 	}
 
 	@Test

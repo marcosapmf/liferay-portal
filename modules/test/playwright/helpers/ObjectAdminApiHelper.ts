@@ -6,6 +6,20 @@
 import {getRandomInt} from '../utils/getRandomInt';
 import {ApiHelpers} from './ApiHelpers';
 
+type TObjectAction = {
+	active?: boolean;
+	id?: number;
+	label: {
+		[key: string]: string;
+	};
+	name: string;
+	objectActionExecutorKey: string;
+	objectActionTriggerKey: string;
+	parameters: {
+		[key: string]: number;
+	};
+};
+
 export class ObjectAdminApiHelper {
 	readonly apiHelpers: ApiHelpers;
 	readonly basePath: string;
@@ -13,6 +27,12 @@ export class ObjectAdminApiHelper {
 	constructor(apiHelpers: ApiHelpers) {
 		this.apiHelpers = apiHelpers;
 		this.basePath = 'object-admin/v1.0';
+	}
+
+	async deleteObjectAction(objectActionId: number) {
+		return this.apiHelpers.delete(
+			`${this.apiHelpers.baseUrl}${this.basePath}/object-actions/${objectActionId}`
+		);
 	}
 
 	async deleteObjectDefinition(objectDefinitionId: number) {
@@ -40,12 +60,22 @@ export class ObjectAdminApiHelper {
 		);
 	}
 
+	async postObjectDefinitionByExternalRefernceCodeObjectAction(
+		externalReferenceCode: string,
+		objectAction?: TObjectAction
+	): Promise<TObjectAction> {
+		return this.apiHelpers.post(
+			`${this.apiHelpers.baseUrl}${this.basePath}/object-definitions/by-external-reference-code/${externalReferenceCode}/object-actions`,
+			{data: objectAction}
+		);
+	}
+
 	async postObjectRelationship(
 		objectRelationship: Partial<ObjectRelationship>
 	) {
 		return this.apiHelpers.post(
 			`${this.apiHelpers.baseUrl}${this.basePath}/object-definitions/by-external-reference-code/${objectRelationship.objectDefinitionExternalReferenceCode1}/object-relationships`,
-			objectRelationship
+			{data: objectRelationship}
 		);
 	}
 
@@ -93,22 +123,24 @@ export class ObjectAdminApiHelper {
 
 		return this.apiHelpers.post(
 			`${this.apiHelpers.baseUrl}${this.basePath}/object-definitions`,
-			requestBody
+			{data: requestBody}
 		);
 	}
 
-	async postRandomObjectFolder() {
+	async postRandomObjectFolder(): Promise<ObjectFolder> {
 		const objectFolderExternalReferenceCode =
 			'objectFolder' + getRandomInt();
 
 		return this.apiHelpers.post(
 			`${this.apiHelpers.baseUrl}${this.basePath}/object-folders`,
 			{
-				externalReferenceCode: objectFolderExternalReferenceCode,
-				label: {
-					en_US: objectFolderExternalReferenceCode,
+				data: {
+					externalReferenceCode: objectFolderExternalReferenceCode,
+					label: {
+						en_US: objectFolderExternalReferenceCode,
+					},
+					name: objectFolderExternalReferenceCode,
 				},
-				name: objectFolderExternalReferenceCode,
 			}
 		);
 	}

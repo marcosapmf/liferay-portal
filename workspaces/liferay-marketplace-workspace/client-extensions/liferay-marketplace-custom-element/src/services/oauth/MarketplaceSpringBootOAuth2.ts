@@ -59,6 +59,7 @@ type LicenseTypePayload = {
 		macAddresses: string;
 		orderId: string;
 		productPurchaseKey: string;
+		productVersion: string;
 	};
 	skuId: number;
 	type: string;
@@ -69,6 +70,7 @@ export type SubscriptionsType = {
 	name: string;
 	perpetual: boolean;
 	productPurchasedKey: string;
+	productVersion: string;
 	provisionedCount: number;
 	purchasedCount: number;
 	startDate: string;
@@ -79,6 +81,16 @@ export default class MarketplaceSpringBootOAuth2 extends OAuth2Client {
 		super(
 			'liferay-marketplace-etc-spring-boot-oauth-application-user-agent'
 		);
+	}
+
+	async getAnalyticsPages(
+		searchParams: URLSearchParams = new URLSearchParams()
+	): Promise<AnalyticsViews> {
+		const response = await this.oAuth2Client.fetch(
+			`/analytics/pages?${searchParams.toString()}`
+		);
+
+		return response.json() as Promise<AnalyticsViews>;
 	}
 
 	async createLicenseKey(payload: LicenseTypePayload): Promise<LicenseKey> {

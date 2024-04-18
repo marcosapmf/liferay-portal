@@ -8,6 +8,7 @@ import {expect, mergeTests} from '@playwright/test';
 import {apiHelpersTest} from '../../fixtures/apiHelpersTest';
 import {featureFlagsTest} from '../../fixtures/featureFlagsTest';
 import {isolatedSiteTest} from '../../fixtures/isolatedSiteTest';
+import {loginTest} from '../../fixtures/loginTest';
 import {expectElementToHaveClass} from '../../utils/expectElementToHaveClass';
 import getRandomString from '../../utils/getRandomString';
 import {pageEditorPagesTest} from './fixtures/pageEditorPagesTest';
@@ -20,6 +21,7 @@ export const test = mergeTests(
 		'LPS-178052': true,
 	}),
 	isolatedSiteTest,
+	loginTest(),
 	pageEditorPagesTest
 );
 
@@ -43,11 +45,11 @@ test('allows moving through layout content with keyboard', async ({
 		'BASIC_COMPONENT-card'
 	);
 
-	const layout = await apiHelpers.headlessDelivery.createSitePage(
-		site.id,
-		getRandomString(),
-		getPageDefinition([cardDefinition, headingDefinition])
-	);
+	const layout = await apiHelpers.headlessDelivery.createSitePage({
+		pageDefinition: getPageDefinition([cardDefinition, headingDefinition]),
+		siteId: site.id,
+		title: getRandomString(),
+	});
 
 	// Go to edit mode of page
 
@@ -114,11 +116,11 @@ test('focus order is correct', async ({
 		'BASIC_COMPONENT-heading'
 	);
 
-	const layout = await apiHelpers.headlessDelivery.createSitePage(
-		site.id,
-		getRandomString(),
-		getPageDefinition([headingDefinition])
-	);
+	const layout = await apiHelpers.headlessDelivery.createSitePage({
+		pageDefinition: getPageDefinition([headingDefinition]),
+		siteId: site.id,
+		title: getRandomString(),
+	});
 
 	// Go to edit mode of page
 

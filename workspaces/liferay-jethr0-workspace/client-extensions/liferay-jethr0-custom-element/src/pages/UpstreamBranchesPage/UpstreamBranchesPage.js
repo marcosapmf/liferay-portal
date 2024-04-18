@@ -13,18 +13,17 @@ import Jethr0Card from '../../components/Jethr0Card/Jethr0Card';
 import Jethr0ContainerFluid from '../../components/Jethr0ContainerFluid/Jethr0ContainerFluid';
 import Jethr0NavigationBar from '../../components/Jethr0NavigationBar/Jethr0NavigationBar';
 import Jethr0Table from '../../components/Jethr0Table/Jethr0Table';
+import {getUpstreamGitBranches} from '../../objects/gitbranches/GitBranchUtil';
 import {toLocaleString} from '../../services/DateUtil';
-import useSpringBootData from '../../services/useSpringBootData';
 
 function UpstreamBranches() {
-	const [gitBranches, setGitBranches] = useState(null);
+	const [upstreamGitBranches, setUpstreamGitBranches] = useState(null);
 
-	useSpringBootData({
-		setData: setGitBranches,
-		urlPath: '/git-branches/upstream',
-	});
+	if (!upstreamGitBranches) {
+		getUpstreamGitBranches({setUpstreamGitBranches});
+	}
 
-	if (!gitBranches) {
+	if (!upstreamGitBranches) {
 		return <div>Loading...</div>;
 	}
 
@@ -46,77 +45,79 @@ function UpstreamBranches() {
 				</tr>
 			</thead>
 			<tbody>
-				{gitBranches &&
-					gitBranches.map((gitBranch) => {
-						const gitHubURLMatch = gitBranch.branchURL.match(
-							gitHubURLRegExp
-						);
+				{upstreamGitBranches?.map((upstreamGitBranch) => {
+					const gitHubURLMatch = upstreamGitBranch.branchURL.match(
+						gitHubURLRegExp
+					);
 
-						const gitBranchName = gitHubURLMatch[3];
-						const gitBranchRepositoryName = gitHubURLMatch[2];
-						const gitBranchUserName = gitHubURLMatch[1];
-						const gitBranchSHA = gitBranch.branchSHA;
+					const gitBranchName = gitHubURLMatch[3];
+					const gitBranchRepositoryName = gitHubURLMatch[2];
+					const gitBranchUserName = gitHubURLMatch[1];
+					const gitBranchSHA = upstreamGitBranch.branchSHA;
 
-						return (
-							<tr key={gitBranch.id}>
-								<th className="font-weight-semi-bold">
-									<Link
-										title={gitBranch.id}
-										to={
-											'/upstream-branches/' + gitBranch.id
-										}
-									>
-										{gitBranch.id}
-									</Link>
-								</th>
-								<td>
-									<Link to={gitBranch.branchURL}>
-										{gitBranchName}
-									</Link>
-								</td>
-								<td>
-									<Link
-										to={
-											'https://github.com/' +
-											gitBranchUserName +
-											'/' +
-											gitBranchRepositoryName +
-											'/commit/' +
-											gitBranchSHA
-										}
-									>
-										{gitBranchSHA.substring(0, 7)}
-									</Link>
-								</td>
-								<td>
-									<Link
-										to={
-											'https://github.com/' +
-											gitBranchUserName +
-											'/' +
-											gitBranchRepositoryName
-										}
-									>
-										{gitBranchRepositoryName}
-									</Link>
-								</td>
-								<td>
-									<Link
-										to={
-											'https://github.com/' +
-											gitBranchUserName
-										}
-									>
-										{gitBranchUserName}
-									</Link>
-								</td>
-								<td>{toLocaleString(gitBranch.dateCreated)}</td>
-								<td>
-									{toLocaleString(gitBranch.dateModified)}
-								</td>
-							</tr>
-						);
-					})}
+					return (
+						<tr key={upstreamGitBranch.id}>
+							<th className="font-weight-semi-bold">
+								<Link
+									title={upstreamGitBranch.id}
+									to={
+										'/upstream-branches/' +
+										upstreamGitBranch.id
+									}
+								>
+									{upstreamGitBranch.id}
+								</Link>
+							</th>
+							<td>
+								<Link to={upstreamGitBranch.branchURL}>
+									{gitBranchName}
+								</Link>
+							</td>
+							<td>
+								<Link
+									to={
+										'https://github.com/' +
+										gitBranchUserName +
+										'/' +
+										gitBranchRepositoryName +
+										'/commit/' +
+										gitBranchSHA
+									}
+								>
+									{gitBranchSHA.substring(0, 7)}
+								</Link>
+							</td>
+							<td>
+								<Link
+									to={
+										'https://github.com/' +
+										gitBranchUserName +
+										'/' +
+										gitBranchRepositoryName
+									}
+								>
+									{gitBranchRepositoryName}
+								</Link>
+							</td>
+							<td>
+								<Link
+									to={
+										'https://github.com/' +
+										gitBranchUserName
+									}
+								>
+									{gitBranchUserName}
+								</Link>
+							</td>
+							<td>
+								{toLocaleString(upstreamGitBranch.dateCreated)}
+							</td>
+							<td>
+								{toLocaleString(upstreamGitBranch.dateModified)}
+							</td>
+						</tr>
+					);
+				})}
 			</tbody>
 		</Jethr0Table>
 	);

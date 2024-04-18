@@ -1072,7 +1072,10 @@ public abstract class BaseObjectValidationRuleResourceTestCase {
 
 	@Test
 	public void testGraphQLDeleteObjectValidationRule() throws Exception {
-		ObjectValidationRule objectValidationRule =
+
+		// No namespace
+
+		ObjectValidationRule objectValidationRule1 =
 			testGraphQLDeleteObjectValidationRule_addObjectValidationRule();
 
 		Assert.assertTrue(
@@ -1084,11 +1087,12 @@ public abstract class BaseObjectValidationRuleResourceTestCase {
 							{
 								put(
 									"objectValidationRuleId",
-									objectValidationRule.getId());
+									objectValidationRule1.getId());
 							}
 						})),
 				"JSONObject/data", "Object/deleteObjectValidationRule"));
-		JSONArray errorsJSONArray = JSONUtil.getValueAsJSONArray(
+
+		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
 			invokeGraphQLQuery(
 				new GraphQLField(
 					"objectValidationRule",
@@ -1096,13 +1100,53 @@ public abstract class BaseObjectValidationRuleResourceTestCase {
 						{
 							put(
 								"objectValidationRuleId",
-								objectValidationRule.getId());
+								objectValidationRule1.getId());
 						}
 					},
 					new GraphQLField("id"))),
 			"JSONArray/errors");
 
-		Assert.assertTrue(errorsJSONArray.length() > 0);
+		Assert.assertTrue(errorsJSONArray1.length() > 0);
+
+		// Using the namespace objectAdmin_v1_0
+
+		ObjectValidationRule objectValidationRule2 =
+			testGraphQLDeleteObjectValidationRule_addObjectValidationRule();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"objectAdmin_v1_0",
+						new GraphQLField(
+							"deleteObjectValidationRule",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"objectValidationRuleId",
+										objectValidationRule2.getId());
+								}
+							}))),
+				"JSONObject/data", "JSONObject/objectAdmin_v1_0",
+				"Object/deleteObjectValidationRule"));
+
+		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"objectAdmin_v1_0",
+					new GraphQLField(
+						"objectValidationRule",
+						new HashMap<String, Object>() {
+							{
+								put(
+									"objectValidationRuleId",
+									objectValidationRule2.getId());
+							}
+						},
+						new GraphQLField("id")))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray2.length() > 0);
 	}
 
 	protected ObjectValidationRule
@@ -1138,6 +1182,8 @@ public abstract class BaseObjectValidationRuleResourceTestCase {
 		ObjectValidationRule objectValidationRule =
 			testGraphQLGetObjectValidationRule_addObjectValidationRule();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				objectValidationRule,
@@ -1155,11 +1201,36 @@ public abstract class BaseObjectValidationRuleResourceTestCase {
 								},
 								getGraphQLFields())),
 						"JSONObject/data", "Object/objectValidationRule"))));
+
+		// Using the namespace objectAdmin_v1_0
+
+		Assert.assertTrue(
+			equals(
+				objectValidationRule,
+				ObjectValidationRuleSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"objectAdmin_v1_0",
+								new GraphQLField(
+									"objectValidationRule",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"objectValidationRuleId",
+												objectValidationRule.getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data", "JSONObject/objectAdmin_v1_0",
+						"Object/objectValidationRule"))));
 	}
 
 	@Test
 	public void testGraphQLGetObjectValidationRuleNotFound() throws Exception {
 		Long irrelevantObjectValidationRuleId = RandomTestUtil.randomLong();
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -1175,6 +1246,27 @@ public abstract class BaseObjectValidationRuleResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace objectAdmin_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"objectAdmin_v1_0",
+						new GraphQLField(
+							"objectValidationRule",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"objectValidationRuleId",
+										irrelevantObjectValidationRuleId);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}

@@ -40,6 +40,14 @@ jarPatched {
 				it.name.startsWith "org.eclipse.equinox.http.servlet-"
 			})
 	}
+
+	mustRunAfter compileJava
+	mustRunAfter generatePomFileForMavenPublication
+	mustRunAfter processResources
+}
+
+jarSources {
+	mustRunAfter patch
 }
 
 patch {

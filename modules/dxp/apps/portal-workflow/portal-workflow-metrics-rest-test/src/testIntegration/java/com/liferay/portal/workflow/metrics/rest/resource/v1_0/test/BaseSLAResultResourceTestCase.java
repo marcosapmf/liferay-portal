@@ -206,6 +206,8 @@ public abstract class BaseSLAResultResourceTestCase {
 	public void testGraphQLGetProcessLastSLAResult() throws Exception {
 		SLAResult slaResult = testGraphQLGetProcessLastSLAResult_addSLAResult();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				slaResult,
@@ -223,6 +225,30 @@ public abstract class BaseSLAResultResourceTestCase {
 								},
 								getGraphQLFields())),
 						"JSONObject/data", "Object/processLastSLAResult"))));
+
+		// Using the namespace portalWorkflowMetrics_v1_0
+
+		Assert.assertTrue(
+			equals(
+				slaResult,
+				SLAResultSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"portalWorkflowMetrics_v1_0",
+								new GraphQLField(
+									"processLastSLAResult",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"processId",
+												testGraphQLGetProcessLastSLAResult_getProcessId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/portalWorkflowMetrics_v1_0",
+						"Object/processLastSLAResult"))));
 	}
 
 	protected Long testGraphQLGetProcessLastSLAResult_getProcessId()
@@ -236,6 +262,8 @@ public abstract class BaseSLAResultResourceTestCase {
 	public void testGraphQLGetProcessLastSLAResultNotFound() throws Exception {
 		Long irrelevantProcessId = RandomTestUtil.randomLong();
 
+		// No namespace
+
 		Assert.assertEquals(
 			"Not Found",
 			JSONUtil.getValueAsString(
@@ -248,6 +276,25 @@ public abstract class BaseSLAResultResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace portalWorkflowMetrics_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"portalWorkflowMetrics_v1_0",
+						new GraphQLField(
+							"processLastSLAResult",
+							new HashMap<String, Object>() {
+								{
+									put("processId", irrelevantProcessId);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}

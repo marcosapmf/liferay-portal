@@ -482,6 +482,8 @@ public abstract class BaseCommerceChannelResourceTestCase {
 			new GraphQLField("items", getGraphQLFields()),
 			new GraphQLField("page"), new GraphQLField("totalCount"));
 
+		// No namespace
+
 		JSONObject commerceChannelsJSONObject = JSONUtil.getValueAsJSONObject(
 			invokeGraphQLQuery(graphQLField), "JSONObject/data",
 			"JSONObject/commerceChannels");
@@ -495,6 +497,28 @@ public abstract class BaseCommerceChannelResourceTestCase {
 
 		commerceChannelsJSONObject = JSONUtil.getValueAsJSONObject(
 			invokeGraphQLQuery(graphQLField), "JSONObject/data",
+			"JSONObject/commerceChannels");
+
+		Assert.assertEquals(
+			totalCount + 2, commerceChannelsJSONObject.getLong("totalCount"));
+
+		assertContains(
+			commerceChannel1,
+			Arrays.asList(
+				CommerceChannelSerDes.toDTOs(
+					commerceChannelsJSONObject.getString("items"))));
+		assertContains(
+			commerceChannel2,
+			Arrays.asList(
+				CommerceChannelSerDes.toDTOs(
+					commerceChannelsJSONObject.getString("items"))));
+
+		// Using the namespace analyticsSettings_v1_0
+
+		commerceChannelsJSONObject = JSONUtil.getValueAsJSONObject(
+			invokeGraphQLQuery(
+				new GraphQLField("analyticsSettings_v1_0", graphQLField)),
+			"JSONObject/data", "JSONObject/analyticsSettings_v1_0",
 			"JSONObject/commerceChannels");
 
 		Assert.assertEquals(

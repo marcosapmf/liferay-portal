@@ -8,6 +8,7 @@ import {expect, mergeTests} from '@playwright/test';
 import {apiHelpersTest} from '../../fixtures/apiHelpersTest';
 import {featureFlagsTest} from '../../fixtures/featureFlagsTest';
 import {isolatedSiteTest} from '../../fixtures/isolatedSiteTest';
+import {loginTest} from '../../fixtures/loginTest';
 import fillAndClickOutside from '../../utils/fillAndClickOutside';
 import getRandomString from '../../utils/getRandomString';
 import {pageEditorPagesTest} from './fixtures/pageEditorPagesTest';
@@ -20,6 +21,7 @@ export const test = mergeTests(
 		'LPS-178052': true,
 	}),
 	isolatedSiteTest,
+	loginTest(),
 	pageEditorPagesTest
 );
 
@@ -72,13 +74,17 @@ test('allows changing and resetting spacing', async ({
 		'BASIC_COMPONENT-heading'
 	);
 
-	const layout = await apiHelpers.headlessDelivery.createSitePage(
-		site.id,
-		getRandomString(),
-		getPageDefinition([headingFragment])
-	);
+	const layout = await apiHelpers.headlessDelivery.createSitePage({
+		pageDefinition: getPageDefinition([headingFragment]),
+		siteId: site.id,
+		title: getRandomString(),
+	});
 
 	await pageEditorPage.goToEditMode(layout, site.friendlyUrlPath);
+
+	// Check Saved icon is not visible at the beggining
+
+	await expect(page.getByLabel('Saved')).not.toBeVisible();
 
 	// Change Margin Top with custom value and check change is applied
 
@@ -102,6 +108,7 @@ test('allows changing and resetting spacing', async ({
 	// Reset to initial value and check change is applied
 
 	await pageEditorPage.resetSpacing(headingId, 'Margin Top');
+
 	expect(await pageEditorPage.getFragmentStyle(headingId, 'marginTop')).toBe(
 		'0px'
 	);
@@ -124,11 +131,11 @@ test('renders all selectors with correct default values', async ({
 		'BASIC_COMPONENT-heading'
 	);
 
-	const layout = await apiHelpers.headlessDelivery.createSitePage(
-		site.id,
-		getRandomString(),
-		getPageDefinition([headingFragment])
-	);
+	const layout = await apiHelpers.headlessDelivery.createSitePage({
+		pageDefinition: getPageDefinition([headingFragment]),
+		siteId: site.id,
+		title: getRandomString(),
+	});
 
 	await pageEditorPage.goToEditMode(layout, site.friendlyUrlPath);
 
@@ -186,11 +193,11 @@ test('renders correct sections in color picker', async ({
 		'BASIC_COMPONENT-heading'
 	);
 
-	const layout = await apiHelpers.headlessDelivery.createSitePage(
-		site.id,
-		getRandomString(),
-		getPageDefinition([headingFragment])
-	);
+	const layout = await apiHelpers.headlessDelivery.createSitePage({
+		pageDefinition: getPageDefinition([headingFragment]),
+		siteId: site.id,
+		title: getRandomString(),
+	});
 
 	await pageEditorPage.goToEditMode(layout, site.friendlyUrlPath);
 
@@ -232,11 +239,11 @@ test('changes the value in the Color Picker when the reset button is clicked', a
 		'BASIC_COMPONENT-heading'
 	);
 
-	const layout = await apiHelpers.headlessDelivery.createSitePage(
-		site.id,
-		getRandomString(),
-		getPageDefinition([headingFragment])
-	);
+	const layout = await apiHelpers.headlessDelivery.createSitePage({
+		pageDefinition: getPageDefinition([headingFragment]),
+		siteId: site.id,
+		title: getRandomString(),
+	});
 
 	await pageEditorPage.goToEditMode(layout, site.friendlyUrlPath);
 

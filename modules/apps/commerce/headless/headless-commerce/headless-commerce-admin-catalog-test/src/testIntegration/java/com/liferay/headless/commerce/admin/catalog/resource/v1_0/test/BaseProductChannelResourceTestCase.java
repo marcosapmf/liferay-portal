@@ -219,7 +219,10 @@ public abstract class BaseProductChannelResourceTestCase {
 
 	@Test
 	public void testGraphQLDeleteProductChannel() throws Exception {
-		ProductChannel productChannel =
+
+		// No namespace
+
+		ProductChannel productChannel1 =
 			testGraphQLDeleteProductChannel_addProductChannel();
 
 		Assert.assertTrue(
@@ -229,23 +232,61 @@ public abstract class BaseProductChannelResourceTestCase {
 						"deleteProductChannel",
 						new HashMap<String, Object>() {
 							{
-								put("id", productChannel.getId());
+								put("id", productChannel1.getId());
 							}
 						})),
 				"JSONObject/data", "Object/deleteProductChannel"));
-		JSONArray errorsJSONArray = JSONUtil.getValueAsJSONArray(
+
+		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
 			invokeGraphQLQuery(
 				new GraphQLField(
 					"productChannel",
 					new HashMap<String, Object>() {
 						{
-							put("id", productChannel.getId());
+							put("id", productChannel1.getId());
 						}
 					},
 					new GraphQLField("id"))),
 			"JSONArray/errors");
 
-		Assert.assertTrue(errorsJSONArray.length() > 0);
+		Assert.assertTrue(errorsJSONArray1.length() > 0);
+
+		// Using the namespace headlessCommerceAdminCatalog_v1_0
+
+		ProductChannel productChannel2 =
+			testGraphQLDeleteProductChannel_addProductChannel();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"headlessCommerceAdminCatalog_v1_0",
+						new GraphQLField(
+							"deleteProductChannel",
+							new HashMap<String, Object>() {
+								{
+									put("id", productChannel2.getId());
+								}
+							}))),
+				"JSONObject/data",
+				"JSONObject/headlessCommerceAdminCatalog_v1_0",
+				"Object/deleteProductChannel"));
+
+		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"headlessCommerceAdminCatalog_v1_0",
+					new GraphQLField(
+						"productChannel",
+						new HashMap<String, Object>() {
+							{
+								put("id", productChannel2.getId());
+							}
+						},
+						new GraphQLField("id")))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray2.length() > 0);
 	}
 
 	protected ProductChannel testGraphQLDeleteProductChannel_addProductChannel()
@@ -279,6 +320,8 @@ public abstract class BaseProductChannelResourceTestCase {
 		ProductChannel productChannel =
 			testGraphQLGetProductChannel_addProductChannel();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				productChannel,
@@ -294,11 +337,35 @@ public abstract class BaseProductChannelResourceTestCase {
 								},
 								getGraphQLFields())),
 						"JSONObject/data", "Object/productChannel"))));
+
+		// Using the namespace headlessCommerceAdminCatalog_v1_0
+
+		Assert.assertTrue(
+			equals(
+				productChannel,
+				ProductChannelSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessCommerceAdminCatalog_v1_0",
+								new GraphQLField(
+									"productChannel",
+									new HashMap<String, Object>() {
+										{
+											put("id", productChannel.getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessCommerceAdminCatalog_v1_0",
+						"Object/productChannel"))));
 	}
 
 	@Test
 	public void testGraphQLGetProductChannelNotFound() throws Exception {
 		Long irrelevantId = RandomTestUtil.randomLong();
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -312,6 +379,25 @@ public abstract class BaseProductChannelResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessCommerceAdminCatalog_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessCommerceAdminCatalog_v1_0",
+						new GraphQLField(
+							"productChannel",
+							new HashMap<String, Object>() {
+								{
+									put("id", irrelevantId);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}

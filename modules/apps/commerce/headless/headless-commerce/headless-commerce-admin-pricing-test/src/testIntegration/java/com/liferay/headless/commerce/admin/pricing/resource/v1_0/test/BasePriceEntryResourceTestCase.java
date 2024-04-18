@@ -247,6 +247,8 @@ public abstract class BasePriceEntryResourceTestCase {
 		PriceEntry priceEntry =
 			testGraphQLGetPriceEntryByExternalReferenceCode_addPriceEntry();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				priceEntry,
@@ -268,6 +270,33 @@ public abstract class BasePriceEntryResourceTestCase {
 								getGraphQLFields())),
 						"JSONObject/data",
 						"Object/priceEntryByExternalReferenceCode"))));
+
+		// Using the namespace headlessCommerceAdminPricing_v1_0
+
+		Assert.assertTrue(
+			equals(
+				priceEntry,
+				PriceEntrySerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessCommerceAdminPricing_v1_0",
+								new GraphQLField(
+									"priceEntryByExternalReferenceCode",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"externalReferenceCode",
+												"\"" +
+													priceEntry.
+														getExternalReferenceCode() +
+															"\"");
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessCommerceAdminPricing_v1_0",
+						"Object/priceEntryByExternalReferenceCode"))));
 	}
 
 	@Test
@@ -276,6 +305,8 @@ public abstract class BasePriceEntryResourceTestCase {
 
 		String irrelevantExternalReferenceCode =
 			"\"" + RandomTestUtil.randomString() + "\"";
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -291,6 +322,27 @@ public abstract class BasePriceEntryResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessCommerceAdminPricing_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessCommerceAdminPricing_v1_0",
+						new GraphQLField(
+							"priceEntryByExternalReferenceCode",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"externalReferenceCode",
+										irrelevantExternalReferenceCode);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}
@@ -333,7 +385,10 @@ public abstract class BasePriceEntryResourceTestCase {
 
 	@Test
 	public void testGraphQLDeletePriceEntry() throws Exception {
-		PriceEntry priceEntry = testGraphQLDeletePriceEntry_addPriceEntry();
+
+		// No namespace
+
+		PriceEntry priceEntry1 = testGraphQLDeletePriceEntry_addPriceEntry();
 
 		Assert.assertTrue(
 			JSONUtil.getValueAsBoolean(
@@ -342,23 +397,60 @@ public abstract class BasePriceEntryResourceTestCase {
 						"deletePriceEntry",
 						new HashMap<String, Object>() {
 							{
-								put("id", priceEntry.getId());
+								put("id", priceEntry1.getId());
 							}
 						})),
 				"JSONObject/data", "Object/deletePriceEntry"));
-		JSONArray errorsJSONArray = JSONUtil.getValueAsJSONArray(
+
+		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
 			invokeGraphQLQuery(
 				new GraphQLField(
 					"priceEntry",
 					new HashMap<String, Object>() {
 						{
-							put("id", priceEntry.getId());
+							put("id", priceEntry1.getId());
 						}
 					},
 					new GraphQLField("id"))),
 			"JSONArray/errors");
 
-		Assert.assertTrue(errorsJSONArray.length() > 0);
+		Assert.assertTrue(errorsJSONArray1.length() > 0);
+
+		// Using the namespace headlessCommerceAdminPricing_v1_0
+
+		PriceEntry priceEntry2 = testGraphQLDeletePriceEntry_addPriceEntry();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"headlessCommerceAdminPricing_v1_0",
+						new GraphQLField(
+							"deletePriceEntry",
+							new HashMap<String, Object>() {
+								{
+									put("id", priceEntry2.getId());
+								}
+							}))),
+				"JSONObject/data",
+				"JSONObject/headlessCommerceAdminPricing_v1_0",
+				"Object/deletePriceEntry"));
+
+		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"headlessCommerceAdminPricing_v1_0",
+					new GraphQLField(
+						"priceEntry",
+						new HashMap<String, Object>() {
+							{
+								put("id", priceEntry2.getId());
+							}
+						},
+						new GraphQLField("id")))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray2.length() > 0);
 	}
 
 	protected PriceEntry testGraphQLDeletePriceEntry_addPriceEntry()
@@ -387,6 +479,8 @@ public abstract class BasePriceEntryResourceTestCase {
 	public void testGraphQLGetPriceEntry() throws Exception {
 		PriceEntry priceEntry = testGraphQLGetPriceEntry_addPriceEntry();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				priceEntry,
@@ -402,11 +496,35 @@ public abstract class BasePriceEntryResourceTestCase {
 								},
 								getGraphQLFields())),
 						"JSONObject/data", "Object/priceEntry"))));
+
+		// Using the namespace headlessCommerceAdminPricing_v1_0
+
+		Assert.assertTrue(
+			equals(
+				priceEntry,
+				PriceEntrySerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessCommerceAdminPricing_v1_0",
+								new GraphQLField(
+									"priceEntry",
+									new HashMap<String, Object>() {
+										{
+											put("id", priceEntry.getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessCommerceAdminPricing_v1_0",
+						"Object/priceEntry"))));
 	}
 
 	@Test
 	public void testGraphQLGetPriceEntryNotFound() throws Exception {
 		Long irrelevantId = RandomTestUtil.randomLong();
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -420,6 +538,25 @@ public abstract class BasePriceEntryResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessCommerceAdminPricing_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessCommerceAdminPricing_v1_0",
+						new GraphQLField(
+							"priceEntry",
+							new HashMap<String, Object>() {
+								{
+									put("id", irrelevantId);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}

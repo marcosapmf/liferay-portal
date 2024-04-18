@@ -28,7 +28,6 @@ import java.time.temporal.TemporalUnit;
 import java.util.Objects;
 import java.util.Properties;
 
-import org.gradle.api.GradleException;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
 
@@ -37,26 +36,28 @@ import org.gradle.api.logging.Logging;
  */
 public class ResourceUtil {
 
-	public static Resolver getClassLoaderResolver(String resourcePath) {
+	public static Resolver getClassLoaderResolver(
+		Class<?> clazz, String resourcePath) {
+
 		return () -> {
-			if (_logger.isInfoEnabled()) {
-				_logger.info(
-					"Trying to get resource from class path: {}", resourcePath);
-			}
+			_logInfo(
+				"Trying to get resource from class path: {}", resourcePath);
 
 			return Objects.requireNonNull(
-				ResourceUtil.class.getResourceAsStream(resourcePath),
+				clazz.getResourceAsStream(resourcePath),
 				"Unable to get resource from class path: " + resourcePath);
 		};
 	}
 
+	public static Resolver getClassLoaderResolver(String resourcePath) {
+		return getClassLoaderResolver(ResourceUtil.class, resourcePath);
+	}
+
 	public static Resolver getLocalFileResolver(File file) {
 		return () -> {
-			if (_logger.isInfoEnabled()) {
-				_logger.info(
-					"Trying to get resource from local file: {}",
-					file.getAbsolutePath());
-			}
+			_logInfo(
+				"Trying to get resource from local file: {}",
+				file.getAbsolutePath());
 
 			_checkFileExists(file);
 
@@ -68,12 +69,10 @@ public class ResourceUtil {
 		File file, long maxAge, TemporalUnit temporalUnit) {
 
 		return () -> {
-			if (_logger.isInfoEnabled()) {
-				_logger.info(
-					"Trying to get resource from local file with max age of " +
-						"{} {}: {}",
-					maxAge, temporalUnit, file.getAbsolutePath());
-			}
+			_logInfo(
+				"Trying to get resource from local file with max age of {} " +
+					"{}: {}",
+				maxAge, temporalUnit, file.getAbsolutePath());
 
 			_checkFileExists(file);
 
@@ -98,9 +97,7 @@ public class ResourceUtil {
 
 	public static Resolver getURIResolver(File cacheDir, URI uri) {
 		return () -> {
-			if (_logger.isInfoEnabled()) {
-				_logger.info("Trying to get resource from URL {}", uri);
-			}
+			_logInfo("Trying to get resource from URL {}", uri);
 
 			URL url = uri.toURL();
 
@@ -156,6 +153,10 @@ public class ResourceUtil {
 			resolvers);
 	}
 
+	public static String readString(Resolver... resolvers) {
+		return _withInputStream(StringUtil::read, resolvers);
+	}
+
 	@FunctionalInterface
 	public interface Resolver {
 
@@ -178,25 +179,44 @@ public class ResourceUtil {
 		}
 	}
 
+	private static void _logInfo(String message, Object... args) {
+		if (_logger.isInfoEnabled()) {
+			_logger.info(message, args);
+		}
+	}
+
 	private static <T> T _withInputStream(
 		Transformer<T> transformer, Resolver... resolvers) {
 
-		for (Resolver resolver : resolvers) {
-			try (InputStream inputStream = resolver.resolve()) {
-				if (inputStream != null) {
-					if (_logger.isInfoEnabled()) {
-						_logger.info("Found resource");
-					}
+		InputStream inputStream1 = null;
 
-					return transformer.transform(inputStream);
-				}
+		for (Resolver resolver : resolvers) {
+			try {
+				inputStream1 = resolver.resolve();
 			}
 			catch (Exception exception) {
-				_logger.lifecycle(exception.getMessage());
+				_logInfo(exception.getMessage());
+			}
+
+			if (inputStream1 != null) {
+				break;
 			}
 		}
 
-		throw new GradleException("Unable to get resource");
+		if (inputStream1 == null) {
+			_logInfo("Resource not found");
+
+			return null;
+		}
+
+		try (InputStream inputStream2 = inputStream1) {
+			_logInfo("Found resource");
+
+			return transformer.transform(inputStream2);
+		}
+		catch (Exception exception) {
+			throw new RuntimeException("Unable to read resource", exception);
+		}
 	}
 
 	private static final Logger _logger = Logging.getLogger(ResourceUtil.class);

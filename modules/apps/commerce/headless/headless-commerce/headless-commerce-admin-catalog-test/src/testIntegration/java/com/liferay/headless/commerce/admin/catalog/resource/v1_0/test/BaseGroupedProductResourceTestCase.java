@@ -206,7 +206,10 @@ public abstract class BaseGroupedProductResourceTestCase {
 
 	@Test
 	public void testGraphQLDeleteGroupedProduct() throws Exception {
-		GroupedProduct groupedProduct =
+
+		// No namespace
+
+		GroupedProduct groupedProduct1 =
 			testGraphQLDeleteGroupedProduct_addGroupedProduct();
 
 		Assert.assertTrue(
@@ -216,10 +219,35 @@ public abstract class BaseGroupedProductResourceTestCase {
 						"deleteGroupedProduct",
 						new HashMap<String, Object>() {
 							{
-								put("groupedProductId", groupedProduct.getId());
+								put(
+									"groupedProductId",
+									groupedProduct1.getId());
 							}
 						})),
 				"JSONObject/data", "Object/deleteGroupedProduct"));
+
+		// Using the namespace headlessCommerceAdminCatalog_v1_0
+
+		GroupedProduct groupedProduct2 =
+			testGraphQLDeleteGroupedProduct_addGroupedProduct();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"headlessCommerceAdminCatalog_v1_0",
+						new GraphQLField(
+							"deleteGroupedProduct",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"groupedProductId",
+										groupedProduct2.getId());
+								}
+							}))),
+				"JSONObject/data",
+				"JSONObject/headlessCommerceAdminCatalog_v1_0",
+				"Object/deleteGroupedProduct"));
 	}
 
 	protected GroupedProduct testGraphQLDeleteGroupedProduct_addGroupedProduct()

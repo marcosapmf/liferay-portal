@@ -10,11 +10,15 @@ export default {
 	'a-request-will-be-sent-to-deactivate-the-selected-activation-key-from-now-on-it-will-be-hidden-and-no-longer-be-visible':
 		'A request will be sent to deactivate the selected activation key. From now on It will be hidden and no longer be visible.',
 	'access-console': 'Access Console',
+	'account': 'Account',
 	'account-name': 'Account Name',
+	'accounts': 'Accounts',
 	'activation-status': 'Activation Status',
 	'add-packages': 'Add Package(s)',
 	'additional-apps-requested': 'Additional Apps Requested',
 	'address': 'Address',
+	'all-published-apps': 'All Published Apps',
+	'amount': 'Amount',
 	'an-administrator-of-the-marketplace-will-review-your-request-shortly-if-you-have-questions-regarding-your-submission-please-email':
 		'An administrator of the Marketplace will review your request shortly. If you have questions regarding your submission, please email',
 	'an-app-build-is-your-compiled-or-non-compiled-code-submitted-on-behalf-of-your-account-to-the-marketplace-once-submitted-it-will-be-reviewed-and-tested-by-our-marketplace-administrators-for-approval-in-the-marketplace':
@@ -22,8 +26,12 @@ export default {
 	'an-unexpected-error-occurred': 'An unexpected error ocurred',
 	'and': 'and',
 	'app-build': 'App Build',
+	'app-name': 'App Name',
+	'app-type': 'App Type',
 	'apply-to-your-use-of-this-service-the-name-on-your-liferay-account-will-be-used-in-this-liferay-marketplace-publisher-profile-it-may-appear-where-you-contribute-and-be-changed-at-any-time':
 		'apply to your use of this service. The name on your Liferay account will be used in this Liferay Marketplace Publisher Profile. It may appear where you contribute and be changed at any time',
+	'apps': 'Apps',
+	'aprove': 'Aprove',
 	'back': 'Back',
 	'back-to-apps': 'Back to Apps',
 	'back-to-my-apps': 'Back to My Apps',
@@ -37,12 +45,15 @@ export default {
 		'By requesting a Publisher account, you agree to the',
 	'cancel': 'Cancel',
 	'cash': 'Cash',
+	'categories': 'Categories',
+	'click-on-add-apps-to-start': "Click on 'Add Apps' to start.",
 	'client-extensions': 'Client Extensions',
 	'cloud-apps-must-state-resource-requirements-if-your-app-has-no-additional-cpu-or-ram-requirements-please-enter-0':
 		'Cloud apps must state resource requirements. If your app has no additional CPU or Ram requirements please enter 0',
 	'cloud-compatible': 'Cloud Compatible?',
 	'cloud-upload': 'Cloud Upload',
 	'comments': 'Comments',
+	'company-profile': 'Company Profile',
 	'compatible-offering': 'Compatible Offering',
 	'complete-publisher-account-request': 'Complete Publisher Account Request',
 	'confirm': 'Confirm',
@@ -51,9 +62,11 @@ export default {
 	'contact-publisher': 'Contact Publisher',
 	'contact-sales': 'Contact Sales',
 	'contact-support': 'Contact Support',
+	'contact-us': 'Contact Us',
 	'content-policy': 'Content policy',
 	'continue': 'Continue',
 	'coupon-code': 'Coupon Code',
+	'create': 'Create',
 	'create-a-cloud-app-to-be-delivered-as-a-live-service':
 		'Create a Cloud App to be delivered as a Live Service',
 	'create-a-dxp-app-to-be-delivered-as-a-download':
@@ -61,17 +74,38 @@ export default {
 	'create-license-key': 'Create License Key',
 	'create-new-licenses-and-they-will-show-up-here':
 		'Create new licenses and they will show up here.',
+	'create-template': 'Create template',
+	'created-at': 'Created At',
 	'customer-account': 'Customer Account',
+	'customer-dashboard': 'Customer Dashboard',
 	'customer-roject': 'Customer Project',
+	'customize-solution-header': 'Customize solution header',
+	'customize-storefront-solutions-details':
+		'Customize storefront solutions details',
+	'dashboard': 'Dashboard',
 	'deactivate': 'Deactivate',
+	'decline': 'Decline',
+	'define-contact-us-information-for-your-solution-this-will-inform-users-about-this-versions-updates-on-the-storefront':
+		'Define contact us information for your solution. This will inform users about this version’s updates on the storefront.',
+	'define-profile-company-information-for-your-solution-this-will-inform-users-about-this-versions-updates-on-the-storefront':
+		'Define profile company information for your solution. This will inform users about this version’s updates on the storefront.',
+	'define-the-solution-profile': 'Define the solution profile',
+	'delete': 'Delete',
 	'description': 'Description',
+	'design-the-storefront-for-your-solution-this-will-set-the-information-displayed-on-the-solutions-page-this-section-is-dedicated-to-creating-the-solutions-detail-content':
+		'Design the storefront for your solution. This will set the information displayed on the solution’s page. This section is dedicated to creating the solution’s detail content.',
+	'design-the-storefront-for-your-solution-this-will-set-the-information-displayed-on-the-solutions-page-this-section-is-dedicated-to-creating-the-solutions-header':
+		'Design the storefront for your solution. This will set the information displayed on the solution’s page. This section is dedicated to creating the solution’s header.',
 	'details': 'Details',
 	'discover-and-customize': 'Discover and customize',
 	'download-app': 'Download App',
 	'download-key': 'Download Key',
+	'draft': 'Draft',
 	'drag-and-drop-to-upload-or': 'Drag and drop to upload or',
 	'dxp-module-based-apps-are-not-supported-on-liferay-experience-cloud-lxc':
 		'DXP module-based apps are not supported on Liferay SaaS.',
+	'each': 'each',
+	'edit': 'Edit',
 	'email': 'Email',
 	'end-user-license-agreement': 'End User License Agreement',
 	'enter-email-address': 'Enter email address',
@@ -87,6 +121,8 @@ export default {
 		'Enter the required RAM (0 is a valid value)',
 	'enter-your-contact-details-in-the-fields-below-in-the-request-description-enter-the-name-and-a-brief-description-of-the-app-you-would-like-to-submit-we-will-be-in-contact-regarding-your-request':
 		'Enter your contact details in the fields below. In the Request Description, enter the name and a brief description of the app you would like to submit. We will be in contact regarding your request.',
+	'enter-your-solution-details-this-information-will-be-used-for-submission-presentation-customer-support-and-search-capabilities':
+		'Enter your solution details. This information will be used for submission, presentation, customer support, and search capabilities.',
 	'environment': 'Environment',
 	'environment-type': 'Environment Type',
 	'expiration-date': 'Expiration Date',
@@ -105,6 +141,7 @@ export default {
 	'host-name': 'Host Name',
 	'i-certify-that-the-instances-activated-with-the-selected-activation-keys-have-been-shut-down-and-that-there-is-no-liferay-software-installed-deployed-used-or-executed-that-is-activated-with-the-selected-activation-key':
 		'I certify that the instances activated with the selected activation keys have been shut down and that there is no Liferay software installed, deployed, used or executed that is activated with the selected activation key.',
+	'id': 'ID',
 	'if-no-ram-required-please-enter-0': 'If no RAM required please enter 0',
 	'if-the-app-is-compatible-with-different-updates-of-74-please-upload-multiple-packages-for-each-update-or-update-compatibility-range':
 		'If the app is compatible with different updates of 7.4, please upload multiple packages for each update or update compatibility range.',
@@ -114,6 +151,8 @@ export default {
 		'In the future, you will be able to submit your app directly from Liferay SaaS projects.',
 	'in-the-future-you-will-be-able-to-submit-your-app-source-code-for-additional-support-and-partnership-opportunities-with-liferay':
 		'In the future, you will be able to submit your app source code for additional support and partnership opportunities with Liferay.',
+	'income': 'Income',
+	'installation': 'Installation',
 	'instance-size': 'Instance Size',
 	'insufficient-resource-requirements': 'Insufficient Resource Requirements',
 	'intl-code': 'Intl. code',
@@ -123,18 +162,22 @@ export default {
 		'Key deactivation requested successfully',
 	'key-type': 'Key Type',
 	'last-name': 'Last Name',
+	'last-update': 'Last Update',
 	'learn-more': 'Learn More',
 	'learn-more-about-app-resource-requirements':
 		'Learn more about App Resource Requirements',
 	'learn-more-about-becoming-a-liferay-customer':
 		'Learn more about becoming a Liferay Customer',
+	'license': 'License',
 	'license-price': 'License Price',
+	'license-prices': 'License Prices',
+	'license-type': 'License Type',
 	'licenses': 'Licenses',
 	'liferay-learn': 'Liferay Learn',
 	'liferay-s': 'Liferay’s',
+	'list-with-latest-published-apps': 'List with latest published apps',
 	'lorem-ipsum-dolor-sit-amet-consectetur':
 		'Lorem ipsum dolor sit amet consectetur.',
-
 	'mac-addresses': 'Mac Addresses',
 	'manage': 'Manage',
 	'manage-all-your-app-purchases-and-subscriptions-in-one-place-read-other-users-reviews-get-notifications-when-updates-are-available-and-get-the-most-out-of-our-apps-catalog':
@@ -145,8 +188,11 @@ export default {
 	'more-info': 'More Info',
 	'name': 'Name',
 	'no': 'No',
+	'no-apps-yet': 'No Apps Yet',
+	'no-become-a-publisher-request': 'No become a publisher request',
 	'no-cloud-projects-available': 'No Cloud Projects Available',
 	'no-licenses-yet': 'No Licenses yet',
+	'no-orders-yet': 'No Orders Yet',
 	'no-results-found': 'No results found',
 	'not-seeing-a-specific-project': 'Not seeing a specific Project?',
 	'number-of-cpus': 'Number of CPUs',
@@ -156,21 +202,37 @@ export default {
 		'Only ZIP files are allowed. Max file size is 500MB',
 	'order-date': 'Order Date',
 	'order-id': 'Order ID',
+	'order-status': 'Order Status',
+	'orders': 'Orders',
+	'payment-status': 'Payment Status',
 	'phone': 'Phone',
 	'phone-number': 'Phone Number',
 	'please-be-sure-to-specify-liferay-compatibility-through-the-appropriate-properties-or-xml-files-in-your-plugin':
 		'Please be sure to specify Liferay compatibility through the appropriate properties or XML files in your plugin.',
 	'please-fill-in-a-valid-email': 'Please fill in a valid email',
+	'please-review-before-submitting-once-sent-you-will-not-be-able-to-edit-any-information-until-this-submission-is-completely-reviewed-by-liferay':
+		'Please, review before submitting. Once sent, you will not be able to edit any information until this submission is completely reviewed by Liferay.',
 	'privacy-policy': 'Privacy Policy',
+	'profile': 'Profile',
 	'provide-app-build': 'Provide app build',
+	'provide-company-profile-details': 'Provide company profile details',
+	'provide-contact-us-details': 'Provide contact us details',
+	'publish-apps-and-they-will-show-up-here':
+		'Publish apps and they will show up here',
 	'publish-apps-to-the-liferay-marketplace':
 		'Publish apps to the Liferay Marketplace',
+	'published-apps': 'Published Apps',
 	'publisher-account-request': 'Publisher Account Request.',
+	'publisher-dashboard': 'Publisher Dashboard',
+	'publisher-requests': 'Publisher Requests',
+	'purchase-and-install-new-apps-and-they-will-show-up-here':
+		'Purchase and install new apps and they will show up here.',
 	'purchase-order-number': 'Purchase Order Number',
 	'purchased-by': 'Purchased by',
 	'qty': 'Qty',
 	'ram': 'RAM',
 	'ram-in-gbs': 'RAM in GBs',
+	'recent-published-apps': 'Recent Published Apps',
 	'remove-a-version': 'Remove a Version',
 	'request-a-marketplace-publisher-account':
 		'Request a Marketplace Publisher Account',
@@ -178,8 +240,12 @@ export default {
 	'request-description': 'Request Description',
 	'request-details': 'Request details',
 	'request-sent-successfully': 'Request sent successfully',
+	'requester': 'Requester',
 	'resource-requirements': 'Resource Requirements',
 	'return-to-marketplace': 'Return to Marketplace',
+	'review-and-accept-the-legal-agreement-between-you-and-liferay-before-proceeding-you-are-about-to-create-a-new-solution-submission':
+		'Review and accept the legal agreement between you and Liferay before proceeding, You are about to create a new solution submission.',
+	'review-and-submit-solution': 'Review and submit solution',
 	'review-the-new-publisher-info-and-the-liferay-marketplace-terms-before-proceeding':
 		'Review the new publisher info and the Liferay Marketplace terms before proceeding',
 	'search': 'Search',
@@ -194,12 +260,20 @@ export default {
 	'self-managed': 'Self-Managed',
 	'send-request': 'Send Request',
 	'sign-in-with-a-different-account': 'Sign in with a different Account',
+	'solution-details': 'Solution Details',
+	'solution-header': 'Solution Header',
+	'solutions': 'Solutions',
+	'solutions-info': 'Solutions Info',
 	'sorry-there-are-no-results-found': 'Sorry, there are no results found',
 	'start-date': 'Start Date',
+	'start-trial': 'Start Trial',
 	'status': 'Status',
+	'submit': 'Submit',
 	'subtotal': 'Subtotal',
 	'subtotal-discount': 'Subtotal Discount',
+	'success': 'success',
 	'summary': 'Summary',
+	'tags': 'Tags',
 	'tax-vat': 'Tax/VAT',
 	'terms-of-service': 'Terms of Service',
 	'thank-you-for-your': 'Thank you for your',
@@ -236,6 +310,7 @@ export default {
 	'type': 'Type',
 	'unable-to-download-your-license-file-please-try-again-and-or-contact-support-via-the-manage-menu-on-the-dashboard':
 		'Unable to download your license file.  Please try again and/or contact support via the manage menu on the dashboard.',
+	'upload-image': 'Upload image',
 	'upload-liferay-plugin-packages': 'Upload Liferay Plugin Packages',
 	'upload-zip-files': 'Upload ZIP Files',
 	'use-any-build-from-any-available-liferay-experience-cloud-account-requires-lxc-account':
@@ -246,10 +321,15 @@ export default {
 		'Use any local ZIP files to upload. Max file size is 500MB',
 	'use-one-of-the-following-methods-to-provide-your-app-builds':
 		'Use one of the following methods to provide your app builds.',
+	'user-account': 'User Account',
+	'users-requests-to-become-a-publisher':
+		'Users requests to become a publisher',
+	'version': 'Version',
 	'via-github-repo': 'Via GitHub Repo',
 	'via-liferay-experience-cloud-integration': 'Via Liferay SaaS Integration',
 	'via-liferay-plugin-packages': 'Via Liferay Plugin Packages',
 	'via-zip-upload': 'Via ZIP Upload',
+	'view-details': 'View details',
 	'we-are-happy-to-have-you-interested-in-the-liferay-marketplace-at-the-moment-we-are-working-on-enhancing-the-experience-for-our-customers-in-the-marketplace-and-access-is-invite-only-if-you-are-an-existing-liferay-customer-please-keep-an-eye-out-for-an-announcement-related-to-the-new-marketplace-in-the-coming-months':
 		'We are happy to have you interested in the Liferay Marketplace. At the moment, we are working on enhancing the experience for our customers in the Marketplace and access is invite only. If you are an existing Liferay customer, please keep an eye out for an announcement related to the new Marketplace in the coming months!',
 	'we-are-happy-to-have-you-interested-in-the-liferay-marketplace-at-the-moment-we-are-working-on-enhancing-the-experience-for-our-publishers-in-the-marketplace-if-you-are-an-existing-liferay-developer-or-partner-you-can-choose-to-join-our-pilot-group-of-publishers-to-submit-apps-to-the-marketplace-continue-to-request-a-publisher-account':

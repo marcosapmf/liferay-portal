@@ -440,6 +440,8 @@ public abstract class BaseCountryResourceTestCase {
 			new GraphQLField("items", getGraphQLFields()),
 			new GraphQLField("page"), new GraphQLField("totalCount"));
 
+		// No namespace
+
 		JSONObject countriesJSONObject = JSONUtil.getValueAsJSONObject(
 			invokeGraphQLQuery(graphQLField), "JSONObject/data",
 			"JSONObject/countries");
@@ -451,6 +453,26 @@ public abstract class BaseCountryResourceTestCase {
 
 		countriesJSONObject = JSONUtil.getValueAsJSONObject(
 			invokeGraphQLQuery(graphQLField), "JSONObject/data",
+			"JSONObject/countries");
+
+		Assert.assertEquals(
+			totalCount + 2, countriesJSONObject.getLong("totalCount"));
+
+		assertContains(
+			country1,
+			Arrays.asList(
+				CountrySerDes.toDTOs(countriesJSONObject.getString("items"))));
+		assertContains(
+			country2,
+			Arrays.asList(
+				CountrySerDes.toDTOs(countriesJSONObject.getString("items"))));
+
+		// Using the namespace headlessAdminAddress_v1_0
+
+		countriesJSONObject = JSONUtil.getValueAsJSONObject(
+			invokeGraphQLQuery(
+				new GraphQLField("headlessAdminAddress_v1_0", graphQLField)),
+			"JSONObject/data", "JSONObject/headlessAdminAddress_v1_0",
 			"JSONObject/countries");
 
 		Assert.assertEquals(
@@ -509,6 +531,8 @@ public abstract class BaseCountryResourceTestCase {
 	public void testGraphQLGetCountryByA2() throws Exception {
 		Country country = testGraphQLGetCountryByA2_addCountry();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				country,
@@ -526,11 +550,37 @@ public abstract class BaseCountryResourceTestCase {
 								},
 								getGraphQLFields())),
 						"JSONObject/data", "Object/countryByA2"))));
+
+		// Using the namespace headlessAdminAddress_v1_0
+
+		Assert.assertTrue(
+			equals(
+				country,
+				CountrySerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessAdminAddress_v1_0",
+								new GraphQLField(
+									"countryByA2",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"a2",
+												"\"" + country.getA2() + "\"");
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessAdminAddress_v1_0",
+						"Object/countryByA2"))));
 	}
 
 	@Test
 	public void testGraphQLGetCountryByA2NotFound() throws Exception {
 		String irrelevantA2 = "\"" + RandomTestUtil.randomString() + "\"";
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -544,6 +594,25 @@ public abstract class BaseCountryResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessAdminAddress_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessAdminAddress_v1_0",
+						new GraphQLField(
+							"countryByA2",
+							new HashMap<String, Object>() {
+								{
+									put("a2", irrelevantA2);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}
@@ -572,6 +641,8 @@ public abstract class BaseCountryResourceTestCase {
 	public void testGraphQLGetCountryByA3() throws Exception {
 		Country country = testGraphQLGetCountryByA3_addCountry();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				country,
@@ -589,11 +660,37 @@ public abstract class BaseCountryResourceTestCase {
 								},
 								getGraphQLFields())),
 						"JSONObject/data", "Object/countryByA3"))));
+
+		// Using the namespace headlessAdminAddress_v1_0
+
+		Assert.assertTrue(
+			equals(
+				country,
+				CountrySerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessAdminAddress_v1_0",
+								new GraphQLField(
+									"countryByA3",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"a3",
+												"\"" + country.getA3() + "\"");
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessAdminAddress_v1_0",
+						"Object/countryByA3"))));
 	}
 
 	@Test
 	public void testGraphQLGetCountryByA3NotFound() throws Exception {
 		String irrelevantA3 = "\"" + RandomTestUtil.randomString() + "\"";
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -607,6 +704,25 @@ public abstract class BaseCountryResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessAdminAddress_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessAdminAddress_v1_0",
+						new GraphQLField(
+							"countryByA3",
+							new HashMap<String, Object>() {
+								{
+									put("a3", irrelevantA3);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}
@@ -635,6 +751,8 @@ public abstract class BaseCountryResourceTestCase {
 	public void testGraphQLGetCountryByName() throws Exception {
 		Country country = testGraphQLGetCountryByName_addCountry();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				country,
@@ -652,11 +770,38 @@ public abstract class BaseCountryResourceTestCase {
 								},
 								getGraphQLFields())),
 						"JSONObject/data", "Object/countryByName"))));
+
+		// Using the namespace headlessAdminAddress_v1_0
+
+		Assert.assertTrue(
+			equals(
+				country,
+				CountrySerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessAdminAddress_v1_0",
+								new GraphQLField(
+									"countryByName",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"name",
+												"\"" + country.getName() +
+													"\"");
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessAdminAddress_v1_0",
+						"Object/countryByName"))));
 	}
 
 	@Test
 	public void testGraphQLGetCountryByNameNotFound() throws Exception {
 		String irrelevantName = "\"" + RandomTestUtil.randomString() + "\"";
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -670,6 +815,25 @@ public abstract class BaseCountryResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessAdminAddress_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessAdminAddress_v1_0",
+						new GraphQLField(
+							"countryByName",
+							new HashMap<String, Object>() {
+								{
+									put("name", irrelevantName);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}
@@ -700,6 +864,8 @@ public abstract class BaseCountryResourceTestCase {
 	public void testGraphQLGetCountryByNumber() throws Exception {
 		Country country = testGraphQLGetCountryByNumber_addCountry();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				country,
@@ -715,11 +881,35 @@ public abstract class BaseCountryResourceTestCase {
 								},
 								getGraphQLFields())),
 						"JSONObject/data", "Object/countryByNumber"))));
+
+		// Using the namespace headlessAdminAddress_v1_0
+
+		Assert.assertTrue(
+			equals(
+				country,
+				CountrySerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessAdminAddress_v1_0",
+								new GraphQLField(
+									"countryByNumber",
+									new HashMap<String, Object>() {
+										{
+											put("number", country.getNumber());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessAdminAddress_v1_0",
+						"Object/countryByNumber"))));
 	}
 
 	@Test
 	public void testGraphQLGetCountryByNumberNotFound() throws Exception {
 		Integer irrelevantNumber = RandomTestUtil.randomInt();
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -733,6 +923,25 @@ public abstract class BaseCountryResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessAdminAddress_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessAdminAddress_v1_0",
+						new GraphQLField(
+							"countryByNumber",
+							new HashMap<String, Object>() {
+								{
+									put("number", irrelevantNumber);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}
@@ -765,7 +974,10 @@ public abstract class BaseCountryResourceTestCase {
 
 	@Test
 	public void testGraphQLDeleteCountry() throws Exception {
-		Country country = testGraphQLDeleteCountry_addCountry();
+
+		// No namespace
+
+		Country country1 = testGraphQLDeleteCountry_addCountry();
 
 		Assert.assertTrue(
 			JSONUtil.getValueAsBoolean(
@@ -774,23 +986,59 @@ public abstract class BaseCountryResourceTestCase {
 						"deleteCountry",
 						new HashMap<String, Object>() {
 							{
-								put("countryId", country.getId());
+								put("countryId", country1.getId());
 							}
 						})),
 				"JSONObject/data", "Object/deleteCountry"));
-		JSONArray errorsJSONArray = JSONUtil.getValueAsJSONArray(
+
+		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
 			invokeGraphQLQuery(
 				new GraphQLField(
 					"country",
 					new HashMap<String, Object>() {
 						{
-							put("countryId", country.getId());
+							put("countryId", country1.getId());
 						}
 					},
 					new GraphQLField("id"))),
 			"JSONArray/errors");
 
-		Assert.assertTrue(errorsJSONArray.length() > 0);
+		Assert.assertTrue(errorsJSONArray1.length() > 0);
+
+		// Using the namespace headlessAdminAddress_v1_0
+
+		Country country2 = testGraphQLDeleteCountry_addCountry();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"headlessAdminAddress_v1_0",
+						new GraphQLField(
+							"deleteCountry",
+							new HashMap<String, Object>() {
+								{
+									put("countryId", country2.getId());
+								}
+							}))),
+				"JSONObject/data", "JSONObject/headlessAdminAddress_v1_0",
+				"Object/deleteCountry"));
+
+		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"headlessAdminAddress_v1_0",
+					new GraphQLField(
+						"country",
+						new HashMap<String, Object>() {
+							{
+								put("countryId", country2.getId());
+							}
+						},
+						new GraphQLField("id")))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray2.length() > 0);
 	}
 
 	protected Country testGraphQLDeleteCountry_addCountry() throws Exception {
@@ -816,6 +1064,8 @@ public abstract class BaseCountryResourceTestCase {
 	public void testGraphQLGetCountry() throws Exception {
 		Country country = testGraphQLGetCountry_addCountry();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				country,
@@ -831,11 +1081,35 @@ public abstract class BaseCountryResourceTestCase {
 								},
 								getGraphQLFields())),
 						"JSONObject/data", "Object/country"))));
+
+		// Using the namespace headlessAdminAddress_v1_0
+
+		Assert.assertTrue(
+			equals(
+				country,
+				CountrySerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessAdminAddress_v1_0",
+								new GraphQLField(
+									"country",
+									new HashMap<String, Object>() {
+										{
+											put("countryId", country.getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessAdminAddress_v1_0",
+						"Object/country"))));
 	}
 
 	@Test
 	public void testGraphQLGetCountryNotFound() throws Exception {
 		Long irrelevantCountryId = RandomTestUtil.randomLong();
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -849,6 +1123,25 @@ public abstract class BaseCountryResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessAdminAddress_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessAdminAddress_v1_0",
+						new GraphQLField(
+							"country",
+							new HashMap<String, Object>() {
+								{
+									put("countryId", irrelevantCountryId);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}

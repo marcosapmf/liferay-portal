@@ -18,7 +18,7 @@ export default function DefinitionBuilder(props) {
 	const [active, setActive] = useState(true);
 	const [alertMessage, setAlertMessage] = useState('');
 	const [alertType, setAlertType] = useState(null);
-	const [blockingErrors, setBlockingErrors] = useState({errorType: ''});
+	const [blockingError, setBlockingError] = useState({errorType: ''});
 	const [currentEditor, setCurrentEditor] = useState(null);
 	const [definitionDescription, setDefinitionDescription] = useState('');
 	const [definitionInfo, setDefinitionInfo] = useState(null);
@@ -34,9 +34,6 @@ export default function DefinitionBuilder(props) {
 	const [hasGroovyScript, setHasGroovyScript] = useState(false);
 	const [selectedLanguageId, setSelectedLanguageId] = useState('');
 	const [showDefinitionInfo, setShowDefinitionInfo] = useState(false);
-	const [showInvalidContentMessage, setShowInvalidContentMessage] = useState(
-		false
-	);
 	const [sourceView, setSourceView] = useState(false);
 	const [showAlert, setShowAlert] = useState(false);
 	const [version, setVersion] = useState(parseInt(props.version, 10));
@@ -46,9 +43,9 @@ export default function DefinitionBuilder(props) {
 		active,
 		alertMessage,
 		alertType,
-		allowScriptContentBeExecutedOrIncluded:
-			props.allowScriptContentBeExecutedOrIncluded,
-		blockingErrors,
+		allowScriptContentToBeExecutedOrIncluded:
+			props.allowScriptContentToBeExecutedOrIncluded,
+		blockingError,
 		currentEditor,
 		definitionDescription,
 		definitionInfo,
@@ -60,12 +57,14 @@ export default function DefinitionBuilder(props) {
 		functionActionExecutors: props.functionActionExecutors,
 		hadGroovyScriptBefore,
 		hasGroovyScript,
+		scriptManagementConfigurationPortletURL:
+			props.scriptManagementConfigurationPortletURL,
 		selectedLanguageId,
 		setAccountEntryId,
 		setActive,
 		setAlertMessage,
 		setAlertType,
-		setBlockingErrors,
+		setBlockingError,
 		setCurrentEditor,
 		setDefinitionDescription,
 		setDefinitionInfo,
@@ -79,12 +78,10 @@ export default function DefinitionBuilder(props) {
 		setSelectedLanguageId,
 		setShowAlert,
 		setShowDefinitionInfo,
-		setShowInvalidContentMessage,
 		setSourceView,
 		setVersion,
 		showAlert,
 		showDefinitionInfo,
-		showInvalidContentMessage,
 		sourceView,
 		statuses: props.statuses,
 		version,

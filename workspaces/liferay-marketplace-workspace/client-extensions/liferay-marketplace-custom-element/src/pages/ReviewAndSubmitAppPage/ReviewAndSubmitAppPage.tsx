@@ -10,12 +10,17 @@ import {Checkbox} from '../../components/Checkbox/Checkbox';
 import {Header} from '../../components/Header/Header';
 import {NewAppPageFooterButtons} from '../../components/NewAppPageFooterButtons/NewAppPageFooterButtons';
 import {Section} from '../../components/Section/Section';
-import {getProduct} from '../../utils/api';
+import {getTierPrice} from '../../utils/api';
 import {getThumbnailByProductAttachment, showAppImage} from '../../utils/util';
 import {CardSectionsBody} from './CardSectionsBody';
 import {App, supportAndHelpMap} from './ReviewAndSubmitAppPageUtil';
 
 import './ReviewAndSubmitAppPage.scss';
+import {useMarketplaceContext} from '../../context/MarketplaceContext';
+import {PRODUCT_CATEGORIES} from '../../enums/Product';
+import {Liferay} from '../../liferay/liferay';
+import HeadlessCommerceAdminCatalogImpl from '../../services/rest/HeadlessCommerceAdminCatalog';
+import {getProductCategoriesByVocabularyName} from '../../utils/productUtils';
 
 type ReviewAndSubmitAppPageProps = {
 	onClickBack: () => void;
@@ -32,6 +37,9 @@ export function ReviewAndSubmitAppPage({
 	productId,
 	readonly = false,
 }: ReviewAndSubmitAppPageProps) {
+	const {channel} = useMarketplaceContext();
+	const accountId = Liferay.CommerceContext.account?.accountId;
+
 	const [checked, setChecked] = useState(false);
 	const [app, setApp] = useState<App>();
 	const [loading, setLoading] = useState(false);
@@ -40,34 +48,45 @@ export function ReviewAndSubmitAppPage({
 		const getData = async () => {
 			setLoading(true);
 
-			const productResponse = await getProduct({
-				appERC: productERC,
-				nestedFields: 'attachments,images,skus,productSpecifications',
-			});
+			const product = await HeadlessCommerceAdminCatalogImpl.getProductByExternalReferenceCode(
+				productERC as string,
+				new URLSearchParams({
+					nestedFields:
+						'attachments,images,skus,productSpecifications',
+				})
+			);
 
-			const productCategories: string[] = [];
-			const productTags: string[] = [];
+			const {
+				categories = [],
+				productSpecifications = [],
+				skus = [],
+			} = product;
 
-			productResponse.categories.forEach((category: any) => {
-				if (category.vocabulary === 'marketplace app category') {
-					productCategories.push(category.name);
-				}
-				else if (category.vocabulary === 'marketplace app tags') {
-					productTags.push(category.name);
-				}
-			});
+			const productCategories = getProductCategoriesByVocabularyName(
+				categories,
+				PRODUCT_CATEGORIES.MARKETPLACE_APP_CATEGORY
+			);
 
-			const productSpecifications =
-				productResponse.productSpecifications || [];
-			const skus = productResponse.skus || [];
+			const productTags = getProductCategoriesByVocabularyName(
+				categories,
+				PRODUCT_CATEGORIES.MARKETPLACE_APP_TAGS
+			);
 
 			const isCloud =
-				productSpecifications?.some(
+				productSpecifications.some(
 					({specificationKey, value}) =>
-						specificationKey === 'type' && value.en_US === 'cloud'
+						specificationKey === 'type' &&
+						(value.en_US === 'cloud' ||
+							((value as unknown) as string) === 'cloud')
 				) ?? false;
 
 			let sku = skus[0];
+
+			const tierPrices = await getTierPrice(
+				channel?.id,
+				product?.productId,
+				Number(accountId)
+			);
 
 			if (isCloud) {
 				sku = skus.find(
@@ -128,32 +147,32 @@ export function ReviewAndSubmitAppPage({
 				] = localizedValue;
 			});
 
-			const attachment = productResponse.attachments.find(
-				(attachment) => {
-					return (attachment.tags || []).indexOf('app icon') < 0;
-				}
-			);
+			const attachment = product.attachments.find((attachment) => {
+				return (attachment.tags || []).indexOf('app icon') < 0;
+			});
 
 			const thumbnail = showAppImage(
-				getThumbnailByProductAttachment(productResponse.images)
+				getThumbnailByProductAttachment(product.images)
 			);
 
 			const newApp = {
 				attachmentTitle: attachment?.title['en_US'] as string,
 				categories: productCategories,
-				description: productResponse.description['en_US'],
-				name: productResponse.name['en_US'],
+				description: product.description['en_US'],
+				name: product.name['en_US'],
 				price: sku?.price as number,
 				resourceRequirements: {
 					cpu: dataProduct.cpu,
 					ram: dataProduct.ram,
 				},
-				storefront: (productResponse.images || []).filter((image) => {
-					return image.galleryEnabled;
-				}),
+				skus,
+				storefront: (product.images || []).filter(
+					(image) => image.galleryEnabled
+				),
 				supportAndHelp: supportAndHelpCardInfos,
 				tags: productTags,
 				thumbnail,
+				tierPrice: tierPrices,
 				...dataProduct,
 			};
 

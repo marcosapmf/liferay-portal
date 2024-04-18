@@ -212,6 +212,8 @@ public abstract class BaseOrderTypeResourceTestCase {
 		OrderType orderType =
 			testGraphQLGetPaymentMethodGroupRelOrderTypeOrderType_addOrderType();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				orderType,
@@ -230,6 +232,30 @@ public abstract class BaseOrderTypeResourceTestCase {
 								getGraphQLFields())),
 						"JSONObject/data",
 						"Object/paymentMethodGroupRelOrderTypeOrderType"))));
+
+		// Using the namespace headlessCommerceAdminChannel_v1_0
+
+		Assert.assertTrue(
+			equals(
+				orderType,
+				OrderTypeSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessCommerceAdminChannel_v1_0",
+								new GraphQLField(
+									"paymentMethodGroupRelOrderTypeOrderType",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"paymentMethodGroupRelOrderTypeId",
+												testGraphQLGetPaymentMethodGroupRelOrderTypeOrderType_getPaymentMethodGroupRelOrderTypeId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessCommerceAdminChannel_v1_0",
+						"Object/paymentMethodGroupRelOrderTypeOrderType"))));
 	}
 
 	protected Long
@@ -247,6 +273,8 @@ public abstract class BaseOrderTypeResourceTestCase {
 		Long irrelevantPaymentMethodGroupRelOrderTypeId =
 			RandomTestUtil.randomLong();
 
+		// No namespace
+
 		Assert.assertEquals(
 			"Not Found",
 			JSONUtil.getValueAsString(
@@ -261,6 +289,27 @@ public abstract class BaseOrderTypeResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessCommerceAdminChannel_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessCommerceAdminChannel_v1_0",
+						new GraphQLField(
+							"paymentMethodGroupRelOrderTypeOrderType",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"paymentMethodGroupRelOrderTypeId",
+										irrelevantPaymentMethodGroupRelOrderTypeId);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}
@@ -310,6 +359,8 @@ public abstract class BaseOrderTypeResourceTestCase {
 		OrderType orderType =
 			testGraphQLGetShippingFixedOptionOrderTypeOrderType_addOrderType();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				orderType,
@@ -328,6 +379,30 @@ public abstract class BaseOrderTypeResourceTestCase {
 								getGraphQLFields())),
 						"JSONObject/data",
 						"Object/shippingFixedOptionOrderTypeOrderType"))));
+
+		// Using the namespace headlessCommerceAdminChannel_v1_0
+
+		Assert.assertTrue(
+			equals(
+				orderType,
+				OrderTypeSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessCommerceAdminChannel_v1_0",
+								new GraphQLField(
+									"shippingFixedOptionOrderTypeOrderType",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"shippingFixedOptionOrderTypeId",
+												testGraphQLGetShippingFixedOptionOrderTypeOrderType_getShippingFixedOptionOrderTypeId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessCommerceAdminChannel_v1_0",
+						"Object/shippingFixedOptionOrderTypeOrderType"))));
 	}
 
 	protected Long
@@ -345,6 +420,8 @@ public abstract class BaseOrderTypeResourceTestCase {
 		Long irrelevantShippingFixedOptionOrderTypeId =
 			RandomTestUtil.randomLong();
 
+		// No namespace
+
 		Assert.assertEquals(
 			"Not Found",
 			JSONUtil.getValueAsString(
@@ -359,6 +436,27 @@ public abstract class BaseOrderTypeResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessCommerceAdminChannel_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessCommerceAdminChannel_v1_0",
+						new GraphQLField(
+							"shippingFixedOptionOrderTypeOrderType",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"shippingFixedOptionOrderTypeId",
+										irrelevantShippingFixedOptionOrderTypeId);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}

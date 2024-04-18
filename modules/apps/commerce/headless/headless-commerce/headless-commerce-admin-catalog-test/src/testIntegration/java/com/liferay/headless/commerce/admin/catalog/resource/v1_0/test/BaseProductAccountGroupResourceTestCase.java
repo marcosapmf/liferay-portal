@@ -218,7 +218,10 @@ public abstract class BaseProductAccountGroupResourceTestCase {
 
 	@Test
 	public void testGraphQLDeleteProductAccountGroup() throws Exception {
-		ProductAccountGroup productAccountGroup =
+
+		// No namespace
+
+		ProductAccountGroup productAccountGroup1 =
 			testGraphQLDeleteProductAccountGroup_addProductAccountGroup();
 
 		Assert.assertTrue(
@@ -228,23 +231,61 @@ public abstract class BaseProductAccountGroupResourceTestCase {
 						"deleteProductAccountGroup",
 						new HashMap<String, Object>() {
 							{
-								put("id", productAccountGroup.getId());
+								put("id", productAccountGroup1.getId());
 							}
 						})),
 				"JSONObject/data", "Object/deleteProductAccountGroup"));
-		JSONArray errorsJSONArray = JSONUtil.getValueAsJSONArray(
+
+		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
 			invokeGraphQLQuery(
 				new GraphQLField(
 					"productAccountGroup",
 					new HashMap<String, Object>() {
 						{
-							put("id", productAccountGroup.getId());
+							put("id", productAccountGroup1.getId());
 						}
 					},
 					new GraphQLField("id"))),
 			"JSONArray/errors");
 
-		Assert.assertTrue(errorsJSONArray.length() > 0);
+		Assert.assertTrue(errorsJSONArray1.length() > 0);
+
+		// Using the namespace headlessCommerceAdminCatalog_v1_0
+
+		ProductAccountGroup productAccountGroup2 =
+			testGraphQLDeleteProductAccountGroup_addProductAccountGroup();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"headlessCommerceAdminCatalog_v1_0",
+						new GraphQLField(
+							"deleteProductAccountGroup",
+							new HashMap<String, Object>() {
+								{
+									put("id", productAccountGroup2.getId());
+								}
+							}))),
+				"JSONObject/data",
+				"JSONObject/headlessCommerceAdminCatalog_v1_0",
+				"Object/deleteProductAccountGroup"));
+
+		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"headlessCommerceAdminCatalog_v1_0",
+					new GraphQLField(
+						"productAccountGroup",
+						new HashMap<String, Object>() {
+							{
+								put("id", productAccountGroup2.getId());
+							}
+						},
+						new GraphQLField("id")))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray2.length() > 0);
 	}
 
 	protected ProductAccountGroup
@@ -280,6 +321,8 @@ public abstract class BaseProductAccountGroupResourceTestCase {
 		ProductAccountGroup productAccountGroup =
 			testGraphQLGetProductAccountGroup_addProductAccountGroup();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				productAccountGroup,
@@ -295,11 +338,37 @@ public abstract class BaseProductAccountGroupResourceTestCase {
 								},
 								getGraphQLFields())),
 						"JSONObject/data", "Object/productAccountGroup"))));
+
+		// Using the namespace headlessCommerceAdminCatalog_v1_0
+
+		Assert.assertTrue(
+			equals(
+				productAccountGroup,
+				ProductAccountGroupSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessCommerceAdminCatalog_v1_0",
+								new GraphQLField(
+									"productAccountGroup",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"id",
+												productAccountGroup.getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessCommerceAdminCatalog_v1_0",
+						"Object/productAccountGroup"))));
 	}
 
 	@Test
 	public void testGraphQLGetProductAccountGroupNotFound() throws Exception {
 		Long irrelevantId = RandomTestUtil.randomLong();
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -313,6 +382,25 @@ public abstract class BaseProductAccountGroupResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessCommerceAdminCatalog_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessCommerceAdminCatalog_v1_0",
+						new GraphQLField(
+							"productAccountGroup",
+							new HashMap<String, Object>() {
+								{
+									put("id", irrelevantId);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}

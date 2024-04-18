@@ -214,6 +214,8 @@ public abstract class BaseTicketResourceTestCase {
 		Ticket ticket =
 			testGraphQLGetUserAccountEmailVerificationTicket_addTicket();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				ticket,
@@ -232,6 +234,29 @@ public abstract class BaseTicketResourceTestCase {
 								getGraphQLFields())),
 						"JSONObject/data",
 						"Object/userAccountEmailVerificationTicket"))));
+
+		// Using the namespace headlessAdminUser_v1_0
+
+		Assert.assertTrue(
+			equals(
+				ticket,
+				TicketSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessAdminUser_v1_0",
+								new GraphQLField(
+									"userAccountEmailVerificationTicket",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"userAccountId",
+												testGraphQLGetUserAccountEmailVerificationTicket_getUserAccountId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data", "JSONObject/headlessAdminUser_v1_0",
+						"Object/userAccountEmailVerificationTicket"))));
 	}
 
 	protected Long
@@ -248,6 +273,8 @@ public abstract class BaseTicketResourceTestCase {
 
 		Long irrelevantUserAccountId = RandomTestUtil.randomLong();
 
+		// No namespace
+
 		Assert.assertEquals(
 			"Not Found",
 			JSONUtil.getValueAsString(
@@ -260,6 +287,27 @@ public abstract class BaseTicketResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessAdminUser_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessAdminUser_v1_0",
+						new GraphQLField(
+							"userAccountEmailVerificationTicket",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"userAccountId",
+										irrelevantUserAccountId);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}
@@ -303,6 +351,8 @@ public abstract class BaseTicketResourceTestCase {
 		Ticket ticket =
 			testGraphQLGetUserAccountPasswordResetTicket_addTicket();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				ticket,
@@ -321,6 +371,29 @@ public abstract class BaseTicketResourceTestCase {
 								getGraphQLFields())),
 						"JSONObject/data",
 						"Object/userAccountPasswordResetTicket"))));
+
+		// Using the namespace headlessAdminUser_v1_0
+
+		Assert.assertTrue(
+			equals(
+				ticket,
+				TicketSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessAdminUser_v1_0",
+								new GraphQLField(
+									"userAccountPasswordResetTicket",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"userAccountId",
+												testGraphQLGetUserAccountPasswordResetTicket_getUserAccountId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data", "JSONObject/headlessAdminUser_v1_0",
+						"Object/userAccountPasswordResetTicket"))));
 	}
 
 	protected Long
@@ -337,6 +410,8 @@ public abstract class BaseTicketResourceTestCase {
 
 		Long irrelevantUserAccountId = RandomTestUtil.randomLong();
 
+		// No namespace
+
 		Assert.assertEquals(
 			"Not Found",
 			JSONUtil.getValueAsString(
@@ -349,6 +424,27 @@ public abstract class BaseTicketResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessAdminUser_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessAdminUser_v1_0",
+						new GraphQLField(
+							"userAccountPasswordResetTicket",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"userAccountId",
+										irrelevantUserAccountId);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}

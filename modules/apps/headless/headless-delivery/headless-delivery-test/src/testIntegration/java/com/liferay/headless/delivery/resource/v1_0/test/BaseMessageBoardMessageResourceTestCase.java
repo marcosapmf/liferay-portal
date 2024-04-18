@@ -233,7 +233,10 @@ public abstract class BaseMessageBoardMessageResourceTestCase {
 
 	@Test
 	public void testGraphQLDeleteMessageBoardMessage() throws Exception {
-		MessageBoardMessage messageBoardMessage =
+
+		// No namespace
+
+		MessageBoardMessage messageBoardMessage1 =
 			testGraphQLDeleteMessageBoardMessage_addMessageBoardMessage();
 
 		Assert.assertTrue(
@@ -245,11 +248,12 @@ public abstract class BaseMessageBoardMessageResourceTestCase {
 							{
 								put(
 									"messageBoardMessageId",
-									messageBoardMessage.getId());
+									messageBoardMessage1.getId());
 							}
 						})),
 				"JSONObject/data", "Object/deleteMessageBoardMessage"));
-		JSONArray errorsJSONArray = JSONUtil.getValueAsJSONArray(
+
+		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
 			invokeGraphQLQuery(
 				new GraphQLField(
 					"messageBoardMessage",
@@ -257,13 +261,53 @@ public abstract class BaseMessageBoardMessageResourceTestCase {
 						{
 							put(
 								"messageBoardMessageId",
-								messageBoardMessage.getId());
+								messageBoardMessage1.getId());
 						}
 					},
 					new GraphQLField("id"))),
 			"JSONArray/errors");
 
-		Assert.assertTrue(errorsJSONArray.length() > 0);
+		Assert.assertTrue(errorsJSONArray1.length() > 0);
+
+		// Using the namespace headlessDelivery_v1_0
+
+		MessageBoardMessage messageBoardMessage2 =
+			testGraphQLDeleteMessageBoardMessage_addMessageBoardMessage();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"headlessDelivery_v1_0",
+						new GraphQLField(
+							"deleteMessageBoardMessage",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"messageBoardMessageId",
+										messageBoardMessage2.getId());
+								}
+							}))),
+				"JSONObject/data", "JSONObject/headlessDelivery_v1_0",
+				"Object/deleteMessageBoardMessage"));
+
+		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"headlessDelivery_v1_0",
+					new GraphQLField(
+						"messageBoardMessage",
+						new HashMap<String, Object>() {
+							{
+								put(
+									"messageBoardMessageId",
+									messageBoardMessage2.getId());
+							}
+						},
+						new GraphQLField("id")))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray2.length() > 0);
 	}
 
 	protected MessageBoardMessage
@@ -299,6 +343,8 @@ public abstract class BaseMessageBoardMessageResourceTestCase {
 		MessageBoardMessage messageBoardMessage =
 			testGraphQLGetMessageBoardMessage_addMessageBoardMessage();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				messageBoardMessage,
@@ -316,11 +362,36 @@ public abstract class BaseMessageBoardMessageResourceTestCase {
 								},
 								getGraphQLFields())),
 						"JSONObject/data", "Object/messageBoardMessage"))));
+
+		// Using the namespace headlessDelivery_v1_0
+
+		Assert.assertTrue(
+			equals(
+				messageBoardMessage,
+				MessageBoardMessageSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessDelivery_v1_0",
+								new GraphQLField(
+									"messageBoardMessage",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"messageBoardMessageId",
+												messageBoardMessage.getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data", "JSONObject/headlessDelivery_v1_0",
+						"Object/messageBoardMessage"))));
 	}
 
 	@Test
 	public void testGraphQLGetMessageBoardMessageNotFound() throws Exception {
 		Long irrelevantMessageBoardMessageId = RandomTestUtil.randomLong();
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -336,6 +407,27 @@ public abstract class BaseMessageBoardMessageResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessDelivery_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessDelivery_v1_0",
+						new GraphQLField(
+							"messageBoardMessage",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"messageBoardMessageId",
+										irrelevantMessageBoardMessageId);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}
@@ -2147,6 +2239,8 @@ public abstract class BaseMessageBoardMessageResourceTestCase {
 			new GraphQLField("items", getGraphQLFields()),
 			new GraphQLField("page"), new GraphQLField("totalCount"));
 
+		// No namespace
+
 		JSONObject messageBoardMessagesJSONObject =
 			JSONUtil.getValueAsJSONObject(
 				invokeGraphQLQuery(graphQLField), "JSONObject/data",
@@ -2161,6 +2255,29 @@ public abstract class BaseMessageBoardMessageResourceTestCase {
 
 		messageBoardMessagesJSONObject = JSONUtil.getValueAsJSONObject(
 			invokeGraphQLQuery(graphQLField), "JSONObject/data",
+			"JSONObject/messageBoardMessages");
+
+		Assert.assertEquals(
+			totalCount + 2,
+			messageBoardMessagesJSONObject.getLong("totalCount"));
+
+		assertContains(
+			messageBoardMessage1,
+			Arrays.asList(
+				MessageBoardMessageSerDes.toDTOs(
+					messageBoardMessagesJSONObject.getString("items"))));
+		assertContains(
+			messageBoardMessage2,
+			Arrays.asList(
+				MessageBoardMessageSerDes.toDTOs(
+					messageBoardMessagesJSONObject.getString("items"))));
+
+		// Using the namespace headlessDelivery_v1_0
+
+		messageBoardMessagesJSONObject = JSONUtil.getValueAsJSONObject(
+			invokeGraphQLQuery(
+				new GraphQLField("headlessDelivery_v1_0", graphQLField)),
+			"JSONObject/data", "JSONObject/headlessDelivery_v1_0",
 			"JSONObject/messageBoardMessages");
 
 		Assert.assertEquals(
@@ -2276,6 +2393,8 @@ public abstract class BaseMessageBoardMessageResourceTestCase {
 		MessageBoardMessage messageBoardMessage =
 			testGraphQLGetSiteMessageBoardMessageByExternalReferenceCode_addMessageBoardMessage();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				messageBoardMessage,
@@ -2304,6 +2423,39 @@ public abstract class BaseMessageBoardMessageResourceTestCase {
 								getGraphQLFields())),
 						"JSONObject/data",
 						"Object/messageBoardMessageByExternalReferenceCode"))));
+
+		// Using the namespace headlessDelivery_v1_0
+
+		Assert.assertTrue(
+			equals(
+				messageBoardMessage,
+				MessageBoardMessageSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessDelivery_v1_0",
+								new GraphQLField(
+									"messageBoardMessageByExternalReferenceCode",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"siteKey",
+												"\"" +
+													testGraphQLGetSiteMessageBoardMessageByExternalReferenceCode_getSiteId(
+														messageBoardMessage) +
+															"\"");
+
+											put(
+												"externalReferenceCode",
+												"\"" +
+													messageBoardMessage.
+														getExternalReferenceCode() +
+															"\"");
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data", "JSONObject/headlessDelivery_v1_0",
+						"Object/messageBoardMessageByExternalReferenceCode"))));
 	}
 
 	protected Long
@@ -2320,6 +2472,8 @@ public abstract class BaseMessageBoardMessageResourceTestCase {
 
 		String irrelevantExternalReferenceCode =
 			"\"" + RandomTestUtil.randomString() + "\"";
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -2338,6 +2492,31 @@ public abstract class BaseMessageBoardMessageResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessDelivery_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessDelivery_v1_0",
+						new GraphQLField(
+							"messageBoardMessageByExternalReferenceCode",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"siteKey",
+										"\"" + irrelevantGroup.getGroupId() +
+											"\"");
+									put(
+										"externalReferenceCode",
+										irrelevantExternalReferenceCode);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}
@@ -2471,6 +2650,8 @@ public abstract class BaseMessageBoardMessageResourceTestCase {
 		MessageBoardMessage messageBoardMessage =
 			testGraphQLGetSiteMessageBoardMessageByFriendlyUrlPath_addMessageBoardMessage();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				messageBoardMessage,
@@ -2499,6 +2680,39 @@ public abstract class BaseMessageBoardMessageResourceTestCase {
 								getGraphQLFields())),
 						"JSONObject/data",
 						"Object/messageBoardMessageByFriendlyUrlPath"))));
+
+		// Using the namespace headlessDelivery_v1_0
+
+		Assert.assertTrue(
+			equals(
+				messageBoardMessage,
+				MessageBoardMessageSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessDelivery_v1_0",
+								new GraphQLField(
+									"messageBoardMessageByFriendlyUrlPath",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"siteKey",
+												"\"" +
+													testGraphQLGetSiteMessageBoardMessageByFriendlyUrlPath_getSiteId(
+														messageBoardMessage) +
+															"\"");
+
+											put(
+												"friendlyUrlPath",
+												"\"" +
+													messageBoardMessage.
+														getFriendlyUrlPath() +
+															"\"");
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data", "JSONObject/headlessDelivery_v1_0",
+						"Object/messageBoardMessageByFriendlyUrlPath"))));
 	}
 
 	protected Long
@@ -2515,6 +2729,8 @@ public abstract class BaseMessageBoardMessageResourceTestCase {
 
 		String irrelevantFriendlyUrlPath =
 			"\"" + RandomTestUtil.randomString() + "\"";
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -2533,6 +2749,31 @@ public abstract class BaseMessageBoardMessageResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessDelivery_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessDelivery_v1_0",
+						new GraphQLField(
+							"messageBoardMessageByFriendlyUrlPath",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"siteKey",
+										"\"" + irrelevantGroup.getGroupId() +
+											"\"");
+									put(
+										"friendlyUrlPath",
+										irrelevantFriendlyUrlPath);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}

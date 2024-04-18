@@ -753,6 +753,8 @@ public abstract class BaseOrganizationResourceTestCase {
 		Organization organization =
 			testGraphQLGetAccountByExternalReferenceCodeOrganization_addOrganization();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				organization,
@@ -777,6 +779,36 @@ public abstract class BaseOrganizationResourceTestCase {
 								getGraphQLFields())),
 						"JSONObject/data",
 						"Object/accountByExternalReferenceCodeOrganization"))));
+
+		// Using the namespace headlessAdminUser_v1_0
+
+		Assert.assertTrue(
+			equals(
+				organization,
+				OrganizationSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessAdminUser_v1_0",
+								new GraphQLField(
+									"accountByExternalReferenceCodeOrganization",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"externalReferenceCode",
+												"\"" +
+													testGraphQLGetAccountByExternalReferenceCodeOrganization_getExternalReferenceCode(
+														organization) + "\"");
+
+											put(
+												"organizationId",
+												"\"" + organization.getId() +
+													"\"");
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data", "JSONObject/headlessAdminUser_v1_0",
+						"Object/accountByExternalReferenceCodeOrganization"))));
 	}
 
 	protected String
@@ -796,6 +828,8 @@ public abstract class BaseOrganizationResourceTestCase {
 		String irrelevantOrganizationId =
 			"\"" + RandomTestUtil.randomString() + "\"";
 
+		// No namespace
+
 		Assert.assertEquals(
 			"Not Found",
 			JSONUtil.getValueAsString(
@@ -811,6 +845,30 @@ public abstract class BaseOrganizationResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessAdminUser_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessAdminUser_v1_0",
+						new GraphQLField(
+							"accountByExternalReferenceCodeOrganization",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"externalReferenceCode",
+										irrelevantExternalReferenceCode);
+									put(
+										"organizationId",
+										irrelevantOrganizationId);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}
@@ -1353,6 +1411,8 @@ public abstract class BaseOrganizationResourceTestCase {
 		Organization organization =
 			testGraphQLGetAccountOrganization_addOrganization();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				organization,
@@ -1374,6 +1434,34 @@ public abstract class BaseOrganizationResourceTestCase {
 								},
 								getGraphQLFields())),
 						"JSONObject/data", "Object/accountOrganization"))));
+
+		// Using the namespace headlessAdminUser_v1_0
+
+		Assert.assertTrue(
+			equals(
+				organization,
+				OrganizationSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessAdminUser_v1_0",
+								new GraphQLField(
+									"accountOrganization",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"accountId",
+												testGraphQLGetAccountOrganization_getAccountId());
+
+											put(
+												"organizationId",
+												"\"" + organization.getId() +
+													"\"");
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data", "JSONObject/headlessAdminUser_v1_0",
+						"Object/accountOrganization"))));
 	}
 
 	protected Long testGraphQLGetAccountOrganization_getAccountId()
@@ -1389,6 +1477,8 @@ public abstract class BaseOrganizationResourceTestCase {
 		String irrelevantOrganizationId =
 			"\"" + RandomTestUtil.randomString() + "\"";
 
+		// No namespace
+
 		Assert.assertEquals(
 			"Not Found",
 			JSONUtil.getValueAsString(
@@ -1402,6 +1492,28 @@ public abstract class BaseOrganizationResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessAdminUser_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessAdminUser_v1_0",
+						new GraphQLField(
+							"accountOrganization",
+							new HashMap<String, Object>() {
+								{
+									put("accountId", irrelevantAccountId);
+									put(
+										"organizationId",
+										irrelevantOrganizationId);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}
@@ -1806,6 +1918,8 @@ public abstract class BaseOrganizationResourceTestCase {
 			new GraphQLField("items", getGraphQLFields()),
 			new GraphQLField("page"), new GraphQLField("totalCount"));
 
+		// No namespace
+
 		JSONObject organizationsJSONObject = JSONUtil.getValueAsJSONObject(
 			invokeGraphQLQuery(graphQLField), "JSONObject/data",
 			"JSONObject/organizations");
@@ -1819,6 +1933,28 @@ public abstract class BaseOrganizationResourceTestCase {
 
 		organizationsJSONObject = JSONUtil.getValueAsJSONObject(
 			invokeGraphQLQuery(graphQLField), "JSONObject/data",
+			"JSONObject/organizations");
+
+		Assert.assertEquals(
+			totalCount + 2, organizationsJSONObject.getLong("totalCount"));
+
+		assertContains(
+			organization1,
+			Arrays.asList(
+				OrganizationSerDes.toDTOs(
+					organizationsJSONObject.getString("items"))));
+		assertContains(
+			organization2,
+			Arrays.asList(
+				OrganizationSerDes.toDTOs(
+					organizationsJSONObject.getString("items"))));
+
+		// Using the namespace headlessAdminUser_v1_0
+
+		organizationsJSONObject = JSONUtil.getValueAsJSONObject(
+			invokeGraphQLQuery(
+				new GraphQLField("headlessAdminUser_v1_0", graphQLField)),
+			"JSONObject/data", "JSONObject/headlessAdminUser_v1_0",
 			"JSONObject/organizations");
 
 		Assert.assertEquals(
@@ -1924,6 +2060,8 @@ public abstract class BaseOrganizationResourceTestCase {
 		Organization organization =
 			testGraphQLGetOrganizationByExternalReferenceCode_addOrganization();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				organization,
@@ -1945,6 +2083,32 @@ public abstract class BaseOrganizationResourceTestCase {
 								getGraphQLFields())),
 						"JSONObject/data",
 						"Object/organizationByExternalReferenceCode"))));
+
+		// Using the namespace headlessAdminUser_v1_0
+
+		Assert.assertTrue(
+			equals(
+				organization,
+				OrganizationSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessAdminUser_v1_0",
+								new GraphQLField(
+									"organizationByExternalReferenceCode",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"externalReferenceCode",
+												"\"" +
+													organization.
+														getExternalReferenceCode() +
+															"\"");
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data", "JSONObject/headlessAdminUser_v1_0",
+						"Object/organizationByExternalReferenceCode"))));
 	}
 
 	@Test
@@ -1953,6 +2117,8 @@ public abstract class BaseOrganizationResourceTestCase {
 
 		String irrelevantExternalReferenceCode =
 			"\"" + RandomTestUtil.randomString() + "\"";
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -1968,6 +2134,27 @@ public abstract class BaseOrganizationResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessAdminUser_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessAdminUser_v1_0",
+						new GraphQLField(
+							"organizationByExternalReferenceCode",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"externalReferenceCode",
+										irrelevantExternalReferenceCode);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}
@@ -2101,7 +2288,10 @@ public abstract class BaseOrganizationResourceTestCase {
 
 	@Test
 	public void testGraphQLDeleteOrganization() throws Exception {
-		Organization organization =
+
+		// No namespace
+
+		Organization organization1 =
 			testGraphQLDeleteOrganization_addOrganization();
 
 		Assert.assertTrue(
@@ -2113,11 +2303,12 @@ public abstract class BaseOrganizationResourceTestCase {
 							{
 								put(
 									"organizationId",
-									"\"" + organization.getId() + "\"");
+									"\"" + organization1.getId() + "\"");
 							}
 						})),
 				"JSONObject/data", "Object/deleteOrganization"));
-		JSONArray errorsJSONArray = JSONUtil.getValueAsJSONArray(
+
+		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
 			invokeGraphQLQuery(
 				new GraphQLField(
 					"organization",
@@ -2125,13 +2316,53 @@ public abstract class BaseOrganizationResourceTestCase {
 						{
 							put(
 								"organizationId",
-								"\"" + organization.getId() + "\"");
+								"\"" + organization1.getId() + "\"");
 						}
 					},
 					new GraphQLField("id"))),
 			"JSONArray/errors");
 
-		Assert.assertTrue(errorsJSONArray.length() > 0);
+		Assert.assertTrue(errorsJSONArray1.length() > 0);
+
+		// Using the namespace headlessAdminUser_v1_0
+
+		Organization organization2 =
+			testGraphQLDeleteOrganization_addOrganization();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"headlessAdminUser_v1_0",
+						new GraphQLField(
+							"deleteOrganization",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"organizationId",
+										"\"" + organization2.getId() + "\"");
+								}
+							}))),
+				"JSONObject/data", "JSONObject/headlessAdminUser_v1_0",
+				"Object/deleteOrganization"));
+
+		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"headlessAdminUser_v1_0",
+					new GraphQLField(
+						"organization",
+						new HashMap<String, Object>() {
+							{
+								put(
+									"organizationId",
+									"\"" + organization2.getId() + "\"");
+							}
+						},
+						new GraphQLField("id")))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray2.length() > 0);
 	}
 
 	protected Organization testGraphQLDeleteOrganization_addOrganization()
@@ -2163,6 +2394,8 @@ public abstract class BaseOrganizationResourceTestCase {
 		Organization organization =
 			testGraphQLGetOrganization_addOrganization();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				organization,
@@ -2180,12 +2413,38 @@ public abstract class BaseOrganizationResourceTestCase {
 								},
 								getGraphQLFields())),
 						"JSONObject/data", "Object/organization"))));
+
+		// Using the namespace headlessAdminUser_v1_0
+
+		Assert.assertTrue(
+			equals(
+				organization,
+				OrganizationSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessAdminUser_v1_0",
+								new GraphQLField(
+									"organization",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"organizationId",
+												"\"" + organization.getId() +
+													"\"");
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data", "JSONObject/headlessAdminUser_v1_0",
+						"Object/organization"))));
 	}
 
 	@Test
 	public void testGraphQLGetOrganizationNotFound() throws Exception {
 		String irrelevantOrganizationId =
 			"\"" + RandomTestUtil.randomString() + "\"";
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -2199,6 +2458,27 @@ public abstract class BaseOrganizationResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessAdminUser_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessAdminUser_v1_0",
+						new GraphQLField(
+							"organization",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"organizationId",
+										irrelevantOrganizationId);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}

@@ -26,6 +26,7 @@ export default function getMDFListColumns(
 		index: number
 	) => boolean | undefined,
 	siteURL: string,
+	urlParams: URLSearchParams,
 	actions?: PermissionActionType[],
 	mutated?: KeyedMutator<LiferayItems<MDFRequestDTO[]>>,
 	isChannel?: boolean
@@ -60,7 +61,7 @@ export default function getMDFListColumns(
 									row[MDFColumnKey.ID]
 								}?p_l_back_url=${encodeURIComponent(
 									Liferay.ThemeDisplay.getLayoutRelativeURL()
-								)}`
+								)}&${urlParams.toString()}`
 							),
 					});
 				}
@@ -82,6 +83,42 @@ export default function getMDFListColumns(
 									PRMPageRoute.EDIT_MDF_REQUEST
 								}/#/${row[MDFColumnKey.ID]}`
 							),
+					});
+				}
+
+				if (
+					currentValue === PermissionActionType.COMPLETE &&
+					row[MDFColumnKey.STATUS] === Status.APPROVED.name
+				) {
+					previousValue.push({
+						icon: 'check',
+						key: Status.COMPLETED.key,
+						label: ' Complete',
+						onClick: () => {
+							Liferay.Util.openConfirmModal({
+								message:
+									'Are you sure you want to complete the MDF request?',
+								onConfirm: async (isConfirmed: boolean) => {
+									if (isConfirmed) {
+										const newRequestStatus = await patchRequestStatus(
+											Status.COMPLETED,
+											String(row[MDFColumnKey.ID])
+										);
+
+										if (newRequestStatus) {
+											Liferay.Util.openToast({
+												message:
+													'MDF Request successfully completed!',
+												title: 'Success',
+												type: 'success',
+											});
+										}
+
+										mutate(mutated);
+									}
+								},
+							});
+						},
 					});
 				}
 
@@ -187,7 +224,7 @@ export default function getMDFListColumns(
 						row[MDFColumnKey.ID]
 					}?p_l_back_url=${encodeURIComponent(
 						Liferay.ThemeDisplay.getLayoutRelativeURL()
-					)}`}
+					)}&${urlParams.toString()}`}
 				>
 					{data}
 				</a>
@@ -204,7 +241,7 @@ export default function getMDFListColumns(
 			render: (data) => <StatusLabel status={data as string} />,
 		},
 		{
-			columnKey: MDFColumnKey.NAME,
+			columnKey: MDFColumnKey.CAMPAIGN_NAME,
 			label: 'Campaign Name',
 			size: 'sm',
 		},

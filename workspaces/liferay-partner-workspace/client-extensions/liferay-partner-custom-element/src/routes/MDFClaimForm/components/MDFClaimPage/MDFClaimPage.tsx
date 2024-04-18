@@ -17,6 +17,7 @@ import ResumeCard from '../../../../common/components/ResumeCard';
 import MDFRequestDTO from '../../../../common/interfaces/dto/mdfRequestDTO';
 import LiferayFile from '../../../../common/interfaces/liferayFile';
 import MDFClaim from '../../../../common/interfaces/mdfClaim';
+import MDFClaimActivity from '../../../../common/interfaces/mdfClaimActivity';
 import MDFClaimProps from '../../../../common/interfaces/mdfClaimProps';
 import {ResourceName} from '../../../../common/services/liferay/object/enum/resourceName';
 import {Status} from '../../../../common/utils/constants/status';
@@ -73,12 +74,46 @@ const MDFClaimPage = ({
 		}
 	).length;
 
+	const isDisplayableMDFActivityClaim = (activity: MDFClaimActivity) => {
+		const claimableActivityByStatus =
+			activity.activityStatus?.key !== Status.CANCELED.key &&
+			activity.activityStatus?.key !== Status.EXPIRED.key &&
+			!activity.claimed;
+
+		const editableClaimActivityByStatus =
+			Boolean(activity.id) && !activity.selected;
+
+		const isDisplayable = activity.id
+			? hasPermissionShowForm
+			: claimableActivityByStatus || editableClaimActivityByStatus;
+
+		return isDisplayable;
+	};
+
+	const availableMDFActivities = values.activities?.filter((activity) =>
+		isDisplayableMDFActivityClaim(activity)
+	).length;
+
+	const getCreateClaimDenialMessage = () => {
+		if (mdfRequest.mdfRequestStatus?.key !== Status.APPROVED.key) {
+			return 'Waiting for Manager approval.';
+		}
+		else if (claimsFiltered && claimsFiltered >= 2 && !values.id) {
+			return 'You already submitted 2 claims.';
+		}
+		else if (!availableMDFActivities) {
+			return "You don't have activities available to claim.";
+		}
+	};
+
 	const getClaimPage = () => {
 		if (!fieldEntries || !companiesEntries) {
 			return <ClayLoadingIndicator />;
 		}
 
-		if (claimsFiltered && claimsFiltered >= 2 && !values.id) {
+		const createClaimDenialMessage = getCreateClaimDenialMessage();
+
+		if (createClaimDenialMessage) {
 			return (
 				<PRMForm name="New" title="Reimbursement Claim">
 					<div className="d-flex justify-content-center mt-4">
@@ -87,35 +122,7 @@ const MDFClaimPage = ({
 							displayType="info"
 							title="Info:"
 						>
-							You already submitted 2 claims.
-						</ClayAlert>
-					</div>
-
-					<PRMForm.Footer>
-						<div className="d-flex mr-auto">
-							<ClayButton
-								className="mr-4"
-								displayType="secondary"
-								onClick={() => onCancel()}
-							>
-								Cancel
-							</ClayButton>
-						</div>
-					</PRMForm.Footer>
-				</PRMForm>
-			);
-		}
-
-		if (mdfRequest.mdfRequestStatus?.key !== 'approved') {
-			return (
-				<PRMForm name="New" title="Reimbursement Claim">
-					<div className="d-flex justify-content-center mt-4">
-						<ClayAlert
-							className="m-0 w-100"
-							displayType="info"
-							title="Info:"
-						>
-							Waiting for Manager approval
+							{createClaimDenialMessage}
 						</ClayAlert>
 					</div>
 
@@ -145,20 +152,23 @@ const MDFClaimPage = ({
 						<span className="text-danger">*</span>
 					</p>
 
-					{values.activities?.map((activity, index) => (
-						<ActivityClaimPanel
-							activity={activity}
-							activityIndex={index}
-							hasPermissionEditClaimActivity={
-								hasPermissionShowForm
-							}
-							key={`${activity.id}-${index}`}
-							overallCampaignDescription={
-								mdfRequest.overallCampaignDescription
-							}
-							setFieldValue={setFieldValue}
-						/>
-					))}
+					{values.activities?.map(
+						(activity, index) =>
+							isDisplayableMDFActivityClaim(activity) && (
+								<ActivityClaimPanel
+									activity={activity}
+									activityIndex={index}
+									hasPermissionEditClaimActivity={
+										hasPermissionShowForm
+									}
+									key={`${activity.id}-${index}`}
+									overallCampaignDescription={
+										mdfRequest.overallCampaignDescription
+									}
+									setFieldValue={setFieldValue}
+								/>
+							)
+					)}
 				</PRMForm.Section>
 
 				<PRMForm.Section

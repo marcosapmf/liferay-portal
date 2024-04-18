@@ -211,7 +211,10 @@ public abstract class BaseDiscountAccountGroupResourceTestCase {
 
 	@Test
 	public void testGraphQLDeleteDiscountAccountGroup() throws Exception {
-		DiscountAccountGroup discountAccountGroup =
+
+		// No namespace
+
+		DiscountAccountGroup discountAccountGroup1 =
 			testGraphQLDeleteDiscountAccountGroup_addDiscountAccountGroup();
 
 		Assert.assertTrue(
@@ -221,10 +224,31 @@ public abstract class BaseDiscountAccountGroupResourceTestCase {
 						"deleteDiscountAccountGroup",
 						new HashMap<String, Object>() {
 							{
-								put("id", discountAccountGroup.getId());
+								put("id", discountAccountGroup1.getId());
 							}
 						})),
 				"JSONObject/data", "Object/deleteDiscountAccountGroup"));
+
+		// Using the namespace headlessCommerceAdminPricing_v1_0
+
+		DiscountAccountGroup discountAccountGroup2 =
+			testGraphQLDeleteDiscountAccountGroup_addDiscountAccountGroup();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"headlessCommerceAdminPricing_v1_0",
+						new GraphQLField(
+							"deleteDiscountAccountGroup",
+							new HashMap<String, Object>() {
+								{
+									put("id", discountAccountGroup2.getId());
+								}
+							}))),
+				"JSONObject/data",
+				"JSONObject/headlessCommerceAdminPricing_v1_0",
+				"Object/deleteDiscountAccountGroup"));
 	}
 
 	protected DiscountAccountGroup

@@ -278,6 +278,8 @@ public abstract class BaseWikiPageResourceTestCase {
 		WikiPage wikiPage =
 			testGraphQLGetSiteWikiPageByExternalReferenceCode_addWikiPage();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				wikiPage,
@@ -305,6 +307,38 @@ public abstract class BaseWikiPageResourceTestCase {
 								getGraphQLFields())),
 						"JSONObject/data",
 						"Object/wikiPageByExternalReferenceCode"))));
+
+		// Using the namespace headlessDelivery_v1_0
+
+		Assert.assertTrue(
+			equals(
+				wikiPage,
+				WikiPageSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessDelivery_v1_0",
+								new GraphQLField(
+									"wikiPageByExternalReferenceCode",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"siteKey",
+												"\"" +
+													testGraphQLGetSiteWikiPageByExternalReferenceCode_getSiteId(
+														wikiPage) + "\"");
+
+											put(
+												"externalReferenceCode",
+												"\"" +
+													wikiPage.
+														getExternalReferenceCode() +
+															"\"");
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data", "JSONObject/headlessDelivery_v1_0",
+						"Object/wikiPageByExternalReferenceCode"))));
 	}
 
 	protected Long testGraphQLGetSiteWikiPageByExternalReferenceCode_getSiteId(
@@ -320,6 +354,8 @@ public abstract class BaseWikiPageResourceTestCase {
 
 		String irrelevantExternalReferenceCode =
 			"\"" + RandomTestUtil.randomString() + "\"";
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -338,6 +374,31 @@ public abstract class BaseWikiPageResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessDelivery_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessDelivery_v1_0",
+						new GraphQLField(
+							"wikiPageByExternalReferenceCode",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"siteKey",
+										"\"" + irrelevantGroup.getGroupId() +
+											"\"");
+									put(
+										"externalReferenceCode",
+										irrelevantExternalReferenceCode);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}
@@ -949,7 +1010,10 @@ public abstract class BaseWikiPageResourceTestCase {
 
 	@Test
 	public void testGraphQLDeleteWikiPage() throws Exception {
-		WikiPage wikiPage = testGraphQLDeleteWikiPage_addWikiPage();
+
+		// No namespace
+
+		WikiPage wikiPage1 = testGraphQLDeleteWikiPage_addWikiPage();
 
 		Assert.assertTrue(
 			JSONUtil.getValueAsBoolean(
@@ -958,23 +1022,59 @@ public abstract class BaseWikiPageResourceTestCase {
 						"deleteWikiPage",
 						new HashMap<String, Object>() {
 							{
-								put("wikiPageId", wikiPage.getId());
+								put("wikiPageId", wikiPage1.getId());
 							}
 						})),
 				"JSONObject/data", "Object/deleteWikiPage"));
-		JSONArray errorsJSONArray = JSONUtil.getValueAsJSONArray(
+
+		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
 			invokeGraphQLQuery(
 				new GraphQLField(
 					"wikiPage",
 					new HashMap<String, Object>() {
 						{
-							put("wikiPageId", wikiPage.getId());
+							put("wikiPageId", wikiPage1.getId());
 						}
 					},
 					new GraphQLField("id"))),
 			"JSONArray/errors");
 
-		Assert.assertTrue(errorsJSONArray.length() > 0);
+		Assert.assertTrue(errorsJSONArray1.length() > 0);
+
+		// Using the namespace headlessDelivery_v1_0
+
+		WikiPage wikiPage2 = testGraphQLDeleteWikiPage_addWikiPage();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"headlessDelivery_v1_0",
+						new GraphQLField(
+							"deleteWikiPage",
+							new HashMap<String, Object>() {
+								{
+									put("wikiPageId", wikiPage2.getId());
+								}
+							}))),
+				"JSONObject/data", "JSONObject/headlessDelivery_v1_0",
+				"Object/deleteWikiPage"));
+
+		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"headlessDelivery_v1_0",
+					new GraphQLField(
+						"wikiPage",
+						new HashMap<String, Object>() {
+							{
+								put("wikiPageId", wikiPage2.getId());
+							}
+						},
+						new GraphQLField("id")))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray2.length() > 0);
 	}
 
 	protected WikiPage testGraphQLDeleteWikiPage_addWikiPage()
@@ -1003,6 +1103,8 @@ public abstract class BaseWikiPageResourceTestCase {
 	public void testGraphQLGetWikiPage() throws Exception {
 		WikiPage wikiPage = testGraphQLGetWikiPage_addWikiPage();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				wikiPage,
@@ -1018,11 +1120,34 @@ public abstract class BaseWikiPageResourceTestCase {
 								},
 								getGraphQLFields())),
 						"JSONObject/data", "Object/wikiPage"))));
+
+		// Using the namespace headlessDelivery_v1_0
+
+		Assert.assertTrue(
+			equals(
+				wikiPage,
+				WikiPageSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessDelivery_v1_0",
+								new GraphQLField(
+									"wikiPage",
+									new HashMap<String, Object>() {
+										{
+											put("wikiPageId", wikiPage.getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data", "JSONObject/headlessDelivery_v1_0",
+						"Object/wikiPage"))));
 	}
 
 	@Test
 	public void testGraphQLGetWikiPageNotFound() throws Exception {
 		Long irrelevantWikiPageId = RandomTestUtil.randomLong();
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -1036,6 +1161,25 @@ public abstract class BaseWikiPageResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessDelivery_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessDelivery_v1_0",
+						new GraphQLField(
+							"wikiPage",
+							new HashMap<String, Object>() {
+								{
+									put("wikiPageId", irrelevantWikiPageId);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}

@@ -243,6 +243,8 @@ public abstract class BaseDispatchTriggerResourceTestCase {
 			new GraphQLField("items", getGraphQLFields()),
 			new GraphQLField("page"), new GraphQLField("totalCount"));
 
+		// No namespace
+
 		JSONObject dispatchTriggersJSONObject = JSONUtil.getValueAsJSONObject(
 			invokeGraphQLQuery(graphQLField), "JSONObject/data",
 			"JSONObject/dispatchTriggers");
@@ -256,6 +258,27 @@ public abstract class BaseDispatchTriggerResourceTestCase {
 
 		dispatchTriggersJSONObject = JSONUtil.getValueAsJSONObject(
 			invokeGraphQLQuery(graphQLField), "JSONObject/data",
+			"JSONObject/dispatchTriggers");
+
+		Assert.assertEquals(
+			totalCount + 2, dispatchTriggersJSONObject.getLong("totalCount"));
+
+		assertContains(
+			dispatchTrigger1,
+			Arrays.asList(
+				DispatchTriggerSerDes.toDTOs(
+					dispatchTriggersJSONObject.getString("items"))));
+		assertContains(
+			dispatchTrigger2,
+			Arrays.asList(
+				DispatchTriggerSerDes.toDTOs(
+					dispatchTriggersJSONObject.getString("items"))));
+
+		// Using the namespace dispatch_v1_0
+
+		dispatchTriggersJSONObject = JSONUtil.getValueAsJSONObject(
+			invokeGraphQLQuery(new GraphQLField("dispatch_v1_0", graphQLField)),
+			"JSONObject/data", "JSONObject/dispatch_v1_0",
 			"JSONObject/dispatchTriggers");
 
 		Assert.assertEquals(

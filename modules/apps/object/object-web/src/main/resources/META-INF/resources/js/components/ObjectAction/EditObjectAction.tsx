@@ -9,7 +9,7 @@ import React from 'react';
 import {ObjectActionContainer} from './ObjectActionContainer';
 
 interface EditObjectActionProps {
-	allowScriptContentBeExecutedOrIncluded: boolean;
+	allowScriptContentToBeExecutedOrIncluded: boolean;
 	isApproved: boolean;
 	objectAction: ObjectAction;
 	objectActionCodeEditorElements: SidebarCategory[];
@@ -19,12 +19,13 @@ interface EditObjectActionProps {
 	objectDefinitionId: number;
 	objectDefinitionsRelationshipsURL: string;
 	readOnly?: boolean;
+	scriptManagementConfigurationPortletURL: string;
 	systemObject: boolean;
 	validateExpressionURL: string;
 }
 
 export default function EditObjectAction({
-	allowScriptContentBeExecutedOrIncluded,
+	allowScriptContentToBeExecutedOrIncluded,
 	isApproved,
 	objectAction: {id, ...values},
 	objectActionCodeEditorElements,
@@ -34,13 +35,14 @@ export default function EditObjectAction({
 	objectDefinitionId,
 	objectDefinitionsRelationshipsURL,
 	readOnly,
+	scriptManagementConfigurationPortletURL,
 	systemObject,
 	validateExpressionURL,
 }: EditObjectActionProps) {
 	return (
 		<ObjectActionContainer
-			allowScriptContentBeExecutedOrIncluded={
-				allowScriptContentBeExecutedOrIncluded
+			allowScriptContentToBeExecutedOrIncluded={
+				allowScriptContentToBeExecutedOrIncluded
 			}
 			editingObjectAction
 			isApproved={isApproved}
@@ -60,6 +62,9 @@ export default function EditObjectAction({
 				method: 'PUT',
 				url: `/o/object-admin/v1.0/object-actions/${id}`,
 			}}
+			scriptManagementConfigurationPortletURL={
+				scriptManagementConfigurationPortletURL
+			}
 			successMessage={Liferay.Language.get(
 				'the-object-action-was-updated-successfully'
 			)}

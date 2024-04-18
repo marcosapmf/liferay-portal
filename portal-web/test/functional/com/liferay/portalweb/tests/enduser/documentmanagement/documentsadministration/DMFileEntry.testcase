@@ -806,6 +806,7 @@ definition {
 	@priority = 4
 	test CanCopyBasicDocumentLinkViaActionsDropdown {
 		property custom.properties = "feature.flag.LPS-197477=true";
+		property portal.release = "quarantine";
 
 		var portalURL = PropsUtil.get("portal.url");
 
@@ -4333,7 +4334,7 @@ definition {
 	@description = "This test covers LPS-144687. It validates that a temp zip is not created if NoSuchFileException occurs during a download."
 	@priority = 4
 	test NoZipFileIsCreatedIfDownloadResultsInError {
-		DMDocument.deleteTempFolder(appServer = "tomcat-9.0.83");
+		DMDocument.deleteTempFolder(appServer = "tomcat-9.0.87");
 
 		for (var num : list "1,2,3") {
 			JSONDocument.addFileWithUploadedFile(
@@ -4353,7 +4354,7 @@ definition {
 		AssertConsoleTextPresent(value1 = "com.liferay.document.library.kernel.exception.NoSuchFileException");
 
 		DMDocument.assertNoZipFileFromTempFolder(
-			appServer = "tomcat-9.0.83",
+			appServer = "tomcat-9.0.87",
 			fileNamePattern = "*.zip");
 	}
 

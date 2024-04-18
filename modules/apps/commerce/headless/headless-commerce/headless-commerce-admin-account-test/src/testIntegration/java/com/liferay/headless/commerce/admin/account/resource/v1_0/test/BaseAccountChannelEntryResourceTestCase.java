@@ -250,6 +250,8 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 		AccountChannelEntry accountChannelEntry =
 			testGraphQLGetAccountChannelBillingAddressId_addAccountChannelEntry();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				accountChannelEntry,
@@ -266,6 +268,30 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 								getGraphQLFields())),
 						"JSONObject/data",
 						"Object/accountChannelBillingAddressId"))));
+
+		// Using the namespace headlessCommerceAdminAccount_v1_0
+
+		Assert.assertTrue(
+			equals(
+				accountChannelEntry,
+				AccountChannelEntrySerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessCommerceAdminAccount_v1_0",
+								new GraphQLField(
+									"accountChannelBillingAddressId",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"id",
+												accountChannelEntry.getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessCommerceAdminAccount_v1_0",
+						"Object/accountChannelBillingAddressId"))));
 	}
 
 	@Test
@@ -273,6 +299,8 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 		throws Exception {
 
 		Long irrelevantId = RandomTestUtil.randomLong();
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -286,6 +314,25 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessCommerceAdminAccount_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessCommerceAdminAccount_v1_0",
+						new GraphQLField(
+							"accountChannelBillingAddressId",
+							new HashMap<String, Object>() {
+								{
+									put("id", irrelevantId);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}
@@ -390,6 +437,8 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 		AccountChannelEntry accountChannelEntry =
 			testGraphQLGetAccountChannelCurrencyId_addAccountChannelEntry();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				accountChannelEntry,
@@ -406,6 +455,30 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 								getGraphQLFields())),
 						"JSONObject/data",
 						"Object/accountChannelCurrencyId"))));
+
+		// Using the namespace headlessCommerceAdminAccount_v1_0
+
+		Assert.assertTrue(
+			equals(
+				accountChannelEntry,
+				AccountChannelEntrySerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessCommerceAdminAccount_v1_0",
+								new GraphQLField(
+									"accountChannelCurrencyId",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"id",
+												accountChannelEntry.getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessCommerceAdminAccount_v1_0",
+						"Object/accountChannelCurrencyId"))));
 	}
 
 	@Test
@@ -413,6 +486,8 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 		throws Exception {
 
 		Long irrelevantId = RandomTestUtil.randomLong();
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -426,6 +501,25 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessCommerceAdminAccount_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessCommerceAdminAccount_v1_0",
+						new GraphQLField(
+							"accountChannelCurrencyId",
+							new HashMap<String, Object>() {
+								{
+									put("id", irrelevantId);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}
@@ -532,6 +626,8 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 		AccountChannelEntry accountChannelEntry =
 			testGraphQLGetAccountChannelDeliveryTermId_addAccountChannelEntry();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				accountChannelEntry,
@@ -548,6 +644,30 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 								getGraphQLFields())),
 						"JSONObject/data",
 						"Object/accountChannelDeliveryTermId"))));
+
+		// Using the namespace headlessCommerceAdminAccount_v1_0
+
+		Assert.assertTrue(
+			equals(
+				accountChannelEntry,
+				AccountChannelEntrySerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessCommerceAdminAccount_v1_0",
+								new GraphQLField(
+									"accountChannelDeliveryTermId",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"id",
+												accountChannelEntry.getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessCommerceAdminAccount_v1_0",
+						"Object/accountChannelDeliveryTermId"))));
 	}
 
 	@Test
@@ -555,6 +675,8 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 		throws Exception {
 
 		Long irrelevantId = RandomTestUtil.randomLong();
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -568,6 +690,25 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessCommerceAdminAccount_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessCommerceAdminAccount_v1_0",
+						new GraphQLField(
+							"accountChannelDeliveryTermId",
+							new HashMap<String, Object>() {
+								{
+									put("id", irrelevantId);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}
@@ -672,6 +813,8 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 		AccountChannelEntry accountChannelEntry =
 			testGraphQLGetAccountChannelDiscountId_addAccountChannelEntry();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				accountChannelEntry,
@@ -688,6 +831,30 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 								getGraphQLFields())),
 						"JSONObject/data",
 						"Object/accountChannelDiscountId"))));
+
+		// Using the namespace headlessCommerceAdminAccount_v1_0
+
+		Assert.assertTrue(
+			equals(
+				accountChannelEntry,
+				AccountChannelEntrySerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessCommerceAdminAccount_v1_0",
+								new GraphQLField(
+									"accountChannelDiscountId",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"id",
+												accountChannelEntry.getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessCommerceAdminAccount_v1_0",
+						"Object/accountChannelDiscountId"))));
 	}
 
 	@Test
@@ -695,6 +862,8 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 		throws Exception {
 
 		Long irrelevantId = RandomTestUtil.randomLong();
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -708,6 +877,25 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessCommerceAdminAccount_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessCommerceAdminAccount_v1_0",
+						new GraphQLField(
+							"accountChannelDiscountId",
+							new HashMap<String, Object>() {
+								{
+									put("id", irrelevantId);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}
@@ -814,6 +1002,8 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 		AccountChannelEntry accountChannelEntry =
 			testGraphQLGetAccountChannelPaymentMethodId_addAccountChannelEntry();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				accountChannelEntry,
@@ -830,6 +1020,30 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 								getGraphQLFields())),
 						"JSONObject/data",
 						"Object/accountChannelPaymentMethodId"))));
+
+		// Using the namespace headlessCommerceAdminAccount_v1_0
+
+		Assert.assertTrue(
+			equals(
+				accountChannelEntry,
+				AccountChannelEntrySerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessCommerceAdminAccount_v1_0",
+								new GraphQLField(
+									"accountChannelPaymentMethodId",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"id",
+												accountChannelEntry.getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessCommerceAdminAccount_v1_0",
+						"Object/accountChannelPaymentMethodId"))));
 	}
 
 	@Test
@@ -837,6 +1051,8 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 		throws Exception {
 
 		Long irrelevantId = RandomTestUtil.randomLong();
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -850,6 +1066,25 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessCommerceAdminAccount_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessCommerceAdminAccount_v1_0",
+						new GraphQLField(
+							"accountChannelPaymentMethodId",
+							new HashMap<String, Object>() {
+								{
+									put("id", irrelevantId);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}
@@ -956,6 +1191,8 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 		AccountChannelEntry accountChannelEntry =
 			testGraphQLGetAccountChannelPaymentTermId_addAccountChannelEntry();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				accountChannelEntry,
@@ -972,6 +1209,30 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 								getGraphQLFields())),
 						"JSONObject/data",
 						"Object/accountChannelPaymentTermId"))));
+
+		// Using the namespace headlessCommerceAdminAccount_v1_0
+
+		Assert.assertTrue(
+			equals(
+				accountChannelEntry,
+				AccountChannelEntrySerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessCommerceAdminAccount_v1_0",
+								new GraphQLField(
+									"accountChannelPaymentTermId",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"id",
+												accountChannelEntry.getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessCommerceAdminAccount_v1_0",
+						"Object/accountChannelPaymentTermId"))));
 	}
 
 	@Test
@@ -979,6 +1240,8 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 		throws Exception {
 
 		Long irrelevantId = RandomTestUtil.randomLong();
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -992,6 +1255,25 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessCommerceAdminAccount_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessCommerceAdminAccount_v1_0",
+						new GraphQLField(
+							"accountChannelPaymentTermId",
+							new HashMap<String, Object>() {
+								{
+									put("id", irrelevantId);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}
@@ -1098,6 +1380,8 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 		AccountChannelEntry accountChannelEntry =
 			testGraphQLGetAccountChannelPriceListId_addAccountChannelEntry();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				accountChannelEntry,
@@ -1114,6 +1398,30 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 								getGraphQLFields())),
 						"JSONObject/data",
 						"Object/accountChannelPriceListId"))));
+
+		// Using the namespace headlessCommerceAdminAccount_v1_0
+
+		Assert.assertTrue(
+			equals(
+				accountChannelEntry,
+				AccountChannelEntrySerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessCommerceAdminAccount_v1_0",
+								new GraphQLField(
+									"accountChannelPriceListId",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"id",
+												accountChannelEntry.getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessCommerceAdminAccount_v1_0",
+						"Object/accountChannelPriceListId"))));
 	}
 
 	@Test
@@ -1121,6 +1429,8 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 		throws Exception {
 
 		Long irrelevantId = RandomTestUtil.randomLong();
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -1134,6 +1444,25 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessCommerceAdminAccount_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessCommerceAdminAccount_v1_0",
+						new GraphQLField(
+							"accountChannelPriceListId",
+							new HashMap<String, Object>() {
+								{
+									put("id", irrelevantId);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}
@@ -1242,6 +1571,8 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 		AccountChannelEntry accountChannelEntry =
 			testGraphQLGetAccountChannelShippingAddressId_addAccountChannelEntry();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				accountChannelEntry,
@@ -1258,6 +1589,30 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 								getGraphQLFields())),
 						"JSONObject/data",
 						"Object/accountChannelShippingAddressId"))));
+
+		// Using the namespace headlessCommerceAdminAccount_v1_0
+
+		Assert.assertTrue(
+			equals(
+				accountChannelEntry,
+				AccountChannelEntrySerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessCommerceAdminAccount_v1_0",
+								new GraphQLField(
+									"accountChannelShippingAddressId",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"id",
+												accountChannelEntry.getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessCommerceAdminAccount_v1_0",
+						"Object/accountChannelShippingAddressId"))));
 	}
 
 	@Test
@@ -1265,6 +1620,8 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 		throws Exception {
 
 		Long irrelevantId = RandomTestUtil.randomLong();
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -1278,6 +1635,25 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessCommerceAdminAccount_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessCommerceAdminAccount_v1_0",
+						new GraphQLField(
+							"accountChannelShippingAddressId",
+							new HashMap<String, Object>() {
+								{
+									put("id", irrelevantId);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}
@@ -1381,6 +1757,8 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 		AccountChannelEntry accountChannelEntry =
 			testGraphQLGetAccountChannelUserId_addAccountChannelEntry();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				accountChannelEntry,
@@ -1396,11 +1774,37 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 								},
 								getGraphQLFields())),
 						"JSONObject/data", "Object/accountChannelUserId"))));
+
+		// Using the namespace headlessCommerceAdminAccount_v1_0
+
+		Assert.assertTrue(
+			equals(
+				accountChannelEntry,
+				AccountChannelEntrySerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessCommerceAdminAccount_v1_0",
+								new GraphQLField(
+									"accountChannelUserId",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"id",
+												accountChannelEntry.getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessCommerceAdminAccount_v1_0",
+						"Object/accountChannelUserId"))));
 	}
 
 	@Test
 	public void testGraphQLGetAccountChannelUserIdNotFound() throws Exception {
 		Long irrelevantId = RandomTestUtil.randomLong();
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -1414,6 +1818,25 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessCommerceAdminAccount_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessCommerceAdminAccount_v1_0",
+						new GraphQLField(
+							"accountChannelUserId",
+							new HashMap<String, Object>() {
+								{
+									put("id", irrelevantId);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}

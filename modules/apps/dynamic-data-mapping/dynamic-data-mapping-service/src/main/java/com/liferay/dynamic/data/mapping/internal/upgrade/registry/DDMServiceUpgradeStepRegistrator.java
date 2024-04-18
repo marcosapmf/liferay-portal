@@ -49,6 +49,7 @@ import com.liferay.dynamic.data.mapping.internal.upgrade.v5_2_0.DDMFacetTemplate
 import com.liferay.dynamic.data.mapping.internal.upgrade.v5_2_1.WorkflowDefinitionLinkUpgradeProcess;
 import com.liferay.dynamic.data.mapping.internal.upgrade.v5_2_2.DLFileEntryDDMFormInstanceRecordUpgradeProcess;
 import com.liferay.dynamic.data.mapping.internal.upgrade.v5_3_3.BrowserSnifferTemplateUpgradeProcess;
+import com.liferay.dynamic.data.mapping.internal.upgrade.v5_4_5.DDMTemplateLinkUpgradeProcess;
 import com.liferay.dynamic.data.mapping.io.DDMFormDeserializer;
 import com.liferay.dynamic.data.mapping.io.DDMFormLayoutDeserializer;
 import com.liferay.dynamic.data.mapping.io.DDMFormLayoutSerializer;
@@ -363,8 +364,10 @@ public class DDMServiceUpgradeStepRegistrator
 
 		registry.register(
 			"3.7.3", "3.7.4",
-			new com.liferay.dynamic.data.mapping.internal.upgrade.v3_7_4.
-				DDMTemplateUpgradeProcess());
+			UpgradeProcessFactory.runSQL(
+				"update DDMTemplate set templateKey = " +
+					"CONCAT(CAST_TEXT(templateId), '_key') where templateKey " +
+						"is null or templateKey = ''"));
 
 		registry.register(
 			"3.7.4", "3.8.0",
@@ -557,6 +560,10 @@ public class DDMServiceUpgradeStepRegistrator
 				DDMStructureUpgradeProcess(
 					_jsonDDMFormDeserializer, _jsonDDMFormSerializer,
 					_spiDDMFormRuleConverter));
+
+		registry.register(
+			"5.4.4", "5.4.5",
+			new DDMTemplateLinkUpgradeProcess(_classNameLocalService));
 	}
 
 	@Activate

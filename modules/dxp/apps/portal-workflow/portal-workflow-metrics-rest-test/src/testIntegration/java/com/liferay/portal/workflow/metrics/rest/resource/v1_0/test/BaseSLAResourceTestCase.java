@@ -374,7 +374,10 @@ public abstract class BaseSLAResourceTestCase {
 
 	@Test
 	public void testGraphQLDeleteSLA() throws Exception {
-		SLA sla = testGraphQLDeleteSLA_addSLA();
+
+		// No namespace
+
+		SLA sla1 = testGraphQLDeleteSLA_addSLA();
 
 		Assert.assertTrue(
 			JSONUtil.getValueAsBoolean(
@@ -383,23 +386,59 @@ public abstract class BaseSLAResourceTestCase {
 						"deleteSLA",
 						new HashMap<String, Object>() {
 							{
-								put("slaId", sla.getId());
+								put("slaId", sla1.getId());
 							}
 						})),
 				"JSONObject/data", "Object/deleteSLA"));
-		JSONArray errorsJSONArray = JSONUtil.getValueAsJSONArray(
+
+		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
 			invokeGraphQLQuery(
 				new GraphQLField(
 					"sLA",
 					new HashMap<String, Object>() {
 						{
-							put("slaId", sla.getId());
+							put("slaId", sla1.getId());
 						}
 					},
 					new GraphQLField("id"))),
 			"JSONArray/errors");
 
-		Assert.assertTrue(errorsJSONArray.length() > 0);
+		Assert.assertTrue(errorsJSONArray1.length() > 0);
+
+		// Using the namespace portalWorkflowMetrics_v1_0
+
+		SLA sla2 = testGraphQLDeleteSLA_addSLA();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"portalWorkflowMetrics_v1_0",
+						new GraphQLField(
+							"deleteSLA",
+							new HashMap<String, Object>() {
+								{
+									put("slaId", sla2.getId());
+								}
+							}))),
+				"JSONObject/data", "JSONObject/portalWorkflowMetrics_v1_0",
+				"Object/deleteSLA"));
+
+		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"portalWorkflowMetrics_v1_0",
+					new GraphQLField(
+						"sLA",
+						new HashMap<String, Object>() {
+							{
+								put("slaId", sla2.getId());
+							}
+						},
+						new GraphQLField("id")))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray2.length() > 0);
 	}
 
 	protected SLA testGraphQLDeleteSLA_addSLA() throws Exception {
@@ -425,6 +464,8 @@ public abstract class BaseSLAResourceTestCase {
 	public void testGraphQLGetSLA() throws Exception {
 		SLA sla = testGraphQLGetSLA_addSLA();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				sla,
@@ -440,11 +481,35 @@ public abstract class BaseSLAResourceTestCase {
 								},
 								getGraphQLFields())),
 						"JSONObject/data", "Object/sLA"))));
+
+		// Using the namespace portalWorkflowMetrics_v1_0
+
+		Assert.assertTrue(
+			equals(
+				sla,
+				SLASerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"portalWorkflowMetrics_v1_0",
+								new GraphQLField(
+									"sLA",
+									new HashMap<String, Object>() {
+										{
+											put("slaId", sla.getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/portalWorkflowMetrics_v1_0",
+						"Object/sLA"))));
 	}
 
 	@Test
 	public void testGraphQLGetSLANotFound() throws Exception {
 		Long irrelevantSlaId = RandomTestUtil.randomLong();
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -458,6 +523,25 @@ public abstract class BaseSLAResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace portalWorkflowMetrics_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"portalWorkflowMetrics_v1_0",
+						new GraphQLField(
+							"sLA",
+							new HashMap<String, Object>() {
+								{
+									put("slaId", irrelevantSlaId);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}

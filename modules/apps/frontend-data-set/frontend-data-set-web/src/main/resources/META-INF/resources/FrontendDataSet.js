@@ -26,16 +26,16 @@ import ClayEmptyState from '@clayui/empty-state';
 
 import FrontendDataSetContext from './FrontendDataSetContext';
 import ManagementBar from './management_bar/ManagementBar';
-import CreationMenu from './management_bar/components/CreationMenu';
-import {FILTER_IMPLEMENTATIONS} from './management_bar/components/filters/Filter';
+import CreationMenu from './management_bar/controls/CreationMenu';
+import {FILTER_IMPLEMENTATIONS} from './management_bar/controls/filters/Filter';
 import Modal from './modal/Modal';
 import SidePanel from './side_panel/SidePanel';
 import filterCreationActions from './utils/actionItems/filterCreationActions';
 import EVENTS from './utils/eventsDefinitions';
+import getRandomId from './utils/getRandomId';
 import {
 	formatItemChanges,
 	getCurrentItemUpdates,
-	getRandomId,
 	loadData,
 } from './utils/index';
 import {logError} from './utils/logError';
@@ -250,15 +250,24 @@ const FrontendDataSet = ({
 							}))
 					: [],
 				onLoad: (bindingContexts) => {
-					const newFilters = bindingContexts.map(
-						({
-							binding: clientExtensionFilterImplementation,
-							context: filter,
-						}) => ({
-							...filter,
-							clientExtensionFilterImplementation,
-						})
-					);
+					const newFilters = initialFilters.map((filter) => {
+						const bindingContext = bindingContexts.find(
+							(bindingContext) =>
+								bindingContext.context
+									.clientExtensionFilterURL ===
+								filter.clientExtensionFilterURL
+						);
+
+						if (bindingContext) {
+							return {
+								...filter,
+								clientExtensionFilterImplementation:
+									bindingContext.binding,
+							};
+						}
+
+						return filter;
+					});
 
 					viewsDispatch({
 						type: VIEWS_ACTION_TYPES.UPDATE_FILTERS,
@@ -896,7 +905,11 @@ const FrontendDataSet = ({
 						/>
 					)}
 
-					<div className="data-set-wrapper" ref={wrapperRef}>
+					<div
+						className="data-set-wrapper"
+						data-testid={`visualization-mode-${activeView.name}`}
+						ref={wrapperRef}
+					>
 						{style === 'default' && (
 							<div className="data-set data-set-inline">
 								{managementBar}

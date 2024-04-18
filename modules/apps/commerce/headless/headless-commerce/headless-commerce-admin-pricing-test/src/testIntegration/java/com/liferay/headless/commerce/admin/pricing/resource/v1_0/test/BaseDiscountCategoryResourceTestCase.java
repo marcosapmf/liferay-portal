@@ -206,7 +206,10 @@ public abstract class BaseDiscountCategoryResourceTestCase {
 
 	@Test
 	public void testGraphQLDeleteDiscountCategory() throws Exception {
-		DiscountCategory discountCategory =
+
+		// No namespace
+
+		DiscountCategory discountCategory1 =
 			testGraphQLDeleteDiscountCategory_addDiscountCategory();
 
 		Assert.assertTrue(
@@ -216,10 +219,31 @@ public abstract class BaseDiscountCategoryResourceTestCase {
 						"deleteDiscountCategory",
 						new HashMap<String, Object>() {
 							{
-								put("id", discountCategory.getId());
+								put("id", discountCategory1.getId());
 							}
 						})),
 				"JSONObject/data", "Object/deleteDiscountCategory"));
+
+		// Using the namespace headlessCommerceAdminPricing_v1_0
+
+		DiscountCategory discountCategory2 =
+			testGraphQLDeleteDiscountCategory_addDiscountCategory();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"headlessCommerceAdminPricing_v1_0",
+						new GraphQLField(
+							"deleteDiscountCategory",
+							new HashMap<String, Object>() {
+								{
+									put("id", discountCategory2.getId());
+								}
+							}))),
+				"JSONObject/data",
+				"JSONObject/headlessCommerceAdminPricing_v1_0",
+				"Object/deleteDiscountCategory"));
 	}
 
 	protected DiscountCategory

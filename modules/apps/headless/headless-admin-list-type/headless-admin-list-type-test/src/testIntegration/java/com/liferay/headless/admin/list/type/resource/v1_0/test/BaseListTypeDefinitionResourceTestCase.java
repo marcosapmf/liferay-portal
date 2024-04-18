@@ -611,6 +611,8 @@ public abstract class BaseListTypeDefinitionResourceTestCase {
 			new GraphQLField("items", getGraphQLFields()),
 			new GraphQLField("page"), new GraphQLField("totalCount"));
 
+		// No namespace
+
 		JSONObject listTypeDefinitionsJSONObject =
 			JSONUtil.getValueAsJSONObject(
 				invokeGraphQLQuery(graphQLField), "JSONObject/data",
@@ -625,6 +627,29 @@ public abstract class BaseListTypeDefinitionResourceTestCase {
 
 		listTypeDefinitionsJSONObject = JSONUtil.getValueAsJSONObject(
 			invokeGraphQLQuery(graphQLField), "JSONObject/data",
+			"JSONObject/listTypeDefinitions");
+
+		Assert.assertEquals(
+			totalCount + 2,
+			listTypeDefinitionsJSONObject.getLong("totalCount"));
+
+		assertContains(
+			listTypeDefinition1,
+			Arrays.asList(
+				ListTypeDefinitionSerDes.toDTOs(
+					listTypeDefinitionsJSONObject.getString("items"))));
+		assertContains(
+			listTypeDefinition2,
+			Arrays.asList(
+				ListTypeDefinitionSerDes.toDTOs(
+					listTypeDefinitionsJSONObject.getString("items"))));
+
+		// Using the namespace headlessAdminListType_v1_0
+
+		listTypeDefinitionsJSONObject = JSONUtil.getValueAsJSONObject(
+			invokeGraphQLQuery(
+				new GraphQLField("headlessAdminListType_v1_0", graphQLField)),
+			"JSONObject/data", "JSONObject/headlessAdminListType_v1_0",
 			"JSONObject/listTypeDefinitions");
 
 		Assert.assertEquals(
@@ -703,6 +728,8 @@ public abstract class BaseListTypeDefinitionResourceTestCase {
 		ListTypeDefinition listTypeDefinition =
 			testGraphQLGetListTypeDefinitionByExternalReferenceCode_addListTypeDefinition();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				listTypeDefinition,
@@ -724,6 +751,33 @@ public abstract class BaseListTypeDefinitionResourceTestCase {
 								getGraphQLFields())),
 						"JSONObject/data",
 						"Object/listTypeDefinitionByExternalReferenceCode"))));
+
+		// Using the namespace headlessAdminListType_v1_0
+
+		Assert.assertTrue(
+			equals(
+				listTypeDefinition,
+				ListTypeDefinitionSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessAdminListType_v1_0",
+								new GraphQLField(
+									"listTypeDefinitionByExternalReferenceCode",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"externalReferenceCode",
+												"\"" +
+													listTypeDefinition.
+														getExternalReferenceCode() +
+															"\"");
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessAdminListType_v1_0",
+						"Object/listTypeDefinitionByExternalReferenceCode"))));
 	}
 
 	@Test
@@ -732,6 +786,8 @@ public abstract class BaseListTypeDefinitionResourceTestCase {
 
 		String irrelevantExternalReferenceCode =
 			"\"" + RandomTestUtil.randomString() + "\"";
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -747,6 +803,27 @@ public abstract class BaseListTypeDefinitionResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessAdminListType_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessAdminListType_v1_0",
+						new GraphQLField(
+							"listTypeDefinitionByExternalReferenceCode",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"externalReferenceCode",
+										irrelevantExternalReferenceCode);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}
@@ -855,7 +932,10 @@ public abstract class BaseListTypeDefinitionResourceTestCase {
 
 	@Test
 	public void testGraphQLDeleteListTypeDefinition() throws Exception {
-		ListTypeDefinition listTypeDefinition =
+
+		// No namespace
+
+		ListTypeDefinition listTypeDefinition1 =
 			testGraphQLDeleteListTypeDefinition_addListTypeDefinition();
 
 		Assert.assertTrue(
@@ -867,11 +947,12 @@ public abstract class BaseListTypeDefinitionResourceTestCase {
 							{
 								put(
 									"listTypeDefinitionId",
-									listTypeDefinition.getId());
+									listTypeDefinition1.getId());
 							}
 						})),
 				"JSONObject/data", "Object/deleteListTypeDefinition"));
-		JSONArray errorsJSONArray = JSONUtil.getValueAsJSONArray(
+
+		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
 			invokeGraphQLQuery(
 				new GraphQLField(
 					"listTypeDefinition",
@@ -879,13 +960,53 @@ public abstract class BaseListTypeDefinitionResourceTestCase {
 						{
 							put(
 								"listTypeDefinitionId",
-								listTypeDefinition.getId());
+								listTypeDefinition1.getId());
 						}
 					},
 					new GraphQLField("id"))),
 			"JSONArray/errors");
 
-		Assert.assertTrue(errorsJSONArray.length() > 0);
+		Assert.assertTrue(errorsJSONArray1.length() > 0);
+
+		// Using the namespace headlessAdminListType_v1_0
+
+		ListTypeDefinition listTypeDefinition2 =
+			testGraphQLDeleteListTypeDefinition_addListTypeDefinition();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"headlessAdminListType_v1_0",
+						new GraphQLField(
+							"deleteListTypeDefinition",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"listTypeDefinitionId",
+										listTypeDefinition2.getId());
+								}
+							}))),
+				"JSONObject/data", "JSONObject/headlessAdminListType_v1_0",
+				"Object/deleteListTypeDefinition"));
+
+		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"headlessAdminListType_v1_0",
+					new GraphQLField(
+						"listTypeDefinition",
+						new HashMap<String, Object>() {
+							{
+								put(
+									"listTypeDefinitionId",
+									listTypeDefinition2.getId());
+							}
+						},
+						new GraphQLField("id")))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray2.length() > 0);
 	}
 
 	protected ListTypeDefinition
@@ -921,6 +1042,8 @@ public abstract class BaseListTypeDefinitionResourceTestCase {
 		ListTypeDefinition listTypeDefinition =
 			testGraphQLGetListTypeDefinition_addListTypeDefinition();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				listTypeDefinition,
@@ -938,11 +1061,37 @@ public abstract class BaseListTypeDefinitionResourceTestCase {
 								},
 								getGraphQLFields())),
 						"JSONObject/data", "Object/listTypeDefinition"))));
+
+		// Using the namespace headlessAdminListType_v1_0
+
+		Assert.assertTrue(
+			equals(
+				listTypeDefinition,
+				ListTypeDefinitionSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessAdminListType_v1_0",
+								new GraphQLField(
+									"listTypeDefinition",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"listTypeDefinitionId",
+												listTypeDefinition.getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessAdminListType_v1_0",
+						"Object/listTypeDefinition"))));
 	}
 
 	@Test
 	public void testGraphQLGetListTypeDefinitionNotFound() throws Exception {
 		Long irrelevantListTypeDefinitionId = RandomTestUtil.randomLong();
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -958,6 +1107,27 @@ public abstract class BaseListTypeDefinitionResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessAdminListType_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessAdminListType_v1_0",
+						new GraphQLField(
+							"listTypeDefinition",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"listTypeDefinitionId",
+										irrelevantListTypeDefinitionId);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}

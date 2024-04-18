@@ -418,7 +418,10 @@ public abstract class BaseWarehouseResourceTestCase {
 
 	@Test
 	public void testGraphQLDeleteWarehouse() throws Exception {
-		Warehouse warehouse = testGraphQLDeleteWarehouse_addWarehouse();
+
+		// No namespace
+
+		Warehouse warehouse1 = testGraphQLDeleteWarehouse_addWarehouse();
 
 		Assert.assertTrue(
 			JSONUtil.getValueAsBoolean(
@@ -427,23 +430,60 @@ public abstract class BaseWarehouseResourceTestCase {
 						"deleteWarehouse",
 						new HashMap<String, Object>() {
 							{
-								put("id", warehouse.getId());
+								put("id", warehouse1.getId());
 							}
 						})),
 				"JSONObject/data", "Object/deleteWarehouse"));
-		JSONArray errorsJSONArray = JSONUtil.getValueAsJSONArray(
+
+		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
 			invokeGraphQLQuery(
 				new GraphQLField(
 					"warehouse",
 					new HashMap<String, Object>() {
 						{
-							put("id", warehouse.getId());
+							put("id", warehouse1.getId());
 						}
 					},
 					new GraphQLField("id"))),
 			"JSONArray/errors");
 
-		Assert.assertTrue(errorsJSONArray.length() > 0);
+		Assert.assertTrue(errorsJSONArray1.length() > 0);
+
+		// Using the namespace headlessCommerceAdminSiteSetting_v1_0
+
+		Warehouse warehouse2 = testGraphQLDeleteWarehouse_addWarehouse();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"headlessCommerceAdminSiteSetting_v1_0",
+						new GraphQLField(
+							"deleteWarehouse",
+							new HashMap<String, Object>() {
+								{
+									put("id", warehouse2.getId());
+								}
+							}))),
+				"JSONObject/data",
+				"JSONObject/headlessCommerceAdminSiteSetting_v1_0",
+				"Object/deleteWarehouse"));
+
+		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"headlessCommerceAdminSiteSetting_v1_0",
+					new GraphQLField(
+						"warehouse",
+						new HashMap<String, Object>() {
+							{
+								put("id", warehouse2.getId());
+							}
+						},
+						new GraphQLField("id")))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray2.length() > 0);
 	}
 
 	protected Warehouse testGraphQLDeleteWarehouse_addWarehouse()
@@ -472,6 +512,8 @@ public abstract class BaseWarehouseResourceTestCase {
 	public void testGraphQLGetWarehouse() throws Exception {
 		Warehouse warehouse = testGraphQLGetWarehouse_addWarehouse();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				warehouse,
@@ -487,11 +529,35 @@ public abstract class BaseWarehouseResourceTestCase {
 								},
 								getGraphQLFields())),
 						"JSONObject/data", "Object/warehouse"))));
+
+		// Using the namespace headlessCommerceAdminSiteSetting_v1_0
+
+		Assert.assertTrue(
+			equals(
+				warehouse,
+				WarehouseSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessCommerceAdminSiteSetting_v1_0",
+								new GraphQLField(
+									"warehouse",
+									new HashMap<String, Object>() {
+										{
+											put("id", warehouse.getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessCommerceAdminSiteSetting_v1_0",
+						"Object/warehouse"))));
 	}
 
 	@Test
 	public void testGraphQLGetWarehouseNotFound() throws Exception {
 		Long irrelevantId = RandomTestUtil.randomLong();
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -505,6 +571,25 @@ public abstract class BaseWarehouseResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessCommerceAdminSiteSetting_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessCommerceAdminSiteSetting_v1_0",
+						new GraphQLField(
+							"warehouse",
+							new HashMap<String, Object>() {
+								{
+									put("id", irrelevantId);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}

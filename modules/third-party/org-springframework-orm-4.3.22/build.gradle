@@ -50,6 +50,14 @@ jarPatched {
 	duplicatesStrategy = "exclude"
 
 	from copyPatchOriginalLibClasses
+
+	mustRunAfter compileJava
+	mustRunAfter generatePomFileForMavenPublication
+	mustRunAfter processResources
+}
+
+jarSources {
+	mustRunAfter patch
 }
 
 javadoc {

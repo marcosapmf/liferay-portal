@@ -102,6 +102,7 @@ Map<String, Object> componentContext = journalDisplayContext.getComponentContext
 											href="<%= editURL %>"
 											label="<%= title %>"
 											title="<%= HtmlUtil.escape(title) %>"
+											translated="<%= false %>"
 										/>
 									</c:when>
 									<c:otherwise>
@@ -111,7 +112,7 @@ Map<String, Object> componentContext = journalDisplayContext.getComponentContext
 									</c:otherwise>
 								</c:choose>
 
-								<c:if test='<%= FeatureFlagManagerUtil.isEnabled("LPD-10626") && !journalDisplayContext.hasGuestViewPermission(curArticle) %>'>
+								<c:if test="<%= !journalDisplayContext.hasGuestViewPermission(curArticle) %>">
 									<clay:icon
 										aria-label="<%= LanguageUtil.get(request, "not-visible-to-guest-users") %>"
 										cssClass="c-ml-2 c-mt-1 lfr-portal-tooltip text-4 text-secondary"
@@ -226,9 +227,10 @@ Map<String, Object> componentContext = journalDisplayContext.getComponentContext
 										<clay:link
 											href="<%= editURL %>"
 											label="<%= title %>"
+											translated="<%= false %>"
 										/>
 
-										<c:if test='<%= FeatureFlagManagerUtil.isEnabled("LPD-10626") && !journalDisplayContext.hasGuestViewPermission(curArticle) %>'>
+										<c:if test="<%= !journalDisplayContext.hasGuestViewPermission(curArticle) %>">
 											<clay:icon
 												aria-label="<%= LanguageUtil.get(request, "not-visible-to-guest-users") %>"
 												cssClass="c-ml-1 c-mt-0 lfr-portal-tooltip text-4 text-secondary"
@@ -372,13 +374,6 @@ Map<String, Object> componentContext = journalDisplayContext.getComponentContext
 						<liferay-ui:search-container-column-text
 							colspan="<%= 2 %>"
 						>
-
-							<%
-							Date createDate = curFolder.getCreateDate();
-
-							String createDateDescription = LanguageUtil.getTimeDescription(request, System.currentTimeMillis() - createDate.getTime(), true);
-							%>
-
 							<div class="d-flex">
 								<c:choose>
 									<c:when test="<%= rowURL.toString() != StringPool.BLANK %>">
@@ -387,6 +382,7 @@ Map<String, Object> componentContext = journalDisplayContext.getComponentContext
 											href="<%= rowURL.toString() %>"
 											label="<%= HtmlUtil.escape(curFolder.getName()) %>"
 											title="<%= HtmlUtil.escape(curFolder.getName()) %>"
+											translated="<%= false %>"
 										/>
 									</c:when>
 									<c:otherwise>
@@ -398,7 +394,7 @@ Map<String, Object> componentContext = journalDisplayContext.getComponentContext
 							</div>
 
 							<span class="c-pt-1 text-secondary">
-								<liferay-ui:message arguments="<%= new String[] {createDateDescription, HtmlUtil.escape(curFolder.getUserName())} %>" key="modified-x-ago-by-x" />
+								<%= journalDisplayContext.getFolderSubtitle(curFolder) %>
 							</span>
 
 							<c:if test="<%= journalDisplayContext.isSearch() && ((curFolder.getParentFolderId() <= 0) || JournalFolderPermission.contains(permissionChecker, curFolder.getParentFolder(), ActionKeys.VIEW)) %>">
@@ -468,6 +464,7 @@ Map<String, Object> componentContext = journalDisplayContext.getComponentContext
 										<clay:link
 											href="<%= rowURL.toString() %>"
 											label="<%= HtmlUtil.escape(curFolder.getName()) %>"
+											translated="<%= false %>"
 										/>
 									</div>
 								</div>
@@ -497,6 +494,14 @@ Map<String, Object> componentContext = journalDisplayContext.getComponentContext
 							value="--"
 						/>
 
+						<c:if test="<%= !journalDisplayContext.isHighlightedDDMStructure() %>">
+							<liferay-ui:search-container-column-text
+								cssClass="table-cell-expand-smallest table-cell-minw-150"
+								name="type"
+								value='<%= LanguageUtil.get(request, "folder") %>'
+							/>
+						</c:if>
+
 						<liferay-ui:search-container-column-date
 							cssClass="table-cell-expand-smallest table-cell-ws-nowrap"
 							name="modified-date"
@@ -516,12 +521,6 @@ Map<String, Object> componentContext = journalDisplayContext.getComponentContext
 								value="<%= curFolder.getCreateDate() %>"
 							/>
 						</c:if>
-
-						<liferay-ui:search-container-column-text
-							cssClass="table-cell-expand-smallest table-cell-minw-150"
-							name="type"
-							value='<%= LanguageUtil.get(request, "folder") %>'
-						/>
 
 						<liferay-ui:search-container-column-text>
 							<clay:dropdown-actions

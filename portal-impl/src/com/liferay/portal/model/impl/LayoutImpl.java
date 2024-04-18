@@ -1434,6 +1434,7 @@ public class LayoutImpl extends LayoutBaseImpl {
 	public boolean isTypeContent() {
 		if (Objects.equals(getType(), LayoutConstants.TYPE_COLLECTION) ||
 			Objects.equals(getType(), LayoutConstants.TYPE_CONTENT) ||
+			Objects.equals(getType(), LayoutConstants.TYPE_UTILITY) ||
 			Objects.equals(
 				_getLayoutTypeControllerType(), LayoutConstants.TYPE_CONTENT)) {
 
@@ -1509,6 +1510,15 @@ public class LayoutImpl extends LayoutBaseImpl {
 	@Override
 	public boolean isTypeURL() {
 		if (Objects.equals(getType(), LayoutConstants.TYPE_URL)) {
+			return true;
+		}
+
+		return false;
+	}
+
+	@Override
+	public boolean isTypeUtility() {
+		if (Objects.equals(getType(), LayoutConstants.TYPE_UTILITY)) {
 			return true;
 		}
 

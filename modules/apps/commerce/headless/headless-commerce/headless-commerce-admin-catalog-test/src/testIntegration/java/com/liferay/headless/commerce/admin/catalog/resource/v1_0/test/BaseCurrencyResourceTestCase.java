@@ -522,6 +522,8 @@ public abstract class BaseCurrencyResourceTestCase {
 			new GraphQLField("items", getGraphQLFields()),
 			new GraphQLField("page"), new GraphQLField("totalCount"));
 
+		// No namespace
+
 		JSONObject currenciesJSONObject = JSONUtil.getValueAsJSONObject(
 			invokeGraphQLQuery(graphQLField), "JSONObject/data",
 			"JSONObject/currencies");
@@ -533,6 +535,29 @@ public abstract class BaseCurrencyResourceTestCase {
 
 		currenciesJSONObject = JSONUtil.getValueAsJSONObject(
 			invokeGraphQLQuery(graphQLField), "JSONObject/data",
+			"JSONObject/currencies");
+
+		Assert.assertEquals(
+			totalCount + 2, currenciesJSONObject.getLong("totalCount"));
+
+		assertContains(
+			currency1,
+			Arrays.asList(
+				CurrencySerDes.toDTOs(
+					currenciesJSONObject.getString("items"))));
+		assertContains(
+			currency2,
+			Arrays.asList(
+				CurrencySerDes.toDTOs(
+					currenciesJSONObject.getString("items"))));
+
+		// Using the namespace headlessCommerceAdminCatalog_v1_0
+
+		currenciesJSONObject = JSONUtil.getValueAsJSONObject(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"headlessCommerceAdminCatalog_v1_0", graphQLField)),
+			"JSONObject/data", "JSONObject/headlessCommerceAdminCatalog_v1_0",
 			"JSONObject/currencies");
 
 		Assert.assertEquals(
@@ -595,7 +620,10 @@ public abstract class BaseCurrencyResourceTestCase {
 
 	@Test
 	public void testGraphQLDeleteCurrency() throws Exception {
-		Currency currency = testGraphQLDeleteCurrency_addCurrency();
+
+		// No namespace
+
+		Currency currency1 = testGraphQLDeleteCurrency_addCurrency();
 
 		Assert.assertTrue(
 			JSONUtil.getValueAsBoolean(
@@ -604,23 +632,60 @@ public abstract class BaseCurrencyResourceTestCase {
 						"deleteCurrency",
 						new HashMap<String, Object>() {
 							{
-								put("id", currency.getId());
+								put("id", currency1.getId());
 							}
 						})),
 				"JSONObject/data", "Object/deleteCurrency"));
-		JSONArray errorsJSONArray = JSONUtil.getValueAsJSONArray(
+
+		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
 			invokeGraphQLQuery(
 				new GraphQLField(
 					"currency",
 					new HashMap<String, Object>() {
 						{
-							put("id", currency.getId());
+							put("id", currency1.getId());
 						}
 					},
 					new GraphQLField("id"))),
 			"JSONArray/errors");
 
-		Assert.assertTrue(errorsJSONArray.length() > 0);
+		Assert.assertTrue(errorsJSONArray1.length() > 0);
+
+		// Using the namespace headlessCommerceAdminCatalog_v1_0
+
+		Currency currency2 = testGraphQLDeleteCurrency_addCurrency();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"headlessCommerceAdminCatalog_v1_0",
+						new GraphQLField(
+							"deleteCurrency",
+							new HashMap<String, Object>() {
+								{
+									put("id", currency2.getId());
+								}
+							}))),
+				"JSONObject/data",
+				"JSONObject/headlessCommerceAdminCatalog_v1_0",
+				"Object/deleteCurrency"));
+
+		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"headlessCommerceAdminCatalog_v1_0",
+					new GraphQLField(
+						"currency",
+						new HashMap<String, Object>() {
+							{
+								put("id", currency2.getId());
+							}
+						},
+						new GraphQLField("id")))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray2.length() > 0);
 	}
 
 	protected Currency testGraphQLDeleteCurrency_addCurrency()
@@ -649,6 +714,8 @@ public abstract class BaseCurrencyResourceTestCase {
 	public void testGraphQLGetCurrency() throws Exception {
 		Currency currency = testGraphQLGetCurrency_addCurrency();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				currency,
@@ -664,11 +731,35 @@ public abstract class BaseCurrencyResourceTestCase {
 								},
 								getGraphQLFields())),
 						"JSONObject/data", "Object/currency"))));
+
+		// Using the namespace headlessCommerceAdminCatalog_v1_0
+
+		Assert.assertTrue(
+			equals(
+				currency,
+				CurrencySerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessCommerceAdminCatalog_v1_0",
+								new GraphQLField(
+									"currency",
+									new HashMap<String, Object>() {
+										{
+											put("id", currency.getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessCommerceAdminCatalog_v1_0",
+						"Object/currency"))));
 	}
 
 	@Test
 	public void testGraphQLGetCurrencyNotFound() throws Exception {
 		Long irrelevantId = RandomTestUtil.randomLong();
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -682,6 +773,25 @@ public abstract class BaseCurrencyResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessCommerceAdminCatalog_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessCommerceAdminCatalog_v1_0",
+						new GraphQLField(
+							"currency",
+							new HashMap<String, Object>() {
+								{
+									put("id", irrelevantId);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}

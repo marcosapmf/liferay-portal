@@ -27,6 +27,7 @@ import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.vulcan.dto.converter.DTOConverter;
@@ -215,7 +216,8 @@ public class ObjectRelationshipResourceImpl
 				GetterUtil.getBoolean(objectRelationship.getSystem()),
 				objectRelationship.getTypeAsString(),
 				ObjectFieldUtil.toObjectField(
-					false, _listTypeDefinitionLocalService,
+					LocaleUtil.getSiteDefault(), false,
+					_listTypeDefinitionLocalService,
 					objectRelationship.getObjectField(),
 					_objectFieldLocalService, _objectFieldSettingLocalService,
 					_objectFilterLocalService)));
@@ -263,7 +265,8 @@ public class ObjectRelationshipResourceImpl
 				GetterUtil.getBoolean(objectRelationship.getEdge()),
 				LocalizedMapUtil.getLocalizedMap(objectRelationship.getLabel()),
 				ObjectFieldUtil.toObjectField(
-					false, _listTypeDefinitionLocalService,
+					LocaleUtil.getSiteDefault(), false,
+					_listTypeDefinitionLocalService,
 					objectRelationship.getObjectField(),
 					_objectFieldLocalService, _objectFieldSettingLocalService,
 					_objectFilterLocalService)));
@@ -297,24 +300,41 @@ public class ObjectRelationshipResourceImpl
 			ObjectRelationship objectRelationship)
 		throws Exception {
 
-		com.liferay.object.model.ObjectDefinition objectDefinition =
-			_objectDefinitionLocalService.
-				fetchObjectDefinitionByExternalReferenceCode(
-					objectRelationship.
-						getObjectDefinitionExternalReferenceCode2(),
-					contextCompany.getCompanyId());
+		com.liferay.object.model.ObjectDefinition
+			serviceBuilderObjectDefinition2 =
+				_objectDefinitionLocalService.
+					fetchObjectDefinitionByExternalReferenceCode(
+						objectRelationship.
+							getObjectDefinitionExternalReferenceCode2(),
+						contextCompany.getCompanyId());
 
-		if (objectDefinition != null) {
-			return objectDefinition;
+		if (serviceBuilderObjectDefinition2 != null) {
+			return serviceBuilderObjectDefinition2;
 		}
 
 		ObjectFolder defaultObjectFolder =
 			_objectFolderLocalService.getOrAddDefaultObjectFolder(
 				contextCompany.getCompanyId());
 
+		long rootObjectDefinitionId = 0;
+
+		if (GetterUtil.getBoolean(objectRelationship.getEdge())) {
+			com.liferay.object.model.ObjectDefinition
+				serviceBuilderObjectDefinition1 =
+					_objectDefinitionLocalService.
+						getObjectDefinitionByExternalReferenceCode(
+							objectRelationship.
+								getObjectDefinitionExternalReferenceCode1(),
+							contextCompany.getCompanyId());
+
+			rootObjectDefinitionId =
+				serviceBuilderObjectDefinition1.getRootObjectDefinitionId();
+		}
+
 		return _objectDefinitionLocalService.addObjectDefinition(
 			objectRelationship.getObjectDefinitionExternalReferenceCode2(),
 			contextUser.getUserId(), defaultObjectFolder.getObjectFolderId(),
+			rootObjectDefinitionId,
 			GetterUtil.get(
 				objectRelationship.getObjectDefinitionModifiable2(), true),
 			GetterUtil.get(

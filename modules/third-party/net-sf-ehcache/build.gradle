@@ -39,6 +39,14 @@ jarPatched {
 				it.name.startsWith "ehcache-"
 			})
 	}
+
+	mustRunAfter compileJava
+	mustRunAfter generatePomFileForMavenPublication
+	mustRunAfter processResources
+}
+
+jarSources {
+	mustRunAfter patch
 }
 
 patch {

@@ -68,11 +68,12 @@ public class ObjectDefinitionLocalServiceWrapper
 	@Override
 	public com.liferay.object.model.ObjectDefinition addObjectDefinition(
 			String externalReferenceCode, long userId, long objectFolderId,
-			boolean modifiable, boolean system)
+			long rootObjectDefinitionId, boolean modifiable, boolean system)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _objectDefinitionLocalService.addObjectDefinition(
-			externalReferenceCode, userId, objectFolderId, modifiable, system);
+			externalReferenceCode, userId, objectFolderId,
+			rootObjectDefinitionId, modifiable, system);
 	}
 
 	@Override
@@ -96,7 +97,8 @@ public class ObjectDefinitionLocalServiceWrapper
 			String panelCategoryKey, String pkObjectFieldDBColumnName,
 			String pkObjectFieldName,
 			java.util.Map<java.util.Locale, String> pluralLabelMap,
-			String scope, String titleObjectFieldName, int version, int status,
+			boolean portlet, String scope, String titleObjectFieldName,
+			int version, int status,
 			java.util.List<com.liferay.object.model.ObjectField> objectFields)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
@@ -104,8 +106,8 @@ public class ObjectDefinitionLocalServiceWrapper
 			externalReferenceCode, userId, objectFolderId, className,
 			dbTableName, enableComments, labelMap, modifiable, name,
 			panelAppOrder, panelCategoryKey, pkObjectFieldDBColumnName,
-			pkObjectFieldName, pluralLabelMap, scope, titleObjectFieldName,
-			version, status, objectFields);
+			pkObjectFieldName, pluralLabelMap, portlet, scope,
+			titleObjectFieldName, version, status, objectFields);
 	}
 
 	@Override
@@ -711,6 +713,14 @@ public class ObjectDefinitionLocalServiceWrapper
 
 		return _objectDefinitionLocalService.updateObjectFolderId(
 			objectDefinitionId, objectFolderId);
+	}
+
+	@Override
+	public com.liferay.object.model.ObjectDefinition updatePortlet(
+			long objectDefinitionId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _objectDefinitionLocalService.updatePortlet(objectDefinitionId);
 	}
 
 	@Override

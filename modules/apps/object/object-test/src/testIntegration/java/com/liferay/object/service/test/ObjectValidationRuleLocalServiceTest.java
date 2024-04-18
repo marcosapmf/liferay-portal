@@ -40,11 +40,13 @@ import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.security.script.management.test.util.ScriptManagementConfigurationTestUtil;
 import com.liferay.portal.test.rule.FeatureFlags;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.vulcan.util.LocalizedMapUtil;
 
+import java.io.Closeable;
 import java.io.Serializable;
 
 import java.util.ArrayList;
@@ -110,6 +112,17 @@ public class ObjectValidationRuleLocalServiceTest {
 			"Engine \"abcdefghijklmnopqrstuvwxyz\" does not exist",
 			() -> _addObjectValidationRule(
 				"abcdefghijklmnopqrstuvwxyz", _VALID_DDM_SCRIPT));
+
+		try (Closeable closeable =
+				ScriptManagementConfigurationTestUtil.disable()) {
+
+			AssertUtils.assertFailure(
+				ObjectValidationRuleEngineException.NotAllowedEngine.class,
+				"Engine \"groovy\" is not allowed",
+				() -> _addObjectValidationRule(
+					ObjectValidationRuleConstants.ENGINE_TYPE_GROOVY,
+					"invalidFields = false;"));
+		}
 
 		AssertUtils.assertFailure(
 			ObjectValidationRuleNameException.class,

@@ -4,7 +4,14 @@
  */
 
 import {ApiHelpers} from '../../../helpers/ApiHelpers';
+import {liferayConfig} from '../../../liferay.config';
 import {DEFAULT_LABEL} from '../utils/constants';
+import {
+	AsyncActionMethod,
+	CreationActionTypes,
+	ItemActionTypes,
+	ModalVariantTypes,
+} from '../utils/types';
 
 const DEFAULT_DATA_SET_ERC = 'sampleDataSetERC';
 export class DataSetManagerApiHelpers extends ApiHelpers {
@@ -31,11 +38,12 @@ export class DataSetManagerApiHelpers extends ApiHelpers {
 			restSchema,
 		};
 
-		return this.post(url, data);
+		return this.post(url, {data});
 	}
 
 	async createDataSetView({
 		defaultItemsPerPage = 20,
+		defaultVisualizationMode,
 		description = 'Sample description',
 		erc = 'sampleDataSetERC',
 		label = DEFAULT_LABEL.VIEW,
@@ -44,6 +52,7 @@ export class DataSetManagerApiHelpers extends ApiHelpers {
 		symbol = 'catalog',
 	}: {
 		defaultItemsPerPage?: number;
+		defaultVisualizationMode?: string;
 		description?: string;
 		erc?: string;
 		label?: string;
@@ -55,6 +64,7 @@ export class DataSetManagerApiHelpers extends ApiHelpers {
 
 		const data = {
 			defaultItemsPerPage,
+			defaultVisualizationMode,
 			description,
 			externalReferenceCode: erc,
 			label,
@@ -63,12 +73,12 @@ export class DataSetManagerApiHelpers extends ApiHelpers {
 			symbol,
 		};
 
-		return this.post(url, data);
+		return this.post(url, {data});
 	}
 
 	async createDataSetViewCardsSection({
 		fieldName = 'name',
-		name = 'Title',
+		name = 'title',
 		r_fdsViewFDSCardsSectionRelationship_c_fdsViewERC = DEFAULT_DATA_SET_ERC,
 	}: {
 		fieldName?: string;
@@ -83,12 +93,123 @@ export class DataSetManagerApiHelpers extends ApiHelpers {
 			r_fdsViewFDSCardsSectionRelationship_c_fdsViewERC,
 		};
 
-		return this.post(url, data);
+		return this.post(url, {data});
+	}
+
+	async createDataSetViewCreationAction({
+		icon,
+		label_i18n = {en_US: 'Default Creation Action'},
+		modalSize = 'full-screen',
+		permissionKey,
+		r_fdsViewFDSCreationActionRelationship_c_fdsViewERC = DEFAULT_DATA_SET_ERC,
+		title_i18n,
+		type = 'link',
+		url = liferayConfig.environment.baseUrl,
+	}: {
+		icon?: string;
+		label_i18n?: {[key: string]: string};
+		modalSize?: ModalVariantTypes;
+		permissionKey?;
+		r_fdsViewFDSCreationActionRelationship_c_fdsViewERC: string;
+		title_i18n?: {[key: string]: string};
+		type?: CreationActionTypes;
+		url?: string;
+	}) {
+		const endpointUrl = `${this.baseUrl}data-set-manager/actions`;
+
+		const data = {
+			icon,
+			label_i18n,
+			modalSize,
+			permissionKey,
+			r_fdsViewFDSCreationActionRelationship_c_fdsViewERC,
+			title_i18n,
+			type,
+			url,
+		};
+
+		return this.post(endpointUrl, {data});
+	}
+
+	async createDataSetViewFields({
+		extraBodyParams = {},
+		label_i18n = {en_US: 'Title'},
+		name = 'title',
+		r_fdsViewFDSFieldRelationship_c_fdsViewERC = DEFAULT_DATA_SET_ERC,
+		type = 'string',
+	}: {
+		extraBodyParams?: any;
+		label_i18n?: {[key: string]: string};
+		name?: string;
+		r_fdsViewFDSFieldRelationship_c_fdsViewERC?: string;
+		type?: string;
+	}) {
+		const url = `${this.baseUrl}data-set-manager/fields`;
+
+		const data = {
+			label_i18n,
+			name,
+			r_fdsViewFDSFieldRelationship_c_fdsViewERC,
+			type,
+			...extraBodyParams,
+		};
+
+		return this.post(url, {data});
+	}
+
+	async createDataSetViewItemAction({
+		confirmationMessage_i18n,
+		confirmationMessageType,
+		errorMessage_i18n,
+		icon,
+		label_i18n = {en_US: 'Default Item Action'},
+		method,
+		modalSize = 'full-screen',
+		permissionKey,
+		r_fdsViewFDSItemActionRelationship_c_fdsViewERC = DEFAULT_DATA_SET_ERC,
+		successMessage_i18n,
+		title_i18n,
+		type = 'link',
+		url = liferayConfig.environment.baseUrl,
+	}: {
+		confirmationMessageType?: string;
+		confirmationMessage_i18n?: {[key: string]: string};
+		errorMessage_i18n?: {[key: string]: string};
+		icon?: string;
+		label_i18n?: {[key: string]: string};
+		method?: AsyncActionMethod;
+		modalSize?: ModalVariantTypes;
+		permissionKey?;
+		r_fdsViewFDSItemActionRelationship_c_fdsViewERC: string;
+		successMessage_i18n?: {[key: string]: string};
+		title_i18n?: {[key: string]: string};
+		type?: ItemActionTypes;
+		url?: string;
+	}) {
+		const endpointUrl = `${this.baseUrl}data-set-manager/actions`;
+
+		const data = {
+			confirmationMessage_i18n,
+			confirmationMessageType,
+			errorMessage_i18n,
+			icon,
+			label_i18n,
+			method,
+			modalSize,
+			permissionKey,
+			r_fdsViewFDSItemActionRelationship_c_fdsViewERC,
+			successMessage_i18n,
+			title_i18n,
+			type,
+			url,
+		};
+
+		return this.post(endpointUrl, {data});
 	}
 
 	async createDataSetViewListSection({
 		fieldName = 'name',
-		name = 'Title',
+		name = 'title',
 		r_fdsViewFDSListSectionRelationship_c_fdsViewERC = DEFAULT_DATA_SET_ERC,
 	}: {
 		fieldName?: string;
@@ -103,12 +224,31 @@ export class DataSetManagerApiHelpers extends ApiHelpers {
 			r_fdsViewFDSListSectionRelationship_c_fdsViewERC,
 		};
 
-		return this.post(url, data);
+		return this.post(url, {data});
 	}
 
 	async deleteDataSet({erc = DEFAULT_DATA_SET_ERC}: {erc?: string}) {
 		const url = `${this.baseUrl}data-set-manager/entries/by-external-reference-code/${erc}`;
 
 		return this.delete(url);
+	}
+
+	async updateDataSetView({
+		defaultVisualizationMode,
+		erc = DEFAULT_DATA_SET_ERC,
+		label,
+	}: {
+		defaultVisualizationMode?: string;
+		erc?: string;
+		label?: string;
+	}) {
+		const url = `${this.baseUrl}data-set-manager/views/by-external-reference-code/${erc}`;
+
+		const data = {
+			defaultVisualizationMode,
+			label,
+		};
+
+		return this.patch(url, data);
 	}
 }

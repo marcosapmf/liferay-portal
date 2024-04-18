@@ -6,27 +6,107 @@
 import {Locator, Page} from '@playwright/test';
 
 import {ApiHelpers} from '../../../helpers/ApiHelpers';
+import {DEFAULT_LABEL} from '../utils/constants';
+import {VisualizationMode} from '../utils/types';
 
 export class FDSFragmentPage {
 	readonly apiHelpers: ApiHelpers;
+	readonly creationMenuButton: Locator;
 	readonly editPageButton: Locator;
+	readonly fdsActiveViewSelector: Locator;
+	readonly fdsCardsWrapper: Locator;
+	readonly fdsListWrapper: Locator;
+	readonly fdsTableWrapper: Locator;
 	readonly fragmentWidgetSearchInput: Locator;
 	readonly page: Page;
 	readonly publishPageButton: Locator;
 
 	constructor(page: Page) {
 		this.apiHelpers = new ApiHelpers(page);
-		this.page = page;
-		this.fragmentWidgetSearchInput = this.page.getByLabel(
+		this.creationMenuButton = page.getByTestId('fdsCreationActionButton');
+		this.fdsActiveViewSelector = page.getByLabel('Show View Options');
+		this.fdsCardsWrapper = page.getByTestId('visualization-mode-cards');
+		this.fdsListWrapper = page.getByTestId('visualization-mode-list');
+		this.fdsTableWrapper = page.getByTestId('visualization-mode-table');
+		this.fragmentWidgetSearchInput = page.getByLabel(
 			'Search Fragments and Widgets'
 		);
-		this.publishPageButton = this.page.getByRole('button', {
+		this.page = page;
+		this.publishPageButton = page.getByRole('button', {
 			name: 'Publish',
 		});
 	}
 
 	async goto() {
 		await this.page.goto('/');
+	}
+
+	async changeVisualizationMode(visualizationMode: VisualizationMode) {
+		await this.fdsActiveViewSelector.waitFor({
+			state: 'visible',
+		});
+		await this.fdsActiveViewSelector.click();
+
+		await this.page
+			.getByRole('listbox')
+			.getByRole('option', {name: visualizationMode})
+			.click();
+	}
+
+	async configureDataSetFragment({
+		layout,
+		site,
+		viewLabel = DEFAULT_LABEL.VIEW,
+	}) {
+		await this.editPage({layout, site});
+
+		await this.searchFragmentOrWidget('Data Set');
+
+		await this.dragAndDropFragment(
+			'Data Set Add Data Set Mark Data Set as Favorite'
+		);
+
+		await this.page
+			.getByText('Select a data set view. Beta')
+			.waitFor({state: 'visible'});
+
+		await this.page
+			.getByText('Select a data set view. Beta')
+			.first()
+			.click();
+
+		await this.page
+			.getByRole('button', {name: 'Select Data Set View'})
+			.click();
+
+		await this.page.getByRole('dialog').isVisible();
+
+		await this.page.getByRole('heading', {name: 'Select'}).isVisible();
+
+		await this.page
+			.frameLocator('iframe[title="Select"]')
+			.locator('.fds-view-item-selector')
+			.waitFor({state: 'visible'});
+
+		await this.page
+			.frameLocator('iframe[title="Select"]')
+			.locator('li')
+			.filter({hasText: viewLabel})
+			.first()
+			.click();
+
+		await this.page
+			.frameLocator('iframe[title="Select"]')
+			.getByRole('button', {name: 'Save'})
+			.click();
+
+		await this.publishPage();
+
+		await this.goToPage({layout, site});
+
+		await this.page
+			.locator('.data-set-wrapper')
+			.waitFor({state: 'visible'});
 	}
 
 	async createPage({
@@ -37,16 +117,18 @@ export class FDSFragmentPage {
 		title: string;
 	}): Promise<Layout> {
 		const pageLayout =
-			await this.apiHelpers.headlessDelivery.createSitePage(
+			await this.apiHelpers.headlessDelivery.createSitePage({
 				siteId,
-				title
-			);
+				title,
+			});
 
 		return pageLayout;
 	}
 
 	async createSite(name: string): Promise<Site> {
-		const site = await this.apiHelpers.headlessSite.createSite(name);
+		const site = await this.apiHelpers.headlessSite.createSite({
+			name,
+		});
 
 		return site;
 	}
@@ -85,6 +167,8 @@ export class FDSFragmentPage {
 
 	async publishPage() {
 		await this.publishPageButton.click();
+
+		await this.publishPageButton.isEnabled();
 	}
 
 	async searchFragmentOrWidget(itemName: string) {

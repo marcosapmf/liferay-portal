@@ -1045,6 +1045,8 @@ public abstract class BaseUserNotificationResourceTestCase {
 		UserNotification userNotification =
 			testGraphQLGetUserNotification_addUserNotification();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				userNotification,
@@ -1062,11 +1064,37 @@ public abstract class BaseUserNotificationResourceTestCase {
 								},
 								getGraphQLFields())),
 						"JSONObject/data", "Object/userNotification"))));
+
+		// Using the namespace headlessUserNotification_v1_0
+
+		Assert.assertTrue(
+			equals(
+				userNotification,
+				UserNotificationSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessUserNotification_v1_0",
+								new GraphQLField(
+									"userNotification",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"userNotificationId",
+												userNotification.getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessUserNotification_v1_0",
+						"Object/userNotification"))));
 	}
 
 	@Test
 	public void testGraphQLGetUserNotificationNotFound() throws Exception {
 		Long irrelevantUserNotificationId = RandomTestUtil.randomLong();
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -1082,6 +1110,27 @@ public abstract class BaseUserNotificationResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessUserNotification_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessUserNotification_v1_0",
+						new GraphQLField(
+							"userNotification",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"userNotificationId",
+										irrelevantUserNotificationId);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}

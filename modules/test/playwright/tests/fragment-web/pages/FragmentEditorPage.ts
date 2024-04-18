@@ -18,6 +18,8 @@ export class FragmentEditorPage {
 
 		// Go to Configuration Tab
 
+		await this.page.getByRole('tab', {name: 'Configuration'}).waitFor();
+
 		await this.page.getByRole('tab', {name: 'Configuration'}).click();
 		await this.page.getByText('Add the JSON configuration').waitFor();
 
@@ -35,9 +37,9 @@ export class FragmentEditorPage {
 
 		await this.page.keyboard.type(configuration);
 		await this.page.getByText('Changes Saved').waitFor();
+	}
 
-		// Publish
-
+	async publish() {
 		await this.page.getByRole('button', {name: 'Publish'}).click();
 
 		await waitForSuccessAlert(this.page);

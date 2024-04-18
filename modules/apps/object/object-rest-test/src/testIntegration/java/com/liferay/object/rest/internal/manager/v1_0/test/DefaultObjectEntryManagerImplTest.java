@@ -40,6 +40,7 @@ import com.liferay.object.field.builder.DecimalObjectFieldBuilder;
 import com.liferay.object.field.builder.IntegerObjectFieldBuilder;
 import com.liferay.object.field.builder.LongIntegerObjectFieldBuilder;
 import com.liferay.object.field.builder.LongTextObjectFieldBuilder;
+import com.liferay.object.field.builder.MultiselectPicklistObjectFieldBuilder;
 import com.liferay.object.field.builder.PicklistObjectFieldBuilder;
 import com.liferay.object.field.builder.PrecisionDecimalObjectFieldBuilder;
 import com.liferay.object.field.builder.RichTextObjectFieldBuilder;
@@ -107,6 +108,7 @@ import com.liferay.portal.kernel.test.util.RoleTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
+import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
@@ -358,6 +360,15 @@ public class DefaultObjectEntryManagerImplTest
 					true
 				).name(
 					"localizedLongTextObjectFieldName"
+				).build(),
+				new MultiselectPicklistObjectFieldBuilder(
+				).labelMap(
+					LocalizedMapUtil.getLocalizedMap(
+						RandomTestUtil.randomString())
+				).listTypeDefinitionId(
+					listTypeDefinition.getListTypeDefinitionId()
+				).name(
+					"multiselectPicklistObjectFieldName"
 				).build(),
 				new PicklistObjectFieldBuilder(
 				).indexed(
@@ -1071,6 +1082,7 @@ public class DefaultObjectEntryManagerImplTest
 		// Account entry restricted scope
 
 		AccountEntry accountEntry1 = _addAccountEntry();
+
 		_user = _addUser();
 
 		_assignAccountEntryRole(accountEntry1, _buyerRole, _user);
@@ -1192,6 +1204,30 @@ public class DefaultObjectEntryManagerImplTest
 			ObjectActionKeys.ADD_OBJECT_ENTRY, _accountManagerRole);
 
 		Assert.assertNotNull(_addObjectEntry(accountEntry1));
+
+		// Regular roles' company scope permissions should not be restricted by
+		// account entry
+
+		_user = _addUser();
+
+		Role role = _addRoleUser(
+			new String[] {ObjectActionKeys.ADD_OBJECT_ENTRY},
+			_objectDefinition3, _user);
+
+		Assert.assertNotNull(_addObjectEntry(accountEntry1));
+
+		_resourcePermissionLocalService.removeResourcePermission(
+			companyId, _objectDefinition3.getResourceName(),
+			ResourceConstants.SCOPE_COMPANY, String.valueOf(companyId),
+			role.getRoleId(), ObjectActionKeys.ADD_OBJECT_ENTRY);
+
+		AssertUtils.assertFailure(
+			PrincipalException.MustHavePermission.class,
+			StringBundler.concat(
+				"User ", _user.getUserId(),
+				" must have ADD_OBJECT_ENTRY permission for ",
+				_objectDefinition3.getResourceName(), StringPool.SPACE),
+			() -> _addObjectEntry(accountEntry1));
 	}
 
 	@Test
@@ -1890,6 +1926,14 @@ public class DefaultObjectEntryManagerImplTest
 
 		// Equals expression
 
+		testGetObjectEntries(
+			HashMapBuilder.put(
+				"filter",
+				buildEqualsExpressionFilterString(
+					_objectRelationshipFieldName,
+					String.valueOf(parentObjectEntry1.getId()))
+			).build(),
+			childObjectEntry1);
 		testGetObjectEntries(
 			HashMapBuilder.put(
 				"filter",
@@ -2858,6 +2902,9 @@ public class DefaultObjectEntryManagerImplTest
 							ObjectFieldValidationConstants.
 								BUSINESS_TYPE_LONG_VALUE_MAX)
 					).put(
+						"multiselectPicklistObjectFieldName",
+						Collections.singletonList(_addListTypeEntry())
+					).put(
 						"precisionDecimalObjectFieldName",
 						new BigDecimal(
 							String.valueOf(RandomTestUtil.randomDouble()))
@@ -2883,6 +2930,25 @@ public class DefaultObjectEntryManagerImplTest
 				"integerObjectFieldName", 25
 			).put(
 				"longIntegerObjectFieldName", 200L
+			).put(
+				"multiselectPicklistObjectFieldName",
+				() -> {
+					ListTypeEntry listTypeEntry =
+						_listTypeEntryLocalService.addListTypeEntry(
+							null, adminUser.getUserId(),
+							listTypeDefinition.getListTypeDefinitionId(),
+							RandomTestUtil.randomString(),
+							Collections.singletonMap(
+								LocaleUtil.US, RandomTestUtil.randomString()));
+
+					return Collections.singletonList(
+						new ListEntry() {
+							{
+								key = listTypeEntry.getKey();
+								name = listTypeEntry.getName(LocaleUtil.US);
+							}
+						});
+				}
 			).put(
 				"precisionDecimalObjectFieldName",
 				new BigDecimal("0.8755445767")
@@ -3713,10 +3779,15 @@ public class DefaultObjectEntryManagerImplTest
 
 		Role role = RoleTestUtil.addRole(RoleConstants.TYPE_REGULAR);
 
+		String name = objectDefinition.getClassName();
+
+		if (ArrayUtil.contains(actionIds, ObjectActionKeys.ADD_OBJECT_ENTRY)) {
+			name = objectDefinition.getResourceName();
+		}
+
 		_resourcePermissionLocalService.setResourcePermissions(
-			companyId, objectDefinition.getClassName(),
-			ResourceConstants.SCOPE_COMPANY, String.valueOf(companyId),
-			role.getRoleId(), actionIds);
+			companyId, name, ResourceConstants.SCOPE_COMPANY,
+			String.valueOf(companyId), role.getRoleId(), actionIds);
 
 		_userLocalService.addRoleUser(role.getRoleId(), user);
 
@@ -3774,21 +3845,46 @@ public class DefaultObjectEntryManagerImplTest
 			long objectEntryId)
 		throws Exception {
 
-		_user.setLanguageId(languageId);
-
-		_user = _userLocalService.updateUser(_user);
+		// DTOConverterContext#getLocale
 
 		assertEquals(
 			_defaultObjectEntryManager.getObjectEntry(
 				new DefaultDTOConverterContext(
 					false, Collections.emptyMap(), dtoConverterRegistry, null,
-					LocaleUtil.getDefault(), null, _user),
+					LocaleUtil.fromLanguageId(languageId), null, _user),
 				_objectDefinition2, objectEntryId),
 			new ObjectEntry() {
 				{
 					properties = expectedLocalizedValues;
 				}
 			});
+
+		// User#getLanguageId
+
+		String originalLanguageId = _user.getLanguageId();
+
+		try {
+			_user.setLanguageId(languageId);
+
+			_user = _userLocalService.updateUser(_user);
+
+			assertEquals(
+				_defaultObjectEntryManager.getObjectEntry(
+					new DefaultDTOConverterContext(
+						false, Collections.emptyMap(), dtoConverterRegistry,
+						null, null, null, _user),
+					_objectDefinition2, objectEntryId),
+				new ObjectEntry() {
+					{
+						properties = expectedLocalizedValues;
+					}
+				});
+		}
+		finally {
+			_user.setLanguageId(originalLanguageId);
+
+			_user = _userLocalService.updateUser(_user);
+		}
 	}
 
 	private void _assertObjectEntriesSize1(long size) throws Exception {

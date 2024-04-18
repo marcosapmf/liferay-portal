@@ -1,5 +1,8 @@
 {
+	"CookiePolicy": "Cookie Policy",
+	"CreateAccount": "Create Account",
 	"ErrorCode404": "404",
 	"ErrorCode500": "500",
-	"Login": "Login"
+	"ForgotPassword": "Forgot Password",
+	"Login": "Sign In"
 }

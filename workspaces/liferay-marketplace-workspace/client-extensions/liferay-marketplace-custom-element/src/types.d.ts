@@ -9,6 +9,73 @@ declare module '*.svg' {
 
 declare module 'warning';
 
+type AnalyticsViews = {
+	results: {
+		metrics: {
+			avgTimeOnPageMetric: {
+				value: number;
+			};
+			bounceMetric: {
+				value: number;
+			};
+			bounceRateMetric: {
+				value: number;
+			};
+			ctaClicksMetric: {
+				value: number;
+			};
+			directAccessMetric: {
+				value: number;
+			};
+			entrancesMetric: {
+				value: number;
+			};
+			exitRateMetric: {
+				value: number;
+			};
+			indirectAccessMetric: {
+				value: number;
+			};
+			readsMetric: {
+				value: number;
+			};
+			sessionsMetric: {
+				value: number;
+			};
+			timeOnPageMetric: {
+				value: number;
+			};
+			viewsMetric: {
+				value: number;
+			};
+			visitorsMetric: {
+				value: number;
+			};
+		};
+		title: string;
+		url: string;
+	}[];
+	total: number;
+};
+
+type PublisherRequestInfo = {
+	emailAddress?: string;
+	extension?: string;
+	firstName?: string;
+	id?: number;
+	lastName?: string;
+	phone?: {
+		code: string;
+		flag: string;
+	};
+	phoneNumber?: string;
+	requestDescription?: string;
+	requestStatus?: {
+		key: string;
+		name: string;
+	};
+};
+
 type Account = {
 	customFields?: CustomField[];
 	description: string;
@@ -239,6 +306,9 @@ type Order = {
 	orderItems: [
 		{
 			id?: number;
+			name?: {
+				en_US: string;
+			};
 			quantity?: number;
 			skuId: number;
 			unitPriceWithTaxAmount?: number;
@@ -252,6 +322,7 @@ type Order = {
 	orderTypeId?: number;
 	shippingAmount?: number;
 	shippingWithTaxAmount?: number;
+	totalAmount?: number;
 };
 
 type OrderType = {
@@ -402,8 +473,11 @@ type DeliverySKU = {
 	price: {price: number; priceFormatted: string};
 	purchasable: boolean;
 	sku: string;
-	skuOptions: {skuOptionKey: string; skuOptionValueKey: string}[];
+	skuOptions: DeliverySKUOption[];
+	tierPrices?: TierPrice[];
 };
+
+type DeliverySKUOption = {skuOptionKey: string; skuOptionValueKey: string};
 
 interface DeliveryProduct {
 	attachments: DeliveryProductAttachment[];
@@ -495,6 +569,13 @@ type ProductSpecification = {
 	specificationId?: number;
 	specificationKey: string;
 	value: {[key: string]: string};
+};
+
+type TierPrice = {
+	currency: string;
+	price: number;
+	priceFormatted: string;
+	quantity: number;
 };
 
 type UserAccount = {

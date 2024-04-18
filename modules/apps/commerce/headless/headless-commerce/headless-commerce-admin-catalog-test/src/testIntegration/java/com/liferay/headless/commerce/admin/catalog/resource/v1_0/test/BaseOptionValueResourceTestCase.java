@@ -248,6 +248,8 @@ public abstract class BaseOptionValueResourceTestCase {
 		OptionValue optionValue =
 			testGraphQLGetOptionValueByExternalReferenceCode_addOptionValue();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				optionValue,
@@ -269,6 +271,33 @@ public abstract class BaseOptionValueResourceTestCase {
 								getGraphQLFields())),
 						"JSONObject/data",
 						"Object/optionValueByExternalReferenceCode"))));
+
+		// Using the namespace headlessCommerceAdminCatalog_v1_0
+
+		Assert.assertTrue(
+			equals(
+				optionValue,
+				OptionValueSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessCommerceAdminCatalog_v1_0",
+								new GraphQLField(
+									"optionValueByExternalReferenceCode",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"externalReferenceCode",
+												"\"" +
+													optionValue.
+														getExternalReferenceCode() +
+															"\"");
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessCommerceAdminCatalog_v1_0",
+						"Object/optionValueByExternalReferenceCode"))));
 	}
 
 	@Test
@@ -277,6 +306,8 @@ public abstract class BaseOptionValueResourceTestCase {
 
 		String irrelevantExternalReferenceCode =
 			"\"" + RandomTestUtil.randomString() + "\"";
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -292,6 +323,27 @@ public abstract class BaseOptionValueResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessCommerceAdminCatalog_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessCommerceAdminCatalog_v1_0",
+						new GraphQLField(
+							"optionValueByExternalReferenceCode",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"externalReferenceCode",
+										irrelevantExternalReferenceCode);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}
@@ -338,7 +390,11 @@ public abstract class BaseOptionValueResourceTestCase {
 
 	@Test
 	public void testGraphQLDeleteOptionValue() throws Exception {
-		OptionValue optionValue = testGraphQLDeleteOptionValue_addOptionValue();
+
+		// No namespace
+
+		OptionValue optionValue1 =
+			testGraphQLDeleteOptionValue_addOptionValue();
 
 		Assert.assertTrue(
 			JSONUtil.getValueAsBoolean(
@@ -347,23 +403,61 @@ public abstract class BaseOptionValueResourceTestCase {
 						"deleteOptionValue",
 						new HashMap<String, Object>() {
 							{
-								put("id", optionValue.getId());
+								put("id", optionValue1.getId());
 							}
 						})),
 				"JSONObject/data", "Object/deleteOptionValue"));
-		JSONArray errorsJSONArray = JSONUtil.getValueAsJSONArray(
+
+		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
 			invokeGraphQLQuery(
 				new GraphQLField(
 					"optionValue",
 					new HashMap<String, Object>() {
 						{
-							put("id", optionValue.getId());
+							put("id", optionValue1.getId());
 						}
 					},
 					new GraphQLField("id"))),
 			"JSONArray/errors");
 
-		Assert.assertTrue(errorsJSONArray.length() > 0);
+		Assert.assertTrue(errorsJSONArray1.length() > 0);
+
+		// Using the namespace headlessCommerceAdminCatalog_v1_0
+
+		OptionValue optionValue2 =
+			testGraphQLDeleteOptionValue_addOptionValue();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"headlessCommerceAdminCatalog_v1_0",
+						new GraphQLField(
+							"deleteOptionValue",
+							new HashMap<String, Object>() {
+								{
+									put("id", optionValue2.getId());
+								}
+							}))),
+				"JSONObject/data",
+				"JSONObject/headlessCommerceAdminCatalog_v1_0",
+				"Object/deleteOptionValue"));
+
+		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"headlessCommerceAdminCatalog_v1_0",
+					new GraphQLField(
+						"optionValue",
+						new HashMap<String, Object>() {
+							{
+								put("id", optionValue2.getId());
+							}
+						},
+						new GraphQLField("id")))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray2.length() > 0);
 	}
 
 	protected OptionValue testGraphQLDeleteOptionValue_addOptionValue()
@@ -392,6 +486,8 @@ public abstract class BaseOptionValueResourceTestCase {
 	public void testGraphQLGetOptionValue() throws Exception {
 		OptionValue optionValue = testGraphQLGetOptionValue_addOptionValue();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				optionValue,
@@ -407,11 +503,35 @@ public abstract class BaseOptionValueResourceTestCase {
 								},
 								getGraphQLFields())),
 						"JSONObject/data", "Object/optionValue"))));
+
+		// Using the namespace headlessCommerceAdminCatalog_v1_0
+
+		Assert.assertTrue(
+			equals(
+				optionValue,
+				OptionValueSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessCommerceAdminCatalog_v1_0",
+								new GraphQLField(
+									"optionValue",
+									new HashMap<String, Object>() {
+										{
+											put("id", optionValue.getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessCommerceAdminCatalog_v1_0",
+						"Object/optionValue"))));
 	}
 
 	@Test
 	public void testGraphQLGetOptionValueNotFound() throws Exception {
 		Long irrelevantId = RandomTestUtil.randomLong();
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -425,6 +545,25 @@ public abstract class BaseOptionValueResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessCommerceAdminCatalog_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessCommerceAdminCatalog_v1_0",
+						new GraphQLField(
+							"optionValue",
+							new HashMap<String, Object>() {
+								{
+									put("id", irrelevantId);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}

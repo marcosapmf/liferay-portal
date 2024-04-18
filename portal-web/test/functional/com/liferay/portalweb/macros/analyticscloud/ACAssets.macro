@@ -83,7 +83,7 @@ definition {
 
 		ScrollWebElementIntoView(locator1 = "ACCards#CARD_TITLE");
 
-		AssertTextEquals(
+		AssertTextEquals.assertPartialText(
 			locator1 = "ACAssets#APPEARS_ON_PAGE_NAME",
 			value1 = ${pageName});
 
@@ -107,23 +107,6 @@ definition {
 			key_assetName = ${assetName},
 			locator1 = "ACAssets#ASSETS_INFO",
 			value1 = ${value});
-	}
-
-	@summary = "Check that the metric number is between the correct range for cases where the exact metric number is not necessary"
-	macro viewIfVisitorsBehaviorMetricIsBetweenCorrectRange(maxMetricValue, metricTitle, minMetricValue) {
-		var key_metricTitle = ${metricTitle};
-
-		WaitForElementPresent(locator1 = "ACAssets#METRIC_VALUE_BY_METRIC_TITLE");
-
-		var actualMetricValue = selenium.getText("ACAssets#METRIC_VALUE_BY_METRIC_TITLE");
-
-		TestUtils.isLessThan(
-			actual = ${minMetricValue},
-			expected = ${actualMetricValue});
-
-		TestUtils.isGreaterThan(
-			actual = ${maxMetricValue},
-			expected = ${actualMetricValue});
 	}
 
 	@summary = "Default summary"

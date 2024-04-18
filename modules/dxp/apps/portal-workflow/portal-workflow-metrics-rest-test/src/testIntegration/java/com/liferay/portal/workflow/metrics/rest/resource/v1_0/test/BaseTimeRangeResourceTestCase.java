@@ -227,6 +227,8 @@ public abstract class BaseTimeRangeResourceTestCase {
 			new GraphQLField("items", getGraphQLFields()),
 			new GraphQLField("page"), new GraphQLField("totalCount"));
 
+		// No namespace
+
 		JSONObject timeRangesJSONObject = JSONUtil.getValueAsJSONObject(
 			invokeGraphQLQuery(graphQLField), "JSONObject/data",
 			"JSONObject/timeRanges");
@@ -238,6 +240,28 @@ public abstract class BaseTimeRangeResourceTestCase {
 
 		timeRangesJSONObject = JSONUtil.getValueAsJSONObject(
 			invokeGraphQLQuery(graphQLField), "JSONObject/data",
+			"JSONObject/timeRanges");
+
+		Assert.assertEquals(
+			totalCount + 2, timeRangesJSONObject.getLong("totalCount"));
+
+		assertContains(
+			timeRange1,
+			Arrays.asList(
+				TimeRangeSerDes.toDTOs(
+					timeRangesJSONObject.getString("items"))));
+		assertContains(
+			timeRange2,
+			Arrays.asList(
+				TimeRangeSerDes.toDTOs(
+					timeRangesJSONObject.getString("items"))));
+
+		// Using the namespace portalWorkflowMetrics_v1_0
+
+		timeRangesJSONObject = JSONUtil.getValueAsJSONObject(
+			invokeGraphQLQuery(
+				new GraphQLField("portalWorkflowMetrics_v1_0", graphQLField)),
+			"JSONObject/data", "JSONObject/portalWorkflowMetrics_v1_0",
 			"JSONObject/timeRanges");
 
 		Assert.assertEquals(

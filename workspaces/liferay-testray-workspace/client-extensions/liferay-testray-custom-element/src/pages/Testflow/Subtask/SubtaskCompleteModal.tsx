@@ -3,8 +3,9 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {useEffect} from 'react';
+import {useEffect, useMemo} from 'react';
 import {useForm} from 'react-hook-form';
+import {getUniqueList} from '~/util';
 
 import Form from '../../../components/Form';
 import Container from '../../../components/Layout/Container';
@@ -17,12 +18,13 @@ import i18n from '../../../i18n';
 import yupSchema, {yupResolver} from '../../../schema/yup';
 import {Liferay} from '../../../services/liferay';
 import {
+	APIResponse,
+	TestrayCaseResult,
 	TestraySubTask,
-	TestraySubTaskIssue,
 	liferayMessageBoardImpl,
+	testrayCaseResultImpl,
 	testraySubTaskImpl,
 } from '../../../services/rest';
-import {testraySubtaskIssuesImpl} from '../../../services/rest/TestraySubtaskIssues';
 import {CaseResultStatuses} from '../../../util/statuses';
 
 type SubtaskForm = typeof yupSchema.subtask.__outputType;
@@ -38,26 +40,69 @@ const SubtaskCompleteModal: React.FC<SubTaskCompleteModalProps> = ({
 	revalidateSubtask,
 	subtask,
 }) => {
-	const {
-		data: subTaskIssuesResponse,
-		revalidate: revalidateSubtaskIssues,
-	} = useFetch(testraySubtaskIssuesImpl.resource, {
-		params: {
-			filter: SearchBuilder.eq('subtaskId', subtask.id),
-		},
-		transformData: (response) =>
-			testraySubtaskIssuesImpl.transformDataFromList(response),
-	});
-
 	const {data: mbMessage} = useFetch(
 		liferayMessageBoardImpl.getMessagesIdURL(subtask.mbMessageId)
 	);
 
-	const subtaskIssues = subTaskIssuesResponse?.items || [];
+	const caseResultsStatusFilter = useMemo(
+		() =>
+			new SearchBuilder()
+				.eq('caseResultToSubtasksCasesResults/subtaskId', subtask.id)
+				.and()
+				.in('dueStatus', ['BLOCKED', 'FAILED', 'PASSED', 'TESTFIX'])
+				.and()
+				.ne('issues', '')
+				.build(),
+		[subtask.id]
+	);
 
-	const issues = subtaskIssues
-		.map((subtaskIssue: TestraySubTaskIssue) => subtaskIssue?.issue?.name)
-		.join(', ');
+	const {data: caseResults} = useFetch<APIResponse<TestrayCaseResult>>(
+		testrayCaseResultImpl.resource,
+		{
+			params: {
+				aggregationTerms: 'dueStatus',
+				fields: 'id',
+				filter: caseResultsStatusFilter,
+				nestedFields: 'caseResultToSubtasksCasesResults',
+				pageSize: 4,
+			},
+		}
+	);
+
+	const subtaskIssues = subtask.issues
+		? subtask.issues
+				.split(',')
+				.map((name) => name.trim())
+				.filter(Boolean)
+		: [];
+
+	const issues = getUniqueList([
+		...subtaskIssues,
+		...subtask.caseResultIssues,
+	]).join(', ');
+
+	const statusMode = useMemo(() => {
+		const statuses = caseResults?.facets[0].facetValues;
+
+		if (!statuses) {
+			return CaseResultStatuses.FAILED;
+		}
+
+		const status = statuses.reduce(
+			(prevValue, status) => {
+				if (
+					status.numberOfOccurrences > prevValue.numberOfOccurrences
+				) {
+					return status;
+				}
+
+				return prevValue;
+			},
+			{numberOfOccurrences: 0, term: ''}
+		);
+
+		return status.term;
+	}, [caseResults]);
 
 	const {
 		formState: {errors, isSubmitting},
@@ -65,9 +110,6 @@ const SubtaskCompleteModal: React.FC<SubTaskCompleteModalProps> = ({
 		register,
 		setValue,
 	} = useForm<SubtaskForm>({
-		defaultValues: {
-			dueStatus: CaseResultStatuses.FAILED,
-		},
 		resolver: yupResolver(yupSchema.subtask),
 	});
 
@@ -98,8 +140,6 @@ const SubtaskCompleteModal: React.FC<SubTaskCompleteModalProps> = ({
 
 			revalidateSubtask();
 
-			revalidateSubtaskIssues();
-
 			onSave();
 		}
 		catch (error) {
@@ -108,9 +148,10 @@ const SubtaskCompleteModal: React.FC<SubTaskCompleteModalProps> = ({
 	};
 
 	useEffect(() => {
+		setValue('dueStatus', statusMode);
 		setValue('comment', mbMessage?.articleBody);
 		setValue('issues', issues);
-	}, [issues, mbMessage, setValue]);
+	}, [issues, statusMode, mbMessage, setValue]);
 
 	const inputProps = {
 		errors,

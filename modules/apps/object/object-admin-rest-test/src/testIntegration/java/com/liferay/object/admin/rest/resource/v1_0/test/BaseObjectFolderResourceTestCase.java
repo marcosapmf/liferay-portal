@@ -326,6 +326,8 @@ public abstract class BaseObjectFolderResourceTestCase {
 			new GraphQLField("items", getGraphQLFields()),
 			new GraphQLField("page"), new GraphQLField("totalCount"));
 
+		// No namespace
+
 		JSONObject objectFoldersJSONObject = JSONUtil.getValueAsJSONObject(
 			invokeGraphQLQuery(graphQLField), "JSONObject/data",
 			"JSONObject/objectFolders");
@@ -339,6 +341,28 @@ public abstract class BaseObjectFolderResourceTestCase {
 
 		objectFoldersJSONObject = JSONUtil.getValueAsJSONObject(
 			invokeGraphQLQuery(graphQLField), "JSONObject/data",
+			"JSONObject/objectFolders");
+
+		Assert.assertEquals(
+			totalCount + 2, objectFoldersJSONObject.getLong("totalCount"));
+
+		assertContains(
+			objectFolder1,
+			Arrays.asList(
+				ObjectFolderSerDes.toDTOs(
+					objectFoldersJSONObject.getString("items"))));
+		assertContains(
+			objectFolder2,
+			Arrays.asList(
+				ObjectFolderSerDes.toDTOs(
+					objectFoldersJSONObject.getString("items"))));
+
+		// Using the namespace objectAdmin_v1_0
+
+		objectFoldersJSONObject = JSONUtil.getValueAsJSONObject(
+			invokeGraphQLQuery(
+				new GraphQLField("objectAdmin_v1_0", graphQLField)),
+			"JSONObject/data", "JSONObject/objectAdmin_v1_0",
 			"JSONObject/objectFolders");
 
 		Assert.assertEquals(
@@ -409,6 +433,8 @@ public abstract class BaseObjectFolderResourceTestCase {
 		ObjectFolder objectFolder =
 			testGraphQLGetObjectFolderByExternalReferenceCode_addObjectFolder();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				objectFolder,
@@ -430,6 +456,32 @@ public abstract class BaseObjectFolderResourceTestCase {
 								getGraphQLFields())),
 						"JSONObject/data",
 						"Object/objectFolderByExternalReferenceCode"))));
+
+		// Using the namespace objectAdmin_v1_0
+
+		Assert.assertTrue(
+			equals(
+				objectFolder,
+				ObjectFolderSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"objectAdmin_v1_0",
+								new GraphQLField(
+									"objectFolderByExternalReferenceCode",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"externalReferenceCode",
+												"\"" +
+													objectFolder.
+														getExternalReferenceCode() +
+															"\"");
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data", "JSONObject/objectAdmin_v1_0",
+						"Object/objectFolderByExternalReferenceCode"))));
 	}
 
 	@Test
@@ -438,6 +490,8 @@ public abstract class BaseObjectFolderResourceTestCase {
 
 		String irrelevantExternalReferenceCode =
 			"\"" + RandomTestUtil.randomString() + "\"";
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -453,6 +507,27 @@ public abstract class BaseObjectFolderResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace objectAdmin_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"objectAdmin_v1_0",
+						new GraphQLField(
+							"objectFolderByExternalReferenceCode",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"externalReferenceCode",
+										irrelevantExternalReferenceCode);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}
@@ -550,7 +625,10 @@ public abstract class BaseObjectFolderResourceTestCase {
 
 	@Test
 	public void testGraphQLDeleteObjectFolder() throws Exception {
-		ObjectFolder objectFolder =
+
+		// No namespace
+
+		ObjectFolder objectFolder1 =
 			testGraphQLDeleteObjectFolder_addObjectFolder();
 
 		Assert.assertTrue(
@@ -560,23 +638,62 @@ public abstract class BaseObjectFolderResourceTestCase {
 						"deleteObjectFolder",
 						new HashMap<String, Object>() {
 							{
-								put("objectFolderId", objectFolder.getId());
+								put("objectFolderId", objectFolder1.getId());
 							}
 						})),
 				"JSONObject/data", "Object/deleteObjectFolder"));
-		JSONArray errorsJSONArray = JSONUtil.getValueAsJSONArray(
+
+		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
 			invokeGraphQLQuery(
 				new GraphQLField(
 					"objectFolder",
 					new HashMap<String, Object>() {
 						{
-							put("objectFolderId", objectFolder.getId());
+							put("objectFolderId", objectFolder1.getId());
 						}
 					},
 					new GraphQLField("id"))),
 			"JSONArray/errors");
 
-		Assert.assertTrue(errorsJSONArray.length() > 0);
+		Assert.assertTrue(errorsJSONArray1.length() > 0);
+
+		// Using the namespace objectAdmin_v1_0
+
+		ObjectFolder objectFolder2 =
+			testGraphQLDeleteObjectFolder_addObjectFolder();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"objectAdmin_v1_0",
+						new GraphQLField(
+							"deleteObjectFolder",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"objectFolderId",
+										objectFolder2.getId());
+								}
+							}))),
+				"JSONObject/data", "JSONObject/objectAdmin_v1_0",
+				"Object/deleteObjectFolder"));
+
+		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"objectAdmin_v1_0",
+					new GraphQLField(
+						"objectFolder",
+						new HashMap<String, Object>() {
+							{
+								put("objectFolderId", objectFolder2.getId());
+							}
+						},
+						new GraphQLField("id")))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray2.length() > 0);
 	}
 
 	protected ObjectFolder testGraphQLDeleteObjectFolder_addObjectFolder()
@@ -608,6 +725,8 @@ public abstract class BaseObjectFolderResourceTestCase {
 		ObjectFolder objectFolder =
 			testGraphQLGetObjectFolder_addObjectFolder();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				objectFolder,
@@ -625,11 +744,36 @@ public abstract class BaseObjectFolderResourceTestCase {
 								},
 								getGraphQLFields())),
 						"JSONObject/data", "Object/objectFolder"))));
+
+		// Using the namespace objectAdmin_v1_0
+
+		Assert.assertTrue(
+			equals(
+				objectFolder,
+				ObjectFolderSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"objectAdmin_v1_0",
+								new GraphQLField(
+									"objectFolder",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"objectFolderId",
+												objectFolder.getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data", "JSONObject/objectAdmin_v1_0",
+						"Object/objectFolder"))));
 	}
 
 	@Test
 	public void testGraphQLGetObjectFolderNotFound() throws Exception {
 		Long irrelevantObjectFolderId = RandomTestUtil.randomLong();
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -643,6 +787,27 @@ public abstract class BaseObjectFolderResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace objectAdmin_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"objectAdmin_v1_0",
+						new GraphQLField(
+							"objectFolder",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"objectFolderId",
+										irrelevantObjectFolderId);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}

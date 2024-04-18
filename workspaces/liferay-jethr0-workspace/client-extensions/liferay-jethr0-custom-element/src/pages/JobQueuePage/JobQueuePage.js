@@ -12,19 +12,14 @@ import Jethr0Breadcrumbs from '../../components/Jethr0Breadcrumbs/Jethr0Breadcru
 import Jethr0Card from '../../components/Jethr0Card/Jethr0Card';
 import Jethr0NavigationBar from '../../components/Jethr0NavigationBar/Jethr0NavigationBar';
 import Jethr0Table from '../../components/Jethr0Table/Jethr0Table';
+import {getJobQueueOrderedJobs} from '../../objects/jobs/JobUtil';
 import {toLocaleString} from '../../services/DateUtil';
-import useSpringBootData from '../../services/useSpringBootData';
 
 function JobQueue() {
-	const [jobQueue, setJobQueue] = useState(null);
+	const [jobs, setJobs] = useState(null);
 
-	useSpringBootData({
-		setData: setJobQueue,
-		urlPath: '/jobs/queue',
-	});
-
-	if (!jobQueue) {
-		return <div>Loading...</div>;
+	if (!jobs) {
+		getJobQueueOrderedJobs({setJobs});
 	}
 
 	return (
@@ -50,39 +45,57 @@ function JobQueue() {
 				</tr>
 			</thead>
 			<tbody>
-				{jobQueue &&
-					jobQueue.map((job) => {
-						return (
-							<tr key={job.id}>
-								<td>{job.position}</td>
-								<th className="font-weight-semi-bold">
-									<Link title={job.id} to={'/jobs/' + job.id}>
-										{job.id}
-									</Link>
-								</th>
-								<td>{job.name}</td>
-								<td>{job.priority}</td>
-								<td>{toLocaleString(job.dateCreated)}</td>
-								<td>{toLocaleString(job.startDate)}</td>
-								<td>{job.state.name}</td>
-								<td>
-									<span className="text-muted">
-										{job.queuedBuilds}
-									</span>
-									<span> / </span>
-									<span className="text-warning">
-										{job.runningBuilds}
-									</span>
-									<span> / </span>
-									<span className="text-success">
-										{job.completedBuilds}
-									</span>
-									<span> / </span>
-									<span>{job.totalBuilds}</span>
-								</td>
-							</tr>
-						);
-					})}
+				{jobs?.map((job, index) => {
+					let completedBuilds = 0;
+					let openedBuilds = 0;
+					let runningBuilds = 0;
+					let totalBuilds = 0;
+
+					for (const build of job.builds) {
+						if (build.state.key === 'completed') {
+							completedBuilds++;
+						}
+						else if (build.state.key === 'opened') {
+							openedBuilds++;
+						}
+						else if (build.state.key === 'running') {
+							runningBuilds++;
+						}
+
+						totalBuilds++;
+					}
+
+					return (
+						<tr key={job.id}>
+							<td>{index + 1}</td>
+							<th className="font-weight-semi-bold">
+								<Link title={job.id} to={'/jobs/' + job.id}>
+									{job.id}
+								</Link>
+							</th>
+							<td>{job.name}</td>
+							<td>{job.priority}</td>
+							<td>{toLocaleString(job.dateCreated)}</td>
+							<td>{toLocaleString(job.startDate)}</td>
+							<td>{job.state.name}</td>
+							<td>
+								<span className="text-muted">
+									{openedBuilds}
+								</span>
+								<span> / </span>
+								<span className="text-warning">
+									{runningBuilds}
+								</span>
+								<span> / </span>
+								<span className="text-success">
+									{completedBuilds}
+								</span>
+								<span> / </span>
+								<span>{totalBuilds}</span>
+							</td>
+						</tr>
+					);
+				})}
 			</tbody>
 		</Jethr0Table>
 	);

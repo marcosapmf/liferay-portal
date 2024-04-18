@@ -392,6 +392,8 @@ public abstract class BaseWorkflowLogResourceTestCase {
 	public void testGraphQLGetWorkflowLog() throws Exception {
 		WorkflowLog workflowLog = testGraphQLGetWorkflowLog_addWorkflowLog();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				workflowLog,
@@ -409,11 +411,37 @@ public abstract class BaseWorkflowLogResourceTestCase {
 								},
 								getGraphQLFields())),
 						"JSONObject/data", "Object/workflowLog"))));
+
+		// Using the namespace headlessAdminWorkflow_v1_0
+
+		Assert.assertTrue(
+			equals(
+				workflowLog,
+				WorkflowLogSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessAdminWorkflow_v1_0",
+								new GraphQLField(
+									"workflowLog",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"workflowLogId",
+												workflowLog.getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessAdminWorkflow_v1_0",
+						"Object/workflowLog"))));
 	}
 
 	@Test
 	public void testGraphQLGetWorkflowLogNotFound() throws Exception {
 		Long irrelevantWorkflowLogId = RandomTestUtil.randomLong();
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -427,6 +455,27 @@ public abstract class BaseWorkflowLogResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessAdminWorkflow_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessAdminWorkflow_v1_0",
+						new GraphQLField(
+							"workflowLog",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"workflowLogId",
+										irrelevantWorkflowLogId);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}

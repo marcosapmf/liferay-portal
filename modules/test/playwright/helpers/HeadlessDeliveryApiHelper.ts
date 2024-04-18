@@ -5,6 +5,13 @@
 
 import {ApiHelpers} from './ApiHelpers';
 
+interface createSitePageProps {
+	pageDefinition?: PageDefinition;
+	pagePermissions?: PagePermission[];
+	siteId: string;
+	title: string;
+}
+
 export class HeadlessDeliveryApiHelper {
 	readonly apiHelpers: ApiHelpers;
 	readonly basePath: string;
@@ -25,14 +32,15 @@ export class HeadlessDeliveryApiHelper {
 	 * @param pageDefinition the definition of the page in case that we want
 	 * to specify some content for it, for example some fragments+
 	 */
-	async createSitePage(
-		siteId: string,
-		title: string,
-		pageDefinition?: PageDefinition
-	): Promise<Layout> {
+	async createSitePage({
+		pageDefinition,
+		pagePermissions,
+		siteId,
+		title,
+	}: createSitePageProps): Promise<Layout> {
 		return this.apiHelpers.post(
 			`${this.apiHelpers.baseUrl}${this.basePath}/sites/${siteId}/site-pages`,
-			{pageDefinition, title}
+			{data: {pageDefinition, pagePermissions, title}}
 		);
 	}
 
@@ -56,16 +64,33 @@ export class HeadlessDeliveryApiHelper {
 		);
 	}
 
-	async postStructuredContent(
-		siteId: string,
-		contentStructureId: number,
-		datePublished: string,
-		title: string
-	): Promise<StructuredContent> {
+	async postStructuredContent({
+		categoryIds,
+		contentStructureId,
+		datePublished,
+		siteId,
+		tags,
+		title,
+	}: {
+		categoryIds?: number[];
+		contentStructureId: number;
+		datePublished: string;
+		siteId: string;
+		tags?: string[];
+		title: string;
+	}): Promise<StructuredContent> {
 		return this.apiHelpers.post(
 			`${this.apiHelpers.baseUrl}${this.basePath}/sites/${siteId}/structured-contents`,
-			{contentStructureId, datePublished, title},
-			true
+			{
+				data: {
+					contentStructureId,
+					datePublished,
+					keywords: tags,
+					taxonomyCategoryIds: categoryIds,
+					title,
+				},
+				failOnStatusCode: true,
+			}
 		);
 	}
 

@@ -39,8 +39,6 @@ export function Attachments({
 	const [selectedEntityValue, setSelectedEntityValue] = useState<string>();
 
 	const parseFields = (fields: ObjectField[]) => {
-		const parsedFields: MultiSelectItem[] = [];
-
 		const attachmentObjectFieldIds = new Set(
 			values?.attachmentObjectFieldIds as number[]
 		);
@@ -50,19 +48,23 @@ export function Attachments({
 				objectDefinition.externalReferenceCode === selectedEntityValue
 		);
 
-		fields.forEach(({id, label, name}) => {
-			parsedFields.push({
-				checked: attachmentObjectFieldIds.has(id as number),
-				label: stringUtils.getLocalizableLabel(
-					selectedObjectDefinitionItem?.defaultLanguageId as Locale,
-					label,
-					name
-				),
-				value: id?.toString() as string,
-			});
-		});
+		const parsedField = {
+			children: fields.map(({id, label, name}) => {
+				return {
+					checked: attachmentObjectFieldIds.has(id as number),
+					label: stringUtils.getLocalizableLabel(
+						selectedObjectDefinitionItem?.defaultLanguageId as Locale,
+						label,
+						name
+					),
+					value: id?.toString() as string,
+				};
+			}),
+			label: '',
+			value: 'attachmentsFields',
+		} as MultiSelectItem;
 
-		return parsedFields;
+		return [parsedField];
 	};
 
 	const getAttachmentFields = async function fetchObjectFields(
@@ -81,7 +83,9 @@ export function Attachments({
 
 	useEffect(() => {
 		const currentObjectDefinition = objectDefinitions?.find(
-			(item) => item.id === values.objectDefinitionId
+			(objectDefinition) =>
+				objectDefinition.externalReferenceCode ===
+				values.objectDefinitionExternalReferenceCode
 		);
 
 		const newObjectDefinitionItems: ObjectDefinitionItem[] = [];
@@ -109,16 +113,6 @@ export function Attachments({
 			}
 		);
 
-		setObjectDefinitionItems(newObjectDefinitionItems);
-
-		setSelectedEntityValue(currentObjectDefinition?.externalReferenceCode);
-	}, [objectDefinitions, values.objectDefinitionId]);
-
-	useEffect(() => {
-		const currentObjectDefinition = objectDefinitions?.find(
-			(item) => item.id === values.objectDefinitionId
-		);
-
 		if (!currentObjectDefinition) {
 			setValues({
 				...values,
@@ -127,23 +121,27 @@ export function Attachments({
 			});
 		}
 
-		setSelectedEntityValue(currentObjectDefinition?.externalReferenceCode);
-
 		if (values.objectDefinitionId) {
 			getAttachmentFields(
 				values.objectDefinitionExternalReferenceCode as string
 			);
 		}
+
+		setObjectDefinitionItems(newObjectDefinitionItems);
+		setSelectedEntityValue(currentObjectDefinition?.externalReferenceCode);
+
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [values.objectDefinitionId]);
+	}, [objectDefinitions, values.objectDefinitionId]);
 
 	useEffect(() => {
-		setValues({
-			...values,
-			attachmentObjectFieldIds: attachmentsFields
-				.filter((field) => field.checked)
-				.map((field) => field.value) as string[],
-		});
+		if (attachmentsFields.length) {
+			setValues({
+				...values,
+				attachmentObjectFieldIds: attachmentsFields[0].children
+					.filter((field) => field.checked)
+					.map((field) => field.value) as string[],
+			});
+		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [attachmentsFields]);
 

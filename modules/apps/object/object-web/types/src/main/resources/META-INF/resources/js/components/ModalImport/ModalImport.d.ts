@@ -5,17 +5,20 @@
 
 /// <reference types="react" />
 
+export declare type ModalImportKeys =
+	| 'listTypeDefinition'
+	| 'objectDefinition'
+	| 'objectDefinitions'
+	| 'objectFolder';
 interface ModalImportProps {
 	JSONInputId: string;
 	apiURL: string;
 	handleOnClose?: () => void;
-	importExtendedInfo?: {
-		key: string;
-		value: string;
-	};
+	importExtendedInfo: KeyValueObject;
 	importURL: string;
-	modalImportKey: string;
+	modalImportKey: ModalImportKeys;
 	nameMaxLength: string;
+	objectFolderExternalReferenceCode?: string;
 	onAfterImport?: () => void;
 	portletNamespace: string;
 	showModal?: boolean;
@@ -32,6 +35,7 @@ export default function ModalImport({
 	importURL,
 	modalImportKey,
 	nameMaxLength,
+	objectFolderExternalReferenceCode,
 	onAfterImport,
 	portletNamespace,
 	showModal,

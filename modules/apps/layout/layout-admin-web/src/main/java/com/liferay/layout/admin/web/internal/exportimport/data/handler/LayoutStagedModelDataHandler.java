@@ -57,8 +57,6 @@ import com.liferay.layout.seo.service.LayoutSEOEntryLocalService;
 import com.liferay.layout.seo.service.LayoutSEOSiteLocalService;
 import com.liferay.layout.service.LayoutClassedModelUsageLocalService;
 import com.liferay.layout.service.LayoutLocalizationLocalService;
-import com.liferay.layout.utility.page.model.LayoutUtilityPageEntry;
-import com.liferay.layout.utility.page.service.LayoutUtilityPageEntryLocalService;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
@@ -70,6 +68,7 @@ import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.NoSuchLayoutException;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.log.Log;
@@ -2636,6 +2635,26 @@ public class LayoutStagedModelDataHandler
 	private boolean _isExportParentLayout(
 		long[] layoutIds, long parentLayoutId) {
 
+		if (FeatureFlagManagerUtil.isEnabled("LPS-199086")) {
+			try {
+				StagingConfiguration stagingConfiguration =
+					_configurationProvider.getCompanyConfiguration(
+						StagingConfiguration.class,
+						CompanyThreadLocal.getCompanyId());
+
+				if (ArrayUtil.contains(layoutIds, parentLayoutId) ||
+					stagingConfiguration.publishParentLayoutsByDefault()) {
+
+					return true;
+				}
+			}
+			catch (Exception exception) {
+				_log.error(exception);
+			}
+
+			return false;
+		}
+
 		if (ArrayUtil.contains(layoutIds, parentLayoutId) ||
 			!ExportImportThreadLocal.isLayoutStagingInProcess()) {
 
@@ -2797,24 +2816,6 @@ public class LayoutStagedModelDataHandler
 
 					layoutElement.addAttribute(
 						"layout-master-page-template", Boolean.TRUE.toString());
-				}
-			}
-			else {
-				LayoutUtilityPageEntry layoutUtilityPageEntry =
-					_layoutUtilityPageEntryLocalService.
-						fetchLayoutUtilityPageEntryByPlid(layout.getPlid());
-
-				if (layoutUtilityPageEntry == null) {
-					layoutUtilityPageEntry =
-						_layoutUtilityPageEntryLocalService.
-							fetchLayoutUtilityPageEntryByPlid(
-								layout.getClassPK());
-				}
-
-				if (layoutUtilityPageEntry != null) {
-					layoutElement.addAttribute(
-						"layout-content-page-template",
-						Boolean.TRUE.toString());
 				}
 			}
 		}
@@ -3180,10 +3181,6 @@ public class LayoutStagedModelDataHandler
 
 	@Reference
 	private LayoutTemplateLocalService _layoutTemplateLocalService;
-
-	@Reference
-	private LayoutUtilityPageEntryLocalService
-		_layoutUtilityPageEntryLocalService;
 
 	@Reference
 	private PermissionImporter _permissionImporter;

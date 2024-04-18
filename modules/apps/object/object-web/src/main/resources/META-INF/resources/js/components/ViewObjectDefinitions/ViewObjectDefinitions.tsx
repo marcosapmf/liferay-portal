@@ -16,7 +16,7 @@ import {
 	formatActionURL,
 } from '../../utils/fds';
 import statusDataRenderer from '../FDSPropsTransformer/FDSDataRenderers/StatusDataRenderer';
-import ModalImport from '../ModalImport/ModalImport';
+import ModalImport, {ModalImportKeys} from '../ModalImport/ModalImport';
 import ModalObjectFieldDeletionNotAllowed from '../ModalObjectFieldDeletionNotAllowed';
 import ViewObjectDefinitionsLabelRenderer from '../ViewObjectDefinitionsLabelRenderer';
 import objectDefinitionModifiedDateDataRenderer from './FDSDataRenderers/ObjectDefinitionModifiedDateDataRenderer';
@@ -41,9 +41,9 @@ import './ViewObjectDefinitions.scss';
 export interface ModalImportProperties {
 	JSONInputId: string;
 	apiURL: string;
-	importExtendedInfo?: {key: string; value: string};
+	importExtendedInfo?: KeyValueObject;
 	importURL: string;
-	modalImportKey: string;
+	modalImportKey: ModalImportKeys;
 }
 
 interface ViewObjectDefinitionsProps extends IFDSTableProps {
@@ -105,7 +105,7 @@ export default function ViewObjectDefinitions({
 		JSONInputId: '',
 		apiURL: '',
 		importURL: '',
-		modalImportKey: '',
+		modalImportKey: 'objectDefinition',
 	});
 
 	const [
@@ -485,6 +485,7 @@ export default function ViewObjectDefinitions({
 					}}
 				/>
 			)}
+
 			{showModal.importModal && (
 				<ModalImport
 					{...(modalImportProperties.modalImportKey ===
@@ -502,11 +503,14 @@ export default function ViewObjectDefinitions({
 						);
 					}}
 					importExtendedInfo={
-						modalImportProperties.importExtendedInfo
+						modalImportProperties.importExtendedInfo as KeyValueObject
 					}
 					importURL={modalImportProperties.importURL}
 					modalImportKey={modalImportProperties.modalImportKey}
 					nameMaxLength={nameMaxLength}
+					objectFolderExternalReferenceCode={
+						selectedObjectFolder.externalReferenceCode
+					}
 					portletNamespace={portletNamespace}
 					showModal={showModal.importModal}
 				/>

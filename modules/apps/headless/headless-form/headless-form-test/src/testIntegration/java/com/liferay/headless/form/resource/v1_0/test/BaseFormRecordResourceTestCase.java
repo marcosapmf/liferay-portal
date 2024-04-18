@@ -197,6 +197,8 @@ public abstract class BaseFormRecordResourceTestCase {
 	public void testGraphQLGetFormRecord() throws Exception {
 		FormRecord formRecord = testGraphQLGetFormRecord_addFormRecord();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				formRecord,
@@ -212,11 +214,36 @@ public abstract class BaseFormRecordResourceTestCase {
 								},
 								getGraphQLFields())),
 						"JSONObject/data", "Object/formRecord"))));
+
+		// Using the namespace headlessForm_v1_0
+
+		Assert.assertTrue(
+			equals(
+				formRecord,
+				FormRecordSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessForm_v1_0",
+								new GraphQLField(
+									"formRecord",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"formRecordId",
+												formRecord.getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data", "JSONObject/headlessForm_v1_0",
+						"Object/formRecord"))));
 	}
 
 	@Test
 	public void testGraphQLGetFormRecordNotFound() throws Exception {
 		Long irrelevantFormRecordId = RandomTestUtil.randomLong();
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -230,6 +257,25 @@ public abstract class BaseFormRecordResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessForm_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessForm_v1_0",
+						new GraphQLField(
+							"formRecord",
+							new HashMap<String, Object>() {
+								{
+									put("formRecordId", irrelevantFormRecordId);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}
@@ -474,6 +520,8 @@ public abstract class BaseFormRecordResourceTestCase {
 		FormRecord formRecord =
 			testGraphQLGetFormFormRecordByLatestDraft_addFormRecord();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				formRecord,
@@ -493,6 +541,30 @@ public abstract class BaseFormRecordResourceTestCase {
 								getGraphQLFields())),
 						"JSONObject/data",
 						"Object/formFormRecordByLatestDraft"))));
+
+		// Using the namespace headlessForm_v1_0
+
+		Assert.assertTrue(
+			equals(
+				formRecord,
+				FormRecordSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessForm_v1_0",
+								new GraphQLField(
+									"formFormRecordByLatestDraft",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"formId",
+												testGraphQLGetFormFormRecordByLatestDraft_getFormId(
+													formRecord));
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data", "JSONObject/headlessForm_v1_0",
+						"Object/formFormRecordByLatestDraft"))));
 	}
 
 	protected Long testGraphQLGetFormFormRecordByLatestDraft_getFormId(
@@ -508,6 +580,8 @@ public abstract class BaseFormRecordResourceTestCase {
 
 		Long irrelevantFormId = RandomTestUtil.randomLong();
 
+		// No namespace
+
 		Assert.assertEquals(
 			"Not Found",
 			JSONUtil.getValueAsString(
@@ -520,6 +594,25 @@ public abstract class BaseFormRecordResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessForm_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessForm_v1_0",
+						new GraphQLField(
+							"formFormRecordByLatestDraft",
+							new HashMap<String, Object>() {
+								{
+									put("formId", irrelevantFormId);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}

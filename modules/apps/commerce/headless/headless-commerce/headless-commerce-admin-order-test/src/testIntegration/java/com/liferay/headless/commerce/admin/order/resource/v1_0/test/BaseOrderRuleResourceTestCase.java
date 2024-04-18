@@ -532,6 +532,8 @@ public abstract class BaseOrderRuleResourceTestCase {
 			new GraphQLField("items", getGraphQLFields()),
 			new GraphQLField("page"), new GraphQLField("totalCount"));
 
+		// No namespace
+
 		JSONObject orderRulesJSONObject = JSONUtil.getValueAsJSONObject(
 			invokeGraphQLQuery(graphQLField), "JSONObject/data",
 			"JSONObject/orderRules");
@@ -543,6 +545,29 @@ public abstract class BaseOrderRuleResourceTestCase {
 
 		orderRulesJSONObject = JSONUtil.getValueAsJSONObject(
 			invokeGraphQLQuery(graphQLField), "JSONObject/data",
+			"JSONObject/orderRules");
+
+		Assert.assertEquals(
+			totalCount + 2, orderRulesJSONObject.getLong("totalCount"));
+
+		assertContains(
+			orderRule1,
+			Arrays.asList(
+				OrderRuleSerDes.toDTOs(
+					orderRulesJSONObject.getString("items"))));
+		assertContains(
+			orderRule2,
+			Arrays.asList(
+				OrderRuleSerDes.toDTOs(
+					orderRulesJSONObject.getString("items"))));
+
+		// Using the namespace headlessCommerceAdminOrder_v1_0
+
+		orderRulesJSONObject = JSONUtil.getValueAsJSONObject(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"headlessCommerceAdminOrder_v1_0", graphQLField)),
+			"JSONObject/data", "JSONObject/headlessCommerceAdminOrder_v1_0",
 			"JSONObject/orderRules");
 
 		Assert.assertEquals(
@@ -642,6 +667,8 @@ public abstract class BaseOrderRuleResourceTestCase {
 		OrderRule orderRule =
 			testGraphQLGetOrderRuleByExternalReferenceCode_addOrderRule();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				orderRule,
@@ -663,6 +690,33 @@ public abstract class BaseOrderRuleResourceTestCase {
 								getGraphQLFields())),
 						"JSONObject/data",
 						"Object/orderRuleByExternalReferenceCode"))));
+
+		// Using the namespace headlessCommerceAdminOrder_v1_0
+
+		Assert.assertTrue(
+			equals(
+				orderRule,
+				OrderRuleSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessCommerceAdminOrder_v1_0",
+								new GraphQLField(
+									"orderRuleByExternalReferenceCode",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"externalReferenceCode",
+												"\"" +
+													orderRule.
+														getExternalReferenceCode() +
+															"\"");
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessCommerceAdminOrder_v1_0",
+						"Object/orderRuleByExternalReferenceCode"))));
 	}
 
 	@Test
@@ -671,6 +725,8 @@ public abstract class BaseOrderRuleResourceTestCase {
 
 		String irrelevantExternalReferenceCode =
 			"\"" + RandomTestUtil.randomString() + "\"";
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -686,6 +742,27 @@ public abstract class BaseOrderRuleResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessCommerceAdminOrder_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessCommerceAdminOrder_v1_0",
+						new GraphQLField(
+							"orderRuleByExternalReferenceCode",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"externalReferenceCode",
+										irrelevantExternalReferenceCode);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}
@@ -752,7 +829,10 @@ public abstract class BaseOrderRuleResourceTestCase {
 
 	@Test
 	public void testGraphQLDeleteOrderRule() throws Exception {
-		OrderRule orderRule = testGraphQLDeleteOrderRule_addOrderRule();
+
+		// No namespace
+
+		OrderRule orderRule1 = testGraphQLDeleteOrderRule_addOrderRule();
 
 		Assert.assertTrue(
 			JSONUtil.getValueAsBoolean(
@@ -761,23 +841,59 @@ public abstract class BaseOrderRuleResourceTestCase {
 						"deleteOrderRule",
 						new HashMap<String, Object>() {
 							{
-								put("id", orderRule.getId());
+								put("id", orderRule1.getId());
 							}
 						})),
 				"JSONObject/data", "Object/deleteOrderRule"));
-		JSONArray errorsJSONArray = JSONUtil.getValueAsJSONArray(
+
+		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
 			invokeGraphQLQuery(
 				new GraphQLField(
 					"orderRule",
 					new HashMap<String, Object>() {
 						{
-							put("id", orderRule.getId());
+							put("id", orderRule1.getId());
 						}
 					},
 					new GraphQLField("id"))),
 			"JSONArray/errors");
 
-		Assert.assertTrue(errorsJSONArray.length() > 0);
+		Assert.assertTrue(errorsJSONArray1.length() > 0);
+
+		// Using the namespace headlessCommerceAdminOrder_v1_0
+
+		OrderRule orderRule2 = testGraphQLDeleteOrderRule_addOrderRule();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"headlessCommerceAdminOrder_v1_0",
+						new GraphQLField(
+							"deleteOrderRule",
+							new HashMap<String, Object>() {
+								{
+									put("id", orderRule2.getId());
+								}
+							}))),
+				"JSONObject/data", "JSONObject/headlessCommerceAdminOrder_v1_0",
+				"Object/deleteOrderRule"));
+
+		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"headlessCommerceAdminOrder_v1_0",
+					new GraphQLField(
+						"orderRule",
+						new HashMap<String, Object>() {
+							{
+								put("id", orderRule2.getId());
+							}
+						},
+						new GraphQLField("id")))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray2.length() > 0);
 	}
 
 	protected OrderRule testGraphQLDeleteOrderRule_addOrderRule()
@@ -806,6 +922,8 @@ public abstract class BaseOrderRuleResourceTestCase {
 	public void testGraphQLGetOrderRule() throws Exception {
 		OrderRule orderRule = testGraphQLGetOrderRule_addOrderRule();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				orderRule,
@@ -821,11 +939,35 @@ public abstract class BaseOrderRuleResourceTestCase {
 								},
 								getGraphQLFields())),
 						"JSONObject/data", "Object/orderRule"))));
+
+		// Using the namespace headlessCommerceAdminOrder_v1_0
+
+		Assert.assertTrue(
+			equals(
+				orderRule,
+				OrderRuleSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessCommerceAdminOrder_v1_0",
+								new GraphQLField(
+									"orderRule",
+									new HashMap<String, Object>() {
+										{
+											put("id", orderRule.getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessCommerceAdminOrder_v1_0",
+						"Object/orderRule"))));
 	}
 
 	@Test
 	public void testGraphQLGetOrderRuleNotFound() throws Exception {
 		Long irrelevantId = RandomTestUtil.randomLong();
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -839,6 +981,25 @@ public abstract class BaseOrderRuleResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessCommerceAdminOrder_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessCommerceAdminOrder_v1_0",
+						new GraphQLField(
+							"orderRule",
+							new HashMap<String, Object>() {
+								{
+									put("id", irrelevantId);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}

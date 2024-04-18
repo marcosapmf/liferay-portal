@@ -5,6 +5,8 @@
 
 package com.liferay.site.initializer.extender.internal;
 
+import com.liferay.account.model.AccountEntry;
+import com.liferay.account.service.AccountEntryLocalService;
 import com.liferay.document.library.kernel.model.DLFolderConstants;
 import com.liferay.document.library.kernel.service.DLAppService;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
@@ -12,22 +14,39 @@ import com.liferay.dynamic.data.mapping.model.DDMTemplate;
 import com.liferay.dynamic.data.mapping.service.DDMStructureLocalService;
 import com.liferay.dynamic.data.mapping.service.DDMTemplateLocalService;
 import com.liferay.headless.delivery.dto.v1_0.PageDefinition;
+import com.liferay.journal.constants.JournalFolderConstants;
+import com.liferay.journal.model.JournalArticle;
+import com.liferay.journal.model.JournalFolder;
+import com.liferay.journal.service.JournalArticleLocalService;
+import com.liferay.journal.service.JournalFolderService;
 import com.liferay.layout.exporter.LayoutsExporter;
 import com.liferay.layout.page.template.model.LayoutPageTemplateStructure;
 import com.liferay.layout.page.template.service.LayoutPageTemplateStructureLocalService;
 import com.liferay.layout.util.structure.LayoutStructure;
+import com.liferay.layout.utility.page.model.LayoutUtilityPageEntry;
+import com.liferay.layout.utility.page.service.LayoutUtilityPageEntryLocalService;
+import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.petra.string.CharPool;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
+import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutConstants;
+import com.liferay.portal.kernel.model.Organization;
+import com.liferay.portal.kernel.model.Role;
+import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.repository.model.Folder;
 import com.liferay.portal.kernel.service.LayoutLocalService;
+import com.liferay.portal.kernel.service.OrganizationLocalService;
+import com.liferay.portal.kernel.service.UserGroupLocalService;
+import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
@@ -50,8 +69,12 @@ import com.liferay.style.book.util.comparator.StyleBookEntryNameComparator;
 import java.io.File;
 import java.io.InputStream;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
+import java.util.TreeSet;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -77,9 +100,14 @@ public class SiteInitializerSerializerImpl
 				"documents/group", zipWriter);
 			_serializeDDMStructures(groupId, zipWriter);
 			_serializeDDMTemplates(groupId, zipWriter);
+			_serializeJournalArticles(
+				groupId, JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID,
+				"journal-articles", zipWriter);
 			_serializeLayoutPageTemplates(groupId, zipWriter);
+			_serializeLayoutUtilityPageEntries(groupId, zipWriter);
 			_serializeLayouts(groupId, "layouts", zipWriter);
 			_serializeStyleBookEntries(groupId, zipWriter);
+			_serializeUserAccounts(groupId, zipWriter);
 
 			return zipWriter.getFile();
 		}
@@ -96,6 +124,13 @@ public class SiteInitializerSerializerImpl
 	}
 
 	private void _addZipEntry(
+			String fileName, JSONArray jsonArray, ZipWriter zipWriter)
+		throws Exception {
+
+		_addZipEntry(fileName, JSONUtil.toString(jsonArray), zipWriter);
+	}
+
+	private void _addZipEntry(
 			String fileName, JSONObject jsonObject, ZipWriter zipWriter)
 		throws Exception {
 
@@ -107,6 +142,15 @@ public class SiteInitializerSerializerImpl
 		throws Exception {
 
 		zipWriter.addEntry("site-initializer/" + fileName, string);
+	}
+
+	private void _addZipEntry(
+			String fileName, UnsafeSupplier<String, Exception> unsafeSupplier,
+			ZipWriter zipWriter)
+		throws Exception {
+
+		zipWriter.addEntry(
+			"site-initializer/" + fileName, unsafeSupplier.get());
 	}
 
 	private String _normalize(String string) {
@@ -217,6 +261,62 @@ public class SiteInitializerSerializerImpl
 			_serializeDocuments(
 				groupId, folder.getFolderId(),
 				zipDirName + "/" + folder.getName(), zipWriter);
+		}
+	}
+
+	private void _serializeJournalArticles(
+			long groupId, long parentFolderId, String zipDirName,
+			ZipWriter zipWriter)
+		throws Exception {
+
+		List<JournalArticle> journalArticles =
+			_journalArticleLocalService.getArticles(groupId, parentFolderId);
+
+		for (JournalArticle journalArticle : journalArticles) {
+			_addZipEntry(
+				_normalize(
+					StringBundler.concat(
+						zipDirName, "/", journalArticle.getArticleId(),
+						".json")),
+				JSONUtil.put(
+					"ddmStructureKey", journalArticle.getDDMStructureKey()
+				).put(
+					"name", journalArticle.getArticleId()
+				),
+				zipWriter);
+			_addZipEntry(
+				_normalize(
+					StringBundler.concat(
+						zipDirName, "/", journalArticle.getArticleId(),
+						".xml")),
+				journalArticle.getContent(), zipWriter);
+		}
+
+		List<JournalFolder> journalFolders = _journalFolderService.getFolders(
+			groupId, parentFolderId);
+
+		for (JournalFolder journalFolder : journalFolders) {
+			_addZipEntry(
+				_normalize(
+					StringBundler.concat(
+						zipDirName, "/", journalFolder.getName(),
+						"metadata.json")),
+				JSONUtil.put(
+					"description", journalFolder.getDescription()
+				).put(
+					"externalReferenceCode",
+					journalFolder.getExternalReferenceCode()
+				).put(
+					"name", journalFolder.getName()
+				).put(
+					"viewableBy", "Anyone"
+				),
+				zipWriter);
+
+			_serializeJournalArticles(
+				groupId, journalFolder.getFolderId(),
+				StringBundler.concat(zipDirName, "/", journalFolder.getName()),
+				zipWriter);
 		}
 	}
 
@@ -368,6 +468,63 @@ public class SiteInitializerSerializerImpl
 			zipWriter);
 	}
 
+	private void _serializeLayoutUtilityPageEntries(
+			long groupId, ZipWriter zipWriter)
+		throws Exception {
+
+		File file = _layoutsExporter.exportLayoutUtilityPageEntries(
+			ListUtil.toLongArray(
+				_layoutUtilityPageEntryLocalService.getLayoutUtilityPageEntries(
+					groupId),
+				LayoutUtilityPageEntry.LAYOUT_UTILITY_PAGE_ENTRY_ID_ACCESSOR));
+		ZipReader zipReader = null;
+
+		try {
+			zipReader = _zipReaderFactory.getZipReader(file);
+
+			for (String name : zipReader.getEntries()) {
+				String fileName = "layout-utility-page-entries/";
+
+				fileName += StringUtil.removeSubstring(
+					name, "layout-utility-page-template/");
+
+				_addZipEntry(
+					fileName, zipReader.getEntryAsInputStream(name), zipWriter);
+			}
+		}
+		finally {
+			if (zipReader != null) {
+				zipReader.close();
+			}
+
+			file.delete();
+		}
+	}
+
+	private void _serializeOrganization(
+		JSONArray jsonArray, Organization organization) {
+
+		JSONObject jsonObject = JSONUtil.put(
+			"childOrganizations", _jsonFactory.createJSONArray()
+		).put(
+			"externalReferenceCode", organization.getExternalReferenceCode()
+		).put(
+			"name", organization.getName()
+		);
+
+		for (Organization childOrganization :
+				_organizationLocalService.getOrganizations(
+					organization.getCompanyId(),
+					organization.getOrganizationId())) {
+
+			_serializeOrganization(
+				jsonObject.getJSONArray("childOrganizations"),
+				childOrganization);
+		}
+
+		jsonArray.put(jsonObject);
+	}
+
 	private void _serializeStyleBookEntries(long groupId, ZipWriter zipWriter)
 		throws Exception {
 
@@ -382,6 +539,159 @@ public class SiteInitializerSerializerImpl
 		}
 	}
 
+	private void _serializeUserAccounts(long groupId, ZipWriter zipWriter)
+		throws Exception {
+
+		Set<AccountEntry> accountEntries = new TreeSet<>();
+		Map<String, String[]> roleNamesMap = new HashMap<>();
+		Set<Organization> organizations = new TreeSet<>();
+		Set<Role> roles = new TreeSet<>();
+
+		_addZipEntry(
+			"user-accounts.json",
+			JSONUtil.toJSONArray(
+				_userLocalService.getGroupUsers(groupId),
+				user -> {
+					List<Role> userRoles = user.getRoles();
+
+					for (Role role : userRoles) {
+						if (StringUtil.equals(
+								role.getName(), RoleConstants.ADMINISTRATOR) ||
+							StringUtil.equals(
+								role.getName(), RoleConstants.POWER_USER)) {
+
+							return null;
+						}
+					}
+
+					roleNamesMap.put(
+						user.getEmailAddress(),
+						ListUtil.toArray(userRoles, Role.NAME_ACCESSOR));
+					roles.addAll(userRoles);
+
+					List<AccountEntry> userAccountEntries =
+						_accountEntryLocalService.getUserAccountEntries(
+							user.getUserId(), null, null, null,
+							QueryUtil.ALL_POS, QueryUtil.ALL_POS);
+
+					accountEntries.addAll(userAccountEntries);
+
+					List<Organization> userOrganizations =
+						user.getOrganizations();
+
+					organizations.addAll(userOrganizations);
+
+					return JSONUtil.put(
+						"accountBriefs",
+						JSONUtil.toJSONArray(
+							userAccountEntries,
+							accountEntry -> JSONUtil.put(
+								"externalReferenceCode",
+								accountEntry.getExternalReferenceCode()))
+					).put(
+						"alternateName", user.getScreenName()
+					).put(
+						"emailAddress", user.getEmailAddresses()
+					).put(
+						"externalReferenceCode", user.getExternalReferenceCode()
+					).put(
+						"familyName", user.getLastName()
+					).put(
+						"givenName", user.getFirstName()
+					).put(
+						"name", user.getFullName()
+					).put(
+						"organizationBriefs",
+						JSONUtil.toJSONArray(
+							userOrganizations,
+							organization -> JSONUtil.put(
+								"name", organization.getName()))
+					);
+				}),
+			zipWriter);
+
+		_addZipEntry(
+			"accounts.json",
+			JSONUtil.toJSONArray(
+				accountEntries,
+				accountEntry -> JSONUtil.put(
+					"externalReferenceCode",
+					accountEntry.getExternalReferenceCode()
+				).put(
+					"name", accountEntry.getName()
+				).put(
+					"type", accountEntry.getType()
+				)),
+			zipWriter);
+		_addZipEntry(
+			"organizations.json",
+			() -> {
+				JSONArray jsonArray = _jsonFactory.createJSONArray();
+
+				for (Organization organization : organizations) {
+					_serializeOrganization(jsonArray, organization);
+				}
+
+				return JSONUtil.toString(jsonArray);
+			},
+			zipWriter);
+		_addZipEntry(
+			"roles.json",
+			JSONUtil.toJSONArray(
+				roles,
+				role -> {
+					if (StringUtil.equals(role.getName(), RoleConstants.USER)) {
+						return null;
+					}
+
+					return JSONUtil.put(
+						"name", role.getName()
+					).put(
+						"name_i18n", JSONUtil.put("en-US", role.getName())
+					).put(
+						"type", role.getType()
+					);
+				}),
+			zipWriter);
+		_addZipEntry(
+			"user-groups.json",
+			JSONUtil.toJSONArray(
+				_userGroupLocalService.getGroupUserGroups(groupId),
+				userGroup -> JSONUtil.put(
+					"description", userGroup.getDescription()
+				).put(
+					"externalReferenceCode",
+					userGroup.getExternalReferenceCode()
+				).put(
+					"name", userGroup.getName()
+				)),
+			zipWriter);
+		_addZipEntry(
+			"user-roles.json",
+			JSONUtil.toJSONArray(
+				roleNamesMap.keySet(),
+				emailAddress -> JSONUtil.put(
+					"emailAddress", emailAddress
+				).put(
+					"roles",
+					JSONUtil.toJSONArray(
+						roleNamesMap.get(emailAddress),
+						roleName -> {
+							if (StringUtil.equals(
+									roleName, RoleConstants.USER)) {
+
+								return null;
+							}
+
+							return roleName;
+						})
+				)),
+			zipWriter);
+	}
+
+	@Reference
+	private AccountEntryLocalService _accountEntryLocalService;
+
 	@Reference
 	private DDMStructureLocalService _ddmStructureLocalService;
 
@@ -393,6 +703,12 @@ public class SiteInitializerSerializerImpl
 
 	@Reference
 	private DTOConverterRegistry _dtoConverterRegistry;
+
+	@Reference
+	private JournalArticleLocalService _journalArticleLocalService;
+
+	@Reference
+	private JournalFolderService _journalFolderService;
 
 	@Reference
 	private JSONFactory _jsonFactory;
@@ -407,6 +723,13 @@ public class SiteInitializerSerializerImpl
 	@Reference
 	private LayoutsExporter _layoutsExporter;
 
+	@Reference
+	private LayoutUtilityPageEntryLocalService
+		_layoutUtilityPageEntryLocalService;
+
+	@Reference
+	private OrganizationLocalService _organizationLocalService;
+
 	@Reference(
 		target = "(component.name=com.liferay.headless.delivery.internal.dto.v1_0.converter.PageDefinitionDTOConverter)"
 	)
@@ -418,6 +741,12 @@ public class SiteInitializerSerializerImpl
 
 	@Reference
 	private StyleBookEntryLocalService _styleBookEntryLocalService;
+
+	@Reference
+	private UserGroupLocalService _userGroupLocalService;
+
+	@Reference
+	private UserLocalService _userLocalService;
 
 	@Reference
 	private ZipReaderFactory _zipReaderFactory;

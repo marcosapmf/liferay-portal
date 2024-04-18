@@ -334,6 +334,8 @@ public abstract class BaseTaskResourceTestCase {
 	public void testGraphQLGetProcessTask() throws Exception {
 		Task task = testGraphQLGetProcessTask_addTask();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				task,
@@ -354,6 +356,33 @@ public abstract class BaseTaskResourceTestCase {
 								},
 								getGraphQLFields())),
 						"JSONObject/data", "Object/processTask"))));
+
+		// Using the namespace portalWorkflowMetrics_v1_0
+
+		Assert.assertTrue(
+			equals(
+				task,
+				TaskSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"portalWorkflowMetrics_v1_0",
+								new GraphQLField(
+									"processTask",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"processId",
+												testGraphQLGetProcessTask_getProcessId(
+													task));
+
+											put("taskId", task.getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/portalWorkflowMetrics_v1_0",
+						"Object/processTask"))));
 	}
 
 	protected Long testGraphQLGetProcessTask_getProcessId(Task task)
@@ -366,6 +395,8 @@ public abstract class BaseTaskResourceTestCase {
 	public void testGraphQLGetProcessTaskNotFound() throws Exception {
 		Long irrelevantProcessId = RandomTestUtil.randomLong();
 		Long irrelevantTaskId = RandomTestUtil.randomLong();
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -380,6 +411,26 @@ public abstract class BaseTaskResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace portalWorkflowMetrics_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"portalWorkflowMetrics_v1_0",
+						new GraphQLField(
+							"processTask",
+							new HashMap<String, Object>() {
+								{
+									put("processId", irrelevantProcessId);
+									put("taskId", irrelevantTaskId);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}

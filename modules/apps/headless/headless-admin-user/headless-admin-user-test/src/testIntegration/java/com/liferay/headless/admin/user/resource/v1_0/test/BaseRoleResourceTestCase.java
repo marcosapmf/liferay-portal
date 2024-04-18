@@ -304,6 +304,8 @@ public abstract class BaseRoleResourceTestCase {
 			new GraphQLField("items", getGraphQLFields()),
 			new GraphQLField("page"), new GraphQLField("totalCount"));
 
+		// No namespace
+
 		JSONObject rolesJSONObject = JSONUtil.getValueAsJSONObject(
 			invokeGraphQLQuery(graphQLField), "JSONObject/data",
 			"JSONObject/roles");
@@ -315,6 +317,26 @@ public abstract class BaseRoleResourceTestCase {
 
 		rolesJSONObject = JSONUtil.getValueAsJSONObject(
 			invokeGraphQLQuery(graphQLField), "JSONObject/data",
+			"JSONObject/roles");
+
+		Assert.assertEquals(
+			totalCount + 2, rolesJSONObject.getLong("totalCount"));
+
+		assertContains(
+			role1,
+			Arrays.asList(
+				RoleSerDes.toDTOs(rolesJSONObject.getString("items"))));
+		assertContains(
+			role2,
+			Arrays.asList(
+				RoleSerDes.toDTOs(rolesJSONObject.getString("items"))));
+
+		// Using the namespace headlessAdminUser_v1_0
+
+		rolesJSONObject = JSONUtil.getValueAsJSONObject(
+			invokeGraphQLQuery(
+				new GraphQLField("headlessAdminUser_v1_0", graphQLField)),
+			"JSONObject/data", "JSONObject/headlessAdminUser_v1_0",
 			"JSONObject/roles");
 
 		Assert.assertEquals(
@@ -350,6 +372,133 @@ public abstract class BaseRoleResourceTestCase {
 	}
 
 	@Test
+	public void testGetRoleByExternalReferenceCode() throws Exception {
+		Role postRole = testGetRoleByExternalReferenceCode_addRole();
+
+		Role getRole = roleResource.getRoleByExternalReferenceCode(
+			postRole.getExternalReferenceCode());
+
+		assertEquals(postRole, getRole);
+		assertValid(getRole);
+	}
+
+	protected Role testGetRoleByExternalReferenceCode_addRole()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLGetRoleByExternalReferenceCode() throws Exception {
+		Role role = testGraphQLGetRoleByExternalReferenceCode_addRole();
+
+		// No namespace
+
+		Assert.assertTrue(
+			equals(
+				role,
+				RoleSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"roleByExternalReferenceCode",
+								new HashMap<String, Object>() {
+									{
+										put(
+											"externalReferenceCode",
+											"\"" +
+												role.
+													getExternalReferenceCode() +
+														"\"");
+									}
+								},
+								getGraphQLFields())),
+						"JSONObject/data",
+						"Object/roleByExternalReferenceCode"))));
+
+		// Using the namespace headlessAdminUser_v1_0
+
+		Assert.assertTrue(
+			equals(
+				role,
+				RoleSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessAdminUser_v1_0",
+								new GraphQLField(
+									"roleByExternalReferenceCode",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"externalReferenceCode",
+												"\"" +
+													role.
+														getExternalReferenceCode() +
+															"\"");
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data", "JSONObject/headlessAdminUser_v1_0",
+						"Object/roleByExternalReferenceCode"))));
+	}
+
+	@Test
+	public void testGraphQLGetRoleByExternalReferenceCodeNotFound()
+		throws Exception {
+
+		String irrelevantExternalReferenceCode =
+			"\"" + RandomTestUtil.randomString() + "\"";
+
+		// No namespace
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"roleByExternalReferenceCode",
+						new HashMap<String, Object>() {
+							{
+								put(
+									"externalReferenceCode",
+									irrelevantExternalReferenceCode);
+							}
+						},
+						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessAdminUser_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessAdminUser_v1_0",
+						new GraphQLField(
+							"roleByExternalReferenceCode",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"externalReferenceCode",
+										irrelevantExternalReferenceCode);
+								}
+							},
+							getGraphQLFields()))),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+	}
+
+	protected Role testGraphQLGetRoleByExternalReferenceCode_addRole()
+		throws Exception {
+
+		return testGraphQLRole_addRole();
+	}
+
+	@Test
 	public void testPutRoleByExternalReferenceCode() throws Exception {
 		Role postRole = testPutRoleByExternalReferenceCode_addRole();
 
@@ -361,7 +510,7 @@ public abstract class BaseRoleResourceTestCase {
 		assertEquals(randomRole, putRole);
 		assertValid(putRole);
 
-		Role getRole = testPutRoleByExternalReferenceCode_getRole(
+		Role getRole = roleResource.getRoleByExternalReferenceCode(
 			putRole.getExternalReferenceCode());
 
 		assertEquals(randomRole, getRole);
@@ -375,7 +524,7 @@ public abstract class BaseRoleResourceTestCase {
 		assertEquals(newRole, putRole);
 		assertValid(putRole);
 
-		getRole = testPutRoleByExternalReferenceCode_getRole(
+		getRole = roleResource.getRoleByExternalReferenceCode(
 			putRole.getExternalReferenceCode());
 
 		assertEquals(newRole, getRole);
@@ -385,13 +534,6 @@ public abstract class BaseRoleResourceTestCase {
 			putRole.getExternalReferenceCode());
 	}
 
-	protected Role testPutRoleByExternalReferenceCode_getRole(
-		String externalReferenceCode) {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
 	protected Role testPutRoleByExternalReferenceCode_createRole()
 		throws Exception {
 
@@ -399,6 +541,67 @@ public abstract class BaseRoleResourceTestCase {
 	}
 
 	protected Role testPutRoleByExternalReferenceCode_addRole()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testDeleteRoleByExternalReferenceCodeUserAccountAssociation()
+		throws Exception {
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		Role role =
+			testDeleteRoleByExternalReferenceCodeUserAccountAssociation_addRole();
+
+		assertHttpResponseStatusCode(
+			204,
+			roleResource.
+				deleteRoleByExternalReferenceCodeUserAccountAssociationHttpResponse(
+					role.getExternalReferenceCode(),
+					testDeleteRoleByExternalReferenceCodeUserAccountAssociation_getUserAccountId()));
+	}
+
+	protected Long
+			testDeleteRoleByExternalReferenceCodeUserAccountAssociation_getUserAccountId()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected Role
+			testDeleteRoleByExternalReferenceCodeUserAccountAssociation_addRole()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPostRoleByExternalReferenceCodeUserAccountAssociation()
+		throws Exception {
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		Role role =
+			testPostRoleByExternalReferenceCodeUserAccountAssociation_addRole();
+
+		assertHttpResponseStatusCode(
+			204,
+			roleResource.
+				postRoleByExternalReferenceCodeUserAccountAssociationHttpResponse(
+					role.getExternalReferenceCode(), null));
+
+		assertHttpResponseStatusCode(
+			404,
+			roleResource.
+				postRoleByExternalReferenceCodeUserAccountAssociationHttpResponse(
+					role.getExternalReferenceCode(), null));
+	}
+
+	protected Role
+			testPostRoleByExternalReferenceCodeUserAccountAssociation_addRole()
 		throws Exception {
 
 		throw new UnsupportedOperationException(
@@ -424,6 +627,8 @@ public abstract class BaseRoleResourceTestCase {
 	public void testGraphQLGetRole() throws Exception {
 		Role role = testGraphQLGetRole_addRole();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				role,
@@ -439,11 +644,34 @@ public abstract class BaseRoleResourceTestCase {
 								},
 								getGraphQLFields())),
 						"JSONObject/data", "Object/role"))));
+
+		// Using the namespace headlessAdminUser_v1_0
+
+		Assert.assertTrue(
+			equals(
+				role,
+				RoleSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessAdminUser_v1_0",
+								new GraphQLField(
+									"role",
+									new HashMap<String, Object>() {
+										{
+											put("roleId", role.getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data", "JSONObject/headlessAdminUser_v1_0",
+						"Object/role"))));
 	}
 
 	@Test
 	public void testGraphQLGetRoleNotFound() throws Exception {
 		Long irrelevantRoleId = RandomTestUtil.randomLong();
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -457,6 +685,25 @@ public abstract class BaseRoleResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessAdminUser_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessAdminUser_v1_0",
+						new GraphQLField(
+							"role",
+							new HashMap<String, Object>() {
+								{
+									put("roleId", irrelevantRoleId);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}

@@ -10,6 +10,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.liferay.asset.kernel.NoSuchClassTypeException;
 import com.liferay.asset.list.service.AssetListEntryLocalService;
 import com.liferay.client.extension.constants.ClientExtensionEntryConstants;
+import com.liferay.client.extension.model.ClientExtensionEntryRel;
 import com.liferay.client.extension.service.ClientExtensionEntryRelLocalService;
 import com.liferay.client.extension.type.CET;
 import com.liferay.client.extension.type.manager.CETManager;
@@ -364,6 +365,21 @@ public class LayoutsImporterImpl implements LayoutsImporter {
 
 		if ((cet == null) || !Objects.equals(type, cet.getType())) {
 			return;
+		}
+
+		List<ClientExtensionEntryRel> clientExtensionEntryRels =
+			_clientExtensionEntryRelLocalService.getClientExtensionEntryRels(
+				_portal.getClassNameId(Layout.class), layout.getPlid());
+
+		for (ClientExtensionEntryRel clientExtensionEntryRel :
+				clientExtensionEntryRels) {
+
+			if (cetExternalReferenceCode.equals(
+					clientExtensionEntryRel.getCETExternalReferenceCode())) {
+
+				_clientExtensionEntryRelLocalService.
+					deleteClientExtensionEntryRel(clientExtensionEntryRel);
+			}
 		}
 
 		UnicodeProperties unicodeProperties = new UnicodeProperties(true);
@@ -733,9 +749,16 @@ public class LayoutsImporterImpl implements LayoutsImporter {
 				continue;
 			}
 
-			if (!FeatureFlagManagerUtil.isEnabled("LPD-6378") &&
-				(utilityPageTemplate.getType() ==
-					UtilityPageTemplate.Type.LOGIN)) {
+			if ((!FeatureFlagManagerUtil.isEnabled("LPD-6378") &&
+				 ((utilityPageTemplate.getType() ==
+					 UtilityPageTemplate.Type.CREATE_ACCOUNT) ||
+				  (utilityPageTemplate.getType() ==
+					  UtilityPageTemplate.Type.FORGOT_PASSWORD) ||
+				  (utilityPageTemplate.getType() ==
+					  UtilityPageTemplate.Type.LOGIN))) ||
+				(!FeatureFlagManagerUtil.isEnabled("LPD-10588") &&
+				 (utilityPageTemplate.getType() ==
+					 UtilityPageTemplate.Type.COOKIE_POLICY))) {
 
 				continue;
 			}
@@ -1481,13 +1504,13 @@ public class LayoutsImporterImpl implements LayoutsImporter {
 	}
 
 	private void _processLayoutUtilityPageTemplateEntry(
-			String externalReferenceCode, long groupId,
+			String externalReferenceCode, String friendlyURL, long groupId,
 			List<LayoutsImporterResultEntry> layoutsImporterResultEntries,
 			LayoutsImportStrategy layoutsImportStrategy,
 			LayoutUtilityPageEntry layoutUtilityPageEntry, String name,
-			PageDefinition pageDefinition, boolean preserveItemIds, String type,
-			long userId, ZipEntry thumbnailZipEntry, String zipPath,
-			ZipFile zipFile)
+			PageDefinition pageDefinition, boolean preserveItemIds,
+			boolean privateLayout, String type, long userId,
+			ZipEntry thumbnailZipEntry, String zipPath, ZipFile zipFile)
 		throws Exception {
 
 		try {
@@ -1497,7 +1520,8 @@ public class LayoutsImporterImpl implements LayoutsImporter {
 				layoutUtilityPageEntry =
 					_layoutUtilityPageEntryService.addLayoutUtilityPageEntry(
 						externalReferenceCode, groupId, 0, 0, false, name, type,
-						0, ServiceContextThreadLocal.getServiceContext());
+						0, friendlyURL, privateLayout,
+						ServiceContextThreadLocal.getServiceContext());
 
 				added = true;
 			}
@@ -2666,10 +2690,13 @@ public class LayoutsImporterImpl implements LayoutsImporter {
 						_groupId);
 
 			_processLayoutUtilityPageTemplateEntry(
-				utilityPageTemplate.getExternalReferenceCode(), _groupId,
+				utilityPageTemplate.getExternalReferenceCode(),
+				utilityPageTemplate.getFriendlyURL(), _groupId,
 				_layoutsImporterResultEntries, _layoutsImportStrategy,
 				layoutUtilityPageEntry, utilityPageTemplate.getName(),
 				_utilityPageTemplateEntry.getPageDefinition(), _preserveItemIds,
+				GetterUtil.getBoolean(
+					utilityPageTemplate.getPrivateLayout(), true),
 				LayoutUtilityPageEntryTypeConverter.convertToInternalValue(
 					utilityPageTemplate.getTypeAsString()),
 				_userId, _utilityPageTemplateEntry.getThumbnailZipEntry(),

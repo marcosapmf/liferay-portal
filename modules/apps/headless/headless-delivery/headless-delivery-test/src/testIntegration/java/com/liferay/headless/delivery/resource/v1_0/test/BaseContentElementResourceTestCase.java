@@ -1096,6 +1096,8 @@ public abstract class BaseContentElementResourceTestCase {
 			new GraphQLField("items", getGraphQLFields()),
 			new GraphQLField("page"), new GraphQLField("totalCount"));
 
+		// No namespace
+
 		JSONObject contentElementsJSONObject = JSONUtil.getValueAsJSONObject(
 			invokeGraphQLQuery(graphQLField), "JSONObject/data",
 			"JSONObject/contentElements");
@@ -1109,6 +1111,28 @@ public abstract class BaseContentElementResourceTestCase {
 
 		contentElementsJSONObject = JSONUtil.getValueAsJSONObject(
 			invokeGraphQLQuery(graphQLField), "JSONObject/data",
+			"JSONObject/contentElements");
+
+		Assert.assertEquals(
+			totalCount + 2, contentElementsJSONObject.getLong("totalCount"));
+
+		assertContains(
+			contentElement1,
+			Arrays.asList(
+				ContentElementSerDes.toDTOs(
+					contentElementsJSONObject.getString("items"))));
+		assertContains(
+			contentElement2,
+			Arrays.asList(
+				ContentElementSerDes.toDTOs(
+					contentElementsJSONObject.getString("items"))));
+
+		// Using the namespace headlessDelivery_v1_0
+
+		contentElementsJSONObject = JSONUtil.getValueAsJSONObject(
+			invokeGraphQLQuery(
+				new GraphQLField("headlessDelivery_v1_0", graphQLField)),
+			"JSONObject/data", "JSONObject/headlessDelivery_v1_0",
 			"JSONObject/contentElements");
 
 		Assert.assertEquals(

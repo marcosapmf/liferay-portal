@@ -45,7 +45,7 @@ export class HeadlessAdminUserApiHelper {
 	) {
 		return this.apiHelpers.post(
 			`${this.apiHelpers.baseUrl}${this.basePath}/accounts/${accountId}/user-accounts/by-email-address`,
-			emails || []
+			{data: emails || []}
 		);
 	}
 
@@ -61,16 +61,47 @@ export class HeadlessAdminUserApiHelper {
 		);
 	}
 
+	async deleteRoleUserAccountAssociation(
+		roleId: number,
+		userAccountId: number
+	) {
+		return this.apiHelpers.delete(
+			`${this.apiHelpers.baseUrl}${this.basePath}/roles/${roleId}/association/user-account/${userAccountId}`
+		);
+	}
+
 	async getSiteByFriendlyUrlPath(friendlyUrlPath: string) {
 		return this.apiHelpers.get(
 			`${this.apiHelpers.baseUrl}${this.basePath}/sites/by-friendly-url-path/${friendlyUrlPath}`
 		);
 	}
 
+	async getRoles(search: string) {
+		return this.apiHelpers.get(
+			`${this.apiHelpers.baseUrl}${this.basePath}/roles?search=${search}`
+		);
+	}
+
+	async getUserAccountByEmailAddress(emailAddress: string) {
+		return this.apiHelpers.get(
+			`${this.apiHelpers.baseUrl}${this.basePath}/user-accounts/by-email-address/${emailAddress}`
+		);
+	}
+
 	async postAccount(account?: TAccount): Promise<TAccount> {
 		return this.apiHelpers.post(
 			`${this.apiHelpers.baseUrl}${this.basePath}/accounts`,
-			{name: 'Account' + getRandomInt(), ...(account || {})}
+			{data: {name: 'Account' + getRandomInt(), ...(account || {})}}
+		);
+	}
+
+	async postRoleUserAccountAssociation(
+		roleId: number,
+		userAccountId: number
+	) {
+		return this.apiHelpers.postResponse(
+			`${this.apiHelpers.baseUrl}${this.basePath}/roles/${roleId}/association/user-account/${userAccountId}`,
+			{data: {}}
 		);
 	}
 
@@ -79,7 +110,29 @@ export class HeadlessAdminUserApiHelper {
 	): Promise<TOrganization> {
 		return this.apiHelpers.post(
 			`${this.apiHelpers.baseUrl}${this.basePath}/organizations`,
-			{name: 'Organization' + getRandomInt(), ...(organization || {})}
+			{
+				data: {
+					name: 'Organization' + getRandomInt(),
+					...(organization || {}),
+				},
+			}
+		);
+	}
+
+	async getAccountRoles(accountId: number) {
+		return this.apiHelpers.get(
+			`${this.apiHelpers.baseUrl}${this.basePath}/accounts/${accountId}/account-roles`
+		);
+	}
+
+	async assignAccountRoles(
+		accountERC: string,
+		roleId: number,
+		userEmail: string
+	) {
+		return this.apiHelpers.post(
+			`${this.apiHelpers.baseUrl}${this.basePath}/accounts/by-external-reference-code/${accountERC}/account-roles/${roleId}/user-accounts/by-email-address/${userEmail}`,
+			{data: {}}
 		);
 	}
 }

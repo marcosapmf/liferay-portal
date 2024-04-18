@@ -242,7 +242,9 @@ public abstract class BaseAccountChannelShippingOptionResourceTestCase {
 	public void testGraphQLDeleteAccountChannelShippingOption()
 		throws Exception {
 
-		AccountChannelShippingOption accountChannelShippingOption =
+		// No namespace
+
+		AccountChannelShippingOption accountChannelShippingOption1 =
 			testGraphQLDeleteAccountChannelShippingOption_addAccountChannelShippingOption();
 
 		Assert.assertTrue(
@@ -252,24 +254,68 @@ public abstract class BaseAccountChannelShippingOptionResourceTestCase {
 						"deleteAccountChannelShippingOption",
 						new HashMap<String, Object>() {
 							{
-								put("id", accountChannelShippingOption.getId());
+								put(
+									"id",
+									accountChannelShippingOption1.getId());
 							}
 						})),
 				"JSONObject/data",
 				"Object/deleteAccountChannelShippingOption"));
-		JSONArray errorsJSONArray = JSONUtil.getValueAsJSONArray(
+
+		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
 			invokeGraphQLQuery(
 				new GraphQLField(
 					"accountChannelShippingOption",
 					new HashMap<String, Object>() {
 						{
-							put("id", accountChannelShippingOption.getId());
+							put("id", accountChannelShippingOption1.getId());
 						}
 					},
 					new GraphQLField("id"))),
 			"JSONArray/errors");
 
-		Assert.assertTrue(errorsJSONArray.length() > 0);
+		Assert.assertTrue(errorsJSONArray1.length() > 0);
+
+		// Using the namespace headlessCommerceAdminAccount_v1_0
+
+		AccountChannelShippingOption accountChannelShippingOption2 =
+			testGraphQLDeleteAccountChannelShippingOption_addAccountChannelShippingOption();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"headlessCommerceAdminAccount_v1_0",
+						new GraphQLField(
+							"deleteAccountChannelShippingOption",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"id",
+										accountChannelShippingOption2.getId());
+								}
+							}))),
+				"JSONObject/data",
+				"JSONObject/headlessCommerceAdminAccount_v1_0",
+				"Object/deleteAccountChannelShippingOption"));
+
+		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"headlessCommerceAdminAccount_v1_0",
+					new GraphQLField(
+						"accountChannelShippingOption",
+						new HashMap<String, Object>() {
+							{
+								put(
+									"id",
+									accountChannelShippingOption2.getId());
+							}
+						},
+						new GraphQLField("id")))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray2.length() > 0);
 	}
 
 	protected AccountChannelShippingOption
@@ -307,6 +353,8 @@ public abstract class BaseAccountChannelShippingOptionResourceTestCase {
 		AccountChannelShippingOption accountChannelShippingOption =
 			testGraphQLGetAccountChannelShippingOption_addAccountChannelShippingOption();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				accountChannelShippingOption,
@@ -326,6 +374,31 @@ public abstract class BaseAccountChannelShippingOptionResourceTestCase {
 								getGraphQLFields())),
 						"JSONObject/data",
 						"Object/accountChannelShippingOption"))));
+
+		// Using the namespace headlessCommerceAdminAccount_v1_0
+
+		Assert.assertTrue(
+			equals(
+				accountChannelShippingOption,
+				AccountChannelShippingOptionSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessCommerceAdminAccount_v1_0",
+								new GraphQLField(
+									"accountChannelShippingOption",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"id",
+												accountChannelShippingOption.
+													getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessCommerceAdminAccount_v1_0",
+						"Object/accountChannelShippingOption"))));
 	}
 
 	@Test
@@ -333,6 +406,8 @@ public abstract class BaseAccountChannelShippingOptionResourceTestCase {
 		throws Exception {
 
 		Long irrelevantId = RandomTestUtil.randomLong();
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -346,6 +421,25 @@ public abstract class BaseAccountChannelShippingOptionResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessCommerceAdminAccount_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessCommerceAdminAccount_v1_0",
+						new GraphQLField(
+							"accountChannelShippingOption",
+							new HashMap<String, Object>() {
+								{
+									put("id", irrelevantId);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}

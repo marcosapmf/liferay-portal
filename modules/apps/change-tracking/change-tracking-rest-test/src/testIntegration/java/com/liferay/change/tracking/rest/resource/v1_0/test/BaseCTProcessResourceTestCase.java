@@ -535,6 +535,8 @@ public abstract class BaseCTProcessResourceTestCase {
 	public void testGraphQLGetCTProcess() throws Exception {
 		CTProcess ctProcess = testGraphQLGetCTProcess_addCTProcess();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				ctProcess,
@@ -550,11 +552,36 @@ public abstract class BaseCTProcessResourceTestCase {
 								},
 								getGraphQLFields())),
 						"JSONObject/data", "Object/cTProcess"))));
+
+		// Using the namespace changeTracking_v1_0
+
+		Assert.assertTrue(
+			equals(
+				ctProcess,
+				CTProcessSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"changeTracking_v1_0",
+								new GraphQLField(
+									"cTProcess",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"ctProcessId",
+												ctProcess.getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data", "JSONObject/changeTracking_v1_0",
+						"Object/cTProcess"))));
 	}
 
 	@Test
 	public void testGraphQLGetCTProcessNotFound() throws Exception {
 		Long irrelevantCtProcessId = RandomTestUtil.randomLong();
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -568,6 +595,25 @@ public abstract class BaseCTProcessResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace changeTracking_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"changeTracking_v1_0",
+						new GraphQLField(
+							"cTProcess",
+							new HashMap<String, Object>() {
+								{
+									put("ctProcessId", irrelevantCtProcessId);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}

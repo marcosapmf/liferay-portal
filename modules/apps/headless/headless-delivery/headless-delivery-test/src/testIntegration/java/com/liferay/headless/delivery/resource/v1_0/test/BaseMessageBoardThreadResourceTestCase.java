@@ -1082,7 +1082,10 @@ public abstract class BaseMessageBoardThreadResourceTestCase {
 
 	@Test
 	public void testGraphQLDeleteMessageBoardThread() throws Exception {
-		MessageBoardThread messageBoardThread =
+
+		// No namespace
+
+		MessageBoardThread messageBoardThread1 =
 			testGraphQLDeleteMessageBoardThread_addMessageBoardThread();
 
 		Assert.assertTrue(
@@ -1094,11 +1097,12 @@ public abstract class BaseMessageBoardThreadResourceTestCase {
 							{
 								put(
 									"messageBoardThreadId",
-									messageBoardThread.getId());
+									messageBoardThread1.getId());
 							}
 						})),
 				"JSONObject/data", "Object/deleteMessageBoardThread"));
-		JSONArray errorsJSONArray = JSONUtil.getValueAsJSONArray(
+
+		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
 			invokeGraphQLQuery(
 				new GraphQLField(
 					"messageBoardThread",
@@ -1106,13 +1110,53 @@ public abstract class BaseMessageBoardThreadResourceTestCase {
 						{
 							put(
 								"messageBoardThreadId",
-								messageBoardThread.getId());
+								messageBoardThread1.getId());
 						}
 					},
 					new GraphQLField("id"))),
 			"JSONArray/errors");
 
-		Assert.assertTrue(errorsJSONArray.length() > 0);
+		Assert.assertTrue(errorsJSONArray1.length() > 0);
+
+		// Using the namespace headlessDelivery_v1_0
+
+		MessageBoardThread messageBoardThread2 =
+			testGraphQLDeleteMessageBoardThread_addMessageBoardThread();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"headlessDelivery_v1_0",
+						new GraphQLField(
+							"deleteMessageBoardThread",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"messageBoardThreadId",
+										messageBoardThread2.getId());
+								}
+							}))),
+				"JSONObject/data", "JSONObject/headlessDelivery_v1_0",
+				"Object/deleteMessageBoardThread"));
+
+		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"headlessDelivery_v1_0",
+					new GraphQLField(
+						"messageBoardThread",
+						new HashMap<String, Object>() {
+							{
+								put(
+									"messageBoardThreadId",
+									messageBoardThread2.getId());
+							}
+						},
+						new GraphQLField("id")))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray2.length() > 0);
 	}
 
 	protected MessageBoardThread
@@ -1148,6 +1192,8 @@ public abstract class BaseMessageBoardThreadResourceTestCase {
 		MessageBoardThread messageBoardThread =
 			testGraphQLGetMessageBoardThread_addMessageBoardThread();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				messageBoardThread,
@@ -1165,11 +1211,36 @@ public abstract class BaseMessageBoardThreadResourceTestCase {
 								},
 								getGraphQLFields())),
 						"JSONObject/data", "Object/messageBoardThread"))));
+
+		// Using the namespace headlessDelivery_v1_0
+
+		Assert.assertTrue(
+			equals(
+				messageBoardThread,
+				MessageBoardThreadSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessDelivery_v1_0",
+								new GraphQLField(
+									"messageBoardThread",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"messageBoardThreadId",
+												messageBoardThread.getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data", "JSONObject/headlessDelivery_v1_0",
+						"Object/messageBoardThread"))));
 	}
 
 	@Test
 	public void testGraphQLGetMessageBoardThreadNotFound() throws Exception {
 		Long irrelevantMessageBoardThreadId = RandomTestUtil.randomLong();
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -1185,6 +1256,27 @@ public abstract class BaseMessageBoardThreadResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessDelivery_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessDelivery_v1_0",
+						new GraphQLField(
+							"messageBoardThread",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"messageBoardThreadId",
+										irrelevantMessageBoardThreadId);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}
@@ -1898,6 +1990,8 @@ public abstract class BaseMessageBoardThreadResourceTestCase {
 			new GraphQLField("items", getGraphQLFields()),
 			new GraphQLField("page"), new GraphQLField("totalCount"));
 
+		// No namespace
+
 		JSONObject messageBoardThreadsJSONObject =
 			JSONUtil.getValueAsJSONObject(
 				invokeGraphQLQuery(graphQLField), "JSONObject/data",
@@ -1912,6 +2006,29 @@ public abstract class BaseMessageBoardThreadResourceTestCase {
 
 		messageBoardThreadsJSONObject = JSONUtil.getValueAsJSONObject(
 			invokeGraphQLQuery(graphQLField), "JSONObject/data",
+			"JSONObject/messageBoardThreads");
+
+		Assert.assertEquals(
+			totalCount + 2,
+			messageBoardThreadsJSONObject.getLong("totalCount"));
+
+		assertContains(
+			messageBoardThread1,
+			Arrays.asList(
+				MessageBoardThreadSerDes.toDTOs(
+					messageBoardThreadsJSONObject.getString("items"))));
+		assertContains(
+			messageBoardThread2,
+			Arrays.asList(
+				MessageBoardThreadSerDes.toDTOs(
+					messageBoardThreadsJSONObject.getString("items"))));
+
+		// Using the namespace headlessDelivery_v1_0
+
+		messageBoardThreadsJSONObject = JSONUtil.getValueAsJSONObject(
+			invokeGraphQLQuery(
+				new GraphQLField("headlessDelivery_v1_0", graphQLField)),
+			"JSONObject/data", "JSONObject/headlessDelivery_v1_0",
 			"JSONObject/messageBoardThreads");
 
 		Assert.assertEquals(
@@ -2011,6 +2128,8 @@ public abstract class BaseMessageBoardThreadResourceTestCase {
 		MessageBoardThread messageBoardThread =
 			testGraphQLGetSiteMessageBoardThreadByFriendlyUrlPath_addMessageBoardThread();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				messageBoardThread,
@@ -2038,6 +2157,39 @@ public abstract class BaseMessageBoardThreadResourceTestCase {
 								getGraphQLFields())),
 						"JSONObject/data",
 						"Object/messageBoardThreadByFriendlyUrlPath"))));
+
+		// Using the namespace headlessDelivery_v1_0
+
+		Assert.assertTrue(
+			equals(
+				messageBoardThread,
+				MessageBoardThreadSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessDelivery_v1_0",
+								new GraphQLField(
+									"messageBoardThreadByFriendlyUrlPath",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"siteKey",
+												"\"" +
+													testGraphQLGetSiteMessageBoardThreadByFriendlyUrlPath_getSiteId(
+														messageBoardThread) +
+															"\"");
+
+											put(
+												"friendlyUrlPath",
+												"\"" +
+													messageBoardThread.
+														getFriendlyUrlPath() +
+															"\"");
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data", "JSONObject/headlessDelivery_v1_0",
+						"Object/messageBoardThreadByFriendlyUrlPath"))));
 	}
 
 	protected Long
@@ -2054,6 +2206,8 @@ public abstract class BaseMessageBoardThreadResourceTestCase {
 
 		String irrelevantFriendlyUrlPath =
 			"\"" + RandomTestUtil.randomString() + "\"";
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -2072,6 +2226,31 @@ public abstract class BaseMessageBoardThreadResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessDelivery_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessDelivery_v1_0",
+						new GraphQLField(
+							"messageBoardThreadByFriendlyUrlPath",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"siteKey",
+										"\"" + irrelevantGroup.getGroupId() +
+											"\"");
+									put(
+										"friendlyUrlPath",
+										irrelevantFriendlyUrlPath);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}

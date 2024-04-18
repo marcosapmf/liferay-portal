@@ -371,6 +371,8 @@ public abstract class BaseSubscriptionResourceTestCase {
 		Subscription subscription =
 			testGraphQLGetMyUserAccountSubscription_addSubscription();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				subscription,
@@ -389,6 +391,29 @@ public abstract class BaseSubscriptionResourceTestCase {
 								getGraphQLFields())),
 						"JSONObject/data",
 						"Object/myUserAccountSubscription"))));
+
+		// Using the namespace headlessAdminUser_v1_0
+
+		Assert.assertTrue(
+			equals(
+				subscription,
+				SubscriptionSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessAdminUser_v1_0",
+								new GraphQLField(
+									"myUserAccountSubscription",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"subscriptionId",
+												subscription.getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data", "JSONObject/headlessAdminUser_v1_0",
+						"Object/myUserAccountSubscription"))));
 	}
 
 	@Test
@@ -396,6 +421,8 @@ public abstract class BaseSubscriptionResourceTestCase {
 		throws Exception {
 
 		Long irrelevantSubscriptionId = RandomTestUtil.randomLong();
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -409,6 +436,27 @@ public abstract class BaseSubscriptionResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessAdminUser_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessAdminUser_v1_0",
+						new GraphQLField(
+							"myUserAccountSubscription",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"subscriptionId",
+										irrelevantSubscriptionId);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}

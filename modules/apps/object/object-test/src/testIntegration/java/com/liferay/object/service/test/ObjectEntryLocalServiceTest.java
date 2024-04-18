@@ -239,6 +239,10 @@ public class ObjectEntryLocalServiceTest {
 					ObjectFieldConstants.DB_TYPE_DATE, true, false, null,
 					"Birthday", "birthday", false),
 				ObjectFieldUtil.createObjectField(
+					ObjectFieldConstants.BUSINESS_TYPE_PRECISION_DECIMAL,
+					ObjectFieldConstants.DB_TYPE_DOUBLE, true, false, null,
+					"BloodPressure", "bloodPressure", false),
+				ObjectFieldUtil.createObjectField(
 					ObjectFieldConstants.BUSINESS_TYPE_TEXT,
 					ObjectFieldConstants.DB_TYPE_STRING, true, true, null,
 					"Email Address", "emailAddress",
@@ -476,6 +480,17 @@ public class ObjectEntryLocalServiceTest {
 			).build());
 
 		_assertCount(5);
+
+		_addObjectEntry(
+			HashMapBuilder.<String, Serializable>put(
+				"bloodPressure", "12,8"
+			).put(
+				"emailAddressRequired", "diogo@liferay.com"
+			).put(
+				"listTypeEntryKeyRequired", "listTypeEntryKey1"
+			).build());
+
+		_assertCount(6);
 
 		AssertUtils.assertFailure(
 			ObjectEntryValuesException.ExceedsIntegerSize.class,
@@ -895,7 +910,6 @@ public class ObjectEntryLocalServiceTest {
 			() -> _dlAppLocalService.getFileEntry(persistedFileEntryId2));
 	}
 
-	@FeatureFlags("LPS-196724")
 	@Test
 	public void testAddObjectEntryWithAutoIncrementObjectField()
 		throws Exception {
@@ -3755,7 +3769,18 @@ public class ObjectEntryLocalServiceTest {
 				"firstName", "John"
 			).put(
 				"listTypeEntryKeyRequired", "listTypeEntryKey1"
+			).put(
+				"state", "listTypeEntryKey1"
 			).build());
+
+		objectEntry = _objectEntryLocalService.updateObjectEntry(
+			TestPropsValues.getUserId(), objectEntry.getObjectEntryId(),
+			HashMapBuilder.<String, Serializable>put(
+				"firstName", "Peter"
+			).put(
+				"state", "listTypeEntryKey1"
+			).build(),
+			ServiceContextTestUtil.getServiceContext());
 
 		ObjectState objectStateListTypeEntryKey1 = objectStates.get(0);
 		ObjectState objectStateListTypeEntryKey2 = objectStates.get(1);

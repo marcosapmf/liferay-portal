@@ -505,6 +505,8 @@ public abstract class BaseContactOrganizationResourceTestCase {
 			new GraphQLField("items", getGraphQLFields()),
 			new GraphQLField("page"), new GraphQLField("totalCount"));
 
+		// No namespace
+
 		JSONObject contactOrganizationsJSONObject =
 			JSONUtil.getValueAsJSONObject(
 				invokeGraphQLQuery(graphQLField), "JSONObject/data",
@@ -519,6 +521,29 @@ public abstract class BaseContactOrganizationResourceTestCase {
 
 		contactOrganizationsJSONObject = JSONUtil.getValueAsJSONObject(
 			invokeGraphQLQuery(graphQLField), "JSONObject/data",
+			"JSONObject/contactOrganizations");
+
+		Assert.assertEquals(
+			totalCount + 2,
+			contactOrganizationsJSONObject.getLong("totalCount"));
+
+		assertContains(
+			contactOrganization1,
+			Arrays.asList(
+				ContactOrganizationSerDes.toDTOs(
+					contactOrganizationsJSONObject.getString("items"))));
+		assertContains(
+			contactOrganization2,
+			Arrays.asList(
+				ContactOrganizationSerDes.toDTOs(
+					contactOrganizationsJSONObject.getString("items"))));
+
+		// Using the namespace analyticsSettings_v1_0
+
+		contactOrganizationsJSONObject = JSONUtil.getValueAsJSONObject(
+			invokeGraphQLQuery(
+				new GraphQLField("analyticsSettings_v1_0", graphQLField)),
+			"JSONObject/data", "JSONObject/analyticsSettings_v1_0",
 			"JSONObject/contactOrganizations");
 
 		Assert.assertEquals(

@@ -20,6 +20,7 @@ type TProduct = {
 	name?: {
 		[key: string]: string;
 	};
+	productChannelFilter?: boolean;
 	productConfiguration?: {
 		allowBackOrder?: boolean;
 	};
@@ -29,6 +30,7 @@ type TProduct = {
 	productStatus?: number;
 	productType?: string;
 	skus?: TSku[];
+	version?: number;
 };
 
 type TRelatedProduct = {
@@ -100,6 +102,12 @@ export class HeadlessCommerceAdminCatalogApiHelper {
 		);
 	}
 
+	async deleteProductByVersion(productId: number, version: number) {
+		return this.apiHelpers.delete(
+			`${this.apiHelpers.baseUrl}${this.basePath}/products/${productId}/by-version/${version}`
+		);
+	}
+
 	async deleteSkuUnitOfMeasure(skuUnitOfMeasureId: string) {
 		return this.apiHelpers.delete(
 			`${this.apiHelpers.baseUrl}${this.basePath}/sku-unit-of-measures/${skuUnitOfMeasureId}`
@@ -118,6 +126,12 @@ export class HeadlessCommerceAdminCatalogApiHelper {
 		);
 	}
 
+	async getCatalogsPage(search: string) {
+		return this.apiHelpers.get(
+			`${this.apiHelpers.baseUrl}${this.basePath}/catalogs?search=${search}`
+		);
+	}
+
 	async getOptionCategory(optionCategoryId: string) {
 		return this.apiHelpers.get(
 			`${this.apiHelpers.baseUrl}${this.basePath}/optionCategories/${optionCategoryId}`
@@ -127,6 +141,18 @@ export class HeadlessCommerceAdminCatalogApiHelper {
 	async getProduct(productId: number) {
 		return this.apiHelpers.get(
 			`${this.apiHelpers.baseUrl}${this.basePath}/products/${productId}?nestedFields=skus`
+		);
+	}
+
+	async getProductByVersion(productId: number, version: number) {
+		return this.apiHelpers.get(
+			`${this.apiHelpers.baseUrl}${this.basePath}/products/${productId}/by-version/${version}`
+		);
+	}
+
+	async getProductsPage(pageSize: number, search: string) {
+		return this.apiHelpers.get(
+			`${this.apiHelpers.baseUrl}${this.basePath}/products?pageSize=${pageSize}&search=${search}`
 		);
 	}
 
@@ -148,6 +174,13 @@ export class HeadlessCommerceAdminCatalogApiHelper {
 		);
 	}
 
+	async patchSku(cpInstanceId: string, sku?: TSku) {
+		return this.apiHelpers.patch(
+			`${this.apiHelpers.baseUrl}${this.basePath}/skus/${cpInstanceId}`,
+			{sku: 'Sku' + getRandomInt(), ...(sku || {})}
+		);
+	}
+
 	async postAttachment(
 		productId: number,
 		fileEntryId: number,
@@ -156,8 +189,10 @@ export class HeadlessCommerceAdminCatalogApiHelper {
 		const postAttachment = await this.apiHelpers.post(
 			`${this.apiHelpers.baseUrl}${this.basePath}/products/${productId}/attachments`,
 			{
-				fileEntryId,
-				title: {en_US: title},
+				data: {
+					fileEntryId,
+					title: {en_US: title},
+				},
 			}
 		);
 
@@ -168,11 +203,13 @@ export class HeadlessCommerceAdminCatalogApiHelper {
 		catalog = await this.apiHelpers.post(
 			`${this.apiHelpers.baseUrl}${this.basePath}/catalogs`,
 			{
-				accountId: 0,
-				currencyCode: 'USD',
-				defaultLanguageId: 'en_US',
-				name: 'Catalog' + getRandomInt(),
-				...(catalog || {}),
+				data: {
+					accountId: 0,
+					currencyCode: 'USD',
+					defaultLanguageId: 'en_US',
+					name: 'Catalog' + getRandomInt(),
+					...(catalog || {}),
+				},
 			}
 		);
 
@@ -192,12 +229,14 @@ export class HeadlessCommerceAdminCatalogApiHelper {
 		const postOption = await this.apiHelpers.post(
 			`${this.apiHelpers.baseUrl}${this.basePath}/options`,
 			{
-				fieldType,
-				key,
-				name: {
-					en_US: name,
+				data: {
+					fieldType,
+					key,
+					name: {
+						en_US: name,
+					},
+					priority,
 				},
-				priority,
 			}
 		);
 
@@ -215,10 +254,12 @@ export class HeadlessCommerceAdminCatalogApiHelper {
 		const postOptionCategory = await this.apiHelpers.post(
 			`${this.apiHelpers.baseUrl}${this.basePath}/optionCategories`,
 			{
-				key: optionCategoryName,
-				priority,
-				title: {
-					en_US: optionCategoryName,
+				data: {
+					key: optionCategoryName,
+					priority,
+					title: {
+						en_US: optionCategoryName,
+					},
 				},
 			}
 		);
@@ -230,23 +271,25 @@ export class HeadlessCommerceAdminCatalogApiHelper {
 		product = await this.apiHelpers.post(
 			`${this.apiHelpers.baseUrl}${this.basePath}/products?nestedFields=productSpecifications,skus`,
 			{
-				active: true,
-				catalogId: 0,
-				name: {
-					en_US: 'Product' + getRandomInt(),
-				},
-				productStatus: 0,
-				productType: 'simple',
-				skus: [
-					{
-						cost: 0,
-						price: 0,
-						published: true,
-						purchasable: true,
-						sku: 'Sku' + getRandomInt(),
+				data: {
+					active: true,
+					catalogId: 0,
+					name: {
+						en_US: 'Product' + getRandomInt(),
 					},
-				],
-				...product,
+					productStatus: 0,
+					productType: 'simple',
+					skus: [
+						{
+							cost: 0,
+							price: 0,
+							published: true,
+							purchasable: true,
+							sku: 'Sku' + getRandomInt(),
+						},
+					],
+					...product,
+				},
 			}
 		);
 
@@ -264,9 +307,11 @@ export class HeadlessCommerceAdminCatalogApiHelper {
 		return await this.apiHelpers.post(
 			`${this.apiHelpers.baseUrl}${this.basePath}/products/${productId}/relatedProducts`,
 			{
-				priority: 1,
-				type: 'cross-sell',
-				...relatedProduct,
+				data: {
+					priority: 1,
+					type: 'cross-sell',
+					...relatedProduct,
+				},
 			}
 		);
 	}
@@ -278,17 +323,19 @@ export class HeadlessCommerceAdminCatalogApiHelper {
 		const postSkuUnitOfMeasure = await this.apiHelpers.post(
 			`${this.apiHelpers.baseUrl}${this.basePath}/skus/${skuId}/sku-unit-of-measures`,
 			{
-				active: true,
-				basePrice: 0,
-				incrementalOrderQuantity: 1,
-				key: 'key-' + getRandomInt(),
-				name: {
-					en_US: 'UOM' + getRandomInt(),
+				data: {
+					active: true,
+					basePrice: 0,
+					incrementalOrderQuantity: 1,
+					key: 'key-' + getRandomInt(),
+					name: {
+						en_US: 'UOM' + getRandomInt(),
+					},
+					primary: false,
+					priority: getRandomInt(),
+					rate: getRandomInt(),
+					...skuUnitOfMeasure,
 				},
-				primary: false,
-				priority: getRandomInt(),
-				rate: getRandomInt(),
-				...skuUnitOfMeasure,
 			}
 		);
 
@@ -312,12 +359,14 @@ export class HeadlessCommerceAdminCatalogApiHelper {
 			return this.apiHelpers.post(
 				`${this.apiHelpers.baseUrl}${this.basePath}/specifications`,
 				{
-					facetable,
-					key: specificationTitle,
-					optionCategory,
-					priority,
-					title: {
-						en_US: specificationTitle,
+					data: {
+						facetable,
+						key: specificationTitle,
+						optionCategory,
+						priority,
+						title: {
+							en_US: specificationTitle,
+						},
 					},
 				}
 			);
@@ -326,11 +375,13 @@ export class HeadlessCommerceAdminCatalogApiHelper {
 		return this.apiHelpers.post(
 			`${this.apiHelpers.baseUrl}${this.basePath}/specifications`,
 			{
-				facetable,
-				key: specificationTitle,
-				priority,
-				title: {
-					en_US: specificationTitle,
+				data: {
+					facetable,
+					key: specificationTitle,
+					priority,
+					title: {
+						en_US: specificationTitle,
+					},
 				},
 			}
 		);

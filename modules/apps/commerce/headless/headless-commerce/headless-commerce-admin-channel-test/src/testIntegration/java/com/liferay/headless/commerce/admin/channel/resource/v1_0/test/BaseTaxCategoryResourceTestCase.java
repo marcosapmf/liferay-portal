@@ -307,6 +307,8 @@ public abstract class BaseTaxCategoryResourceTestCase {
 			new GraphQLField("items", getGraphQLFields()),
 			new GraphQLField("page"), new GraphQLField("totalCount"));
 
+		// No namespace
+
 		JSONObject taxCategoriesJSONObject = JSONUtil.getValueAsJSONObject(
 			invokeGraphQLQuery(graphQLField), "JSONObject/data",
 			"JSONObject/taxCategories");
@@ -320,6 +322,29 @@ public abstract class BaseTaxCategoryResourceTestCase {
 
 		taxCategoriesJSONObject = JSONUtil.getValueAsJSONObject(
 			invokeGraphQLQuery(graphQLField), "JSONObject/data",
+			"JSONObject/taxCategories");
+
+		Assert.assertEquals(
+			totalCount + 2, taxCategoriesJSONObject.getLong("totalCount"));
+
+		assertContains(
+			taxCategory1,
+			Arrays.asList(
+				TaxCategorySerDes.toDTOs(
+					taxCategoriesJSONObject.getString("items"))));
+		assertContains(
+			taxCategory2,
+			Arrays.asList(
+				TaxCategorySerDes.toDTOs(
+					taxCategoriesJSONObject.getString("items"))));
+
+		// Using the namespace headlessCommerceAdminChannel_v1_0
+
+		taxCategoriesJSONObject = JSONUtil.getValueAsJSONObject(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"headlessCommerceAdminChannel_v1_0", graphQLField)),
+			"JSONObject/data", "JSONObject/headlessCommerceAdminChannel_v1_0",
 			"JSONObject/taxCategories");
 
 		Assert.assertEquals(
@@ -363,6 +388,8 @@ public abstract class BaseTaxCategoryResourceTestCase {
 	public void testGraphQLGetTaxCategory() throws Exception {
 		TaxCategory taxCategory = testGraphQLGetTaxCategory_addTaxCategory();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				taxCategory,
@@ -378,11 +405,35 @@ public abstract class BaseTaxCategoryResourceTestCase {
 								},
 								getGraphQLFields())),
 						"JSONObject/data", "Object/taxCategory"))));
+
+		// Using the namespace headlessCommerceAdminChannel_v1_0
+
+		Assert.assertTrue(
+			equals(
+				taxCategory,
+				TaxCategorySerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessCommerceAdminChannel_v1_0",
+								new GraphQLField(
+									"taxCategory",
+									new HashMap<String, Object>() {
+										{
+											put("id", taxCategory.getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessCommerceAdminChannel_v1_0",
+						"Object/taxCategory"))));
 	}
 
 	@Test
 	public void testGraphQLGetTaxCategoryNotFound() throws Exception {
 		Long irrelevantId = RandomTestUtil.randomLong();
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -396,6 +447,25 @@ public abstract class BaseTaxCategoryResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessCommerceAdminChannel_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessCommerceAdminChannel_v1_0",
+						new GraphQLField(
+							"taxCategory",
+							new HashMap<String, Object>() {
+								{
+									put("id", irrelevantId);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}

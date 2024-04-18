@@ -18,9 +18,10 @@ import {checkIdErrors, checkLabelErrors, getUpdatedLabelItem} from './utils';
 
 export default function NodeInformation({errors, setErrors}) {
 	const {
-		allowScriptContentBeExecutedOrIncluded,
+		allowScriptContentToBeExecutedOrIncluded,
 		elements,
 		hasGroovyScript,
+		scriptManagementConfigurationPortletURL,
 		selectedLanguageId,
 	} = useContext(DefinitionBuilderContext);
 	const {
@@ -33,11 +34,15 @@ export default function NodeInformation({errors, setErrors}) {
 	return (
 		<>
 			{Liferay.FeatureFlags['LPD-11179'] &&
-				!allowScriptContentBeExecutedOrIncluded &&
+				!allowScriptContentToBeExecutedOrIncluded &&
 				hasGroovyScript &&
 				selectedItem &&
 				selectedItem.type === 'condition' && (
-					<DisabledGroovyScriptAlert />
+					<DisabledGroovyScriptAlert
+						scriptManagementConfigurationPortletURL={
+							scriptManagementConfigurationPortletURL
+						}
+					/>
 				)}
 
 			<SidebarPanel panelTitle={Liferay.Language.get('information')}>

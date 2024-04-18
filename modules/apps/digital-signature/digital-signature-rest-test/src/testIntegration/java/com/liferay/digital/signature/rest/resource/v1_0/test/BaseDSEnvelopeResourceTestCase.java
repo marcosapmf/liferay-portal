@@ -415,6 +415,8 @@ public abstract class BaseDSEnvelopeResourceTestCase {
 	public void testGraphQLGetSiteDSEnvelope() throws Exception {
 		DSEnvelope dsEnvelope = testGraphQLGetSiteDSEnvelope_addDSEnvelope();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				dsEnvelope,
@@ -438,6 +440,36 @@ public abstract class BaseDSEnvelopeResourceTestCase {
 								},
 								getGraphQLFields())),
 						"JSONObject/data", "Object/dSEnvelope"))));
+
+		// Using the namespace digitalSignature_v1_0
+
+		Assert.assertTrue(
+			equals(
+				dsEnvelope,
+				DSEnvelopeSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"digitalSignature_v1_0",
+								new GraphQLField(
+									"dSEnvelope",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"siteKey",
+												"\"" +
+													testGraphQLGetSiteDSEnvelope_getSiteId(
+														dsEnvelope) + "\"");
+
+											put(
+												"dsEnvelopeId",
+												"\"" + dsEnvelope.getId() +
+													"\"");
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data", "JSONObject/digitalSignature_v1_0",
+						"Object/dSEnvelope"))));
 	}
 
 	protected Long testGraphQLGetSiteDSEnvelope_getSiteId(DSEnvelope dsEnvelope)
@@ -450,6 +482,8 @@ public abstract class BaseDSEnvelopeResourceTestCase {
 	public void testGraphQLGetSiteDSEnvelopeNotFound() throws Exception {
 		String irrelevantDsEnvelopeId =
 			"\"" + RandomTestUtil.randomString() + "\"";
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -466,6 +500,29 @@ public abstract class BaseDSEnvelopeResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace digitalSignature_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"digitalSignature_v1_0",
+						new GraphQLField(
+							"dSEnvelope",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"siteKey",
+										"\"" + irrelevantGroup.getGroupId() +
+											"\"");
+									put("dsEnvelopeId", irrelevantDsEnvelopeId);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}

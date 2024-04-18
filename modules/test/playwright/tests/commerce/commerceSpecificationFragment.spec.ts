@@ -54,6 +54,8 @@ test.afterEach(async ({apiHelpers}) => {
 				break;
 		}
 	}
+
+	await apiHelpers.featureFlag.updateFeatureFlag('LPD-10856', false);
 });
 
 test('Product specification fragment only shows correct specifications', async ({
@@ -62,9 +64,11 @@ test('Product specification fragment only shows correct specifications', async (
 	commerceLayoutsPage,
 	page,
 }) => {
-	const site = await apiHelpers.headlessSite.createSite(
-		'Specification Fragment Site'
-	);
+	await apiHelpers.featureFlag.updateFeatureFlag('LPD-10856', true);
+
+	const site = await apiHelpers.headlessSite.createSite({
+		name: 'Specification Fragment Site',
+	});
 
 	data.push({id: site.id, type: 'site'});
 

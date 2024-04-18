@@ -89,7 +89,7 @@ public class DBPartitionUtil {
 				while (resultSet.next()) {
 					String tableName = resultSet.getString("TABLE_NAME");
 
-					if (DBInspector.isObjectTable(
+					if (dbInspector.isObjectTable(
 							_getCompanyIds(), tableName)) {
 
 						continue;
@@ -311,7 +311,7 @@ public class DBPartitionUtil {
 
 		if (!db.isSupportsDBPartition()) {
 			throw new Error(
-				"Database partition is not supported for " + db.getDBType());
+				"Database partitioning is not supported for " + db.getDBType());
 		}
 
 		if (db.getDBType() == DBType.MYSQL) {

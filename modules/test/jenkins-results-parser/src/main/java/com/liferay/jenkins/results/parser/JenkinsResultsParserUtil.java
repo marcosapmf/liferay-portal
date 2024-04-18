@@ -1686,7 +1686,7 @@ public class JenkinsResultsParserUtil {
 			}
 		}
 
-		return ciProperties.getProperty(key);
+		return getProperty(ciProperties, key);
 	}
 
 	public static String getCohortName() {
@@ -3302,6 +3302,11 @@ public class JenkinsResultsParserUtil {
 		try (InputStream resourceInputStream =
 				JenkinsResultsParserUtil.class.getResourceAsStream(
 					resourceName)) {
+
+			if (resourceInputStream == null) {
+				throw new RuntimeException(
+					"Unable to find resource: " + resourceName);
+			}
 
 			return readInputStream(resourceInputStream);
 		}

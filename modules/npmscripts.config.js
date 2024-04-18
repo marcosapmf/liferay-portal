@@ -373,6 +373,7 @@ module.exports = {
 			'@liferay/content-dashboard-web': [],
 			'@liferay/cookies-banner-web': [],
 			'@liferay/document-library-preview-css': [],
+			'@liferay/document-library-web': [],
 			'@liferay/flags-taglib': [],
 			'@liferay/fragment-renderer-collection-filter-impl': [],
 			'@liferay/frontend-data-set-web': [],
@@ -460,6 +461,7 @@ module.exports = {
 			'@liferay/portal-workflow-instance-tracker-web': [],
 			'@liferay/template-web': [],
 			'asset-taglib': [],
+			'commerce-frontend-js': [],
 			'data-engine-js-components-web': [],
 			'data-engine-taglib': [],
 			'dynamic-data-mapping-form-field-type': [

@@ -76,6 +76,7 @@ export enum ListViewTypes {
 	SET_CHECKED_ALL_ROWS = 'SET_CHECKED_ALL_ROWS',
 	SET_CHECKED_ROW = 'SET_CHECKED_ROW',
 	SET_CLEAR = 'SET_CLEAR',
+	SET_CLEAR_CHECKED_ROW = 'SET_CLEAR_CHECKED_ROW',
 	SET_COLUMNS = 'SET_COLUMNS',
 	SET_CUSTOM_FILTER_FIELDS = 'SET_CUSTOM_FILTER_FIELD',
 	SET_FILTERS = 'SET_FILTERS',
@@ -91,6 +92,7 @@ type ListViewPayload = {
 	[ListViewTypes.SET_CHECKED_ALL_ROWS]: boolean;
 	[ListViewTypes.SET_CHECKED_ROW]: number | number[];
 	[ListViewTypes.SET_CLEAR]: null;
+	[ListViewTypes.SET_CLEAR_CHECKED_ROW]: [];
 	[ListViewTypes.SET_COLUMNS]: {columns: any};
 	[ListViewTypes.SET_CUSTOM_FILTER_FIELDS]: {customFilterFields: any};
 	[ListViewTypes.SET_FILTERS]: {filters?: any; pin?: any};
@@ -161,6 +163,12 @@ const reducer = (state: InitialState, action: AppActions) => {
 				...state,
 				filters: initialState.filters,
 				keywords: '',
+			};
+
+		case ListViewTypes.SET_CLEAR_CHECKED_ROW:
+			return {
+				...state,
+				selectedRows: initialState.selectedRows,
 			};
 
 		case ListViewTypes.SET_COLUMNS:
@@ -283,6 +291,8 @@ const reducer = (state: InitialState, action: AppActions) => {
 
 export type ListViewContextProviderProps = Partial<InitialState>;
 
+type Option = {label: string; value: string};
+
 const ListViewContextProvider: React.FC<
 	ListViewContextProviderProps & {children: ReactNode; id: string}
 > = ({children, id, ...initialStateProps}) => {
@@ -305,18 +315,51 @@ const ListViewContextProvider: React.FC<
 	);
 
 	useEffect(() => {
-		if (!filter && filterSchemaStorage && filterPinnedStorage) {
+		const filters =
+			filterPinnedStorage?.filter &&
+			Object.keys(filterPinnedStorage?.filter).map((key) => {
+				if (Array.isArray(filterPinnedStorage?.filter[key])) {
+					return {
+						name: key,
+						value: (filterPinnedStorage?.filter as any)[key].map(
+							(options: Option) => options.value || options
+						),
+					};
+				}
+				else {
+					return {
+						name: key,
+						value: filterPinnedStorage?.filter[key],
+					};
+				}
+			});
+
+		const formattedFilter = filters?.reduce(
+			(previousValue, currentValue) => {
+				return {
+					...previousValue,
+					[currentValue.name]: currentValue.value,
+				};
+			},
+			{}
+		);
+
+		if (!filter && filterSchemaStorage && formattedFilter) {
 			setSearchParams(
 				new URLSearchParams({
-					filter: JSON.stringify(filterPinnedStorage?.filter),
+					filter: JSON.stringify(formattedFilter),
 					filterSchema: filterSchemaStorage as string,
 					page: '1',
 					pageSize: '20',
 				})
 			);
 		}
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, []);
+	}, [
+		filter,
+		filterPinnedStorage?.filter,
+		filterSchemaStorage,
+		setSearchParams,
+	]);
 
 	const [state, dispatch] = useReducer(reducer, {
 		...initialState,

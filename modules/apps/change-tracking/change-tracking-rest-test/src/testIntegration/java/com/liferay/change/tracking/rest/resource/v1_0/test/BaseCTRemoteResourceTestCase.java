@@ -472,7 +472,10 @@ public abstract class BaseCTRemoteResourceTestCase {
 
 	@Test
 	public void testGraphQLDeleteCTRemote() throws Exception {
-		CTRemote ctRemote = testGraphQLDeleteCTRemote_addCTRemote();
+
+		// No namespace
+
+		CTRemote ctRemote1 = testGraphQLDeleteCTRemote_addCTRemote();
 
 		Assert.assertTrue(
 			JSONUtil.getValueAsBoolean(
@@ -481,23 +484,59 @@ public abstract class BaseCTRemoteResourceTestCase {
 						"deleteCTRemote",
 						new HashMap<String, Object>() {
 							{
-								put("id", ctRemote.getId());
+								put("id", ctRemote1.getId());
 							}
 						})),
 				"JSONObject/data", "Object/deleteCTRemote"));
-		JSONArray errorsJSONArray = JSONUtil.getValueAsJSONArray(
+
+		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
 			invokeGraphQLQuery(
 				new GraphQLField(
 					"cTRemote",
 					new HashMap<String, Object>() {
 						{
-							put("id", ctRemote.getId());
+							put("id", ctRemote1.getId());
 						}
 					},
 					new GraphQLField("id"))),
 			"JSONArray/errors");
 
-		Assert.assertTrue(errorsJSONArray.length() > 0);
+		Assert.assertTrue(errorsJSONArray1.length() > 0);
+
+		// Using the namespace changeTracking_v1_0
+
+		CTRemote ctRemote2 = testGraphQLDeleteCTRemote_addCTRemote();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"changeTracking_v1_0",
+						new GraphQLField(
+							"deleteCTRemote",
+							new HashMap<String, Object>() {
+								{
+									put("id", ctRemote2.getId());
+								}
+							}))),
+				"JSONObject/data", "JSONObject/changeTracking_v1_0",
+				"Object/deleteCTRemote"));
+
+		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"changeTracking_v1_0",
+					new GraphQLField(
+						"cTRemote",
+						new HashMap<String, Object>() {
+							{
+								put("id", ctRemote2.getId());
+							}
+						},
+						new GraphQLField("id")))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray2.length() > 0);
 	}
 
 	protected CTRemote testGraphQLDeleteCTRemote_addCTRemote()
@@ -526,6 +565,8 @@ public abstract class BaseCTRemoteResourceTestCase {
 	public void testGraphQLGetCTRemote() throws Exception {
 		CTRemote ctRemote = testGraphQLGetCTRemote_addCTRemote();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				ctRemote,
@@ -541,11 +582,34 @@ public abstract class BaseCTRemoteResourceTestCase {
 								},
 								getGraphQLFields())),
 						"JSONObject/data", "Object/cTRemote"))));
+
+		// Using the namespace changeTracking_v1_0
+
+		Assert.assertTrue(
+			equals(
+				ctRemote,
+				CTRemoteSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"changeTracking_v1_0",
+								new GraphQLField(
+									"cTRemote",
+									new HashMap<String, Object>() {
+										{
+											put("id", ctRemote.getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data", "JSONObject/changeTracking_v1_0",
+						"Object/cTRemote"))));
 	}
 
 	@Test
 	public void testGraphQLGetCTRemoteNotFound() throws Exception {
 		Long irrelevantId = RandomTestUtil.randomLong();
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -559,6 +623,25 @@ public abstract class BaseCTRemoteResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace changeTracking_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"changeTracking_v1_0",
+						new GraphQLField(
+							"cTRemote",
+							new HashMap<String, Object>() {
+								{
+									put("id", irrelevantId);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}

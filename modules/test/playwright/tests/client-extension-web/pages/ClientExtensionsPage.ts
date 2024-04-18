@@ -5,34 +5,20 @@
 
 import {Locator, Page} from '@playwright/test';
 
-import {ApplicationsMenuPage} from '../../../pages/product-navigation-applications-menu/ApplicationsMenuPage';
+import {liferayConfig} from '../../../liferay.config';
 
 export class ClientExtensionsPage {
-	readonly addThemeCSSMenuItem: Locator;
-	readonly applicationsMenuPage: ApplicationsMenuPage;
 	readonly deleteMenuItem: Locator;
 	readonly editMenuItem: Locator;
-	readonly editorConfigContributorMenuItem: Locator;
-	readonly newClientExtensionButton: Locator;
 	readonly page: Page;
 
 	constructor(page: Page) {
-		this.addThemeCSSMenuItem = page.getByRole('menuitem', {
-			name: 'Add Theme CSS',
-		});
-		this.applicationsMenuPage = new ApplicationsMenuPage(page);
 		this.deleteMenuItem = page.getByRole('menuitem', {
 			name: 'Delete',
 		});
 		this.editMenuItem = page.getByRole('menuitem', {
 			name: 'Edit',
 		});
-		this.editorConfigContributorMenuItem = page.getByRole('menuitem', {
-			name: 'Add Editor Config Contributor',
-		});
-		this.newClientExtensionButton = page
-			.getByRole('button')
-			.and(page.getByTitle('New'));
 		this.page = page;
 	}
 
@@ -51,14 +37,10 @@ export class ClientExtensionsPage {
 	}
 
 	async goto() {
-		await this.applicationsMenuPage.goToClientExtensions();
-	}
-
-	async gotoNewEditorConfigContributorPage() {
-		await this.goto();
-
-		await this.newClientExtensionButton.click();
-		await this.editorConfigContributorMenuItem.click();
+		await this.page.goto(
+			`${liferayConfig.environment.baseUrl}/group/guest/~/control_panel/manage` +
+				'?p_p_id=com_liferay_client_extension_web_internal_portlet_ClientExtensionAdminPortlet'
+		);
 	}
 
 	async openItemActionsDropdown(clientExtensionName: string) {

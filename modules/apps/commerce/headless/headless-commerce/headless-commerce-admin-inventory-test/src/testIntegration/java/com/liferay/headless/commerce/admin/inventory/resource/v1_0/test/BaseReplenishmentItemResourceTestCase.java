@@ -255,6 +255,8 @@ public abstract class BaseReplenishmentItemResourceTestCase {
 		ReplenishmentItem replenishmentItem =
 			testGraphQLGetReplenishmentItemByExternalReferenceCode_addReplenishmentItem();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				replenishmentItem,
@@ -276,6 +278,33 @@ public abstract class BaseReplenishmentItemResourceTestCase {
 								getGraphQLFields())),
 						"JSONObject/data",
 						"Object/replenishmentItemByExternalReferenceCode"))));
+
+		// Using the namespace headlessCommerceAdminInventory_v1_0
+
+		Assert.assertTrue(
+			equals(
+				replenishmentItem,
+				ReplenishmentItemSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessCommerceAdminInventory_v1_0",
+								new GraphQLField(
+									"replenishmentItemByExternalReferenceCode",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"externalReferenceCode",
+												"\"" +
+													replenishmentItem.
+														getExternalReferenceCode() +
+															"\"");
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessCommerceAdminInventory_v1_0",
+						"Object/replenishmentItemByExternalReferenceCode"))));
 	}
 
 	@Test
@@ -284,6 +313,8 @@ public abstract class BaseReplenishmentItemResourceTestCase {
 
 		String irrelevantExternalReferenceCode =
 			"\"" + RandomTestUtil.randomString() + "\"";
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -299,6 +330,27 @@ public abstract class BaseReplenishmentItemResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessCommerceAdminInventory_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessCommerceAdminInventory_v1_0",
+						new GraphQLField(
+							"replenishmentItemByExternalReferenceCode",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"externalReferenceCode",
+										irrelevantExternalReferenceCode);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}
@@ -381,7 +433,10 @@ public abstract class BaseReplenishmentItemResourceTestCase {
 
 	@Test
 	public void testGraphQLDeleteReplenishmentItem() throws Exception {
-		ReplenishmentItem replenishmentItem =
+
+		// No namespace
+
+		ReplenishmentItem replenishmentItem1 =
 			testGraphQLDeleteReplenishmentItem_addReplenishmentItem();
 
 		Assert.assertTrue(
@@ -393,11 +448,12 @@ public abstract class BaseReplenishmentItemResourceTestCase {
 							{
 								put(
 									"replenishmentItemId",
-									replenishmentItem.getId());
+									replenishmentItem1.getId());
 							}
 						})),
 				"JSONObject/data", "Object/deleteReplenishmentItem"));
-		JSONArray errorsJSONArray = JSONUtil.getValueAsJSONArray(
+
+		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
 			invokeGraphQLQuery(
 				new GraphQLField(
 					"replenishmentItem",
@@ -405,13 +461,54 @@ public abstract class BaseReplenishmentItemResourceTestCase {
 						{
 							put(
 								"replenishmentItemId",
-								replenishmentItem.getId());
+								replenishmentItem1.getId());
 						}
 					},
 					new GraphQLField("id"))),
 			"JSONArray/errors");
 
-		Assert.assertTrue(errorsJSONArray.length() > 0);
+		Assert.assertTrue(errorsJSONArray1.length() > 0);
+
+		// Using the namespace headlessCommerceAdminInventory_v1_0
+
+		ReplenishmentItem replenishmentItem2 =
+			testGraphQLDeleteReplenishmentItem_addReplenishmentItem();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"headlessCommerceAdminInventory_v1_0",
+						new GraphQLField(
+							"deleteReplenishmentItem",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"replenishmentItemId",
+										replenishmentItem2.getId());
+								}
+							}))),
+				"JSONObject/data",
+				"JSONObject/headlessCommerceAdminInventory_v1_0",
+				"Object/deleteReplenishmentItem"));
+
+		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"headlessCommerceAdminInventory_v1_0",
+					new GraphQLField(
+						"replenishmentItem",
+						new HashMap<String, Object>() {
+							{
+								put(
+									"replenishmentItemId",
+									replenishmentItem2.getId());
+							}
+						},
+						new GraphQLField("id")))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray2.length() > 0);
 	}
 
 	protected ReplenishmentItem
@@ -446,6 +543,8 @@ public abstract class BaseReplenishmentItemResourceTestCase {
 		ReplenishmentItem replenishmentItem =
 			testGraphQLGetReplenishmentItem_addReplenishmentItem();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				replenishmentItem,
@@ -463,11 +562,37 @@ public abstract class BaseReplenishmentItemResourceTestCase {
 								},
 								getGraphQLFields())),
 						"JSONObject/data", "Object/replenishmentItem"))));
+
+		// Using the namespace headlessCommerceAdminInventory_v1_0
+
+		Assert.assertTrue(
+			equals(
+				replenishmentItem,
+				ReplenishmentItemSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessCommerceAdminInventory_v1_0",
+								new GraphQLField(
+									"replenishmentItem",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"replenishmentItemId",
+												replenishmentItem.getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessCommerceAdminInventory_v1_0",
+						"Object/replenishmentItem"))));
 	}
 
 	@Test
 	public void testGraphQLGetReplenishmentItemNotFound() throws Exception {
 		Long irrelevantReplenishmentItemId = RandomTestUtil.randomLong();
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -483,6 +608,27 @@ public abstract class BaseReplenishmentItemResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessCommerceAdminInventory_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessCommerceAdminInventory_v1_0",
+						new GraphQLField(
+							"replenishmentItem",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"replenishmentItemId",
+										irrelevantReplenishmentItemId);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}
@@ -728,6 +874,8 @@ public abstract class BaseReplenishmentItemResourceTestCase {
 			new GraphQLField("items", getGraphQLFields()),
 			new GraphQLField("page"), new GraphQLField("totalCount"));
 
+		// No namespace
+
 		JSONObject replenishmentItemsJSONObject = JSONUtil.getValueAsJSONObject(
 			invokeGraphQLQuery(graphQLField), "JSONObject/data",
 			"JSONObject/replenishmentItems");
@@ -741,6 +889,29 @@ public abstract class BaseReplenishmentItemResourceTestCase {
 
 		replenishmentItemsJSONObject = JSONUtil.getValueAsJSONObject(
 			invokeGraphQLQuery(graphQLField), "JSONObject/data",
+			"JSONObject/replenishmentItems");
+
+		Assert.assertEquals(
+			totalCount + 2, replenishmentItemsJSONObject.getLong("totalCount"));
+
+		assertContains(
+			replenishmentItem1,
+			Arrays.asList(
+				ReplenishmentItemSerDes.toDTOs(
+					replenishmentItemsJSONObject.getString("items"))));
+		assertContains(
+			replenishmentItem2,
+			Arrays.asList(
+				ReplenishmentItemSerDes.toDTOs(
+					replenishmentItemsJSONObject.getString("items"))));
+
+		// Using the namespace headlessCommerceAdminInventory_v1_0
+
+		replenishmentItemsJSONObject = JSONUtil.getValueAsJSONObject(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"headlessCommerceAdminInventory_v1_0", graphQLField)),
+			"JSONObject/data", "JSONObject/headlessCommerceAdminInventory_v1_0",
 			"JSONObject/replenishmentItems");
 
 		Assert.assertEquals(

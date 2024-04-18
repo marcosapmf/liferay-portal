@@ -85,7 +85,7 @@ const baseFilters: Filter = {
 	caseType: {
 		label: i18n.translate('case-type'),
 		name: 'caseType',
-		resource: '/casetypes?fields=id,name&sort=name:asc&pageSize=100',
+		resource: '/casetypes?fields=id,name&pageSize=100&sort=name:asc',
 		transformData(item) {
 			return dataToOptions(transformData<TestrayCaseType>(item));
 		},
@@ -94,11 +94,15 @@ const baseFilters: Filter = {
 	component: {
 		label: i18n.translate('component'),
 		name: 'componentId',
-		resource: ({projectId}) =>
-			`/components?fields=id,name&sort=name:asc&pageSize=200&filter=${SearchBuilder.eq(
+		resource: ({projectId}) => {
+			const filter = `${SearchBuilder.eq(
 				'projectId',
 				projectId as string
-			)}`,
+			)}`;
+
+			return `/components?fields=id,name&filter=${filter}&pageSize=200&sort=name:asc`;
+		},
+
 		transformData(item) {
 			return dataToOptions(transformData<TestrayComponent>(item));
 		},
@@ -146,11 +150,14 @@ const baseFilters: Filter = {
 	productVersion: {
 		label: i18n.translate('product-version'),
 		name: 'productVersion',
-		resource: ({projectId}) =>
-			`/productversions?fields=id,name&sort=name:asc&pageSize=100&filter=${SearchBuilder.eq(
+		resource: ({projectId}) => {
+			const filter = `${SearchBuilder.eq(
 				'projectId',
 				projectId as string
-			)}`,
+			)}`;
+
+			return `/productversions?fields=id,name&filter=${filter}&pageSize=100&sort=name:asc`;
+		},
 		transformData(item) {
 			return dataToOptions(transformData<TestrayProductVersion>(item));
 		},
@@ -168,11 +175,14 @@ const baseFilters: Filter = {
 	routine: {
 		label: i18n.translate('routines'),
 		name: 'routines',
-		resource: ({projectId}) =>
-			`/routines?fields=id,name&pageSize=100&filter=${SearchBuilder.eq(
+		resource: ({projectId}) => {
+			const filter = `${SearchBuilder.eq(
 				'projectId',
 				projectId as string
-			)}`,
+			)}`;
+
+			return `/routines?fields=id,name&filter=${filter}&pageSize=100`;
+		},
 		transformData(item) {
 			return dataToOptions(transformData<TestrayRoutine>(item));
 		},
@@ -204,11 +214,14 @@ const baseFilters: Filter = {
 	team: {
 		label: i18n.translate('team'),
 		name: 'teamId',
-		resource: ({projectId}) =>
-			`/teams?fields=id,name&sort=name:asc&pageSize=100&filter=${SearchBuilder.eq(
+		resource: ({projectId}) => {
+			const filter = `${SearchBuilder.eq(
 				'projectId',
 				projectId as string
-			)}`,
+			)}`;
+
+			return `/teams?fields=id,name&filter=${filter}&pageSize=100&sort=name:asc`;
+		},
 		transformData(item) {
 			return dataToOptions(transformData<TestrayTeam>(item));
 		},
@@ -227,7 +240,17 @@ const overrides = (
 
 const filterSchema = {
 	buildCaseTypes: {
-		fields: [baseFilters.priority, baseFilters.team] as RendererFields[],
+		fields: [
+			overrides(baseFilters.priority, {
+				name: 'caseTypeToCases/priority',
+				removeQuoteMark: true,
+			}),
+			overrides(baseFilters.team, {
+				name:
+					'caseTypeToCases/componentToCases/r_teamToComponents_c_teamId',
+				type: 'multiselect',
+			}),
+		] as RendererFields[],
 		name: 'buildCaseTypes',
 	},
 	buildComponents: {
@@ -322,10 +345,7 @@ const filterSchema = {
 					},
 				],
 			}),
-			overrides(baseFilters.issues, {
-				name: 'caseResultToCaseResultsIssues/name',
-				operator: 'contains',
-			}),
+			baseFilters.issues,
 			overrides(baseFilters.erros, {
 				operator: 'contains',
 			}),
@@ -386,10 +406,7 @@ const filterSchema = {
 					},
 				],
 			}),
-			overrides(baseFilters.issues, {
-				name: 'caseResultToCaseResultsIssues/name',
-				operator: 'contains',
-			}),
+			baseFilters.issues,
 			overrides(baseFilters.erros, {
 				operator: 'contains',
 			}),
@@ -424,17 +441,26 @@ const filterSchema = {
 				name: 'runToCaseResult/caseToCaseResult/caseTypeToCases/id',
 			}),
 			overrides(baseFilters.team, {
-				disabled: true,
+				name:
+					'runToCaseResult/componentToCaseResult/r_teamToComponents_c_teamId',
 			}),
 		] as RendererFields[],
 		name: 'buildRuns',
 	},
 	buildTeams: {
 		fields: [
-			overrides(baseFilters.priority, {disabled: true, type: 'select'}),
-			overrides(baseFilters.caseType, {disabled: true, type: 'select'}),
+			overrides(baseFilters.priority, {
+				name: 'teamToComponents/componentToCases/priority',
+				removeQuoteMark: true,
+			}),
+			overrides(baseFilters.caseType, {
+				name: 'teamToComponents/componentToCases/caseTypeToCases/id',
+			}),
 			overrides(baseFilters.team, {name: 'id', type: 'multiselect'}),
-			overrides(baseFilters.run, {disabled: true}),
+			overrides(baseFilters.run, {
+				name:
+					'teamToComponents/componentToCaseResult/runToCaseResult/id',
+			}),
 		] as RendererFields[],
 		name: 'buildTeams',
 	},
@@ -555,7 +581,7 @@ const filterSchema = {
 			baseFilters.description,
 			baseFilters.steps,
 			overrides(baseFilters.issues, {
-				name: 'caseToCaseResult/caseResultToCaseResultsIssues/name',
+				name: 'caseToCaseResult/issues',
 				operator: 'contains',
 			}),
 			baseFilters.hasRequirements,
@@ -651,6 +677,32 @@ const filterSchema = {
 
 		name: 'compareRunsCases',
 	},
+	compareRunsTeamsAndComponents: {
+		fields: [
+			overrides(baseFilters.priority, {
+				name: 'testrayCasePriorities',
+				removeQuoteMark: true,
+				type: 'multiselect',
+			}),
+			overrides(baseFilters.team, {
+				name: 'testrayTeamId',
+				resource: ({runA, runB}) => {
+					const filter = `${SearchBuilder.eq(
+						'teamToComponents/componentToCaseResult/r_runToCaseResult_c_runId',
+						runA as string
+					)} or ${SearchBuilder.eq(
+						'teamToComponents/componentToCaseResult/r_runToCaseResult_c_runId',
+						runB as string
+					)}`;
+
+					return `/teams?filter=${filter}&pageSize=100&sort=name:asc`;
+				},
+
+				type: 'select',
+			}),
+		] as RendererFields[],
+		name: 'compareRunsTeamsAndComponents',
+	},
 	components: {
 		fields: [
 			{
@@ -712,9 +764,9 @@ const filterSchema = {
 				type: 'text',
 			},
 			{
-				disabled: true,
 				label: i18n.translate('case'),
-				name: 'case',
+				name:
+					'requiremenToRequirementsCases/caseToRequirementsCases/name',
 				operator: 'contains',
 				optionalOperators: 'ne',
 				type: 'textarea',
@@ -724,9 +776,19 @@ const filterSchema = {
 	},
 	routines: {
 		fields: [
-			baseFilters.priority,
-			baseFilters.caseType,
-			baseFilters.team,
+			overrides(baseFilters.priority, {
+				name:
+					'routineToBuilds/buildToCaseResult/caseToCaseResult/priority',
+				removeQuoteMark: true,
+			}),
+			overrides(baseFilters.caseType, {
+				name:
+					'routineToBuilds/buildToCaseResult/caseToCaseResult/caseTypeToCases/id',
+			}),
+			overrides(baseFilters.team, {
+				name:
+					'routineToBuilds/buildToCaseResult/componentToCaseResult/r_teamToComponents_c_teamId',
+			}),
 		] as RendererFields[],
 		name: 'routines',
 	},
@@ -766,7 +828,7 @@ const filterSchema = {
 			},
 			overrides(baseFilters.issues, {
 				name:
-					'subtaskToSubtasksCasesResults/caseResultToSubtasksCasesResults/caseResultToCaseResultsIssues/issueToCaseResultsIssues/name',
+					'subtaskToSubtasksCasesResults/caseResultToSubtasksCasesResults/issues',
 				operator: 'contains',
 			}),
 			overrides(baseFilters.team, {
@@ -822,7 +884,7 @@ const filterSchema = {
 				label: i18n.translate('routine-name'),
 				name: 'buildToTasks/r_routineToBuilds_c_routineId',
 				resource:
-					'/routines?fields=id,name,routineToProjects.name&nestedFields=routineToProjects&sort=name:asc&pageSize=100',
+					'/routines?fields=id,name,routineToProjects.name&nestedFields=routineToProjects&pageSize=100&sort=name:asc',
 				transformData(item) {
 					const transformRoutineData = (routine: TestrayRoutine) => ({
 						label: `${routine.routineToProjects?.name} / ${routine.name}`,
