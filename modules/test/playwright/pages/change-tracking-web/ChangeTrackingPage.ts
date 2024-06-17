@@ -5,6 +5,7 @@
 
 import {Locator, Page, expect} from '@playwright/test';
 
+import getRandomString from '../../utils/getRandomString';
 import {PORTLET_URLS} from '../../utils/portletUrls';
 
 export class ChangeTrackingPage {
@@ -20,12 +21,53 @@ export class ChangeTrackingPage {
 		this.tabsContainer = page.locator('nav.navbar');
 	}
 
+	async addComment() {
+		await this.openComments();
+
+		const commentTextBox = this.page.getByRole('textbox', {
+			name: 'Comment',
+		});
+
+		await commentTextBox.fill(getRandomString());
+
+		await this.page.getByRole('button', {name: 'Reply'}).waitFor();
+
+		await this.page.getByRole('button', {name: 'Reply'}).click();
+
+		await expect(this.page.getByText('1 Comment')).toBeVisible();
+	}
+
 	async goto() {
 		await this.page.goto(`/group/guest${PORTLET_URLS.publications}`);
 	}
 
 	async goToReviewChanges(title: string) {
 		await this.goto();
+
+		await this.page
+			.locator('#fnsd___table-id div')
+			.filter({hasText: title})
+			.first()
+			.waitFor();
+
+		await this.page.getByRole('link', {exact: true, name: title}).click();
+
+		await this.page
+			.locator(
+				'#_com_liferay_change_tracking_web_portlet_PublicationsPortlet_controlMenu'
+			)
+			.filter({hasText: 'Review Changes'})
+			.waitFor();
+	}
+
+	async goToReviewChangesHistory(title: string) {
+		await this.goto();
+
+		await this.page
+			.locator('li[data-nav-item-index="2"] a span')
+			.filter({hasText: 'History'})
+			.first()
+			.click();
 
 		await this.page
 			.locator('#fnsd___table-id div')
@@ -57,6 +99,12 @@ export class ChangeTrackingPage {
 		await tabLink.click();
 
 		await tabLink.and(this.page.locator('.active')).waitFor();
+	}
+
+	async openComments() {
+		const commentsIcon = this.page.getByLabel('Comments');
+
+		await commentsIcon.click();
 	}
 
 	async viewDisplayTab(tabLabel: string, {isHidden} = {isHidden: false}) {

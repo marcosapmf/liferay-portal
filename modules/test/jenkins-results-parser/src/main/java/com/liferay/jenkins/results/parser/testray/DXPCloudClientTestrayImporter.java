@@ -258,12 +258,14 @@ public class DXPCloudClientTestrayImporter {
 			return null;
 		}
 
-		Element attachmentElement = Dom4JUtil.getNewElement("attachment");
+		Element attachmentElement = Dom4JUtil.getNewElement("file");
 
 		attachmentElement.addAttribute("name", "Poshi Log");
 		attachmentElement.addAttribute(
 			"url",
-			_testrayS3Bucket.getTestrayS3BaseURL() + key + "?authuser=0");
+			JenkinsResultsParserUtil.combine(
+				_testrayS3Bucket.getTestrayS3BaseURL(), "/", key,
+				"?authuser=0"));
 		attachmentElement.addAttribute("value", key + "?authuser=0");
 
 		return attachmentElement;
@@ -411,8 +413,8 @@ public class DXPCloudClientTestrayImporter {
 			attachmentElement.addAttribute(
 				"url",
 				JenkinsResultsParserUtil.combine(
-					_testrayServerURL, "/reports/", _testrayReleaseName,
-					"/logs/", key, "?authuser=0"));
+					_testrayS3Bucket.getTestrayS3BaseURL(), "/", key,
+					"?authuser=0"));
 			attachmentElement.addAttribute("value", key + "?authuser=0");
 		}
 
@@ -666,6 +668,10 @@ public class DXPCloudClientTestrayImporter {
 
 		Properties properties = new Properties();
 
+		properties.setProperty(
+			"testray.build.date",
+			JenkinsResultsParserUtil.toDateString(
+				new Date(), "yyy-MM-dd HH:mm:ss", "America/Los_Angeles"));
 		properties.setProperty("testray.build.name", testrayBuild.getName());
 		properties.setProperty("testray.build.type", testrayRoutine.getName());
 		properties.setProperty(

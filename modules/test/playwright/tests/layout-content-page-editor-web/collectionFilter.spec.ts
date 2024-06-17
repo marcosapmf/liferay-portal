@@ -207,7 +207,7 @@ testWithIsolatedSite(
 
 		for (const tagName of ['Dogs', 'Cats']) {
 			tags.push(
-				await apiHelpers.headlessAdminTaxonomy.createTag({
+				await apiHelpers.headlessAdminTaxonomy.postTag({
 					name: tagName,
 					siteId: site.id,
 				})
@@ -216,9 +216,8 @@ testWithIsolatedSite(
 
 		// Create two Web Contents with tags
 
-		const contentStructureId = await getBasicWebContentStructureId(
-			apiHelpers
-		);
+		const contentStructureId =
+			await getBasicWebContentStructureId(apiHelpers);
 		const webContents = [
 			{
 				name: 'Web content with the tag Dogs',

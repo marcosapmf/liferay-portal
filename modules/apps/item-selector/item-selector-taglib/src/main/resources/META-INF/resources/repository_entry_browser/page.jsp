@@ -232,11 +232,11 @@ SearchContainer<?> searchContainer = new SearchContainer(renderRequest, itemSele
 										</span>
 									</a>
 
-									<c:if test='<%= FeatureFlagManagerUtil.isEnabled(latestFileVersion.getCompanyId(), "LPD-16311") && !repositoryEntryBrowserDisplayContext.hasGuestViewPermission(fileEntry) %>'>
+									<c:if test="<%= !repositoryEntryBrowserDisplayContext.hasGuestViewPermission(fileEntry) %>">
 										<clay:icon
-											aria-label="<%= LanguageUtil.get(request, "not-visible-to-guest-users") %>"
+											aria-label='<%= LanguageUtil.get(request, "not-visible-to-guest-users") %>'
 											cssClass="c-ml-2 c-mt-1 lfr-portal-tooltip text-4 text-secondary"
-											data-title="<%= LanguageUtil.get(request, "not-visible-to-guest-users") %>"
+											data-title='<%= LanguageUtil.get(request, "not-visible-to-guest-users") %>'
 											symbol="password-policies"
 										/>
 									</c:if>
@@ -480,11 +480,11 @@ SearchContainer<?> searchContainer = new SearchContainer(renderRequest, itemSele
 																<%= HtmlUtil.escape(title) %>
 															</aui:a>
 
-															<c:if test='<%= FeatureFlagManagerUtil.isEnabled(latestFileVersion.getCompanyId(), "LPD-16311") && !repositoryEntryBrowserDisplayContext.hasGuestViewPermission(fileEntry) %>'>
+															<c:if test="<%= !repositoryEntryBrowserDisplayContext.hasGuestViewPermission(fileEntry) %>">
 																<clay:icon
-																	aria-label="<%= LanguageUtil.get(request, "not-visible-to-guest-users") %>"
+																	aria-label='<%= LanguageUtil.get(request, "not-visible-to-guest-users") %>'
 																	cssClass="c-ml-2 c-mt-1 lfr-portal-tooltip text-4 text-secondary"
-																	data-title="<%= LanguageUtil.get(request, "not-visible-to-guest-users") %>"
+																	data-title='<%= LanguageUtil.get(request, "not-visible-to-guest-users") %>'
 																	symbol="password-policies"
 																/>
 															</c:if>
@@ -591,11 +591,11 @@ SearchContainer<?> searchContainer = new SearchContainer(renderRequest, itemSele
 											<h5>
 												<strong><%= title %></strong>
 
-												<c:if test='<%= FeatureFlagManagerUtil.isEnabled(latestFileVersion.getCompanyId(), "LPD-16311") && !repositoryEntryBrowserDisplayContext.hasGuestViewPermission(fileEntry) %>'>
+												<c:if test="<%= !repositoryEntryBrowserDisplayContext.hasGuestViewPermission(fileEntry) %>">
 													<clay:icon
-														aria-label="<%= LanguageUtil.get(request, "not-visible-to-guest-users") %>"
+														aria-label='<%= LanguageUtil.get(request, "not-visible-to-guest-users") %>'
 														cssClass="c-ml-2 c-mt-1 lfr-portal-tooltip text-4 text-secondary"
-														data-title="<%= LanguageUtil.get(request, "not-visible-to-guest-users") %>"
+														data-title='<%= LanguageUtil.get(request, "not-visible-to-guest-users") %>'
 														symbol="password-policies"
 													/>
 												</c:if>

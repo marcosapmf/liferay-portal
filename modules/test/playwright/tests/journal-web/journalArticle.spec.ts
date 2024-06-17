@@ -49,12 +49,7 @@ const baseTest = mergeTests(
 	workflowPagesTest
 );
 
-const bulkTest = mergeTests(
-	baseTest,
-	featureFlagsTest({
-		'LPD-16469': true,
-	})
-);
+const bulkTest = mergeTests(baseTest);
 
 const expect = baseExpect.extend({
 	toBeSuccessful: (response: APIResponse) => ({
@@ -69,8 +64,8 @@ const expect = baseExpect.extend({
 const autoSaveAsDraftTest = mergeTests(
 	baseTest,
 	featureFlagsTest({
+		'LPD-11228': true,
 		'LPD-15596': true,
-		'LPS-141392': true,
 	})
 );
 
@@ -95,13 +90,6 @@ const translationTest = mergeTests(
 	featureFlagsTest({
 		'LPD-11253': true,
 		'LPS-114700': true,
-	})
-);
-
-const aiCreateImageTest = mergeTests(
-	baseTest,
-	featureFlagsTest({
-		'LPD-10793': true,
 	})
 );
 
@@ -205,9 +193,8 @@ autoSaveAsDraftTest(
 keepTitlesUntranslated(
 	'LPD-20723: Clay link is translating asset titles/names by default in vertical card',
 	async ({apiHelpers, journalPage, page, site}) => {
-		const contentStructureId = await getBasicWebContentStructureId(
-			apiHelpers
-		);
+		const contentStructureId =
+			await getBasicWebContentStructureId(apiHelpers);
 
 		const title = 'add-web-content';
 
@@ -243,9 +230,8 @@ keepTitlesUntranslated(
 privateContentIconTest(
 	'LPD-15807: Identify at a glance if a Web Content is visible for guests in content management',
 	async ({apiHelpers, journalEditArticlePage, journalPage, site}) => {
-		const contentStructureId = await getBasicWebContentStructureId(
-			apiHelpers
-		);
+		const contentStructureId =
+			await getBasicWebContentStructureId(apiHelpers);
 
 		const title = getRandomString();
 
@@ -275,9 +261,8 @@ privateContentIconTest(
 privateContentIconTest(
 	'LPD-15807: Identify at a glance if a Web Content is visible for guests in the item selector',
 	async ({apiHelpers, journalEditArticlePage, journalPage, site}) => {
-		const contentStructureId = await getBasicWebContentStructureId(
-			apiHelpers
-		);
+		const contentStructureId =
+			await getBasicWebContentStructureId(apiHelpers);
 
 		await addApprovedStructuredContent({
 			apiHelpers,
@@ -327,9 +312,8 @@ prefixUrlTest(
 	}) => {
 		const articleTitle = getRandomString();
 
-		const contentStructureId = await getBasicWebContentStructureId(
-			apiHelpers
-		);
+		const contentStructureId =
+			await getBasicWebContentStructureId(apiHelpers);
 
 		await addApprovedStructuredContent({
 			apiHelpers,
@@ -608,9 +592,8 @@ translationTest(
 		journalPage,
 		site,
 	}) => {
-		const contentStructureId = await getBasicWebContentStructureId(
-			apiHelpers
-		);
+		const contentStructureId =
+			await getBasicWebContentStructureId(apiHelpers);
 
 		const title = getRandomString();
 
@@ -645,9 +628,8 @@ bulkTest(
 			{enabled: true, locator: '#guest_ACTION_PERMISSIONS'},
 		];
 
-		const contentStructureId = await getBasicWebContentStructureId(
-			apiHelpers
-		);
+		const contentStructureId =
+			await getBasicWebContentStructureId(apiHelpers);
 
 		const title1 = getRandomString();
 		const title2 = getRandomString();
@@ -947,7 +929,7 @@ scheduleTest(
 	}
 );
 
-aiCreateImageTest(
+baseTest(
 	'LPD-6800 Create AI Image option visible from Item Selector',
 	async ({journalEditArticlePage, page, site}) => {
 		await journalEditArticlePage.goto({siteUrl: site.friendlyUrlPath});

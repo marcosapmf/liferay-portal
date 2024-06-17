@@ -39,10 +39,17 @@ export class ObjectAdminApiHelper {
 		);
 	}
 
-	async postObjectDefinition(data: DataObject) {
+	async postObjectDefinition(data: DataObject): Promise<ObjectDefinition> {
 		return this.apiHelpers.post(
 			`${this.apiHelpers.baseUrl}${this.basePath}/object-definitions`,
 			{data}
+		);
+	}
+
+	async postObjectDefinitionPublish(objectDefinitionId: number) {
+		return this.apiHelpers.post(
+			`${this.apiHelpers.baseUrl}${this.basePath}/object-definitions/${objectDefinitionId}/publish`,
+			{}
 		);
 	}
 
@@ -157,6 +164,16 @@ export class ObjectAdminApiHelper {
 					name: objectFolderExternalReferenceCode,
 				},
 			}
+		);
+	}
+
+	async putObjectRelationship(
+		objectRelationshipId: number,
+		objectRelationship: Partial<ObjectRelationship>
+	) {
+		return this.apiHelpers.put(
+			`${this.apiHelpers.baseUrl}${this.basePath}/object-relationships/${objectRelationshipId}`,
+			{data: objectRelationship}
 		);
 	}
 }

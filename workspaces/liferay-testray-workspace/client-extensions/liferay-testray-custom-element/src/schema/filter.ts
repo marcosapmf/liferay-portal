@@ -85,7 +85,7 @@ const baseFilters: Filter = {
 	caseType: {
 		label: i18n.translate('case-type'),
 		name: 'caseType',
-		resource: '/casetypes?fields=id,name&pageSize=100&sort=name:asc',
+		resource: '/casetypes?fields=id,name&pageSize=-1&sort=name:asc',
 		transformData(item) {
 			return dataToOptions(transformData<TestrayCaseType>(item));
 		},
@@ -100,7 +100,7 @@ const baseFilters: Filter = {
 				projectId as string
 			)}`;
 
-			return `/components?fields=id,name&filter=${filter}&pageSize=200&sort=name:asc`;
+			return `/components?fields=id,name&filter=${filter}&pageSize=-1&sort=name:asc`;
 		},
 
 		transformData(item) {
@@ -156,7 +156,7 @@ const baseFilters: Filter = {
 				projectId as string
 			)}`;
 
-			return `/productversions?fields=id,name&filter=${filter}&pageSize=100&sort=name:asc`;
+			return `/productversions?fields=id,name&filter=${filter}&pageSize=-1&sort=name:asc`;
 		},
 		transformData(item) {
 			return dataToOptions(transformData<TestrayProductVersion>(item));
@@ -166,7 +166,7 @@ const baseFilters: Filter = {
 	project: {
 		label: i18n.translate('project'),
 		name: 'projectId',
-		resource: '/projects?fields=id,name&pageSize=100',
+		resource: '/projects?fields=id,name&pageSize=-1',
 		transformData(item) {
 			return dataToOptions(transformData<TestrayProject>(item));
 		},
@@ -181,7 +181,7 @@ const baseFilters: Filter = {
 				projectId as string
 			)}`;
 
-			return `/routines?fields=id,name&filter=${filter}&pageSize=100`;
+			return `/routines?fields=id,name&filter=${filter}&pageSize=-1`;
 		},
 		transformData(item) {
 			return dataToOptions(transformData<TestrayRoutine>(item));
@@ -220,7 +220,7 @@ const baseFilters: Filter = {
 				projectId as string
 			)}`;
 
-			return `/teams?fields=id,name&filter=${filter}&pageSize=100&sort=name:asc`;
+			return `/teams?fields=id,name&filter=${filter}&pageSize=-1&sort=name:asc`;
 		},
 		transformData(item) {
 			return dataToOptions(transformData<TestrayTeam>(item));
@@ -371,8 +371,7 @@ const filterSchema = {
 		fields: [
 			overrides(baseFilters.productVersion, {
 				label: i18n.translate('product-version-name'),
-				name:
-					'buildToCaseResult/r_productVersionToBuilds_c_productVersionId',
+				name: 'buildToCaseResult/r_productVersionToBuilds_c_productVersionId',
 				type: 'multiselect',
 			}),
 			{
@@ -386,8 +385,7 @@ const filterSchema = {
 				type: 'multiselect',
 			}),
 			overrides(baseFilters.team, {
-				name:
-					'caseToCaseResult/componentToCases/r_teamToComponents_c_teamId',
+				name: 'caseToCaseResult/componentToCases/r_teamToComponents_c_teamId',
 				type: 'multiselect',
 			}),
 			overrides(baseFilters.assignee, {
@@ -847,8 +845,7 @@ const filterSchema = {
 			},
 			{
 				label: i18n.translate('case'),
-				name:
-					'requiremenToRequirementsCases/caseToRequirementsCases/name',
+				name: 'requiremenToRequirementsCases/caseToRequirementsCases/name',
 				operator: 'contains',
 				optionalOperator: 'ne',
 				type: 'textarea',
@@ -990,13 +987,11 @@ const filterSchema = {
 				optionalOperator: 'ne',
 			}),
 			overrides(baseFilters.team, {
-				name:
-					'subtaskToCaseResults/componentToCaseResult/r_teamToComponents_c_teamId',
+				name: 'subtaskToCaseResults/componentToCaseResult/r_teamToComponents_c_teamId',
 				type: 'multiselect',
 			}),
 			overrides(baseFilters.component, {
-				name:
-					'subtaskToCaseResults/r_componentToCaseResult_c_componentId',
+				name: 'subtaskToCaseResults/r_componentToCaseResult_c_componentId',
 				type: 'multiselect',
 			}),
 		] as RendererFields[],

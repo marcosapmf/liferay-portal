@@ -25,6 +25,7 @@ import {config as featureFlagWebConfig} from './tests/feature-flag-web/config';
 import {config as frontendDataSetViewsWebConfig} from './tests/frontend-data-set-views-web/config';
 import {config as frontendDataSetWebConfig} from './tests/frontend-data-set-web/config';
 import {config as frontendJsSpaWebConfig} from './tests/frontend-js-spa-web/config';
+import {config as frontendTaglibClayConfig} from './tests/frontend-taglib-clay/config';
 import {config as headlessBuilderImplConfig} from './tests/headless-builder-impl/config';
 import {config as headlessBuilderWebConfig} from './tests/headless-builder-web/config';
 import {config as journalWebConfig} from './tests/journal-web/config';
@@ -35,6 +36,7 @@ import {config as layoutPageTemplateAdminWeb} from './tests/layout-page-template
 import {config as layoutSetPrototypeWebConfig} from './tests/layout-set-prototype-web/config';
 import {config as lockedItemsConfig} from './tests/locked-items-web/config';
 import {config as loginWebConfig} from './tests/login-web/config';
+import {config as messageBoardsConfig} from './tests/message-boards-web/config';
 import {config as notificationWebConfig} from './tests/notification-web/config';
 import {config as objectWebConfig} from './tests/object-web/config';
 import {config as osbFaroWebConfig} from './tests/osb-faro-web/config';
@@ -46,6 +48,7 @@ import {config as portalWorkflowKaleoDesignerWebConfig} from './tests/portal-wor
 import {config as portletConfigurationWebConfig} from './tests/portlet-configuration-web/config';
 import {config as productNavigationUserPersonalBarWebConfig} from './tests/product-navigation-user-personal-bar-web/config';
 import {config as questionsWebConfig} from './tests/questions-web/config';
+import {config as rolesAdminWebConfig} from './tests/roles-admin-web/config';
 import {config as stableConfig} from './tests/stable/config';
 import {config as stylebookConfig} from './tests/style-book-web/config';
 import {config as usersAdminWebConfig} from './tests/users-admin-web/config';
@@ -79,6 +82,7 @@ export default defineConfig({
 		frontendDataSetViewsWebConfig,
 		frontendDataSetWebConfig,
 		frontendJsSpaWebConfig,
+		frontendTaglibClayConfig,
 		headlessBuilderImplConfig,
 		headlessBuilderWebConfig,
 		journalWebConfig,
@@ -90,6 +94,7 @@ export default defineConfig({
 		lockedItemsConfig,
 		loginWebConfig,
 		marketplaceConfig,
+		messageBoardsConfig,
 		notificationWebConfig,
 		objectWebConfig,
 		osbFaroWebConfig,
@@ -101,6 +106,7 @@ export default defineConfig({
 		portletConfigurationWebConfig,
 		productNavigationUserPersonalBarWebConfig,
 		questionsWebConfig,
+		rolesAdminWebConfig,
 		stableConfig,
 		stylebookConfig,
 		usersAdminWebConfig,
@@ -130,6 +136,7 @@ export default defineConfig({
 			? process.env.PORTAL_URL
 			: 'http://localhost:8080',
 		screenshot: 'only-on-failure',
+		testIdAttribute: 'data-qa-id',
 		trace: 'retain-on-failure',
 	},
 	workers: 1,

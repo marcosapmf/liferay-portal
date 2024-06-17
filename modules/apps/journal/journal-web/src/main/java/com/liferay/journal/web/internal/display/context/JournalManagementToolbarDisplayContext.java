@@ -168,7 +168,6 @@ public class JournalManagementToolbarDisplayContext
 					dropdownGroupItem.setSeparator(true);
 				}
 			).addGroup(
-				() -> FeatureFlagManagerUtil.isEnabled("LPD-16469"),
 				dropdownGroupItem -> {
 					dropdownGroupItem.setDropdownItems(
 						DropdownItemListBuilder.add(
@@ -698,23 +697,9 @@ public class JournalManagementToolbarDisplayContext
 					).setParameter(
 						"navigationMine", Boolean.TRUE
 					).setParameter(
-						"orderByCol",
-						() -> {
-							if (FeatureFlagManagerUtil.isEnabled("LPD-11218")) {
-								return "create-date";
-							}
-
-							return null;
-						}
+						"orderByCol", "create-date"
 					).setParameter(
-						"orderByType",
-						() -> {
-							if (FeatureFlagManagerUtil.isEnabled("LPD-11218")) {
-								return "desc";
-							}
-
-							return null;
-						}
+						"orderByType", "desc"
 					).buildPortletURL()
 				).setLabel(
 					LanguageUtil.get(httpServletRequest, "mine")

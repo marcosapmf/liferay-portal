@@ -14,17 +14,43 @@ type TCatalog = {
 	name?: string;
 };
 
+type TChannel = {
+	channelId: number;
+	currencyCode: string;
+	externalReferenceCode?: string;
+	id?: number;
+	name: string;
+	type: string;
+};
+
+type TCategory = {
+	checked?: boolean;
+	externalReferenceCode: string;
+	id: number;
+	label?: string;
+	name: string;
+	value?: string;
+	vocabulary: string;
+};
+
 type TProduct = {
 	active?: boolean;
 	catalogId: number;
+	categories?: TCategory[];
 	description?: {
 		[key: string]: string;
 	};
+	externalReferenceCode?: string;
+	id?: number;
 	name?: {
 		[key: string]: string;
 	};
+	productChannelFilter?: boolean;
+	productChannels?: TChannel[];
 	productConfiguration?: {
 		allowBackOrder?: boolean;
+		minOrderQuantity?: number;
+		multipleOrderQuantity?: number;
 	};
 	productId?: number;
 	productOptions?: any[];
@@ -43,12 +69,18 @@ type TProductVirtualSettings = {
 	activationStatus?: number;
 	duration?: number;
 	maxUsages?: number;
+	productVirtualSettingsFileEntries?: TProductVirtualSettingsFileEntry[];
 	sampleURL?: string;
 	termsOfUseContent?: {
 		[key: string]: string;
 	};
 	url?: string;
 	useSample?: boolean;
+};
+
+type TProductVirtualSettingsFileEntry = {
+	attachment: string;
+	version: string;
 };
 
 type TRelatedProduct = {
@@ -78,6 +110,7 @@ type TSkuUnitOfMeasure = {
 	name?: {
 		[key: string]: string;
 	};
+	precision?: number;
 	primary?: boolean;
 	priority?: number;
 	rate?: number;
@@ -176,6 +209,14 @@ export class HeadlessCommerceAdminCatalogApiHelper {
 		);
 	}
 
+	async getProducts(searchParams = new URLSearchParams()) {
+		return this.apiHelpers.get(
+			`${this.apiHelpers.baseUrl}${
+				this.basePath
+			}/products?${searchParams.toString()}`
+		);
+	}
+
 	async getProductByVersion(productId: number, version: number) {
 		return this.apiHelpers.get(
 			`${this.apiHelpers.baseUrl}${this.basePath}/products/${productId}/by-version/${version}`
@@ -185,6 +226,12 @@ export class HeadlessCommerceAdminCatalogApiHelper {
 	async getProductsPage(pageSize: number, search: string) {
 		return this.apiHelpers.get(
 			`${this.apiHelpers.baseUrl}${this.basePath}/products?pageSize=${pageSize}&search=${search}`
+		);
+	}
+
+	async getProductVirtualSettings(productId: number) {
+		return this.apiHelpers.get(
+			`${this.apiHelpers.baseUrl}${this.basePath}/products/${productId}/product-virtual-settings`
 		);
 	}
 
@@ -206,6 +253,21 @@ export class HeadlessCommerceAdminCatalogApiHelper {
 			{
 				name: {
 					en_US: 'Product' + getRandomInt(),
+				},
+				...(product || {}),
+			}
+		);
+	}
+
+	async patchProductByErc(
+		externalReferenceCode: string,
+		product?: DataObject
+	) {
+		return this.apiHelpers.patch(
+			`${this.apiHelpers.baseUrl}${this.basePath}/products/by-externalReferenceCode/${externalReferenceCode}`,
+			{
+				name: {
+					en_US: `Product${getRandomInt()}`,
 				},
 				...(product || {}),
 			}
