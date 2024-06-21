@@ -88,6 +88,12 @@ public class UpgradeCatchAllCheck implements ConfigurationBeanDeclaration {
 		assetCategory.getCategoryId;
 	}
 
+	public void method(boolean showHiddenPages) {
+		LayoutItemSelectorCriterion layoutItemSelectorCriterion = new LayoutItemSelectorCriterion();
+
+		layoutItemSelectorCriterion.setShowHiddenPages(null);
+	}
+
 	public void method(CommerceAddress commerceAddress) {
 		CommerceAddressLocalServiceUtil.updateCommerceAddress(commerceAddress.getCommerceAddressId(), commerceAddress.getName(), commerceAddress.getDescription(), commerceAddress.getStreet1(), commerceAddress.getStreet2(), commerceAddress.getStreet3(), commerceAddress.getCity(), commerceAddress.getZip(), commerceAddress.getRegionId(), commerceAddress.getCountryId(), commerceAddress.getPhoneNumber(), commerceAddress.getType(), ServiceContextThreadLocal.getServiceContext());
 		CommerceAddressLocalServiceUtil.updateCommerceAddress(null);
@@ -144,6 +150,10 @@ public class UpgradeCatchAllCheck implements ConfigurationBeanDeclaration {
 
 		Map<Indexer<?>, Indexer<?>> indexerRequests = new LinkedHashMap<>();
 		List<Indexer<?>> indexers = portlet.getIndexerInstances();
+	}
+
+	public void method(Layout layout, String friendlyURL) {
+		LayoutFriendlyURLComposite(layout, friendlyURL, false);
 	}
 
 	public void method(long commerceOrderId) {
@@ -429,6 +439,10 @@ public class UpgradeCatchAllCheck implements ConfigurationBeanDeclaration {
 		AssetVocabularyLocalServiceUtil.fetchAssetVocabularyByExternalReferenceCode(companyId, externalReferenceCode);
 		_assetVocabularyLocalService.fetchAssetVocabularyByExternalReferenceCode(companyId, externalReferenceCode);
 
+		CommerceCatalogLocalServiceUtil.fetchCommerceCatalogByExternalReferenceCode(externalReferenceCode, companyId);
+		_commerceCatalogLocalService.fetchCommerceCatalogByExternalReferenceCode(123, "test123");
+		_commerceCatalogLocalService.fetchCommerceCatalogByExternalReferenceCode(externalReferenceCode, companyId);
+
 		CommercePriceListLocalServiceUtil.fetchByExternalReferenceCode(externalReferenceCode, companyId);
 		_commercePriceListLocalService.fetchByExternalReferenceCode(123, "test123");
 		_commercePriceListLocalService.fetchByExternalReferenceCode(externalReferenceCode, companyId);
@@ -517,6 +531,14 @@ public class UpgradeCatchAllCheck implements ConfigurationBeanDeclaration {
 	}
 
 	public void method(
+		String searchEngineId, long companyId, Collection<Document> documents,
+		boolean commitImmediately) {
+
+		IndexWriterHelperUtil.updateDocument(companyId, documents);
+		IndexWriterHelperUtil.updateDocument("test123", 123, null, null);
+	}
+
+	public void method(
 		String className, long classPK, Locale locale,
 		ThemeDisplay themeDisplay) {
 
@@ -600,6 +622,9 @@ public class UpgradeCatchAllCheck implements ConfigurationBeanDeclaration {
 
 	@Reference
 	private CommerceAddressLocalService _commerceAddressLocalService;
+
+	@Reference
+	private CommerceCatalogLocalService _commerceCatalogLocalService;
 
 	@Reference
 	private CommerceOrderItemLocalService _commerceOrderItemLocalService;

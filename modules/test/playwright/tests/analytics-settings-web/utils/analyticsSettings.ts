@@ -18,7 +18,7 @@ export async function acceptsCookiesBanner(page) {
 }
 
 export async function connectToAnalyticsCloud(page) {
-	await page.getByTestId('input-token', {name: 'input-token'}).click();
+	await page.getByPlaceholder('Paste token here.').click();
 
 	await page.keyboard.press('Control+V');
 
@@ -76,14 +76,14 @@ export async function navigateToSitePage(page, siteName, pageName) {
 }
 
 export async function syncAllContacts(page) {
-	const wizard = page.getByTestId('VIEW_WIZARD_MODE');
+	const wizard = page.locator('[data-testid="VIEW_WIZARD_MODE"]');
 
 	await expect(wizard.getByText('Sync People')).toBeVisible({
 		timeout: 100 * 1000,
 	});
 
-	const syncContactsButton = page.getByTestId(
-		'sync-all-contacts-and-accounts__false'
+	const syncContactsButton = page.locator(
+		'[data-testid="sync-all-contacts-and-accounts__false"]'
 	);
 
 	if (await syncContactsButton.isVisible()) {
@@ -93,8 +93,8 @@ export async function syncAllContacts(page) {
 	await page.getByRole('button', {exact: true, name: 'Next'}).click();
 }
 
-export async function syncAnalyticsCloud(page, propertyName) {
-	await createChannel(page, propertyName);
+export async function syncAnalyticsCloud(apiHelpers, page, propertyName) {
+	await createChannel(apiHelpers, propertyName);
 
 	await createDataSource(page);
 
@@ -120,7 +120,7 @@ export async function syncSite(page, propertyName) {
 		timeout: 100 * 1000,
 	});
 
-	const wizard = page.getByTestId('VIEW_WIZARD_MODE');
+	const wizard = page.locator('[data-testid="VIEW_WIZARD_MODE"]');
 
 	await expect(wizard.getByText('Available Properties')).toBeVisible({
 		timeout: 100 * 1000,

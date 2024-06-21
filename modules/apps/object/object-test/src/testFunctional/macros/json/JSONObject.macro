@@ -28,12 +28,12 @@ definition {
 					"recipientType": "email",
 					"recipients": [
 						{
-							"cc": "${cc}",
 							"bcc": "${bcc}",
+							"cc": "${cc}",
+							"from": "${fromAddress}",
 							"fromName": {
 								"en_US": "${fromName}"
 							},
-							"from": "${fromAddress}",
 							"to": {
 								"en_US": "${toAddress}"
 							}
@@ -79,12 +79,13 @@ definition {
 				-H 'Content-Type: application/json' \
 				-u ${userEmailAddress}:${userPassword} \
 				-d '{
+					"externalReferenceCode": "${externalReferenceCode}",
 					"label": {
 						"en_US": "${labelName}"
 					},
-					"externalReferenceCode": "${externalReferenceCode}",
 					"name": "${objectName}",
-					"objectFields": [],
+					"objectFields": [
+					],
 					"panelCategoryKey": "${panelCategoryKey}",
 					"pluralLabel": {
 						"en_US": "${pluralLabelName}"
@@ -252,7 +253,7 @@ definition {
 	}
 
 	@summary = "Default summary"
-	macro addObjectField(fieldName = null, picklistName = null, fieldLabelName = null, timeStorageOption = null, isRequired = null, outputOption = null, fileSource = null, fieldBusinessType = null, formulaScript = null, objectName = null, fieldType = null, externalReferenceCode = null) {
+	macro addObjectField(externalReferenceCode = null, fieldName = null, fieldBusinessType = null, fieldLabelName = null, fieldType = null, fileSource = null, formulaScript = null, isRequired = null, objectName = null, outputOption = null, picklistName = null, timeStorageOption = null) {
 		var portalURL = JSONCompany.getPortalURL();
 		var objectId = JSONObject.getObjectId(
 			objectName = ${objectName},
@@ -709,8 +710,8 @@ definition {
 					-H 'Content-Type: application/json' \
 					-u ${userEmailAddress}:${userPassword} \
 					-d '{
-						"externalReferenceCode": "${ercName}",
-						"${fieldName}": "${value}"
+						"${fieldName}": "${value}",
+						"externalReferenceCode": "${ercName}"
 					}'
 			''';
 		}

@@ -70,7 +70,7 @@ export class JournalPage {
 		const target = structureName
 			? this.page.getByRole('menuitem', {
 					name: structureName,
-			  })
+				})
 			: this.createBasicWebContentLink;
 
 		await clickAndExpectToBeVisible({
@@ -102,6 +102,10 @@ export class JournalPage {
 		await this.goToJournalArticleAction('Permissions', title);
 
 		await this.assertPermissions(permissions);
+	}
+
+	async assertTitle(title: string) {
+		await expect(this.page.locator(`a[title='${title}']`)).toBeVisible();
 	}
 
 	async assertPermissions(

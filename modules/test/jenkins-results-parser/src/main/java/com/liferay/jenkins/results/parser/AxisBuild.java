@@ -472,6 +472,14 @@ public class AxisBuild extends BaseBuild {
 		return warningMessages;
 	}
 
+	@Override
+	public void saveBuildURLInBuildDatabase() {
+		BuildDatabase buildDatabase = BuildDatabaseUtil.getBuildDatabase(this);
+
+		buildDatabase.putProperty(
+			BUILD_URLS_PROPERTIES_KEY, getAxisName(), getBuildURL());
+	}
+
 	protected AxisBuild(String url) {
 		this(url, null);
 	}

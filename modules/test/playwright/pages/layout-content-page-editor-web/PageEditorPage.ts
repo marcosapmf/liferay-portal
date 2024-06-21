@@ -17,9 +17,11 @@ export class PageEditorPage {
 
 	readonly experienceSelector: Locator;
 	readonly publishButton: Locator;
+	readonly publishMasterButton: Locator;
 	readonly redoButton: Locator;
 	readonly undoButton: Locator;
 	readonly undoHistory: Locator;
+	readonly selectItemMappingButton: Locator;
 
 	readonly segmentEditorPage: SegmentEditorPage;
 
@@ -30,9 +32,13 @@ export class PageEditorPage {
 			'.page-editor__experience-selector'
 		);
 		this.publishButton = page.getByLabel('Publish', {exact: true});
+		this.publishMasterButton = page.getByLabel('Publish Master', {
+			exact: true,
+		});
 		this.redoButton = page.getByTitle('Redo');
 		this.undoButton = page.getByTitle('Undo');
 		this.undoHistory = page.locator('.page-editor__undo-history');
+		this.selectItemMappingButton = page.getByLabel('Select Item');
 
 		this.segmentEditorPage = new SegmentEditorPage(page);
 	}
@@ -95,26 +101,53 @@ export class PageEditorPage {
 		await this.waitForChangesSaved();
 	}
 
-	async changeFragmentConfiguration(
-		fragmentId: string,
-		tab: ConfigurationTab,
-		fieldLabel: string,
-		value: string,
-		isDesktop = true
-	) {
+	async changeFragmentConfiguration({
+		fieldLabel,
+		fragmentId,
+		isDesktop = true,
+		tab,
+		value,
+		valueFromStylebook,
+	}: {
+		fieldLabel: string;
+		fragmentId: string;
+		isDesktop?: boolean;
+		tab: ConfigurationTab;
+		value?: string;
+		valueFromStylebook?: boolean;
+	}) {
 		await this.selectFragment(fragmentId, isDesktop);
 		await this.goToConfigurationTab(tab);
 
 		// Change value in different way depending on field type
 
-		const field = await this.page.getByLabel(fieldLabel, {exact: true});
-		const type = await field.evaluate((element) => element.tagName);
+		const field = await this.page.getByLabel(fieldLabel, {
+			exact: true,
+		});
 
-		if (type === 'INPUT' || type === 'TEXTAREA') {
-			await field.fill(value);
+		if (valueFromStylebook) {
+			await field
+				.getByLabel('Value from Stylebook', {exact: true})
+				.click();
+
+			const valueButton = await this.page.getByTitle(value, {
+				exact: true,
+			});
+
+			await valueButton.click();
 		}
-		else if (type === 'SELECT') {
-			await field.selectOption(value);
+		else {
+			const type = await field.evaluate((element) => element.tagName);
+
+			if (type === 'INPUT' || type === 'TEXTAREA') {
+				await field.fill(value);
+			}
+			else if (type === 'SELECT') {
+				await field.selectOption(value);
+			}
+			else if (type === 'BUTTON') {
+				await field.click();
+			}
 		}
 
 		// The change is applied on blur
@@ -321,7 +354,9 @@ export class PageEditorPage {
 
 		await this.page.keyboard.type(value);
 
-		await this.page.locator('header.page-editor__disabled-area').click();
+		await this.page
+			.locator(`.page-editor__sidebar div[data-item-id='${fragmentId}']`)
+			.click();
 
 		await this.waitForChangesSaved();
 	}
@@ -402,14 +437,50 @@ export class PageEditorPage {
 		);
 	}
 
-	async getFragmentStyle(
-		fragmentId: string,
-		style: string,
-		isDesktop = true
-	) {
-		const topper = this.getTopper(fragmentId, isDesktop);
+	/**
+	 * Get id of a fragment that was manually added to the page.
+	 *
+	 * This is for cases in which we are not able to use a page definition to
+	 * create the page, for example when editing display page templates.
+	 *
+	 * It's recommended to change fragment's name before using this method
+	 * so we make sure we get the id for the desired fragment
+	 *
+	 * @param fragmentName Name of the fragment
+	 */
 
-		const styles = await topper.evaluate((element) =>
+	async getFragmentId(fragmentName: string) {
+		const topper = this.page.locator(
+			`.page-editor__topper[data-name="${fragmentName}"]`
+		);
+
+		const fragmentId = await topper.evaluate((element) =>
+			Array.from(element.classList)
+				.find((cssClass) =>
+					cssClass.includes('lfr-layout-structure-item')
+				)
+				.replace('lfr-layout-structure-item-topper-', '')
+		);
+
+		return fragmentId;
+	}
+
+	async getFragmentStyle({
+		fragmentId,
+		isDesktop = true,
+		isTopperStyle = false,
+		style,
+	}: {
+		fragmentId: string;
+		isDesktop?: boolean;
+		isTopperStyle?: boolean;
+		style: string;
+	}) {
+		const element = isTopperStyle
+			? this.getTopper(fragmentId, isDesktop)
+			: this.getFragment(fragmentId, isDesktop);
+
+		const styles = await element.evaluate((element) =>
 			window.getComputedStyle(element)
 		);
 
@@ -438,13 +509,45 @@ export class PageEditorPage {
 		const topper = isDesktop
 			? this.page.locator(
 					`.lfr-layout-structure-item-topper-${fragmentId}`
-			  )
+				)
 			: this.page
 					.frameLocator('.page-editor__global-context-iframe')
 					.locator(`.lfr-layout-structure-item-topper-${fragmentId}`);
 
 		return await topper.evaluate((element) =>
 			element.classList.contains('active')
+		);
+	}
+
+	async isMaster() {
+		const toolbar = this.page.locator('.page-editor__toolbar');
+
+		return await toolbar.evaluate((element) =>
+			element.classList.contains('page-editor__toolbar--master-layout')
+		);
+	}
+
+	async mapFormFragment(fragmentId: string, type: string, fields: string[]) {
+		const fragment = this.getFragment(fragmentId);
+
+		await fragment.getByLabel('Content Type').selectOption(type);
+
+		const fieldsModal = this.page.frameLocator(
+			'iframe[title="Manage Form Fields"]'
+		);
+
+		for (const field of fields) {
+			await fieldsModal
+				.getByRole('row', {name: field})
+				.getByRole('checkbox')
+				.check();
+		}
+
+		await this.page.locator('.modal-footer').getByText('Save').click();
+
+		await waitForSuccessAlert(
+			this.page,
+			'Success:Your form has been successfully loaded.'
 		);
 	}
 
@@ -468,12 +571,17 @@ export class PageEditorPage {
 	}
 
 	async publishPage() {
-		await this.publishButton.click();
+		const isMaster = await this.isMaster();
 
-		await waitForSuccessAlert(
-			this.page,
-			'Success:The page was published successfully.'
-		);
+		const button = isMaster ? this.publishMasterButton : this.publishButton;
+		const successMessage = isMaster
+			? 'Success:The master page was published successfully.'
+			: 'Success:The page was published successfully.';
+
+		await button.waitFor();
+		await button.click();
+
+		await waitForSuccessAlert(this.page, successMessage);
 	}
 
 	async removeFragment(fragmentId: string) {
@@ -497,6 +605,22 @@ export class PageEditorPage {
 			await resetButton.click();
 			await resetButton.waitFor({state: 'hidden'});
 		}
+
+		await this.waitForChangesSaved();
+	}
+
+	async hideFragment(fragmentId: string, isDesktop = true) {
+		await this.selectFragment(fragmentId, isDesktop);
+
+		await this.page
+			.locator('.page-editor__topper__item')
+			.getByRole('button', {name: 'Options'})
+			.click();
+
+		await this.page
+			.locator('.dropdown-menu.show')
+			.getByText('Hide Fragment')
+			.click();
 
 		await this.waitForChangesSaved();
 	}
@@ -531,6 +655,69 @@ export class PageEditorPage {
 		await editable.click();
 
 		await expect(editable).toBeFocused();
+	}
+
+	async setMappingConfiguration({
+		entity,
+		entry,
+		field,
+		recentSelectedItem,
+		relationship,
+		source,
+	}: {
+		entity?: string;
+		entry?: string;
+		field: string;
+		recentSelectedItem?: string;
+		relationship?: string;
+		source?: 'content' | 'relationship' | 'structure';
+	}) {
+
+		// Select source and relationship is needed
+
+		if (source) {
+			await this.page.getByLabel('Source').selectOption(source);
+		}
+
+		if (source === 'relationship') {
+			await this.page
+				.getByLabel('Relationship')
+				.selectOption(relationship);
+		}
+
+		// If source is not content, just select the field
+
+		if (source !== 'content') {
+			await this.page.getByLabel('Field').selectOption(field);
+
+			return;
+		}
+
+		// If source is content, select the item and the field
+
+		await this.selectItemMappingButton.click();
+
+		if (recentSelectedItem) {
+			await this.page
+				.getByRole('menuitem', {name: recentSelectedItem})
+				.click();
+		}
+		else {
+			await this.page
+				.frameLocator('iframe[title="Select"]')
+				.getByRole('menuitem', {name: entity})
+				.click();
+
+			await this.page.waitForTimeout(1500);
+
+			await this.page
+				.frameLocator('iframe[title="Select"]')
+				.getByRole('paragraph')
+				.filter({hasText: entry})
+				.click();
+		}
+
+		await this.page.getByLabel('Field').selectOption(field);
 	}
 
 	async switchExperience(experience: string) {
@@ -590,14 +777,12 @@ export class PageEditorPage {
 	}
 
 	getTopper(fragmentId: string, isDesktop = true) {
-		const topper = isDesktop
+		return isDesktop
 			? this.page.locator(
 					`.lfr-layout-structure-item-topper-${fragmentId}`
-			  )
+				)
 			: this.page
 					.frameLocator('.page-editor__global-context-iframe')
 					.locator(`.lfr-layout-structure-item-topper-${fragmentId}`);
-
-		return topper;
 	}
 }

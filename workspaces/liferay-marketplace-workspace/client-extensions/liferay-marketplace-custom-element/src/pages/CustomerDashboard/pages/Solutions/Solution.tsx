@@ -24,23 +24,19 @@ export enum TRIAL_CUSTOM_FIELDS {
 const statusAlert = {
 	[ORDER_WORKFLOW_STATUS_CODE.CANCELLED]: {
 		displayType: 'danger',
-		text:
-			'Your order has been cancelled. Please contact support if you have any questions.',
+		text: 'Your order has been cancelled. Please contact support if you have any questions.',
 	},
 	[ORDER_WORKFLOW_STATUS_CODE.ON_HOLD]: {
 		displayType: 'secondary',
-		text:
-			'Your order is currently on hold. Please check your email for further instructions.',
+		text: 'Your order is currently on hold. Please check your email for further instructions.',
 	},
 	[ORDER_WORKFLOW_STATUS_CODE.PROCESSING]: {
 		displayType: 'info',
-		text:
-			'Your order is being processed. We will notify you once it is ready for the next step.',
+		text: 'Your order is being processed. We will notify you once it is ready for the next step.',
 	},
 	[ORDER_WORKFLOW_STATUS_CODE.PENDING]: {
 		displayType: 'warning',
-		text:
-			'Your order is pending. Please wait a few minutes or hours for the processing to complete.',
+		text: 'Your order is pending. Please wait a few minutes or hours for the processing to complete.',
 	},
 };
 
@@ -53,18 +49,22 @@ const Solution = () => {
 		product: DeliveryProduct;
 	}>();
 
-	const customFields = placedOrder.customFields;
-
-	const nextToExpire = customFields[TRIAL_CUSTOM_FIELDS.END_DATE]
-		? differenceInDays(
-				new Date(customFields[TRIAL_CUSTOM_FIELDS.END_DATE]),
-				new Date()
-		  ) <= NEXT_TO_EXPIRE_LEFT_DAYS
-		: false;
-	const virtualHost = customFields[TRIAL_CUSTOM_FIELDS.VIRTUAL_HOST] || '';
-
 	const orderStatusCode = placedOrder.orderStatusInfo
 		?.code as ORDER_WORKFLOW_STATUS_CODE;
+
+	const customFields = placedOrder.customFields;
+
+	const isTrialCompleted =
+		orderStatusCode === ORDER_WORKFLOW_STATUS_CODE.COMPLETED;
+
+	const nextToExpire = customFields[TRIAL_CUSTOM_FIELDS.END_DATE]
+		? !isTrialCompleted &&
+			differenceInDays(
+				new Date(customFields[TRIAL_CUSTOM_FIELDS.END_DATE]),
+				new Date()
+			) <= NEXT_TO_EXPIRE_LEFT_DAYS
+		: false;
+	const virtualHost = customFields[TRIAL_CUSTOM_FIELDS.VIRTUAL_HOST] || '';
 
 	const alert = (statusAlert as any)[orderStatusCode];
 
@@ -109,7 +109,7 @@ const Solution = () => {
 											customFields[
 												TRIAL_CUSTOM_FIELDS.START_DATE
 											]
-									  )
+										)
 									: '-',
 							},
 							{
@@ -134,6 +134,15 @@ const Solution = () => {
 												Expires soon
 											</ClayLabel>
 										)}
+
+										{!nextToExpire && isTrialCompleted && (
+											<ClayLabel
+												className="ml-2"
+												displayType="danger"
+											>
+												{i18n.translate('expired')}
+											</ClayLabel>
+										)}
 									</span>
 								) : (
 									'-'
@@ -141,7 +150,7 @@ const Solution = () => {
 							},
 							{
 								title: i18n.translate('trial-url'),
-								value: virtualHost ? (
+								value: (
 									<a
 										href={
 											(virtualHost as string).startsWith(
@@ -155,9 +164,11 @@ const Solution = () => {
 									>
 										{virtualHost}
 									</a>
-								) : (
-									'-'
 								),
+								visible:
+									orderStatusCode ===
+										ORDER_WORKFLOW_STATUS_CODE.IN_PROGRESS &&
+									!!virtualHost,
 							},
 						]}
 					/>

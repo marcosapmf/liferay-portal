@@ -156,7 +156,7 @@ Map<String, Object> componentContext = journalDisplayContext.getComponentContext
 									label="<%= WorkflowConstants.getStatusLabel(curArticle.getStatus()) %>"
 								/>
 
-							<c:if test='<%= FeatureFlagManagerUtil.isEnabled("LPD-15596") && curArticle.isScheduled() %>'>
+							<c:if test="<%= curArticle.isScheduled() %>">
 
 								<%
 								String scheduledArticleMessage = journalDisplayContext.getScheduledArticleMessage(curArticle);
@@ -309,13 +309,11 @@ Map<String, Object> componentContext = journalDisplayContext.getComponentContext
 							value="<%= curArticle.getDisplayDate() %>"
 						/>
 
-						<c:if test='<%= FeatureFlagManagerUtil.isEnabled("LPD-11218") %>'>
 							<liferay-ui:search-container-column-date
 								cssClass="table-cell-expand-smallest table-cell-ws-nowrap"
 								name="create-date"
 								value="<%= curArticle.getCreateDate() %>"
 							/>
-						</c:if>
 
 						<liferay-ui:search-container-column-text>
 							<clay:dropdown-actions
@@ -510,13 +508,11 @@ Map<String, Object> componentContext = journalDisplayContext.getComponentContext
 							value="--"
 						/>
 
-						<c:if test='<%= FeatureFlagManagerUtil.isEnabled("LPD-11218") %>'>
-							<liferay-ui:search-container-column-date
-								cssClass="table-cell-expand-smallest table-cell-ws-nowrap"
-								name="create-date"
-								value="<%= curFolder.getCreateDate() %>"
-							/>
-						</c:if>
+						<liferay-ui:search-container-column-date
+							cssClass="table-cell-expand-smallest table-cell-ws-nowrap"
+							name="create-date"
+							value="<%= curFolder.getCreateDate() %>"
+						/>
 
 						<liferay-ui:search-container-column-text>
 							<clay:dropdown-actions

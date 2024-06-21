@@ -56,7 +56,6 @@ import com.liferay.object.internal.filter.parser.DateRangeObjectFilterParser;
 import com.liferay.object.internal.filter.parser.EqualityOperatorsObjectFilterParser;
 import com.liferay.object.internal.filter.parser.InclusionOperatorsObjectFilterParser;
 import com.liferay.object.internal.filter.parser.ObjectFilterParser;
-import com.liferay.object.internal.petra.sql.dsl.DynamicObjectDefinitionLocalizationTableFactory;
 import com.liferay.object.internal.sort.SortDSLQueryVisitor;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectEntry;
@@ -68,6 +67,7 @@ import com.liferay.object.model.ObjectRelationship;
 import com.liferay.object.model.ObjectState;
 import com.liferay.object.model.ObjectStateFlow;
 import com.liferay.object.petra.sql.dsl.DynamicObjectDefinitionLocalizationTable;
+import com.liferay.object.petra.sql.dsl.DynamicObjectDefinitionLocalizationTableFactory;
 import com.liferay.object.petra.sql.dsl.DynamicObjectDefinitionTable;
 import com.liferay.object.petra.sql.dsl.DynamicObjectDefinitionTableUtil;
 import com.liferay.object.petra.sql.dsl.DynamicObjectRelationshipMappingTable;
@@ -3949,12 +3949,14 @@ public class ObjectEntryLocalServiceImpl
 			preparedStatement.setBoolean(index, GetterUtil.getBoolean(value));
 		}
 		else if (sqlType == Types.CLOB) {
-			if (DBManagerUtil.getDBType() == DBType.POSTGRESQL) {
-				preparedStatement.setString(index, String.valueOf(value));
+			String valueString = String.valueOf(value);
+
+			if (valueString.isEmpty() ||
+				(DBManagerUtil.getDBType() == DBType.POSTGRESQL)) {
+
+				preparedStatement.setString(index, valueString);
 			}
 			else {
-				String valueString = String.valueOf(value);
-
 				preparedStatement.setClob(
 					index, new StringReader(valueString), valueString.length());
 			}

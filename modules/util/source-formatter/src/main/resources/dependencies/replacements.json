@@ -1,6 +1,15 @@
 [
 	{
 		"classNames": [
+			"CommerceCatalogLocalService",
+			"CommerceCatalogLocalServiceUtil"
+		],
+		"from": "fetchCommerceCatalogByExternalReferenceCode(long paramName, String paramName)",
+		"issueKey": "LPD-7751",
+		"to": "fetchCommerceCatalogByExternalReferenceCode(param#1#, param#0#)"
+	},
+	{
+		"classNames": [
 			"AssetDisplayPageFriendlyURLProvider"
 		],
 		"from": "getFriendlyURL(String paramName, long paramName, Locale paramName, ThemeDisplay paramName)",
@@ -20,6 +29,28 @@
 			"com.liferay.info.item.InfoItemReference"
 		],
 		"to": "getFriendlyURL(new InfoItemReference(param#0#, param#1#), param#2#)"
+	},
+	{
+		"classNames": [
+			"IndexWriterHelperUtil"
+		],
+		"from": "updateDocument(String paramName, long paramName, Collection<Document> paramName, boolean paramName)",
+		"issueKey": "LPD-8003",
+		"to": "updateDocument(param#1#, param#2#)"
+	},
+	{
+		"from": "LayoutFriendlyURLComposite(Layout paramName, String paramName)",
+		"issueKey": "LPD-8025",
+		"skipParametersValidation": true,
+		"to": "LayoutFriendlyURLComposite(param#0#, param#1#, false)"
+	},
+	{
+		"classNames": [
+			"LayoutItemSelectorCriterion"
+		],
+		"from": "setShowHiddenPages(boolean paramName)",
+		"issueKey": "LPD-8038",
+		"to": ""
 	},
 	{
 		"from": "CookieKeys.COMMERCE_CONTINUE_AS_GUEST",

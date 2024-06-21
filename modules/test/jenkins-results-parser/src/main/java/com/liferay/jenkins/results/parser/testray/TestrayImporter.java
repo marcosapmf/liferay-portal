@@ -652,6 +652,13 @@ public class TestrayImporter {
 					_replaceEnvVars(testrayProjectName, true));
 			}
 
+			if ((testrayProject == null) &&
+				!JenkinsResultsParserUtil.isNullOrEmpty(testrayProjectName)) {
+
+				testrayProject = testrayServer.createTestrayProject(
+					_replaceEnvVars(testrayProjectName, true));
+			}
+
 			testrayProjectID = _getBuildParameter("TESTRAY_PROJECT_ID");
 
 			if ((testrayProject == null) && (testrayProjectID != null) &&
@@ -1227,8 +1234,15 @@ public class TestrayImporter {
 				continue;
 			}
 
-			String testray1ImportEnabled = System.getenv(
-				"TESTRAY_1_IMPORT_ENABLED");
+			String testray1ImportEnabled = "false";
+
+			try {
+				testray1ImportEnabled =
+					JenkinsResultsParserUtil.getBuildProperty(
+						"testray.import.enabled[testray-1]");
+			}
+			catch (IOException ioException) {
+			}
 
 			if (!(testrayBuild instanceof Testray1TestrayBuild) &&
 				(testray1ImportEnabled != null)) {

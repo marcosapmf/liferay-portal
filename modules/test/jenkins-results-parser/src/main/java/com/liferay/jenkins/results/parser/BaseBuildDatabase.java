@@ -81,14 +81,14 @@ public abstract class BaseBuildDatabase implements BuildDatabase {
 
 	@Override
 	public Properties getProperties(String key, Pattern pattern) {
+		Properties properties = new Properties();
+
 		if (!hasProperties(key)) {
-			throw new RuntimeException("Unable to find properties for " + key);
+			return properties;
 		}
 
 		JSONObject propertiesJSONObject = _jsonObject.getJSONObject(
 			"properties");
-
-		Properties properties = new Properties();
 
 		JSONArray propertyJSONArray = propertiesJSONObject.getJSONArray(key);
 
@@ -252,6 +252,19 @@ public abstract class BaseBuildDatabase implements BuildDatabase {
 			propertiesJSONObject.put(key, _toJSONArray(properties));
 
 			_writeJSONObjectFile();
+		}
+	}
+
+	@Override
+	public void putProperty(
+		String key, String propertyName, String propertyValue) {
+
+		synchronized (_buildDatabaseFile) {
+			Properties properties = getProperties(key);
+
+			properties.setProperty(propertyName, propertyValue);
+
+			putProperties(key, properties);
 		}
 	}
 

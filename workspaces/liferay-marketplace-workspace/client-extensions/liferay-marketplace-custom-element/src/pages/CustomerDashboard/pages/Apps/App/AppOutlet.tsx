@@ -93,7 +93,8 @@ const AppOutlet = () => {
 						data?.placedOrder.workflowStatusInfo.code ===
 							ORDER_WORKFLOW_STATUS_CODE.COMPLETED &&
 						placedOrderItems.some(
-							(item: PlacedOrderItems) => item.virtualItems.length
+							(item: PlacedOrderItems) =>
+								item.virtualItems?.length
 						),
 				},
 				{
@@ -103,7 +104,7 @@ const AppOutlet = () => {
 						getProductPriceModel(product).isFreeApp ||
 						(placedOrderItems[0]?.price?.price === 0 &&
 							product?.skus?.some((sku: any) =>
-								isTrialSKU((sku as unknown) as SKU)
+								isTrialSKU(sku as unknown as SKU)
 							))
 					),
 				},

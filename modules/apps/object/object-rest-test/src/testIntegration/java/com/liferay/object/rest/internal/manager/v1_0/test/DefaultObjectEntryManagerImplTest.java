@@ -97,6 +97,7 @@ import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.PermissionCheckerFactoryUtil;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
+import com.liferay.portal.kernel.security.permission.ResourceActions;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.service.OrganizationLocalService;
@@ -1302,9 +1303,32 @@ public class DefaultObjectEntryManagerImplTest
 			},
 			ObjectDefinitionConstants.SCOPE_COMPANY);
 
+		_user = _addUser();
+
+		_assignAccountEntryRole(accountEntry, _buyerRole, _user);
+
 		_removeResourcePermission(
 			ObjectActionKeys.ADD_OBJECT_ENTRY, _rootObjectDefinition,
 			_buyerRole);
+
+		_addResourcePermission(
+			ActionKeys.UPDATE, _rootObjectDefinition, _buyerRole);
+
+		_defaultObjectEntryManager.addObjectEntry(
+			_simpleDTOConverterContext,
+			objectDefinitionLocalService.getObjectDefinition(
+				childNode.getPrimaryKey()),
+			new ObjectEntry() {
+				{
+					properties = HashMapBuilder.<String, Object>put(
+						objectField.getName(), objectEntry.getId()
+					).build();
+				}
+			},
+			ObjectDefinitionConstants.SCOPE_COMPANY);
+
+		_removeResourcePermission(
+			ActionKeys.UPDATE, _rootObjectDefinition, _buyerRole);
 
 		AssertUtils.assertFailure(
 			PrincipalException.MustHavePermission.class,
@@ -2112,8 +2136,64 @@ public class DefaultObjectEntryManagerImplTest
 
 		testGetObjectEntries(
 			HashMapBuilder.put(
-				"filter", _buildContainsExpressionFilterString("id", "aaaa")
+				"filter",
+				_buildContainsExpressionFilterString(
+					"id", RandomTestUtil.randomString())
 			).build());
+		testGetObjectEntries(
+			HashMapBuilder.put(
+				"filter",
+				_buildContainsExpressionFilterString(
+					"id", String.valueOf(childObjectEntry1.getId()))
+			).build(),
+			childObjectEntry1);
+		testGetObjectEntries(
+			HashMapBuilder.put(
+				"filter",
+				_buildContainsExpressionFilterString(
+					"id", String.valueOf(childObjectEntry2.getId()))
+			).build(),
+			childObjectEntry2);
+		testGetObjectEntries(
+			HashMapBuilder.put(
+				"filter",
+				_buildContainsExpressionFilterString(
+					"localizedLongTextObjectFieldName",
+					RandomTestUtil.randomString())
+			).build());
+		testGetObjectEntries(
+			HashMapBuilder.put(
+				"filter",
+				_buildContainsExpressionFilterString(
+					"localizedLongTextObjectFieldName", "en_US")
+			).build(),
+			childObjectEntry1, childObjectEntry2);
+		testGetObjectEntries(
+			HashMapBuilder.put(
+				"filter",
+				_buildContainsExpressionFilterString(
+					"localizedLongTextObjectFieldName", "localizedLongText")
+			).build(),
+			childObjectEntry1, childObjectEntry2);
+		testGetObjectEntries(
+			HashMapBuilder.put(
+				"filter",
+				_buildContainsExpressionFilterString(
+					"textObjectFieldName", RandomTestUtil.randomString())
+			).build());
+		testGetObjectEntries(
+			HashMapBuilder.put(
+				"filter",
+				_buildContainsExpressionFilterString(
+					"textObjectFieldName", "aa")
+			).build(),
+			childObjectEntry1, childObjectEntry2);
+		testGetObjectEntries(
+			HashMapBuilder.put(
+				"filter",
+				_buildContainsExpressionFilterString("textObjectFieldName", "b")
+			).build(),
+			childObjectEntry2);
 
 		// Equals expression
 
@@ -2416,6 +2496,68 @@ public class DefaultObjectEntryManagerImplTest
 				"search", parentObjectEntry1.getExternalReferenceCode()
 			).build(),
 			childObjectEntry1);
+
+		// "Starts with" expression
+
+		testGetObjectEntries(
+			HashMapBuilder.put(
+				"filter",
+				_buildStartsWithExpressionFilterString(
+					"id", RandomTestUtil.randomString())
+			).build());
+		testGetObjectEntries(
+			HashMapBuilder.put(
+				"filter",
+				_buildStartsWithExpressionFilterString(
+					"id", String.valueOf(childObjectEntry1.getId()))
+			).build(),
+			childObjectEntry1);
+		testGetObjectEntries(
+			HashMapBuilder.put(
+				"filter",
+				_buildStartsWithExpressionFilterString(
+					"id", String.valueOf(childObjectEntry2.getId()))
+			).build(),
+			childObjectEntry2);
+		testGetObjectEntries(
+			HashMapBuilder.put(
+				"filter",
+				_buildStartsWithExpressionFilterString(
+					"localizedLongTextObjectFieldName",
+					RandomTestUtil.randomString())
+			).build());
+		testGetObjectEntries(
+			HashMapBuilder.put(
+				"filter",
+				_buildStartsWithExpressionFilterString(
+					"localizedLongTextObjectFieldName", "en_US")
+			).build(),
+			childObjectEntry1, childObjectEntry2);
+		testGetObjectEntries(
+			HashMapBuilder.put(
+				"filter",
+				_buildStartsWithExpressionFilterString(
+					"localizedLongTextObjectFieldName", "localizedLongText")
+			).build());
+		testGetObjectEntries(
+			HashMapBuilder.put(
+				"filter",
+				_buildStartsWithExpressionFilterString(
+					"textObjectFieldName", RandomTestUtil.randomString())
+			).build());
+		testGetObjectEntries(
+			HashMapBuilder.put(
+				"filter",
+				_buildStartsWithExpressionFilterString(
+					"textObjectFieldName", "aa")
+			).build(),
+			childObjectEntry1, childObjectEntry2);
+		testGetObjectEntries(
+			HashMapBuilder.put(
+				"filter",
+				_buildStartsWithExpressionFilterString(
+					"textObjectFieldName", "b")
+			).build());
 	}
 
 	@Test
@@ -4378,6 +4520,13 @@ public class DefaultObjectEntryManagerImplTest
 			StringUtil.merge(valuesList, includes ? " or " : " and "), "))");
 	}
 
+	private String _buildStartsWithExpressionFilterString(
+		String fieldName, String value) {
+
+		return StringBundler.concat(
+			"startswith( ", fieldName, ",'", value, "')");
+	}
+
 	private ObjectDefinition _createObjectDefinition(
 			List<ObjectField> objectFields)
 		throws Exception {
@@ -4685,6 +4834,9 @@ public class DefaultObjectEntryManagerImplTest
 	private OrganizationLocalService _organizationLocalService;
 
 	private NestedFieldsContext _originalNestedFieldsContext;
+
+	@Inject
+	private ResourceActions _resourceActions;
 
 	@Inject
 	private ResourcePermissionLocalService _resourcePermissionLocalService;

@@ -64,28 +64,6 @@ export default function _JournalPortlet({
 
 	const lockHolder = {};
 
-	if (!Liferay.FeatureFlags['LPD-15596']) {
-		initializeLock('publishing', {
-			lockedIndicator: document.getElementById(
-				`${namespace}savingChangesIndicator`
-			),
-			namespace,
-			onLockChange: ({isLocked}) => {
-				[publishButton, resetValuesButton, saveButton].forEach(
-					(triggerElement) => {
-						if (triggerElement) {
-							triggerElement.disabled = isLocked;
-						}
-					}
-				);
-			},
-			triggerElements: [publishButton, resetValuesButton, saveButton],
-			unlockedIndicator: document.getElementById(
-				`${namespace}changesSavedIndicator`
-			),
-		});
-	}
-
 	Liferay.componentReady(`${namespace}publishing`).then((lock) => {
 		lockHolder.lock = lock;
 	});
@@ -261,7 +239,7 @@ export default function _JournalPortlet({
 	const handlePublishButtonClick = (event) => {
 		lockHolder.lock?.lock();
 
-		if (Liferay.FeatureFlags['LPS-141392']) {
+		if (Liferay.FeatureFlags['LPD-11228']) {
 			return;
 		}
 
@@ -394,9 +372,8 @@ export default function _JournalPortlet({
 							);
 
 							if (!friendlyUrlInputComponent.getValue()) {
-								const friendlyURL = url.searchParams.get(
-									friendlyURLKey
-								);
+								const friendlyURL =
+									url.searchParams.get(friendlyURLKey);
 								friendlyUrlInputComponent.updateInputLanguage(
 									friendlyURL,
 									defaultLanguageId
