@@ -24,7 +24,8 @@ export async function clickOnActionButton({
 
 	const href = await reviewTagA.getAttribute('href');
 
-	await page.goto(
-		href.replace('http://localhost:8080', liferayConfig.environment.baseUrl)
+	await page.goto(href.replace(
+		'http://localhost:8080',
+		liferayConfig.environment.baseUrl)
 	);
 }
