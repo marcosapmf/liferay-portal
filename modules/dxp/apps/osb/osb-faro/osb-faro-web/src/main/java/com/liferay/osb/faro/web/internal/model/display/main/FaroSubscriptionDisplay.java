@@ -497,7 +497,7 @@ public class FaroSubscriptionDisplay {
 		}
 
 		monthlyValueJSONObject.put(
-			"count", monthlyValueJSONObject.getLong("count") + 0
+			"count", monthlyValueJSONObject.getLong("count") + count
 		).put(
 			"countSinceLastAnniversary",
 			monthlyValueJSONObject.getLong("countSinceLastAnniversary") + count
