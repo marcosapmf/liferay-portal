@@ -355,8 +355,8 @@ definition {
 			}
 
 			task ("View the default form fragment displayed by default for each field type") {
-				var fieldTypeList = "Boolean,Date,File,HTML,Long Text,Multiselect,Number,Relationship,Select,Text,Submit Button";
-				var formFragmentNameList = "Checkbox,Date,File Upload,Rich Text,Textarea,Multiselect,Numeric,Select,Select,Text,Submit Button";
+				var fieldTypeList = "Boolean,Date,File,Form Button,HTML,Long Text,Multiselect,Number,Relationship,Select,Text";
+				var formFragmentNameList = "Checkbox,Date,File Upload,Form Button,Rich Text,Textarea,Multiselect,Numeric,Select,Select,Text";
 				var i = 0;
 				var list1 = ListUtil.newListFromString(${fieldTypeList});
 				var list2 = ListUtil.newListFromString(${formFragmentNameList});
@@ -913,16 +913,14 @@ if (layoutMode === 'edit') {
 				collectionName = "Form Components",
 				fragmentName = "Form Container");
 
-			PageEditor.editFormContainer(
-				contentType = "Purchase Order",
-				panel = "General");
+			PageEditor.editFormContainer(contentType = "Purchase Order");
 
 			PageEditor.removeFragment(fragmentName = "Text");
 
 			PageEditor.addFragmentToFormContainer(
 				collectionName = "Fragment Set Name",
 				fragmentName = "Fragment Name",
-				targetFragmentName = "Submit Button");
+				targetFragmentName = "Form Button");
 
 			PageEditor.editInput(
 				field = "Region",

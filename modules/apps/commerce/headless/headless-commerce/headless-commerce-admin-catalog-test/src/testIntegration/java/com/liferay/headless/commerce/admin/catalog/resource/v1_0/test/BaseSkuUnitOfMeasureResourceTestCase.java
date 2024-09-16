@@ -115,7 +115,32 @@ public abstract class BaseSkuUnitOfMeasureResourceTestCase {
 
 	@Test
 	public void testClientSerDesToDTO() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		SkuUnitOfMeasure skuUnitOfMeasure1 = randomSkuUnitOfMeasure();
+
+		String json = objectMapper.writeValueAsString(skuUnitOfMeasure1);
+
+		SkuUnitOfMeasure skuUnitOfMeasure2 = SkuUnitOfMeasureSerDes.toDTO(json);
+
+		Assert.assertTrue(equals(skuUnitOfMeasure1, skuUnitOfMeasure2));
+	}
+
+	@Test
+	public void testClientSerDesToJSON() throws Exception {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		SkuUnitOfMeasure skuUnitOfMeasure = randomSkuUnitOfMeasure();
+
+		String json1 = objectMapper.writeValueAsString(skuUnitOfMeasure);
+		String json2 = SkuUnitOfMeasureSerDes.toJSON(skuUnitOfMeasure);
+
+		Assert.assertEquals(
+			objectMapper.readTree(json1), objectMapper.readTree(json2));
+	}
+
+	protected ObjectMapper getClientSerDesObjectMapper() {
+		return new ObjectMapper() {
 			{
 				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
 				configure(
@@ -130,40 +155,6 @@ public abstract class BaseSkuUnitOfMeasureResourceTestCase {
 					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
 			}
 		};
-
-		SkuUnitOfMeasure skuUnitOfMeasure1 = randomSkuUnitOfMeasure();
-
-		String json = objectMapper.writeValueAsString(skuUnitOfMeasure1);
-
-		SkuUnitOfMeasure skuUnitOfMeasure2 = SkuUnitOfMeasureSerDes.toDTO(json);
-
-		Assert.assertTrue(equals(skuUnitOfMeasure1, skuUnitOfMeasure2));
-	}
-
-	@Test
-	public void testClientSerDesToJSON() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
-			{
-				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
-				configure(
-					SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true);
-				setDateFormat(new ISO8601DateFormat());
-				setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
-				setSerializationInclusion(JsonInclude.Include.NON_NULL);
-				setVisibility(
-					PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-				setVisibility(
-					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
-			}
-		};
-
-		SkuUnitOfMeasure skuUnitOfMeasure = randomSkuUnitOfMeasure();
-
-		String json1 = objectMapper.writeValueAsString(skuUnitOfMeasure);
-		String json2 = SkuUnitOfMeasureSerDes.toJSON(skuUnitOfMeasure);
-
-		Assert.assertEquals(
-			objectMapper.readTree(json1), objectMapper.readTree(json2));
 	}
 
 	@Test
@@ -1035,6 +1026,14 @@ public abstract class BaseSkuUnitOfMeasureResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals("pricingQuantity", additionalAssertFieldName)) {
+				if (skuUnitOfMeasure.getPricingQuantity() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("primary", additionalAssertFieldName)) {
 				if (skuUnitOfMeasure.getPrimary() == null) {
 					valid = false;
@@ -1286,6 +1285,17 @@ public abstract class BaseSkuUnitOfMeasureResourceTestCase {
 				if (!Objects.deepEquals(
 						skuUnitOfMeasure1.getPrecision(),
 						skuUnitOfMeasure2.getPrecision())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("pricingQuantity", additionalAssertFieldName)) {
+				if (!Objects.deepEquals(
+						skuUnitOfMeasure1.getPricingQuantity(),
+						skuUnitOfMeasure2.getPricingQuantity())) {
 
 					return false;
 				}
@@ -1549,6 +1559,11 @@ public abstract class BaseSkuUnitOfMeasureResourceTestCase {
 			return sb.toString();
 		}
 
+		if (entityFieldName.equals("pricingQuantity")) {
+			throw new IllegalArgumentException(
+				"Invalid entity field " + entityFieldName);
+		}
+
 		if (entityFieldName.equals("primary")) {
 			throw new IllegalArgumentException(
 				"Invalid entity field " + entityFieldName);
@@ -1701,12 +1716,12 @@ public abstract class BaseSkuUnitOfMeasureResourceTestCase {
 		public static void copyProperties(Object source, Object target)
 			throws Exception {
 
-			Class<?> sourceClass = _getSuperClass(source.getClass());
+			Class<?> sourceClass = source.getClass();
 
 			Class<?> targetClass = target.getClass();
 
 			for (java.lang.reflect.Field field :
-					sourceClass.getDeclaredFields()) {
+					_getAllDeclaredFields(sourceClass)) {
 
 				if (field.isSynthetic()) {
 					continue;
@@ -1715,11 +1730,16 @@ public abstract class BaseSkuUnitOfMeasureResourceTestCase {
 				Method getMethod = _getMethod(
 					sourceClass, field.getName(), "get");
 
-				Method setMethod = _getMethod(
-					targetClass, field.getName(), "set",
-					getMethod.getReturnType());
+				try {
+					Method setMethod = _getMethod(
+						targetClass, field.getName(), "set",
+						getMethod.getReturnType());
 
-				setMethod.invoke(target, getMethod.invoke(source));
+					setMethod.invoke(target, getMethod.invoke(source));
+				}
+				catch (Exception e) {
+					continue;
+				}
 			}
 		}
 
@@ -1751,6 +1771,24 @@ public abstract class BaseSkuUnitOfMeasureResourceTestCase {
 			setMethod.invoke(bean, _translateValue(parameterTypes[0], value));
 		}
 
+		private static List<java.lang.reflect.Field> _getAllDeclaredFields(
+			Class<?> clazz) {
+
+			List<java.lang.reflect.Field> fields = new ArrayList<>();
+
+			while ((clazz != null) && (clazz != Object.class)) {
+				for (java.lang.reflect.Field field :
+						clazz.getDeclaredFields()) {
+
+					fields.add(field);
+				}
+
+				clazz = clazz.getSuperclass();
+			}
+
+			return fields;
+		}
+
 		private static Method _getMethod(Class<?> clazz, String name) {
 			for (Method method : clazz.getMethods()) {
 				if (name.equals(method.getName()) &&
@@ -1772,16 +1810,6 @@ public abstract class BaseSkuUnitOfMeasureResourceTestCase {
 			return clazz.getMethod(
 				prefix + StringUtil.upperCaseFirstLetter(fieldName),
 				parameterTypes);
-		}
-
-		private static Class<?> _getSuperClass(Class<?> clazz) {
-			Class<?> superClass = clazz.getSuperclass();
-
-			if ((superClass == null) || (superClass == Object.class)) {
-				return clazz;
-			}
-
-			return superClass;
 		}
 
 		private static Object _translateValue(

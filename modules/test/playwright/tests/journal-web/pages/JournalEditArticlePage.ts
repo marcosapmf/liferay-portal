@@ -18,6 +18,7 @@ export class JournalEditArticlePage {
 	readonly changesSavedIndicator: Locator;
 	readonly friendlyURLInput: Locator;
 	readonly friendlyUrlToggle: Locator;
+	readonly historyButton: Locator;
 	readonly journalPage: JournalPage;
 	readonly propertiesTab: Locator;
 	readonly publishButton: Locator;
@@ -36,6 +37,7 @@ export class JournalEditArticlePage {
 			'#_com_liferay_journal_web_portlet_JournalPortlet_friendlyURL'
 		);
 		this.friendlyUrlToggle = page.locator('#friendlyUrlToggle');
+		this.historyButton = page.getByLabel('History');
 		this.journalPage = new JournalPage(page);
 		this.propertiesTab = page.getByRole('tab', {name: 'Properties'});
 		this.publishButton = page.locator(
@@ -148,7 +150,7 @@ export class JournalEditArticlePage {
 
 	async fillContent(content: string) {
 		await this.journalPage.articleContentTextBox.fill(content);
-		await this.journalPage.articleContentTextBox.press('Backspace');
+		await this.journalPage.articleContentTextBox.press('Enter');
 	}
 
 	async fillFriendlyURL(friendlyURL: string) {
@@ -171,13 +173,13 @@ export class JournalEditArticlePage {
 	}
 
 	async fillTitle(title: string) {
+		await this.propertiesTab.waitFor();
+
 		await fillAndClickOutside(this.page, this.titleInput, title);
 	}
 
 	async editAndPublishExistingBasicArticle(title: string) {
 		await this.editArticle(title);
-
-		await this.propertiesTab.waitFor();
 
 		await this.fillTitle(title);
 

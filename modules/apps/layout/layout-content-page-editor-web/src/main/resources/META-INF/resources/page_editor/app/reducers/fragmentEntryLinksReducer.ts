@@ -10,6 +10,7 @@ import addFragmentEntryLinks, {
 	FragmentEntryLinkMap,
 } from '../actions/addFragmentEntryLinks';
 import addItem from '../actions/addItem';
+import addStepper from '../actions/addStepper';
 import changeMasterLayout from '../actions/changeMasterLayout';
 import deleteFragmentEntryLinkComment from '../actions/deleteFragmentEntryLinkComment';
 import deleteItem from '../actions/deleteItem';
@@ -19,6 +20,7 @@ import {
 	ADD_FRAGMENT_ENTRY_LINKS,
 	ADD_FRAGMENT_ENTRY_LINK_COMMENT,
 	ADD_ITEM,
+	ADD_STEPPER,
 	CHANGE_MASTER_LAYOUT,
 	DELETE_FRAGMENT_ENTRY_LINK_COMMENT,
 	DELETE_ITEM,
@@ -48,6 +50,7 @@ export default function fragmentEntryLinksReducer(
 		| typeof addItem
 		| typeof addFragmentEntryLinks
 		| typeof addFragmentEntryLinkComment
+		| typeof addStepper
 		| typeof changeMasterLayout
 		| typeof deleteItem
 		| typeof deleteFragmentEntryLinkComment
@@ -83,7 +86,8 @@ export default function fragmentEntryLinksReducer(
 			return fragmentEntryLinks;
 		}
 
-		case ADD_FRAGMENT_ENTRY_LINKS: {
+		case ADD_FRAGMENT_ENTRY_LINKS:
+		case ADD_STEPPER: {
 			const newFragmentEntryLinks: FragmentEntryLinkMap = {};
 
 			action.fragmentEntryLinks.forEach((fragmentEntryLink) => {
@@ -290,16 +294,18 @@ export default function fragmentEntryLinksReducer(
 		case UPDATE_FORM_ITEM_CONFIG: {
 			const newFragmentEntryLinks: FragmentEntryLinkMap =
 				action.addedFragmentEntryLinks
-					? {...action.addedFragmentEntryLinks}
-					: {};
+					? {...fragmentEntryLinks, ...action.addedFragmentEntryLinks}
+					: {...fragmentEntryLinks};
 
 			if (action.removedFragmentEntryLinkIds) {
 				action.removedFragmentEntryLinkIds.forEach(
 					(fragmentEntryLinkId) => {
-						newFragmentEntryLinks[fragmentEntryLinkId] = {
-							...fragmentEntryLinks[fragmentEntryLinkId],
-							removed: true,
-						};
+						if (newFragmentEntryLinks[fragmentEntryLinkId]) {
+							newFragmentEntryLinks[fragmentEntryLinkId] = {
+								...newFragmentEntryLinks[fragmentEntryLinkId],
+								removed: true,
+							};
+						}
 					}
 				);
 			}
@@ -307,16 +313,17 @@ export default function fragmentEntryLinksReducer(
 			if (action.restoredFragmentEntryLinkIds) {
 				action.restoredFragmentEntryLinkIds.forEach(
 					(fragmentEntryLinkId) => {
-						newFragmentEntryLinks[fragmentEntryLinkId] = {
-							...fragmentEntryLinks[fragmentEntryLinkId],
-							removed: false,
-						};
+						if (newFragmentEntryLinks[fragmentEntryLinkId]) {
+							newFragmentEntryLinks[fragmentEntryLinkId] = {
+								...newFragmentEntryLinks[fragmentEntryLinkId],
+								removed: false,
+							};
+						}
 					}
 				);
 			}
 
 			return {
-				...fragmentEntryLinks,
 				...newFragmentEntryLinks,
 			};
 		}

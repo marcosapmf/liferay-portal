@@ -177,7 +177,10 @@ export default function _JournalPortlet({
 			`${namespace}titleMapAsXML`
 		);
 
-		if (!titleInputComponent?.getValue(defaultLanguageId)) {
+		if (
+			!titleInputComponent?.getValue(defaultLanguageId) &&
+			!Liferay.FeatureFlags['LPS-114700']
+		) {
 			showAlert(
 				sub(
 					Liferay.Language.get(
@@ -186,6 +189,8 @@ export default function _JournalPortlet({
 					defaultLanguageId.replaceAll('_', '-')
 				)
 			);
+
+			validateRequiredDDMFields();
 		}
 	};
 
@@ -243,17 +248,23 @@ export default function _JournalPortlet({
 				form.submit();
 			}
 		}
+		else if (showErrors && !Liferay.FeatureFlags['LPS-114700']) {
+			showAlert(
+				sub(
+					Liferay.Language.get(
+						'please-enter-a-valid-title-for-the-default-language-x'
+					),
+					defaultLanguageId.replaceAll('_', '-')
+				)
+			);
+
+			validateRequiredDDMFields();
+
+			lockHolder.lock?.unlock(true);
+		}
 		else {
-			if (showErrors) {
-				showAlert(
-					sub(
-						Liferay.Language.get(
-							'please-enter-a-valid-title-for-the-default-language-x'
-						),
-						defaultLanguageId.replaceAll('_', '-')
-					)
-				);
-			}
+			Liferay.Form.get(formId).formValidator.validate();
+			validateRequiredDDMFields();
 
 			lockHolder.lock?.unlock(true);
 		}
@@ -484,6 +495,17 @@ export default function _JournalPortlet({
 			})
 		),
 	];
+
+	const validateRequiredDDMFields = () => {
+		Liferay.componentReady(`${namespace}dataEngineLayoutRenderer`).then(
+			(dataEngineLayoutRenderer) => {
+				const dataEngineLayoutRendererRef =
+					dataEngineLayoutRenderer?.reactComponentRef;
+
+				return dataEngineLayoutRendererRef.current.validate();
+			}
+		);
+	};
 
 	if (
 		autoSaveDraftEnabled &&

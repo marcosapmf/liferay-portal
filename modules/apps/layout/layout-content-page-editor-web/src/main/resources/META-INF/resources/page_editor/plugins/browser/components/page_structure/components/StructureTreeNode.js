@@ -186,7 +186,7 @@ function StructureTreeNodeContent({
 		[layoutDataRef, node]
 	);
 
-	const fragmentEntryType = useSelectorCallback(
+	const {fieldTypes, fragmentEntryType} = useSelectorCallback(
 		(state) => {
 			if (!node.type === LAYOUT_DATA_ITEM_TYPES.fragment) {
 				return null;
@@ -195,9 +195,13 @@ function StructureTreeNodeContent({
 			const fragmentEntryLink =
 				state.fragmentEntryLinks[item.config?.fragmentEntryLinkId];
 
-			return fragmentEntryLink?.fragmentEntryType ?? null;
+			return {
+				fieldTypes: fragmentEntryLink?.fieldTypes ?? [],
+				fragmentEntryType: fragmentEntryLink?.fragmentEntryType ?? null,
+			};
 		},
-		[item]
+		[item],
+		deepEqual
 	);
 
 	const isWidget = useSelectorCallback(
@@ -211,7 +215,7 @@ function StructureTreeNodeContent({
 	);
 
 	const {handlerRef, isDraggingSource: itemIsDraggingSource} = useDragItem(
-		{...item, fragmentEntryType, isWidget},
+		{...item, fieldTypes, fragmentEntryType, isWidget},
 		(parentItemId, position) =>
 			dispatch(
 				moveItem({
@@ -326,8 +330,6 @@ function StructureTreeNodeContent({
 				'drag-over-top':
 					isValidDrop && dropTargetPosition === TARGET_POSITIONS.TOP,
 				'dragged': isDraggingSource,
-				'font-weight-semi-bold':
-					node.activable && node.itemType !== ITEM_TYPES.editable,
 			})}
 			ref={targetRef}
 		>
@@ -366,6 +368,7 @@ function StructureTreeNodeContent({
 
 			<MoveButton
 				canUpdate={canUpdatePageStructure}
+				fieldTypes={fieldTypes}
 				fragmentEntryType={fragmentEntryType}
 				isWidget={isWidget}
 				node={node}
@@ -530,6 +533,7 @@ const NameLabel = React.forwardRef(
 
 const MoveButton = ({
 	canUpdate,
+	fieldTypes,
 	fragmentEntryType,
 	isWidget,
 	node,
@@ -575,6 +579,7 @@ const MoveButton = ({
 			onBlur={(event) => event.stopPropagation()}
 			onClick={() =>
 				setMovementSource({
+					fieldTypes,
 					fragmentEntryType,
 					icon: node.icon,
 					isWidget,
@@ -605,6 +610,7 @@ const MoveButton = ({
 
 function computeHover({
 	dispatch,
+	fragmentEntryLinksRef,
 	layoutDataRef,
 	monitor,
 	siblingItem = null,
@@ -643,20 +649,29 @@ function computeHover({
 		const targetIsCollectionNotMapped =
 			targetItem.type === LAYOUT_DATA_ITEM_TYPES.collection &&
 			!collectionIsMapped(targetItem);
+
 		const targetIsColumn =
 			targetItem.type === LAYOUT_DATA_ITEM_TYPES.column;
+
 		const targetIsFragment =
 			targetItem.type === LAYOUT_DATA_ITEM_TYPES.fragment;
+
 		const targetIsContainer =
 			targetItem.type === LAYOUT_DATA_ITEM_TYPES.container ||
 			targetItem.type === LAYOUT_DATA_ITEM_TYPES.form;
+
 		const targetIsEmpty =
 			layoutDataRef.current.items[targetItem.itemId]?.children.length ===
 			0;
+
 		const targetIsFormNotMapped =
 			targetItem.type === LAYOUT_DATA_ITEM_TYPES.form &&
 			!formIsMapped(targetItem);
+
 		const targetIsParent = sourceItem.parentId === targetItem.itemId;
+
+		const targetIsFormStep =
+			targetItem.type === LAYOUT_DATA_ITEM_TYPES.formStep;
 
 		return (
 			targetPositionWithMiddle === TARGET_POSITIONS.MIDDLE &&
@@ -664,7 +679,8 @@ function computeHover({
 				targetIsCollectionNotMapped ||
 				targetIsColumn ||
 				targetIsContainer ||
-				targetIsFormNotMapped) &&
+				targetIsFormNotMapped ||
+				targetIsFormStep) &&
 			!targetIsFragment &&
 			!targetIsParent
 		);
@@ -674,7 +690,12 @@ function computeHover({
 		return dispatch({
 			dropItem: sourceItem,
 			dropTargetItem: targetItem,
-			droppable: checkAllowedChild(sourceItem, targetItem, layoutDataRef),
+			droppable: checkAllowedChild(
+				sourceItem,
+				targetItem,
+				layoutDataRef,
+				fragmentEntryLinksRef
+			),
 			elevate: null,
 			targetPositionWithMiddle,
 			targetPositionWithoutMiddle,
@@ -690,7 +711,12 @@ function computeHover({
 		return dispatch({
 			dropItem: sourceItem,
 			dropTargetItem: siblingItem,
-			droppable: checkAllowedChild(sourceItem, targetItem, layoutDataRef),
+			droppable: checkAllowedChild(
+				sourceItem,
+				targetItem,
+				layoutDataRef,
+				fragmentEntryLinksRef
+			),
 			elevate: true,
 			targetPositionWithMiddle,
 			targetPositionWithoutMiddle,
@@ -739,6 +765,7 @@ function computeHover({
 		if (elevatedTargetItem && elevatedTargetItem !== targetItem) {
 			return computeHover({
 				dispatch,
+				fragmentEntryLinksRef,
 				layoutDataRef,
 				monitor,
 				siblingItem,

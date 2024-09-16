@@ -9,6 +9,7 @@ import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.model.UserConstants;
 import com.liferay.portal.kernel.security.auth.FullNameGenerator;
 import com.liferay.portal.kernel.security.auth.FullNameGeneratorFactory;
+import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
@@ -116,7 +117,10 @@ public class TestrayCaseResultResourceImpl
 
 		if (Validator.isNotNull(status)) {
 			sb.append("and cr.dueStatus_ in (");
-			sb.append(TestrayUtil.interpolateParams(params, status));
+			sb.append(
+				TestrayUtil.interpolateParams(
+					params,
+					ArrayUtil.toLongArray(StringUtil.split(status, ",", 0L))));
 			sb.append(") ");
 		}
 
@@ -124,13 +128,19 @@ public class TestrayCaseResultResourceImpl
 			sb.append("and pv.c_productVersionId_ in (");
 			sb.append(
 				TestrayUtil.interpolateParams(
-					params, testrayProductVersionIds));
+					params,
+					ArrayUtil.toLongArray(
+						StringUtil.split(testrayProductVersionIds, ",", 0L))));
 			sb.append(") ");
 		}
 
 		if (Validator.isNotNull(testrayRoutineIds)) {
 			sb.append("and ro.c_routineId_ in (");
-			sb.append(TestrayUtil.interpolateParams(params, testrayRoutineIds));
+			sb.append(
+				TestrayUtil.interpolateParams(
+					params,
+					ArrayUtil.toLongArray(
+						StringUtil.split(testrayRoutineIds, ",", 0L))));
 			sb.append(") ");
 		}
 
@@ -141,13 +151,17 @@ public class TestrayCaseResultResourceImpl
 
 		if (Validator.isNotNull(testrayTeamIds)) {
 			sb.append("and co.r_teamToComponents_c_teamId in (");
-			sb.append(TestrayUtil.interpolateParams(params, testrayTeamIds));
+			sb.append(
+				TestrayUtil.interpolateParams(
+					params,
+					ArrayUtil.toLongArray(
+						StringUtil.split(testrayTeamIds, ",", 0L))));
 			sb.append(") ");
 		}
 
 		if (Validator.isNotNull(testrayUserId)) {
 			sb.append("and cr.r_userToCaseResults_userId  = ? ");
-			params.add(testrayUserId);
+			params.add(GetterUtil.getLong(testrayUserId));
 		}
 
 		if (Validator.isNotNull(warning)) {
@@ -155,7 +169,7 @@ public class TestrayCaseResultResourceImpl
 			params.add(warning);
 		}
 
-		sb.append("group by cr.c_caseResultId_ order by b.dueDate_ desc ");
+		sb.append("order by b.dueDate_ desc ");
 
 		String sql = StringUtil.replace(
 			sb.toString(), "[%COMPANY_ID%]",
@@ -179,34 +193,34 @@ public class TestrayCaseResultResourceImpl
 				value -> new TestrayCaseResult() {
 					{
 						error = GetterUtil.getString(value.get("errors_"));
-						gitHash = GetterUtil.getString(value.get("gitHash_"));
+						gitHash = GetterUtil.getString(value.get("githash_"));
 						issues = GetterUtil.getString(value.get("issues_"));
-						status = GetterUtil.getString(value.get("dueStatus_"));
+						status = GetterUtil.getString(value.get("duestatus_"));
 						testrayBuildId = GetterUtil.getLong(
-							value.get("c_buildId_"));
+							value.get("c_buildid_"));
 						testrayCaseResultId = GetterUtil.getLong(
-							value.get("c_caseResultId_"));
+							value.get("c_caseresultid_"));
 						testrayProductVersionName = GetterUtil.getString(
-							value.get("productVersion"));
+							value.get("productversion"));
 						testrayRoutineId = GetterUtil.getLong(
-							value.get("c_routineId_"));
+							value.get("c_routineid_"));
 						testrayRoutineName = GetterUtil.getString(
-							value.get("routineName"));
+							value.get("routinename"));
 						testrayRunName = GetterUtil.getString(
-							value.get("runName"));
+							value.get("runname"));
 						testrayTeamName = GetterUtil.getString(
-							value.get("teamName"));
+							value.get("teamname"));
 						userName = GetterUtil.getString(value.get("name"));
 						warning = GetterUtil.getInteger(value.get("warnings_"));
 
 						setExecutionDate(
 							() -> {
-								if (value.get("executionDate") == null) {
+								if (value.get("executiondate") == null) {
 									return null;
 								}
 
 								return value.get(
-									"executionDate"
+									"executiondate"
 								).toString();
 							});
 					}
@@ -224,23 +238,22 @@ public class TestrayCaseResultResourceImpl
 			String testrayTeamIds, String testrayUserId, Pagination pagination)
 		throws Exception {
 
-		StringBundler sb = new StringBundler(50);
+		StringBundler sb = new StringBundler(47);
 
 		sb.append("select cr.c_caseResultId_, cr.comment_, cr.dueStatus_, ");
 		sb.append("cr.errors_, cr.issues_, ct.name_ as caseTypeName, c.name_ ");
-		sb.append("as caseName, c.priority_, cx.flaky_, r.name_ as runName, ");
+		sb.append("as caseName, c.priority_, c.flaky_, r.name_ as runName, ");
 		sb.append("r.number_ as runNumber, co.name_ as componentName, ");
 		sb.append("t.name_ as teamName, u.firstName, u.lastName, ");
 		sb.append("u.middleName, u.uuid_, u.portraitId from ");
 		sb.append("O_[%COMPANY_ID%]_Build b, O_[%COMPANY_ID%]_CaseResult cr ");
 		sb.append("left outer join User_ u on u.userId = ");
 		sb.append("cr.r_userToCaseResults_userId, O_[%COMPANY_ID%]_Case c, ");
-		sb.append("O_[%COMPANY_ID%]_Case_x cx, O_[%COMPANY_ID%]_CaseType ct, ");
-		sb.append("O_[%COMPANY_ID%]_Component co, O_[%COMPANY_ID%]_Run r, ");
-		sb.append("O_[%COMPANY_ID%]_Team t where b.c_buildId_ = ? and ");
-		sb.append("cr.r_buildToCaseResult_c_buildId = b.c_buildId_ and ");
-		sb.append("c.c_caseId_ = cr.r_caseToCaseResult_c_caseId and ");
-		sb.append("c.c_caseId_ = cx.c_caseId_ and ct.c_caseTypeId_ = ");
+		sb.append("O_[%COMPANY_ID%]_CaseType ct, O_[%COMPANY_ID%]_Component ");
+		sb.append("co, O_[%COMPANY_ID%]_Run r, O_[%COMPANY_ID%]_Team t where ");
+		sb.append("b.c_buildId_ = ? and cr.r_buildToCaseResult_c_buildId = ");
+		sb.append("b.c_buildId_ and c.c_caseId_ = ");
+		sb.append("cr.r_caseToCaseResult_c_caseId and ct.c_caseTypeId_ = ");
 		sb.append("c.r_caseTypeToCases_c_caseTypeId and co.c_componentId_ = ");
 		sb.append("cr.r_componentToCaseResult_c_componentId and r.c_runId_ = ");
 		sb.append("cr.r_runToCaseResult_c_runId and t.c_teamId_ = ");
@@ -261,7 +274,7 @@ public class TestrayCaseResultResourceImpl
 		}
 
 		if (flaky != null) {
-			sb.append("and cx.flaky_ = ? ");
+			sb.append("and c.flaky_ = ? ");
 			params.add(flaky);
 		}
 
@@ -284,7 +297,11 @@ public class TestrayCaseResultResourceImpl
 
 		if (Validator.isNotNull(priority)) {
 			sb.append("and c.priority_ in (");
-			sb.append(TestrayUtil.interpolateParams(params, priority));
+			sb.append(
+				TestrayUtil.interpolateParams(
+					params,
+					ArrayUtil.toLongArray(
+						StringUtil.split(priority, ",", 0L))));
 			sb.append(") ");
 		}
 
@@ -302,20 +319,26 @@ public class TestrayCaseResultResourceImpl
 		if (Validator.isNotNull(testrayCaseTypeIds)) {
 			sb.append("and c.r_caseTypeToCases_c_caseTypeId in (");
 			sb.append(
-				TestrayUtil.interpolateParams(params, testrayCaseTypeIds));
+				TestrayUtil.interpolateParams(
+					params,
+					ArrayUtil.toLongArray(
+						StringUtil.split(testrayCaseTypeIds, ",", 0L))));
 			sb.append(") ");
 		}
 
 		if (Validator.isNotNull(testrayComponentIds)) {
 			sb.append("and cr.r_componentToCaseResult_c_componentId in (");
 			sb.append(
-				TestrayUtil.interpolateParams(params, testrayComponentIds));
+				TestrayUtil.interpolateParams(
+					params,
+					ArrayUtil.toLongArray(
+						StringUtil.split(testrayComponentIds, ",", 0L))));
 			sb.append(") ");
 		}
 
 		if (Validator.isNotNull(testrayRunId)) {
 			sb.append("and cr.r_runToCaseResult_c_runId = ? ");
-			params.add(testrayRunId);
+			params.add(GetterUtil.getLong(testrayRunId));
 		}
 
 		if (Validator.isNotNull(testrayRunName)) {
@@ -325,24 +348,26 @@ public class TestrayCaseResultResourceImpl
 
 		if (Validator.isNotNull(testraySubtaskId)) {
 			sb.append("and cr.r_subtaskToCaseResults_c_subtaskId = ? ");
-			params.add(testraySubtaskId);
+			params.add(GetterUtil.getLong(testraySubtaskId));
 		}
 
 		if (Validator.isNotNull(testrayTeamIds)) {
 			sb.append("and co.r_teamToComponents_c_teamId in (");
-			sb.append(TestrayUtil.interpolateParams(params, testrayTeamIds));
+			sb.append(
+				TestrayUtil.interpolateParams(
+					params,
+					ArrayUtil.toLongArray(
+						StringUtil.split(testrayTeamIds, ",", 0L))));
 			sb.append(") ");
 		}
 
 		if (Validator.isNotNull(testrayUserId)) {
 			sb.append("and cr.r_userToCaseResults_userId  = ? ");
-			params.add(testrayUserId);
+			params.add(GetterUtil.getLong(testrayUserId));
 		}
 
-		sb.append("group by cr.c_caseResultId_, u.firstName, u.lastName, ");
-		sb.append("u.middleName, u.uuid_, u.portraitId order by ");
-		sb.append("cr.dueStatus_ asc, cr.errors_ is null asc, c.priority_ ");
-		sb.append("desc, t.name_ asc, co.name_ asc, ct.name_ asc ");
+		sb.append("order by cr.dueStatus_ asc, cr.errors_ is null asc,");
+		sb.append("c.priority_ desc, t.name_ asc, co.name_ asc, ct.name_ asc ");
 
 		String sql = StringUtil.replace(
 			sb.toString(), "[%COMPANY_ID%]",
@@ -371,21 +396,21 @@ public class TestrayCaseResultResourceImpl
 							String.valueOf(value.get("flaky_")));
 						issues = GetterUtil.getString(value.get("issues_"));
 						priority = GetterUtil.getLong(value.get("priority_"));
-						status = GetterUtil.getString(value.get("dueStatus_"));
+						status = GetterUtil.getString(value.get("duestatus_"));
 						testrayCaseName = GetterUtil.getString(
-							value.get("caseName"));
+							value.get("casename"));
 						testrayCaseResultId = GetterUtil.getLong(
-							value.get("c_caseResultId_"));
+							value.get("c_caseresultid_"));
 						testrayCaseTypeName = GetterUtil.getString(
-							value.get("caseTypeName"));
+							value.get("casetypename"));
 						testrayComponentName = GetterUtil.getString(
-							value.get("componentName"));
+							value.get("componentname"));
 						testrayRunName = GetterUtil.getString(
-							value.get("runName"));
+							value.get("runname"));
 						testrayRunNumber = GetterUtil.getLong(
-							value.get("runNumber"));
+							value.get("runnumber"));
 						testrayTeamName = GetterUtil.getString(
-							value.get("teamName"));
+							value.get("teamname"));
 
 						setUserName(
 							() -> {
@@ -394,16 +419,16 @@ public class TestrayCaseResultResourceImpl
 
 								return fullNameGenerator.getFullName(
 									GetterUtil.getString(
-										value.get("firstName")),
+										value.get("firstname")),
 									GetterUtil.getString(
-										value.get("middleName")),
+										value.get("middlename")),
 									GetterUtil.getString(
-										value.get("lastName")));
+										value.get("lastname")));
 							});
 						setUserPortraitUrl(
 							() -> {
 								long portraitId = GetterUtil.getLong(
-									value.get("portraitId"));
+									value.get("portraitid"));
 
 								if (portraitId == 0) {
 									return null;

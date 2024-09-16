@@ -116,7 +116,32 @@ public abstract class BaseCTEntryResourceTestCase {
 
 	@Test
 	public void testClientSerDesToDTO() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		CTEntry ctEntry1 = randomCTEntry();
+
+		String json = objectMapper.writeValueAsString(ctEntry1);
+
+		CTEntry ctEntry2 = CTEntrySerDes.toDTO(json);
+
+		Assert.assertTrue(equals(ctEntry1, ctEntry2));
+	}
+
+	@Test
+	public void testClientSerDesToJSON() throws Exception {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		CTEntry ctEntry = randomCTEntry();
+
+		String json1 = objectMapper.writeValueAsString(ctEntry);
+		String json2 = CTEntrySerDes.toJSON(ctEntry);
+
+		Assert.assertEquals(
+			objectMapper.readTree(json1), objectMapper.readTree(json2));
+	}
+
+	protected ObjectMapper getClientSerDesObjectMapper() {
+		return new ObjectMapper() {
 			{
 				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
 				configure(
@@ -131,40 +156,6 @@ public abstract class BaseCTEntryResourceTestCase {
 					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
 			}
 		};
-
-		CTEntry ctEntry1 = randomCTEntry();
-
-		String json = objectMapper.writeValueAsString(ctEntry1);
-
-		CTEntry ctEntry2 = CTEntrySerDes.toDTO(json);
-
-		Assert.assertTrue(equals(ctEntry1, ctEntry2));
-	}
-
-	@Test
-	public void testClientSerDesToJSON() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
-			{
-				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
-				configure(
-					SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true);
-				setDateFormat(new ISO8601DateFormat());
-				setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
-				setSerializationInclusion(JsonInclude.Include.NON_NULL);
-				setVisibility(
-					PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-				setVisibility(
-					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
-			}
-		};
-
-		CTEntry ctEntry = randomCTEntry();
-
-		String json1 = objectMapper.writeValueAsString(ctEntry);
-		String json2 = CTEntrySerDes.toJSON(ctEntry);
-
-		Assert.assertEquals(
-			objectMapper.readTree(json1), objectMapper.readTree(json2));
 	}
 
 	@Test
@@ -176,6 +167,7 @@ public abstract class BaseCTEntryResourceTestCase {
 		ctEntry.setChangeType(regex);
 		ctEntry.setOwnerName(regex);
 		ctEntry.setSiteName(regex);
+		ctEntry.setStatusMessage(regex);
 		ctEntry.setTitle(regex);
 		ctEntry.setTypeName(regex);
 
@@ -188,6 +180,7 @@ public abstract class BaseCTEntryResourceTestCase {
 		Assert.assertEquals(regex, ctEntry.getChangeType());
 		Assert.assertEquals(regex, ctEntry.getOwnerName());
 		Assert.assertEquals(regex, ctEntry.getSiteName());
+		Assert.assertEquals(regex, ctEntry.getStatusMessage());
 		Assert.assertEquals(regex, ctEntry.getTitle());
 		Assert.assertEquals(regex, ctEntry.getTypeName());
 	}
@@ -1066,6 +1059,14 @@ public abstract class BaseCTEntryResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals("statusMessage", additionalAssertFieldName)) {
+				if (ctEntry.getStatusMessage() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("title", additionalAssertFieldName)) {
 				if (ctEntry.getTitle() == null) {
 					valid = false;
@@ -1329,6 +1330,17 @@ public abstract class BaseCTEntryResourceTestCase {
 			if (Objects.equals("status", additionalAssertFieldName)) {
 				if (!Objects.deepEquals(
 						ctEntry1.getStatus(), ctEntry2.getStatus())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("statusMessage", additionalAssertFieldName)) {
+				if (!Objects.deepEquals(
+						ctEntry1.getStatusMessage(),
+						ctEntry2.getStatusMessage())) {
 
 					return false;
 				}
@@ -1708,6 +1720,52 @@ public abstract class BaseCTEntryResourceTestCase {
 				"Invalid entity field " + entityFieldName);
 		}
 
+		if (entityFieldName.equals("statusMessage")) {
+			Object object = ctEntry.getStatusMessage();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
+
+			return sb.toString();
+		}
+
 		if (entityFieldName.equals("title")) {
 			Object object = ctEntry.getTitle();
 
@@ -1860,6 +1918,8 @@ public abstract class BaseCTEntryResourceTestCase {
 				siteId = testGroup.getGroupId();
 				siteName = StringUtil.toLowerCase(
 					RandomTestUtil.randomString());
+				statusMessage = StringUtil.toLowerCase(
+					RandomTestUtil.randomString());
 				title = StringUtil.toLowerCase(RandomTestUtil.randomString());
 				typeName = StringUtil.toLowerCase(
 					RandomTestUtil.randomString());
@@ -1889,12 +1949,12 @@ public abstract class BaseCTEntryResourceTestCase {
 		public static void copyProperties(Object source, Object target)
 			throws Exception {
 
-			Class<?> sourceClass = _getSuperClass(source.getClass());
+			Class<?> sourceClass = source.getClass();
 
 			Class<?> targetClass = target.getClass();
 
 			for (java.lang.reflect.Field field :
-					sourceClass.getDeclaredFields()) {
+					_getAllDeclaredFields(sourceClass)) {
 
 				if (field.isSynthetic()) {
 					continue;
@@ -1903,11 +1963,16 @@ public abstract class BaseCTEntryResourceTestCase {
 				Method getMethod = _getMethod(
 					sourceClass, field.getName(), "get");
 
-				Method setMethod = _getMethod(
-					targetClass, field.getName(), "set",
-					getMethod.getReturnType());
+				try {
+					Method setMethod = _getMethod(
+						targetClass, field.getName(), "set",
+						getMethod.getReturnType());
 
-				setMethod.invoke(target, getMethod.invoke(source));
+					setMethod.invoke(target, getMethod.invoke(source));
+				}
+				catch (Exception e) {
+					continue;
+				}
 			}
 		}
 
@@ -1939,6 +2004,24 @@ public abstract class BaseCTEntryResourceTestCase {
 			setMethod.invoke(bean, _translateValue(parameterTypes[0], value));
 		}
 
+		private static List<java.lang.reflect.Field> _getAllDeclaredFields(
+			Class<?> clazz) {
+
+			List<java.lang.reflect.Field> fields = new ArrayList<>();
+
+			while ((clazz != null) && (clazz != Object.class)) {
+				for (java.lang.reflect.Field field :
+						clazz.getDeclaredFields()) {
+
+					fields.add(field);
+				}
+
+				clazz = clazz.getSuperclass();
+			}
+
+			return fields;
+		}
+
 		private static Method _getMethod(Class<?> clazz, String name) {
 			for (Method method : clazz.getMethods()) {
 				if (name.equals(method.getName()) &&
@@ -1960,16 +2043,6 @@ public abstract class BaseCTEntryResourceTestCase {
 			return clazz.getMethod(
 				prefix + StringUtil.upperCaseFirstLetter(fieldName),
 				parameterTypes);
-		}
-
-		private static Class<?> _getSuperClass(Class<?> clazz) {
-			Class<?> superClass = clazz.getSuperclass();
-
-			if ((superClass == null) || (superClass == Object.class)) {
-				return clazz;
-			}
-
-			return superClass;
 		}
 
 		private static Object _translateValue(

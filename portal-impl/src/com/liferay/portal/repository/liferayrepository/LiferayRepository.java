@@ -153,13 +153,13 @@ public class LiferayRepository
 
 	@Override
 	public FileShortcut addFileShortcut(
-			long userId, long folderId, long toFileEntryId,
-			ServiceContext serviceContext)
+			String externalReferenceCode, long userId, long folderId,
+			long toFileEntryId, ServiceContext serviceContext)
 		throws PortalException {
 
 		DLFileShortcut dlFileShortcut = dlFileShortcutService.addFileShortcut(
-			getGroupId(), getRepositoryId(), folderId, toFileEntryId,
-			serviceContext);
+			externalReferenceCode, getGroupId(), getRepositoryId(), folderId,
+			toFileEntryId, serviceContext);
 
 		return new LiferayFileShortcut(dlFileShortcut);
 	}
@@ -472,7 +472,7 @@ public class LiferayRepository
 
 		DLFileEntry dlFileEntry =
 			dlFileEntryService.getFileEntryByExternalReferenceCode(
-				getGroupId(), externalReferenceCode);
+				externalReferenceCode, getGroupId());
 
 		return new LiferayFileEntry(dlFileEntry);
 	}
@@ -505,6 +505,18 @@ public class LiferayRepository
 
 		DLFileShortcut dlFileShortcut = dlFileShortcutService.getFileShortcut(
 			fileShortcutId);
+
+		return new LiferayFileShortcut(dlFileShortcut);
+	}
+
+	@Override
+	public FileShortcut getFileShortcutByExternalReferenceCode(
+			String externalReferenceCode)
+		throws PortalException {
+
+		DLFileShortcut dlFileShortcut =
+			dlFileShortcutService.getDLFileShortcutByExternalReferenceCode(
+				externalReferenceCode, getGroupId());
 
 		return new LiferayFileShortcut(dlFileShortcut);
 	}

@@ -99,8 +99,9 @@ create index IX_9EE96CAD on DLFileEntry (repositoryId);
 create index IX_25F5CAB9 on DLFileEntry (smallImageId, largeImageId, custom1ImageId, custom2ImageId);
 create index IX_64F0FE40 on DLFileEntry (uuid_[$COLUMN_LENGTH:75$]);
 
+create unique index IX_36AA016C on DLFileEntryMetadata (ctCollectionId, externalReferenceCode[$COLUMN_LENGTH:75$], companyId);
 create index IX_4F40FE5E on DLFileEntryMetadata (fileEntryId);
-create unique index IX_5DC2B977 on DLFileEntryMetadata (fileVersionId, DDMStructureId, ctCollectionId);
+create unique index IX_BE290777 on DLFileEntryMetadata (fileVersionId, ctCollectionId, DDMStructureId);
 create index IX_D49AB5D1 on DLFileEntryMetadata (uuid_[$COLUMN_LENGTH:75$]);
 
 create unique index IX_93ED0F06 on DLFileEntryType (groupId, ctCollectionId, dataDefinitionId);
@@ -113,6 +114,7 @@ create index IX_2E64D9F9 on DLFileEntryTypes_DLFolders (companyId);
 create index IX_6E00A2EC on DLFileEntryTypes_DLFolders (folderId);
 
 create index IX_8571953E on DLFileShortcut (companyId, status);
+create unique index IX_A9E34105 on DLFileShortcut (groupId, ctCollectionId, externalReferenceCode[$COLUMN_LENGTH:75$]);
 create index IX_17EE3098 on DLFileShortcut (groupId, folderId, active_, status);
 create unique index IX_86FE17F8 on DLFileShortcut (groupId, uuid_[$COLUMN_LENGTH:75$], ctCollectionId);
 create index IX_4B7247F6 on DLFileShortcut (toFileEntryId);
@@ -324,6 +326,7 @@ create unique index IX_982329B on RegionLocalization (regionId, languageId[$COLU
 
 create unique index IX_8BD6BCA7 on Release_ (servletContextName[$COLUMN_LENGTH:75$]);
 
+create index IX_D4C6FBCB on RememberMeToken (expirationDate);
 create index IX_291F58D4 on RememberMeToken (userId);
 
 create unique index IX_470608AE on Repository (groupId, ctCollectionId, name[$COLUMN_LENGTH:200$], portletId[$COLUMN_LENGTH:200$]);
@@ -335,8 +338,9 @@ create unique index IX_239165C6 on RepositoryEntry (uuid_[$COLUMN_LENGTH:75$], c
 create unique index IX_EDB9986E on ResourceAction (name[$COLUMN_LENGTH:255$], actionId[$COLUMN_LENGTH:75$]);
 
 create index IX_26284944 on ResourcePermission (companyId, primKey[$COLUMN_LENGTH:255$]);
-create unique index IX_F2237D8E on ResourcePermission (companyId, scope, name[$COLUMN_LENGTH:255$], primKey[$COLUMN_LENGTH:255$], roleId, ctCollectionId);
-create index IX_FA3E7EEB on ResourcePermission (companyId, scope, name[$COLUMN_LENGTH:255$], roleId, primKeyId, viewActionId);
+create index IX_A24F62CB on ResourcePermission (companyId, scope, name[$COLUMN_LENGTH:255$], primKey[$COLUMN_LENGTH:255$]);
+create unique index IX_FD2D2D64 on ResourcePermission (companyId, scope, name[$COLUMN_LENGTH:255$], roleId, primKey[$COLUMN_LENGTH:255$], ctCollectionId);
+create index IX_D8997757 on ResourcePermission (companyId, scope, name[$COLUMN_LENGTH:255$], roleId, viewActionId, primKeyId);
 create index IX_F6BAE86A on ResourcePermission (companyId, scope, primKey[$COLUMN_LENGTH:255$]);
 create index IX_D5F1E2A2 on ResourcePermission (name[$COLUMN_LENGTH:255$]);
 create index IX_A37A0588 on ResourcePermission (roleId);

@@ -3587,20 +3587,30 @@ public class BundleSiteInitializerTest {
 				_group.getGroupId(), "TEST-SEGMENTS-ENTRY-1");
 
 		Assert.assertNotNull(segmentsEntry1);
-		Assert.assertTrue(segmentsEntry1.isActive());
 		Assert.assertEquals(
 			"Test Segments Entry 1",
 			segmentsEntry1.getName(LocaleUtil.getSiteDefault()));
+		Assert.assertTrue(segmentsEntry1.isActive());
+		Assert.assertFalse(
+			segmentsEntry1.getCriteria(
+			).contains(
+				"[$ROLE_ID:Test Role 1$]"
+			));
 
 		SegmentsEntry segmentsEntry2 =
 			_segmentsEntryLocalService.fetchSegmentsEntry(
 				_group.getGroupId(), "TEST-SEGMENTS-ENTRY-2");
 
 		Assert.assertNotNull(segmentsEntry2);
-		Assert.assertFalse(segmentsEntry2.isActive());
 		Assert.assertEquals(
 			"Test Segments Entry 2",
 			segmentsEntry2.getName(LocaleUtil.getSiteDefault()));
+		Assert.assertFalse(segmentsEntry2.isActive());
+		Assert.assertFalse(
+			segmentsEntry2.getCriteria(
+			).contains(
+				"[$ROLE_ID:Test Role 2$]"
+			));
 
 		Layout layout = _layoutLocalService.fetchLayoutByFriendlyURL(
 			_group.getGroupId(), false, "/test-public-layout");

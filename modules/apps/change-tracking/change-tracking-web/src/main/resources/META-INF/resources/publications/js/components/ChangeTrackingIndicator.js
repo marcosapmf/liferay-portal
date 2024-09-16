@@ -5,6 +5,7 @@
 
 import ClayButton, {ClayButtonWithIcon} from '@clayui/button';
 import ClayDropDown, {Align, ClayDropDownWithItems} from '@clayui/drop-down';
+import {ClayCheckbox, ClaySelectWithOption} from '@clayui/form';
 import ClayIcon from '@clayui/icon';
 import ClayLayout from '@clayui/layout';
 import ClayList from '@clayui/list';
@@ -16,14 +17,29 @@ import {
 	fetch,
 	navigate as navigateUtil,
 	openConfirmModal,
+	sub,
 } from 'frontend-js-web';
 import React, {useEffect, useState} from 'react';
 
 import PublicationTimeline from './PublicationTimeline';
 import PublicationsSearchContainer from './PublicationsSearchContainer';
 
+const HIDE_CONTEXT_CHANGE_WARNING_DURATION_OPTIONS = [
+	{label: sub(Liferay.Language.get('x-hour'), 1), value: 1},
+	{label: sub(Liferay.Language.get('x-hours'), 4), value: 4},
+	{
+		label: sub(Liferay.Language.get('x-hours'), 24),
+		value: 24,
+	},
+	{
+		label: Liferay.Language.get('forever'),
+		value: -1,
+	},
+];
+
 export default function ChangeTrackingIndicator({
 	checkoutDropdownItem,
+	contextChangeButtons,
 	createDropdownItem,
 	getConflictInfoURL,
 	getSelectPublicationsURL,
@@ -33,9 +49,14 @@ export default function ChangeTrackingIndicator({
 	orderByAscending,
 	orderByColumn,
 	preferencesPrefix,
+	previewProductionDropdownItem,
+	returnToPublicationDropdownItem,
 	reviewDropdownItem,
 	saveDisplayPreferenceURL,
 	spritemap,
+	timelineClassNameId,
+	timelineClassPK,
+	timelineEditURL,
 	timelineIconClass,
 	timelineIconName,
 	timelineItemsURL,
@@ -52,10 +73,24 @@ export default function ChangeTrackingIndicator({
 	const [column, setColumn] = useState(
 		orderByColumn === COLUMN_NAME ? COLUMN_NAME : COLUMN_MODIFIED_DATE
 	);
+	const [
+		hideContextChangeWarningDuration,
+		setHideContextChangeWarningDuration,
+	] = useState('24');
+	const [popoverCheckbox, setPopoverCheckbox] = useState(false);
 	const [showModal, setShowModal] = useState(false);
 	const [showWarning, setShowWarning] = useState(
 		warningBody || warningHeader
 	);
+
+	const savePortalPreferences = (key, url, value) => {
+		const portletURL = createPortletURL(url, {
+			key,
+			value,
+		});
+
+		fetch(portletURL);
+	};
 
 	const navigate = (url, action) => {
 		const portletURL = createPortletURL(url, {
@@ -95,11 +130,20 @@ export default function ChangeTrackingIndicator({
 		});
 	}
 
-	dropdownItems.push({
-		label: Liferay.Language.get('select-a-publication'),
-		onClick: () => setShowModal(true),
-		symbolLeft: 'cards2',
-	});
+	if (previewProductionDropdownItem) {
+		dropdownItems.push(previewProductionDropdownItem);
+	}
+
+	if (returnToPublicationDropdownItem) {
+		dropdownItems.push(returnToPublicationDropdownItem);
+	}
+	else {
+		dropdownItems.push({
+			label: Liferay.Language.get('select-a-publication'),
+			onClick: () => setShowModal(true),
+			symbolLeft: 'cards2',
+		});
+	}
 
 	if (createDropdownItem) {
 		dropdownItems.push(createDropdownItem);
@@ -291,6 +335,7 @@ export default function ChangeTrackingIndicator({
 								items={dropdownItems}
 								trigger={
 									<ClayButtonWithIcon
+										aria-label="actions"
 										displayType="unstyled"
 										small
 										spritemap={spritemap}
@@ -417,6 +462,14 @@ export default function ChangeTrackingIndicator({
 								displayType="unstyled"
 								onClick={() => {
 									setShowWarning(false);
+
+									if (popoverCheckbox) {
+										savePortalPreferences(
+											'hideContextChangeWarningDuration',
+											saveDisplayPreferenceURL,
+											hideContextChangeWarningDuration
+										);
+									}
 								}}
 								size="xs"
 								symbol="times"
@@ -425,9 +478,19 @@ export default function ChangeTrackingIndicator({
 						</ClayLayout.ContentCol>
 					</ClayLayout.ContentRow>
 				}
-				onShowChange={setShowWarning}
+				onShowChange={(value) => {
+					setShowWarning(value);
+
+					if (popoverCheckbox) {
+						savePortalPreferences(
+							'hideContextChangeWarningDuration',
+							saveDisplayPreferenceURL,
+							hideContextChangeWarningDuration
+						);
+					}
+				}}
 				show={showWarning}
-				size="lg"
+				style={{maxWidth: contextChangeButtons ? '711px' : '421px'}}
 				trigger={renderTrigger}
 			>
 				<ClayLayout.ContainerFluid>
@@ -441,12 +504,123 @@ export default function ChangeTrackingIndicator({
 						</ClayLayout.Col>
 					</ClayLayout.Row>
 
+					{contextChangeButtons && (
+						<>
+							<ClayLayout.Row
+								style={{marginBottom: '8px', marginTop: '16px'}}
+							>
+								<ClayLayout.Col
+									style={{
+										alignItems: 'center',
+										display: 'flex',
+									}}
+								>
+									<ClayCheckbox
+										checked={popoverCheckbox}
+										label={Liferay.Language.get(
+											'do-not-show-this-message-again-in-the-selected-period-of-time'
+										)}
+										onChange={() =>
+											setPopoverCheckbox(!popoverCheckbox)
+										}
+										style={{marginLeft: '10px'}}
+									/>
+
+									<ClaySelectWithOption
+										id="hideContextChangeWarningDuration"
+										onChange={(event) => {
+											setHideContextChangeWarningDuration(
+												event.target.value
+											);
+										}}
+										options={
+											HIDE_CONTEXT_CHANGE_WARNING_DURATION_OPTIONS
+										}
+										sizing="sm"
+										style={{
+											marginLeft: '10px',
+											marginTop: '-16px',
+											width: '120px',
+										}}
+										title="hideContextChangeWarningDuration"
+										value={hideContextChangeWarningDuration}
+									/>
+								</ClayLayout.Col>
+							</ClayLayout.Row>
+						</>
+					)}
+
 					<ClayLayout.Row>
+						{contextChangeButtons && (
+							<>
+								<ClayLayout.Col>
+									<ClayButton
+										displayType="secondary"
+										onClick={() => {
+											setShowWarning(false);
+
+											if (popoverCheckbox) {
+												savePortalPreferences(
+													'hideContextChangeWarningDuration',
+													saveDisplayPreferenceURL,
+													hideContextChangeWarningDuration
+												);
+											}
+										}}
+										size="sm"
+										style={{
+											whiteSpace: 'nowrap',
+											width: 'auto',
+										}}
+									>
+										{Liferay.Language.get(
+											'stay-in-current-publication'
+										)}
+									</ClayButton>
+								</ClayLayout.Col>
+
+								<ClayLayout.Col>
+									<ClayButton
+										displayType="secondary"
+										onClick={() => {
+											setShowModal(true);
+											setShowWarning(false);
+
+											if (popoverCheckbox) {
+												savePortalPreferences(
+													'hideContextChangeWarningDuration',
+													saveDisplayPreferenceURL,
+													hideContextChangeWarningDuration
+												);
+											}
+										}}
+										size="sm"
+										style={{
+											whiteSpace: 'nowrap',
+											width: 'auto',
+										}}
+									>
+										{Liferay.Language.get(
+											'select-a-publication'
+										)}
+									</ClayButton>
+								</ClayLayout.Col>
+							</>
+						)}
+
 						<ClayLayout.Col>
 							{warningButton && checkoutDropdownItem && (
 								<ClayButton
 									displayType="secondary"
 									onClick={() => {
+										if (popoverCheckbox) {
+											savePortalPreferences(
+												'hideContextChangeWarningDuration',
+												saveDisplayPreferenceURL,
+												hideContextChangeWarningDuration
+											);
+										}
+
 										if (
 											!checkoutDropdownItem.confirmationMessage
 										) {
@@ -470,7 +644,7 @@ export default function ChangeTrackingIndicator({
 											});
 										}
 									}}
-									size="xs"
+									size={contextChangeButtons ? 'sm' : 'xs'}
 								>
 									{Liferay.Language.get('work-on-production')}
 								</ClayButton>
@@ -497,10 +671,12 @@ export default function ChangeTrackingIndicator({
 			return (
 				<ClayDropDown
 					alignmentPosition={Align.BottomCenter}
+					menuElementAttrs={{style: {maxWidth: '303px'}}}
 					renderMenuOnClick
 					trigger={
 						<ClayButton
 							aria-controls="publication-timeline-dropdown"
+							aria-label="timeline-button"
 							className="change-tracking-timeline-button"
 						>
 							<ClayIcon
@@ -512,6 +688,11 @@ export default function ChangeTrackingIndicator({
 				>
 					<PublicationTimeline
 						namespace={namespace}
+						navigate={navigate}
+						spritemap={spritemap}
+						timelineClassNameId={timelineClassNameId}
+						timelineClassPK={timelineClassPK}
+						timelineEditURL={timelineEditURL}
 						timelineItemsURL={timelineItemsURL}
 					/>
 				</ClayDropDown>

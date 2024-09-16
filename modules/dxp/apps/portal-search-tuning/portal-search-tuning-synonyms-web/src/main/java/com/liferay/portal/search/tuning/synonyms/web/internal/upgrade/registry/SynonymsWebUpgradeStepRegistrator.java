@@ -5,6 +5,7 @@
 
 package com.liferay.portal.search.tuning.synonyms.web.internal.upgrade.registry;
 
+import com.liferay.portal.search.tuning.synonyms.web.internal.upgrade.v1_0_1.SynonymsConfigurationUpgradeProcess;
 import com.liferay.portal.upgrade.registry.UpgradeStepRegistrator;
 
 import org.osgi.service.component.annotations.Component;
@@ -19,6 +20,9 @@ public class SynonymsWebUpgradeStepRegistrator
 	@Override
 	public void register(Registry registry) {
 		registry.registerInitialization();
+
+		registry.register(
+			"1.0.0", "1.0.1", new SynonymsConfigurationUpgradeProcess());
 	}
 
 }

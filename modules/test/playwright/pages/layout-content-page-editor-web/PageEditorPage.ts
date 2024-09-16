@@ -11,6 +11,7 @@ import {collapseSection} from '../../utils/collapseSection';
 import dragAndDropElement from '../../utils/dragAndDropElement';
 import {expandSection} from '../../utils/expandSection';
 import fillAndClickOutside from '../../utils/fillAndClickOutside';
+import {hoverAndExpectToBeVisible} from '../../utils/hoverAndExpectToBeVisible';
 import {selectElement} from '../../utils/selectElement';
 import {waitForSuccessAlert} from '../../utils/waitForSuccessAlert';
 import {SegmentEditorPage} from '../segments-web/SegmentEditorPage';
@@ -87,7 +88,9 @@ export class PageEditorPage {
 			await this.page.keyboard.press('Enter');
 		}
 
-		await this.waitForChangesSaved();
+		if (name !== 'Stepper') {
+			await this.waitForChangesSaved();
+		}
 	}
 
 	async addFragmentComment(fragmentId: string, comment: string) {
@@ -316,6 +319,35 @@ export class PageEditorPage {
 		await this.page.getByRole('button', {name: 'Save'}).click();
 	}
 
+	async clickPageContentContentAction(
+		action: string,
+		name: string,
+		subMenuAction?: string
+	) {
+		await this.goToSidebarTab('Page Content');
+
+		if (subMenuAction) {
+			await clickAndExpectToBeVisible({
+				autoClick: false,
+				target: this.page.getByRole('menuitem', {name: action}),
+				trigger: this.page.getByTitle('Open Actions Menu'),
+			});
+
+			await hoverAndExpectToBeVisible({
+				autoClick: true,
+				target: this.page.locator(`[data-label="${subMenuAction}"]`),
+				trigger: this.page.getByRole('menuitem', {name: action}),
+			});
+		}
+		else {
+			await clickAndExpectToBeVisible({
+				autoClick: true,
+				target: this.page.getByRole('menuitem', {name: action}),
+				trigger: this.page.getByTitle('Open Actions Menu'),
+			});
+		}
+	}
+
 	async closeExperienceSelector() {
 		await collapseSection(this.experienceSelector);
 
@@ -399,17 +431,25 @@ export class PageEditorPage {
 		await this.waitForChangesSaved();
 	}
 
-	async editHTMLEditable(
-		fragmentId: string,
-		editableId: string,
-		value: string
-	) {
+	async editHTMLEditable({
+		editableId,
+		fragmentId,
+		value,
+	}: {
+		editableId: string;
+		fragmentId: string;
+		useBackwardCompatibility?: boolean;
+		value: string;
+	}) {
 
 		// Select fragment and editable
 
 		await this.selectEditable(fragmentId, editableId);
 
-		const editable = this.getEditable(fragmentId, editableId);
+		const editable = this.getEditable({
+			editableId,
+			fragmentId,
+		});
 
 		// Enable editor
 
@@ -443,7 +483,10 @@ export class PageEditorPage {
 
 		// Click editable again to enable edition
 
-		const editable = this.getEditable(fragmentId, editableId);
+		const editable = this.getEditable({
+			editableId,
+			fragmentId,
+		});
 
 		await editable.click();
 
@@ -644,45 +687,46 @@ export class PageEditorPage {
 		);
 	}
 
-	async mapFormFragment(
-		fragmentId: string,
-		type: string,
-		fields: string[] = []
-	) {
+	async mapFormFragment(fragmentId: string, type: string, fields?: string[]) {
 		const fragment = this.getFragment(fragmentId);
 
 		await fragment.getByLabel('Content Type').selectOption(type);
 
-		if (await this.page.evaluate(() => Liferay.FeatureFlags['LPD-20213'])) {
-			const fieldsModal = this.page.frameLocator(
-				'iframe[title="Manage Form Fields"]'
-			);
+		const fieldsModal = this.page.frameLocator(
+			'iframe[title="Manage Form Fields"]'
+		);
 
+		await fieldsModal
+			.getByRole('row')
+			.getByRole('checkbox')
+			.first()
+			.waitFor();
+
+		if (!fields) {
 			await fieldsModal
-				.getByRole('row')
-				.getByRole('checkbox')
-				.first()
-				.waitFor();
-
+				.getByLabel('Select All Items on the Page')
+				.check();
+		}
+		else {
 			for (const field of fields) {
 				await fieldsModal
 					.getByRole('row', {name: field})
 					.getByRole('checkbox')
 					.check();
 			}
-
-			await clickAndExpectToBeHidden({
-				target: this.page.locator('.modal-title', {
-					hasText: 'Manage Form Fields',
-				}),
-				trigger: this.page.locator('.modal-footer').getByText('Save'),
-			});
-
-			await waitForSuccessAlert(
-				this.page,
-				'Success:Your form has been successfully loaded.'
-			);
 		}
+
+		await clickAndExpectToBeHidden({
+			target: this.page.locator('.modal-title', {
+				hasText: 'Manage Form Fields',
+			}),
+			trigger: this.page.locator('.modal-footer').getByText('Save'),
+		});
+
+		await waitForSuccessAlert(
+			this.page,
+			'Success:Your form has been successfully loaded.'
+		);
 	}
 
 	async openExperienceSelector() {
@@ -691,11 +735,45 @@ export class PageEditorPage {
 		await this.page.getByText('Select Experience').waitFor();
 	}
 
+	async openMappingSelector() {
+		await this.selectItemMappingButton.click();
+
+		const hasRecentItems = await this.page
+			.getByRole('menuitem', {name: 'Select Item...'})
+			.isVisible();
+
+		if (hasRecentItems) {
+			await this.page
+				.getByRole('menuitem', {name: 'Select Item...'})
+				.click();
+		}
+	}
+
 	async openSpacingSelector(fragmentId: string, spacingType: SpacingType) {
 		await this.selectFragment(fragmentId);
 		await this.goToConfigurationTab('Styles');
 
 		await this.page.getByLabel(spacingType, {exact: true}).click();
+	}
+
+	async goToWidgetConfiguration(
+		layout: Layout,
+		site: Site,
+		widgetId: string
+	) {
+		await this.goto(layout, site.friendlyUrlPath);
+
+		const topper = this.getTopper(widgetId);
+
+		await topper.hover();
+
+		await expect(topper.locator('.portlet-options')).toBeVisible();
+
+		await topper.locator('.portlet-options').click();
+
+		await this.page
+			.getByRole('menuitem', {exact: true, name: 'Configuration'})
+			.click();
 	}
 
 	async publishPage() {
@@ -755,11 +833,15 @@ export class PageEditorPage {
 			element.classList.contains('page-editor__collection')
 		);
 
-		if (isCollection) {
+		const isForm = await fragment.evaluate(
+			(element) => !!element.closest('.page-editor__form')
+		);
+
+		if (isCollection || isForm) {
 			await this.goToSidebarTab('Browser');
 
 			const treeNode = this.page.locator(
-				`.treeview-link[data-id*="${fragmentId}"]`
+				`.treeview-link[data-id$="${fragmentId}"]`
 			);
 
 			await treeNode.click();
@@ -775,11 +857,53 @@ export class PageEditorPage {
 	) {
 		await this.selectFragment(fragmentId, isDesktop);
 
-		const editable = this.getEditable(fragmentId, editableId, isDesktop);
+		const editable = this.getEditable({
+			editableId,
+			fragmentId,
+			isDesktop,
+		});
 
 		await editable.click();
 
 		await expect(editable).toHaveClass(/page-editor__editable--active/);
+	}
+
+	async selectVideo({
+		fragmentId,
+		isDesktop = true,
+		title,
+		videoURL,
+	}: {
+		fragmentId: string;
+		isDesktop?: boolean;
+		title?: string;
+		videoURL?: string;
+	}) {
+		await this.selectFragment(fragmentId, isDesktop);
+
+		await this.page.getByTitle('Select Video', {exact: true}).click();
+
+		const selectIframe = this.page.frameLocator('iframe[title="Select"]');
+
+		if (title) {
+			await selectIframe
+				.getByRole('link', {exact: true, name: 'Documents and Media'})
+				.click();
+
+			await selectIframe.getByTitle(title, {exact: true}).click();
+		}
+		else if (videoURL) {
+			await selectIframe.getByLabel('Video URL').fill(videoURL);
+
+			const addButton = selectIframe.getByRole('button', {
+				exact: true,
+				name: 'Add',
+			});
+
+			await addButton.isEnabled();
+
+			await addButton.click();
+		}
 	}
 
 	async setMappedItem({
@@ -802,23 +926,27 @@ export class PageEditorPage {
 		}
 		else {
 			const hasRecentItems = await this.page
-				.getByRole('presentation', {
-					name: 'Recent',
-				})
+				.getByRole('menuitem', {name: 'Select Item...'})
 				.isVisible();
 
 			if (hasRecentItems) {
 				await this.page
-					.getByRole('menuitem', {name: 'Select item'})
+					.getByRole('menuitem', {name: 'Select Item...'})
 					.click();
 			}
 
 			const iframe = this.page.frameLocator('iframe[title="Select"]');
 
-			await clickAndExpectToBeVisible({
-				target: iframe.locator('.sheet-title').getByText(entity),
-				trigger: iframe.getByRole('menuitem', {name: entity}),
-			});
+			await iframe.getByRole('main').waitFor();
+
+			const hasMenuBar = await iframe.getByRole('menubar').isVisible();
+
+			if (hasMenuBar) {
+				await clickAndExpectToBeVisible({
+					target: iframe.locator('.sheet-title').getByText(entity),
+					trigger: iframe.getByRole('menuitem', {name: entity}),
+				});
+			}
 
 			if (folder) {
 				await clickAndExpectToBeVisible({
@@ -829,12 +957,36 @@ export class PageEditorPage {
 				});
 			}
 
-			await clickAndExpectToBeHidden({
-				target: iframe.locator('.sheet-title').getByText(entity),
-				trigger: entryLocator
-					? entryLocator
-					: iframe.getByRole('paragraph').filter({hasText: entry}),
-			});
+			if (hasMenuBar) {
+				await clickAndExpectToBeHidden({
+					target: iframe.locator('.sheet-title').getByText(entity),
+					trigger: entryLocator
+						? entryLocator
+						: iframe
+								.getByRole('paragraph')
+								.filter({hasText: entry}),
+				});
+			}
+			else {
+				if (entryLocator) {
+					await entryLocator.waitFor();
+				}
+				else {
+					await iframe
+						.getByRole('paragraph')
+						.filter({hasText: entry})
+						.waitFor();
+				}
+
+				await clickAndExpectToBeHidden({
+					target: iframe.locator('.sheet-title .lfr-item-viewer'),
+					trigger: entryLocator
+						? entryLocator
+						: iframe
+								.getByRole('paragraph')
+								.filter({hasText: entry}),
+				});
+			}
 		}
 
 		await expect(
@@ -931,10 +1083,22 @@ export class PageEditorPage {
 			.waitFor();
 	}
 
-	getEditable(fragmentId: string, editableId: string, isDesktop = true) {
-		return this.getFragment(fragmentId, isDesktop)
-			.locator(`[data-lfr-editable-id="${editableId}"]`)
-			.first();
+	getEditable({
+		editableId,
+		fragmentId,
+		isDesktop = true,
+	}: {
+		editableId: string;
+		fragmentId: string;
+		isDesktop?: boolean;
+	}) {
+		const fragment = this.getFragment(fragmentId, isDesktop);
+		const dataAttributeLocator = fragment.locator(
+			`[data-lfr-editable-id="${editableId}"]`
+		);
+		const tagLocator = fragment.locator(`lfr-editable[id="${editableId}"]`);
+
+		return dataAttributeLocator.or(tagLocator).first();
 	}
 
 	getFragment(fragmentId: string, isDesktop = true) {

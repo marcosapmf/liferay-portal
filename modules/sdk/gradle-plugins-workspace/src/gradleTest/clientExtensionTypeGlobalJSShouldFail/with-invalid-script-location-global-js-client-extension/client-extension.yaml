@@ -1,0 +1,4 @@
+with-invalid-script-location-global-js-client-extension:
+    scriptLocation: "foo"
+    type: globalJS
+    url: src/dummy.js

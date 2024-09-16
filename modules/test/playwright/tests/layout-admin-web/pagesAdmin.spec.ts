@@ -46,20 +46,16 @@ test('Changes the permissions of a group of pages', async ({
 
 	await pagesAdminPage.goto(site.friendlyUrlPath);
 
-	// Select the first page and change the Guest-View permission
+	// Change permissions for first page
 
-	await pagesAdminPage.selectPageAndChangePermissions(
+	await pagesAdminPage.changePagesPermissions(
 		[firstName],
 		['guest_ACTION_VIEW']
 	);
 
-	// Select the second page (keeping the first page checked) and open the modal of permissions
+	// Select first and second page and open the modal of permissions
 
-	await page
-		.getByLabel(`Select ${secondName}`, {
-			exact: true,
-		})
-		.check();
+	await pagesAdminPage.selectPages([firstName, secondName]);
 
 	await page.getByRole('button', {name: 'Permissions'}).click();
 
@@ -71,7 +67,7 @@ test('Changes the permissions of a group of pages', async ({
 
 	// Check that the Guest-View permission value for both pages is indeterminate
 
-	const permission = await permissionsFrame.locator('#guest_ACTION_VIEW');
+	const permission = permissionsFrame.locator('#guest_ACTION_VIEW');
 
 	await expect(permission).toHaveValue('indeterminate');
 
@@ -79,7 +75,7 @@ test('Changes the permissions of a group of pages', async ({
 
 	// Change the Guest-View permission for both pages
 
-	await pagesAdminPage.selectPageAndChangePermissions(
+	await pagesAdminPage.changePagesPermissions(
 		[firstName, secondName],
 		['guest_ACTION_VIEW']
 	);
@@ -252,7 +248,7 @@ test(
 
 		await pagesAdminPage.searchPage('Layout');
 
-		const listItem = await page.locator('.lfr-title-column');
+		const listItem = page.locator('.lfr-title-column');
 
 		await expect(listItem.nth(1)).toHaveText(layoutTitle);
 		await expect(listItem.nth(2)).toHaveText(childLayoutTitle);
@@ -298,5 +294,62 @@ test(
 		});
 
 		await pagesAdminPage.goto(site.friendlyUrlPath);
+	}
+);
+
+test(
+	'toastData parameter is escaped to avoid Javascript execution',
+	{
+		tag: '@LPD-35827',
+	},
+	async ({page}) => {
+
+		// Add listener with expect so it fails when a browser dialog is shown
+
+		page.on('dialog', async (dialog) => {
+			dialog.accept();
+
+			expect(
+				dialog.message(),
+				'This alert should not be shown'
+			).toBeNull();
+		});
+
+		const data = {
+			message: '<img src=x onerror=alert(123)>',
+			title: 'test',
+		};
+
+		const url = page.url();
+
+		await page.goto(
+			`${url}?toastData=${encodeURIComponent(JSON.stringify(data))}`
+		);
+	}
+);
+
+test(
+	'The sort button for pages is not shown',
+	{
+		tag: '@LPD-36041',
+	},
+	async ({apiHelpers, page, pagesAdminPage, site}) => {
+
+		// Create a page
+
+		await apiHelpers.jsonWebServicesLayout.addLayout({
+			groupId: site.id,
+			title: getRandomString(),
+		});
+
+		// Go to admin page
+
+		await pagesAdminPage.goto(site.friendlyUrlPath);
+
+		// Check the button is not shown
+
+		await expect(
+			page.getByLabel('Reverse Order Direction:')
+		).not.toBeAttached();
 	}
 );

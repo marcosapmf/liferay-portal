@@ -14,11 +14,14 @@ import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutConstants;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.upgrade.UpgradeProcess;
+import com.liferay.portal.kernel.util.ListUtil;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -75,12 +78,17 @@ public class PortletPreferencesUpgradeProcess extends UpgradeProcess {
 		for (Long groupControlPanelLayoutPlid :
 				_groupControlPanelPlids.values()) {
 
-			_layoutLocalService.deleteLayout(groupControlPanelLayoutPlid);
+			try {
+				_layoutLocalService.deleteLayout(groupControlPanelLayoutPlid);
+			}
+			catch (Exception exception) {
+				_log.error(exception);
+			}
 		}
 	}
 
 	private Map<Long, Long> _getPortletPreferencesMap(
-			long companyId, long ctCollectionId, long groupId, String namespace)
+			long companyId, long groupId, String namespace)
 		throws Exception {
 
 		Map<Long, Long> portletPreferencesMap = new HashMap<>();
@@ -89,19 +97,15 @@ public class PortletPreferencesUpgradeProcess extends UpgradeProcess {
 				StringBundler.concat(
 					"select PortletPreferences.portletPreferencesId, ",
 					"PortletPreferences.plid from PortletPreferences inner ",
-					"join Layout on Layout.ctCollectionId = ? and ",
-					"PortletPreferences.plid = Layout.plid where ",
-					"PortletPreferences.ctCollectionId = ? and ",
-					"PortletPreferences.portletId like CONCAT('%_INSTANCE_', ",
-					"?) and (Layout.groupId = ? or PortletPreferences.plid = ",
-					"?)"))) {
+					"join Layout on PortletPreferences.plid = Layout.plid ",
+					"where PortletPreferences.portletId like ",
+					"CONCAT('%_INSTANCE_', ?) and (Layout.groupId = ? or ",
+					"PortletPreferences.plid = ?)"))) {
 
-			preparedStatement.setLong(1, ctCollectionId);
-			preparedStatement.setLong(2, ctCollectionId);
-			preparedStatement.setString(3, namespace);
-			preparedStatement.setLong(4, groupId);
+			preparedStatement.setString(1, namespace);
+			preparedStatement.setLong(2, groupId);
 			preparedStatement.setLong(
-				5, _companyControlPanelPlids.get(companyId));
+				3, _companyControlPanelPlids.get(companyId));
 
 			ResultSet resultSet = preparedStatement.executeQuery();
 
@@ -120,39 +124,38 @@ public class PortletPreferencesUpgradeProcess extends UpgradeProcess {
 
 	private void _upgradePortletPreferences() throws Exception {
 		try (PreparedStatement preparedStatement1 = connection.prepareStatement(
-				"select ctCollectionId, groupId, companyId, classPK, " +
-					"namespace from FragmentEntryLink");
+				"select groupId, companyId, classPK, namespace from " +
+					"FragmentEntryLink");
 			PreparedStatement preparedStatement2 =
 				AutoBatchPreparedStatementUtil.autoBatch(
 					connection,
-					"delete from PortletPreferences where ctCollectionId = ? " +
-						"and portletPreferencesId = ?");
+					"delete from PortletPreferences where " +
+						"portletPreferencesId = ?");
 			PreparedStatement preparedStatement3 =
 				AutoBatchPreparedStatementUtil.autoBatch(
 					connection,
 					"update PortletPreferences set plid = ? where " +
-						"ctCollectionId = ? and portletPreferencesId = ?");
+						"portletPreferencesId = ?");
 			ResultSet resultSet = preparedStatement1.executeQuery()) {
 
 			while (resultSet.next()) {
-				long classPK = resultSet.getLong("classPK");
-				long companyId = resultSet.getLong("companyId");
-				long ctCollectionId = resultSet.getLong("ctCollectionId");
 				long groupId = resultSet.getLong("groupId");
+				long companyId = resultSet.getLong("companyId");
+				long classPK = resultSet.getLong("classPK");
 				String namespace = resultSet.getString("namespace");
 
 				try {
 					Map<Long, Long> portletPreferencesMap =
 						_getPortletPreferencesMap(
-							companyId, ctCollectionId, groupId, namespace);
+							companyId, groupId, namespace);
 
 					if (portletPreferencesMap.isEmpty()) {
 						continue;
 					}
 
-					Long companyPortletPreferencesId = null;
-					Long groupPortletPreferencesId = null;
-					Long layoutPortletPreferencesId = null;
+					List<Long> companyPortletPreferencesIds = new ArrayList<>();
+					List<Long> groupPortletPreferencesIds = new ArrayList<>();
+					List<Long> layoutPortletPreferencesIds = new ArrayList<>();
 
 					long companyControlPanelPlid =
 						_companyControlPanelPlids.get(companyId);
@@ -167,54 +170,68 @@ public class PortletPreferencesUpgradeProcess extends UpgradeProcess {
 						Long portletPreferencesPlid = entry.getValue();
 
 						if (portletPreferencesPlid == companyControlPanelPlid) {
-							companyPortletPreferencesId = portletPreferencesId;
+							companyPortletPreferencesIds.add(
+								portletPreferencesId);
 						}
 						else if (portletPreferencesPlid ==
 									groupControlPanelPlid) {
 
-							groupPortletPreferencesId = portletPreferencesId;
+							groupPortletPreferencesIds.add(
+								portletPreferencesId);
 						}
 						else if (portletPreferencesPlid == layoutPlid) {
-							layoutPortletPreferencesId = portletPreferencesId;
+							layoutPortletPreferencesIds.add(
+								portletPreferencesId);
 						}
 					}
 
-					if (groupPortletPreferencesId != null) {
-						if (companyPortletPreferencesId != null) {
-							preparedStatement2.setLong(1, ctCollectionId);
+					if (ListUtil.isNotEmpty(groupPortletPreferencesIds)) {
+						for (Long companyPortletPreferencesId :
+								companyPortletPreferencesIds) {
+
 							preparedStatement2.setLong(
+								1, companyPortletPreferencesId);
+							preparedStatement2.addBatch();
+						}
+
+						for (Long layoutPortletPreferencesId :
+								layoutPortletPreferencesIds) {
+
+							preparedStatement2.setLong(
+								1, layoutPortletPreferencesId);
+							preparedStatement2.addBatch();
+						}
+
+						for (Long groupPortletPreferencesId :
+								groupPortletPreferencesIds) {
+
+							preparedStatement3.setLong(1, classPK);
+							preparedStatement3.setLong(
+								2, groupPortletPreferencesId);
+
+							preparedStatement3.addBatch();
+						}
+					}
+					else if (ListUtil.isNotEmpty(
+								companyPortletPreferencesIds)) {
+
+						for (Long layoutPortletPreferencesId :
+								layoutPortletPreferencesIds) {
+
+							preparedStatement2.setLong(
+								1, layoutPortletPreferencesId);
+							preparedStatement2.addBatch();
+						}
+
+						for (Long companyPortletPreferencesId :
+								companyPortletPreferencesIds) {
+
+							preparedStatement3.setLong(1, classPK);
+							preparedStatement3.setLong(
 								2, companyPortletPreferencesId);
-							preparedStatement2.addBatch();
+
+							preparedStatement3.addBatch();
 						}
-
-						if (layoutPortletPreferencesId != null) {
-							preparedStatement2.setLong(1, ctCollectionId);
-							preparedStatement2.setLong(
-								2, layoutPortletPreferencesId);
-							preparedStatement2.addBatch();
-						}
-
-						preparedStatement3.setLong(1, classPK);
-						preparedStatement3.setLong(2, ctCollectionId);
-						preparedStatement3.setLong(
-							3, groupPortletPreferencesId);
-
-						preparedStatement3.addBatch();
-					}
-					else if (companyPortletPreferencesId != null) {
-						if (layoutPortletPreferencesId != null) {
-							preparedStatement2.setLong(1, ctCollectionId);
-							preparedStatement2.setLong(
-								2, layoutPortletPreferencesId);
-							preparedStatement2.addBatch();
-						}
-
-						preparedStatement3.setLong(1, classPK);
-						preparedStatement3.setLong(2, ctCollectionId);
-						preparedStatement3.setLong(
-							3, companyPortletPreferencesId);
-
-						preparedStatement3.addBatch();
 					}
 				}
 				catch (Exception exception) {

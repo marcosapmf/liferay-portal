@@ -32,13 +32,17 @@ import {useDispatch, useSelectorRef} from '../../contexts/StoreContext';
 import selectLayoutDataItemLabel from '../../selectors/selectLayoutDataItemLabel';
 import addFragment from '../../thunks/addFragment';
 import addItem from '../../thunks/addItem';
+import addStepper from '../../thunks/addStepper';
 import addWidget from '../../thunks/addWidget';
 import moveItem from '../../thunks/moveItem';
 import checkAllowedChild from '../../utils/drag_and_drop/checkAllowedChild';
 import {TARGET_POSITIONS} from '../../utils/drag_and_drop/constants/targetPositions';
 import getDropData from '../../utils/drag_and_drop/getDropData';
 import itemIsAncestor from '../../utils/drag_and_drop/itemIsAncestor';
+import {getFormParent} from '../../utils/getFormParent';
+import {isMultistepForm} from '../../utils/isMultistepForm';
 import {isUnmappedCollection} from '../../utils/isUnmappedCollection';
+import {openFormConversionModal} from '../../utils/openFormConversionModal';
 
 const DIRECTIONS = {
 	down: 'down',
@@ -121,6 +125,16 @@ export default function KeyboardMovementManager() {
 								selectItems,
 							});
 						}
+						else if (source.fieldTypes?.includes('stepper')) {
+							thunk = addStepper({
+								fragmentEntryKey: source.fragmentEntryKey,
+								groupId: source.groupId,
+								parentItemId: dropItemId,
+								position,
+								selectItems,
+								type: source.type,
+							});
+						}
 						else {
 							thunk = addFragment({
 								fragmentEntryKey: source.fragmentEntryKey,
@@ -142,23 +156,44 @@ export default function KeyboardMovementManager() {
 					}
 				}
 
-				dispatch(thunk);
+				const executeAction = () => {
+					dispatch(thunk);
 
-				setText(
-					sub(Liferay.Language.get('x-placed-on-x-of-x'), [
-						source.name,
-						target.position,
-						target.name,
-					])
+					setText(
+						sub(Liferay.Language.get('x-placed-on-x-of-x'), [
+							source.name,
+							target.position,
+							target.name,
+						])
+					);
+
+					if (actionType === ACTION_TYPES.move) {
+						selectItem(source.itemId);
+					}
+				};
+
+				const targetItem = layoutDataRef.current.items[target.itemId];
+				const formParent = getFormParent(
+					targetItem,
+					layoutDataRef.current
 				);
+
+				if (
+					formParent &&
+					source.fieldTypes?.includes('stepper') &&
+					!isMultistepForm(formParent)
+				) {
+					openFormConversionModal({
+						onContinue: () => executeAction(),
+					});
+				}
+				else {
+					executeAction();
+				}
 
 				setTimeout(() => setText(null), 1000);
 
 				disableMovement();
-
-				if (actionType === ACTION_TYPES.move) {
-					selectItem(source.itemId);
-				}
 			},
 			keyCode: ENTER_KEY_CODE,
 		},
@@ -167,7 +202,7 @@ export default function KeyboardMovementManager() {
 				const nextTarget = getNextTarget(
 					source,
 					target,
-					fragmentEntryLinksRef.current,
+					fragmentEntryLinksRef,
 					layoutDataRef,
 					DIRECTIONS.down
 				);
@@ -328,7 +363,12 @@ export function getInitialTarget(source, layoutDataRef, fragmentEntryLinksRef) {
 	if (actionType === ACTION_TYPES.add) {
 		const root = layoutData.items[layoutData.rootItems.main];
 
-		const canDropInRoot = checkAllowedChild(source, root, layoutDataRef);
+		const canDropInRoot = checkAllowedChild(
+			source,
+			root,
+			layoutDataRef,
+			fragmentEntryLinksRef
+		);
 
 		// Check root children to see if someone is targetable
 
@@ -365,7 +405,7 @@ export function getInitialTarget(source, layoutDataRef, fragmentEntryLinksRef) {
 					return getNextTarget(
 						source,
 						target,
-						fragmentEntryLinks,
+						fragmentEntryLinksRef,
 						layoutDataRef,
 						DIRECTIONS.up
 					);
@@ -397,10 +437,11 @@ export function getInitialTarget(source, layoutDataRef, fragmentEntryLinksRef) {
 function getNextTarget(
 	source,
 	target,
-	fragmentEntryLinks,
+	fragmentEntryLinksRef,
 	layoutDataRef,
 	direction
 ) {
+	const fragmentEntryLinks = fragmentEntryLinksRef.current;
 	const layoutData = layoutDataRef.current;
 
 	const checkValidTarget = (nextTarget) => {
@@ -422,7 +463,7 @@ function getNextTarget(
 			return getNextTarget(
 				source,
 				nextTarget,
-				fragmentEntryLinks,
+				fragmentEntryLinksRef,
 				layoutDataRef,
 				direction
 			);
@@ -435,11 +476,18 @@ function getNextTarget(
 		}
 
 		if (nextTarget.position === TARGET_POSITIONS.BOTTOM) {
-			if (!checkAllowedChild(source, nextTargetParent, layoutDataRef)) {
+			if (
+				!checkAllowedChild(
+					source,
+					nextTargetParent,
+					layoutDataRef,
+					fragmentEntryLinksRef
+				)
+			) {
 				return getNextTarget(
 					source,
 					nextTarget,
-					fragmentEntryLinks,
+					fragmentEntryLinksRef,
 					layoutDataRef,
 					direction
 				);
@@ -449,12 +497,17 @@ function getNextTarget(
 		if (nextTarget.position === TARGET_POSITIONS.TOP) {
 			if (
 				nextTargetParent.children[0] !== nextTarget.itemId ||
-				!checkAllowedChild(source, nextTargetParent, layoutDataRef)
+				!checkAllowedChild(
+					source,
+					nextTargetParent,
+					layoutDataRef,
+					fragmentEntryLinksRef
+				)
 			) {
 				return getNextTarget(
 					source,
 					nextTarget,
-					fragmentEntryLinks,
+					fragmentEntryLinksRef,
 					layoutDataRef,
 					direction
 				);
@@ -464,12 +517,17 @@ function getNextTarget(
 		if (nextTarget.position === TARGET_POSITIONS.MIDDLE) {
 			if (
 				hasChildren(nextTargetItem, layoutData) ||
-				!checkAllowedChild(source, nextTargetItem, layoutDataRef)
+				!checkAllowedChild(
+					source,
+					nextTargetItem,
+					layoutDataRef,
+					fragmentEntryLinksRef
+				)
 			) {
 				return getNextTarget(
 					source,
 					nextTarget,
-					fragmentEntryLinks,
+					fragmentEntryLinksRef,
 					layoutDataRef,
 					direction
 				);

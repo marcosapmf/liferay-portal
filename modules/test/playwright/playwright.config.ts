@@ -9,6 +9,7 @@ import {config as accountAdminWebConfig} from './tests/account-admin-web/config'
 import {config as analyticsSettingsWebConfig} from './tests/analytics-settings-web/config';
 import {config as analyticsWebConfig} from './tests/analytics-web/config';
 import {config as announcementsWebConfig} from './tests/announcements-web/config';
+import {config as assetPublisherWebConfig} from './tests/asset-publisher-web/config';
 import {config as batchPlannerConfig} from './tests/batch-planner/config';
 import {config as blogsWebConfig} from './tests/blogs-web/config';
 import {config as calendarWebConfig} from './tests/calendar-web/config';
@@ -18,6 +19,7 @@ import {config as commerceConfig} from './tests/commerce/config';
 import {config as configurationAdminWebConfig} from './tests/configuration-admin-web/config';
 import {config as contentDashboardWebConfig} from './tests/content-dashboard-web/config';
 import {config as cookiesBannerWebConfig} from './tests/cookies-banner-web/config';
+import {config as depotWebConfig} from './tests/depot-web/config';
 import {config as dispatchWebConfig} from './tests/dispatch-web/config';
 import {config as documentLibraryWebConfig} from './tests/document-library-web/config';
 import {config as dynamicDataMappingFormWebConfig} from './tests/dynamic-data-mapping-form-web/config';
@@ -26,6 +28,7 @@ import {config as featureFlagWebConfig} from './tests/feature-flag-web/config';
 import {config as fragmentWebConfig} from './tests/fragment-web/config';
 import {config as frontendDataSetAdminWebConfig} from './tests/frontend-data-set-admin-web/config';
 import {config as frontendDataSetWebConfig} from './tests/frontend-data-set-web/config';
+import {config as frontendEditorCKEditorSampleWebConfig} from './tests/frontend-editor-ckeditor-sample-web/config';
 import {config as frontendJsSpaWebConfig} from './tests/frontend-js-spa-web/config';
 import {config as frontendTaglibClayConfig} from './tests/frontend-taglib-clay/config';
 import {config as headlessBuilderImplConfig} from './tests/headless-builder-impl/config';
@@ -40,6 +43,7 @@ import {config as layoutSetPrototypeWebConfig} from './tests/layout-set-prototyp
 import {config as lockedItemsWebConfig} from './tests/locked-items-web/config';
 import {config as loginWebConfig} from './tests/login-web/config';
 import {config as messageBoardsWebConfig} from './tests/message-boards-web/config';
+import {config as nestedPortletsWebConfig} from './tests/nested-portlets-web/config';
 import {config as notificationWebConfig} from './tests/notification-web/config';
 import {config as objectWebConfig} from './tests/object-web/config';
 import {config as openIdLinkConfig} from './tests/openid-link/config';
@@ -61,13 +65,16 @@ import {config as rolesAdminWebConfig} from './tests/roles-admin-web/config';
 import {config as samlWebConfig} from './tests/saml-web/config';
 import {config as scimConfiguraitonWebConfig} from './tests/scim-configuration-web/config';
 import {config as searchExperiencesWebConfig} from './tests/search-experiences-web/config';
+import {config as segmentExperimentWebConfig} from './tests/segment-experiment-web/config';
 import {
 	pageManagementSiteSetup,
 	pageManagementSiteTeardown,
 } from './tests/setup/page-management-site/config';
 import {config as siteAdminWebConfig} from './tests/site-admin-web/config';
 import {config as siteNavigationAdminWebConfig} from './tests/site-navigation-admin-web/config';
+import {config as siteNavigationLanguageWebConfig} from './tests/site-navigation-language-web/config';
 import {config as stableConfig} from './tests/stable/config';
+import {config as stagingConfig} from './tests/staging-configuration-web/config';
 import {config as stylebookWebConfig} from './tests/style-book-web/config';
 import {config as templateWebConfig} from './tests/template-web/config';
 import {config as usersAdminWebConfig} from './tests/users-admin-web/config';
@@ -89,7 +96,9 @@ export default defineConfig({
 		accountAdminWebConfig,
 		analyticsSettingsWebConfig,
 		analyticsWebConfig,
+		depotWebConfig,
 		announcementsWebConfig,
+		assetPublisherWebConfig,
 		batchPlannerConfig,
 		blogsWebConfig,
 		calendarWebConfig,
@@ -109,6 +118,7 @@ export default defineConfig({
 		fragmentWebConfig,
 		frontendDataSetAdminWebConfig,
 		frontendDataSetWebConfig,
+		frontendEditorCKEditorSampleWebConfig,
 		frontendJsSpaWebConfig,
 		frontendTaglibClayConfig,
 		headlessBuilderImplConfig,
@@ -125,6 +135,7 @@ export default defineConfig({
 		loginWebConfig,
 		marketplaceConfig,
 		messageBoardsWebConfig,
+		nestedPortletsWebConfig,
 		notificationWebConfig,
 		objectWebConfig,
 		openIdLinkConfig,
@@ -147,9 +158,12 @@ export default defineConfig({
 		samlWebConfig,
 		scimConfiguraitonWebConfig,
 		searchExperiencesWebConfig,
+		segmentExperimentWebConfig,
 		siteAdminWebConfig,
 		siteNavigationAdminWebConfig,
+		siteNavigationLanguageWebConfig,
 		stableConfig,
+		stagingConfig,
 		stylebookWebConfig,
 		templateWebConfig,
 		usersAdminWebConfig,

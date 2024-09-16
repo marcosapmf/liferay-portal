@@ -16,6 +16,7 @@ import com.liferay.jenkins.results.parser.test.clazz.group.FunctionalAxisTestCla
 import com.liferay.jenkins.results.parser.test.clazz.group.JSUnitAxisTestClassGroup;
 import com.liferay.jenkins.results.parser.test.clazz.group.JUnitAxisTestClassGroup;
 import com.liferay.jenkins.results.parser.test.clazz.group.PlaywrightAxisTestClassGroup;
+import com.liferay.jenkins.results.parser.test.clazz.group.SemVerModulesAxisTestClassGroup;
 
 import java.io.File;
 import java.io.IOException;
@@ -190,11 +191,18 @@ public class TestrayFactory {
 				return new JUnitBatchBuildTestrayCaseResult(
 					testrayBuild, topLevelBuild, axisTestClassGroup, testClass);
 			}
-		}
+			else if (axisTestClassGroup instanceof
+						PlaywrightAxisTestClassGroup) {
 
-		if (axisTestClassGroup instanceof PlaywrightAxisTestClassGroup) {
-			return new PlaywrightJUnitBatchBuildTestrayCaseResult(
-				testrayBuild, topLevelBuild, axisTestClassGroup, testClass);
+				return new PlaywrightJUnitBatchBuildTestrayCaseResult(
+					testrayBuild, topLevelBuild, axisTestClassGroup, testClass);
+			}
+			else if (axisTestClassGroup instanceof
+						SemVerModulesAxisTestClassGroup) {
+
+				return new SemVerModulesBatchBuildTestrayCaseResult(
+					testrayBuild, topLevelBuild, axisTestClassGroup, testClass);
+			}
 		}
 
 		if (topLevelBuild instanceof SourceFormatBuild) {
@@ -441,7 +449,7 @@ public class TestrayFactory {
 		Pattern.compile("testray.server.url\\[(?<serverVersion>[^\\]]+)\\]");
 	private static final Pattern _testrayURLPattern = Pattern.compile(
 		"https://(testray(-old)?\\.liferay\\.com|webserver-testray2" +
-			"(-prd|-uat)?.lfr.cloud)");
+			"(-prd\\d*|-uat\\d*)?.lfr.cloud)");
 	private static final Map<Long, TopLevelBuildTestrayCaseResult>
 		_topLevelBuildTestrayCaseResults = new HashMap<>();
 

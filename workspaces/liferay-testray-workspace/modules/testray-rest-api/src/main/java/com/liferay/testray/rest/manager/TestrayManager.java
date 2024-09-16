@@ -5,6 +5,7 @@
 
 package com.liferay.testray.rest.manager;
 
+import com.liferay.object.model.ObjectEntry;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.testray.rest.dto.v1_0.TestrayCache;
 
@@ -36,6 +37,10 @@ public interface TestrayManager {
 			long companyId, Document document, String fileName, long fileSize,
 			ServiceContext serviceContext, TestrayCache testrayCache,
 			long userId)
+		throws Exception;
+
+	public ObjectEntry updateTestrayBuildSummary(
+			long companyId, long testrayBuildId, long userId)
 		throws Exception;
 
 }

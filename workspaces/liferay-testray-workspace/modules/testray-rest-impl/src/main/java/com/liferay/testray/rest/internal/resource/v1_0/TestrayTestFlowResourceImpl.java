@@ -30,6 +30,7 @@ import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.testray.rest.dto.v1_0.TestraySubtask;
 import com.liferay.testray.rest.dto.v1_0.TestrayTestFlow;
 import com.liferay.testray.rest.internal.util.TestrayUtil;
+import com.liferay.testray.rest.manager.TestrayManager;
 import com.liferay.testray.rest.resource.v1_0.TestrayTestFlowResource;
 
 import java.io.Serializable;
@@ -75,7 +76,7 @@ public class TestrayTestFlowResourceImpl
 		sb.append("cr.r_componentToCaseResult_c_componentId = ");
 		sb.append("c.c_componentId_ and c.r_teamToComponents_c_teamId = ");
 		sb.append("t.c_teamId_ and cr.r_subtaskToCaseResults_c_subtaskId = ");
-		sb.append("s.c_subtaskId_ and s.dueStatus_ <> 'merged' and ");
+		sb.append("s.c_subtaskId_ and s.dueStatus_ <> 'MERGED' and ");
 		sb.append("s.r_userToSubtasks_userId = 0 and ta.c_taskId_ = ");
 		sb.append("s.r_taskToSubtasks_c_taskId ");
 
@@ -126,12 +127,12 @@ public class TestrayTestFlowResourceImpl
 
 		if (Validator.isNotNull(testrayUserId)) {
 			sb.append("and s.r_userToSubtasks_userId = ? ");
-			params.add(testrayUserId);
+			params.add(GetterUtil.getLong(testrayUserId));
 		}
 
 		sb.append("group by s.c_subtaskId_, s.dueStatus_, s.errors_, ");
-		sb.append("s.issues_, s.score_, s.name_ union all select ");
-		sb.append("count(cr.r_subtaskToCaseResults_c_subtaskId) as ");
+		sb.append("s.issues_, s.score_, s.name_, ta.c_taskid_ union all ");
+		sb.append("select count(cr.r_subtaskToCaseResults_c_subtaskId) as ");
 		sb.append("caseResultAmount, s.c_subtaskId_, s.dueStatus_, ");
 		sb.append("s.errors_, s.issues_, s.score_, s.name_, u.firstName, ");
 		sb.append("u.userId, u.lastName, u.middleName, u.uuid_, ");
@@ -144,7 +145,7 @@ public class TestrayTestFlowResourceImpl
 		sb.append("and cr.r_componentToCaseResult_c_componentId = ");
 		sb.append("c.c_componentId_ and c.r_teamToComponents_c_teamId = ");
 		sb.append("t.c_teamId_ and cr.r_subtaskToCaseResults_c_subtaskId = ");
-		sb.append("s.c_subtaskId_ and s.dueStatus_ <> 'merged' and ");
+		sb.append("s.c_subtaskId_ and s.dueStatus_ <> 'MERGED' and ");
 		sb.append("ta.c_taskId_ = s.r_taskToSubtasks_c_taskId and u.userId = ");
 		sb.append("s.r_userToSubtasks_userId ");
 
@@ -193,13 +194,13 @@ public class TestrayTestFlowResourceImpl
 
 		if (Validator.isNotNull(testrayUserId)) {
 			sb.append("and s.r_userToSubtasks_userId = ? ");
-			params.add(testrayUserId);
+			params.add(GetterUtil.getLong(testrayUserId));
 		}
 
 		sb.append("group by s.c_subtaskId_, s.dueStatus_, s.errors_, ");
-		sb.append("s.issues_, s.score_, s.name_, u.firstName, u.lastName, ");
-		sb.append("u.middleName, u.userId, u.uuid_, u.portraitId ) as ");
-		sb.append("subtasks order by c_subtaskId_ asc ");
+		sb.append("s.issues_, s.score_, s.name_, ta.c_taskid_, u.firstName, ");
+		sb.append("u.lastName, u.middleName, u.userId, u.uuid_, u.portraitId ");
+		sb.append(") as subtasks order by c_subtaskId_ asc ");
 
 		String sql = StringUtil.replace(
 			sb.toString(), "[%COMPANY_ID%]",
@@ -223,16 +224,16 @@ public class TestrayTestFlowResourceImpl
 				value -> new TestraySubtask() {
 					{
 						caseResultAmount = GetterUtil.getLong(
-							value.get("caseResultAmount"));
+							value.get("caseresultamount"));
 						error = GetterUtil.getString(value.get("errors_"));
-						id = GetterUtil.getLong(value.get("c_subtaskId_"));
+						id = GetterUtil.getLong(value.get("c_subtaskid_"));
 						issues = GetterUtil.getString(value.get("issues_"));
 						name = GetterUtil.getString(value.get("name_"));
 						score = GetterUtil.getLong(value.get("score_"));
-						status = GetterUtil.getString(value.get("dueStatus_"));
+						status = GetterUtil.getString(value.get("duestatus_"));
 						testrayTaskId = GetterUtil.getLong(
-							value.get("c_taskId_"));
-						userId = GetterUtil.getLong(value.get("userId"));
+							value.get("c_taskid_"));
+						userId = GetterUtil.getLong(value.get("userid"));
 
 						setUserName(
 							() -> {
@@ -241,16 +242,16 @@ public class TestrayTestFlowResourceImpl
 
 								return fullNameGenerator.getFullName(
 									GetterUtil.getString(
-										value.get("firstName")),
+										value.get("firstname")),
 									GetterUtil.getString(
-										value.get("middleName")),
+										value.get("middlename")),
 									GetterUtil.getString(
-										value.get("lastName")));
+										value.get("lastname")));
 							});
 						setUserPortraitUrl(
 							() -> {
 								long portraitId = GetterUtil.getLong(
-									value.get("portraitId"));
+									value.get("portraitid"));
 
 								if (portraitId == 0) {
 									return null;
@@ -276,7 +277,7 @@ public class TestrayTestFlowResourceImpl
 		List<Map<String, Serializable>> valuesList =
 			_objectEntryLocalService.getValuesList(
 				0, contextCompany.getCompanyId(), contextUser.getUserId(),
-				objectDefinition.getObjectDefinitionId(),
+				objectDefinition.getObjectDefinitionId(), null,
 				_filterFactory.create(
 					"buildToTasks/id eq '" + testrayTaskId + "'",
 					objectDefinition),
@@ -291,9 +292,8 @@ public class TestrayTestFlowResourceImpl
 		StringBundler sb = new StringBundler(9);
 
 		sb.append("select cr.errors_ , sum(c.priority_) as score from ");
-		sb.append("lportal.O_[%COMPANY_ID%]_CaseResult cr, ");
-		sb.append("lportal.O_[%COMPANY_ID%]_Case c where cr.errors_ is not ");
-		sb.append("null and cr.errors_ != '' and ");
+		sb.append("O_[%COMPANY_ID%]_CaseResult cr, O_[%COMPANY_ID%]_Case c ");
+		sb.append("where cr.errors_ is not null and cr.errors_ != '' and ");
 		sb.append("cr.r_caseToCaseResult_c_caseId = c.c_caseId_ and ");
 		sb.append("cr.r_buildToCaseResult_c_buildId = ? group by cr.errors_ ");
 		sb.append("order by score desc");
@@ -397,6 +397,21 @@ public class TestrayTestFlowResourceImpl
 
 		EntityCacheUtil.clearCache();
 
+		ObjectEntry objectEntry = _objectEntryLocalService.getObjectEntry(
+			testraySubtaskId);
+
+		Map<String, Serializable> values = objectEntry.getValues();
+
+		objectEntry = _objectEntryLocalService.getObjectEntry(
+			GetterUtil.getLong(values.get("r_taskToSubtasks_c_taskId")));
+
+		values = objectEntry.getValues();
+
+		_testrayManager.updateTestrayBuildSummary(
+			contextCompany.getCompanyId(),
+			GetterUtil.getInteger(values.get("r_buildToTasks_c_buildId")),
+			contextUser.getUserId());
+
 		return testrayTestFlow;
 	}
 
@@ -413,5 +428,8 @@ public class TestrayTestFlowResourceImpl
 
 	@Reference
 	private ServiceContextHelper _serviceContextHelper;
+
+	@Reference
+	private TestrayManager _testrayManager;
 
 }

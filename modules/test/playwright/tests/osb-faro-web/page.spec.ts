@@ -6,13 +6,17 @@
 import {Page, expect, mergeTests} from '@playwright/test';
 
 import {apiHelpersTest} from '../../fixtures/apiHelpersTest';
+import {assetPublisherPagesTest} from '../../fixtures/assetPublisherPagesTest';
 import {dataApiHelpersTest} from '../../fixtures/dataApiHelpersTest';
 import {featureFlagsTest} from '../../fixtures/featureFlagsTest';
 import {loginAnalyticsCloudTest} from '../../fixtures/loginAnalyticsCloudTest';
 import {loginTest} from '../../fixtures/loginTest';
+import {pageEditorPagesTest} from '../../fixtures/pageEditorPagesTest';
 import {liferayConfig} from '../../liferay.config';
 import getRandomString from '../../utils/getRandomString';
 import {syncAnalyticsCloud} from '../analytics-settings-web/utils/analytics-settings';
+import getPageDefinition from '../layout-content-page-editor-web/utils/getPageDefinition';
+import getWidgetDefinition from '../layout-content-page-editor-web/utils/getWidgetDefinition';
 import {createChannel, switchChannel} from './utils/channel';
 import {createIndividuals, generateIndividual} from './utils/individuals';
 import {Nanites, runNanites} from './utils/nanites';
@@ -22,7 +26,11 @@ import {
 	navigateToACPageViaURL,
 	navigateToACWorkspace,
 } from './utils/navigation';
-import {createSitePage, navigateToSitePage} from './utils/portal';
+import {
+	createSitePage,
+	navigateToDXPandDeleteSite,
+	navigateToSitePage,
+} from './utils/portal';
 import {
 	addSegmentField,
 	addStaticMember,
@@ -34,6 +42,7 @@ import {
 	setSegmentName,
 } from './utils/segments';
 import {CardSelectors, SegmentConditions} from './utils/selectors';
+import {closeSessions} from './utils/sessions';
 import {changeTimeFilter} from './utils/time-filter';
 import {
 	viewNameNotPresentOnTableList,
@@ -43,6 +52,8 @@ import {
 export const test = mergeTests(
 	apiHelpersTest,
 	dataApiHelpersTest,
+	assetPublisherPagesTest,
+	pageEditorPagesTest,
 	featureFlagsTest({
 		'LPS-178052': true,
 	}),
@@ -69,6 +80,279 @@ const goToWithReferrer = async function ({
 		aTag.click();
 	}, url);
 };
+
+test(
+	'Assert clicking on a page in the pages lists navigates to the page profile',
+	{
+		tag: '@LRAC-8112 Legacy',
+	},
+
+	async ({apiHelpers, page}) => {
+		const siteName = getRandomString();
+
+		const site = await apiHelpers.headlessSite.createSite({
+			name: siteName,
+		});
+
+		const pageTitle = 'MyPage ' + getRandomString();
+
+		await createSitePage({
+			apiHelpers,
+			pageTitle,
+			siteName,
+		});
+
+		const channelName = 'My Property ' + getRandomString();
+
+		const {channel, project} = await syncAnalyticsCloud({
+			apiHelpers,
+			channelName,
+			page,
+			siteName,
+		});
+
+		await test.step('Go to My Page', async () => {
+			await navigateToSitePage({
+				page,
+				pageName: pageTitle,
+				siteName,
+			});
+			await page.waitForTimeout(10000);
+		});
+
+		await test.step('Go to Analytics Cloud and Switch the property', async () => {
+			await navigateToACWorkspace({page});
+			await switchChannel({
+				channelName,
+				page,
+			});
+		});
+
+		await test.step('Go to Pages Tab', async () => {
+			await navigateTo({
+				page,
+				pageName: 'Pages',
+			});
+		});
+
+		await test.step('Change the time filter to Last 24 hours', async () => {
+			await changeTimeFilter({
+				page,
+				timeFilterPeriod: 'Last 24 hours',
+			});
+		});
+
+		await test.step('Access one of the pages on the list', async () => {
+			await navigateTo({
+				page,
+				pageName: pageTitle,
+			});
+		});
+
+		await test.step('Assert Page Profile', async () => {
+			await expect(page.locator('h1.title')).toContainText(pageTitle);
+			await expect(page.locator('h1.title')).toContainText(siteName);
+
+			const cardsNames = [
+				'Unique Visitors',
+				'Views',
+				'Bounce Rate',
+				'Time On Page',
+				'Entrances',
+				'Exit Rate',
+			];
+
+			for (const card of cardsNames) {
+				await expect(
+					page.getByRole('button').getByText(card, {exact: true})
+				).toBeVisible();
+			}
+		});
+
+		await test.step('View the time filter of Visitors Behavior is Last 24 Hours', async () => {
+			await expect(
+				page
+					.locator('[id="container\\.report\\.visitorsBehaviorCard"]')
+					.getByRole('button', {name: 'Last 24 hours'})
+			).toBeVisible();
+		});
+
+		const tabNames = ['Path', 'Known Individuals'];
+
+		for (const tab of tabNames) {
+			await test.step('Switch the tab', async () => {
+				await navigateTo({
+					page,
+					pageName: tab,
+				});
+			});
+
+			await test.step('Set the time filter to the last 30 days', async () => {
+				await changeTimeFilter({
+					page,
+					timeFilterPeriod: 'Last 30 days',
+				});
+			});
+
+			await test.step('Switch to Overview tab and view the time filter of Visitors Behavior is Last 24 Hours', async () => {
+				await navigateTo({
+					page,
+					pageName: 'Overview',
+				});
+
+				await expect(
+					page
+						.locator(
+							'[id="container\\.report\\.visitorsBehaviorCard"]'
+						)
+						.getByRole('button', {name: 'Last 24 hours'})
+				).toBeVisible();
+			});
+		}
+
+		await test.step('delete channel', async () => {
+			await apiHelpers.jsonWebServicesOSBFaro.deleteChannel(
+				`[${channel.id}]`,
+				project.groupId
+			);
+		});
+
+		await test.step('delete site on DXP side', async () => {
+			await navigateToDXPandDeleteSite({apiHelpers, page, site});
+		});
+	}
+);
+
+test(
+	'Assert page view accuracy between cards Visitor Behavior, Audience, and Page List number',
+	{
+		tag: '@LRAC-14813',
+	},
+
+	async ({apiHelpers, assetPublisherPage, page, pageEditorPage}) => {
+		const channelName = 'My Property ' + getRandomString();
+
+		const siteName = 'My Site ' + getRandomString();
+
+		const blogName = 'My Blog ' + getRandomString();
+
+		const pageName = 'My Blog Page ' + getRandomString();
+
+		const site = await apiHelpers.headlessSite.createSite({
+			name: siteName,
+		});
+
+		await test.step('Connect the DXP to AC', async () => {
+			await syncAnalyticsCloud({
+				apiHelpers,
+				channelName,
+				page,
+				siteName,
+			});
+		});
+
+		await test.step('Create a page with an Asset Publisher Widget and access to the configuration of the widget from the page editor', async () => {
+			const widgetId = getRandomString();
+
+			const widgetDefinition = getWidgetDefinition({
+				id: widgetId,
+				widgetName:
+					'com_liferay_asset_publisher_web_portlet_AssetPublisherPortlet',
+			});
+
+			const layout = await apiHelpers.headlessDelivery.createSitePage({
+				pageDefinition: getPageDefinition([widgetDefinition]),
+				siteId: site.id,
+				title: pageName,
+			});
+
+			await navigateToSitePage({
+				page,
+				pageName,
+				siteName,
+			});
+
+			await pageEditorPage.goToWidgetConfiguration(
+				layout,
+				site,
+				widgetId
+			);
+
+			await assetPublisherPage.changeAssetSelection('Dynamic');
+
+			await page.keyboard.press('Escape');
+
+			await pageEditorPage.publishPage();
+		});
+
+		await test.step('Create a Blog', async () => {
+			await apiHelpers.headlessDelivery.postBlog(site.id, {
+				headline: blogName,
+			});
+			await page.waitForTimeout(3000);
+		});
+
+		await test.step('Go to My Blog Page', async () => {
+			await navigateToSitePage({
+				page,
+				pageName,
+				siteName,
+			});
+
+			await page.locator('.asset-title').getByText(blogName).click();
+
+			await page.waitForTimeout(10000);
+		});
+
+		await test.step('Go to Analytics Cloud and Switch the property', async () => {
+			await navigateToACWorkspace({page});
+			await switchChannel({
+				channelName,
+				page,
+			});
+		});
+
+		await test.step('Go to Pages Tab', async () => {
+			await navigateTo({
+				page,
+				pageName: 'Pages',
+			});
+		});
+
+		await test.step('Change the time filter to Last 24 hours', async () => {
+			await changeTimeFilter({
+				page,
+				timeFilterPeriod: 'Last 24 hours',
+			});
+		});
+
+		await test.step('Access one of the pages on the list', async () => {
+			await navigateTo({
+				page,
+				pageName: blogName,
+			});
+		});
+
+		await test.step('View Unique Visitors metric value in Visitors Behavior card', async () => {
+			await expect(
+				page.getByRole('button', {name: 'Unique Visitors'})
+			).toContainText('1');
+		});
+
+		await test.step('View Visitors metric value in Audience card', async () => {
+			await expect(
+				page
+					.locator('[id="container\\.report\\.audienceCard"]')
+					.getByText('1')
+					.nth(1)
+			).toBeVisible();
+		});
+
+		await test.step('Delete site on DXP side', async () => {
+			await navigateToDXPandDeleteSite({apiHelpers, page, site});
+		});
+	}
+);
 
 test(
 	'Check that the Dynamic Segment does not continue to appear in the audience card after the segment is deleted',
@@ -337,6 +621,85 @@ test(
 );
 
 test(
+	'Create the page name with special characters makes the correct name appear in the path part of AC pages',
+	{
+		tag: '@LRAC-8988',
+	},
+
+	async ({apiHelpers, page}) => {
+		const pageTitle = 'Snúið Vinsælar þú';
+		const sitePage = await createSitePage({
+			apiHelpers,
+			pageTitle,
+		});
+
+		const channelName = 'My Property - ' + getRandomString();
+		await test.step('Connect the DXP to AC', async () => {
+			await syncAnalyticsCloud({
+				apiHelpers,
+				channelName,
+				page,
+			});
+		});
+
+		await test.step('Go to Snúið Vinsælar þú Page', async () => {
+			await navigateToSitePage({
+				page,
+				pageName: pageTitle,
+			});
+			await page.waitForTimeout(10000);
+		});
+
+		await test.step('Go to Analytics Cloud and Switch the property', async () => {
+			await navigateToACWorkspace({page});
+			await switchChannel({
+				channelName,
+				page,
+			});
+		});
+
+		await test.step('Go to Pages Tab', async () => {
+			await navigateTo({
+				page,
+				pageName: 'Pages',
+			});
+		});
+
+		await test.step('Change the time filter to Last 24 hours', async () => {
+			await changeTimeFilter({
+				page,
+				timeFilterPeriod: 'Last 24 hours',
+			});
+		});
+
+		await test.step('Access one of the pages on the list > Go to Path Tab', async () => {
+			await navigateTo({
+				page,
+				pageName: pageTitle,
+			});
+			await navigateTo({
+				page,
+				pageName: 'Path',
+			});
+		});
+
+		await test.step('Check that Snúið Vinsælar þú Page appear as referral page', async () => {
+			await expect(
+				page.getByText('Snúið Vinsælar ...', {exact: true}).first()
+			).toBeVisible();
+		});
+
+		await test.step('Delete pages created in DXP during automation execution', async () => {
+			await page.goto(liferayConfig.environment.baseUrl);
+
+			await apiHelpers.jsonWebServicesLayout.deleteLayout(
+				String(sitePage.id)
+			);
+		});
+	}
+);
+
+test(
 	'Page Profile known individuals list shows individuals who have viewed the page',
 	{
 		tag: '@Legacy',
@@ -468,6 +831,104 @@ test(
 				`[${channel.id}]`,
 				project.groupId
 			);
+		});
+	}
+);
+
+test(
+	'Page profile views by technology shows which browsers are being used',
+	{
+		tag: '@Legacy',
+	},
+
+	async ({apiHelpers, page}) => {
+		const randomString = getRandomString();
+		const channelName = 'My Property ' + randomString;
+		const siteName = 'My Site ' + randomString;
+		const pageTitle = 'My Page ' + randomString;
+
+		const site = await apiHelpers.headlessSite.createSite({
+			name: siteName,
+		});
+
+		await createSitePage({
+			apiHelpers,
+			pageTitle,
+			siteName,
+		});
+
+		const {channel, project} = await syncAnalyticsCloud({
+			apiHelpers,
+			channelName,
+			page,
+			siteName,
+		});
+
+		await test.step('Go to My Page', async () => {
+			await navigateToSitePage({
+				page,
+				pageName: pageTitle,
+				siteName,
+			});
+			await page.waitForTimeout(10000);
+
+			await closeSessions(apiHelpers, page);
+		});
+
+		await test.step('Go to Analytics Cloud and Switch the property', async () => {
+			await navigateToACWorkspace({page});
+			await switchChannel({
+				channelName,
+				page,
+			});
+		});
+
+		await test.step('Go to Pages Tab', async () => {
+			await navigateTo({
+				page,
+				pageName: 'Pages',
+			});
+		});
+
+		await test.step('Change the time filter to Last 24 hours', async () => {
+			await changeTimeFilter({
+				page,
+				timeFilterPeriod: 'Last 24 hours',
+			});
+		});
+
+		await test.step('Access one of the pages on the list', async () => {
+			await navigateTo({
+				page,
+				pageName: pageTitle,
+			});
+		});
+
+		await test.step('View Technology Browsers Metrics', async () => {
+			await page
+				.getByText('Views by Technology')
+				.scrollIntoViewIfNeeded();
+
+			await page.getByRole('button', {name: 'Browsers'}).click();
+
+			await expect(page.getByText('Views by Technology')).toBeVisible();
+
+			await expect(page.getByText('Chrome')).toBeVisible();
+
+			await expect(page.locator('.legend-percentage')).toContainText(
+				'100%'
+			);
+		});
+
+		await test.step('Delete channel', async () => {
+			await apiHelpers.jsonWebServicesOSBFaro.deleteChannel(
+				`[${channel.id}]`,
+				project.groupId
+			);
+		});
+
+		await test.step('Delete site on DXP side', async () => {
+			await navigateToDXPandDeleteSite({apiHelpers, page, site});
 		});
 	}
 );

@@ -53,11 +53,27 @@ public class UpgradeSourceProcessorTest extends BaseSourceProcessorTestCase {
 	}
 
 	@Test
-	public void testUpgradeCatchAllCheck() throws Exception {
+	public void testUpgradeCatchAllCheckFTL() throws Exception {
 		_testUpgradeCatchAllCheck("upgrade/UpgradeCatchAllCheck.testftl");
+	}
+
+	@Test
+	public void testUpgradeCatchAllCheckJava() throws Exception {
 		_testUpgradeCatchAllCheck("upgrade/UpgradeCatchAllCheck.testjava");
+	}
+
+	@Test
+	public void testUpgradeCatchAllCheckJSP() throws Exception {
 		_testUpgradeCatchAllCheck("upgrade/UpgradeCatchAllCheck.testjsp");
+	}
+
+	@Test
+	public void testUpgradeCatchAllCheckJSPF() throws Exception {
 		_testUpgradeCatchAllCheck("upgrade/UpgradeCatchAllCheck.testjspf");
+	}
+
+	@Test
+	public void testUpgradeCatchAllCheckSCSS() throws Exception {
 		_testUpgradeCatchAllCheck("upgrade/UpgradeCatchAllCheck.testscss");
 	}
 
@@ -210,6 +226,13 @@ public class UpgradeSourceProcessorTest extends BaseSourceProcessorTestCase {
 	}
 
 	@Test
+	public void testUpgradeJavaProductDTOConverterReferenceCheck()
+		throws Exception {
+
+		test("upgrade/UpgradeJavaProductDTOConverterReferenceCheck.testjava");
+	}
+
+	@Test
 	public void testUpgradeJavaSchedulerEntryImplConstructorCheck()
 		throws Exception {
 
@@ -231,6 +254,11 @@ public class UpgradeSourceProcessorTest extends BaseSourceProcessorTestCase {
 		throws Exception {
 
 		test("upgrade/UpgradeJavaServiceReferenceAnnotationCheck.testjava");
+	}
+
+	@Test
+	public void testUpgradeJavaSortFieldNameTranslatorCheck() throws Exception {
+		test("upgrade/UpgradeJavaSortFieldNameTranslatorCheck.testjava");
 	}
 
 	@Test

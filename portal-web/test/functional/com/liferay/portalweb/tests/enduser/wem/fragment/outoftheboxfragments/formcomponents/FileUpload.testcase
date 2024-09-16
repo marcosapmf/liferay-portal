@@ -59,9 +59,7 @@ definition {
 			}
 
 			task ("Add a File Upload fragment and Submit Button fragment into Form Container") {
-				PageEditor.editFormContainer(
-					contentType = "Upload Object",
-					panel = "General");
+				PageEditor.editFormContainer(contentType = "Upload Object");
 
 				PageEditor.publish();
 			}
@@ -74,7 +72,7 @@ definition {
 
 			PageEditor.editFragmentText(
 				className = "button",
-				fragmentName = "Submit Button",
+				fragmentName = "Form Button",
 				id = "text",
 				text = "Custom Text");
 		}
@@ -84,7 +82,7 @@ definition {
 				PageEditor.viewFragmentEditableText(
 					className = "button",
 					editableText = "Custom Text",
-					fragmentName = "Submit Button",
+					fragmentName = "Form Button",
 					id = "submit-button-text");
 			}
 
@@ -136,9 +134,7 @@ definition {
 					collectionName = "Form Components",
 					fragmentName = "Form Container");
 
-				PageEditor.editFormContainer(
-					contentType = "Upload Object",
-					panel = "General");
+				PageEditor.editFormContainer(contentType = "Upload Object");
 			}
 		}
 
@@ -221,15 +217,13 @@ definition {
 					collectionName = "Form Components",
 					fragmentName = "Form Container");
 
-				PageEditor.editFormContainer(
-					contentType = "Upload Object",
-					panel = "General");
+				PageEditor.editFormContainer(contentType = "Upload Object");
 
 				PageEditor.removeFragment(
 					fragmentName = "File Upload",
 					index = 2);
 
-				for (var fragmentName : list "File Upload,Submit Button") {
+				for (var fragmentName : list "File Upload,Form Button") {
 					PageEditor.removeFragment(fragmentName = ${fragmentName});
 				}
 			}
@@ -393,9 +387,7 @@ definition {
 					collectionName = "Form Components",
 					fragmentName = "Form Container");
 
-				PageEditor.editFormContainer(
-					contentType = "Upload Object",
-					panel = "General");
+				PageEditor.editFormContainer(contentType = "Upload Object");
 
 				PageEditor.publish();
 			}
@@ -664,9 +656,7 @@ definition {
 					collectionName = "Form Components",
 					fragmentName = "Form Container");
 
-				PageEditor.editFormContainer(
-					contentType = "Upload Object",
-					panel = "General");
+				PageEditor.editFormContainer(contentType = "Upload Object");
 
 				PageEditor.publish();
 			}
@@ -718,9 +708,7 @@ definition {
 					collectionName = "Form Components",
 					fragmentName = "Form Container");
 
-				PageEditor.editFormContainer(
-					contentType = "Upload Object",
-					panel = "General");
+				PageEditor.editFormContainer(contentType = "Upload Object");
 
 				PageEditor.publish();
 			}

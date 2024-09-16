@@ -25,6 +25,7 @@ import com.liferay.portal.kernel.bean.BeanPropertiesUtil;
 import com.liferay.portal.kernel.cache.thread.local.Lifecycle;
 import com.liferay.portal.kernel.cache.thread.local.ThreadLocalCache;
 import com.liferay.portal.kernel.cache.thread.local.ThreadLocalCacheManager;
+import com.liferay.portal.kernel.change.tracking.CTCollectionPreviewThreadLocal;
 import com.liferay.portal.kernel.cluster.ClusterExecutorUtil;
 import com.liferay.portal.kernel.cluster.ClusterInvokeThreadLocal;
 import com.liferay.portal.kernel.cluster.ClusterRequest;
@@ -98,6 +99,7 @@ import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.portlet.PortletBag;
 import com.liferay.portal.kernel.portlet.PortletBagPool;
 import com.liferay.portal.kernel.portlet.PortletConfigFactoryUtil;
+import com.liferay.portal.kernel.portlet.PortletFriendlyURLMapperMatch;
 import com.liferay.portal.kernel.portlet.PortletIdCodec;
 import com.liferay.portal.kernel.portlet.PortletInstanceFactoryUtil;
 import com.liferay.portal.kernel.portlet.PortletModeFactory;
@@ -165,7 +167,6 @@ import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.Http;
 import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.InetAddressUtil;
-import com.liferay.portal.kernel.util.InheritableMap;
 import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.ListMergeable;
 import com.liferay.portal.kernel.util.LocaleUtil;
@@ -772,6 +773,19 @@ public class PortalImpl implements Portal {
 			}
 		}
 
+		long previewCTCollectionId =
+			CTCollectionPreviewThreadLocal.getCTCollectionId();
+
+		if (previewCTCollectionId > -1) {
+			url = HttpComponentsUtil.setParameter(
+				url, "previewCTCollectionId", previewCTCollectionId);
+		}
+
+		if (CTCollectionPreviewThreadLocal.isIndicatorEnabled()) {
+			url = HttpComponentsUtil.setParameter(
+				url, "previewCTIndicator", true);
+		}
+
 		return url;
 	}
 
@@ -1176,6 +1190,8 @@ public class PortalImpl implements Portal {
 			Set<Locale> availableLocales)
 		throws PortalException {
 
+		Map<Locale, String> alternateURLs = new HashMap<>();
+
 		String defaultVirtualHostname = _getDefaultVirtualHostname(
 			themeDisplay.getCompany());
 		String portalDomain = themeDisplay.getPortalDomain();
@@ -1195,8 +1211,6 @@ public class PortalImpl implements Portal {
 
 			virtualHostname = portalDomain;
 		}
-
-		Map<Locale, String> alternateURLs = new HashMap<>();
 
 		if (Validator.isNull(virtualHostname)) {
 			for (Locale locale : availableLocales) {
@@ -4057,14 +4071,14 @@ public class PortalImpl implements Portal {
 
 	@Override
 	public String getPortletTitle(PortletRequest portletRequest) {
+		String portletTitle = null;
+
 		String portletId = (String)portletRequest.getAttribute(
 			WebKeys.PORTLET_ID);
 
 		PortletConfig portletConfig = PortletConfigFactoryUtil.get(portletId);
 
 		Locale locale = portletRequest.getLocale();
-
-		String portletTitle = null;
 
 		if (portletConfig == null) {
 			Portlet portlet = PortletLocalServiceUtil.getPortletById(
@@ -4257,12 +4271,12 @@ public class PortalImpl implements Portal {
 			boolean checkStagingGroup)
 		throws PortalException {
 
+		long scopeGroupId = 0;
+
 		Layout layout = (Layout)httpServletRequest.getAttribute(WebKeys.LAYOUT);
 		ThemeDisplay themeDisplay =
 			(ThemeDisplay)httpServletRequest.getAttribute(
 				WebKeys.THEME_DISPLAY);
-
-		long scopeGroupId = 0;
 
 		if (layout != null) {
 			Group group = layout.getGroup();
@@ -4320,11 +4334,8 @@ public class PortalImpl implements Portal {
 			if ((portletId != null) && (group != null) &&
 				(group.isStaged() || group.isStagingGroup())) {
 
-				Group liveGroup = group;
-
-				if (group.isStagingGroup()) {
-					liveGroup = group.getLiveGroup();
-				}
+				Group liveGroup =
+					group.isStagingGroup() ? group.getLiveGroup() : group;
 
 				if (liveGroup.isStaged() &&
 					!liveGroup.isStagedPortlet(portletId)) {
@@ -4340,15 +4351,31 @@ public class PortalImpl implements Portal {
 						scopeGroupId = _getScopeGroupId(
 							themeDisplay, liveGroupLayout, portletId);
 					}
-					else if (checkStagingGroup &&
-							 !liveGroup.isStagedRemotely()) {
-
-						Group stagingGroup = liveGroup.getStagingGroup();
-
-						scopeGroupId = stagingGroup.getGroupId();
-					}
 					else {
-						scopeGroupId = liveGroup.getGroupId();
+						String scopeType = _getScopeType(
+							portletId, themeDisplay, layout);
+
+						if (scopeType.equals("company")) {
+							scopeGroupId = _getScopeGroupId(
+								themeDisplay, layout, portletId);
+						}
+						else if (scopeType.equals("layout")) {
+							scopeGroupId = _getScopeGroupId(
+								themeDisplay, liveGroupLayout, portletId);
+						}
+						else {
+							if (checkStagingGroup &&
+								!liveGroup.isStagedRemotely()) {
+
+								Group stagingGroup =
+									liveGroup.getStagingGroup();
+
+								scopeGroupId = stagingGroup.getGroupId();
+							}
+							else {
+								scopeGroupId = liveGroup.getGroupId();
+							}
+						}
 					}
 				}
 			}
@@ -7716,89 +7743,13 @@ public class PortalImpl implements Portal {
 			String url, Map<String, String[]> params,
 			Map<String, Object> requestContext) {
 
-		boolean foundFriendlyURLMapper = false;
-
 		String friendlyURL = url;
 		String queryString = StringPool.BLANK;
 
-		List<Portlet> portlets =
-			PortletLocalServiceUtil.getFriendlyURLMapperPortlets();
+		PortletFriendlyURLMapperMatch portletFriendlyURLMapperMatch =
+			PortletLocalServiceUtil.getPortletFriendlyURLMapperMatch(url);
 
-		for (Portlet portlet : portlets) {
-			FriendlyURLMapper friendlyURLMapper =
-				portlet.getFriendlyURLMapperInstance();
-
-			if (url.endsWith(
-					StringPool.SLASH + friendlyURLMapper.getMapping())) {
-
-				url += StringPool.SLASH;
-			}
-
-			int pos = -1;
-
-			if (friendlyURLMapper.isCheckMappingWithPrefix()) {
-				pos = url.indexOf(
-					FRIENDLY_URL_SEPARATOR + friendlyURLMapper.getMapping() +
-						StringPool.SLASH);
-			}
-			else {
-				pos = url.indexOf(
-					StringPool.SLASH + friendlyURLMapper.getMapping() +
-						StringPool.SLASH);
-			}
-
-			if (pos == -1) {
-				continue;
-			}
-
-			foundFriendlyURLMapper = true;
-
-			friendlyURL = url.substring(0, pos);
-
-			InheritableMap<String, String[]> actualParams =
-				new InheritableMap<>();
-
-			if (params != null) {
-				actualParams.setParentMap(params);
-			}
-
-			Map<String, String> prpIdentifiers = new HashMap<>();
-
-			Set<PublicRenderParameter> publicRenderParameters =
-				portlet.getPublicRenderParameters();
-
-			for (PublicRenderParameter publicRenderParameter :
-					publicRenderParameters) {
-
-				QName qName = publicRenderParameter.getQName();
-
-				String publicRenderParameterIdentifier = qName.getLocalPart();
-
-				prpIdentifiers.put(
-					publicRenderParameterIdentifier,
-					PortletQNameUtil.getPublicRenderParameterName(qName));
-			}
-
-			FriendlyURLMapperThreadLocal.setPRPIdentifiers(prpIdentifiers);
-
-			if (friendlyURLMapper.isCheckMappingWithPrefix()) {
-				friendlyURLMapper.populateParams(
-					url.substring(pos + 2), actualParams, requestContext);
-			}
-			else {
-				friendlyURLMapper.populateParams(
-					url.substring(pos), actualParams, requestContext);
-			}
-
-			String actualParamsString = HttpComponentsUtil.parameterMapToString(
-				actualParams, false);
-
-			queryString = StringPool.AMPERSAND + actualParamsString;
-
-			break;
-		}
-
-		if (!foundFriendlyURLMapper) {
+		if (portletFriendlyURLMapperMatch == null) {
 			int x = url.indexOf(FRIENDLY_URL_SEPARATOR);
 
 			if (x != -1) {
@@ -7838,6 +7789,55 @@ public class PortalImpl implements Portal {
 					queryString = StringPool.AMPERSAND + result;
 				}
 			}
+		}
+		else {
+			Portlet portlet = portletFriendlyURLMapperMatch.getPortlet();
+
+			FriendlyURLMapper friendlyURLMapper =
+				portletFriendlyURLMapperMatch.getFriendlyURLMapper();
+
+			int position = portletFriendlyURLMapperMatch.getPosition();
+
+			friendlyURL = url.substring(0, position);
+
+			Map<String, String[]> actualParams = new HashMap<>();
+
+			Map<String, String> prpIdentifiers = new HashMap<>();
+
+			Set<PublicRenderParameter> publicRenderParameters =
+				portlet.getPublicRenderParameters();
+
+			for (PublicRenderParameter publicRenderParameter :
+					publicRenderParameters) {
+
+				QName qName = publicRenderParameter.getQName();
+
+				String publicRenderParameterIdentifier = qName.getLocalPart();
+
+				prpIdentifiers.put(
+					publicRenderParameterIdentifier,
+					PortletQNameUtil.getPublicRenderParameterName(qName));
+			}
+
+			FriendlyURLMapperThreadLocal.setPRPIdentifiers(prpIdentifiers);
+
+			if (friendlyURLMapper.isCheckMappingWithPrefix()) {
+				friendlyURLMapper.populateParams(
+					url.substring(position + 2), actualParams, requestContext);
+			}
+			else {
+				friendlyURLMapper.populateParams(
+					url.substring(position), actualParams, requestContext);
+			}
+
+			Set<String> actualKeySet = actualParams.keySet();
+
+			actualKeySet.removeAll(params.keySet());
+
+			String actualParamsString = HttpComponentsUtil.parameterMapToString(
+				actualParams, false);
+
+			queryString = StringPool.AMPERSAND + actualParamsString;
 		}
 
 		friendlyURL = StringUtil.replace(
@@ -7930,6 +7930,25 @@ public class PortalImpl implements Portal {
 		}
 
 		return scopeGroup.getGroupId();
+	}
+
+	private String _getScopeType(
+		String portletId, ThemeDisplay themeDisplay, Layout layout) {
+
+		PortletPreferences portletPreferences = null;
+
+		if (themeDisplay == null) {
+			portletPreferences =
+				PortletPreferencesFactoryUtil.getStrictLayoutPortletSetup(
+					layout, portletId);
+		}
+		else {
+			portletPreferences = themeDisplay.getStrictLayoutPortletSetup(
+				layout, portletId);
+		}
+
+		return GetterUtil.getString(
+			portletPreferences.getValue("lfrScopeType", null));
 	}
 
 	private Group _getSiteGroup(long groupId) {

@@ -280,8 +280,18 @@
 				"type": "CETProperty.Type.String"
 			},
 			{
+				"default": "page",
+				"name": "scope",
+				"type": "CETProperty.Type.String"
+			},
+			{
 				"default": "",
 				"name": "scriptElementAttributesJSON",
+				"type": "CETProperty.Type.String"
+			},
+			{
+				"default": "head",
+				"name": "scriptLocation",
 				"type": "CETProperty.Type.String"
 			},
 			{

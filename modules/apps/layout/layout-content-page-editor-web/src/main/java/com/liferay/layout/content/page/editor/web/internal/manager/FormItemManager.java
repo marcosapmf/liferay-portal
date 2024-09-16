@@ -21,6 +21,7 @@ import com.liferay.info.item.provider.InfoItemFormProvider;
 import com.liferay.info.search.InfoSearchClassMapperRegistry;
 import com.liferay.layout.content.page.editor.web.internal.util.layout.structure.LayoutStructureUtil;
 import com.liferay.layout.util.structure.DropZoneLayoutStructureItem;
+import com.liferay.layout.util.structure.FormStepContainerStyledLayoutStructureItem;
 import com.liferay.layout.util.structure.FormStyledLayoutStructureItem;
 import com.liferay.layout.util.structure.FragmentStyledLayoutStructureItem;
 import com.liferay.layout.util.structure.LayoutStructure;
@@ -28,7 +29,6 @@ import com.liferay.layout.util.structure.LayoutStructureItem;
 import com.liferay.layout.util.structure.LayoutStructureItemUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.language.Language;
@@ -48,6 +48,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 import java.util.TreeSet;
 
 import org.osgi.service.component.annotations.Component;
@@ -58,6 +59,38 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(service = FormItemManager.class)
 public class FormItemManager {
+
+	public LayoutStructureItemChanges addFormStepLayoutStructureItems(
+		FormStyledLayoutStructureItem formStyledLayoutStructureItem,
+		LayoutStructure layoutStructure, int numberOfSteps) {
+
+		LayoutStructureItem formStepContainerStyledLayoutStructureItem =
+			_findFormStepContainerStyledLayoutStructureItem(
+				formStyledLayoutStructureItem, layoutStructure);
+
+		LayoutStructureItemChanges layoutStructureItemChanges =
+			new LayoutStructureItemChanges();
+
+		if (formStepContainerStyledLayoutStructureItem == null) {
+			return layoutStructureItemChanges;
+		}
+
+		List<String> childrenItemIds =
+			formStepContainerStyledLayoutStructureItem.getChildrenItemIds();
+
+		int numberOfStepsNeeded = numberOfSteps - childrenItemIds.size();
+
+		for (int i = 0; i < numberOfStepsNeeded; i++) {
+			LayoutStructureItem layoutStructureItem =
+				layoutStructure.addFormStepLayoutStructureItem(
+					formStepContainerStyledLayoutStructureItem.getItemId(), -1);
+
+			layoutStructureItemChanges.addAddedLayoutStructureItems(
+				layoutStructureItem);
+		}
+
+		return layoutStructureItemChanges;
+	}
 
 	public List<FragmentEntryLink> addFragmentEntryLinks(
 			JSONObject errorJSONObject,
@@ -122,8 +155,8 @@ public class FormItemManager {
 
 			addedFragmentEntryLinks.add(
 				_addFragmentEntryLink(
-					formStyledLayoutStructureItem.getItemId(), fragmentEntry,
-					infoField, layout, layoutStructure, segmentsExperienceId,
+					formStyledLayoutStructureItem, fragmentEntry, infoField,
+					layout, layoutStructure, segmentsExperienceId,
 					serviceContext));
 		}
 
@@ -143,9 +176,9 @@ public class FormItemManager {
 			else {
 				addedFragmentEntryLinks.add(
 					_addFragmentEntryLink(
-						formStyledLayoutStructureItem.getItemId(),
-						fragmentEntry, null, layout, layoutStructure,
-						segmentsExperienceId, serviceContext));
+						formStyledLayoutStructureItem, fragmentEntry, null,
+						layout, layoutStructure, segmentsExperienceId,
+						serviceContext));
 			}
 		}
 
@@ -177,31 +210,88 @@ public class FormItemManager {
 		return addedFragmentEntryLinks;
 	}
 
-	public JSONArray removeLayoutStructureItemsJSONArray(
+	public LayoutStructureItemChanges changeToMultistepFormType(
 		FormStyledLayoutStructureItem formStyledLayoutStructureItem,
-		LayoutStructure layoutStructure, List<String> removedItemIds) {
+		LayoutStructure layoutStructure, Locale locale, int numberOfSteps) {
 
-		JSONArray fragmentEntryLinkIdsJSONArray =
-			_jsonFactory.createJSONArray();
+		LayoutStructureItemChanges layoutStructureItemChanges =
+			new LayoutStructureItemChanges();
 
-		for (String itemId :
-				LayoutStructureItemUtil.getChildrenItemIds(
-					formStyledLayoutStructureItem.getItemId(),
-					layoutStructure)) {
+		List<String> childrenItemIds = new ArrayList<>(
+			formStyledLayoutStructureItem.getChildrenItemIds());
 
-			if (ListUtil.isNotEmpty(removedItemIds) &&
-				!removedItemIds.contains(itemId)) {
+		LayoutStructureItem formStepContainerStyledLayoutStructureItem =
+			layoutStructure.addFormStepContainerStyledLayoutStructureItem(
+				formStyledLayoutStructureItem.getItemId(), -1);
 
-				continue;
+		layoutStructureItemChanges.addAddedLayoutStructureItems(
+			formStepContainerStyledLayoutStructureItem);
+
+		LayoutStructureItem firstFormStepLayoutStructureItem =
+			layoutStructure.addFormStepLayoutStructureItem(
+				formStepContainerStyledLayoutStructureItem.getItemId(), 0);
+
+		for (String childrenItemId : childrenItemIds) {
+			LayoutStructureItem layoutStructureItem =
+				layoutStructure.getLayoutStructureItem(childrenItemId);
+
+			if (layoutStructureItem instanceof
+					FragmentStyledLayoutStructureItem) {
+
+				FragmentStyledLayoutStructureItem
+					fragmentStyledLayoutStructureItem =
+						(FragmentStyledLayoutStructureItem)layoutStructureItem;
+
+				Set<String> fieldTypes =
+					_fragmentEntryLinkManager.getFragmentEntryLinkFieldTypes(
+						fragmentStyledLayoutStructureItem.
+							getFragmentEntryLinkId(),
+						locale);
+
+				if (fieldTypes.contains("stepper")) {
+					continue;
+				}
 			}
 
-			layoutStructure.markLayoutStructureItemForDeletion(
-				Collections.singletonList(itemId), Collections.emptyList());
+			layoutStructureItemChanges.addMovedLayoutStructureItems(
+				layoutStructureItem.clone());
 
-			LayoutStructureItem removedLayoutStructureItem =
-				layoutStructure.getLayoutStructureItem(itemId);
+			layoutStructure.moveLayoutStructureItem(
+				childrenItemId, firstFormStepLayoutStructureItem.getItemId(),
+				-1);
+		}
 
-			if (!(removedLayoutStructureItem instanceof
+		for (int i = 1; i < numberOfSteps; i++) {
+			layoutStructure.addFormStepLayoutStructureItem(
+				formStepContainerStyledLayoutStructureItem.getItemId(), i);
+		}
+
+		return layoutStructureItemChanges;
+	}
+
+	public LayoutStructureItemChanges changeToSimpleFormType(
+		FormStyledLayoutStructureItem formStyledLayoutStructureItem,
+		LayoutStructure layoutStructure, Locale locale) {
+
+		LayoutStructureItem formStepContainerStyledLayoutStructureItem =
+			_findFormStepContainerStyledLayoutStructureItem(
+				formStyledLayoutStructureItem, layoutStructure);
+
+		if (formStepContainerStyledLayoutStructureItem == null) {
+			return new LayoutStructureItemChanges();
+		}
+
+		LayoutStructureItemChanges layoutStructureItemChanges =
+			new LayoutStructureItemChanges();
+
+		for (String childrenItemId :
+				new ArrayList<>(
+					formStyledLayoutStructureItem.getChildrenItemIds())) {
+
+			LayoutStructureItem layoutStructureItem =
+				layoutStructure.getLayoutStructureItem(childrenItemId);
+
+			if (!(layoutStructureItem instanceof
 					FragmentStyledLayoutStructureItem)) {
 
 				continue;
@@ -209,21 +299,186 @@ public class FormItemManager {
 
 			FragmentStyledLayoutStructureItem
 				fragmentStyledLayoutStructureItem =
-					(FragmentStyledLayoutStructureItem)
-						removedLayoutStructureItem;
+					(FragmentStyledLayoutStructureItem)layoutStructureItem;
 
-			fragmentEntryLinkIdsJSONArray.put(
-				String.valueOf(
-					fragmentStyledLayoutStructureItem.
-						getFragmentEntryLinkId()));
+			Set<String> fieldTypes =
+				_fragmentEntryLinkManager.getFragmentEntryLinkFieldTypes(
+					fragmentStyledLayoutStructureItem.getFragmentEntryLinkId(),
+					locale);
+
+			if (!fieldTypes.contains("stepper")) {
+				continue;
+			}
+
+			layoutStructure.markLayoutStructureItemForDeletion(
+				Collections.singletonList(childrenItemId),
+				Collections.emptyList());
+
+			layoutStructureItemChanges.addRemovedLayoutStructureItems(
+				layoutStructureItem);
 		}
 
-		return fragmentEntryLinkIdsJSONArray;
+		for (String childrenItemId :
+				new ArrayList<>(
+					formStepContainerStyledLayoutStructureItem.
+						getChildrenItemIds())) {
+
+			LayoutStructureItem formStepLayoutStructureItem =
+				layoutStructure.getLayoutStructureItem(childrenItemId);
+
+			for (String formStepLayoutStructureItemChildrenItemId :
+					new ArrayList<>(
+						formStepLayoutStructureItem.getChildrenItemIds())) {
+
+				LayoutStructureItem layoutStructureItem =
+					layoutStructure.getLayoutStructureItem(
+						formStepLayoutStructureItemChildrenItemId);
+
+				layoutStructureItemChanges.addMovedLayoutStructureItems(
+					layoutStructureItem.clone());
+
+				layoutStructure.moveLayoutStructureItem(
+					formStepLayoutStructureItemChildrenItemId,
+					formStyledLayoutStructureItem.getItemId(), -1);
+			}
+		}
+
+		layoutStructure.markLayoutStructureItemForDeletion(
+			Collections.singletonList(
+				formStepContainerStyledLayoutStructureItem.getItemId()),
+			Collections.emptyList());
+
+		layoutStructureItemChanges.addRemovedLayoutStructureItems(
+			formStepContainerStyledLayoutStructureItem);
+
+		return layoutStructureItemChanges;
+	}
+
+	public LayoutStructureItemChanges removeFormStepLayoutStructureItems(
+		FormStyledLayoutStructureItem formStyledLayoutStructureItem,
+		LayoutStructure layoutStructure, int numberOfSteps) {
+
+		LayoutStructureItem formStepContainerStyledLayoutStructureItem =
+			_findFormStepContainerStyledLayoutStructureItem(
+				formStyledLayoutStructureItem, layoutStructure);
+
+		LayoutStructureItemChanges layoutStructureItemChanges =
+			new LayoutStructureItemChanges();
+
+		if (formStepContainerStyledLayoutStructureItem == null) {
+			return layoutStructureItemChanges;
+		}
+
+		List<String> childrenItemIds = new ArrayList<>(
+			formStepContainerStyledLayoutStructureItem.getChildrenItemIds());
+
+		LayoutStructureItem previousFormStepLayoutStructureItem =
+			layoutStructure.getLayoutStructureItem(
+				childrenItemIds.get(numberOfSteps - 1));
+
+		for (int i = numberOfSteps; i < childrenItemIds.size(); i++) {
+			LayoutStructureItem formStepLayoutStructureItem =
+				layoutStructure.getLayoutStructureItem(childrenItemIds.get(i));
+
+			for (String childrenItemId :
+					new ArrayList<>(
+						formStepLayoutStructureItem.getChildrenItemIds())) {
+
+				LayoutStructureItem layoutStructureItem =
+					layoutStructure.getLayoutStructureItem(childrenItemId);
+
+				layoutStructureItemChanges.addMovedLayoutStructureItems(
+					layoutStructureItem.clone());
+
+				layoutStructure.moveLayoutStructureItem(
+					childrenItemId,
+					previousFormStepLayoutStructureItem.getItemId(), -1);
+			}
+
+			layoutStructureItemChanges.addRemovedLayoutStructureItems(
+				formStepLayoutStructureItem);
+
+			layoutStructure.markLayoutStructureItemForDeletion(
+				Collections.singletonList(
+					formStepLayoutStructureItem.getItemId()),
+				Collections.emptyList());
+		}
+
+		return layoutStructureItemChanges;
+	}
+
+	public LayoutStructureItemChanges removeLayoutStructureItemsJSONArray(
+		FormStyledLayoutStructureItem formStyledLayoutStructureItem,
+		LayoutStructure layoutStructure, List<String> initialRemovedItemIds) {
+
+		LayoutStructureItemChanges layoutStructureItemChanges =
+			new LayoutStructureItemChanges();
+
+		for (String itemId :
+				LayoutStructureItemUtil.getChildrenItemIds(
+					formStyledLayoutStructureItem.getItemId(),
+					layoutStructure)) {
+
+			if (ListUtil.isNotEmpty(initialRemovedItemIds) &&
+				!initialRemovedItemIds.contains(itemId)) {
+
+				continue;
+			}
+
+			layoutStructure.markLayoutStructureItemForDeletion(
+				Collections.singletonList(itemId), Collections.emptyList());
+
+			layoutStructureItemChanges.addRemovedLayoutStructureItems(
+				layoutStructure.getLayoutStructureItem(itemId));
+		}
+
+		return layoutStructureItemChanges;
+	}
+
+	public static class LayoutStructureItemChanges {
+
+		public void addAddedLayoutStructureItems(
+			LayoutStructureItem layoutStructureItem) {
+
+			_addedLayoutStructureItems.add(layoutStructureItem);
+		}
+
+		public void addMovedLayoutStructureItems(
+			LayoutStructureItem layoutStructureItem) {
+
+			_movedLayoutStructureItems.add(layoutStructureItem);
+		}
+
+		public void addRemovedLayoutStructureItems(
+			LayoutStructureItem layoutStructureItem) {
+
+			_removedLayoutStructureItems.add(layoutStructureItem);
+		}
+
+		public List<LayoutStructureItem> getAddedLayoutStructureItems() {
+			return _addedLayoutStructureItems;
+		}
+
+		public List<LayoutStructureItem> getMovedLayoutStructureItems() {
+			return _movedLayoutStructureItems;
+		}
+
+		public List<LayoutStructureItem> getRemovedLayoutStructureItems() {
+			return _removedLayoutStructureItems;
+		}
+
+		private final List<LayoutStructureItem> _addedLayoutStructureItems =
+			new ArrayList<>();
+		private final List<LayoutStructureItem> _movedLayoutStructureItems =
+			new ArrayList<>();
+		private final List<LayoutStructureItem> _removedLayoutStructureItems =
+			new ArrayList<>();
+
 	}
 
 	private FragmentEntryLink _addFragmentEntryLink(
-			String formItemId, FragmentEntry fragmentEntry,
-			InfoField<?> infoField, Layout layout,
+			FormStyledLayoutStructureItem formStyledLayoutStructureItem,
+			FragmentEntry fragmentEntry, InfoField<?> infoField, Layout layout,
 			LayoutStructure layoutStructure, long segmentsExperienceId,
 			ServiceContext serviceContext)
 		throws PortalException {
@@ -239,13 +494,8 @@ public class FormItemManager {
 				serviceContext);
 
 		if (infoField != null) {
-			JSONObject editableValuesJSONObject =
-				_jsonFactory.createJSONObject();
-
-			if (Validator.isNotNull(fragmentEntryLink.getEditableValues())) {
-				editableValuesJSONObject = _jsonFactory.createJSONObject(
-					fragmentEntryLink.getEditableValues());
-			}
+			JSONObject editableValuesJSONObject = _jsonFactory.createJSONObject(
+				fragmentEntryLink.getEditableValues());
 
 			JSONObject jsonObject = editableValuesJSONObject.getJSONObject(
 				FragmentEntryProcessorConstants.
@@ -268,10 +518,48 @@ public class FormItemManager {
 					editableValuesJSONObject.toString());
 		}
 
-		layoutStructure.addFragmentStyledLayoutStructureItem(
-			fragmentEntryLink.getFragmentEntryLinkId(), formItemId, -1);
+		LayoutStructureItem layoutStructureItem =
+			_findFormStepContainerStyledLayoutStructureItem(
+				formStyledLayoutStructureItem, layoutStructure);
+
+		if (layoutStructureItem == null) {
+			layoutStructure.addFragmentStyledLayoutStructureItem(
+				fragmentEntryLink.getFragmentEntryLinkId(),
+				formStyledLayoutStructureItem.getItemId(), -1);
+		}
+		else {
+			List<String> childrenItemIds =
+				layoutStructureItem.getChildrenItemIds();
+
+			layoutStructureItem = layoutStructure.getLayoutStructureItem(
+				childrenItemIds.get(0));
+
+			layoutStructure.addFragmentStyledLayoutStructureItem(
+				fragmentEntryLink.getFragmentEntryLinkId(),
+				layoutStructureItem.getItemId(), -1);
+		}
 
 		return fragmentEntryLink;
+	}
+
+	private LayoutStructureItem _findFormStepContainerStyledLayoutStructureItem(
+		FormStyledLayoutStructureItem formStyledLayoutStructureItem,
+		LayoutStructure layoutStructure) {
+
+		for (String childrenItemId :
+				formStyledLayoutStructureItem.getChildrenItemIds()) {
+
+			LayoutStructureItem layoutStructureItem =
+				layoutStructure.getLayoutStructureItem(childrenItemId);
+
+			if (layoutStructureItem instanceof
+					FormStepContainerStyledLayoutStructureItem) {
+
+				return layoutStructureItem;
+			}
+		}
+
+		return null;
 	}
 
 	private FragmentEntry _getFragmentEntry(
@@ -404,6 +692,9 @@ public class FormItemManager {
 	@Reference
 	private FragmentCollectionContributorRegistry
 		_fragmentCollectionContributorRegistry;
+
+	@Reference
+	private FragmentEntryLinkManager _fragmentEntryLinkManager;
 
 	@Reference
 	private FragmentEntryLinkService _fragmentEntryLinkService;

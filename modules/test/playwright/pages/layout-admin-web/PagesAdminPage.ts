@@ -3,16 +3,14 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {FrameLocator, Locator, Page} from '@playwright/test';
+import {FrameLocator, Locator, Page, expect} from '@playwright/test';
 
-import {liferayConfig} from '../../liferay.config';
 import {clickAndExpectToBeHidden} from '../../utils/clickAndExpectToBeHidden';
 import {clickAndExpectToBeVisible} from '../../utils/clickAndExpectToBeVisible';
+import fillAndClickOutside from '../../utils/fillAndClickOutside';
 import {PORTLET_URLS} from '../../utils/portletUrls';
-import {reloadUntilVisible} from '../../utils/reloadUntilVisible';
 import {waitForSuccessAlert} from '../../utils/waitForSuccessAlert';
 import {PageEditorPage} from '../layout-content-page-editor-web/PageEditorPage';
-import {UIElementsPage} from '../uielements/UIElementsPage';
 
 export class PagesAdminPage {
 	readonly page: Page;
@@ -20,19 +18,14 @@ export class PagesAdminPage {
 	readonly addButton: Locator;
 	readonly addPageButton: Locator;
 	readonly addPageIFrame: FrameLocator;
-	readonly addTemplatePageButton: Locator;
 	readonly blankTypeButton: Locator;
 	readonly configurationSaveButton: Locator;
-	readonly homePageLink: Locator;
 	readonly javaScriptClientExtensionsTab: Locator;
 	readonly newButton: Locator;
-	readonly oneColumnButton: Locator;
 	readonly pageEditorPage: PageEditorPage;
 	readonly pageTitleBox: Locator;
 	readonly searchButton: Locator;
 	readonly searchInput: Locator;
-	readonly uiElementsPage: UIElementsPage;
-	readonly widgetPageButton: Locator;
 
 	constructor(page: Page) {
 		this.page = page;
@@ -41,32 +34,27 @@ export class PagesAdminPage {
 			exact: true,
 			name: 'Page',
 		});
-		this.addPageIFrame = page.frameLocator('iframe[title="Add Page"]');
+		this.addPageIFrame = page.frameLocator(
+			'iframe[id="addLayoutDialog_iframe_"]'
+		);
 		this.addButton = this.addPageIFrame.getByRole('button', {name: 'Add'});
-		this.addTemplatePageButton = page.getByRole('menuitem', {
-			name: 'Add Site Template Page',
-		});
 		this.blankTypeButton = page.getByRole('button', {name: 'Blank'});
 		this.configurationSaveButton = page.getByRole('button', {
 			exact: true,
 			name: 'Save',
 		});
-		this.homePageLink = page.getByLabel('Home', {exact: true});
 		this.javaScriptClientExtensionsTab = page.getByRole('tab', {
 			name: 'JavaScript',
 		});
 		this.newButton = page
 			.locator('.management-bar')
 			.getByRole('button', {name: 'New'});
-		this.oneColumnButton = page.getByText('1 Column', {exact: true});
 		this.pageEditorPage = new PageEditorPage(this.page);
 		this.pageTitleBox = this.addPageIFrame.locator(
 			'input[id="_com_liferay_layout_admin_web_portlet_GroupPagesPortlet_name"]'
 		);
 		this.searchButton = this.page.getByLabel('Search for', {exact: true});
 		this.searchInput = this.page.getByPlaceholder('Search for');
-		this.uiElementsPage = new UIElementsPage(page);
-		this.widgetPageButton = page.getByRole('button', {name: 'Widget Page'});
 	}
 
 	async goto(siteUrl?: Site['friendlyUrlPath']) {
@@ -75,10 +63,10 @@ export class PagesAdminPage {
 		);
 	}
 
-	async addCSSClientExtension(clientExtensionName: string) {
+	private async addCSSClientExtension(clientExtensionName: string) {
 		await this.page
-			.locator('.portlet-body li', {
-				has: this.page.getByText('Design'),
+			.getByRole('link', {
+				name: 'Design',
 			})
 			.click();
 
@@ -90,7 +78,7 @@ export class PagesAdminPage {
 
 		// Wait for "Select Items" checkbox label to be visible which occurs when JavaScript hydration is complete.
 
-		await iframe.getByText('Select Items').waitFor({state: 'visible'});
+		await iframe.getByLabel(clientExtensionName).check({trial: true});
 
 		await iframe.getByLabel(clientExtensionName).check();
 
@@ -111,10 +99,10 @@ export class PagesAdminPage {
 		await this.configurationSaveButton.click();
 	}
 
-	async addJavaScriptClientExtension(clientExtensionName: string) {
+	private async addJavaScriptClientExtension(clientExtensionName: string) {
 		await this.page
-			.locator('.portlet-body li', {
-				has: this.page.getByText('Design'),
+			.getByRole('link', {
+				name: 'Design',
 			})
 			.click();
 
@@ -151,75 +139,176 @@ export class PagesAdminPage {
 		await this.configurationSaveButton.click();
 	}
 
-	async addContentPage(pageName: string) {
-		await this.blankTypeButton.waitFor({state: 'visible'});
-		await this.blankTypeButton.click();
-		await this.pageTitleBox.fill(pageName);
-		await this.addButton.click();
+	async addCollectionPage({
+		collectionName,
+		draft = false,
+		name,
+		parent,
+	}: {
+		collectionName: string;
+		draft?: boolean;
+		name: string;
+		parent?: string;
+	}) {
+
+		// If no parent specified, just create from toolbar
+
+		if (!parent) {
+			await this.newButton.click();
+
+			await this.page
+				.getByRole('menuitem')
+				.getByText('Collection Page', {exact: true})
+				.click();
+		}
+
+		// If parent is specified, create child page
+
+		else {
+			await clickAndExpectToBeVisible({
+				autoClick: true,
+				target: this.page.getByRole('menuitem', {
+					name: 'Add Collection Page',
+				}),
+				trigger: this.page
+					.locator('li', {has: this.page.getByText(parent)})
+					.getByTitle('Add Child Page'),
+			});
+		}
+
 		await this.page
-			.getByTitle(`Go to ${pageName}`)
-			.waitFor({state: 'visible'});
+			.getByRole('button')
+			.filter({hasText: collectionName})
+			.click();
+
+		// Select template and fill name
+
+		await this.addPage({
+			name,
+			successMessage:
+				'Success:The collection page was created successfully',
+		});
+
+		// Publish is draft param is false
+
+		if (!draft) {
+			await this.pageEditorPage.publishPage();
+		}
 	}
 
-	async addWidgetPage(pageName: string) {
-		await this.widgetPageButton.waitFor({state: 'visible'});
-		await this.widgetPageButton.click();
-		await this.pageTitleBox.waitFor({state: 'attached'});
-		await this.pageTitleBox.hover();
-		await this.pageTitleBox.click();
-		await this.pageTitleBox.fill(pageName);
+	async addPage({
+		name,
+		successMessage,
+		template = 'Blank',
+	}: {
+		name: string;
+		successMessage: string;
+		template?: string;
+	}) {
+		await this.page
+			.locator('.card-page-item')
+			.filter({hasText: template})
+			.click();
+
+		const loadingAnimation = this.page.locator(
+			'.modal-body-iframe .loading-animation'
+		);
+		await loadingAnimation.waitFor();
+		await loadingAnimation.waitFor({state: 'hidden'});
+
+		await fillAndClickOutside(this.page, this.pageTitleBox, name);
+
 		await this.addButton.waitFor({state: 'attached'});
 		await this.addButton.hover();
 		await this.addButton.click();
-		await this.page
-			.getByText('Success:The page was created successfully.')
-			.waitFor({state: 'visible'});
-		await this.oneColumnButton.click();
-		await this.uiElementsPage.saveButton.click();
-		await this.page
-			.getByText('Success:The page was updated successfully.')
-			.waitFor({state: 'visible'});
+
+		await waitForSuccessAlert(this.page, successMessage);
 	}
 
-	async checkIfWebContentAddedToHome(
-		siteName: string,
-		webContentBody: string
-	) {
-		await this.page.goto(
-			liferayConfig.environment.baseUrl + `/group/${siteName}`
-		);
-		const myLocator = this.page.getByRole('link', {
-			name: `Go to ${siteName}`,
-		});
-		await reloadUntilVisible({
-			myLocator,
-			page: this.page,
-		});
+	private async addThemeFaviconClientExtension(clientExtensionName: string) {
 		await this.page
-			.getByText(webContentBody)
-			.waitFor({state: 'visible', timeout: 3000});
-		await this.page.getByText(webContentBody).isVisible();
+			.getByRole('link', {
+				name: 'Design',
+			})
+			.click();
+
+		await this.page.getByLabel('Select Favicon', {exact: true}).click();
+
+		const iframe = this.page.frameLocator('iframe[title="Select Favicon"]');
+
+		await iframe
+			.getByRole('link', {exact: true, name: 'Client Extension'})
+			.click();
+
+		await iframe.getByText(clientExtensionName).click();
+
+		await expect(
+			this.page.getByAltText(clientExtensionName, {exact: true})
+		).toBeVisible();
+
+		await this.configurationSaveButton.click();
 	}
 
-	async checkIfWebContentAdded(
-		siteName: string,
-		webContentName: string,
-		webContentBody: string
-	) {
-		await this.page.goto(
-			liferayConfig.environment.baseUrl + `/group/${siteName}`
-		);
-		const myLocator = this.page.getByText(webContentName);
-		await reloadUntilVisible({
-			myLocator,
-			page: this.page,
+	async addWidgetPage({
+		addButtonLabel = 'Page',
+		name,
+	}: {
+		addButtonLabel?: string;
+		name: string;
+	}) {
+		await this.createNewPage({
+			addButtonLabel,
+			draft: true,
+			name,
+			template: 'Widget Page',
 		});
+	}
+
+	async changeFavicon(
+		layoutTitle: string,
+		filePath: string,
+		siteUrl: string
+	) {
+		await this.goto(siteUrl);
+
+		await this.clickOnAction('Configure', layoutTitle);
+
+		const fileChooserPromise = this.page.waitForEvent('filechooser');
+
 		await this.page
-			.getByRole('menuitem', {name: webContentName})
+			.locator('.portlet-body li', {
+				has: this.page.getByText('Design'),
+			})
+			.click();
+
+		await this.page
+			.getByLabel('Select Favicon', {exact: true})
 			.waitFor({state: 'visible'});
-		await this.page.getByRole('menuitem', {name: webContentName}).click();
-		await this.page.getByText(webContentBody).waitFor({state: 'visible'});
-		await this.page.getByText(webContentBody).isVisible();
+
+		await this.page.getByLabel('Select Favicon', {exact: true}).click();
+
+		const iframe = this.page.frameLocator('iframe[title="Select Favicon"]');
+
+		await expect(
+			iframe.getByText('Drag & Drop Your Files or Browse to Upload')
+		).toBeVisible();
+
+		await iframe
+			.getByText('Drag & Drop Your Files or Browse to Upload')
+			.click();
+
+		const fileChooser = await fileChooserPromise;
+
+		await fileChooser.setFiles(filePath);
+
+		await iframe.getByRole('button', {exact: true, name: 'Add'}).click();
+
+		await this.configurationSaveButton.click();
+
+		await waitForSuccessAlert(
+			this.page,
+			'Success:The page was updated successfully.'
+		);
 	}
 
 	async clickOnJavaScriptClientExtensionsTab() {
@@ -241,12 +330,55 @@ export class PagesAdminPage {
 		});
 	}
 
+	async clearThemeFaviconClientExtension({
+		layoutTitle,
+		siteUrl,
+	}: {
+		layoutTitle?: string;
+		siteUrl?: Site['friendlyUrlPath'];
+	}) {
+		if (!layoutTitle) {
+			await this.gotoPagesConfiguration(siteUrl);
+		}
+		else {
+			await this.goto(siteUrl);
+
+			await this.clickOnAction('Configure', layoutTitle);
+		}
+
+		await this.page
+			.locator('.portlet-body li', {
+				has: this.page.getByText('Design'),
+			})
+			.click();
+
+		await this.page.getByLabel('Clear Favicon', {exact: true}).click();
+
+		await expect(
+			this.page.getByAltText('Favicon from Theme', {exact: true})
+		).toBeVisible();
+
+		await this.configurationSaveButton.click();
+
+		if (!layoutTitle) {
+			await waitForSuccessAlert(this.page);
+		}
+		else {
+			await waitForSuccessAlert(
+				this.page,
+				'Success:The page was updated successfully.'
+			);
+		}
+	}
+
 	async createNewPage({
+		addButtonLabel = 'Page',
 		draft = false,
 		name,
 		parent,
 		template,
 	}: {
+		addButtonLabel?: string;
 		draft?: boolean;
 		name: string;
 		parent?: string;
@@ -260,7 +392,7 @@ export class PagesAdminPage {
 
 			await this.page
 				.getByRole('menuitem')
-				.getByText('Page', {exact: true})
+				.getByText(addButtonLabel, {exact: true})
 				.click();
 		}
 
@@ -278,28 +410,11 @@ export class PagesAdminPage {
 
 		// Select template and fill name
 
-		await this.page
-			.locator('.card-page-item')
-			.filter({hasText: template || 'Blank'})
-			.click();
-
-		const loadingAnimation = this.page.locator(
-			'.modal-body-iframe .loading-animation'
-		);
-		await loadingAnimation.waitFor();
-		await loadingAnimation.waitFor({state: 'hidden'});
-
-		const modalFrame = this.page.frameLocator('iframe[title="Add Page"]');
-		const inputName = modalFrame.getByPlaceholder('Add Page Name');
-
-		await inputName.fill(name);
-
-		await modalFrame.getByRole('button', {name: 'Add'}).click();
-
-		await waitForSuccessAlert(
-			this.page,
-			'Success:The page was created successfully.'
-		);
+		await this.addPage({
+			name,
+			successMessage: 'Success:The page was created successfully.',
+			template,
+		});
 
 		// Publish is draft param is false
 
@@ -374,28 +489,35 @@ export class PagesAdminPage {
 	async selectClientExtension({
 		clientExtensionName,
 		layoutTitle,
+		openConfiguration = true,
 		siteUrl,
 		type,
 	}: {
 		clientExtensionName: string;
 		layoutTitle?: string;
+		openConfiguration?: boolean;
 		siteUrl?: Site['friendlyUrlPath'];
-		type?: string;
+		type?: 'globalCSS' | 'globalJS' | 'themeFavicon';
 	}) {
-		if (!layoutTitle) {
-			await this.gotoPagesConfiguration(siteUrl);
-		}
-		else {
-			await this.goto(siteUrl);
+		if (openConfiguration) {
+			if (!layoutTitle) {
+				await this.gotoPagesConfiguration(siteUrl);
+			}
+			else {
+				await this.goto(siteUrl);
 
-			await this.clickOnAction('Configure', layoutTitle);
+				await this.clickOnAction('Configure', layoutTitle);
+			}
 		}
 
 		if (type && type === 'globalCSS') {
 			await this.addCSSClientExtension(clientExtensionName);
 		}
-		else {
+		else if (type && type === 'globalJS') {
 			await this.addJavaScriptClientExtension(clientExtensionName);
+		}
+		else {
+			await this.addThemeFaviconClientExtension(clientExtensionName);
 		}
 
 		if (!layoutTitle) {
@@ -439,21 +561,30 @@ export class PagesAdminPage {
 		await this.configurationSaveButton.click();
 	}
 
-	async selectPageAndChangePermissions(
-		pageNames: string[],
-		permissionIds: string[]
-	) {
-
-		// Select the pages
-
-		for (const pageName of pageNames) {
+	async selectPages(pageNames: string[]) {
+		for (const [index, pageName] of pageNames.entries()) {
 			const checkbox = this.page.getByLabel(`Select ${pageName}`, {
 				exact: true,
 			});
 
-			await checkbox.waitFor();
-			await checkbox.check();
+			if (!(await checkbox.isChecked())) {
+				await clickAndExpectToBeVisible({
+					target: this.page
+						.locator('.management-bar .nav-item')
+						.getByText(`${index + 1} of`),
+					trigger: this.page.getByLabel(`Select ${pageName}`, {
+						exact: true,
+					}),
+				});
+			}
 		}
+	}
+
+	async changePagesPermissions(pageNames: string[], permissionIds: string[]) {
+
+		// Select the pages
+
+		await this.selectPages(pageNames);
 
 		// Open the permissions modal
 
@@ -488,5 +619,9 @@ export class PagesAdminPage {
 		await waitForSuccessAlert(permissionsFrame, successMessage);
 
 		await this.page.getByLabel('close', {exact: true}).click();
+
+		await this.page.getByLabel('Clear selection').click();
+
+		await this.page.getByLabel('Select All Items').waitFor();
 	}
 }

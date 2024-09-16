@@ -5,10 +5,16 @@
 
 import {Locator, Page} from '@playwright/test';
 
-import {searchTableRowByValue} from '../commerceDNDTablePage';
+import {
+	CommerceDNDTablePage,
+	searchTableRowByValue,
+} from '../commerceDNDTablePage';
 import {CommerceLayoutsPage} from '../commerceLayoutsPage';
 
-export class PendingOrdersPage {
+export class PendingOrdersPage extends CommerceDNDTablePage {
+	readonly approveButton: Locator;
+	readonly checkoutButton: Locator;
+	readonly doneButton: Locator;
 	readonly editMenuItem: Locator;
 	readonly errorMessageCloseButton: Locator;
 	readonly layoutsPage: CommerceLayoutsPage;
@@ -29,6 +35,17 @@ export class PendingOrdersPage {
 	readonly viewButton: Locator;
 
 	constructor(page: Page) {
+		super(
+			page,
+			'#portlet_com_liferay_commerce_order_content_web_internal_portlet_CommerceOpenOrderContentPortlet .dnd-table'
+		);
+
+		this.approveButton = page.getByText('Approve');
+		this.checkoutButton = page.getByText('Checkout');
+		this.doneButton = page.getByRole('button', {
+			exact: true,
+			name: 'Done',
+		});
 		this.editMenuItem = page.getByRole('menuitem', {
 			exact: true,
 			name: 'Edit',

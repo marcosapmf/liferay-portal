@@ -27,6 +27,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.regex.Matcher;
 
 /**
  * @author Brian Wing Shun Chan
@@ -128,7 +129,9 @@ public class HttpInvoker {
 	}
 
 	public HttpInvoker path(String name, Object value) {
-		_path = _path.replaceFirst("\\{" + name + "\\}", String.valueOf(value));
+		_path = _path.replaceFirst(
+			"\\{" + name + "\\}",
+			Matcher.quoteReplacement(String.valueOf(value)));
 
 		return this;
 	}

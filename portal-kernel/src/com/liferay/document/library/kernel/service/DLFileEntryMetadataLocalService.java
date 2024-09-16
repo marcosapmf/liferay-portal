@@ -135,6 +135,10 @@ public interface DLFileEntryMetadataLocalService
 	public void deleteFileEntryMetadata(long fileEntryId)
 		throws PortalException;
 
+	public void deleteFileEntryMetadataByExternalReferenceCode(
+			String externalReferenceCode, long companyId)
+		throws PortalException;
+
 	public void deleteFileVersionFileEntryMetadata(long fileVersionId)
 		throws PortalException;
 
@@ -221,6 +225,10 @@ public interface DLFileEntryMetadataLocalService
 	public DLFileEntryMetadata fetchDLFileEntryMetadata(
 		long fileEntryMetadataId);
 
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public DLFileEntryMetadata fetchDLFileEntryMetadataByExternalReferenceCode(
+		String externalReferenceCode, long companyId);
+
 	/**
 	 * Returns the document library file entry metadata with the matching UUID and company.
 	 *
@@ -251,6 +259,11 @@ public interface DLFileEntryMetadataLocalService
 	 */
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public DLFileEntryMetadata getDLFileEntryMetadata(long fileEntryMetadataId)
+		throws PortalException;
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public DLFileEntryMetadata getDLFileEntryMetadataByExternalReferenceCode(
+			String externalReferenceCode, long companyId)
 		throws PortalException;
 
 	/**
@@ -344,13 +357,15 @@ public interface DLFileEntryMetadataLocalService
 		DLFileEntryMetadata dlFileEntryMetadata);
 
 	public void updateFileEntryMetadata(
-			long companyId, List<DDMStructure> ddmStructures, long fileEntryId,
+			String externalReferenceCode, long companyId,
+			List<DDMStructure> ddmStructures, long fileEntryId,
 			long fileVersionId, Map<String, DDMFormValues> ddmFormValuesMap,
 			ServiceContext serviceContext)
 		throws PortalException;
 
 	public void updateFileEntryMetadata(
-			long fileEntryTypeId, long fileEntryId, long fileVersionId,
+			String externalReferenceCode, long fileEntryTypeId,
+			long fileEntryId, long fileVersionId,
 			Map<String, DDMFormValues> ddmFormValuesMap,
 			ServiceContext serviceContext)
 		throws PortalException;

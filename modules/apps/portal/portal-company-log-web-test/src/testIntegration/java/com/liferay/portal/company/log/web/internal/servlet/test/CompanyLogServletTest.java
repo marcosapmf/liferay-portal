@@ -270,13 +270,13 @@ public class CompanyLogServletTest {
 
 	@Test
 	public void testListWithOmniadminUser() throws Exception {
-		User omniAdminUser = null;
+		User omniadminUser = null;
 
 		try {
-			omniAdminUser = UserTestUtil.addOmniadminUser();
+			omniadminUser = UserTestUtil.addOmniadminUser();
 
 			MockHttpServletRequest mockHttpServletRequest =
-				_createMockHttpServletRequest("/", omniAdminUser);
+				_createMockHttpServletRequest("/", omniadminUser);
 
 			_servlet.service(mockHttpServletRequest, _mockHttpServletResponse);
 
@@ -292,8 +292,8 @@ public class CompanyLogServletTest {
 				mockHttpServletRequest);
 		}
 		finally {
-			if (omniAdminUser != null) {
-				_userLocalService.deleteUser(omniAdminUser);
+			if (omniadminUser != null) {
+				_userLocalService.deleteUser(omniadminUser);
 			}
 		}
 	}

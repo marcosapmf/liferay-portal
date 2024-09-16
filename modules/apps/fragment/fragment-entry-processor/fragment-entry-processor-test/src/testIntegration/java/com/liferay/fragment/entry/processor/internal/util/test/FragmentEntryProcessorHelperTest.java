@@ -54,6 +54,7 @@ import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
+import com.liferay.portal.kernel.test.TestInfo;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
@@ -72,7 +73,6 @@ import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.WebKeys;
-import com.liferay.portal.test.rule.FeatureFlags;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
@@ -217,6 +217,7 @@ public class FragmentEntryProcessorHelperTest {
 	}
 
 	@Test
+	@TestInfo("LPS-162223")
 	public void testGetFieldValueFromStringValueDateDDMFormFieldType()
 		throws Exception {
 
@@ -501,8 +502,8 @@ public class FragmentEntryProcessorHelperTest {
 				fieldId, LocaleUtil.getSiteDefault()));
 	}
 
-	@FeatureFlags("LPD-11377")
 	@Test
+	@TestInfo("LPD-11377")
 	public void testGetRepeatableAssetTags() throws Exception {
 		JSONObject jsonObject = JSONUtil.put(
 			"className", JournalArticle.class.getName()
@@ -546,8 +547,8 @@ public class FragmentEntryProcessorHelperTest {
 				LocaleUtil.SPAIN));
 	}
 
-	@FeatureFlags("LPD-11377")
 	@Test
+	@TestInfo("LPD-11377")
 	public void testGetRepeatableAssetVocabularies() throws Exception {
 		JSONObject jsonObject = JSONUtil.put(
 			"className", JournalArticle.class.getName()
@@ -593,8 +594,8 @@ public class FragmentEntryProcessorHelperTest {
 				LocaleUtil.SPAIN));
 	}
 
-	@FeatureFlags("LPD-11377")
 	@Test
+	@TestInfo("LPD-11377")
 	public void testGetRepeatableFieldValue() throws Exception {
 		JSONObject jsonObject = JSONUtil.put(
 			"className", JournalArticle.class.getName()

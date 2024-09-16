@@ -48,6 +48,11 @@ public class RememberMeTokenLocalServiceImpl
 	}
 
 	@Override
+	public void deleteExpiredRememberMeTokens(Date expirationDate) {
+		rememberMeTokenPersistence.removeByLteExpirationDate(expirationDate);
+	}
+
+	@Override
 	public void deleteExpiredRememberMeTokens(long userId) {
 		for (RememberMeToken rememberMeToken :
 				rememberMeTokenPersistence.findByUserId(userId)) {
@@ -71,6 +76,12 @@ public class RememberMeTokenLocalServiceImpl
 				rememberMeToken.getValue(),
 				PasswordEncryptorUtil.encrypt(
 					value, rememberMeToken.getValue()))) {
+
+			return null;
+		}
+
+		if (rememberMeToken.isExpired()) {
+			rememberMeTokenLocalService.deleteRememberMeToken(rememberMeToken);
 
 			return null;
 		}

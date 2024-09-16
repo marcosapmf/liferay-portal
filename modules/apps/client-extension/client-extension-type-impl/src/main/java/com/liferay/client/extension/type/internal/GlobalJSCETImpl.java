@@ -35,8 +35,18 @@ public class GlobalJSCETImpl extends BaseCETImpl implements GlobalJSCET {
 	}
 
 	@Override
+	public String getScope() {
+		return getString("scope");
+	}
+
+	@Override
 	public String getScriptElementAttributesJSON() {
 		return getString("scriptElementAttributesJSON");
+	}
+
+	@Override
+	public String getScriptLocation() {
+		return getString("scriptLocation");
 	}
 
 	@Override

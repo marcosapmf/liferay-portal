@@ -127,7 +127,7 @@ public class DocumentResourceImpl extends BaseDocumentResourceImpl {
 		throws Exception {
 
 		FileEntry fileEntry = _dlAppService.getFileEntryByExternalReferenceCode(
-			assetLibraryId, externalReferenceCode);
+			externalReferenceCode, assetLibraryId);
 
 		_dlAppService.deleteFileEntry(fileEntry.getFileEntryId());
 	}
@@ -150,7 +150,7 @@ public class DocumentResourceImpl extends BaseDocumentResourceImpl {
 		throws Exception {
 
 		FileEntry fileEntry = _dlAppService.getFileEntryByExternalReferenceCode(
-			siteId, externalReferenceCode);
+			externalReferenceCode, siteId);
 
 		_dlAppService.deleteFileEntry(fileEntry.getFileEntryId());
 	}
@@ -162,7 +162,7 @@ public class DocumentResourceImpl extends BaseDocumentResourceImpl {
 
 		return _toDocument(
 			_dlAppService.getFileEntryByExternalReferenceCode(
-				assetLibraryId, externalReferenceCode));
+				externalReferenceCode, assetLibraryId));
 	}
 
 	@Override
@@ -301,7 +301,7 @@ public class DocumentResourceImpl extends BaseDocumentResourceImpl {
 
 		return _toDocument(
 			_dlAppService.getFileEntryByExternalReferenceCode(
-				siteId, externalReferenceCode));
+				externalReferenceCode, siteId));
 	}
 
 	@Override
@@ -550,6 +550,18 @@ public class DocumentResourceImpl extends BaseDocumentResourceImpl {
 
 		if ((externalReferenceCode == null) && (document != null)) {
 			externalReferenceCode = document.getExternalReferenceCode();
+		}
+
+		if ((document != null) &&
+			(document.getDocumentFolderExternalReferenceCode() != null)) {
+
+			Folder folder =
+				_dlAppLocalService.fetchFolderByExternalReferenceCode(
+					document.getDocumentFolderExternalReferenceCode(), groupId);
+
+			if (folder != null) {
+				documentFolderId = folder.getFolderId();
+			}
 		}
 
 		if (documentFolderId == null) {
@@ -918,11 +930,26 @@ public class DocumentResourceImpl extends BaseDocumentResourceImpl {
 
 		Long folderId = null;
 
-		if ((document != null) && (document.getDocumentFolderId() != null) &&
-			(document.getDocumentFolderId() !=
-				existingFileEntry.getFolderId())) {
+		if (document != null) {
+			String documentFolderExternalReferenceCode =
+				document.getDocumentFolderExternalReferenceCode();
 
-			folderId = document.getDocumentFolderId();
+			if (documentFolderExternalReferenceCode != null) {
+				Folder folder =
+					_dlAppLocalService.fetchFolderByExternalReferenceCode(
+						documentFolderExternalReferenceCode,
+						existingFileEntry.getGroupId());
+
+				if (folder != null) {
+					folderId = folder.getFolderId();
+				}
+			}
+			else if ((document.getDocumentFolderId() != null) &&
+					 (document.getDocumentFolderId() !=
+						 existingFileEntry.getFolderId())) {
+
+				folderId = document.getDocumentFolderId();
+			}
 		}
 
 		if (folderId != null) {

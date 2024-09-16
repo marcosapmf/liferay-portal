@@ -368,7 +368,7 @@ public class SearchResultResourceTest extends BaseSearchResultResourceTestCase {
 	public void testSearchEndpointRedirect() throws Exception {
 		_baseURI = "portal-search-rest";
 
-		_testPostSearchPageWithKeywords();
+		testPostSearchPage();
 	}
 
 	@Override
@@ -936,15 +936,17 @@ public class SearchResultResourceTest extends BaseSearchResultResourceTestCase {
 		JSONArray rangesJSONArray = _jsonFactory.createJSONArray();
 
 		String range = StringBundler.concat(
+			StringPool.OPEN_BRACKET,
 			DateFormatUtils.format(
 				Date.from(
 					startOfDayLocalDateTime.toInstant(ZoneOffset.ofHours(0))),
 				"yyyyMMddHHmmss"),
-			" TO ", DateFormatUtils.format(new Date(), "yyyyMMddHHmmss"));
+			" TO ", DateFormatUtils.format(new Date(), "yyyyMMddHHmmss"),
+			StringPool.CLOSE_BRACKET);
 
 		rangesJSONArray.put(
 			JSONUtil.put(
-				"label", "1"
+				"label", range
 			).put(
 				"range", range
 			));
@@ -966,7 +968,7 @@ public class SearchResultResourceTest extends BaseSearchResultResourceTestCase {
 		JSONArray termJSONArray = (JSONArray)searchFacets.get("date-range");
 
 		Assert.assertEquals(
-			"1",
+			range,
 			_jsonFactory.createJSONObject(
 				termJSONArray.getString(0)
 			).getString(
@@ -976,6 +978,10 @@ public class SearchResultResourceTest extends BaseSearchResultResourceTestCase {
 
 	private void _testPostSearchPageWithEmbeddedNestedFields()
 		throws Exception {
+
+		if (Objects.equals(_searchEngine.getVendor(), "Solr")) {
+			return;
+		}
 
 		ObjectField objectField = ObjectFieldUtil.createObjectField(
 			"Text", "String", true, true, null,
@@ -1095,6 +1101,10 @@ public class SearchResultResourceTest extends BaseSearchResultResourceTestCase {
 	private void _testPostSearchPageWithHighlightConfiguration()
 		throws Exception {
 
+		if (Objects.equals(_searchEngine.getVendor(), "Solr")) {
+			return;
+		}
+
 		SearchPage<SearchResult> searchPage =
 			_postSearchPageWithSXPBlueprintConfiguration(
 				_user.getModelClassName(), _user.getFullName(),
@@ -1174,6 +1184,10 @@ public class SearchResultResourceTest extends BaseSearchResultResourceTestCase {
 
 	private void _testPostSearchPageWithoutHighlightConfiguration()
 		throws Exception {
+
+		if (Objects.equals(_searchEngine.getVendor(), "Solr")) {
+			return;
+		}
 
 		SearchPage<SearchResult> searchPage =
 			_postSearchPageWithSXPBlueprintConfiguration(

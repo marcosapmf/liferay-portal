@@ -1099,6 +1099,10 @@ public class ClientExtensionProjectConfigurator
 		}
 		else if (Objects.equals(clientExtension.type, "globalJS")) {
 			_validateGlobalJSScriptElementAttributes(clientExtension);
+			_validateTypeSettingsValues(
+				clientExtension, "scope", "instance", "page");
+			_validateTypeSettingsValues(
+				clientExtension, "scriptLocation", "bottom", "head");
 		}
 		else if (Objects.equals(clientExtension.type, "instanceSettings")) {
 			_validateRequiredTypeSettingsKeys(clientExtension, "pid");

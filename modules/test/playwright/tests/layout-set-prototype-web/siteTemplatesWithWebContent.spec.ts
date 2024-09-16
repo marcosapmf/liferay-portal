@@ -7,6 +7,7 @@ import {Page, expect, mergeTests} from '@playwright/test';
 
 import {apiHelpersTest} from '../../fixtures/apiHelpersTest';
 import {applicationsMenuPageTest} from '../../fixtures/applicationsMenuPageTest';
+import {isolatedSiteTest} from '../../fixtures/isolatedSiteTest';
 import {loginTest} from '../../fixtures/loginTest';
 import {pageEditorPagesTest} from '../../fixtures/pageEditorPagesTest';
 import {pageViewModePagesTest} from '../../fixtures/pageViewModePagesTest';
@@ -26,7 +27,9 @@ import {PageEditorPage} from '../../pages/layout-content-page-editor-web/PageEdi
 import {ApplicationsMenuPage} from '../../pages/product-navigation-applications-menu/ApplicationsMenuPage';
 import {ProductMenuPage} from '../../pages/product-navigation-control-menu-web/ProductMenuPage';
 import {UIElementsPage} from '../../pages/uielements/UIElementsPage';
+import {clickAndExpectToBeVisible} from '../../utils/clickAndExpectToBeVisible';
 import getRandomString from '../../utils/getRandomString';
+import {waitForSuccessAlert} from '../../utils/waitForSuccessAlert';
 import {journalPagesTest} from '../journal-web/fixtures/journalPagesTest';
 import {JournalPage} from '../journal-web/pages/JournalPage';
 import {pagesPagesTest} from '../layout-admin-web/fixtures/pagesPagesTest';
@@ -37,6 +40,7 @@ export const test = mergeTests(
 	applicationsMenuPageTest,
 	journalPagesTest,
 	apiHelpersTest,
+	isolatedSiteTest,
 	layoutSetPrototypePageTest,
 	productMenuPageTest,
 	uiElementsPageTest,
@@ -44,8 +48,8 @@ export const test = mergeTests(
 	pageViewModePagesTest,
 	webContentDisplayPageTest,
 	pageEditorPagesTest,
-	serverAdministrationPageTest,
 	sitesPageTest,
+	serverAdministrationPageTest,
 	systemSettingsPageTest,
 	loginTest(),
 	pagesAdminPagesTest
@@ -56,6 +60,137 @@ const webContentName2: string = getRandomString();
 const webContentText1: string = getRandomString();
 const webContentText2: string = getRandomString();
 
+test(
+	'Editing global web contents does not trigger site template propagation',
+	{tag: '@LPD-21445'},
+	async ({
+		apiHelpers,
+		applicationsMenuPage,
+		journalPage,
+		layoutSetPrototypePage,
+		page,
+		pageEditorPage,
+		pagesAdminPage,
+		productMenuPage,
+		sitesPage,
+		systemSettingsPage,
+		uiElementsPage,
+	}) => {
+		const siteTemplateName: string = getRandomString();
+		const siteName1: string = getRandomString();
+		const siteName2: string = getRandomString();
+		const webContentName: string = getRandomString();
+		const text: string = getRandomString();
+		const secondPageNameOnSiteTemplate = getRandomString();
+
+		let site1Id: string | undefined;
+		let site2Id: string | undefined;
+
+		try {
+			await systemSettingsPage.disablePrivatePages();
+
+			await applicationsMenuPage.goToGlobalSite();
+			await productMenuPage.checkIfAdecuateProductMenu('Global');
+			await productMenuPage.openProductMenuIfClosed();
+
+			await productMenuPage.goToWebContent();
+			await journalPage.goToCreateArticle();
+			await journalPage.fillArticleDataSiteTemplate(webContentName, text);
+			await journalPage.publishArticle();
+
+			await createSiteTemplateWithContentPageAndAssetPublisher({
+				applicationsMenuPage,
+				layoutSetPrototypePage,
+				page,
+				pageEditorPage,
+				pagesAdminPage,
+				productMenuPage,
+				templateName: siteTemplateName,
+				uiElementsPage,
+			});
+
+			await applicationsMenuPage.goToSites();
+			site1Id = await sitesPage.createSiteFromTemplate(
+				siteTemplateName,
+				siteName1
+			);
+
+			await applicationsMenuPage.goToSites();
+			site2Id = await sitesPage.createSiteFromTemplate(
+				siteTemplateName,
+				siteName2
+			);
+
+			await applicationsMenuPage.goToSiteTemplates();
+			const siteTemplateUrl =
+				await layoutSetPrototypePage.getSiteTemplateUrl(
+					siteTemplateName
+				);
+			await page.goto(siteTemplateUrl);
+
+			await productMenuPage.checkIfAdecuateProductMenu(siteTemplateName);
+			await productMenuPage.openProductMenuIfClosed();
+
+			await productMenuPage.goToPages();
+			await pagesAdminPage.newButton.click();
+			await layoutSetPrototypePage.addTemplatePageButton.waitFor({
+				state: 'visible',
+			});
+			await layoutSetPrototypePage.addTemplatePageButton.click();
+			await pagesAdminPage.addPage({
+				name: secondPageNameOnSiteTemplate,
+				successMessage: 'Success:The page was created successfully.',
+			});
+
+			await journalPage.goto('/global');
+
+			await page.getByTestId('row').first().locator('a').click();
+
+			await page.waitForTimeout(2000);
+
+			const layoutsCountOnSite1 =
+				await apiHelpers.jsonWebServicesLayout.getLayoutsCount(
+					Number(site1Id),
+					true
+				);
+
+			await expect(layoutsCountOnSite1).toBe(2);
+		}
+		finally {
+			if (site1Id || site2Id) {
+				await deleteSites(apiHelpers, site1Id, site2Id);
+			}
+
+			const layoutSetPrototypes: LayoutSetPrototype[] =
+				await apiHelpers.jsonWebServicesLayoutSetPrototype.getLayoutSetPrototypes();
+			const layoutSetPrototype = await getLayoutTemplateByName(
+				layoutSetPrototypes,
+				siteTemplateName
+			);
+
+			if (layoutSetPrototypes) {
+				await deleteLayoutSetPrototype(
+					apiHelpers,
+					layoutSetPrototype.layoutSetPrototypeId.toString()
+				);
+			}
+
+			await applicationsMenuPage.goToGlobalSite();
+			await productMenuPage.checkIfAdecuateProductMenu('Global');
+			await productMenuPage.openProductMenuIfClosed();
+			await productMenuPage.goToWebContent();
+			const checkbox = page
+				.getByTestId('row')
+				.first()
+				.locator('input[type="checkbox"]');
+			await checkbox.check();
+
+			const deleteButton = page.getByRole('button', {name: 'Delete'});
+			await deleteButton.click();
+		}
+	}
+);
+
 test('Can switch template with web content on widget page.', async ({
 	apiHelpers,
 	applicationsMenuPage,
@@ -65,7 +200,6 @@ test('Can switch template with web content on widget page.', async ({
 	pagesAdminPage,
 	productMenuPage,
 	serverAdministrationPage,
-	sitesPage,
 	systemSettingsPage,
 	uiElementsPage,
 	webContentDisplayPage,
@@ -78,9 +212,8 @@ test('Can switch template with web content on widget page.', async ({
 	await systemSettingsPage.disablePrivatePages();
 
 	await createSiteTemplateWithWebContentOnWidgetPage({
-		applicationsMenuPage,
+		apiHelpers,
 		journalPage,
-		layoutSetPrototypePage,
 		page,
 		pagesAdminPage,
 		productMenuPage,
@@ -88,14 +221,13 @@ test('Can switch template with web content on widget page.', async ({
 		text: `${webContentText1} `,
 		uiElementsPage,
 		webContentDisplayPage,
-		webContentName: `${webContentName1} `,
+		webContentName: webContentName1,
 		widgetPagePage,
 	});
 
 	await createSiteTemplateWithWebContentOnWidgetPage({
-		applicationsMenuPage,
+		apiHelpers,
 		journalPage,
-		layoutSetPrototypePage,
 		page,
 		pagesAdminPage,
 		productMenuPage,
@@ -103,7 +235,7 @@ test('Can switch template with web content on widget page.', async ({
 		text: `${webContentText2} `,
 		uiElementsPage,
 		webContentDisplayPage,
-		webContentName: `${webContentName2} `,
+		webContentName: webContentName2,
 		widgetPagePage,
 	});
 	const layoutSetPrototypes: LayoutSetPrototype[] =
@@ -117,24 +249,26 @@ test('Can switch template with web content on widget page.', async ({
 		widgetTemplateName2
 	);
 	await applicationsMenuPage.goToSites();
-	const siteId = await sitesPage.createSiteFromTemplate(
-		widgetTemplateName1,
-		siteName
-	);
+
+	const site = await apiHelpers.headlessSite.createSite({
+		name: siteName,
+		templateKey: layoutSetPrototype1.layoutSetPrototypeId,
+		templateType: 'site-template',
+	});
 
 	await applicationsMenuPage.goToServerAdministration();
 
 	const script = `
     import com.liferay.portal.kernel.service.LayoutSetLocalServiceUtil;
     String siteTemplateUUID = "${layoutSetPrototype2.uuid}";
-    long siteId = ${siteId};
+    long siteId = ${site.id};
     LayoutSetLocalServiceUtil.updateLayoutSetPrototypeLinkEnabled(siteId, true, true, siteTemplateUUID);
     `;
 	await serverAdministrationPage.executeScript(script);
 
 	await applicationsMenuPage.goToSites();
 
-	await pagesAdminPage.checkIfWebContentAdded(
+	await layoutSetPrototypePage.checkIfWebContentAdded(
 		siteName,
 		widgetTemplateName2,
 		webContentText2
@@ -144,7 +278,7 @@ test('Can switch template with web content on widget page.', async ({
 
 	await deleteSiteAndLayoutSetPrototypes(
 		apiHelpers,
-		siteId,
+		site.id,
 		layoutSetPrototype1.layoutSetPrototypeId.toString(),
 		layoutSetPrototype2.layoutSetPrototypeId.toString()
 	);
@@ -160,7 +294,6 @@ test('Can switch template with web content on content page.', async ({
 	pagesAdminPage,
 	productMenuPage,
 	serverAdministrationPage,
-	sitesPage,
 	systemSettingsPage,
 	uiElementsPage,
 	webContentDisplayPage,
@@ -172,7 +305,7 @@ test('Can switch template with web content on content page.', async ({
 	const siteName: string = getRandomString();
 
 	await createSiteTemplateWithWebContentOnContentPage({
-		applicationsMenuPage,
+		apiHelpers,
 		journalPage,
 		layoutSetPrototypePage,
 		page,
@@ -183,11 +316,11 @@ test('Can switch template with web content on content page.', async ({
 		text: `${webContentText1} `,
 		uiElementsPage,
 		webContentDisplayPage,
-		webContentName: `${webContentName1} `,
+		webContentName: webContentName1,
 	});
 
 	await createSiteTemplateWithWebContentOnContentPage({
-		applicationsMenuPage,
+		apiHelpers,
 		journalPage,
 		layoutSetPrototypePage,
 		page,
@@ -198,7 +331,7 @@ test('Can switch template with web content on content page.', async ({
 		text: `${webContentText2} `,
 		uiElementsPage,
 		webContentDisplayPage,
-		webContentName: `${webContentName2} `,
+		webContentName: webContentName2,
 	});
 
 	const layoutSetPrototypes: LayoutSetPrototype[] =
@@ -212,13 +345,13 @@ test('Can switch template with web content on content page.', async ({
 		contentTemplateName2
 	);
 
-	await applicationsMenuPage.goToSites();
-	const siteId = await sitesPage.createSiteFromTemplate(
-		contentTemplateName1,
-		siteName
-	);
-	await applicationsMenuPage.goToSites();
-	await pagesAdminPage.checkIfWebContentAdded(
+	const site = await apiHelpers.headlessSite.createSite({
+		name: siteName,
+		templateKey: layoutSetPrototype1.layoutSetPrototypeId,
+		templateType: 'site-template',
+	});
+
+	await layoutSetPrototypePage.checkIfWebContentAdded(
 		siteName,
 		contentTemplateName1,
 		webContentText1
@@ -229,12 +362,12 @@ test('Can switch template with web content on content page.', async ({
 	const script = `
     import com.liferay.portal.kernel.service.LayoutSetLocalServiceUtil;
     String siteTemplateUUID = "${layoutSetPrototype2.uuid}";
-    long siteId = ${siteId};
+    long siteId = ${site.id};
     LayoutSetLocalServiceUtil.updateLayoutSetPrototypeLinkEnabled(siteId, true, true, siteTemplateUUID);
     `;
 	await serverAdministrationPage.executeScript(script);
 
-	await pagesAdminPage.checkIfWebContentAdded(
+	await layoutSetPrototypePage.checkIfWebContentAdded(
 		siteName,
 		contentTemplateName2,
 		webContentText2
@@ -244,7 +377,7 @@ test('Can switch template with web content on content page.', async ({
 
 	await deleteSiteAndLayoutSetPrototypes(
 		apiHelpers,
-		siteId,
+		site.id,
 		layoutSetPrototype1.layoutSetPrototypeId.toString(),
 		layoutSetPrototype2.layoutSetPrototypeId.toString()
 	);
@@ -257,10 +390,8 @@ test('Can switch template with web content on home page.', async ({
 	layoutSetPrototypePage,
 	page,
 	pageEditorPage,
-	pagesAdminPage,
 	productMenuPage,
 	serverAdministrationPage,
-	sitesPage,
 	systemSettingsPage,
 	uiElementsPage,
 	webContentDisplayPage,
@@ -272,33 +403,33 @@ test('Can switch template with web content on home page.', async ({
 	const siteName: string = getRandomString();
 
 	await createSiteTemplateWithWebContentOnHomePage({
+		apiHelpers,
 		applicationsMenuPage,
 		journalPage,
 		layoutSetPrototypePage,
 		page,
 		pageEditorPage,
-		pagesAdminPage,
 		productMenuPage,
 		templateName: contentTemplateName1,
 		text: `${webContentText1} `,
 		uiElementsPage,
 		webContentDisplayPage,
-		webContentName: `${webContentName1} `,
+		webContentName: webContentName1,
 	});
 
 	await createSiteTemplateWithWebContentOnHomePage({
+		apiHelpers,
 		applicationsMenuPage,
 		journalPage,
 		layoutSetPrototypePage,
 		page,
 		pageEditorPage,
-		pagesAdminPage,
 		productMenuPage,
 		templateName: contentTemplateName2,
 		text: `${webContentText2} `,
 		uiElementsPage,
 		webContentDisplayPage,
-		webContentName: `${webContentName2} `,
+		webContentName: webContentName2,
 	});
 
 	const layoutSetPrototypes: LayoutSetPrototype[] =
@@ -312,13 +443,13 @@ test('Can switch template with web content on home page.', async ({
 		contentTemplateName2
 	);
 
-	await applicationsMenuPage.goToSites();
-	const siteId = await sitesPage.createSiteFromTemplate(
-		contentTemplateName1,
-		siteName
-	);
-	await applicationsMenuPage.goToSites();
-	await pagesAdminPage.checkIfWebContentAddedToHome(
+	const site = await apiHelpers.headlessSite.createSite({
+		name: siteName,
+		templateKey: layoutSetPrototype1.layoutSetPrototypeId,
+		templateType: 'site-template',
+	});
+
+	await layoutSetPrototypePage.checkIfWebContentAddedToHome(
 		siteName,
 		webContentText1
 	);
@@ -328,12 +459,12 @@ test('Can switch template with web content on home page.', async ({
 	const script = `
     import com.liferay.portal.kernel.service.LayoutSetLocalServiceUtil;
     String siteTemplateUUID = "${layoutSetPrototype2.uuid}";
-    long siteId = ${siteId};
+    long siteId = ${site.id};
     LayoutSetLocalServiceUtil.updateLayoutSetPrototypeLinkEnabled(siteId, true, true, siteTemplateUUID);
     `;
 	await serverAdministrationPage.executeScript(script);
 
-	await pagesAdminPage.checkIfWebContentAddedToHome(
+	await layoutSetPrototypePage.checkIfWebContentAddedToHome(
 		siteName,
 		webContentText1
 	);
@@ -342,7 +473,7 @@ test('Can switch template with web content on home page.', async ({
 
 	await deleteSiteAndLayoutSetPrototypes(
 		apiHelpers,
-		siteId,
+		site.id,
 		layoutSetPrototype1.layoutSetPrototypeId.toString(),
 		layoutSetPrototype2.layoutSetPrototypeId.toString()
 	);
@@ -363,6 +494,25 @@ async function deleteSiteAndLayoutSetPrototypes(
 			prototypeId
 		);
 	}
+}
+
+async function deleteSites(apiHelpers: ApiHelpers, ...siteIds: string[]) {
+	for (const siteId of siteIds) {
+		let response = await apiHelpers.headlessSite.deleteSite(siteId);
+		if (!response.ok()) {
+			response = await apiHelpers.headlessSite.deleteSite(siteId);
+		}
+		expect(response.ok()).toBe(true);
+	}
+}
+
+async function deleteLayoutSetPrototype(
+	apiHelpers: ApiHelpers,
+	layoutSetPrototypeId: string
+) {
+	await apiHelpers.jsonWebServicesLayoutSetPrototype.deleteLayoutSetPrototypes(
+		layoutSetPrototypeId
+	);
 }
 
 async function getLayoutTemplateByName(
@@ -390,10 +540,170 @@ async function getLayoutTemplateByName(
 	}
 }
 
-async function createSiteTemplateWithWebContentOnWidgetPage({
+async function createSiteTemplateWithContentPageAndAssetPublisher({
 	applicationsMenuPage,
-	journalPage,
 	layoutSetPrototypePage,
+	page,
+	pageEditorPage,
+	pagesAdminPage,
+	productMenuPage,
+	templateName,
+}: {
+	applicationsMenuPage: ApplicationsMenuPage;
+	layoutSetPrototypePage: LayoutSetPrototypePage;
+	page: Page;
+	pageEditorPage: PageEditorPage;
+	pagesAdminPage: PagesAdminPage;
+	productMenuPage: ProductMenuPage;
+	templateName: string;
+	uiElementsPage: UIElementsPage;
+}): Promise<void> {
+	await applicationsMenuPage.goToSiteTemplates();
+	await layoutSetPrototypePage.addSiteTemplate(templateName);
+	await applicationsMenuPage.goToSiteTemplates();
+	const siteTemplateUrl =
+		await layoutSetPrototypePage.getSiteTemplateUrl(templateName);
+
+	await page.goto(siteTemplateUrl);
+	await productMenuPage.checkIfAdecuateProductMenu(templateName);
+	await productMenuPage.openProductMenuIfClosed();
+
+	await productMenuPage.goToPages();
+	await pagesAdminPage.newButton.click();
+	await layoutSetPrototypePage.addTemplatePageButton.waitFor({
+		state: 'visible',
+	});
+	await layoutSetPrototypePage.addTemplatePageButton.click();
+	await pagesAdminPage.addPage({
+		name: templateName,
+		successMessage: 'Success:The page was created successfully.',
+	});
+	await pageEditorPage.addWidget('Content Management', 'Asset Publisher');
+
+	const widgetId = await pageEditorPage.getFragmentId('Asset Publisher');
+
+	const topper = pageEditorPage.getTopper(widgetId);
+	await topper.hover();
+	await clickAndExpectToBeVisible({
+		autoClick: true,
+		target: page.getByRole('menuitem', {
+			exact: true,
+			name: 'Configuration',
+		}),
+		trigger: topper.locator('.portlet-options'),
+	});
+
+	const configurationModal = await page.frameLocator(
+		'iframe[title*="Asset Publisher"][title*="Configuration"]'
+	);
+	await configurationModal.locator('.portlet-body').waitFor();
+
+	const configurationManualInput = await configurationModal.getByLabel(
+		'Manual',
+		{exact: true}
+	);
+
+	if (await configurationManualInput.isHidden()) {
+		await configurationModal
+			.getByRole('link', {name: 'Asset Selection'})
+			.click();
+	}
+	if (!(await configurationManualInput.isChecked())) {
+		await configurationManualInput.click();
+
+		await waitForSuccessAlert(
+			configurationModal,
+			'Success:You have successfully updated the setup.'
+		);
+	}
+
+	const scopeSection = configurationModal.locator('#scopeContent');
+	if (await scopeSection.isHidden()) {
+		await configurationModal.getByRole('link', {name: 'Scope'}).click();
+	}
+	await scopeSection.waitFor();
+
+	const selectButton = scopeSection.locator('button.dropdown-toggle', {
+		hasText: 'Select',
+	});
+	await selectButton.click();
+
+	const globalOption = configurationModal.getByRole('menuitem', {
+		name: 'Global',
+	});
+	await globalOption.click();
+
+	await waitForSuccessAlert(
+		configurationModal,
+		'Success:You have successfully updated the setup.'
+	);
+
+	const currentSiteDeleteButton = scopeSection
+		.getByRole('row', {name: /^Current Site/})
+		.getByLabel('Delete');
+	await currentSiteDeleteButton.click();
+
+	await waitForSuccessAlert(
+		configurationModal,
+		'Success:You have successfully updated the setup.'
+	);
+
+	const assetEntriesSection = configurationModal.locator(
+		'#assetEntriesContent'
+	);
+	if (await assetEntriesSection.isHidden()) {
+		await configurationModal
+			.getByRole('link', {name: 'Asset Entries'})
+			.click();
+	}
+	await assetEntriesSection.waitFor();
+
+	const selectAssetEntriesButton = assetEntriesSection.locator(
+		'button.dropdown-toggle',
+		{hasText: 'Select'}
+	);
+	await selectAssetEntriesButton.click();
+
+	const basicWebContentOption = configurationModal.getByRole('menuitem', {
+		name: 'Basic Web Content',
+	});
+	await basicWebContentOption.click();
+
+	const selectWebContentModal = await configurationModal.frameLocator(
+		'iframe[title*="Select Basic Web Content"]'
+	);
+
+	await selectWebContentModal.locator('#main-content').waitFor();
+
+	const checkbox = selectWebContentModal
+		.getByTestId('row')
+		.first()
+		.locator('input[type="checkbox"]');
+	await checkbox.check();
+
+	const addButton = configurationModal.getByRole('button', {name: 'Add'});
+	await addButton.click();
+
+	await waitForSuccessAlert(
+		configurationModal,
+		'Success:You have successfully updated the setup.'
+	);
+
+	await configurationModal.getByRole('button', {name: 'Save'}).click();
+
+	await waitForSuccessAlert(
+		configurationModal,
+		'Success:You have successfully updated the setup.'
+	);
+
+	await page.getByLabel('close', {exact: true}).click();
+
+	await pageEditorPage.publishPage();
+}
+
+async function createSiteTemplateWithWebContentOnWidgetPage({
+	apiHelpers,
+	journalPage,
 	page,
 	pagesAdminPage,
 	productMenuPage,
@@ -404,9 +714,8 @@ async function createSiteTemplateWithWebContentOnWidgetPage({
 	webContentName,
 	widgetPagePage,
 }: {
-	applicationsMenuPage: ApplicationsMenuPage;
+	apiHelpers: ApiHelpers;
 	journalPage: JournalPage;
-	layoutSetPrototypePage: LayoutSetPrototypePage;
 	page: Page;
 	pagesAdminPage: PagesAdminPage;
 	productMenuPage: ProductMenuPage;
@@ -417,27 +726,32 @@ async function createSiteTemplateWithWebContentOnWidgetPage({
 	webContentName: string;
 	widgetPagePage: WidgetPagePage;
 }): Promise<void> {
-	await applicationsMenuPage.goToSiteTemplates();
-	await layoutSetPrototypePage.addSiteTemplate(templateName);
-	await applicationsMenuPage.goToSiteTemplates();
-	const siteTemplateUrl =
-		await layoutSetPrototypePage.getSiteTemplateUrl(templateName);
-	await page.goto(siteTemplateUrl);
+	const layoutSetPrototype: LayoutSetPrototype =
+		await apiHelpers.jsonWebServicesLayoutSetPrototype.addLayoutSetPrototypes(
+			templateName
+		);
+	await page.goto(
+		'group/template-' + layoutSetPrototype.layoutSetPrototypeId
+	);
+
 	await productMenuPage.checkIfAdecuateProductMenu(templateName);
 	await productMenuPage.openProductMenuIfClosed();
 	await productMenuPage.goToWebContent();
 	await journalPage.goToCreateArticle();
-	await journalPage.fillArticleData(webContentName, text);
+	await journalPage.fillArticleDataSiteTemplate(webContentName, text);
 	await journalPage.publishArticle();
 
 	await productMenuPage.goToPages();
-	await uiElementsPage.clickNewButton();
-	if (!pagesAdminPage.addTemplatePageButton.isVisible) {
-		await uiElementsPage.clickNewButton();
-		await pagesAdminPage.addTemplatePageButton.waitFor({state: 'visible'});
-	}
-	await pagesAdminPage.addTemplatePageButton.click();
-	await pagesAdminPage.addWidgetPage(templateName);
+
+	await page
+		.locator('.control-menu-level-1-heading')
+		.filter({hasText: 'Pages'})
+		.waitFor();
+
+	await pagesAdminPage.addWidgetPage({
+		addButtonLabel: 'Add Site Template Page',
+		name: templateName,
+	});
 
 	await productMenuPage.clickSpecificPage(templateName);
 	await widgetPagePage.addButton.click();
@@ -450,7 +764,7 @@ async function createSiteTemplateWithWebContentOnWidgetPage({
 }
 
 async function createSiteTemplateWithWebContentOnContentPage({
-	applicationsMenuPage,
+	apiHelpers,
 	journalPage,
 	layoutSetPrototypePage,
 	page,
@@ -463,7 +777,7 @@ async function createSiteTemplateWithWebContentOnContentPage({
 	webContentDisplayPage,
 	webContentName,
 }: {
-	applicationsMenuPage: ApplicationsMenuPage;
+	apiHelpers: ApiHelpers;
 	journalPage: JournalPage;
 	layoutSetPrototypePage: LayoutSetPrototypePage;
 	page: Page;
@@ -476,25 +790,30 @@ async function createSiteTemplateWithWebContentOnContentPage({
 	webContentDisplayPage: WebContentDisplayPage;
 	webContentName: string;
 }): Promise<void> {
-	await applicationsMenuPage.goToSiteTemplates();
-	await layoutSetPrototypePage.addSiteTemplate(templateName);
-	await applicationsMenuPage.goToSiteTemplates();
-	const siteTemplateUrl =
-		await layoutSetPrototypePage.getSiteTemplateUrl(templateName);
-
-	await page.goto(siteTemplateUrl);
+	const layoutSetPrototype: LayoutSetPrototype =
+		await apiHelpers.jsonWebServicesLayoutSetPrototype.addLayoutSetPrototypes(
+			templateName
+		);
+	await page.goto(
+		'group/template-' + layoutSetPrototype.layoutSetPrototypeId
+	);
 	await productMenuPage.checkIfAdecuateProductMenu(templateName);
 	await productMenuPage.openProductMenuIfClosed();
 	await productMenuPage.goToWebContent();
 	await journalPage.goToCreateArticle();
-	await journalPage.fillArticleData(webContentName, text);
+	await journalPage.fillArticleDataSiteTemplate(webContentName, text);
 	await journalPage.publishArticle();
 
 	await productMenuPage.goToPages();
-	await uiElementsPage.clickNewButton();
-	await pagesAdminPage.addTemplatePageButton.waitFor({state: 'visible'});
-	await pagesAdminPage.addTemplatePageButton.click();
-	await pagesAdminPage.addContentPage(templateName);
+	await pagesAdminPage.newButton.click();
+	await layoutSetPrototypePage.addTemplatePageButton.waitFor({
+		state: 'visible',
+	});
+	await layoutSetPrototypePage.addTemplatePageButton.click();
+	await pagesAdminPage.addPage({
+		name: templateName,
+		successMessage: 'Success:The page was created successfully.',
+	});
 
 	await pageEditorPage.addWidget('Content Management', 'Web Content Display');
 	await webContentDisplayPage.addWebContentWithDisplay();
@@ -502,12 +821,11 @@ async function createSiteTemplateWithWebContentOnContentPage({
 }
 
 async function createSiteTemplateWithWebContentOnHomePage({
-	applicationsMenuPage,
+	apiHelpers,
 	journalPage,
 	layoutSetPrototypePage,
 	page,
 	pageEditorPage,
-	pagesAdminPage,
 	productMenuPage,
 	templateName,
 	text,
@@ -515,12 +833,12 @@ async function createSiteTemplateWithWebContentOnHomePage({
 	webContentDisplayPage,
 	webContentName,
 }: {
+	apiHelpers: ApiHelpers;
 	applicationsMenuPage: ApplicationsMenuPage;
 	journalPage: JournalPage;
 	layoutSetPrototypePage: LayoutSetPrototypePage;
 	page: Page;
 	pageEditorPage: PageEditorPage;
-	pagesAdminPage: PagesAdminPage;
 	productMenuPage: ProductMenuPage;
 	templateName: string;
 	text: string;
@@ -528,22 +846,22 @@ async function createSiteTemplateWithWebContentOnHomePage({
 	webContentDisplayPage: WebContentDisplayPage;
 	webContentName: string;
 }): Promise<void> {
-	await applicationsMenuPage.goToSiteTemplates();
-	await layoutSetPrototypePage.addSiteTemplate(templateName);
-	await applicationsMenuPage.goToSiteTemplates();
-	const siteTemplateUrl =
-		await layoutSetPrototypePage.getSiteTemplateUrl(templateName);
-
-	await page.goto(siteTemplateUrl);
+	const layoutSetPrototype: LayoutSetPrototype =
+		await apiHelpers.jsonWebServicesLayoutSetPrototype.addLayoutSetPrototypes(
+			templateName
+		);
+	await page.goto(
+		'group/template-' + layoutSetPrototype.layoutSetPrototypeId
+	);
 	await productMenuPage.checkIfAdecuateProductMenu(templateName);
 	await productMenuPage.openProductMenuIfClosed();
 	await productMenuPage.goToWebContent();
 	await journalPage.goToCreateArticle();
-	await journalPage.fillArticleData(webContentName, text);
+	await journalPage.fillArticleDataSiteTemplate(webContentName, text);
 	await journalPage.publishArticle();
 
 	await productMenuPage.goToPages();
-	await pagesAdminPage.homePageLink.click();
+	await layoutSetPrototypePage.homePageLink.click();
 	await pageEditorPage.addWidget('Content Management', 'Web Content Display');
 	await webContentDisplayPage.addWebContentWithDisplay();
 	await uiElementsPage.publishButton.click();

@@ -10,6 +10,8 @@ export class CommerceAdminProductDetailsPage {
 	readonly productDiagramTab: Locator;
 	readonly productOptionsTab: Locator;
 	readonly productRelationsTab: Locator;
+	readonly productSkusTab: Locator;
+	readonly productVisibilityTab: Locator;
 
 	constructor(page: Page) {
 		this.page = page;
@@ -21,6 +23,12 @@ export class CommerceAdminProductDetailsPage {
 		});
 		this.productRelationsTab = page.getByRole('link', {
 			name: 'Product Relations',
+		});
+		this.productSkusTab = page.getByRole('link', {
+			name: 'Skus',
+		});
+		this.productVisibilityTab = page.getByRole('link', {
+			name: 'Visibility',
 		});
 	}
 
@@ -34,5 +42,13 @@ export class CommerceAdminProductDetailsPage {
 
 	async goToProductRelations() {
 		await this.productRelationsTab.click();
+	}
+
+	async goToProductSkus() {
+		await this.productSkusTab.click();
+	}
+
+	async goToProductVisibility() {
+		await this.productVisibilityTab.click();
 	}
 }

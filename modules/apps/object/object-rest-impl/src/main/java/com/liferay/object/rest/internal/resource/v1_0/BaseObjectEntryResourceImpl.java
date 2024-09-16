@@ -424,6 +424,10 @@ public abstract class BaseObjectEntryResourceImpl
 			existingObjectEntry.setKeywords(objectEntry.getKeywords());
 		}
 
+		if (objectEntry.getPermissions() != null) {
+			existingObjectEntry.setPermissions(objectEntry.getPermissions());
+		}
+
 		if (objectEntry.getProperties() != null) {
 			Map<String, Object> properties =
 				existingObjectEntry.getProperties();
@@ -638,6 +642,10 @@ public abstract class BaseObjectEntryResourceImpl
 
 		if (objectEntry.getKeywords() != null) {
 			existingObjectEntry.setKeywords(objectEntry.getKeywords());
+		}
+
+		if (objectEntry.getPermissions() != null) {
+			existingObjectEntry.setPermissions(objectEntry.getPermissions());
 		}
 
 		if (objectEntry.getProperties() != null) {
@@ -878,6 +886,10 @@ public abstract class BaseObjectEntryResourceImpl
 
 		if (objectEntry.getKeywords() != null) {
 			existingObjectEntry.setKeywords(objectEntry.getKeywords());
+		}
+
+		if (objectEntry.getPermissions() != null) {
+			existingObjectEntry.setPermissions(objectEntry.getPermissions());
 		}
 
 		if (objectEntry.getProperties() != null) {
@@ -1455,6 +1467,9 @@ public abstract class BaseObjectEntryResourceImpl
 				resourceName, null));
 	}
 
+	/**
+	 * @see com.liferay.portal.vulcan.permission.PermissionUtil#getPermissions(long, List, long, String, String[])
+	 */
 	private Collection<Permission> _getPermissions(
 			long companyId, List<ResourceAction> resourceActions,
 			long resourceId, String resourceName, String[] roleNames)

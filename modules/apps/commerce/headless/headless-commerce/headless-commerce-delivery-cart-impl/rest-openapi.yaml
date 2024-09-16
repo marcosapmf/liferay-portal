@@ -122,6 +122,9 @@ components:
                     type: string
                 billingAddress:
                     $ref: "#/components/schemas/Address"
+                billingAddressExternalReferenceCode:
+                    example: AAB-34098-789-N
+                    type: string
                 billingAddressId:
                     format: int64
                     type: integer
@@ -204,6 +207,9 @@ components:
                     type: string
                 shippingAddress:
                     $ref: "#/components/schemas/Address"
+                shippingAddressExternalReferenceCode:
+                    example: AAB-34098-789-N
+                    type: string
                 shippingAddressId:
                     format: int64
                     type: integer
@@ -302,11 +308,22 @@ components:
                     example: "12341234"
                     readOnly: true
                     type: string
+                replacedSkuExternalReferenceCode:
+                    example: AB-34098-789-N
+                    type: string
                 replacedSkuId:
                     format: int64
                     type: integer
                 settings:
                     $ref: "#/components/schemas/Settings"
+                shippingAddress:
+                    $ref: "#/components/schemas/Address"
+                shippingAddressExternalReferenceCode:
+                    example: AB-34098-789-N
+                    type: string
+                shippingAddressId:
+                    format: int64
+                    type: integer
                 sku:
                     readOnly: true
                     type: string
@@ -568,7 +585,7 @@ components:
 info:
     description:
         "Headless Delivery Commerce Cart API. A Java client JAR is available for use with the group ID 'com.liferay',
-        artifact ID 'com.liferay.headless.commerce.delivery.cart.client', and version '4.0.40'."
+        artifact ID 'com.liferay.headless.commerce.delivery.cart.client', and version '4.0.42'."
     license:
         name: Apache 2.0
         url: http://www.apache.org/licenses/LICENSE-2.0.html
@@ -3306,7 +3323,7 @@ paths:
         get:
             description:
                 Retrieves carts for specific account in the given channel.
-            operationId: getChannelCartsPage
+            operationId: getChannelAccountCartsPage
             parameters:
                 - in: path
                   explode: false
@@ -3390,6 +3407,92 @@ paths:
                         Unexpected error
             tags: ["Cart"]
     /channels/{channelId}/carts:
+        get:
+            description:
+                Retrieves carts in the given channel.
+            operationId: getChannelCartsPage
+            parameters:
+                - in: path
+                  explode: false
+                  name: channelId
+                  required: true
+                  schema:
+                      description:
+                          Channel Id
+                      format: int64
+                      type: integer
+                  style: simple
+                - in: query
+                  name: filter
+                  required: false
+                  schema:
+                      type: string
+                - in: query
+                  name: page
+                  required: false
+                  schema:
+                      type: integer
+                - in: query
+                  name: pageSize
+                  required: false
+                  schema:
+                      type: integer
+                - in: query
+                  name: search
+                  required: false
+                  schema:
+                      type: string
+                - in: query
+                  name: sort
+                  required: false
+                  schema:
+                      type: string
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/Cart"
+                                type: array
+                        application/xml:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/Cart"
+                                type: array
+                    description:
+                        Successful operation
+                401:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        Authentication information is missing or invalid
+                404:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        The specified resource was not found
+                500:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        Unexpected error
+            tags: ["Cart"]
         post:
             operationId: postChannelCart
             parameters:

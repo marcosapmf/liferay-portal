@@ -3,12 +3,15 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {expect, mergeTests} from '@playwright/test';
+import {Page, expect, mergeTests} from '@playwright/test';
 
 import {apiHelpersTest} from '../../fixtures/apiHelpersTest';
+import {displayPageTemplatesPagesTest} from '../../fixtures/displayPageTemplatesPagesTest';
+import {documentLibraryPagesTest} from '../../fixtures/documentLibraryPages.fixtures';
 import {featureFlagsTest} from '../../fixtures/featureFlagsTest';
 import {isolatedSiteTest} from '../../fixtures/isolatedSiteTest';
 import {loginTest} from '../../fixtures/loginTest';
+import {masterPagesPagesTest} from '../../fixtures/masterPagesPagesTest';
 import {objectPagesTest} from '../../fixtures/objectPagesTest';
 import {pageEditorPagesTest} from '../../fixtures/pageEditorPagesTest';
 import {pageManagementSiteTest} from '../../fixtures/pageManagementSiteTest';
@@ -16,12 +19,17 @@ import {PageEditorPage} from '../../pages/layout-content-page-editor-web/PageEdi
 import {checkAccessibility} from '../../utils/checkAccessibility';
 import {clickAndExpectToBeHidden} from '../../utils/clickAndExpectToBeHidden';
 import {clickAndExpectToBeVisible} from '../../utils/clickAndExpectToBeVisible';
+import dragAndDropElement from '../../utils/dragAndDropElement';
 import getGlobalSiteId from '../../utils/getGlobalSiteId';
 import getRandomString from '../../utils/getRandomString';
 import {PORTLET_URLS} from '../../utils/portletUrls';
+import getBasicWebContentStructureId, {
+	getWebContentStructureId,
+} from '../../utils/structured-content/getBasicWebContentStructureId';
 import {journalPagesTest} from '../journal-web/fixtures/journalPagesTest';
-import {displayPageTemplatesPagesTest} from '../layout-page-template-admin-web/fixtures/displayPageTemplatesPagesTest';
 import {
+	ANIMAL_DDM_STRUCTURE_KEY,
+	ANIMAL_DDM_TEMPLATE_KEY,
 	LEMON_BASKET_OBJECT_ERC,
 	LEMON_OBJECT_ERC,
 } from '../setup/page-management-site/constants';
@@ -33,12 +41,14 @@ import getPageDefinition from './utils/getPageDefinition';
 const test = mergeTests(
 	apiHelpersTest,
 	displayPageTemplatesPagesTest,
+	documentLibraryPagesTest,
 	featureFlagsTest({
 		'LPS-178052': true,
 	}),
 	isolatedSiteTest,
 	journalPagesTest,
 	loginTest(),
+	masterPagesPagesTest,
 	objectPagesTest,
 	pageEditorPagesTest,
 	pageManagementSiteTest
@@ -46,48 +56,42 @@ const test = mergeTests(
 
 const ENTER_KEY = 'Enter';
 
-async function openDropdownAndCheckStyle(
-	pageEditorPage: PageEditorPage,
-	dropdownId: string,
-	isDesktop = true,
-	style: string,
-	value: string
-) {
-
-	// Select dropdown
-
-	await pageEditorPage.selectFragment(dropdownId, isDesktop);
-
-	const dropdownFragment = pageEditorPage.getFragment(dropdownId, isDesktop);
-
-	const dropdownButton = dropdownFragment.locator(
-		'.dropdown-fragment-toggle'
-	);
-
-	// Open dropdown
-
-	await dropdownButton.press(ENTER_KEY);
-
-	const dropdownMenu = dropdownFragment.locator('.dropdown-fragment-menu');
-
-	await dropdownMenu.waitFor();
-
-	// Check style
-
-	expect(
-		await dropdownMenu.evaluate((element, style) => {
-			return window.getComputedStyle(element).getPropertyValue(style);
-		}, style)
-	).toBe(value);
-
-	// Close dropdown
-
-	await dropdownButton.press(ENTER_KEY);
-
-	await dropdownMenu.waitFor({state: 'hidden'});
-}
-
 test.describe('Content Display Fragment', () => {
+	const CONTENT_DISPLAY_FRAGMENT_HTML = `<div class="content-display-fragment">
+		[#if itemSelectorNameObject??]
+			\${itemSelectorNameObject.getTitle()}
+		[#else]
+			<div class="portlet-msg-info">The selected content will be shown here.</div>
+		[/#if]
+	</div>`;
+
+	function getContentDisplayFragmentConfiguration({
+		itemSubtype,
+		itemType,
+	}: {
+		itemSubtype?: string;
+		itemType: string;
+	}): FragmentConfiguration {
+		return {
+			fieldSets: [
+				{
+					fields: [
+						{
+							label: 'Item',
+							name: 'itemSelectorName',
+							type: 'itemSelector',
+							typeOptions: {
+								enableSelectTemplate: true,
+								itemSubtype,
+								itemType,
+							},
+						},
+					],
+				},
+			],
+		};
+	}
+
 	test('Does not show alert when accessing a page with a web content display mapped to a restricted web content', async ({
 		apiHelpers,
 		browser,
@@ -165,9 +169,320 @@ test.describe('Content Display Fragment', () => {
 		await expect(incognitoPage.getByText(articleContent)).not.toBeVisible();
 		await expect(incognitoPage.getByRole('alert')).not.toBeVisible();
 	});
+
+	test(
+		'Can only select Documents and Media when set itemType to FileEntry',
+		{
+			tag: ['@LPS-97182', '@LPS-100545', '@LPS-101249'],
+		},
+		async ({apiHelpers, page, pageEditorPage, pageManagementSite}) => {
+
+			// Create a fragment with itemSelector configuration for file entries
+
+			const {fragmentCollectionId} =
+				await apiHelpers.jsonWebServicesFragmentCollection.addFragmentCollection(
+					{
+						groupId: pageManagementSite.id,
+						name: getRandomString(),
+					}
+				);
+
+			const fragmentEntryName = getRandomString();
+
+			await apiHelpers.jsonWebServicesFragmentEntry.addFragmentEntry({
+				configuration: getContentDisplayFragmentConfiguration({
+					itemType:
+						'com.liferay.portal.kernel.repository.model.FileEntry',
+				}),
+				fragmentCollectionId,
+				groupId: pageManagementSite.id,
+				html: CONTENT_DISPLAY_FRAGMENT_HTML,
+				name: fragmentEntryName,
+			});
+
+			// Create a content page with Wem Site's Apple fragment
+
+			const fragmentName = getRandomString();
+
+			const fragmentDefinition = getFragmentDefinition({
+				id: fragmentName,
+				key: fragmentEntryName,
+			});
+
+			// Create a content page and go to edit mode
+
+			const layoutTitle = getRandomString();
+
+			const layout = await apiHelpers.headlessDelivery.createSitePage({
+				pageDefinition: getPageDefinition([fragmentDefinition]),
+				siteId: pageManagementSite.id,
+				title: layoutTitle,
+			});
+
+			await pageEditorPage.goto(
+				layout,
+				pageManagementSite.friendlyUrlPath
+			);
+
+			// Assert only documents and media is shown
+
+			await pageEditorPage.selectFragment(fragmentName);
+
+			await pageEditorPage.openMappingSelector();
+
+			const iframe = page.frameLocator('iframe[title="Select"]');
+
+			await expect(iframe.getByRole('menubar')).not.toBeVisible();
+
+			await expect(
+				iframe.getByTitle('poodle.jpg', {exact: true})
+			).toBeVisible();
+
+			await page
+				.getByRole('dialog')
+				.getByLabel('close', {exact: true})
+				.click();
+
+			// Select specific document and media file
+
+			await pageEditorPage.setMappedItem({
+				entity: 'Documents and Media',
+				entry: 'poodle.jpg',
+				entryLocator: page
+					.frameLocator('iframe[title="Select"]')
+					.getByText('poodle.jpg', {exact: false}),
+			});
+
+			await expect(
+				page
+					.locator('.content-display-fragment')
+					.getByText('poodle.jpg')
+			).toBeVisible();
+
+			// Remove the page
+
+			await apiHelpers.jsonWebServicesLayout.deleteLayout(layout.id);
+
+			// Remove fragment set
+
+			await apiHelpers.jsonWebServicesFragmentCollection.deleteFragmentCollection(
+				fragmentCollectionId
+			);
+		}
+	);
+
+	test(
+		'Can only select web content of type animal when set itemSubtype to animal',
+		{
+			tag: ['@LPS-97182', '@LPS-100545', '@LPS-101249'],
+		},
+		async ({apiHelpers, page, pageEditorPage, pageManagementSite}) => {
+
+			// Create animal web content
+
+			const animalWebContentTitle = getRandomString();
+
+			const animalWebContentStructureId = await getWebContentStructureId(
+				apiHelpers,
+				pageManagementSite.id,
+				ANIMAL_DDM_STRUCTURE_KEY
+			);
+
+			const {articleId: animalWebContentId} =
+				await apiHelpers.jsonWebServicesJournal.addWebContent({
+					ddmStructureId: animalWebContentStructureId,
+					ddmTemplateKey: ANIMAL_DDM_TEMPLATE_KEY,
+					groupId: pageManagementSite.id,
+					titleMap: {en_US: animalWebContentTitle},
+				});
+
+			// Create basic web content
+
+			const basicWebContentTitle = getRandomString();
+
+			const basicWebContentStructureId =
+				await getBasicWebContentStructureId(apiHelpers);
+
+			const {articleId: basicWebContentId} =
+				await apiHelpers.jsonWebServicesJournal.addWebContent({
+					ddmStructureId: basicWebContentStructureId,
+					groupId: pageManagementSite.id,
+					titleMap: {en_US: basicWebContentTitle},
+				});
+
+			// Create a fragment with itemSelector configuration for animals
+
+			const {fragmentCollectionId} =
+				await apiHelpers.jsonWebServicesFragmentCollection.addFragmentCollection(
+					{
+						groupId: pageManagementSite.id,
+						name: getRandomString(),
+					}
+				);
+
+			const fragmentEntryName = getRandomString();
+
+			await apiHelpers.jsonWebServicesFragmentEntry.addFragmentEntry({
+				configuration: getContentDisplayFragmentConfiguration({
+					itemSubtype: ANIMAL_DDM_STRUCTURE_KEY,
+					itemType: 'com.liferay.journal.model.JournalArticle',
+				}),
+				fragmentCollectionId,
+				groupId: pageManagementSite.id,
+				html: CONTENT_DISPLAY_FRAGMENT_HTML,
+				name: fragmentEntryName,
+			});
+
+			// Create a content page with Wem Site's Apple fragment
+
+			const fragmentName = getRandomString();
+
+			const fragmentDefinition = getFragmentDefinition({
+				id: fragmentName,
+				key: fragmentEntryName,
+			});
+
+			// Create a content page and go to edit mode
+
+			const layoutTitle = getRandomString();
+
+			const layout = await apiHelpers.headlessDelivery.createSitePage({
+				pageDefinition: getPageDefinition([fragmentDefinition]),
+				siteId: pageManagementSite.id,
+				title: layoutTitle,
+			});
+
+			await pageEditorPage.goto(
+				layout,
+				pageManagementSite.friendlyUrlPath
+			);
+
+			// Assert basic web content is not showed and animal is showed
+
+			await pageEditorPage.selectFragment(fragmentName);
+
+			await pageEditorPage.openMappingSelector();
+
+			const iframe = page.frameLocator('iframe[title="Select"]');
+
+			await expect(iframe.getByRole('menubar')).not.toBeVisible();
+
+			await expect(
+				iframe
+					.getByRole('paragraph')
+					.filter({hasText: animalWebContentTitle})
+			).toBeVisible();
+
+			await expect(
+				iframe
+					.getByRole('paragraph')
+					.filter({hasText: basicWebContentTitle})
+			).not.toBeVisible();
+
+			await page
+				.getByRole('dialog')
+				.getByLabel('close', {exact: true})
+				.click();
+
+			// Select animal
+
+			await pageEditorPage.setMappedItem({
+				entity: 'Web Content',
+				entry: animalWebContentTitle,
+			});
+
+			await expect(page.locator('.content-display-fragment')).toHaveText(
+				animalWebContentTitle
+			);
+
+			await pageEditorPage.publishPage();
+
+			// Go to view mode of the created page
+
+			await page.goto(
+				`/web${pageManagementSite.friendlyUrlPath}${layout.friendlyUrlPath}`
+			);
+
+			await expect(page.locator('.content-display-fragment')).toHaveText(
+				animalWebContentTitle
+			);
+
+			// Remove web contents
+
+			expect(
+				await apiHelpers.jsonWebServicesJournal.moveArticleToTrash(
+					pageManagementSite.id,
+					animalWebContentId
+				)
+			).toHaveProperty('articleId');
+
+			expect(
+				await apiHelpers.jsonWebServicesJournal.moveArticleToTrash(
+					pageManagementSite.id,
+					basicWebContentId
+				)
+			).toHaveProperty('articleId');
+
+			// Remove the page
+
+			await apiHelpers.jsonWebServicesLayout.deleteLayout(layout.id);
+
+			// Remove fragment set
+
+			await apiHelpers.jsonWebServicesFragmentCollection.deleteFragmentCollection(
+				fragmentCollectionId
+			);
+		}
+	);
 });
 
 test.describe('Dropdown Fragment', () => {
+	async function openDropdownAndCheckStyle(
+		pageEditorPage: PageEditorPage,
+		dropdownId: string,
+		isDesktop = true,
+		style: string,
+		value: string
+	) {
+
+		// Select dropdown
+
+		await pageEditorPage.selectFragment(dropdownId, isDesktop);
+
+		const dropdownFragment = pageEditorPage.getFragment(
+			dropdownId,
+			isDesktop
+		);
+
+		const dropdownButton = dropdownFragment.locator(
+			'.dropdown-fragment-toggle'
+		);
+
+		// Open dropdown
+
+		await dropdownButton.press(ENTER_KEY);
+
+		const dropdownMenu = dropdownFragment.locator(
+			'.dropdown-fragment-menu'
+		);
+
+		await dropdownMenu.waitFor();
+
+		// Check style
+
+		expect(
+			await dropdownMenu.evaluate((element, style) => {
+				return window.getComputedStyle(element).getPropertyValue(style);
+			}, style)
+		).toBe(value);
+
+		// Close dropdown
+
+		await dropdownButton.press(ENTER_KEY);
+
+		await dropdownMenu.waitFor({state: 'hidden'});
+	}
+
 	test('Check the functionality of the Dropdown fragment', async ({
 		apiHelpers,
 		page,
@@ -347,41 +662,326 @@ test.describe('Dropdown Fragment', () => {
 	});
 });
 
+test.describe('External Video', () => {
+	test(
+		'Uses External Video fragment and display a video from document library',
+		{
+			tag: '@LPS-130453',
+		},
+		async ({
+			apiHelpers,
+			documentLibraryEditFilePage,
+			documentLibraryPage,
+			page,
+			pageEditorPage,
+			site,
+		}) => {
+
+			// Add document library external video shortcut
+
+			await documentLibraryPage.goto(site.friendlyUrlPath);
+
+			await clickAndExpectToBeVisible({
+				autoClick: true,
+				target: page.getByRole('menuitem', {
+					exact: true,
+					name: 'External Video Shortcut',
+				}),
+				trigger: page.getByRole('button', {exact: true, name: 'New'}),
+			});
+
+			await page
+				.getByLabel('Video URL')
+				.fill('https://www.youtube.com/watch?v=2EPZxIC5ogU');
+
+			await expect(page.getByLabel('Title')).toHaveValue(
+				'Life at Liferay - A Look into Liferay Culture'
+			);
+
+			await documentLibraryEditFilePage.publishFileEntry();
+
+			// Create page with a Video URL fragment and go to edit mode
+
+			const fragmentId = getRandomString();
+
+			const fragment = getFragmentDefinition({
+				id: fragmentId,
+				key: 'BASIC_COMPONENT-external-video',
+			});
+
+			const layout = await apiHelpers.headlessDelivery.createSitePage({
+				pageDefinition: getPageDefinition([fragment]),
+				siteId: site.id,
+				title: getRandomString(),
+			});
+
+			await pageEditorPage.goto(layout, site.friendlyUrlPath);
+
+			// Edit video URL and publish the page
+
+			await pageEditorPage.selectVideo({
+				fragmentId,
+				title: 'Life at Liferay - A Look into Liferay Culture',
+			});
+
+			await pageEditorPage.publishPage();
+
+			// Go to view mode and assert video
+
+			await page.goto(
+				`/web${site.friendlyUrlPath}${layout.friendlyUrlPath}`
+			);
+
+			const videoIframeLocator = page
+				.locator('.video-container')
+				.frameLocator('iframe');
+
+			await expect(
+				videoIframeLocator.getByText(
+					'Life at Liferay - A Look into Liferay Culture'
+				)
+			).toBeVisible();
+		}
+	);
+
+	test(
+		'Uses External Video fragment and display a video from URL',
+		{
+			tag: '@LPS-130453',
+		},
+		async ({apiHelpers, page, pageEditorPage, site}) => {
+
+			// Create page with a Video URL fragment and go to edit mode
+
+			const fragmentId = getRandomString();
+
+			const fragment = getFragmentDefinition({
+				id: fragmentId,
+				key: 'BASIC_COMPONENT-external-video',
+			});
+
+			const layout = await apiHelpers.headlessDelivery.createSitePage({
+				pageDefinition: getPageDefinition([fragment]),
+				siteId: site.id,
+				title: getRandomString(),
+			});
+
+			await pageEditorPage.goto(layout, site.friendlyUrlPath);
+
+			await pageEditorPage.selectVideo({
+				fragmentId,
+				videoURL: 'https://www.youtube.com/watch?v=2EPZxIC5ogU',
+			});
+
+			// Select video URL and publish the page
+
+			await pageEditorPage.publishPage();
+
+			// Go to view mode and assert video
+
+			await page.goto(
+				`/web${site.friendlyUrlPath}${layout.friendlyUrlPath}`
+			);
+
+			const videoIframeLocator = page
+				.locator('.video-container')
+				.frameLocator('iframe');
+
+			await expect(
+				videoIframeLocator.getByText(
+					'Life at Liferay - A Look into Liferay Culture'
+				)
+			).toBeVisible();
+		}
+	);
+});
+
+test.describe('Heading Fragment', () => {
+	test(
+		'Can edit text editable',
+		{tag: ['@LPS-78726', '@LPS-85872']},
+		async ({apiHelpers, page, pageEditorPage, site}) => {
+
+			// Create page with a heading fragment and go to edit mode
+
+			const fragmentId = getRandomString();
+
+			const fragment = getFragmentDefinition({
+				id: fragmentId,
+				key: 'BASIC_COMPONENT-heading',
+			});
+
+			const layout = await apiHelpers.headlessDelivery.createSitePage({
+				pageDefinition: getPageDefinition([fragment]),
+				siteId: site.id,
+				title: getRandomString(),
+			});
+
+			await pageEditorPage.goto(layout, site.friendlyUrlPath);
+
+			// Check heading editable can be edited
+
+			await pageEditorPage.editTextEditable(
+				fragmentId,
+				'element-text',
+				'New editable fragment text'
+			);
+
+			await expect(
+				page.getByText('New editable fragment text')
+			).toBeAttached();
+		}
+	);
+});
+
 test.describe('HTML Fragment', () => {
-	test('Can edit html editable', async ({
-		apiHelpers,
-		page,
-		pageEditorPage,
-		site,
-	}) => {
+	const CUSTOM_FRAGMENT_HTML = `<lfr-editable id="element-html" type="html">
+		<h1>HTML Example</h1>
+	</lfr-editable>`;
 
-		// Create page with a HTML fragment and go to edit mode
+	test(
+		'Can edit custom html editable with lfr-editable',
+		{tag: '@LPS-98553'},
+		async ({apiHelpers, page, pageEditorPage, site}) => {
 
-		const fragmentId = getRandomString();
+			// Create a fragment with lfr-editable
 
-		const fragment = getFragmentDefinition({
-			id: fragmentId,
-			key: 'BASIC_COMPONENT-html',
-		});
+			const {fragmentCollectionId} =
+				await apiHelpers.jsonWebServicesFragmentCollection.addFragmentCollection(
+					{
+						groupId: site.id,
+						name: getRandomString(),
+					}
+				);
 
-		const layout = await apiHelpers.headlessDelivery.createSitePage({
-			pageDefinition: getPageDefinition([fragment]),
-			siteId: site.id,
-			title: getRandomString(),
-		});
+			const fragmentEntryName = getRandomString();
 
-		await pageEditorPage.goto(layout, site.friendlyUrlPath);
+			await apiHelpers.jsonWebServicesFragmentEntry.addFragmentEntry({
+				fragmentCollectionId,
+				groupId: site.id,
+				html: CUSTOM_FRAGMENT_HTML,
+				name: fragmentEntryName,
+			});
 
-		// Check html editable can be edited
+			// Create a content page with Wem Site's Apple fragment
 
-		await pageEditorPage.editHTMLEditable(
-			fragmentId,
-			'element-html',
-			'<div class="text-success"><h1>test html</h1></div>'
-		);
+			const fragmentName = getRandomString();
 
-		await expect(page.getByText('test html')).toBeAttached();
-	});
+			const fragmentDefinition = getFragmentDefinition({
+				id: fragmentName,
+				key: fragmentEntryName,
+			});
+
+			// Create a content page and go to edit mode
+
+			const layoutTitle = getRandomString();
+
+			const layout = await apiHelpers.headlessDelivery.createSitePage({
+				pageDefinition: getPageDefinition([fragmentDefinition]),
+				siteId: site.id,
+				title: layoutTitle,
+			});
+
+			await pageEditorPage.goto(layout, site.friendlyUrlPath);
+
+			// Check html editable can be edited
+
+			await pageEditorPage.editHTMLEditable({
+				editableId: 'element-html',
+				fragmentId: fragmentName,
+				value: '<div class="text-success"><h1>test html</h1></div>',
+			});
+
+			await expect(page.getByText('test html')).toBeAttached();
+		}
+	);
+
+	test(
+		'Can edit html editable',
+		{tag: '@LPS-98553'},
+		async ({apiHelpers, page, pageEditorPage, site}) => {
+
+			// Create page with a HTML fragment and go to edit mode
+
+			const fragmentId = getRandomString();
+
+			const fragment = getFragmentDefinition({
+				id: fragmentId,
+				key: 'BASIC_COMPONENT-html',
+			});
+
+			const layout = await apiHelpers.headlessDelivery.createSitePage({
+				pageDefinition: getPageDefinition([fragment]),
+				siteId: site.id,
+				title: getRandomString(),
+			});
+
+			await pageEditorPage.goto(layout, site.friendlyUrlPath);
+
+			// Check html editable can be edited
+
+			await pageEditorPage.editHTMLEditable({
+				editableId: 'element-html',
+				fragmentId,
+				value: '<div class="text-success"><h1>test html</h1></div>',
+			});
+
+			await expect(page.getByText('test html')).toBeAttached();
+		}
+	);
+});
+
+test.describe('Image Fragment', () => {
+	test(
+		'Select image from document and media',
+		{tag: ['@LPS-95045', '@LPS-101328']},
+		async ({apiHelpers, page, pageEditorPage, pageManagementSite}) => {
+
+			// Create a page with an image fragment
+
+			const imageId = getRandomString();
+
+			const imageFragment = getFragmentDefinition({
+				id: imageId,
+				key: 'BASIC_COMPONENT-image',
+			});
+
+			const layout = await apiHelpers.headlessDelivery.createSitePage({
+				pageDefinition: getPageDefinition([imageFragment]),
+				siteId: pageManagementSite.id,
+				title: getRandomString(),
+			});
+
+			await pageEditorPage.goto(
+				layout,
+				pageManagementSite.friendlyUrlPath
+			);
+
+			// Select the image directly
+
+			await pageEditorPage.selectEditable(imageId, 'image-square');
+
+			await page.getByTitle('Select Image').click();
+
+			const imageCard = page
+				.frameLocator('iframe[title="Select"]')
+				.getByText('poodle.jpg');
+
+			await clickAndExpectToBeHidden({
+				target: page.locator('.modal-dialog'),
+				trigger: imageCard,
+			});
+
+			await pageEditorPage.waitForChangesSaved();
+
+			expect(
+				await page
+					.locator('.component-image img')
+					.first()
+					.getAttribute('src')
+			).toContain('poodle-jpg');
+		}
+	);
 });
 
 test.describe('Multiselect Fragment', () => {
@@ -479,6 +1079,44 @@ test.describe('Multiselect Fragment', () => {
 					'Thank you. Your information was successfully received.'
 				)
 			).toBeVisible();
+		}
+	);
+});
+
+test.describe('Paragraph Fragment', () => {
+	test(
+		'Can edit text editable',
+		{tag: ['@LPS-127732']},
+		async ({apiHelpers, page, pageEditorPage, site}) => {
+
+			// Create page with a paragraph fragment and go to edit mode
+
+			const fragmentId = getRandomString();
+
+			const fragment = getFragmentDefinition({
+				id: fragmentId,
+				key: 'BASIC_COMPONENT-paragraph',
+			});
+
+			const layout = await apiHelpers.headlessDelivery.createSitePage({
+				pageDefinition: getPageDefinition([fragment]),
+				siteId: site.id,
+				title: getRandomString(),
+			});
+
+			await pageEditorPage.goto(layout, site.friendlyUrlPath);
+
+			// Check paragraph editable can be edited
+
+			await pageEditorPage.editTextEditable(
+				fragmentId,
+				'element-text',
+				'New editable fragment text'
+			);
+
+			await expect(
+				page.getByText('New editable fragment text')
+			).toBeAttached();
 		}
 	);
 });
@@ -626,6 +1264,11 @@ test.describe('Slider Fragment', () => {
 });
 
 test.describe('Tabs Fragment', () => {
+	const getTab = (tabName: string, page: Page) =>
+		page.locator('.nav-item button', {
+			has: page.getByText(tabName),
+		});
+
 	test('Checks that the Tabs fragment works correctly and has the correct semantics in small resolution', async ({
 		apiHelpers,
 		page,
@@ -698,6 +1341,151 @@ test.describe('Tabs Fragment', () => {
 		// Check accessibility
 
 		await checkAccessibility({page, selectors: ['.component-tabs']});
+	});
+
+	test('Check the Persist Selected Tab configuration', async ({
+		apiHelpers,
+		page,
+		pageEditorPage,
+		site,
+	}) => {
+
+		// Create page with a Tabs fragment
+
+		const tabsId = getRandomString();
+
+		const tabsDefinition = getFragmentDefinition({
+			fragmentConfig: {
+				numberOfTabs: 2,
+			},
+			fragmentFields: [
+				{
+					id: 'title1',
+					value: {},
+				},
+				{
+					id: 'title2',
+					value: {},
+				},
+			],
+			id: tabsId,
+			key: 'BASIC_COMPONENT-tabs',
+		});
+
+		const layout = await apiHelpers.headlessDelivery.createSitePage({
+			pageDefinition: getPageDefinition([tabsDefinition]),
+			siteId: site.id,
+			title: getRandomString(),
+		});
+
+		await pageEditorPage.goto(layout, site.friendlyUrlPath);
+
+		const firstTab = getTab('Tab 1', page);
+
+		const secondTab = getTab('Tab 2', page);
+
+		// Check that the first tab is activated
+
+		await expect(firstTab).toHaveAttribute('aria-selected', 'true');
+		await expect(secondTab).toHaveAttribute('aria-selected', 'false');
+
+		// Select the second tab and refresh the page to check if the selection persists
+
+		await secondTab.press(ENTER_KEY);
+
+		await pageEditorPage.goto(layout, site.friendlyUrlPath);
+
+		await expect(firstTab).toHaveAttribute('aria-selected', 'false');
+		await expect(secondTab).toHaveAttribute('aria-selected', 'true');
+
+		// Change the configuration so that the selection does not persist
+
+		await pageEditorPage.selectFragment(tabsId);
+
+		await pageEditorPage.changeFragmentConfiguration({
+			fieldLabel: 'Persist Selected Tab',
+			fragmentId: tabsId,
+			tab: 'General',
+			value: false,
+		});
+
+		// Refresh the page and check that the selection does not persist
+
+		await pageEditorPage.goto(layout, site.friendlyUrlPath);
+
+		await expect(secondTab).toHaveAttribute('aria-selected', 'false');
+		await expect(firstTab).toHaveAttribute('aria-selected', 'true');
+	});
+
+	test('Check that tabs have their corresponding content on a master page', async ({
+		apiHelpers,
+		masterPagesPage,
+		page,
+		pageEditorPage,
+		site,
+	}) => {
+
+		// Create a master page and add a Tabs fragment
+
+		const masterPageName = getRandomString();
+
+		await apiHelpers.jsonWebServicesLayoutPageTemplateEntry.addLayoutPageTemplateEntry(
+			{
+				groupId: site.id,
+				name: masterPageName,
+				type: 'master-layout',
+			}
+		);
+
+		await masterPagesPage.goto(site.friendlyUrlPath);
+
+		await masterPagesPage.editMaster(masterPageName);
+
+		await pageEditorPage.addFragment('Basic Components', 'Tabs');
+
+		// Add the main drop zone on the first tab and a Heading fragment in the second tab
+
+		const tabDropZone = page
+			.getByText('Place fragments or widgets here.')
+			.first();
+
+		await dragAndDropElement({
+			dragTarget: page.locator('[data-name="Drop Zone"]'),
+			dropTarget: tabDropZone,
+			page,
+		});
+
+		await pageEditorPage.addFragment('Basic Components', 'Heading');
+
+		const secondTab = getTab('Tab 2', page);
+
+		await secondTab.press('Enter');
+
+		await tabDropZone.waitFor();
+
+		await dragAndDropElement({
+			dragTarget: page.locator('[data-name="Heading"]'),
+			dropTarget: page
+				.getByText('Place fragments or widgets here.')
+				.first(),
+			page,
+		});
+
+		// Check that each tab has the corresponding content
+
+		const firstTab = getTab('Tab 1', page);
+
+		await firstTab.press('Enter');
+
+		await expect(
+			page.getByText(
+				'Fragments and widgets for pages based on this master will be placed here.'
+			)
+		).toBeVisible();
+
+		await secondTab.press('Enter');
+
+		await expect(page.getByText('Heading Example')).toBeVisible();
 	});
 });
 
@@ -888,4 +1676,59 @@ test.describe('Tags Fragment', () => {
 			value: true,
 		});
 	});
+});
+
+test.describe('Video URL', () => {
+	test(
+		'Uses Video URL fragment and display a video',
+		{
+			tag: '@LPS-99176',
+		},
+		async ({apiHelpers, page, pageEditorPage, site}) => {
+
+			// Create page with a Video URL fragment and go to edit mode
+
+			const fragmentId = getRandomString();
+
+			const fragment = getFragmentDefinition({
+				id: fragmentId,
+				key: 'BASIC_COMPONENT-video',
+			});
+
+			const layout = await apiHelpers.headlessDelivery.createSitePage({
+				pageDefinition: getPageDefinition([fragment]),
+				siteId: site.id,
+				title: getRandomString(),
+			});
+
+			await pageEditorPage.goto(layout, site.friendlyUrlPath);
+
+			// Edit video URL and publish the page
+
+			await pageEditorPage.changeFragmentConfiguration({
+				fieldLabel: 'URL',
+				fragmentId,
+				tab: 'General',
+				value: 'https://www.youtube.com/watch?v=2EPZxIC5ogU',
+			});
+
+			await pageEditorPage.publishPage();
+
+			// Go to view mode and assert video
+
+			await page.goto(
+				`/web${site.friendlyUrlPath}${layout.friendlyUrlPath}`
+			);
+
+			const videoIframeLocator = page.frameLocator(
+				'iframe[title="Life at Liferay - A Look into Liferay Culture"]'
+			);
+
+			await expect(
+				videoIframeLocator.getByText(
+					'Life at Liferay - A Look into Liferay Culture'
+				)
+			).toBeVisible();
+		}
+	);
 });

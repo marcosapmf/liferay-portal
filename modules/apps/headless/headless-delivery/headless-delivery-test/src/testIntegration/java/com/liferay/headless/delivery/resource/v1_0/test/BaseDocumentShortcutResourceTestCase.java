@@ -133,7 +133,32 @@ public abstract class BaseDocumentShortcutResourceTestCase {
 
 	@Test
 	public void testClientSerDesToDTO() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		DocumentShortcut documentShortcut1 = randomDocumentShortcut();
+
+		String json = objectMapper.writeValueAsString(documentShortcut1);
+
+		DocumentShortcut documentShortcut2 = DocumentShortcutSerDes.toDTO(json);
+
+		Assert.assertTrue(equals(documentShortcut1, documentShortcut2));
+	}
+
+	@Test
+	public void testClientSerDesToJSON() throws Exception {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		DocumentShortcut documentShortcut = randomDocumentShortcut();
+
+		String json1 = objectMapper.writeValueAsString(documentShortcut);
+		String json2 = DocumentShortcutSerDes.toJSON(documentShortcut);
+
+		Assert.assertEquals(
+			objectMapper.readTree(json1), objectMapper.readTree(json2));
+	}
+
+	protected ObjectMapper getClientSerDesObjectMapper() {
+		return new ObjectMapper() {
 			{
 				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
 				configure(
@@ -148,40 +173,6 @@ public abstract class BaseDocumentShortcutResourceTestCase {
 					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
 			}
 		};
-
-		DocumentShortcut documentShortcut1 = randomDocumentShortcut();
-
-		String json = objectMapper.writeValueAsString(documentShortcut1);
-
-		DocumentShortcut documentShortcut2 = DocumentShortcutSerDes.toDTO(json);
-
-		Assert.assertTrue(equals(documentShortcut1, documentShortcut2));
-	}
-
-	@Test
-	public void testClientSerDesToJSON() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
-			{
-				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
-				configure(
-					SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true);
-				setDateFormat(new ISO8601DateFormat());
-				setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
-				setSerializationInclusion(JsonInclude.Include.NON_NULL);
-				setVisibility(
-					PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-				setVisibility(
-					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
-			}
-		};
-
-		DocumentShortcut documentShortcut = randomDocumentShortcut();
-
-		String json1 = objectMapper.writeValueAsString(documentShortcut);
-		String json2 = DocumentShortcutSerDes.toJSON(documentShortcut);
-
-		Assert.assertEquals(
-			objectMapper.readTree(json1), objectMapper.readTree(json2));
 	}
 
 	@Test
@@ -191,6 +182,7 @@ public abstract class BaseDocumentShortcutResourceTestCase {
 		DocumentShortcut documentShortcut = randomDocumentShortcut();
 
 		documentShortcut.setAssetLibraryKey(regex);
+		documentShortcut.setExternalReferenceCode(regex);
 		documentShortcut.setTitle(regex);
 
 		String json = DocumentShortcutSerDes.toJSON(documentShortcut);
@@ -200,6 +192,7 @@ public abstract class BaseDocumentShortcutResourceTestCase {
 		documentShortcut = DocumentShortcutSerDes.toDTO(json);
 
 		Assert.assertEquals(regex, documentShortcut.getAssetLibraryKey());
+		Assert.assertEquals(regex, documentShortcut.getExternalReferenceCode());
 		Assert.assertEquals(regex, documentShortcut.getTitle());
 	}
 
@@ -1031,6 +1024,309 @@ public abstract class BaseDocumentShortcutResourceTestCase {
 		Assert.assertTrue(equals(randomDocumentShortcut, documentShortcut));
 	}
 
+	@Test
+	public void testDeleteSiteDocumentShortcutByExternalReferenceCode()
+		throws Exception {
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		DocumentShortcut documentShortcut =
+			testDeleteSiteDocumentShortcutByExternalReferenceCode_addDocumentShortcut();
+
+		assertHttpResponseStatusCode(
+			204,
+			documentShortcutResource.
+				deleteSiteDocumentShortcutByExternalReferenceCodeHttpResponse(
+					testDeleteSiteDocumentShortcutByExternalReferenceCode_getSiteId(
+						documentShortcut),
+					documentShortcut.getExternalReferenceCode()));
+
+		assertHttpResponseStatusCode(
+			404,
+			documentShortcutResource.
+				getSiteDocumentShortcutByExternalReferenceCodeHttpResponse(
+					testDeleteSiteDocumentShortcutByExternalReferenceCode_getSiteId(
+						documentShortcut),
+					documentShortcut.getExternalReferenceCode()));
+
+		assertHttpResponseStatusCode(
+			404,
+			documentShortcutResource.
+				getSiteDocumentShortcutByExternalReferenceCodeHttpResponse(
+					testDeleteSiteDocumentShortcutByExternalReferenceCode_getSiteId(
+						documentShortcut),
+					documentShortcut.getExternalReferenceCode()));
+	}
+
+	protected Long
+			testDeleteSiteDocumentShortcutByExternalReferenceCode_getSiteId(
+				DocumentShortcut documentShortcut)
+		throws Exception {
+
+		return documentShortcut.getSiteId();
+	}
+
+	protected DocumentShortcut
+			testDeleteSiteDocumentShortcutByExternalReferenceCode_addDocumentShortcut()
+		throws Exception {
+
+		return documentShortcutResource.postSiteDocumentShortcut(
+			testGroup.getGroupId(), randomDocumentShortcut());
+	}
+
+	@Test
+	public void testGetSiteDocumentShortcutByExternalReferenceCode()
+		throws Exception {
+
+		DocumentShortcut postDocumentShortcut =
+			testGetSiteDocumentShortcutByExternalReferenceCode_addDocumentShortcut();
+
+		DocumentShortcut getDocumentShortcut =
+			documentShortcutResource.
+				getSiteDocumentShortcutByExternalReferenceCode(
+					testGetSiteDocumentShortcutByExternalReferenceCode_getSiteId(
+						postDocumentShortcut),
+					postDocumentShortcut.getExternalReferenceCode());
+
+		assertEquals(postDocumentShortcut, getDocumentShortcut);
+		assertValid(getDocumentShortcut);
+	}
+
+	protected Long testGetSiteDocumentShortcutByExternalReferenceCode_getSiteId(
+			DocumentShortcut documentShortcut)
+		throws Exception {
+
+		return documentShortcut.getSiteId();
+	}
+
+	protected DocumentShortcut
+			testGetSiteDocumentShortcutByExternalReferenceCode_addDocumentShortcut()
+		throws Exception {
+
+		return documentShortcutResource.postSiteDocumentShortcut(
+			testGroup.getGroupId(), randomDocumentShortcut());
+	}
+
+	@Test
+	public void testGraphQLGetSiteDocumentShortcutByExternalReferenceCode()
+		throws Exception {
+
+		DocumentShortcut documentShortcut =
+			testGraphQLGetSiteDocumentShortcutByExternalReferenceCode_addDocumentShortcut();
+
+		// No namespace
+
+		Assert.assertTrue(
+			equals(
+				documentShortcut,
+				DocumentShortcutSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"documentShortcutByExternalReferenceCode",
+								new HashMap<String, Object>() {
+									{
+										put(
+											"siteKey",
+											"\"" +
+												testGraphQLGetSiteDocumentShortcutByExternalReferenceCode_getSiteId(
+													documentShortcut) + "\"");
+
+										put(
+											"externalReferenceCode",
+											"\"" +
+												documentShortcut.
+													getExternalReferenceCode() +
+														"\"");
+									}
+								},
+								getGraphQLFields())),
+						"JSONObject/data",
+						"Object/documentShortcutByExternalReferenceCode"))));
+
+		// Using the namespace headlessDelivery_v1_0
+
+		Assert.assertTrue(
+			equals(
+				documentShortcut,
+				DocumentShortcutSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessDelivery_v1_0",
+								new GraphQLField(
+									"documentShortcutByExternalReferenceCode",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"siteKey",
+												"\"" +
+													testGraphQLGetSiteDocumentShortcutByExternalReferenceCode_getSiteId(
+														documentShortcut) +
+															"\"");
+
+											put(
+												"externalReferenceCode",
+												"\"" +
+													documentShortcut.
+														getExternalReferenceCode() +
+															"\"");
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data", "JSONObject/headlessDelivery_v1_0",
+						"Object/documentShortcutByExternalReferenceCode"))));
+	}
+
+	protected Long
+			testGraphQLGetSiteDocumentShortcutByExternalReferenceCode_getSiteId(
+				DocumentShortcut documentShortcut)
+		throws Exception {
+
+		return documentShortcut.getSiteId();
+	}
+
+	@Test
+	public void testGraphQLGetSiteDocumentShortcutByExternalReferenceCodeNotFound()
+		throws Exception {
+
+		String irrelevantExternalReferenceCode =
+			"\"" + RandomTestUtil.randomString() + "\"";
+
+		// No namespace
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"documentShortcutByExternalReferenceCode",
+						new HashMap<String, Object>() {
+							{
+								put(
+									"siteKey",
+									"\"" + irrelevantGroup.getGroupId() + "\"");
+								put(
+									"externalReferenceCode",
+									irrelevantExternalReferenceCode);
+							}
+						},
+						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessDelivery_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessDelivery_v1_0",
+						new GraphQLField(
+							"documentShortcutByExternalReferenceCode",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"siteKey",
+										"\"" + irrelevantGroup.getGroupId() +
+											"\"");
+									put(
+										"externalReferenceCode",
+										irrelevantExternalReferenceCode);
+								}
+							},
+							getGraphQLFields()))),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+	}
+
+	protected DocumentShortcut
+			testGraphQLGetSiteDocumentShortcutByExternalReferenceCode_addDocumentShortcut()
+		throws Exception {
+
+		return testGraphQLDocumentShortcut_addDocumentShortcut();
+	}
+
+	@Test
+	public void testPutSiteDocumentShortcutByExternalReferenceCode()
+		throws Exception {
+
+		DocumentShortcut postDocumentShortcut =
+			testPutSiteDocumentShortcutByExternalReferenceCode_addDocumentShortcut();
+
+		DocumentShortcut randomDocumentShortcut = randomDocumentShortcut();
+
+		DocumentShortcut putDocumentShortcut =
+			documentShortcutResource.
+				putSiteDocumentShortcutByExternalReferenceCode(
+					testPutSiteDocumentShortcutByExternalReferenceCode_getSiteId(
+						postDocumentShortcut),
+					postDocumentShortcut.getExternalReferenceCode(),
+					randomDocumentShortcut);
+
+		assertEquals(randomDocumentShortcut, putDocumentShortcut);
+		assertValid(putDocumentShortcut);
+
+		DocumentShortcut getDocumentShortcut =
+			documentShortcutResource.
+				getSiteDocumentShortcutByExternalReferenceCode(
+					testPutSiteDocumentShortcutByExternalReferenceCode_getSiteId(
+						putDocumentShortcut),
+					putDocumentShortcut.getExternalReferenceCode());
+
+		assertEquals(randomDocumentShortcut, getDocumentShortcut);
+		assertValid(getDocumentShortcut);
+
+		DocumentShortcut newDocumentShortcut =
+			testPutSiteDocumentShortcutByExternalReferenceCode_createDocumentShortcut();
+
+		putDocumentShortcut =
+			documentShortcutResource.
+				putSiteDocumentShortcutByExternalReferenceCode(
+					testPutSiteDocumentShortcutByExternalReferenceCode_getSiteId(
+						newDocumentShortcut),
+					newDocumentShortcut.getExternalReferenceCode(),
+					newDocumentShortcut);
+
+		assertEquals(newDocumentShortcut, putDocumentShortcut);
+		assertValid(putDocumentShortcut);
+
+		getDocumentShortcut =
+			documentShortcutResource.
+				getSiteDocumentShortcutByExternalReferenceCode(
+					testPutSiteDocumentShortcutByExternalReferenceCode_getSiteId(
+						putDocumentShortcut),
+					putDocumentShortcut.getExternalReferenceCode());
+
+		assertEquals(newDocumentShortcut, getDocumentShortcut);
+
+		Assert.assertEquals(
+			newDocumentShortcut.getExternalReferenceCode(),
+			putDocumentShortcut.getExternalReferenceCode());
+	}
+
+	protected Long testPutSiteDocumentShortcutByExternalReferenceCode_getSiteId(
+			DocumentShortcut documentShortcut)
+		throws Exception {
+
+		return documentShortcut.getSiteId();
+	}
+
+	protected DocumentShortcut
+			testPutSiteDocumentShortcutByExternalReferenceCode_createDocumentShortcut()
+		throws Exception {
+
+		return randomDocumentShortcut();
+	}
+
+	protected DocumentShortcut
+			testPutSiteDocumentShortcutByExternalReferenceCode_addDocumentShortcut()
+		throws Exception {
+
+		return documentShortcutResource.postSiteDocumentShortcut(
+			testGroup.getGroupId(), randomDocumentShortcut());
+	}
+
 	protected void appendGraphQLFieldValue(StringBuilder sb, Object value)
 		throws Exception {
 
@@ -1114,6 +1410,8 @@ public abstract class BaseDocumentShortcutResourceTestCase {
 		sb.append("}");
 
 		List<GraphQLField> graphQLFields = getGraphQLFields();
+
+		graphQLFields.add(new GraphQLField("externalReferenceCode"));
 
 		graphQLFields.add(new GraphQLField("id"));
 
@@ -1250,6 +1548,16 @@ public abstract class BaseDocumentShortcutResourceTestCase {
 
 			if (Objects.equals("assetLibraryKey", additionalAssertFieldName)) {
 				if (documentShortcut.getAssetLibraryKey() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals(
+					"externalReferenceCode", additionalAssertFieldName)) {
+
+				if (documentShortcut.getExternalReferenceCode() == null) {
 					valid = false;
 				}
 
@@ -1437,6 +1745,19 @@ public abstract class BaseDocumentShortcutResourceTestCase {
 				if (!Objects.deepEquals(
 						documentShortcut1.getDateModified(),
 						documentShortcut2.getDateModified())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals(
+					"externalReferenceCode", additionalAssertFieldName)) {
+
+				if (!Objects.deepEquals(
+						documentShortcut1.getExternalReferenceCode(),
+						documentShortcut2.getExternalReferenceCode())) {
 
 					return false;
 				}
@@ -1721,6 +2042,52 @@ public abstract class BaseDocumentShortcutResourceTestCase {
 			return sb.toString();
 		}
 
+		if (entityFieldName.equals("externalReferenceCode")) {
+			Object object = documentShortcut.getExternalReferenceCode();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
+
+			return sb.toString();
+		}
+
 		if (entityFieldName.equals("folderId")) {
 			throw new IllegalArgumentException(
 				"Invalid entity field " + entityFieldName);
@@ -1841,6 +2208,8 @@ public abstract class BaseDocumentShortcutResourceTestCase {
 					RandomTestUtil.randomString());
 				dateCreated = RandomTestUtil.nextDate();
 				dateModified = RandomTestUtil.nextDate();
+				externalReferenceCode = StringUtil.toLowerCase(
+					RandomTestUtil.randomString());
 				folderId = RandomTestUtil.randomLong();
 				id = RandomTestUtil.randomLong();
 				siteId = testGroup.getGroupId();
@@ -1877,12 +2246,12 @@ public abstract class BaseDocumentShortcutResourceTestCase {
 		public static void copyProperties(Object source, Object target)
 			throws Exception {
 
-			Class<?> sourceClass = _getSuperClass(source.getClass());
+			Class<?> sourceClass = source.getClass();
 
 			Class<?> targetClass = target.getClass();
 
 			for (java.lang.reflect.Field field :
-					sourceClass.getDeclaredFields()) {
+					_getAllDeclaredFields(sourceClass)) {
 
 				if (field.isSynthetic()) {
 					continue;
@@ -1891,11 +2260,16 @@ public abstract class BaseDocumentShortcutResourceTestCase {
 				Method getMethod = _getMethod(
 					sourceClass, field.getName(), "get");
 
-				Method setMethod = _getMethod(
-					targetClass, field.getName(), "set",
-					getMethod.getReturnType());
+				try {
+					Method setMethod = _getMethod(
+						targetClass, field.getName(), "set",
+						getMethod.getReturnType());
 
-				setMethod.invoke(target, getMethod.invoke(source));
+					setMethod.invoke(target, getMethod.invoke(source));
+				}
+				catch (Exception e) {
+					continue;
+				}
 			}
 		}
 
@@ -1927,6 +2301,24 @@ public abstract class BaseDocumentShortcutResourceTestCase {
 			setMethod.invoke(bean, _translateValue(parameterTypes[0], value));
 		}
 
+		private static List<java.lang.reflect.Field> _getAllDeclaredFields(
+			Class<?> clazz) {
+
+			List<java.lang.reflect.Field> fields = new ArrayList<>();
+
+			while ((clazz != null) && (clazz != Object.class)) {
+				for (java.lang.reflect.Field field :
+						clazz.getDeclaredFields()) {
+
+					fields.add(field);
+				}
+
+				clazz = clazz.getSuperclass();
+			}
+
+			return fields;
+		}
+
 		private static Method _getMethod(Class<?> clazz, String name) {
 			for (Method method : clazz.getMethods()) {
 				if (name.equals(method.getName()) &&
@@ -1948,16 +2340,6 @@ public abstract class BaseDocumentShortcutResourceTestCase {
 			return clazz.getMethod(
 				prefix + StringUtil.upperCaseFirstLetter(fieldName),
 				parameterTypes);
-		}
-
-		private static Class<?> _getSuperClass(Class<?> clazz) {
-			Class<?> superClass = clazz.getSuperclass();
-
-			if ((superClass == null) || (superClass == Object.class)) {
-				return clazz;
-			}
-
-			return superClass;
 		}
 
 		private static Object _translateValue(

@@ -117,7 +117,32 @@ public abstract class BasePaymentResourceTestCase {
 
 	@Test
 	public void testClientSerDesToDTO() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		Payment payment1 = randomPayment();
+
+		String json = objectMapper.writeValueAsString(payment1);
+
+		Payment payment2 = PaymentSerDes.toDTO(json);
+
+		Assert.assertTrue(equals(payment1, payment2));
+	}
+
+	@Test
+	public void testClientSerDesToJSON() throws Exception {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		Payment payment = randomPayment();
+
+		String json1 = objectMapper.writeValueAsString(payment);
+		String json2 = PaymentSerDes.toJSON(payment);
+
+		Assert.assertEquals(
+			objectMapper.readTree(json1), objectMapper.readTree(json2));
+	}
+
+	protected ObjectMapper getClientSerDesObjectMapper() {
+		return new ObjectMapper() {
 			{
 				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
 				configure(
@@ -132,40 +157,6 @@ public abstract class BasePaymentResourceTestCase {
 					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
 			}
 		};
-
-		Payment payment1 = randomPayment();
-
-		String json = objectMapper.writeValueAsString(payment1);
-
-		Payment payment2 = PaymentSerDes.toDTO(json);
-
-		Assert.assertTrue(equals(payment1, payment2));
-	}
-
-	@Test
-	public void testClientSerDesToJSON() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
-			{
-				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
-				configure(
-					SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true);
-				setDateFormat(new ISO8601DateFormat());
-				setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
-				setSerializationInclusion(JsonInclude.Include.NON_NULL);
-				setVisibility(
-					PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-				setVisibility(
-					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
-			}
-		};
-
-		Payment payment = randomPayment();
-
-		String json1 = objectMapper.writeValueAsString(payment);
-		String json2 = PaymentSerDes.toJSON(payment);
-
-		Assert.assertEquals(
-			objectMapper.readTree(json1), objectMapper.readTree(json2));
 	}
 
 	@Test
@@ -175,6 +166,7 @@ public abstract class BasePaymentResourceTestCase {
 		Payment payment = randomPayment();
 
 		payment.setAmountFormatted(regex);
+		payment.setAuthor(regex);
 		payment.setCallbackURL(regex);
 		payment.setCancelURL(regex);
 		payment.setComment(regex);
@@ -198,6 +190,7 @@ public abstract class BasePaymentResourceTestCase {
 		payment = PaymentSerDes.toDTO(json);
 
 		Assert.assertEquals(regex, payment.getAmountFormatted());
+		Assert.assertEquals(regex, payment.getAuthor());
 		Assert.assertEquals(regex, payment.getCallbackURL());
 		Assert.assertEquals(regex, payment.getCancelURL());
 		Assert.assertEquals(regex, payment.getComment());
@@ -1167,6 +1160,14 @@ public abstract class BasePaymentResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals("author", additionalAssertFieldName)) {
+				if (payment.getAuthor() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("callbackURL", additionalAssertFieldName)) {
 				if (payment.getCallbackURL() == null) {
 					valid = false;
@@ -1502,6 +1503,16 @@ public abstract class BasePaymentResourceTestCase {
 				if (!Objects.deepEquals(
 						payment1.getAmountFormatted(),
 						payment2.getAmountFormatted())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("author", additionalAssertFieldName)) {
+				if (!Objects.deepEquals(
+						payment1.getAuthor(), payment2.getAuthor())) {
 
 					return false;
 				}
@@ -1888,6 +1899,52 @@ public abstract class BasePaymentResourceTestCase {
 
 		if (entityFieldName.equals("amountFormatted")) {
 			Object object = payment.getAmountFormatted();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
+
+			return sb.toString();
+		}
+
+		if (entityFieldName.equals("author")) {
+			Object object = payment.getAuthor();
 
 			String value = String.valueOf(object);
 
@@ -2743,6 +2800,7 @@ public abstract class BasePaymentResourceTestCase {
 			{
 				amountFormatted = StringUtil.toLowerCase(
 					RandomTestUtil.randomString());
+				author = StringUtil.toLowerCase(RandomTestUtil.randomString());
 				callbackURL = StringUtil.toLowerCase(
 					RandomTestUtil.randomString());
 				cancelURL = StringUtil.toLowerCase(
@@ -2802,12 +2860,12 @@ public abstract class BasePaymentResourceTestCase {
 		public static void copyProperties(Object source, Object target)
 			throws Exception {
 
-			Class<?> sourceClass = _getSuperClass(source.getClass());
+			Class<?> sourceClass = source.getClass();
 
 			Class<?> targetClass = target.getClass();
 
 			for (java.lang.reflect.Field field :
-					sourceClass.getDeclaredFields()) {
+					_getAllDeclaredFields(sourceClass)) {
 
 				if (field.isSynthetic()) {
 					continue;
@@ -2816,11 +2874,16 @@ public abstract class BasePaymentResourceTestCase {
 				Method getMethod = _getMethod(
 					sourceClass, field.getName(), "get");
 
-				Method setMethod = _getMethod(
-					targetClass, field.getName(), "set",
-					getMethod.getReturnType());
+				try {
+					Method setMethod = _getMethod(
+						targetClass, field.getName(), "set",
+						getMethod.getReturnType());
 
-				setMethod.invoke(target, getMethod.invoke(source));
+					setMethod.invoke(target, getMethod.invoke(source));
+				}
+				catch (Exception e) {
+					continue;
+				}
 			}
 		}
 
@@ -2852,6 +2915,24 @@ public abstract class BasePaymentResourceTestCase {
 			setMethod.invoke(bean, _translateValue(parameterTypes[0], value));
 		}
 
+		private static List<java.lang.reflect.Field> _getAllDeclaredFields(
+			Class<?> clazz) {
+
+			List<java.lang.reflect.Field> fields = new ArrayList<>();
+
+			while ((clazz != null) && (clazz != Object.class)) {
+				for (java.lang.reflect.Field field :
+						clazz.getDeclaredFields()) {
+
+					fields.add(field);
+				}
+
+				clazz = clazz.getSuperclass();
+			}
+
+			return fields;
+		}
+
 		private static Method _getMethod(Class<?> clazz, String name) {
 			for (Method method : clazz.getMethods()) {
 				if (name.equals(method.getName()) &&
@@ -2873,16 +2954,6 @@ public abstract class BasePaymentResourceTestCase {
 			return clazz.getMethod(
 				prefix + StringUtil.upperCaseFirstLetter(fieldName),
 				parameterTypes);
-		}
-
-		private static Class<?> _getSuperClass(Class<?> clazz) {
-			Class<?> superClass = clazz.getSuperclass();
-
-			if ((superClass == null) || (superClass == Object.class)) {
-				return clazz;
-			}
-
-			return superClass;
 		}
 
 		private static Object _translateValue(

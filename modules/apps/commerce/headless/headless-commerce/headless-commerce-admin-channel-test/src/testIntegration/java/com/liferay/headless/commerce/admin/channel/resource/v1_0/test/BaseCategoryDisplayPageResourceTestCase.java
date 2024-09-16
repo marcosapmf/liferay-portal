@@ -118,7 +118,33 @@ public abstract class BaseCategoryDisplayPageResourceTestCase {
 
 	@Test
 	public void testClientSerDesToDTO() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		CategoryDisplayPage categoryDisplayPage1 = randomCategoryDisplayPage();
+
+		String json = objectMapper.writeValueAsString(categoryDisplayPage1);
+
+		CategoryDisplayPage categoryDisplayPage2 =
+			CategoryDisplayPageSerDes.toDTO(json);
+
+		Assert.assertTrue(equals(categoryDisplayPage1, categoryDisplayPage2));
+	}
+
+	@Test
+	public void testClientSerDesToJSON() throws Exception {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		CategoryDisplayPage categoryDisplayPage = randomCategoryDisplayPage();
+
+		String json1 = objectMapper.writeValueAsString(categoryDisplayPage);
+		String json2 = CategoryDisplayPageSerDes.toJSON(categoryDisplayPage);
+
+		Assert.assertEquals(
+			objectMapper.readTree(json1), objectMapper.readTree(json2));
+	}
+
+	protected ObjectMapper getClientSerDesObjectMapper() {
+		return new ObjectMapper() {
 			{
 				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
 				configure(
@@ -133,41 +159,6 @@ public abstract class BaseCategoryDisplayPageResourceTestCase {
 					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
 			}
 		};
-
-		CategoryDisplayPage categoryDisplayPage1 = randomCategoryDisplayPage();
-
-		String json = objectMapper.writeValueAsString(categoryDisplayPage1);
-
-		CategoryDisplayPage categoryDisplayPage2 =
-			CategoryDisplayPageSerDes.toDTO(json);
-
-		Assert.assertTrue(equals(categoryDisplayPage1, categoryDisplayPage2));
-	}
-
-	@Test
-	public void testClientSerDesToJSON() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
-			{
-				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
-				configure(
-					SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true);
-				setDateFormat(new ISO8601DateFormat());
-				setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
-				setSerializationInclusion(JsonInclude.Include.NON_NULL);
-				setVisibility(
-					PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-				setVisibility(
-					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
-			}
-		};
-
-		CategoryDisplayPage categoryDisplayPage = randomCategoryDisplayPage();
-
-		String json1 = objectMapper.writeValueAsString(categoryDisplayPage);
-		String json2 = CategoryDisplayPageSerDes.toJSON(categoryDisplayPage);
-
-		Assert.assertEquals(
-			objectMapper.readTree(json1), objectMapper.readTree(json2));
 	}
 
 	@Test
@@ -176,6 +167,8 @@ public abstract class BaseCategoryDisplayPageResourceTestCase {
 
 		CategoryDisplayPage categoryDisplayPage = randomCategoryDisplayPage();
 
+		categoryDisplayPage.setCategoryExternalReferenceCode(regex);
+		categoryDisplayPage.setGroupExternalReferenceCode(regex);
 		categoryDisplayPage.setPageUuid(regex);
 
 		String json = CategoryDisplayPageSerDes.toJSON(categoryDisplayPage);
@@ -184,6 +177,10 @@ public abstract class BaseCategoryDisplayPageResourceTestCase {
 
 		categoryDisplayPage = CategoryDisplayPageSerDes.toDTO(json);
 
+		Assert.assertEquals(
+			regex, categoryDisplayPage.getCategoryExternalReferenceCode());
+		Assert.assertEquals(
+			regex, categoryDisplayPage.getGroupExternalReferenceCode());
 		Assert.assertEquals(regex, categoryDisplayPage.getPageUuid());
 	}
 
@@ -1572,8 +1569,33 @@ public abstract class BaseCategoryDisplayPageResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals(
+					"categoryExternalReferenceCode",
+					additionalAssertFieldName)) {
+
+				if (categoryDisplayPage.getCategoryExternalReferenceCode() ==
+						null) {
+
+					valid = false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("categoryId", additionalAssertFieldName)) {
 				if (categoryDisplayPage.getCategoryId() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals(
+					"groupExternalReferenceCode", additionalAssertFieldName)) {
+
+				if (categoryDisplayPage.getGroupExternalReferenceCode() ==
+						null) {
+
 					valid = false;
 				}
 
@@ -1720,10 +1742,38 @@ public abstract class BaseCategoryDisplayPageResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals(
+					"categoryExternalReferenceCode",
+					additionalAssertFieldName)) {
+
+				if (!Objects.deepEquals(
+						categoryDisplayPage1.getCategoryExternalReferenceCode(),
+						categoryDisplayPage2.
+							getCategoryExternalReferenceCode())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("categoryId", additionalAssertFieldName)) {
 				if (!Objects.deepEquals(
 						categoryDisplayPage1.getCategoryId(),
 						categoryDisplayPage2.getCategoryId())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals(
+					"groupExternalReferenceCode", additionalAssertFieldName)) {
+
+				if (!Objects.deepEquals(
+						categoryDisplayPage1.getGroupExternalReferenceCode(),
+						categoryDisplayPage2.getGroupExternalReferenceCode())) {
 
 					return false;
 				}
@@ -1866,9 +1916,102 @@ public abstract class BaseCategoryDisplayPageResourceTestCase {
 				"Invalid entity field " + entityFieldName);
 		}
 
+		if (entityFieldName.equals("categoryExternalReferenceCode")) {
+			Object object =
+				categoryDisplayPage.getCategoryExternalReferenceCode();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
+
+			return sb.toString();
+		}
+
 		if (entityFieldName.equals("categoryId")) {
 			throw new IllegalArgumentException(
 				"Invalid entity field " + entityFieldName);
+		}
+
+		if (entityFieldName.equals("groupExternalReferenceCode")) {
+			Object object = categoryDisplayPage.getGroupExternalReferenceCode();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
+
+			return sb.toString();
 		}
 
 		if (entityFieldName.equals("id")) {
@@ -1967,7 +2110,11 @@ public abstract class BaseCategoryDisplayPageResourceTestCase {
 	protected CategoryDisplayPage randomCategoryDisplayPage() throws Exception {
 		return new CategoryDisplayPage() {
 			{
+				categoryExternalReferenceCode = StringUtil.toLowerCase(
+					RandomTestUtil.randomString());
 				categoryId = RandomTestUtil.randomLong();
+				groupExternalReferenceCode = StringUtil.toLowerCase(
+					RandomTestUtil.randomString());
 				id = RandomTestUtil.randomLong();
 				pageUuid = StringUtil.toLowerCase(
 					RandomTestUtil.randomString());
@@ -2000,12 +2147,12 @@ public abstract class BaseCategoryDisplayPageResourceTestCase {
 		public static void copyProperties(Object source, Object target)
 			throws Exception {
 
-			Class<?> sourceClass = _getSuperClass(source.getClass());
+			Class<?> sourceClass = source.getClass();
 
 			Class<?> targetClass = target.getClass();
 
 			for (java.lang.reflect.Field field :
-					sourceClass.getDeclaredFields()) {
+					_getAllDeclaredFields(sourceClass)) {
 
 				if (field.isSynthetic()) {
 					continue;
@@ -2014,11 +2161,16 @@ public abstract class BaseCategoryDisplayPageResourceTestCase {
 				Method getMethod = _getMethod(
 					sourceClass, field.getName(), "get");
 
-				Method setMethod = _getMethod(
-					targetClass, field.getName(), "set",
-					getMethod.getReturnType());
+				try {
+					Method setMethod = _getMethod(
+						targetClass, field.getName(), "set",
+						getMethod.getReturnType());
 
-				setMethod.invoke(target, getMethod.invoke(source));
+					setMethod.invoke(target, getMethod.invoke(source));
+				}
+				catch (Exception e) {
+					continue;
+				}
 			}
 		}
 
@@ -2050,6 +2202,24 @@ public abstract class BaseCategoryDisplayPageResourceTestCase {
 			setMethod.invoke(bean, _translateValue(parameterTypes[0], value));
 		}
 
+		private static List<java.lang.reflect.Field> _getAllDeclaredFields(
+			Class<?> clazz) {
+
+			List<java.lang.reflect.Field> fields = new ArrayList<>();
+
+			while ((clazz != null) && (clazz != Object.class)) {
+				for (java.lang.reflect.Field field :
+						clazz.getDeclaredFields()) {
+
+					fields.add(field);
+				}
+
+				clazz = clazz.getSuperclass();
+			}
+
+			return fields;
+		}
+
 		private static Method _getMethod(Class<?> clazz, String name) {
 			for (Method method : clazz.getMethods()) {
 				if (name.equals(method.getName()) &&
@@ -2071,16 +2241,6 @@ public abstract class BaseCategoryDisplayPageResourceTestCase {
 			return clazz.getMethod(
 				prefix + StringUtil.upperCaseFirstLetter(fieldName),
 				parameterTypes);
-		}
-
-		private static Class<?> _getSuperClass(Class<?> clazz) {
-			Class<?> superClass = clazz.getSuperclass();
-
-			if ((superClass == null) || (superClass == Object.class)) {
-				return clazz;
-			}
-
-			return superClass;
 		}
 
 		private static Object _translateValue(

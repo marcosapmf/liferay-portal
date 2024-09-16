@@ -9,10 +9,13 @@ import com.liferay.client.extension.constants.ClientExtensionEntryConstants;
 import com.liferay.client.extension.type.manager.CETManager;
 import com.liferay.frontend.data.set.admin.web.internal.constants.FDSAdminPortletKeys;
 import com.liferay.frontend.data.set.admin.web.internal.portlet.FDSAdminPortlet;
+import com.liferay.frontend.data.set.resolver.FDSAPIURLResolver;
+import com.liferay.frontend.data.set.resolver.FDSAPIURLResolverRegistry;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.osgi.service.tracker.collections.list.ServiceTrackerList;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONUtil;
@@ -42,12 +45,14 @@ public class FDSAdminDisplayContext {
 
 	public FDSAdminDisplayContext(
 		CETManager cetManager,
+		FDSAPIURLResolverRegistry fdsAPIURLResolverRegistry,
 		ObjectDefinitionLocalService objectDefinitionLocalService,
 		RenderRequest renderRequest, RenderResponse renderResponse,
 		ServiceTrackerList<FDSAdminPortlet.CompanyScopedOpenAPIResource>
 			serviceTrackerList) {
 
 		_cetManager = cetManager;
+		_fdsAPIURLResolverRegistry = fdsAPIURLResolverRegistry;
 		_renderRequest = renderRequest;
 		_renderResponse = renderResponse;
 		_serviceTrackerList = serviceTrackerList;
@@ -198,6 +203,21 @@ public class FDSAdminDisplayContext {
 		).buildString();
 	}
 
+	public JSONArray getRESTApplicationResolvedSchemasJSONArray() {
+		JSONArray jsonArray = JSONFactoryUtil.createJSONArray();
+
+		if (FeatureFlagManagerUtil.isEnabled("LPD-25230")) {
+			List<FDSAPIURLResolver> fdsAPIURLResolvers =
+				_fdsAPIURLResolverRegistry.getFDSAPIURLResolvers();
+
+			for (FDSAPIURLResolver fdsAPIURLResolver : fdsAPIURLResolvers) {
+				jsonArray.put(fdsAPIURLResolver.getSchema());
+			}
+		}
+
+		return jsonArray;
+	}
+
 	public JSONArray getRESTApplicationsJSONArray() {
 		JSONArray jsonArray = JSONFactoryUtil.createJSONArray();
 
@@ -255,6 +275,7 @@ public class FDSAdminDisplayContext {
 	}
 
 	private final CETManager _cetManager;
+	private final FDSAPIURLResolverRegistry _fdsAPIURLResolverRegistry;
 	private final ObjectDefinition _fdsEntryObjectDefinition;
 	private final ObjectDefinition _fdsViewObjectDefinition;
 	private final RenderRequest _renderRequest;

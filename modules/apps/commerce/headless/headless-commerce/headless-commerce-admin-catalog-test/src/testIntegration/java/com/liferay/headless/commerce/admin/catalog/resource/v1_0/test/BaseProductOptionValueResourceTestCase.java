@@ -117,7 +117,33 @@ public abstract class BaseProductOptionValueResourceTestCase {
 
 	@Test
 	public void testClientSerDesToDTO() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		ProductOptionValue productOptionValue1 = randomProductOptionValue();
+
+		String json = objectMapper.writeValueAsString(productOptionValue1);
+
+		ProductOptionValue productOptionValue2 = ProductOptionValueSerDes.toDTO(
+			json);
+
+		Assert.assertTrue(equals(productOptionValue1, productOptionValue2));
+	}
+
+	@Test
+	public void testClientSerDesToJSON() throws Exception {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		ProductOptionValue productOptionValue = randomProductOptionValue();
+
+		String json1 = objectMapper.writeValueAsString(productOptionValue);
+		String json2 = ProductOptionValueSerDes.toJSON(productOptionValue);
+
+		Assert.assertEquals(
+			objectMapper.readTree(json1), objectMapper.readTree(json2));
+	}
+
+	protected ObjectMapper getClientSerDesObjectMapper() {
+		return new ObjectMapper() {
 			{
 				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
 				configure(
@@ -132,41 +158,6 @@ public abstract class BaseProductOptionValueResourceTestCase {
 					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
 			}
 		};
-
-		ProductOptionValue productOptionValue1 = randomProductOptionValue();
-
-		String json = objectMapper.writeValueAsString(productOptionValue1);
-
-		ProductOptionValue productOptionValue2 = ProductOptionValueSerDes.toDTO(
-			json);
-
-		Assert.assertTrue(equals(productOptionValue1, productOptionValue2));
-	}
-
-	@Test
-	public void testClientSerDesToJSON() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
-			{
-				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
-				configure(
-					SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true);
-				setDateFormat(new ISO8601DateFormat());
-				setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
-				setSerializationInclusion(JsonInclude.Include.NON_NULL);
-				setVisibility(
-					PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-				setVisibility(
-					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
-			}
-		};
-
-		ProductOptionValue productOptionValue = randomProductOptionValue();
-
-		String json1 = objectMapper.writeValueAsString(productOptionValue);
-		String json2 = ProductOptionValueSerDes.toJSON(productOptionValue);
-
-		Assert.assertEquals(
-			objectMapper.readTree(json1), objectMapper.readTree(json2));
 	}
 
 	@Test
@@ -176,6 +167,7 @@ public abstract class BaseProductOptionValueResourceTestCase {
 		ProductOptionValue productOptionValue = randomProductOptionValue();
 
 		productOptionValue.setKey(regex);
+		productOptionValue.setSkuExternalReferenceCode(regex);
 		productOptionValue.setUnitOfMeasureKey(regex);
 
 		String json = ProductOptionValueSerDes.toJSON(productOptionValue);
@@ -185,6 +177,8 @@ public abstract class BaseProductOptionValueResourceTestCase {
 		productOptionValue = ProductOptionValueSerDes.toDTO(json);
 
 		Assert.assertEquals(regex, productOptionValue.getKey());
+		Assert.assertEquals(
+			regex, productOptionValue.getSkuExternalReferenceCode());
 		Assert.assertEquals(regex, productOptionValue.getUnitOfMeasureKey());
 	}
 
@@ -995,6 +989,16 @@ public abstract class BaseProductOptionValueResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals(
+					"skuExternalReferenceCode", additionalAssertFieldName)) {
+
+				if (productOptionValue.getSkuExternalReferenceCode() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("skuId", additionalAssertFieldName)) {
 				if (productOptionValue.getSkuId() == null) {
 					valid = false;
@@ -1209,6 +1213,19 @@ public abstract class BaseProductOptionValueResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals(
+					"skuExternalReferenceCode", additionalAssertFieldName)) {
+
+				if (!Objects.deepEquals(
+						productOptionValue1.getSkuExternalReferenceCode(),
+						productOptionValue2.getSkuExternalReferenceCode())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("skuId", additionalAssertFieldName)) {
 				if (!Objects.deepEquals(
 						productOptionValue1.getSkuId(),
@@ -1416,6 +1433,52 @@ public abstract class BaseProductOptionValueResourceTestCase {
 				"Invalid entity field " + entityFieldName);
 		}
 
+		if (entityFieldName.equals("skuExternalReferenceCode")) {
+			Object object = productOptionValue.getSkuExternalReferenceCode();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
+
+			return sb.toString();
+		}
+
 		if (entityFieldName.equals("skuId")) {
 			throw new IllegalArgumentException(
 				"Invalid entity field " + entityFieldName);
@@ -1516,6 +1579,8 @@ public abstract class BaseProductOptionValueResourceTestCase {
 				key = StringUtil.toLowerCase(RandomTestUtil.randomString());
 				preselected = RandomTestUtil.randomBoolean();
 				priority = RandomTestUtil.randomDouble();
+				skuExternalReferenceCode = StringUtil.toLowerCase(
+					RandomTestUtil.randomString());
 				skuId = RandomTestUtil.randomLong();
 				unitOfMeasureKey = StringUtil.toLowerCase(
 					RandomTestUtil.randomString());
@@ -1548,12 +1613,12 @@ public abstract class BaseProductOptionValueResourceTestCase {
 		public static void copyProperties(Object source, Object target)
 			throws Exception {
 
-			Class<?> sourceClass = _getSuperClass(source.getClass());
+			Class<?> sourceClass = source.getClass();
 
 			Class<?> targetClass = target.getClass();
 
 			for (java.lang.reflect.Field field :
-					sourceClass.getDeclaredFields()) {
+					_getAllDeclaredFields(sourceClass)) {
 
 				if (field.isSynthetic()) {
 					continue;
@@ -1562,11 +1627,16 @@ public abstract class BaseProductOptionValueResourceTestCase {
 				Method getMethod = _getMethod(
 					sourceClass, field.getName(), "get");
 
-				Method setMethod = _getMethod(
-					targetClass, field.getName(), "set",
-					getMethod.getReturnType());
+				try {
+					Method setMethod = _getMethod(
+						targetClass, field.getName(), "set",
+						getMethod.getReturnType());
 
-				setMethod.invoke(target, getMethod.invoke(source));
+					setMethod.invoke(target, getMethod.invoke(source));
+				}
+				catch (Exception e) {
+					continue;
+				}
 			}
 		}
 
@@ -1598,6 +1668,24 @@ public abstract class BaseProductOptionValueResourceTestCase {
 			setMethod.invoke(bean, _translateValue(parameterTypes[0], value));
 		}
 
+		private static List<java.lang.reflect.Field> _getAllDeclaredFields(
+			Class<?> clazz) {
+
+			List<java.lang.reflect.Field> fields = new ArrayList<>();
+
+			while ((clazz != null) && (clazz != Object.class)) {
+				for (java.lang.reflect.Field field :
+						clazz.getDeclaredFields()) {
+
+					fields.add(field);
+				}
+
+				clazz = clazz.getSuperclass();
+			}
+
+			return fields;
+		}
+
 		private static Method _getMethod(Class<?> clazz, String name) {
 			for (Method method : clazz.getMethods()) {
 				if (name.equals(method.getName()) &&
@@ -1619,16 +1707,6 @@ public abstract class BaseProductOptionValueResourceTestCase {
 			return clazz.getMethod(
 				prefix + StringUtil.upperCaseFirstLetter(fieldName),
 				parameterTypes);
-		}
-
-		private static Class<?> _getSuperClass(Class<?> clazz) {
-			Class<?> superClass = clazz.getSuperclass();
-
-			if ((superClass == null) || (superClass == Object.class)) {
-				return clazz;
-			}
-
-			return superClass;
 		}
 
 		private static Object _translateValue(

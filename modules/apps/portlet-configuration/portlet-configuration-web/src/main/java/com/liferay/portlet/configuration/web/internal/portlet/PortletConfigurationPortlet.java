@@ -555,7 +555,9 @@ public class PortletConfigurationPortlet extends MVCPortlet {
 
 		PermissionPropagator permissionPropagator = null;
 
-		if (PropsValues.PERMISSIONS_PROPAGATION_ENABLED) {
+		if (PropsValues.PERMISSIONS_PROPAGATION_ENABLED &&
+			Validator.isNotNull(portletResource)) {
+
 			Portlet portlet = _portletLocalService.getPortletById(
 				themeDisplay.getCompanyId(), portletResource);
 
@@ -945,7 +947,8 @@ public class PortletConfigurationPortlet extends MVCPortlet {
 			WebKeys.THEME_DISPLAY);
 
 		String portletTitle = PortletConfigurationUtil.getPortletTitle(
-			portletPreferences, themeDisplay.getLanguageId());
+			portlet.getPortletId(), portletPreferences,
+			themeDisplay.getLanguageId());
 
 		if (Validator.isNull(portletTitle)) {
 			ServletContext servletContext =

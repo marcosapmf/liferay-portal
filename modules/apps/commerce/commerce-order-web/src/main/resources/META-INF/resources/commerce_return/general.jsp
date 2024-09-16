@@ -190,7 +190,7 @@ CommerceOrder commerceOrder = commerceReturnEditDisplayContext.getCommerceReturn
 
 		<div class="col-12">
 			<commerce-ui:panel
-				title='<%= LanguageUtil.get(request, "refund-summary") %>'
+				title='<%= LanguageUtil.get(request, "return-summary") %>'
 			>
 				<div class="row summary-table text-right">
 					<div class="col-6 col-md-9">
@@ -204,7 +204,15 @@ CommerceOrder commerceOrder = commerceReturnEditDisplayContext.getCommerceReturn
 					</div>
 
 					<div class="col-6 col-md-9">
-						<span class="summary-table-item"><liferay-ui:message key="refund-subtotal" /></span>
+						<span class="summary-table-item"><liferay-ui:message key="delivery" /></span>
+					</div>
+
+					<div class="col-6 col-md-3">
+						<span class="summary-table-item"><%= commerceReturnEditDisplayContext.getCommerceOrderShippingAmountFormatted() %></span>
+					</div>
+
+					<div class="col-6 col-md-9">
+						<span class="summary-table-item"><liferay-ui:message key="return-subtotal" /></span>
 					</div>
 
 					<div class="col-6 col-md-3">
@@ -216,7 +224,7 @@ CommerceOrder commerceOrder = commerceReturnEditDisplayContext.getCommerceReturn
 					</div>
 
 					<div class="col-6 col-md-9">
-						<div class="h4 my-2 summary-table-item-big"><liferay-ui:message key="total-estimated-refund" /></div>
+						<div class="h4 my-2 summary-table-item-big"><liferay-ui:message key="total-estimated-return" /></div>
 					</div>
 
 					<div class="col-6 col-md-3">

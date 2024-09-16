@@ -33,6 +33,7 @@ import com.liferay.headless.delivery.resource.v1_0.ContentElementResource;
 import com.liferay.headless.delivery.resource.v1_0.ContentStructureResource;
 import com.liferay.headless.delivery.resource.v1_0.ContentTemplateResource;
 import com.liferay.headless.delivery.resource.v1_0.DocumentFolderResource;
+import com.liferay.headless.delivery.resource.v1_0.DocumentMetadataSetResource;
 import com.liferay.headless.delivery.resource.v1_0.DocumentResource;
 import com.liferay.headless.delivery.resource.v1_0.DocumentShortcutResource;
 import com.liferay.headless.delivery.resource.v1_0.KnowledgeBaseArticleResource;
@@ -147,6 +148,14 @@ public class Mutation {
 
 		_documentFolderResourceComponentServiceObjects =
 			documentFolderResourceComponentServiceObjects;
+	}
+
+	public static void setDocumentMetadataSetResourceComponentServiceObjects(
+		ComponentServiceObjects<DocumentMetadataSetResource>
+			documentMetadataSetResourceComponentServiceObjects) {
+
+		_documentMetadataSetResourceComponentServiceObjects =
+			documentMetadataSetResourceComponentServiceObjects;
 	}
 
 	public static void setDocumentShortcutResourceComponentServiceObjects(
@@ -2083,6 +2092,42 @@ public class Mutation {
 	}
 
 	@GraphQLField
+	public Response createAssetLibraryDocumentMetadataSetsPageExportBatch(
+			@GraphQLName("assetLibraryId") @NotEmpty String assetLibraryId,
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("contentType") String contentType,
+			@GraphQLName("fieldNames") String fieldNames)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_documentMetadataSetResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			documentMetadataSetResource ->
+				documentMetadataSetResource.
+					postAssetLibraryDocumentMetadataSetsPageExportBatch(
+						Long.valueOf(assetLibraryId), callbackURL, contentType,
+						fieldNames));
+	}
+
+	@GraphQLField
+	public Response createSiteDocumentMetadataSetsPageExportBatch(
+			@GraphQLName("siteKey") @NotEmpty String siteKey,
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("contentType") String contentType,
+			@GraphQLName("fieldNames") String fieldNames)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_documentMetadataSetResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			documentMetadataSetResource ->
+				documentMetadataSetResource.
+					postSiteDocumentMetadataSetsPageExportBatch(
+						Long.valueOf(siteKey), callbackURL, contentType,
+						fieldNames));
+	}
+
+	@GraphQLField
 	public Response createAssetLibraryDocumentShortcutsPageExportBatch(
 			@GraphQLName("assetLibraryId") @NotEmpty String assetLibraryId,
 			@GraphQLName("callbackURL") String callbackURL,
@@ -2251,6 +2296,42 @@ public class Mutation {
 			documentShortcutResource ->
 				documentShortcutResource.postSiteDocumentShortcutBatch(
 					Long.valueOf(siteKey), callbackURL, object));
+	}
+
+	@GraphQLField(
+		description = "Deletes the site's document shortcut by external reference code returns a 204 if the operation succeeds."
+	)
+	public boolean deleteSiteDocumentShortcutByExternalReferenceCode(
+			@GraphQLName("siteKey") @NotEmpty String siteKey,
+			@GraphQLName("externalReferenceCode") String externalReferenceCode)
+		throws Exception {
+
+		_applyVoidComponentServiceObjects(
+			_documentShortcutResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			documentShortcutResource ->
+				documentShortcutResource.
+					deleteSiteDocumentShortcutByExternalReferenceCode(
+						Long.valueOf(siteKey), externalReferenceCode));
+
+		return true;
+	}
+
+	@GraphQLField
+	public DocumentShortcut updateSiteDocumentShortcutByExternalReferenceCode(
+			@GraphQLName("siteKey") @NotEmpty String siteKey,
+			@GraphQLName("externalReferenceCode") String externalReferenceCode,
+			@GraphQLName("documentShortcut") DocumentShortcut documentShortcut)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_documentShortcutResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			documentShortcutResource ->
+				documentShortcutResource.
+					putSiteDocumentShortcutByExternalReferenceCode(
+						Long.valueOf(siteKey), externalReferenceCode,
+						documentShortcut));
 	}
 
 	@GraphQLField(
@@ -5966,6 +6047,28 @@ public class Mutation {
 	}
 
 	private void _populateResourceContext(
+			DocumentMetadataSetResource documentMetadataSetResource)
+		throws Exception {
+
+		documentMetadataSetResource.setContextAcceptLanguage(_acceptLanguage);
+		documentMetadataSetResource.setContextCompany(_company);
+		documentMetadataSetResource.setContextHttpServletRequest(
+			_httpServletRequest);
+		documentMetadataSetResource.setContextHttpServletResponse(
+			_httpServletResponse);
+		documentMetadataSetResource.setContextUriInfo(_uriInfo);
+		documentMetadataSetResource.setContextUser(_user);
+		documentMetadataSetResource.setGroupLocalService(_groupLocalService);
+		documentMetadataSetResource.setRoleLocalService(_roleLocalService);
+
+		documentMetadataSetResource.setVulcanBatchEngineExportTaskResource(
+			_vulcanBatchEngineExportTaskResource);
+
+		documentMetadataSetResource.setVulcanBatchEngineImportTaskResource(
+			_vulcanBatchEngineImportTaskResource);
+	}
+
+	private void _populateResourceContext(
 			DocumentShortcutResource documentShortcutResource)
 		throws Exception {
 
@@ -6326,6 +6429,8 @@ public class Mutation {
 		_documentResourceComponentServiceObjects;
 	private static ComponentServiceObjects<DocumentFolderResource>
 		_documentFolderResourceComponentServiceObjects;
+	private static ComponentServiceObjects<DocumentMetadataSetResource>
+		_documentMetadataSetResourceComponentServiceObjects;
 	private static ComponentServiceObjects<DocumentShortcutResource>
 		_documentShortcutResourceComponentServiceObjects;
 	private static ComponentServiceObjects<KnowledgeBaseArticleResource>

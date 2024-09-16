@@ -142,11 +142,17 @@ components:
                         type: object
                     readOnly: true
                     type: object
+                categoryExternalReferenceCode:
+                    example: "DAB-34098-789-N"
+                    type: string
                 categoryId:
                     example: 30130
                     format: int64
                     minimum: 0
                     type: integer
+                groupExternalReferenceCode:
+                    example: "DAB-34098-789-N"
+                    type: string
                 id:
                     example: 30130
                     format: int64
@@ -388,6 +394,9 @@ components:
                     type: string
                 pageUuid:
                     type: string
+                productExternalReferenceCode:
+                    example: "DAB-34098-789-N"
+                    type: string
                 productId:
                     example: 30324
                     format: int64
@@ -594,7 +603,7 @@ components:
 info:
     description:
         "Liferay Commerce Admin Channel API. A Java client JAR is available for use with the group ID 'com.liferay',
-        artifact ID 'com.liferay.headless.commerce.admin.channel.client', and version '4.0.38'."
+        artifact ID 'com.liferay.headless.commerce.admin.channel.client', and version '4.0.40'."
     license:
         name: "Apache 2.0"
         url: "http://www.apache.org/licenses/LICENSE-2.0.html"

@@ -118,7 +118,33 @@ public abstract class BaseProductDisplayPageResourceTestCase {
 
 	@Test
 	public void testClientSerDesToDTO() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		ProductDisplayPage productDisplayPage1 = randomProductDisplayPage();
+
+		String json = objectMapper.writeValueAsString(productDisplayPage1);
+
+		ProductDisplayPage productDisplayPage2 = ProductDisplayPageSerDes.toDTO(
+			json);
+
+		Assert.assertTrue(equals(productDisplayPage1, productDisplayPage2));
+	}
+
+	@Test
+	public void testClientSerDesToJSON() throws Exception {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		ProductDisplayPage productDisplayPage = randomProductDisplayPage();
+
+		String json1 = objectMapper.writeValueAsString(productDisplayPage);
+		String json2 = ProductDisplayPageSerDes.toJSON(productDisplayPage);
+
+		Assert.assertEquals(
+			objectMapper.readTree(json1), objectMapper.readTree(json2));
+	}
+
+	protected ObjectMapper getClientSerDesObjectMapper() {
+		return new ObjectMapper() {
 			{
 				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
 				configure(
@@ -133,41 +159,6 @@ public abstract class BaseProductDisplayPageResourceTestCase {
 					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
 			}
 		};
-
-		ProductDisplayPage productDisplayPage1 = randomProductDisplayPage();
-
-		String json = objectMapper.writeValueAsString(productDisplayPage1);
-
-		ProductDisplayPage productDisplayPage2 = ProductDisplayPageSerDes.toDTO(
-			json);
-
-		Assert.assertTrue(equals(productDisplayPage1, productDisplayPage2));
-	}
-
-	@Test
-	public void testClientSerDesToJSON() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
-			{
-				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
-				configure(
-					SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true);
-				setDateFormat(new ISO8601DateFormat());
-				setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
-				setSerializationInclusion(JsonInclude.Include.NON_NULL);
-				setVisibility(
-					PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-				setVisibility(
-					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
-			}
-		};
-
-		ProductDisplayPage productDisplayPage = randomProductDisplayPage();
-
-		String json1 = objectMapper.writeValueAsString(productDisplayPage);
-		String json2 = ProductDisplayPageSerDes.toJSON(productDisplayPage);
-
-		Assert.assertEquals(
-			objectMapper.readTree(json1), objectMapper.readTree(json2));
 	}
 
 	@Test
@@ -178,6 +169,7 @@ public abstract class BaseProductDisplayPageResourceTestCase {
 
 		productDisplayPage.setPageTemplateUuid(regex);
 		productDisplayPage.setPageUuid(regex);
+		productDisplayPage.setProductExternalReferenceCode(regex);
 
 		String json = ProductDisplayPageSerDes.toJSON(productDisplayPage);
 
@@ -187,6 +179,8 @@ public abstract class BaseProductDisplayPageResourceTestCase {
 
 		Assert.assertEquals(regex, productDisplayPage.getPageTemplateUuid());
 		Assert.assertEquals(regex, productDisplayPage.getPageUuid());
+		Assert.assertEquals(
+			regex, productDisplayPage.getProductExternalReferenceCode());
 	}
 
 	@Test
@@ -1577,6 +1571,19 @@ public abstract class BaseProductDisplayPageResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals(
+					"productExternalReferenceCode",
+					additionalAssertFieldName)) {
+
+				if (productDisplayPage.getProductExternalReferenceCode() ==
+						null) {
+
+					valid = false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("productId", additionalAssertFieldName)) {
 				if (productDisplayPage.getProductId() == null) {
 					valid = false;
@@ -1743,6 +1750,21 @@ public abstract class BaseProductDisplayPageResourceTestCase {
 				if (!Objects.deepEquals(
 						productDisplayPage1.getPageUuid(),
 						productDisplayPage2.getPageUuid())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals(
+					"productExternalReferenceCode",
+					additionalAssertFieldName)) {
+
+				if (!Objects.deepEquals(
+						productDisplayPage1.getProductExternalReferenceCode(),
+						productDisplayPage2.
+							getProductExternalReferenceCode())) {
 
 					return false;
 				}
@@ -1971,6 +1993,53 @@ public abstract class BaseProductDisplayPageResourceTestCase {
 			return sb.toString();
 		}
 
+		if (entityFieldName.equals("productExternalReferenceCode")) {
+			Object object =
+				productDisplayPage.getProductExternalReferenceCode();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
+
+			return sb.toString();
+		}
+
 		if (entityFieldName.equals("productId")) {
 			throw new IllegalArgumentException(
 				"Invalid entity field " + entityFieldName);
@@ -2026,6 +2095,8 @@ public abstract class BaseProductDisplayPageResourceTestCase {
 					RandomTestUtil.randomString());
 				pageUuid = StringUtil.toLowerCase(
 					RandomTestUtil.randomString());
+				productExternalReferenceCode = StringUtil.toLowerCase(
+					RandomTestUtil.randomString());
 				productId = RandomTestUtil.randomLong();
 			}
 		};
@@ -2056,12 +2127,12 @@ public abstract class BaseProductDisplayPageResourceTestCase {
 		public static void copyProperties(Object source, Object target)
 			throws Exception {
 
-			Class<?> sourceClass = _getSuperClass(source.getClass());
+			Class<?> sourceClass = source.getClass();
 
 			Class<?> targetClass = target.getClass();
 
 			for (java.lang.reflect.Field field :
-					sourceClass.getDeclaredFields()) {
+					_getAllDeclaredFields(sourceClass)) {
 
 				if (field.isSynthetic()) {
 					continue;
@@ -2070,11 +2141,16 @@ public abstract class BaseProductDisplayPageResourceTestCase {
 				Method getMethod = _getMethod(
 					sourceClass, field.getName(), "get");
 
-				Method setMethod = _getMethod(
-					targetClass, field.getName(), "set",
-					getMethod.getReturnType());
+				try {
+					Method setMethod = _getMethod(
+						targetClass, field.getName(), "set",
+						getMethod.getReturnType());
 
-				setMethod.invoke(target, getMethod.invoke(source));
+					setMethod.invoke(target, getMethod.invoke(source));
+				}
+				catch (Exception e) {
+					continue;
+				}
 			}
 		}
 
@@ -2106,6 +2182,24 @@ public abstract class BaseProductDisplayPageResourceTestCase {
 			setMethod.invoke(bean, _translateValue(parameterTypes[0], value));
 		}
 
+		private static List<java.lang.reflect.Field> _getAllDeclaredFields(
+			Class<?> clazz) {
+
+			List<java.lang.reflect.Field> fields = new ArrayList<>();
+
+			while ((clazz != null) && (clazz != Object.class)) {
+				for (java.lang.reflect.Field field :
+						clazz.getDeclaredFields()) {
+
+					fields.add(field);
+				}
+
+				clazz = clazz.getSuperclass();
+			}
+
+			return fields;
+		}
+
 		private static Method _getMethod(Class<?> clazz, String name) {
 			for (Method method : clazz.getMethods()) {
 				if (name.equals(method.getName()) &&
@@ -2127,16 +2221,6 @@ public abstract class BaseProductDisplayPageResourceTestCase {
 			return clazz.getMethod(
 				prefix + StringUtil.upperCaseFirstLetter(fieldName),
 				parameterTypes);
-		}
-
-		private static Class<?> _getSuperClass(Class<?> clazz) {
-			Class<?> superClass = clazz.getSuperclass();
-
-			if ((superClass == null) || (superClass == Object.class)) {
-				return clazz;
-			}
-
-			return superClass;
 		}
 
 		private static Object _translateValue(

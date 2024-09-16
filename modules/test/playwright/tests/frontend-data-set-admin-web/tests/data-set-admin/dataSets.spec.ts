@@ -16,6 +16,7 @@ export const test = mergeTests(
 	dataSetManagerApiHelpersTest,
 	dataSetsPageTest,
 	featureFlagsTest({
+		'LPD-25230': true,
 		'LPS-164563': true,
 	}),
 	loginTest(),
@@ -144,9 +145,9 @@ async function assertTableRowsCount(page, rowsCount) {
 }
 
 test.afterEach(async ({dataSetManagerApiHelpers}) => {
-	for (const DATA_SET_ERC of dataSetERCs) {
+	for (const erc of dataSetERCs) {
 		await dataSetManagerApiHelpers.deleteDataSet({
-			erc: DATA_SET_ERC,
+			erc,
 		});
 	}
 
@@ -183,7 +184,7 @@ test(
 	}
 );
 
-test('Create parameterized data set via UI', async ({dataSetsPage, page}) => {
+test('Create parameterized data set', async ({dataSetsPage, page}) => {
 	await test.step('Create Data Set', async () => {
 		await dataSetsPage.goto();
 		await dataSetsPage.createDataSet(blogPostsDataSetConfig);
@@ -200,35 +201,55 @@ test('Create parameterized data set via UI', async ({dataSetsPage, page}) => {
 	});
 });
 
-test('Create data set via API', async ({
-	dataSetManagerApiHelpers,
-	dataSetsPage,
-	page,
-}) => {
-	const DEFAULT_DATA_SET_ERC = getRandomString();
-	dataSetERCs.push(DEFAULT_DATA_SET_ERC);
+test(
+	'Assert endpoint with resolved paramater is available as an option',
+	{tag: '@LPD-25230'},
+	async ({dataSetsPage}) => {
+		const cartDataSetConfig = {
+			name: 'Carts',
+			restApplication: '/headless-commerce-delivery-cart/v1.0',
+			restEndpoint:
+				'/v1.0/channels/{channelId}/account/{accountId}/carts',
+			restSchema: 'Cart',
+		};
 
-	await test.step('Create Data Set', async () => {
-		await dataSetManagerApiHelpers.createDataSet({
-			...tableSectionsDataSetConfig,
-			erc: DEFAULT_DATA_SET_ERC,
-			label: tableSectionsDataSetConfig.name,
+		const modal = dataSetsPage.newDataSetModal;
+
+		await test.step('Go to Data Sets page and open "New" modal', async () => {
+			await dataSetsPage.goto();
+
+			await dataSetsPage.newDataSetButton.click();
+
+			await expect(modal.nameInput).toBeVisible();
 		});
-	});
 
-	await test.step('Navigate to Data Sets page', async () => {
-		await dataSetsPage.goto();
-	});
+		await test.step('Assert endpoint with resolved paramater is available', async () => {
+			await modal.restApplicationField.click();
 
-	await assertTableColumnLabels(page);
+			await modal.restApplicationOptions
+				.getByRole('option', {name: cartDataSetConfig.restApplication})
+				.click();
 
-	await assertTableCellContent({
-		dataSetConfig: tableSectionsDataSetConfig,
-		page,
-	});
+			await expect(modal.restSchemaField).toBeVisible();
 
-	await assertTableActionLabels(page);
-});
+			await modal.restSchemaField.click();
+
+			await modal.restSchemaOptions
+				.getByRole('option', {name: cartDataSetConfig.restSchema})
+				.click();
+
+			await expect(modal.restEndpointField).toBeVisible();
+
+			await modal.restEndpointField.click();
+
+			await expect(
+				modal.restEndpointOptions.getByRole('option', {
+					name: cartDataSetConfig.restEndpoint,
+				})
+			).toBeVisible();
+		});
+	}
+);
 
 test('Can paginate created Data Sets', async ({
 	dataSetManagerApiHelpers,
@@ -315,7 +336,7 @@ test('Can paginate created Data Sets', async ({
 	await assertTableRowsCount(page, 4);
 });
 
-test('Can sort Data Set by different columns', async ({
+test('Sort data sets by different columns', async ({
 	dataSetManagerApiHelpers,
 	dataSetsPage,
 	page,
@@ -365,7 +386,7 @@ test('Can sort Data Set by different columns', async ({
 
 	await assertTableRowsCount(page, 4);
 
-	await test.step('Check Data Sets default sort is by creation date, in descending order', async () => {
+	await test.step('Check data sets default sort is by creation date, in descending order', async () => {
 		await assertTableCellContent({
 			dataSetConfig: skusDataSetConfig,
 			page,
@@ -388,8 +409,9 @@ test('Can sort Data Set by different columns', async ({
 		});
 	});
 
-	await test.step('Check that it is possible to sort Data Sets by Name', async () => {
-		dataSetsPage.sortBy('Name');
+	await test.step('Sort data sets by "Name" column', async () => {
+		await dataSetsPage.sortBy('Name');
+
 		await assertTableCellContent({
 			dataSetConfig: blogPostsDataSetConfig,
 			page,
@@ -411,7 +433,8 @@ test('Can sort Data Set by different columns', async ({
 			rowIndex: 3,
 		});
 
-		dataSetsPage.sortBy('Name');
+		await dataSetsPage.sortBy('Name');
+
 		await assertTableCellContent({
 			dataSetConfig: skusDataSetConfig,
 			page,
@@ -434,64 +457,14 @@ test('Can sort Data Set by different columns', async ({
 		});
 	});
 
-	await test.step('Check that it is possible to sort Data Sets by REST Application', async () => {
+	await test.step('Sort data sets by "REST Endpoint" column', async () => {
 
 		// Reload to start with default sort
 
 		await page.reload();
 
-		dataSetsPage.sortBy('REST Application');
-		await assertTableCellContent({
-			dataSetConfig: skusDataSetConfig,
-			page,
-			rowIndex: 0,
-		});
-		await assertTableCellContent({
-			dataSetConfig: productsDataSetConfig,
-			page,
-			rowIndex: 1,
-		});
-		await assertTableCellContent({
-			dataSetConfig: catalogsDataSetConfig,
-			page,
-			rowIndex: 2,
-		});
-		await assertTableCellContent({
-			dataSetConfig: blogPostsDataSetConfig,
-			page,
-			rowIndex: 3,
-		});
+		await dataSetsPage.sortBy('REST Endpoint');
 
-		dataSetsPage.sortBy('REST Application');
-		await assertTableCellContent({
-			dataSetConfig: blogPostsDataSetConfig,
-			page,
-			rowIndex: 0,
-		});
-		await assertTableCellContent({
-			dataSetConfig: catalogsDataSetConfig,
-			page,
-			rowIndex: 1,
-		});
-		await assertTableCellContent({
-			dataSetConfig: productsDataSetConfig,
-			page,
-			rowIndex: 2,
-		});
-		await assertTableCellContent({
-			dataSetConfig: skusDataSetConfig,
-			page,
-			rowIndex: 3,
-		});
-	});
-
-	await test.step('Check that it is possible to sort Data Sets by REST Endpoint', async () => {
-
-		// Reload to start with default sort
-
-		await page.reload();
-
-		dataSetsPage.sortBy('REST Endpoint');
 		await assertTableCellContent({
 			dataSetConfig: catalogsDataSetConfig,
 			page,
@@ -513,7 +486,8 @@ test('Can sort Data Set by different columns', async ({
 			rowIndex: 3,
 		});
 
-		dataSetsPage.sortBy('REST Endpoint');
+		await dataSetsPage.sortBy('REST Endpoint');
+
 		await assertTableCellContent({
 			dataSetConfig: skusDataSetConfig,
 			page,
@@ -536,13 +510,14 @@ test('Can sort Data Set by different columns', async ({
 		});
 	});
 
-	await test.step('Check that it is possible to sort Data Sets by REST Schema', async () => {
+	await test.step('Sort data sets by "REST Schema" column', async () => {
 
 		// Reload to start with default sort
 
 		await page.reload();
 
-		dataSetsPage.sortBy('REST Schema');
+		await dataSetsPage.sortBy('REST Schema');
+
 		await assertTableCellContent({
 			dataSetConfig: blogPostsDataSetConfig,
 			page,
@@ -564,7 +539,8 @@ test('Can sort Data Set by different columns', async ({
 			rowIndex: 3,
 		});
 
-		dataSetsPage.sortBy('REST Schema');
+		await dataSetsPage.sortBy('REST Schema');
+
 		await assertTableCellContent({
 			dataSetConfig: skusDataSetConfig,
 			page,
@@ -587,13 +563,14 @@ test('Can sort Data Set by different columns', async ({
 		});
 	});
 
-	await test.step('Check that it is possible to sort Data Sets by Modified Date', async () => {
+	await test.step('Sort data sets by "Modified Date" column', async () => {
 
 		// Reload to start with default sort
 
 		await page.reload();
 
-		dataSetsPage.sortBy('Modified Date');
+		await dataSetsPage.sortBy('Modified Date');
+
 		await assertTableCellContent({
 			dataSetConfig: blogPostsDataSetConfig,
 			page,
@@ -622,7 +599,8 @@ test('Can sort Data Set by different columns', async ({
 
 		await page.reload();
 
-		dataSetsPage.sortBy('Modified Date');
+		await dataSetsPage.sortBy('Modified Date');
+
 		await assertTableCellContent({
 			dataSetConfig: blogPostsDataSetConfig,
 			page,

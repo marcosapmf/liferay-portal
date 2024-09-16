@@ -270,6 +270,11 @@ public class ContentPageEditorDisplayContext {
 				getFragmentEntryActionURL(
 					"/layout_content_page_editor/add_rule")
 			).put(
+				"addStepperFragmentEntryLinkURL",
+				getFragmentEntryActionURL(
+					"/layout_content_page_editor" +
+						"/add_stepper_fragment_entry_link")
+			).put(
 				"assetCategoryTreeNodeItemSelectorURL",
 				_getAssetCategoryTreeNodeItemSelectorURL()
 			).put(
@@ -676,6 +681,10 @@ public class ContentPageEditorDisplayContext {
 				"styleBooks", _getStyleBooks()
 			).put(
 				"themeColorsCssClasses", _getThemeColorsCssClasses()
+			).put(
+				"undoUpdateFormConfigURL",
+				getFragmentEntryActionURL(
+					"/layout_content_page_editor/undo_form_item_config")
 			).put(
 				"unmarkItemsForDeletionURL",
 				getFragmentEntryActionURL(
@@ -1228,7 +1237,7 @@ public class ContentPageEditorDisplayContext {
 					EditorConfigurationFactoryUtil.getEditorConfiguration(
 						ContentPageEditorPortletKeys.
 							CONTENT_PAGE_EDITOR_PORTLET,
-						"fragmenEntryLinkRichTextEditor", StringPool.BLANK,
+						"fragmentEntryLinkRichTextEditor", StringPool.BLANK,
 						Collections.emptyMap(), themeDisplay,
 						RequestBackedPortletURLFactoryUtil.create(
 							httpServletRequest));
@@ -1242,7 +1251,7 @@ public class ContentPageEditorDisplayContext {
 					EditorConfigurationFactoryUtil.getEditorConfiguration(
 						ContentPageEditorPortletKeys.
 							CONTENT_PAGE_EDITOR_PORTLET,
-						"fragmenEntryLinkEditor", StringPool.BLANK,
+						"fragmentEntryLinkEditor", StringPool.BLANK,
 						Collections.emptyMap(), themeDisplay,
 						RequestBackedPortletURLFactoryUtil.create(
 							httpServletRequest));
@@ -1869,7 +1878,7 @@ public class ContentPageEditorDisplayContext {
 			_styleBookEntryLocalService.getStyleBookEntries(
 				_staging.getLiveGroupId(themeDisplay.getScopeGroupId()),
 				QueryUtil.ALL_POS, QueryUtil.ALL_POS,
-				new StyleBookEntryNameComparator(true));
+				StyleBookEntryNameComparator.getInstance(true));
 
 		for (StyleBookEntry styleBookEntry : styleBookEntries) {
 			styleBooks.add(

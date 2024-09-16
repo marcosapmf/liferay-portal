@@ -13,6 +13,8 @@ import com.liferay.fragment.renderer.FragmentRenderer;
 import com.liferay.fragment.renderer.FragmentRendererContext;
 import com.liferay.fragment.util.configuration.FragmentEntryConfigurationParser;
 import com.liferay.frontend.data.set.constants.FDSEntityFieldTypes;
+import com.liferay.frontend.data.set.resolver.FDSAPIURLResolver;
+import com.liferay.frontend.data.set.resolver.FDSAPIURLResolverRegistry;
 import com.liferay.list.type.model.ListTypeDefinition;
 import com.liferay.list.type.model.ListTypeEntry;
 import com.liferay.list.type.service.ListTypeDefinitionLocalService;
@@ -28,6 +30,7 @@ import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
+import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONException;
@@ -337,19 +340,25 @@ public class FDSAdminFragmentRenderer implements FragmentRenderer {
 			HttpServletRequest httpServletRequest)
 		throws Exception {
 
-		Map<String, Object> properties = fdsEntryObjectEntry.getProperties();
-
 		StringBundler sb = new StringBundler(3);
 
 		sb.append("/o");
+
+		Map<String, Object> properties = fdsEntryObjectEntry.getProperties();
+
+		String restApplication = String.valueOf(
+			properties.get("restApplication"));
+
 		sb.append(
-			StringUtil.replaceLast(
-				String.valueOf(properties.get("restApplication")), "/v1.0",
-				StringPool.BLANK));
+			StringUtil.replaceLast(restApplication, "/v1.0", StringPool.BLANK));
+
 		sb.append(String.valueOf(properties.get("restEndpoint")));
 
-		return _interpolateURL(
-			_getNestedFields(sb.toString(), fdsFieldObjectEntries),
+		return _resolveParameters(
+			_interpolateURL(
+				_getNestedFields(sb.toString(), fdsFieldObjectEntries),
+				httpServletRequest),
+			restApplication, String.valueOf(properties.get("restSchema")),
 			httpServletRequest);
 	}
 
@@ -1074,11 +1083,39 @@ public class FDSAdminFragmentRenderer implements FragmentRenderer {
 		return apiURL;
 	}
 
+	private String _resolveParameters(
+		String apiURL, String restApplication, String restSchema,
+		HttpServletRequest httpServletRequest) {
+
+		if (FeatureFlagManagerUtil.isEnabled("LPD-25230")) {
+			FDSAPIURLResolver fdsAPIURLResolver =
+				_fdsAPIURLResolverRegistry.getFDSAPIURLResolver(
+					restApplication, restSchema);
+
+			if (fdsAPIURLResolver != null) {
+				try {
+					return fdsAPIURLResolver.resolve(
+						apiURL, httpServletRequest);
+				}
+				catch (PortalException portalException) {
+					_log.error(portalException);
+
+					return apiURL;
+				}
+			}
+		}
+
+		return apiURL;
+	}
+
 	private static final Log _log = LogFactoryUtil.getLog(
 		FDSAdminFragmentRenderer.class);
 
 	@Reference
 	private CETManager _cetManager;
+
+	@Reference
+	private FDSAPIURLResolverRegistry _fdsAPIURLResolverRegistry;
 
 	@Reference
 	private FragmentEntryConfigurationParser _fragmentEntryConfigurationParser;

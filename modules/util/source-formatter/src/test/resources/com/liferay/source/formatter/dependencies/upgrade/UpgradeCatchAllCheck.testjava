@@ -33,7 +33,11 @@ public class UpgradeCatchAllCheck implements ConfigurationBeanDeclaration {
 		DestinationNames.STOCK_QUANTITY;
 		DestinationNames.SUBSCRIPTION_STATUS;
 
+		DLUtil.getDownloadURL(null, null, null, null, null, null);
 		DLUtil.getImagePreviewURL(null, null, null);
+
+		ExpandoColumnLocalServiceUtil.getColumn(123, "test123");
+		_expandoColumnLocalService.getColumn(123, "test123");
 
 		FDSTableSchemaBuilder fDSTableSchemaBuilder = _fDSTableSchemaBuilderFactory.create();
 
@@ -113,6 +117,7 @@ public class UpgradeCatchAllCheck implements ConfigurationBeanDeclaration {
 
 		ListUtil.fromArray(LanguageUtil.getAvailableLocales());
 
+		new AppTitleComparator();
 		new ArticleCreateDateComparator();
 		new ArticleDisplayDateComparator();
 		new ArticleIDComparator();
@@ -123,6 +128,9 @@ public class UpgradeCatchAllCheck implements ConfigurationBeanDeclaration {
 		new ArticleVersionComparator();
 		new AssetCategoryCreateDateComparator();
 		new AssetListEntryCreateDateComparator();
+		new AssetListEntrySegmentsEntryRelPriorityComparator();
+		new AssetListEntryTitleComparator();
+		new AssetListEntryUsageModifiedDateComparator();
 		new AssetTagAssetCountComparator();
 		new AssetTagCountComparator();
 		new AssetVocabularyCreateDateComparator();
@@ -161,6 +169,10 @@ public class UpgradeCatchAllCheck implements ConfigurationBeanDeclaration {
 		new CPSpecificationOptionTitleComparator();
 		new CPTaxCategoryCreateDateComparator();
 		new CPTaxCategoryNameComparator();
+		new CalendarBookingStartTimeComparator();
+		new CalendarNameComparator();
+		new CalendarResourceCodeComparator();
+		new CalendarResourceNameComparator();
 		new CategoryModifiedDateComparator();
 		new CategoryTitleComparator();
 		new CommerceAddressCreateDateComparator();
@@ -198,6 +210,8 @@ public class UpgradeCatchAllCheck implements ConfigurationBeanDeclaration {
 		new CommerceShipmentIdComparator();
 		new CommerceShipmentItemCreateDateComparator();
 		new CommerceShipmentShippingDateComparator();
+		new CommerceShippingFixedOptionPriorityComparator();
+		new CommerceShippingFixedOptionRelCountryIdComparator();
 		new CommerceShippingMethodPriorityComparator();
 		new CommerceSubscriptionEntryCreateDateComparatorOrganizationIdComparator();
 		new CommerceTaxFixedRateAddressRelCreateDateComparator();
@@ -215,9 +229,21 @@ public class UpgradeCatchAllCheck implements ConfigurationBeanDeclaration {
 		new DDMFormInstanceRecordIdComparator();
 		new DEDataListViewCreateDateComparator();
 		new DEDataListViewNameComparator();
+		new DLContentVersionComparator();
 		new DLFileVersionVersionComparator();
 		new DataProviderInstanceModifiedDateComparator();
 		new DataProviderInstanceNameComparator();
+		new DefinitionCreateDateComparator();
+		new EntryCreateDateComparator();
+		new EntryDisplayDateComparator();
+		new EntryIdComparator();
+		new EntryModifiedDateComparator();
+		new EntryNameComparator();
+		new EntryPriorityComparator();
+		new EntryTitleComparator();
+		new EntryTypeComparator();
+		new EntryURLComparator();
+		new EntryUserNameComparator();
 		new ExportImportConfigurationNameComparator();
 		new FeedIDComparator();
 		new FeedNameComparator();
@@ -236,6 +262,8 @@ public class UpgradeCatchAllCheck implements ConfigurationBeanDeclaration {
 		new FragmentEntryCreateDateComparator();
 		new FragmentEntryLinkLastPropagationDateComparator();
 		new FragmentEntryNameComparator();
+		new FriendlyURLEntryCreateDateComparator();
+		new FriendlyURLEntryLocalizationComparator();
 		new GroupFriendlyURLComparator();
 		new GroupIdComparator();
 		new GroupTypeComparator();
@@ -292,22 +320,41 @@ public class UpgradeCatchAllCheck implements ConfigurationBeanDeclaration {
 		new MessageModifiedDateComparator();
 		new MessageSubjectComparator();
 		new MessageURLSubjectComparator();
+		new NodeLastPostDateComparator();
+		new NodeNameComparator();
+		new ObjectFieldCreateDateComparator();
 		new OrganizationNameComparator();
 		new OrganizationTypeComparator();
+		new PageCreateDateComparator();
+		new PageModifiedDateComparator();
+		new PageTitleComparator();
+		new PageVersionComparator();
 		new PasswordPolicyDescriptionComparator();
 		new PasswordPolicyNameComparator();
+		new PushNotificationsDevicePlatformComparator();
 		new ResourceActionBitwiseValueComparator();
 		new RoleDescriptionComparator();
 		new RoleNameComparator();
 		new RoleRoleIdComparator();
 		new RoleTypeComparator();
+		new SAPEntryNameComparator();
 		new SXPBlueprintModifiedDateComparator();
+		new SavedContentEntryClassNameIdComparator();
+		new SharingEntryModifiedDateComparator();
+		new SiteNavigationMenuCreateDateComparator();
+		new SiteNavigationMenuItemOrderComparator();
+		new SiteNavigationMenuModifiedDateComparator();
+		new SiteNavigationMenuNameComparator();
 		new SocialActivitySetModifiedDateComparator();
+		new SourceCreateDateComparator();
 		new StructureCreateDateComparator();
 		new StructureIdComparator();
 		new StructureLayoutCreateDateComparator();
 		new StructureLayoutNameComparator();
 		new StructureLinkStructureModifiedDateComparator();
+		new StyleBookEntryCreateDateComparator();
+		new StyleBookEntryNameComparator();
+		new SubscriptionClassNameIdComparator();
 		new TeamNameComparator();
 		new TemplateIdComparator();
 		new ThreadCreateDateComparator();
@@ -361,6 +408,7 @@ public class UpgradeCatchAllCheck implements ConfigurationBeanDeclaration {
 		layoutItemSelectorCriterion.setShowHiddenPages(null);
 		layoutItemSelectorCriterion.setShowHiddenPages(showHiddenPages);
 
+		new AppTitleComparator(showHiddenPages);
 		new ArticleCreateDateComparator(showHiddenPages);
 		new ArticleDisplayDateComparator(showHiddenPages);
 		new ArticleIDComparator(showHiddenPages);
@@ -371,6 +419,9 @@ public class UpgradeCatchAllCheck implements ConfigurationBeanDeclaration {
 		new ArticleVersionComparator(showHiddenPages);
 		new AssetCategoryCreateDateComparator(showHiddenPages);
 		new AssetListEntryCreateDateComparator(showHiddenPages);
+		new AssetListEntrySegmentsEntryRelPriorityComparator(showHiddenPages);
+		new AssetListEntryTitleComparator(showHiddenPages);
+		new AssetListEntryUsageModifiedDateComparator(showHiddenPages);
 		new AssetTagAssetCountComparator(showHiddenPages);
 		new AssetTagCountComparator(showHiddenPages);
 		new AssetVocabularyCreateDateComparator(showHiddenPages);
@@ -409,6 +460,10 @@ public class UpgradeCatchAllCheck implements ConfigurationBeanDeclaration {
 		new CPSpecificationOptionTitleComparator(showHiddenPages);
 		new CPTaxCategoryCreateDateComparator(showHiddenPages);
 		new CPTaxCategoryNameComparator(showHiddenPages);
+		new CalendarBookingStartTimeComparator(showHiddenPages);
+		new CalendarNameComparator(showHiddenPages);
+		new CalendarResourceCodeComparator(showHiddenPages);
+		new CalendarResourceNameComparator(showHiddenPages);
 		new CategoryModifiedDateComparator(showHiddenPages);
 		new CategoryTitleComparator(showHiddenPages);
 		new CommerceAddressCreateDateComparator(showHiddenPages);
@@ -446,6 +501,8 @@ public class UpgradeCatchAllCheck implements ConfigurationBeanDeclaration {
 		new CommerceShipmentIdComparator(showHiddenPages);
 		new CommerceShipmentItemCreateDateComparator(showHiddenPages);
 		new CommerceShipmentShippingDateComparator(showHiddenPages);
+		new CommerceShippingFixedOptionPriorityComparator(showHiddenPages);
+		new CommerceShippingFixedOptionRelCountryIdComparator(showHiddenPages);
 		new CommerceShippingMethodPriorityComparator(showHiddenPages);
 		new CommerceSubscriptionEntryCreateDateComparatorOrganizationIdComparator(showHiddenPages);
 		new CommerceTaxFixedRateAddressRelCreateDateComparator(showHiddenPages);
@@ -463,9 +520,21 @@ public class UpgradeCatchAllCheck implements ConfigurationBeanDeclaration {
 		new DDMFormInstanceRecordIdComparator(showHiddenPages);
 		new DEDataListViewCreateDateComparator(showHiddenPages);
 		new DEDataListViewNameComparator(showHiddenPages);
+		new DLContentVersionComparator(showHiddenPages);
 		new DLFileVersionVersionComparator(showHiddenPages);
 		new DataProviderInstanceModifiedDateComparator(showHiddenPages);
 		new DataProviderInstanceNameComparator(showHiddenPages);
+		new DefinitionCreateDateComparator(showHiddenPages);
+		new EntryCreateDateComparator(showHiddenPages);
+		new EntryDisplayDateComparator(showHiddenPages);
+		new EntryIdComparator(showHiddenPages);
+		new EntryModifiedDateComparator(showHiddenPages);
+		new EntryNameComparator(showHiddenPages);
+		new EntryPriorityComparator(showHiddenPages);
+		new EntryTitleComparator(showHiddenPages);
+		new EntryTypeComparator(showHiddenPages);
+		new EntryURLComparator(showHiddenPages);
+		new EntryUserNameComparator(showHiddenPages);
 		new ExportImportConfigurationNameComparator(showHiddenPages);
 		new FeedIDComparator(showHiddenPages);
 		new FeedNameComparator(showHiddenPages);
@@ -484,6 +553,8 @@ public class UpgradeCatchAllCheck implements ConfigurationBeanDeclaration {
 		new FragmentEntryCreateDateComparator(showHiddenPages);
 		new FragmentEntryLinkLastPropagationDateComparator(showHiddenPages);
 		new FragmentEntryNameComparator(showHiddenPages);
+		new FriendlyURLEntryCreateDateComparator(showHiddenPages);
+		new FriendlyURLEntryLocalizationComparator(showHiddenPages);
 		new GroupFriendlyURLComparator(showHiddenPages);
 		new GroupIdComparator(showHiddenPages);
 		new GroupTypeComparator(showHiddenPages);
@@ -540,22 +611,41 @@ public class UpgradeCatchAllCheck implements ConfigurationBeanDeclaration {
 		new MessageModifiedDateComparator(showHiddenPages);
 		new MessageSubjectComparator(showHiddenPages);
 		new MessageURLSubjectComparator(showHiddenPages);
+		new NodeLastPostDateComparator(showHiddenPages);
+		new NodeNameComparator(showHiddenPages);
+		new ObjectFieldCreateDateComparator(showHiddenPages);
 		new OrganizationNameComparator(showHiddenPages);
 		new OrganizationTypeComparator(showHiddenPages);
+		new PageCreateDateComparator(showHiddenPages);
+		new PageModifiedDateComparator(showHiddenPages);
+		new PageTitleComparator(showHiddenPages);
+		new PageVersionComparator(showHiddenPages);
 		new PasswordPolicyDescriptionComparator(showHiddenPages);
 		new PasswordPolicyNameComparator(showHiddenPages);
+		new PushNotificationsDevicePlatformComparator(showHiddenPages);
 		new ResourceActionBitwiseValueComparator(showHiddenPages);
 		new RoleDescriptionComparator(showHiddenPages);
 		new RoleNameComparator(showHiddenPages);
 		new RoleRoleIdComparator(showHiddenPages);
 		new RoleTypeComparator(showHiddenPages);
+		new SAPEntryNameComparator(showHiddenPages);
 		new SXPBlueprintModifiedDateComparator(showHiddenPages);
+		new SavedContentEntryClassNameIdComparator(showHiddenPages);
+		new SharingEntryModifiedDateComparator(showHiddenPages);
+		new SiteNavigationMenuCreateDateComparator(showHiddenPages);
+		new SiteNavigationMenuItemOrderComparator(showHiddenPages);
+		new SiteNavigationMenuModifiedDateComparator(showHiddenPages);
+		new SiteNavigationMenuNameComparator(showHiddenPages);
 		new SocialActivitySetModifiedDateComparator(showHiddenPages);
+		new SourceCreateDateComparator(showHiddenPages);
 		new StructureCreateDateComparator(showHiddenPages);
 		new StructureIdComparator(showHiddenPages);
 		new StructureLayoutCreateDateComparator(showHiddenPages);
 		new StructureLayoutNameComparator(showHiddenPages);
 		new StructureLinkStructureModifiedDateComparator(showHiddenPages);
+		new StyleBookEntryCreateDateComparator(showHiddenPages);
+		new StyleBookEntryNameComparator(showHiddenPages);
+		new SubscriptionClassNameIdComparator(showHiddenPages);
 		new TeamNameComparator(showHiddenPages);
 		new TemplateIdComparator(showHiddenPages);
 		new ThreadCreateDateComparator(showHiddenPages);
@@ -584,6 +674,7 @@ public class UpgradeCatchAllCheck implements ConfigurationBeanDeclaration {
 		CommerceAddress commerceAddress, Country country, Region region) {
 
 		commerceAddress.getCountry().getTwoLettersISOCode();
+		country.getCommerceCountryId();
 		country.getTwoLettersISOCode();
 		country.setTwoLettersISOCode();
 		country.getThreeLettersISOCode();
@@ -600,9 +691,20 @@ public class UpgradeCatchAllCheck implements ConfigurationBeanDeclaration {
 		contact.setSuffixId();
 	}
 
+	public void method(DDMStructure ddmStructure, Fields ddmFields) {
+		_journalConverter.getContent(ddmStructure, null);
+		_journalConverter.getContent(ddmStructure, ddmFields);
+	}
+
 	public void method(HttpServletRequest httpServletRequest) {
 		_commerceAccountHelper.getCurrentCommerceAccount(httpServletRequest);
 		_commerceAccountHelper.getCurrentCommerceAccount(null);
+	}
+
+	public void method(HttpServletRequest httpServletRequest, Object value) {
+		httpServletRequest.setAttribute(null, null);
+		httpServletRequest.setAttribute(InfoDisplayWebKeys.INFO_ITEM_FIELD_VALUES_PROVIDER, value);
+		httpServletRequest.setAttribute(InfoDisplayWebKeys.INFO_ITEM_FIELD_VALUES_PROVIDER, infoItemServiceTracker.getFirstInfoItemService(InfoItemFieldValuesProvider.class, infoItemClassName));
 	}
 
 	public void method(HttpServletRequest httpServletRequest, String name) {
@@ -640,6 +742,11 @@ public class UpgradeCatchAllCheck implements ConfigurationBeanDeclaration {
 		CommerceOrderItemLocalServiceUtil.deleteCommerceOrderItems(commerceOrderId);
 		_commerceOrderItemLocalService.deleteCommerceOrderItems(123);
 		_commerceOrderItemLocalService.deleteCommerceOrderItems(commerceOrderId);
+	}
+
+	public void method(long companyId, boolean readOnly) {
+		PrefsPropsUtil.getPreferences(123, readOnly);
+		PrefsPropsUtil.getPreferences(companyId, readOnly);
 	}
 
 	public void method(
@@ -702,6 +809,11 @@ public class UpgradeCatchAllCheck implements ConfigurationBeanDeclaration {
 		UserServiceUtil.updateStatus(userId, status);
 		_userLocalService.updateStatus(userId, status);
 		_userService.updateStatus(userId, status);
+	}
+
+	public void method(long companyId, long workflowTaskId) {
+		_workflowTaskManager.getWorkflowTask(123, workflowTaskId);
+		_workflowTaskManager.getWorkflowTask(companyId, workflowTaskId);
 	}
 
 	public void method(
@@ -1040,8 +1152,18 @@ public class UpgradeCatchAllCheck implements ConfigurationBeanDeclaration {
 		String searchEngineId, long companyId, Collection<Document> documents,
 		boolean commitImmediately) {
 
-		IndexWriterHelperUtil.updateDocument(searchEngineId, companyId, documents, commitImmediately);
+		IndexWriterHelperUtil.updateDocuments("test123", 123, null, null);
+		IndexWriterHelperUtil.updateDocuments(searchEngineId, companyId, documents, commitImmediately);
+		_indexWriterHelper.updateDocuments(searchEngineId, companyId, documents, commitImmediately);
+	}
+
+	public void method(
+		String searchEngineId, long companyId, Document document,
+		boolean commitImmediately) {
+
 		IndexWriterHelperUtil.updateDocument("test123", 123, null, null);
+		IndexWriterHelperUtil.updateDocument(searchEngineId, companyId, document, commitImmediately);
+		_indexWriterHelper.updateDocument(searchEngineId, companyId, document, commitImmediately);
 	}
 
 	public void method(
@@ -1077,6 +1199,13 @@ public class UpgradeCatchAllCheck implements ConfigurationBeanDeclaration {
 
 		_assetDisplayPageFriendlyURLProvider.getFriendlyURL(className, classPK, themeDisplay);
 		_assetDisplayPageFriendlyURLProvider.getFriendlyURL("test123", 123, themeDisplay);
+	}
+
+	public void method(String name, String type) {
+		ListTypeServiceUtil.getListTypes("test123");
+		ListTypeServiceUtil.getListTypes(type);
+		_listTypeLocalService.addListType("test123", type);
+		_listTypeLocalService.addListType(name, type);
 	}
 
 	public void method(String name, String label, BigDecimal amount) {
@@ -1181,10 +1310,19 @@ public class UpgradeCatchAllCheck implements ConfigurationBeanDeclaration {
 	private DLFolderService _dlFolderService;
 
 	@Reference
+	private ExpandoColumnLocalService _expandoColumnLocalService;
+
+	@Reference
 	private FDSTableSchemaBuilderFactory _fDSTableSchemaBuilderFactory;
 
 	@Reference
 	private Http _http;
+
+	@Reference
+	private IndexWriterHelper _indexWriterHelper;
+
+	@Reference
+	private JournalConverter _journalConverter;
 
 	@Reference
 	private JournalFolderLocalService _journalFolderLocalService;
@@ -1195,6 +1333,12 @@ public class UpgradeCatchAllCheck implements ConfigurationBeanDeclaration {
 	@Reference
 	private LayoutService _layoutService;
 
+	@Reference
+	private ListTypeLocalService _listTypeLocalService;
+
+	@Reference
+	private PrefsProps _prefsProps;
+
 	private ServiceTrackerList<Class<T>, Class<E>> _serviceTrackerList;
 
 	@Reference
@@ -1202,5 +1346,8 @@ public class UpgradeCatchAllCheck implements ConfigurationBeanDeclaration {
 
 	@Reference
 	private UserService _userService;
+
+	@Reference
+	private WorkflowTaskManager _workflowTaskManager;
 
 }

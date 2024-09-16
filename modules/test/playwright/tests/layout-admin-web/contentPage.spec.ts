@@ -12,6 +12,7 @@ import {loginTest} from '../../fixtures/loginTest';
 import {pageEditorPagesTest} from '../../fixtures/pageEditorPagesTest';
 import {pagesAdminPagesTest} from '../../fixtures/pagesAdminPagesTest';
 import {liferayConfig} from '../../liferay.config';
+import {clickAndExpectToBeVisible} from '../../utils/clickAndExpectToBeVisible';
 import getRandomString from '../../utils/getRandomString';
 import getFragmentDefinition from '../layout-content-page-editor-web/utils/getFragmentDefinition';
 import getPageDefinition from '../layout-content-page-editor-web/utils/getPageDefinition';
@@ -28,6 +29,58 @@ const test = mergeTests(
 	pagesAdminPagesTest,
 	pagesPagesTest,
 	pageEditorPagesTest
+);
+
+test(
+	'Can configure and delete content page via header ellipsis icon at edit mode',
+	{
+		tag: '@LPS-137155',
+	},
+	async ({apiHelpers, page, pageEditorPage, site}) => {
+
+		// Create a content page
+
+		const pageName = getRandomString();
+
+		const layout = await apiHelpers.headlessDelivery.createSitePage({
+			siteId: site.id,
+			title: pageName,
+		});
+
+		// Configure page in edit mode
+
+		await pageEditorPage.goto(layout, site.friendlyUrlPath);
+
+		await clickAndExpectToBeVisible({
+			autoClick: true,
+			target: page
+				.locator('.dropdown-menu')
+				.getByRole('menuitem', {name: 'Configure'}),
+			trigger: page
+				.locator('.control-menu-nav-item')
+				.getByLabel('Options', {exact: true}),
+		});
+
+		await expect(page.getByText('Basic Info')).toBeVisible();
+
+		// Delete page in edit mode
+
+		await pageEditorPage.goto(layout, site.friendlyUrlPath);
+
+		await clickAndExpectToBeVisible({
+			autoClick: true,
+			target: page
+				.locator('.dropdown-menu')
+				.getByRole('menuitem', {name: 'Delete'}),
+			trigger: page
+				.locator('.control-menu-nav-item')
+				.getByLabel('Options', {exact: true}),
+		});
+
+		await page.getByRole('button', {name: 'Delete'}).click();
+
+		await expect(page.getByText('No Pages Yet.')).toBeVisible();
+	}
 );
 
 test('Does not show widget topper on hover in view mode', async ({
@@ -108,33 +161,48 @@ test('Checks the correct label for restricted page in the page heading', async (
 	await expect(header.getByText('Restricted Page')).toBeVisible();
 });
 
-test('Checks page title in view mode and in edit mode', async ({
-	apiHelpers,
-	page,
-	pageEditorPage,
-	site,
-}) => {
+test(
+	'Checks page title in view mode and in edit mode',
+	{
+		tag: '@LPS-146373',
+	},
+	async ({apiHelpers, page, site}) => {
 
-	// Create a content page
+		// Create a content page
 
-	const pageName = getRandomString();
+		const pageName = getRandomString();
 
-	const layout = await apiHelpers.headlessDelivery.createSitePage({
-		siteId: site.id,
-		title: pageName,
-	});
+		const layout = await apiHelpers.headlessDelivery.createSitePage({
+			siteId: site.id,
+			title: pageName,
+		});
 
-	// Check the page title in the view mode
+		// Check the page title in the view mode
 
-	await page.goto(`/web${site.friendlyUrlPath}${layout.friendlyUrlPath}`);
+		await page.goto(`/web${site.friendlyUrlPath}${layout.friendlyUrlPath}`);
 
-	expect(await page.title()).toBe(`${pageName} - ${site.name} - Liferay DXP`);
+		expect(await page.title()).toBe(
+			`${pageName} - ${site.name} - Liferay DXP`
+		);
 
-	// Check the page title in the edit mode
+		// Check the page title in the edit mode
 
-	await pageEditorPage.goto(layout, site.friendlyUrlPath);
+		await page.getByTitle('Edit', {exact: true}).click();
 
-	expect(await page.title()).toBe(
-		`${pageName} - ${site.name} - Liferay DXP (Editing)`
-	);
-});
+		await page.getByText('Place fragments or widgets here').waitFor();
+
+		expect(await page.title()).toBe(
+			`${pageName} - ${site.name} - Liferay DXP (Editing)`
+		);
+
+		// Click back button
+
+		await page.getByTitle(`Go to ${pageName}`).click();
+
+		await page.getByTitle('Edit', {exact: true}).waitFor();
+
+		expect(await page.title()).toBe(
+			`${pageName} - ${site.name} - Liferay DXP`
+		);
+	}
+);

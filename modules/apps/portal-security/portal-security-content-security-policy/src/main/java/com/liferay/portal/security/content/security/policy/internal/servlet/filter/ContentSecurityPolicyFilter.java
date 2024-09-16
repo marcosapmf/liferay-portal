@@ -8,6 +8,9 @@ package com.liferay.portal.security.content.security.policy.internal.servlet.fil
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
@@ -52,6 +55,16 @@ public class ContentSecurityPolicyFilter extends BasePortalFilter {
 	public boolean isFilterEnabled(
 		HttpServletRequest httpServletRequest,
 		HttpServletResponse httpServletResponse) {
+
+		if (CompanyThreadLocal.getCompanyId() == 0) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(
+					"Content security policy will not be applied to this " +
+						"request for company ID 0");
+			}
+
+			return false;
+		}
 
 		ContentSecurityPolicyConfiguration contentSecurityPolicyConfiguration =
 			ContentSecurityPolicyConfigurationUtil.
@@ -103,7 +116,7 @@ public class ContentSecurityPolicyFilter extends BasePortalFilter {
 			filterChain.doFilter(
 				httpServletRequest, contentSecurityPolicyHttpServletResponse);
 
-			String content = _updateContent(
+			String content = updateContent(
 				contentSecurityPolicyHttpServletResponse.getContent(), nonce);
 
 			printWriter.write(content);
@@ -117,41 +130,7 @@ public class ContentSecurityPolicyFilter extends BasePortalFilter {
 		}
 	}
 
-	private boolean _isExcludedURIPath(
-		ContentSecurityPolicyConfiguration contentSecurityPolicyConfiguration,
-		HttpServletRequest httpServletRequest) {
-
-		String requestURI = httpServletRequest.getRequestURI();
-
-		if (Validator.isNull(requestURI)) {
-			return false;
-		}
-
-		for (String internallyExcludedPath : _INTERNALLY_EXCLUDED_PATHS) {
-			if (Validator.isNotNull(internallyExcludedPath) &&
-				requestURI.startsWith(
-					StringUtil.toLowerCase(internallyExcludedPath))) {
-
-				return true;
-			}
-		}
-
-		requestURI = StringUtil.toLowerCase(requestURI);
-
-		for (String excludedPath :
-				contentSecurityPolicyConfiguration.excludedPaths()) {
-
-			if (Validator.isNotNull(excludedPath) &&
-				requestURI.startsWith(StringUtil.toLowerCase(excludedPath))) {
-
-				return true;
-			}
-		}
-
-		return false;
-	}
-
-	private String _updateContent(String content, String nonce) {
+	protected String updateContent(String content, String nonce) {
 		String nonceAttribute = "nonce=\"" + nonce + "\"";
 		String escapedNonceAttribute = "nonce=\\\"" + nonce + "\\\"";
 
@@ -209,9 +188,46 @@ public class ContentSecurityPolicyFilter extends BasePortalFilter {
 		return content;
 	}
 
+	private boolean _isExcludedURIPath(
+		ContentSecurityPolicyConfiguration contentSecurityPolicyConfiguration,
+		HttpServletRequest httpServletRequest) {
+
+		String requestURI = httpServletRequest.getRequestURI();
+
+		if (Validator.isNull(requestURI)) {
+			return false;
+		}
+
+		for (String internallyExcludedPath : _INTERNALLY_EXCLUDED_PATHS) {
+			if (Validator.isNotNull(internallyExcludedPath) &&
+				requestURI.startsWith(
+					StringUtil.toLowerCase(internallyExcludedPath))) {
+
+				return true;
+			}
+		}
+
+		requestURI = StringUtil.toLowerCase(requestURI);
+
+		for (String excludedPath :
+				contentSecurityPolicyConfiguration.excludedPaths()) {
+
+			if (Validator.isNotNull(excludedPath) &&
+				requestURI.startsWith(StringUtil.toLowerCase(excludedPath))) {
+
+				return true;
+			}
+		}
+
+		return false;
+	}
+
 	private static final String[] _INTERNALLY_EXCLUDED_PATHS = {
 		"/group/", "/user/", "/web/"
 	};
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		ContentSecurityPolicyFilter.class);
 
 	@Reference
 	private ConfigurationProvider _configurationProvider;

@@ -39,7 +39,7 @@ export class WidgetPagePage {
 	}
 
 	async addContent(contentName: string) {
-		await this.addButton.click();
+		await this.openAddPanel();
 
 		await this.contentTab.click();
 
@@ -56,7 +56,7 @@ export class WidgetPagePage {
 	}
 
 	async addPortlet(portletName: string) {
-		await this.addButton.click();
+		await this.openAddPanel();
 
 		await this.widgetsTab.click();
 
@@ -77,6 +77,17 @@ export class WidgetPagePage {
 		);
 	}
 
+	async clickOnAction(portletName: string, action: string) {
+		await this.page
+			.locator('.portlet-topper', {hasText: portletName})
+			.getByLabel('Options')
+			.click();
+
+		await this.page
+			.getByRole('menuitem', {exact: true, name: action})
+			.click();
+	}
+
 	async deletePortlet(portletName: string) {
 		this.page.on('dialog', async (dialog) => {
 			await dialog.accept();
@@ -94,6 +105,33 @@ export class WidgetPagePage {
 			.click();
 	}
 
+	async dragPortlet(portletName: string, target: Locator) {
+		const topper = this.page.locator(
+			'.portlet-journal-content .portlet-topper',
+			{hasText: portletName}
+		);
+
+		const targetRect = await target.evaluate((element) =>
+			element.getBoundingClientRect()
+		);
+
+		await topper.hover();
+
+		await this.page.mouse.down();
+
+		await this.page.mouse.move(
+			targetRect.x + targetRect.width / 2,
+			targetRect.y + targetRect.height / 2,
+			{steps: 10}
+		);
+
+		await this.page
+			.locator('.sortable-layout-drag-indicator')
+			.waitFor({state: 'visible'});
+
+		await this.page.mouse.up();
+	}
+
 	async openAddPanel() {
 		const isOpen = await this.addButton.evaluate((element) =>
 			element.classList.contains('open')
@@ -102,6 +140,24 @@ export class WidgetPagePage {
 		if (!isOpen) {
 			await this.addButton.click();
 		}
+	}
+
+	async saveAndClose(title: string) {
+		const configurationIFrame = this.page.frameLocator(
+			`iframe[title*="${title}"]`
+		);
+
+		await configurationIFrame.getByRole('button', {name: 'Save'}).click();
+
+		await waitForSuccessAlert(
+			configurationIFrame,
+			'Success:You have successfully updated the setup.'
+		);
+
+		await this.page
+			.locator('.modal-header')
+			.getByLabel('close', {exact: true})
+			.click();
 	}
 
 	async toggleControls(state: 'visible' | 'hidden') {

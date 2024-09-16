@@ -3,21 +3,25 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {expect, mergeTests} from '@playwright/test';
+import {Locator, expect, mergeTests} from '@playwright/test';
 
 import {apiHelpersTest} from '../../fixtures/apiHelpersTest';
 import {loginTest} from '../../fixtures/loginTest';
 import {objectPagesTest} from '../../fixtures/objectPagesTest';
 import {getRandomInt} from '../../utils/getRandomInt';
+import {AsyncArray} from './utils/AsyncArray';
+import {mockObjectFields} from './utils/mockObjectFields';
 
 export const test = mergeTests(apiHelpersTest, loginTest(), objectPagesTest);
 
 const createdEntities = {
 	listTypeDefinitionIds: [],
-	objectDefinition: {},
+	objectDefinitions: [],
+	objectFolders: [],
 } as {
 	listTypeDefinitionIds: number[];
-	objectDefinition: ObjectDefinition;
+	objectDefinitions: ObjectDefinition[];
+	objectFolders: ObjectFolder[];
 };
 
 test.beforeEach(async ({apiHelpers}) => {
@@ -27,26 +31,45 @@ test.beforeEach(async ({apiHelpers}) => {
 			status: {code: 0},
 		});
 
-	createdEntities.objectDefinition = newObjectDefinition;
+	createdEntities.objectDefinitions.push(newObjectDefinition);
 });
 
 test.afterEach(async ({apiHelpers}) => {
-	await apiHelpers.objectAdmin.deleteObjectDefinition(
-		createdEntities.objectDefinition.id
-	);
+	const asyncArray = new AsyncArray<
+		ObjectDefinition | ObjectFolder | number,
+		void
+	>();
 
-	if (createdEntities.listTypeDefinitionIds.length) {
-		await Promise.all(
-			createdEntities.listTypeDefinitionIds.map(
-				async (listTypeDefinitionId) =>
-					await apiHelpers.listTypeAdmin.deleteListTypeDefinition(
-						listTypeDefinitionId
-					)
-			)
-		);
+	await asyncArray.map({
+		array: createdEntities.objectDefinitions,
+		predicate: async (objectDefinition: ObjectDefinition) => {
+			await apiHelpers.objectAdmin.deleteObjectDefinition(
+				objectDefinition.id
+			);
+		},
+	});
 
-		createdEntities.listTypeDefinitionIds = [];
-	}
+	createdEntities.objectDefinitions = [];
+
+	await asyncArray.map({
+		array: createdEntities.objectFolders,
+		predicate: async (objectFolder: ObjectFolder) => {
+			await apiHelpers.objectAdmin.deleteObjectFolder(objectFolder.id);
+		},
+	});
+
+	createdEntities.objectDefinitions = [];
+
+	await asyncArray.map({
+		array: createdEntities.listTypeDefinitionIds,
+		predicate: async (listTypeDefinitionId: number) => {
+			await apiHelpers.listTypeAdmin.deleteListTypeDefinition(
+				listTypeDefinitionId
+			);
+		},
+	});
+
+	createdEntities.listTypeDefinitionIds = [];
 });
 
 test.describe('Manage object fields through Model Builder', () => {
@@ -56,9 +79,13 @@ test.describe('Manage object fields through Model Builder', () => {
 
 	test('all picklist definitions are listed during object field creation', async ({
 		apiHelpers,
-		modelBuilderPage,
+		modelBuilderDiagramPage,
+		modelBuilderLeftSidebarPage,
+		modelBuilderObjectDefinitionNodePage,
 	}) => {
-		const {listTypeDefinitionIds, objectDefinition} = createdEntities;
+		const {listTypeDefinitionIds, objectDefinitions} = createdEntities;
+
+		const [objectDefinition] = objectDefinitions;
 
 		const existingListTypeDefinitions = (
 			await apiHelpers.listTypeAdmin.getListTypeDefinitions()
@@ -79,22 +106,30 @@ test.describe('Manage object fields through Model Builder', () => {
 			listTypeDefinitionIds.push(id)
 		);
 
-		await modelBuilderPage.goto({objectFolderName: 'Default'});
+		await modelBuilderDiagramPage.goto({objectFolderName: 'Default'});
 
-		await modelBuilderPage.openNewFieldModal(objectDefinition.name);
+		await modelBuilderLeftSidebarPage.sidebarItems
+			.filter({hasText: objectDefinition.name})
+			.click();
 
-		await modelBuilderPage.fillNewObjectFieldLabel(
+		await modelBuilderObjectDefinitionNodePage.openAddNewObjectFieldOrRelationshipModal(
+			objectDefinition.name,
+			modelBuilderDiagramPage.objectDefinitionNodes,
+			modelBuilderObjectDefinitionNodePage.addObjectFieldButton
+		);
+
+		await modelBuilderObjectDefinitionNodePage.fillObjectFieldLabelInput(
 			'objectFieldLabel' + getRandomInt()
 		);
 
-		await modelBuilderPage.selectNewObjectFieldBusinessTypeOption(
+		await modelBuilderObjectDefinitionNodePage.selectNewObjectFieldBusinessTypeOption(
 			'Picklist'
 		);
 
-		await modelBuilderPage.newObjectFieldSelectPicklist.click();
+		await modelBuilderObjectDefinitionNodePage.objectFieldPicklistSelect.click();
 
 		const listTypeDefinitionBox =
-			modelBuilderPage.page.getByRole('listbox');
+			modelBuilderDiagramPage.page.getByRole('listbox');
 
 		await expect(listTypeDefinitionBox).toBeVisible();
 
@@ -105,11 +140,15 @@ test.describe('Manage object fields through Model Builder', () => {
 
 	test('can add picklist object field to object definition node', async ({
 		apiHelpers,
-		modelBuilderPage,
+		modelBuilderDiagramPage,
+		modelBuilderLeftSidebarPage,
+		modelBuilderObjectDefinitionNodePage,
 		page,
 		viewObjectDefinitionsPage,
 	}) => {
-		const {listTypeDefinitionIds, objectDefinition} = createdEntities;
+		const {listTypeDefinitionIds, objectDefinitions} = createdEntities;
+
+		const [objectDefinition] = objectDefinitions;
 
 		await page.goto('/');
 
@@ -124,25 +163,37 @@ test.describe('Manage object fields through Model Builder', () => {
 
 		await viewObjectDefinitionsPage.viewInModelBuilderButton.click();
 
+		await modelBuilderLeftSidebarPage.sidebarItems
+			.filter({hasText: objectDefinition.name})
+			.click();
+
 		const objectFieldLabel = 'objectFieldLabel' + getRandomInt();
 
-		await modelBuilderPage.createObjectField({
+		await modelBuilderObjectDefinitionNodePage.createObjectField({
 			listTypeDefinitionName: listTypeDefinition.name,
 			mandatory: false,
-			objectDefinitionName: objectDefinition.name,
+			objectDefinitionLabel: objectDefinition.label['en_US'],
+			objectDefinitionNodes:
+				modelBuilderDiagramPage.objectDefinitionNodes,
 			objectFieldBusinessType: 'Picklist',
 			objectFieldLabel,
 		});
 
 		await expect(
-			modelBuilderPage.objectDefinitionNodes
+			modelBuilderDiagramPage.objectDefinitionNodes
 				.filter({hasText: objectDefinition.label['en_US']})
 				.getByText(objectFieldLabel)
 		).toBeVisible();
 	});
 
-	test('can delete object field', async ({apiHelpers, modelBuilderPage}) => {
-		const {objectDefinition} = createdEntities;
+	test('can delete object field', async ({
+		apiHelpers,
+		modelBuilderDiagramPage,
+		modelBuilderLeftSidebarPage,
+		modelBuilderObjectDefinitionNodePage,
+		modelBuilderRightSidebarPage,
+	}) => {
+		const [objectDefinition] = createdEntities.objectDefinitions;
 
 		await apiHelpers.objectAdmin.postObjectFieldByExternalReferenceCode(
 			objectDefinition.externalReferenceCode,
@@ -164,25 +215,28 @@ test.describe('Manage object fields through Model Builder', () => {
 			}
 		);
 
-		await modelBuilderPage.goto({objectFolderName: 'Default'});
+		await modelBuilderDiagramPage.goto({objectFolderName: 'Default'});
 
-		await modelBuilderPage.leftSidebarItems
+		await modelBuilderLeftSidebarPage.sidebarItems
 			.filter({hasText: objectDefinition.name})
 			.click();
 
-		await modelBuilderPage.clickShowAllFieldsButton(objectDefinition.name);
+		await modelBuilderObjectDefinitionNodePage.clickShowAllFieldsButton(
+			objectDefinition.label['en_US'],
+			modelBuilderDiagramPage.objectDefinitionNodes
+		);
 
-		await modelBuilderPage.objectDefinitionNodes
+		await modelBuilderDiagramPage.objectDefinitionNodes
 			.filter({hasText: objectDefinition.name})
-			.getByText('integer', {exact: true})
+			.getByText('Integer', {exact: true})
 			.click();
 
-		await modelBuilderPage.deleteTrashButton.click();
+		await modelBuilderRightSidebarPage.deleteTrashButton.click();
 
-		await modelBuilderPage.modalDeleteObjectDefinitionConfirmationButton.click();
+		await modelBuilderObjectDefinitionNodePage.modalDeleteObjectDefinitionConfirmationButton.click();
 
 		await expect(
-			modelBuilderPage.objectDefinitionNodes
+			modelBuilderDiagramPage.objectDefinitionNodes
 				.filter({hasText: objectDefinition.name})
 				.getByText('intField')
 		).toBeHidden();
@@ -190,7 +244,9 @@ test.describe('Manage object fields through Model Builder', () => {
 
 	test('can edit picklist object field from draft object definition', async ({
 		apiHelpers,
-		modelBuilderPage,
+		modelBuilderDiagramPage,
+		modelBuilderLeftSidebarPage,
+		modelBuilderObjectDefinitionNodePage,
 		page,
 	}) => {
 		const {listTypeDefinitionIds} = createdEntities;
@@ -200,6 +256,8 @@ test.describe('Manage object fields through Model Builder', () => {
 				objectFolderExternalReferenceCode: 'default',
 				status: {code: 2},
 			});
+
+		createdEntities.objectDefinitions.push(draftObjectDefinition);
 
 		const listTypeDefinition =
 			await apiHelpers.listTypeAdmin.postRandomListTypeDefinition();
@@ -230,14 +288,15 @@ test.describe('Manage object fields through Model Builder', () => {
 			}
 		);
 
-		await modelBuilderPage.goto({objectFolderName: 'Default'});
+		await modelBuilderDiagramPage.goto({objectFolderName: 'Default'});
 
-		await modelBuilderPage.clickLeftSideBarItem(
+		await modelBuilderLeftSidebarPage.clickSideBarItem(
 			draftObjectDefinition.label['en_US']
 		);
 
-		await modelBuilderPage.clickShowAllFieldsButton(
-			draftObjectDefinition.label['en_US']
+		await modelBuilderObjectDefinitionNodePage.clickShowAllFieldsButton(
+			draftObjectDefinition.label['en_US'],
+			modelBuilderDiagramPage.objectDefinitionNodes
 		);
 
 		await page.getByText(picklistFieldName).click();
@@ -248,23 +307,131 @@ test.describe('Manage object fields through Model Builder', () => {
 			.getByPlaceholder('Text to translate...')
 			.fill(picklistFieldName);
 
-		await modelBuilderPage.clickLeftSideBarItem(
+		await modelBuilderLeftSidebarPage.clickSideBarItem(
 			draftObjectDefinition.label['en_US']
 		);
 
 		await expect(page.getByText(picklistFieldName)).toBeVisible();
+	});
 
-		await apiHelpers.objectAdmin.deleteObjectDefinition(
-			draftObjectDefinition.id
+	test('can see the translation of the object fields businesses types in object definition node', async ({
+		apiHelpers,
+		modelBuilderDiagramPage,
+		page,
+	}) => {
+		const {listTypeDefinitionIds, objectDefinitions, objectFolders} =
+			createdEntities;
+		const objectFolder =
+			await apiHelpers.objectAdmin.postRandomObjectFolder();
+
+		objectFolders.push(objectFolder);
+
+		const {listTypeDefinition, objectFields} = await mockObjectFields({
+			apiHelpers,
+			objectFieldBusinessTypes: [
+				'attachment',
+				'boolean',
+				'date',
+				'decimal',
+				'integer',
+				'longInteger',
+				'longText',
+				'picklist',
+				'precisionDecimal',
+				'richText',
+				'text',
+			],
+		});
+
+		listTypeDefinitionIds.push(listTypeDefinition.id);
+
+		const objectDefinition =
+			await apiHelpers.objectAdmin.postRandomObjectDefinition({
+				objectFields,
+				objectFolderExternalReferenceCode:
+					objectFolder.externalReferenceCode,
+				status: {code: 1},
+			});
+
+		objectDefinitions.push(objectDefinition);
+
+		await apiHelpers.objectAdmin.postObjectDefinitionObjectFieldBatch(
+			objectDefinition.id,
+			objectFields
 		);
+
+		await page.goto('pt');
+
+		await page.waitForLoadState('networkidle');
+
+		await modelBuilderDiagramPage.goto({
+			objectFolderName: objectFolder.name,
+		});
+
+		await modelBuilderDiagramPage.objectDefinitionNodes
+			.filter({hasText: objectDefinition.label['en_US']})
+			.getByRole('button', {name: 'Exibir tudo campo'})
+			.click();
+
+		const objectDefinitionNodeObjectFields = await page
+			.locator('.lfr-objects__model-builder-node-field')
+			.all();
+
+		const {objectFields: objectDefinitionObjectFields} = objectDefinition;
+
+		expect(objectDefinitionNodeObjectFields).toHaveLength(
+			objectDefinitionObjectFields.length
+		);
+
+		const objectFieldBusinessTypeNameLabel = {
+			Attachment: 'Anexo',
+			Boolean: 'Boolean',
+			Date: 'Data',
+			Decimal: 'Decimal',
+			Integer: 'Inteiro',
+			LongInteger: 'Número inteiro longo',
+			LongText: 'Texto longo',
+			Picklist: 'Lista de seleção',
+			PrecisionDecimal: 'Casa decimal',
+			RichText: 'Rich Text',
+			Text: 'Texto',
+		};
+
+		const asyncArray = new AsyncArray<Locator, boolean>();
+
+		for (let i = 0; i < objectDefinitionObjectFields.length; i++) {
+			const objectFieldRow = await asyncArray.find({
+				array: objectDefinitionNodeObjectFields,
+				predicate: async (objectFieldTableRow: Locator) => {
+					return (await objectFieldTableRow.textContent()).includes(
+						objectDefinitionObjectFields[i].label['en_US']
+					);
+				},
+			});
+
+			expect(objectFieldRow).toBeVisible();
+			expect(
+				objectFieldRow.getByText(
+					objectFieldBusinessTypeNameLabel[
+						objectDefinitionObjectFields[i].businessType
+					],
+					{exact: true}
+				)
+			).toBeVisible();
+		}
+
+		await page.goto('en');
 	});
 
 	test('can show and hide object fields in the object definition node', async ({
 		apiHelpers,
-		modelBuilderPage,
+		modelBuilderDiagramPage,
+		modelBuilderLeftSidebarPage,
+		modelBuilderObjectDefinitionNodePage,
 		page,
 	}) => {
-		const {objectDefinition} = createdEntities;
+		const [objectDefinition] = createdEntities.objectDefinitions;
+
 		const dateFieldName = 'dateField' + getRandomInt();
 		const integerFieldName = 'integerField' + getRandomInt();
 
@@ -308,24 +475,26 @@ test.describe('Manage object fields through Model Builder', () => {
 			}
 		);
 
-		await modelBuilderPage.goto({objectFolderName: 'Default'});
+		await modelBuilderDiagramPage.goto({objectFolderName: 'Default'});
 
-		await modelBuilderPage.clickLeftSideBarItem(
+		await modelBuilderLeftSidebarPage.clickSideBarItem(
 			objectDefinition.label['en_US']
 		);
 
 		await expect(page.getByText(integerFieldName)).not.toBeVisible();
 		await expect(page.getByText(dateFieldName)).not.toBeVisible();
 
-		await modelBuilderPage.clickShowAllFieldsButton(
-			objectDefinition.label['en_US']
+		await modelBuilderObjectDefinitionNodePage.clickShowAllFieldsButton(
+			objectDefinition.label['en_US'],
+			modelBuilderDiagramPage.objectDefinitionNodes
 		);
 
 		await expect(page.getByText(integerFieldName)).toBeVisible();
 		await expect(page.getByText(dateFieldName)).toBeVisible();
 
-		await modelBuilderPage.clickHideFieldsButton(
-			objectDefinition.label['en_US']
+		await modelBuilderObjectDefinitionNodePage.clickHideFieldsButton(
+			objectDefinition.label['en_US'],
+			modelBuilderDiagramPage.objectDefinitionNodes
 		);
 
 		await expect(page.getByText(integerFieldName)).not.toBeVisible();
@@ -334,10 +503,13 @@ test.describe('Manage object fields through Model Builder', () => {
 
 	test('cannot delete an objectField that belongs to a unique composite key validation through Model Builder', async ({
 		apiHelpers,
-		modelBuilderPage,
+		modelBuilderDiagramPage,
+		modelBuilderLeftSidebarPage,
+		modelBuilderObjectDefinitionNodePage,
+		modelBuilderRightSidebarPage,
 		page,
 	}) => {
-		const {objectDefinition} = createdEntities;
+		const [objectDefinition] = createdEntities.objectDefinitions;
 
 		const integerFieldName = 'integerField' + getRandomInt();
 
@@ -392,17 +564,20 @@ test.describe('Manage object fields through Model Builder', () => {
 			}
 		);
 
-		await modelBuilderPage.goto({objectFolderName: 'Default'});
+		await modelBuilderDiagramPage.goto({objectFolderName: 'Default'});
 
-		await modelBuilderPage.leftSidebarItems
+		await modelBuilderLeftSidebarPage.sidebarItems
 			.filter({hasText: objectDefinition.name})
 			.click();
 
-		await modelBuilderPage.clickShowAllFieldsButton(objectDefinition.name);
+		await modelBuilderObjectDefinitionNodePage.clickShowAllFieldsButton(
+			objectDefinition.name,
+			modelBuilderDiagramPage.objectDefinitionNodes
+		);
 
 		await page.getByText(integerFieldName).click();
 
-		await modelBuilderPage.deleteButton.click();
+		await modelBuilderRightSidebarPage.deleteButton.click();
 
 		await expect(page.getByText('Deletion Not Allowed')).toBeVisible();
 		await expect(
@@ -413,22 +588,28 @@ test.describe('Manage object fields through Model Builder', () => {
 	});
 
 	test('cannot delete only custom object field of an published object definition', async ({
-		modelBuilderPage,
+		modelBuilderDiagramPage,
+		modelBuilderLeftSidebarPage,
+		modelBuilderObjectDefinitionNodePage,
+		modelBuilderRightSidebarPage,
 		page,
 	}) => {
-		const {objectDefinition} = createdEntities;
+		const [objectDefinition] = createdEntities.objectDefinitions;
 
-		await modelBuilderPage.goto({objectFolderName: 'Default'});
+		await modelBuilderDiagramPage.goto({objectFolderName: 'Default'});
 
-		await modelBuilderPage.leftSidebarItems
+		await modelBuilderLeftSidebarPage.sidebarItems
 			.filter({hasText: objectDefinition.name})
 			.click();
 
-		await modelBuilderPage.clickShowAllFieldsButton(objectDefinition.name);
+		await modelBuilderObjectDefinitionNodePage.clickShowAllFieldsButton(
+			objectDefinition.name,
+			modelBuilderDiagramPage.objectDefinitionNodes
+		);
 
 		await page.getByText('textField').click();
 
-		await modelBuilderPage.deleteButton.click();
+		await modelBuilderRightSidebarPage.deleteButton.click();
 
 		await expect(page.getByText('Deletion Not Allowed')).toBeVisible();
 		await expect(
@@ -442,10 +623,20 @@ test.describe('Manage object fields through Model Builder', () => {
 test.describe('Manage objectFields through Objects Admin UI', () => {
 	test('can create object fields of multiple types (except AutoIncrement, Date and Time, Encrypted and Aggregation)', async ({
 		apiHelpers,
+		modelBuilderDiagramPage,
 		objectFieldsPage,
 		page,
 	}) => {
-		const {listTypeDefinitionIds, objectDefinition} = createdEntities;
+		const {listTypeDefinitionIds, objectDefinitions} = createdEntities;
+
+		const objectDefinition =
+			await apiHelpers.objectAdmin.postRandomObjectDefinition({
+				objectFields: [],
+				objectFolderExternalReferenceCode: 'default',
+				status: {code: 1},
+			});
+
+		objectDefinitions.push(objectDefinition);
 
 		const listTypeDefinition =
 			await apiHelpers.listTypeAdmin.postRandomListTypeDefinition();
@@ -457,65 +648,65 @@ test.describe('Manage objectFields through Objects Admin UI', () => {
 		const objectFieldsMock = [
 			{
 				objectFieldBusinessType: 'Attachment',
-				objectFieldLabel: 'Custom Attachment',
+				objectFieldLabel: `attachment${getRandomInt()}`,
 			},
 			{
 				objectFieldBusinessType: 'Boolean',
-				objectFieldLabel: 'Custom Boolean',
+				objectFieldLabel: `boolean${getRandomInt()}`,
 			},
 			{
 				objectFieldBusinessType: 'Date',
-				objectFieldLabel: 'Custom Date',
+				objectFieldLabel: `date${getRandomInt()}`,
 			},
 			{
 				objectFieldBusinessType: 'Decimal',
-				objectFieldLabel: 'Custom Decimal',
+				objectFieldLabel: `decimal${getRandomInt()}`,
 			},
 			{
 				objectFieldBusinessType: 'Integer',
-				objectFieldLabel: 'Custom Integer',
+				objectFieldLabel: `integer${getRandomInt()}`,
 			},
 			{
 				objectFieldBusinessType: 'Long Integer',
-				objectFieldLabel: 'Custom Long Integer',
+				objectFieldLabel: `longInteger${getRandomInt()}`,
 			},
 			{
 				objectFieldBusinessType: 'Long Text',
-				objectFieldLabel: 'Custom Long Text',
+				objectFieldLabel: `longText${getRandomInt()}`,
 			},
 			{
 				objectFieldBusinessType: 'Multiselect Picklist',
-				objectFieldLabel: 'Custom Multiselect Picklist',
+				objectFieldLabel: `multiselectPicklist${getRandomInt()}`,
 			},
 			{
 				objectFieldBusinessType: 'Picklist',
-				objectFieldLabel: 'Custom Picklist',
+				objectFieldLabel: `picklist${getRandomInt()}`,
 			},
-
 			{
 				objectFieldBusinessType: 'Precision Decimal',
-				objectFieldLabel: 'Custom Precision Decimal',
+				objectFieldLabel: `precisionDecimal${getRandomInt()}`,
 			},
 			{
 				objectFieldBusinessType: 'Rich Text',
-				objectFieldLabel: 'Custom Rich Text',
+				objectFieldLabel: `richText${getRandomInt()}`,
 			},
 			{
 				objectFieldBusinessType: 'Text',
-				objectFieldLabel: 'Custom Text',
+				objectFieldLabel: `text${getRandomInt()}`,
 			},
 		] as {
 			objectFieldBusinessType: string;
 			objectFieldLabel: string;
 		}[];
 
-		for (let i = 0; i < objectFieldsMock.length; i++) {
-			const {objectFieldBusinessType, objectFieldLabel} =
-				objectFieldsMock[i];
+		for (const objectField of objectFieldsMock) {
+			const {objectFieldBusinessType, objectFieldLabel} = objectField;
 
 			if (objectFieldBusinessType === 'Attachment') {
 				await objectFieldsPage.addObjectField({
 					attachmentSource: 'Upload Directly from the User',
+					objectDefinitionNodes:
+						modelBuilderDiagramPage.objectDefinitionNodes,
 					objectFieldBusinessType,
 					objectFieldLabel,
 				});
@@ -529,6 +720,8 @@ test.describe('Manage objectFields through Objects Admin UI', () => {
 			) {
 				await objectFieldsPage.addObjectField({
 					listTypeDefinitionName: listTypeDefinition.name,
+					objectDefinitionNodes:
+						modelBuilderDiagramPage.objectDefinitionNodes,
 					objectFieldBusinessType,
 					objectFieldLabel,
 				});
@@ -537,15 +730,51 @@ test.describe('Manage objectFields through Objects Admin UI', () => {
 			}
 
 			await objectFieldsPage.addObjectField({
+				objectDefinitionNodes:
+					modelBuilderDiagramPage.objectDefinitionNodes,
 				objectFieldBusinessType,
 				objectFieldLabel,
 			});
 		}
 
-		for (let i = 0; i < objectFieldsMock.length; i++) {
-			const {objectFieldLabel} = objectFieldsMock[i];
+		while (
+			(await page.locator('.dnd-tbody > .dnd-tr').all()).length !==
+			objectDefinition.objectFields.length + objectFieldsMock.length
+		) {
+			await page.waitForTimeout(1000);
+		}
 
-			await expect(page.getByText(objectFieldLabel)).toBeVisible();
+		const objectFieldTableRows = await page
+			.locator('.dnd-tbody > .dnd-tr')
+			.all();
+
+		const asyncArray = new AsyncArray<Locator, boolean>();
+
+		const objectFieldTableCustomRows = await asyncArray.filter({
+			array: objectFieldTableRows,
+			predicate: async (objectFieldTableRow: Locator) => {
+				return (await objectFieldTableRow.textContent()).includes(
+					'Custom'
+				);
+			},
+		});
+
+		for (let i = 0; i < objectFieldsMock.length; i++) {
+			const {objectFieldBusinessType, objectFieldLabel} =
+				objectFieldsMock[i];
+
+			await expect(
+				objectFieldTableCustomRows[i].getByText(objectFieldLabel, {
+					exact: true,
+				})
+			).toBeVisible();
+
+			await expect(
+				objectFieldTableCustomRows[i].getByText(
+					objectFieldBusinessType,
+					{exact: true}
+				)
+			).toBeVisible();
 		}
 	});
 
@@ -554,7 +783,7 @@ test.describe('Manage objectFields through Objects Admin UI', () => {
 		objectFieldsPage,
 		page,
 	}) => {
-		const {objectDefinition} = createdEntities;
+		const [objectDefinition] = createdEntities.objectDefinitions;
 		const integerFieldName = 'integerField' + getRandomInt();
 
 		await apiHelpers.objectAdmin.postObjectFieldByExternalReferenceCode(

@@ -39,6 +39,8 @@ public class PropertiesLanguageKeysContextCheck extends BaseFileCheck {
 
 		List<String> allowedSingleWordLanguageKeys =
 			_getAllowedSingleWordLanguageKeys();
+		List<String> ambiguousSingleWordLanguageKeys =
+			_getAmbiguousSingleWordLanguageKeys();
 
 		int contextDepth = GetterUtil.getInteger(
 			getAttributeValue(_CONTEXT_DEPTH_KEY, absolutePath));
@@ -56,16 +58,31 @@ public class PropertiesLanguageKeysContextCheck extends BaseFileCheck {
 		while (enumeration.hasMoreElements()) {
 			String key = enumeration.nextElement();
 
-			if (key.matches("\\w+") &&
-				StringUtil.equalsIgnoreCase(key, properties.getProperty(key)) &&
-				!allowedSingleWordLanguageKeys.contains(key)) {
+			int lineNumber = _getLineNumber(content, key);
 
-				addMessage(
-					fileName,
-					StringBundler.concat(
-						"The single-word key '", key,
-						"' should include a word of context at the end, ",
-						"within a [], to indicate specific meaning"));
+			if (key.matches("\\w+")) {
+				if (StringUtil.equalsIgnoreCase(
+						key, properties.getProperty(key)) &&
+					!allowedSingleWordLanguageKeys.contains(key)) {
+
+					addMessage(
+						fileName,
+						StringBundler.concat(
+							"The single-word key '", key,
+							"' should include a word of context at the end, ",
+							"within a [], to indicate specific meaning"),
+						lineNumber);
+				}
+				else if (ambiguousSingleWordLanguageKeys.contains(key)) {
+					addMessage(
+						fileName,
+						StringBundler.concat(
+							"The single-word key '", key,
+							"' should include a word of context at the end, ",
+							"within a [], like [noun] or [verb] to indicate ",
+							"specific meaning"),
+						lineNumber);
+				}
 
 				continue;
 			}
@@ -83,16 +100,7 @@ public class PropertiesLanguageKeysContextCheck extends BaseFileCheck {
 				continue;
 			}
 
-			if (properties.containsKey(matcher.group(1))) {
-				addMessage(
-					fileName,
-					StringBundler.concat(
-						"The key '", matcher.group(1), "' should include a ",
-						"word of context at the end, within a [], to indicate ",
-						"specific meaning"));
-			}
-
-			String bracketsContent = matcher.group(2);
+			String bracketsContent = matcher.group(1);
 
 			if ((bracketsContent.length() == 0) ||
 				((bracketsContent.length() == 1) &&
@@ -106,7 +114,8 @@ public class PropertiesLanguageKeysContextCheck extends BaseFileCheck {
 					fileName,
 					StringBundler.concat(
 						"The context '", bracketsContent,
-						"' is invalid in the key '", key, "'"));
+						"' is invalid in the key '", key, "'"),
+					lineNumber);
 			}
 		}
 
@@ -139,14 +148,51 @@ public class PropertiesLanguageKeysContextCheck extends BaseFileCheck {
 		return _allowedSingleWordLanguageKeys;
 	}
 
+	private synchronized List<String> _getAmbiguousSingleWordLanguageKeys()
+		throws IOException {
+
+		if (_ambiguousSingleWordLanguageKeys != null) {
+			return _ambiguousSingleWordLanguageKeys;
+		}
+
+		_ambiguousSingleWordLanguageKeys = new ArrayList<>();
+
+		Class<?> clazz = getClass();
+
+		ClassLoader classLoader = clazz.getClassLoader();
+
+		InputStream inputStream = classLoader.getResourceAsStream(
+			"dependencies/ambiguous-single-word-language-keys.txt");
+
+		if (inputStream == null) {
+			return Collections.emptyList();
+		}
+
+		_ambiguousSingleWordLanguageKeys = ListUtil.fromString(
+			StringUtil.read(inputStream));
+
+		return _ambiguousSingleWordLanguageKeys;
+	}
+
+	private int _getLineNumber(String content, String key) {
+		int x = content.indexOf("\n" + key + "=");
+
+		if (x != -1) {
+			return getLineNumber(content, x + 1);
+		}
+
+		return getLineNumber(content, content.indexOf(key + "="));
+	}
+
 	private static final String _CONTEXT_DEPTH_KEY = "contextDepth";
 
 	private static final String _FORBIDDEN_CONTEXT_NAMES_KEY =
 		"forbiddenContextNames";
 
 	private static final Pattern _languageKeyPattern = Pattern.compile(
-		"([\\s\\S]+)\\[([\\s\\S]*)\\]");
+		"[\\s\\S]+\\[([\\s\\S]*)\\]");
 
 	private List<String> _allowedSingleWordLanguageKeys;
+	private List<String> _ambiguousSingleWordLanguageKeys;
 
 }

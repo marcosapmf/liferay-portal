@@ -252,8 +252,15 @@ export class ApplicationsMenuPage {
 		await this.clientExtensionsLink.click();
 	}
 
-	async goToCustomFields() {
-		await this.goto();
+	async goToCustomFields(forceReload = true) {
+		if (forceReload) {
+			await this.goto();
+		}
+		else {
+			await this.homePage.openApplicationMenu();
+
+			await expect(this.applicationsMenuTabButton).toBeVisible();
+		}
 		await this.controlPanelButton.click();
 		await this.customFieldsMenuItem.click();
 	}
@@ -308,9 +315,22 @@ export class ApplicationsMenuPage {
 		await this.siteTemplatesButton.click();
 	}
 
-	async goToSites() {
-		await this.goToControlPanel();
+	async goToSites(forceReload = true) {
+		if (forceReload) {
+			await this.goto();
+		}
+		else {
+			await this.homePage.openApplicationMenu();
+
+			await expect(this.applicationsMenuTabButton).toBeVisible();
+		}
+
+		await this.controlPanelButton.click();
 		await this.sitesItem.click();
+	}
+
+	async goToGlobalSite() {
+		await this.goToSite('Global');
 	}
 
 	async goToSystemSettings() {
@@ -348,8 +368,8 @@ export class ApplicationsMenuPage {
 		await this.commerceOrdersMenuItem.click();
 	}
 
-	async goToCommerceReturns() {
-		await this.goToCommercePanel();
+	async goToCommerceReturns(checkTabVisibility = true) {
+		await this.goToCommercePanel(checkTabVisibility);
 		await this.commerceReturnsMenuItem.click();
 	}
 
@@ -368,8 +388,8 @@ export class ApplicationsMenuPage {
 		await this.paymentsMenuItem.click();
 	}
 
-	async goToProducts() {
-		await this.goToCommercePanel();
+	async goToProducts(checkTabVisibility = true) {
+		await this.goToCommercePanel(checkTabVisibility);
 		await this.productsMenuItem.click();
 	}
 
@@ -409,8 +429,16 @@ export class ApplicationsMenuPage {
 		await this.rolesItem.click();
 	}
 
-	async goToSamlAdmin() {
-		await this.goto();
+	async goToSamlAdmin(forceReload = true) {
+		if (forceReload) {
+			await this.goto();
+		}
+		else {
+			await this.homePage.openApplicationMenu();
+
+			await expect(this.applicationsMenuTabButton).toBeVisible();
+		}
+
 		await this.controlPanelButton.click();
 		await this.samlAdminItem.click();
 	}

@@ -28,7 +28,6 @@ components:
         FileEntry:
             properties:
                 externalReferenceCode:
-                    readOnly: true
                     type: string
                 fileBase64:
                     # @review
@@ -48,7 +47,6 @@ components:
                     type: string
                 scope:
                     $ref: "#/components/schemas/Scope"
-                    readOnly: true
             type: object
         Folder:
             properties:
@@ -112,6 +110,10 @@ components:
                     items:
                         type: string
                     type: array
+                permissions:
+                    items:
+                        type: permission
+                    type: array
                 properties:
                     additionalProperties:
                         type: object
@@ -156,6 +158,8 @@ components:
                     type: string
                 label_i18n:
                     type: string
+            required:
+                - code
             type: object
         TaxonomyCategoryBrief:
             properties:

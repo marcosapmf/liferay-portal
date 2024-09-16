@@ -136,6 +136,13 @@
 			<description name="Checks if the property value for `Web-ContextPath` matches the module directory." />
 		</check>
 	</source-processor>
+	<source-processor name="CIMergeAndGitRepoSourceProcessor">
+		<check name="CIMergeAndGitRepoFileCheck">
+			<category name="Bug Prevention" />
+			<description name="Checks that `ci-merge` and `.gitrepo` files can not be added or modified." />
+			<property name="enabled" value="false" />
+		</check>
+	</source-processor>
 	<source-processor name="CodeownersSourceProcessor">
 		<check name="CodeownersFileLocationCheck">
 			<category name="Bug Prevention" />
@@ -1247,6 +1254,10 @@
 			<category name="Naming Conventions" />
 			<description name="Check if the names of functions in `.jsp` files follow naming conventions." />
 		</check>
+		<check name="JSPIllegalTagsCheck">
+			<category name="Bug Prevention" />
+			<description name="Finds cases of incorrect use of certain tags." />
+		</check>
 		<check name="JSPLanguageKeysCheck">
 			<category name="Bug Prevention" />
 			<description name="Finds missing language keys in `Language.properties`." />
@@ -1829,6 +1840,10 @@
 			<category name="Upgrade" />
 			<description name="Replaces the Optional return type of the methods `getParameterValues` and `getPortletPreferences` of `PortletSharedSearchSettings` class." />
 		</check>
+		<check name="UpgradeJavaProductDTOConverterReferenceCheck">
+			<category name="Upgrade" />
+			<description name="Updates references of `ProductDTOConverter` to `DTOConverter`" />
+		</check>
 		<check name="UpgradeJavaSchedulerEntryImplConstructorCheck">
 			<category name="Upgrade" />
 			<description name="Replace constructors that use the empty constructor of the SchedulerEntryImpl class." />
@@ -1844,6 +1859,10 @@
 		<check name="UpgradeJavaServiceReferenceAnnotationCheck">
 			<category name="Upgrade" />
 			<description name="Run code migration to replace '@ServiceReference' by '@Reference'." />
+		</check>
+		<check name="UpgradeJavaSortFieldNameTranslatorCheck">
+			<category name="Upgrade" />
+			<description name="Upgrade class that implements SortFieldNameTranslator." />
 		</check>
 		<check name="UpgradeJavaStorageTypeAwareCheck">
 			<category name="Upgrade" />

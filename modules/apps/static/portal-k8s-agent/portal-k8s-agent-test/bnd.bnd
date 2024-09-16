@@ -20,6 +20,8 @@ Import-Package:\
 	\
 	javax.*,\
 	\
+	kotlin.*;mandatory:=usage;usage=test,\
+	\
 	okhttp3.*;mandatory:=usage;usage=test,\
 	\
 	okio;mandatory:=usage;usage=test,\

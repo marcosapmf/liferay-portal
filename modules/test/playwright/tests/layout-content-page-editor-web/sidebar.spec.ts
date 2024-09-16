@@ -223,6 +223,72 @@ test.describe('Fragments Panel', () => {
 
 		await expect(page.getByText(unpublishedFragmentName)).not.toBeVisible();
 	});
+
+	test('Can remove search text when pressing backspace', async ({
+		apiHelpers,
+		page,
+		pageEditorPage,
+		site,
+	}) => {
+
+		// Create content page and go to edit mode
+
+		const layout = await apiHelpers.headlessDelivery.createSitePage({
+			siteId: site.id,
+			title: getRandomString(),
+		});
+
+		await pageEditorPage.goto(layout, site.friendlyUrlPath);
+
+		// Open the "Fragments and Widgets" panel
+
+		await pageEditorPage.goToSidebarTab('Fragments and Widgets');
+
+		// Find the search input and type some text
+
+		const searchInput = page.getByPlaceholder('Search...');
+
+		await searchInput.fill('Heading');
+
+		// Verify the search text is present
+
+		await expect(searchInput).toHaveValue('Heading');
+
+		// Press Backspace to remove the text
+
+		await searchInput.press('Backspace');
+
+		// Verify the search text has been removed
+
+		await expect(searchInput).toHaveValue('Headin');
+	});
+
+	test('Favorite section is empty when there are no favorites', async ({
+		apiHelpers,
+		page,
+		pageEditorPage,
+		site,
+	}) => {
+
+		// Create content page and go to edit mode
+
+		const layout = await apiHelpers.headlessDelivery.createSitePage({
+			siteId: site.id,
+			title: getRandomString(),
+		});
+
+		await pageEditorPage.goto(layout, site.friendlyUrlPath);
+
+		// Open the "Fragments and Widgets" panel
+
+		await pageEditorPage.goToSidebarTab('Fragments and Widgets');
+
+		// Assert favorite section is empty
+
+		await expect(
+			page.getByRole('menuitem', {name: 'Favorites'})
+		).not.toBeVisible();
+	});
 });
 
 test.describe('Page Contents Panel', () => {
@@ -271,7 +337,10 @@ test.describe('Page Contents Panel', () => {
 
 		await content.click();
 
-		const editable = pageEditorPage.getEditable(headingId, 'element-text');
+		const editable = pageEditorPage.getEditable({
+			editableId: 'element-text',
+			fragmentId: headingId,
+		});
 
 		await editable.locator('.cke_editable_inline').waitFor();
 
@@ -289,6 +358,52 @@ test.describe('Page Contents Panel', () => {
 			page.locator('.page-editor__page-contents__page-content')
 		).toContainText('New Content');
 	});
+});
+
+test.describe('Page Design Options', () => {
+	test(
+		'Allows editing inline text from Page Content Panel',
+		{
+			tag: '@LPS-146373',
+		},
+		async ({apiHelpers, page, pageEditorPage, site}) => {
+
+			// Create a page
+
+			const layout = await apiHelpers.headlessDelivery.createSitePage({
+				siteId: site.id,
+				title: getRandomString(),
+			});
+
+			// Go to edit mode of page
+
+			await pageEditorPage.goto(layout, site.friendlyUrlPath);
+
+			// Go to Page Contents panel
+
+			await pageEditorPage.goToSidebarTab('Page Design Options');
+
+			// Go to look and feel
+
+			await page
+				.getByTitle('More Page Design Options', {exact: true})
+				.click();
+
+			// Assert sections
+
+			await expect(
+				page.getByRole('heading', {name: 'Theme'})
+			).toBeAttached();
+
+			await expect(
+				page.getByRole('heading', {name: 'Basic Settings'})
+			).toBeAttached();
+
+			await expect(
+				page.getByRole('heading', {name: 'Customization'})
+			).toBeAttached();
+		}
+	);
 });
 
 test.describe('Rules Panel', () => {

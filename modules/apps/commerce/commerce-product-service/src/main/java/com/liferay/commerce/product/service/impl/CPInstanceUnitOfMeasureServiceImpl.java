@@ -44,23 +44,25 @@ public class CPInstanceUnitOfMeasureServiceImpl
 	public CPInstanceUnitOfMeasure addCPInstanceUnitOfMeasure(
 			long cpInstanceId, boolean active,
 			BigDecimal incrementalOrderQuantity, String key,
-			Map<Locale, String> nameMap, int precision, boolean primary,
-			double priority, BigDecimal rate, String sku)
+			Map<Locale, String> nameMap, int precision,
+			BigDecimal pricingQuantity, boolean primary, double priority,
+			BigDecimal rate, String sku)
 		throws PortalException {
 
 		_checkCommerceCatalog(cpInstanceId, ActionKeys.UPDATE);
 
 		return cpInstanceUnitOfMeasureLocalService.addCPInstanceUnitOfMeasure(
 			getUserId(), cpInstanceId, active, incrementalOrderQuantity, key,
-			nameMap, precision, primary, priority, rate, sku);
+			nameMap, precision, pricingQuantity, primary, priority, rate, sku);
 	}
 
 	@Override
 	public CPInstanceUnitOfMeasure addOrUpdateCPInstanceUnitOfMeasure(
 			long cpInstanceId, boolean active,
 			BigDecimal incrementalOrderQuantity, String key,
-			Map<Locale, String> nameMap, int precision, boolean primary,
-			double priority, BigDecimal rate, String sku)
+			Map<Locale, String> nameMap, int precision,
+			BigDecimal pricingQuantity, boolean primary, double priority,
+			BigDecimal rate, String sku)
 		throws PortalException {
 
 		_checkCommerceCatalog(cpInstanceId, ActionKeys.UPDATE);
@@ -68,7 +70,8 @@ public class CPInstanceUnitOfMeasureServiceImpl
 		return cpInstanceUnitOfMeasureLocalService.
 			addOrUpdateCPInstanceUnitOfMeasure(
 				getUserId(), cpInstanceId, active, incrementalOrderQuantity,
-				key, nameMap, precision, primary, priority, rate, sku);
+				key, nameMap, precision, pricingQuantity, primary, priority,
+				rate, sku);
 	}
 
 	@Override
@@ -199,8 +202,9 @@ public class CPInstanceUnitOfMeasureServiceImpl
 	public CPInstanceUnitOfMeasure updateCPInstanceUnitOfMeasure(
 			long cpInstanceUnitOfMeasureId, long cpInstanceId, boolean active,
 			BigDecimal incrementalOrderQuantity, String key,
-			Map<Locale, String> nameMap, int precision, boolean primary,
-			double priority, BigDecimal rate, String sku)
+			Map<Locale, String> nameMap, int precision,
+			BigDecimal pricingQuantity, boolean primary, double priority,
+			BigDecimal rate, String sku)
 		throws PortalException {
 
 		_checkCommerceCatalog(cpInstanceId, ActionKeys.UPDATE);
@@ -208,8 +212,8 @@ public class CPInstanceUnitOfMeasureServiceImpl
 		return cpInstanceUnitOfMeasureLocalService.
 			updateCPInstanceUnitOfMeasure(
 				cpInstanceUnitOfMeasureId, cpInstanceId, active,
-				incrementalOrderQuantity, key, nameMap, precision, primary,
-				priority, rate, sku);
+				incrementalOrderQuantity, key, nameMap, precision,
+				pricingQuantity, primary, priority, rate, sku);
 	}
 
 	private void _checkCommerceCatalog(long cpInstanceId, String actionId)

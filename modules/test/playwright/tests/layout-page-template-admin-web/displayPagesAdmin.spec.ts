@@ -6,6 +6,7 @@
 import {Page, expect, mergeTests} from '@playwright/test';
 
 import {apiHelpersTest} from '../../fixtures/apiHelpersTest';
+import {displayPageTemplatesPagesTest} from '../../fixtures/displayPageTemplatesPagesTest';
 import {documentLibraryPagesTest} from '../../fixtures/documentLibraryPages.fixtures';
 import {featureFlagsTest} from '../../fixtures/featureFlagsTest';
 import {isolatedSiteTest} from '../../fixtures/isolatedSiteTest';
@@ -13,19 +14,22 @@ import {loginTest} from '../../fixtures/loginTest';
 import {ApiHelpers} from '../../helpers/ApiHelpers';
 import {getRandomInt} from '../../utils/getRandomInt';
 import getRandomString from '../../utils/getRandomString';
+import {performLogout} from '../../utils/performLogin';
 import getBasicWebContentStructureId from '../../utils/structured-content/getBasicWebContentStructureId';
 import {waitForSuccessAlert} from '../../utils/waitForSuccessAlert';
 import {blogsPagesTest} from '../blogs-web/fixtures/blogsPagesTest';
 import {journalPagesTest} from '../journal-web/fixtures/journalPagesTest';
 import {JournalEditArticlePage} from '../journal-web/pages/JournalEditArticlePage';
 import {JournalPage} from '../journal-web/pages/JournalPage';
-import {displayPageTemplatesPagesTest} from './fixtures/displayPageTemplatesPagesTest';
 
 const test = mergeTests(
 	apiHelpersTest,
 	blogsPagesTest,
 	displayPageTemplatesPagesTest,
 	documentLibraryPagesTest,
+	featureFlagsTest({
+		'LPS-178052': true,
+	}),
 	isolatedSiteTest,
 	journalPagesTest,
 	loginTest()
@@ -70,6 +74,263 @@ async function addBasicJournalArticleWithSpecificDisplayPageTemplate(
 		`Success:${journalArticleTitle} was updated successfully.`
 	);
 }
+
+testInfoPanel.describe('InfoPanel', () => {
+	testInfoPanel(
+		'View the info panel for a display page and for a folder',
+		{
+			tag: ['@LPD-34205', '@LPS-189857'],
+		},
+		async ({displayPageTemplatesPage, page, site}) => {
+
+			// Create a folder
+
+			await displayPageTemplatesPage.goto(site.friendlyUrlPath);
+
+			const displayPageTemplateFolderName = getRandomString();
+
+			await displayPageTemplatesPage.createFolder(
+				displayPageTemplateFolderName
+			);
+
+			// Create a display page template for Blogs Entry
+
+			const displayPageTemplateName = getRandomString();
+
+			await displayPageTemplatesPage.createTemplate({
+				contentType: 'Blogs Entry',
+				folderName: displayPageTemplateFolderName,
+				name: displayPageTemplateName,
+			});
+
+			// Check folder info panel
+
+			await page.getByTitle('Toggle Info Panel', {exact: true}).click();
+
+			const infoPanel = page.getByLabel('Info Panel', {exact: true});
+
+			await expect(
+				infoPanel.locator('.sidebar-header .component-title')
+			).toContainText(displayPageTemplateFolderName);
+
+			await expect(
+				infoPanel.locator('.sidebar-header .component-subtitle')
+			).toContainText('Folder');
+
+			await expect(
+				infoPanel.locator('.sidebar-body .mb-4').nth(0)
+			).toContainText('Location');
+
+			await expect(
+				infoPanel.locator('.sidebar-body .mb-4').nth(0)
+			).toContainText(`Home > ${displayPageTemplateFolderName}`);
+
+			await expect(
+				infoPanel.locator('.sidebar-body .mb-4').nth(1)
+			).toContainText('Number of Items');
+
+			await expect(
+				infoPanel.locator('.sidebar-body .mb-4').nth(1)
+			).toContainText('1');
+
+			await expect(
+				infoPanel.locator('.sidebar-body .mb-4').nth(2)
+			).toContainText('Created');
+
+			await expect(
+				infoPanel.locator('.sidebar-body .mb-4').nth(3)
+			).toContainText('Modified');
+
+			// Check display page info panel
+
+			await page
+				.getByLabel(`Select ${displayPageTemplateName}`, {exact: true})
+				.check();
+
+			await expect(
+				infoPanel.locator('.sidebar-header .component-title')
+			).toContainText(displayPageTemplateName);
+
+			await expect(
+				infoPanel.locator('.sidebar-header .component-subtitle')
+			).toContainText('Display Page Template');
+
+			await expect(
+				infoPanel.locator('.sidebar-header .label-item')
+			).toContainText('Approved');
+
+			await expect(
+				infoPanel.locator('.sidebar-body .mb-4').nth(0)
+			).toContainText('Location');
+
+			await expect(
+				infoPanel.locator('.sidebar-body .mb-4').nth(0)
+			).toContainText(`Home > ${displayPageTemplateFolderName}`);
+
+			await expect(
+				infoPanel.locator('.sidebar-body .mb-4').nth(1)
+			).toContainText('Content Type');
+
+			await expect(
+				infoPanel.locator('.sidebar-body .mb-4').nth(1)
+			).toContainText('Blogs Entry');
+
+			await expect(
+				infoPanel.locator('.sidebar-body .mb-4').nth(2)
+			).toContainText('Created');
+
+			await expect(
+				infoPanel.locator('.sidebar-body .mb-4').nth(3)
+			).toContainText('Modified');
+		}
+	);
+});
+
+test.describe('UI', () => {
+	test(
+		'Assert warning message when user change the content type',
+		{
+			tag: '@LPS-192722',
+		},
+		async ({displayPageTemplatesPage, page, site}) => {
+
+			// Create a display page template for Basic Web Content
+
+			await displayPageTemplatesPage.goto(site.friendlyUrlPath);
+
+			const displayPageTemplateName = getRandomString();
+
+			await displayPageTemplatesPage.createTemplate({
+				contentSubtype: 'Basic Web Content',
+				contentType: 'Web Content Article',
+				name: displayPageTemplateName,
+			});
+
+			// Assert warning message
+
+			await displayPageTemplatesPage.clickMoreActions(
+				displayPageTemplateName,
+				'Change Content Type'
+			);
+
+			await expect(
+				page.getByText(
+					'Changing the content type may cause some elements of the display page template to lose their previous mapping.'
+				)
+			).toBeVisible();
+
+			// Dismiss warning message
+
+			await page
+				.locator('.alert-dismissible')
+				.getByLabel('Close', {exact: true})
+				.click();
+
+			await page
+				.locator('.modal-header')
+				.getByLabel('close', {exact: true})
+				.click();
+
+			// Assert warning message
+
+			await displayPageTemplatesPage.clickMoreActions(
+				displayPageTemplateName,
+				'Change Content Type'
+			);
+
+			await expect(
+				page.getByText(
+					'Changing the content type may cause some elements of the display page template to lose their previous mapping.'
+				)
+			).toBeVisible();
+		}
+	);
+
+	test('Checks that the card checkbox has the correct aria label', async ({
+		displayPageTemplatesPage,
+		page,
+		site,
+	}) => {
+
+		// Go to display pages administration
+
+		await displayPageTemplatesPage.goto(site.friendlyUrlPath);
+
+		// Create new DPT and check checkbox aria-label
+
+		const displayPageTemplateName = getRandomString();
+
+		await displayPageTemplatesPage.createTemplate({
+			contentSubtype: 'Basic Web Content',
+			contentType: 'Web Content Article',
+			name: displayPageTemplateName,
+		});
+
+		await expect(
+			page.getByLabel(`Select ${displayPageTemplateName}`)
+		).toBeVisible();
+	});
+
+	test('User can delete default display page template', async ({
+		displayPageTemplatesPage,
+		page,
+		site,
+	}) => {
+
+		// Create a display page template for Basic Web Content and mark as default
+
+		await displayPageTemplatesPage.goto(site.friendlyUrlPath);
+
+		const displayPageTemplateName = getRandomString();
+
+		await displayPageTemplatesPage.createTemplate({
+			contentSubtype: 'Basic Web Content',
+			contentType: 'Web Content Article',
+			name: displayPageTemplateName,
+		});
+
+		await displayPageTemplatesPage.markAsDefault(displayPageTemplateName);
+
+		// Delete default display page template
+
+		await displayPageTemplatesPage.deleteTemplate(displayPageTemplateName);
+
+		await expect(
+			page.getByText(displayPageTemplateName, {exact: true})
+		).not.toBeVisible();
+	});
+
+	test('User can rename a display page', async ({
+		displayPageTemplatesPage,
+		page,
+		site,
+	}) => {
+
+		// Create a display page template for Blogs Entry
+
+		await displayPageTemplatesPage.goto(site.friendlyUrlPath);
+
+		const displayPageTemplateName = getRandomString();
+
+		await displayPageTemplatesPage.createTemplate({
+			contentType: 'Blogs Entry',
+			name: displayPageTemplateName,
+		});
+
+		// Rename display page template
+
+		const newDisplayPageTemplateName = getRandomString();
+
+		await displayPageTemplatesPage.renameTemplate(
+			newDisplayPageTemplateName,
+			displayPageTemplateName
+		);
+
+		await expect(
+			page.getByText(newDisplayPageTemplateName, {exact: true})
+		).toBeVisible();
+	});
+});
 
 test.describe('Usages', () => {
 	test(
@@ -408,196 +669,122 @@ test.describe('Usages', () => {
 	);
 });
 
-test('Checks that the card checkbox has the correct aria label', async ({
-	displayPageTemplatesPage,
-	page,
-	site,
-}) => {
+test.describe('View', () => {
+	test(
+		'View display page',
+		{
+			tag: [
+				'@LPS-86190',
+				'@LPS-96438',
+				'@LPS-90999',
+				'@LPS-121195',
+				'@LPS-150919',
+			],
+		},
+		async ({apiHelpers, displayPageTemplatesPage, page, site}) => {
 
-	// Go to display pages administration
+			// Create a content page
 
-	await displayPageTemplatesPage.goto(site.friendlyUrlPath);
+			await apiHelpers.headlessDelivery.createSitePage({
+				siteId: site.id,
+				title: getRandomString(),
+			});
 
-	// Create new DPT and check checkbox aria-label
+			// Create a display page template for Basic Web Content
 
-	const displayPageTemplateName = getRandomString();
+			await displayPageTemplatesPage.goto(site.friendlyUrlPath);
 
-	await displayPageTemplatesPage.createTemplate({
-		contentSubtype: 'Basic Web Content',
-		contentType: 'Web Content Article',
-		name: displayPageTemplateName,
-	});
+			const displayPageTemplateName =
+				'basicWebContentDpt' + getRandomInt();
 
-	await expect(
-		page.getByLabel(`Select ${displayPageTemplateName}`)
-	).toBeVisible();
-});
+			await displayPageTemplatesPage.createTemplate({
+				contentSubtype: 'Basic Web Content',
+				contentType: 'Web Content Article',
+				name: displayPageTemplateName,
+			});
 
-test('User can delete default display page template', async ({
-	displayPageTemplatesPage,
-	page,
-	site,
-}) => {
+			await displayPageTemplatesPage.markAsDefault(
+				displayPageTemplateName
+			);
 
-	// Create a display page template for Basic Web Content and mark as default
+			// Create a Basic Web Content
 
-	await displayPageTemplatesPage.goto(site.friendlyUrlPath);
+			const journalArticleTitle = getRandomString();
 
-	const displayPageTemplateName = getRandomString();
+			const contentStructureId =
+				await getBasicWebContentStructureId(apiHelpers);
 
-	await displayPageTemplatesPage.createTemplate({
-		contentSubtype: 'Basic Web Content',
-		contentType: 'Web Content Article',
-		name: displayPageTemplateName,
-	});
+			await apiHelpers.headlessDelivery.postStructuredContent({
+				contentStructureId,
+				datePublished: null,
+				siteId: site.id,
+				tags: ['Cats', 'Dogs'],
+				title: journalArticleTitle,
+				viewableBy: 'Anyone',
+			});
 
-	await displayPageTemplatesPage.markAsDefault(displayPageTemplateName);
+			const blogsEntryName = getRandomString();
 
-	// Delete default display page template
+			await apiHelpers.headlessDelivery.postBlog(site.id, {
+				headline: blogsEntryName,
+			});
 
-	await displayPageTemplatesPage.delete(displayPageTemplateName);
+			// Go to display page
 
-	await expect(
-		page.getByText(displayPageTemplateName, {exact: true})
-	).not.toBeVisible();
-});
+			await page.goto(
+				`web${site.friendlyUrlPath}/w/${journalArticleTitle}`
+			);
 
-test('User can rename a display page', async ({
-	displayPageTemplatesPage,
-	page,
-	site,
-}) => {
+			await expect(
+				page.getByRole('heading', {name: journalArticleTitle})
+			).toBeVisible();
 
-	// Create a display page template for Blogs Entry
+			// Can access to edit the web content article or display page while viewing the article through its display page
 
-	await displayPageTemplatesPage.goto(site.friendlyUrlPath);
+			await page
+				.locator('.control-menu-nav-item')
+				.getByLabel('Edit', {exact: true})
+				.click();
 
-	const displayPageTemplateName = getRandomString();
+			await expect(
+				page.locator('.dropdown-menu').getByRole('menuitem', {
+					name: `Edit ${journalArticleTitle}`,
+				})
+			).toBeVisible();
 
-	await displayPageTemplatesPage.createTemplate({
-		contentType: 'Blogs Entry',
-		name: displayPageTemplateName,
-	});
+			await expect(
+				page
+					.locator('.dropdown-menu')
+					.getByRole('menuitem', {name: 'Edit Display Page Template'})
+			).toBeVisible();
 
-	// Rename display page template
+			// Assert metadata should appear in page source
 
-	const newDisplayPageTemplateName = getRandomString();
+			await expect(
+				page.locator('meta[content="cats,dogs"]')
+			).toBeAttached();
 
-	await displayPageTemplatesPage.rename(
-		newDisplayPageTemplateName,
-		displayPageTemplateName
+			// Verify guest user can view display page
+
+			await performLogout(page);
+
+			await page.goto(
+				`web${site.friendlyUrlPath}/w/${journalArticleTitle}`
+			);
+
+			await expect(page.getByText('Page Not Found')).not.toBeVisible();
+
+			await expect(
+				page.locator(
+					`link[href*="web${site.friendlyUrlPath}/w/${journalArticleTitle}"][rel="canonical"]`
+				)
+			).toBeAttached();
+
+			await expect(
+				page.locator(
+					`link[href*="zh/web${site.friendlyUrlPath}/w/${journalArticleTitle}"][hreflang="zh-CN"][rel="alternate"]`
+				)
+			).toBeAttached();
+		}
 	);
-
-	await expect(
-		page.getByText(newDisplayPageTemplateName, {exact: true})
-	).toBeVisible();
 });
-
-testInfoPanel(
-	'View the info panel for a display page and for a folder',
-	{
-		tag: ['@LPD-34205', '@LPS-189857'],
-	},
-	async ({displayPageTemplatesPage, page, site}) => {
-
-		// Create a folder
-
-		await displayPageTemplatesPage.goto(site.friendlyUrlPath);
-
-		const displayPageTemplateFolderName = getRandomString();
-
-		await displayPageTemplatesPage.createFolder(
-			displayPageTemplateFolderName
-		);
-
-		// Create a display page template for Blogs Entry
-
-		const displayPageTemplateName = getRandomString();
-
-		await displayPageTemplatesPage.createTemplate({
-			contentType: 'Blogs Entry',
-			folderName: displayPageTemplateFolderName,
-			name: displayPageTemplateName,
-		});
-
-		// Check folder info panel
-
-		await page.getByTitle('Toggle Info Panel', {exact: true}).click();
-
-		const infoPanel = page.getByLabel('Info Panel', {exact: true});
-
-		await expect(
-			infoPanel.locator('.sidebar-header .component-title')
-		).toContainText(displayPageTemplateFolderName);
-
-		await expect(
-			infoPanel.locator('.sidebar-header .component-subtitle')
-		).toContainText('Folder');
-
-		await expect(
-			infoPanel.locator('.sidebar-body .mb-4').nth(0)
-		).toContainText('Location');
-
-		await expect(
-			infoPanel.locator('.sidebar-body .mb-4').nth(0)
-		).toContainText(`Home > ${displayPageTemplateFolderName}`);
-
-		await expect(
-			infoPanel.locator('.sidebar-body .mb-4').nth(1)
-		).toContainText('Number of Items');
-
-		await expect(
-			infoPanel.locator('.sidebar-body .mb-4').nth(1)
-		).toContainText('1');
-
-		await expect(
-			infoPanel.locator('.sidebar-body .mb-4').nth(2)
-		).toContainText('Created');
-
-		await expect(
-			infoPanel.locator('.sidebar-body .mb-4').nth(3)
-		).toContainText('Modified');
-
-		// Check display page info panel
-
-		await page
-			.getByLabel(`Select ${displayPageTemplateName}`, {exact: true})
-			.check();
-
-		await expect(
-			infoPanel.locator('.sidebar-header .component-title')
-		).toContainText(displayPageTemplateName);
-
-		await expect(
-			infoPanel.locator('.sidebar-header .component-subtitle')
-		).toContainText('Display Page Template');
-
-		await expect(
-			infoPanel.locator('.sidebar-header .label-item')
-		).toContainText('Approved');
-
-		await expect(
-			infoPanel.locator('.sidebar-body .mb-4').nth(0)
-		).toContainText('Location');
-
-		await expect(
-			infoPanel.locator('.sidebar-body .mb-4').nth(0)
-		).toContainText(`Home > ${displayPageTemplateFolderName}`);
-
-		await expect(
-			infoPanel.locator('.sidebar-body .mb-4').nth(1)
-		).toContainText('Content Type');
-
-		await expect(
-			infoPanel.locator('.sidebar-body .mb-4').nth(1)
-		).toContainText('Blogs Entry');
-
-		await expect(
-			infoPanel.locator('.sidebar-body .mb-4').nth(2)
-		).toContainText('Created');
-
-		await expect(
-			infoPanel.locator('.sidebar-body .mb-4').nth(3)
-		).toContainText('Modified');
-	}
-);

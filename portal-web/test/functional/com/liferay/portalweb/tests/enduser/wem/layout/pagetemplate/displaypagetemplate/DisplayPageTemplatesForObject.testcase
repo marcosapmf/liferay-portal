@@ -199,7 +199,7 @@ definition {
 			PageEditor.viewFragmentEditableText(
 				className = "button",
 				editableText = "Submit",
-				fragmentName = "Submit Button",
+				fragmentName = "Form Button",
 				id = "submit-button");
 
 			PageEditor.gotoConfiguration(fragmentName = "Form Container");
@@ -1490,9 +1490,7 @@ definition {
 			PageEditor.mapFormContainerToObject(contentType = "Purchase Order");
 
 			PageEditor.editFormContainer(
-				contentType = "Purchase Order",
 				displayPageName = "Display Page Name",
-				panel = "General",
 				successMessage = "Go to Entry Display Page");
 
 			PageEditor.publish();
@@ -1637,9 +1635,7 @@ definition {
 			PageEditor.mapFormContainerToObject(contentType = "Purchase Order");
 
 			PageEditor.editFormContainer(
-				contentType = "Purchase Order",
 				displayPageName = "Display Page Name",
-				panel = "General",
 				successMessage = "Go to Entry Display Page");
 
 			PageEditor.publish();

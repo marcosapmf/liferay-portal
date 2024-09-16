@@ -50,21 +50,21 @@ export default {
 
 	addFragmentComposition({
 		description,
+		fileEntryId,
 		fragmentCollectionId,
 		itemId,
 		name,
 		onNetworkStatus,
-		previewImageURL,
 		saveInlineContent,
 		saveMappingConfiguration,
 		segmentsExperienceId,
 	}: {
 		description: string;
+		fileEntryId?: string;
 		fragmentCollectionId: string;
 		itemId: string;
 		name: string;
 		onNetworkStatus: OnNetworkStatus;
-		previewImageURL?: string;
 		saveInlineContent: boolean;
 		saveMappingConfiguration: boolean;
 		segmentsExperienceId: string;
@@ -77,10 +77,10 @@ export default {
 			{
 				body: {
 					description,
+					fileEntryId,
 					fragmentCollectionId,
 					itemId,
 					name,
-					previewImageURL,
 					saveInlineContent,
 					saveMappingConfiguration,
 					segmentsExperienceId,
@@ -149,6 +149,43 @@ export default {
 				body: {
 					fragmentEntryKey,
 					groupId,
+					parentItemId,
+					position,
+					segmentsExperienceId,
+				},
+			},
+			onNetworkStatus
+		);
+	},
+
+	addStepperFragmentEntryLink({
+		fragmentEntryKey,
+		groupId,
+		numberOfSteps,
+		onNetworkStatus,
+		parentItemId,
+		position,
+		segmentsExperienceId,
+	}: {
+		fragmentEntryKey: string;
+		groupId: string;
+		numberOfSteps: number;
+		onNetworkStatus: OnNetworkStatus;
+		parentItemId: string;
+		position: number;
+		segmentsExperienceId: string;
+	}) {
+		return draftServiceFetch<{
+			addedItemId: string;
+			fragmentEntryLink: FragmentEntryLink;
+			layoutData: LayoutData;
+		}>(
+			config.addStepperFragmentEntryLinkURL,
+			{
+				body: {
+					fragmentEntryKey,
+					groupId,
+					numberOfSteps,
 					parentItemId,
 					position,
 					segmentsExperienceId,

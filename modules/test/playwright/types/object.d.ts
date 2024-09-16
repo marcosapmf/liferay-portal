@@ -15,14 +15,26 @@ interface CreateObjectField {
 	attachmentSource?: string;
 	listTypeDefinitionName?: string;
 	mandatory?: boolean;
-	objectDefinitionName?: string;
+	objectDefinitionLabel?: string;
+	objectDefinitionNodes: unknown;
+
 	objectFieldBusinessType: string;
 	objectFieldLabel: string;
+}
+
+interface CreateObjectRelationship {
+	manyRecordsOf: string;
+	objectDefinitionLabel: string;
+	objectDefinitionNodes: unknown;
+	objectRelationshipLabel: string;
+	objectRelationshipType: string;
 }
 
 interface DataObject {
 	[K: string]: unknown;
 }
+
+type Direction = 'bottom' | 'left' | 'right' | 'top';
 
 type ExcludesFilterOperator = {
 	not: {

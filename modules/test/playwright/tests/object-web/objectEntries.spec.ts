@@ -66,10 +66,45 @@ test.describe('Manage object entries through Page Templates', () => {
 	}) => {
 		const {objectDefinitions} = createdEntities;
 
+		const objectFields = [
+			{
+				DBType: 'String',
+				businessType: 'Text',
+				externalReferenceCode: 'textField',
+				indexed: true,
+				indexedAsKeyword: false,
+				indexedLanguageId: '',
+				label: {en_US: 'textField'},
+				listTypeDefinitionId: 0,
+				localized: true,
+				name: 'textField',
+				required: false,
+				system: false,
+				type: 'String',
+			},
+		];
+
+		const objectDefinitionExternalReferenceCode =
+			'ObjectDefinition' + getRandomInt();
+
 		const objectDefinition1 =
-			await apiHelpers.objectAdmin.postRandomObjectDefinition({
+			await apiHelpers.objectAdmin.postObjectDefinition({
+				active: true,
+				enableLocalization: true,
+				externalReferenceCode: objectDefinitionExternalReferenceCode,
+				label: {
+					en_US: objectDefinitionExternalReferenceCode,
+				},
+				name: objectDefinitionExternalReferenceCode,
+				objectFields,
 				objectFolderExternalReferenceCode: 'default',
+				pluralLabel: {
+					en_US: objectDefinitionExternalReferenceCode,
+				},
+				portlet: true,
+				scope: 'company',
 				status: {code: 0},
+				titleObjectFieldName: 'textField',
 			});
 
 		objectDefinitions.push(objectDefinition1);
@@ -109,30 +144,31 @@ test.describe('Manage object entries through Page Templates', () => {
 		const applicationName =
 			'c/' + objectDefinition1.name.toLowerCase() + 's';
 
-		const textObjectEntry = {
-			textField: 'entry',
-		};
-
-		const objectEntries = [];
+		const itemValues = [];
 
 		for (let i = 0; i <= 15; i++) {
 			const objectEntry = await apiHelpers.objectEntry.postObjectEntry(
-				textObjectEntry,
+				{
+					textField_i18n: {
+						en_US: 'entry_en_US' + i,
+						pt_BR: 'entry_pt_BR' + i,
+					},
+				},
 				applicationName
 			);
 
-			objectEntries.push(objectEntry.id);
+			itemValues.push(objectEntry.textField_i18n['pt_BR']);
 		}
 
-		await viewObjectEntriesPage.goto(objectDefinition2.id);
-		await viewObjectEntriesPage.clickAddObjectEntry(
-			objectDefinition2.label['en_US']
-		);
-		await page.getByPlaceholder('Search', {exact: true}).click();
+		await viewObjectEntriesPage.goto(objectDefinition2.id, 'pt');
 
-		objectEntries.forEach((objectEntryId) => {
+		await viewObjectEntriesPage.clickAddObjectEntry();
+
+		await page.getByPlaceholder('Buscar', {exact: true}).click();
+
+		itemValues.forEach((itemValue) => {
 			expect(
-				page.getByRole('menuitem', {name: objectEntryId})
+				page.getByRole('menuitem', {exact: true, name: itemValue})
 			).toBeVisible();
 		});
 	});
@@ -608,7 +644,75 @@ test('can view success message entirely in arabic', async ({
 	await expect(viewObjectEntriesPage.successMessageArabic).toBeVisible();
 });
 
-test.describe('Manage object entries through Workflow Metrics', () => {
+test.describe('Manage object entries through Workflow', () => {
+	test('can edit object entry through workflow task page', async ({
+		apiHelpers,
+		applicationsMenuPage,
+		configurationTabPage,
+		page,
+		viewObjectEntriesPage,
+		workflowTaskDetailsPage,
+		workflowTasksPage,
+	}) => {
+		const {objectDefinitions} = createdEntities;
+
+		const objectDefinition =
+			await apiHelpers.objectAdmin.postRandomObjectDefinition({
+				objectFolderExternalReferenceCode: 'default',
+				status: {code: 0},
+				titleObjectFieldName: 'textField',
+			});
+
+		objectDefinitions.push(objectDefinition);
+
+		await applicationsMenuPage.goToProcessBuilder();
+
+		await configurationTabPage.configurationTabLink.click();
+
+		await configurationTabPage.assignWorkflowToAssetType(
+			'Single Approver',
+			objectDefinition.label['en_US']
+		);
+
+		const applicationName =
+			'c/' + objectDefinition.name.toLowerCase() + 's';
+
+		await apiHelpers.objectEntry.postObjectEntry(
+			{textField: 'entry'},
+			applicationName
+		);
+
+		await workflowTasksPage.goToAssignedToMyRoles();
+
+		await workflowTasksPage.assignToMe('entry');
+
+		await workflowTasksPage.goto();
+
+		await workflowTaskDetailsPage.selectAsset(
+			objectDefinition.label['en_US']
+		);
+
+		await workflowTaskDetailsPage.editAssetButton.click();
+
+		const objectFieldValue = getRandomString();
+
+		await viewObjectEntriesPage.fillObjectEntry({
+			objectFieldBusinessType: 'Text',
+			objectFieldLabel: objectDefinition.titleObjectFieldName,
+			objectFieldValue,
+		});
+
+		await viewObjectEntriesPage.saveObjectEntryButton.click();
+
+		await expect(viewObjectEntriesPage.successMessage).toBeVisible();
+
+		await viewObjectEntriesPage.backButton.click();
+
+		await expect(page.getByLabel('textField', {exact: true})).toHaveValue(
+			objectFieldValue
+		);
+	});
+
 	test('can view Asset Title, Asset Type and Item Subject of an entry on metrics page', async ({
 		apiHelpers,
 		applicationsMenuPage,

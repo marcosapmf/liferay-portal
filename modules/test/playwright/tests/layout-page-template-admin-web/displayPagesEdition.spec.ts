@@ -5,21 +5,16 @@
 
 import {expect, mergeTests} from '@playwright/test';
 
-import {featureFlagsTest} from '../../fixtures/featureFlagsTest';
+import {displayPageTemplatesPagesTest} from '../../fixtures/displayPageTemplatesPagesTest';
 import {loginTest} from '../../fixtures/loginTest';
 import {pageEditorPagesTest} from '../../fixtures/pageEditorPagesTest';
 import {pageManagementSiteTest} from '../../fixtures/pageManagementSiteTest';
 import {clickAndExpectToBeHidden} from '../../utils/clickAndExpectToBeHidden';
 import {clickAndExpectToBeVisible} from '../../utils/clickAndExpectToBeVisible';
 import getRandomString from '../../utils/getRandomString';
-import {displayPageTemplatesPagesTest} from './fixtures/displayPageTemplatesPagesTest';
 
 const test = mergeTests(
 	displayPageTemplatesPagesTest,
-	featureFlagsTest({
-		'LPD-11377': true,
-		'LPD-20213': true,
-	}),
 	pageEditorPagesTest,
 	loginTest(),
 	pageManagementSiteTest
@@ -153,7 +148,10 @@ test('Allow mapping editables to fields of related object', async ({
 
 	// Check editable is mapped
 
-	const editable = pageEditorPage.getEditable(headingId, 'element-text');
+	const editable = pageEditorPage.getEditable({
+		editableId: 'element-text',
+		fragmentId: headingId,
+	});
 
 	await expect(editable).toHaveClass(/page-editor__editable--mapped/);
 });

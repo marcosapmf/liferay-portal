@@ -6,19 +6,27 @@
 import {useControlledState} from '@liferay/layout-js-components-web';
 import classNames from 'classnames';
 import {openModal} from 'frontend-js-web';
-import React from 'react';
+import React, {useCallback} from 'react';
 
 import {CheckboxField} from '../../../../../../app/components/fragment_configuration_fields/CheckboxField';
 import {SelectField} from '../../../../../../app/components/fragment_configuration_fields/SelectField';
 import {TextField} from '../../../../../../app/components/fragment_configuration_fields/TextField';
+import {FORM_DEFAULT_NUMBER_OF_STEPS} from '../../../../../../app/config/constants/formDefaultNumberOfSteps';
+import {FREEMARKER_FRAGMENT_ENTRY_PROCESSOR} from '../../../../../../app/config/constants/freemarkerFragmentEntryProcessor';
 import {
 	useItemLocalConfig,
 	useUpdateItemLocalConfig,
 } from '../../../../../../app/contexts/LocalConfigContext';
+import {
+	useDispatch,
+	useSelector,
+} from '../../../../../../app/contexts/StoreContext';
+import updateFragmentConfiguration from '../../../../../../app/thunks/updateFragmentConfiguration';
+import {getStepperChild} from '../../../../../../app/utils/getStepperChild';
 
 const FORM_TYPE_OPTIONS = [
 	{label: Liferay.Language.get('simple'), value: 'simple'},
-	{label: Liferay.Language.get('multi-step'), value: 'multistep'},
+	{label: Liferay.Language.get('multistep'), value: 'multistep'},
 ];
 
 export default function FormMultistepOptions({item, onValueSelect}) {
@@ -32,12 +40,47 @@ export default function FormMultistepOptions({item, onValueSelect}) {
 		item.config.numberOfSteps
 	);
 
+	const dispatch = useDispatch();
+	const layoutData = useSelector((state) => state.layoutData);
+	const fragmentEntryLinks = useSelector((state) => state.fragmentEntryLinks);
+
+	const updateNumberOfSteps = useCallback(
+		(value) => {
+			setNumberOfSteps(value);
+
+			onValueSelect({numberOfSteps: value}).then(() => {
+				const stepper = getStepperChild(
+					item,
+					layoutData,
+					fragmentEntryLinks
+				);
+
+				if (stepper) {
+					updateStepperConfiguration({
+						dispatch,
+						fragmentEntryLink:
+							fragmentEntryLinks[
+								stepper.config.fragmentEntryLinkId
+							],
+						numberOfSteps: value,
+					});
+				}
+			});
+		},
+		[
+			dispatch,
+			fragmentEntryLinks,
+			item,
+			layoutData,
+			onValueSelect,
+			setNumberOfSteps,
+		]
+	);
+
 	return (
 		<>
 			<SelectField
-				className={classNames('mb-2', {
-					'mt-3': Liferay.FeatureFlags['LPD-20213'],
-				})}
+				className={classNames('mb-2', 'mt-3')}
 				field={{
 					label: Liferay.Language.get('form-type'),
 					name: 'formType',
@@ -51,21 +94,35 @@ export default function FormMultistepOptions({item, onValueSelect}) {
 					if (formType === 'multistep') {
 						onValueSelect({
 							formType,
-							numberOfSteps: 2,
+							numberOfSteps: FORM_DEFAULT_NUMBER_OF_STEPS,
 						});
 					}
 					else {
-						openWarningModal({
-							onCancel: () => {
-								setFormType('multistep');
-							},
-							onContinue: () => {
-								onValueSelect({
-									formType: 'simple',
-									numberOfSteps: 1,
-								});
-							},
-						});
+						const stepper = getStepperChild(
+							item,
+							layoutData,
+							fragmentEntryLinks
+						);
+
+						if (stepper) {
+							openWarningModal({
+								onCancel: () => {
+									setFormType('multistep');
+								},
+								onContinue: () => {
+									onValueSelect({
+										formType: 'simple',
+										numberOfSteps: 1,
+									});
+								},
+							});
+						}
+						else {
+							onValueSelect({
+								formType: 'simple',
+								numberOfSteps: 1,
+							});
+						}
 					}
 				}}
 				value={formType}
@@ -85,11 +142,10 @@ export default function FormMultistepOptions({item, onValueSelect}) {
 							},
 						},
 					}}
-					onValueSelect={(_, numberOfSteps) => {
-						setNumberOfSteps(numberOfSteps);
-						onValueSelect({numberOfSteps});
-					}}
-					value={numberOfSteps || 2}
+					onValueSelect={(_, numberOfSteps) =>
+						updateNumberOfSteps(numberOfSteps)
+					}
+					value={numberOfSteps || FORM_DEFAULT_NUMBER_OF_STEPS}
 				/>
 			) : null}
 
@@ -142,4 +198,24 @@ function openWarningModal({onCancel, onContinue}) {
 		status: 'info',
 		title: Liferay.Language.get('convert-to-simple-form'),
 	});
+}
+
+function updateStepperConfiguration({
+	dispatch,
+	fragmentEntryLink,
+	numberOfSteps,
+}) {
+	const configurationValues = {
+		...fragmentEntryLink.editableValues[
+			FREEMARKER_FRAGMENT_ENTRY_PROCESSOR
+		],
+		numberOfSteps,
+	};
+
+	dispatch(
+		updateFragmentConfiguration({
+			configurationValues,
+			fragmentEntryLink,
+		})
+	);
 }

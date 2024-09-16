@@ -121,15 +121,21 @@ public class CommerceReturnItemObjectEntryValuesContributor
 		}
 
 		values.put(
-			"returnItemStatus", _getNextReturnItemStatus(values, returnStatus));
+			"returnItemStatus",
+			_getNextReturnItemStatus(
+				objectEntryContext.getObjectDefinitionId(), returnStatus,
+				values));
 	}
 
 	private String _getNextReturnItemStatus(
-		Map<String, Serializable> values, String returnStatus) {
+			long objectDefinitionId, String returnStatus,
+			Map<String, Serializable> values)
+		throws Exception {
 
-		long authorized = GetterUtil.getLong(values.get("authorized"));
+		BigDecimal authorized = BigDecimal.valueOf(
+			GetterUtil.getDouble(values.get("authorized")));
 
-		if (authorized == 0) {
+		if (BigDecimalUtil.isZero(authorized)) {
 			return CommerceReturnConstants.RETURN_ITEM_STATUS_NOT_AUTHORIZED;
 		}
 
@@ -146,21 +152,23 @@ public class CommerceReturnItemObjectEntryValuesContributor
 			return CommerceReturnConstants.RETURN_ITEM_STATUS_RECEIVED;
 		}
 
-		long received = GetterUtil.getLong(values.get("received"));
+		BigDecimal received = BigDecimal.valueOf(
+			GetterUtil.getDouble(values.get("received")));
 
-		if (received == 0) {
+		if (BigDecimalUtil.isZero(received)) {
 			if (StringUtil.equals(
 					returnStatus,
 					CommerceReturnConstants.RETURN_STATUS_PENDING)) {
 
-				long quantity = GetterUtil.getLong(values.get("quantity"));
+				BigDecimal quantity = BigDecimal.valueOf(
+					GetterUtil.getLong(values.get("quantity")));
 
-				if (authorized < quantity) {
+				if (BigDecimalUtil.lt(authorized, quantity)) {
 					return CommerceReturnConstants.
 						RETURN_ITEM_STATUS_PARTIALLY_AUTHORIZED;
 				}
 
-				if (authorized == quantity) {
+				if (BigDecimalUtil.eq(authorized, quantity)) {
 					return CommerceReturnConstants.
 						RETURN_ITEM_STATUS_AUTHORIZED;
 				}
@@ -169,7 +177,26 @@ public class CommerceReturnItemObjectEntryValuesContributor
 			if (StringUtil.equals(
 					returnStatus,
 					CommerceReturnConstants.RETURN_STATUS_AUTHORIZED) &&
-				(authorized > 0)) {
+				BigDecimalUtil.gt(authorized, BigDecimal.ZERO)) {
+
+				ObjectEntry originalObjectEntry =
+					_objectEntryLocalService.getObjectEntry(
+						GetterUtil.getString(
+							values.get("externalReferenceCode")),
+						objectDefinitionId);
+
+				Map<String, Serializable> originalValues =
+					originalObjectEntry.getValues();
+
+				if (!BigDecimalUtil.eq(
+						authorized,
+						BigDecimal.valueOf(
+							GetterUtil.getDouble(
+								originalValues.get("authorized"))))) {
+
+					return CommerceReturnConstants.
+						RETURN_ITEM_STATUS_AWAITING_RECEIPT;
+				}
 
 				return CommerceReturnConstants.
 					RETURN_ITEM_STATUS_RECEIPT_REJECTED;
@@ -182,7 +209,7 @@ public class CommerceReturnItemObjectEntryValuesContributor
 			return CommerceReturnConstants.RETURN_ITEM_STATUS_TO_BE_PROCESSED;
 		}
 
-		if (received < authorized) {
+		if (BigDecimalUtil.lt(received, authorized)) {
 			return CommerceReturnConstants.
 				RETURN_ITEM_STATUS_PARTIALLY_RECEIVED;
 		}

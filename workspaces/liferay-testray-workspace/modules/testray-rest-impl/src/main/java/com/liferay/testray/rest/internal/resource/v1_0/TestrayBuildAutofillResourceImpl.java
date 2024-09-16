@@ -23,6 +23,7 @@ import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.testray.rest.dto.v1_0.TestrayBuildAutofill;
 import com.liferay.testray.rest.internal.util.TestrayUtil;
+import com.liferay.testray.rest.manager.TestrayManager;
 import com.liferay.testray.rest.resource.v1_0.TestrayBuildAutofillResource;
 
 import java.io.Serializable;
@@ -103,6 +104,15 @@ public class TestrayBuildAutofillResourceImpl
 			}
 		}
 
+		if (caseAmount != 0) {
+			_testrayManager.updateTestrayBuildSummary(
+				contextCompany.getCompanyId(), testrayBuildId1,
+				contextUser.getUserId());
+			_testrayManager.updateTestrayBuildSummary(
+				contextCompany.getCompanyId(), testrayBuildId2,
+				contextUser.getUserId());
+		}
+
 		TestrayBuildAutofill testrayBuildAutofill = new TestrayBuildAutofill();
 
 		testrayBuildAutofill.setCaseAmount(caseAmount);
@@ -174,7 +184,7 @@ public class TestrayBuildAutofillResourceImpl
 		for (Map<String, Serializable> values :
 				_objectEntryLocalService.getValuesList(
 					0, contextCompany.getCompanyId(), contextUser.getUserId(),
-					objectDefinition.getObjectDefinitionId(),
+					objectDefinition.getObjectDefinitionId(), null,
 					_filterFactory.create(
 						"buildId eq '" + testrayBuildId1 + "' and errors ne ''",
 						objectDefinition),
@@ -235,14 +245,14 @@ public class TestrayBuildAutofillResourceImpl
 			values.get(
 				0
 			).get(
-				"runId"
+				"runid"
 			)
 		).put(
 			"testrayRunId2",
 			values.get(
 				1
 			).get(
-				"runId"
+				"runid"
 			)
 		);
 
@@ -265,5 +275,8 @@ public class TestrayBuildAutofillResourceImpl
 
 	@Reference
 	private ServiceContextHelper _serviceContextHelper;
+
+	@Reference
+	private TestrayManager _testrayManager;
 
 }

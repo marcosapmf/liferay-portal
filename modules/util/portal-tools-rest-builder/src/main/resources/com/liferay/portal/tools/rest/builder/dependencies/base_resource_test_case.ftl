@@ -97,6 +97,10 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
+<#if schema.discriminator?has_content>
+	import java.util.function.Supplier;
+</#if>
+
 import javax.annotation.Generated;
 
 import javax.ws.rs.core.MultivaluedHashMap;
@@ -165,18 +169,7 @@ public abstract class Base${schemaName}ResourceTestCase {
 	<#if javaDataTypeMap?keys?seq_contains(schemaName)>
 		@Test
 		public void testClientSerDesToDTO() throws Exception {
-			ObjectMapper objectMapper = new ObjectMapper() {
-				{
-					configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
-					configure(SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true);
-					enable(SerializationFeature.INDENT_OUTPUT);
-					setDateFormat(new ISO8601DateFormat());
-					setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
-					setSerializationInclusion(JsonInclude.Include.NON_NULL);
-					setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-					setVisibility(PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
-				}
-			};
+			ObjectMapper objectMapper = getClientSerDesObjectMapper();
 
 			${schemaName} ${schemaVarName}1 = random${schemaName}();
 
@@ -189,17 +182,7 @@ public abstract class Base${schemaName}ResourceTestCase {
 
 		@Test
 		public void testClientSerDesToJSON() throws Exception {
-			ObjectMapper objectMapper = new ObjectMapper() {
-				{
-					configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
-					configure(SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true);
-					setDateFormat(new ISO8601DateFormat());
-					setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
-					setSerializationInclusion(JsonInclude.Include.NON_NULL);
-					setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-					setVisibility(PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
-				}
-			};
+			ObjectMapper objectMapper = getClientSerDesObjectMapper();
 
 			${schemaName} ${schemaVarName} = random${schemaName}();
 
@@ -208,6 +191,21 @@ public abstract class Base${schemaName}ResourceTestCase {
 
 			Assert.assertEquals(
 				objectMapper.readTree(json1), objectMapper.readTree(json2));
+		}
+
+		protected ObjectMapper getClientSerDesObjectMapper() {
+			return new ObjectMapper() {
+				{
+					configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
+					configure(SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true);
+					enable(SerializationFeature.INDENT_OUTPUT);
+					setDateFormat(new ISO8601DateFormat());
+					setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
+					setSerializationInclusion(JsonInclude.Include.NON_NULL);
+					setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
+					setVisibility(PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
+				}
+			};
 		}
 
 		@Test
@@ -434,15 +432,31 @@ public abstract class Base${schemaName}ResourceTestCase {
 						${schemaName} post${schemaName} = test${javaMethodSignature.methodName?cap_first}_add${schemaName}();
 					</#if>
 
-					Page<Permission> page = ${schemaVarName}Resource.${javaMethodSignature.methodName}(
-						<#if stringUtil.equals("assetLibraryId", firstParameterName)>
-							testDepotEntry.getDepotEntryId()
-						<#elseif stringUtil.equals("siteId", firstParameterName)>
-							testGroup.getGroupId()
-						<#else>
-							post${schemaName}.getId()
-						</#if>
-					, RoleConstants.GUEST);
+					<#if javaMethodSignature.javaMethodParameters?size == 3>
+						Page<Permission> page = ${schemaVarName}Resource.${javaMethodSignature.methodName}(
+							<#if stringUtil.equals("assetLibraryId", firstParameterName)>
+								testDepotEntry.getDepotEntryId()
+							<#elseif stringUtil.equals("siteId", firstParameterName)>
+								testGroup.getGroupId()
+							<#elseif stringUtil.equals("siteExternalReferenceCode", firstParameterName)>
+								testGroup.getExternalReferenceCode()
+							<#else>
+								post${schemaName}.getId()
+							</#if>
+						, post${schemaName}.getExternalReferenceCode(), RoleConstants.GUEST);
+					<#else>
+						Page<Permission> page = ${schemaVarName}Resource.${javaMethodSignature.methodName}(
+							<#if stringUtil.equals("assetLibraryId", firstParameterName)>
+								testDepotEntry.getDepotEntryId()
+							<#elseif stringUtil.equals("siteId", firstParameterName)>
+								testGroup.getGroupId()
+							<#elseif stringUtil.equals("siteExternalReferenceCode", firstParameterName)>
+								testGroup.getExternalReferenceCode()
+							<#else>
+								post${schemaName}.getId()
+							</#if>
+						, RoleConstants.GUEST);
+					</#if>
 
 					Assert.assertNotNull(page);
 				}
@@ -1304,6 +1318,8 @@ public abstract class Base${schemaName}ResourceTestCase {
 								<#else>
 									null
 								</#if>
+							<#elseif freeMarkerTool.isQueryParameter(javaMethodParameter, javaMethodSignature.operation)>
+								, test${javaMethodSignature.methodName?cap_first}_get${javaMethodParameter.parameterName?cap_first}()
 							</#if>
 						</#list>, randomPatch${schemaName}
 						<#if freeMarkerTool.hasRequestBodyMediaType(javaMethodSignature, "multipart/form-data")>
@@ -1358,6 +1374,14 @@ public abstract class Base${schemaName}ResourceTestCase {
 					</#if>
 				}
 			</#if>
+
+			<#list javaMethodSignature.javaMethodParameters as javaMethodParameter>
+				<#if freeMarkerTool.isQueryParameter(javaMethodParameter, javaMethodSignature.operation)>
+					protected ${javaMethodParameter.parameterType} test${javaMethodSignature.methodName?cap_first}_get${javaMethodParameter.parameterName?cap_first}() throws Exception {
+						throw new UnsupportedOperationException("This method needs to be implemented");
+					}
+				</#if>
+			</#list>
 		<#elseif freeMarkerTool.hasHTTPMethod(javaMethodSignature, "post") && javaMethodSignature.returnType?ends_with(schemaName)>
 			@Test
 			public void test${javaMethodSignature.methodName?cap_first}() throws Exception {
@@ -1382,6 +1406,44 @@ public abstract class Base${schemaName}ResourceTestCase {
 
 				<#if freeMarkerTool.hasRequestBodyMediaType(javaMethodSignature, "multipart/form-data")>
 					assertValid(post${schemaName}, multipartFiles);
+				</#if>
+
+				<#if schema.discriminator?has_content>
+					<#assign discriminatorPropertyName = schema.discriminator.propertyName />
+
+					<#list schema.discriminator.mapping as mappingName, mappingSchema>
+						<#assign
+							childSchemaName = freeMarkerTool.getReferenceName(mappingSchema)
+
+							childSchemaVarName = freeMarkerTool.getSchemaVarName(childSchemaName)
+
+							allChildProperties = properties + freeMarkerTool.getDTOProperties(configYAML, openAPIYAML, allSchemas[childSchemaName], allSchemas)
+						/>
+
+						${childSchemaName} ${childSchemaVarName} = new ${childSchemaName}() {
+							{
+								<#list allChildProperties?keys as propertyName>
+									<#if stringUtil.equals(propertyName, "siteId")>
+										${propertyName} = testGroup.getGroupId();
+									<#elseif stringUtil.equals(allChildProperties[propertyName], "Integer")>
+										${propertyName} = RandomTestUtil.randomInt();
+									<#elseif propertyName?contains("email") && stringUtil.equals(allChildProperties[propertyName], "String")>
+										${propertyName} = StringUtil.toLowerCase(RandomTestUtil.randomString()) + "@liferay.com";
+									<#elseif stringUtil.equals(allChildProperties[propertyName], "String")>
+										${propertyName} = StringUtil.toLowerCase(RandomTestUtil.randomString());
+									<#elseif randomDataTypes?seq_contains(allChildProperties[propertyName])>
+										${propertyName} = RandomTestUtil.random${allChildProperties[propertyName]}();
+									<#elseif stringUtil.equals(allChildProperties[propertyName], "Date")>
+										${propertyName} = RandomTestUtil.nextDate();
+									</#if>
+								</#list>
+
+								${discriminatorPropertyName} = ${discriminatorPropertyName?cap_first}.create("${mappingName}");
+							}
+						};
+
+						assertEquals(${childSchemaVarName}, test${javaMethodSignature.methodName?cap_first}_add${schemaName}(${childSchemaVarName}));
+					</#list>
 				</#if>
 			}
 
@@ -2564,6 +2626,34 @@ public abstract class Base${schemaName}ResourceTestCase {
 				}
 			</#list>
 
+			<#if schema.discriminator?has_content>
+				<#list schema.discriminator.mapping as mappingName, mappingSchema>
+					<#assign childSchemaProperties = freeMarkerTool.getDTOProperties(configYAML, openAPIYAML, allSchemas[freeMarkerTool.getReferenceName(mappingSchema)], allSchemas) />
+
+					<#if childSchemaProperties?has_content>
+						<#list childSchemaProperties?keys as propertyName>
+							if (Objects.equals("${propertyName}", additionalAssertFieldName)) {
+								if (!(${schemaVarName} instanceof ${mappingName})) {
+									continue;
+								}
+
+								<#assign capitalizedPropertyName = propertyName?cap_first />
+
+								<#if enumSchemas?keys?seq_contains(childSchemaProperties[propertyName])>
+									<#assign capitalizedPropertyName = childSchemaProperties[propertyName] />
+								</#if>
+
+								if (((${mappingName})${schemaVarName}).get${capitalizedPropertyName}() == null) {
+									valid = false;
+								}
+
+								continue;
+							}
+						</#list>
+					</#if>
+				</#list>
+			</#if>
+
 			throw new IllegalArgumentException("Invalid additional assert field name " + additionalAssertFieldName);
 		}
 
@@ -2767,6 +2857,34 @@ public abstract class Base${schemaName}ResourceTestCase {
 					continue;
 				}
 			</#list>
+
+			<#if schema.discriminator?has_content>
+				<#list schema.discriminator.mapping as mappingName, mappingSchema>
+					<#assign childSchemaProperties = freeMarkerTool.getDTOProperties(configYAML, openAPIYAML, allSchemas[freeMarkerTool.getReferenceName(mappingSchema)], allSchemas) />
+
+					<#if childSchemaProperties?has_content>
+						<#list childSchemaProperties?keys as propertyName>
+							if (Objects.equals("${propertyName}", additionalAssertFieldName)) {
+								if (!(${schemaVarName}1 instanceof ${mappingName}) || !(${schemaVarName}2 instanceof ${mappingName})) {
+									continue;
+								}
+
+								<#assign capitalizedPropertyName = propertyName?cap_first />
+
+								<#if enumSchemas?keys?seq_contains(childSchemaProperties[propertyName])>
+									<#assign capitalizedPropertyName = childSchemaProperties[propertyName] />
+								</#if>
+
+								if (!Objects.deepEquals(((${mappingName})${schemaVarName}1).get${capitalizedPropertyName}(), ((${mappingName})${schemaVarName}2).get${capitalizedPropertyName}())) {
+									return false;
+								}
+
+								continue;
+							}
+						</#list>
+					</#if>
+				</#list>
+			</#if>
 
 			throw new IllegalArgumentException("Invalid additional assert field name " + additionalAssertFieldName);
 		}
@@ -3016,25 +3134,89 @@ public abstract class Base${schemaName}ResourceTestCase {
 
 	<#if javaDataTypeMap?keys?seq_contains(schemaName)>
 		protected ${schemaName} random${schemaName}() throws Exception {
-			return new ${schemaName}() {
-				{
-					<#list properties?keys as propertyName>
-						<#if stringUtil.equals(propertyName, "siteId")>
-							${propertyName} = testGroup.getGroupId();
-						<#elseif stringUtil.equals(properties[propertyName], "Integer")>
-							${propertyName} = RandomTestUtil.randomInt();
-						<#elseif propertyName?contains("email") && stringUtil.equals(properties[propertyName], "String")>
-							${propertyName} = StringUtil.toLowerCase(RandomTestUtil.randomString()) + "@liferay.com";
-						<#elseif stringUtil.equals(properties[propertyName], "String")>
-							${propertyName} = StringUtil.toLowerCase(RandomTestUtil.randomString());
-						<#elseif randomDataTypes?seq_contains(properties[propertyName])>
-							${propertyName} = RandomTestUtil.random${properties[propertyName]}();
-						<#elseif stringUtil.equals(properties[propertyName], "Date")>
-							${propertyName} = RandomTestUtil.nextDate();
-						</#if>
-					</#list>
-				}
-			};
+			<#if schema.discriminator?has_content>
+				<#assign discriminatorPropertyName = schema.discriminator.propertyName />
+
+				List<Supplier<${schemaName}>> suppliers = Arrays.asList(
+
+				<#list schema.discriminator.mapping as mappingName, mappingSchema>
+					<#assign
+						childSchemaName = freeMarkerTool.getReferenceName(mappingSchema)
+
+						childProperties = freeMarkerTool.getDTOProperties(configYAML, openAPIYAML, childSchemaName, allSchemas)
+					/>
+
+					() -> {
+						${childSchemaName} ${schemaVarName} = new ${childSchemaName}();
+
+						<#list properties?keys as propertyName>
+							<#if stringUtil.equals(propertyName, "siteId")>
+								${schemaVarName}.setGroupId(testGroup.getGroupId());
+							<#elseif stringUtil.equals(properties[propertyName], "Integer")>
+								${schemaVarName}.set${propertyName?cap_first}(RandomTestUtil.randomInt());
+							<#elseif propertyName?contains("email") && stringUtil.equals(properties[propertyName], "String")>
+								${schemaVarName}.set${propertyName?cap_first}(StringUtil.toLowerCase(RandomTestUtil.randomString()) + "@liferay.com");
+							<#elseif stringUtil.equals(properties[propertyName], "String")>
+								${schemaVarName}.set${propertyName?cap_first}(StringUtil.toLowerCase(RandomTestUtil.randomString()));
+							<#elseif randomDataTypes?seq_contains(properties[propertyName])>
+								${schemaVarName}.set${propertyName?cap_first}(RandomTestUtil.random${properties[propertyName]}());
+							<#elseif stringUtil.equals(properties[propertyName], "Date")>
+								${schemaVarName}.set${propertyName?cap_first}(RandomTestUtil.nextDate());
+							</#if>
+						</#list>
+
+						<#list childProperties?keys as propertyName>
+							<#if stringUtil.equals(propertyName, "siteId")>
+								${schemaVarName}.setGroupId(testGroup.getGroupId());
+							<#elseif stringUtil.equals(childProperties[propertyName], "Integer")>
+								${schemaVarName}.set${propertyName?cap_first}(RandomTestUtil.randomInt());
+							<#elseif propertyName?contains("email") && stringUtil.equals(childProperties[propertyName], "String")>
+								${schemaVarName}.set${propertyName?cap_first}(StringUtil.toLowerCase(RandomTestUtil.randomString()) + "@liferay.com");
+							<#elseif stringUtil.equals(childProperties[propertyName], "String")>
+								${schemaVarName}.set${propertyName?cap_first}(StringUtil.toLowerCase(RandomTestUtil.randomString()));
+							<#elseif randomDataTypes?seq_contains(childProperties[propertyName])>
+								${schemaVarName}.set${propertyName?cap_first}(RandomTestUtil.random${childProperties[propertyName]}());
+							<#elseif stringUtil.equals(childProperties[propertyName], "Date")>
+								${schemaVarName}.set${propertyName?cap_first}(RandomTestUtil.nextDate());
+							</#if>
+						</#list>
+
+						${schemaVarName}.set${discriminatorPropertyName?cap_first}(${schemaName}.${discriminatorPropertyName?cap_first}.create("${mappingName}"));
+
+						return ${schemaVarName};
+					}
+
+					<#if mappingName?has_next>
+						,
+					</#if>
+				</#list>
+
+				);
+
+				Supplier<${schemaName}> supplier = suppliers.get(RandomTestUtil.randomInt(0, suppliers.size() - 1));
+
+				return supplier.get();
+			<#else>
+				return new ${schemaName}() {
+					{
+						<#list properties?keys as propertyName>
+							<#if stringUtil.equals(propertyName, "siteId")>
+								${propertyName} = testGroup.getGroupId();
+							<#elseif stringUtil.equals(properties[propertyName], "Integer")>
+								${propertyName} = RandomTestUtil.randomInt();
+							<#elseif propertyName?contains("email") && stringUtil.equals(properties[propertyName], "String")>
+								${propertyName} = StringUtil.toLowerCase(RandomTestUtil.randomString()) + "@liferay.com";
+							<#elseif stringUtil.equals(properties[propertyName], "String")>
+								${propertyName} = StringUtil.toLowerCase(RandomTestUtil.randomString());
+							<#elseif randomDataTypes?seq_contains(properties[propertyName])>
+								${propertyName} = RandomTestUtil.random${properties[propertyName]}();
+							<#elseif stringUtil.equals(properties[propertyName], "Date")>
+								${propertyName} = RandomTestUtil.nextDate();
+							</#if>
+						</#list>
+					}
+				};
+			</#if>
 		}
 
 		protected ${schemaName} randomIrrelevant${schemaName}() throws Exception {
@@ -3083,20 +3265,25 @@ public abstract class Base${schemaName}ResourceTestCase {
 	protected static class BeanTestUtil {
 
 		public static void copyProperties(Object source, Object target) throws Exception {
-			Class<?> sourceClass = _getSuperClass(source.getClass());
+			Class<?> sourceClass = source.getClass();
 
 			Class<?> targetClass = target.getClass();
 
-			for (java.lang.reflect.Field field : sourceClass.getDeclaredFields()) {
+			for (java.lang.reflect.Field field : _getAllDeclaredFields(sourceClass)) {
 				if (field.isSynthetic()) {
 					continue;
 				}
 
 				Method getMethod = _getMethod(sourceClass, field.getName(), "get");
 
-				Method setMethod = _getMethod(targetClass, field.getName(), "set", getMethod.getReturnType());
+				try {
+					Method setMethod = _getMethod(targetClass, field.getName(), "set", getMethod.getReturnType());
 
-				setMethod.invoke(target, getMethod.invoke(source));
+					setMethod.invoke(target, getMethod.invoke(source));
+				}
+				catch (Exception e) {
+					continue;
+				}
 			}
 		}
 
@@ -3124,6 +3311,20 @@ public abstract class Base${schemaName}ResourceTestCase {
 			setMethod.invoke(bean, _translateValue(parameterTypes[0], value));
 		}
 
+		private static List<java.lang.reflect.Field> _getAllDeclaredFields(Class<?> clazz) {
+			List<java.lang.reflect.Field> fields = new ArrayList<>();
+
+			while ((clazz != null) && (clazz != Object.class)) {
+				for (java.lang.reflect.Field field : clazz.getDeclaredFields()) {
+					fields.add(field);
+				}
+
+				clazz = clazz.getSuperclass();
+			}
+
+			return fields;
+		}
+
 		private static Method _getMethod(Class<?> clazz, String name) {
 			for (Method method : clazz.getMethods()) {
 				if (name.equals(method.getName()) &&
@@ -3139,16 +3340,6 @@ public abstract class Base${schemaName}ResourceTestCase {
 
 		private static Method _getMethod(Class<?> clazz, String fieldName, String prefix, Class<?>... parameterTypes) throws Exception {
 			return clazz.getMethod(prefix + StringUtil.upperCaseFirstLetter(fieldName), parameterTypes);
-		}
-
-		private static Class<?> _getSuperClass(Class<?> clazz) {
-			Class<?> superClass = clazz.getSuperclass();
-
-			if ((superClass == null) || (superClass == Object.class)) {
-				return clazz;
-			}
-
-			return superClass;
 		}
 
 		private static Object _translateValue(Class<?> parameterType, Object value) {

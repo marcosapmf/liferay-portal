@@ -58,6 +58,7 @@ export default function useSubmitLXCEnvironment(
 	const [updateAccountSubscriptionGroupsInfo] = useMutation(
 		updateAccountSubscriptionGroups
 	);
+
 	const [createAdminLiferayExperienceCloud] =
 		useCreateAdminLiferayExperienceCloud();
 
@@ -71,6 +72,7 @@ export default function useSubmitLXCEnvironment(
 					filter: SearchBuilder.eq('accountKey', project.accountKey),
 				},
 			});
+
 			if (data) {
 				const status =
 					!!data?.c?.liferayExperienceCloudEnvironments?.items
@@ -86,10 +88,12 @@ export default function useSubmitLXCEnvironment(
 
 		if (alreadySubmitted) {
 			setFormAlreadySubmitted(true);
+
+			return;
 		}
 
-		if (!alreadySubmitted) {
-			const handleDataSubmit = async () => {
+		const handleDataSubmit = async () => {
+			try {
 				const {data} = await createLiferayExperienceCloudEnvironment({
 					variables: {
 						LiferayExperienceCloudEnvironment: {
@@ -100,6 +104,8 @@ export default function useSubmitLXCEnvironment(
 								lxcActivationFields.incidentManagementFullName,
 							primaryRegion: lxcActivationFields.primaryRegion,
 							projectId: lxcActivationFields.projectId,
+							r_liferayExperienceCloudEnvironment_accountEntryId:
+								project.id,
 						},
 					},
 				});
@@ -135,6 +141,8 @@ export default function useSubmitLXCEnvironment(
 											fullName,
 											githubUsername: '...',
 											liferayExperienceCloudEnvironmentId,
+											r_accountEntryToAdminLiferayExperienceCloud_accountEntryId:
+												project.id,
 										},
 									},
 								});
@@ -148,15 +156,15 @@ export default function useSubmitLXCEnvironment(
 								const [firstName, ...lastNames] =
 									fullName.split(' ');
 								const lastName = lastNames.join(' ');
-								const projectAdminEmailBody = `
-							<strong>First Name -</strong> ${firstName}<br>
-							<strong>Last Name - </strong>${lastName}<br>
-							<strong>Email Address - </strong>${email}
-							<br><br>`;
 
-								return projectAdminEmailBody;
+								return `
+                                <strong>First Name -</strong> ${firstName}<br>
+                                <strong>Last Name - </strong>${lastName}<br>
+                                <strong>Email Address - </strong>${email}
+                                <br><br>`;
 							}
 						);
+
 						const notificationTemplateService =
 							new NotificationQueueService(client);
 
@@ -174,21 +182,34 @@ export default function useSubmitLXCEnvironment(
 						);
 					}
 				}
-			};
+			}
+			catch (error) {
+				console.error(error);
+			}
+		};
 
-			try {
-				handleLoadingSubmitButton(true);
+		try {
+			handleLoadingSubmitButton(true);
 
-				if (featureFlags.includes('LPS-159127')) {
-					try {
-						await updateRaysourceContact(
-							addContactRoleRaysource,
-							addHighPriorityContactList,
-							project,
-							sessionId,
-							provisioningServerAPI
-						);
+			if (featureFlags.includes('LPS-159127')) {
+				try {
+					await updateRaysourceContact(
+						addContactRoleRaysource,
+						addHighPriorityContactList,
+						project,
+						sessionId,
+						provisioningServerAPI
+					);
 
+					await updateLiferayContact(
+						addHighPriorityContactList,
+						addContactRoleLiferay,
+						project,
+						client
+					);
+				}
+				catch (error) {
+					if (error.cause === STATUS_CODE.conflict) {
 						await updateLiferayContact(
 							addHighPriorityContactList,
 							addContactRoleLiferay,
@@ -196,43 +217,35 @@ export default function useSubmitLXCEnvironment(
 							client
 						);
 					}
-					catch (error) {
-						if (error.cause === STATUS_CODE.conflict) {
-							await updateLiferayContact(
-								addHighPriorityContactList,
-								addContactRoleLiferay,
-								project,
-								client
-							);
-						}
-						else {
-							throw new Error('Error', {cause: error.cause});
-						}
+					else {
+						throw new Error('Error', {cause: error.cause});
 					}
-
-					await updateRaysourceContact(
-						removeContactRoleRaysource,
-						removeHighPriorityContactList,
-						project,
-						sessionId,
-						provisioningServerAPI
-					);
-
-					await updateLiferayContact(
-						removeHighPriorityContactList,
-						removeContactRoleLiferay,
-						project,
-						client
-					);
 				}
 
-				handleDataSubmit();
-				handleLoadingSubmitButton(false);
-				handleChangeForm(true);
+				await updateRaysourceContact(
+					removeContactRoleRaysource,
+					removeHighPriorityContactList,
+					project,
+					sessionId,
+					provisioningServerAPI
+				);
+
+				await updateLiferayContact(
+					removeHighPriorityContactList,
+					removeContactRoleLiferay,
+					project,
+					client
+				);
 			}
-			catch (error) {
-				handleLoadingSubmitButton(false);
-			}
+
+			await handleDataSubmit();
+			handleChangeForm(true);
+		}
+		catch (error) {
+			console.error(error);
+		}
+		finally {
+			handleLoadingSubmitButton(false);
 		}
 	};
 

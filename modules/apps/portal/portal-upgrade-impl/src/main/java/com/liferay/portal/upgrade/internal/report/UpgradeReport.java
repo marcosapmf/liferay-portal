@@ -19,6 +19,8 @@ import com.liferay.portal.kernel.model.ReleaseConstants;
 import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.upgrade.ReleaseManager;
 import com.liferay.portal.kernel.upgrade.UpgradeProcess;
+import com.liferay.portal.kernel.util.ArrayUtil;
+import com.liferay.portal.kernel.util.EnvPropertiesUtil;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LinkedHashMapBuilder;
@@ -32,12 +34,21 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.tools.DBUpgrader;
 import com.liferay.portal.upgrade.PortalUpgradeProcess;
 import com.liferay.portal.upgrade.internal.recorder.UpgradeRecorder;
+import com.liferay.portal.util.PropsUtil;
 import com.liferay.portal.util.PropsValues;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+
+import java.lang.management.ManagementFactory;
+import java.lang.management.RuntimeMXBean;
+
+import java.net.URI;
 
 import java.nio.file.Files;
+import java.nio.file.Paths;
 
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
@@ -54,8 +65,10 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Dictionary;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.TimeZone;
 
 import org.apache.commons.io.FileUtils;
@@ -259,6 +272,52 @@ public class UpgradeReport {
 					StringPool.PERIOD, db.getMinorVersion());
 			}
 		).put(
+			"jvm.arguments",
+			() -> {
+				List<String> jvmArguments = new ArrayList<>();
+
+				String[] keywords = {
+					"password", "secret", "securitycredential"
+				};
+
+				RuntimeMXBean runtimeMXBean =
+					ManagementFactory.getRuntimeMXBean();
+
+				for (String inputArgument : runtimeMXBean.getInputArguments()) {
+					if (!inputArgument.startsWith("-D") ||
+						!inputArgument.contains(StringPool.EQUAL)) {
+
+						jvmArguments.add(inputArgument);
+
+						continue;
+					}
+
+					String keyValueString = inputArgument.substring(2);
+
+					String[] keyValue = keyValueString.split(
+						StringPool.EQUAL, 2);
+
+					String key = keyValue[0];
+					String value = keyValue[1];
+
+					for (String keyword : keywords) {
+						if (StringUtil.containsIgnoreCase(
+								key, keyword, StringPool.BLANK)) {
+
+							value = StringPool.EIGHT_STARS;
+
+							break;
+						}
+					}
+
+					jvmArguments.add(
+						StringBundler.concat(
+							"-D", key, StringPool.EQUAL, value));
+				}
+
+				return ListUtil.sort(jvmArguments);
+			}
+		).put(
 			"property",
 			() -> {
 				if (StringUtil.equals(
@@ -295,6 +354,71 @@ public class UpgradeReport {
 				).put(
 					"rootDir", (_rootDir != null) ? _rootDir : "Undefined"
 				).build();
+			}
+		).put(
+			"properties.set.by.user",
+			() -> {
+				Map<String, Properties> propertiesMap = new LinkedHashMap<>();
+
+				for (String loadedSource : PropsUtil.getLoadedSources()) {
+					URI uri = new URI(loadedSource);
+
+					String propertiesFilePathString = StringPool.BLANK;
+
+					if (StringUtil.equals("file", uri.getScheme())) {
+						propertiesFilePathString = String.valueOf(
+							Paths.get(uri));
+					}
+
+					if (!FileUtil.exists(propertiesFilePathString)) {
+						continue;
+					}
+
+					Properties properties = new Properties();
+
+					try (InputStream inputStream = new FileInputStream(
+							propertiesFilePathString)) {
+
+						properties.load(inputStream);
+					}
+					catch (IOException ioException) {
+						if (_log.isWarnEnabled()) {
+							_log.warn(
+								"Unable to load properties file from: " +
+									propertiesFilePathString,
+								ioException);
+						}
+
+						continue;
+					}
+
+					propertiesMap.put(propertiesFilePathString, properties);
+				}
+
+				String envPrefix = "LIFERAY_";
+
+				Map<String, String> env = System.getenv();
+
+				Properties properties = new Properties();
+
+				for (Map.Entry<String, String> entry : env.entrySet()) {
+					String key = entry.getKey();
+
+					if (!key.startsWith(envPrefix)) {
+						continue;
+					}
+
+					properties.setProperty(
+						EnvPropertiesUtil.decode(
+							StringUtil.toLowerCase(
+								key.substring(envPrefix.length()))),
+						entry.getValue());
+				}
+
+				propertiesMap.put(
+					"Properties set with environment variables", properties);
+
+				return new PropertiesPrinter(propertiesMap);
 			}
 		).put(
 			"document.library.storage.size",
@@ -457,12 +581,54 @@ public class UpgradeReport {
 
 					count++;
 
-					if (count >= _UPGRADE_PROCESSES_COUNT) {
+					if (count >= _LONGEST_UPGRADE_PROCESSES_COUNT) {
 						break;
 					}
 				}
 
 				return longestRunningUpgradeProcesses;
+			}
+		).put(
+			"longest.running.sqls",
+			() -> {
+				List<RunningSQL> longestRunningSQLs = new ArrayList<>();
+
+				Map<String, Long> sqlExecutionTimes =
+					upgradeRecorder.getSQLExecutionTimes();
+
+				List<Map.Entry<String, Long>> entries = new ArrayList<>(
+					sqlExecutionTimes.entrySet());
+
+				entries.sort(
+					(entry1, entry2) -> Long.compare(
+						entry2.getValue(), entry1.getValue()));
+
+				int count = Math.min(
+					_LONGEST_RUNNING_SQLS_COUNT, entries.size());
+
+				for (int i = 0; i < count; i++) {
+					Map.Entry<String, Long> entry = entries.get(i);
+
+					String key = entry.getKey();
+
+					String sql = key;
+
+					String upgradeProcessClassName = StringPool.BLANK;
+
+					if (key.contains(StringPool.PIPE)) {
+						int index = key.indexOf(StringPool.PIPE);
+
+						upgradeProcessClassName = key.substring(0, index);
+
+						sql = key.substring(index + 1);
+					}
+
+					longestRunningSQLs.add(
+						new RunningSQL(
+							entry.getValue(), sql, upgradeProcessClassName));
+				}
+
+				return longestRunningSQLs;
 			}
 		).put(
 			"failed.sqls", upgradeRecorder.getFailedSQLs()
@@ -668,8 +834,7 @@ public class UpgradeReport {
 				List<Object> objects = (List<Object>)value;
 
 				if (objects.isEmpty()) {
-					sb.append(": Nothing registered");
-					sb.append(StringPool.NEW_LINE);
+					sb.append(": Nothing registered\n");
 				}
 				else {
 					sb.append(StringPool.NEW_LINE);
@@ -743,7 +908,9 @@ public class UpgradeReport {
 		"com.liferay.portal.store.file.system.configuration." +
 			"FileSystemStoreConfiguration";
 
-	private static final int _UPGRADE_PROCESSES_COUNT = 20;
+	private static final int _LONGEST_RUNNING_SQLS_COUNT = 20;
+
+	private static final int _LONGEST_UPGRADE_PROCESSES_COUNT = 20;
 
 	private static final Log _log = LogFactoryUtil.getLog(UpgradeReport.class);
 
@@ -826,6 +993,96 @@ public class UpgradeReport {
 			private final int _occurrences;
 
 		}
+
+	}
+
+	private class PropertiesPrinter {
+
+		public PropertiesPrinter(Map<String, Properties> propertiesMap) {
+			_propertiesMap = propertiesMap;
+		}
+
+		@Override
+		public String toString() {
+			StringBundler sb = new StringBundler();
+
+			sb.append(StringPool.NEW_LINE);
+			sb.append(StringPool.NEW_LINE);
+
+			for (Map.Entry<String, Properties> filePropertiesEntry :
+					_propertiesMap.entrySet()) {
+
+				String source = filePropertiesEntry.getKey();
+
+				Properties properties = filePropertiesEntry.getValue();
+
+				sb.append(source);
+
+				sb.append(StringPool.NEW_LINE);
+
+				sb.append(
+					ListUtil.toString(
+						Collections.nCopies(source.length(), StringPool.MINUS),
+						StringPool.NULL, StringPool.BLANK));
+
+				sb.append(StringPool.NEW_LINE);
+
+				for (Map.Entry<Object, Object> propertyEntry :
+						properties.entrySet()) {
+
+					sb.append(propertyEntry.getKey());
+					sb.append(StringPool.COLON);
+					sb.append(StringPool.SPACE);
+
+					if (ArrayUtil.contains(
+							PropsValues.ADMIN_OBFUSCATED_PROPERTIES,
+							String.valueOf(propertyEntry.getKey()))) {
+
+						sb.append(StringPool.EIGHT_STARS);
+					}
+					else {
+						sb.append(propertyEntry.getValue());
+					}
+
+					sb.append(StringPool.NEW_LINE);
+				}
+
+				sb.append(StringPool.NEW_LINE);
+			}
+
+			return sb.toString();
+		}
+
+		private final Map<String, Properties> _propertiesMap;
+
+	}
+
+	private class RunningSQL {
+
+		public RunningSQL(
+			long duration, String sql, String upgradeProcessClassName) {
+
+			_duration = duration;
+			_sql = sql;
+			_upgradeProcessClassName = upgradeProcessClassName;
+		}
+
+		@Override
+		public String toString() {
+			if (_logContext) {
+				return StringBundler.concat(
+					_upgradeProcessClassName, StringPool.COLON, _sql,
+					StringPool.COLON, _duration, " ms");
+			}
+
+			return StringBundler.concat(
+				"Upgrade Process: ", _upgradeProcessClassName, "\nSQL: ", _sql,
+				"\nDuration: ", _duration, " ms\n");
+		}
+
+		private final long _duration;
+		private final String _sql;
+		private final String _upgradeProcessClassName;
 
 	}
 

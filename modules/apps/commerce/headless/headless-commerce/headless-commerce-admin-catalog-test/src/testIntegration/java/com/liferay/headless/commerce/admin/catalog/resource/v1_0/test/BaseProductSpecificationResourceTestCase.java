@@ -115,21 +115,7 @@ public abstract class BaseProductSpecificationResourceTestCase {
 
 	@Test
 	public void testClientSerDesToDTO() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
-			{
-				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
-				configure(
-					SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true);
-				enable(SerializationFeature.INDENT_OUTPUT);
-				setDateFormat(new ISO8601DateFormat());
-				setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
-				setSerializationInclusion(JsonInclude.Include.NON_NULL);
-				setVisibility(
-					PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-				setVisibility(
-					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
-			}
-		};
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
 
 		ProductSpecification productSpecification1 =
 			randomProductSpecification();
@@ -144,20 +130,7 @@ public abstract class BaseProductSpecificationResourceTestCase {
 
 	@Test
 	public void testClientSerDesToJSON() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
-			{
-				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
-				configure(
-					SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true);
-				setDateFormat(new ISO8601DateFormat());
-				setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
-				setSerializationInclusion(JsonInclude.Include.NON_NULL);
-				setVisibility(
-					PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-				setVisibility(
-					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
-			}
-		};
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
 
 		ProductSpecification productSpecification =
 			randomProductSpecification();
@@ -169,6 +142,24 @@ public abstract class BaseProductSpecificationResourceTestCase {
 			objectMapper.readTree(json1), objectMapper.readTree(json2));
 	}
 
+	protected ObjectMapper getClientSerDesObjectMapper() {
+		return new ObjectMapper() {
+			{
+				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
+				configure(
+					SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true);
+				enable(SerializationFeature.INDENT_OUTPUT);
+				setDateFormat(new ISO8601DateFormat());
+				setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
+				setSerializationInclusion(JsonInclude.Include.NON_NULL);
+				setVisibility(
+					PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
+				setVisibility(
+					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
+			}
+		};
+	}
+
 	@Test
 	public void testEscapeRegexInStringFields() throws Exception {
 		String regex = "^[0-9]+(\\.[0-9]{1,2})\"?";
@@ -177,6 +168,8 @@ public abstract class BaseProductSpecificationResourceTestCase {
 			randomProductSpecification();
 
 		productSpecification.setKey(regex);
+		productSpecification.setOptionCategoryExternalReferenceCode(regex);
+		productSpecification.setSpecificationExternalReferenceCode(regex);
 		productSpecification.setSpecificationKey(regex);
 
 		String json = ProductSpecificationSerDes.toJSON(productSpecification);
@@ -186,6 +179,12 @@ public abstract class BaseProductSpecificationResourceTestCase {
 		productSpecification = ProductSpecificationSerDes.toDTO(json);
 
 		Assert.assertEquals(regex, productSpecification.getKey());
+		Assert.assertEquals(
+			regex,
+			productSpecification.getOptionCategoryExternalReferenceCode());
+		Assert.assertEquals(
+			regex,
+			productSpecification.getSpecificationExternalReferenceCode());
 		Assert.assertEquals(regex, productSpecification.getSpecificationKey());
 	}
 
@@ -446,6 +445,252 @@ public abstract class BaseProductSpecificationResourceTestCase {
 
 	protected ProductSpecification
 			testPatchProductSpecification_addProductSpecification()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGetProductByExternalReferenceCodeProductSpecificationsPage()
+		throws Exception {
+
+		String externalReferenceCode =
+			testGetProductByExternalReferenceCodeProductSpecificationsPage_getExternalReferenceCode();
+		String irrelevantExternalReferenceCode =
+			testGetProductByExternalReferenceCodeProductSpecificationsPage_getIrrelevantExternalReferenceCode();
+
+		Page<ProductSpecification> page =
+			productSpecificationResource.
+				getProductByExternalReferenceCodeProductSpecificationsPage(
+					externalReferenceCode, Pagination.of(1, 10));
+
+		long totalCount = page.getTotalCount();
+
+		if (irrelevantExternalReferenceCode != null) {
+			ProductSpecification irrelevantProductSpecification =
+				testGetProductByExternalReferenceCodeProductSpecificationsPage_addProductSpecification(
+					irrelevantExternalReferenceCode,
+					randomIrrelevantProductSpecification());
+
+			page =
+				productSpecificationResource.
+					getProductByExternalReferenceCodeProductSpecificationsPage(
+						irrelevantExternalReferenceCode,
+						Pagination.of(1, (int)totalCount + 1));
+
+			Assert.assertEquals(totalCount + 1, page.getTotalCount());
+
+			assertContains(
+				irrelevantProductSpecification,
+				(List<ProductSpecification>)page.getItems());
+			assertValid(
+				page,
+				testGetProductByExternalReferenceCodeProductSpecificationsPage_getExpectedActions(
+					irrelevantExternalReferenceCode));
+		}
+
+		ProductSpecification productSpecification1 =
+			testGetProductByExternalReferenceCodeProductSpecificationsPage_addProductSpecification(
+				externalReferenceCode, randomProductSpecification());
+
+		ProductSpecification productSpecification2 =
+			testGetProductByExternalReferenceCodeProductSpecificationsPage_addProductSpecification(
+				externalReferenceCode, randomProductSpecification());
+
+		page =
+			productSpecificationResource.
+				getProductByExternalReferenceCodeProductSpecificationsPage(
+					externalReferenceCode, Pagination.of(1, 10));
+
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
+
+		assertContains(
+			productSpecification1, (List<ProductSpecification>)page.getItems());
+		assertContains(
+			productSpecification2, (List<ProductSpecification>)page.getItems());
+		assertValid(
+			page,
+			testGetProductByExternalReferenceCodeProductSpecificationsPage_getExpectedActions(
+				externalReferenceCode));
+
+		productSpecificationResource.deleteProductSpecification(
+			productSpecification1.getId());
+
+		productSpecificationResource.deleteProductSpecification(
+			productSpecification2.getId());
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetProductByExternalReferenceCodeProductSpecificationsPage_getExpectedActions(
+				String externalReferenceCode)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
+	}
+
+	@Test
+	public void testGetProductByExternalReferenceCodeProductSpecificationsPageWithPagination()
+		throws Exception {
+
+		String externalReferenceCode =
+			testGetProductByExternalReferenceCodeProductSpecificationsPage_getExternalReferenceCode();
+
+		Page<ProductSpecification> productSpecificationPage =
+			productSpecificationResource.
+				getProductByExternalReferenceCodeProductSpecificationsPage(
+					externalReferenceCode, null);
+
+		int totalCount = GetterUtil.getInteger(
+			productSpecificationPage.getTotalCount());
+
+		ProductSpecification productSpecification1 =
+			testGetProductByExternalReferenceCodeProductSpecificationsPage_addProductSpecification(
+				externalReferenceCode, randomProductSpecification());
+
+		ProductSpecification productSpecification2 =
+			testGetProductByExternalReferenceCodeProductSpecificationsPage_addProductSpecification(
+				externalReferenceCode, randomProductSpecification());
+
+		ProductSpecification productSpecification3 =
+			testGetProductByExternalReferenceCodeProductSpecificationsPage_addProductSpecification(
+				externalReferenceCode, randomProductSpecification());
+
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
+
+		int pageSizeLimit = 500;
+
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<ProductSpecification> page1 =
+				productSpecificationResource.
+					getProductByExternalReferenceCodeProductSpecificationsPage(
+						externalReferenceCode,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+							pageSizeLimit));
+
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
+
+			assertContains(
+				productSpecification1,
+				(List<ProductSpecification>)page1.getItems());
+
+			Page<ProductSpecification> page2 =
+				productSpecificationResource.
+					getProductByExternalReferenceCodeProductSpecificationsPage(
+						externalReferenceCode,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+							pageSizeLimit));
+
+			assertContains(
+				productSpecification2,
+				(List<ProductSpecification>)page2.getItems());
+
+			Page<ProductSpecification> page3 =
+				productSpecificationResource.
+					getProductByExternalReferenceCodeProductSpecificationsPage(
+						externalReferenceCode,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+							pageSizeLimit));
+
+			assertContains(
+				productSpecification3,
+				(List<ProductSpecification>)page3.getItems());
+		}
+		else {
+			Page<ProductSpecification> page1 =
+				productSpecificationResource.
+					getProductByExternalReferenceCodeProductSpecificationsPage(
+						externalReferenceCode,
+						Pagination.of(1, totalCount + 2));
+
+			List<ProductSpecification> productSpecifications1 =
+				(List<ProductSpecification>)page1.getItems();
+
+			Assert.assertEquals(
+				productSpecifications1.toString(), totalCount + 2,
+				productSpecifications1.size());
+
+			Page<ProductSpecification> page2 =
+				productSpecificationResource.
+					getProductByExternalReferenceCodeProductSpecificationsPage(
+						externalReferenceCode,
+						Pagination.of(2, totalCount + 2));
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<ProductSpecification> productSpecifications2 =
+				(List<ProductSpecification>)page2.getItems();
+
+			Assert.assertEquals(
+				productSpecifications2.toString(), 1,
+				productSpecifications2.size());
+
+			Page<ProductSpecification> page3 =
+				productSpecificationResource.
+					getProductByExternalReferenceCodeProductSpecificationsPage(
+						externalReferenceCode,
+						Pagination.of(1, (int)totalCount + 3));
+
+			assertContains(
+				productSpecification1,
+				(List<ProductSpecification>)page3.getItems());
+			assertContains(
+				productSpecification2,
+				(List<ProductSpecification>)page3.getItems());
+			assertContains(
+				productSpecification3,
+				(List<ProductSpecification>)page3.getItems());
+		}
+	}
+
+	protected ProductSpecification
+			testGetProductByExternalReferenceCodeProductSpecificationsPage_addProductSpecification(
+				String externalReferenceCode,
+				ProductSpecification productSpecification)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected String
+			testGetProductByExternalReferenceCodeProductSpecificationsPage_getExternalReferenceCode()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected String
+			testGetProductByExternalReferenceCodeProductSpecificationsPage_getIrrelevantExternalReferenceCode()
+		throws Exception {
+
+		return null;
+	}
+
+	@Test
+	public void testPostProductByExternalReferenceCodeProductSpecification()
+		throws Exception {
+
+		ProductSpecification randomProductSpecification =
+			randomProductSpecification();
+
+		ProductSpecification postProductSpecification =
+			testPostProductByExternalReferenceCodeProductSpecification_addProductSpecification(
+				randomProductSpecification);
+
+		assertEquals(randomProductSpecification, postProductSpecification);
+		assertValid(postProductSpecification);
+	}
+
+	protected ProductSpecification
+			testPostProductByExternalReferenceCodeProductSpecification_addProductSpecification(
+				ProductSpecification productSpecification)
 		throws Exception {
 
 		throw new UnsupportedOperationException(
@@ -798,6 +1043,19 @@ public abstract class BaseProductSpecificationResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals(
+					"optionCategoryExternalReferenceCode",
+					additionalAssertFieldName)) {
+
+				if (productSpecification.
+						getOptionCategoryExternalReferenceCode() == null) {
+
+					valid = false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("optionCategoryId", additionalAssertFieldName)) {
 				if (productSpecification.getOptionCategoryId() == null) {
 					valid = false;
@@ -816,6 +1074,19 @@ public abstract class BaseProductSpecificationResourceTestCase {
 
 			if (Objects.equals("productId", additionalAssertFieldName)) {
 				if (productSpecification.getProductId() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals(
+					"specificationExternalReferenceCode",
+					additionalAssertFieldName)) {
+
+				if (productSpecification.
+						getSpecificationExternalReferenceCode() == null) {
+
 					valid = false;
 				}
 
@@ -1010,6 +1281,22 @@ public abstract class BaseProductSpecificationResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals(
+					"optionCategoryExternalReferenceCode",
+					additionalAssertFieldName)) {
+
+				if (!Objects.deepEquals(
+						productSpecification1.
+							getOptionCategoryExternalReferenceCode(),
+						productSpecification2.
+							getOptionCategoryExternalReferenceCode())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("optionCategoryId", additionalAssertFieldName)) {
 				if (!Objects.deepEquals(
 						productSpecification1.getOptionCategoryId(),
@@ -1036,6 +1323,22 @@ public abstract class BaseProductSpecificationResourceTestCase {
 				if (!Objects.deepEquals(
 						productSpecification1.getProductId(),
 						productSpecification2.getProductId())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals(
+					"specificationExternalReferenceCode",
+					additionalAssertFieldName)) {
+
+				if (!Objects.deepEquals(
+						productSpecification1.
+							getSpecificationExternalReferenceCode(),
+						productSpecification2.
+							getSpecificationExternalReferenceCode())) {
 
 					return false;
 				}
@@ -1253,6 +1556,53 @@ public abstract class BaseProductSpecificationResourceTestCase {
 				"Invalid entity field " + entityFieldName);
 		}
 
+		if (entityFieldName.equals("optionCategoryExternalReferenceCode")) {
+			Object object =
+				productSpecification.getOptionCategoryExternalReferenceCode();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
+
+			return sb.toString();
+		}
+
 		if (entityFieldName.equals("optionCategoryId")) {
 			throw new IllegalArgumentException(
 				"Invalid entity field " + entityFieldName);
@@ -1267,6 +1617,53 @@ public abstract class BaseProductSpecificationResourceTestCase {
 		if (entityFieldName.equals("productId")) {
 			throw new IllegalArgumentException(
 				"Invalid entity field " + entityFieldName);
+		}
+
+		if (entityFieldName.equals("specificationExternalReferenceCode")) {
+			Object object =
+				productSpecification.getSpecificationExternalReferenceCode();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
+
+			return sb.toString();
 		}
 
 		if (entityFieldName.equals("specificationId")) {
@@ -1382,9 +1779,13 @@ public abstract class BaseProductSpecificationResourceTestCase {
 			{
 				id = RandomTestUtil.randomLong();
 				key = StringUtil.toLowerCase(RandomTestUtil.randomString());
+				optionCategoryExternalReferenceCode = StringUtil.toLowerCase(
+					RandomTestUtil.randomString());
 				optionCategoryId = RandomTestUtil.randomLong();
 				priority = RandomTestUtil.randomDouble();
 				productId = RandomTestUtil.randomLong();
+				specificationExternalReferenceCode = StringUtil.toLowerCase(
+					RandomTestUtil.randomString());
 				specificationId = RandomTestUtil.randomLong();
 				specificationKey = StringUtil.toLowerCase(
 					RandomTestUtil.randomString());
@@ -1418,12 +1819,12 @@ public abstract class BaseProductSpecificationResourceTestCase {
 		public static void copyProperties(Object source, Object target)
 			throws Exception {
 
-			Class<?> sourceClass = _getSuperClass(source.getClass());
+			Class<?> sourceClass = source.getClass();
 
 			Class<?> targetClass = target.getClass();
 
 			for (java.lang.reflect.Field field :
-					sourceClass.getDeclaredFields()) {
+					_getAllDeclaredFields(sourceClass)) {
 
 				if (field.isSynthetic()) {
 					continue;
@@ -1432,11 +1833,16 @@ public abstract class BaseProductSpecificationResourceTestCase {
 				Method getMethod = _getMethod(
 					sourceClass, field.getName(), "get");
 
-				Method setMethod = _getMethod(
-					targetClass, field.getName(), "set",
-					getMethod.getReturnType());
+				try {
+					Method setMethod = _getMethod(
+						targetClass, field.getName(), "set",
+						getMethod.getReturnType());
 
-				setMethod.invoke(target, getMethod.invoke(source));
+					setMethod.invoke(target, getMethod.invoke(source));
+				}
+				catch (Exception e) {
+					continue;
+				}
 			}
 		}
 
@@ -1468,6 +1874,24 @@ public abstract class BaseProductSpecificationResourceTestCase {
 			setMethod.invoke(bean, _translateValue(parameterTypes[0], value));
 		}
 
+		private static List<java.lang.reflect.Field> _getAllDeclaredFields(
+			Class<?> clazz) {
+
+			List<java.lang.reflect.Field> fields = new ArrayList<>();
+
+			while ((clazz != null) && (clazz != Object.class)) {
+				for (java.lang.reflect.Field field :
+						clazz.getDeclaredFields()) {
+
+					fields.add(field);
+				}
+
+				clazz = clazz.getSuperclass();
+			}
+
+			return fields;
+		}
+
 		private static Method _getMethod(Class<?> clazz, String name) {
 			for (Method method : clazz.getMethods()) {
 				if (name.equals(method.getName()) &&
@@ -1489,16 +1913,6 @@ public abstract class BaseProductSpecificationResourceTestCase {
 			return clazz.getMethod(
 				prefix + StringUtil.upperCaseFirstLetter(fieldName),
 				parameterTypes);
-		}
-
-		private static Class<?> _getSuperClass(Class<?> clazz) {
-			Class<?> superClass = clazz.getSuperclass();
-
-			if ((superClass == null) || (superClass == Object.class)) {
-				return clazz;
-			}
-
-			return superClass;
 		}
 
 		private static Object _translateValue(

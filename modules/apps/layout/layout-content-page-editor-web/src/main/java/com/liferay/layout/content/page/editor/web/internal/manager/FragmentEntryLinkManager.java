@@ -8,6 +8,7 @@ package com.liferay.layout.content.page.editor.web.internal.manager;
 import com.liferay.fragment.constants.FragmentConstants;
 import com.liferay.fragment.constants.FragmentEntryLinkConstants;
 import com.liferay.fragment.contributor.FragmentCollectionContributorRegistry;
+import com.liferay.fragment.entry.processor.constants.FragmentEntryProcessorConstants;
 import com.liferay.fragment.entry.processor.util.EditableFragmentEntryProcessorUtil;
 import com.liferay.fragment.helper.FragmentEntryLinkHelper;
 import com.liferay.fragment.model.FragmentEntry;
@@ -17,6 +18,7 @@ import com.liferay.fragment.renderer.FragmentRenderer;
 import com.liferay.fragment.renderer.FragmentRendererController;
 import com.liferay.fragment.renderer.FragmentRendererRegistry;
 import com.liferay.fragment.renderer.constants.FragmentRendererConstants;
+import com.liferay.fragment.service.FragmentEntryLinkLocalService;
 import com.liferay.fragment.service.FragmentEntryLocalService;
 import com.liferay.fragment.util.configuration.FragmentEntryConfigurationParser;
 import com.liferay.info.exception.NoSuchFormVariationException;
@@ -38,6 +40,7 @@ import com.liferay.portal.kernel.comment.CommentManager;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONArray;
+import com.liferay.portal.kernel.json.JSONException;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
@@ -55,9 +58,11 @@ import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -86,6 +91,35 @@ public class FragmentEntryLinkManager {
 			_fragmentCollectionContributorRegistry.getFragmentEntries(locale);
 
 		return fragmentEntries.get(fragmentEntryKey);
+	}
+
+	public Set<String> getFragmentEntryLinkFieldTypes(
+		long fragmentEntryLinkId, Locale locale) {
+
+		FragmentEntryLink fragmentEntryLink =
+			_fragmentEntryLinkLocalService.fetchFragmentEntryLink(
+				fragmentEntryLinkId);
+
+		if (fragmentEntryLink == null) {
+			return Collections.emptySet();
+		}
+
+		FragmentEntry fragmentEntry = _getFragmentEntry(
+			fragmentEntryLink, locale);
+
+		if (fragmentEntry != null) {
+			return _getFieldTypes(fragmentEntry.getTypeOptions());
+		}
+
+		FragmentRenderer fragmentRenderer =
+			_fragmentRendererRegistry.getFragmentRenderer(
+				fragmentEntryLink.getRendererKey());
+
+		if (fragmentRenderer != null) {
+			return _getFieldTypes(fragmentRenderer.getTypeOptions());
+		}
+
+		return Collections.emptySet();
 	}
 
 	public JSONObject getFragmentEntryLinkJSONObject(
@@ -225,6 +259,25 @@ public class FragmentEntryLinkManager {
 			).put(
 				"editableValues", editableValuesJSONObject
 			).put(
+				"fieldTypes",
+				() -> {
+					if (fragmentEntry != null) {
+						return _jsonFactory.createJSONArray(
+							_getFieldTypes(fragmentEntry.getTypeOptions()));
+					}
+
+					FragmentRenderer fragmentRenderer =
+						_fragmentRendererRegistry.getFragmentRenderer(
+							fragmentEntryLink.getRendererKey());
+
+					if (fragmentRenderer != null) {
+						return _jsonFactory.createJSONArray(
+							_getFieldTypes(fragmentRenderer.getTypeOptions()));
+					}
+
+					return _jsonFactory.createJSONArray();
+				}
+			).put(
 				"fragmentEntryId",
 				() -> {
 					if (fragmentEntry != null) {
@@ -326,6 +379,48 @@ public class FragmentEntryLinkManager {
 			layoutStructure);
 	}
 
+	public JSONObject mergeEditableValuesJSONObject(
+		JSONObject defaultEditableValuesJSONObject,
+		JSONObject editableValuesJSONObject) {
+
+		for (String fragmentEntryProcessorKey :
+				_FRAGMENT_ENTRY_PROCESSOR_KEYS) {
+
+			JSONObject editableFragmentEntryProcessorJSONObject =
+				editableValuesJSONObject.getJSONObject(
+					fragmentEntryProcessorKey);
+
+			JSONObject defaultEditableFragmentEntryProcessorJSONObject =
+				defaultEditableValuesJSONObject.getJSONObject(
+					fragmentEntryProcessorKey);
+
+			if (defaultEditableFragmentEntryProcessorJSONObject == null) {
+				continue;
+			}
+
+			if (editableFragmentEntryProcessorJSONObject != null) {
+				Iterator<String> iterator =
+					defaultEditableFragmentEntryProcessorJSONObject.keys();
+
+				while (iterator.hasNext()) {
+					String key = iterator.next();
+
+					if (editableFragmentEntryProcessorJSONObject.has(key)) {
+						defaultEditableFragmentEntryProcessorJSONObject.put(
+							key,
+							editableFragmentEntryProcessorJSONObject.get(key));
+					}
+				}
+			}
+
+			editableValuesJSONObject.put(
+				fragmentEntryProcessorKey,
+				defaultEditableFragmentEntryProcessorJSONObject);
+		}
+
+		return editableValuesJSONObject;
+	}
+
 	private String _getContent(
 		DefaultFragmentRendererContext defaultFragmentRendererContext,
 		JSONObject editableValuesJSONObject,
@@ -364,6 +459,23 @@ public class FragmentEntryLinkManager {
 		return _fragmentRendererController.render(
 			defaultFragmentRendererContext, httpServletRequest,
 			httpServletResponse);
+	}
+
+	private Set<String> _getFieldTypes(String typeOptions) {
+		try {
+			JSONObject jsonObject = _jsonFactory.createJSONObject(typeOptions);
+
+			JSONArray jsonArray = jsonObject.getJSONArray("fieldTypes");
+
+			if (jsonArray != null) {
+				return JSONUtil.toStringSet(jsonArray);
+			}
+		}
+		catch (JSONException jsonException) {
+			_log.error(jsonException);
+		}
+
+		return Collections.emptySet();
 	}
 
 	private FragmentEntry _getFragmentEntry(
@@ -494,6 +606,12 @@ public class FragmentEntryLinkManager {
 			fragmentEntryLink.getGroupId());
 	}
 
+	private static final String[] _FRAGMENT_ENTRY_PROCESSOR_KEYS = {
+		FragmentEntryProcessorConstants.
+			KEY_BACKGROUND_IMAGE_FRAGMENT_ENTRY_PROCESSOR,
+		FragmentEntryProcessorConstants.KEY_EDITABLE_FRAGMENT_ENTRY_PROCESSOR
+	};
+
 	private static final Log _log = LogFactoryUtil.getLog(
 		FragmentEntryLinkManager.class);
 
@@ -509,6 +627,9 @@ public class FragmentEntryLinkManager {
 
 	@Reference
 	private FragmentEntryLinkHelper _fragmentEntryLinkHelper;
+
+	@Reference
+	private FragmentEntryLinkLocalService _fragmentEntryLinkLocalService;
 
 	@Reference
 	private FragmentEntryLocalService _fragmentEntryLocalService;

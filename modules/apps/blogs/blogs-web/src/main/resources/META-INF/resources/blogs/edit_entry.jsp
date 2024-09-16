@@ -143,6 +143,7 @@ renderResponse.setTitle(blogsEditEntryDisplayContext.getPageTitle(resourceBundle
 						<liferay-asset:asset-categories-selector
 							className="<%= BlogsEntry.class.getName() %>"
 							classPK="<%= blogsEditEntryDisplayContext.getEntryId() %>"
+							useDataCategoriesAttribute="<%= true %>"
 							visibilityTypes="<%= AssetVocabularyConstants.VISIBILITY_TYPES %>"
 						/>
 
@@ -185,6 +186,8 @@ renderResponse.setTitle(blogsEditEntryDisplayContext.getPageTitle(resourceBundle
 					else {
 						automaticURL = blogsEditEntryDisplayContext.isAutomaticURL();
 					}
+
+					String inputAddon = StringUtil.shorten("/-/" + portlet.getFriendlyURLMapping(), 40) + StringPool.SLASH;
 					%>
 
 					<c:if test='<%= FeatureFlagManagerUtil.isEnabled("LPD-11147") %>'>
@@ -204,34 +207,33 @@ renderResponse.setTitle(blogsEditEntryDisplayContext.getPageTitle(resourceBundle
 								<aui:input checked="<%= !automaticURL %>" label="use-a-customized-url" name="automaticURL" type="radio" value="<%= false %>" />
 							</div>
 
-							<div class="form-group">
-								<label class='<%= automaticURL ? "disabled" : StringPool.BLANK %>''>
-									<liferay-ui:message key="add-categories-to-url" />
-								</label>
+							<clay:alert
+								dismissible="<%= true %>"
+								message="ensure-your-url-unique-to-avoid-conflicts"
+							/>
 
-								<div class="input-group">
-									<div class="input-group-item">
-										<input class="form-control" disabled="<%= true %>" type="text" />
-									</div>
+							<label><liferay-ui:message key="customize-the-url" /></label>
 
-									<div class="input-group-item input-group-item-shrink">
-										<button class="btn btn-secondary" disabled="<%= true %>" type="button">
-											<liferay-ui:message key="select" />
-										</button>
-									</div>
-								</div>
+							<p class="small text-secondary">
+								<liferay-ui:message key="add-and-reorder-categories-to-customize-the-friendly-url" />
+
+								<liferay-ui:message key="categories-will-only-appear-in-the-url-when-the-blog-entry-is-associated-to-a-display-page" />
+							</p>
+
+							<div>
+								<div class="py-7"><span aria-hidden="true" class="loading-animation"></span></div>
 
 								<react:component
-									module="{AssetCategoriesFriendlyUrlSelector} from blogs-web"
+									module="{AssetCategoriesSelectionBox} from blogs-web"
 									props='<%=
 										HashMapBuilder.<String, Object>put(
-											"automaticURL", automaticURL
+											"availableCategories", blogsEditEntryDisplayContext.getAvailableFriendlyURLAssetCategoriesJSONArray()
 										).put(
-											"inputAddon", StringUtil.shorten("/-/" + portlet.getFriendlyURLMapping()) + StringPool.SLASH
+											"currentCategories", blogsEditEntryDisplayContext.getCurrentFriendlyURLAssetCategoriesJSONArray()
 										).put(
-											"selectCategoryURL", blogsEditEntryDisplayContext.getFriendlyURLAssetCategorySelectorURL()
+											"disabled", automaticURL
 										).put(
-											"selectedCategories", blogsEditEntryDisplayContext.getFriendlyURLAssetCategoriesJSONArray()
+											"inputAddon", inputAddon
 										).build()
 									%>'
 								/>
@@ -241,10 +243,14 @@ renderResponse.setTitle(blogsEditEntryDisplayContext.getPageTitle(resourceBundle
 								className="<%= BlogsEntry.class.getName() %>"
 								classPK="<%= blogsEditEntryDisplayContext.getEntryId() %>"
 								disabled="<%= automaticURL %>"
-								inputAddon='<%= StringUtil.shorten("/-/" + portlet.getFriendlyURLMapping(), 40) + StringPool.SLASH %>'
+								inputAddon="<%= inputAddon %>"
 								localizable="<%= false %>"
 								name="urlTitle"
 							/>
+
+							<p class="mt-n4 small text-secondary">
+								<liferay-ui:message key="the-url-prefix-might-change-based-on-the-selected-display-page" />
+							</p>
 						</aui:fieldset>
 					</c:if>
 
@@ -263,7 +269,7 @@ renderResponse.setTitle(blogsEditEntryDisplayContext.getPageTitle(resourceBundle
 									className="<%= BlogsEntry.class.getName() %>"
 									classPK="<%= blogsEditEntryDisplayContext.getEntryId() %>"
 									disabled="<%= automaticURL %>"
-									inputAddon='<%= StringUtil.shorten("/-/" + portlet.getFriendlyURLMapping(), 40) + StringPool.SLASH %>'
+									inputAddon="<%= inputAddon %>"
 									localizable="<%= false %>"
 									name="urlTitle"
 								/>

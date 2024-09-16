@@ -83,7 +83,7 @@ export default function SaveButtons({
 				});
 			}
 		}
-		else {
+		else if (!Liferay.FeatureFlags['LPS-114700']) {
 			showAlert(
 				sub(
 					Liferay.Language.get(
@@ -92,6 +92,9 @@ export default function SaveButtons({
 					defaultLanguageId.replaceAll('_', '-')
 				)
 			);
+		}
+		else {
+			validateRequiredFields();
 		}
 	};
 
@@ -161,6 +164,18 @@ export default function SaveButtons({
 				}
 			}
 		);
+	};
+
+	const validateRequiredFields = () => {
+		Liferay.Form.get(formId).formValidator.validate();
+		Liferay.componentReady(
+			`${portletNamespace}dataEngineLayoutRenderer`
+		).then((dataEngineLayoutRenderer) => {
+			const dataEngineLayoutRendererRef =
+				dataEngineLayoutRenderer?.reactComponentRef;
+
+			return dataEngineLayoutRendererRef.current.validate();
+		});
 	};
 
 	useEffect(() => {
@@ -238,7 +253,13 @@ export default function SaveButtons({
 					>
 						{articleId
 							? workflowEnabled
-								? Liferay.Language.get('submit-for-workflow')
+								? showPublishModal
+									? Liferay.Language.get(
+											'submit-for-workflow-with-permissions'
+										)
+									: Liferay.Language.get(
+											'submit-for-workflow'
+										)
 								: showPublishModal
 									? Liferay.Language.get(
 											'publish-with-permissions'
@@ -266,7 +287,7 @@ export default function SaveButtons({
 									publishModalVisible: true,
 								});
 							}
-							else {
+							else if (!Liferay.FeatureFlags['LPS-114700']) {
 								showAlert(
 									sub(
 										Liferay.Language.get(
@@ -275,6 +296,9 @@ export default function SaveButtons({
 										defaultLanguageId.replaceAll('_', '-')
 									)
 								);
+							}
+							else {
+								validateRequiredFields();
 							}
 						}}
 						symbolLeft="date-time"
@@ -304,6 +328,7 @@ export default function SaveButtons({
 					}}
 					permissionsURL={permissionsURL}
 					portletNamespace={portletNamespace}
+					showPermissionsOptions={showPublishModal}
 					timeZone={timeZone}
 					workflowEnabled={workflowEnabled}
 				/>

@@ -16,7 +16,6 @@ import {pageViewModePagesTest} from '../../fixtures/pageViewModePagesTest';
 import getRandomString from '../../utils/getRandomString';
 import {ANIMALS_COLLECTION_NAME} from '../setup/page-management-site/constants';
 import getCollectionDefinition from './utils/getCollectionDefinition';
-import getCollectionItemDefinition from './utils/getCollectionItemDefinition';
 import getFragmentDefinition from './utils/getFragmentDefinition';
 import getPageDefinition from './utils/getPageDefinition';
 
@@ -59,13 +58,11 @@ test('Allows adding a Collection Display with a manual collection into another C
 		pageManagementSite.friendlyUrlPath
 	);
 
-	const animalsCollection = getCollectionItemDefinition(getRandomString(), [
-		getCollectionDefinition({
-			classPK: animalsClassPK,
-			id: getRandomString(),
-			listStyle: 'Bulleted List (Journal)',
-		}),
-	]);
+	const animalsCollection = getCollectionDefinition({
+		classPK: animalsClassPK,
+		id: getRandomString(),
+		listStyle: 'Bulleted List (Journal)',
+	});
 
 	// Create definition for another collection mapped to Recent Content provider
 
@@ -92,7 +89,7 @@ test('Allows adding a Collection Display with a manual collection into another C
 
 	// Calculate the number of recent contents
 
-	const firstCollection = await pageEditorPage.getFragment(firstCollectionId);
+	const firstCollection = pageEditorPage.getFragment(firstCollectionId);
 
 	const count = await firstCollection.locator('.list-group-item').count();
 
@@ -154,33 +151,31 @@ test('Checks Content Flags, Content Ratings and Content Display are compatible w
 		pageManagementSite.friendlyUrlPath
 	);
 
-	const animalsCollection = getCollectionItemDefinition(getRandomString(), [
-		getFragmentDefinition({
-			id: getRandomString(),
-			key: 'com.liferay.fragment.internal.renderer.ContentFlagsFragmentRenderer',
-		}),
-		getFragmentDefinition({
-			id: getRandomString(),
-			key: 'com.liferay.fragment.internal.renderer.ContentRatingsFragmentRenderer',
-		}),
-		getFragmentDefinition({
-			fragmentConfig: {
-				itemSelector: {
-					template: {
-						infoItemRendererKey:
-							'com.liferay.journal.web.internal.info.item.renderer.JournalArticleFullContentInfoItemRenderer',
-					},
-				},
-			},
-			id: getRandomString(),
-			key: 'com.liferay.fragment.internal.renderer.ContentObjectFragmentRenderer',
-		}),
-	]);
-
 	const collectionDefinition = getCollectionDefinition({
 		classPK: animalsClassPK,
 		id: getRandomString(),
-		pageElements: [animalsCollection],
+		pageElements: [
+			getFragmentDefinition({
+				id: getRandomString(),
+				key: 'com.liferay.fragment.internal.renderer.ContentFlagsFragmentRenderer',
+			}),
+			getFragmentDefinition({
+				id: getRandomString(),
+				key: 'com.liferay.fragment.internal.renderer.ContentRatingsFragmentRenderer',
+			}),
+			getFragmentDefinition({
+				fragmentConfig: {
+					itemSelector: {
+						template: {
+							infoItemRendererKey:
+								'com.liferay.journal.web.internal.info.item.renderer.JournalArticleFullContentInfoItemRenderer',
+						},
+					},
+				},
+				id: getRandomString(),
+				key: 'com.liferay.fragment.internal.renderer.ContentObjectFragmentRenderer',
+			}),
+		],
 	});
 
 	// Create a content page and go to edit mode
@@ -213,7 +208,7 @@ test('Checks Content Flags, Content Ratings and Content Display are compatible w
 
 	// Check that the Content Ratings is shown in each item and the Field input has the corresponding name
 
-	const voteItem = await page.getByLabel('Vote', {exact: true});
+	const voteItem = page.getByLabel('Vote', {exact: true});
 
 	await expect(voteItem).toHaveCount(2);
 
@@ -231,7 +226,7 @@ test('Checks Content Flags, Content Ratings and Content Display are compatible w
 
 	// Check that the Content Flags is shown in each item and the Field input has the corresponding name
 
-	const reportItem = await page.locator('.taglib-flags');
+	const reportItem = page.locator('.taglib-flags');
 
 	await expect(reportItem).toHaveCount(2);
 
@@ -265,14 +260,15 @@ test('Modifies inline text on all collection items', async ({
 
 	const headingId = getRandomString();
 
-	const animalsCollection = getCollectionItemDefinition(getRandomString(), [
-		getFragmentDefinition({id: headingId, key: 'BASIC_COMPONENT-heading'}),
-	]);
-
 	const collectionDefinition = getCollectionDefinition({
 		classPK: animalsClassPK,
 		id: getRandomString(),
-		pageElements: [animalsCollection],
+		pageElements: [
+			getFragmentDefinition({
+				id: headingId,
+				key: 'BASIC_COMPONENT-heading',
+			}),
+		],
 	});
 
 	// Create a content page and go to edit mode
@@ -308,7 +304,7 @@ test('Checks the different styles for the Display Collection', async ({
 	pageManagementSite,
 }) => {
 	const checkStyleDisplay = async () => {
-		const listItem = await page.locator(
+		const listItem = page.locator(
 			'.lfr-layout-structure-item-collection ul'
 		);
 
@@ -336,7 +332,7 @@ test('Checks the different styles for the Display Collection', async ({
 
 		// Check the Numbered List style
 
-		const orderedListItem = await page.locator(
+		const orderedListItem = page.locator(
 			'.lfr-layout-structure-item-collection ol'
 		);
 
@@ -361,46 +357,64 @@ test('Checks the different styles for the Display Collection', async ({
 		pageManagementSite.friendlyUrlPath
 	);
 
-	const animalsCollection = getCollectionItemDefinition(getRandomString(), [
-		getFragmentDefinition({
-			id: getRandomString(),
-			key: 'BASIC_COMPONENT-heading',
-		}),
-	]);
-
 	const borderedListCollection = getCollectionDefinition({
 		classPK: animalsClassPK,
 		id: getRandomString(),
 		listStyle: 'Bordered List (Collection Provider)',
-		pageElements: [animalsCollection],
+		pageElements: [
+			getFragmentDefinition({
+				id: getRandomString(),
+				key: 'BASIC_COMPONENT-heading',
+			}),
+		],
 	});
 
 	const bulletedListCollection = getCollectionDefinition({
 		classPK: animalsClassPK,
 		id: getRandomString(),
 		listStyle: 'Bulleted List (Collection Provider)',
-		pageElements: [animalsCollection],
+		pageElements: [
+			getFragmentDefinition({
+				id: getRandomString(),
+				key: 'BASIC_COMPONENT-heading',
+			}),
+		],
 	});
 
 	const inlineListCollection = getCollectionDefinition({
 		classPK: animalsClassPK,
 		id: getRandomString(),
 		listStyle: 'Inline List',
-		pageElements: [animalsCollection],
+		pageElements: [
+			getFragmentDefinition({
+				id: getRandomString(),
+				key: 'BASIC_COMPONENT-heading',
+			}),
+		],
 	});
 
 	const numberedListCollection = getCollectionDefinition({
 		classPK: animalsClassPK,
 		id: getRandomString(),
 		listStyle: 'Numbered List',
-		pageElements: [animalsCollection],
+		pageElements: [
+			getFragmentDefinition({
+				id: getRandomString(),
+				key: 'BASIC_COMPONENT-heading',
+			}),
+		],
 	});
 
 	const unstyledListCollection = getCollectionDefinition({
 		classPK: animalsClassPK,
 		id: getRandomString(),
 		listStyle: 'Unstyled List',
-		pageElements: [animalsCollection],
+		pageElements: [
+			getFragmentDefinition({
+				id: getRandomString(),
+				key: 'BASIC_COMPONENT-heading',
+			}),
+		],
 	});
 
 	// Create a content page and go to edit mode
@@ -471,22 +485,18 @@ test('Checks that fragment ids used within a display collection are not repeated
 		key: 'BASIC_COMPONENT-heading',
 	});
 
-	const headingCollectionDefintion = getCollectionItemDefinition(
-		getRandomString(),
-		[headingDefinition]
-	);
-
 	const collectionWithHeadings = getCollectionDefinition({
 		classPK: animalsClassPK,
 		id: getRandomString(),
-		pageElements: [headingCollectionDefintion],
+		pageElements: [headingDefinition],
 	});
 
 	// Create a second collection definition with tabs and headings inside
 
-	const tabsCollectionDefinition = getCollectionItemDefinition(
-		getRandomString(),
-		[
+	const collectionWithTabs = getCollectionDefinition({
+		classPK: animalsClassPK,
+		id: getRandomString(),
+		pageElements: [
 			getFragmentDefinition({
 				fragmentConfig: {
 					numberOfTabs: 1,
@@ -509,13 +519,7 @@ test('Checks that fragment ids used within a display collection are not repeated
 					},
 				],
 			}),
-		]
-	);
-
-	const collectionWithTabs = getCollectionDefinition({
-		classPK: animalsClassPK,
-		id: getRandomString(),
-		pageElements: [tabsCollectionDefinition],
+		],
 	});
 
 	// Create a content page with the two collections and go to edit mode
@@ -561,16 +565,17 @@ test('Displays correct layout in other viewports', async ({
 
 	const headingId = getRandomString();
 
-	const animalsCollection = getCollectionItemDefinition(getRandomString(), [
-		getFragmentDefinition({id: headingId, key: 'BASIC_COMPONENT-heading'}),
-	]);
-
 	const collectionId = getRandomString();
 
 	const collectionDefinition = getCollectionDefinition({
 		classPK: animalsClassPK,
 		id: collectionId,
-		pageElements: [animalsCollection],
+		pageElements: [
+			getFragmentDefinition({
+				id: headingId,
+				key: 'BASIC_COMPONENT-heading',
+			}),
+		],
 	});
 
 	// Create a content page and go to edit mode

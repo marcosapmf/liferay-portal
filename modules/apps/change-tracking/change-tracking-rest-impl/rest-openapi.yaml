@@ -110,6 +110,11 @@ components:
                 status:
                     $ref: "#/components/schemas/Status"
                     readOnly: true
+                statusMessage:
+                    description:
+                        Info on when a change was made.
+                    readOnly: true
+                    type: string
                 title:
                     readOnly: true
                     type: string
@@ -211,7 +216,7 @@ components:
 info:
     description:
         "A Java client JAR is available for use with the group ID 'com.liferay', artifact ID
-        'com.liferay.change.tracking.rest.client', and version '3.2.0'."
+        'com.liferay.change.tracking.rest.client', and version '3.2.2'."
     license:
         name: "Apache 2.0"
         url: "http://www.apache.org/licenses/LICENSE-2.0.html"

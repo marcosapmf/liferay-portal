@@ -569,19 +569,34 @@ module.framework.properties.osgi.console=11312</echo>
 						<![CDATA[
 							#!/bin/bash
 
-							mysqldump \
-								--compact \
-								--no-data \
-								--order-by-primary \
-								--password=${database.mysql.password} \
-								--skip-comments \
-								--skip-extended-insert \
-								--user=${database.mysql.username} \
-								--default-character-set=utf8 \
-								--databases ${database.schema.name} > \
-								${docker.src.file.path}
+							function get_modifiable_system_object_definition_table_names() {
+								mysql --execute="SHOW TABLES" --password=${database.mysql.password} --user=${database.mysql.username} ${database.schema.name} | grep -E '^L_[0-9]+_'
+							}
 
-							sed -i "s/Warning: Using a password on the command line interface can be insecure.//g" ${docker.src.file.path}
+							function main {
+								local ignore_table_argument="";
+
+								while IFS= read -r table; do
+									ignore_table_argument+=" --ignore-table=${database.schema.name}.$table"
+								done < <(get_modifiable_system_object_definition_table_names)
+
+								mysqldump \
+									--compact \
+									--databases ${database.schema.name} \
+									--default-character-set=utf8 \
+									${ignore_table_argument} \
+									--no-data \
+									--order-by-primary \
+									--password=${database.mysql.password} \
+									--skip-comments \
+									--skip-extended-insert \
+									--user=${database.mysql.username} \
+									> ${docker.src.file.path}
+
+								sed -i "s/Warning: Using a password on the command line interface can be insecure.//g" ${docker.src.file.path}
+							}
+
+							main
 						]]>
 					</echo>
 
@@ -1056,7 +1071,7 @@ jdbc.default.connectionProperties=oracle.jdbc.ReadTimeout=0;oracle.net.CONNECT_T
 			<propertyregex
 				input="${test.batch.name}"
 				property="java.jdk.bundle.type"
-				regexp="-jdk[0-9]+_(\w+)"
+				regexp="-jdk[0-9]+_([^_]+)_?"
 				select="\1"
 			/>
 
@@ -1064,7 +1079,7 @@ jdbc.default.connectionProperties=oracle.jdbc.ReadTimeout=0;oracle.net.CONNECT_T
 				<matches pattern="-jdk[0-9]+$" string="${test.batch.name}" />
 			</condition>
 
-			<property name="java.jdk.bundle.type" value="oracle" />
+			<property name="java.jdk.bundle.type" value="none" />
 		</sequential>
 	</macrodef>
 
@@ -1087,14 +1102,14 @@ jdbc.default.connectionProperties=oracle.jdbc.ReadTimeout=0;oracle.net.CONNECT_T
 				select="\1"
 			/>
 
-			<property name="java.jdk.bundle.version" value="${ant.java.version}" />
+			<property name="java.jdk.bundle.version" value="none" />
 		</sequential>
 	</macrodef>
 
 	<macrodef name="get-java-jdk-home">
 		<attribute default="${java.jdk.architecture}" name="architecture" />
-		<attribute default="oracle" name="type" />
-		<attribute default="${ant.java.version}" name="version" />
+		<attribute default="none" name="type" />
+		<attribute default="none" name="version" />
 
 		<sequential>
 			<var name="java.jdk.home" unset="true" />
@@ -1105,9 +1120,44 @@ jdbc.default.connectionProperties=oracle.jdbc.ReadTimeout=0;oracle.net.CONNECT_T
 					<property name="java.jdk.home" value="${local.java.jdk.home}" />
 				</then>
 				<else>
-					<propertycopy from="java.jdk.home[@{version}][@{architecture}][@{type}]" property="java.jdk.home" silent="true" />
+					<if>
+						<and>
+							<equals arg1="@{type}" arg2="none" />
+							<equals arg1="@{version}" arg2="none" />
+						</and>
+						<then>
+							<propertycopy from="java.jdk.default.runtime" property="java.jdk.home" silent="true" />
+						</then>
+						<elseif>
+							<or>
+								<equals arg1="@{type}" arg2="none" />
+								<equals arg1="@{type}" arg2="stable" />
+							</or>
+							<then>
+								<propertycopy from="java.jdk[@{version}]" property="java.jdk.home.property.name" silent="true" />
 
-					<property name="java.jdk.home" value="${java.home}" />
+								<propertycopy from="${java.jdk.home.property.name}" property="java.jdk.home" silent="true" />
+							</then>
+						</elseif>
+						<elseif>
+							<equals arg1="@{version}" arg2="none" />
+							<then>
+								<propertycopy from="java.jdk.default.runtime" property="java.jdk.home" silent="true" />
+							</then>
+						</elseif>
+						<else>
+							<propertycopy from="java.jdk.home[@{version}][@{architecture}][@{type}]" property="java.jdk.home" silent="true" />
+						</else>
+					</if>
+
+					<if>
+						<not>
+							<isset property="java.jdk.home" />
+						</not>
+						<then>
+							<fail>Unable to get the property "java.jdk.home" for jdk version @{version} and type @{type}.</fail>
+						</then>
+					</if>
 
 					<if>
 						<not>
@@ -2897,7 +2947,7 @@ server.detector.server.id=wildfly</echo>
 					<equals arg1="${database.type}" arg2="mysql" />
 				</or>
 				<then>
-					<property name="database.url.upgrade" value="${database.url}&amp;rewriteBatchedStatements=true" />
+					<property name="database.url.upgrade" value="${database.url}" />
 				</then>
 				<elseif>
 					<equals arg1="${database.type}" arg2="postgresql" />
@@ -2959,6 +3009,11 @@ include-and-override=portal-liferay-online.properties</echo>
 						file="portal-impl/src/portal-ext.properties"
 						token="${database.mysql.driver}"
 						value="${database.mariadb.driver}"
+					/>
+					<replace
+						file="portal-impl/src/portal-ext.properties"
+						token="jdbc:mysql:"
+						value="jdbc:mariadb:"
 					/>
 				</then>
 			</if>
@@ -5251,6 +5306,11 @@ include-and-override=portal-liferay-online.properties</echo>
 								file="${liferay.home}/tools/portal-tools-db-upgrade-client/portal-upgrade-database.properties"
 								token="${database.mysql.driver}"
 								value="${database.mariadb.driver}"
+							/>
+							<replace
+								file="${liferay.home}/tools/portal-tools-db-upgrade-client/portal-upgrade-database.properties"
+								token="jdbc:mysql:"
+								value="jdbc:mariadb:"
 							/>
 						</then>
 					</if>
@@ -12504,7 +12564,7 @@ portal.proxy.path=/${portal.proxy.path}</echo>
 						<replace
 							file="portal-impl/src/portal-ext.properties"
 							token="${database.url}"
-							value="${database.url}&amp;rewriteBatchedStatements=true"
+							value="${database.url}&amp;rewriteBatchedStatements=true&amp;cachePrepStmts=true&amp;prepStmtCacheSize=1000&amp;prepStmtCacheSqlLimit=2048"
 						/>
 					</then>
 					<elseif>

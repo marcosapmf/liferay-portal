@@ -22,10 +22,11 @@ import com.liferay.layout.util.structure.FragmentStyledLayoutStructureItem;
 import com.liferay.layout.util.structure.LayoutStructure;
 import com.liferay.layout.util.structure.LayoutStructureItem;
 import com.liferay.layout.util.structure.LayoutStructureItemUtil;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.service.ServiceContextFactory;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
@@ -41,6 +42,7 @@ import com.liferay.portal.kernel.util.WebKeys;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -164,26 +166,21 @@ public class UpdateFormItemConfigMVCActionCommand
 			(FormStyledLayoutStructureItem)layoutStructure.updateItemConfig(
 				_jsonFactory.createJSONObject(itemConfig), formItemId);
 
-		JSONArray removedLayoutStructureItemsJSONArray =
-			_jsonFactory.createJSONArray();
-
 		HttpServletRequest httpServletRequest = _portal.getHttpServletRequest(
 			actionRequest);
 
 		List<FragmentEntryLink> addedFragmentEntryLinks = new ArrayList<>();
 
-		if (!Objects.equals(
-				formStyledLayoutStructureItem.getFormType(),
-				previousFormType) ||
-			!Objects.equals(
-				formStyledLayoutStructureItem.getNumberOfSteps(),
-				previousNumberOfSteps)) {
+		List<FormItemManager.LayoutStructureItemChanges>
+			layoutStructureItemChanges = new ArrayList<>();
 
-			layoutStructure.updateFormStyledLayoutStructureItemFormType(
-				formStyledLayoutStructureItem.getItemId(),
-				formStyledLayoutStructureItem.getFormType(),
-				formStyledLayoutStructureItem.getNumberOfSteps());
-		}
+		layoutStructureItemChanges.add(
+			_updateFormStyledLayoutStructureItemFormType(
+				formStyledLayoutStructureItem,
+				formStyledLayoutStructureItem.getFormType(), layoutStructure,
+				themeDisplay.getLocale(),
+				formStyledLayoutStructureItem.getNumberOfSteps(),
+				previousFormType, previousNumberOfSteps));
 
 		if (!Objects.equals(
 				formStyledLayoutStructureItem.getClassNameId(),
@@ -192,25 +189,23 @@ public class UpdateFormItemConfigMVCActionCommand
 				formStyledLayoutStructureItem.getClassTypeId(),
 				previousClassTypeId)) {
 
-			removedLayoutStructureItemsJSONArray =
+			layoutStructureItemChanges.add(
 				_formItemManager.removeLayoutStructureItemsJSONArray(
-					formStyledLayoutStructureItem, layoutStructure, null);
+					formStyledLayoutStructureItem, layoutStructure, null));
 
 			if (formStyledLayoutStructureItem.getClassNameId() > 0) {
 				String[] uniqueInfoFieldIds = StringUtil.split(
 					ParamUtil.getString(actionRequest, "fields"));
 
-				if (!FeatureFlagManagerUtil.isEnabled("LPD-20213") ||
-					ArrayUtil.isNotEmpty(uniqueInfoFieldIds)) {
-
-					addedFragmentEntryLinks =
+				if (ArrayUtil.isNotEmpty(uniqueInfoFieldIds)) {
+					addedFragmentEntryLinks.addAll(
 						_formItemManager.addFragmentEntryLinks(
 							jsonObject, formStyledLayoutStructureItem, true,
 							themeDisplay.getLayout(), layoutStructure,
 							themeDisplay.getLocale(), segmentsExperienceId,
 							ServiceContextFactory.getInstance(
 								httpServletRequest),
-							uniqueInfoFieldIds);
+							uniqueInfoFieldIds));
 				}
 			}
 		}
@@ -219,7 +214,6 @@ public class UpdateFormItemConfigMVCActionCommand
 				actionRequest.getParameterMap();
 
 			if (parameterMap.containsKey("fields") &&
-				FeatureFlagManagerUtil.isEnabled("LPD-20213") &&
 				(formStyledLayoutStructureItem.getClassNameId() > 0)) {
 
 				List<String> newUniqueInfoFieldIds = new ArrayList<>();
@@ -243,14 +237,14 @@ public class UpdateFormItemConfigMVCActionCommand
 				}
 
 				if (ListUtil.isNotEmpty(newUniqueInfoFieldIds)) {
-					addedFragmentEntryLinks =
+					addedFragmentEntryLinks.addAll(
 						_formItemManager.addFragmentEntryLinks(
 							jsonObject, formStyledLayoutStructureItem, false,
 							themeDisplay.getLayout(), layoutStructure,
 							themeDisplay.getLocale(), segmentsExperienceId,
 							ServiceContextFactory.getInstance(
 								httpServletRequest),
-							newUniqueInfoFieldIds.toArray(new String[0]));
+							newUniqueInfoFieldIds.toArray(new String[0])));
 				}
 
 				List<String> removedItemIds = new ArrayList<>();
@@ -267,10 +261,10 @@ public class UpdateFormItemConfigMVCActionCommand
 				}
 
 				if (ListUtil.isNotEmpty(removedItemIds)) {
-					removedLayoutStructureItemsJSONArray =
+					layoutStructureItemChanges.add(
 						_formItemManager.removeLayoutStructureItemsJSONArray(
 							formStyledLayoutStructureItem, layoutStructure,
-							removedItemIds);
+							removedItemIds));
 				}
 			}
 		}
@@ -293,32 +287,113 @@ public class UpdateFormItemConfigMVCActionCommand
 			}
 		}
 
-		JSONObject addedFragmentEntryLinksJSONObject =
-			_jsonFactory.createJSONObject();
-
 		HttpServletResponse httpServletResponse =
 			_portal.getHttpServletResponse(actionResponse);
 
 		LayoutStructure updatedLayoutStructure = LayoutStructure.of(
 			layoutPageTemplateStructure.getData(segmentsExperienceId));
 
+		List<LayoutStructureItem> addedLayoutStructureItems = new ArrayList<>();
+		List<LayoutStructureItem> movedLayoutStructureItems = new ArrayList<>();
+		List<LayoutStructureItem> removedLayoutStructureItems =
+			new ArrayList<>();
+		JSONObject addedFragmentEntryLinksJSONObject =
+			_jsonFactory.createJSONObject();
+
 		for (FragmentEntryLink addedFragmentEntryLink :
 				addedFragmentEntryLinks) {
+
+			LayoutStructureItem layoutStructureItem =
+				layoutStructure.getLayoutStructureItemByFragmentEntryLinkId(
+					addedFragmentEntryLink.getFragmentEntryLinkId());
 
 			addedFragmentEntryLinksJSONObject.put(
 				String.valueOf(addedFragmentEntryLink.getFragmentEntryLinkId()),
 				_fragmentEntryLinkManager.getFragmentEntryLinkJSONObject(
 					addedFragmentEntryLink, httpServletRequest,
 					httpServletResponse, updatedLayoutStructure));
+
+			addedLayoutStructureItems.add(layoutStructureItem);
+		}
+
+		for (FormItemManager.LayoutStructureItemChanges
+				layoutStructureItemChange : layoutStructureItemChanges) {
+
+			addedLayoutStructureItems.addAll(
+				layoutStructureItemChange.getAddedLayoutStructureItems());
+			movedLayoutStructureItems.addAll(
+				layoutStructureItemChange.getMovedLayoutStructureItems());
+			removedLayoutStructureItems.addAll(
+				layoutStructureItemChange.getRemovedLayoutStructureItems());
 		}
 
 		return jsonObject.put(
 			"addedFragmentEntryLinks", addedFragmentEntryLinksJSONObject
 		).put(
+			"addedItemIds",
+			_jsonFactory.createJSONArray(
+				TransformUtil.transform(
+					addedLayoutStructureItems, LayoutStructureItem::getItemId))
+		).put(
 			"layoutData", updatedLayoutStructure.toJSONObject()
 		).put(
-			"removedFragmentEntryLinkIds", removedLayoutStructureItemsJSONArray
+			"movedItemIds",
+			() -> {
+				JSONArray jsonArray = _jsonFactory.createJSONArray();
+
+				for (LayoutStructureItem movedLayoutStructureItem :
+						movedLayoutStructureItems) {
+
+					jsonArray.put(
+						JSONUtil.put(
+							"itemId", movedLayoutStructureItem.getItemId()
+						).put(
+							"parentId",
+							movedLayoutStructureItem.getParentItemId()
+						));
+				}
+
+				return jsonArray;
+			}
+		).put(
+			"removedItemIds",
+			_jsonFactory.createJSONArray(
+				TransformUtil.transform(
+					removedLayoutStructureItems,
+					LayoutStructureItem::getItemId))
 		);
+	}
+
+	private FormItemManager.LayoutStructureItemChanges
+		_updateFormStyledLayoutStructureItemFormType(
+			FormStyledLayoutStructureItem formStyledLayoutStructureItem,
+			String formType, LayoutStructure layoutStructure, Locale locale,
+			int numberOfSteps, String previousFormType,
+			int previousNumberOfSteps) {
+
+		if (!Objects.equals(formType, previousFormType)) {
+			if (Objects.equals(formType, "multistep")) {
+				return _formItemManager.changeToMultistepFormType(
+					formStyledLayoutStructureItem, layoutStructure, locale,
+					numberOfSteps);
+			}
+
+			return _formItemManager.changeToSimpleFormType(
+				formStyledLayoutStructureItem, layoutStructure, locale);
+		}
+
+		if (numberOfSteps != previousNumberOfSteps) {
+			if (numberOfSteps > previousNumberOfSteps) {
+				return _formItemManager.addFormStepLayoutStructureItems(
+					formStyledLayoutStructureItem, layoutStructure,
+					numberOfSteps);
+			}
+
+			return _formItemManager.removeFormStepLayoutStructureItems(
+				formStyledLayoutStructureItem, layoutStructure, numberOfSteps);
+		}
+
+		return new FormItemManager.LayoutStructureItemChanges();
 	}
 
 	@Reference

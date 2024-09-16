@@ -401,18 +401,24 @@ public class CreateClientExtensionConfigTask extends DefaultTask {
 		for (Map.Entry<String, Object> entry : typeSettings.entrySet()) {
 			Object currentValue = entry.getValue();
 
-			if ((currentValue instanceof String) &&
-				_isWildcardValue((String)currentValue)) {
+			String key = StringUtil.toLowerCase(entry.getKey());
 
-				entry.setValue(
-					_getMatchingPaths(staticDirPath, (String)currentValue));
+			if (currentValue instanceof String) {
+				String currentValueString = (String)currentValue;
+
+				if (key.contains("url") &&
+					_isWildcardValue(currentValueString)) {
+
+					entry.setValue(
+						_getMatchingPaths(staticDirPath, (String)currentValue));
+				}
 			}
 
 			if (currentValue instanceof List) {
 				List<String> values = new ArrayList<>();
 
 				for (String value : (List<String>)currentValue) {
-					if (_isWildcardValue(value)) {
+					if (key.contains("url") && _isWildcardValue(value)) {
 						values.addAll(_getMatchingPaths(staticDirPath, value));
 					}
 					else {
@@ -615,7 +621,7 @@ public class CreateClientExtensionConfigTask extends DefaultTask {
 	}
 
 	private boolean _isWildcardValue(String value) {
-		if (value.contains(StringUtil.STAR)) {
+		if (value.contains(StringUtil.STAR) && !StringUtil.isUrl(value)) {
 			return true;
 		}
 

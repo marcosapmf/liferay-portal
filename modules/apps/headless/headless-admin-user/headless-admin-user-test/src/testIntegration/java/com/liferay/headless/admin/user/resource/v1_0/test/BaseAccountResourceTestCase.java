@@ -117,7 +117,32 @@ public abstract class BaseAccountResourceTestCase {
 
 	@Test
 	public void testClientSerDesToDTO() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		Account account1 = randomAccount();
+
+		String json = objectMapper.writeValueAsString(account1);
+
+		Account account2 = AccountSerDes.toDTO(json);
+
+		Assert.assertTrue(equals(account1, account2));
+	}
+
+	@Test
+	public void testClientSerDesToJSON() throws Exception {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		Account account = randomAccount();
+
+		String json1 = objectMapper.writeValueAsString(account);
+		String json2 = AccountSerDes.toJSON(account);
+
+		Assert.assertEquals(
+			objectMapper.readTree(json1), objectMapper.readTree(json2));
+	}
+
+	protected ObjectMapper getClientSerDesObjectMapper() {
+		return new ObjectMapper() {
 			{
 				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
 				configure(
@@ -132,40 +157,6 @@ public abstract class BaseAccountResourceTestCase {
 					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
 			}
 		};
-
-		Account account1 = randomAccount();
-
-		String json = objectMapper.writeValueAsString(account1);
-
-		Account account2 = AccountSerDes.toDTO(json);
-
-		Assert.assertTrue(equals(account1, account2));
-	}
-
-	@Test
-	public void testClientSerDesToJSON() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
-			{
-				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
-				configure(
-					SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true);
-				setDateFormat(new ISO8601DateFormat());
-				setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
-				setSerializationInclusion(JsonInclude.Include.NON_NULL);
-				setVisibility(
-					PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-				setVisibility(
-					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
-			}
-		};
-
-		Account account = randomAccount();
-
-		String json1 = objectMapper.writeValueAsString(account);
-		String json2 = AccountSerDes.toJSON(account);
-
-		Assert.assertEquals(
-			objectMapper.readTree(json1), objectMapper.readTree(json2));
 	}
 
 	@Test
@@ -174,10 +165,14 @@ public abstract class BaseAccountResourceTestCase {
 
 		Account account = randomAccount();
 
+		account.setDefaultBillingAddressExternalReferenceCode(regex);
+		account.setDefaultShippingAddressExternalReferenceCode(regex);
 		account.setDescription(regex);
 		account.setExternalReferenceCode(regex);
+		account.setLogoExternalReferenceCode(regex);
 		account.setLogoURL(regex);
 		account.setName(regex);
+		account.setParentAccountExternalReferenceCode(regex);
 		account.setTaxId(regex);
 
 		String json = AccountSerDes.toJSON(account);
@@ -186,10 +181,17 @@ public abstract class BaseAccountResourceTestCase {
 
 		account = AccountSerDes.toDTO(json);
 
+		Assert.assertEquals(
+			regex, account.getDefaultBillingAddressExternalReferenceCode());
+		Assert.assertEquals(
+			regex, account.getDefaultShippingAddressExternalReferenceCode());
 		Assert.assertEquals(regex, account.getDescription());
 		Assert.assertEquals(regex, account.getExternalReferenceCode());
+		Assert.assertEquals(regex, account.getLogoExternalReferenceCode());
 		Assert.assertEquals(regex, account.getLogoURL());
 		Assert.assertEquals(regex, account.getName());
+		Assert.assertEquals(
+			regex, account.getParentAccountExternalReferenceCode());
 		Assert.assertEquals(regex, account.getTaxId());
 	}
 
@@ -2615,9 +2617,35 @@ public abstract class BaseAccountResourceTestCase {
 			}
 
 			if (Objects.equals(
+					"defaultBillingAddressExternalReferenceCode",
+					additionalAssertFieldName)) {
+
+				if (account.getDefaultBillingAddressExternalReferenceCode() ==
+						null) {
+
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals(
 					"defaultBillingAddressId", additionalAssertFieldName)) {
 
 				if (account.getDefaultBillingAddressId() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals(
+					"defaultShippingAddressExternalReferenceCode",
+					additionalAssertFieldName)) {
+
+				if (account.getDefaultShippingAddressExternalReferenceCode() ==
+						null) {
+
 					valid = false;
 				}
 
@@ -2660,6 +2688,16 @@ public abstract class BaseAccountResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals(
+					"logoExternalReferenceCode", additionalAssertFieldName)) {
+
+				if (account.getLogoExternalReferenceCode() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("logoId", additionalAssertFieldName)) {
 				if (account.getLogoId() == null) {
 					valid = false;
@@ -2692,8 +2730,30 @@ public abstract class BaseAccountResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals(
+					"organizationExternalReferenceCodes",
+					additionalAssertFieldName)) {
+
+				if (account.getOrganizationExternalReferenceCodes() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("organizationIds", additionalAssertFieldName)) {
 				if (account.getOrganizationIds() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals(
+					"parentAccountExternalReferenceCode",
+					additionalAssertFieldName)) {
+
+				if (account.getParentAccountExternalReferenceCode() == null) {
 					valid = false;
 				}
 
@@ -2925,11 +2985,43 @@ public abstract class BaseAccountResourceTestCase {
 			}
 
 			if (Objects.equals(
+					"defaultBillingAddressExternalReferenceCode",
+					additionalAssertFieldName)) {
+
+				if (!Objects.deepEquals(
+						account1.
+							getDefaultBillingAddressExternalReferenceCode(),
+						account2.
+							getDefaultBillingAddressExternalReferenceCode())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals(
 					"defaultBillingAddressId", additionalAssertFieldName)) {
 
 				if (!Objects.deepEquals(
 						account1.getDefaultBillingAddressId(),
 						account2.getDefaultBillingAddressId())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals(
+					"defaultShippingAddressExternalReferenceCode",
+					additionalAssertFieldName)) {
+
+				if (!Objects.deepEquals(
+						account1.
+							getDefaultShippingAddressExternalReferenceCode(),
+						account2.
+							getDefaultShippingAddressExternalReferenceCode())) {
 
 					return false;
 				}
@@ -2991,6 +3083,19 @@ public abstract class BaseAccountResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals(
+					"logoExternalReferenceCode", additionalAssertFieldName)) {
+
+				if (!Objects.deepEquals(
+						account1.getLogoExternalReferenceCode(),
+						account2.getLogoExternalReferenceCode())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("logoId", additionalAssertFieldName)) {
 				if (!Objects.deepEquals(
 						account1.getLogoId(), account2.getLogoId())) {
@@ -3032,10 +3137,38 @@ public abstract class BaseAccountResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals(
+					"organizationExternalReferenceCodes",
+					additionalAssertFieldName)) {
+
+				if (!Objects.deepEquals(
+						account1.getOrganizationExternalReferenceCodes(),
+						account2.getOrganizationExternalReferenceCodes())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("organizationIds", additionalAssertFieldName)) {
 				if (!Objects.deepEquals(
 						account1.getOrganizationIds(),
 						account2.getOrganizationIds())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals(
+					"parentAccountExternalReferenceCode",
+					additionalAssertFieldName)) {
+
+				if (!Objects.deepEquals(
+						account1.getParentAccountExternalReferenceCode(),
+						account2.getParentAccountExternalReferenceCode())) {
 
 					return false;
 				}
@@ -3284,9 +3417,107 @@ public abstract class BaseAccountResourceTestCase {
 			return sb.toString();
 		}
 
+		if (entityFieldName.equals(
+				"defaultBillingAddressExternalReferenceCode")) {
+
+			Object object =
+				account.getDefaultBillingAddressExternalReferenceCode();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
+
+			return sb.toString();
+		}
+
 		if (entityFieldName.equals("defaultBillingAddressId")) {
 			throw new IllegalArgumentException(
 				"Invalid entity field " + entityFieldName);
+		}
+
+		if (entityFieldName.equals(
+				"defaultShippingAddressExternalReferenceCode")) {
+
+			Object object =
+				account.getDefaultShippingAddressExternalReferenceCode();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
+
+			return sb.toString();
 		}
 
 		if (entityFieldName.equals("defaultShippingAddressId")) {
@@ -3396,6 +3627,52 @@ public abstract class BaseAccountResourceTestCase {
 				"Invalid entity field " + entityFieldName);
 		}
 
+		if (entityFieldName.equals("logoExternalReferenceCode")) {
+			Object object = account.getLogoExternalReferenceCode();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
+
+			return sb.toString();
+		}
+
 		if (entityFieldName.equals("logoId")) {
 			throw new IllegalArgumentException(
 				"Invalid entity field " + entityFieldName);
@@ -3499,9 +3776,60 @@ public abstract class BaseAccountResourceTestCase {
 			return sb.toString();
 		}
 
+		if (entityFieldName.equals("organizationExternalReferenceCodes")) {
+			throw new IllegalArgumentException(
+				"Invalid entity field " + entityFieldName);
+		}
+
 		if (entityFieldName.equals("organizationIds")) {
 			throw new IllegalArgumentException(
 				"Invalid entity field " + entityFieldName);
+		}
+
+		if (entityFieldName.equals("parentAccountExternalReferenceCode")) {
+			Object object = account.getParentAccountExternalReferenceCode();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
+
+			return sb.toString();
 		}
 
 		if (entityFieldName.equals("parentAccountId")) {
@@ -3618,17 +3946,25 @@ public abstract class BaseAccountResourceTestCase {
 			{
 				dateCreated = RandomTestUtil.nextDate();
 				dateModified = RandomTestUtil.nextDate();
+				defaultBillingAddressExternalReferenceCode =
+					StringUtil.toLowerCase(RandomTestUtil.randomString());
 				defaultBillingAddressId = RandomTestUtil.randomLong();
+				defaultShippingAddressExternalReferenceCode =
+					StringUtil.toLowerCase(RandomTestUtil.randomString());
 				defaultShippingAddressId = RandomTestUtil.randomLong();
 				description = StringUtil.toLowerCase(
 					RandomTestUtil.randomString());
 				externalReferenceCode = StringUtil.toLowerCase(
 					RandomTestUtil.randomString());
 				id = RandomTestUtil.randomLong();
+				logoExternalReferenceCode = StringUtil.toLowerCase(
+					RandomTestUtil.randomString());
 				logoId = RandomTestUtil.randomLong();
 				logoURL = StringUtil.toLowerCase(RandomTestUtil.randomString());
 				name = StringUtil.toLowerCase(RandomTestUtil.randomString());
 				numberOfUsers = RandomTestUtil.randomInt();
+				parentAccountExternalReferenceCode = StringUtil.toLowerCase(
+					RandomTestUtil.randomString());
 				parentAccountId = RandomTestUtil.randomLong();
 				status = RandomTestUtil.randomInt();
 				taxId = StringUtil.toLowerCase(RandomTestUtil.randomString());
@@ -3656,12 +3992,12 @@ public abstract class BaseAccountResourceTestCase {
 		public static void copyProperties(Object source, Object target)
 			throws Exception {
 
-			Class<?> sourceClass = _getSuperClass(source.getClass());
+			Class<?> sourceClass = source.getClass();
 
 			Class<?> targetClass = target.getClass();
 
 			for (java.lang.reflect.Field field :
-					sourceClass.getDeclaredFields()) {
+					_getAllDeclaredFields(sourceClass)) {
 
 				if (field.isSynthetic()) {
 					continue;
@@ -3670,11 +4006,16 @@ public abstract class BaseAccountResourceTestCase {
 				Method getMethod = _getMethod(
 					sourceClass, field.getName(), "get");
 
-				Method setMethod = _getMethod(
-					targetClass, field.getName(), "set",
-					getMethod.getReturnType());
+				try {
+					Method setMethod = _getMethod(
+						targetClass, field.getName(), "set",
+						getMethod.getReturnType());
 
-				setMethod.invoke(target, getMethod.invoke(source));
+					setMethod.invoke(target, getMethod.invoke(source));
+				}
+				catch (Exception e) {
+					continue;
+				}
 			}
 		}
 
@@ -3706,6 +4047,24 @@ public abstract class BaseAccountResourceTestCase {
 			setMethod.invoke(bean, _translateValue(parameterTypes[0], value));
 		}
 
+		private static List<java.lang.reflect.Field> _getAllDeclaredFields(
+			Class<?> clazz) {
+
+			List<java.lang.reflect.Field> fields = new ArrayList<>();
+
+			while ((clazz != null) && (clazz != Object.class)) {
+				for (java.lang.reflect.Field field :
+						clazz.getDeclaredFields()) {
+
+					fields.add(field);
+				}
+
+				clazz = clazz.getSuperclass();
+			}
+
+			return fields;
+		}
+
 		private static Method _getMethod(Class<?> clazz, String name) {
 			for (Method method : clazz.getMethods()) {
 				if (name.equals(method.getName()) &&
@@ -3727,16 +4086,6 @@ public abstract class BaseAccountResourceTestCase {
 			return clazz.getMethod(
 				prefix + StringUtil.upperCaseFirstLetter(fieldName),
 				parameterTypes);
-		}
-
-		private static Class<?> _getSuperClass(Class<?> clazz) {
-			Class<?> superClass = clazz.getSuperclass();
-
-			if ((superClass == null) || (superClass == Object.class)) {
-				return clazz;
-			}
-
-			return superClass;
 		}
 
 		private static Object _translateValue(

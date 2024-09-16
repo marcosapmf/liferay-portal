@@ -863,6 +863,18 @@ public class DLFileEntryLocalServiceImpl
 		}
 	}
 
+	@Indexable(type = IndexableType.DELETE)
+	@Override
+	public DLFileEntry deleteFileEntryByExternalReferenceCode(
+			String externalReferenceCode, long groupId)
+		throws PortalException {
+
+		DLFileEntry dlFileEntry = getFileEntryByExternalReferenceCode(
+			externalReferenceCode, groupId);
+
+		return dlFileEntryLocalService.deleteFileEntry(dlFileEntry);
+	}
+
 	@Indexable(type = IndexableType.REINDEX)
 	@Override
 	public DLFileEntry deleteFileVersion(
@@ -1440,7 +1452,7 @@ public class DLFileEntryLocalServiceImpl
 
 	@Override
 	public DLFileEntry getFileEntryByExternalReferenceCode(
-			long groupId, String externalReferenceCode)
+			String externalReferenceCode, long groupId)
 		throws PortalException {
 
 		return dlFileEntryPersistence.findByERC_G(
@@ -1474,6 +1486,8 @@ public class DLFileEntryLocalServiceImpl
 	public Map<Long, Long> getFileEntryTypeIds(
 		long companyId, long[] groupIds, String treePath) {
 
+		Map<Long, Long> fileEntryTypeIds = new HashMap<>();
+
 		List<Object[]> results = dslQuery(
 			DSLQueryFactoryUtil.select(
 				DLFileEntryTable.INSTANCE.fileEntryId,
@@ -1506,8 +1520,6 @@ public class DLFileEntryLocalServiceImpl
 						treePath.concat(StringPool.PERCENT))
 				)
 			));
-
-		Map<Long, Long> fileEntryTypeIds = new HashMap<>();
 
 		for (Object[] result : results) {
 			fileEntryTypeIds.put((Long)result[0], (Long)result[1]);
@@ -2359,8 +2371,8 @@ public class DLFileEntryLocalServiceImpl
 
 		if ((fileEntryTypeId > 0) && (ddmFormValuesMap != null)) {
 			_dlFileEntryMetadataLocalService.updateFileEntryMetadata(
-				fileEntryTypeId, dlFileEntry.getFileEntryId(), fileVersionId,
-				ddmFormValuesMap, serviceContext);
+				null, fileEntryTypeId, dlFileEntry.getFileEntryId(),
+				fileVersionId, ddmFormValuesMap, serviceContext);
 		}
 
 		return dlFileVersion;
@@ -2746,8 +2758,8 @@ public class DLFileEntryLocalServiceImpl
 
 		if (!ddmFormValuesMap.isEmpty()) {
 			_dlFileEntryMetadataLocalService.updateFileEntryMetadata(
-				companyId, ddmStructures, fileEntryId, targetFileVersionId,
-				ddmFormValuesMap, serviceContext);
+				null, companyId, ddmStructures, fileEntryId,
+				targetFileVersionId, ddmFormValuesMap, serviceContext);
 		}
 	}
 
@@ -3949,7 +3961,7 @@ public class DLFileEntryLocalServiceImpl
 
 		if ((fileEntryTypeId > 0) && (ddmFormValuesMap != null)) {
 			_dlFileEntryMetadataLocalService.updateFileEntryMetadata(
-				fileEntryTypeId, dlFileVersion.getFileEntryId(),
+				null, fileEntryTypeId, dlFileVersion.getFileEntryId(),
 				dlFileVersion.getFileVersionId(), ddmFormValuesMap,
 				serviceContext);
 		}

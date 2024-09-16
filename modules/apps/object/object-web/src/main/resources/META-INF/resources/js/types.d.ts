@@ -299,6 +299,7 @@ type ObjectFieldBusinessTypeName =
 	| 'Aggregation'
 	| 'Attachment'
 	| 'AutoIncrement'
+	| 'Boolean'
 	| 'Date'
 	| 'DateTime'
 	| 'Decimal'
@@ -312,8 +313,7 @@ type ObjectFieldBusinessTypeName =
 	| 'PrecisionDecimal'
 	| 'Relationship'
 	| 'RichText'
-	| 'Text'
-	| 'Workflow Status';
+	| 'Text';
 
 type ObjectFieldDateRangeFilterSettings = {
 	[key: string]: string;
