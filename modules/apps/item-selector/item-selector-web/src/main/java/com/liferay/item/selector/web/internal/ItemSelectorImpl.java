@@ -30,6 +30,7 @@ import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.URLCodec;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.util.ArrayList;
@@ -71,7 +72,7 @@ public class ItemSelectorImpl implements ItemSelector {
 		Matcher matcher = _itemSelectorURLPattern.matcher(itemSelectorURL);
 
 		if (matcher.find()) {
-			return matcher.group(2);
+			return URLCodec.decodeURL(matcher.group(2));
 		}
 
 		String namespace = _portal.getPortletNamespace(
@@ -79,7 +80,7 @@ public class ItemSelectorImpl implements ItemSelector {
 
 		return HttpComponentsUtil.getParameter(
 			itemSelectorURL,
-			namespace.concat(PARAMETER_ITEM_SELECTED_EVENT_NAME), false);
+			namespace.concat(PARAMETER_ITEM_SELECTED_EVENT_NAME), true);
 	}
 
 	@Override
@@ -96,7 +97,7 @@ public class ItemSelectorImpl implements ItemSelector {
 		for (int i = 0; i < itemSelectorCriterionClasses.size(); i++) {
 			String[] values = parameters.get(i + JSON);
 
-			if (!ArrayUtil.isEmpty(values)) {
+			if (ArrayUtil.isNotEmpty(values)) {
 				itemSelectorCriteria.add(
 					_itemSelectionCriterionSerializer.deserialize(
 						itemSelectorCriterionClasses.get(i), values[0]));
@@ -436,11 +437,7 @@ public class ItemSelectorImpl implements ItemSelector {
 	private boolean _isSearch(Map<String, String[]> parameters) {
 		String keywords = getValue(parameters, "keywords");
 
-		if (Validator.isNotNull(keywords)) {
-			return true;
-		}
-
-		return false;
+		return Validator.isNotNull(keywords);
 	}
 
 	private static final Pattern _itemSelectorURLPattern = Pattern.compile(

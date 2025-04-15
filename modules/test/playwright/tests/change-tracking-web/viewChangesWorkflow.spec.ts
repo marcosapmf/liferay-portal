@@ -8,17 +8,13 @@ import moment from 'moment';
 
 import {apiHelpersTest} from '../../fixtures/apiHelpersTest';
 import {changeTrackingPagesTest} from '../../fixtures/changeTrackingPagesTest';
-import {featureFlagsTest} from '../../fixtures/featureFlagsTest';
 import {workflowPagesTest} from '../../fixtures/workflowPagesTest';
 import getRandomString from '../../utils/getRandomString';
-import {waitForSuccessAlert} from '../../utils/waitForSuccessAlert';
+import {waitForAlert} from '../../utils/waitForAlert';
 import {journalPagesTest} from '../journal-web/fixtures/journalPagesTest';
 
 export const test = mergeTests(
 	apiHelpersTest,
-	featureFlagsTest({
-		'LPD-10703': true,
-	}),
 	journalPagesTest,
 	changeTrackingPagesTest,
 	workflowPagesTest
@@ -43,7 +39,7 @@ test.beforeEach(
 		journalEditArticlePage,
 		workflowPage,
 	}) => {
-		await apiHelpers.headlessChangeTracking.checkoutCTCollection('0');
+		await apiHelpers.headlessChangeTracking.checkoutCTCollection(0);
 
 		await workflowPage.goto();
 		await workflowPage.changeWorkflow(
@@ -52,19 +48,19 @@ test.beforeEach(
 		);
 
 		await apiHelpers.headlessChangeTracking.checkoutCTCollection(
-			ctCollection.id
+			ctCollection.body.id
 		);
 
 		journalName = getRandomString();
 		await journalEditArticlePage.goto();
 		await journalEditArticlePage.submitArticleForWorkflow(journalName);
 
-		date = moment().format('M/D/YY h:mm A');
+		date = moment().format('M/D/YY, h:mm A');
 	}
 );
 
 test.afterEach(async ({apiHelpers, page, workflowPage}) => {
-	await apiHelpers.headlessChangeTracking.checkoutCTCollection('0');
+	await apiHelpers.headlessChangeTracking.checkoutCTCollection(0);
 
 	await workflowPage.goto();
 
@@ -92,7 +88,7 @@ test('LPD-19748 Add workflow info to the View Change screen', async ({
 	ctCollection,
 	page,
 }) => {
-	await changeTrackingPage.goToReviewChanges(ctCollection.name);
+	await changeTrackingPage.goToReviewChanges(ctCollection.body.name);
 
 	await changeTrackingPage.reviewChange(journalName);
 
@@ -106,7 +102,7 @@ test('LPD-19748 Workflow data is displayed in tab', async ({
 	ctCollection,
 	page,
 }) => {
-	await changeTrackingPage.goToReviewChanges(ctCollection.name);
+	await changeTrackingPage.goToReviewChanges(ctCollection.body.name);
 
 	await changeTrackingPage.reviewChange(journalName);
 
@@ -129,7 +125,7 @@ test('LPD-19748 Only workflow status is displayed when workflow is disabled', as
 		disable: true,
 	});
 
-	await changeTrackingPage.goToReviewChanges(ctCollection.name);
+	await changeTrackingPage.goToReviewChanges(ctCollection.body.name);
 
 	await changeTrackingPage.reviewChange(journalName);
 
@@ -143,7 +139,7 @@ test('LPD-19763 Workflow assign actions are displayed in dropdown', async ({
 	ctCollection,
 	page,
 }) => {
-	await changeTrackingPage.goToReviewChanges(ctCollection.name);
+	await changeTrackingPage.goToReviewChanges(ctCollection.body.name);
 
 	await changeTrackingPage.reviewChange(journalName);
 
@@ -189,7 +185,7 @@ test('LPD-22673 View Usages link is added to workflow info display', async ({
 	ctCollection,
 	page,
 }) => {
-	await changeTrackingPage.goToReviewChanges(ctCollection.name);
+	await changeTrackingPage.goToReviewChanges(ctCollection.body.name);
 
 	await changeTrackingPage.reviewChange(journalName);
 
@@ -205,7 +201,7 @@ test('LPD-23974 Comments link is added to workflow info display', async ({
 	ctCollection,
 	page,
 }) => {
-	await changeTrackingPage.goToReviewChanges(ctCollection.name);
+	await changeTrackingPage.goToReviewChanges(ctCollection.body.name);
 
 	await changeTrackingPage.reviewChange(journalName);
 
@@ -226,7 +222,11 @@ test('LPD-23974 Comments link is added to workflow info display', async ({
 
 	await page.getByRole('button', {name: 'Reply'}).click();
 
-	await page.getByRole('link', {name: 'Back'}).click();
+	await page.waitForLoadState('load');
+
+	await changeTrackingPage.goToReviewChanges(ctCollection.body.name);
+
+	await changeTrackingPage.reviewChange(journalName);
 
 	await changeTrackingPage.selectTab('Workflow');
 
@@ -247,7 +247,7 @@ test('LPD-23331 Workflow data is displayed when workflow task is approved', asyn
 
 	await workflowTasksPage.approve(journalName);
 
-	await changeTrackingPage.goToReviewChanges(ctCollection.name);
+	await changeTrackingPage.goToReviewChanges(ctCollection.body.name);
 
 	await changeTrackingPage.reviewChange(journalName);
 
@@ -265,7 +265,7 @@ test('LPD-23969 Activities tab is added to workflow info display', async ({
 	ctCollection,
 	page,
 }) => {
-	await changeTrackingPage.goToReviewChanges(ctCollection.name);
+	await changeTrackingPage.goToReviewChanges(ctCollection.body.name);
 
 	await changeTrackingPage.reviewChange(journalName);
 
@@ -282,13 +282,17 @@ test('LPD-23969 Activities tab is added to workflow info display', async ({
 	).toBeVisible();
 
 	await expect(
+		page.getByRole('cell', {
+			exact: true,
+			name: 'Task initially assigned to the Administrator role. Assigned initial task.',
+		})
+	).toBeVisible();
+
+	await expect(
 		page
-			.getByRole('row', {
-				exact: true,
-				name: `Task initially assigned to the Administrator role. Assigned initial task. ${date}`,
-			})
-			.getByRole('cell')
-			.nth(1)
+			.getByLabel('Activity DescriptionDateTask')
+			.getByRole('cell', {name: `${date}`})
+			.nth(4)
 	).toBeVisible();
 
 	await expect(
@@ -310,7 +314,7 @@ test('LPD-25058 View More button is added to workflow Activities tab for many ro
 
 	await workflowTasksPage.resubmit(journalName);
 
-	await changeTrackingPage.goToReviewChanges(ctCollection.name);
+	await changeTrackingPage.goToReviewChanges(ctCollection.body.name);
 
 	await changeTrackingPage.reviewChange(journalName);
 
@@ -339,9 +343,14 @@ test('LPD-24645 Workflow tab is not present for draft', async ({
 
 	await page.getByRole('button', {name: 'Save as Draft'}).click();
 
+	await page
+		.locator('[role="dialog"]')
+		.getByRole('button', {name: /save as draft/i})
+		.click();
+
 	await page.getByText('Version: 1.0 Draft').waitFor();
 
-	await changeTrackingPage.goToReviewChanges(ctCollection.name);
+	await changeTrackingPage.goToReviewChanges(ctCollection.body.name);
 
 	await changeTrackingPage.reviewChange(title);
 
@@ -353,7 +362,7 @@ test('LPD-22771 Assign button added to workflow view', async ({
 	ctCollection,
 	page,
 }) => {
-	await changeTrackingPage.goToReviewChanges(ctCollection.name);
+	await changeTrackingPage.goToReviewChanges(ctCollection.body.name);
 
 	await changeTrackingPage.reviewChange(journalName);
 
@@ -387,9 +396,9 @@ test('LPD-22771 Assign button is not visible in other publications', async ({
 	ctCollection,
 	page,
 }) => {
-	await apiHelpers.headlessChangeTracking.checkoutCTCollection('0');
+	await apiHelpers.headlessChangeTracking.checkoutCTCollection(0);
 
-	await changeTrackingPage.goToReviewChanges(ctCollection.name);
+	await changeTrackingPage.goToReviewChanges(ctCollection.body.name);
 
 	await changeTrackingPage.reviewChange(journalName);
 
@@ -408,7 +417,7 @@ test('LPD-23430 Workflow transition actions are displayed in dropdown', async ({
 	ctCollection,
 	page,
 }) => {
-	await changeTrackingPage.goToReviewChanges(ctCollection.name);
+	await changeTrackingPage.goToReviewChanges(ctCollection.body.name);
 
 	await changeTrackingPage.reviewChange(journalName);
 
@@ -489,7 +498,7 @@ test('LPD-27013 Cannot assign tasks once task is completed', async ({
 
 	await workflowTasksPage.approve(journalName);
 
-	await changeTrackingPage.goToReviewChanges(ctCollection.name);
+	await changeTrackingPage.goToReviewChanges(ctCollection.body.name);
 
 	await changeTrackingPage.reviewChange(journalName);
 
@@ -527,10 +536,10 @@ test('LPD-24758 Error when viewing Workflow tab in publication history', async (
 	await workflowTasksPage.approve(journalName);
 
 	await apiHelpers.headlessChangeTracking.publishCTCollection(
-		ctCollection.id
+		ctCollection.body.id
 	);
 
-	await changeTrackingPage.goToReviewChangesHistory(ctCollection.name);
+	await changeTrackingPage.goToReviewChangesHistory(ctCollection.body.name);
 
 	await changeTrackingPage.reviewChange(journalName);
 
@@ -548,7 +557,7 @@ test('LPD-28970 Error when viewing data tab after viewing Workflow tab', async (
 	ctCollection,
 	page,
 }) => {
-	await changeTrackingPage.goToReviewChanges(ctCollection.name);
+	await changeTrackingPage.goToReviewChanges(ctCollection.body.name);
 
 	await changeTrackingPage.reviewChange(journalName);
 
@@ -568,7 +577,7 @@ test('LPD-28734 SuccessMessage appears on Workflow Portlet after doing workflow 
 	ctCollection,
 	page,
 }) => {
-	await changeTrackingPage.goToReviewChanges(ctCollection.name);
+	await changeTrackingPage.goToReviewChanges(ctCollection.body.name);
 
 	await changeTrackingPage.reviewChange(journalName);
 
@@ -649,12 +658,9 @@ test('LPD-28975 Workflow tab shows unexpected error for asset added in publicati
 
 	await journalEditArticlePage.fillTitle(title1);
 
-	await page.getByRole('button', {name: 'Publish'}).click();
+	await journalEditArticlePage.publishArticle();
 
-	await waitForSuccessAlert(
-		page,
-		`Success:${title1} was created successfully.`
-	);
+	await waitForAlert(page, `Success:${title1} was created successfully.`);
 
 	await workflowPage.goto();
 
@@ -666,7 +672,7 @@ test('LPD-28975 Workflow tab shows unexpected error for asset added in publicati
 
 	await journalEditArticlePage.submitArticleForWorkflow(title2);
 
-	await changeTrackingPage.goToReviewChanges(ctCollection.name);
+	await changeTrackingPage.goToReviewChanges(ctCollection.body.name);
 
 	await changeTrackingPage.reviewChange(title1);
 

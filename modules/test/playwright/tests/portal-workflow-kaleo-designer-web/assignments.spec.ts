@@ -8,7 +8,7 @@ import {expect, mergeTests} from '@playwright/test';
 import {apiHelpersTest} from '../../fixtures/apiHelpersTest';
 import {loginTest} from '../../fixtures/loginTest';
 import {workflowPagesTest} from '../../fixtures/workflowPagesTest';
-import {getRandomInt} from '../../utils/getRandomInt';
+import postSingleApproverCopy from './utils/postSingleApproverCopy';
 
 export const test = mergeTests(apiHelpersTest, loginTest(), workflowPagesTest);
 
@@ -16,20 +16,10 @@ let workflowDefinitionId: number;
 let workflowDefinitionName: string;
 
 test.beforeEach(async ({apiHelpers}) => {
-	const singleApproverWorkflowDefinition =
-		await apiHelpers.headlessAdminWorkflow.getWorkflowDefinitionByName(
-			'Single Approver'
-		);
+	const workFlowDefinition = await postSingleApproverCopy(apiHelpers);
 
-	workflowDefinitionName = 'Copy of Single Approver' + getRandomInt();
-
-	const workflowDefinition =
-		await apiHelpers.headlessAdminWorkflow.postWorkflowDefinitionSave(
-			workflowDefinitionName,
-			singleApproverWorkflowDefinition
-		);
-
-	workflowDefinitionId = workflowDefinition.id;
+	workflowDefinitionId = workFlowDefinition.id;
+	workflowDefinitionName = workFlowDefinition.name;
 });
 
 test.afterEach(async ({apiHelpers, scriptManagementPage}) => {
@@ -83,4 +73,33 @@ test('cannot see Scripted Assignment option when script management configuration
 	expect(
 		await page.$(`#assignment-type option[value="scriptedAssignment"]`)
 	).toBeNull();
+});
+
+test('role name search box does not support regex strings', async ({
+	diagramViewPage,
+	nodePropertiesSidebarPage,
+	page,
+	processBuilderPage,
+}) => {
+	await processBuilderPage.goto();
+
+	await processBuilderPage.clickWorkflowDefinitionName(
+		workflowDefinitionName
+	);
+
+	await diagramViewPage.clickNode('review');
+
+	await nodePropertiesSidebarPage.editAssignmentButton.click();
+
+	await nodePropertiesSidebarPage.roleNameInput.fill('a');
+
+	expect(
+		await page.getByRole('menuitem').filter({hasText: 'Account'}).first()
+	).toBeVisible();
+
+	await nodePropertiesSidebarPage.roleNameInput.fill('a+');
+
+	expect(
+		await page.getByRole('menuitem').filter({hasText: 'Account'})
+	).not.toBeVisible();
 });

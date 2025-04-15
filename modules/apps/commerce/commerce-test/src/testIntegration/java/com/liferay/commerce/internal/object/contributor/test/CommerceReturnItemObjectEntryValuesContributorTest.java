@@ -20,6 +20,7 @@ import com.liferay.commerce.product.service.CommerceChannelLocalService;
 import com.liferay.commerce.product.test.util.CPTestUtil;
 import com.liferay.commerce.service.CommerceOrderLocalService;
 import com.liferay.commerce.test.util.CommerceTestUtil;
+import com.liferay.object.constants.ObjectEntryFolderConstants;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectEntry;
 import com.liferay.object.service.ObjectDefinitionLocalService;
@@ -32,6 +33,7 @@ import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
+import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.test.rule.Inject;
@@ -118,10 +120,12 @@ public class CommerceReturnItemObjectEntryValuesContributorTest {
 
 		ObjectDefinition objectDefinition =
 			_objectDefinitionLocalService.fetchSystemObjectDefinition(
-				"CommerceReturn");
+				TestPropsValues.getCompanyId(), "CommerceReturn");
 
 		_objectEntry = _objectEntryLocalService.addObjectEntry(
 			_user.getUserId(), 0, objectDefinition.getObjectDefinitionId(),
+			ObjectEntryFolderConstants.PARENT_OBJECT_ENTRY_FOLDER_ID_DEFAULT,
+			null,
 			HashMapBuilder.<String, Serializable>put(
 				"channelGroupId", _commerceChannel.getSiteGroupId()
 			).put(
@@ -162,10 +166,12 @@ public class CommerceReturnItemObjectEntryValuesContributorTest {
 
 		ObjectDefinition objectDefinition =
 			_objectDefinitionLocalService.fetchSystemObjectDefinition(
-				"CommerceReturnItem");
+				TestPropsValues.getCompanyId(), "CommerceReturnItem");
 
 		ObjectEntry objectEntry = _objectEntryLocalService.addObjectEntry(
 			_user.getUserId(), 0, objectDefinition.getObjectDefinitionId(),
+			ObjectEntryFolderConstants.PARENT_OBJECT_ENTRY_FOLDER_ID_DEFAULT,
+			null,
 			HashMapBuilder.<String, Serializable>put(
 				"quantity", _commerceOrderItem.getQuantity()
 			).put(
@@ -175,7 +181,7 @@ public class CommerceReturnItemObjectEntryValuesContributorTest {
 				"r_commerceOrderItemToCommerceReturnItems_commerceOrderItemId",
 				_commerceOrderItem.getCommerceOrderItemId()
 			).put(
-				"r_commerceReturnToCommerceReturnItems_c_commerceReturnId",
+				"r_commerceReturnToCommerceReturnItems_l_commerceReturnId",
 				_objectEntry.getObjectEntryId()
 			).build(),
 			ServiceContextTestUtil.getServiceContext());

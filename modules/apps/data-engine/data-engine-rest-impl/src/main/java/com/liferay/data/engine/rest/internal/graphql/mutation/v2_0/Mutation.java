@@ -19,7 +19,6 @@ import com.liferay.data.engine.rest.resource.v2_0.DataRecordCollectionResource;
 import com.liferay.data.engine.rest.resource.v2_0.DataRecordResource;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.function.UnsafeFunction;
-import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
@@ -229,6 +228,45 @@ public class Mutation {
 			dataDefinitionResource ->
 				dataDefinitionResource.postSiteDataDefinitionByContentType(
 					Long.valueOf(siteKey), contentType, dataDefinition));
+	}
+
+	@GraphQLField
+	public boolean deleteSiteDataDefinitionByContentTypeByExternalReferenceCode(
+			@GraphQLName("siteKey") @NotEmpty String siteKey,
+			@GraphQLName("contentType") String contentType,
+			@GraphQLName("externalReferenceCode") String externalReferenceCode)
+		throws Exception {
+
+		_applyVoidComponentServiceObjects(
+			_dataDefinitionResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			dataDefinitionResource ->
+				dataDefinitionResource.
+					deleteSiteDataDefinitionByContentTypeByExternalReferenceCode(
+						Long.valueOf(siteKey), contentType,
+						externalReferenceCode));
+
+		return true;
+	}
+
+	@GraphQLField
+	public DataDefinition
+			updateSiteDataDefinitionByContentTypeByExternalReferenceCode(
+				@GraphQLName("siteKey") @NotEmpty String siteKey,
+				@GraphQLName("contentType") String contentType,
+				@GraphQLName("externalReferenceCode") String
+					externalReferenceCode,
+				@GraphQLName("dataDefinition") DataDefinition dataDefinition)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_dataDefinitionResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			dataDefinitionResource ->
+				dataDefinitionResource.
+					putSiteDataDefinitionByContentTypeByExternalReferenceCode(
+						Long.valueOf(siteKey), contentType,
+						externalReferenceCode, dataDefinition));
 	}
 
 	@GraphQLField
@@ -984,7 +1022,8 @@ public class Mutation {
 	private HttpServletRequest _httpServletRequest;
 	private HttpServletResponse _httpServletResponse;
 	private RoleLocalService _roleLocalService;
-	private BiFunction<Object, String, Sort[]> _sortsBiFunction;
+	private BiFunction<Object, String, com.liferay.portal.kernel.search.Sort[]>
+		_sortsBiFunction;
 	private UriInfo _uriInfo;
 	private com.liferay.portal.kernel.model.User _user;
 	private VulcanBatchEngineExportTaskResource

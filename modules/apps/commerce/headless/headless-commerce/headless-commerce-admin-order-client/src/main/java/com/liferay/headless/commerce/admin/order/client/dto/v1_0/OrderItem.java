@@ -113,6 +113,27 @@ public class OrderItem implements Cloneable, Serializable {
 
 	protected String deliveryGroup;
 
+	public String getDeliveryGroupName() {
+		return deliveryGroupName;
+	}
+
+	public void setDeliveryGroupName(String deliveryGroupName) {
+		this.deliveryGroupName = deliveryGroupName;
+	}
+
+	public void setDeliveryGroupName(
+		UnsafeSupplier<String, Exception> deliveryGroupNameUnsafeSupplier) {
+
+		try {
+			deliveryGroupName = deliveryGroupNameUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String deliveryGroupName;
+
 	public BigDecimal getDiscountAmount() {
 		return discountAmount;
 	}
@@ -705,6 +726,32 @@ public class OrderItem implements Cloneable, Serializable {
 
 	protected String replacedSku;
 
+	public String getReplacedSkuExternalReferenceCode() {
+		return replacedSkuExternalReferenceCode;
+	}
+
+	public void setReplacedSkuExternalReferenceCode(
+		String replacedSkuExternalReferenceCode) {
+
+		this.replacedSkuExternalReferenceCode =
+			replacedSkuExternalReferenceCode;
+	}
+
+	public void setReplacedSkuExternalReferenceCode(
+		UnsafeSupplier<String, Exception>
+			replacedSkuExternalReferenceCodeUnsafeSupplier) {
+
+		try {
+			replacedSkuExternalReferenceCode =
+				replacedSkuExternalReferenceCodeUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String replacedSkuExternalReferenceCode;
+
 	public Long getReplacedSkuId() {
 		return replacedSkuId;
 	}
@@ -746,6 +793,27 @@ public class OrderItem implements Cloneable, Serializable {
 	}
 
 	protected Date requestedDeliveryDate;
+
+	public Boolean getShippable() {
+		return shippable;
+	}
+
+	public void setShippable(Boolean shippable) {
+		this.shippable = shippable;
+	}
+
+	public void setShippable(
+		UnsafeSupplier<Boolean, Exception> shippableUnsafeSupplier) {
+
+		try {
+			shippable = shippableUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Boolean shippable;
 
 	public BigDecimal getShippedQuantity() {
 		return shippedQuantity;
@@ -789,6 +857,32 @@ public class OrderItem implements Cloneable, Serializable {
 	}
 
 	protected ShippingAddress shippingAddress;
+
+	public String getShippingAddressExternalReferenceCode() {
+		return shippingAddressExternalReferenceCode;
+	}
+
+	public void setShippingAddressExternalReferenceCode(
+		String shippingAddressExternalReferenceCode) {
+
+		this.shippingAddressExternalReferenceCode =
+			shippingAddressExternalReferenceCode;
+	}
+
+	public void setShippingAddressExternalReferenceCode(
+		UnsafeSupplier<String, Exception>
+			shippingAddressExternalReferenceCodeUnsafeSupplier) {
+
+		try {
+			shippingAddressExternalReferenceCode =
+				shippingAddressExternalReferenceCodeUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String shippingAddressExternalReferenceCode;
 
 	public Long getShippingAddressId() {
 		return shippingAddressId;

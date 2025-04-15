@@ -29,8 +29,9 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
-import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
+import com.liferay.portal.kernel.util.FastDateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -44,7 +45,7 @@ import com.liferay.portal.vulcan.resource.EntityModelResource;
 
 import java.lang.reflect.Method;
 
-import java.text.DateFormat;
+import java.text.Format;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -83,7 +84,7 @@ public abstract class BaseSkuResourceTestCase {
 
 	@BeforeClass
 	public static void setUpClass() throws Exception {
-		_dateFormat = DateFormatFactoryUtil.getSimpleDateFormat(
+		_format = FastDateFormatFactoryUtil.getSimpleDateFormat(
 			"yyyy-MM-dd'T'HH:mm:ss'Z'");
 	}
 
@@ -97,10 +98,15 @@ public abstract class BaseSkuResourceTestCase {
 
 		_skuResource.setContextCompany(testCompany);
 
-		SkuResource.Builder builder = SkuResource.builder();
+		_testCompanyAdminUser = UserTestUtil.getAdminUser(
+			testCompany.getCompanyId());
 
-		skuResource = builder.authentication(
-			"test@liferay.com", PropsValues.DEFAULT_ADMIN_PASSWORD
+		skuResource = SkuResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
 		).locale(
 			LocaleUtil.getDefault()
 		).build();
@@ -114,7 +120,32 @@ public abstract class BaseSkuResourceTestCase {
 
 	@Test
 	public void testClientSerDesToDTO() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		Sku sku1 = randomSku();
+
+		String json = objectMapper.writeValueAsString(sku1);
+
+		Sku sku2 = SkuSerDes.toDTO(json);
+
+		Assert.assertTrue(equals(sku1, sku2));
+	}
+
+	@Test
+	public void testClientSerDesToJSON() throws Exception {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		Sku sku = randomSku();
+
+		String json1 = objectMapper.writeValueAsString(sku);
+		String json2 = SkuSerDes.toJSON(sku);
+
+		Assert.assertEquals(
+			objectMapper.readTree(json1), objectMapper.readTree(json2));
+	}
+
+	protected ObjectMapper getClientSerDesObjectMapper() {
+		return new ObjectMapper() {
 			{
 				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
 				configure(
@@ -129,40 +160,6 @@ public abstract class BaseSkuResourceTestCase {
 					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
 			}
 		};
-
-		Sku sku1 = randomSku();
-
-		String json = objectMapper.writeValueAsString(sku1);
-
-		Sku sku2 = SkuSerDes.toDTO(json);
-
-		Assert.assertTrue(equals(sku1, sku2));
-	}
-
-	@Test
-	public void testClientSerDesToJSON() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
-			{
-				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
-				configure(
-					SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true);
-				setDateFormat(new ISO8601DateFormat());
-				setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
-				setSerializationInclusion(JsonInclude.Include.NON_NULL);
-				setVisibility(
-					PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-				setVisibility(
-					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
-			}
-		};
-
-		Sku sku = randomSku();
-
-		String json1 = objectMapper.writeValueAsString(sku);
-		String json2 = SkuSerDes.toJSON(sku);
-
-		Assert.assertEquals(
-			objectMapper.readTree(json1), objectMapper.readTree(json2));
 	}
 
 	@Test
@@ -210,7 +207,7 @@ public abstract class BaseSkuResourceTestCase {
 			skuResource.
 				getChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodeSkusPage(
 					channelExternalReferenceCode, productExternalReferenceCode,
-					null, Pagination.of(1, 10));
+					null, RandomTestUtil.randomString(), Pagination.of(1, 10));
 
 		long totalCount = page.getTotalCount();
 
@@ -227,7 +224,7 @@ public abstract class BaseSkuResourceTestCase {
 				skuResource.
 					getChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodeSkusPage(
 						irrelevantChannelExternalReferenceCode,
-						irrelevantProductExternalReferenceCode, null,
+						irrelevantProductExternalReferenceCode, null, null,
 						Pagination.of(1, (int)totalCount + 1));
 
 			Assert.assertEquals(totalCount + 1, page.getTotalCount());
@@ -254,7 +251,7 @@ public abstract class BaseSkuResourceTestCase {
 			skuResource.
 				getChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodeSkusPage(
 					channelExternalReferenceCode, productExternalReferenceCode,
-					null, Pagination.of(1, 10));
+					null, null, Pagination.of(1, 10));
 
 		Assert.assertEquals(totalCount + 2, page.getTotalCount());
 
@@ -290,7 +287,7 @@ public abstract class BaseSkuResourceTestCase {
 			skuResource.
 				getChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodeSkusPage(
 					channelExternalReferenceCode, productExternalReferenceCode,
-					null, null);
+					null, null, null);
 
 		int totalCount = GetterUtil.getInteger(skuPage.getTotalCount());
 
@@ -318,7 +315,7 @@ public abstract class BaseSkuResourceTestCase {
 				skuResource.
 					getChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodeSkusPage(
 						channelExternalReferenceCode,
-						productExternalReferenceCode, null,
+						productExternalReferenceCode, null, null,
 						Pagination.of(
 							(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
 							pageSizeLimit));
@@ -331,7 +328,7 @@ public abstract class BaseSkuResourceTestCase {
 				skuResource.
 					getChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodeSkusPage(
 						channelExternalReferenceCode,
-						productExternalReferenceCode, null,
+						productExternalReferenceCode, null, null,
 						Pagination.of(
 							(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
 							pageSizeLimit));
@@ -342,7 +339,7 @@ public abstract class BaseSkuResourceTestCase {
 				skuResource.
 					getChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodeSkusPage(
 						channelExternalReferenceCode,
-						productExternalReferenceCode, null,
+						productExternalReferenceCode, null, null,
 						Pagination.of(
 							(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
 							pageSizeLimit));
@@ -354,7 +351,7 @@ public abstract class BaseSkuResourceTestCase {
 				skuResource.
 					getChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodeSkusPage(
 						channelExternalReferenceCode,
-						productExternalReferenceCode, null,
+						productExternalReferenceCode, null, null,
 						Pagination.of(1, totalCount + 2));
 
 			List<Sku> skus1 = (List<Sku>)page1.getItems();
@@ -365,7 +362,7 @@ public abstract class BaseSkuResourceTestCase {
 				skuResource.
 					getChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodeSkusPage(
 						channelExternalReferenceCode,
-						productExternalReferenceCode, null,
+						productExternalReferenceCode, null, null,
 						Pagination.of(2, totalCount + 2));
 
 			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
@@ -378,7 +375,7 @@ public abstract class BaseSkuResourceTestCase {
 				skuResource.
 					getChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodeSkusPage(
 						channelExternalReferenceCode,
-						productExternalReferenceCode, null,
+						productExternalReferenceCode, null, null,
 						Pagination.of(1, (int)totalCount + 3));
 
 			assertContains(sku1, (List<Sku>)page3.getItems());
@@ -463,7 +460,7 @@ public abstract class BaseSkuResourceTestCase {
 					testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodeSkuByExternalReferenceCodeSkuExternalReferenceCode_getChannelExternalReferenceCode(),
 					testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodeSkuByExternalReferenceCodeSkuExternalReferenceCode_getProductExternalReferenceCode(),
 					testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodeSkuByExternalReferenceCodeSkuExternalReferenceCode_getSkuExternalReferenceCode(),
-					null);
+					null, null);
 
 		assertEquals(postSku, getSku);
 		assertValid(getSku);
@@ -710,7 +707,8 @@ public abstract class BaseSkuResourceTestCase {
 			testGetChannelProductSkusPage_getIrrelevantProductId();
 
 		Page<Sku> page = skuResource.getChannelProductSkusPage(
-			channelId, productId, null, Pagination.of(1, 10));
+			channelId, productId, null, RandomTestUtil.randomString(),
+			Pagination.of(1, 10));
 
 		long totalCount = page.getTotalCount();
 
@@ -720,7 +718,7 @@ public abstract class BaseSkuResourceTestCase {
 				randomIrrelevantSku());
 
 			page = skuResource.getChannelProductSkusPage(
-				irrelevantChannelId, irrelevantProductId, null,
+				irrelevantChannelId, irrelevantProductId, null, null,
 				Pagination.of(1, (int)totalCount + 1));
 
 			Assert.assertEquals(totalCount + 1, page.getTotalCount());
@@ -739,7 +737,7 @@ public abstract class BaseSkuResourceTestCase {
 			channelId, productId, randomSku());
 
 		page = skuResource.getChannelProductSkusPage(
-			channelId, productId, null, Pagination.of(1, 10));
+			channelId, productId, null, null, Pagination.of(1, 10));
 
 		Assert.assertEquals(totalCount + 2, page.getTotalCount());
 
@@ -767,7 +765,7 @@ public abstract class BaseSkuResourceTestCase {
 		Long productId = testGetChannelProductSkusPage_getProductId();
 
 		Page<Sku> skuPage = skuResource.getChannelProductSkusPage(
-			channelId, productId, null, null);
+			channelId, productId, null, null, null);
 
 		int totalCount = GetterUtil.getInteger(skuPage.getTotalCount());
 
@@ -786,7 +784,7 @@ public abstract class BaseSkuResourceTestCase {
 
 		if (totalCount >= (pageSizeLimit - 2)) {
 			Page<Sku> page1 = skuResource.getChannelProductSkusPage(
-				channelId, productId, null,
+				channelId, productId, null, null,
 				Pagination.of(
 					(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
 					pageSizeLimit));
@@ -796,7 +794,7 @@ public abstract class BaseSkuResourceTestCase {
 			assertContains(sku1, (List<Sku>)page1.getItems());
 
 			Page<Sku> page2 = skuResource.getChannelProductSkusPage(
-				channelId, productId, null,
+				channelId, productId, null, null,
 				Pagination.of(
 					(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
 					pageSizeLimit));
@@ -804,7 +802,7 @@ public abstract class BaseSkuResourceTestCase {
 			assertContains(sku2, (List<Sku>)page2.getItems());
 
 			Page<Sku> page3 = skuResource.getChannelProductSkusPage(
-				channelId, productId, null,
+				channelId, productId, null, null,
 				Pagination.of(
 					(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
 					pageSizeLimit));
@@ -813,14 +811,16 @@ public abstract class BaseSkuResourceTestCase {
 		}
 		else {
 			Page<Sku> page1 = skuResource.getChannelProductSkusPage(
-				channelId, productId, null, Pagination.of(1, totalCount + 2));
+				channelId, productId, null, null,
+				Pagination.of(1, totalCount + 2));
 
 			List<Sku> skus1 = (List<Sku>)page1.getItems();
 
 			Assert.assertEquals(skus1.toString(), totalCount + 2, skus1.size());
 
 			Page<Sku> page2 = skuResource.getChannelProductSkusPage(
-				channelId, productId, null, Pagination.of(2, totalCount + 2));
+				channelId, productId, null, null,
+				Pagination.of(2, totalCount + 2));
 
 			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
 
@@ -829,7 +829,7 @@ public abstract class BaseSkuResourceTestCase {
 			Assert.assertEquals(skus2.toString(), 1, skus2.size());
 
 			Page<Sku> page3 = skuResource.getChannelProductSkusPage(
-				channelId, productId, null,
+				channelId, productId, null, null,
 				Pagination.of(1, (int)totalCount + 3));
 
 			assertContains(sku1, (List<Sku>)page3.getItems());
@@ -911,7 +911,7 @@ public abstract class BaseSkuResourceTestCase {
 		Sku getSku = skuResource.getChannelProductSku(
 			testGetChannelProductSku_getChannelId(),
 			testGetChannelProductSku_getProductId(postSku), postSku.getId(),
-			null);
+			null, null);
 
 		assertEquals(postSku, getSku);
 		assertValid(getSku);
@@ -2033,13 +2033,11 @@ public abstract class BaseSkuResourceTestCase {
 				sb.append("(");
 				sb.append(entityFieldName);
 				sb.append(" gt ");
-				sb.append(
-					_dateFormat.format(date.getTime() - (2 * Time.SECOND)));
+				sb.append(_format.format(date.getTime() - (2 * Time.SECOND)));
 				sb.append(" and ");
 				sb.append(entityFieldName);
 				sb.append(" lt ");
-				sb.append(
-					_dateFormat.format(date.getTime() + (2 * Time.SECOND)));
+				sb.append(_format.format(date.getTime() + (2 * Time.SECOND)));
 				sb.append(")");
 			}
 			else {
@@ -2049,7 +2047,7 @@ public abstract class BaseSkuResourceTestCase {
 				sb.append(operator);
 				sb.append(" ");
 
-				sb.append(_dateFormat.format(sku.getDiscontinuedDate()));
+				sb.append(_format.format(sku.getDiscontinuedDate()));
 			}
 
 			return sb.toString();
@@ -2064,13 +2062,11 @@ public abstract class BaseSkuResourceTestCase {
 				sb.append("(");
 				sb.append(entityFieldName);
 				sb.append(" gt ");
-				sb.append(
-					_dateFormat.format(date.getTime() - (2 * Time.SECOND)));
+				sb.append(_format.format(date.getTime() - (2 * Time.SECOND)));
 				sb.append(" and ");
 				sb.append(entityFieldName);
 				sb.append(" lt ");
-				sb.append(
-					_dateFormat.format(date.getTime() + (2 * Time.SECOND)));
+				sb.append(_format.format(date.getTime() + (2 * Time.SECOND)));
 				sb.append(")");
 			}
 			else {
@@ -2080,7 +2076,7 @@ public abstract class BaseSkuResourceTestCase {
 				sb.append(operator);
 				sb.append(" ");
 
-				sb.append(_dateFormat.format(sku.getDisplayDate()));
+				sb.append(_format.format(sku.getDisplayDate()));
 			}
 
 			return sb.toString();
@@ -2100,13 +2096,11 @@ public abstract class BaseSkuResourceTestCase {
 				sb.append("(");
 				sb.append(entityFieldName);
 				sb.append(" gt ");
-				sb.append(
-					_dateFormat.format(date.getTime() - (2 * Time.SECOND)));
+				sb.append(_format.format(date.getTime() - (2 * Time.SECOND)));
 				sb.append(" and ");
 				sb.append(entityFieldName);
 				sb.append(" lt ");
-				sb.append(
-					_dateFormat.format(date.getTime() + (2 * Time.SECOND)));
+				sb.append(_format.format(date.getTime() + (2 * Time.SECOND)));
 				sb.append(")");
 			}
 			else {
@@ -2116,7 +2110,7 @@ public abstract class BaseSkuResourceTestCase {
 				sb.append(operator);
 				sb.append(" ");
 
-				sb.append(_dateFormat.format(sku.getExpirationDate()));
+				sb.append(_format.format(sku.getExpirationDate()));
 			}
 
 			return sb.toString();
@@ -2581,12 +2575,12 @@ public abstract class BaseSkuResourceTestCase {
 		public static void copyProperties(Object source, Object target)
 			throws Exception {
 
-			Class<?> sourceClass = _getSuperClass(source.getClass());
+			Class<?> sourceClass = source.getClass();
 
 			Class<?> targetClass = target.getClass();
 
 			for (java.lang.reflect.Field field :
-					sourceClass.getDeclaredFields()) {
+					_getAllDeclaredFields(sourceClass)) {
 
 				if (field.isSynthetic()) {
 					continue;
@@ -2595,11 +2589,16 @@ public abstract class BaseSkuResourceTestCase {
 				Method getMethod = _getMethod(
 					sourceClass, field.getName(), "get");
 
-				Method setMethod = _getMethod(
-					targetClass, field.getName(), "set",
-					getMethod.getReturnType());
+				try {
+					Method setMethod = _getMethod(
+						targetClass, field.getName(), "set",
+						getMethod.getReturnType());
 
-				setMethod.invoke(target, getMethod.invoke(source));
+					setMethod.invoke(target, getMethod.invoke(source));
+				}
+				catch (Exception e) {
+					continue;
+				}
 			}
 		}
 
@@ -2631,6 +2630,24 @@ public abstract class BaseSkuResourceTestCase {
 			setMethod.invoke(bean, _translateValue(parameterTypes[0], value));
 		}
 
+		private static List<java.lang.reflect.Field> _getAllDeclaredFields(
+			Class<?> clazz) {
+
+			List<java.lang.reflect.Field> fields = new ArrayList<>();
+
+			while ((clazz != null) && (clazz != Object.class)) {
+				for (java.lang.reflect.Field field :
+						clazz.getDeclaredFields()) {
+
+					fields.add(field);
+				}
+
+				clazz = clazz.getSuperclass();
+			}
+
+			return fields;
+		}
+
 		private static Method _getMethod(Class<?> clazz, String name) {
 			for (Method method : clazz.getMethods()) {
 				if (name.equals(method.getName()) &&
@@ -2652,16 +2669,6 @@ public abstract class BaseSkuResourceTestCase {
 			return clazz.getMethod(
 				prefix + StringUtil.upperCaseFirstLetter(fieldName),
 				parameterTypes);
-		}
-
-		private static Class<?> _getSuperClass(Class<?> clazz) {
-			Class<?> superClass = clazz.getSuperclass();
-
-			if ((superClass == null) || (superClass == Object.class)) {
-				return clazz;
-			}
-
-			return superClass;
 		}
 
 		private static Object _translateValue(
@@ -2759,7 +2766,9 @@ public abstract class BaseSkuResourceTestCase {
 	private static final com.liferay.portal.kernel.log.Log _log =
 		LogFactoryUtil.getLog(BaseSkuResourceTestCase.class);
 
-	private static DateFormat _dateFormat;
+	private static Format _format;
+
+	private com.liferay.portal.kernel.model.User _testCompanyAdminUser;
 
 	@Inject
 	private

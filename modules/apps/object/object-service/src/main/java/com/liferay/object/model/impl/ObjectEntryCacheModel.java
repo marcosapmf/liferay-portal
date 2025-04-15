@@ -68,7 +68,7 @@ public class ObjectEntryCacheModel
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(35);
+		StringBundler sb = new StringBundler(43);
 
 		sb.append("{mvccVersion=");
 		sb.append(mvccVersion);
@@ -92,8 +92,16 @@ public class ObjectEntryCacheModel
 		sb.append(modifiedDate);
 		sb.append(", objectDefinitionId=");
 		sb.append(objectDefinitionId);
+		sb.append(", objectEntryFolderId=");
+		sb.append(objectEntryFolderId);
 		sb.append(", rootObjectEntryId=");
 		sb.append(rootObjectEntryId);
+		sb.append(", defaultLanguageId=");
+		sb.append(defaultLanguageId);
+		sb.append(", treePath=");
+		sb.append(treePath);
+		sb.append(", version=");
+		sb.append(version);
 		sb.append(", lastPublishDate=");
 		sb.append(lastPublishDate);
 		sb.append(", status=");
@@ -156,7 +164,24 @@ public class ObjectEntryCacheModel
 		}
 
 		objectEntryImpl.setObjectDefinitionId(objectDefinitionId);
+		objectEntryImpl.setObjectEntryFolderId(objectEntryFolderId);
 		objectEntryImpl.setRootObjectEntryId(rootObjectEntryId);
+
+		if (defaultLanguageId == null) {
+			objectEntryImpl.setDefaultLanguageId("");
+		}
+		else {
+			objectEntryImpl.setDefaultLanguageId(defaultLanguageId);
+		}
+
+		if (treePath == null) {
+			objectEntryImpl.setTreePath("");
+		}
+		else {
+			objectEntryImpl.setTreePath(treePath);
+		}
+
+		objectEntryImpl.setVersion(version);
 
 		if (lastPublishDate == Long.MIN_VALUE) {
 			objectEntryImpl.setLastPublishDate(null);
@@ -206,7 +231,13 @@ public class ObjectEntryCacheModel
 
 		objectDefinitionId = objectInput.readLong();
 
+		objectEntryFolderId = objectInput.readLong();
+
 		rootObjectEntryId = objectInput.readLong();
+		defaultLanguageId = objectInput.readUTF();
+		treePath = objectInput.readUTF();
+
+		version = objectInput.readInt();
 		lastPublishDate = objectInput.readLong();
 
 		status = objectInput.readInt();
@@ -254,7 +285,25 @@ public class ObjectEntryCacheModel
 
 		objectOutput.writeLong(objectDefinitionId);
 
+		objectOutput.writeLong(objectEntryFolderId);
+
 		objectOutput.writeLong(rootObjectEntryId);
+
+		if (defaultLanguageId == null) {
+			objectOutput.writeUTF("");
+		}
+		else {
+			objectOutput.writeUTF(defaultLanguageId);
+		}
+
+		if (treePath == null) {
+			objectOutput.writeUTF("");
+		}
+		else {
+			objectOutput.writeUTF(treePath);
+		}
+
+		objectOutput.writeInt(version);
 		objectOutput.writeLong(lastPublishDate);
 
 		objectOutput.writeInt(status);
@@ -282,7 +331,11 @@ public class ObjectEntryCacheModel
 	public long createDate;
 	public long modifiedDate;
 	public long objectDefinitionId;
+	public long objectEntryFolderId;
 	public long rootObjectEntryId;
+	public String defaultLanguageId;
+	public String treePath;
+	public int version;
 	public long lastPublishDate;
 	public int status;
 	public long statusByUserId;

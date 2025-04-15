@@ -124,6 +124,9 @@ public interface BenchmarksPropsKeys {
 	public static final String MAX_DL_FOLDER_DEPTH =
 		"sample.sql.max.dl.folder.depth";
 
+	public static final String MAX_FRAGMENT_ENTRY_LINK_COUNT =
+		"sample.sql.max.fragment.entry.link.count";
+
 	public static final String MAX_GROUP_COUNT = "sample.sql.max.group.count";
 
 	public static final String MAX_JOURNAL_ARTICLE_COUNT =
@@ -153,6 +156,12 @@ public interface BenchmarksPropsKeys {
 	public static final String MAX_MB_THREAD_COUNT =
 		"sample.sql.max.mb.thread.count";
 
+	public static final String MAX_OBJECT_ENTRY_COUNT =
+		"sample.sql.max.object.entry.count";
+
+	public static final String MAX_OBJECT_ENTRY_PAGE_COUNT =
+		"sample.sql.max.object.entry.page.count";
+
 	public static final String MAX_SEGMENTS_ENTRY_COUNT =
 		"sample.sql.max.segments.entry.count";
 
@@ -161,15 +170,6 @@ public interface BenchmarksPropsKeys {
 
 	public static final String MAX_USER_TO_GROUP_COUNT =
 		"sample.sql.max.user.to.group.count";
-
-	public static final String MAX_WIKI_NODE_COUNT =
-		"sample.sql.max.wiki.node.count";
-
-	public static final String MAX_WIKI_PAGE_COMMENT_COUNT =
-		"sample.sql.max.wiki.page.comment.count";
-
-	public static final String MAX_WIKI_PAGE_COUNT =
-		"sample.sql.max.wiki.page.count";
 
 	public static final String OPTIMIZE_BUFFER_SIZE =
 		"sample.sql.optimize.buffer.size";

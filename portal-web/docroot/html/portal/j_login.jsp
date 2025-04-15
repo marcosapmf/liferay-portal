@@ -8,11 +8,7 @@
 <%@ include file="/html/common/init.jsp" %>
 
 <%
-String jSecurityCheck = "j_security_check";
-
-if (!ServerDetector.isWebSphere()) {
-	jSecurityCheck = themeDisplay.getPathMain() + "/portal/" + jSecurityCheck;
-}
+String jSecurityCheck = themeDisplay.getPathMain() + "/portal/j_security_check";
 
 String jUserName = (String)session.getAttribute("j_username");
 String jPassword = (String)session.getAttribute("j_password");
@@ -43,31 +39,33 @@ if (PropsValues.PORTAL_JAAS_ENABLE && (jUserName != null)) {
 				<meta content="no-cache" http-equiv="Pragma" />
 				<meta content="0" http-equiv="Expires" />
 
-				<link class="lfr-css-file" href="<%= HtmlUtil.escapeAttribute(themeDisplay.getClayCSSURL()) %>" rel="stylesheet" type="text/css" />
+				<aui:link cssClass="lfr-css-file" href="<%= HtmlUtil.escapeAttribute(themeDisplay.getClayCSSURL()) %>" rel="stylesheet" type="text/css" />
 			</head>
 
-			<body onLoad="setTimeout('document.fm.submit()', 100);">
-				<center>
-					<table border="0" cellpadding="0" cellspacing="0" height="100%" width="600">
-						<tr>
-							<td align="center" valign="middle">
-								<form action="<%= jSecurityCheck %>" method="post" name="fm">
-									<input name="j_username" type="hidden" value="<%= HtmlUtil.escapeAttribute(jUserName) %>" />
-									<input name="j_password" type="hidden" value="<%= HtmlUtil.escapeAttribute(jPassword) %>" />
-								</form>
+			<liferay-ui:csp>
+				<body onload="setTimeout('document.fm.submit()', 100);">
+					<center>
+						<table border="0" cellpadding="0" cellspacing="0" height="100%" width="600">
+							<tr>
+								<td align="center" valign="middle">
+									<form action="<%= jSecurityCheck %>" method="post" name="fm">
+										<input name="j_username" type="hidden" value="<%= HtmlUtil.escapeAttribute(jUserName) %>" />
+										<input name="j_password" type="hidden" value="<%= HtmlUtil.escapeAttribute(jPassword) %>" />
+									</form>
 
-								<font face="Verdana, Tahoma, Arial" size="3">
-									<strong><liferay-ui:message key="processing-login" /></strong>
-								</font>
+									<font face="Verdana, Tahoma, Arial" size="3">
+										<strong><liferay-ui:message key="processing-login" /></strong>
+									</font>
 
-								<br /><br />
+									<br /><br />
 
-								<span aria-hidden="true" class="loading-animation loading-animation-sm"></span>
-							</td>
-						</tr>
-					</table>
-				</center>
-			</body>
+									<span aria-hidden="true" class="loading-animation loading-animation-sm"></span>
+								</td>
+							</tr>
+						</table>
+					</center>
+				</body>
+			</liferay-ui:csp>
 		</html>
 
 		<%
@@ -107,9 +105,10 @@ if (PropsValues.PORTAL_JAAS_ENABLE && (jUserName != null)) {
 				<meta content="0" http-equiv="Expires" />
 			</head>
 
-			<body onLoad="javascript:location.replace('<%= themeDisplay.getPathMain() %>')">
-
-			</body>
+			<liferay-ui:csp>
+				<body onload="window.location.replace('<%= themeDisplay.getPathMain() %>');">
+				</body>
+			</liferay-ui:csp>
 		</html>
 	</c:otherwise>
 </c:choose>

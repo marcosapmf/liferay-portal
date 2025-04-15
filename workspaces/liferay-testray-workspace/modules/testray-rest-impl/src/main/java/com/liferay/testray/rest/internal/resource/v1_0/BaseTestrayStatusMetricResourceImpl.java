@@ -4,6 +4,7 @@ import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.service.GroupLocalService;
@@ -337,19 +338,7 @@ public abstract class BaseTestrayStatusMetricResourceImpl
 			),
 			@io.swagger.v3.oas.annotations.Parameter(
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "testrayCasePriorities"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "testrayCaseTypes"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "testrayRoutineId"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "testrayTeamId"
+				name = "sort"
 			)
 		}
 	)
@@ -372,19 +361,8 @@ public abstract class BaseTestrayStatusMetricResourceImpl
 				@javax.validation.constraints.NotNull
 				@javax.ws.rs.PathParam("testrayProjectId")
 				Long testrayProjectId,
-				@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-				@javax.ws.rs.QueryParam("testrayCasePriorities")
-				String testrayCasePriorities,
-				@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-				@javax.ws.rs.QueryParam("testrayCaseTypes")
-				String testrayCaseTypes,
-				@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-				@javax.ws.rs.QueryParam("testrayRoutineId")
-				Long testrayRoutineId,
-				@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-				@javax.ws.rs.QueryParam("testrayTeamId")
-				Long testrayTeamId,
-				@javax.ws.rs.core.Context Pagination pagination)
+				@javax.ws.rs.core.Context Pagination pagination,
+				@javax.ws.rs.core.Context Sort[] sorts)
 		throws Exception {
 
 		return Page.of(Collections.emptyList());

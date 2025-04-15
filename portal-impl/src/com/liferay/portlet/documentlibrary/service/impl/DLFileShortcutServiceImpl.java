@@ -28,8 +28,8 @@ public class DLFileShortcutServiceImpl extends DLFileShortcutServiceBaseImpl {
 
 	@Override
 	public DLFileShortcut addFileShortcut(
-			long groupId, long repositoryId, long folderId, long toFileEntryId,
-			ServiceContext serviceContext)
+			String externalReferenceCode, long groupId, long repositoryId,
+			long folderId, long toFileEntryId, ServiceContext serviceContext)
 		throws PortalException {
 
 		ModelResourcePermissionUtil.check(
@@ -51,8 +51,8 @@ public class DLFileShortcutServiceImpl extends DLFileShortcutServiceBaseImpl {
 		}
 
 		return dlFileShortcutLocalService.addFileShortcut(
-			getUserId(), groupId, repositoryId, folderId, toFileEntryId,
-			serviceContext);
+			externalReferenceCode, getUserId(), groupId, repositoryId, folderId,
+			toFileEntryId, serviceContext);
 	}
 
 	@Override
@@ -66,6 +66,47 @@ public class DLFileShortcutServiceImpl extends DLFileShortcutServiceBaseImpl {
 			getPermissionChecker(), fileShortcutId, ActionKeys.DELETE);
 
 		dlFileShortcutLocalService.deleteFileShortcut(fileShortcutId);
+	}
+
+	@Override
+	public void deleteFileShortcut(String externalReferenceCode, long groupId)
+		throws PortalException {
+
+		DLFileShortcut fileShortcut =
+			dlFileShortcutLocalService.getDLFileShortcutByExternalReferenceCode(
+				externalReferenceCode, groupId);
+
+		ModelResourcePermission<FileShortcut>
+			fileShortcutModelResourcePermission =
+				ModelResourcePermissionRegistryUtil.getModelResourcePermission(
+					FileShortcut.class.getName());
+
+		fileShortcutModelResourcePermission.check(
+			getPermissionChecker(), fileShortcut.getFileShortcutId(),
+			ActionKeys.DELETE);
+
+		dlFileShortcutLocalService.deleteFileShortcut(fileShortcut);
+	}
+
+	@Override
+	public DLFileShortcut getDLFileShortcutByExternalReferenceCode(
+			String externalReferenceCode, long groupId)
+		throws PortalException {
+
+		DLFileShortcut fileShortcut =
+			dlFileShortcutLocalService.getDLFileShortcutByExternalReferenceCode(
+				externalReferenceCode, groupId);
+
+		ModelResourcePermission<FileShortcut>
+			fileShortcutModelResourcePermission =
+				ModelResourcePermissionRegistryUtil.getModelResourcePermission(
+					FileShortcut.class.getName());
+
+		fileShortcutModelResourcePermission.check(
+			getPermissionChecker(), fileShortcut.getFileShortcutId(),
+			ActionKeys.VIEW);
+
+		return fileShortcut;
 	}
 
 	@Override

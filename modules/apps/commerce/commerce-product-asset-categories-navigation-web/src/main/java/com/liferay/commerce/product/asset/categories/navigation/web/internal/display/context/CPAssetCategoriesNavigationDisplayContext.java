@@ -29,15 +29,18 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.module.configuration.ConfigurationException;
-import com.liferay.portal.kernel.security.permission.ActionKeys;
+import com.liferay.portal.kernel.security.auth.PrincipalException;
+import com.liferay.portal.kernel.service.GroupLocalService;
+import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
-import com.liferay.portlet.asset.service.permission.AssetVocabularyPermission;
 
 import java.util.Collections;
 import java.util.List;
@@ -50,30 +53,33 @@ import javax.servlet.http.HttpServletRequest;
 public class CPAssetCategoriesNavigationDisplayContext {
 
 	public CPAssetCategoriesNavigationDisplayContext(
-			HttpServletRequest httpServletRequest,
 			AssetCategoryService assetCategoryService,
 			AssetVocabularyService assetVocabularyService,
 			CommerceMediaResolver commerceMediaResolver,
 			CPAttachmentFileEntryService cpAttachmentFileEntryService,
 			CPFriendlyURL cpFriendlyURL,
 			FriendlyURLEntryLocalService friendlyURLEntryLocalService,
-			Portal portal)
+			GroupLocalService groupLocalService,
+			HttpServletRequest httpServletRequest, Portal portal)
 		throws ConfigurationException {
 
-		_httpServletRequest = httpServletRequest;
 		_assetCategoryService = assetCategoryService;
 		_assetVocabularyService = assetVocabularyService;
 		_commerceMediaResolver = commerceMediaResolver;
 		_cpAttachmentFileEntryService = cpAttachmentFileEntryService;
 		_cpFriendlyURL = cpFriendlyURL;
 		_friendlyURLEntryLocalService = friendlyURLEntryLocalService;
+		_groupLocalService = groupLocalService;
+		_httpServletRequest = httpServletRequest;
 		_portal = portal;
+
+		_themeDisplay = (ThemeDisplay)httpServletRequest.getAttribute(
+			WebKeys.THEME_DISPLAY);
 
 		_cpAssetCategoriesNavigationPortletInstanceConfiguration =
 			ConfigurationProviderUtil.getPortletInstanceConfiguration(
 				CPAssetCategoriesNavigationPortletInstanceConfiguration.class,
-				(ThemeDisplay)httpServletRequest.getAttribute(
-					WebKeys.THEME_DISPLAY));
+				_themeDisplay);
 	}
 
 	public List<AssetCategory> getAssetCategories() throws PortalException {
@@ -130,21 +136,25 @@ public class CPAssetCategoriesNavigationDisplayContext {
 			return _assetVocabulary;
 		}
 
-		ThemeDisplay themeDisplay =
-			(ThemeDisplay)_httpServletRequest.getAttribute(
-				WebKeys.THEME_DISPLAY);
-
-		long assetVocabularyId = GetterUtil.getLong(
+		String assetVocabularyExternalReferenceCode =
 			_cpAssetCategoriesNavigationPortletInstanceConfiguration.
-				assetVocabularyId());
+				assetVocabularyExternalReferenceCode();
 
-		if ((assetVocabularyId > 0) &&
-			AssetVocabularyPermission.contains(
-				themeDisplay.getPermissionChecker(), assetVocabularyId,
-				ActionKeys.VIEW)) {
+		if (Validator.isNull(assetVocabularyExternalReferenceCode)) {
+			return _assetVocabulary;
+		}
 
-			_assetVocabulary = _assetVocabularyService.fetchVocabulary(
-				assetVocabularyId);
+		try {
+			_assetVocabulary =
+				_assetVocabularyService.
+					getAssetVocabularyByExternalReferenceCode(
+						_themeDisplay.getCompanyGroupId(),
+						assetVocabularyExternalReferenceCode);
+		}
+		catch (PrincipalException principalException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(principalException);
+			}
 		}
 
 		return _assetVocabulary;
@@ -193,23 +203,57 @@ public class CPAssetCategoriesNavigationDisplayContext {
 	}
 
 	public long getDisplayStyleGroupId() {
-		if (_displayStyleGroupId > 0) {
+		if (_displayStyleGroupId != null) {
 			return _displayStyleGroupId;
 		}
 
-		_displayStyleGroupId =
+		String displayStyleGroupExternalReferenceCode =
 			_cpAssetCategoriesNavigationPortletInstanceConfiguration.
-				displayStyleGroupId();
+				displayStyleGroupExternalReferenceCode();
 
-		if (_displayStyleGroupId <= 0) {
-			ThemeDisplay themeDisplay =
-				(ThemeDisplay)_httpServletRequest.getAttribute(
-					WebKeys.THEME_DISPLAY);
+		Group group = _themeDisplay.getScopeGroup();
 
-			_displayStyleGroupId = themeDisplay.getScopeGroupId();
+		if (Validator.isNotNull(displayStyleGroupExternalReferenceCode)) {
+			group = GroupLocalServiceUtil.fetchGroupByExternalReferenceCode(
+				displayStyleGroupExternalReferenceCode,
+				_themeDisplay.getCompanyId());
+		}
+
+		if (group != null) {
+			_displayStyleGroupId = group.getGroupId();
+		}
+		else {
+			_displayStyleGroupId = _themeDisplay.getScopeGroupId();
 		}
 
 		return _displayStyleGroupId;
+	}
+
+	public String getDisplayStyleGroupKey() {
+		if (Validator.isNotNull(_displayStyleGroupKey)) {
+			return _displayStyleGroupKey;
+		}
+
+		Group group = _themeDisplay.getScopeGroup();
+
+		String displayStyleGroupExternalReferenceCode =
+			_cpAssetCategoriesNavigationPortletInstanceConfiguration.
+				displayStyleGroupExternalReferenceCode();
+
+		if (Validator.isNotNull(displayStyleGroupExternalReferenceCode)) {
+			group = GroupLocalServiceUtil.fetchGroupByExternalReferenceCode(
+				displayStyleGroupExternalReferenceCode,
+				_themeDisplay.getCompanyId());
+		}
+
+		if (group != null) {
+			_displayStyleGroupKey = group.getGroupKey();
+		}
+		else {
+			_displayStyleGroupKey = StringPool.BLANK;
+		}
+
+		return _displayStyleGroupKey;
 	}
 
 	public String getFriendlyURL(long categoryId, ThemeDisplay themeDisplay)
@@ -253,9 +297,25 @@ public class CPAssetCategoriesNavigationDisplayContext {
 			friendlyURLEntry.getUrlTitle(languageId);
 	}
 
-	public String getRootAssetCategoryId() {
-		return _cpAssetCategoriesNavigationPortletInstanceConfiguration.
-			rootAssetCategoryId();
+	public String getRootAssetCategoryId() throws PortalException {
+		AssetCategory assetCategory = null;
+
+		String rootAssetCategoryExternalReferenceCode =
+			_cpAssetCategoriesNavigationPortletInstanceConfiguration.
+				rootAssetCategoryExternalReferenceCode();
+
+		if (Validator.isNotNull(rootAssetCategoryExternalReferenceCode)) {
+			assetCategory =
+				_assetCategoryService.fetchCategoryByExternalReferenceCode(
+					rootAssetCategoryExternalReferenceCode,
+					_themeDisplay.getCompanyGroupId());
+		}
+
+		if (assetCategory != null) {
+			return String.valueOf(assetCategory.getCategoryId());
+		}
+
+		return StringPool.BLANK;
 	}
 
 	public String getVocabularyNavigation(ThemeDisplay themeDisplay)
@@ -382,9 +442,12 @@ public class CPAssetCategoriesNavigationDisplayContext {
 		_cpAssetCategoriesNavigationPortletInstanceConfiguration;
 	private final CPAttachmentFileEntryService _cpAttachmentFileEntryService;
 	private final CPFriendlyURL _cpFriendlyURL;
-	private long _displayStyleGroupId;
+	private Long _displayStyleGroupId;
+	private String _displayStyleGroupKey;
 	private final FriendlyURLEntryLocalService _friendlyURLEntryLocalService;
+	private final GroupLocalService _groupLocalService;
 	private final HttpServletRequest _httpServletRequest;
 	private final Portal _portal;
+	private final ThemeDisplay _themeDisplay;
 
 }

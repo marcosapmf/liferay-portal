@@ -3,21 +3,22 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
+import {ObjectDefinitionAPI} from '@liferay/object-admin-rest-client-js';
 import {expect, mergeTests} from '@playwright/test';
 
-import {apiHelpersTest} from '../../fixtures/apiHelpersTest';
+import {dataApiHelpersTest} from '../../fixtures/dataApiHelpersTest';
 import {headlessDiscoveryPagesTest} from '../../fixtures/headlessDiscoveryWebPagesTest';
 import {loginTest} from '../../fixtures/loginTest';
 import {headlessBuilderPagesTest} from './fixtures/headlessBuilderPagesTest';
 
 export const test = mergeTests(
-	apiHelpersTest,
+	dataApiHelpersTest,
 	loginTest(),
 	headlessBuilderPagesTest(),
 	headlessDiscoveryPagesTest
 );
 
-const application = {
+const applicationData = {
 	apiApplicationToAPISchemas: [
 		{
 			description: 'API Application Schema',
@@ -33,7 +34,7 @@ const application = {
 	title: 'Basic application',
 };
 
-const studentSubjectsApplication = {
+const studentSubjectsApplicationData = {
 	apiApplicationToAPISchemas: [
 		{
 			apiSchemaToAPIProperties: [
@@ -77,13 +78,15 @@ test('can create post endpoint and can not disassociate request api schema', asy
 	headlessBuilderPage,
 	page,
 }) => {
-	await apiHelpers.objectEntry.postObjectEntry(
-		application,
+	const application = await apiHelpers.objectEntry.postObjectEntry(
+		applicationData,
 		'headless-builder/applications'
 	);
 
+	apiHelpers.data.push({id: application.id, type: 'apiApplication'});
+
 	await headlessBuilderPage.goto();
-	await headlessBuilderPage.goToEditApplication(application.title);
+	await headlessBuilderPage.goToEditApplication(applicationData.title);
 
 	await applicationPage.createEndpoint('POST', 'Company', 'student');
 
@@ -101,11 +104,6 @@ test('can create post endpoint and can not disassociate request api schema', asy
 	await expect(
 		page.getByText('Please select a request body schema.')
 	).toBeVisible();
-
-	await apiHelpers.objectEntry.deleteObjectEntryByExternalReferenceCode(
-		'headless-builder/applications',
-		application.externalReferenceCode
-	);
 });
 
 test('can create post endpoint and can not edit http method', async ({
@@ -113,13 +111,15 @@ test('can create post endpoint and can not edit http method', async ({
 	applicationPage,
 	headlessBuilderPage,
 }) => {
-	await apiHelpers.objectEntry.postObjectEntry(
-		application,
+	const application = await apiHelpers.objectEntry.postObjectEntry(
+		applicationData,
 		'headless-builder/applications'
 	);
 
+	apiHelpers.data.push({id: application.id, type: 'apiApplication'});
+
 	await headlessBuilderPage.goto();
-	await headlessBuilderPage.goToEditApplication(application.title);
+	await headlessBuilderPage.goToEditApplication(applicationData.title);
 
 	await applicationPage.createEndpoint('POST', 'Company', 'student');
 
@@ -130,11 +130,6 @@ test('can create post endpoint and can not edit http method', async ({
 	);
 
 	await expect(isDisabled).toBeTruthy();
-
-	await apiHelpers.objectEntry.deleteObjectEntryByExternalReferenceCode(
-		'headless-builder/applications',
-		application.externalReferenceCode
-	);
 });
 
 test('can create post endpoint with different request and response schema', async ({
@@ -144,145 +139,164 @@ test('can create post endpoint with different request and response schema', asyn
 	headlessBuilderPage,
 	page,
 }) => {
-	const subjectResponse = await apiHelpers.objectAdmin.postObjectDefinition({
-		active: true,
-		externalReferenceCode: 'subject-definition',
-		label: {
-			en_US: 'Subject',
-		},
-		name: 'Subject',
-		objectFields: [
-			{
-				DBType: 'String',
-				businessType: 'Text',
-				externalReferenceCode: 'subject-name-field',
-				indexed: true,
-				indexedAsKeyword: false,
-				indexedLanguageId: 'en_US',
-				label: {
-					en_US: 'Subject name',
-				},
-				listTypeDefinitionId: 0,
-				name: 'subjectName',
-				required: false,
-				state: false,
-				system: false,
-				type: 'String',
+	const objectDefinitionAPIClient =
+		await apiHelpers.buildRestClient(ObjectDefinitionAPI);
+
+	const {body: subjectResponse} =
+		await objectDefinitionAPIClient.postObjectDefinition({
+			active: true,
+			externalReferenceCode: 'subject-definition',
+			label: {
+				en_US: 'Subject',
 			},
-		],
-		panelCategoryKey: 'control_panel.object',
-		pluralLabel: {
-			en_US: 'Subjects',
-		},
-		portlet: true,
-		restContextPath: '/o/c/subjects',
-		scope: 'company',
-		status: {
-			code: 0,
-		},
-	});
-	const studentResponse = await apiHelpers.objectAdmin.postObjectDefinition({
-		active: true,
-		externalReferenceCode: 'student-definition',
-		label: {
-			en_US: 'Student',
-		},
-		name: 'Student',
-		objectFields: [
-			{
-				DBType: 'String',
-				businessType: 'Text',
-				externalReferenceCode: 'student-name-field',
-				indexed: true,
-				indexedAsKeyword: false,
-				indexedLanguageId: 'en_US',
-				label: {
-					en_US: 'Student name',
-				},
-				listTypeDefinitionId: 0,
-				name: 'studentName',
-				required: true,
-				state: false,
-				system: false,
-				type: 'String',
-			},
-		],
-		objectRelationships: [
-			{
-				deletionType: 'cascade',
-				externalReferenceCode: 'student-subjects-relationship',
-				label: {
-					en_US: 'Student subjects',
-				},
-				name: 'studentSubjects',
-				objectDefinitionExternalReferenceCode1: 'student-definition',
-				objectDefinitionExternalReferenceCode2: 'subject-definition',
-				objectDefinitionModifiable2: true,
-				objectDefinitionName2: 'Subject',
-				objectDefinitionSystem2: false,
-				objectField: {
-					DBType: 'Long',
-					businessType: 'Relationship',
-					externalReferenceCode:
-						'student-subjects-relationship-field',
+			name: 'Subject',
+			objectFields: [
+				{
+					DBType: 'String',
+					businessType: 'Text',
+					externalReferenceCode: 'subject-name-field',
 					indexed: true,
 					indexedAsKeyword: false,
-					indexedLanguageId: '',
+					indexedLanguageId: 'en_US',
 					label: {
-						en_US: 'Student subjects',
+						en_US: 'Subject name',
 					},
-					name: 'r_studentSubjects_c_studentId',
-					objectFieldSettings: [
-						{
-							name: 'objectDefinition1ShortName',
-							value: 'Student',
-						},
-						{
-							name: 'objectRelationshipERCObjectFieldName',
-							value: 'r_studentSubjects_c_studentERC',
-						},
-					],
-					relationshipType: 'oneToMany',
+					listTypeDefinitionId: 0,
+					name: 'subjectName',
 					required: false,
 					state: false,
 					system: false,
-					type: 'Long',
-					unique: false,
+					type: 'String',
 				},
-				parameterObjectFieldId: 0,
-				parameterObjectFieldName: '',
-				reverse: false,
-				system: false,
-				type: 'oneToMany',
+			],
+			panelCategoryKey: 'control_panel.object',
+			pluralLabel: {
+				en_US: 'Subjects',
 			},
-		],
-		panelCategoryKey: 'control_panel.object',
-		pluralLabel: {
-			en_US: 'Students',
-		},
-		portlet: true,
-		restContextPath: '/o/c/students',
-		scope: 'company',
-		status: {
-			code: 0,
-		},
+			portlet: true,
+			restContextPath: '/o/c/subjects',
+			scope: 'company',
+			status: {
+				code: 0,
+			},
+		});
+
+	apiHelpers.data.push({id: subjectResponse.id, type: 'objectDefinition'});
+
+	const {body: studentResponse} =
+		await objectDefinitionAPIClient.postObjectDefinition({
+			active: true,
+			externalReferenceCode: 'student-definition',
+			label: {
+				en_US: 'Student',
+			},
+			name: 'Student',
+			objectFields: [
+				{
+					DBType: 'String',
+					businessType: 'Text',
+					externalReferenceCode: 'student-name-field',
+					indexed: true,
+					indexedAsKeyword: false,
+					indexedLanguageId: 'en_US',
+					label: {
+						en_US: 'Student name',
+					},
+					listTypeDefinitionId: 0,
+					name: 'studentName',
+					required: true,
+					state: false,
+					system: false,
+					type: 'String',
+				},
+			],
+			objectRelationships: [
+				{
+					deletionType: 'cascade',
+					externalReferenceCode: 'student-subjects-relationship',
+					label: {
+						en_US: 'Student subjects',
+					},
+					name: 'studentSubjects',
+					objectDefinitionExternalReferenceCode1:
+						'student-definition',
+					objectDefinitionExternalReferenceCode2:
+						'subject-definition',
+					objectDefinitionModifiable2: true,
+					objectDefinitionName2: 'Subject',
+					objectDefinitionSystem2: false,
+					objectField: {
+						DBType: 'Long',
+						businessType: 'Relationship',
+						externalReferenceCode:
+							'student-subjects-relationship-field',
+						indexed: true,
+						indexedAsKeyword: false,
+						indexedLanguageId: '',
+						label: {
+							en_US: 'Student subjects',
+						},
+						name: 'r_studentSubjects_c_studentId',
+						objectFieldSettings: [
+							{
+								name: 'objectDefinition1ShortName',
+								value: 'Student',
+							} as any,
+							{
+								name: 'objectRelationshipERCObjectFieldName',
+								value: 'r_studentSubjects_c_studentERC',
+							} as any,
+						],
+						relationshipType: 'oneToMany',
+						required: false,
+						state: false,
+						system: false,
+						type: 'Long',
+						unique: false,
+					},
+					parameterObjectFieldId: 0,
+					parameterObjectFieldName: '',
+					reverse: false,
+					system: false,
+					type: 'oneToMany',
+				},
+			],
+			panelCategoryKey: 'control_panel.object',
+			pluralLabel: {
+				en_US: 'Students',
+			},
+			portlet: true,
+			restContextPath: '/o/c/students',
+			scope: 'company',
+			status: {
+				code: 0,
+			},
+		});
+
+	apiHelpers.data.push({id: studentResponse.id, type: 'objectDefinition'});
+
+	apiHelpers.data.push({
+		id: studentResponse.objectRelationships[0].id,
+		type: 'objectRelationship',
 	});
 
-	await apiHelpers.objectEntry.postObjectEntry(
-		studentSubjectsApplication,
+	const application = await apiHelpers.objectEntry.postObjectEntry(
+		studentSubjectsApplicationData,
 		'headless-builder/applications'
 	);
 
+	apiHelpers.data.push({id: application.id, type: 'apiApplication'});
+
 	await headlessBuilderPage.goto();
 	await headlessBuilderPage.goToEditApplication(
-		studentSubjectsApplication.title
+		studentSubjectsApplicationData.title
 	);
 
 	await applicationPage.createEndpoint('POST', 'Company', 'student');
 
 	await applicationPage.goToEndpointConfigurationTab();
 	await applicationPage.selectEndpointRequestSchema(
-		studentSubjectsApplication.apiApplicationToAPISchemas[0].name
+		studentSubjectsApplicationData.apiApplicationToAPISchemas[0].name
 	);
 
 	// TODO Change to:
@@ -292,28 +306,18 @@ test('can create post endpoint with different request and response schema', asyn
 	await page.getByRole('button', {name: 'Select a Schema'}).click();
 	await page
 		.getByRole('menuitem', {
-			name: studentSubjectsApplication.apiApplicationToAPISchemas[1].name,
+			name: studentSubjectsApplicationData.apiApplicationToAPISchemas[1]
+				.name,
 		})
 		.click();
 
 	await applicationPage.publishButton.click();
 
 	await apiExplorerPage.goToApplication(
-		`c/${studentSubjectsApplication.baseURL}`
+		`c/${studentSubjectsApplicationData.baseURL}`
 	);
 
 	await expect(apiExplorerPage.getEndpointLocator('/student')).toBeVisible();
-
-	await page.goto('/');
-	await apiHelpers.objectEntry.deleteObjectEntryByExternalReferenceCode(
-		'headless-builder/applications',
-		studentSubjectsApplication.externalReferenceCode
-	);
-	await apiHelpers.objectAdmin.deleteObjectRelationship(
-		studentResponse.objectRelationships[0].id
-	);
-	await apiHelpers.objectAdmin.deleteObjectDefinition(studentResponse.id);
-	await apiHelpers.objectAdmin.deleteObjectDefinition(subjectResponse.id);
 });
 
 test('can create post method endpoint with company scope', async ({
@@ -321,15 +325,16 @@ test('can create post method endpoint with company scope', async ({
 	apiHelpers,
 	applicationPage,
 	headlessBuilderPage,
-	page,
 }) => {
-	await apiHelpers.objectEntry.postObjectEntry(
-		application,
+	const application = await apiHelpers.objectEntry.postObjectEntry(
+		applicationData,
 		'headless-builder/applications'
 	);
 
+	apiHelpers.data.push({id: application.id, type: 'apiApplication'});
+
 	await headlessBuilderPage.goto();
-	await headlessBuilderPage.goToEditApplication(application.title);
+	await headlessBuilderPage.goToEditApplication(applicationData.title);
 
 	await applicationPage.createEndpoint(
 		'POST',
@@ -339,19 +344,13 @@ test('can create post method endpoint with company scope', async ({
 
 	await applicationPage.goToEndpointConfigurationTab();
 	await applicationPage.selectEndpointRequestSchema(
-		application.apiApplicationToAPISchemas[0].name
+		applicationData.apiApplicationToAPISchemas[0].name
 	);
 	await applicationPage.publishButton.click();
 
-	await apiExplorerPage.goToApplication(`c/${application.baseURL}`);
+	await apiExplorerPage.goToApplication(`c/${applicationData.baseURL}`);
 
 	await expect(
 		apiExplorerPage.getEndpointLocator('/test-post-endpoint')
 	).toBeVisible();
-
-	await page.goto('/');
-	await apiHelpers.objectEntry.deleteObjectEntryByExternalReferenceCode(
-		'headless-builder/applications',
-		application.externalReferenceCode
-	);
 });

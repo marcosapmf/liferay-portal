@@ -3,10 +3,11 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
+import {useIsMounted} from '@liferay/frontend-js-react-web';
+import {navigate} from 'frontend-js-web';
 import PropTypes from 'prop-types';
 import {useEffect} from 'react';
 
-import {useToControlsId} from '../../contexts/CollectionItemContext';
 import {
 	useEditableProcessorClickPosition,
 	useEditableProcessorUniqueId,
@@ -29,23 +30,47 @@ export default function FragmentContentProcessor({
 	const editableProcessorUniqueId = useEditableProcessorUniqueId();
 	const languageId = useSelector(selectLanguageId);
 	const setEditableProcessorUniqueId = useSetEditableProcessorUniqueId();
-	const toControlsId = useToControlsId();
+	const isMounted = useIsMounted();
 
 	const editable = editables.find(
-		(editable) =>
-			editableProcessorUniqueId === toControlsId(editable.itemId)
+		(editable) => editableProcessorUniqueId === editable.itemId
 	);
 
-	const editableCollectionItemId = toControlsId(
-		editable ? editable.itemId : ''
-	);
-
+	const editableCollectionItemId = editable ? editable.itemId : '';
 	const editableValues = useSelectorCallback(
 		(state) =>
 			state.fragmentEntryLinks[fragmentEntryLinkId] &&
 			state.fragmentEntryLinks[fragmentEntryLinkId].editableValues,
 		[fragmentEntryLinkId]
 	);
+
+	useEffect(() => {
+		const onBeforeNavigate = (event) => {
+			if (!editable) {
+				return;
+			}
+
+			event.originalEvent.preventDefault();
+
+			const editableValue =
+				editableValues[editable.editableValueNamespace][
+					editable.editableId
+				];
+
+			editable.processor.destroyEditor(
+				editable.element,
+				editableValue.config
+			);
+
+			navigate(event.path);
+		};
+
+		Liferay.on('beforeNavigate', onBeforeNavigate);
+
+		return () => {
+			Liferay.detach('beforeNavigate', onBeforeNavigate);
+		};
+	}, [editable, editableValues]);
 
 	useEffect(() => {
 		if (
@@ -105,12 +130,17 @@ export default function FragmentContentProcessor({
 					setEditableProcessorUniqueId(null);
 				}
 
+				if (!isMounted()) {
+					return;
+				}
+
 				editable.processor.destroyEditor(
 					editable.element,
 					editableValue.config
 				);
 			},
-			editableProcessorClickPosition
+			editableProcessorClickPosition,
+			editableValue[languageId] || editableValue.defaultValue || ''
 		);
 	}, [
 		dispatch,
@@ -120,6 +150,7 @@ export default function FragmentContentProcessor({
 		editableProcessorUniqueId,
 		editableValues,
 		fragmentEntryLinkId,
+		isMounted,
 		languageId,
 		setEditableProcessorUniqueId,
 	]);

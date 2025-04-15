@@ -20,6 +20,7 @@ import com.liferay.fragment.listener.FragmentEntryLinkListener;
 import com.liferay.fragment.listener.FragmentEntryLinkListenerRegistry;
 import com.liferay.fragment.model.FragmentEntryLink;
 import com.liferay.fragment.processor.FragmentEntryProcessorRegistry;
+import com.liferay.fragment.processor.PortletRegistry;
 import com.liferay.fragment.renderer.FragmentRendererRegistry;
 import com.liferay.fragment.service.FragmentCollectionLocalService;
 import com.liferay.fragment.service.FragmentCollectionService;
@@ -186,6 +187,10 @@ public class LayoutsImporterImpl implements LayoutsImporter {
 
 		ZipReader zipReader = _zipReaderFactory.getZipReader(file);
 
+		_processMasterLayoutLayoutPageTemplateEntries(
+			groupId, layoutsImporterResultEntries, layoutsImportStrategy,
+			preserveItemIds, userId, zipReader);
+
 		_processBasicLayoutPageTemplateEntries(
 			groupId, layoutPageTemplateCollectionId,
 			layoutsImporterResultEntries, layoutsImportStrategy,
@@ -204,9 +209,6 @@ public class LayoutsImporterImpl implements LayoutsImporter {
 			layoutsImportStrategy, preserveItemIds, userId, zipReader);
 
 		_processLayoutUtilityPageEntries(
-			groupId, layoutsImporterResultEntries, layoutsImportStrategy,
-			preserveItemIds, userId, zipReader);
-		_processMasterLayoutLayoutPageTemplateEntries(
 			groupId, layoutsImporterResultEntries, layoutsImportStrategy,
 			preserveItemIds, userId, zipReader);
 
@@ -372,9 +374,7 @@ public class LayoutsImporterImpl implements LayoutsImporter {
 			new WidgetLayoutStructureItemImporter(
 				_fragmentEntryLinkLocalService, _fragmentEntryProcessorRegistry,
 				_portletConfigurationImporterHelper, _portletLocalService,
-				_portletPermissionsImporterHelper,
-				_portletPreferencesLocalService,
-				_segmentsExperienceLocalService));
+				_portletPermissionsImporterHelper, _portletRegistry));
 	}
 
 	private void _addClientExtensionEntryRel(
@@ -433,14 +433,14 @@ public class LayoutsImporterImpl implements LayoutsImporter {
 
 		if (classNameId == 0) {
 			return _layoutPageTemplateEntryService.addLayoutPageTemplateEntry(
-				null, groupId, layoutPageTemplateCollectionId, name,
+				null, groupId, layoutPageTemplateCollectionId, null, name,
 				layoutPageTemplateEntryType, 0,
 				WorkflowConstants.STATUS_APPROVED,
 				ServiceContextThreadLocal.getServiceContext());
 		}
 
 		return _layoutPageTemplateEntryService.addLayoutPageTemplateEntry(
-			null, groupId, layoutPageTemplateCollectionId, classNameId,
+			null, groupId, layoutPageTemplateCollectionId, null, classNameId,
 			classTypeId, name, 0, WorkflowConstants.STATUS_APPROVED,
 			ServiceContextThreadLocal.getServiceContext());
 	}
@@ -511,7 +511,7 @@ public class LayoutsImporterImpl implements LayoutsImporter {
 			if (layoutPageTemplateCollection == null) {
 				return _layoutPageTemplateCollectionService.
 					addLayoutPageTemplateCollection(
-						null, groupId, layoutPageTemplateCollectionId,
+						null, groupId, layoutPageTemplateCollectionId, null,
 						pageTemplateCollection.getName(),
 						pageTemplateCollection.getDescription(),
 						LayoutPageTemplateCollectionTypeConstants.BASIC,
@@ -525,7 +525,7 @@ public class LayoutsImporterImpl implements LayoutsImporter {
 			return _layoutPageTemplateCollectionService.
 				addLayoutPageTemplateCollection(
 					pageTemplateCollection.getUuid(), groupId,
-					layoutPageTemplateCollectionId,
+					layoutPageTemplateCollectionId, null,
 					_layoutPageTemplateCollectionLocalService.
 						getUniqueLayoutPageTemplateCollectionName(
 							groupId, layoutPageTemplateCollectionId,
@@ -586,7 +586,7 @@ public class LayoutsImporterImpl implements LayoutsImporter {
 		if (layoutPageTemplateCollection == null) {
 			return _layoutPageTemplateCollectionService.
 				addLayoutPageTemplateCollection(
-					null, groupId, layoutPageTemplateCollectionId,
+					null, groupId, layoutPageTemplateCollectionId, null,
 					pageTemplateCollection.getName(),
 					pageTemplateCollection.getDescription(),
 					LayoutPageTemplateCollectionTypeConstants.DISPLAY_PAGE,
@@ -598,7 +598,7 @@ public class LayoutsImporterImpl implements LayoutsImporter {
 
 			return _layoutPageTemplateCollectionService.
 				addLayoutPageTemplateCollection(
-					null, groupId, layoutPageTemplateCollectionId,
+					null, groupId, layoutPageTemplateCollectionId, null,
 					_layoutPageTemplateCollectionLocalService.
 						getUniqueLayoutPageTemplateCollectionName(
 							groupId, layoutPageTemplateCollectionId,
@@ -901,13 +901,13 @@ public class LayoutsImporterImpl implements LayoutsImporter {
 			_themeLocalService.getThemes(companyId),
 			theme -> Objects.equals(theme.getName(), themeName));
 
-		if (ListUtil.isNotEmpty(themes)) {
-			Theme theme = themes.get(0);
-
-			return theme.getThemeId();
+		if (ListUtil.isEmpty(themes)) {
+			return null;
 		}
 
-		return null;
+		Theme theme = themes.get(0);
+
+		return theme.getThemeId();
 	}
 
 	private Thumbnail _getThumbnail(String fileName, ZipReader zipReader) {
@@ -950,63 +950,37 @@ public class LayoutsImporterImpl implements LayoutsImporter {
 	}
 
 	private boolean _isDisplayPageTemplateCollectionFile(String fileName) {
-		if (fileName.endsWith(
-				CharPool.SLASH +
-					LayoutPageTemplateExportImportConstants.
-						FILE_NAME_DISPLAY_PAGE_TEMPLATE_COLLECTION)) {
-
-			return true;
-		}
-
-		return false;
+		return fileName.endsWith(
+			CharPool.SLASH +
+				LayoutPageTemplateExportImportConstants.
+					FILE_NAME_DISPLAY_PAGE_TEMPLATE_COLLECTION);
 	}
 
 	private boolean _isDisplayPageTemplateFile(String fileName) {
-		if (fileName.endsWith(
-				CharPool.SLASH +
-					LayoutPageTemplateExportImportConstants.
-						FILE_NAME_DISPLAY_PAGE_TEMPLATE)) {
-
-			return true;
-		}
-
-		return false;
+		return fileName.endsWith(
+			CharPool.SLASH +
+				LayoutPageTemplateExportImportConstants.
+					FILE_NAME_DISPLAY_PAGE_TEMPLATE);
 	}
 
 	private boolean _isMasterPageFile(String fileName) {
-		if (fileName.endsWith(
-				CharPool.SLASH +
-					LayoutPageTemplateExportImportConstants.
-						FILE_NAME_MASTER_PAGE)) {
-
-			return true;
-		}
-
-		return false;
+		return fileName.endsWith(
+			CharPool.SLASH +
+				LayoutPageTemplateExportImportConstants.FILE_NAME_MASTER_PAGE);
 	}
 
 	private boolean _isPageTemplateCollectionFile(String fileName) {
-		if (fileName.endsWith(
-				CharPool.SLASH +
-					LayoutPageTemplateExportImportConstants.
-						FILE_NAME_PAGE_TEMPLATE_COLLECTION)) {
-
-			return true;
-		}
-
-		return false;
+		return fileName.endsWith(
+			CharPool.SLASH +
+				LayoutPageTemplateExportImportConstants.
+					FILE_NAME_PAGE_TEMPLATE_COLLECTION);
 	}
 
 	private boolean _isPageTemplateFile(String fileName) {
-		if (fileName.endsWith(
-				CharPool.SLASH +
-					LayoutPageTemplateExportImportConstants.
-						FILE_NAME_PAGE_TEMPLATE)) {
-
-			return true;
-		}
-
-		return false;
+		return fileName.endsWith(
+			CharPool.SLASH +
+				LayoutPageTemplateExportImportConstants.
+					FILE_NAME_PAGE_TEMPLATE);
 	}
 
 	private boolean _isRootFolder(List<String> entries, String fileName) {
@@ -1031,15 +1005,9 @@ public class LayoutsImporterImpl implements LayoutsImporter {
 	}
 
 	private boolean _isUtilityPageTemplateFile(String fileName) {
-		if (fileName.endsWith(
-				CharPool.SLASH +
-					LayoutUtilityPageExportImportConstants.
-						FILE_NAME_UTILITY_PAGE)) {
-
-			return true;
-		}
-
-		return false;
+		return fileName.endsWith(
+			CharPool.SLASH +
+				LayoutUtilityPageExportImportConstants.FILE_NAME_UTILITY_PAGE);
 	}
 
 	private boolean _isValidBasicLayoutPageTemplateCollection(
@@ -1536,7 +1504,8 @@ public class LayoutsImporterImpl implements LayoutsImporter {
 				layoutPageTemplateEntryType);
 
 		try (SafeCloseable safeCloseable =
-				CheckUnlockedLayoutThreadLocal.setWithSafeCloseable(false)) {
+				CheckUnlockedLayoutThreadLocal.
+					setCheckUnlockedLayoutWithSafeCloseable(false)) {
 
 			if ((layoutPageTemplateEntry != null) &&
 				Objects.equals(
@@ -2008,7 +1977,7 @@ public class LayoutsImporterImpl implements LayoutsImporter {
 
 		_updateLayoutPageTemplateStructure(layout, layoutStructure);
 
-		_updateLayouts(plid);
+		_updateLayouts(plid, userId);
 	}
 
 	private boolean _processPageElement(
@@ -2159,12 +2128,14 @@ public class LayoutsImporterImpl implements LayoutsImporter {
 				deleteLayoutPageTemplateStructure(layoutPageTemplateStructure);
 		}
 
+		ServiceContext serviceContext =
+			ServiceContextThreadLocal.getServiceContext();
+
 		_layoutPageTemplateStructureLocalService.addLayoutPageTemplateStructure(
-			layout.getUserId(), layout.getGroupId(), layout.getPlid(),
+			serviceContext.getUserId(), layout.getGroupId(), layout.getPlid(),
 			_segmentsExperienceLocalService.fetchDefaultSegmentsExperienceId(
 				layout.getPlid()),
-			jsonObject.toString(),
-			ServiceContextThreadLocal.getServiceContext());
+			jsonObject.toString(), serviceContext);
 
 		try (AutoCloseable autoCloseable =
 				_layoutServiceContextHelper.getServiceContextAutoCloseable(
@@ -2185,7 +2156,7 @@ public class LayoutsImporterImpl implements LayoutsImporter {
 		}
 	}
 
-	private void _updateLayouts(long plid) throws Exception {
+	private void _updateLayouts(long plid, long userId) throws Exception {
 		Layout layout = _layoutLocalService.fetchLayout(plid);
 
 		Layout draftLayout = layout.fetchDraftLayout();
@@ -2194,11 +2165,11 @@ public class LayoutsImporterImpl implements LayoutsImporter {
 			layout, draftLayout);
 
 		_layoutLocalService.updateStatus(
-			draftLayout.getUserId(), draftLayout.getPlid(),
-			WorkflowConstants.STATUS_APPROVED,
+			userId, draftLayout.getPlid(), WorkflowConstants.STATUS_APPROVED,
 			ServiceContextThreadLocal.getServiceContext());
+
 		_layoutLocalService.updateStatus(
-			draftLayout.getUserId(), plid, WorkflowConstants.STATUS_APPROVED,
+			userId, plid, WorkflowConstants.STATUS_APPROVED,
 			ServiceContextThreadLocal.getServiceContext());
 	}
 
@@ -2471,6 +2442,9 @@ public class LayoutsImporterImpl implements LayoutsImporter {
 
 	@Reference
 	private PortletPreferencesLocalService _portletPreferencesLocalService;
+
+	@Reference
+	private PortletRegistry _portletRegistry;
 
 	@Reference
 	private SegmentsExperienceLocalService _segmentsExperienceLocalService;

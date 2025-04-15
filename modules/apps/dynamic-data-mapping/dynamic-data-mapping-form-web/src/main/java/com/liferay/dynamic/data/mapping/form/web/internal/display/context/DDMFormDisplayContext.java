@@ -36,15 +36,18 @@ import com.liferay.dynamic.data.mapping.service.DDMFormInstanceRecordService;
 import com.liferay.dynamic.data.mapping.service.DDMFormInstanceRecordVersionLocalService;
 import com.liferay.dynamic.data.mapping.service.DDMFormInstanceService;
 import com.liferay.dynamic.data.mapping.service.DDMFormInstanceVersionLocalService;
+import com.liferay.dynamic.data.mapping.service.DDMStructureLocalService;
 import com.liferay.dynamic.data.mapping.storage.DDMFormValues;
 import com.liferay.dynamic.data.mapping.storage.DDMStorageAdapter;
 import com.liferay.dynamic.data.mapping.storage.DDMStorageAdapterRegistry;
 import com.liferay.dynamic.data.mapping.util.DDMFormValuesMerger;
 import com.liferay.frontend.js.loader.modules.extender.npm.NPMResolver;
 import com.liferay.object.dynamic.data.mapping.form.field.type.constants.ObjectDDMFormFieldTypeConstants;
+import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectField;
 import com.liferay.object.model.ObjectFieldSetting;
 import com.liferay.object.model.ObjectRelationship;
+import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.object.service.ObjectFieldLocalService;
 import com.liferay.object.service.ObjectFieldSettingLocalService;
 import com.liferay.object.service.ObjectRelationshipLocalService;
@@ -124,8 +127,10 @@ public class DDMFormDisplayContext {
 		DDMFormValuesMerger ddmFormValuesMerger,
 		DDMFormWebConfiguration ddmFormWebConfiguration,
 		DDMStorageAdapterRegistry ddmStorageAdapterRegistry,
+		DDMStructureLocalService ddmStructureLocalService,
 		GroupLocalService groupLocalService, JSONFactory jsonFactory,
 		NPMResolver npmResolver,
+		ObjectDefinitionLocalService objectDefinitionLocalService,
 		ObjectFieldLocalService objectFieldLocalService,
 		ObjectFieldSettingLocalService objectFieldSettingLocalService,
 		ObjectRelationshipLocalService objectRelationshipLocalService,
@@ -148,9 +153,11 @@ public class DDMFormDisplayContext {
 		_ddmFormValuesMerger = ddmFormValuesMerger;
 		_ddmFormWebConfiguration = ddmFormWebConfiguration;
 		_ddmStorageAdapterRegistry = ddmStorageAdapterRegistry;
+		_ddmStructureLocalService = ddmStructureLocalService;
 		_groupLocalService = groupLocalService;
 		_jsonFactory = jsonFactory;
 		_npmResolver = npmResolver;
+		_objectDefinitionLocalService = objectDefinitionLocalService;
 		_objectFieldLocalService = objectFieldLocalService;
 		_objectFieldSettingLocalService = objectFieldSettingLocalService;
 		_objectRelationshipLocalService = objectRelationshipLocalService;
@@ -346,7 +353,7 @@ public class DDMFormDisplayContext {
 		}
 
 		try {
-			_ddmFormInstance = _ddmFormInstanceService.fetchFormInstance(
+			_ddmFormInstance = _ddmFormInstanceLocalService.fetchFormInstance(
 				getFormInstanceId());
 
 			if ((_ddmFormInstance != null) && !isPreview()) {
@@ -385,6 +392,42 @@ public class DDMFormDisplayContext {
 	public long getFormInstanceId() {
 		if (_ddmFormInstanceId != 0) {
 			return _ddmFormInstanceId;
+		}
+
+		String ddmStructureExternalReferenceCode = PrefsParamUtil.getString(
+			_renderRequest.getPreferences(), _renderRequest,
+			"ddmStructureExternalReferenceCode");
+
+		if (!Validator.isBlank(ddmStructureExternalReferenceCode)) {
+			ThemeDisplay themeDisplay = getThemeDisplay();
+
+			Group group = _groupLocalService.fetchGroupByExternalReferenceCode(
+				PrefsParamUtil.getString(
+					_renderRequest.getPreferences(), _renderRequest,
+					"groupExternalReferenceCode"),
+				themeDisplay.getCompanyId());
+
+			try {
+				DDMStructure ddmStructure =
+					_ddmStructureLocalService.
+						getStructureByExternalReferenceCode(
+							ddmStructureExternalReferenceCode,
+							group.getGroupId(),
+							_portal.getClassNameId(DDMFormInstance.class));
+
+				DDMFormInstance ddmFormInstance =
+					_ddmFormInstanceLocalService.getFormInstanceByStructureId(
+						ddmStructure.getStructureId());
+
+				_ddmFormInstanceId = ddmFormInstance.getFormInstanceId();
+
+				return _ddmFormInstanceId;
+			}
+			catch (PortalException portalException) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(portalException);
+				}
+			}
 		}
 
 		_ddmFormInstanceId = PrefsParamUtil.getLong(
@@ -517,8 +560,25 @@ public class DDMFormDisplayContext {
 
 		ResourceBundle resourceBundle = _getResourceBundle();
 
-		if (_hasWorkflowEnabled(getFormInstance(), getThemeDisplay()) ||
-			StringUtil.equals(ddmFormInstance.getStorageType(), "object")) {
+		if (StringUtil.equals(ddmFormInstance.getStorageType(), "object")) {
+			ObjectDefinition objectDefinition =
+				_objectDefinitionLocalService.getObjectDefinition(
+					ddmFormInstance.getObjectDefinitionId());
+
+			if (_workflowDefinitionLinkLocalService.hasWorkflowDefinitionLink(
+					objectDefinition.getCompanyId(), 0,
+					objectDefinition.getClassName())) {
+
+				return LanguageUtil.get(resourceBundle, "submit-for-workflow");
+			}
+
+			return LanguageUtil.get(resourceBundle, "save");
+		}
+
+		if (_workflowDefinitionLinkLocalService.hasWorkflowDefinitionLink(
+				ddmFormInstance.getCompanyId(), ddmFormInstance.getGroupId(),
+				DDMFormInstance.class.getName(),
+				ddmFormInstance.getFormInstanceId())) {
 
 			DDMFormInstanceRecord ddmFormInstanceRecord =
 				getFormInstanceRecord();
@@ -714,11 +774,7 @@ public class DDMFormDisplayContext {
 		ThemeDisplay themeDisplay = (ThemeDisplay)_renderRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
-		if (themeDisplay.isSignedIn()) {
-			return true;
-		}
-
-		return false;
+		return themeDisplay.isSignedIn();
 	}
 
 	public boolean isPreview() throws PortalException {
@@ -1155,15 +1211,6 @@ public class DDMFormDisplayContext {
 		return themeDisplay.getUserId();
 	}
 
-	private boolean _hasWorkflowEnabled(
-		DDMFormInstance ddmFormInstance, ThemeDisplay themeDisplay) {
-
-		return _workflowDefinitionLinkLocalService.hasWorkflowDefinitionLink(
-			themeDisplay.getCompanyId(), ddmFormInstance.getGroupId(),
-			DDMFormInstance.class.getName(),
-			ddmFormInstance.getFormInstanceId());
-	}
-
 	private static final Log _log = LogFactoryUtil.getLog(
 		DDMFormDisplayContext.class);
 
@@ -1188,12 +1235,14 @@ public class DDMFormDisplayContext {
 	private final DDMFormValuesMerger _ddmFormValuesMerger;
 	private final DDMFormWebConfiguration _ddmFormWebConfiguration;
 	private final DDMStorageAdapterRegistry _ddmStorageAdapterRegistry;
+	private final DDMStructureLocalService _ddmStructureLocalService;
 	private final GroupLocalService _groupLocalService;
 	private Boolean _hasAddFormInstanceRecordPermission;
 	private Boolean _hasViewPermission;
 	private final JSONFactory _jsonFactory;
 	private DDMFormInstanceVersion _latestDDMFormInstanceVersion;
 	private final NPMResolver _npmResolver;
+	private final ObjectDefinitionLocalService _objectDefinitionLocalService;
 	private final ObjectFieldLocalService _objectFieldLocalService;
 	private final ObjectFieldSettingLocalService
 		_objectFieldSettingLocalService;

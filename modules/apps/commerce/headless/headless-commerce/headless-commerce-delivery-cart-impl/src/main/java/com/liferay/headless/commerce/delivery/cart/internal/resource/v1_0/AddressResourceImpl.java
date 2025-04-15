@@ -51,12 +51,12 @@ public class AddressResourceImpl extends BaseAddressResourceImpl {
 	}
 
 	@Override
-	public Address getCartByExternalReferenceCodeBillingAddres(
+	public Address getCartByExternalReferenceCodeBillingAddress(
 			String externalReferenceCode)
 		throws Exception {
 
 		CommerceOrder commerceOrder =
-			_commerceOrderService.fetchByExternalReferenceCode(
+			_commerceOrderService.fetchCommerceOrderByExternalReferenceCode(
 				externalReferenceCode, contextCompany.getCompanyId());
 
 		if (commerceOrder == null) {
@@ -76,12 +76,12 @@ public class AddressResourceImpl extends BaseAddressResourceImpl {
 	}
 
 	@Override
-	public Address getCartByExternalReferenceCodeShippingAddres(
+	public Address getCartByExternalReferenceCodeShippingAddress(
 			String externalReferenceCode)
 		throws Exception {
 
 		CommerceOrder commerceOrder =
-			_commerceOrderService.fetchByExternalReferenceCode(
+			_commerceOrderService.fetchCommerceOrderByExternalReferenceCode(
 				externalReferenceCode, contextCompany.getCompanyId());
 
 		if (commerceOrder == null) {

@@ -7,13 +7,12 @@ import {useIsMounted} from '@liferay/frontend-js-react-web';
 import classNames from 'classnames';
 import {useId} from 'frontend-js-components-web';
 import PropTypes from 'prop-types';
-import React, {useCallback, useEffect, useState} from 'react';
+import React, {useCallback, useEffect, useMemo, useState} from 'react';
 
 import {TEXT_EDITABLE_TYPES} from '../../config/constants/textEditableTypes';
 import {
 	useGetContent,
 	useGetFieldValue,
-	useToControlsId,
 	useWithinCollection,
 } from '../../contexts/CollectionItemContext';
 import {useIsProcessorEnabled} from '../../contexts/EditableProcessorContext';
@@ -30,6 +29,7 @@ import resolveEditableConfig from '../../utils/editable_value/resolveEditableCon
 import resolveEditableValue from '../../utils/editable_value/resolveEditableValue';
 import getLayoutDataItemCssClasses from '../../utils/getLayoutDataItemCssClasses';
 import getLayoutDataItemUniqueClassName from '../../utils/getLayoutDataItemUniqueClassName';
+import getPortletCustomActions from '../../utils/getPortletCustomActions';
 import {getResponsiveConfig} from '../../utils/getResponsiveConfig';
 import hasInnerCommonStyles from '../../utils/hasInnerCustomStyles';
 import useBackgroundImageValue from '../../utils/useBackgroundImageValue';
@@ -50,7 +50,6 @@ const FragmentContent = ({
 	const isMounted = useIsMounted();
 	const isProcessorEnabled = useIsProcessorEnabled();
 	const globalContext = useGlobalContext();
-	const toControlsId = useToControlsId();
 	const getFieldValue = useGetFieldValue();
 
 	const canConfigureWidgets = useSelector(selectCanConfigureWidgets);
@@ -86,7 +85,7 @@ const FragmentContent = ({
 
 			return nextEditables;
 		},
-		[isMounted, fragmentEntryLinkId, item, computeEditables]
+		[isMounted, fragmentEntryLinkId, item.itemId, computeEditables]
 	);
 
 	const fragmentEntryLink = useSelectorCallback(
@@ -119,6 +118,13 @@ const FragmentContent = ({
 
 	const cssClasses = getLayoutDataItemCssClasses(item);
 
+	const showPortletTopper = useMemo(
+		() =>
+			getPortletCustomActions(fragmentEntryLink).length ||
+			fragmentEntryLink.fragmentEntryType !== 'widget',
+		[fragmentEntryLink]
+	);
+
 	useEffect(() => {
 		if (fragmentEntryLinkError) {
 			throw new Error(fragmentEntryLinkError);
@@ -126,7 +132,7 @@ const FragmentContent = ({
 	}, [fragmentEntryLinkError]);
 
 	const isBeingEdited = editables.some((editable) =>
-		isProcessorEnabled(toControlsId(editable.itemId))
+		isProcessorEnabled(editable.itemId)
 	);
 
 	/**
@@ -213,7 +219,6 @@ const FragmentContent = ({
 		isProcessorEnabled,
 		languageId,
 		segmentsExperienceId,
-		toControlsId,
 		withinCollection,
 	]);
 
@@ -231,17 +236,27 @@ const FragmentContent = ({
 		getFieldValue
 	);
 
-	const style = {};
+	const style = useMemo(() => {
+		const style = {};
 
-	if (backgroundImageValue.url) {
-		style[`--lfr-background-image-${item.itemId}`] =
-			`url(${backgroundImageValue.url})`;
+		if (backgroundImageValue.url) {
+			style[`--lfr-background-image-${item.itemId}`] =
+				`url(${backgroundImageValue.url})`;
 
-		if (backgroundImage?.fileEntryId) {
-			style['--background-image-file-entry-id'] =
-				backgroundImage.fileEntryId;
+			if (backgroundImage?.fileEntryId) {
+				style['--background-image-file-entry-id'] =
+					backgroundImage.fileEntryId;
+			}
 		}
-	}
+
+		return style;
+	}, [backgroundImageValue?.url, item.itemId, backgroundImage]);
+
+	const data = useMemo(() => {
+		return {
+			fragmentEntryLinkId,
+		};
+	}, [fragmentEntryLinkId]);
 
 	return (
 		<>
@@ -261,12 +276,13 @@ const FragmentContent = ({
 								!hasInnerCommonStyles(fragmentEntryLink),
 							[getLayoutDataItemUniqueClassName(item.itemId)]:
 								!hasInnerCommonStyles(fragmentEntryLink),
+							'custom-height': item.config.styles?.height,
 							'page-editor__fragment-content--portlet-topper-hidden':
-								!canConfigureWidgets,
+								!canConfigureWidgets || !showPortletTopper,
 						}
 					)}
 					contentRef={elementRef}
-					data={{fragmentEntryLinkId}}
+					data={data}
 					getPortals={getPortals}
 					globalContext={globalContext}
 					id={elementId}

@@ -164,6 +164,12 @@ public interface PortletDataHandler {
 	public PortletDataHandlerControl[] getImportMetadataControls()
 		throws PortletDataException;
 
+	public default String getName() {
+		Class<? extends PortletDataHandler> clazz = getClass();
+
+		return clazz.getName();
+	}
+
 	public default String getNamespace() {
 		return StringPool.BLANK;
 	}
@@ -260,6 +266,10 @@ public interface PortletDataHandler {
 			PortletPreferences portletPreferences, String data)
 		throws PortletDataException;
 
+	public default boolean isCompany() {
+		return false;
+	}
+
 	public default boolean isConfigurationEnabled() {
 		return true;
 	}
@@ -275,6 +285,14 @@ public interface PortletDataHandler {
 	public boolean isDataSiteLevel();
 
 	public boolean isDisplayPortlet();
+
+	public boolean isEmptyControlsAllowed();
+
+	public default boolean isEnabled(long companyId) {
+		return true;
+	}
+
+	public boolean isModelCountSupported();
 
 	/**
 	 * Returns whether the data exported by this handler should be included by

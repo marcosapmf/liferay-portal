@@ -28,6 +28,7 @@
 		<column name="name" type="String" />
 		<column name="previewFileEntryId" type="long" />
 		<column name="styleBookEntryKey" type="String" />
+		<column name="themeId" type="String" />
 
 		<!-- Order -->
 
@@ -52,10 +53,20 @@
 			<finder-column name="groupId" />
 			<finder-column name="styleBookEntryKey" />
 		</finder>
+		<finder name="G_T" return-type="Collection">
+			<finder-column name="groupId" />
+			<finder-column name="themeId" />
+		</finder>
+		<finder name="G_D_T" return-type="Collection">
+			<finder-column name="groupId" />
+			<finder-column name="defaultStyleBookEntry" />
+			<finder-column name="themeId" />
+		</finder>
 	</entity>
 	<exceptions>
 		<exception>DuplicateStyleBookEntryKey</exception>
 		<exception>StyleBookEntryFile</exception>
 		<exception>StyleBookEntryName</exception>
+		<exception>StyleBookEntryThemeId</exception>
 	</exceptions>
 </service-builder>

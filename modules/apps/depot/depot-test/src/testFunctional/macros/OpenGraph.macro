@@ -1,0 +1,346 @@
+definition {
+
+	@summary = "Default summary"
+	macro changeLocale(fieldName = null, locale = null) {
+		Click.clickNoMouseOver(
+			key_fieldName = ${fieldName},
+			locator1 = "Button#LOCALIZATION_OPEN_GRAPH");
+
+		Click(
+			key_locale = ${locale},
+			locator1 = "Translation#LOCALIZATION_NAME");
+	}
+
+	@summary = "Default summary"
+	macro clearImage() {
+		Click(
+			key_fieldLabel = "Image",
+			locator1 = "Button#IMAGE_CLEAR");
+	}
+
+	@summary = "Default summary"
+	macro configureOpenGraph(depotName = null, customDescription = null, customImage = null, customTitle = null, altDescription = null) {
+		if (isSet(customTitle)) {
+			var checkboxName = "Use Custom Title";
+
+			if (IsNotChecked(locator1 = "Checkbox#ANY_CHECKBOX")) {
+				Click(locator1 = "Checkbox#ANY_CHECKBOX");
+			}
+
+			Type(
+				locator1 = "TextInput#OPEN_GRAPH_CUSTOM_TITLE",
+				value1 = ${customTitle});
+		}
+
+		if (isSet(customDescription)) {
+			var checkboxName = "Use Custom Description";
+
+			if (IsNotChecked(locator1 = "Checkbox#ANY_CHECKBOX")) {
+				Click(locator1 = "Checkbox#ANY_CHECKBOX");
+			}
+
+			Type(
+				key_text = "openGraphDescription",
+				locator1 = "TextArea#ANY",
+				value1 = ${customDescription});
+		}
+
+		if (isSet(customImage)) {
+			var key_uploadFileName = ${uploadFileName};
+
+			WaitForVisible(
+				key_fieldLabel = "Image",
+				locator1 = "Button#IMAGE_SELECTOR");
+
+			Click(
+				key_fieldLabel = "Image",
+				locator1 = "Button#IMAGE_SELECTOR");
+
+			AssertTextEquals(
+				locator1 = "Modal#HEADER",
+				value1 = "Select Image");
+
+			SelectFrame(locator1 = "IFrame#MODAL_BODY");
+
+			if (isSet(depotName)) {
+				ItemSelector.selectRepositoryImage(
+					customImage = ${customImage},
+					depotName = ${depotName},
+					imageFileName = ${uploadFileName});
+			}
+			else {
+				UploadCommonFile.uploadCommonFileHiddenNoMouseOver(
+					locator1 = "TextInput#FILE",
+					value1 = ${uploadFileName});
+
+				WaitForVisible(
+					locator1 = "ItemSelector#ADD_BUTTON",
+					value1 = "Add");
+
+				AssertClick(
+					locator1 = "ItemSelector#ADD_BUTTON",
+					value1 = "Add");
+
+				SelectFrameTop(value1 = "relative=top");
+			}
+
+			if (isSet(altDescription)) {
+				Type(
+					locator1 = "TextInput#OPEN_GRAPH_IMAGE_ALT_DESCRIPTION",
+					value1 = ${altDescription});
+			}
+		}
+
+		if (!(isSet(dontSave))) {
+			Button.click(button = "Save");
+
+			if (isSet(customImage)) {
+				var uploadFileName = StringUtil.extractFirst(${uploadFileName}, ".");
+
+				AssertElementPresent.assertVisible(
+					key_dmDocumentURL = ${uploadFileName},
+					locator1 = "TextInput#OPEN_GRAPH_CUSTOM_IMAGE_INPUT");
+			}
+		}
+	}
+
+	@summary = "Default summary"
+	macro disableOpenGraphAtSiteLevel(siteURLKey = null) {
+		Navigator.openWithAppendToBaseURL(urlAppend = "group/${siteURLKey}/~/control_panel/manage/-/site/settings?_com_liferay_site_admin_web_portlet_SiteSettingsPortlet_mvcRenderCommandName=%2Fconfiguration_admin%2Fview_configuration_screen&_com_liferay_site_admin_web_portlet_SiteSettingsPortlet_configurationScreenKey=site-configuration-open-graph");
+
+		if (IsChecked(checkboxName = "Enable Open Graph", locator1 = "Checkbox#ANY_CHECKBOX")) {
+			Click(
+				checkboxName = "Enable Open Graph",
+				locator1 = "Checkbox#ANY_CHECKBOX");
+		}
+
+		AssertElementPresent(locator1 = "Checkbox#OPEN_GRAPH_CHECKBOX_DISABLED");
+
+		Button.click(button = "Save");
+	}
+
+	@summary = "Default summary"
+	macro disableOpenGraphCustomSettings() {
+		if (isSet(customTitle)) {
+			var checkboxName = "Use Custom Title";
+
+			if (IsChecked(locator1 = "Checkbox#ANY_CHECKBOX")) {
+				Click(locator1 = "Checkbox#ANY_CHECKBOX");
+			}
+		}
+
+		if (isSet(customDescription)) {
+			var checkboxName = "Use Custom Description";
+
+			if (IsChecked(locator1 = "Checkbox#ANY_CHECKBOX")) {
+				Click(locator1 = "Checkbox#ANY_CHECKBOX");
+			}
+		}
+	}
+
+	@summary = "Default summary"
+	macro mapEditableTextToField(mappedFieldText = null, mappedFieldName = null, textType = null, mappedField = null) {
+		if (${textType} == "TextInput") {
+			Type(
+				key_text = ${mappedField},
+				locator1 = "TextInput#ANY",
+				value1 = ${mappedFieldText});
+		}
+		else if (${textType} == "TextArea") {
+			Type(
+				key_text = ${mappedField},
+				locator1 = "TextArea#ANY",
+				value1 = ${mappedFieldText});
+		}
+
+		Click(
+			key_fieldLabel = ${mappedFieldName},
+			key_text = "bolt",
+			locator1 = "Icon#ANY_ITEM_SELECTOR");
+
+		for (var field : list ${field}) {
+			if (${textType} == "TextInput") {
+				Type.sendKeys(
+					key_text = ${mappedField},
+					locator1 = "TextInput#ANY",
+					value1 = "${field}:");
+			}
+			else if (${textType} == "TextArea") {
+				Type.sendKeys(
+					key_text = ${mappedField},
+					locator1 = "TextArea#ANY",
+					value1 = "${field}:");
+			}
+
+			Select(
+				key_fieldLabel = "Field",
+				locator1 = "Select#GENERIC_SELECT_FIELD",
+				value1 = ${field});
+
+			if (${mappedFieldName} == "Image") {
+				Click(
+					key_text = "Map Content",
+					locator1 = "Button#ANY");
+			}
+			else {
+				Click(
+					key_text = "Add Field",
+					locator1 = "Button#ANY");
+			}
+		}
+	}
+
+	@summary = "Default summary"
+	macro openToConfigInSystemSettings(portlet = null) {
+		var baseURL = PropsUtil.get("portal.url");
+
+		if (${portlet} == "SEO") {
+			var portletId = "com.liferay.layout.seo.internal.configuration.LayoutSEOCompanyConfiguration";
+		}
+
+		Open(value1 = "${baseURL}/group/control_panel/manage?p_p_id=com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet&_com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet_factoryPid=${portletId}&_com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet_mvcRenderCommandName=%2Fconfiguration_admin%2Fedit_configuration");
+	}
+
+	@summary = "Default summary"
+	macro viewDefaultConfiguration() {
+		task ("Assert open graph title") {
+			AssertTextEquals(
+				key_title = "Open Graph",
+				locator1 = "Header#H2_TITLE",
+				value1 = "Open Graph");
+		}
+
+		task ("Assert custom title configuration") {
+			AssertTextEquals.assertPartialText(
+				key_fieldName = "openGraphTitleEnabled",
+				locator1 = "FormFields#CHECKBOX_LABEL",
+				value1 = "Use Custom Title");
+
+			AssertElementPresent(locator1 = "TextInput#OPEN_GRAPH_CUSTOM_TITLE");
+		}
+
+		task ("Assert custom description configuration") {
+			AssertTextEquals.assertPartialText(
+				key_fieldName = "openGraphDescriptionEnabled",
+				locator1 = "FormFields#CHECKBOX_LABEL",
+				value1 = "Use Custom Description");
+
+			AssertElementPresent(
+				key_text = "openGraphDescription",
+				locator1 = "TextArea#ANY");
+		}
+
+		task ("Assert image configuration") {
+			AssertTextEquals.assertPartialText(
+				key_fieldLabel = "Image",
+				locator1 = "FormFields#OPEN_GRAPH_LABEL",
+				value1 = "Image");
+
+			AssertTextEquals.assertPartialText(
+				key_fieldLabel = "Image Alt Description",
+				locator1 = "FormFields#OPEN_GRAPH_LABEL",
+				value1 = "Image Alt Description");
+
+			AssertElementPresent(
+				key_fieldLabel = "Image",
+				locator1 = "Button#IMAGE_SELECTOR");
+		}
+	}
+
+	@summary = "Default summary"
+	macro viewDefaultMappedField(description = null, portlet = null, title = null) {
+		AssertAttributeValue(
+			key_mappedField = "Title",
+			locator1 = "TextInput#SEO_MAPPED_FIELD",
+			value1 = "value",
+			value2 = ${title});
+
+		AssertTextEquals(
+			key_mappedField = "Description",
+			locator1 = "TextInput#SEO_MAPPED_FIELD",
+			value1 = ${description});
+
+		AssertAttributeValue(
+			key_mappedField = "Image",
+			locator1 = "TextInput#SEO_MAPPED_FIELD",
+			value1 = "value",
+			value2 = "-- Unmapped --");
+
+		AssertTextEquals(
+			key_mappedField = "ImageAlt",
+			locator1 = "TextInput#SEO_MAPPED_FIELD",
+			value1 = "");
+	}
+
+	@summary = "Default summary"
+	macro viewImageAltDescriptionDefault() {
+		AssertElementPresent(
+			key_text = "openGraphImageAlt",
+			locator1 = "TextInput#OPEN_GRAPH_IMAGE_ALT_DESCRIPTION_DISABLED");
+	}
+
+	@summary = "Default summary"
+	macro viewImageFieldDefault() {
+		AssertElementPresent(locator1 = "TextInput#OPEN_GRAPH_CUSTOM_IMAGE_DEFAULT_VALUE");
+	}
+
+	@summary = "Default summary"
+	macro viewMappedField(mappedFieldValue = null, mappedField = null) {
+		if (isSet(textType)) {
+			AssertTextEquals(
+				key_mappedField = ${mappedField},
+				locator1 = "TextInput#SEO_MAPPED_FIELD",
+				value1 = ${mappedFieldValue});
+		}
+		else {
+			AssertAttributeValue(
+				key_mappedField = ${mappedField},
+				locator1 = "TextInput#SEO_MAPPED_FIELD",
+				value1 = "value",
+				value2 = ${mappedFieldValue});
+		}
+	}
+
+	@summary = "Default summary"
+	macro viewNoOpenGraphProperties(ogPropertyList = null) {
+		for (var ogProperty : list ${ogPropertyList}) {
+			AssertHTMLSourceTextNotPresent(value1 = ${ogProperty});
+		}
+	}
+
+	@summary = "Default summary"
+	macro viewNoPreviewDescription() {
+		AssertTextEquals(
+			locator1 = "PagesAdmin#PREVIEW_DESCRIPTION",
+			value1 = "");
+	}
+
+	@summary = "Default summary"
+	macro viewNoPreviewImage(imageName = null) {
+		AssertElementNotPresent(
+			key_imageName = ${imageName},
+			locator1 = "PagesAdmin#PREVIEW_IMAGE");
+	}
+
+	@summary = "Default summary"
+	macro viewNoTab() {
+		AssertElementNotPresent(
+			key_panel = "Open Graph",
+			locator1 = "NavTab#TAB_LINK");
+	}
+
+	@summary = "Default summary"
+	macro viewOpenGraphProperties(ogPropertyList = null) {
+		for (var ogProperty : list ${ogPropertyList}) {
+			AssertHTMLSourceTextPresent(value1 = ${ogProperty});
+		}
+	}
+
+	@summary = "Default summary"
+	macro viewPreviewImage(imageName = null) {
+		AssertVisible(
+			key_imageName = ${imageName},
+			locator1 = "PagesAdmin#PREVIEW_IMAGE");
+	}
+
+}

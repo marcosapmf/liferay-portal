@@ -114,6 +114,10 @@ public class CheckoutDisplayContext {
 			(CommerceContext)_httpServletRequest.getAttribute(
 				CommerceWebKeys.COMMERCE_CONTEXT);
 
+		if (commerceContext == null) {
+			return false;
+		}
+
 		long commerceChannelId = commerceContext.getCommerceChannelId();
 
 		if (commerceChannelId > 0) {
@@ -131,11 +135,7 @@ public class CheckoutDisplayContext {
 		List<CommerceOrderItem> commerceOrderItems =
 			_commerceOrder.getCommerceOrderItems();
 
-		if (commerceOrderItems.isEmpty()) {
-			return true;
-		}
-
-		return false;
+		return commerceOrderItems.isEmpty();
 	}
 
 	public boolean isOrderSummaryShowFullAddressEnabled()

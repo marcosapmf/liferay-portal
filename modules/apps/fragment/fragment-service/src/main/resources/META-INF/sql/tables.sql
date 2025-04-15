@@ -13,6 +13,7 @@ create table FragmentCollection (
 	fragmentCollectionKey VARCHAR(75) null,
 	name VARCHAR(75) null,
 	description STRING null,
+	marketplace BOOLEAN,
 	lastPublishDate DATE null,
 	primary key (fragmentCollectionId, ctCollectionId)
 );
@@ -35,6 +36,7 @@ create table FragmentComposition (
 	description STRING null,
 	data_ TEXT null,
 	previewFileEntryId LONG,
+	marketplace BOOLEAN,
 	lastPublishDate DATE null,
 	status INTEGER,
 	statusByUserId LONG,
@@ -67,6 +69,7 @@ create table FragmentEntry (
 	configuration TEXT null,
 	icon VARCHAR(75) null,
 	previewFileEntryId LONG,
+	marketplace BOOLEAN,
 	readOnly BOOLEAN,
 	type_ INTEGER,
 	typeOptions TEXT null,
@@ -135,6 +138,7 @@ create table FragmentEntryVersion (
 	configuration TEXT null,
 	icon VARCHAR(75) null,
 	previewFileEntryId LONG,
+	marketplace BOOLEAN,
 	readOnly BOOLEAN,
 	type_ INTEGER,
 	typeOptions TEXT null,

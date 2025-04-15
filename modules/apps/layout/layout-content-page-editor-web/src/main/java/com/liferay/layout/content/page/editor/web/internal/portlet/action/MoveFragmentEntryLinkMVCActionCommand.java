@@ -6,17 +6,22 @@
 package com.liferay.layout.content.page.editor.web.internal.portlet.action;
 
 import com.liferay.layout.content.page.editor.constants.ContentPageEditorPortletKeys;
+import com.liferay.layout.content.page.editor.web.internal.manager.FormItemManager;
 import com.liferay.layout.content.page.editor.web.internal.util.layout.structure.LayoutStructureUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ParamUtil;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
+
+import java.util.Arrays;
 
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
 
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Eudaldo Alonso
@@ -41,16 +46,65 @@ public class MoveFragmentEntryLinkMVCActionCommand
 
 		long segmentsExperienceId = ParamUtil.getLong(
 			actionRequest, "segmentsExperienceId");
+
+		String[] itemIds = null;
+
 		String itemId = ParamUtil.getString(actionRequest, "itemId");
-		String parentItemId = ParamUtil.getString(
-			actionRequest, "parentItemId");
-		int position = ParamUtil.getInteger(actionRequest, "position");
+
+		if (Validator.isNotNull(itemId)) {
+			itemIds = new String[] {itemId};
+		}
+		else {
+			itemIds = ParamUtil.getStringValues(actionRequest, "itemIds");
+		}
+
+		String[] finalItemIds = itemIds;
+
+		String[] parentItemIds = ParamUtil.getStringValues(
+			actionRequest, "parentItemIds");
+
+		if (parentItemIds.length < 2) {
+			String curParentItemId = parentItemIds[0];
+
+			parentItemIds = new String[finalItemIds.length];
+
+			Arrays.fill(parentItemIds, curParentItemId);
+		}
+
+		String[] finalParentItemIds = parentItemIds;
+
+		int[] positions = ParamUtil.getIntegerValues(
+			actionRequest, "positions");
+
+		if (positions.length < 2) {
+			int curPosition = positions[0];
+
+			positions = new int[finalItemIds.length];
+
+			for (int i = 0; i < positions.length; i++) {
+				positions[i] = i + curPosition;
+			}
+		}
+
+		int[] finalPositions = positions;
 
 		return LayoutStructureUtil.updateLayoutPageTemplateData(
 			themeDisplay.getScopeGroupId(), segmentsExperienceId,
 			themeDisplay.getPlid(),
-			layoutStructure -> layoutStructure.moveLayoutStructureItem(
-				itemId, parentItemId, position));
+			layoutStructure -> {
+				for (int i = 0; i < finalItemIds.length; i++) {
+					_formItemManager.checkFormContainerParentItemRequired(
+						new String[] {finalItemIds[i]}, layoutStructure,
+						finalParentItemIds[i]);
+
+					layoutStructure.moveLayoutStructureItem(
+						finalItemIds[i], finalParentItemIds[i],
+						finalPositions[i]);
+				}
+			});
 	}
+
+	@Reference
+	private FormItemManager _formItemManager;
 
 }

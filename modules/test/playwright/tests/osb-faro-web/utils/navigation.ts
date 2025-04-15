@@ -9,12 +9,23 @@ import {faroConfig} from '../faro.config';
 import {waitForLoading} from './loading';
 
 export enum ACPage {
+	apisTokensPage = 'apis/tokens',
 	assetPage = 'assets',
-	eventAnalysisPage = 'events',
-	individualPage = 'individuals',
-	segmentPage = 'segments',
+	dataSourcePage = 'data-source',
+	dataPrivacyRequestLogPage = 'data-privacy/request-log',
+	dataPrivacySupressedUsersPage = 'data-privacy/suppressed-users',
+	definitionsIndividualAttributesPage = 'definitions/individual-attributes',
+	definitionsEventAttributesGlobalPage = 'definitions/event-attributes/global',
+	definitionsEventsCustomPage = 'definitions/events/custom',
+	definitionsEventsBlockListPage = 'definitions/events/block-list',
+	eventAnalysisPage = 'event-analysis',
+	eventAttributesPage = 'definitions/event-attributes/global',
+	individualPage = 'contacts/individuals',
+	segmentPage = 'contacts/segments',
 	sitePage = 'sites',
+	propertiesPage = 'properties',
 	testPage = 'tests',
+	userManagementPage = 'users',
 }
 
 export async function navigateTo({
@@ -27,6 +38,10 @@ export async function navigateTo({
 	await page.getByRole('link', {name: pageName}).first().click();
 
 	await waitForLoading(page);
+}
+
+export async function navigateToACAdmin({page}: {page: Page}) {
+	await page.goto(`${faroConfig.environment.baseUrl}/admin`);
 }
 
 export async function navigateToACWorkspace({
@@ -58,5 +73,19 @@ export async function navigateToACPageViaURL({
 }) {
 	await page.goto(
 		`${faroConfig.environment.baseUrl}/workspace/${projectID}/${channelID}/${acPage}`
+	);
+}
+
+export async function navigateToACSettingsViaURL({
+	acPage,
+	page,
+	projectID,
+}: {
+	acPage: ACPage;
+	page: Page;
+	projectID: string;
+}) {
+	await page.goto(
+		`${faroConfig.environment.baseUrl}/workspace/${projectID}/settings/${acPage}`
 	);
 }

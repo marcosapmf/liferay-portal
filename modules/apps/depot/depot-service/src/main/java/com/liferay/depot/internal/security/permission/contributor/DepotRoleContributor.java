@@ -10,6 +10,7 @@ import com.liferay.depot.model.DepotEntryGroupRel;
 import com.liferay.depot.service.DepotEntryGroupRelLocalService;
 import com.liferay.depot.service.DepotEntryLocalService;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
@@ -46,36 +47,44 @@ public class DepotRoleContributor implements RoleContributor {
 			Group group = _groupLocalService.getGroup(
 				roleCollection.getGroupId());
 
-			if (!group.isDepot()) {
-				return;
-			}
+			if (group.isDepot()) {
+				UserBag userBag = roleCollection.getUserBag();
 
-			UserBag userBag = roleCollection.getUserBag();
-
-			if (userBag.hasUserGroup(group) ||
-				_hasInheritedMemberships(group.getGroupId(), userBag)) {
-
-				_addRoleId(
-					roleCollection, DepotRolesConstants.ASSET_LIBRARY_MEMBER);
-			}
-
-			List<DepotEntryGroupRel> depotEntryGroupRels =
-				_depotEntryGroupRelLocalService.getDepotEntryGroupRels(
-					_depotEntryLocalService.getGroupDepotEntry(
-						group.getGroupId()));
-
-			for (DepotEntryGroupRel depotEntryGroupRel : depotEntryGroupRels) {
-				if (userBag.hasUserGroup(
-						_groupLocalService.getGroup(
-							depotEntryGroupRel.getToGroupId()))) {
+				if (userBag.hasUserGroup(group) ||
+					_hasInheritedMemberships(group.getGroupId(), userBag)) {
 
 					_addRoleId(
 						roleCollection,
-						DepotRolesConstants.
-							ASSET_LIBRARY_CONNECTED_SITE_MEMBER);
-
-					break;
+						DepotRolesConstants.ASSET_LIBRARY_MEMBER);
 				}
+
+				List<DepotEntryGroupRel> depotEntryGroupRels =
+					_depotEntryGroupRelLocalService.getDepotEntryGroupRels(
+						_depotEntryLocalService.getGroupDepotEntry(
+							group.getGroupId()));
+
+				for (DepotEntryGroupRel depotEntryGroupRel :
+						depotEntryGroupRels) {
+
+					if (userBag.hasUserGroup(
+							_groupLocalService.getGroup(
+								depotEntryGroupRel.getToGroupId()))) {
+
+						_addRoleId(
+							roleCollection,
+							DepotRolesConstants.
+								ASSET_LIBRARY_CONNECTED_SITE_MEMBER);
+
+						break;
+					}
+				}
+			}
+
+			if (FeatureFlagManagerUtil.isEnabled(
+					group.getCompanyId(), "LPD-17564") &&
+				group.isCMS()) {
+
+				_addRoleId(roleCollection, DepotRolesConstants.CMS_CONSUMER);
 			}
 		}
 		catch (PortalException portalException) {

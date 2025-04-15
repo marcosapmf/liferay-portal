@@ -10,8 +10,13 @@ export const INACTIVE = Liferay.Language.get('inactive');
 export const ASCENDING = Liferay.Language.get('ascending');
 export const DESCENDING = Liferay.Language.get('descending');
 
+export const ASSET_CATEGORY_EXTERNAL_REFERENCE_CODE =
+	'asset_category_external_reference_code';
+export const ASSET_CATEGORY_EXTERNAL_REFERENCE_CODES =
+	'asset_category_external_reference_codes';
+
 export const ASSET_CATEGORY_ID = 'asset_category_id';
-export const GROUP_ID = 'group_id';
+export const ASSET_CATEGORY_IDS = 'asset_category_ids';
 
 export const CONFIG_PREFIX = 'configuration';
 
@@ -21,6 +26,12 @@ export const DEFAULT_INDEX_CONFIGURATION = {
 	external: false,
 	indexName: '',
 };
+
+export const GROUP_EXTERNAL_REFERENCE_CODE = 'group_external_reference_code';
+export const GROUP_EXTERNAL_REFERENCE_CODES = 'group_external_reference_codes';
+
+export const GROUP_ID = 'group_id';
+export const GROUP_IDS = 'group_ids';
 
 export const SXP_ELEMENT_PREFIX = {
 	QUERY: 'querySXPElement',

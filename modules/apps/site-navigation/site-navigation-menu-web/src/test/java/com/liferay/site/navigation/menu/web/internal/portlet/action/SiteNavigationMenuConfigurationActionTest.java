@@ -8,31 +8,30 @@ package com.liferay.site.navigation.menu.web.internal.portlet.action;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.service.GroupLocalService;
-import com.liferay.portal.kernel.settings.ModifiableSettings;
-import com.liferay.portal.kernel.settings.Settings;
+import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
+import com.liferay.portal.kernel.test.TestInfo;
+import com.liferay.portal.kernel.test.portlet.MockActionRequest;
+import com.liferay.portal.kernel.test.portlet.MockPortletPreferences;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
-import com.liferay.portal.test.rule.FeatureFlags;
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
 import com.liferay.site.navigation.model.SiteNavigationMenu;
 import com.liferay.site.navigation.model.SiteNavigationMenuItem;
 import com.liferay.site.navigation.service.SiteNavigationMenuItemLocalService;
 import com.liferay.site.navigation.service.SiteNavigationMenuService;
 
-import java.util.HashMap;
-import java.util.Map;
+import javax.portlet.PortletPreferences;
 
-import javax.portlet.PortletRequest;
-
+import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 
-import org.mockito.ArgumentMatchers;
+import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 
 /**
@@ -45,35 +44,19 @@ public class SiteNavigationMenuConfigurationActionTest {
 	public static final LiferayUnitTestRule liferayUnitTestRule =
 		LiferayUnitTestRule.INSTANCE;
 
+	@AfterClass
+	public static void tearDownClass() {
+		_groupLocalServiceUtilMockedStatic.close();
+	}
+
 	@Before
-	public void setUp() {
-		_setUpSettings();
+	public void setUp() throws Exception {
+		_setUpPortletPreferences();
 	}
 
 	@Test
-	public void testUpdateDisplayStyleGroupPreferencesWithFeatureFlagDisabled()
-		throws Exception {
-
-		_setUpSiteNavigationMenuConfigurationAction(null, null, null);
-
-		_siteNavigationMenuConfigurationAction.postProcess(
-			_COMPANY_ID, _getPortletRequest(RandomTestUtil.randomLong()),
-			_settings);
-
-		Assert.assertNull(
-			_modifiableSettings.getValue(
-				"displayStyleGroupExternalReferenceCode", null));
-		Assert.assertEquals(
-			_DISPLAY_STYLE_GROUP_ID,
-			_modifiableSettings.getValue("displayStyleGroupId", null));
-		Assert.assertEquals(
-			_DISPLAY_STYLE_GROUP_KEY,
-			_modifiableSettings.getValue("displayStyleGroupKey", null));
-	}
-
-	@FeatureFlags("LPD-23048")
-	@Test
-	public void testUpdateDisplayStyleGroupPreferencesWithFeatureFlagEnabledDifferentScope()
+	@TestInfo("LPD-37038")
+	public void testUpdateDisplayStyleGroupPreferencesWithDifferentScope()
 		throws Exception {
 
 		Group group = _getGroup(RandomTestUtil.randomLong());
@@ -81,24 +64,23 @@ public class SiteNavigationMenuConfigurationActionTest {
 		_setUpSiteNavigationMenuConfigurationAction(group, null, null);
 
 		_siteNavigationMenuConfigurationAction.postProcess(
-			_COMPANY_ID, _getPortletRequest(RandomTestUtil.randomLong()),
-			_settings);
+			_COMPANY_ID, _getMockActionRequest(RandomTestUtil.randomLong()),
+			_portletPreferences);
 
 		Assert.assertEquals(
 			group.getExternalReferenceCode(),
-			_modifiableSettings.getValue(
+			_portletPreferences.getValue(
 				"displayStyleGroupExternalReferenceCode", null));
 		Assert.assertEquals(
 			_DISPLAY_STYLE_GROUP_ID,
-			_modifiableSettings.getValue("displayStyleGroupId", null));
+			_portletPreferences.getValue("displayStyleGroupId", null));
 		Assert.assertEquals(
 			_DISPLAY_STYLE_GROUP_KEY,
-			_modifiableSettings.getValue("displayStyleGroupKey", null));
+			_portletPreferences.getValue("displayStyleGroupKey", null));
 	}
 
-	@FeatureFlags("LPD-23048")
 	@Test
-	public void testUpdateDisplayStyleGroupPreferencesWithFeatureFlagEnabledSameScope()
+	public void testUpdateDisplayStyleGroupPreferencesWithSameScope()
 		throws Exception {
 
 		Group group = _getGroup(RandomTestUtil.randomLong());
@@ -106,43 +88,22 @@ public class SiteNavigationMenuConfigurationActionTest {
 		_setUpSiteNavigationMenuConfigurationAction(group, null, null);
 
 		_siteNavigationMenuConfigurationAction.postProcess(
-			_COMPANY_ID, _getPortletRequest(group.getGroupId()), _settings);
+			_COMPANY_ID, _getMockActionRequest(group.getGroupId()),
+			_portletPreferences);
 
 		Assert.assertNull(
-			_modifiableSettings.getValue(
+			_portletPreferences.getValue(
 				"displayStyleGroupExternalReferenceCode", null));
 		Assert.assertEquals(
 			_DISPLAY_STYLE_GROUP_ID,
-			_modifiableSettings.getValue("displayStyleGroupId", null));
+			_portletPreferences.getValue("displayStyleGroupId", null));
 		Assert.assertEquals(
 			_DISPLAY_STYLE_GROUP_KEY,
-			_modifiableSettings.getValue("displayStyleGroupKey", null));
+			_portletPreferences.getValue("displayStyleGroupKey", null));
 	}
 
 	@Test
-	public void testUpdateRootMenuItemPreferencesWithFeatureFlagDisabled()
-		throws Exception {
-
-		_setUpSiteNavigationMenuConfigurationAction(
-			null, null, RandomTestUtil.randomString());
-
-		_siteNavigationMenuConfigurationAction.postProcess(
-			_COMPANY_ID, _getPortletRequest(RandomTestUtil.randomLong()),
-			_settings);
-
-		Assert.assertNull(
-			_modifiableSettings.getValue(
-				"rootMenuItemExternalReferenceCode", null));
-		Assert.assertEquals(
-			_ROOT_MENU_ITEM_ID,
-			_modifiableSettings.getValue("rootMenuItemId", null));
-	}
-
-	@FeatureFlags("LPD-23048")
-	@Test
-	public void testUpdateRootMenuItemPreferencesWithFeatureFlagEnabled()
-		throws Exception {
-
+	public void testUpdateRootMenuItemPreferences() throws Exception {
 		String rootMenuItemExternalReferenceCode =
 			RandomTestUtil.randomString();
 
@@ -150,59 +111,68 @@ public class SiteNavigationMenuConfigurationActionTest {
 			null, null, rootMenuItemExternalReferenceCode);
 
 		_siteNavigationMenuConfigurationAction.postProcess(
-			_COMPANY_ID, _getPortletRequest(RandomTestUtil.randomLong()),
-			_settings);
+			_COMPANY_ID, _getMockActionRequest(RandomTestUtil.randomLong()),
+			_portletPreferences);
 
 		Assert.assertEquals(
 			rootMenuItemExternalReferenceCode,
-			_modifiableSettings.getValue(
+			_portletPreferences.getValue(
 				"rootMenuItemExternalReferenceCode", null));
 		Assert.assertEquals(
 			_ROOT_MENU_ITEM_ID,
-			_modifiableSettings.getValue("rootMenuItemId", null));
+			_portletPreferences.getValue("rootMenuItemId", null));
 	}
 
 	@Test
-	public void testUpdateSiteNavigationMenuPreferencesWithFeatureFlagDisabled()
-		throws Exception {
-
-		_setUpSiteNavigationMenuConfigurationAction(
-			null, RandomTestUtil.randomString(), null);
-
-		_siteNavigationMenuConfigurationAction.postProcess(
-			_COMPANY_ID, _getPortletRequest(RandomTestUtil.randomLong()),
-			_settings);
-
-		Assert.assertNull(
-			_modifiableSettings.getValue(
-				"siteNavigationMenuExternalReferenceCode", null));
-		Assert.assertEquals(
-			_SITE_NAVIGATION_MENU_ITEM_ID,
-			_modifiableSettings.getValue("siteNavigationMenuId", null));
-	}
-
-	@FeatureFlags("LPD-23048")
-	@Test
-	public void testUpdateSiteNavigationMenuPreferencesWithFeatureFlagEnabled()
-		throws Exception {
-
+	public void testUpdateSiteNavigationMenuPreferences() throws Exception {
+		long groupId = RandomTestUtil.randomLong();
 		String siteNavigationMenuExternalReferenceCode =
 			RandomTestUtil.randomString();
 
 		_setUpSiteNavigationMenuConfigurationAction(
-			null, siteNavigationMenuExternalReferenceCode, null);
+			_getGroup(groupId), siteNavigationMenuExternalReferenceCode, null);
 
 		_siteNavigationMenuConfigurationAction.postProcess(
-			_COMPANY_ID, _getPortletRequest(RandomTestUtil.randomLong()),
-			_settings);
+			_COMPANY_ID, _getMockActionRequest(groupId), _portletPreferences);
 
 		Assert.assertEquals(
 			siteNavigationMenuExternalReferenceCode,
-			_modifiableSettings.getValue(
+			_portletPreferences.getValue(
 				"siteNavigationMenuExternalReferenceCode", null));
+		Assert.assertNull(
+			_portletPreferences.getValue(
+				"siteNavigationMenuGroupExternalReferenceCode", null));
 		Assert.assertEquals(
 			_SITE_NAVIGATION_MENU_ITEM_ID,
-			_modifiableSettings.getValue("siteNavigationMenuId", null));
+			_portletPreferences.getValue("siteNavigationMenuId", null));
+	}
+
+	@Test
+	public void testUpdateSiteNavigationMenuPreferencesWithDifferentScope()
+		throws Exception {
+
+		Group group = _getGroup(RandomTestUtil.randomLong());
+		String siteNavigationMenuExternalReferenceCode =
+			RandomTestUtil.randomString();
+
+		_setUpSiteNavigationMenuConfigurationAction(
+			group, siteNavigationMenuExternalReferenceCode, null);
+
+		_siteNavigationMenuConfigurationAction.postProcess(
+			_COMPANY_ID, _getMockActionRequest(RandomTestUtil.randomLong()),
+			_portletPreferences);
+
+		Assert.assertEquals(
+			siteNavigationMenuExternalReferenceCode,
+			_portletPreferences.getValue(
+				"siteNavigationMenuExternalReferenceCode", null));
+		Assert.assertEquals(
+			group.getExternalReferenceCode(),
+			_portletPreferences.getValue(
+				"siteNavigationMenuGroupExternalReferenceCode", null));
+		Assert.assertEquals(
+			_SITE_NAVIGATION_MENU_ITEM_ID,
+			_portletPreferences.getValue("siteNavigationMenuId", null));
 	}
 
 	private Group _getGroup(long groupId) {
@@ -213,11 +183,13 @@ public class SiteNavigationMenuConfigurationActionTest {
 		).thenReturn(
 			RandomTestUtil.randomString()
 		);
+
 		Mockito.when(
 			group.getGroupId()
 		).thenReturn(
 			groupId
 		);
+
 		Mockito.when(
 			group.getGroupKey()
 		).thenReturn(
@@ -233,25 +205,7 @@ public class SiteNavigationMenuConfigurationActionTest {
 		GroupLocalService groupLocalService = Mockito.mock(
 			GroupLocalService.class);
 
-		if (group == null) {
-			Mockito.when(
-				groupLocalService.fetchGroup(
-					Mockito.anyLong(), Mockito.anyString())
-			).thenReturn(
-				null
-			);
-			Mockito.when(
-				groupLocalService.getGroup(Mockito.anyLong())
-			).thenReturn(
-				null
-			);
-		}
-		else {
-			Mockito.when(
-				groupLocalService.fetchGroup(_COMPANY_ID, group.getGroupKey())
-			).thenReturn(
-				group
-			);
+		if (group != null) {
 			Mockito.when(
 				groupLocalService.getGroup(group.getGroupId())
 			).thenReturn(
@@ -262,8 +216,8 @@ public class SiteNavigationMenuConfigurationActionTest {
 		return groupLocalService;
 	}
 
-	private PortletRequest _getPortletRequest(long groupId) throws Exception {
-		PortletRequest portletRequest = Mockito.mock(PortletRequest.class);
+	private MockActionRequest _getMockActionRequest(long groupId)
+		throws Exception {
 
 		ThemeDisplay themeDisplay = new ThemeDisplay();
 
@@ -279,13 +233,13 @@ public class SiteNavigationMenuConfigurationActionTest {
 
 		themeDisplay.setScopeGroupId(groupId);
 
-		Mockito.when(
-			portletRequest.getAttribute(WebKeys.THEME_DISPLAY)
-		).thenReturn(
-			themeDisplay
-		);
+		MockActionRequest mockActionRequest = new MockActionRequest();
 
-		return portletRequest;
+		mockActionRequest.setAttribute(WebKeys.THEME_DISPLAY, themeDisplay);
+		mockActionRequest.setParameter(
+			"preferences--displayStyleGroupKey--", _DISPLAY_STYLE_GROUP_KEY);
+
+		return mockActionRequest;
 	}
 
 	private SiteNavigationMenuItemLocalService
@@ -294,6 +248,10 @@ public class SiteNavigationMenuConfigurationActionTest {
 
 		SiteNavigationMenuItemLocalService siteNavigationMenuItemLocalService =
 			Mockito.mock(SiteNavigationMenuItemLocalService.class);
+
+		if (Validator.isNull(siteNavigationMenuItemExternalReferenceCode)) {
+			return siteNavigationMenuItemLocalService;
+		}
 
 		SiteNavigationMenuItem siteNavigationMenuItem = Mockito.mock(
 			SiteNavigationMenuItem.class);
@@ -315,11 +273,15 @@ public class SiteNavigationMenuConfigurationActionTest {
 	}
 
 	private SiteNavigationMenuService _getSiteNavigationMenuService(
-			String siteNavigationMenuExternalReferenceCode)
+			Group group, String siteNavigationMenuExternalReferenceCode)
 		throws Exception {
 
 		SiteNavigationMenuService siteNavigationMenuService = Mockito.mock(
 			SiteNavigationMenuService.class);
+
+		if (Validator.isNull(siteNavigationMenuExternalReferenceCode)) {
+			return siteNavigationMenuService;
+		}
 
 		SiteNavigationMenu siteNavigationMenu = Mockito.mock(
 			SiteNavigationMenu.class);
@@ -328,6 +290,18 @@ public class SiteNavigationMenuConfigurationActionTest {
 			siteNavigationMenu.getExternalReferenceCode()
 		).thenReturn(
 			siteNavigationMenuExternalReferenceCode
+		);
+
+		long groupId = RandomTestUtil.randomLong();
+
+		if (group != null) {
+			groupId = group.getGroupId();
+		}
+
+		Mockito.when(
+			siteNavigationMenu.getGroupId()
+		).thenReturn(
+			groupId
 		);
 
 		Mockito.when(
@@ -339,67 +313,58 @@ public class SiteNavigationMenuConfigurationActionTest {
 		return siteNavigationMenuService;
 	}
 
-	private void _setUpSettings() {
-		_settings = Mockito.mock(Settings.class);
+	private void _setUpGroupLocalServiceUtil(Group group) throws Exception {
+		_groupLocalServiceUtilMockedStatic.reset();
 
-		_modifiableSettings = Mockito.mock(ModifiableSettings.class);
+		if (group == null) {
+			_groupLocalServiceUtilMockedStatic.when(
+				() -> GroupLocalServiceUtil.fetchGroup(
+					Mockito.anyLong(), Mockito.anyString())
+			).thenReturn(
+				null
+			);
 
-		_portletPropertiesMap = new HashMap<>();
+			_groupLocalServiceUtilMockedStatic.when(
+				() -> GroupLocalServiceUtil.getGroup(Mockito.anyLong())
+			).thenReturn(
+				null
+			);
+		}
+		else {
+			_groupLocalServiceUtilMockedStatic.when(
+				() -> GroupLocalServiceUtil.fetchGroup(
+					_COMPANY_ID, group.getGroupKey())
+			).thenReturn(
+				group
+			);
 
-		Mockito.when(
-			_modifiableSettings.getValue(
-				Mockito.anyString(), ArgumentMatchers.nullable(String.class))
-		).then(
-			invocation -> {
-				String value = _portletPropertiesMap.get(
-					invocation.getArgument(0, String.class));
+			_groupLocalServiceUtilMockedStatic.when(
+				() -> GroupLocalServiceUtil.getGroup(group.getGroupId())
+			).thenReturn(
+				group
+			);
+		}
+	}
 
-				if (Validator.isNull(value)) {
-					return invocation.getArgument(1, String.class);
-				}
+	private void _setUpPortletPreferences() throws Exception {
+		_portletPreferences = new MockPortletPreferences();
 
-				return value;
-			}
-		);
-
-		Mockito.when(
-			_modifiableSettings.setValue(
-				Mockito.anyString(), Mockito.anyString())
-		).then(
-			invocation -> _portletPropertiesMap.put(
-				invocation.getArgument(0, String.class),
-				invocation.getArgument(1, String.class))
-		);
-
-		Mockito.doAnswer(
-			invocation -> _portletPropertiesMap.remove(
-				invocation.getArgument(0, String.class))
-		).when(
-			_modifiableSettings
-		).reset(
-			Mockito.anyString()
-		);
-
-		_modifiableSettings.setValue(
+		_portletPreferences.setValue(
 			"displayStyleGroupId", _DISPLAY_STYLE_GROUP_ID);
-		_modifiableSettings.setValue(
+		_portletPreferences.setValue(
 			"displayStyleGroupKey", _DISPLAY_STYLE_GROUP_KEY);
-		_modifiableSettings.setValue("rootMenuItemId", _ROOT_MENU_ITEM_ID);
-		_modifiableSettings.setValue("rootMenuItemType", "select");
-		_modifiableSettings.setValue(
+		_portletPreferences.setValue("rootMenuItemId", _ROOT_MENU_ITEM_ID);
+		_portletPreferences.setValue("rootMenuItemType", "select");
+		_portletPreferences.setValue(
 			"siteNavigationMenuId", _SITE_NAVIGATION_MENU_ITEM_ID);
-
-		Mockito.when(
-			_settings.getModifiableSettings()
-		).thenReturn(
-			_modifiableSettings
-		);
 	}
 
 	private void _setUpSiteNavigationMenuConfigurationAction(
 			Group group, String siteNavigationMenuExternalReferenceCode,
 			String siteNavigationMenuItemExternalReferenceCode)
 		throws Exception {
+
+		_setUpGroupLocalServiceUtil(group);
 
 		_siteNavigationMenuConfigurationAction =
 			new SiteNavigationMenuConfigurationAction();
@@ -412,7 +377,7 @@ public class SiteNavigationMenuConfigurationActionTest {
 					siteNavigationMenuItemExternalReferenceCode);
 		_siteNavigationMenuConfigurationAction.siteNavigationMenuService =
 			_getSiteNavigationMenuService(
-				siteNavigationMenuExternalReferenceCode);
+				group, siteNavigationMenuExternalReferenceCode);
 	}
 
 	private static final long _COMPANY_ID = RandomTestUtil.randomLong();
@@ -429,9 +394,11 @@ public class SiteNavigationMenuConfigurationActionTest {
 	private static final String _SITE_NAVIGATION_MENU_ITEM_ID = String.valueOf(
 		RandomTestUtil.randomLong());
 
-	private ModifiableSettings _modifiableSettings;
-	private Map<String, String> _portletPropertiesMap;
-	private Settings _settings;
+	private static final MockedStatic<GroupLocalServiceUtil>
+		_groupLocalServiceUtilMockedStatic = Mockito.mockStatic(
+			GroupLocalServiceUtil.class);
+
+	private PortletPreferences _portletPreferences;
 	private SiteNavigationMenuConfigurationAction
 		_siteNavigationMenuConfigurationAction;
 

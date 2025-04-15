@@ -70,15 +70,19 @@ export function Conditions({
 	const objectFieldsItems = useMemo(() => {
 		return customObjectFields.map(
 			({externalReferenceCode, label, name}) => ({
-				label: stringUtils.getLocalizableLabel(
-					creationLanguageId,
-					label,
-					name
-				),
+				label: stringUtils.getLocalizableLabel({
+					fallbackLabel: name,
+					fallbackLanguageId: creationLanguageId,
+					labels: label,
+				}),
 				value: externalReferenceCode,
 			})
 		);
 	}, [creationLanguageId, customObjectFields]);
+
+	const hasLocalizedField = useMemo(() => {
+		return customObjectFields.some((field) => field.localized);
+	}, [customObjectFields]);
 
 	return (
 		<>
@@ -109,6 +113,19 @@ export function Conditions({
 				title={values.engineLabel!}
 				tooltip={engine === 'ddm' ? ddmTooltip : null}
 			>
+				{hasLocalizedField && (
+					<ClayAlert
+						displayType="info"
+						title={`${Liferay.Language.get('info')}:`}
+					>
+						{`${Liferay.Language.get(
+							'this-object-includes-translatable-fields'
+						)} ${Liferay.Language.get(
+							'validations-always-use-the-object-entrys-default-language'
+						)}`}
+					</ClayAlert>
+				)}
+
 				<CodeEditor
 					error={errors.script}
 					mode={engine}

@@ -26,6 +26,7 @@ import com.liferay.dynamic.data.mapping.service.DDMTemplateLocalService;
 import com.liferay.dynamic.data.mapping.util.DefaultDDMStructureHelper;
 import com.liferay.expando.kernel.service.ExpandoValueLocalService;
 import com.liferay.fragment.importer.FragmentsImporter;
+import com.liferay.fragment.service.FragmentEntryLinkLocalService;
 import com.liferay.headless.admin.list.type.resource.v1_0.ListTypeDefinitionResource;
 import com.liferay.headless.admin.list.type.resource.v1_0.ListTypeEntryResource;
 import com.liferay.headless.admin.taxonomy.resource.v1_0.KeywordResource;
@@ -67,7 +68,6 @@ import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.LayoutSetLocalService;
 import com.liferay.portal.kernel.service.OrganizationLocalService;
-import com.liferay.portal.kernel.service.PortletPreferencesLocalService;
 import com.liferay.portal.kernel.service.ResourceActionLocalService;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
@@ -86,6 +86,7 @@ import com.liferay.portal.security.service.access.policy.service.SAPEntryLocalSe
 import com.liferay.portal.util.PropsValues;
 import com.liferay.segments.service.SegmentsEntryLocalService;
 import com.liferay.segments.service.SegmentsExperienceLocalService;
+import com.liferay.site.configuration.manager.MenuAccessConfigurationManager;
 import com.liferay.site.initializer.extender.internal.file.backed.osgi.FileBackedBundleDelegate;
 import com.liferay.site.initializer.extender.internal.file.backed.servlet.FileBackedServletContextDelegate;
 import com.liferay.site.navigation.service.SiteNavigationMenuItemLocalService;
@@ -143,17 +144,18 @@ public class SiteInitializerExtender
 				_accountEntryOrganizationRelLocalService,
 				_accountGroupLocalService, _accountGroupRelService,
 				_accountResourceFactory, _accountRoleLocalService,
-				_accountRoleResourceFactory, _assetCategoryLocalService,
-				_assetEntryLocalService, _assetLinkLocalService,
-				_assetListEntryLocalService, _blogPostingResourceFactory,
-				bundle, _cetManager, _clientExtensionEntryLocalService,
-				_companyLocalService, _configurationProvider,
-				_dataDefinitionResourceFactory, _ddmStructureLocalService,
-				_ddmTemplateLocalService, _defaultDDMStructureHelper,
-				_dependencyManager, _depotEntryGroupRelLocalService,
-				_depotEntryLocalService, _dlFileEntryTypeLocalService,
-				_dlURLHelper, _documentFolderResourceFactory,
-				_documentResourceFactory, _expandoValueLocalService,
+				_accountRoleResourceFactory, _archivedSettingsFactory,
+				_assetCategoryLocalService, _assetEntryLocalService,
+				_assetLinkLocalService, _assetListEntryLocalService,
+				_blogPostingResourceFactory, _cetManager,
+				_clientExtensionEntryLocalService, _companyLocalService,
+				_configurationProvider, _dataDefinitionResourceFactory,
+				_ddmStructureLocalService, _ddmTemplateLocalService,
+				_defaultDDMStructureHelper, _dependencyManager,
+				_depotEntryGroupRelLocalService, _depotEntryLocalService,
+				_dlFileEntryTypeLocalService, _dlURLHelper,
+				_documentFolderResourceFactory, _documentResourceFactory,
+				_expandoValueLocalService, _fragmentEntryLinkLocalService,
 				_fragmentsImporter, _groupLocalService,
 				_journalArticleLocalService, _jsonFactory,
 				_keywordResourceFactory, _knowledgeBaseArticleResourceFactory,
@@ -165,7 +167,7 @@ public class SiteInitializerExtender
 				_layoutUtilityPageEntryLocalService,
 				_listTypeDefinitionResource, _listTypeDefinitionResourceFactory,
 				_listTypeEntryLocalService, _listTypeEntryResource,
-				_listTypeEntryResourceFactory,
+				_listTypeEntryResourceFactory, _menuAccessConfigurationManager,
 				_notificationTemplateResourceFactory, _objectActionLocalService,
 				_objectDefinitionLocalService, _objectDefinitionResourceFactory,
 				_objectEntryLocalService, _objectEntryManager,
@@ -173,10 +175,10 @@ public class SiteInitializerExtender
 				_objectFolderResourceFactory, _objectRelationshipLocalService,
 				_objectRelationshipResourceFactory, _organizationLocalService,
 				_organizationResourceFactory, _ploEntryLocalService, _portal,
-				_portletPreferencesLocalService, _resourceActionLocalService,
-				_resourcePermissionLocalService, _roleLocalService,
-				_sapEntryLocalService, _segmentsEntryLocalService,
-				_segmentsExperienceLocalService, null, _archivedSettingsFactory,
+				_resourceActionLocalService, _resourcePermissionLocalService,
+				_roleLocalService, _sapEntryLocalService,
+				_segmentsEntryLocalService, _segmentsExperienceLocalService,
+				null, bundle, _bundleContext.getBundle(),
 				_siteNavigationMenuItemLocalService,
 				_siteNavigationMenuItemTypeRegistry,
 				_siteNavigationMenuLocalService,
@@ -264,22 +266,18 @@ public class SiteInitializerExtender
 				_accountEntryOrganizationRelLocalService,
 				_accountGroupLocalService, _accountGroupRelService,
 				_accountResourceFactory, _accountRoleLocalService,
-				_accountRoleResourceFactory, _assetCategoryLocalService,
-				_assetEntryLocalService, _assetLinkLocalService,
-				_assetListEntryLocalService, _blogPostingResourceFactory,
-				ProxyUtil.newDelegateProxyInstance(
-					Bundle.class.getClassLoader(), Bundle.class,
-					new FileBackedBundleDelegate(
-						_bundleContext, file, _jsonFactory, symbolicName),
-					null),
-				_cetManager, _clientExtensionEntryLocalService,
-				_companyLocalService, _configurationProvider,
-				_dataDefinitionResourceFactory, _ddmStructureLocalService,
-				_ddmTemplateLocalService, _defaultDDMStructureHelper,
-				_dependencyManager, _depotEntryGroupRelLocalService,
-				_depotEntryLocalService, _dlFileEntryTypeLocalService,
-				_dlURLHelper, _documentFolderResourceFactory,
-				_documentResourceFactory, _expandoValueLocalService,
+				_accountRoleResourceFactory, _archivedSettingsFactory,
+				_assetCategoryLocalService, _assetEntryLocalService,
+				_assetLinkLocalService, _assetListEntryLocalService,
+				_blogPostingResourceFactory, _cetManager,
+				_clientExtensionEntryLocalService, _companyLocalService,
+				_configurationProvider, _dataDefinitionResourceFactory,
+				_ddmStructureLocalService, _ddmTemplateLocalService,
+				_defaultDDMStructureHelper, _dependencyManager,
+				_depotEntryGroupRelLocalService, _depotEntryLocalService,
+				_dlFileEntryTypeLocalService, _dlURLHelper,
+				_documentFolderResourceFactory, _documentResourceFactory,
+				_expandoValueLocalService, _fragmentEntryLinkLocalService,
 				_fragmentsImporter, _groupLocalService,
 				_journalArticleLocalService, _jsonFactory,
 				_keywordResourceFactory, _knowledgeBaseArticleResourceFactory,
@@ -291,7 +289,7 @@ public class SiteInitializerExtender
 				_layoutUtilityPageEntryLocalService,
 				_listTypeDefinitionResource, _listTypeDefinitionResourceFactory,
 				_listTypeEntryLocalService, _listTypeEntryResource,
-				_listTypeEntryResourceFactory,
+				_listTypeEntryResourceFactory, _menuAccessConfigurationManager,
 				_notificationTemplateResourceFactory, _objectActionLocalService,
 				_objectDefinitionLocalService, _objectDefinitionResourceFactory,
 				_objectEntryLocalService, _objectEntryManager,
@@ -299,16 +297,20 @@ public class SiteInitializerExtender
 				_objectFolderResourceFactory, _objectRelationshipLocalService,
 				_objectRelationshipResourceFactory, _organizationLocalService,
 				_organizationResourceFactory, _ploEntryLocalService, _portal,
-				_portletPreferencesLocalService, _resourceActionLocalService,
-				_resourcePermissionLocalService, _roleLocalService,
-				_sapEntryLocalService, _segmentsEntryLocalService,
-				_segmentsExperienceLocalService,
+				_resourceActionLocalService, _resourcePermissionLocalService,
+				_roleLocalService, _sapEntryLocalService,
+				_segmentsEntryLocalService, _segmentsExperienceLocalService,
 				ProxyUtil.newDelegateProxyInstance(
 					ServletContext.class.getClassLoader(), ServletContext.class,
 					new FileBackedServletContextDelegate(
 						file, fileKey, symbolicName),
 					null),
-				_archivedSettingsFactory, _siteNavigationMenuItemLocalService,
+				ProxyUtil.newDelegateProxyInstance(
+					Bundle.class.getClassLoader(), Bundle.class,
+					new FileBackedBundleDelegate(
+						_bundleContext, file, _jsonFactory, symbolicName),
+					null),
+				_bundleContext.getBundle(), _siteNavigationMenuItemLocalService,
 				_siteNavigationMenuItemTypeRegistry,
 				_siteNavigationMenuLocalService,
 				_structuredContentFolderResourceFactory,
@@ -419,6 +421,9 @@ public class SiteInitializerExtender
 		_fileSiteInitializerExtensions = new ArrayList<>();
 
 	@Reference
+	private FragmentEntryLinkLocalService _fragmentEntryLinkLocalService;
+
+	@Reference
 	private FragmentsImporter _fragmentsImporter;
 
 	@Reference
@@ -483,6 +488,9 @@ public class SiteInitializerExtender
 	private ListTypeEntryResource.Factory _listTypeEntryResourceFactory;
 
 	@Reference
+	private MenuAccessConfigurationManager _menuAccessConfigurationManager;
+
+	@Reference
 	private NotificationTemplateResource.Factory
 		_notificationTemplateResourceFactory;
 
@@ -528,9 +536,6 @@ public class SiteInitializerExtender
 
 	@Reference
 	private Portal _portal;
-
-	@Reference
-	private PortletPreferencesLocalService _portletPreferencesLocalService;
 
 	@Reference
 	private ResourceActionLocalService _resourceActionLocalService;

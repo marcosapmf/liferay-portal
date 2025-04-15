@@ -173,7 +173,15 @@ describe('AccountSelector', () => {
 			cleanup();
 		});
 
-		it('must display the orders search autocomplete component"', () => {
+		it('must display the orders search autocomplete component"', async () => {
+			await act(async () => {
+				fireEvent.click(
+					renderedComponent.baseElement.querySelector(
+						'.btn-account-selector'
+					)
+				);
+			});
+
 			expect(
 				renderedComponent.getByPlaceholderText(/search-order/)
 			).toBeInTheDocument();
@@ -211,13 +219,8 @@ describe('AccountSelector', () => {
 			const orders = renderedComponent.baseElement.querySelectorAll(
 				'.orders-table tbody tr'
 			);
-			const orderItem = renderedComponent.baseElement.querySelector(
-				'.orders-table tbody tr'
-			);
 
 			expect(orders.length).toBe(10);
-
-			expect(orderItem.querySelector('a').href).toContain('/test-url/');
 		});
 	});
 

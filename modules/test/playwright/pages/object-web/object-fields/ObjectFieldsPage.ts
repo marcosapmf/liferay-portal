@@ -5,6 +5,7 @@
 
 import {Locator, Page} from '@playwright/test';
 
+import {CreateObjectField} from '../../../helpers/ObjectAdminApiHelper';
 import {ViewObjectDefinitionsPage} from '../ViewObjectDefinitionsPage';
 
 export class ObjectFieldsPage {
@@ -22,7 +23,7 @@ export class ObjectFieldsPage {
 		this.deleteObjectFieldOption = page.getByRole('menuitem', {
 			name: 'Delete',
 		});
-		this.fieldsTabItem = page.locator('.navbar-text-truncate').filter({
+		this.fieldsTabItem = page.locator('.nav-item .nav-link').filter({
 			hasText: 'Fields',
 		});
 		this.page = page;
@@ -71,10 +72,10 @@ export class ObjectFieldsPage {
 	}
 
 	async deleteObjectField(nth: number) {
-		await this.page.locator('.dnd-td.item-actions').nth(nth).waitFor();
+		await this.page.locator('.cell-item-actions').nth(nth).waitFor();
 
 		await this.page
-			.locator('.dnd-td.item-actions')
+			.locator('.cell-item-actions')
 			.nth(nth)
 			.locator('.dropdown-toggle')
 			.click();

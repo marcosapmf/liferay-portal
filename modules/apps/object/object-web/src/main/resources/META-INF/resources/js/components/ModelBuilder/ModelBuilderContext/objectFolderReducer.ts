@@ -6,7 +6,6 @@
 import {stringUtils} from '@liferay/object-js-components-web';
 import {Edge, Node, isEdge, isNode} from 'react-flow-renderer';
 
-import {defaultLanguageId} from '../../../utils/constants';
 import {getObjectDefinitionNodeActions} from '../../ViewObjectDefinitions/objectDefinitionUtil';
 import {ObjectRelationshipMap} from '../Edges/ObjectRelationshipMap';
 import {objectRelationshipEdgeFactory} from '../Edges/objectRelationshipEdgeFactory';
@@ -78,6 +77,8 @@ export function ObjectFolderReducer(state: TState, action: TAction): TState {
 								!!newObjectDefinition.actions.permissions,
 							hasObjectDefinitionUpdateResourcePermission:
 								!!newObjectDefinition.actions.update,
+							isTreeStructure:
+								!!newObjectDefinition.rootObjectDefinitionExternalReferenceCode,
 							objectDefinitionId: newObjectDefinition.id,
 							objectDefinitionName: newObjectDefinition.name,
 							objectDefinitionPermissionsURL,
@@ -92,11 +93,12 @@ export function ObjectFolderReducer(state: TState, action: TAction): TState {
 							hiddenObjectDefinitionNode: false,
 							id: newObjectDefinition.id,
 							kebabOptions,
-							label: stringUtils.getLocalizableLabel(
-								newObjectDefinition.defaultLanguageId,
-								newObjectDefinition.label,
-								newObjectDefinition.name
-							),
+							label: stringUtils.getLocalizableLabel({
+								fallbackLabel: newObjectDefinition.name,
+								fallbackLanguageId:
+									newObjectDefinition.defaultLanguageId,
+								labels: newObjectDefinition.label,
+							}),
 							name: newObjectDefinition.name,
 							selected: true,
 							type: !dbTableName
@@ -869,11 +871,10 @@ export function ObjectFolderReducer(state: TState, action: TAction): TState {
 					) {
 						return {
 							...leftSidebarItem,
-							name: stringUtils.getLocalizableLabel(
-								defaultLanguageId,
-								updatedSelectedObjectFolder.label,
-								updatedSelectedObjectFolder.name
-							),
+							name: stringUtils.getLocalizableLabel({
+								fallbackLabel: updatedSelectedObjectFolder.name,
+								labels: updatedSelectedObjectFolder.label,
+							}),
 						};
 					}
 
@@ -1069,6 +1070,8 @@ export function ObjectFolderReducer(state: TState, action: TAction): TState {
 								objectDefinition.hasObjectDefinitionManagePermissionsResourcePermission,
 							hasObjectDefinitionUpdateResourcePermission:
 								objectDefinition.hasObjectDefinitionUpdateResourcePermission,
+							isTreeStructure:
+								!!objectDefinition.rootObjectDefinitionExternalReferenceCode,
 							objectDefinitionId: objectDefinition.id,
 							objectDefinitionName: objectDefinition.name,
 							objectDefinitionPermissionsURL,
@@ -1083,11 +1086,12 @@ export function ObjectFolderReducer(state: TState, action: TAction): TState {
 							hiddenObjectDefinitionNode: false,
 							id: objectDefinition.id,
 							kebabOptions,
-							label: stringUtils.getLocalizableLabel(
-								objectDefinition.defaultLanguageId,
-								objectDefinition.label,
-								objectDefinition.name
-							),
+							label: stringUtils.getLocalizableLabel({
+								fallbackLabel: objectDefinition.name,
+								fallbackLanguageId:
+									objectDefinition.defaultLanguageId,
+								labels: objectDefinition.label,
+							}),
 							name: objectDefinition.name,
 							selected: false,
 							type: !objectDefinition.dbTableName
@@ -1101,11 +1105,10 @@ export function ObjectFolderReducer(state: TState, action: TAction): TState {
 				return {
 					hiddenObjectFolderObjectDefinitionNodes: false,
 					leftSidebarObjectDefinitionItems,
-					name: stringUtils.getLocalizableLabel(
-						defaultLanguageId,
-						objectFolder.label,
-						objectFolder.name
-					),
+					name: stringUtils.getLocalizableLabel({
+						fallbackLabel: objectFolder.name,
+						labels: objectFolder.label,
+					}),
 					objectFolderName: objectFolder.name,
 					type: 'objectFolder',
 				} as LeftSidebarItem;
@@ -1261,9 +1264,11 @@ export function ObjectFolderReducer(state: TState, action: TAction): TState {
 										return {
 											...leftSidebarObjectDefinitionItem,
 											label: stringUtils.getLocalizableLabel(
-												defaultLanguageId,
-												updatedObjectDefinition.label,
-												updatedObjectDefinition.name
+												{
+													fallbackLabel:
+														updatedObjectDefinition.name,
+													labels: updatedObjectDefinition.label,
+												}
 											),
 										};
 									}

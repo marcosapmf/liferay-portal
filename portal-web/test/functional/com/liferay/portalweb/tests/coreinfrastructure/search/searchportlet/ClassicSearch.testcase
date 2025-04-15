@@ -1,10 +1,12 @@
 @component-name = "portal-search"
 definition {
 
+	property custom.properties = "feature.flag.LPD-35013=false";
 	property osgi.module.configuration.file.names = "com.liferay.portal.search.web.internal.configuration.SearchWebConfiguration.config";
 	property osgi.module.configurations = "classicSearchPortletInFrontPage=\"true\"";
-	property portal.release = "true";
-	property portal.suite.search.engine = "elasticsearch7,solr";
+	property osgi.modules.includes = "wiki";
+	property portal.release = "false";
+	property portal.suite.search.engine = "elasticsearch7,opensearch2,solr";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Web Search";
 
@@ -12,6 +14,10 @@ definition {
 		TestCase.setUpPortalInstance();
 
 		User.firstLoginPG();
+
+		WikiPortlet.enableWiki();
+
+		Navigator.openURL();
 	}
 
 	tearDown {
@@ -137,7 +143,7 @@ definition {
 
 	@priority = 4
 	test SearchByUserFacet {
-		property custom.properties = "jsonws.web.service.paths.excludes=";
+		property custom.properties = "feature.flag.LPD-35013=true${line.separator}jsonws.web.service.paths.excludes=";
 
 		JSONUser.addUser(
 			userEmailAddress = "userea@liferay.com",

@@ -110,6 +110,35 @@
 		<column name="createDate" type="Date" />
 		<column name="modifiedDate" type="Date" />
 	</entity>
+	<entity local-service="true" name="DefinedDefaultOrderEntry" remote-service="false">
+
+		<!-- PK fields -->
+
+		<column name="definedDefaultOrderEntryId" primary="true" type="long" />
+
+		<!-- Audit fields -->
+
+		<column name="modifiedDate" type="Date" />
+
+		<!-- Other fields -->
+
+		<column name="name" type="String" />
+
+		<!-- Order -->
+
+		<order by="asc">
+			<order-column name="modifiedDate" />
+		</order>
+
+		<!-- Finder methods -->
+
+		<finder name="Name" return-type="DefinedDefaultOrderEntry">
+			<finder-column name="name" />
+		</finder>
+		<finder name="Name_Collection" return-type="Collection">
+			<finder-column name="name" />
+		</finder>
+	</entity>
 	<entity cache-enabled="true" local-service="true" name="DSLQueryEntry" remote-service="false">
 
 		<!-- PK fields -->
@@ -155,6 +184,12 @@
 		<!-- Audit fields -->
 
 		<column name="companyId" type="long" />
+		<column name="userId" type="long" />
+		<column name="userName" type="String" />
+
+		<!-- Other fields -->
+
+		<column name="column1" type="int" />
 	</entity>
 	<entity external-reference-code="group" local-service="true" name="ERCGroupEntry" remote-service="false" uuid="true">
 
@@ -202,6 +237,70 @@
 		</finder>
 	</entity>
 	<entity local-service="true" name="GenericMethodsEntry" remote-service="false" />
+	<entity change-tracking-enabled="true" external-reference-code="company" local-service="false" mvcc-enabled="true" name="IndexEntry" remote-service="false">
+
+		<!-- PK fields -->
+
+		<column name="indexEntryId" primary="true" type="long" />
+
+		<!-- Audit fields -->
+
+		<column name="companyId" type="long" />
+
+		<!-- Other fields -->
+
+		<column name="ownerId" type="long" />
+		<column name="ownerType" type="int" />
+		<column name="plid" type="long" />
+		<column name="portletId" type="String" />
+
+		<!-- Finder methods -->
+
+		<finder name="OwnerId" return-type="Collection">
+			<finder-column name="ownerId" />
+		</finder>
+		<finder name="Plid" return-type="Collection">
+			<finder-column name="plid" />
+		</finder>
+		<finder name="PortletId" return-type="Collection">
+			<finder-column name="portletId" />
+		</finder>
+		<finder name="O_P" return-type="Collection">
+			<finder-column name="ownerType" />
+			<finder-column name="portletId" />
+		</finder>
+		<finder name="P_P" return-type="Collection">
+			<finder-column name="plid" />
+			<finder-column name="portletId" />
+		</finder>
+		<finder name="O_O_P" return-type="Collection">
+			<finder-column name="ownerId" />
+			<finder-column name="ownerType" />
+			<finder-column name="plid" />
+		</finder>
+		<finder name="O_O_PI" return-type="Collection">
+			<finder-column name="ownerId" />
+			<finder-column name="ownerType" />
+			<finder-column name="portletId" />
+		</finder>
+		<finder name="O_P_P" return-type="Collection">
+			<finder-column name="ownerType" />
+			<finder-column name="plid" />
+			<finder-column name="portletId" />
+		</finder>
+		<finder name="C_O_O_LikeP" return-type="Collection">
+			<finder-column name="companyId" />
+			<finder-column name="ownerId" />
+			<finder-column name="ownerType" />
+			<finder-column comparator="LIKE" name="portletId" />
+		</finder>
+		<finder name="O_O_P_P" return-type="IndexEntry" unique="true">
+			<finder-column name="ownerId" />
+			<finder-column name="ownerType" />
+			<finder-column name="plid" />
+			<finder-column name="portletId" />
+		</finder>
+	</entity>
 	<entity local-service="true" name="LazyBlobEntry" remote-service="true" uuid="true">
 
 		<!-- PK fields -->
@@ -462,6 +561,29 @@
 		<!-- Other fields -->
 
 		<column name="message" type="String" uad-nonanonymizable="true" />
+	</entity>
+	<entity local-service="true" name="UndefinedDefaultOrderEntry" remote-service="false">
+
+		<!-- PK fields -->
+
+		<column name="undefinedDefaultOrderEntryId" primary="true" type="long" />
+
+		<!-- Audit fields -->
+
+		<column name="modifiedDate" type="Date" />
+
+		<!-- Other fields -->
+
+		<column name="name" type="String" />
+
+		<!-- Finder methods -->
+
+		<finder name="Name" return-type="UndefinedDefaultOrderEntry">
+			<finder-column name="name" />
+		</finder>
+		<finder name="Name_Collection" return-type="Collection">
+			<finder-column name="name" />
+		</finder>
 	</entity>
 	<entity local-service="true" name="VersionedEntry" remote-service="false" versioned="true">
 

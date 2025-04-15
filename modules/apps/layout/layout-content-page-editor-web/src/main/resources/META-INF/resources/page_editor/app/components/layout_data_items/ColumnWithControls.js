@@ -7,6 +7,7 @@ import {useEventListener} from '@liferay/frontend-js-react-web';
 import classNames from 'classnames';
 import React, {useCallback, useMemo, useRef, useState} from 'react';
 
+import useSetRef from '../../../common/hooks/useSetRef';
 import {getLayoutDataItemPropTypes} from '../../../prop_types/index';
 import {VIEWPORT_SIZES} from '../../config/constants/viewportSizes';
 import {useIsActive} from '../../contexts/ControlsContext';
@@ -418,10 +419,33 @@ const ColumnWithControls = React.forwardRef(({children, item}, ref) => {
 		globalContext.document.body
 	);
 
+	const [setRef, itemElement] = useSetRef(ref);
+
+	const shouldIgnoreEvents = useCallback(
+		(event) => {
+
+			// Element from point will only be the item element itself if we are
+			// interacting with the padding space. In that case we want to
+			// elevate the event to the parent grid
+
+			if (
+				document.elementFromPoint(event.clientX, event.clientY) ===
+				itemElement
+			) {
+				return true;
+			}
+
+			return false;
+		},
+		[itemElement]
+	);
+
 	return (
 		<TopperEmpty
 			className={getLayoutDataItemTopperUniqueClassName(item.itemId)}
 			item={item}
+			itemElement={itemElement}
+			shouldIgnoreEvents={shouldIgnoreEvents}
 		>
 			<Column
 				className={classNames('page-editor__col', {
@@ -436,7 +460,7 @@ const ColumnWithControls = React.forwardRef(({children, item}, ref) => {
 						resizing,
 				})}
 				item={item}
-				ref={ref}
+				ref={setRef}
 			>
 				{(canUpdatePageStructure || canUpdateItemConfiguration) &&
 					parentItemIsActive &&

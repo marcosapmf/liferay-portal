@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2005, 2013 IBM Corporation and others.
+ * Copyright (c) 2005, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -46,12 +46,12 @@ public class MetaTypeProviderImpl implements MetaTypeProvider {
 	boolean _isThereMeta = false;
 
 	// Give access to subclasses.
-	protected final LogService logger;
+	protected final LogTracker logger;
 
 	/**
 	 * Constructor of class MetaTypeProviderImpl.
 	 */
-	MetaTypeProviderImpl(Bundle bundle, Supplier<SAXParser> parserSupplier, LogService logger) {
+	MetaTypeProviderImpl(Bundle bundle, Supplier<SAXParser> parserSupplier, LogTracker logger) {
 
 		this._bundle = bundle;
 		this.logger = logger;
@@ -107,7 +107,7 @@ public class MetaTypeProviderImpl implements MetaTypeProvider {
 					}
 				}
 			} catch (Exception e) {
-				logger.log(LogService.LOG_ERROR, NLS.bind(MetaTypeMsg.METADATA_FILE_PARSE_ERROR, new Object[] {entry, bundle.getBundleId(), bundle.getSymbolicName()}), e);
+				logger.log(LogService.LOG_WARNING, NLS.bind(MetaTypeMsg.METADATA_FILE_PARSE_ERROR, new Object[] {entry, bundle.getBundleId(), bundle.getSymbolicName()}), e);
 			}
 		}
 		return result;

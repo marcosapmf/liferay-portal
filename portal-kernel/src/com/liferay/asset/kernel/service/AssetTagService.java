@@ -49,12 +49,22 @@ public interface AssetTagService extends BaseService {
 	 * Never modify this interface directly. Add custom service methods to <code>com.liferay.portlet.asset.service.impl.AssetTagServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface. Consume the asset tag remote service via injection or a <code>org.osgi.util.tracker.ServiceTracker</code>. Use {@link AssetTagServiceUtil} if injection and service tracking are not available.
 	 */
 	public AssetTag addTag(
-			long groupId, String name, ServiceContext serviceContext)
+			String externalReferenceCode, long groupId, String name,
+			ServiceContext serviceContext)
 		throws PortalException;
 
 	public void deleteTag(long tagId) throws PortalException;
 
 	public void deleteTags(long[] tagIds) throws PortalException;
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public AssetTag fetchAssetTagByExternalReferenceCode(
+		String externalReferenceCode, long groupId);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public AssetTag getAssetTagByExternalReferenceCode(
+			String externalReferenceCode, long groupId)
+		throws PortalException;
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<AssetTag> getGroupsTags(long[] groupIds);
@@ -141,7 +151,8 @@ public interface AssetTagService extends BaseService {
 	public void unsubscribeTag(long userId, long tagId) throws PortalException;
 
 	public AssetTag updateTag(
-			long tagId, String name, ServiceContext serviceContext)
+			String externalReferenceCode, long tagId, String name,
+			ServiceContext serviceContext)
 		throws PortalException;
 
 }

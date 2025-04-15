@@ -51,8 +51,6 @@ import com.liferay.headless.commerce.admin.pricing.resource.v2_0.PriceModifierRe
 import com.liferay.headless.commerce.admin.pricing.resource.v2_0.TierPriceResource;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.function.UnsafeFunction;
-import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
@@ -325,6 +323,20 @@ public class Mutation {
 			this::_populateResourceContext,
 			discountResource ->
 				discountResource.patchDiscountByExternalReferenceCode(
+					externalReferenceCode, discount));
+	}
+
+	@GraphQLField
+	public Discount updateDiscountByExternalReferenceCode(
+			@GraphQLName("externalReferenceCode") String externalReferenceCode,
+			@GraphQLName("discount") Discount discount)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_discountResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			discountResource ->
+				discountResource.putDiscountByExternalReferenceCode(
 					externalReferenceCode, discount));
 	}
 
@@ -1218,6 +1230,20 @@ public class Mutation {
 			this::_populateResourceContext,
 			priceListResource ->
 				priceListResource.patchPriceListByExternalReferenceCode(
+					externalReferenceCode, priceList));
+	}
+
+	@GraphQLField
+	public PriceList updatePriceListByExternalReferenceCode(
+			@GraphQLName("externalReferenceCode") String externalReferenceCode,
+			@GraphQLName("priceList") PriceList priceList)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_priceListResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			priceListResource ->
+				priceListResource.putPriceListByExternalReferenceCode(
 					externalReferenceCode, priceList));
 	}
 
@@ -2660,12 +2686,15 @@ public class Mutation {
 
 	private AcceptLanguage _acceptLanguage;
 	private com.liferay.portal.kernel.model.Company _company;
-	private BiFunction<Object, String, Filter> _filterBiFunction;
+	private BiFunction
+		<Object, String, com.liferay.portal.kernel.search.filter.Filter>
+			_filterBiFunction;
 	private GroupLocalService _groupLocalService;
 	private HttpServletRequest _httpServletRequest;
 	private HttpServletResponse _httpServletResponse;
 	private RoleLocalService _roleLocalService;
-	private BiFunction<Object, String, Sort[]> _sortsBiFunction;
+	private BiFunction<Object, String, com.liferay.portal.kernel.search.Sort[]>
+		_sortsBiFunction;
 	private UriInfo _uriInfo;
 	private com.liferay.portal.kernel.model.User _user;
 	private VulcanBatchEngineExportTaskResource

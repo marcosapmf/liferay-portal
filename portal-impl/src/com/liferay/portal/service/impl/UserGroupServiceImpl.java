@@ -112,6 +112,7 @@ public class UserGroupServiceImpl extends UserGroupServiceBaseImpl {
 	 * including its resources, metadata, and internal data structures.
 	 * </p>
 	 *
+	 * @param  externalReferenceCode the user group's external reference code
 	 * @param  name the user group's name
 	 * @param  description the user group's description
 	 * @param  serviceContext the service context to be applied (optionally
@@ -121,7 +122,8 @@ public class UserGroupServiceImpl extends UserGroupServiceBaseImpl {
 	 */
 	@Override
 	public UserGroup addUserGroup(
-			String name, String description, ServiceContext serviceContext)
+			String externalReferenceCode, String name, String description,
+			ServiceContext serviceContext)
 		throws PortalException {
 
 		PortalPermissionUtil.check(
@@ -130,8 +132,8 @@ public class UserGroupServiceImpl extends UserGroupServiceBaseImpl {
 		User user = getUser();
 
 		UserGroup userGroup = userGroupLocalService.addUserGroup(
-			user.getUserId(), user.getCompanyId(), name, description,
-			serviceContext);
+			externalReferenceCode, user.getUserId(), user.getCompanyId(), name,
+			description, serviceContext);
 
 		UserGroupMembershipPolicyUtil.verifyPolicy(userGroup);
 
@@ -171,7 +173,7 @@ public class UserGroupServiceImpl extends UserGroupServiceBaseImpl {
 
 	@Override
 	public UserGroup fetchUserGroupByExternalReferenceCode(
-			long companyId, String externalReferenceCode)
+			String externalReferenceCode, long companyId)
 		throws PortalException {
 
 		UserGroup userGroup =
@@ -224,6 +226,22 @@ public class UserGroupServiceImpl extends UserGroupServiceBaseImpl {
 
 		UserGroup userGroup = userGroupLocalService.getUserGroup(
 			user.getCompanyId(), name);
+
+		UserGroupPermissionUtil.check(
+			getPermissionChecker(), userGroup.getUserGroupId(),
+			ActionKeys.VIEW);
+
+		return userGroup;
+	}
+
+	@Override
+	public UserGroup getUserGroupByExternalReferenceCode(
+			String externalReferenceCode, long companyId)
+		throws PortalException {
+
+		UserGroup userGroup =
+			userGroupLocalService.getUserGroupByExternalReferenceCode(
+				externalReferenceCode, companyId);
 
 		UserGroupPermissionUtil.check(
 			getPermissionChecker(), userGroup.getUserGroupId(),
@@ -504,6 +522,7 @@ public class UserGroupServiceImpl extends UserGroupServiceBaseImpl {
 	/**
 	 * Updates the user group.
 	 *
+	 * @param  externalReferenceCode the user group's external reference code
 	 * @param  userGroupId the primary key of the user group
 	 * @param  name the user group's name
 	 * @param  description the the user group's description
@@ -514,8 +533,8 @@ public class UserGroupServiceImpl extends UserGroupServiceBaseImpl {
 	 */
 	@Override
 	public UserGroup updateUserGroup(
-			long userGroupId, String name, String description,
-			ServiceContext serviceContext)
+			String externalReferenceCode, long userGroupId, String name,
+			String description, ServiceContext serviceContext)
 		throws PortalException {
 
 		UserGroupPermissionUtil.check(
@@ -524,8 +543,8 @@ public class UserGroupServiceImpl extends UserGroupServiceBaseImpl {
 		User user = getUser();
 
 		return userGroupLocalService.updateUserGroup(
-			user.getCompanyId(), userGroupId, name, description,
-			serviceContext);
+			externalReferenceCode, user.getCompanyId(), userGroupId, name,
+			description, serviceContext);
 	}
 
 	protected List<UserGroup> filterUserGroups(List<UserGroup> userGroups)

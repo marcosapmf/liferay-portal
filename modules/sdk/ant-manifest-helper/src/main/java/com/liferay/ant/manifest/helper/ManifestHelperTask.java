@@ -5,11 +5,12 @@
 
 package com.liferay.ant.manifest.helper;
 
+import com.liferay.ant.manifest.helper.util.CPEUtil;
+import com.liferay.ant.manifest.helper.util.Validator;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.util.OSDetector;
 import com.liferay.portal.kernel.util.ReleaseInfo;
 import com.liferay.portal.kernel.util.StringUtil;
-import com.liferay.portal.kernel.util.Validator;
 
 import java.io.File;
 
@@ -63,6 +64,7 @@ public class ManifestHelperTask extends Task {
 
 		project.setProperty("build.revision", getBuildRevision());
 		project.setProperty("build.time", getDateString(new Date()));
+		project.setProperty("cpe.name", CPEUtil.getName(project));
 		project.setProperty(
 			"release.info.build.date",
 			String.valueOf(ReleaseInfo.getBuildDate()));

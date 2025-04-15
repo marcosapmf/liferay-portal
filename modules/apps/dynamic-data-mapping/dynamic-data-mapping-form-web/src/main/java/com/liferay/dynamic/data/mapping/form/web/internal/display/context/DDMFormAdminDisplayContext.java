@@ -77,6 +77,7 @@ import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.editor.configuration.EditorConfiguration;
 import com.liferay.portal.kernel.editor.configuration.EditorConfigurationFactoryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONException;
 import com.liferay.portal.kernel.json.JSONFactory;
@@ -413,8 +414,9 @@ public class DDMFormAdminDisplayContext {
 					EditorConfiguration editorConfiguration =
 						EditorConfigurationFactoryUtil.getEditorConfiguration(
 							StringPool.BLANK, ddmFormFieldType.getName(),
-							"ckeditor_classic", new HashMap<String, Object>(),
-							themeDisplay,
+							FeatureFlagManagerUtil.isEnabled("LPD-11235") ?
+								"ckeditor5_classic" : "ckeditor_classic",
+							new HashMap<String, Object>(), themeDisplay,
 							RequestBackedPortletURLFactoryUtil.create(
 								httpServletRequest));
 
@@ -1199,11 +1201,7 @@ public class DDMFormAdminDisplayContext {
 	}
 
 	public boolean hasValidDDMFormFields(DDMFormInstance ddmFormInstance) {
-		if (Validator.isNull(getInvalidDDMFormFieldType(ddmFormInstance))) {
-			return true;
-		}
-
-		return false;
+		return Validator.isNull(getInvalidDDMFormFieldType(ddmFormInstance));
 	}
 
 	public boolean hasValidMappedObject(
@@ -1489,11 +1487,7 @@ public class DDMFormAdminDisplayContext {
 	}
 
 	protected boolean isSearch() {
-		if (Validator.isNotNull(getKeywords())) {
-			return true;
-		}
-
-		return false;
+		return Validator.isNotNull(getKeywords());
 	}
 
 	protected final DDMFormAdminRequestHelper ddmFormAdminRequestHelper;

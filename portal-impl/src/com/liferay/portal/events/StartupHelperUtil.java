@@ -119,11 +119,13 @@ public class StartupHelperUtil {
 	}
 
 	public static void setUpgrading(boolean upgrading) {
-		if (upgrading != _upgrading) {
-			_dbWarmedSCLSingleton.destroy(null);
-
-			_upgrading = upgrading;
+		if (upgrading == _upgrading) {
+			return;
 		}
+
+		_dbWarmedSCLSingleton.destroy(null);
+
+		_upgrading = upgrading;
 
 		if (upgrading) {
 			if (PropsValues.UPGRADE_LOG_CONTEXT_ENABLED) {
@@ -215,9 +217,7 @@ public class StartupHelperUtil {
 	private static boolean _isDBWarmed() {
 		boolean dbWarmed = true;
 
-		if (_dbNew || _upgrading ||
-			DBUpgrader.isUpgradeDatabaseAutoRunEnabled()) {
-
+		if (_dbNew || DBUpgrader.isUpgradeDatabaseAutoRunEnabled()) {
 			dbWarmed = false;
 		}
 

@@ -30,6 +30,18 @@ const STATE = {
 
 const LAYOUT_DATA = {
 	items: {
+		collectionItem: {
+			children: [],
+			itemId: 'collectionItem',
+			parentId: 'column',
+			type: LAYOUT_DATA_ITEM_TYPES.collectionItem,
+		},
+		column: {
+			children: ['fragment05', 'formStep', 'dropZone', 'collectionItem'],
+			itemId: 'column',
+			parentId: 'grid',
+			type: LAYOUT_DATA_ITEM_TYPES.column,
+		},
 		container01: {
 			children: ['fragment01', 'fragment02'],
 			itemId: 'container01',
@@ -43,10 +55,22 @@ const LAYOUT_DATA = {
 			type: LAYOUT_DATA_ITEM_TYPES.container,
 		},
 		container03: {
-			children: ['fragment05'],
+			children: ['grid'],
 			itemId: 'container03',
 			parentId: 'container02',
 			type: LAYOUT_DATA_ITEM_TYPES.container,
+		},
+		dropZone: {
+			children: [],
+			itemId: 'dropZone',
+			parentId: 'column',
+			type: LAYOUT_DATA_ITEM_TYPES.fragmentDropZone,
+		},
+		formStep: {
+			children: [],
+			itemId: 'formStep',
+			parentId: 'column',
+			type: LAYOUT_DATA_ITEM_TYPES.formStep,
 		},
 		fragment01: {
 			children: [],
@@ -75,8 +99,14 @@ const LAYOUT_DATA = {
 		fragment05: {
 			children: [],
 			itemId: 'fragment05',
-			parentId: 'container03',
+			parentId: 'column',
 			type: LAYOUT_DATA_ITEM_TYPES.fragment,
+		},
+		grid: {
+			children: ['column'],
+			itemId: 'grid',
+			parentId: 'container03',
+			type: LAYOUT_DATA_ITEM_TYPES.row,
 		},
 		root: {
 			children: ['container01', 'container02'],
@@ -299,17 +329,15 @@ describe('Reducer', () => {
 
 		describe('Simple selection', () => {
 			it('selects multiple items', () => {
-				Liferay.FeatureFlags['LPD-18221'] = true;
-
 				const action = {
 					...ACTION,
 					itemId: 'fragment01',
+					multiSelect: 'simple',
 					type: SELECT_ITEM,
 				};
 				const state = {
 					...STATE,
 					activeItemIds: ['fragment04', 'fragment02'],
-					multiSelect: 'simple',
 				};
 
 				expect(reducer(state, action)).toEqual(
@@ -321,22 +349,18 @@ describe('Reducer', () => {
 						],
 					})
 				);
-
-				Liferay.FeatureFlags['LPD-18221'] = false;
 			});
 
 			it('deselects an item if it is already selected', () => {
-				Liferay.FeatureFlags['LPD-18221'] = true;
-
 				const action = {
 					...ACTION,
 					itemId: 'fragment02',
+					multiSelect: 'simple',
 					type: SELECT_ITEM,
 				};
 				const state = {
 					...STATE,
 					activeItemIds: ['fragment04', 'fragment02'],
-					multiSelect: 'simple',
 				};
 
 				expect(reducer(state, action)).toEqual(
@@ -344,25 +368,21 @@ describe('Reducer', () => {
 						activeItemIds: ['fragment04'],
 					})
 				);
-
-				Liferay.FeatureFlags['LPD-18221'] = false;
 			});
 		});
 
 		describe('Range selection', () => {
 			it('selects in range when only one range limit is selected and there are more items selected', () => {
-				Liferay.FeatureFlags['LPD-18221'] = true;
-
 				const action = {
 					...ACTION,
 					itemId: 'fragment01',
+					layoutData: LAYOUT_DATA,
+					multiSelect: 'range',
 					type: SELECT_ITEM,
 				};
 				const state = {
 					...STATE,
 					activeItemIds: ['fragment03', 'fragment04', 'fragment02'],
-					layoutData: LAYOUT_DATA,
-					multiSelect: 'range',
 					rangeLimitIds: {start: 'fragment02'},
 				};
 
@@ -376,16 +396,14 @@ describe('Reducer', () => {
 						],
 					})
 				);
-
-				Liferay.FeatureFlags['LPD-18221'] = false;
 			});
 
 			it('selects in range when 2 range limits are selected and there are more items selected', () => {
-				Liferay.FeatureFlags['LPD-18221'] = true;
-
 				const action = {
 					...ACTION,
 					itemId: 'container02',
+					layoutData: LAYOUT_DATA,
+					multiSelect: 'range',
 					type: SELECT_ITEM,
 				};
 				const state = {
@@ -396,8 +414,6 @@ describe('Reducer', () => {
 						'fragment02',
 						'fragment01',
 					],
-					layoutData: LAYOUT_DATA,
-					multiSelect: 'range',
 					rangeLimitIds: {end: 'fragment01', start: 'fragment02'},
 				};
 
@@ -411,8 +427,69 @@ describe('Reducer', () => {
 						],
 					})
 				);
+			});
 
-				Liferay.FeatureFlags['LPD-18221'] = false;
+			it('selects the item when the range multiselection is activated before there are any items selected', () => {
+				const action = {
+					...ACTION,
+					itemId: 'fragment01',
+					layoutData: LAYOUT_DATA,
+					multiSelect: 'range',
+					type: SELECT_ITEM,
+				};
+				const state = {
+					...STATE,
+					activeItemIds: [],
+				};
+
+				expect(reducer(state, action)).toEqual(
+					expect.objectContaining({
+						activeItemIds: ['fragment01'],
+					})
+				);
+			});
+
+			it('selects a single item when the start and the end of the range are the same id', () => {
+				const action = {
+					...ACTION,
+					itemId: 'fragment01',
+					layoutData: LAYOUT_DATA,
+					multiSelect: 'range',
+					type: SELECT_ITEM,
+				};
+				const state = {
+					...STATE,
+					activeItemIds: ['fragment01', 'fragment02'],
+					rangeLimitIds: {end: 'fragment01', start: 'fragment01'},
+				};
+
+				expect(reducer(state, action)).toEqual(
+					expect.objectContaining({
+						activeItemIds: ['fragment01'],
+					})
+				);
+			});
+
+			it('selects parents when range end is an editable', () => {
+				const action = {
+					...ACTION,
+					itemId: 'editable02',
+					layoutData: LAYOUT_DATA,
+					multiSelect: 'range',
+					parentId: 'fragment02',
+					type: SELECT_ITEM,
+				};
+
+				const state = {
+					...STATE,
+					activeItemIds: ['fragment01'],
+				};
+
+				expect(reducer(state, action)).toEqual(
+					expect.objectContaining({
+						activeItemIds: ['fragment01', 'fragment02'],
+					})
+				);
 			});
 		});
 	});
@@ -482,22 +559,6 @@ describe('Reducer', () => {
 	});
 
 	describe('Multiselect action', () => {
-		it('activates multiselect', () => {
-			const state = {...STATE, multiSelect: null};
-			const action = {
-				...ACTION,
-				...{
-					multiSelect: 'simple',
-					type: MULTI_SELECT,
-				},
-			};
-
-			expect(reducer(state, action)).toEqual({
-				...state,
-				multiSelect: 'simple',
-			});
-		});
-
 		it('selects multiple fragments', () => {
 			const state = {...STATE, activeItemIds: []};
 			const action = {
@@ -514,7 +575,7 @@ describe('Reducer', () => {
 	});
 
 	describe('getItemsWithinRange', () => {
-		it('select range from top to bottom ', () => {
+		it('select range from top to bottom avoiding non-selectable elements', () => {
 			expect(
 				getItemsWithinRange({
 					itemIds: LAYOUT_DATA.items.root.children,
@@ -525,13 +586,14 @@ describe('Reducer', () => {
 				'fragment02',
 				'container02',
 				'container03',
+				'grid',
 				'fragment05',
 				'fragment03',
 				'fragment04',
 			]);
 		});
 
-		it('select range from bottom to top ', () => {
+		it('select range from bottom to top avoiding non-selectable elements', () => {
 			expect(
 				getItemsWithinRange({
 					itemIds: LAYOUT_DATA.items.root.children,
@@ -543,6 +605,7 @@ describe('Reducer', () => {
 				'fragment02',
 				'container02',
 				'container03',
+				'grid',
 				'fragment05',
 				'fragment03',
 			]);

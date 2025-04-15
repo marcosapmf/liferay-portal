@@ -14,14 +14,16 @@ import ClayLink from '@clayui/link';
 import ClayNavigationBar from '@clayui/navigation-bar';
 import ClayTable from '@clayui/table';
 import classNames from 'classnames';
-import {FeatureIndicator} from 'frontend-js-components-web';
+import {
+	FeatureIndicator,
+	openConfirmModal,
+	openSimpleInputModal,
+	openToast,
+} from 'frontend-js-components-web';
 import {
 	createPortletURL,
 	fetch,
 	navigate as navigateUtil,
-	openConfirmModal,
-	openSimpleInputModal,
-	openToast,
 } from 'frontend-js-web';
 import React, {useEffect, useState} from 'react';
 
@@ -828,7 +830,7 @@ export default function ChangeTrackingRenderView({
 						</div>
 					</>
 				),
-				onClick: () => navigate(moveChangesURL),
+				onClick: () => navigateUtil(moveChangesURL),
 				symbolLeft: 'move-folder',
 			});
 		}
@@ -1577,18 +1579,13 @@ export default function ChangeTrackingRenderView({
 						<div className="entry-description">
 							<span>{description} </span>
 
-							{Liferay.FeatureFlags['LPD-10703'] ? (
-								<>
-									<WorkflowStatusLabel
-										workflowStatus={
-											state.renderData.workflowData
-												? state.renderData.workflowData
-														.status
-												: workflowStatus
-										}
-									/>
-								</>
-							) : null}
+							<WorkflowStatusLabel
+								workflowStatus={
+									state.renderData.workflowData
+										? state.renderData.workflowData.status
+										: workflowStatus
+								}
+							/>
 						</div>
 					</div>
 

@@ -87,8 +87,6 @@ public class ResourcePermissionLocalServiceConcurrentTest {
 		_resourceAction = _resourceActionLocalService.addResourceAction(
 			_name, _actionId, RandomTestUtil.randomLong());
 
-		_resourceActionLocalService.checkResourceActions();
-
 		AopInvocationHandler aopInvocationHandler =
 			ProxyUtil.fetchInvocationHandler(
 				_resourcePermissionLocalService, AopInvocationHandler.class);
@@ -165,7 +163,7 @@ public class ResourcePermissionLocalServiceConcurrentTest {
 					@ExpectedLog(
 						expectedDBType = ExpectedDBType.MARIADB,
 						expectedLog = "Duplicate entry '",
-						expectedType = ExpectedType.PREFIX
+						expectedType = ExpectedType.CONTAINS
 					),
 					@ExpectedLog(
 						expectedDBType = ExpectedDBType.MYSQL,
@@ -191,11 +189,6 @@ public class ResourcePermissionLocalServiceConcurrentTest {
 						expectedDBType = ExpectedDBType.SQLSERVER,
 						expectedLog = "Cannot insert duplicate key row",
 						expectedType = ExpectedType.PREFIX
-					),
-					@ExpectedLog(
-						expectedDBType = ExpectedDBType.SYBASE,
-						expectedLog = "Attempt to insert duplicate key row",
-						expectedType = ExpectedType.CONTAINS
 					)
 				},
 				level = "ERROR", loggerClass = SqlExceptionHelper.class

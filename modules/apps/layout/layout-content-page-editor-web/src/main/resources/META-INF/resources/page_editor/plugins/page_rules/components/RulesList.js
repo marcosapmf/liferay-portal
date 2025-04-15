@@ -9,7 +9,8 @@ import ClayIcon from '@clayui/icon';
 import ClayLabel from '@clayui/label';
 import ClayList from '@clayui/list';
 import classNames from 'classnames';
-import {openToast, sub} from 'frontend-js-web';
+import {openToast} from 'frontend-js-components-web';
+import {sub} from 'frontend-js-web';
 import React, {useEffect, useState} from 'react';
 
 import {useDispatch, useSelector} from '../../../app/contexts/StoreContext';
@@ -112,7 +113,7 @@ function Rule({onDelete, onEdit, rule, savedRuleId, setSavedRuleId}) {
 		}))
 	);
 
-	const conditions = useConditionValues(rule);
+	const conditions = useConditionValues({...rule, items});
 	const actions = useActionValues({...rule, items});
 
 	return (
@@ -225,8 +226,6 @@ function Action({action}) {
 			) : null}
 
 			<span className="font-weight-semi-bold">{action.type}</span>
-
-			{action.action}
 
 			<ClayLabel className="m-0" displayType="secondary">
 				{action.item}

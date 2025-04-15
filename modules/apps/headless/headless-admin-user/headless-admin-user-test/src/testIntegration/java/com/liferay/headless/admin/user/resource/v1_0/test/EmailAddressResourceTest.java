@@ -11,6 +11,7 @@ import com.liferay.account.model.AccountEntry;
 import com.liferay.account.service.AccountEntryLocalService;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.headless.admin.user.client.dto.v1_0.EmailAddress;
+import com.liferay.headless.admin.user.client.pagination.Page;
 import com.liferay.portal.kernel.model.Contact;
 import com.liferay.portal.kernel.model.ListType;
 import com.liferay.portal.kernel.model.ListTypeConstants;
@@ -24,15 +25,19 @@ import com.liferay.portal.kernel.test.util.OrganizationTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.SynchronousMailTestRule;
 
 import java.util.List;
+import java.util.Objects;
 
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 
 /**
@@ -65,6 +70,22 @@ public class EmailAddressResourceTest extends BaseEmailAddressResourceTestCase {
 	}
 
 	@Override
+	@Test
+	public void testDeleteEmailAddress() throws Exception {
+		super.testDeleteEmailAddress();
+
+		_testDeletePrimaryEmailAddress();
+	}
+
+	@Override
+	@Test
+	public void testPatchEmailAddress() throws Exception {
+		super.testPatchEmailAddress();
+
+		_testPatchEmailAddressNotPrimary();
+	}
+
+	@Override
 	protected String[] getAdditionalAssertFieldNames() {
 		return new String[] {"emailAddress", "primary"};
 	}
@@ -74,9 +95,30 @@ public class EmailAddressResourceTest extends BaseEmailAddressResourceTestCase {
 		return new EmailAddress() {
 			{
 				emailAddress = RandomTestUtil.randomString() + "@liferay.com";
+				externalReferenceCode = RandomTestUtil.randomString();
 				primary = false;
+				type = "email-address-3";
 			}
 		};
+	}
+
+	@Override
+	protected EmailAddress testDeleteEmailAddress_addEmailAddress()
+		throws Exception {
+
+		return _addEmailAddress(
+			randomEmailAddress(), Contact.class.getName(), _user.getContactId(),
+			ListTypeConstants.CONTACT_EMAIL_ADDRESS);
+	}
+
+	@Override
+	protected EmailAddress
+			testDeleteEmailAddressByExternalReferenceCode_addEmailAddress()
+		throws Exception {
+
+		return _addEmailAddress(
+			randomEmailAddress(), Contact.class.getName(), _user.getContactId(),
+			ListTypeConstants.CONTACT_EMAIL_ADDRESS);
 	}
 
 	@Override
@@ -118,6 +160,16 @@ public class EmailAddressResourceTest extends BaseEmailAddressResourceTestCase {
 
 	@Override
 	protected EmailAddress testGetEmailAddress_addEmailAddress()
+		throws Exception {
+
+		return _addEmailAddress(
+			randomEmailAddress(), Contact.class.getName(), _user.getContactId(),
+			ListTypeConstants.CONTACT_EMAIL_ADDRESS);
+	}
+
+	@Override
+	protected EmailAddress
+			testGetEmailAddressByExternalReferenceCode_addEmailAddress()
 		throws Exception {
 
 		return _addEmailAddress(
@@ -203,6 +255,25 @@ public class EmailAddressResourceTest extends BaseEmailAddressResourceTestCase {
 		return testGetEmailAddress_addEmailAddress();
 	}
 
+	@Override
+	protected EmailAddress testPatchEmailAddress_addEmailAddress()
+		throws Exception {
+
+		return _addEmailAddress(
+			randomEmailAddress(), Contact.class.getName(), _user.getContactId(),
+			ListTypeConstants.CONTACT_EMAIL_ADDRESS);
+	}
+
+	@Override
+	protected EmailAddress
+			testPatchEmailAddressByExternalReferenceCode_addEmailAddress()
+		throws Exception {
+
+		return _addEmailAddress(
+			randomEmailAddress(), Contact.class.getName(), _user.getContactId(),
+			ListTypeConstants.CONTACT_EMAIL_ADDRESS);
+	}
+
 	private EmailAddress _addEmailAddress(
 			EmailAddress emailAddress, String className, long classPK,
 			String listTypeId)
@@ -210,9 +281,10 @@ public class EmailAddressResourceTest extends BaseEmailAddressResourceTestCase {
 
 		return _toEmailAddress(
 			EmailAddressLocalServiceUtil.addEmailAddress(
-				_user.getUserId(), className, classPK,
-				emailAddress.getEmailAddress(), _getListTypeId(listTypeId),
-				emailAddress.getPrimary(), new ServiceContext()));
+				emailAddress.getExternalReferenceCode(), _user.getUserId(),
+				className, classPK, emailAddress.getEmailAddress(),
+				_getListTypeId(listTypeId), emailAddress.getPrimary(),
+				new ServiceContext()));
 	}
 
 	private long _getListTypeId(String listTypeId) {
@@ -224,6 +296,58 @@ public class EmailAddressResourceTest extends BaseEmailAddressResourceTestCase {
 		return listType.getListTypeId();
 	}
 
+	private void _testDeletePrimaryEmailAddress() throws Exception {
+		EmailAddress emailAddress1 = randomEmailAddress();
+
+		emailAddress1.setPrimary(true);
+
+		emailAddress1 = _addEmailAddress(
+			emailAddress1, Contact.class.getName(), _user.getContactId(),
+			ListTypeConstants.CONTACT_EMAIL_ADDRESS);
+
+		Assert.assertTrue(emailAddress1.getPrimary());
+
+		EmailAddress emailAddress2 = testDeleteEmailAddress_addEmailAddress();
+
+		Assert.assertFalse(emailAddress2.getPrimary());
+
+		emailAddressResource.deleteEmailAddress(emailAddress1.getId());
+
+		emailAddress2 = emailAddressResource.getEmailAddress(
+			emailAddress2.getId());
+
+		Assert.assertTrue(emailAddress2.getPrimary());
+	}
+
+	private void _testPatchEmailAddressNotPrimary() throws Exception {
+		EmailAddress randomEmailAddress = randomEmailAddress();
+
+		randomEmailAddress.setPrimary(true);
+
+		randomEmailAddress = _addEmailAddress(
+			randomEmailAddress, Contact.class.getName(), _user.getContactId(),
+			ListTypeConstants.CONTACT_EMAIL_ADDRESS);
+
+		testPatchEmailAddress_addEmailAddress();
+
+		randomEmailAddress.setPrimary(false);
+
+		EmailAddress patchEmailAddress = emailAddressResource.patchEmailAddress(
+			randomEmailAddress.getId(), randomEmailAddress);
+
+		Page<EmailAddress> emailAddressesPage =
+			emailAddressResource.getUserAccountEmailAddressesPage(
+				_user.getUserId());
+
+		Assert.assertTrue(
+			ListUtil.exists(
+				ListUtil.fromCollection(emailAddressesPage.getItems()),
+				emailAddress ->
+					emailAddress.getPrimary() &&
+					!Objects.equals(
+						emailAddress.getId(), patchEmailAddress.getId())));
+	}
+
 	private EmailAddress _toEmailAddress(
 		com.liferay.portal.kernel.model.EmailAddress
 			serviceBuilderEmailAddress) {
@@ -231,6 +355,8 @@ public class EmailAddressResourceTest extends BaseEmailAddressResourceTestCase {
 		return new EmailAddress() {
 			{
 				emailAddress = serviceBuilderEmailAddress.getAddress();
+				externalReferenceCode =
+					serviceBuilderEmailAddress.getExternalReferenceCode();
 				id = serviceBuilderEmailAddress.getEmailAddressId();
 				primary = serviceBuilderEmailAddress.isPrimary();
 			}

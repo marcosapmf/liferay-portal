@@ -49,7 +49,6 @@ import com.liferay.portal.vulcan.pagination.Pagination;
 
 import java.math.BigDecimal;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.osgi.service.component.annotations.Component;
@@ -73,7 +72,8 @@ public class SkuResourceImpl extends BaseSkuResourceImpl {
 			getChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodeSkuByExternalReferenceCodeSkuExternalReferenceCode(
 				String channelExternalReferenceCode,
 				String productExternalReferenceCode,
-				String skuExternalReferenceCode, Long accountId)
+				String skuExternalReferenceCode, Long accountId,
+				String currencyCode)
 		throws Exception {
 
 		CommerceChannel commerceChannel =
@@ -92,7 +92,7 @@ public class SkuResourceImpl extends BaseSkuResourceImpl {
 
 		return getChannelProductSku(
 			commerceChannel.getCommerceChannelId(), cProduct.getCProductId(),
-			cpInstance.getCPInstanceId(), accountId);
+			cpInstance.getCPInstanceId(), accountId, currencyCode);
 	}
 
 	@Override
@@ -100,7 +100,7 @@ public class SkuResourceImpl extends BaseSkuResourceImpl {
 			getChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodeSkusPage(
 				String channelExternalReferenceCode,
 				String productExternalReferenceCode, Long accountId,
-				Pagination pagination)
+				String currencyCode, Pagination pagination)
 		throws Exception {
 
 		CommerceChannel commerceChannel =
@@ -115,12 +115,13 @@ public class SkuResourceImpl extends BaseSkuResourceImpl {
 
 		return getChannelProductSkusPage(
 			commerceChannel.getCommerceChannelId(), cProduct.getCProductId(),
-			accountId, pagination);
+			accountId, currencyCode, pagination);
 	}
 
 	@Override
 	public Sku getChannelProductSku(
-			Long channelId, Long productId, Long skuId, Long accountId)
+			Long channelId, Long productId, Long skuId, Long accountId,
+			String currencyCode)
 		throws Exception {
 
 		CPDefinition cpDefinition =
@@ -134,7 +135,7 @@ public class SkuResourceImpl extends BaseSkuResourceImpl {
 			_commerceChannelLocalService.getCommerceChannel(channelId);
 
 		CommerceContext commerceContext = _getCommerceContext(
-			accountId, commerceChannel);
+			accountId, commerceChannel, currencyCode);
 
 		AccountEntry accountEntry = commerceContext.getAccountEntry();
 
@@ -149,12 +150,15 @@ public class SkuResourceImpl extends BaseSkuResourceImpl {
 			throw new NoSuchCPInstanceException();
 		}
 
+		String defaultUnitOfMeasureKey = _getDefaultUnitOfMeasureKey(
+			cpInstance.getCPInstanceId());
+
 		return _skuDTOConverter.toDTO(
 			new SkuDTOConverterContext(
 				commerceContext, contextCompany.getCompanyId(), cpDefinition,
-				contextAcceptLanguage.getPreferredLocale(), BigDecimal.ONE,
-				cpInstance.getCPInstanceId(), null,
-				_getDefaultUnitOfMeasureKey(cpInstance.getCPInstanceId()),
+				contextAcceptLanguage.getPreferredLocale(),
+				_getDefaultQuantity(cpInstance, defaultUnitOfMeasureKey),
+				cpInstance.getCPInstanceId(), null, defaultUnitOfMeasureKey,
 				contextUriInfo, contextUser));
 	}
 
@@ -162,7 +166,7 @@ public class SkuResourceImpl extends BaseSkuResourceImpl {
 	@Override
 	public Page<Sku> getChannelProductSkusPage(
 			Long channelId, @NestedFieldId("productId") Long productId,
-			Long accountId, Pagination pagination)
+			Long accountId, String currencyCode, Pagination pagination)
 		throws Exception {
 
 		CPDefinition cpDefinition =
@@ -213,13 +217,14 @@ public class SkuResourceImpl extends BaseSkuResourceImpl {
 				pagination.getStartPosition(), pagination.getEndPosition(),
 				null);
 
-		int totalItems = _cpInstanceLocalService.getCPDefinitionInstancesCount(
+		int totalCount = _cpInstanceLocalService.getCPDefinitionInstancesCount(
 			cpDefinition.getCPDefinitionId(),
 			WorkflowConstants.STATUS_APPROVED);
 
 		return Page.of(
-			_toSKUs(channelId, accountId, cpInstances, cpDefinition),
-			pagination, totalItems);
+			_toSKUs(
+				channelId, accountId, cpInstances, cpDefinition, currencyCode),
+			pagination, totalCount);
 	}
 
 	@Override
@@ -227,8 +232,8 @@ public class SkuResourceImpl extends BaseSkuResourceImpl {
 			postChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodeSkuBySkuOption(
 				String channelExternalReferenceCode,
 				String productExternalReferenceCode, Long accountId,
-				BigDecimal quantity, String skuUnitOfMeasureKey,
-				SkuOption[] skuOptions)
+				String currencyCode, BigDecimal quantity,
+				String skuUnitOfMeasureKey, SkuOption[] skuOptions)
 		throws Exception {
 
 		CommerceChannel commerceChannel =
@@ -243,7 +248,7 @@ public class SkuResourceImpl extends BaseSkuResourceImpl {
 
 		return postChannelProductSkuBySkuOption(
 			commerceChannel.getCommerceChannelId(), cProduct.getCProductId(),
-			accountId, quantity, skuUnitOfMeasureKey, skuOptions);
+			accountId, currencyCode, quantity, skuUnitOfMeasureKey, skuOptions);
 	}
 
 	@Override
@@ -257,8 +262,9 @@ public class SkuResourceImpl extends BaseSkuResourceImpl {
 
 	@Override
 	public Sku postChannelProductSkuBySkuOption(
-			Long channelId, Long productId, Long accountId, BigDecimal quantity,
-			String skuUnitOfMeasureKey, SkuOption[] skuOptions)
+			Long channelId, Long productId, Long accountId, String currencyCode,
+			BigDecimal quantity, String skuUnitOfMeasureKey,
+			SkuOption[] skuOptions)
 		throws Exception {
 
 		CPDefinition cpDefinition =
@@ -272,7 +278,7 @@ public class SkuResourceImpl extends BaseSkuResourceImpl {
 			_commerceChannelLocalService.getCommerceChannel(channelId);
 
 		CommerceContext commerceContext = _getCommerceContext(
-			accountId, commerceChannel);
+			accountId, commerceChannel, currencyCode);
 
 		AccountEntry accountEntry = commerceContext.getAccountEntry();
 
@@ -301,13 +307,16 @@ public class SkuResourceImpl extends BaseSkuResourceImpl {
 			new SkuDTOConverterContext(
 				commerceContext, contextCompany.getCompanyId(), cpDefinition,
 				contextAcceptLanguage.getPreferredLocale(),
-				BigDecimalUtil.get(quantity, BigDecimal.ONE),
+				BigDecimalUtil.get(
+					quantity,
+					_getDefaultQuantity(cpInstance, skuUnitOfMeasureKey)),
 				cpInstance.getCPInstanceId(), skuOptionJSONArray,
 				skuUnitOfMeasureKey, contextUriInfo, contextUser));
 	}
 
 	private CommerceContext _getCommerceContext(
-			Long accountId, CommerceChannel commerceChannel)
+			Long accountId, CommerceChannel commerceChannel,
+			String currencyCode)
 		throws Exception {
 
 		int countUserCommerceAccounts =
@@ -320,8 +329,8 @@ public class SkuResourceImpl extends BaseSkuResourceImpl {
 			}
 
 			return _commerceContextFactory.create(
-				contextCompany.getCompanyId(), commerceChannel.getGroupId(),
-				contextUser.getUserId(), 0, accountId);
+				accountId, commerceChannel.getGroupId(), currencyCode, 0,
+				contextCompany.getCompanyId());
 		}
 
 		long[] commerceAccountIds =
@@ -337,8 +346,25 @@ public class SkuResourceImpl extends BaseSkuResourceImpl {
 		}
 
 		return _commerceContextFactory.create(
-			contextCompany.getCompanyId(), commerceChannel.getGroupId(),
-			contextUser.getUserId(), 0, commerceAccountIds[0]);
+			commerceAccountIds[0], commerceChannel.getGroupId(), currencyCode,
+			0, contextCompany.getCompanyId());
+	}
+
+	private BigDecimal _getDefaultQuantity(
+		CPInstance cpInstance, String unitOfMeasureKey) {
+
+		if ((cpInstance == null) || Validator.isNull(unitOfMeasureKey)) {
+			return BigDecimal.ONE;
+		}
+
+		CPInstanceUnitOfMeasure cpInstanceUnitOfMeasure =
+			cpInstance.fetchCPInstanceUnitOfMeasure(unitOfMeasureKey);
+
+		if (cpInstanceUnitOfMeasure != null) {
+			return cpInstanceUnitOfMeasure.getIncrementalOrderQuantity();
+		}
+
+		return BigDecimal.ONE;
 	}
 
 	private String _getDefaultUnitOfMeasureKey(long cpInstanceId) {
@@ -358,28 +384,29 @@ public class SkuResourceImpl extends BaseSkuResourceImpl {
 
 	private List<Sku> _toSKUs(
 			Long channelId, Long accountId, List<CPInstance> cpInstances,
-			CPDefinition cpDefinition)
+			CPDefinition cpDefinition, String currencyCode)
 		throws Exception {
-
-		List<Sku> skus = new ArrayList<>();
 
 		CommerceChannel commerceChannel =
 			_commerceChannelLocalService.getCommerceChannel(channelId);
 
-		for (CPInstance cpInstance : cpInstances) {
-			skus.add(
-				_skuDTOConverter.toDTO(
+		return transform(
+			cpInstances,
+			cpInstance -> {
+				String defaultUnitOfMeasureKey = _getDefaultUnitOfMeasureKey(
+					cpInstance.getCPInstanceId());
+
+				return _skuDTOConverter.toDTO(
 					new SkuDTOConverterContext(
-						_getCommerceContext(accountId, commerceChannel),
+						_getCommerceContext(
+							accountId, commerceChannel, currencyCode),
 						contextCompany.getCompanyId(), cpDefinition,
 						contextAcceptLanguage.getPreferredLocale(),
-						BigDecimal.ONE, cpInstance.getCPInstanceId(), null,
-						_getDefaultUnitOfMeasureKey(
-							cpInstance.getCPInstanceId()),
-						contextUriInfo, contextUser)));
-		}
-
-		return skus;
+						_getDefaultQuantity(
+							cpInstance, defaultUnitOfMeasureKey),
+						cpInstance.getCPInstanceId(), null,
+						defaultUnitOfMeasureKey, contextUriInfo, contextUser));
+			});
 	}
 
 	@Reference

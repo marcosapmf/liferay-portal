@@ -199,6 +199,7 @@ import java.util.SortedMap;
 import java.util.Stack;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
@@ -1317,7 +1318,7 @@ public class GraphQLServletExtender {
 		Configuration[] configurations = _configurationAdmin.listConfigurations(
 			filterString);
 
-		if (!ArrayUtil.isEmpty(configurations)) {
+		if (ArrayUtil.isNotEmpty(configurations)) {
 			Dictionary<String, Object> dictionary =
 				configurations[0].getProperties();
 
@@ -1893,6 +1894,10 @@ public class GraphQLServletExtender {
 		else if (String.class.equals(clazz)) {
 			return Scalars.GraphQLString;
 		}
+		else if (clazz.isArray()) {
+			return new GraphQLList(
+				_toGraphQLType(clazz.getComponentType(), graphQLTypes, input));
+		}
 
 		String key = (input ? "Input" : "") + clazz.getSimpleName();
 
@@ -2177,10 +2182,15 @@ public class GraphQLServletExtender {
 			GraphQLFieldDefinition graphQLFieldDefinition =
 				dataFetchingEnvironment.getFieldDefinition();
 
+			GraphQLFieldDefinition fieldGraphQLFieldDefinition = _addField(
+				graphQLFieldDefinition.getType(), fieldName);
+
 			DataFetcher<?> dataFetcher = graphQLCodeRegistry.getDataFetcher(
-				(GraphQLFieldsContainer)graphQLNamedTypes.get(
-					GraphQLConstants.NAMESPACE_QUERY),
-				_addField(graphQLFieldDefinition.getType(), fieldName));
+				FieldCoordinates.coordinates(
+					(GraphQLFieldsContainer)graphQLNamedTypes.get(
+						GraphQLConstants.NAMESPACE_QUERY),
+					fieldGraphQLFieldDefinition),
+				fieldGraphQLFieldDefinition);
 
 			DataFetchingEnvironmentImpl.Builder dataFetchingEnvironmentBuilder =
 				DataFetchingEnvironmentImpl.newDataFetchingEnvironment(
@@ -2361,41 +2371,33 @@ public class GraphQLServletExtender {
 		public List<GraphQLError> processErrors(
 			List<GraphQLError> graphQLErrors) {
 
-			List<GraphQLError> processedErrors = new ArrayList<>();
+			return TransformUtil.transform(
+				graphQLErrors,
+				graphQLError -> {
+					if (_isNotFoundException(graphQLError) &&
+						!_isRequiredField(graphQLError)) {
 
-			for (GraphQLError graphQLError : graphQLErrors) {
-				if (_isNotFoundException(graphQLError) &&
-					!_isRequiredField(graphQLError)) {
+						return null;
+					}
 
-					continue;
-				}
+					if (_isForbiddenException(graphQLError)) {
+						return _getExtendedGraphQLError(
+							graphQLError, Response.Status.FORBIDDEN);
+					}
+					else if (_isNotFoundException(graphQLError)) {
+						return _getExtendedGraphQLError(
+							graphQLError, Response.Status.NOT_FOUND);
+					}
+					else if (_isClientErrorException(graphQLError) ||
+							 _isStatusException(graphQLError)) {
 
-				if (_isForbiddenException(graphQLError)) {
-					processedErrors.add(
-						_getExtendedGraphQLError(
-							graphQLError, Response.Status.FORBIDDEN));
-				}
-				else if (_isNotFoundException(graphQLError)) {
-					processedErrors.add(
-						_getExtendedGraphQLError(
-							graphQLError, Response.Status.NOT_FOUND));
-				}
-				else if (_isClientErrorException(graphQLError) ||
-						 _isStatusException(graphQLError)) {
+						return _getExtendedGraphQLError(
+							graphQLError, Response.Status.BAD_REQUEST);
+					}
 
-					processedErrors.add(
-						_getExtendedGraphQLError(
-							graphQLError, Response.Status.BAD_REQUEST));
-				}
-				else {
-					processedErrors.add(
-						_getExtendedGraphQLError(
-							graphQLError,
-							Response.Status.INTERNAL_SERVER_ERROR));
-				}
-			}
-
-			return processedErrors;
+					return _getExtendedGraphQLError(
+						graphQLError, Response.Status.INTERNAL_SERVER_ERROR);
+				});
 		}
 
 		private GraphQLError _getExtendedGraphQLError(
@@ -2513,16 +2515,10 @@ public class GraphQLServletExtender {
 				return false;
 			}
 
-			if (StringUtil.endsWith(
-					ClassUtil.getClassName(
-						_getThrowable(
-							(ExceptionWhileDataFetching)graphQLError)),
-					"StatusException")) {
-
-				return true;
-			}
-
-			return false;
+			return StringUtil.endsWith(
+				ClassUtil.getClassName(
+					_getThrowable((ExceptionWhileDataFetching)graphQLError)),
+				"StatusException");
 		}
 
 		private final Set<String> _graphQLNamespaces;
@@ -2566,15 +2562,19 @@ public class GraphQLServletExtender {
 
 			GraphQLFieldDefinition graphQLFieldDefinition =
 				dataFetchingEnvironment.getFieldDefinition();
-
 			String fieldName = _getFieldName(
 				dataFetchingEnvironment, graphQLSchema);
 
+			GraphQLFieldDefinition fieldGraphQLFieldDefinition = _addField(
+				graphQLFieldDefinition.getType(), fieldName,
+				graphQLFieldDefinition.getArgument("id"));
+
 			DataFetcher<?> dataFetcher = graphQLCodeRegistry.getDataFetcher(
-				(GraphQLFieldsContainer)dataFetchingEnvironment.getParentType(),
-				_addField(
-					graphQLFieldDefinition.getType(), fieldName,
-					graphQLFieldDefinition.getArgument("id")));
+				FieldCoordinates.coordinates(
+					(GraphQLFieldsContainer)
+						dataFetchingEnvironment.getParentType(),
+					fieldGraphQLFieldDefinition),
+				fieldGraphQLFieldDefinition);
 
 			DataFetchingEnvironmentImpl.Builder dataFetchingEnvironmentBuilder =
 				DataFetchingEnvironmentImpl.newDataFetchingEnvironment(
@@ -2633,6 +2633,15 @@ public class GraphQLServletExtender {
 		implements DataFetcherExceptionHandler {
 
 		@Override
+		public CompletableFuture<DataFetcherExceptionHandlerResult>
+			handleException(
+				DataFetcherExceptionHandlerParameters
+					dataFetcherExceptionHandlerParameters) {
+
+			return CompletableFuture.completedFuture(
+				onException(dataFetcherExceptionHandlerParameters));
+		}
+
 		public DataFetcherExceptionHandlerResult onException(
 			DataFetcherExceptionHandlerParameters
 				dataFetcherExceptionHandlerParameters) {

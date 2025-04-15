@@ -14,21 +14,20 @@ import com.liferay.commerce.service.CommerceOrderService;
 import com.liferay.headless.commerce.delivery.order.dto.v1_0.PlacedOrder;
 import com.liferay.headless.commerce.delivery.order.dto.v1_0.PlacedOrderItem;
 import com.liferay.headless.commerce.delivery.order.internal.dto.v1_0.converter.PlacedOrderItemDTOConverterContext;
+import com.liferay.headless.commerce.delivery.order.internal.odate.entity.v1_0.PlacedOrderItemEntityModel;
 import com.liferay.headless.commerce.delivery.order.resource.v1_0.PlacedOrderItemResource;
-import com.liferay.portal.kernel.dao.orm.QueryUtil;
-import com.liferay.portal.kernel.search.BaseModelSearchResult;
+import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.util.ArrayUtil;
+import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.fields.NestedField;
 import com.liferay.portal.vulcan.fields.NestedFieldId;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
+import com.liferay.portal.vulcan.util.SearchUtil;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import javax.ws.rs.core.MultivaluedMap;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -46,6 +45,11 @@ public class PlacedOrderItemResourceImpl
 	extends BasePlacedOrderItemResourceImpl {
 
 	@Override
+	public EntityModel getEntityModel(MultivaluedMap multivaluedMap) {
+		return _entityModel;
+	}
+
+	@Override
 	public Page<PlacedOrderItem>
 			getPlacedOrderByExternalReferenceCodePlacedOrderItemsPage(
 				String externalReferenceCode, String search, Long skuId,
@@ -53,7 +57,7 @@ public class PlacedOrderItemResourceImpl
 		throws Exception {
 
 		CommerceOrder commerceOrder =
-			_commerceOrderService.fetchByExternalReferenceCode(
+			_commerceOrderService.fetchCommerceOrderByExternalReferenceCode(
 				externalReferenceCode, contextCompany.getCompanyId());
 
 		if (commerceOrder == null) {
@@ -62,9 +66,22 @@ public class PlacedOrderItemResourceImpl
 					externalReferenceCode);
 		}
 
-		return getPlacedOrderPlacedOrderItemsPage(
-			commerceOrder.getCommerceOrderId(), search, skuId, pagination,
-			sorts);
+		return SearchUtil.search(
+			null, booleanQuery -> booleanQuery.getPreBooleanFilter(), null,
+			CommerceOrderItem.class.getName(), search, pagination,
+			queryConfig -> queryConfig.setSelectedFieldNames(
+				Field.ENTRY_CLASS_PK),
+			searchContext -> {
+				searchContext.setAttribute(
+					"commerceOrderId", commerceOrder.getCommerceOrderId());
+				searchContext.setAttribute("parentCommerceOrderItemId", 0L);
+				searchContext.setCompanyId(contextCompany.getCompanyId());
+			},
+			sorts,
+			document -> _toPlacedOrderItem(
+				commerceOrder.getCommerceAccountId(),
+				_commerceOrderItemService.getCommerceOrderItem(
+					GetterUtil.getLong(document.get(Field.ENTRY_CLASS_PK)))));
 	}
 
 	@Override
@@ -90,8 +107,9 @@ public class PlacedOrderItemResourceImpl
 		throws Exception {
 
 		CommerceOrderItem commerceOrderItem =
-			_commerceOrderItemService.fetchByExternalReferenceCode(
-				externalReferenceCode, contextCompany.getCompanyId());
+			_commerceOrderItemService.
+				fetchCommerceOrderItemByExternalReferenceCode(
+					externalReferenceCode, contextCompany.getCompanyId());
 
 		if (commerceOrderItem == null) {
 			throw new NoSuchOrderItemException(
@@ -116,89 +134,55 @@ public class PlacedOrderItemResourceImpl
 			throw new NoSuchOrderException();
 		}
 
-		Sort sort = new Sort();
-
-		if (sorts != null) {
-			sort = sorts[0];
-		}
-
-		int startPosition = QueryUtil.ALL_POS;
-		int endPosition = QueryUtil.ALL_POS;
-
-		if (pagination != null) {
-			startPosition = pagination.getStartPosition();
-			endPosition = pagination.getEndPosition();
-		}
-
-		BaseModelSearchResult<CommerceOrderItem> searchResult =
-			_commerceOrderItemService.searchCommerceOrderItems(
-				placedOrderId, search, startPosition, endPosition, sort);
-
-		List<PlacedOrderItem> placedOrderItems = _filterPlacedOrderItems(
-			transform(
-				searchResult.getBaseModels(),
-				commerceOrderItem -> _toPlacedOrderItem(
-					commerceOrder.getCommerceAccountId(), commerceOrderItem)));
-
-		return Page.of(
-			placedOrderItems, pagination,
-			Math.max(
-				_commerceOrderItemService.getCommerceOrderItemsCount(
-					placedOrderId),
-				placedOrderItems.size()));
+		return SearchUtil.search(
+			null, booleanQuery -> booleanQuery.getPreBooleanFilter(), null,
+			CommerceOrderItem.class.getName(), search, pagination,
+			queryConfig -> queryConfig.setSelectedFieldNames(
+				Field.ENTRY_CLASS_PK),
+			searchContext -> {
+				searchContext.setAttribute(
+					"commerceOrderId", commerceOrder.getCommerceOrderId());
+				searchContext.setAttribute("parentCommerceOrderItemId", 0L);
+				searchContext.setCompanyId(contextCompany.getCompanyId());
+			},
+			sorts,
+			document -> _toPlacedOrderItem(
+				commerceOrder.getCommerceAccountId(),
+				_commerceOrderItemService.getCommerceOrderItem(
+					GetterUtil.getLong(document.get(Field.ENTRY_CLASS_PK)))));
 	}
 
-	private List<PlacedOrderItem> _filterPlacedOrderItems(
-		List<PlacedOrderItem> placedOrderItems) {
+	private PlacedOrderItem[] _getPlacedOrderItems(
+		long commerceAccountId, CommerceOrderItem commerceOrderItem) {
 
-		Map<Long, PlacedOrderItem> placedOrderItemMap = new HashMap<>();
-
-		for (PlacedOrderItem placedOrderItem : placedOrderItems) {
-			placedOrderItemMap.put(placedOrderItem.getId(), placedOrderItem);
-		}
-
-		for (PlacedOrderItem placedOrderItem : placedOrderItems) {
-			Long parentOrderItemId = placedOrderItem.getParentOrderItemId();
-
-			if (parentOrderItemId == null) {
-				continue;
-			}
-
-			PlacedOrderItem parentOrderItem = placedOrderItemMap.get(
-				parentOrderItemId);
-
-			if (parentOrderItem == null) {
-				continue;
-			}
-
-			PlacedOrderItem[] parentOrderItemPlacedOrderItems =
-				parentOrderItem.getPlacedOrderItems();
-
-			parentOrderItem.setPlacedOrderItems(
-				() -> {
-					if (parentOrderItemPlacedOrderItems == null) {
-						return new PlacedOrderItem[] {placedOrderItem};
-					}
-
-					return ArrayUtil.append(
-						parentOrderItemPlacedOrderItems, placedOrderItem);
-				});
-
-			placedOrderItemMap.remove(placedOrderItem.getId());
-		}
-
-		return new ArrayList(placedOrderItemMap.values());
+		return transformToArray(
+			commerceOrderItem.getChildCommerceOrderItems(),
+			placedOrderItem -> _placedOrderItemDTOConverter.toDTO(
+				new PlacedOrderItemDTOConverterContext(
+					commerceAccountId, placedOrderItem.getCommerceOrderItemId(),
+					contextAcceptLanguage.getPreferredLocale())),
+			PlacedOrderItem.class);
 	}
 
 	private PlacedOrderItem _toPlacedOrderItem(
 			long commerceAccountId, CommerceOrderItem commerceOrderItem)
 		throws Exception {
 
-		return _placedOrderItemDTOConverter.toDTO(
+		PlacedOrderItemDTOConverterContext placedOrderItemDTOConverterContext =
 			new PlacedOrderItemDTOConverterContext(
 				commerceAccountId, commerceOrderItem.getCommerceOrderItemId(),
-				contextAcceptLanguage.getPreferredLocale()));
+				contextAcceptLanguage.getPreferredLocale());
+
+		placedOrderItemDTOConverterContext.setAttribute(
+			"placedOrderItems",
+			_getPlacedOrderItems(commerceAccountId, commerceOrderItem));
+
+		return _placedOrderItemDTOConverter.toDTO(
+			placedOrderItemDTOConverterContext);
 	}
+
+	private static final EntityModel _entityModel =
+		new PlacedOrderItemEntityModel();
 
 	@Reference
 	private CommerceOrderItemService _commerceOrderItemService;

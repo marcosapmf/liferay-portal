@@ -6,7 +6,7 @@
 package com.liferay.commerce.order.content.web.internal.info.item.provider;
 
 import com.liferay.commerce.model.CommerceOrderItem;
-import com.liferay.commerce.service.CommerceOrderItemLocalService;
+import com.liferay.commerce.service.CommerceOrderItemService;
 import com.liferay.info.exception.NoSuchInfoItemException;
 import com.liferay.info.item.ClassPKInfoItemIdentifier;
 import com.liferay.info.item.InfoItemIdentifier;
@@ -36,14 +36,14 @@ public class CommerceOrderItemInfoItemObjectProvider
 
 		if (!(infoItemIdentifier instanceof ClassPKInfoItemIdentifier)) {
 			throw new NoSuchInfoItemException(
-				"Unsupported info item identifier type " + infoItemIdentifier);
+				"Unsupported info item identifier " + infoItemIdentifier);
 		}
 
 		ClassPKInfoItemIdentifier classPKInfoItemIdentifier =
 			(ClassPKInfoItemIdentifier)infoItemIdentifier;
 
 		try {
-			return _commerceOrderItemLocalService.getCommerceOrderItem(
+			return _commerceOrderItemService.getCommerceOrderItem(
 				classPKInfoItemIdentifier.getClassPK());
 		}
 		catch (PortalException portalException) {
@@ -55,6 +55,6 @@ public class CommerceOrderItemInfoItemObjectProvider
 	}
 
 	@Reference
-	private CommerceOrderItemLocalService _commerceOrderItemLocalService;
+	private CommerceOrderItemService _commerceOrderItemService;
 
 }

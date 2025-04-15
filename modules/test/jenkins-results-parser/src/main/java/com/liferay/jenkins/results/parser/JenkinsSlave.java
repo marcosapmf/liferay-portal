@@ -7,8 +7,10 @@ package com.liferay.jenkins.results.parser;
 
 import java.io.IOException;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -22,9 +24,15 @@ import org.json.JSONObject;
 public class JenkinsSlave implements JenkinsNode<JenkinsSlave> {
 
 	public JenkinsSlave() {
-		this(
-			JenkinsResultsParserUtil.getHostName(
-				JenkinsResultsParserUtil.getHostIPAddress()));
+		_jenkinsMaster = JenkinsMaster.getInstance(
+			System.getenv("MASTER_HOSTNAME"));
+		_name = System.getenv("NODE_NAME");
+
+		update(
+			JenkinsAPIUtil.getAPIJSONObject(
+				getComputerURL(),
+				"assignedLabels[name],displayName,idle,offline," +
+					"offlineCauseReason"));
 	}
 
 	public JenkinsSlave(String hostname) {
@@ -50,7 +58,8 @@ public class JenkinsSlave implements JenkinsNode<JenkinsSlave> {
 		}
 
 		JSONObject jenkinsSlaveJSONObject = JenkinsAPIUtil.getAPIJSONObject(
-			getComputerURL(), "displayName,idle,offline,offlineCauseReason");
+			getComputerURL(),
+			"assignedLabels[name],displayName,idle,offline,offlineCauseReason");
 
 		update(jenkinsSlaveJSONObject);
 	}
@@ -73,6 +82,11 @@ public class JenkinsSlave implements JenkinsNode<JenkinsSlave> {
 		}
 
 		return super.equals(object);
+	}
+
+	@Override
+	public List<String> getAssignedLabels() {
+		return _assignedLabels;
 	}
 
 	public String getComputerURL() {
@@ -180,10 +194,26 @@ public class JenkinsSlave implements JenkinsNode<JenkinsSlave> {
 		return hashCodeString.hashCode();
 	}
 
+	public boolean isEC2FleetNodeComputer() {
+		if (_jenkinsNodeClassName == null) {
+			update();
+		}
+
+		if (_jenkinsNodeClassName.equals(
+				"com.amazon.jenkins.ec2fleet.EC2FleetNodeComputer")) {
+
+			return true;
+		}
+
+		return false;
+	}
+
+	@Override
 	public boolean isIdle() {
 		return _idle;
 	}
 
+	@Override
 	public boolean isOffline() {
 		return _offline;
 	}
@@ -209,20 +239,58 @@ public class JenkinsSlave implements JenkinsNode<JenkinsSlave> {
 		_jenkinsMaster.update();
 	}
 
+	protected static String getDisplayName(JSONObject jenkinsSlaveJSONObject) {
+		String displayName = jenkinsSlaveJSONObject.getString("displayName");
+
+		String className = jenkinsSlaveJSONObject.getString("_class");
+
+		if (className.contains("EC2FleetNodeComputer")) {
+			Matcher matcher = _instanceIDPattern.matcher(displayName);
+
+			if (matcher.find()) {
+				displayName = matcher.group("instanceID");
+			}
+		}
+
+		return displayName;
+	}
+
 	protected JenkinsSlave(
 		JenkinsMaster jenkinsMaster, JSONObject jenkinsSlaveJSONObject) {
 
 		_jenkinsMaster = jenkinsMaster;
 
-		_name = jenkinsSlaveJSONObject.getString("displayName");
+		_name = getDisplayName(jenkinsSlaveJSONObject);
 
 		update(jenkinsSlaveJSONObject);
 	}
 
 	protected void update(JSONObject jenkinsSlaveJSONObject) {
+		_assignedLabels.clear();
+
+		JSONArray assignedLabelsJSONArray = jenkinsSlaveJSONObject.optJSONArray(
+			"assignedLabels");
+
+		if (assignedLabelsJSONArray != null) {
+			for (int i = 0; i < assignedLabelsJSONArray.length(); i++) {
+				JSONObject assignedLabelJSONObject =
+					assignedLabelsJSONArray.getJSONObject(i);
+
+				String assignedLabelName = assignedLabelJSONObject.optString(
+					"name");
+
+				if (JenkinsResultsParserUtil.isNullOrEmpty(assignedLabelName)) {
+					continue;
+				}
+
+				_assignedLabels.add(assignedLabelName);
+			}
+		}
+
 		_idle = jenkinsSlaveJSONObject.getBoolean("idle");
+		_jenkinsNodeClassName = jenkinsSlaveJSONObject.getString("_class");
 		_offline = jenkinsSlaveJSONObject.getBoolean("offline");
-		_offlineCauseReason = jenkinsSlaveJSONObject.getString(
+		_offlineCauseReason = jenkinsSlaveJSONObject.optString(
 			"offlineCauseReason");
 	}
 
@@ -252,11 +320,15 @@ public class JenkinsSlave implements JenkinsNode<JenkinsSlave> {
 		}
 	}
 
+	private static final Pattern _instanceIDPattern = Pattern.compile(
+		".* (?<instanceID>i-[0-9a-z]+) .*");
 	private static final Pattern _namePattern = Pattern.compile(
 		"(?<prefix>.*[^\\d]+)(?<number>\\d+)");
 
+	private final List<String> _assignedLabels = new ArrayList<>();
 	private boolean _idle;
 	private final JenkinsMaster _jenkinsMaster;
+	private String _jenkinsNodeClassName;
 	private final String _name;
 	private boolean _offline;
 	private String _offlineCauseReason;

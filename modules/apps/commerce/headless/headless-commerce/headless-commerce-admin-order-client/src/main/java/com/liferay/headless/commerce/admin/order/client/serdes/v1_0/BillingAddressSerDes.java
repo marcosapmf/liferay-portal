@@ -216,6 +216,20 @@ public class BillingAddressSerDes {
 			sb.append("\"");
 		}
 
+		if (billingAddress.getSubtype() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"subtype\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(billingAddress.getSubtype()));
+
+			sb.append("\"");
+		}
+
 		if (billingAddress.getVatNumber() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -362,6 +376,13 @@ public class BillingAddressSerDes {
 			map.put("street3", String.valueOf(billingAddress.getStreet3()));
 		}
 
+		if (billingAddress.getSubtype() == null) {
+			map.put("subtype", null);
+		}
+		else {
+			map.put("subtype", String.valueOf(billingAddress.getSubtype()));
+		}
+
 		if (billingAddress.getVatNumber() == null) {
 			map.put("vatNumber", null);
 		}
@@ -433,6 +454,9 @@ public class BillingAddressSerDes {
 				return false;
 			}
 			else if (Objects.equals(jsonParserFieldName, "street3")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "subtype")) {
 				return false;
 			}
 			else if (Objects.equals(jsonParserFieldName, "vatNumber")) {
@@ -523,6 +547,11 @@ public class BillingAddressSerDes {
 					billingAddress.setStreet3((String)jsonParserFieldValue);
 				}
 			}
+			else if (Objects.equals(jsonParserFieldName, "subtype")) {
+				if (jsonParserFieldValue != null) {
+					billingAddress.setSubtype((String)jsonParserFieldValue);
+				}
+			}
 			else if (Objects.equals(jsonParserFieldName, "vatNumber")) {
 				if (jsonParserFieldValue != null) {
 					billingAddress.setVatNumber((String)jsonParserFieldValue);
@@ -578,6 +607,10 @@ public class BillingAddressSerDes {
 	}
 
 	private static String _toJSON(Object value) {
+		if (value == null) {
+			return "null";
+		}
+
 		if (value instanceof Map) {
 			return _toJSON((Map)value);
 		}

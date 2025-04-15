@@ -43,10 +43,12 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.attribute.FileTime;
 
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.jar.Attributes;
 import java.util.jar.JarFile;
 import java.util.jar.JarOutputStream;
@@ -182,6 +184,8 @@ public class JspPrecompileTest {
 			outputStream.write(classWriter.toByteArray());
 		}
 
+		Files.setLastModifiedTime(jspClassPath, _fileTime);
+
 		try (LogCapture logCapture = LoggerTestUtil.configureLog4JLogger(
 				_CLASS_NAME_JSP_COMPILER, LoggerTestUtil.DEBUG)) {
 
@@ -291,10 +295,15 @@ public class JspPrecompileTest {
 
 				jarOutputStream.closeEntry();
 
-				jarOutputStream.putNextEntry(
-					new ZipEntry(
-						"META-INF/resources/".concat(
-							_PRECOMPILE_JSP_FILE_NAME)));
+				ZipEntry zipEntry = new ZipEntry(
+					"META-INF/resources/".concat(_PRECOMPILE_JSP_FILE_NAME));
+
+				_fileTime = FileTime.from(
+					System.currentTimeMillis() / 1000, TimeUnit.SECONDS);
+
+				zipEntry.setLastModifiedTime(_fileTime);
+
+				jarOutputStream.putNextEntry(zipEntry);
 
 				jarOutputStream.closeEntry();
 			}
@@ -372,7 +381,8 @@ public class JspPrecompileTest {
 	}
 
 	private static final String _CLASS_NAME_JSP_COMPILER =
-		"com.liferay.portal.osgi.web.servlet.jsp.compiler.internal.JspCompiler";
+		"com.liferay.portal.osgi.web.servlet.jsp.compiler.internal." +
+			"CompilerWrapper";
 
 	private static final String _JSP_PACKAGE_NAME = "org.apache.jsp.";
 
@@ -382,6 +392,7 @@ public class JspPrecompileTest {
 	private static final String _RUNTIME_COMPILE_JSP_FILE_NAME = "runtime.jsp";
 
 	private static Bundle _bundle;
+	private static FileTime _fileTime;
 	private static Path _workDirPath;
 
 	private Group _group;

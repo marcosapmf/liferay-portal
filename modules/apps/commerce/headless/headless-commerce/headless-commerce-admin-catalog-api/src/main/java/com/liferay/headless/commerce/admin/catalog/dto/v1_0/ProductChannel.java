@@ -16,8 +16,6 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
-import io.swagger.v3.oas.annotations.media.Schema;
-
 import java.io.Serializable;
 
 import java.util.Iterator;
@@ -29,7 +27,6 @@ import java.util.function.Supplier;
 import javax.annotation.Generated;
 
 import javax.validation.constraints.DecimalMin;
-import javax.validation.constraints.NotNull;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
@@ -40,7 +37,6 @@ import javax.xml.bind.annotation.XmlRootElement;
 @Generated("")
 @GraphQLName("ProductChannel")
 @JsonFilter("Liferay.Vulcan")
-@Schema(requiredProperties = {"id"})
 @XmlRootElement(name = "ProductChannel")
 public class ProductChannel implements Serializable {
 
@@ -53,7 +49,7 @@ public class ProductChannel implements Serializable {
 	}
 
 	@DecimalMin("0")
-	@Schema(example = "31130")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "31130")
 	public Long getChannelId() {
 		if (_channelIdSupplier != null) {
 			channelId = _channelIdSupplier.get();
@@ -94,7 +90,7 @@ public class ProductChannel implements Serializable {
 	@JsonIgnore
 	private Supplier<Long> _channelIdSupplier;
 
-	@Schema(example = "USD")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "USD")
 	public String getCurrencyCode() {
 		if (_currencyCodeSupplier != null) {
 			currencyCode = _currencyCodeSupplier.get();
@@ -135,7 +131,7 @@ public class ProductChannel implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _currencyCodeSupplier;
 
-	@Schema(example = "AB-34098-789-N")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "AB-34098-789-N")
 	public String getExternalReferenceCode() {
 		if (_externalReferenceCodeSupplier != null) {
 			externalReferenceCode = _externalReferenceCodeSupplier.get();
@@ -177,7 +173,7 @@ public class ProductChannel implements Serializable {
 	private Supplier<String> _externalReferenceCodeSupplier;
 
 	@DecimalMin("0")
-	@Schema(example = "31130")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "31130")
 	public Long getId() {
 		if (_idSupplier != null) {
 			id = _idSupplier.get();
@@ -211,13 +207,14 @@ public class ProductChannel implements Serializable {
 
 	@GraphQLField
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
-	@NotNull
 	protected Long id;
 
 	@JsonIgnore
 	private Supplier<Long> _idSupplier;
 
-	@Schema(example = "Alessio Antonio Rendina")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		example = "Alessio Antonio Rendina"
+	)
 	public String getName() {
 		if (_nameSupplier != null) {
 			name = _nameSupplier.get();
@@ -256,7 +253,7 @@ public class ProductChannel implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _nameSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getType() {
 		if (_typeSupplier != null) {
 			type = _typeSupplier.get();
@@ -415,8 +412,8 @@ public class ProductChannel implements Serializable {
 		return sb.toString();
 	}
 
-	@Schema(
-		accessMode = Schema.AccessMode.READ_ONLY,
+	@io.swagger.v3.oas.annotations.media.Schema(
+		accessMode = io.swagger.v3.oas.annotations.media.Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.commerce.admin.catalog.dto.v1_0.ProductChannel",
 		name = "x-class-name"
 	)

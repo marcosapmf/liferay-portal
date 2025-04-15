@@ -1662,11 +1662,12 @@ public class VerifyProperties {
 		"auth.login.prompt.enabled", "auth.max.failures.limit",
 		"auth.user.uuid.store.enabled", "auto.deploy.blacklist.threshold",
 		"auto.deploy.copy.commons.logging", "auto.deploy.copy.log4j",
-		"auto.deploy.dest.dir", "auto.deploy.default.dest.dir",
-		"auto.deploy.jboss.dest.dir", "auto.deploy.jboss.dest.dir[5]",
-		"auto.deploy.jboss.prefix", "auto.deploy.tomcat.dest.dir",
-		"auto.deploy.tomcat.lib.dir", "auto.deploy.unpack.war",
-		"auto.deploy.weblogic.dest.dir", "auto.deploy.websphere.dest.dir",
+		"auto.deploy.custom.portlet.xml", "auto.deploy.dest.dir",
+		"auto.deploy.default.dest.dir", "auto.deploy.jboss.dest.dir",
+		"auto.deploy.jboss.dest.dir[5]", "auto.deploy.jboss.prefix",
+		"auto.deploy.tomcat.dest.dir", "auto.deploy.tomcat.lib.dir",
+		"auto.deploy.unpack.war", "auto.deploy.weblogic.dest.dir",
+		"auto.deploy.websphere.dest.dir",
 		"auto.deploy.websphere.wsadmin.app.manager.install.options",
 		"auto.deploy.websphere.wsadmin.app.manager.list.options",
 		"auto.deploy.websphere.wsadmin.app.manager.query",
@@ -2039,6 +2040,8 @@ public class VerifyProperties {
 		"staging.lock.enabled", "social.activity.sets.bundling.enabled",
 		"social.activity.sets.enabled", "social.bookmark.display.styles",
 		"social.bookmark.types", "spring.hibernate.data.source",
+		"spring.hibernate.configuration.proxy.factory.preload.classloader." +
+			"classes",
 		"spring.hibernate.session.factory", "spring.portlet.configs",
 		"spring.remoting.servlet.hosts.allowed",
 		"spring.remoting.servlet.https.required", "sprite.enabled",
@@ -2065,9 +2068,9 @@ public class VerifyProperties {
 		"verify.process.concurrency.threshold", "webdav.storage.class",
 		"webdav.storage.show.edit.url", "webdav.storage.show.view.url",
 		"webdav.storage.tokens", "wiki.email.page.added.signature",
-		"wiki.email.page.updated.signature",
-		"xsl.template.secure.processing.enabled", "xss.allow",
-		"xuggler.enabled", "xuggler.jar.file", "xuggler.jar.url",
+		"wiki.email.page.updated.signature", "work.dir.override.enabled",
+		"xml.sitemap.index.enabled", "xsl.template.secure.processing.enabled",
+		"xss.allow", "xuggler.enabled", "xuggler.jar.file", "xuggler.jar.url",
 		"xuggler.jar.options", "xuggler.ffpreset.8x8dct", "xuggler.ffpreset.bf",
 		"xuggler.f.ffpreset.cmp", "xuggler.f.ffpreset.coder",
 		"xuggler.f.ffpreset.flags", "xuggler.f.ffpreset.flags2",
@@ -2265,7 +2268,15 @@ public class VerifyProperties {
 			"tags.asset.increment.view.counter.enabled",
 			"asset.entry.increment.view.counter.enabled"
 		},
-		{"sql.data.max.parameters", "database.max.parameters"}
+		{"sql.data.max.parameters", "database.max.parameters"},
+		{
+			"staging.groups.in.memory.filter.limit",
+			"cacheable.query.limit.LPD-28122"
+		},
+		{
+			"virtual.hosts.per.company.in.memory.filter.limit",
+			"cacheable.query.limit.LPD-27353"
+		}
 	};
 
 	private static final String[][] _RENAMED_SYSTEM_KEYS = {

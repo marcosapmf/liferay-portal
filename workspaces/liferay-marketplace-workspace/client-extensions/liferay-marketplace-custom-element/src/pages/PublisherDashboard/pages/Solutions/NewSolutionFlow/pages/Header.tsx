@@ -20,8 +20,8 @@ import {
 	useSolutionContext,
 } from '../../../../../../context/SolutionContext';
 import i18n from '../../../../../../i18n';
+import {swapElements} from '../../../../../../utils/array';
 import {getRandomID} from '../../../../../../utils/string';
-import {swapImageElements} from '../../../../constants';
 import {ACCEPT_FILE_TYPES} from '../../../Apps/AppCreationFlow/StorefrontPage/CustomizeAppStorefrontPage';
 import {MAX_IMAGE_QUANTITY, MAX_SIZE_5MBS} from '../../constants';
 
@@ -116,7 +116,7 @@ const Header = () => {
 	const handleArrowClick = (index: number, direction: string) => {
 		const newIndex = direction === 'up' ? index - 1 : index + 1;
 
-		const files = swapImageElements(
+		const files = swapElements(
 			(contentType as HeaderContentTypeImages).content.headerImages,
 			index,
 			newIndex

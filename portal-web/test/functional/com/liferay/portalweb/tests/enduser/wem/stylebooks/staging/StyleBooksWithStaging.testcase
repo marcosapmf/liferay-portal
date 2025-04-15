@@ -29,13 +29,12 @@ definition {
 	}
 
 	tearDown {
+		JSONGroup.deleteGroupByName(groupName = "Test Site Name");
+
 		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
 		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
-		}
-		else {
-			JSONGroup.deleteGroupByName(groupName = "Test Site Name");
 		}
 	}
 
@@ -81,15 +80,19 @@ definition {
 				type = "content");
 		}
 
-		task ("Add a Banner Center fragment to page") {
+		task ("Add a heading fragment to page") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name",
 				siteName = "Test Site Name Staging");
 
 			PageEditor.addFragment(
-				collectionName = "Featured Content",
-				composition = "true",
-				fragmentName = "Banner Center");
+				collectionName = "Basic Components",
+				fragmentName = "Heading");
+
+			PageEditor.addFragment(
+				collectionName = "Basic Components",
+				fragmentName = "Button",
+				targetFragmentName = "Heading");
 		}
 
 		task ("Change to the new style book via Look and Feel") {
@@ -151,7 +154,7 @@ definition {
 				value1 = "rgba(0, 255, 0, 1)");
 
 			AssertCssValue(
-				key_content = "Banner Title Example",
+				key_content = "Heading Example",
 				key_element = "h1",
 				key_id = "element-text",
 				key_type = "text",
@@ -221,7 +224,7 @@ definition {
 				value1 = "rgba(11, 95, 255, 1)");
 
 			AssertCssValue(
-				key_content = "Banner Title Example",
+				key_content = "Heading Example",
 				key_element = "h1",
 				key_id = "element-text",
 				key_type = "text",
@@ -279,9 +282,13 @@ definition {
 				siteName = "Test Site Name Staging");
 
 			PageEditor.addFragment(
-				collectionName = "Featured Content",
-				composition = "true",
-				fragmentName = "Banner Center");
+				collectionName = "Basic Components",
+				fragmentName = "Heading");
+
+			PageEditor.addFragment(
+				collectionName = "Basic Components",
+				fragmentName = "Button",
+				targetFragmentName = "Heading");
 
 			PageEditor.gotoTab(tabName = "Page Design Options");
 
@@ -327,7 +334,7 @@ definition {
 				value1 = "rgba(0, 255, 0, 1)");
 
 			AssertCssValue(
-				key_content = "Banner Title Example",
+				key_content = "Heading Example",
 				key_element = "h1",
 				key_id = "element-text",
 				key_type = "text",
@@ -383,7 +390,7 @@ definition {
 				value1 = "rgba(11, 95, 255, 1)");
 
 			AssertCssValue(
-				key_content = "Banner Title Example",
+				key_content = "Heading Example",
 				key_element = "h1",
 				key_id = "element-text",
 				key_type = "text",
@@ -586,15 +593,19 @@ definition {
 				type = "content");
 		}
 
-		task ("Add a Banner Center to page") {
+		task ("Add a Heading to page") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name",
 				siteName = "Test Site Name Staging");
 
 			PageEditor.addFragment(
-				collectionName = "Featured Content",
-				composition = "true",
-				fragmentName = "Banner Center");
+				collectionName = "Basic Components",
+				fragmentName = "Heading");
+
+			PageEditor.addFragment(
+				collectionName = "Basic Components",
+				fragmentName = "Button",
+				targetFragmentName = "Heading");
 
 			PageEditor.publish();
 		}
@@ -620,7 +631,7 @@ definition {
 				value1 = "rgba(255, 0, 0, 1)");
 
 			AssertCssValue(
-				key_content = "Banner Title Example",
+				key_content = "Heading Example",
 				key_element = "h1",
 				key_id = "element-text",
 				key_type = "text",
@@ -682,15 +693,19 @@ definition {
 				type = "content");
 		}
 
-		task ("Add a Banner Center to page") {
+		task ("Add a Basic Components to page") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name",
 				siteName = "Test Site Name Staging");
 
 			PageEditor.addFragment(
-				collectionName = "Featured Content",
-				composition = "true",
-				fragmentName = "Banner Center");
+				collectionName = "Basic Components",
+				fragmentName = "Heading");
+
+			PageEditor.addFragment(
+				collectionName = "Basic Components",
+				fragmentName = "Button",
+				targetFragmentName = "Heading");
 		}
 
 		task ("Change to the new style book") {
@@ -738,7 +753,7 @@ definition {
 				value1 = "rgba(0, 255, 0, 1)");
 
 			AssertCssValue(
-				key_content = "Banner Title Example",
+				key_content = "Heading Example",
 				key_element = "h1",
 				key_id = "element-text",
 				key_type = "text",
@@ -768,7 +783,7 @@ definition {
 				value1 = "rgba(0, 255, 0, 1)");
 
 			AssertCssValue(
-				key_content = "Banner Title Example",
+				key_content = "Heading Example",
 				key_element = "h1",
 				key_id = "element-text",
 				key_type = "text",
@@ -831,7 +846,7 @@ definition {
 				value1 = "rgba(255, 0, 0, 1)");
 
 			AssertCssValue(
-				key_content = "Banner Title Example",
+				key_content = "Heading Example",
 				key_element = "h1",
 				key_id = "element-text",
 				key_type = "text",

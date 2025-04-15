@@ -5,18 +5,19 @@
 
 package com.liferay.portal.instances.internal.configuration;
 
-import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
-import com.liferay.portal.instances.service.PortalInstancesLocalService;
+import com.liferay.portal.kernel.cluster.ClusterMasterExecutor;
+import com.liferay.portal.kernel.dependency.manager.DependencyManagerSyncUtil;
 import com.liferay.portal.kernel.exception.NoSuchCompanyException;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.instance.PortalInstancePool;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.module.framework.ModuleServiceLifecycle;
-import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.util.PortalInstances;
 
 import java.util.Map;
 
@@ -43,55 +44,58 @@ public class PortalInstancesConfigurationFactory {
 			ConfigurableUtil.createConfigurable(
 				PortalInstancesConfiguration.class, properties);
 
-		String webId = _getWebId(properties);
-		String virtualHostname = portalInstancesConfiguration.virtualHostname();
-		String mx = portalInstancesConfiguration.mx();
-		int maxUsers = portalInstancesConfiguration.maxUsers();
-		boolean active = portalInstancesConfiguration.active();
+		DependencyManagerSyncUtil.registerSyncCallable(
+			() -> {
+				if (!_clusterMasterExecutor.isMaster()) {
+					return null;
+				}
 
-		Company company = null;
+				String webId = _getWebId(properties);
+				String virtualHostname =
+					portalInstancesConfiguration.virtualHostname();
+				String mx = portalInstancesConfiguration.mx();
+				int maxUsers = portalInstancesConfiguration.maxUsers();
+				boolean active = portalInstancesConfiguration.active();
 
-		try {
-			company = _companyLocalService.getCompanyByWebId(webId);
-		}
-		catch (NoSuchCompanyException noSuchCompanyException) {
-			if (_log.isDebugEnabled()) {
-				_log.debug(noSuchCompanyException);
-			}
-		}
+				Company company = null;
 
-		if (company == null) {
-			company = _companyLocalService.addCompany(
-				null, webId, virtualHostname, mx, maxUsers, active,
-				portalInstancesConfiguration.addDefaultAdminUser(),
-				portalInstancesConfiguration.adminPassword(),
-				portalInstancesConfiguration.adminScreenName(),
-				portalInstancesConfiguration.adminEmailAddress(),
-				portalInstancesConfiguration.adminFirstName(),
-				portalInstancesConfiguration.adminMiddleName(),
-				portalInstancesConfiguration.adminLastName());
+				try {
+					company = _companyLocalService.getCompanyByWebId(webId);
+				}
+				catch (NoSuchCompanyException noSuchCompanyException) {
+					if (_log.isDebugEnabled()) {
+						_log.debug(noSuchCompanyException);
+					}
+				}
 
-			try (SafeCloseable safeCloseable =
-					CompanyThreadLocal.setWithSafeCloseable(
-						company.getCompanyId())) {
+				if (company == null) {
+					PortalInstances.addCompany(
+						portalInstancesConfiguration.siteInitializerKey(),
+						() -> _companyLocalService.addCompany(
+							null, webId, virtualHostname, mx, maxUsers,
+							portalInstancesConfiguration.active(),
+							portalInstancesConfiguration.addDefaultAdminUser(),
+							portalInstancesConfiguration.adminPassword(),
+							portalInstancesConfiguration.adminScreenName(),
+							portalInstancesConfiguration.adminEmailAddress(),
+							portalInstancesConfiguration.adminFirstName(),
+							portalInstancesConfiguration.adminMiddleName(),
+							portalInstancesConfiguration.adminLastName()));
+				}
+				else {
+					if (company.getCompanyId() ==
+							PortalInstancePool.getDefaultCompanyId()) {
 
-				_portalInstancesLocalService.initializePortalInstance(
-					company.getCompanyId(),
-					portalInstancesConfiguration.siteInitializerKey());
-			}
-		}
-		else {
-			if (company.getCompanyId() ==
-					_portalInstancesLocalService.getDefaultCompanyId()) {
+						active = true;
+					}
 
-				active = true;
-			}
+					_companyLocalService.updateCompany(
+						company.getCompanyId(), virtualHostname, mx, maxUsers,
+						active);
+				}
 
-			_companyLocalService.updateCompany(
-				company.getCompanyId(), virtualHostname, mx, maxUsers, active);
-		}
-
-		_portalInstancesLocalService.synchronizePortalInstances();
+				return null;
+			});
 	}
 
 	private String _getWebId(Map<String, Object> properties) {
@@ -111,12 +115,12 @@ public class PortalInstancesConfigurationFactory {
 		PortalInstancesConfigurationFactory.class);
 
 	@Reference
+	private ClusterMasterExecutor _clusterMasterExecutor;
+
+	@Reference
 	private CompanyLocalService _companyLocalService;
 
 	@Reference(target = ModuleServiceLifecycle.PORTLETS_INITIALIZED)
 	private ModuleServiceLifecycle _moduleServiceLifecycle;
-
-	@Reference
-	private PortalInstancesLocalService _portalInstancesLocalService;
 
 }

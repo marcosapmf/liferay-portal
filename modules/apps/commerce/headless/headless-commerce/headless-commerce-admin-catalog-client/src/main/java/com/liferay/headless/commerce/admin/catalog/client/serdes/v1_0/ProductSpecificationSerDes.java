@@ -46,6 +46,20 @@ public class ProductSpecificationSerDes {
 
 		sb.append("{");
 
+		if (productSpecification.getExternalReferenceCode() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"externalReferenceCode\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(productSpecification.getExternalReferenceCode()));
+
+			sb.append("\"");
+		}
+
 		if (productSpecification.getId() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -80,6 +94,25 @@ public class ProductSpecificationSerDes {
 			sb.append(_toJSON(productSpecification.getLabel()));
 		}
 
+		if (productSpecification.getOptionCategoryExternalReferenceCode() !=
+				null) {
+
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"optionCategoryExternalReferenceCode\": ");
+
+			sb.append("\"");
+
+			sb.append(
+				_escape(
+					productSpecification.
+						getOptionCategoryExternalReferenceCode()));
+
+			sb.append("\"");
+		}
+
 		if (productSpecification.getOptionCategoryId() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -108,6 +141,25 @@ public class ProductSpecificationSerDes {
 			sb.append("\"productId\": ");
 
 			sb.append(productSpecification.getProductId());
+		}
+
+		if (productSpecification.getSpecificationExternalReferenceCode() !=
+				null) {
+
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"specificationExternalReferenceCode\": ");
+
+			sb.append("\"");
+
+			sb.append(
+				_escape(
+					productSpecification.
+						getSpecificationExternalReferenceCode()));
+
+			sb.append("\"");
 		}
 
 		if (productSpecification.getSpecificationId() != null) {
@@ -154,6 +206,16 @@ public class ProductSpecificationSerDes {
 			sb.append(_toJSON(productSpecification.getValue()));
 		}
 
+		if (productSpecification.getVisible() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"visible\": ");
+
+			sb.append(productSpecification.getVisible());
+		}
+
 		sb.append("}");
 
 		return sb.toString();
@@ -175,6 +237,16 @@ public class ProductSpecificationSerDes {
 
 		Map<String, String> map = new TreeMap<>();
 
+		if (productSpecification.getExternalReferenceCode() == null) {
+			map.put("externalReferenceCode", null);
+		}
+		else {
+			map.put(
+				"externalReferenceCode",
+				String.valueOf(
+					productSpecification.getExternalReferenceCode()));
+		}
+
 		if (productSpecification.getId() == null) {
 			map.put("id", null);
 		}
@@ -194,6 +266,19 @@ public class ProductSpecificationSerDes {
 		}
 		else {
 			map.put("label", String.valueOf(productSpecification.getLabel()));
+		}
+
+		if (productSpecification.getOptionCategoryExternalReferenceCode() ==
+				null) {
+
+			map.put("optionCategoryExternalReferenceCode", null);
+		}
+		else {
+			map.put(
+				"optionCategoryExternalReferenceCode",
+				String.valueOf(
+					productSpecification.
+						getOptionCategoryExternalReferenceCode()));
 		}
 
 		if (productSpecification.getOptionCategoryId() == null) {
@@ -220,6 +305,19 @@ public class ProductSpecificationSerDes {
 			map.put(
 				"productId",
 				String.valueOf(productSpecification.getProductId()));
+		}
+
+		if (productSpecification.getSpecificationExternalReferenceCode() ==
+				null) {
+
+			map.put("specificationExternalReferenceCode", null);
+		}
+		else {
+			map.put(
+				"specificationExternalReferenceCode",
+				String.valueOf(
+					productSpecification.
+						getSpecificationExternalReferenceCode()));
 		}
 
 		if (productSpecification.getSpecificationId() == null) {
@@ -257,6 +355,14 @@ public class ProductSpecificationSerDes {
 			map.put("value", String.valueOf(productSpecification.getValue()));
 		}
 
+		if (productSpecification.getVisible() == null) {
+			map.put("visible", null);
+		}
+		else {
+			map.put(
+				"visible", String.valueOf(productSpecification.getVisible()));
+		}
+
 		return map;
 	}
 
@@ -275,7 +381,10 @@ public class ProductSpecificationSerDes {
 
 		@Override
 		protected boolean parseMaps(String jsonParserFieldName) {
-			if (Objects.equals(jsonParserFieldName, "id")) {
+			if (Objects.equals(jsonParserFieldName, "externalReferenceCode")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "id")) {
 				return false;
 			}
 			else if (Objects.equals(jsonParserFieldName, "key")) {
@@ -284,6 +393,12 @@ public class ProductSpecificationSerDes {
 			else if (Objects.equals(jsonParserFieldName, "label")) {
 				return true;
 			}
+			else if (Objects.equals(
+						jsonParserFieldName,
+						"optionCategoryExternalReferenceCode")) {
+
+				return false;
+			}
 			else if (Objects.equals(jsonParserFieldName, "optionCategoryId")) {
 				return false;
 			}
@@ -291,6 +406,12 @@ public class ProductSpecificationSerDes {
 				return false;
 			}
 			else if (Objects.equals(jsonParserFieldName, "productId")) {
+				return false;
+			}
+			else if (Objects.equals(
+						jsonParserFieldName,
+						"specificationExternalReferenceCode")) {
+
 				return false;
 			}
 			else if (Objects.equals(jsonParserFieldName, "specificationId")) {
@@ -307,6 +428,9 @@ public class ProductSpecificationSerDes {
 			else if (Objects.equals(jsonParserFieldName, "value")) {
 				return true;
 			}
+			else if (Objects.equals(jsonParserFieldName, "visible")) {
+				return false;
+			}
 
 			return false;
 		}
@@ -316,7 +440,13 @@ public class ProductSpecificationSerDes {
 			ProductSpecification productSpecification,
 			String jsonParserFieldName, Object jsonParserFieldValue) {
 
-			if (Objects.equals(jsonParserFieldName, "id")) {
+			if (Objects.equals(jsonParserFieldName, "externalReferenceCode")) {
+				if (jsonParserFieldValue != null) {
+					productSpecification.setExternalReferenceCode(
+						(String)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "id")) {
 				if (jsonParserFieldValue != null) {
 					productSpecification.setId(
 						Long.valueOf((String)jsonParserFieldValue));
@@ -331,6 +461,15 @@ public class ProductSpecificationSerDes {
 				if (jsonParserFieldValue != null) {
 					productSpecification.setLabel(
 						(Map<String, String>)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(
+						jsonParserFieldName,
+						"optionCategoryExternalReferenceCode")) {
+
+				if (jsonParserFieldValue != null) {
+					productSpecification.setOptionCategoryExternalReferenceCode(
+						(String)jsonParserFieldValue);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "optionCategoryId")) {
@@ -349,6 +488,15 @@ public class ProductSpecificationSerDes {
 				if (jsonParserFieldValue != null) {
 					productSpecification.setProductId(
 						Long.valueOf((String)jsonParserFieldValue));
+				}
+			}
+			else if (Objects.equals(
+						jsonParserFieldName,
+						"specificationExternalReferenceCode")) {
+
+				if (jsonParserFieldValue != null) {
+					productSpecification.setSpecificationExternalReferenceCode(
+						(String)jsonParserFieldValue);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "specificationId")) {
@@ -375,6 +523,12 @@ public class ProductSpecificationSerDes {
 				if (jsonParserFieldValue != null) {
 					productSpecification.setValue(
 						(Map<String, String>)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "visible")) {
+				if (jsonParserFieldValue != null) {
+					productSpecification.setVisible(
+						(Boolean)jsonParserFieldValue);
 				}
 			}
 		}
@@ -422,6 +576,10 @@ public class ProductSpecificationSerDes {
 	}
 
 	private static String _toJSON(Object value) {
+		if (value == null) {
+			return "null";
+		}
+
 		if (value instanceof Map) {
 			return _toJSON((Map)value);
 		}

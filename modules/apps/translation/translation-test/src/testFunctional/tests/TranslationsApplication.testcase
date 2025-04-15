@@ -70,7 +70,9 @@ definition {
 			siteURLKey = "guest",
 			webContentTitle = "WC WebContent Title");
 
-		Translations.viewUntranslatedStatus(locale = "es-ES");
+		Translations.viewUntranslatedStatus(
+			locale = "es-ES",
+			translated = "true");
 	}
 
 	@description = "This ensures that The translation in the web content remains after deleting the translation in approved status from the app."
@@ -121,7 +123,9 @@ definition {
 			version = "1.1",
 			webContentTitle = "WC WebContent Title");
 
-		PortletEntry.changeLocale(locale = "es-ES");
+		PortletEntry.changeLocale(
+			locale = "es-ES",
+			translated = "true");
 
 		WebContent.viewCP(
 			webContentContent = "WC WebContent Contenido",
@@ -198,7 +202,9 @@ definition {
 			version = "1.1",
 			webContentTitle = "WC WebContent Title");
 
-		PortletEntry.changeLocale(locale = "es-ES");
+		PortletEntry.changeLocale(
+			locale = "es-ES",
+			translated = "true");
 
 		WebContent.viewCP(
 			webContentContent = "WC WebContent Contenido editar",
@@ -275,14 +281,18 @@ definition {
 			version = "1.1",
 			webContentTitle = "WC WebContent Title");
 
-		PortletEntry.changeLocale(locale = "es-ES");
+		PortletEntry.changeLocale(
+			locale = "es-ES",
+			translated = "true");
 
 		WebContent.viewCP(
 			webContentContent = "WC WebContent Contenido",
 			webContentDescription = "WC WebContent Descripción",
 			webContentTitle = "WC WebContent Título");
 
-		PortletEntry.changeLocale(locale = "ja-JP");
+		PortletEntry.changeLocale(
+			locale = "ja-JP",
+			translated = "true");
 
 		WebContent.viewCP(
 			webContentContent = "wc webcontentコンテンツ",
@@ -327,7 +337,7 @@ definition {
 			webContentText = "WC WebContent Text",
 			webContentTitle = "WC WebContent Title");
 
-		PortletEntry.publish();
+		WebContent.publishWithPermissions();
 
 		Translations.gotoTranslate(webContentTitle = "WC WebContent Title");
 

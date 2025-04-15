@@ -16,13 +16,17 @@ import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.search.IndexerRegistry;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterContext;
 
+import java.util.Date;
 import java.util.Locale;
+
+import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -65,6 +69,39 @@ public class CTEntryDTOConverter
 			field.getLocalizedValues(), locale, LocaleUtil.getDefault());
 	}
 
+	private String _getStatusMessage(
+		int ctCollectionStatus, Date ctCollectionStatusDate,
+		String ctCollectionStatusUserName,
+		HttpServletRequest httpServletRequest) {
+
+		if (ctCollectionStatus == WorkflowConstants.STATUS_APPROVED) {
+			return _language.format(
+				httpServletRequest, "published-x-ago-by-x",
+				new String[] {
+					_language.getTimeDescription(
+						httpServletRequest,
+						System.currentTimeMillis() -
+							ctCollectionStatusDate.getTime(),
+						true),
+					HtmlUtil.escape(ctCollectionStatusUserName)
+				});
+		}
+		else if (ctCollectionStatus == WorkflowConstants.STATUS_SCHEDULED) {
+			return _language.format(
+				httpServletRequest, "schedule-to-publish-in-x-by-x",
+				new String[] {
+					_language.getTimeDescription(
+						httpServletRequest,
+						ctCollectionStatusDate.getTime() -
+							System.currentTimeMillis(),
+						true),
+					HtmlUtil.escape(ctCollectionStatusUserName)
+				});
+		}
+
+		return StringPool.BLANK;
+	}
+
 	private <T extends BaseModel<T>> CTEntry _toCTEntry(
 			DTOConverterContext dtoConverterContext,
 			com.liferay.change.tracking.model.CTEntry ctEntry)
@@ -86,6 +123,34 @@ public class CTEntryDTOConverter
 							GetterUtil.getInteger(
 								document.get("changeType")))));
 				setCtCollectionId(ctEntry::getCtCollectionId);
+				setCtCollectionName(
+					() -> {
+						if (document.hasField("ctCollectionName")) {
+							return document.get("ctCollectionName");
+						}
+
+						return StringPool.BLANK;
+					});
+				setCtCollectionStatus(
+					() -> _toStatus(
+						dtoConverterContext.getLocale(), document,
+						"ctCollectionStatus"));
+				setCtCollectionStatusDate(
+					() -> {
+						if (document.hasField("ctCollectionStatusDate")) {
+							return document.getDate("ctCollectionStatusDate");
+						}
+
+						return null;
+					});
+				setCtCollectionStatusUserName(
+					() -> {
+						if (document.hasField("ctCollectionStatusUserName")) {
+							return document.get("ctCollectionStatusUserName");
+						}
+
+						return StringPool.BLANK;
+					});
 				setDateCreated(ctEntry::getCreateDate);
 				setDateModified(ctEntry::getModifiedDate);
 				setHideable(
@@ -97,12 +162,11 @@ public class CTEntryDTOConverter
 				setOwnerName(ctEntry::getUserName);
 				setSiteId(
 					() -> {
-						if (document.hasField(Field.GROUP_ID)) {
-							return GetterUtil.getLong(
-								document.get(Field.GROUP_ID));
+						if (!document.hasField(Field.GROUP_ID)) {
+							return null;
 						}
 
-						return null;
+						return GetterUtil.getLong(document.get(Field.GROUP_ID));
 					});
 				setSiteName(
 					() -> {
@@ -112,10 +176,19 @@ public class CTEntryDTOConverter
 								dtoConverterContext.getLocale());
 						}
 
-						return null;
+						return StringPool.BLANK;
 					});
 				setStatus(
-					() -> _toStatus(dtoConverterContext.getLocale(), document));
+					() -> _toStatus(
+						dtoConverterContext.getLocale(), document,
+						Field.STATUS));
+				setStatusMessage(
+					() -> _getStatusMessage(
+						GetterUtil.getInteger(
+							document.get("ctCollectionStatus")),
+						getCtCollectionStatusDate(),
+						getCtCollectionStatusUserName(),
+						dtoConverterContext.getHttpServletRequest()));
 				setTitle(
 					() -> _getLocalizedValue(
 						document.getField("title"),
@@ -128,14 +201,14 @@ public class CTEntryDTOConverter
 		};
 	}
 
-	private Status _toStatus(Locale locale, Document document)
+	private Status _toStatus(Locale locale, Document document, String fieldName)
 		throws Exception {
 
-		if (!document.hasField(Field.STATUS)) {
+		if (!document.hasField(fieldName)) {
 			return null;
 		}
 
-		int status = Integer.valueOf(document.get(Field.STATUS));
+		int status = GetterUtil.getInteger(document.get(fieldName));
 
 		String statusLabel = WorkflowConstants.getStatusLabel(status);
 

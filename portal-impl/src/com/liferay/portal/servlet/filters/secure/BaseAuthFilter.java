@@ -33,6 +33,7 @@ import com.liferay.portal.util.PropsUtil;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 import javax.servlet.FilterChain;
@@ -165,10 +166,14 @@ public abstract class BaseAuthFilter extends BasePortalFilter {
 			}
 
 			if (userId > 0) {
+				user1 = UserLocalServiceUtil.getUser(userId);
+
 				httpServletRequest = setCredentials(
-					httpServletRequest, httpSession,
-					UserLocalServiceUtil.getUser(userId),
+					httpServletRequest, httpSession, user1,
 					HttpServletRequest.DIGEST_AUTH);
+
+				httpSession.setAttribute(
+					WebKeys.USER_DIGEST, user1.getDigest());
 			}
 			else {
 				HttpAuthManagerUtil.generateChallenge(
@@ -182,7 +187,7 @@ public abstract class BaseAuthFilter extends BasePortalFilter {
 		else {
 			User user2 = UserLocalServiceUtil.getUser(user1.getUserId());
 
-			if (!user2.isActive()) {
+			if (_isDigestModified(httpSession) || !user2.isActive()) {
 				httpSession.invalidate();
 
 				HttpAuthManagerUtil.generateChallenge(
@@ -356,6 +361,21 @@ public abstract class BaseAuthFilter extends BasePortalFilter {
 
 	protected void setUsePermissionChecker(boolean usePermissionChecker) {
 		_usePermissionChecker = usePermissionChecker;
+	}
+
+	private boolean _isDigestModified(HttpSession httpSession)
+		throws Exception {
+
+		User user = (User)httpSession.getAttribute(WebKeys.USER);
+
+		if (user == null) {
+			return false;
+		}
+
+		user = UserLocalServiceUtil.getUser(user.getUserId());
+
+		return !Objects.equals(
+			user.getDigest(), httpSession.getAttribute(WebKeys.USER_DIGEST));
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(BaseAuthFilter.class);

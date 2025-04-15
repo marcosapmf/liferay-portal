@@ -17,8 +17,11 @@ import com.liferay.oauth2.provider.internal.test.util.JWTAssertionUtil;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
+import com.liferay.portal.kernel.util.Base64;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+
+import java.nio.charset.StandardCharsets;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -57,27 +60,38 @@ public abstract class BaseTokenEndpointTestCase extends BaseClientTestCase {
 			clientAuthentications.put(
 				TEST_CLIENT_ID_1,
 				new ClientPasswordClientAuthentication(
-					TEST_CLIENT_ID_1, TEST_CLIENT_SECRET));
+					TEST_CLIENT_ID_1, _TEST_CLIENT_SECRET));
 			clientAuthentications.put(
 				TEST_CLIENT_ID_2,
 				new JWTAssertionClientAuthentication(
 					getTokenWebTarget(), TEST_CLIENT_ID_2, false,
-					TEST_CLIENT_ID_2, TEST_CLIENT_SECRET, true));
+					TEST_CLIENT_ID_2, _TEST_CLIENT_SECRET, true));
 			clientAuthentications.put(
 				TEST_CLIENT_ID_3,
 				new JWTAssertionClientAuthentication(
 					getTokenWebTarget(), TEST_CLIENT_ID_3, false,
 					TEST_CLIENT_ID_3, JWTAssertionUtil.JWKS, false));
+			clientAuthentications.put(
+				TEST_CLIENT_ID_4,
+				new JWTAssertionClientAuthentication(
+					getTokenWebTarget(), TEST_CLIENT_ID_4, true,
+					TEST_CLIENT_ID_4,
+					Base64.encode(
+						_TEST_CLIENT_SECRET_NOT_BASE64.getBytes(
+							StandardCharsets.UTF_8)),
+					true));
 
 			createOAuth2ApplicationWithClientSecretPost(
-				user.getCompanyId(), user, TEST_CLIENT_ID_1, TEST_CLIENT_SECRET,
+				user.getCompanyId(), user, TEST_CLIENT_ID_1,
+				_TEST_CLIENT_SECRET,
 				Arrays.asList(
 					GrantType.RESOURCE_OWNER_PASSWORD, GrantType.REFRESH_TOKEN,
 					GrantType.JWT_BEARER),
 				Arrays.asList(
 					"everything", "everything.read", "everything.write"));
 			createOAuth2ApplicationWithClientSecretJWT(
-				user.getCompanyId(), user, TEST_CLIENT_ID_2, TEST_CLIENT_SECRET,
+				user.getCompanyId(), user, TEST_CLIENT_ID_2,
+				_TEST_CLIENT_SECRET,
 				Arrays.asList(
 					GrantType.RESOURCE_OWNER_PASSWORD, GrantType.REFRESH_TOKEN,
 					GrantType.JWT_BEARER),
@@ -89,6 +103,13 @@ public abstract class BaseTokenEndpointTestCase extends BaseClientTestCase {
 					GrantType.RESOURCE_OWNER_PASSWORD, GrantType.REFRESH_TOKEN,
 					GrantType.JWT_BEARER),
 				JWTAssertionUtil.JWKS,
+				Arrays.asList(
+					"everything", "everything.read", "everything.write"));
+			createOAuth2ApplicationWithClientSecretJWT(
+				user.getCompanyId(), user, TEST_CLIENT_ID_4,
+				_TEST_CLIENT_SECRET_NOT_BASE64,
+				Arrays.asList(
+					GrantType.CLIENT_CREDENTIALS, GrantType.JWT_BEARER),
 				Arrays.asList(
 					"everything", "everything.read", "everything.write"));
 		}
@@ -140,8 +161,7 @@ public abstract class BaseTokenEndpointTestCase extends BaseClientTestCase {
 
 	protected static final String TEST_CLIENT_ID_3 = "test_client_id_3";
 
-	protected static final String TEST_CLIENT_SECRET =
-		"oauthTestApplicationSecret";
+	protected static final String TEST_CLIENT_ID_4 = "test_client_id_4";
 
 	protected static final Map<String, ClientAuthentication>
 		clientAuthentications = new HashMap<>();
@@ -150,6 +170,12 @@ public abstract class BaseTokenEndpointTestCase extends BaseClientTestCase {
 		return getInvocationBuilder(
 			null, getTokenWebTarget(), Function.identity());
 	}
+
+	private static final String _TEST_CLIENT_SECRET =
+		"oauthTestApplicationSecret";
+
+	private static final String _TEST_CLIENT_SECRET_NOT_BASE64 =
+		"secret-2527c3ad-be54-dcea-18a3-ab349ff637ac";
 
 	private static final Invocation.Builder _invocationBuilder =
 		_getInvocationBuilder();

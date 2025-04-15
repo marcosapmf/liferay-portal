@@ -18,8 +18,6 @@ import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.service.UserLocalServiceUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 
-import java.text.DecimalFormat;
-
 import java.util.Date;
 
 /**
@@ -41,6 +39,8 @@ public class FaroProjectAdminDisplay {
 			_log.error(exception);
 		}
 
+		_dataSourceConnected = GetterUtil.getBoolean(
+			document.get("dataSourceConnected"));
 		_faroProjectId = GetterUtil.getLong(document.get(Field.ENTRY_CLASS_PK));
 		_groupId = GetterUtil.getLong(document.get(Field.GROUP_ID));
 		_individualsLimit = GetterUtil.getLong(
@@ -67,12 +67,12 @@ public class FaroProjectAdminDisplay {
 			_individualsCount = subscriptionJSONObject.getLong(
 				"individualsCountSinceLastAnniversary");
 
-			_individualsUsage = _getUsage(_individualsCount, _individualsLimit);
+			_individualsUsage = document.get("individualsUsage");
 
 			_pageViewsCount = subscriptionJSONObject.getLong(
 				"pageViewsCountSinceLastAnniversary");
 
-			_pageViewsUsage = _getUsage(_pageViewsCount, _pageViewsLimit);
+			_pageViewsUsage = document.get("pageViewsUsage");
 		}
 		catch (Exception exception) {
 			_log.error(exception);
@@ -167,6 +167,10 @@ public class FaroProjectAdminDisplay {
 		return _weDeployKey;
 	}
 
+	public boolean isDataSourceConnected() {
+		return _dataSourceConnected;
+	}
+
 	public boolean isOffline() {
 		return _offline;
 	}
@@ -183,6 +187,10 @@ public class FaroProjectAdminDisplay {
 		if (createDate != null) {
 			_createDate = new Date(createDate.getTime());
 		}
+	}
+
+	public void setDataSourceConnected(boolean dataSourceConnected) {
+		_dataSourceConnected = dataSourceConnected;
 	}
 
 	public void setFaroProjectId(long faroProjectId) {
@@ -268,23 +276,13 @@ public class FaroProjectAdminDisplay {
 		return null;
 	}
 
-	private String _getUsage(long count, long limit) {
-		if ((count == 0) || (limit == 0)) {
-			return "0";
-		}
-
-		return _decimalFormat.format(100D * count / limit);
-	}
-
 	private static final Log _log = LogFactoryUtil.getLog(
 		FaroProjectAdminDisplay.class);
-
-	private static final DecimalFormat _decimalFormat = new DecimalFormat(
-		"#.##");
 
 	private String _corpProjectName;
 	private String _corpProjectUuid;
 	private Date _createDate;
+	private boolean _dataSourceConnected;
 	private long _faroProjectId;
 	private long _groupId;
 	private long _individualsCount;

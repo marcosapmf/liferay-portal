@@ -298,7 +298,7 @@ definition {
 				productName = "Simple Product",
 				productQuantity = 1,
 				productSku = "TESTSKU",
-				productTotalPrice = "100.00");
+				productTotalPrice = "$ 100.00");
 		}
 	}
 
@@ -398,8 +398,12 @@ definition {
 		task ("When the admin creates 1 quantity of the shipment in a supplier order with 'Simple Product' and edits the tracking URL for the shipment") {
 			CommerceOrders.openOrdersAdmin();
 
-			var customerOrderId = selenium.getText("//div[(@class='dnd-td') and contains(string(), '$ 64.00')]//..//div[(@class='dnd-td')][1]");
-			var supplierOrderId = selenium.getText("//div[(@class='dnd-td') and contains(string(), '$ 25.00')]//..//div[(@class='dnd-td')][1]");
+			var customerOrderId = selenium.getText("//td[contains(string(), '$ 64.00')]//..//td[2]");
+			var supplierOrderId = selenium.getText("//td[contains(string(), '$ 25.00')]//..//td[2]");
+
+			echo("customerOrderId:${customerOrderId}");
+
+			echo("supplierOrderId:${supplierOrderId}");
 
 			CommerceNavigator.gotoOrderEntryViaAdmin(status = "$ 25.00");
 
@@ -526,7 +530,7 @@ definition {
 
 			CommerceOrders.openOrdersAdmin();
 
-			var supplierOrderId = selenium.getText("//div[(@class='dnd-td') and contains(string(), '$ 25.00')]//..//div[(@class='dnd-td')][1]");
+			var supplierOrderId = selenium.getText("//td[contains(string(), '$ 25.00')]//..//td[1]");
 		}
 
 		task ("And the admin navigates into a supplier order") {
@@ -955,7 +959,7 @@ definition {
 			AssertTextEquals(
 				key_cellName1 = "$ 25.00",
 				key_cellName2 = "",
-				key_columnNumber = 4,
+				key_columnNumber = 5,
 				locator1 = "CommerceEntry#TABLE_CELL_BY_COLUMN_ORDER_NO_TITLE",
 				value1 = "Supplier Channel");
 		}
@@ -964,7 +968,7 @@ definition {
 			AssertTextEquals(
 				key_cellName1 = "$ 24.00",
 				key_cellName2 = "",
-				key_columnNumber = 4,
+				key_columnNumber = 5,
 				locator1 = "CommerceEntry#TABLE_CELL_BY_COLUMN_ORDER_NO_TITLE",
 				value1 = "Minium Portal");
 		}
@@ -1100,7 +1104,7 @@ definition {
 			AssertTextEquals(
 				key_cellName1 = "$ 25.00",
 				key_cellName2 = "",
-				key_columnNumber = 4,
+				key_columnNumber = 5,
 				locator1 = "CommerceEntry#TABLE_CELL_BY_COLUMN_ORDER_NO_TITLE",
 				value1 = "Minium Portal");
 		}
@@ -1109,7 +1113,7 @@ definition {
 			AssertTextEquals(
 				key_cellName1 = "$ 24.00",
 				key_cellName2 = "",
-				key_columnNumber = 4,
+				key_columnNumber = 5,
 				locator1 = "CommerceEntry#TABLE_CELL_BY_COLUMN_ORDER_NO_TITLE",
 				value1 = "Minium Portal");
 		}
@@ -1244,7 +1248,7 @@ definition {
 			AssertTextEquals(
 				key_cellName1 = "$ 25.00",
 				key_cellName2 = "",
-				key_columnNumber = 4,
+				key_columnNumber = 5,
 				locator1 = "CommerceEntry#TABLE_CELL_BY_COLUMN_ORDER_NO_TITLE",
 				value1 = "Minium Portal");
 		}
@@ -1253,7 +1257,7 @@ definition {
 			AssertTextEquals(
 				key_cellName1 = "$ 24.00",
 				key_cellName2 = "",
-				key_columnNumber = 4,
+				key_columnNumber = 5,
 				locator1 = "CommerceEntry#TABLE_CELL_BY_COLUMN_ORDER_NO_TITLE",
 				value1 = "Minium Portal");
 		}
@@ -1375,7 +1379,7 @@ definition {
 				productName = "Simple Product",
 				productQuantity = 3,
 				productSku = "TESTSKU",
-				productTotalPrice = "5.00");
+				productTotalPrice = "$ 5.00");
 		}
 
 		task ("When the admin opens the customer order") {
@@ -1390,14 +1394,14 @@ definition {
 				productName = "U-Joint",
 				productQuantity = 1,
 				productSku = "MIN55861",
-				productTotalPrice = "24.00");
+				productTotalPrice = "$ 24.00");
 
 			CommerceOrders.viewOrdersEntry(
 				productListPrice = "5.00",
 				productName = "Simple Product",
 				productQuantity = 3,
 				productSku = "TESTSKU",
-				productTotalPrice = "5.00");
+				productTotalPrice = "$ 5.00");
 		}
 
 		task ("But if the admin changes the quantity inside the customer order") {
@@ -1410,14 +1414,14 @@ definition {
 				productName = "U-Joint",
 				productQuantity = 1,
 				productSku = "MIN55861",
-				productTotalPrice = "24.00");
+				productTotalPrice = "$ 24.00");
 
 			CommerceOrders.viewOrdersEntry(
 				productListPrice = "5.00",
 				productName = "Simple Product",
 				productQuantity = 6,
 				productSku = "TESTSKU",
-				productTotalPrice = "5.00");
+				productTotalPrice = "$ 5.00");
 		}
 
 		task ("Then the changes are not updated inside the supplier order") {
@@ -1430,7 +1434,7 @@ definition {
 				productName = "Simple Product",
 				productQuantity = 3,
 				productSku = "TESTSKU",
-				productTotalPrice = "5.00");
+				productTotalPrice = "$ 5.00");
 		}
 	}
 
@@ -1550,9 +1554,9 @@ definition {
 
 			CommerceSKUs.generateAllSkuCombinations();
 
-			WaitForElementPresent(locator1 = "//div[@class='dnd-tbody']//div[(@class='dnd-tr')]//span[text()='Approved']/../../..//div[@class='table-list-title']/a");
+			WaitForElementPresent(locator1 = "//tbody//tr//span[text()='Approved']/../../..//div[@class='table-list-title']/a");
 
-			var skuCombinationName = selenium.getText("//div[@class='dnd-tbody']//div[(@class='dnd-tr')]//span[text()='Approved']/../../..//div[@class='table-list-title']/a");
+			var skuCombinationName = selenium.getText("//tbody//tr//span[text()='Approved']/../../..//div[@class='table-list-title']/a");
 
 			CommerceNavigator.gotoEntry(entryName = ${skuCombinationName});
 
@@ -1644,26 +1648,30 @@ definition {
 
 			CommerceNavigator.gotoOrderEntryViaAdmin(status = "$ 162.00");
 
+			Click(
+				key_cellContent = "VALUE1VALUE2",
+				locator1 = "CommerceEntry#BUNDLE_PRODUCT_EXPAND_BUTTON");
+
 			CommerceOrders.viewOrdersEntry(
 				productListPrice = "49.00",
 				productName = "ABS Sensor",
 				productQuantity = 3,
 				productSku = ${skuCombinationName},
-				productTotalPrice = "147.00");
+				productTotalPrice = "$ 147.00");
 
 			CommerceOrders.viewOrdersEntry(
 				productListPrice = "24.00",
 				productName = "U-Joint",
 				productQuantity = 3,
 				productSku = "MIN55861",
-				productTotalPrice = "72.00");
+				productTotalPrice = "$ 72.00");
 
 			CommerceOrders.viewOrdersEntry(
 				productListPrice = "5.00",
 				productName = "Simple Product",
 				productQuantity = 3,
 				productSku = "TESTSKU",
-				productTotalPrice = "15.00");
+				productTotalPrice = "$ 15.00");
 
 			CommerceOrders.openOrdersAdmin();
 
@@ -1674,7 +1682,7 @@ definition {
 				productName = "Simple Product",
 				productQuantity = 3,
 				productSku = "TESTSKU",
-				productTotalPrice = "15.00");
+				productTotalPrice = "$ 15.00");
 
 			CommerceOrders.openOrdersAdmin();
 
@@ -1685,14 +1693,14 @@ definition {
 				productName = "ABS Sensor",
 				productQuantity = 3,
 				productSku = ${skuCombinationName},
-				productTotalPrice = "60.00");
+				productTotalPrice = "$ 60.00");
 
 			CommerceOrders.viewOrdersEntry(
 				productListPrice = "24.00",
 				productName = "U-Joint",
 				productQuantity = 3,
 				productSku = "MIN55861",
-				productTotalPrice = "72.00");
+				productTotalPrice = "$ 72.00");
 		}
 	}
 
@@ -1735,7 +1743,9 @@ definition {
 				key_secondRowValue = "No",
 				locator1 = "CommerceEntry#GENERIC_TABLE_ROW_VALUE");
 
-			ObjectAdmin.selectKebabMenuOption(kebabOption = "Edit");
+			ObjectAdmin.selectSpecificKebabMenuOption(
+				kebabOption = "Edit",
+				objectLabel = "Split order by catalog");
 
 			SelectFrame(locator1 = "IFrame#IFRAME");
 
@@ -2383,8 +2393,8 @@ definition {
 		task ("And the admin goes inside a supplier order (e.g. the one containing the product from the Master catalog)") {
 			CommerceOrders.openOrdersAdmin();
 
-			var supplierOrderId = selenium.getText("//div[(@class='dnd-td') and contains(string(), '$ 25.00')]//..//div[(@class='dnd-td')][1]");
-			var customerOrderId = selenium.getText("//div[(@class='dnd-td') and contains(string(), '$ 64.00')]//..//div[(@class='dnd-td')][1]");
+			var supplierOrderId = selenium.getText("//td[contains(string(), '$ 25.00')]//..//td[2]");
+			var customerOrderId = selenium.getText("//td[contains(string(), '$ 64.00')]//..//td[2]");
 
 			CommerceNavigator.gotoOrderEntryViaAdmin(status = "$ 25.00");
 		}
@@ -3185,14 +3195,14 @@ definition {
 				productName = "U-Joint",
 				productQuantity = 1,
 				productSku = "MIN55861",
-				productTotalPrice = "24.00");
+				productTotalPrice = "$ 24.00");
 
 			CommerceOrders.viewOrdersEntry(
 				productListPrice = "5.00",
 				productName = "Simple Product",
 				productQuantity = 1,
 				productSku = "TESTSKU",
-				productTotalPrice = "5.00");
+				productTotalPrice = "$ 5.00");
 
 			CommerceOrders.openOrdersAdmin();
 
@@ -3203,7 +3213,7 @@ definition {
 				productName = "Simple Product",
 				productQuantity = 1,
 				productSku = "TESTSKU",
-				productTotalPrice = "5.00");
+				productTotalPrice = "$ 5.00");
 
 			CommerceOrders.openOrdersAdmin();
 
@@ -3214,7 +3224,7 @@ definition {
 				productName = "U-Joint",
 				productQuantity = 1,
 				productSku = "MIN55861",
-				productTotalPrice = "24.00");
+				productTotalPrice = "$ 24.00");
 		}
 	}
 
@@ -3323,7 +3333,8 @@ definition {
 
 			for (var rowIndex : list "1,2,3") {
 				AssertTextEquals(
-					key_columnIndex = 4,
+					key_cellContent = "",
+					key_columnIndex = 5,
 					key_rowIndex = ${rowIndex},
 					locator1 = "CommerceEntry#TABLE_ENTRY_ROW_FIELD_GENERIC",
 					value1 = "Minium Portal");
@@ -3427,9 +3438,9 @@ definition {
 
 			CommerceOrders.openOrdersAdmin();
 
-			var customerOrderId = selenium.getText("//div[(@class='dnd-td') and contains(string(), '$ 64.00')]//..//div[(@class='dnd-td')][1]");
-			var supplierOrderId1 = selenium.getText("//div[(@class='dnd-td') and contains(string(), '$ 24.00')]//..//div[(@class='dnd-td')][1]");
-			var supplierOrderId2 = selenium.getText("//div[(@class='dnd-td') and contains(string(), '$ 25.00')]//..//div[(@class='dnd-td')][1]");
+			var customerOrderId = selenium.getText("//td[contains(string(), '$ 64.00')]//..//td[2]");
+			var supplierOrderId1 = selenium.getText("//td[contains(string(), '$ 24.00')]//..//td[2]");
+			var supplierOrderId2 = selenium.getText("//td[contains(string(), '$ 25.00')]//..//td[2]");
 		}
 
 		task ("When the admin navigates to Commerce -> Inventory -> SKU (e.g. the one relating to the product from the Minium catalog) -> On Order tab") {

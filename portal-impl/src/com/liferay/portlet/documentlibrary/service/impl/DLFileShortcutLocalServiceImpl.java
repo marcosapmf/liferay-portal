@@ -51,8 +51,9 @@ public class DLFileShortcutLocalServiceImpl
 
 	@Override
 	public DLFileShortcut addFileShortcut(
-			long userId, long groupId, long repositoryId, long folderId,
-			long toFileEntryId, ServiceContext serviceContext)
+			String externalReferenceCode, long userId, long groupId,
+			long repositoryId, long folderId, long toFileEntryId,
+			ServiceContext serviceContext)
 		throws PortalException {
 
 		// File shortcut
@@ -69,6 +70,7 @@ public class DLFileShortcutLocalServiceImpl
 			fileShortcutId);
 
 		fileShortcut.setUuid(serviceContext.getUuid());
+		fileShortcut.setExternalReferenceCode(externalReferenceCode);
 		fileShortcut.setGroupId(groupId);
 		fileShortcut.setCompanyId(user.getCompanyId());
 		fileShortcut.setUserId(user.getUserId());
@@ -199,6 +201,15 @@ public class DLFileShortcutLocalServiceImpl
 			dlFileShortcutLocalService.getDLFileShortcut(fileShortcutId);
 
 		dlFileShortcutLocalService.deleteFileShortcut(fileShortcut);
+	}
+
+	@Override
+	public void deleteFileShortcut(String externalReferenceCode, long groupId)
+		throws PortalException {
+
+		dlFileShortcutLocalService.deleteFileShortcut(
+			dlFileShortcutPersistence.findByERC_G(
+				externalReferenceCode, groupId));
 	}
 
 	@Override

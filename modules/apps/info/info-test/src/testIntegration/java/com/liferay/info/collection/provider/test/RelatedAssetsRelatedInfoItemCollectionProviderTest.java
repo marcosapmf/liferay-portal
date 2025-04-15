@@ -42,9 +42,8 @@ import com.liferay.journal.test.util.JournalTestUtil;
 import com.liferay.layout.display.page.LayoutDisplayPageProvider;
 import com.liferay.layout.display.page.LayoutDisplayPageProviderRegistry;
 import com.liferay.layout.display.page.constants.LayoutDisplayPageWebKeys;
-import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
-import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalService;
+import com.liferay.layout.page.template.test.util.DisplayPageTemplateTestUtil;
 import com.liferay.layout.provider.LayoutStructureProvider;
 import com.liferay.layout.test.util.ContentLayoutTestUtil;
 import com.liferay.layout.test.util.LayoutTestUtil;
@@ -81,7 +80,6 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import com.liferay.segments.service.SegmentsExperienceLocalService;
 
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
@@ -127,15 +125,17 @@ public class RelatedAssetsRelatedInfoItemCollectionProviderTest {
 	}
 
 	@Test
-	@TestInfo("LPS-112360,LPS-127023")
+	@TestInfo({"LPS-112360", "LPS-127023"})
 	public void testCollectionDisplayWithInfoListRenderer() throws Exception {
 		Layout layout = _addDefaultDisplayPageTemplateLayout(
 			_portal.getClassNameId(FileEntry.class.getName()),
 			_dlFileEntry.getFileEntryTypeId());
 
+		Layout draftLayout = layout.fetchDraftLayout();
+
 		long segmentsExperienceId =
 			_segmentsExperienceLocalService.fetchDefaultSegmentsExperienceId(
-				layout.getPlid());
+				draftLayout.getPlid());
 
 		_mapCollectionDisplayWithInfoListRenderer(
 			layout, "FileEntry_title", segmentsExperienceId);
@@ -148,14 +148,16 @@ public class RelatedAssetsRelatedInfoItemCollectionProviderTest {
 	}
 
 	@Test
-	@TestInfo("LPS-112360,LPS-127023")
+	@TestInfo({"LPS-112360", "LPS-127023"})
 	public void testMapContentDisplayInCollectionDisplay() throws Exception {
 		Layout layout = _addDefaultDisplayPageTemplateLayout(
 			_portal.getClassNameId(BlogsEntry.class.getName()), 0);
 
+		Layout draftLayout = layout.fetchDraftLayout();
+
 		long segmentsExperienceId =
 			_segmentsExperienceLocalService.fetchDefaultSegmentsExperienceId(
-				layout.getPlid());
+				draftLayout.getPlid());
 
 		_mapContentDisplayInCollectionDisplay(
 			layout, "BlogsEntry_title", segmentsExperienceId);
@@ -168,15 +170,17 @@ public class RelatedAssetsRelatedInfoItemCollectionProviderTest {
 	}
 
 	@Test
-	@TestInfo("LPD-32486,LPS-112360,LPS-127023")
+	@TestInfo({"LPD-32486", "LPS-112360", "LPS-127023"})
 	public void testMapInfoFieldInCollectionDisplay() throws Exception {
 		Layout layout = _addDefaultDisplayPageTemplateLayout(
 			_portal.getClassNameId(JournalArticle.class.getName()),
 			_journalArticle.getDDMStructureId());
 
+		Layout draftLayout = layout.fetchDraftLayout();
+
 		long segmentsExperienceId =
 			_segmentsExperienceLocalService.fetchDefaultSegmentsExperienceId(
-				layout.getPlid());
+				draftLayout.getPlid());
 
 		_mapInfoFieldInCollectionDisplay(
 			layout, "JournalArticle_title", segmentsExperienceId);
@@ -221,9 +225,11 @@ public class RelatedAssetsRelatedInfoItemCollectionProviderTest {
 		Layout layout = _addDefaultDisplayPageTemplateLayout(
 			_portal.getClassNameId(AssetCategory.class.getName()), 0);
 
+		Layout draftLayout = layout.fetchDraftLayout();
+
 		long segmentsExperienceId =
 			_segmentsExperienceLocalService.fetchDefaultSegmentsExperienceId(
-				layout.getPlid());
+				draftLayout.getPlid());
 
 		_mapInfoFieldInCollectionDisplayNestedInCollectionDisplay(
 			"com.liferay.asset.categories.admin.web.internal.info.collection." +
@@ -252,9 +258,11 @@ public class RelatedAssetsRelatedInfoItemCollectionProviderTest {
 
 		Layout layout = LayoutTestUtil.addTypeContentLayout(_group);
 
+		Layout draftLayout = layout.fetchDraftLayout();
+
 		long segmentsExperienceId =
 			_segmentsExperienceLocalService.fetchDefaultSegmentsExperienceId(
-				layout.getPlid());
+				draftLayout.getPlid());
 
 		_mapInfoFieldInCollectionDisplayNestedInCollectionDisplay(
 			"com.liferay.asset.internal.info.collection.provider." +
@@ -351,11 +359,9 @@ public class RelatedAssetsRelatedInfoItemCollectionProviderTest {
 		throws Exception {
 
 		LayoutPageTemplateEntry layoutPageTemplateEntry =
-			_layoutPageTemplateEntryLocalService.addLayoutPageTemplateEntry(
-				null, TestPropsValues.getUserId(), _group.getGroupId(), 0,
-				classNameId, classTypeId, RandomTestUtil.randomString(),
-				LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE, 0, true, 0,
-				0, 0, WorkflowConstants.STATUS_DRAFT, _serviceContext);
+			DisplayPageTemplateTestUtil.addDisplayPageTemplate(
+				_group.getGroupId(), classNameId, classTypeId, true,
+				WorkflowConstants.STATUS_APPROVED);
 
 		return _layoutLocalService.getLayout(layoutPageTemplateEntry.getPlid());
 	}
@@ -385,7 +391,7 @@ public class RelatedAssetsRelatedInfoItemCollectionProviderTest {
 			StringPool.BLANK,
 			"<h1 data-lfr-editable-id=\"element-text\" " +
 				"data-lfr-editable-type=\"text\">Heading Example</h1>",
-			StringPool.BLANK, false, StringPool.BLANK, null, 0, false,
+			StringPool.BLANK, false, StringPool.BLANK, null, 0, false, false,
 			FragmentConstants.TYPE_COMPONENT, null,
 			WorkflowConstants.STATUS_APPROVED, _serviceContext);
 	}
@@ -621,11 +627,10 @@ public class RelatedAssetsRelatedInfoItemCollectionProviderTest {
 				(CollectionStyledLayoutStructureItem)
 					layoutStructure.getLayoutStructureItem(itemId);
 
-		List<String> childrenItemIds =
-			collectionStyledLayoutStructureItem.getChildrenItemIds();
-
 		_addInfoFieldInCollectionDisplayToLayout(
-			draftLayout, childrenItemIds.get(0), segmentsExperienceId);
+			draftLayout,
+			collectionStyledLayoutStructureItem.getChildrenItemId(0),
+			segmentsExperienceId);
 
 		ContentLayoutTestUtil.publishLayout(draftLayout, layout);
 	}
@@ -691,10 +696,6 @@ public class RelatedAssetsRelatedInfoItemCollectionProviderTest {
 
 	@Inject
 	private LayoutLocalService _layoutLocalService;
-
-	@Inject
-	private LayoutPageTemplateEntryLocalService
-		_layoutPageTemplateEntryLocalService;
 
 	@Inject
 	private LayoutServiceContextHelper _layoutServiceContextHelper;

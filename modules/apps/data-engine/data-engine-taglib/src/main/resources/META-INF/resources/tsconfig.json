@@ -1,9 +1,8 @@
 {
-	"@generated": "6463fc8f5c082d8e1f9a986d2220638c4af40bc8",
+	"@generated": "667d63cbf3bb5ac43843002397cc885af61c5429",
 	"@readonly": "** AUTO-GENERATED: DO NOT EDIT **",
 	"compilerOptions": {
 		"allowSyntheticDefaultImports": true,
-		"baseUrl": ".",
 		"checkJs": false,
 		"composite": true,
 		"declarationDir": "../../../../../../../../.tsc/types",
@@ -16,7 +15,10 @@
 				"../../../../../../../frontend-js/frontend-js-react-web/src/main/resources/META-INF/resources/js/index.ts"
 			],
 			"@liferay/frontend-js-state-web": [
-				"../../../../../../../frontend-js/frontend-js-state-web/src/main/resources/META-INF/resources/index.ts"
+				"../../../../../../../frontend-js/frontend-js-state-web/src/main/resources/META-INF/resources/main/index.ts"
+			],
+			"@liferay/frontend-js-state-web/react": [
+				"../../../../../../../frontend-js/frontend-js-state-web/src/main/resources/META-INF/resources/react/index.ts"
 			],
 			"data-engine-js-components-web": [
 				"../../../../../../data-engine-js-components-web/src/main/resources/META-INF/resources/js/index.d.ts"

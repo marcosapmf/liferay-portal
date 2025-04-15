@@ -99,8 +99,8 @@ public class LayoutPageTemplateStructureUpgradeProcessTest {
 	public void testUpgradeDisplaPageWithFragments() throws Exception {
 		LayoutPageTemplateEntry layoutPageTemplateEntry =
 			_layoutPageTemplateEntryLocalService.addLayoutPageTemplateEntry(
-				null, TestPropsValues.getUserId(), _group.getGroupId(), 0, 0, 0,
-				RandomTestUtil.randomString(),
+				null, TestPropsValues.getUserId(), _group.getGroupId(), 0, null,
+				0, 0, RandomTestUtil.randomString(),
 				LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE, 0, true, 0,
 				0, 0, WorkflowConstants.STATUS_APPROVED, new ServiceContext());
 
@@ -146,8 +146,8 @@ public class LayoutPageTemplateStructureUpgradeProcessTest {
 	public void testUpgradeDisplaPageWithoutFragments() throws Exception {
 		LayoutPageTemplateEntry layoutPageTemplateEntry =
 			_layoutPageTemplateEntryLocalService.addLayoutPageTemplateEntry(
-				null, TestPropsValues.getUserId(), _group.getGroupId(), 0, 0, 0,
-				RandomTestUtil.randomString(),
+				null, TestPropsValues.getUserId(), _group.getGroupId(), 0, null,
+				0, 0, RandomTestUtil.randomString(),
 				LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE, 0, true, 0,
 				0, 0, WorkflowConstants.STATUS_APPROVED, new ServiceContext());
 
@@ -326,7 +326,7 @@ public class LayoutPageTemplateStructureUpgradeProcessTest {
 				StringUtil.randomString(), StringUtil.randomString(),
 				RandomTestUtil.randomString(), RandomTestUtil.randomString(),
 				RandomTestUtil.randomString(), false, "{fieldSets: []}", null,
-				0, false, FragmentConstants.TYPE_COMPONENT, null,
+				0, false, false, FragmentConstants.TYPE_COMPONENT, null,
 				WorkflowConstants.STATUS_APPROVED,
 				ServiceContextTestUtil.getServiceContext(
 					_group.getGroupId(), TestPropsValues.getUserId()));

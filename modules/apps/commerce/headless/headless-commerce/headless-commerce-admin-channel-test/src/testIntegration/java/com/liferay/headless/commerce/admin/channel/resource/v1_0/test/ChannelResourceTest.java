@@ -9,6 +9,8 @@ import com.liferay.account.constants.AccountConstants;
 import com.liferay.account.model.AccountEntry;
 import com.liferay.account.service.AccountEntryLocalService;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.commerce.currency.model.CommerceCurrency;
+import com.liferay.commerce.currency.test.util.CommerceCurrencyTestUtil;
 import com.liferay.commerce.product.constants.CommerceChannelConstants;
 import com.liferay.commerce.product.model.CommerceChannel;
 import com.liferay.commerce.product.model.CommerceChannelRel;
@@ -44,6 +46,9 @@ public class ChannelResourceTest extends BaseChannelResourceTestCase {
 	@Override
 	public void setUp() throws Exception {
 		super.setUp();
+
+		_commerceCurrency = CommerceCurrencyTestUtil.addCommerceCurrency(
+			testGroup.getCompanyId());
 
 		_user = UserTestUtil.addUser(testCompany);
 
@@ -109,8 +114,10 @@ public class ChannelResourceTest extends BaseChannelResourceTestCase {
 		return new Channel() {
 			{
 				accountId = AccountConstants.ACCOUNT_ENTRY_ID_DEFAULT;
-				currencyCode = StringUtil.toLowerCase(
-					RandomTestUtil.randomString());
+				currencyCode = _commerceCurrency.getCode();
+				currencyExternalReferenceCode =
+					_commerceCurrency.getExternalReferenceCode();
+				currencyId = _commerceCurrency.getCommerceCurrencyId();
 				externalReferenceCode = StringUtil.toLowerCase(
 					RandomTestUtil.randomString());
 				id = RandomTestUtil.randomLong();
@@ -126,8 +133,10 @@ public class ChannelResourceTest extends BaseChannelResourceTestCase {
 		return new Channel() {
 			{
 				accountId = AccountConstants.ACCOUNT_ENTRY_ID_DEFAULT;
-				currencyCode = StringUtil.toLowerCase(
-					RandomTestUtil.randomString());
+				currencyCode = _commerceCurrency.getCode();
+				currencyExternalReferenceCode =
+					_commerceCurrency.getExternalReferenceCode();
+				currencyId = _commerceCurrency.getCommerceCurrencyId();
 				externalReferenceCode = StringUtil.toLowerCase(
 					RandomTestUtil.randomString());
 				id = RandomTestUtil.randomLong();
@@ -255,11 +264,13 @@ public class ChannelResourceTest extends BaseChannelResourceTestCase {
 			_address = _addressLocalService.addAddress(
 				RandomTestUtil.randomString(), _user.getUserId(),
 				AccountEntry.class.getName(), _accountEntry.getAccountEntryId(),
+				0, 0, 0, RandomTestUtil.randomString(),
+				RandomTestUtil.randomString(), false,
+				RandomTestUtil.randomString(), false,
 				RandomTestUtil.randomString(), RandomTestUtil.randomString(),
+				RandomTestUtil.randomString(), null,
 				RandomTestUtil.randomString(), RandomTestUtil.randomString(),
-				RandomTestUtil.randomString(), RandomTestUtil.randomString(),
-				RandomTestUtil.randomString(), 0, 0, 0, false, false,
-				RandomTestUtil.randomString(), _serviceContext);
+				_serviceContext);
 		}
 
 		Channel channel = channelResource.postChannel(randomChannel());
@@ -575,6 +586,7 @@ public class ChannelResourceTest extends BaseChannelResourceTestCase {
 	@Inject
 	private CommerceChannelRelLocalService _commerceChannelRelLocalService;
 
+	private CommerceCurrency _commerceCurrency;
 	private ServiceContext _serviceContext;
 	private User _user;
 

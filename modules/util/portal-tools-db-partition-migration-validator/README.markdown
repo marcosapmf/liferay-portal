@@ -1,7 +1,8 @@
 # Database Partition Migration Validator Tool
 
 This tool validates the compatibility between the source and target databases
-for a partition migration.
+for a partition migration. This tool is a beta feature. It is experimental and
+not supported.
 
 ## Requirements
 
@@ -21,6 +22,7 @@ Commands:
 
 Export parameters:
 
+- `--company-id <arg>` Set the company ID.
 - `--jdbc-url <arg>` Set the JDBC URL.
 - `--output-dir <arg>` Set the output directory.
 - `--password <arg>` Set the database user password.
@@ -35,7 +37,7 @@ Validate parameters:
 ## Examples
 
 ```
-./db_partition_migration_validator.sh export --jdbc-url "jdbc:mysql://localhost:3306/defaultSchema" --password xyz123 --user xyz123 --schema-name lpartition_1234
-./db_partition_migration_validator.sh export --jdbc-url "jdbc:mysql://localhost:3306/defaultSchema" --password xyz123 --user xyz123
+./db_partition_migration_validator.sh export --jdbc-url "jdbc:mysql://localhost:3306/defaultSchema" --company-id 1234 --password xyz123 --user xyz123 --schema-name lpartition_1234
+./db_partition_migration_validator.sh export --jdbc-url "jdbc:mysql://localhost:3306/defaultSchema" --company-id 1234 --password xyz123 --user xyz123
 ./db_partition_migration_validator.sh validate --source-file source.json --target-file target.json
 ```

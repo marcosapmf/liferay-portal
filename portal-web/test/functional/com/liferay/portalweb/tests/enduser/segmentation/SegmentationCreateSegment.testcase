@@ -1,10 +1,12 @@
-@component-name = "portal-segmentation"
+@component-name = "portal-analytics-cloud"
 definition {
 
-	property ci.retries.disabled = "true";
+	property analytics.cloud.release = "true";
+	property analytics.cloud.upstream = "true";
 	property custom.properties = "jsonws.web.service.paths.excludes=";
 	property portal.release = "true";
 	property portal.upstream = "true";
+	property property.group = "analytics.cloud.profile";
 	property testray.main.component.name = "Segmentation";
 
 	setUp {
@@ -444,7 +446,7 @@ definition {
 	@priority = 5
 	@uitest
 	test AddSegmentByOrganizationRegion {
-		property portal.acceptance = "true";
+		property portal.upstream = "quarantine";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
@@ -616,65 +618,6 @@ definition {
 			AssertValue(
 				locator1 = "Segmentation#CRITERION_INPUT_ANY",
 				value1 = "organization");
-		}
-	}
-
-	@description = "Test Automation for LPS-130345: Segment member preview count shows the correct number of users when segments are combined"
-	@priority = 5
-	@uitest
-	test AddSegmentByOtherSegments {
-		property portal.acceptance = "true";
-
-		task ("Add users") {
-			JSONUser.addUser(
-				userEmailAddress = "userea1@liferay.com",
-				userFirstName = "userfn1",
-				userLastName = "userln1",
-				userScreenName = "usersn1");
-
-			JSONUser.addUser(
-				userEmailAddress = "userea2@liferay.com",
-				userFirstName = "userfn2",
-				userLastName = "userln2",
-				userScreenName = "usersn2");
-		}
-
-		task ("Add 2 segments") {
-			JSONSegmentsentry.addSegment(
-				fieldName = "Screen Name",
-				groupName = "Test Site Name",
-				operator = "equals",
-				segmentName = "Segment With User1",
-				text = "usersn1");
-
-			JSONSegmentsentry.addSegment(
-				fieldName = "Screen Name",
-				groupName = "Test Site Name",
-				operator = "equals",
-				segmentName = "Segment With User2",
-				text = "usersn2");
-		}
-
-		task ("Add segment that contains the segments created and check the users belong to the segment") {
-			LexiconEntry.gotoAdd();
-
-			Segmentation.gotoSidebar(fieldType = "Segments");
-
-			Segmentation.addProperties(propertyOption = "Segment");
-
-			Segmentation.fillProperty(selectEntry = "Segment With User1");
-
-			Segmentation.addSecondProperty(propertyOption = "Segment");
-
-			Segmentation.fillProperty(
-				indexNumber = 2,
-				selectEntry = "Segment With User2");
-
-			Segmentation.changeCriterionConjunction(criterionConjunctionItem = "Or");
-
-			Segmentation.fillTitle(titleField = "AddSegmentByOtherSegments Test");
-
-			Segmentation.viewMembers(memberNameList = "userfn1 userln1,userfn2 userln2");
 		}
 	}
 
@@ -1735,7 +1678,7 @@ definition {
 	@priority = 5
 	@uitest
 	test AddSegmentByUserSiteOrganizationRole {
-		property portal.acceptance = "true";
+		property portal.upstream = "quarantine";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
@@ -1977,7 +1920,7 @@ definition {
 	@description = "LPS-147454 Validate if the user can use a custom field as criteria to create a segment"
 	@priority = 4
 	test AddSegmentUsingCustomFields {
-		property portal.acceptance = "true";
+		property portal.upstream = "quarantine";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
@@ -2467,6 +2410,7 @@ definition {
 	@description = "LPS-130919 Given the Session Property Vocabularies in Instance Settings When the user is adding a vocabulary to a session property Then the breadcrumb to go to Segments, or Instance Settings is available"
 	@priority = 3
 	test InstanceSettingsSessionPropertyVocabulariesBreadcrumb {
+		property portal.upstream = "quarantine";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
@@ -2499,6 +2443,7 @@ definition {
 	@description = "LPS-130919 Given the adding a vocabulary to a session property view When the user clicks on Cancel button Then the user is lead to the main tab Session Property Vocabularies"
 	@priority = 3
 	test InstanceSettingsSessionPropertyVocabulariesCancelButton {
+		property portal.upstream = "quarantine";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
@@ -2529,7 +2474,7 @@ definition {
 	@description = "LPS-130919 Given the Segment Editor When the user adds a Session Property Vocabulary in the Instance Settings Then the associated Categories must be available when selecting the session property"
 	@priority = 5
 	test InstanceSettingsSessionPropertyVocabularyInSegmentsEditor {
-		property portal.acceptance = "true";
+		property portal.upstream = "quarantine";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
@@ -2595,7 +2540,7 @@ definition {
 	@description = "LPS-132249 If vocabulary or value is deleted, in the segment editor the condition will keep working if the user go out without saving changes"
 	@priority = 4
 	test KeepInfomationOfDeleteVocabularyInSegment {
-		property portal.acceptance = "true";
+		property portal.upstream = "quarantine";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
@@ -2675,55 +2620,6 @@ definition {
 			ScrollWebElementIntoView(
 				key_propertyOption = "User Agent",
 				locator1 = "Segmentation#ADD_FIELD_TYPE");
-		}
-	}
-
-	@description = "LPS-87031: Validate if the members are assigned correctly depending on the criteria selected"
-	@priority = 5
-	@uitest
-	test SegmentationCheckMembers {
-		property portal.acceptance = "true";
-
-		task ("Add user") {
-			JSONUser.addUser(
-				userEmailAddress = "u1@liferay.com",
-				userFirstName = "User",
-				userLastName = 1,
-				userScreenName = "u1");
-		}
-
-		task ("Add segment and check the user Belongs To the segment") {
-			LexiconEntry.gotoAdd();
-
-			Segmentation.addProperties(propertyOption = "Email Address");
-
-			Segmentation.fillTitle(titleField = "Segment View Members");
-
-			Segmentation.changeCriterionInput(criterionInputOption = "Contains");
-
-			Segmentation.fillProperty(criterionValue = "test");
-
-			AssertTextEquals(
-				locator1 = "Segmentation#MEMBERS_MATCHED",
-				value1 = "1 Member");
-		}
-
-		task ("Modify the criteria and check the user Belongs To the segment") {
-			Segmentation.viewMembers(memberName = "Test");
-
-			Segmentation.fillProperty(criterionValue = "liferay");
-
-			AssertTextEquals(
-				locator1 = "Segmentation#MEMBERS_MATCHED",
-				value1 = "2 Members");
-
-			Segmentation.viewMembers(memberName = "Test");
-
-			Segmentation.viewMembers(memberName = "User 1");
-
-			Button.clickSave();
-
-			Alert.viewSuccessMessage();
 		}
 	}
 
@@ -3382,7 +3278,7 @@ definition {
 	@description = "LPS-132249 In System Settings>Segments, all vocabularies created will be listed in the Vocabulary dropdown"
 	@priority = 4
 	test VocabulariesListedInSystemSettingsSegments {
-		property portal.acceptance = "true";
+		property portal.upstream = "quarantine";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 

@@ -5,10 +5,12 @@
 
 import {Page, expect, mergeTests} from '@playwright/test';
 
+import {featureFlagsTest} from '../../fixtures/featureFlagsTest';
 import {isolatedSiteTest} from '../../fixtures/isolatedSiteTest';
-import {localizationSiteSettingsPageTest} from '../../fixtures/localizationSiteSettingsPageTest';
 import {loginTest} from '../../fixtures/loginTest';
 import {pagesAdminPagesTest} from '../../fixtures/pagesAdminPagesTest';
+import {siteSettingsPagesTest} from '../../fixtures/siteSettingsPagesTest';
+import {styleBookPageTest} from '../../fixtures/styleBookPageTest';
 import {PagesAdminPage} from '../../pages/layout-admin-web/PagesAdminPage';
 import {clickAndExpectToBeVisible} from '../../utils/clickAndExpectToBeVisible';
 import getRandomString from '../../utils/getRandomString';
@@ -22,12 +24,17 @@ const SAMPLES = [
 	{
 		erc: 'LXC:liferay-sample-global-js-1',
 		name: 'Liferay Sample Global JS 1',
-		url: '/o/liferay-sample-global-js-1/global.d4caf6cbfdcfd38c0ed9.js',
+		url: '/o/liferay-sample-global-js-1/global.4d17c43dda6583afad57bbbc8acdd5cb0dee05d4.js',
 	},
 	{
 		erc: 'LXC:liferay-sample-global-js-2',
 		name: 'Liferay Sample Global JS 2',
-		url: '/o/liferay-sample-global-js-2/global.a0ff2e4a08889609cd1e.js',
+		url: '/o/liferay-sample-global-js-2/global.8c92c7c882ec7d19ed12a7e49871f927b591fc71.js',
+	},
+	{
+		erc: 'LXC:liferay-sample-global-js-3',
+		name: 'Liferay Sample Global JS 3',
+		url: '/o/liferay-sample-global-js-3/global.703fd93d4aae1d37d59a61a3f9d42ee8bf507cf5.js',
 	},
 ];
 
@@ -58,13 +65,56 @@ for (const sample of SAMPLES) {
 	);
 }
 
+export const testInstanceScoped = mergeTests(
+	editJSClientExtensionsPageTest,
+	featureFlagsTest({
+		'LPD-30371': {enabled: true},
+	}),
+	loginTest(),
+	styleBookPageTest
+);
+
+testInstanceScoped(
+	'Assert that the instance scoped client extensions are injected into site pages, site control panel pages, and instance control panel pages',
+	async ({editJSClientExtensionsPage, page, styleBooksPage}) => {
+		const scriptLocator = page.locator(`script[src="${SAMPLES[2].url}"]`);
+
+		await testInstanceScoped.step(
+			'Assert that the client extension is imported into a site page',
+			async () => {
+				await page.goto('/');
+
+				await expect(scriptLocator).toBeAttached();
+			}
+		);
+
+		await testInstanceScoped.step(
+			'Assert that the client extension is imported into an instance control panel page',
+			async () => {
+				await editJSClientExtensionsPage.goto();
+
+				await expect(scriptLocator).toBeAttached();
+			}
+		);
+
+		await testInstanceScoped.step(
+			'Assert that the client extension is imported into a site control panel page',
+			async () => {
+				await styleBooksPage.goto();
+
+				await expect(scriptLocator).toBeAttached();
+			}
+		);
+	}
+);
+
 export const test = mergeTests(
 	clientExtensionsPageTest,
 	editJSClientExtensionsPageTest,
 	isolatedSiteTest,
-	localizationSiteSettingsPageTest,
 	loginTest(),
-	pagesAdminPagesTest
+	pagesAdminPagesTest,
+	siteSettingsPagesTest
 );
 
 test('Create a new JS client extension with a script element attribute', async ({
@@ -87,19 +137,20 @@ test('Create a new JS client extension with a script element attribute', async (
 		'https://www.example.com/script.js'
 	);
 
-	await page
-		.getByRole('textbox', {
-			name: 'Attribute',
-		})
-		.fill('id');
-
-	await page.getByLabel('Value', {exact: true}).fill(clientExtensionValue);
+	await editJSClientExtensionsPage.addScriptAttribute(
+		'id',
+		'string',
+		clientExtensionValue
+	);
 
 	await editJSClientExtensionsPage.publish();
 
 	// Apply JS client extension to all pages.
 
-	await pagesAdminPage.selectClientExtension({clientExtensionName});
+	await pagesAdminPage.selectClientExtension({
+		clientExtensionName,
+		type: 'globalJS',
+	});
 
 	await page.goto('/');
 
@@ -120,13 +171,24 @@ test('JS client extension does not allow "src" as a script element attribute', a
 }) => {
 	await editJSClientExtensionsPage.goto();
 
-	await page
-		.getByRole('textbox', {
-			name: 'Attribute',
-		})
-		.fill('src');
+	await editJSClientExtensionsPage.addScriptAttribute('src', 'string', '');
 
 	expect(page.getByText('Use the "JavaScript URL" field.')).toBeVisible();
+
+	expect(editJSClientExtensionsPage.publishButton).toBeDisabled();
+});
+
+test('JS client extension does not allow a script element attribute with an empty name', async ({
+	editJSClientExtensionsPage,
+	page,
+}) => {
+	await editJSClientExtensionsPage.goto();
+
+	await editJSClientExtensionsPage.addScriptAttribute('', 'string', 'value');
+
+	expect(page.getByText('Attribute field is required.')).toBeVisible();
+
+	expect(editJSClientExtensionsPage.publishButton).toBeDisabled();
 });
 
 test('Assert the help link is pointing to the correct url', async ({
@@ -205,9 +267,12 @@ const testJSClientExtensionWithAttributes = async ({
 
 	// Apply the JS client extension and assert its attributes
 
-	await pagesAdminPage.selectClientExtension({clientExtensionName});
+	await pagesAdminPage.selectClientExtension({
+		clientExtensionName,
+		type: 'globalJS',
+	});
 
-	await pagesAdminPage.javaScriptClientExtensionsTab.click();
+	await pagesAdminPage.clickOnJavaScriptClientExtensionsTab();
 
 	if (defaultSelectedLoadType) {
 		await assertDefaultSelectedLoadType(
@@ -388,12 +453,12 @@ test('JS client extension with async and defer attributes set to false and data-
 test('JS client extension can be created with name translations while having a language configuration for the site settings', async ({
 	clientExtensionsPage,
 	editJSClientExtensionsPage,
-	localizationSiteSettingsPage,
 	page,
 	site,
+	siteSettingsLocalizationPage,
 }) => {
 	await test.step('Set spanish as default language for the site', async () => {
-		await localizationSiteSettingsPage.setDefaultCustomLanguage(
+		await siteSettingsLocalizationPage.setCustomDefaultLanguage(
 			'Spanish (Spain)',
 			site.friendlyUrlPath
 		);
@@ -413,7 +478,9 @@ test('JS client extension can be created with name translations while having a l
 
 		await clickAndExpectToBeVisible({
 			autoClick: true,
-			target: page.getByRole('menuitem', {name: 'spanish'}),
+			target: page.getByRole('menuitem', {
+				name: 'Not translated into Spanish.',
+			}),
 			trigger: page.getByRole('button', {
 				exact: false,
 				name: 'Current translation',
@@ -446,7 +513,9 @@ test('JS client extension can be created with name translations while having a l
 
 		await clickAndExpectToBeVisible({
 			autoClick: true,
-			target: page.getByRole('menuitem', {name: 'spanish'}),
+			target: page.getByRole('menuitem', {
+				name: 'Translated into Spanish.',
+			}),
 			trigger: page.getByRole('button', {
 				exact: false,
 				name: 'Current translation',

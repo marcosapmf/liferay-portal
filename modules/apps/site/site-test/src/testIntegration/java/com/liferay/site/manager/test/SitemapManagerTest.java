@@ -26,9 +26,8 @@ import com.liferay.journal.constants.JournalFolderConstants;
 import com.liferay.journal.model.JournalArticle;
 import com.liferay.journal.test.util.JournalTestUtil;
 import com.liferay.layout.admin.kernel.model.LayoutTypePortletConstants;
-import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
-import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalService;
+import com.liferay.layout.page.template.test.util.DisplayPageTemplateTestUtil;
 import com.liferay.layout.test.util.ContentLayoutTestUtil;
 import com.liferay.layout.test.util.LayoutTestUtil;
 import com.liferay.petra.function.transform.TransformUtil;
@@ -49,7 +48,6 @@ import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.LayoutSetLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
-import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
@@ -65,13 +63,13 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.TreeMapBuilder;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.kernel.xml.Document;
 import com.liferay.portal.kernel.xml.Element;
 import com.liferay.portal.kernel.xml.SAXReader;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
-import com.liferay.portal.util.PropsValues;
 import com.liferay.site.manager.SitemapManager;
 import com.liferay.translation.info.item.provider.InfoItemLanguagesProvider;
 
@@ -110,17 +108,19 @@ public class SitemapManagerTest {
 			PermissionCheckerMethodTestRule.INSTANCE);
 
 	@BeforeClass
-	public static void setUpClass() throws PortalException {
-		_originalXMLSitemapIndexEnabled =
-			ReflectionTestUtil.getAndSetFieldValue(
-				PropsValues.class, "XML_SITEMAP_INDEX_ENABLED", Boolean.FALSE);
+	public static void setUpClass() throws Exception {
+		_companyConfigurationTemporarySwapper =
+			new CompanyConfigurationTemporarySwapper(
+				TestPropsValues.getCompanyId(),
+				_PID_SITEMAP_COMPANY_CONFIGURATION,
+				HashMapDictionaryBuilder.<String, Object>put(
+					"xmlSitemapIndexEnabled", false
+				).build());
 	}
 
 	@AfterClass
-	public static void tearDownClass() {
-		ReflectionTestUtil.setFieldValue(
-			PropsValues.class, "XML_SITEMAP_INDEX_ENABLED",
-			_originalXMLSitemapIndexEnabled);
+	public static void tearDownClass() throws Exception {
+		_companyConfigurationTemporarySwapper.close();
 	}
 
 	@Before
@@ -762,11 +762,9 @@ public class SitemapManagerTest {
 		throws Exception {
 
 		LayoutPageTemplateEntry layoutPageTemplateEntry =
-			_layoutPageTemplateEntryLocalService.addLayoutPageTemplateEntry(
-				null, _group.getCreatorUserId(), _group.getGroupId(), 0,
-				classNameId, classTypeId, RandomTestUtil.randomString(),
-				LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE, 0, true, 0,
-				0, 0, 0, _serviceContext);
+			DisplayPageTemplateTestUtil.addDisplayPageTemplate(
+				_group.getGroupId(), classNameId, classTypeId, true,
+				WorkflowConstants.STATUS_APPROVED);
 
 		return _assetDisplayPageEntryLocalService.addAssetDisplayPageEntry(
 			TestPropsValues.getUserId(), _group.getGroupId(), classNameId,
@@ -1144,7 +1142,8 @@ public class SitemapManagerTest {
 	private static final String _PID_SITEMAP_GROUP_CONFIGURATION =
 		"com.liferay.site.internal.configuration.SitemapGroupConfiguration";
 
-	private static boolean _originalXMLSitemapIndexEnabled;
+	private static CompanyConfigurationTemporarySwapper
+		_companyConfigurationTemporarySwapper;
 
 	@Inject
 	private AssetCategoryService _assetCategoryService;
@@ -1183,10 +1182,6 @@ public class SitemapManagerTest {
 
 	@Inject
 	private LayoutLocalService _layoutLocalService;
-
-	@Inject
-	private LayoutPageTemplateEntryLocalService
-		_layoutPageTemplateEntryLocalService;
 
 	@Inject
 	private LayoutSetLocalService _layoutSetLocalService;

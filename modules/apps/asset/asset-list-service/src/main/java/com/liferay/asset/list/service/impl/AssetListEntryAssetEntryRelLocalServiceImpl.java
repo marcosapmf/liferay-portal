@@ -10,15 +10,18 @@ import com.liferay.asset.list.model.AssetListEntryAssetEntryRel;
 import com.liferay.asset.list.service.base.AssetListEntryAssetEntryRelLocalServiceBaseImpl;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.mass.delete.MassDeleteCacheThreadLocal;
 import com.liferay.portal.kernel.model.SystemEventConstants;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.systemevent.SystemEvent;
 import com.liferay.portal.kernel.transaction.TransactionCommitCallbackUtil;
+import com.liferay.portal.kernel.util.MapUtil;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -134,6 +137,46 @@ public class AssetListEntryAssetEntryRelLocalServiceImpl
 		return deleteAssetListEntryAssetEntryRel(
 			assetListEntryAssetEntryRelPersistence.findByA_S_P(
 				assetListEntryId, segmentsEntryId, position));
+	}
+
+	@Override
+	public void deleteAssetListEntryAssetEntryRelByAssetEntryId(
+			long assetEntryId)
+		throws PortalException {
+
+		String ownerName =
+			AssetListEntryAssetEntryRelLocalServiceImpl.class.getName() +
+				".deleteAssetListEntryAssetEntryRelByAssetEntryId";
+
+		Map<Long, List<AssetListEntryAssetEntryRel>>
+			partitionAssetListEntryAssetEntryRels =
+				MassDeleteCacheThreadLocal.getMassDeleteCache(
+					ownerName,
+					() -> MapUtil.toPartitionMap(
+						assetListEntryAssetEntryRelPersistence.findAll(),
+						AssetListEntryAssetEntryRel::getAssetEntryId));
+
+		if (partitionAssetListEntryAssetEntryRels == null) {
+			for (AssetListEntryAssetEntryRel assetListEntryAssetEntryRel :
+					assetListEntryAssetEntryRelPersistence.findByAssetEntryId(
+						assetEntryId)) {
+
+				deleteAssetListEntryAssetEntryRel(assetListEntryAssetEntryRel);
+			}
+		}
+		else {
+			List<AssetListEntryAssetEntryRel> assetListEntryAssetEntryRels =
+				partitionAssetListEntryAssetEntryRels.remove(assetEntryId);
+
+			if (assetListEntryAssetEntryRels != null) {
+				for (AssetListEntryAssetEntryRel assetListEntryAssetEntryRel :
+						assetListEntryAssetEntryRels) {
+
+					deleteAssetListEntryAssetEntryRel(
+						assetListEntryAssetEntryRel);
+				}
+			}
+		}
 	}
 
 	@Override

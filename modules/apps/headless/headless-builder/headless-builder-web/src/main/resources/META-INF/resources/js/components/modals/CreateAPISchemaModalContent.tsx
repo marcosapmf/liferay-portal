@@ -5,7 +5,8 @@
 
 import ClayButton from '@clayui/button';
 import ClayModal from '@clayui/modal';
-import {fetch, openToast} from 'frontend-js-web';
+import {openToast} from 'frontend-js-components-web';
+import {fetch} from 'frontend-js-web';
 import React, {Dispatch, SetStateAction, useEffect, useState} from 'react';
 
 import BaseAPISchemaFields from '../baseComponents/BaseAPISchemaFields';
@@ -53,7 +54,7 @@ export function CreateAPISchemaModalContent({
 			body: JSON.stringify({
 				...localUIData,
 				applicationStatus: {key: 'unpublished'},
-				r_apiApplicationToAPISchemas_c_apiApplicationId:
+				r_apiApplicationToAPISchemas_l_apiApplicationId:
 					currentAPIApplicationId,
 				version: '1.0',
 			}),

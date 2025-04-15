@@ -5,6 +5,7 @@
 
 import {Cookie, Page, expect} from '@playwright/test';
 
+import {ApiHelpers, getHeader} from '../helpers/ApiHelpers';
 import {liferayConfig} from '../liferay.config';
 
 export type LoginScreenName =
@@ -40,7 +41,8 @@ async function performLogin(
 	page: Page,
 	screenName: LoginScreenName | string,
 	baseUrl = '/',
-	domain = '@liferay.com'
+	domain = '@liferay.com',
+	rememberMe = true
 ): Promise<Cookie[]> {
 	const {name, password, surname} = userData[screenName];
 
@@ -48,7 +50,11 @@ async function performLogin(
 
 	const signInButton = page.getByRole('button', {name: 'Sign In'});
 
-	await expect(page.getByPlaceholder('Search')).toBeVisible();
+	const searchInput = page
+		.locator('.user-personal-bar')
+		.getByPlaceholder('Search');
+
+	await expect(searchInput).toBeVisible();
 
 	await signInButton.click();
 
@@ -59,7 +65,7 @@ async function performLogin(
 	await emailAddressInput.fill(`${screenName}${domain}`);
 
 	await page.getByLabel('Password').fill(password);
-	await page.getByLabel('Remember Me').check();
+	await page.getByLabel('Remember Me').setChecked(rememberMe);
 
 	if ((await signInButton.count()) === 1) {
 		await signInButton.click();
@@ -71,11 +77,49 @@ async function performLogin(
 			.click();
 	}
 
-	await expect(
-		page.getByLabel(`${name} ${surname} User Profile`)
-	).toBeVisible({
+	await expect(page.getByLabel(`${name} ${surname}`)).toBeVisible({
 		timeout: 30 * 1000,
 	});
+
+	return await page.context().cookies();
+}
+
+export async function performLoginViaApi(
+	page: Page,
+	screenName: LoginScreenName | string,
+	domain = '@liferay.com',
+	rememberMe = true
+) {
+	const {password} = userData[screenName || 'test'];
+
+	const params = new URLSearchParams({
+		login: `${screenName}${domain}`,
+		password,
+		rememberMe: String(rememberMe),
+	});
+
+	try {
+		await page.goto('/');
+
+		const url = `${liferayConfig.environment.baseUrl}/c/portal/login`;
+
+		await page.request.post(url, {
+			data: params.toString(),
+			headers: await getHeader(page, 'application/x-www-form-urlencoded'),
+		});
+
+		await page.goto('/');
+
+		const apiHelpers = new ApiHelpers(page);
+
+		const {alternateName} =
+			await apiHelpers.headlessAdminUser.getMyUserAccount();
+
+		expect(alternateName).toBe(screenName);
+	}
+	catch {
+		throw new Error('Login via API failed');
+	}
 
 	return await page.context().cookies();
 }

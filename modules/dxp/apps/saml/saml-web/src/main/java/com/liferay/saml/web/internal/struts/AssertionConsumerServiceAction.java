@@ -12,11 +12,10 @@ import com.liferay.portal.kernel.exception.UserEmailAddressException;
 import com.liferay.portal.kernel.exception.UserEmailAddressException.MustNotUseCompanyMx;
 import com.liferay.portal.kernel.exception.UserScreenNameException;
 import com.liferay.portal.kernel.struts.StrutsAction;
-import com.liferay.portal.kernel.util.ParamUtil;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.Portal;
-import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.saml.constants.SamlWebKeys;
-import com.liferay.saml.helper.RelayStateHelper;
 import com.liferay.saml.runtime.configuration.SamlProviderConfigurationHelper;
 import com.liferay.saml.runtime.exception.AuthnAgeException;
 import com.liferay.saml.runtime.exception.EntityInteractionException;
@@ -103,17 +102,11 @@ public class AssertionConsumerServiceAction extends BaseSamlStrutsAction {
 
 			httpSession.setAttribute(SamlWebKeys.SAML_SSO_ERROR, error);
 
-			String redirect = _relayStateHelper.getRedirectFromRelayStateToken(
-				ParamUtil.getString(httpServletRequest, "RelayState"));
-
-			redirect = _portal.escapeRedirect(redirect);
-
-			if (Validator.isNull(redirect)) {
-				redirect = _portal.getHomeURL(httpServletRequest);
-			}
-
 			try {
-				httpServletResponse.sendRedirect(redirect);
+				httpServletResponse.sendRedirect(
+					GetterUtil.getString(
+						httpServletRequest.getAttribute(WebKeys.REDIRECT),
+						_portal.getHomeURL(httpServletRequest)));
 
 				return null;
 			}
@@ -127,9 +120,6 @@ public class AssertionConsumerServiceAction extends BaseSamlStrutsAction {
 
 	@Reference
 	private Portal _portal;
-
-	@Reference
-	private RelayStateHelper _relayStateHelper;
 
 	@Reference
 	private SamlProviderConfigurationHelper _samlProviderConfigurationHelper;

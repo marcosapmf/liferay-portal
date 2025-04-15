@@ -5,7 +5,7 @@
 
 import {Locator, Page} from '@playwright/test';
 
-import {waitForSuccessAlert} from '../../../utils/waitForSuccessAlert';
+import {waitForAlert} from '../../../utils/waitForAlert';
 import {JournalStructuresPage} from './JournalStructuresPage';
 
 export enum FIELD_TYPES {
@@ -18,6 +18,7 @@ export enum FIELD_TYPES {
 export class JournalEditStructurePage {
 	readonly page: Page;
 
+	readonly fieldsetsTab: Locator;
 	readonly journalStructurePage: JournalStructuresPage;
 	readonly propertyPlaceholderText: Locator;
 	readonly propertiesTab: Locator;
@@ -26,6 +27,7 @@ export class JournalEditStructurePage {
 	constructor(page: Page) {
 		this.page = page;
 
+		this.fieldsetsTab = page.getByRole('tab', {name: 'Fieldsets'});
 		this.journalStructurePage = new JournalStructuresPage(page);
 		this.propertyPlaceholderText = page.getByLabel('Placeholder Text');
 		this.propertiesTab = page.getByRole('tab', {name: 'Properties'});
@@ -61,7 +63,7 @@ export class JournalEditStructurePage {
 	async save() {
 		await this.saveButton.click();
 
-		await waitForSuccessAlert(
+		await waitForAlert(
 			this.page,
 			`Success:Your request completed successfully.`
 		);

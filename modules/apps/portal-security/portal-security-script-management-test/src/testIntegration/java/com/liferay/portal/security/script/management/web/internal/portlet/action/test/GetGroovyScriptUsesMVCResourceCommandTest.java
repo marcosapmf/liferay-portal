@@ -273,12 +273,13 @@ public class GetGroovyScriptUsesMVCResourceCommandTest {
 
 		ObjectDefinition objectDefinition =
 			_objectDefinitionLocalService.addCustomObjectDefinition(
-				userId, 0, false, true, false, false,
+				userId, 0, null, false, false, true, false, false, false,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				ObjectDefinitionTestUtil.getRandomName(), null, null,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				false, ObjectDefinitionConstants.SCOPE_COMPANY,
 				ObjectDefinitionConstants.STORAGE_TYPE_DEFAULT,
+				Collections.emptyList(),
 				Arrays.asList(
 					new TextObjectFieldBuilder(
 					).labelMap(
@@ -327,26 +328,27 @@ public class GetGroovyScriptUsesMVCResourceCommandTest {
 		throws Exception {
 
 		_workflowDefinitionManager.deployWorkflowDefinition(
-			companyId, userId,
+			null, companyId, userId,
 			companyName + "PublishedGroovyWorkflowDefinition",
 			companyName + "PublishedGroovyWorkflowDefinition",
 			_getContentBytes("workflow-definition-2.json"));
 		_workflowDefinitionManager.deployWorkflowDefinition(
-			companyId, userId, companyName + "PublishedJavaWorkflowDefinition",
+			null, companyId, userId,
+			companyName + "PublishedJavaWorkflowDefinition",
 			companyName + "PublishedJavaWorkflowDefinition",
 			_getContentBytes("workflow-definition-3.json"));
 		_workflowDefinitionManager.deployWorkflowDefinition(
-			companyId, userId, companyName + "PublishedWorkflowDefinition",
-			StringUtil.randomId(),
+			null, companyId, userId,
+			companyName + "PublishedWorkflowDefinition", StringUtil.randomId(),
 			_getContentBytes("workflow-definition-1.json"));
 
 		_workflowDefinitionManager.saveWorkflowDefinition(
-			companyId, userId,
+			null, companyId, userId,
 			companyName + "UnpublishedGroovyWorkflowDefinition",
 			StringUtil.randomId(),
 			_getContentBytes("workflow-definition-2.json"));
 		_workflowDefinitionManager.saveWorkflowDefinition(
-			companyId, userId,
+			null, companyId, userId,
 			companyName + "UnpublishedJavaWorkflowDefinition",
 			StringUtil.randomId(),
 			_getContentBytes("workflow-definition-3.json"));

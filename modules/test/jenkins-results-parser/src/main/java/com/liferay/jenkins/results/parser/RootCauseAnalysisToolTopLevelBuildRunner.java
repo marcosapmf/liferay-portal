@@ -8,6 +8,7 @@ package com.liferay.jenkins.results.parser;
 import com.liferay.jenkins.results.parser.test.clazz.FunctionalTestClass;
 import com.liferay.jenkins.results.parser.test.clazz.JUnitTestClass;
 import com.liferay.jenkins.results.parser.test.clazz.ModulesTestClass;
+import com.liferay.jenkins.results.parser.test.clazz.PlaywrightJUnitTestClass;
 import com.liferay.jenkins.results.parser.test.clazz.TestClass;
 import com.liferay.jenkins.results.parser.test.clazz.TestClassMethod;
 import com.liferay.jenkins.results.parser.test.clazz.group.BatchTestClassGroup;
@@ -422,7 +423,9 @@ public class RootCauseAnalysisToolTopLevelBuildRunner
 
 				list.add(functionalTestClass.getTestClassMethodName());
 			}
-			else if (testClass instanceof JUnitTestClass) {
+			else if ((testClass instanceof JUnitTestClass) &&
+					 !(testClass instanceof PlaywrightJUnitTestClass)) {
+
 				String testClassFilePath =
 					JenkinsResultsParserUtil.getCanonicalPath(
 						testClass.getTestClassFile());
@@ -438,6 +441,9 @@ public class RootCauseAnalysisToolTopLevelBuildRunner
 					list.add(testClassMethod.getName());
 				}
 			}
+			else if (testClass instanceof PlaywrightJUnitTestClass) {
+				list.add(testClass.getName());
+			}
 		}
 
 		return list;
@@ -447,11 +453,7 @@ public class RootCauseAnalysisToolTopLevelBuildRunner
 		String portalBatchName = getBuildParameter(
 			_NAME_BUILD_PARAMETER_PORTAL_BATCH);
 
-		if (portalBatchName.startsWith("functional")) {
-			return true;
-		}
-
-		return false;
+		return portalBatchName.startsWith("functional");
 	}
 
 	private boolean _isJUnitBatch() {

@@ -25,6 +25,7 @@ import com.liferay.upload.UniqueFileNameProvider;
 
 import java.io.Serializable;
 
+import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
@@ -58,7 +59,7 @@ public class DiagramUtil {
 			cpDefinitionId, GetterUtil.getLong(diagram.getImageId()),
 			GetterUtil.getString(diagram.getColor()),
 			GetterUtil.getDouble(diagram.getRadius()),
-			GetterUtil.getString(diagram.getType()));
+			GetterUtil.getString(diagram.getType(), "diagram.type.default"));
 	}
 
 	public static CSDiagramSetting addOrUpdateCSDiagramSetting(
@@ -179,9 +180,11 @@ public class DiagramUtil {
 				CPAttachmentFileEntry.class.getName(), companyId,
 				attachmentBase64.getCustomFields(), locale);
 
-		if (expandoBridgeAttributes != null) {
-			serviceContext.setExpandoBridgeAttributes(expandoBridgeAttributes);
+		if (expandoBridgeAttributes == null) {
+			expandoBridgeAttributes = new HashMap<>();
 		}
+
+		serviceContext.setExpandoBridgeAttributes(expandoBridgeAttributes);
 
 		return serviceContext;
 	}

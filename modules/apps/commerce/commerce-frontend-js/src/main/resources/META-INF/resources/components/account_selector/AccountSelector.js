@@ -4,7 +4,6 @@
  */
 
 import ClayDropDown from '@clayui/drop-down';
-import {fetch} from 'frontend-js-web';
 import PropTypes from 'prop-types';
 import React, {useCallback, useEffect, useState} from 'react';
 
@@ -12,62 +11,76 @@ import './account_selector.scss';
 import ServiceProvider from '../../ServiceProvider/index';
 import {
 	CURRENT_ACCOUNT_UPDATED,
+	CURRENT_ORDER_DELETED,
 	CURRENT_ORDER_UPDATED,
 } from '../../utilities/eventsDefinitions';
 import {showErrorNotification} from '../../utilities/notifications';
 import Trigger from './Trigger';
-import {VIEWS} from './util/constants';
-import {selectAccount} from './util/index';
+import {ACCOUNT_ENTRY_ID_DEFAULT, VIEWS} from './util/constants';
+import {selectAccount, shouldSelectAccount} from './util/index';
+import AccountSelectionModal from './views/AccountSelectionModal';
 import AccountsListView from './views/AccountsListView';
 import OrdersListView from './views/OrdersListView';
 
-const DeliveryCatalogAPIServiceProvider =
-	ServiceProvider.DeliveryCatalogAPI('v1');
+const DeliveryCatalogResource = ServiceProvider.DeliveryCatalogAPI('v1');
 
 function AccountSelector({
 	accountEntryAllowedTypes,
 	alignmentPosition,
+	checkoutURL,
 	commerceChannelId,
 	createNewOrderURL,
+	currencyCode,
 	currentCommerceAccount: account,
 	currentCommerceOrder: order,
-	namespace,
+	hasAddCommerceOrderPermission,
+	hasManageAccountsPermission,
+	orderTypes,
 	refreshPageOnAccountSelected: forceRefresh,
 	selectOrderURL,
-	setCurrentAccountURL,
+	setCurrentAccountURL: selectAccountURL,
 	showOrderTypeModal,
 }) {
 	const [active, setActive] = useState(false);
-	const [currentAccount, setCurrentAccount] = useState(account);
+	const [availableAccounts, setAvailableAccounts] = useState([]);
+	const [currentAccount, setCurrentAccount] = useState({
+		...account,
+		id: account?.id ?? ACCOUNT_ENTRY_ID_DEFAULT,
+	});
 	const [currentOrder, setCurrentOrder] = useState({
 		...order,
 		id: order?.orderId || 0,
 	});
 	const [currentView, setCurrentView] = useState(
-		account ? VIEWS.ORDERS_LIST : VIEWS.ACCOUNTS_LIST
+		account?.id ? VIEWS.ORDERS_LIST : VIEWS.ACCOUNTS_LIST
 	);
 	const [currentUser, setCurrentUser] = useState({});
 
 	useEffect(() => {
-		const accountsApi = new URL(
-			`${themeDisplay.getPathContext()}${DeliveryCatalogAPIServiceProvider.baseURL(
-				commerceChannelId
-			)}`,
-			themeDisplay.getPortalURL()
-		);
-
-		fetch(accountsApi.toString())
-			.then((response) => response.json())
+		DeliveryCatalogResource.getAccountsByChannelId(commerceChannelId)
 			.then((response) => {
 				setCurrentUser(response);
+
+				if (response.items.length) {
+					setAvailableAccounts(response.items);
+				}
 			})
 			.catch((error) => showErrorNotification(error.message));
 	}, [commerceChannelId]);
 
-	const changeAccount = (account) => {
-		selectAccount(account.id, setCurrentAccountURL)
+	useEffect(() => {
+		if (!!checkoutURL && currentAccount.id && currentOrder.id) {
+			window.location.href = checkoutURL;
+		}
+	}, [checkoutURL, currentAccount, currentOrder]);
+
+	const changeAccount = (account, doCheckout = false) => {
+		selectAccount(account.id, selectAccountURL)
 			.then(() => {
-				if (forceRefresh) {
+				if (doCheckout) {
+					window.location.href = checkoutURL;
+				}
+				else if (forceRefresh) {
 					window.location.reload();
 				}
 				else {
@@ -84,7 +97,9 @@ function AccountSelector({
 	const updateOrderModel = useCallback(
 		({order}) => {
 			if (!currentOrder || currentOrder.id !== order.id) {
-				setCurrentOrder((current) => ({...current, ...order}));
+				setCurrentOrder((current) =>
+					order.id === 0 ? {id: order.id} : {...current, ...order}
+				);
 			}
 		},
 		[currentOrder, setCurrentOrder]
@@ -92,52 +107,74 @@ function AccountSelector({
 
 	useEffect(() => {
 		Liferay.on(CURRENT_ORDER_UPDATED, updateOrderModel);
+		Liferay.on(CURRENT_ORDER_DELETED, updateOrderModel);
 
 		return () => {
+			Liferay.detach(CURRENT_ORDER_DELETED, updateOrderModel);
 			Liferay.detach(CURRENT_ORDER_UPDATED, updateOrderModel);
 		};
 	}, [updateOrderModel]);
 
 	return (
-		<ClayDropDown
-			active={active}
-			alignmentPosition={alignmentPosition}
-			className="account-selector account-selector-dropdown"
-			menuElementAttrs={{className: 'account-selector-dropdown-menu'}}
-			onActiveChange={setActive}
-			trigger={
-				<Trigger
-					active={active}
-					currentAccount={currentAccount}
-					currentOrder={currentOrder}
-				/>
-			}
-		>
-			{currentView === VIEWS.ACCOUNTS_LIST && (
-				<AccountsListView
-					accountEntryAllowedTypes={accountEntryAllowedTypes}
-					changeAccount={changeAccount}
-					commerceChannelId={commerceChannelId}
-					currentAccount={currentAccount}
-					currentUser={currentUser}
-					disabled={!active}
-					setCurrentView={setCurrentView}
-				/>
-			)}
+		<>
+			<ClayDropDown
+				active={active}
+				alignmentPosition={alignmentPosition}
+				className="account-selector account-selector-dropdown"
+				data-permission={hasAddCommerceOrderPermission}
+				menuElementAttrs={{className: 'account-selector-dropdown-menu'}}
+				onActiveChange={setActive}
+				trigger={
+					<Trigger
+						active={active}
+						currentAccount={currentAccount}
+						currentOrder={currentOrder}
+					/>
+				}
+			>
+				{currentView === VIEWS.ACCOUNTS_LIST && (
+					<AccountsListView
+						accountEntryAllowedTypes={accountEntryAllowedTypes}
+						changeAccount={changeAccount}
+						commerceChannelId={commerceChannelId}
+						currentAccount={currentAccount}
+						currentUser={currentUser}
+						disabled={!active}
+						setCurrentView={setCurrentView}
+					/>
+				)}
 
-			{currentView === VIEWS.ORDERS_LIST && (
-				<OrdersListView
+				{currentView === VIEWS.ORDERS_LIST && (
+					<OrdersListView
+						commerceChannelId={commerceChannelId}
+						createOrderURL={createNewOrderURL}
+						currencyCode={currencyCode}
+						currentAccount={currentAccount}
+						disabled={!active}
+						hasAddCommerceOrderPermission={
+							hasAddCommerceOrderPermission
+						}
+						orderTypes={orderTypes}
+						selectOrderURL={selectOrderURL}
+						setCurrentView={setCurrentView}
+						showOrderTypeModal={showOrderTypeModal}
+					/>
+				)}
+			</ClayDropDown>
+
+			{!!availableAccounts.length &&
+			shouldSelectAccount(currentAccount.id, currentOrder.id) ? (
+				<AccountSelectionModal
+					accountEntryAllowedTypes={accountEntryAllowedTypes}
+					availableAccounts={availableAccounts}
+					changeAccount={changeAccount}
+					checkoutURL={checkoutURL}
 					commerceChannelId={commerceChannelId}
-					createOrderURL={createNewOrderURL}
-					currentAccount={currentAccount}
-					disabled={!active}
-					namespace={namespace}
-					selectOrderURL={selectOrderURL}
-					setCurrentView={setCurrentView}
-					showOrderTypeModal={showOrderTypeModal}
+					hasCreatePermission={!!currentUser.actions?.create}
+					hasManagePermission={hasManageAccountsPermission}
 				/>
-			)}
-		</ClayDropDown>
+			) : null}
+		</>
 	);
 }
 
@@ -149,6 +186,7 @@ AccountSelector.propTypes = {
 		PropTypes.string,
 	]),
 	createNewOrderURL: PropTypes.string.isRequired,
+	currencyCode: PropTypes.string.isRequired,
 	currentCommerceAccount: PropTypes.shape({
 		id: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
 		logoURL: PropTypes.string,
@@ -160,7 +198,9 @@ AccountSelector.propTypes = {
 			label_i18n: PropTypes.string,
 		}),
 	}),
-	namespace: PropTypes.string,
+	hasAddCommerceOrderPermission: PropTypes.bool,
+	hasManageAccountsPermission: PropTypes.bool,
+	orderTypes: PropTypes.array,
 	refreshPageOnAccountSelected: PropTypes.bool,
 	selectOrderURL: PropTypes.string.isRequired,
 	setCurrentAccountURL: PropTypes.string.isRequired,
@@ -169,9 +209,14 @@ AccountSelector.propTypes = {
 
 AccountSelector.defaultProps = {
 	alignmentPosition: 3,
+	currentCommerceAccount: {
+		id: ACCOUNT_ENTRY_ID_DEFAULT,
+	},
 	currentCommerceOrder: {
 		orderId: 0,
 	},
+	hasAddCommerceOrderPermission: false,
+	hasManageAccountsPermission: false,
 	refreshPageOnAccountSelected: false,
 };
 

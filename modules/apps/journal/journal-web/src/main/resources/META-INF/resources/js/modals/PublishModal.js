@@ -9,6 +9,7 @@ import ClayModal, {useModal} from '@clayui/modal';
 import React, {useState} from 'react';
 
 import PermissionsOptions from '../PermissionsOptions';
+import PublishModalDisplayDate from '../PublishModalDisplayDate';
 import ScheduleOptions from '../ScheduleOptions';
 
 export default function PublishModal({
@@ -19,6 +20,7 @@ export default function PublishModal({
 	onPublishButtonClick,
 	permissionsURL,
 	portletNamespace,
+	showPermissionsOptions,
 	timeZone,
 	workflowEnabled,
 }) {
@@ -67,16 +69,23 @@ export default function PublishModal({
 						setError={setDateError}
 						timeZone={timeZone}
 					/>
-				) : null}
-
-				{(!articleId || Liferay.FeatureFlags['LPD-11228']) && (
-					<div className="mt-3">
-						<PermissionsOptions
-							formId={formId}
-							permissionsURL={permissionsURL}
-						/>
-					</div>
+				) : (
+					<PublishModalDisplayDate
+						formId={formId}
+						portletNamespace={portletNamespace}
+						timeZone={timeZone}
+					/>
 				)}
+
+				{(!articleId || Liferay.FeatureFlags['LPD-11228']) &&
+					showPermissionsOptions && (
+						<div className="mt-3">
+							<PermissionsOptions
+								formId={formId}
+								permissionsURL={permissionsURL}
+							/>
+						</div>
+					)}
 			</ClayModal.Body>
 
 			<ClayModal.Footer
@@ -105,8 +114,7 @@ export default function PublishModal({
 									setShowErrorAlert(true);
 								}
 								else {
-									onPublishButtonClick();
-									onClose();
+									onPublishButtonClick(actionButton);
 								}
 							}}
 							type={

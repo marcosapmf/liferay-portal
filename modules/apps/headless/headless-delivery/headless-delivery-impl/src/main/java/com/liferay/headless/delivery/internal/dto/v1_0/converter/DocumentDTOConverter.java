@@ -54,10 +54,10 @@ import com.liferay.layout.page.template.service.LayoutPageTemplateEntryService;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.comment.CommentManager;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.repository.model.FileVersion;
+import com.liferay.portal.kernel.repository.model.Folder;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.service.GroupLocalService;
@@ -158,14 +158,19 @@ public class DocumentDTOConverter
 				setDateCreated(fileEntry::getCreateDate);
 				setDateExpired(fileEntry::getExpirationDate);
 				setDateModified(fileEntry::getModifiedDate);
-
-				if (FeatureFlagManagerUtil.isEnabled(
-						fileEntry.getCompanyId(), "LPD-10701")) {
-
-					setDatePublished(fileEntry::getDisplayDate);
-				}
-
+				setDatePublished(fileEntry::getDisplayDate);
 				setDescription(fileEntry::getDescription);
+				setDocumentFolderExternalReferenceCode(
+					() -> {
+						if (fileEntry.getFolderId() <= 0) {
+							return null;
+						}
+
+						Folder folder = _dlAppService.getFolder(
+							fileEntry.getFolderId());
+
+						return folder.getExternalReferenceCode();
+					});
 				setDocumentFolderId(fileEntry::getFolderId);
 				setDocumentType(
 					() -> _toDocumentType(dtoConverterContext, fileVersion));

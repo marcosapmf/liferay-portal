@@ -17,6 +17,7 @@ import com.liferay.commerce.discount.service.CommerceDiscountLocalService;
 import com.liferay.commerce.discount.service.CommerceDiscountLocalServiceUtil;
 import com.liferay.commerce.test.util.CommerceAccountGroupTestUtil;
 import com.liferay.headless.commerce.admin.pricing.client.dto.v2_0.DiscountAccountGroup;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.service.ServiceContext;
@@ -93,8 +94,9 @@ public class DiscountAccountGroupResourceTest
 		}
 
 		CommerceDiscount commerceDiscount =
-			_commerceDiscountLocalService.fetchByExternalReferenceCode(
-				"external-reference-code-test", testCompany.getCompanyId());
+			_commerceDiscountLocalService.
+				fetchCommerceDiscountByExternalReferenceCode(
+					"external-reference-code-test", testCompany.getCompanyId());
 
 		if (commerceDiscount != null) {
 			_commerceDiscountLocalService.deleteCommerceDiscount(
@@ -141,8 +143,9 @@ public class DiscountAccountGroupResourceTest
 		}
 
 		CommerceDiscount commerceDiscount =
-			_commerceDiscountLocalService.fetchByExternalReferenceCode(
-				"external-reference-code-test", testCompany.getCompanyId());
+			_commerceDiscountLocalService.
+				fetchCommerceDiscountByExternalReferenceCode(
+					"external-reference-code-test", testCompany.getCompanyId());
 
 		if (commerceDiscount != null) {
 			_commerceDiscountLocalService.deleteCommerceDiscount(
@@ -272,14 +275,23 @@ public class DiscountAccountGroupResourceTest
 
 	@Override
 	protected DiscountAccountGroup
+			testDeleteDiscountAccountGroupBatch_addDiscountAccountGroup()
+		throws Exception {
+
+		return _addDiscountAccountGroup(randomDiscountAccountGroup());
+	}
+
+	@Override
+	protected DiscountAccountGroup
 			testGetDiscountByExternalReferenceCodeDiscountAccountGroupsPage_addDiscountAccountGroup(
 				String externalReferenceCode,
 				DiscountAccountGroup discountAccountGroup)
 		throws Exception {
 
 		CommerceDiscount commerceDiscount =
-			_commerceDiscountLocalService.fetchByExternalReferenceCode(
-				externalReferenceCode, testCompany.getCompanyId());
+			_commerceDiscountLocalService.
+				fetchCommerceDiscountByExternalReferenceCode(
+					externalReferenceCode, testCompany.getCompanyId());
 
 		CommerceDiscountCommerceAccountGroupRel
 			commerceDiscountCommerceAccountGroupRel =
@@ -335,10 +347,9 @@ public class DiscountAccountGroupResourceTest
 
 		AccountGroup accountGroup =
 			AccountGroupLocalServiceUtil.addAccountGroup(
-				_serviceContext.getUserId(), null,
+				StringPool.BLANK, _serviceContext.getUserId(), null,
 				RandomTestUtil.randomString(), _serviceContext);
 
-		accountGroup.setExternalReferenceCode(null);
 		accountGroup.setDefaultAccountGroup(false);
 		accountGroup.setType(AccountConstants.ACCOUNT_GROUP_TYPE_STATIC);
 		accountGroup.setExpandoBridgeAttributes(_serviceContext);

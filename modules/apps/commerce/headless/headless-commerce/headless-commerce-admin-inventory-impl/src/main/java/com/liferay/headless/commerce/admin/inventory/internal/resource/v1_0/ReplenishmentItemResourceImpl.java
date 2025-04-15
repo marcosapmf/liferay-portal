@@ -214,6 +214,57 @@ public class ReplenishmentItemResourceImpl
 					commerceInventoryWarehouseItem.getSku(), StringPool.BLANK));
 	}
 
+	@Override
+	public ReplenishmentItem putReplenishmentItemByExternalReferenceCode(
+			String externalReferenceCode, ReplenishmentItem replenishmentItem)
+		throws Exception {
+
+		CommerceInventoryReplenishmentItem commerceInventoryReplenishmentItem =
+			_commerceInventoryReplenishmentItemService.
+				fetchCommerceInventoryReplenishmentItemByExternalReferenceCode(
+					externalReferenceCode, contextCompany.getCompanyId());
+
+		if (commerceInventoryReplenishmentItem == null) {
+			CommerceInventoryWarehouseItem commerceInventoryWarehouseItem =
+				_commerceInventoryWarehouseItemService.
+					getCommerceInventoryWarehouseItem(
+						replenishmentItem.getWarehouseId(),
+						replenishmentItem.getSku(), StringPool.BLANK);
+
+			return _toReplenishmentItem(
+				_commerceInventoryReplenishmentItemService.
+					addCommerceInventoryReplenishmentItem(
+						externalReferenceCode,
+						commerceInventoryWarehouseItem.
+							getCommerceInventoryWarehouseId(),
+						GetterUtil.getDate(
+							replenishmentItem.getAvailabilityDate(),
+							DateFormatFactoryUtil.getDate(
+								contextAcceptLanguage.getPreferredLocale(),
+								contextUser.getTimeZone())),
+						BigDecimal.valueOf(
+							GetterUtil.getInteger(
+								replenishmentItem.getQuantity())),
+						commerceInventoryWarehouseItem.getSku(),
+						StringPool.BLANK));
+		}
+
+		return _toReplenishmentItem(
+			_commerceInventoryReplenishmentItemService.
+				updateCommerceInventoryReplenishmentItem(
+					replenishmentItem.getExternalReferenceCode(),
+					commerceInventoryReplenishmentItem.
+						getCommerceInventoryReplenishmentItemId(),
+					GetterUtil.getDate(
+						replenishmentItem.getAvailabilityDate(),
+						DateFormatFactoryUtil.getDate(
+							contextAcceptLanguage.getPreferredLocale(),
+							contextUser.getTimeZone())),
+					BigDecimal.valueOf(
+						GetterUtil.getInteger(replenishmentItem.getQuantity())),
+					commerceInventoryReplenishmentItem.getMvccVersion()));
+	}
+
 	private CommerceInventoryReplenishmentItem
 			_fetchCommerceInventoryReplenishmentItemByExternalReferenceCode(
 				String externalReferenceCode)

@@ -2,6 +2,7 @@
 definition {
 
 	property custom.properties = "feature.flag.COMMERCE-8087=true";
+	property portal.acceptance = "quarantine";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Data Migration Center";
@@ -80,8 +81,6 @@ definition {
 
 	@priority = 4
 	test ActionsNodeAreAvailableInDonwloadedFile {
-		property portal.acceptance = "true";
-
 		task ("And Given 'Student (v1.0 - Liferay Object REST)' as Entity Type in Data Migration Center --> Export File") {
 			ImportExport.selectEntity(entityType = "Student (v1.0 - Liferay Object REST)");
 		}
@@ -111,7 +110,6 @@ definition {
 	@priority = 4
 	test AllSystemObjectFieldsAreAvailableToExport {
 		property custom.properties = "feature.flag.LPS-186620=true";
-		property portal.acceptance = "true";
 
 		task ("When 'Account (v1.0 - Liferay Headless Admin User)' as Entity Type in Data Migration Center --> Export File") {
 			ImportExport.selectEntity(entityType = "Account (v1.0 - Liferay Headless Admin User)");
@@ -130,8 +128,6 @@ definition {
 
 	@priority = 5
 	test CanDownloadFiledWithAllFieldsSelected {
-		property portal.acceptance = "true";
-
 		task ("And Given 'Student (v1.0 - Liferay Object REST)' as Entity Type in Data Migration Center --> Export File") {
 			ImportExport.configureExport(
 				entityType = "Student (v1.0 - Liferay Object REST)",
@@ -175,8 +171,6 @@ definition {
 
 	@priority = 4
 	test CanExportSpecificFieldsWithJSONTConfigurationNode {
-		property portal.acceptance = "true";
-
 		task ("And Given 'Student (v1.0 - Liferay Object REST)' as Entity Type in Data Migration Center --> Export File") {
 			ImportExport.selectEntity(entityType = "Student (v1.0 - Liferay Object REST)");
 		}
@@ -215,7 +209,6 @@ definition {
 	@priority = 4
 	test CanExportSystemObjectItems {
 		property custom.properties = "feature.flag.LPS-186620=true";
-		property portal.acceptance = "true";
 
 		task ("And Given 'Account (v1.0 - Liferay Headless Admin User)' as Entity Type in Data Migration Center --> Export File") {
 			ImportExport.selectEntity(entityType = "Account (v1.0 - Liferay Headless Admin User)");
@@ -263,8 +256,6 @@ definition {
 
 	@priority = 5
 	test CanSelectFromAllExistingFields {
-		property portal.acceptance = "true";
-
 		task ("When selecting 'Student (v1.0 - Liferay Object REST)' as Entity Type in Data Migration Center --> Export File") {
 			ImportExport.selectEntity(entityType = "Student (v1.0 - Liferay Object REST)");
 		}

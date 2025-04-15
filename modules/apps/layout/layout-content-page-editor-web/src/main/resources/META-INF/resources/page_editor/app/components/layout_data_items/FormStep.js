@@ -4,15 +4,25 @@
  */
 
 import classNames from 'classnames';
-import React, {useEffect, useState} from 'react';
+import React from 'react';
 
+import useSetRef from '../../../common/hooks/useSetRef';
 import {getLayoutDataItemPropTypes} from '../../../prop_types/index';
+import {config} from '../../config';
+import {useSelectItem} from '../../contexts/ControlsContext';
+import {useActiveStep} from '../../contexts/FormStepContext';
 import {useItemLocalConfig} from '../../contexts/LocalConfigContext';
-import {useSelectorCallback} from '../../contexts/StoreContext';
+import {
+	useDispatch,
+	useSelector,
+	useSelectorCallback,
+} from '../../contexts/StoreContext';
+import canBeRemoved from '../../utils/canBeRemoved';
 import getLayoutDataItemTopperUniqueClassName from '../../utils/getLayoutDataItemTopperUniqueClassName';
-import getLayoutDataItemUniqueClassName from '../../utils/getLayoutDataItemUniqueClassName';
 import isItemEmpty from '../../utils/isItemEmpty';
+import removeFormStep from '../../utils/removeFormStep';
 import TopperEmpty from '../topper/TopperEmpty';
+import getParentHeight from './getParentHeight';
 
 const FormStepWithControls = React.forwardRef(({children, item}, ref) => {
 	const isEmpty = useSelectorCallback(
@@ -38,46 +48,63 @@ const FormStepWithControls = React.forwardRef(({children, item}, ref) => {
 
 	const localConfig = useItemLocalConfig(formId);
 
-	const [visible, setVisible] = useState(index === 0);
+	const activeStep = useActiveStep();
 
-	useEffect(() => {
-		const onStepChange = ({emitter, step}) => {
-			const form = document.querySelector(
-				`.${getLayoutDataItemUniqueClassName(formId)}`
-			);
+	const visible = index === activeStep;
 
-			// Return if the emitter is not in this form
+	const [setRef, itemElement] = useSetRef(ref);
 
-			if (!form.contains(emitter)) {
-				return;
-			}
+	const layoutData = useSelector((state) => state.layoutData);
 
-			// Change step visibility
+	const dispatch = useDispatch();
 
-			setVisible(step === index);
-		};
-
-		Liferay.on('formFragment:changeStep', onStepChange);
-
-		return () => Liferay.detach('formFragment:changeStep', onStepChange);
-	}, [formId, index, setVisible]);
+	const selectItem = useSelectItem();
 
 	return (
 		<TopperEmpty
-			className={getLayoutDataItemTopperUniqueClassName(item.itemId)}
+			className={classNames(
+				'page-editor__form-step-topper',
+				getLayoutDataItemTopperUniqueClassName(item.itemId)
+			)}
 			item={item}
+			itemElement={itemElement}
+			options={
+				canBeRemoved(item, layoutData)
+					? [
+							{
+								label: Liferay.Language.get('remove-step'),
+								onClick: () =>
+									removeFormStep({
+										dispatch,
+										item,
+										layoutData,
+										selectItem,
+									}),
+								symbol: 'times-circle',
+							},
+						]
+					: []
+			}
 		>
 			<FormStep
 				className={classNames('page-editor__form-step', {
 					'd-none': !visible && !localConfig.displayAllSteps,
 				})}
-				ref={ref}
+				ref={setRef}
 			>
 				{isEmpty && (
-					<div className="page-editor__no-fragments-state">
+					<div
+						className="d-flex flex-column page-editor__no-fragments-state"
+						style={{height: getParentHeight(item, layoutData)}}
+					>
+						<img
+							className="page-editor__no-fragments-state__image"
+							src={`${config.imagesPath}/drag_and_drop.svg`}
+						/>
+
 						<p className="page-editor__no-fragments-state__message">
 							{Liferay.Language.get(
-								'place-fragments-or-widgets-here'
+								'drag-and-drop-fragments-or-widgets-here'
 							)}
 						</p>
 					</div>
@@ -95,13 +122,15 @@ FormStepWithControls.propTypes = {
 	item: getLayoutDataItemPropTypes().isRequired,
 };
 
-const FormStep = React.forwardRef(({children, className}, ref) => {
-	return (
-		<div className={className} ref={ref}>
-			{children}
-		</div>
-	);
-});
+const FormStep = React.forwardRef(
+	({children, className, ...otherProps}, ref) => {
+		return (
+			<div className={className} ref={ref} {...otherProps}>
+				{children}
+			</div>
+		);
+	}
+);
 
 FormStep.displayName = 'FormStep';
 

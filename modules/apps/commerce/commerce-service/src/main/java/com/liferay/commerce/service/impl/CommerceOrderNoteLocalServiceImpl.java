@@ -54,10 +54,6 @@ public class CommerceOrderNoteLocalServiceImpl
 
 		_validate(content);
 
-		if (Validator.isBlank(externalReferenceCode)) {
-			externalReferenceCode = null;
-		}
-
 		long commerceOrderNoteId = counterLocalService.increment();
 
 		CommerceOrderNote commerceOrderNote =
@@ -82,10 +78,6 @@ public class CommerceOrderNoteLocalServiceImpl
 			long commerceOrderId, String content, boolean restricted,
 			ServiceContext serviceContext)
 		throws PortalException {
-
-		if (Validator.isBlank(externalReferenceCode)) {
-			externalReferenceCode = null;
-		}
 
 		CommerceOrderNote commerceOrderNote;
 
@@ -112,18 +104,6 @@ public class CommerceOrderNoteLocalServiceImpl
 	@Override
 	public void deleteCommerceOrderNotes(long commerceOrderId) {
 		commerceOrderNotePersistence.removeByCommerceOrderId(commerceOrderId);
-	}
-
-	@Override
-	public CommerceOrderNote fetchByExternalReferenceCode(
-		String externalReferenceCode, long companyId) {
-
-		if (Validator.isBlank(externalReferenceCode)) {
-			return null;
-		}
-
-		return commerceOrderNotePersistence.fetchByERC_C(
-			externalReferenceCode, companyId);
 	}
 
 	@Override
@@ -185,10 +165,6 @@ public class CommerceOrderNoteLocalServiceImpl
 		_validate(content);
 
 		if (Validator.isNull(commerceOrderNote.getExternalReferenceCode())) {
-			if (Validator.isBlank(externalReferenceCode)) {
-				externalReferenceCode = null;
-			}
-
 			commerceOrderNote.setExternalReferenceCode(externalReferenceCode);
 		}
 

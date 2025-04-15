@@ -11,8 +11,6 @@ import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.exception.NoSuchModelException;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ResourceActionLocalService;
@@ -33,10 +31,12 @@ import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
 import com.liferay.portal.vulcan.batch.engine.VulcanBatchEngineTaskItemDelegate;
 import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineExportTaskResource;
 import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineImportTaskResource;
+import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegate;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 import com.liferay.portal.vulcan.util.ActionUtil;
+import com.liferay.portal.vulcan.util.UriInfoUtil;
 import com.liferay.search.experiences.rest.dto.v1_0.Parameter;
 import com.liferay.search.experiences.rest.dto.v1_0.SXPBlueprint;
 import com.liferay.search.experiences.rest.resource.v1_0.SXPBlueprintResource;
@@ -69,7 +69,8 @@ import javax.ws.rs.core.UriInfo;
 @javax.ws.rs.Path("/v1.0")
 public abstract class BaseSXPBlueprintResourceImpl
 	implements EntityModelResource, SXPBlueprintResource,
-			   VulcanBatchEngineTaskItemDelegate<SXPBlueprint> {
+			   VulcanBatchEngineTaskItemDelegate<SXPBlueprint>,
+			   VulcanCRUDItemDelegate<SXPBlueprint> {
 
 	/**
 	 * Invoke this method with the command line:
@@ -111,9 +112,11 @@ public abstract class BaseSXPBlueprintResourceImpl
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
 			@javax.ws.rs.QueryParam("search")
 			String search,
-			@javax.ws.rs.core.Context Filter filter,
+			@javax.ws.rs.core.Context
+				com.liferay.portal.kernel.search.filter.Filter filter,
 			@javax.ws.rs.core.Context Pagination pagination,
-			@javax.ws.rs.core.Context Sort[] sorts)
+			@javax.ws.rs.core.Context com.liferay.portal.kernel.search.Sort[]
+				sorts)
 		throws Exception {
 
 		return Page.of(Collections.emptyList());
@@ -164,8 +167,10 @@ public abstract class BaseSXPBlueprintResourceImpl
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
 			@javax.ws.rs.QueryParam("search")
 			String search,
-			@javax.ws.rs.core.Context Filter filter,
-			@javax.ws.rs.core.Context Sort[] sorts,
+			@javax.ws.rs.core.Context
+				com.liferay.portal.kernel.search.filter.Filter filter,
+			@javax.ws.rs.core.Context com.liferay.portal.kernel.search.Sort[]
+				sorts,
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
 			@javax.ws.rs.QueryParam("callbackURL")
 			String callbackURL,
@@ -219,7 +224,7 @@ public abstract class BaseSXPBlueprintResourceImpl
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'POST' 'http://localhost:8080/o/search-experiences-rest/v1.0/sxp-blueprints/batch' -d $'{"configuration": ___, "createDate": ___, "description": ___, "description_i18n": ___, "elementInstances": ___, "externalReferenceCode": ___, "id": ___, "modifiedDate": ___, "schemaVersion": ___, "title": ___, "title_i18n": ___, "userName": ___, "version": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 * curl -X 'POST' 'http://localhost:8080/o/search-experiences-rest/v1.0/sxp-blueprints/batch'  -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
@@ -238,7 +243,6 @@ public abstract class BaseSXPBlueprintResourceImpl
 	@javax.ws.rs.Produces("application/json")
 	@Override
 	public Response postSXPBlueprintBatch(
-			SXPBlueprint sxpBlueprint,
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
 			@javax.ws.rs.QueryParam("callbackURL")
 			String callbackURL,
@@ -377,14 +381,10 @@ public abstract class BaseSXPBlueprintResourceImpl
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'DELETE' 'http://localhost:8080/o/search-experiences-rest/v1.0/sxp-blueprints/{sxpBlueprintId}/batch'  -u 'test@liferay.com:test'
+	 * curl -X 'DELETE' 'http://localhost:8080/o/search-experiences-rest/v1.0/sxp-blueprints/batch'  -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "sxpBlueprintId"
-			),
 			@io.swagger.v3.oas.annotations.Parameter(
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
 				name = "callbackURL"
@@ -396,14 +396,10 @@ public abstract class BaseSXPBlueprintResourceImpl
 	)
 	@javax.ws.rs.Consumes("application/json")
 	@javax.ws.rs.DELETE
-	@javax.ws.rs.Path("/sxp-blueprints/{sxpBlueprintId}/batch")
+	@javax.ws.rs.Path("/sxp-blueprints/batch")
 	@javax.ws.rs.Produces("application/json")
 	@Override
 	public Response deleteSXPBlueprintBatch(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("sxpBlueprintId")
-			Long sxpBlueprintId,
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
 			@javax.ws.rs.QueryParam("callbackURL")
 			String callbackURL,
@@ -571,14 +567,10 @@ public abstract class BaseSXPBlueprintResourceImpl
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'PUT' 'http://localhost:8080/o/search-experiences-rest/v1.0/sxp-blueprints/{sxpBlueprintId}/batch' -d $'{"configuration": ___, "createDate": ___, "description": ___, "description_i18n": ___, "elementInstances": ___, "externalReferenceCode": ___, "id": ___, "modifiedDate": ___, "schemaVersion": ___, "title": ___, "title_i18n": ___, "userName": ___, "version": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 * curl -X 'PUT' 'http://localhost:8080/o/search-experiences-rest/v1.0/sxp-blueprints/batch'  -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "sxpBlueprintId"
-			),
 			@io.swagger.v3.oas.annotations.Parameter(
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
 				name = "callbackURL"
@@ -589,16 +581,11 @@ public abstract class BaseSXPBlueprintResourceImpl
 		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "SXPBlueprint")}
 	)
 	@javax.ws.rs.Consumes("application/json")
-	@javax.ws.rs.Path("/sxp-blueprints/{sxpBlueprintId}/batch")
+	@javax.ws.rs.Path("/sxp-blueprints/batch")
 	@javax.ws.rs.Produces("application/json")
 	@javax.ws.rs.PUT
 	@Override
 	public Response putSXPBlueprintBatch(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("sxpBlueprintId")
-			Long sxpBlueprintId,
-			SXPBlueprint sxpBlueprint,
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
 			@javax.ws.rs.QueryParam("callbackURL")
 			String callbackURL,
@@ -764,8 +751,25 @@ public abstract class BaseSXPBlueprintResourceImpl
 			Map<String, Serializable> parameters)
 		throws Exception {
 
-		for (SXPBlueprint sxpBlueprint : sxpBlueprints) {
-			deleteSXPBlueprint(sxpBlueprint.getId());
+		UnsafeFunction<SXPBlueprint, SXPBlueprint, Exception>
+			sxpBlueprintUnsafeFunction = sxpBlueprint -> {
+				deleteSXPBlueprint(sxpBlueprint.getId());
+
+				return sxpBlueprint;
+			};
+
+		if (contextBatchUnsafeBiConsumer != null) {
+			contextBatchUnsafeBiConsumer.accept(
+				sxpBlueprints, sxpBlueprintUnsafeFunction);
+		}
+		else if (contextBatchUnsafeConsumer != null) {
+			contextBatchUnsafeConsumer.accept(
+				sxpBlueprints, sxpBlueprintUnsafeFunction::apply);
+		}
+		else {
+			for (SXPBlueprint sxpBlueprint : sxpBlueprints) {
+				sxpBlueprintUnsafeFunction.apply(sxpBlueprint);
+			}
 		}
 	}
 
@@ -802,7 +806,9 @@ public abstract class BaseSXPBlueprintResourceImpl
 
 	@Override
 	public Page<SXPBlueprint> read(
-			Filter filter, Pagination pagination, Sort[] sorts,
+			com.liferay.portal.kernel.search.filter.Filter filter,
+			Pagination pagination,
+			com.liferay.portal.kernel.search.Sort[] sorts,
 			Map<String, Serializable> parameters, String search)
 		throws Exception {
 
@@ -886,6 +892,11 @@ public abstract class BaseSXPBlueprintResourceImpl
 		return null;
 	}
 
+	@Override
+	public SXPBlueprint getItem(Long id) throws Exception {
+		return getSXPBlueprint(id);
+	}
+
 	public void setContextAcceptLanguage(AcceptLanguage contextAcceptLanguage) {
 		this.contextAcceptLanguage = contextAcceptLanguage;
 	}
@@ -926,7 +937,8 @@ public abstract class BaseSXPBlueprintResourceImpl
 	}
 
 	public void setContextUriInfo(UriInfo contextUriInfo) {
-		this.contextUriInfo = contextUriInfo;
+		this.contextUriInfo = UriInfoUtil.getVulcanUriInfo(
+			getApplicationPath(), contextUriInfo);
 	}
 
 	public void setContextUser(
@@ -936,7 +948,8 @@ public abstract class BaseSXPBlueprintResourceImpl
 	}
 
 	public void setExpressionConvert(
-		ExpressionConvert<Filter> expressionConvert) {
+		ExpressionConvert<com.liferay.portal.kernel.search.filter.Filter>
+			expressionConvert) {
 
 		this.expressionConvert = expressionConvert;
 	}
@@ -971,6 +984,10 @@ public abstract class BaseSXPBlueprintResourceImpl
 		this.sortParserProvider = sortParserProvider;
 	}
 
+	protected String getApplicationPath() {
+		return "search-experiences-rest";
+	}
+
 	public void setVulcanBatchEngineExportTaskResource(
 		VulcanBatchEngineExportTaskResource
 			vulcanBatchEngineExportTaskResource) {
@@ -988,7 +1005,7 @@ public abstract class BaseSXPBlueprintResourceImpl
 	}
 
 	@Override
-	public Filter toFilter(
+	public com.liferay.portal.kernel.search.filter.Filter toFilter(
 		String filterString, Map<String, List<String>> multivaluedMap) {
 
 		try {
@@ -1013,7 +1030,7 @@ public abstract class BaseSXPBlueprintResourceImpl
 	}
 
 	@Override
-	public Sort[] toSorts(String sortString) {
+	public com.liferay.portal.kernel.search.Sort[] toSorts(String sortString) {
 		if (Validator.isNull(sortString)) {
 			return null;
 		}
@@ -1031,13 +1048,13 @@ public abstract class BaseSXPBlueprintResourceImpl
 					sortParser.parse(sortString));
 
 			List<SortField> sortFields = oDataSort.getSortFields();
-
-			Sort[] sorts = new Sort[sortFields.size()];
+			com.liferay.portal.kernel.search.Sort[] sorts =
+				new com.liferay.portal.kernel.search.Sort[sortFields.size()];
 
 			for (int i = 0; i < sortFields.size(); i++) {
 				SortField sortField = sortFields.get(i);
 
-				sorts[i] = new Sort(
+				sorts[i] = new com.liferay.portal.kernel.search.Sort(
 					sortField.getSortableFieldName(
 						contextAcceptLanguage.getPreferredLocale()),
 					!sortField.isAscending());
@@ -1048,7 +1065,7 @@ public abstract class BaseSXPBlueprintResourceImpl
 		catch (Exception exception) {
 			_log.error("Invalid sort " + sortString, exception);
 
-			return new Sort[0];
+			return new com.liferay.portal.kernel.search.Sort[0];
 		}
 	}
 
@@ -1178,7 +1195,8 @@ public abstract class BaseSXPBlueprintResourceImpl
 	protected Object contextScopeChecker;
 	protected UriInfo contextUriInfo;
 	protected com.liferay.portal.kernel.model.User contextUser;
-	protected ExpressionConvert<Filter> expressionConvert;
+	protected ExpressionConvert<com.liferay.portal.kernel.search.filter.Filter>
+		expressionConvert;
 	protected FilterParserProvider filterParserProvider;
 	protected GroupLocalService groupLocalService;
 	protected ResourceActionLocalService resourceActionLocalService;

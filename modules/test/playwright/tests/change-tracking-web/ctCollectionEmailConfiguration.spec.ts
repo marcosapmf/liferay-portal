@@ -12,7 +12,7 @@ import {loginTest} from '../../fixtures/loginTest';
 export const test = mergeTests(
 	changeTrackingPagesTest,
 	featureFlagsTest({
-		'LPD-11212': true,
+		'LPD-11212': {enabled: true},
 	}),
 	loginTest()
 );
@@ -26,20 +26,30 @@ test('LPD-28802 Verify email notification checkbox is displayed', async ({
 
 	await page.getByRole('menuitem', {name: 'Notifications'}).click();
 
-	await page
+	const optionButton = page
 		.locator(
 			'#portlet-topper-toolbar_com_liferay_notifications_web_portlet_NotificationsPortlet'
 		)
-		.getByLabel('Options')
-		.click();
+		.getByLabel('Options');
 
-	await page
-		.getByRole('menuitem', {exact: true, name: 'Configuration'})
-		.click();
+	await optionButton.click();
+
+	const configurationButton = page.getByRole('menuitem', {
+		exact: true,
+		name: 'Configuration',
+	});
+
+	if (!(await configurationButton.isVisible())) {
+		await optionButton.click();
+	}
+
+	await expect(configurationButton).toBeVisible();
+
+	await configurationButton.click();
 
 	const dialogIFrame = page.frameLocator('iframe');
 
-	await dialogIFrame.getByRole('link', {name: 'Publications'}).click();
+	await dialogIFrame.getByRole('button', {name: 'Publications'}).click();
 
 	const invitePublication = dialogIFrame.getByRole('cell', {
 		name: 'Receive a notification when someone: Invites you to work on a publication.',

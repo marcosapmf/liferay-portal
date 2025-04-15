@@ -4,19 +4,83 @@
  */
 
 import {act, cleanup, fireEvent, render} from '@testing-library/react';
-import {PageProvider} from 'data-engine-js-components-web';
+
+import '@testing-library/jest-dom/extend-expect';
+import {
+	FormProvider,
+	PageProvider,
+	languageReducer,
+} from 'data-engine-js-components-web';
 import React from 'react';
 import ReactDOM from 'react-dom';
 
 import LocalizableText from '../../../src/main/resources/META-INF/resources/LocalizableText/LocalizableText.es';
 
-const spritemap = 'icons.svg';
+const availableLocales = [
+	{
+		displayName: 'English (United States)',
+		icon: 'en-us',
+		localeId: 'en_US',
+	},
+	{displayName: 'العربية (السعودية)', icon: 'ar-sa', localeId: 'ar_SA'},
+	{displayName: 'català (Espanya)', icon: 'ca-es', localeId: 'ca_ES'},
+	{displayName: '中文 (中国)', icon: 'zh-cn', localeId: 'zh_CN'},
+	{
+		displayName: 'Nederlands (Nederland)',
+		icon: 'nl-nl',
+		localeId: 'nl_NL',
+	},
+	{displayName: 'suomi (Suomi)', icon: 'fi-fi', localeId: 'fi_FI'},
+	{displayName: 'français (France)', icon: 'fr-fr', localeId: 'fr_FR'},
+	{
+		displayName: 'Deutsch (Deutschland)',
+		icon: 'de-de',
+		localeId: 'de_DE',
+	},
+	{
+		displayName: 'magyar (Magyarország)',
+		icon: 'hu-hu',
+		localeId: 'hu_HU',
+	},
+	{displayName: '日本語 (日本)', icon: 'ja-jp', localeId: 'ja_JP'},
+	{displayName: 'português (Brasil)', icon: 'pt-br', localeId: 'pt_BR'},
+	{displayName: 'español (España)', icon: 'es-es', localeId: 'es_ES'},
+	{displayName: 'svenska (Sverige)', icon: 'sv-se', localeId: 'sv_SE'},
+];
 
+const focusedField = {
+	availableLocales,
+	instanceId: '12345678',
+	localizable: true,
+	value: {ca_ES: 'Teste ES', en_US: 'Test EUA', pt_BR: 'Teste BR'},
+};
 const globalLanguageDirection = Liferay.Language.direction;
+const pages = [
+	{
+		localizedDescription: {
+			en_US: 'description',
+			pt_BR: 'descrição',
+		},
+		localizedTitle: {en_US: 'title', pt_BR: 'título'},
+		rows: [{columns: [{fields: [focusedField]}]}],
+	},
+];
+const spritemap = 'icons.svg';
+const state = {
+	availableLanguageIds: ['en_US', 'pt_BR', 'ca_ES'],
+	focusedField,
+	pages,
+};
 
 const LocalizableTextWithProvider = (props) => (
 	<PageProvider value={{editingLanguageId: 'en_US'}}>
-		<LocalizableText {...props} />
+		<FormProvider
+			initialState={state}
+			reducers={[languageReducer]}
+			value={{defaultLanguageId: 'en_US', editingLanguageId: 'en_US'}}
+		>
+			<LocalizableText {...props} />
+		</FormProvider>
 	</PageProvider>
 );
 
@@ -33,38 +97,13 @@ afterAll(() => {
 afterEach(cleanup);
 
 const defaultLocalizableTextConfig = {
-	availableLocales: [
-		{
-			displayName: 'English (United States)',
-			icon: 'en-us',
-			localeId: 'en_US',
-		},
-		{displayName: 'العربية (السعودية)', icon: 'ar-sa', localeId: 'ar_SA'},
-		{displayName: 'català (Espanya)', icon: 'ca-es', localeId: 'ca_ES'},
-		{displayName: '中文 (中国)', icon: 'zh-cn', localeId: 'zh_CN'},
-		{
-			displayName: 'Nederlands (Nederland)',
-			icon: 'nl-nl',
-			localeId: 'nl_NL',
-		},
-		{displayName: 'suomi (Suomi)', icon: 'fi-fi', localeId: 'fi_FI'},
-		{displayName: 'français (France)', icon: 'fr-fr', localeId: 'fr_FR'},
-		{
-			displayName: 'Deutsch (Deutschland)',
-			icon: 'de-de',
-			localeId: 'de_DE',
-		},
-		{
-			displayName: 'magyar (Magyarország)',
-			icon: 'hu-hu',
-			localeId: 'hu_HU',
-		},
-		{displayName: '日本語 (日本)', icon: 'ja-jp', localeId: 'ja_JP'},
-		{displayName: 'português (Brasil)', icon: 'pt-br', localeId: 'pt_BR'},
-		{displayName: 'español (España)', icon: 'es-es', localeId: 'es_ES'},
-		{displayName: 'svenska (Sverige)', icon: 'sv-se', localeId: 'sv_SE'},
-	],
+	availableLocales,
 	defaultLocale: {
+		displayName: 'English (United States)',
+		icon: 'en-us',
+		localeId: 'en_US',
+	},
+	editingLocale: {
 		displayName: 'English (United States)',
 		icon: 'en-us',
 		localeId: 'en_US',
@@ -145,6 +184,25 @@ describe('Field LocalizableText', () => {
 		});
 
 		expect(container).toMatchSnapshot();
+	});
+
+	it('has aria-label when the displayStyle is multiline', () => {
+		const {getByRole} = render(
+			<LocalizableTextWithProvider
+				{...defaultLocalizableTextConfig}
+				displayStyle="multiline"
+				label="label"
+				value={{
+					ca_ES: 'Teste ES',
+					en_US: 'Test EUA',
+					pt_BR: 'Teste BR',
+				}}
+			/>
+		);
+
+		const textarea = getByRole('textbox');
+
+		expect(textarea).toHaveAttribute('aria-label', 'label');
 	});
 
 	it('has a placeholder', () => {

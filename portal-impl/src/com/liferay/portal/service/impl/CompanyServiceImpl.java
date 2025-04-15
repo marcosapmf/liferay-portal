@@ -87,8 +87,8 @@ public class CompanyServiceImpl extends CompanyServiceBaseImpl {
 	@JSONWebService(mode = JSONWebServiceMode.IGNORE)
 	@Override
 	public Company addCompany(
-			String webId, String virtualHost, String mx, int maxUsers,
-			boolean active, String defaultAdminPassword,
+			Long companyId, String webId, String virtualHost, String mx,
+			int maxUsers, boolean active, String defaultAdminPassword,
 			String defaultAdminScreenName, String defaultAdminEmailAddress,
 			String defaultAdminFirstName, String defaultAdminMiddleName,
 			String defaultAdminLastName)
@@ -101,7 +101,7 @@ public class CompanyServiceImpl extends CompanyServiceBaseImpl {
 		}
 
 		return companyLocalService.addCompany(
-			null, webId, virtualHost, mx, maxUsers, active, true,
+			companyId, webId, virtualHost, mx, maxUsers, active, true,
 			defaultAdminPassword, defaultAdminScreenName,
 			defaultAdminEmailAddress, defaultAdminFirstName,
 			defaultAdminMiddleName, defaultAdminLastName);
@@ -168,28 +168,6 @@ public class CompanyServiceImpl extends CompanyServiceBaseImpl {
 	@Override
 	public Company getCompanyById(long companyId) throws PortalException {
 		return companyLocalService.getCompanyById(companyId);
-	}
-
-	/**
-	 * Returns the company with the logo.
-	 *
-	 * @param  logoId the ID of the company's logo
-	 * @return Returns the company with the logo
-	 */
-	@Override
-	public Company getCompanyByLogoId(long logoId) throws PortalException {
-		return companyLocalService.getCompanyByLogoId(logoId);
-	}
-
-	/**
-	 * Returns the company with the mail domian.
-	 *
-	 * @param  mx the company's mail domain
-	 * @return Returns the company with the mail domain
-	 */
-	@Override
-	public Company getCompanyByMx(String mx) throws PortalException {
-		return companyLocalService.getCompanyByMx(mx);
 	}
 
 	/**

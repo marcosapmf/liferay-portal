@@ -12,6 +12,10 @@ import PageTemplateModal from '../../../src/main/resources/META-INF/resources/js
 
 import '@testing-library/jest-dom/extend-expect';
 
+jest.mock('frontend-js-components-web', () => ({
+	openToast: jest.fn(),
+}));
+
 jest.mock('frontend-js-web', () => {
 	const actual = jest.requireActual('frontend-js-web');
 
@@ -98,7 +102,9 @@ describe('ConvertToPageTemplateModal', () => {
 			const saveButton = screen.getByText('save');
 			const select = screen.getByLabelText('page-template-set');
 
-			userEvent.selectOptions(select, 'set-1');
+			await userEvent.selectOptions(select, 'set-1', {
+				advanceTimers: jest.advanceTimersByTime,
+			});
 			fireEvent.change(select);
 
 			fireEvent.click(saveButton);
@@ -162,7 +168,9 @@ describe('ConvertToPageTemplateModal', () => {
 			const descriptionInput = screen.getByLabelText('description');
 			const saveButton = screen.getByText('save');
 
-			userEvent.type(descriptionInput, 'This is a description');
+			await userEvent.type(descriptionInput, 'This is a description', {
+				advanceTimers: jest.advanceTimersByTime,
+			});
 
 			fireEvent.click(saveButton);
 

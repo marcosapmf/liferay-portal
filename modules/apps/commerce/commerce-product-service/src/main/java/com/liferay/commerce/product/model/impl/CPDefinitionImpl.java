@@ -6,10 +6,14 @@
 package com.liferay.commerce.product.model.impl;
 
 import com.liferay.commerce.media.CommerceMediaResolverUtil;
+import com.liferay.commerce.product.constants.CPConfigurationEntrySettingConstants;
 import com.liferay.commerce.product.exception.CPDefinitionMetaDescriptionException;
 import com.liferay.commerce.product.exception.CPDefinitionMetaKeywordsException;
 import com.liferay.commerce.product.exception.CPDefinitionMetaTitleException;
 import com.liferay.commerce.product.model.CPAttachmentFileEntry;
+import com.liferay.commerce.product.model.CPConfigurationEntry;
+import com.liferay.commerce.product.model.CPConfigurationEntrySetting;
+import com.liferay.commerce.product.model.CPConfigurationList;
 import com.liferay.commerce.product.model.CPDefinition;
 import com.liferay.commerce.product.model.CPDefinitionLocalization;
 import com.liferay.commerce.product.model.CPDefinitionOptionRel;
@@ -19,6 +23,9 @@ import com.liferay.commerce.product.model.CPTaxCategory;
 import com.liferay.commerce.product.model.CProduct;
 import com.liferay.commerce.product.model.CommerceCatalog;
 import com.liferay.commerce.product.service.CPAttachmentFileEntryLocalServiceUtil;
+import com.liferay.commerce.product.service.CPConfigurationEntryLocalServiceUtil;
+import com.liferay.commerce.product.service.CPConfigurationEntrySettingLocalServiceUtil;
+import com.liferay.commerce.product.service.CPConfigurationListLocalServiceUtil;
 import com.liferay.commerce.product.service.CPDefinitionLocalServiceUtil;
 import com.liferay.commerce.product.service.CPDefinitionOptionRelLocalServiceUtil;
 import com.liferay.commerce.product.service.CPDefinitionSpecificationOptionValueLocalServiceUtil;
@@ -39,6 +46,7 @@ import com.liferay.portal.kernel.service.ClassNameLocalServiceUtil;
 import com.liferay.portal.kernel.util.LocaleThreadLocal;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.UnicodePropertiesBuilder;
 import com.liferay.portal.kernel.util.Validator;
@@ -145,6 +153,38 @@ public class CPDefinitionImpl extends CPDefinitionBaseImpl {
 	}
 
 	@Override
+	public CPConfigurationEntry fetchCPConfigurationEntry(
+		long cpConfigurationListId) {
+
+		return _fetchCPConfigurationEntry(
+			cpConfigurationListId,
+			CPConfigurationEntryLocalServiceUtil.getCPConfigurationEntries(
+				ClassNameLocalServiceUtil.getClassNameId(CPDefinition.class),
+				getCPDefinitionId()));
+	}
+
+	@Override
+	public CPConfigurationEntry fetchMasterCPConfigurationEntry()
+		throws PortalException {
+
+		if (_cpConfigurationEntry != null) {
+			return _cpConfigurationEntry;
+		}
+
+		CPConfigurationList cpConfigurationList =
+			CPConfigurationListLocalServiceUtil.getMasterCPConfigurationList(
+				getGroupId());
+
+		_cpConfigurationEntry =
+			CPConfigurationEntryLocalServiceUtil.fetchCPConfigurationEntry(
+				PortalUtil.getClassNameId(CPDefinition.class.getName()),
+				getCPDefinitionId(),
+				cpConfigurationList.getCPConfigurationListId());
+
+		return _cpConfigurationEntry;
+	}
+
+	@Override
 	public String[] getAvailableLanguageIds() {
 		Set<String> availableLanguageIds = new TreeSet<>();
 
@@ -184,7 +224,7 @@ public class CPDefinitionImpl extends CPDefinitionBaseImpl {
 
 		return CPDefinitionSpecificationOptionValueLocalServiceUtil.
 			getCPDefinitionSpecificationOptionValues(
-				getCPDefinitionId(), QueryUtil.ALL_POS, QueryUtil.ALL_POS,
+				getCPDefinitionId(), true, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
 				null);
 	}
 
@@ -202,12 +242,12 @@ public class CPDefinitionImpl extends CPDefinitionBaseImpl {
 
 	@Override
 	public CPTaxCategory getCPTaxCategory() throws PortalException {
-		if (getCPTaxCategoryId() > 0) {
-			return CPTaxCategoryLocalServiceUtil.getCPTaxCategory(
-				getCPTaxCategoryId());
+		if (getCPTaxCategoryId() <= 0) {
+			return null;
 		}
 
-		return null;
+		return CPTaxCategoryLocalServiceUtil.getCPTaxCategory(
+			getCPTaxCategoryId());
 	}
 
 	@Override
@@ -265,6 +305,14 @@ public class CPDefinitionImpl extends CPDefinitionBaseImpl {
 				getCPDefinitionId());
 
 		return _descriptionMap;
+	}
+
+	@Override
+	public CPConfigurationList getMasterCPConfigurationList()
+		throws PortalException {
+
+		return CPConfigurationListLocalServiceUtil.getMasterCPConfigurationList(
+			getGroupId());
 	}
 
 	@Override
@@ -392,6 +440,23 @@ public class CPDefinitionImpl extends CPDefinitionBaseImpl {
 	}
 
 	@Override
+	public boolean isVisible(long cpConfigurationListId)
+		throws PortalException {
+
+		CPConfigurationEntry cpConfigurationEntry = _fetchCPConfigurationEntry(
+			cpConfigurationListId,
+			CPConfigurationEntryLocalServiceUtil.getCPConfigurationEntries(
+				ClassNameLocalServiceUtil.getClassNameId(CPDefinition.class),
+				getCPDefinitionId(), true));
+
+		if (cpConfigurationEntry == null) {
+			return false;
+		}
+
+		return true;
+	}
+
+	@Override
 	public void setDeliverySubscriptionTypeSettings(
 		String subscriptionTypeSettings) {
 
@@ -461,9 +526,41 @@ public class CPDefinitionImpl extends CPDefinitionBaseImpl {
 		_urlTitleMap = urlTitleMap;
 	}
 
+	private CPConfigurationEntry _fetchCPConfigurationEntry(
+		long cpConfigurationListId,
+		List<CPConfigurationEntry> cpConfigurationEntries) {
+
+		for (CPConfigurationEntry cpConfigurationEntry :
+				cpConfigurationEntries) {
+
+			if (cpConfigurationEntry.getCPConfigurationListId() ==
+					cpConfigurationListId) {
+
+				return cpConfigurationEntry;
+			}
+
+			CPConfigurationEntrySetting cpConfigurationEntrySetting =
+				CPConfigurationEntrySettingLocalServiceUtil.
+					fetchCPConfigurationEntrySetting(
+						cpConfigurationEntry.getCPConfigurationEntryId(),
+						CPConfigurationEntrySettingConstants.TYPE_INDEX_IDS);
+
+			if ((cpConfigurationEntrySetting != null) &&
+				StringUtil.contains(
+					cpConfigurationEntrySetting.getValue(),
+					String.valueOf(cpConfigurationListId))) {
+
+				return cpConfigurationEntry;
+			}
+		}
+
+		return null;
+	}
+
 	private static final Log _log = LogFactoryUtil.getLog(
 		CPDefinitionImpl.class);
 
+	private CPConfigurationEntry _cpConfigurationEntry;
 	private UnicodeProperties
 		_deliverySubscriptionTypeSettingsUnicodeProperties;
 	private Map<Locale, String> _descriptionMap;

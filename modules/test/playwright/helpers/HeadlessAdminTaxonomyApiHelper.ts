@@ -11,6 +11,12 @@ interface postSiteTaxonomyVocabularyProps {
 	siteId: string;
 }
 
+export interface postTaxonomyCategoryTaxonomyCategory {
+	name: string;
+	name_i18n?: {['ES-es']: string};
+	parentTaxonomyCategoryId: number;
+}
+
 export interface postTaxonomyVocabularyTaxonomyCategoryProps {
 	name: string;
 	name_i18n?: {['ES-es']: string};
@@ -19,6 +25,11 @@ export interface postTaxonomyVocabularyTaxonomyCategoryProps {
 
 interface patchTaxonomyCategoryProps {
 	id: number;
+	name: string;
+}
+
+interface postAssetLibraryKeywordProps {
+	depotEntryId: string;
 	name: string;
 }
 
@@ -34,6 +45,18 @@ export class HeadlessAdminTaxonomyApiHelper {
 	constructor(apiHelpers: ApiHelpers) {
 		this.apiHelpers = apiHelpers;
 		this.basePath = 'headless-admin-taxonomy/v1.0';
+	}
+
+	/**
+	 * It allows deleting a vocabulary.
+	 *
+	 * @param vocabularyId the vocabulary id
+	 */
+
+	async deleteTaxonomyVocabulary(vocabularyId: number) {
+		return this.apiHelpers.delete(
+			`${this.apiHelpers.baseUrl}${this.basePath}/taxonomy-vocabularies/${vocabularyId}`
+		);
 	}
 
 	/**
@@ -77,6 +100,24 @@ export class HeadlessAdminTaxonomyApiHelper {
 		return this.apiHelpers.post(
 			`${this.apiHelpers.baseUrl}${this.basePath}/sites/${siteId}/taxonomy-vocabularies`,
 			{data: {assetTypes, name}}
+		);
+	}
+
+	/**
+	 * It allows creating a subcategory inside a category.
+	 *
+	 * @param name the name of the subcategory
+	 * @param vocabularyId the parent vocabulary id
+	 */
+
+	async postTaxonomyCategoryTaxonomyCategory({
+		name,
+		name_i18n,
+		parentTaxonomyCategoryId,
+	}: postTaxonomyCategoryTaxonomyCategory): Promise<{id: number}> {
+		return this.apiHelpers.post(
+			`${this.apiHelpers.baseUrl}${this.basePath}/taxonomy-categories/${parentTaxonomyCategoryId}/taxonomy-categories`,
+			{data: {name, name_i18n}}
 		);
 	}
 
@@ -128,6 +169,23 @@ export class HeadlessAdminTaxonomyApiHelper {
 	}: postSiteKeywordProps): Promise<{id: number}> {
 		return this.apiHelpers.post(
 			`${this.apiHelpers.baseUrl}${this.basePath}/sites/${siteId}/keywords`,
+			{data: {name}}
+		);
+	}
+
+	/**
+	 * It allows creating a tag inside an asset library
+	 *
+	 * @param name the name of the tag
+	 * @param assetLibraryId the id of the asset library in which the tag will be created
+	 */
+
+	async postAssetLibraryKeyword({
+		depotEntryId,
+		name,
+	}: postAssetLibraryKeywordProps): Promise<{id: number}> {
+		return this.apiHelpers.post(
+			`${this.apiHelpers.baseUrl}${this.basePath}/asset-libraries/${depotEntryId}/keywords`,
 			{data: {name}}
 		);
 	}

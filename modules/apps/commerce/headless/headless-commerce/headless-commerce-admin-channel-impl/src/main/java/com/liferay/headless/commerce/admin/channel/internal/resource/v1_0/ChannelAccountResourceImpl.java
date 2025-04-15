@@ -31,7 +31,6 @@ import com.liferay.portal.vulcan.fields.NestedField;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -63,8 +62,9 @@ public class ChannelAccountResourceImpl extends BaseChannelAccountResourceImpl {
 		throws Exception {
 
 		CommerceChannel commerceChannel =
-			_commerceChannelLocalService.fetchByExternalReferenceCode(
-				externalReferenceCode, contextCompany.getCompanyId());
+			_commerceChannelLocalService.
+				fetchCommerceChannelByExternalReferenceCode(
+					externalReferenceCode, contextCompany.getCompanyId());
 
 		if (commerceChannel == null) {
 			throw new NoSuchChannelException(
@@ -190,8 +190,9 @@ public class ChannelAccountResourceImpl extends BaseChannelAccountResourceImpl {
 				_serviceContextHelper.getServiceContext();
 
 			commerceChannel =
-				_commerceChannelService.fetchByExternalReferenceCode(
-					externalReferenceCode, serviceContext.getCompanyId());
+				_commerceChannelService.
+					fetchCommerceChannelByExternalReferenceCode(
+						externalReferenceCode, serviceContext.getCompanyId());
 
 			if (commerceChannel == null) {
 				throw new NoSuchChannelException(
@@ -244,18 +245,11 @@ public class ChannelAccountResourceImpl extends BaseChannelAccountResourceImpl {
 				commerceChannelAccountEntryRels)
 		throws Exception {
 
-		List<ChannelAccount> channelAccounts = new ArrayList<>();
-
-		for (CommerceChannelAccountEntryRel commerceChannelAccountEntryRel :
-				commerceChannelAccountEntryRels) {
-
-			channelAccounts.add(
-				_toChannelAccount(
-					commerceChannelAccountEntryRel.
-						getCommerceChannelAccountEntryRelId()));
-		}
-
-		return channelAccounts;
+		return transform(
+			commerceChannelAccountEntryRels,
+			commerceChannelAccountEntryRel -> _toChannelAccount(
+				commerceChannelAccountEntryRel.
+					getCommerceChannelAccountEntryRelId()));
 	}
 
 	@Reference

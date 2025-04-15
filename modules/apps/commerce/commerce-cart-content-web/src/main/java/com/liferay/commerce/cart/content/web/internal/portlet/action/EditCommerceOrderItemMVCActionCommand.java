@@ -66,10 +66,12 @@ public class EditCommerceOrderItemMVCActionCommand
 						commerceOrderItemId);
 
 				_commerceOrderItemService.updateCommerceOrderItem(
+					commerceOrderItem.getExternalReferenceCode(),
 					commerceOrderItem.getCommerceOrderItemId(),
 					commerceOrderItem.getJson(),
 					_commerceOrderItemQuantityFormatter.parse(
-						actionRequest, "quantity"),
+						actionRequest, CommerceOrderItem.class.getName(),
+						"quantity"),
 					commerceContext,
 					ServiceContextFactory.getInstance(
 						CommerceOrderItem.class.getName(), actionRequest));

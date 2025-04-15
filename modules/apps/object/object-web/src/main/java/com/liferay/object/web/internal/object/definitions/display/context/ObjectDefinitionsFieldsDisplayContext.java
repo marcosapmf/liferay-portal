@@ -13,7 +13,7 @@ import com.liferay.object.constants.ObjectFieldConstants;
 import com.liferay.object.field.business.type.ObjectFieldBusinessTypeRegistry;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectField;
-import com.liferay.object.service.ObjectFieldSettingLocalService;
+import com.liferay.object.service.ObjectFolderLocalService;
 import com.liferay.object.web.internal.util.ObjectFieldBusinessTypeUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONObject;
@@ -47,13 +47,14 @@ public class ObjectDefinitionsFieldsDisplayContext
 		ModelResourcePermission<ObjectDefinition>
 			objectDefinitionModelResourcePermission,
 		ObjectFieldBusinessTypeRegistry objectFieldBusinessTypeRegistry,
-		ObjectFieldSettingLocalService objectFieldSettingLocalService) {
+		ObjectFolderLocalService objectFolderLocalService) {
 
-		super(httpServletRequest, objectDefinitionModelResourcePermission);
+		super(
+			httpServletRequest, objectDefinitionModelResourcePermission,
+			objectFolderLocalService);
 
 		_listTypeDefinitionService = listTypeDefinitionService;
 		_objectFieldBusinessTypeRegistry = objectFieldBusinessTypeRegistry;
-		_objectFieldSettingLocalService = objectFieldSettingLocalService;
 	}
 
 	public CreationMenu getCreationMenu(ObjectDefinition objectDefinition)
@@ -144,8 +145,7 @@ public class ObjectDefinitionsFieldsDisplayContext
 
 	public JSONObject getObjectFieldJSONObject(ObjectField objectField) {
 		return ObjectFieldUtil.toJSONObject(
-			_listTypeDefinitionService, objectField,
-			_objectFieldSettingLocalService);
+			_listTypeDefinitionService, objectField);
 	}
 
 	@Override
@@ -156,7 +156,5 @@ public class ObjectDefinitionsFieldsDisplayContext
 	private final ListTypeDefinitionService _listTypeDefinitionService;
 	private final ObjectFieldBusinessTypeRegistry
 		_objectFieldBusinessTypeRegistry;
-	private final ObjectFieldSettingLocalService
-		_objectFieldSettingLocalService;
 
 }

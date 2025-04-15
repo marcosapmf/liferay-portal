@@ -121,8 +121,9 @@ public class CSVCommerceOrderImporterTypeImpl
 				commerceOrder.getGroupId());
 
 		_commerceOrderImporterItemImpls = _getCommerceOrderImporterItemImpls(
-			commerceOrder.getCompanyId(), commerceChannel.getGroupId(),
-			(FileEntry)object);
+			commerceOrder.getCompanyId(), commerceOrder.getCommerceAccountId(),
+			commerceChannel.getGroupId(),
+			commerceOrder.getCommerceOrderTypeId(), (FileEntry)object);
 
 		int start = 0;
 		int end = _commerceOrderImporterItemImpls.length;
@@ -226,7 +227,8 @@ public class CSVCommerceOrderImporterTypeImpl
 	}
 
 	private CommerceOrderImporterItemImpl[] _getCommerceOrderImporterItemImpls(
-			long companyId, long commerceChannelGroupId, FileEntry fileEntry)
+			long companyId, long accountEntryId, long commerceChannelGroupId,
+			long commerceOrderTypeId, FileEntry fileEntry)
 		throws Exception {
 
 		CSVParser csvParser = _getCSVParser(fileEntry);
@@ -234,7 +236,8 @@ public class CSVCommerceOrderImporterTypeImpl
 		return TransformUtil.transformToArray(
 			csvParser.getRecords(),
 			csvRecord -> _toCommerceOrderImporterItemImpl(
-				companyId, commerceChannelGroupId, csvRecord),
+				companyId, accountEntryId, commerceChannelGroupId,
+				commerceOrderTypeId, csvRecord),
 			CommerceOrderImporterItemImpl.class);
 	}
 
@@ -257,7 +260,8 @@ public class CSVCommerceOrderImporterTypeImpl
 	}
 
 	private CommerceOrderImporterItemImpl _toCommerceOrderImporterItemImpl(
-			long companyId, long commerceChannelGroupId, CSVRecord csvRecord)
+			long companyId, long accountEntryId, long commerceChannelGroupId,
+			long commerceOrderTypeId, CSVRecord csvRecord)
 		throws Exception {
 
 		String sku = GetterUtil.getString(csvRecord.get("sku"));
@@ -303,12 +307,13 @@ public class CSVCommerceOrderImporterTypeImpl
 		else {
 			CPInstance firstAvailableReplacementCPInstance =
 				_cpInstanceHelper.fetchFirstAvailableReplacementCPInstance(
-					commerceChannelGroupId, cpInstance.getCPInstanceId());
+					accountEntryId, commerceChannelGroupId, commerceOrderTypeId,
+					cpInstance.getCPInstanceId());
 
 			if ((firstAvailableReplacementCPInstance != null) &&
 				!_cpAvailabilityChecker.check(
-					commerceChannelGroupId, cpInstance, StringPool.BLANK,
-					quantity)) {
+					accountEntryId, commerceChannelGroupId, cpInstance,
+					StringPool.BLANK, quantity)) {
 
 				commerceOrderImporterItemImpl.setReplacingSKU(
 					cpInstance.getSku());

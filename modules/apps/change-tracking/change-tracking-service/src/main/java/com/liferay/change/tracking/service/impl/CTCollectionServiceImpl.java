@@ -11,6 +11,7 @@ import com.liferay.change.tracking.exception.CTCollectionStatusException;
 import com.liferay.change.tracking.model.CTAutoResolutionInfo;
 import com.liferay.change.tracking.model.CTCollection;
 import com.liferay.change.tracking.model.CTCollectionTable;
+import com.liferay.change.tracking.model.CTEntry;
 import com.liferay.change.tracking.service.CTProcessLocalService;
 import com.liferay.change.tracking.service.base.CTCollectionServiceBaseImpl;
 import com.liferay.change.tracking.service.persistence.CTAutoResolutionInfoPersistence;
@@ -97,6 +98,20 @@ public class CTCollectionServiceImpl extends CTCollectionServiceBaseImpl {
 	}
 
 	@Override
+	public void discardCTEntry(long ctCollectionId, List<CTEntry> ctEntries)
+		throws PortalException {
+
+		CTCollection ctCollection = ctCollectionPersistence.findByPrimaryKey(
+			ctCollectionId);
+
+		_ctCollectionModelResourcePermission.check(
+			getPermissionChecker(), ctCollection, ActionKeys.UPDATE);
+
+		ctCollectionLocalService.discardCTEntry(
+			ctCollectionId, ctEntries, false);
+	}
+
+	@Override
 	public void discardCTEntry(
 			long ctCollectionId, long modelClassNameId, long modelClassPK)
 		throws PortalException {
@@ -157,6 +172,21 @@ public class CTCollectionServiceImpl extends CTCollectionServiceBaseImpl {
 		);
 
 		return ctCollectionPersistence.dslQueryCount(dslQuery);
+	}
+
+	@Override
+	public void moveCTEntries(
+			long fromCTCollectionId, long toCTCollectionId,
+			List<CTEntry> ctEntries)
+		throws PortalException {
+
+		_ctCollectionModelResourcePermission.check(
+			getPermissionChecker(), fromCTCollectionId, ActionKeys.UPDATE);
+		_ctCollectionModelResourcePermission.check(
+			getPermissionChecker(), toCTCollectionId, ActionKeys.UPDATE);
+
+		ctCollectionLocalService.moveCTEntries(
+			fromCTCollectionId, toCTCollectionId, ctEntries);
 	}
 
 	@Override
@@ -234,12 +264,12 @@ public class CTCollectionServiceImpl extends CTCollectionServiceBaseImpl {
 			companyId
 		).and(
 			() -> {
-				if (!ArrayUtil.isEmpty(statuses)) {
-					return CTCollectionTable.INSTANCE.status.in(
-						ArrayUtil.toArray(statuses));
+				if (ArrayUtil.isEmpty(statuses)) {
+					return null;
 				}
 
-				return null;
+				return CTCollectionTable.INSTANCE.status.in(
+					ArrayUtil.toArray(statuses));
 			}
 		);
 

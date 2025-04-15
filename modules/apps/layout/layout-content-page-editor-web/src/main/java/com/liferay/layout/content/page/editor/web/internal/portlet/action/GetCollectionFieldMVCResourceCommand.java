@@ -15,9 +15,9 @@ import com.liferay.fragment.entry.processor.helper.FragmentEntryProcessorHelper;
 import com.liferay.fragment.processor.DefaultFragmentEntryProcessorContext;
 import com.liferay.fragment.processor.FragmentEntryProcessorContext;
 import com.liferay.info.collection.provider.RepeatableFieldInfoItemCollectionProvider;
-import com.liferay.info.collection.provider.item.selector.criterion.InfoCollectionProviderItemSelectorCriterion;
-import com.liferay.info.collection.provider.item.selector.criterion.RelatedInfoItemCollectionProviderItemSelectorCriterion;
-import com.liferay.info.collection.provider.item.selector.criterion.RepeatableFieldInfoCollectionProviderItemSelectorCriterion;
+import com.liferay.info.collection.provider.item.selector.InfoCollectionProviderItemSelectorCriterion;
+import com.liferay.info.collection.provider.item.selector.RelatedInfoItemCollectionProviderItemSelectorCriterion;
+import com.liferay.info.collection.provider.item.selector.RepeatableFieldInfoCollectionProviderItemSelectorCriterion;
 import com.liferay.info.exception.NoSuchInfoItemException;
 import com.liferay.info.field.InfoField;
 import com.liferay.info.field.InfoFieldValue;
@@ -202,15 +202,15 @@ public class GetCollectionFieldMVCResourceCommand
 
 		// LPS-133832
 
-		if (listObjectReference instanceof ClassedModelListObjectReference) {
-			ClassedModelListObjectReference classedModelListObjectReference =
-				(ClassedModelListObjectReference)listObjectReference;
-
-			return _assetListEntryLocalService.fetchAssetListEntry(
-				classedModelListObjectReference.getClassPK());
+		if (!(listObjectReference instanceof ClassedModelListObjectReference)) {
+			return null;
 		}
 
-		return null;
+		ClassedModelListObjectReference classedModelListObjectReference =
+			(ClassedModelListObjectReference)listObjectReference;
+
+		return _assetListEntryLocalService.fetchAssetListEntry(
+			classedModelListObjectReference.getClassPK());
 	}
 
 	private JSONObject _getCollectionFieldsJSONObject(
@@ -505,26 +505,28 @@ public class GetCollectionFieldMVCResourceCommand
 		).put(
 			"classPK",
 			() -> {
-				if (infoItemIdentifier instanceof ClassPKInfoItemIdentifier) {
-					ClassPKInfoItemIdentifier classPKInfoItemIdentifier =
-						(ClassPKInfoItemIdentifier)infoItemIdentifier;
+				if (!(infoItemIdentifier instanceof
+						ClassPKInfoItemIdentifier)) {
 
-					return classPKInfoItemIdentifier.getClassPK();
+					return null;
 				}
 
-				return null;
+				ClassPKInfoItemIdentifier classPKInfoItemIdentifier =
+					(ClassPKInfoItemIdentifier)infoItemIdentifier;
+
+				return classPKInfoItemIdentifier.getClassPK();
 			}
 		).put(
 			"externalReferenceCode",
 			() -> {
-				if (infoItemIdentifier instanceof ERCInfoItemIdentifier) {
-					ERCInfoItemIdentifier ercInfoItemIdentifier =
-						(ERCInfoItemIdentifier)infoItemIdentifier;
-
-					return ercInfoItemIdentifier.getExternalReferenceCode();
+				if (!(infoItemIdentifier instanceof ERCInfoItemIdentifier)) {
+					return null;
 				}
 
-				return null;
+				ERCInfoItemIdentifier ercInfoItemIdentifier =
+					(ERCInfoItemIdentifier)infoItemIdentifier;
+
+				return ercInfoItemIdentifier.getExternalReferenceCode();
 			}
 		);
 
@@ -577,12 +579,14 @@ public class GetCollectionFieldMVCResourceCommand
 	}
 
 	private Object _getInfoItem(HttpServletRequest httpServletRequest) {
-		long classNameId = ParamUtil.getLong(httpServletRequest, "classNameId");
+		String className = _portal.fetchClassName(
+			ParamUtil.getLong(httpServletRequest, "classNameId"));
+
 		long classPK = ParamUtil.getLong(httpServletRequest, "classPK");
 		String externalReferenceCode = ParamUtil.getString(
 			httpServletRequest, "externalReferenceCode");
 
-		if ((classNameId <= 0) ||
+		if (Validator.isNull(className) ||
 			((classPK <= 0) && Validator.isNull(externalReferenceCode))) {
 
 			return null;
@@ -599,8 +603,8 @@ public class GetCollectionFieldMVCResourceCommand
 		InfoItemObjectProvider<Object> infoItemObjectProvider =
 			(InfoItemObjectProvider<Object>)
 				_infoItemServiceRegistry.getFirstInfoItemService(
-					InfoItemObjectProvider.class,
-					_portal.getClassName(classNameId), infoItemServiceFilter);
+					InfoItemObjectProvider.class, className,
+					infoItemServiceFilter);
 
 		if (infoItemObjectProvider == null) {
 			return null;

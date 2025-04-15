@@ -5,6 +5,7 @@
 
 package com.liferay.object.internal.notification.term.contributor;
 
+import com.liferay.notification.context.NotificationContext;
 import com.liferay.notification.term.evaluator.NotificationTermEvaluator;
 import com.liferay.object.definition.notification.term.util.ObjectDefinitionNotificationTermUtil;
 import com.liferay.object.internal.notification.term.evaluator.util.ObjectDefinitionNotificationTermEvaluatorUtil;
@@ -37,6 +38,7 @@ import java.text.DateFormat;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 
@@ -62,6 +64,28 @@ public class ObjectDefinitionNotificationTermEvaluator
 		_objectFieldLocalService = objectFieldLocalService;
 		_objectRelationshipLocalService = objectRelationshipLocalService;
 		_userLocalService = userLocalService;
+	}
+
+	@Override
+	public String evaluate(
+			Context context, NotificationContext notificationContext,
+			String termName)
+		throws PortalException {
+
+		Map<String, Object> termValues = notificationContext.getTermValues();
+
+		Locale locale = notificationContext.getUserLocale();
+
+		if (locale != null) {
+			if (_isObjectFieldTermName("createDate", termName)) {
+				return _format((Date)termValues.get("createDate"), locale);
+			}
+			else if (_isObjectFieldTermName("modifiedDate", termName)) {
+				return _format((Date)termValues.get("modifiedDate"), locale);
+			}
+		}
+
+		return evaluate(context, termValues, termName);
 	}
 
 	@Override
@@ -165,12 +189,7 @@ public class ObjectDefinitionNotificationTermEvaluator
 				_objectFieldLocalService.getObjectFields(
 					_objectDefinition.getObjectDefinitionId())) {
 
-			if (!Objects.equals(
-					ObjectDefinitionNotificationTermUtil.getObjectFieldTermName(
-						_objectDefinition.getShortName(),
-						objectField.getName()),
-					termName)) {
-
+			if (!_isObjectFieldTermName(objectField.getName(), termName)) {
 				continue;
 			}
 
@@ -337,6 +356,13 @@ public class ObjectDefinitionNotificationTermEvaluator
 				parentObjectField, values.get(parentObjectField.getName())));
 	}
 
+	private String _format(Date date, Locale locale) {
+		DateFormat dateFormat = DateFormatFactoryUtil.getSimpleDateFormat(
+			"EEE MMM dd HH:mm:ss zzz yyyy", locale);
+
+		return dateFormat.format(date);
+	}
+
 	private String _getTermValue(String partialTermName, User user)
 		throws PortalException {
 
@@ -396,6 +422,15 @@ public class ObjectDefinitionNotificationTermEvaluator
 		}
 
 		return true;
+	}
+
+	private boolean _isObjectFieldTermName(
+		String objectFieldName, String termName) {
+
+		return StringUtil.equals(
+			ObjectDefinitionNotificationTermUtil.getObjectFieldTermName(
+				_objectDefinition.getShortName(), objectFieldName),
+			termName);
 	}
 
 	private final List<EvaluatorFunction> _evaluatorFunctions = Arrays.asList(

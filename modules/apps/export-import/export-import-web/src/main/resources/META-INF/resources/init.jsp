@@ -23,7 +23,6 @@ taglib uri="http://liferay.com/tld/util" prefix="liferay-util" %>
 
 <%@ page import="com.liferay.document.library.configuration.DLConfiguration" %><%@
 page import="com.liferay.dynamic.data.mapping.exception.StructureDuplicateStructureKeyException" %><%@
-page import="com.liferay.exportimport.constants.ExportImportPortletKeys" %><%@
 page import="com.liferay.exportimport.kernel.background.task.BackgroundTaskExecutorNames" %><%@
 page import="com.liferay.exportimport.kernel.configuration.ExportImportConfigurationUtil" %><%@
 page import="com.liferay.exportimport.kernel.configuration.constants.ExportImportConfigurationConstants" %><%@
@@ -121,6 +120,7 @@ page import="com.liferay.portal.kernel.service.ServiceContext" %><%@
 page import="com.liferay.portal.kernel.service.TicketLocalServiceUtil" %><%@
 page import="com.liferay.portal.kernel.service.UserLocalServiceUtil" %><%@
 page import="com.liferay.portal.kernel.service.permission.GroupPermissionUtil" %><%@
+page import="com.liferay.portal.kernel.service.permission.PortletPermissionUtil" %><%@
 page import="com.liferay.portal.kernel.servlet.SessionMessages" %><%@
 page import="com.liferay.portal.kernel.upload.configuration.UploadServletRequestConfigurationProviderUtil" %><%@
 page import="com.liferay.portal.kernel.util.AggregateResourceBundle" %><%@
@@ -148,6 +148,8 @@ page import="com.liferay.portal.kernel.workflow.WorkflowConstants" %><%@
 page import="com.liferay.portal.util.PropsValues" %><%@
 page import="com.liferay.site.display.context.GroupDisplayContextHelper" %><%@
 page import="com.liferay.site.navigation.taglib.servlet.taglib.util.BreadcrumbEntriesUtil" %><%@
+page import="com.liferay.staging.StagingGroupHelper" %><%@
+page import="com.liferay.staging.StagingGroupHelperUtil" %><%@
 page import="com.liferay.taglib.search.ResultRow" %>
 
 <%@ page import="java.io.Serializable" %>
@@ -191,6 +193,8 @@ Calendar calendar = CalendarFactoryUtil.getCalendar(timeZone, locale);
 int timeZoneOffset = timeZone.getOffset(calendar.getTimeInMillis());
 
 Format dateTimeFormat = FastDateFormatFactoryUtil.getDateTime(locale, timeZone);
+
+StagingGroupHelper stagingGroupHelper = StagingGroupHelperUtil.getStagingGroupHelper();
 %>
 
 <%@ include file="/init-ext.jsp" %>

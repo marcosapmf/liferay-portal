@@ -212,6 +212,10 @@ export function selectPanels(activeItemId, activeItemType, state) {
 	let activeItem = null;
 	let panelsIds = {};
 
+	if (!activeItemId) {
+		return {activeItem, panelsIds};
+	}
+
 	if (activeItemType === ITEM_TYPES.layoutDataItem) {
 		activeItem = state.layoutData.items[activeItemId];
 	}
@@ -222,6 +226,10 @@ export function selectPanels(activeItemId, activeItemType, state) {
 			activeItemId.indexOf('-') + 1,
 			activeItemId.length
 		);
+
+		if (!state.fragmentEntryLinks[fragmentEntryLinkId]) {
+			return {activeItem, panelsIds};
+		}
 
 		const editableType =
 			state.fragmentEntryLinks[fragmentEntryLinkId].editableTypes[

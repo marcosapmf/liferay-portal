@@ -486,7 +486,10 @@ public class PortletRenderUtil {
 
 		printWriter.print("<link href=\"");
 		printWriter.print(HtmlUtil.escape(cssPath));
-		printWriter.println("\" rel=\"stylesheet\" type=\"text/css\"");
+		printWriter.print(StringPool.QUOTE);
+		printWriter.print(
+			ContentSecurityPolicyNonceProviderUtil.getNonceAttribute(null));
+		printWriter.println(" rel=\"stylesheet\" type=\"text/css\"");
 
 		if (attributes != null) {
 			for (Map.Entry<String, String> entry : attributes.entrySet()) {

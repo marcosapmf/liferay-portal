@@ -13,8 +13,6 @@ import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.exception.NoSuchModelException;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ResourceActionLocalService;
@@ -35,10 +33,12 @@ import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
 import com.liferay.portal.vulcan.batch.engine.VulcanBatchEngineTaskItemDelegate;
 import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineExportTaskResource;
 import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineImportTaskResource;
+import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegate;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 import com.liferay.portal.vulcan.util.ActionUtil;
+import com.liferay.portal.vulcan.util.UriInfoUtil;
 
 import java.io.Serializable;
 
@@ -68,7 +68,8 @@ import javax.ws.rs.core.UriInfo;
 @javax.ws.rs.Path("/v1.0")
 public abstract class BaseObjectDefinitionResourceImpl
 	implements EntityModelResource, ObjectDefinitionResource,
-			   VulcanBatchEngineTaskItemDelegate<ObjectDefinition> {
+			   VulcanBatchEngineTaskItemDelegate<ObjectDefinition>,
+			   VulcanCRUDItemDelegate<ObjectDefinition> {
 
 	/**
 	 * Invoke this method with the command line:
@@ -118,9 +119,11 @@ public abstract class BaseObjectDefinitionResourceImpl
 			String search,
 			@javax.ws.rs.core.Context
 				com.liferay.portal.vulcan.aggregation.Aggregation aggregation,
-			@javax.ws.rs.core.Context Filter filter,
+			@javax.ws.rs.core.Context
+				com.liferay.portal.kernel.search.filter.Filter filter,
 			@javax.ws.rs.core.Context Pagination pagination,
-			@javax.ws.rs.core.Context Sort[] sorts)
+			@javax.ws.rs.core.Context com.liferay.portal.kernel.search.Sort[]
+				sorts)
 		throws Exception {
 
 		return Page.of(Collections.emptyList());
@@ -173,8 +176,10 @@ public abstract class BaseObjectDefinitionResourceImpl
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
 			@javax.ws.rs.QueryParam("search")
 			String search,
-			@javax.ws.rs.core.Context Filter filter,
-			@javax.ws.rs.core.Context Sort[] sorts,
+			@javax.ws.rs.core.Context
+				com.liferay.portal.kernel.search.filter.Filter filter,
+			@javax.ws.rs.core.Context com.liferay.portal.kernel.search.Sort[]
+				sorts,
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
 			@javax.ws.rs.QueryParam("callbackURL")
 			String callbackURL,
@@ -209,7 +214,7 @@ public abstract class BaseObjectDefinitionResourceImpl
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'POST' 'http://localhost:8080/o/object-admin/v1.0/object-definitions' -d $'{"accountEntryRestricted": ___, "accountEntryRestrictedObjectFieldName": ___, "active": ___, "defaultLanguageId": ___, "enableCategorization": ___, "enableComments": ___, "enableIndexSearch": ___, "enableLocalization": ___, "enableObjectEntryDraft": ___, "enableObjectEntryHistory": ___, "externalReferenceCode": ___, "label": ___, "modifiable": ___, "name": ___, "objectActions": ___, "objectFields": ___, "objectFolderExternalReferenceCode": ___, "objectLayouts": ___, "objectRelationships": ___, "objectValidationRules": ___, "objectViews": ___, "panelAppOrder": ___, "panelCategoryKey": ___, "pluralLabel": ___, "portlet": ___, "rootObjectDefinitionExternalReferenceCode": ___, "scope": ___, "status": ___, "storageType": ___, "system": ___, "titleObjectFieldName": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 * curl -X 'POST' 'http://localhost:8080/o/object-admin/v1.0/object-definitions' -d $'{"accountEntryRestricted": ___, "accountEntryRestrictedObjectFieldName": ___, "active": ___, "className": ___, "defaultLanguageId": ___, "enableCategorization": ___, "enableComments": ___, "enableFriendlyURLCustomization": ___, "enableIndexSearch": ___, "enableLocalization": ___, "enableObjectEntryDraft": ___, "enableObjectEntryHistory": ___, "enableObjectEntryVersioning": ___, "externalReferenceCode": ___, "label": ___, "modifiable": ___, "name": ___, "objectActions": ___, "objectDefinitionSettings": ___, "objectFields": ___, "objectFolderExternalReferenceCode": ___, "objectLayouts": ___, "objectRelationships": ___, "objectValidationRules": ___, "objectViews": ___, "panelAppOrder": ___, "panelCategoryKey": ___, "pluralLabel": ___, "portlet": ___, "scope": ___, "status": ___, "storageType": ___, "system": ___, "titleObjectFieldName": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.tags.Tags(
 		value = {
@@ -311,7 +316,7 @@ public abstract class BaseObjectDefinitionResourceImpl
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'PUT' 'http://localhost:8080/o/object-admin/v1.0/object-definitions/by-external-reference-code/{externalReferenceCode}' -d $'{"accountEntryRestricted": ___, "accountEntryRestrictedObjectFieldName": ___, "active": ___, "defaultLanguageId": ___, "enableCategorization": ___, "enableComments": ___, "enableIndexSearch": ___, "enableLocalization": ___, "enableObjectEntryDraft": ___, "enableObjectEntryHistory": ___, "externalReferenceCode": ___, "label": ___, "modifiable": ___, "name": ___, "objectActions": ___, "objectFields": ___, "objectFolderExternalReferenceCode": ___, "objectLayouts": ___, "objectRelationships": ___, "objectValidationRules": ___, "objectViews": ___, "panelAppOrder": ___, "panelCategoryKey": ___, "pluralLabel": ___, "portlet": ___, "rootObjectDefinitionExternalReferenceCode": ___, "scope": ___, "status": ___, "storageType": ___, "system": ___, "titleObjectFieldName": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 * curl -X 'PUT' 'http://localhost:8080/o/object-admin/v1.0/object-definitions/by-external-reference-code/{externalReferenceCode}' -d $'{"accountEntryRestricted": ___, "accountEntryRestrictedObjectFieldName": ___, "active": ___, "className": ___, "defaultLanguageId": ___, "enableCategorization": ___, "enableComments": ___, "enableFriendlyURLCustomization": ___, "enableIndexSearch": ___, "enableLocalization": ___, "enableObjectEntryDraft": ___, "enableObjectEntryHistory": ___, "enableObjectEntryVersioning": ___, "externalReferenceCode": ___, "label": ___, "modifiable": ___, "name": ___, "objectActions": ___, "objectDefinitionSettings": ___, "objectFields": ___, "objectFolderExternalReferenceCode": ___, "objectLayouts": ___, "objectRelationships": ___, "objectValidationRules": ___, "objectViews": ___, "panelAppOrder": ___, "panelCategoryKey": ___, "pluralLabel": ___, "portlet": ___, "scope": ___, "status": ___, "storageType": ___, "system": ___, "titleObjectFieldName": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
@@ -455,7 +460,7 @@ public abstract class BaseObjectDefinitionResourceImpl
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'PATCH' 'http://localhost:8080/o/object-admin/v1.0/object-definitions/{objectDefinitionId}' -d $'{"accountEntryRestricted": ___, "accountEntryRestrictedObjectFieldName": ___, "active": ___, "defaultLanguageId": ___, "enableCategorization": ___, "enableComments": ___, "enableIndexSearch": ___, "enableLocalization": ___, "enableObjectEntryDraft": ___, "enableObjectEntryHistory": ___, "externalReferenceCode": ___, "label": ___, "modifiable": ___, "name": ___, "objectActions": ___, "objectFields": ___, "objectFolderExternalReferenceCode": ___, "objectLayouts": ___, "objectRelationships": ___, "objectValidationRules": ___, "objectViews": ___, "panelAppOrder": ___, "panelCategoryKey": ___, "pluralLabel": ___, "portlet": ___, "rootObjectDefinitionExternalReferenceCode": ___, "scope": ___, "status": ___, "storageType": ___, "system": ___, "titleObjectFieldName": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 * curl -X 'PATCH' 'http://localhost:8080/o/object-admin/v1.0/object-definitions/{objectDefinitionId}' -d $'{"accountEntryRestricted": ___, "accountEntryRestrictedObjectFieldName": ___, "active": ___, "className": ___, "defaultLanguageId": ___, "enableCategorization": ___, "enableComments": ___, "enableFriendlyURLCustomization": ___, "enableIndexSearch": ___, "enableLocalization": ___, "enableObjectEntryDraft": ___, "enableObjectEntryHistory": ___, "enableObjectEntryVersioning": ___, "externalReferenceCode": ___, "label": ___, "modifiable": ___, "name": ___, "objectActions": ___, "objectDefinitionSettings": ___, "objectFields": ___, "objectFolderExternalReferenceCode": ___, "objectLayouts": ___, "objectRelationships": ___, "objectValidationRules": ___, "objectViews": ___, "panelAppOrder": ___, "panelCategoryKey": ___, "pluralLabel": ___, "portlet": ___, "scope": ___, "status": ___, "storageType": ___, "system": ___, "titleObjectFieldName": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
@@ -502,6 +507,11 @@ public abstract class BaseObjectDefinitionResourceImpl
 			existingObjectDefinition.setActive(objectDefinition.getActive());
 		}
 
+		if (objectDefinition.getClassName() != null) {
+			existingObjectDefinition.setClassName(
+				objectDefinition.getClassName());
+		}
+
 		if (objectDefinition.getDefaultLanguageId() != null) {
 			existingObjectDefinition.setDefaultLanguageId(
 				objectDefinition.getDefaultLanguageId());
@@ -515,6 +525,11 @@ public abstract class BaseObjectDefinitionResourceImpl
 		if (objectDefinition.getEnableComments() != null) {
 			existingObjectDefinition.setEnableComments(
 				objectDefinition.getEnableComments());
+		}
+
+		if (objectDefinition.getEnableFriendlyURLCustomization() != null) {
+			existingObjectDefinition.setEnableFriendlyURLCustomization(
+				objectDefinition.getEnableFriendlyURLCustomization());
 		}
 
 		if (objectDefinition.getEnableIndexSearch() != null) {
@@ -535,6 +550,11 @@ public abstract class BaseObjectDefinitionResourceImpl
 		if (objectDefinition.getEnableObjectEntryHistory() != null) {
 			existingObjectDefinition.setEnableObjectEntryHistory(
 				objectDefinition.getEnableObjectEntryHistory());
+		}
+
+		if (objectDefinition.getEnableObjectEntryVersioning() != null) {
+			existingObjectDefinition.setEnableObjectEntryVersioning(
+				objectDefinition.getEnableObjectEntryVersioning());
 		}
 
 		if (objectDefinition.getExternalReferenceCode() != null) {
@@ -579,15 +599,6 @@ public abstract class BaseObjectDefinitionResourceImpl
 			existingObjectDefinition.setPortlet(objectDefinition.getPortlet());
 		}
 
-		if (objectDefinition.getRootObjectDefinitionExternalReferenceCode() !=
-				null) {
-
-			existingObjectDefinition.
-				setRootObjectDefinitionExternalReferenceCode(
-					objectDefinition.
-						getRootObjectDefinitionExternalReferenceCode());
-		}
-
 		if (objectDefinition.getScope() != null) {
 			existingObjectDefinition.setScope(objectDefinition.getScope());
 		}
@@ -615,7 +626,7 @@ public abstract class BaseObjectDefinitionResourceImpl
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'PUT' 'http://localhost:8080/o/object-admin/v1.0/object-definitions/{objectDefinitionId}' -d $'{"accountEntryRestricted": ___, "accountEntryRestrictedObjectFieldName": ___, "active": ___, "defaultLanguageId": ___, "enableCategorization": ___, "enableComments": ___, "enableIndexSearch": ___, "enableLocalization": ___, "enableObjectEntryDraft": ___, "enableObjectEntryHistory": ___, "externalReferenceCode": ___, "label": ___, "modifiable": ___, "name": ___, "objectActions": ___, "objectFields": ___, "objectFolderExternalReferenceCode": ___, "objectLayouts": ___, "objectRelationships": ___, "objectValidationRules": ___, "objectViews": ___, "panelAppOrder": ___, "panelCategoryKey": ___, "pluralLabel": ___, "portlet": ___, "rootObjectDefinitionExternalReferenceCode": ___, "scope": ___, "status": ___, "storageType": ___, "system": ___, "titleObjectFieldName": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 * curl -X 'PUT' 'http://localhost:8080/o/object-admin/v1.0/object-definitions/{objectDefinitionId}' -d $'{"accountEntryRestricted": ___, "accountEntryRestrictedObjectFieldName": ___, "active": ___, "className": ___, "defaultLanguageId": ___, "enableCategorization": ___, "enableComments": ___, "enableFriendlyURLCustomization": ___, "enableIndexSearch": ___, "enableLocalization": ___, "enableObjectEntryDraft": ___, "enableObjectEntryHistory": ___, "enableObjectEntryVersioning": ___, "externalReferenceCode": ___, "label": ___, "modifiable": ___, "name": ___, "objectActions": ___, "objectDefinitionSettings": ___, "objectFields": ___, "objectFolderExternalReferenceCode": ___, "objectLayouts": ___, "objectRelationships": ___, "objectValidationRules": ___, "objectViews": ___, "panelAppOrder": ___, "panelCategoryKey": ___, "pluralLabel": ___, "portlet": ___, "scope": ___, "status": ___, "storageType": ___, "system": ___, "titleObjectFieldName": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
@@ -808,8 +819,25 @@ public abstract class BaseObjectDefinitionResourceImpl
 			Map<String, Serializable> parameters)
 		throws Exception {
 
-		for (ObjectDefinition objectDefinition : objectDefinitions) {
-			deleteObjectDefinition(objectDefinition.getId());
+		UnsafeFunction<ObjectDefinition, ObjectDefinition, Exception>
+			objectDefinitionUnsafeFunction = objectDefinition -> {
+				deleteObjectDefinition(objectDefinition.getId());
+
+				return objectDefinition;
+			};
+
+		if (contextBatchUnsafeBiConsumer != null) {
+			contextBatchUnsafeBiConsumer.accept(
+				objectDefinitions, objectDefinitionUnsafeFunction);
+		}
+		else if (contextBatchUnsafeConsumer != null) {
+			contextBatchUnsafeConsumer.accept(
+				objectDefinitions, objectDefinitionUnsafeFunction::apply);
+		}
+		else {
+			for (ObjectDefinition objectDefinition : objectDefinitions) {
+				objectDefinitionUnsafeFunction.apply(objectDefinition);
+			}
 		}
 	}
 
@@ -846,7 +874,9 @@ public abstract class BaseObjectDefinitionResourceImpl
 
 	@Override
 	public Page<ObjectDefinition> read(
-			Filter filter, Pagination pagination, Sort[] sorts,
+			com.liferay.portal.kernel.search.filter.Filter filter,
+			Pagination pagination,
+			com.liferay.portal.kernel.search.Sort[] sorts,
 			Map<String, Serializable> parameters, String search)
 		throws Exception {
 
@@ -937,6 +967,11 @@ public abstract class BaseObjectDefinitionResourceImpl
 		return null;
 	}
 
+	@Override
+	public ObjectDefinition getItem(Long id) throws Exception {
+		return getObjectDefinition(id);
+	}
+
 	public void setContextAcceptLanguage(AcceptLanguage contextAcceptLanguage) {
 		this.contextAcceptLanguage = contextAcceptLanguage;
 	}
@@ -978,7 +1013,8 @@ public abstract class BaseObjectDefinitionResourceImpl
 	}
 
 	public void setContextUriInfo(UriInfo contextUriInfo) {
-		this.contextUriInfo = contextUriInfo;
+		this.contextUriInfo = UriInfoUtil.getVulcanUriInfo(
+			getApplicationPath(), contextUriInfo);
 	}
 
 	public void setContextUser(
@@ -988,7 +1024,8 @@ public abstract class BaseObjectDefinitionResourceImpl
 	}
 
 	public void setExpressionConvert(
-		ExpressionConvert<Filter> expressionConvert) {
+		ExpressionConvert<com.liferay.portal.kernel.search.filter.Filter>
+			expressionConvert) {
 
 		this.expressionConvert = expressionConvert;
 	}
@@ -1023,6 +1060,10 @@ public abstract class BaseObjectDefinitionResourceImpl
 		this.sortParserProvider = sortParserProvider;
 	}
 
+	protected String getApplicationPath() {
+		return "object-admin";
+	}
+
 	public void setVulcanBatchEngineExportTaskResource(
 		VulcanBatchEngineExportTaskResource
 			vulcanBatchEngineExportTaskResource) {
@@ -1040,7 +1081,7 @@ public abstract class BaseObjectDefinitionResourceImpl
 	}
 
 	@Override
-	public Filter toFilter(
+	public com.liferay.portal.kernel.search.filter.Filter toFilter(
 		String filterString, Map<String, List<String>> multivaluedMap) {
 
 		try {
@@ -1065,7 +1106,7 @@ public abstract class BaseObjectDefinitionResourceImpl
 	}
 
 	@Override
-	public Sort[] toSorts(String sortString) {
+	public com.liferay.portal.kernel.search.Sort[] toSorts(String sortString) {
 		if (Validator.isNull(sortString)) {
 			return null;
 		}
@@ -1083,13 +1124,13 @@ public abstract class BaseObjectDefinitionResourceImpl
 					sortParser.parse(sortString));
 
 			List<SortField> sortFields = oDataSort.getSortFields();
-
-			Sort[] sorts = new Sort[sortFields.size()];
+			com.liferay.portal.kernel.search.Sort[] sorts =
+				new com.liferay.portal.kernel.search.Sort[sortFields.size()];
 
 			for (int i = 0; i < sortFields.size(); i++) {
 				SortField sortField = sortFields.get(i);
 
-				sorts[i] = new Sort(
+				sorts[i] = new com.liferay.portal.kernel.search.Sort(
 					sortField.getSortableFieldName(
 						contextAcceptLanguage.getPreferredLocale()),
 					!sortField.isAscending());
@@ -1100,7 +1141,7 @@ public abstract class BaseObjectDefinitionResourceImpl
 		catch (Exception exception) {
 			_log.error("Invalid sort " + sortString, exception);
 
-			return new Sort[0];
+			return new com.liferay.portal.kernel.search.Sort[0];
 		}
 	}
 
@@ -1232,7 +1273,8 @@ public abstract class BaseObjectDefinitionResourceImpl
 	protected Object contextScopeChecker;
 	protected UriInfo contextUriInfo;
 	protected com.liferay.portal.kernel.model.User contextUser;
-	protected ExpressionConvert<Filter> expressionConvert;
+	protected ExpressionConvert<com.liferay.portal.kernel.search.filter.Filter>
+		expressionConvert;
 	protected FilterParserProvider filterParserProvider;
 	protected GroupLocalService groupLocalService;
 	protected ResourceActionLocalService resourceActionLocalService;

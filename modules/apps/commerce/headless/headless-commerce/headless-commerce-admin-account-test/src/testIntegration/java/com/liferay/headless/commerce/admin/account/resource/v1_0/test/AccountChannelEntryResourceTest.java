@@ -93,17 +93,16 @@ public class AccountChannelEntryResourceTest
 
 		_address = AddressLocalServiceUtil.addAddress(
 			RandomTestUtil.randomString(), _user.getUserId(),
-			User.class.getName(), _user.getUserId(),
-			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
-			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
-			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
-			String.valueOf(30133), _region.getRegionId(),
-			_country.getCountryId(), 2, false, false,
+			User.class.getName(), _user.getUserId(), _country.getCountryId(), 2,
+			_region.getRegionId(), RandomTestUtil.randomString(),
+			RandomTestUtil.randomString(), false, RandomTestUtil.randomString(),
+			false, RandomTestUtil.randomString(), RandomTestUtil.randomString(),
+			RandomTestUtil.randomString(), null, String.valueOf(30133),
 			RandomTestUtil.randomString(), serviceContext);
 
 		_commerceCurrency =
 			CommerceCurrencyLocalServiceUtil.addCommerceCurrency(
-				_user.getUserId(), RandomTestUtil.randomString(),
+				null, _user.getUserId(), RandomTestUtil.randomString(),
 				Collections.singletonMap(
 					LocaleUtil.getSiteDefault(), RandomTestUtil.randomString()),
 				RandomTestUtil.randomString(), BigDecimal.ONE, new HashMap<>(),
@@ -141,14 +140,14 @@ public class AccountChannelEntryResourceTest
 				serviceContext);
 		_commercePriceList =
 			CommercePriceListLocalServiceUtil.addCommercePriceList(
-				RandomTestUtil.randomString(), testGroup.getGroupId(),
-				_user.getUserId(), _commerceCurrency.getCommerceCurrencyId(),
-				true, CommercePriceListConstants.TYPE_PRICE_LIST, 0, true,
+				RandomTestUtil.randomString(), _user.getUserId(),
+				testGroup.getGroupId(), _commerceCurrency.getCode(), true,
+				CommercePriceListConstants.TYPE_PRICE_LIST, 0, true,
 				RandomTestUtil.randomString(), 1000, 1, 1, 2022, 12, 0, 0, 0, 0,
 				0, 0, true, serviceContext);
 		_commerceUser = UserLocalServiceUtil.addUser(
 			_user.getUserId(), testCompany.getCompanyId(), true,
-			RandomTestUtil.randomString(), RandomTestUtil.randomString(), true,
+			StringPool.BLANK, StringPool.BLANK, true,
 			RandomTestUtil.randomString(),
 			RandomTestUtil.randomString() + "@liferay.com",
 			LocaleUtil.getSiteDefault(), RandomTestUtil.randomString(),

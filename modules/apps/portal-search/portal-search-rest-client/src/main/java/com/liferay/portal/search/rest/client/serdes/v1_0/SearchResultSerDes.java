@@ -52,6 +52,16 @@ public class SearchResultSerDes {
 		DateFormat liferayToJSONDateFormat = new SimpleDateFormat(
 			"yyyy-MM-dd'T'HH:mm:ssXX");
 
+		if (searchResult.getActions() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"actions\": ");
+
+			sb.append(_toJSON(searchResult.getActions()));
+		}
+
 		if (searchResult.getDateCreated() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -111,6 +121,20 @@ public class SearchResultSerDes {
 			else {
 				sb.append(searchResult.getEmbedded());
 			}
+		}
+
+		if (searchResult.getEntryClassName() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"entryClassName\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(searchResult.getEntryClassName()));
+
+			sb.append("\"");
 		}
 
 		if (searchResult.getItemURL() != null) {
@@ -173,6 +197,13 @@ public class SearchResultSerDes {
 		DateFormat liferayToJSONDateFormat = new SimpleDateFormat(
 			"yyyy-MM-dd'T'HH:mm:ssXX");
 
+		if (searchResult.getActions() == null) {
+			map.put("actions", null);
+		}
+		else {
+			map.put("actions", String.valueOf(searchResult.getActions()));
+		}
+
 		if (searchResult.getDateCreated() == null) {
 			map.put("dateCreated", null);
 		}
@@ -204,6 +235,15 @@ public class SearchResultSerDes {
 		}
 		else {
 			map.put("embedded", String.valueOf(searchResult.getEmbedded()));
+		}
+
+		if (searchResult.getEntryClassName() == null) {
+			map.put("entryClassName", null);
+		}
+		else {
+			map.put(
+				"entryClassName",
+				String.valueOf(searchResult.getEntryClassName()));
 		}
 
 		if (searchResult.getItemURL() == null) {
@@ -245,7 +285,10 @@ public class SearchResultSerDes {
 
 		@Override
 		protected boolean parseMaps(String jsonParserFieldName) {
-			if (Objects.equals(jsonParserFieldName, "dateCreated")) {
+			if (Objects.equals(jsonParserFieldName, "actions")) {
+				return true;
+			}
+			else if (Objects.equals(jsonParserFieldName, "dateCreated")) {
 				return false;
 			}
 			else if (Objects.equals(jsonParserFieldName, "dateModified")) {
@@ -255,6 +298,9 @@ public class SearchResultSerDes {
 				return false;
 			}
 			else if (Objects.equals(jsonParserFieldName, "embedded")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "entryClassName")) {
 				return false;
 			}
 			else if (Objects.equals(jsonParserFieldName, "itemURL")) {
@@ -275,7 +321,13 @@ public class SearchResultSerDes {
 			SearchResult searchResult, String jsonParserFieldName,
 			Object jsonParserFieldValue) {
 
-			if (Objects.equals(jsonParserFieldName, "dateCreated")) {
+			if (Objects.equals(jsonParserFieldName, "actions")) {
+				if (jsonParserFieldValue != null) {
+					searchResult.setActions(
+						(Map<String, Map<String, String>>)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "dateCreated")) {
 				if (jsonParserFieldValue != null) {
 					searchResult.setDateCreated(
 						toDate((String)jsonParserFieldValue));
@@ -295,6 +347,12 @@ public class SearchResultSerDes {
 			else if (Objects.equals(jsonParserFieldName, "embedded")) {
 				if (jsonParserFieldValue != null) {
 					searchResult.setEmbedded((Object)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "entryClassName")) {
+				if (jsonParserFieldValue != null) {
+					searchResult.setEntryClassName(
+						(String)jsonParserFieldValue);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "itemURL")) {
@@ -358,6 +416,10 @@ public class SearchResultSerDes {
 	}
 
 	private static String _toJSON(Object value) {
+		if (value == null) {
+			return "null";
+		}
+
 		if (value instanceof Map) {
 			return _toJSON((Map)value);
 		}

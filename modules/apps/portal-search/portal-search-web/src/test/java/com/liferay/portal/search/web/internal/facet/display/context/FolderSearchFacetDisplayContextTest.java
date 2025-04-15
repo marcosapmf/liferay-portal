@@ -6,9 +6,11 @@
 package com.liferay.portal.search.web.internal.facet.display.context;
 
 import com.liferay.portal.configuration.module.configuration.ConfigurationProviderUtil;
+import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.search.facet.collector.DefaultTermCollector;
 import com.liferay.portal.kernel.search.facet.collector.TermCollector;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.search.web.internal.BaseFacetDisplayContextTestCase;
 import com.liferay.portal.search.web.internal.facet.display.context.builder.FolderSearchFacetDisplayContextBuilder;
 import com.liferay.portal.search.web.internal.folder.facet.configuration.FolderFacetPortletInstanceConfiguration;
@@ -65,6 +67,8 @@ public class FolderSearchFacetDisplayContextTest
 			_folderTitleLookup);
 		folderSearchFacetDisplayContextBuilder.setFrequenciesVisible(true);
 		folderSearchFacetDisplayContextBuilder.setFrequencyThreshold(0);
+		folderSearchFacetDisplayContextBuilder.setLocale(
+			LocaleUtil.getDefault());
 		folderSearchFacetDisplayContextBuilder.setMaxTerms(0);
 		folderSearchFacetDisplayContextBuilder.setOrder(order);
 		folderSearchFacetDisplayContextBuilder.setParameterName(
@@ -139,6 +143,18 @@ public class FolderSearchFacetDisplayContextTest
 	}
 
 	@Override
+	protected FacetDisplayContext getFacetDisplayContext(Group group)
+		throws Exception {
+
+		FolderSearchFacetDisplayContextBuilder
+			folderSearchFacetDisplayContextBuilder =
+				new FolderSearchFacetDisplayContextBuilder(
+					getRenderRequest(group));
+
+		return folderSearchFacetDisplayContextBuilder.build();
+	}
+
+	@Override
 	protected String getFilterValue(String term) {
 		return String.valueOf(_folderId);
 	}
@@ -148,6 +164,29 @@ public class FolderSearchFacetDisplayContextTest
 		_folderId = RandomTestUtil.randomLong();
 
 		_addFolder(_folderId, term);
+	}
+
+	@Override
+	protected void setUpPortletDisplayStyleGroupExternalReferenceCode(
+		String externalReferenceCode) {
+
+		FolderFacetPortletInstanceConfiguration
+			folderFacetPortletInstanceConfiguration = Mockito.mock(
+				FolderFacetPortletInstanceConfiguration.class);
+
+		Mockito.when(
+			folderFacetPortletInstanceConfiguration.
+				displayStyleGroupExternalReferenceCode()
+		).thenReturn(
+			externalReferenceCode
+		);
+
+		configurationProviderUtilMockedStatic.when(
+			() -> ConfigurationProviderUtil.getPortletInstanceConfiguration(
+				Mockito.any(), Mockito.any())
+		).thenReturn(
+			folderFacetPortletInstanceConfiguration
+		);
 	}
 
 	@Override

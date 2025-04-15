@@ -253,8 +253,7 @@ public interface CompanyLocalService
 	public long dynamicQueryCount(
 		DynamicQuery dynamicQuery, Projection projection);
 
-	public Company extractDBPartitionCompany(long companyId)
-		throws PortalException;
+	public Company extractCompany(long companyId) throws PortalException;
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public Company fetchCompany(long companyId);
@@ -350,24 +349,6 @@ public interface CompanyLocalService
 	 */
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public Company getCompanyById(long companyId) throws PortalException;
-
-	/**
-	 * Returns the company with the logo.
-	 *
-	 * @param logoId the ID of the company's logo
-	 * @return the company with the logo
-	 */
-	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public Company getCompanyByLogoId(long logoId) throws PortalException;
-
-	/**
-	 * Returns the company with the mail domain.
-	 *
-	 * @param mx the company's mail domain
-	 * @return the company with the mail domain
-	 */
-	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public Company getCompanyByMx(String mx) throws PortalException;
 
 	/**
 	 * Returns the company with the virtual host name.

@@ -41,6 +41,7 @@ import com.liferay.portal.kernel.servlet.SessionMessages;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Validator;
@@ -102,13 +103,21 @@ public class ExportImportMVCActionCommand extends BaseMVCActionCommand {
 			return;
 		}
 
-		long groupId = ParamUtil.getLong(actionRequest, "groupId");
+		long ctCollectionId = CTCollectionThreadLocal.getCTCollectionId();
 
-		Group group = _groupLocalService.getGroup(groupId);
+		if (cmd.equals(Constants.ADD_TEMP) ||
+			cmd.equals(Constants.DELETE_TEMP)) {
+
+			long groupId = ParamUtil.getLong(actionRequest, "groupId");
+
+			Group group = _groupLocalService.getGroup(groupId);
+
+			ctCollectionId = group.getCtCollectionId();
+		}
 
 		try (SafeCloseable safeCloseable =
 				CTCollectionThreadLocal.setCTCollectionIdWithSafeCloseable(
-					group.getCtCollectionId())) {
+					ctCollectionId)) {
 
 			if (cmd.equals(Constants.ADD_TEMP)) {
 				addTempFileEntry(
@@ -244,7 +253,14 @@ public class ExportImportMVCActionCommand extends BaseMVCActionCommand {
 
 			importData(actionRequest, inputStream);
 
-			deleteTempFileEntry(groupId, folderName);
+			Group group = _groupLocalService.getGroup(groupId);
+
+			try (SafeCloseable safeCloseable =
+					CTCollectionThreadLocal.setCTCollectionIdWithSafeCloseable(
+						group.getCtCollectionId())) {
+
+				deleteTempFileEntry(groupId, folderName);
+			}
 		}
 	}
 
@@ -279,15 +295,12 @@ public class ExportImportMVCActionCommand extends BaseMVCActionCommand {
 				JSONUtil.put(
 					"warningMessages",
 					() -> {
-						if ((weakMissingReferences != null) &&
-							!weakMissingReferences.isEmpty()) {
-
-							return _staging.getWarningMessagesJSONArray(
-								themeDisplay.getLocale(),
-								weakMissingReferences);
+						if (MapUtil.isEmpty(weakMissingReferences)) {
+							return null;
 						}
 
-						return null;
+						return _staging.getWarningMessagesJSONArray(
+							themeDisplay.getLocale(), weakMissingReferences);
 					}));
 		}
 	}

@@ -1,10 +1,9 @@
-@component-name = "portal-solutions"
+@component-name = "portal-commerce"
 definition {
 
 	property osgi.modules.includes = "site-initializer-liferay-marketplace";
 	property portal.release = "false";
 	property portal.upstream = "true";
-	property release.feature.flags.disable.DISABLE_PRIVATE_LAYOUTS = "true";
 	property testray.main.component.name = "Site Initializer Liferay Marketplace";
 
 	var testSiteName = "Marketplace Site";
@@ -17,6 +16,10 @@ definition {
 		MP2Configuration.marketplaceSetUp(
 			clientExtensionDeploy = "true",
 			viaFrontEnd = "true");
+
+		task ("Enable private pages") {
+			PagesAdmin.enablePrivatePages();
+		}
 	}
 
 	tearDown {

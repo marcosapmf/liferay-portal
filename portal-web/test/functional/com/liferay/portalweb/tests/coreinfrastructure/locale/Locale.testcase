@@ -41,7 +41,11 @@ definition {
 			category = "Contenido",
 			portlet = "Formularios");
 
-		FormsAdminNavigator.gotoAddForm();
+		WaitForPageLoad();
+
+		Click.waitForMenuToggleJSClick(locator1 = "//*[self::a or self::button][contains(@class,'btn-primary')][normalize-space()='Nuevo']");
+
+		SelectFrameTop();
 
 		Form.editName();
 
@@ -486,9 +490,11 @@ definition {
 
 	@priority = 3
 	test LocaleNotAppendedToAlternateDefaultLocaleURL {
-		property release.feature.flags.disable.DISABLE_PRIVATE_LAYOUTS = "true";
-
 		User.firstLoginPG();
+
+		task ("Enable private pages") {
+			PagesAdmin.enablePrivatePages();
+		}
 
 		HeadlessSite.addSite(siteName = "Test Site Name");
 
@@ -928,7 +934,7 @@ definition {
 		WebContentNavigator.gotoAddCP();
 
 		task ("Assert the default enabled locales in Web Content match what is normally available") {
-			Click(locator1 = "Button#LOCALIZATION_GENERIC");
+			Click(locator1 = "//div[@class='translation-manager']/button[contains(., 'en-US')]");
 
 			for (var language : list "ar-SA,ca-ES,zh-CN,nl-NL,fi-FI,fr-FR,de-DE,hu-HU,ja-JP,pt-BR,es-ES,sv-SE") {
 				AssertElementPresent(
@@ -1118,6 +1124,10 @@ definition {
 
 		User.firstLoginPG();
 
+		task ("Enable dynamic and manual selection") {
+			AssetPublisherPortlet.enableDynamicAndManualSelection();
+		}
+
 		HeadlessSite.addSite(siteName = "Test Site Name");
 
 		JSONLayout.addPublicLayout(
@@ -1169,6 +1179,10 @@ definition {
 		property test.run.type = "sequential";
 
 		User.firstLoginPG();
+
+		task ("Enable dynamic and manual selection") {
+			AssetPublisherPortlet.enableDynamicAndManualSelection();
+		}
 
 		HeadlessSite.addSite(siteName = "Test Site Name");
 

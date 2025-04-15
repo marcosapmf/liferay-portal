@@ -1,0 +1,20 @@
+/**
+ * SPDX-FileCopyrightText: (c) 2024 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
+ */
+
+// @ts-ignore
+
+export {default as useKeyboardNavigation} from '../../page_editor/plugins/fragments_and_widgets/hooks/useKeyboardNavigation';
+
+// @ts-ignore
+
+export {useActivationOrigin} from './contexts/ControlsContext';
+
+// @ts-ignore
+
+export {useActiveItemIds} from './contexts/ControlsContext';
+
+// @ts-ignore
+
+export {default as addFragment} from './thunks/addFragment';

@@ -7,7 +7,6 @@ package com.liferay.portal.service.impl;
 
 import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.petra.reflect.ReflectionUtil;
-import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.bean.BeanReference;
 import com.liferay.portal.kernel.dao.orm.EntityCacheUtil;
 import com.liferay.portal.kernel.exception.AvailableLocaleException;
@@ -26,11 +25,12 @@ import com.liferay.portal.kernel.service.persistence.CompanyPersistence;
 import com.liferay.portal.kernel.service.persistence.GroupPersistence;
 import com.liferay.portal.kernel.service.persistence.LayoutSetPersistence;
 import com.liferay.portal.kernel.transaction.TransactionCommitCallbackUtil;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
-import com.liferay.portal.kernel.util.TreeMapBuilder;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.model.impl.LayoutSetImpl;
 import com.liferay.portal.service.base.VirtualHostLocalServiceBaseImpl;
+import com.liferay.portal.util.PropsUtil;
 import com.liferay.portal.util.PropsValues;
 
 import java.net.IDN;
@@ -53,15 +53,43 @@ import java.util.TreeMap;
 public class VirtualHostLocalServiceImpl
 	extends VirtualHostLocalServiceBaseImpl {
 
-	/**
-	 * @deprecated As of Mueller (7.2.x), replaced by {@link
-	 *             #getVirtualHosts(long, long)}
-	 */
-	@Deprecated
 	@Override
-	public VirtualHost fetchVirtualHost(long companyId, long layoutSetId) {
-		return virtualHostPersistence.fetchByC_L_D(
-			companyId, layoutSetId, true);
+	public VirtualHost fetchCompanyDefaultVirtualHost(long companyId) {
+		List<VirtualHost> virtualHosts = getVirtualHosts(companyId, 0);
+
+		if (virtualHosts.isEmpty()) {
+			return null;
+		}
+
+		if (virtualHosts.size() == 1) {
+			VirtualHost virtualHost = virtualHosts.get(0);
+
+			if (virtualHost.isDefaultVirtualHost()) {
+				return virtualHost;
+			}
+
+			return null;
+		}
+
+		List<VirtualHost> defaultVirtualHosts = new ArrayList<>();
+
+		for (VirtualHost virtualHost : virtualHosts) {
+			if (virtualHost.isDefaultVirtualHost()) {
+				defaultVirtualHosts.add(virtualHost);
+			}
+		}
+
+		if (defaultVirtualHosts.isEmpty()) {
+			return null;
+		}
+
+		if ((defaultVirtualHosts.size() > 1) && _log.isWarnEnabled()) {
+			_log.error(
+				"More than one default virtual host uses company ID " +
+					companyId);
+		}
+
+		return defaultVirtualHosts.get(defaultVirtualHosts.size() - 1);
 	}
 
 	@Override
@@ -91,18 +119,6 @@ public class VirtualHostLocalServiceImpl
 		return virtualHost;
 	}
 
-	/**
-	 * @deprecated As of Mueller (7.2.x), replaced by {@link
-	 *             #getVirtualHosts(long, long)}
-	 */
-	@Deprecated
-	@Override
-	public VirtualHost getVirtualHost(long companyId, long layoutSetId)
-		throws PortalException {
-
-		return virtualHostPersistence.findByC_L_D(companyId, layoutSetId, true);
-	}
-
 	@Override
 	public VirtualHost getVirtualHost(String hostname) throws PortalException {
 		try {
@@ -125,15 +141,15 @@ public class VirtualHostLocalServiceImpl
 
 	@Override
 	public List<VirtualHost> getVirtualHosts(long companyId, long layoutSetId) {
-		if (_perCompanyInMemoryFilterLimit <= 0) {
+		if (_cacheableQueryLimitLPD27353 <= 0) {
 			return virtualHostPersistence.findByC_L(companyId, layoutSetId);
 		}
 
 		List<VirtualHost> virtualHosts = virtualHostPersistence.findByCompanyId(
 			companyId);
 
-		if (virtualHosts.size() > _perCompanyInMemoryFilterLimit) {
-			_perCompanyInMemoryFilterLimit = 0;
+		if (virtualHosts.size() > _cacheableQueryLimitLPD27353) {
+			_cacheableQueryLimitLPD27353 = 0;
 		}
 
 		List<VirtualHost> filteredVirtualHosts = null;
@@ -161,28 +177,6 @@ public class VirtualHostLocalServiceImpl
 
 		return virtualHostPersistence.countByNotL_H(
 			excludedLayoutSetId, virtualHostNames);
-	}
-
-	/**
-	 * @deprecated As of Mueller (7.2.x), replaced by {@link
-	 *             #updateVirtualHosts(long, long, TreeMap)}
-	 */
-	@Deprecated
-	@Override
-	public VirtualHost updateVirtualHost(
-		long companyId, long layoutSetId, String hostname) {
-
-		List<VirtualHost> virtualHosts = updateVirtualHosts(
-			companyId, layoutSetId,
-			TreeMapBuilder.put(
-				hostname, StringPool.BLANK
-			).build());
-
-		if (virtualHosts.isEmpty()) {
-			return null;
-		}
-
-		return virtualHosts.get(0);
 	}
 
 	@Override
@@ -219,7 +213,7 @@ public class VirtualHostLocalServiceImpl
 				long virtualHostId = 0;
 
 				try (SafeCloseable safeCloseable =
-						CompanyThreadLocal.setWithSafeCloseable(
+						CompanyThreadLocal.setCompanyIdWithSafeCloseable(
 							CompanyConstants.SYSTEM)) {
 
 					virtualHostId = counterLocalService.increment();
@@ -313,6 +307,9 @@ public class VirtualHostLocalServiceImpl
 	private static final Log _log = LogFactoryUtil.getLog(
 		VirtualHostLocalServiceImpl.class);
 
+	private volatile int _cacheableQueryLimitLPD27353 = GetterUtil.getInteger(
+		PropsUtil.get("cacheable.query.limit.LPD-27353"));
+
 	@BeanReference(type = CompanyPersistence.class)
 	private CompanyPersistence _companyPersistence;
 
@@ -321,8 +318,5 @@ public class VirtualHostLocalServiceImpl
 
 	@BeanReference(type = LayoutSetPersistence.class)
 	private LayoutSetPersistence _layoutSetPersistence;
-
-	private volatile int _perCompanyInMemoryFilterLimit =
-		PropsValues.VIRTUAL_HOSTS_PER_COMPANY_IN_MEMORY_FILTER_LIMIT;
 
 }

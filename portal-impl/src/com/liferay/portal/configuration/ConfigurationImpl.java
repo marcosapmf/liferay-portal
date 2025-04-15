@@ -227,6 +227,11 @@ public class ConfigurationImpl
 	}
 
 	@Override
+	public List<String> getLoadedSources() {
+		return _classLoaderAggregateProperties.loadedSources();
+	}
+
+	@Override
 	public Properties getProperties() {
 		if (_properties != null) {
 			return _properties;

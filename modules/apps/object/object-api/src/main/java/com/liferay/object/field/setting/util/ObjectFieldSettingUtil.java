@@ -12,7 +12,7 @@ import com.liferay.dynamic.data.mapping.expression.DDMExpressionFactory;
 import com.liferay.object.constants.ObjectFieldSettingConstants;
 import com.liferay.object.model.ObjectField;
 import com.liferay.object.model.ObjectFieldSetting;
-import com.liferay.object.service.ObjectFieldSettingLocalService;
+import com.liferay.object.petra.sql.dsl.DynamicObjectDefinitionTableUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -30,22 +30,25 @@ import java.util.Objects;
  */
 public class ObjectFieldSettingUtil {
 
-	public static String getDefaultValueAsString(
-		DDMExpressionFactory ddmExpressionFactory, long objectFieldId,
-		ObjectFieldSettingLocalService objectFieldSettingLocalService,
+	public static Object getDefaultValue(
+		DDMExpressionFactory ddmExpressionFactory, ObjectField objectField,
 		Map<String, Object> values) {
 
+		List<ObjectFieldSetting> objectFieldSettings =
+			objectField.getObjectFieldSettings();
+
 		ObjectFieldSetting defaultValueObjectFieldSetting =
-			objectFieldSettingLocalService.fetchObjectFieldSetting(
-				objectFieldId, ObjectFieldSettingConstants.NAME_DEFAULT_VALUE);
+			_getObjectFieldSetting(
+				objectFieldSettings,
+				ObjectFieldSettingConstants.NAME_DEFAULT_VALUE);
 
 		if (defaultValueObjectFieldSetting == null) {
 			return null;
 		}
 
 		ObjectFieldSetting defaultValueTypeObjectFieldSetting =
-			objectFieldSettingLocalService.fetchObjectFieldSetting(
-				objectFieldId,
+			_getObjectFieldSetting(
+				objectFieldSettings,
 				ObjectFieldSettingConstants.NAME_DEFAULT_VALUE_TYPE);
 
 		if ((defaultValueTypeObjectFieldSetting == null) ||
@@ -53,7 +56,9 @@ public class ObjectFieldSettingUtil {
 				defaultValueTypeObjectFieldSetting.getValue(),
 				ObjectFieldSettingConstants.VALUE_INPUT_AS_VALUE)) {
 
-			return defaultValueObjectFieldSetting.getValue();
+			return _parseValue(
+				objectField.getDBType(),
+				defaultValueObjectFieldSetting.getValue());
 		}
 
 		if (ddmExpressionFactory == null) {
@@ -61,7 +66,7 @@ public class ObjectFieldSettingUtil {
 		}
 
 		try {
-			DDMExpression<String> ddmExpression =
+			DDMExpression<?> ddmExpression =
 				ddmExpressionFactory.createExpression(
 					CreateExpressionRequest.Builder.newBuilder(
 						defaultValueObjectFieldSetting.getValue()
@@ -123,6 +128,28 @@ public class ObjectFieldSettingUtil {
 			getValue(
 				ObjectFieldSettingConstants.NAME_UNIQUE_VALUES,
 				objectFieldSetting));
+	}
+
+	private static ObjectFieldSetting _getObjectFieldSetting(
+		List<ObjectFieldSetting> objectFieldSettings, String name) {
+
+		for (ObjectFieldSetting objectFieldSetting : objectFieldSettings) {
+			if (Objects.equals(objectFieldSetting.getName(), name)) {
+				return objectFieldSetting;
+			}
+		}
+
+		return null;
+	}
+
+	private static Object _parseValue(String dbType, String value) {
+		Class<?> clazz = DynamicObjectDefinitionTableUtil.getJavaClass(dbType);
+
+		if (clazz == Boolean.class) {
+			return Boolean.parseBoolean(value);
+		}
+
+		return value;
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

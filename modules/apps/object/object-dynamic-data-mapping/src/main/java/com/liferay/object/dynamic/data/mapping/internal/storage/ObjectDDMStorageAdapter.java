@@ -27,6 +27,7 @@ import com.liferay.object.constants.ObjectFieldConstants;
 import com.liferay.object.field.util.ObjectFieldUtil;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectField;
+import com.liferay.object.rest.dto.v1_0.ListEntry;
 import com.liferay.object.rest.dto.v1_0.ObjectEntry;
 import com.liferay.object.rest.manager.v1_0.DefaultObjectEntryManager;
 import com.liferay.object.rest.manager.v1_0.DefaultObjectEntryManagerProvider;
@@ -37,6 +38,7 @@ import com.liferay.object.scope.ObjectScopeProviderRegistry;
 import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.object.service.ObjectEntryService;
 import com.liferay.object.service.ObjectFieldLocalService;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.json.JSONArray;
@@ -59,7 +61,6 @@ import java.math.BigDecimal;
 
 import java.text.NumberFormat;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -204,66 +205,81 @@ public class ObjectDDMStorageAdapter implements DDMStorageAdapter {
 		List<DDMFormField> ddmFormFields, Locale locale,
 		Map<String, Object> properties) {
 
-		List<DDMFormFieldValue> ddmFormFieldValues = new ArrayList<>();
+		return TransformUtil.transform(
+			ddmFormFields,
+			ddmFormField -> {
+				DDMFormFieldValue ddmFormFieldValue = new DDMFormFieldValue();
 
-		for (DDMFormField ddmFormField : ddmFormFields) {
-			DDMFormFieldValue ddmFormFieldValue = new DDMFormFieldValue();
+				ddmFormFieldValue.setFieldReference(
+					ddmFormField.getFieldReference());
+				ddmFormFieldValue.setName(ddmFormField.getName());
 
-			ddmFormFieldValue.setFieldReference(
-				ddmFormField.getFieldReference());
-			ddmFormFieldValue.setName(ddmFormField.getName());
+				if (StringUtil.equals(
+						ddmFormField.getType(),
+						DDMFormFieldTypeConstants.FIELDSET)) {
 
-			if (StringUtil.equals(
-					ddmFormField.getType(),
-					DDMFormFieldTypeConstants.FIELDSET)) {
+					ddmFormFieldValue.setNestedDDMFormFields(
+						_getDDMFormFieldValues(
+							ddmFormField.getNestedDDMFormFields(), locale,
+							properties));
 
-				ddmFormFieldValue.setNestedDDMFormFields(
-					_getDDMFormFieldValues(
-						ddmFormField.getNestedDDMFormFields(), locale,
-						properties));
-
-				ddmFormFieldValues.add(ddmFormFieldValue);
-
-				continue;
-			}
-
-			Value value = new LocalizedValue(locale);
-
-			String objectFieldName = StringPool.BLANK;
-
-			try {
-				JSONArray jsonArray = _jsonFactory.createJSONArray(
-					GetterUtil.getString(
-						ddmFormField.getProperty("objectFieldName")));
-
-				objectFieldName = jsonArray.getString(0);
-			}
-			catch (Exception exception) {
-				if (_log.isDebugEnabled()) {
-					_log.debug(exception);
+					return ddmFormFieldValue;
 				}
-			}
 
-			Object objectFieldValue = properties.get(objectFieldName);
+				Value value = new LocalizedValue(locale);
 
-			if (objectFieldValue instanceof Double) {
-				NumberFormat numberFormat = NumberFormat.getInstance(locale);
+				String objectFieldName = StringPool.BLANK;
 
-				value.addString(locale, numberFormat.format(objectFieldValue));
-			}
-			else if (objectFieldValue instanceof byte[]) {
-				value.addString(locale, new String((byte[])objectFieldValue));
-			}
-			else {
-				value.addString(locale, String.valueOf(objectFieldValue));
-			}
+				try {
+					JSONArray jsonArray = _jsonFactory.createJSONArray(
+						GetterUtil.getString(
+							ddmFormField.getProperty("objectFieldName")));
 
-			ddmFormFieldValue.setValue(value);
+					objectFieldName = jsonArray.getString(0);
+				}
+				catch (Exception exception) {
+					if (_log.isDebugEnabled()) {
+						_log.debug(exception);
+					}
+				}
 
-			ddmFormFieldValues.add(ddmFormFieldValue);
-		}
+				Object objectFieldValue = properties.get(objectFieldName);
 
-		return ddmFormFieldValues;
+				if (StringUtil.equals(
+						ddmFormField.getType(),
+						DDMFormFieldTypeConstants.RADIO)) {
+
+					JSONArray jsonArray = _toJSONArray(objectFieldValue);
+
+					value.addString(locale, jsonArray.getString(0));
+				}
+				else if (StringUtil.equals(
+							ddmFormField.getType(),
+							DDMFormFieldTypeConstants.SELECT)) {
+
+					JSONArray jsonArray = _toJSONArray(objectFieldValue);
+
+					value.addString(locale, jsonArray.toString());
+				}
+				else if (objectFieldValue instanceof Double) {
+					NumberFormat numberFormat = NumberFormat.getInstance(
+						locale);
+
+					value.addString(
+						locale, numberFormat.format(objectFieldValue));
+				}
+				else if (objectFieldValue instanceof byte[]) {
+					value.addString(
+						locale, new String((byte[])objectFieldValue));
+				}
+				else {
+					value.addString(locale, String.valueOf(objectFieldValue));
+				}
+
+				ddmFormFieldValue.setValue(value);
+
+				return ddmFormFieldValue;
+			});
 	}
 
 	private String _getOptionReference(
@@ -357,6 +373,23 @@ public class ObjectDDMStorageAdapter implements DDMStorageAdapter {
 		}
 
 		return valueString;
+	}
+
+	private JSONArray _toJSONArray(Object objectFieldValue) {
+		JSONArray jsonArray = _jsonFactory.createJSONArray();
+
+		if (objectFieldValue instanceof List) {
+			for (ListEntry listEntry : (List<ListEntry>)objectFieldValue) {
+				jsonArray.put(listEntry.getName());
+			}
+		}
+		else {
+			ListEntry listEntry = (ListEntry)objectFieldValue;
+
+			jsonArray.put(listEntry.getName());
+		}
+
+		return jsonArray;
 	}
 
 	private Map<String, Object> _toProperties(

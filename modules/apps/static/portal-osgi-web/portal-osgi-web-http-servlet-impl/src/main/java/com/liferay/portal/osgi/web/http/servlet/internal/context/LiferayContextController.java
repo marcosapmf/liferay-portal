@@ -48,6 +48,7 @@ import javax.servlet.ServletContextListener;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequestAttributeListener;
 import javax.servlet.ServletRequestListener;
+import javax.servlet.descriptor.JspConfigDescriptor;
 import javax.servlet.http.HttpSession;
 import javax.servlet.http.HttpSessionAttributeListener;
 import javax.servlet.http.HttpSessionEvent;
@@ -736,14 +737,8 @@ public class LiferayContextController extends ContextController {
 			HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_SELECT);
 
 		if (contextSelect == null) {
-			if (_contextName.equals(
-					HttpWhiteboardConstants.
-						HTTP_WHITEBOARD_DEFAULT_CONTEXT_NAME)) {
-
-				return true;
-			}
-
-			return false;
+			return _contextName.equals(
+				HttpWhiteboardConstants.HTTP_WHITEBOARD_DEFAULT_CONTEXT_NAME);
 		}
 
 		if (_contextName.equals(contextSelect)) {
@@ -885,7 +880,13 @@ public class LiferayContextController extends ContextController {
 		ServletContextAdaptor servletContextAdaptor = new ServletContextAdaptor(
 			this, bundle, servletContextHelper,
 			_servletContextHelperDataContext, _eventListeners,
-			AccessController.getContext());
+			AccessController.getContext()) {
+
+			public JspConfigDescriptor getJspConfigDescriptor() {
+				return null;
+			}
+
+		};
 
 		return servletContextAdaptor.createServletContext();
 	}

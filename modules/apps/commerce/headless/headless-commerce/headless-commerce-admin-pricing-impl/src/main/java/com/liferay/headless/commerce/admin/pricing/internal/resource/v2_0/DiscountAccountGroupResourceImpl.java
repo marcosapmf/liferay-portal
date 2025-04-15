@@ -27,7 +27,6 @@ import com.liferay.portal.vulcan.fields.NestedField;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -59,8 +58,9 @@ public class DiscountAccountGroupResourceImpl
 		throws Exception {
 
 		CommerceDiscount commerceDiscount =
-			_commerceDiscountService.fetchByExternalReferenceCode(
-				externalReferenceCode, contextCompany.getCompanyId());
+			_commerceDiscountService.
+				fetchCommerceDiscountByExternalReferenceCode(
+					externalReferenceCode, contextCompany.getCompanyId());
 
 		if (commerceDiscount == null) {
 			throw new NoSuchDiscountException(
@@ -76,14 +76,14 @@ public class DiscountAccountGroupResourceImpl
 						pagination.getStartPosition(),
 						pagination.getEndPosition(), null);
 
-		int totalItems =
+		int totalCount =
 			_commerceDiscountCommerceAccountGroupRelService.
 				getCommerceDiscountCommerceAccountGroupRelsCount(
 					commerceDiscount.getCommerceDiscountId());
 
 		return Page.of(
 			_toDiscountAccountGroups(commerceDiscountCommerceAccountGroupRels),
-			pagination, totalItems);
+			pagination, totalCount);
 	}
 
 	@NestedField(parentClass = Discount.class, value = "discountAccountGroups")
@@ -100,13 +100,13 @@ public class DiscountAccountGroupResourceImpl
 						id, search, pagination.getStartPosition(),
 						pagination.getEndPosition());
 
-		int totalItems =
+		int totalCount =
 			_commerceDiscountCommerceAccountGroupRelService.
 				getCommerceDiscountCommerceAccountGroupRelsCount(id, search);
 
 		return Page.of(
 			_toDiscountAccountGroups(commerceDiscountCommerceAccountGroupRels),
-			pagination, totalItems);
+			pagination, totalCount);
 	}
 
 	@Override
@@ -117,8 +117,9 @@ public class DiscountAccountGroupResourceImpl
 		throws Exception {
 
 		CommerceDiscount commerceDiscount =
-			_commerceDiscountService.fetchByExternalReferenceCode(
-				externalReferenceCode, contextCompany.getCompanyId());
+			_commerceDiscountService.
+				fetchCommerceDiscountByExternalReferenceCode(
+					externalReferenceCode, contextCompany.getCompanyId());
 
 		if (commerceDiscount == null) {
 			throw new NoSuchDiscountException(
@@ -199,19 +200,11 @@ public class DiscountAccountGroupResourceImpl
 				commerceDiscountCommerceAccountGroupRels)
 		throws Exception {
 
-		List<DiscountAccountGroup> discountAccountGroups = new ArrayList<>();
-
-		for (CommerceDiscountCommerceAccountGroupRel
-				commerceDiscountCommerceAccountGroupRel :
-					commerceDiscountCommerceAccountGroupRels) {
-
-			discountAccountGroups.add(
-				_toDiscountAccountGroup(
-					commerceDiscountCommerceAccountGroupRel.
-						getCommerceDiscountCommerceAccountGroupRelId()));
-		}
-
-		return discountAccountGroups;
+		return transform(
+			commerceDiscountCommerceAccountGroupRels,
+			commerceDiscountCommerceAccountGroupRel -> _toDiscountAccountGroup(
+				commerceDiscountCommerceAccountGroupRel.
+					getCommerceDiscountCommerceAccountGroupRelId()));
 	}
 
 	@Reference

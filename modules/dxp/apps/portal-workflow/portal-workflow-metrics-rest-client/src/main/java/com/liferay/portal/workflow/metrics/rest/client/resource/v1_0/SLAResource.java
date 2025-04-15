@@ -59,11 +59,11 @@ public interface SLAResource {
 		throws Exception;
 
 	public void postProcessSLABatch(
-			Long processId, SLA sla, String callbackURL, Object object)
+			Long processId, String callbackURL, Object object)
 		throws Exception;
 
 	public HttpInvoker.HttpResponse postProcessSLABatchHttpResponse(
-			Long processId, SLA sla, String callbackURL, Object object)
+			Long processId, String callbackURL, Object object)
 		throws Exception;
 
 	public void deleteSLA(Long slaId) throws Exception;
@@ -71,11 +71,11 @@ public interface SLAResource {
 	public HttpInvoker.HttpResponse deleteSLAHttpResponse(Long slaId)
 		throws Exception;
 
-	public void deleteSLABatch(Long slaId, String callbackURL, Object object)
+	public void deleteSLABatch(String callbackURL, Object object)
 		throws Exception;
 
 	public HttpInvoker.HttpResponse deleteSLABatchHttpResponse(
-			Long slaId, String callbackURL, Object object)
+			String callbackURL, Object object)
 		throws Exception;
 
 	public SLA getSLA(Long slaId) throws Exception;
@@ -88,12 +88,10 @@ public interface SLAResource {
 	public HttpInvoker.HttpResponse putSLAHttpResponse(Long slaId, SLA sla)
 		throws Exception;
 
-	public void putSLABatch(
-			Long slaId, SLA sla, String callbackURL, Object object)
-		throws Exception;
+	public void putSLABatch(String callbackURL, Object object) throws Exception;
 
 	public HttpInvoker.HttpResponse putSLABatchHttpResponse(
-			Long slaId, SLA sla, String callbackURL, Object object)
+			String callbackURL, Object object)
 		throws Exception;
 
 	public static class Builder {
@@ -194,8 +192,8 @@ public interface SLAResource {
 		private Map<String, String> _headers = new LinkedHashMap<>();
 		private String _host = "localhost";
 		private Locale _locale;
-		private String _login = "";
-		private String _password = "";
+		private String _login;
+		private String _password;
 		private Map<String, String> _parameters = new LinkedHashMap<>();
 		private int _port = 8080;
 		private String _scheme = "http";
@@ -313,8 +311,10 @@ public interface SLAResource {
 
 			httpInvoker.path("processId", processId);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
@@ -430,8 +430,10 @@ public interface SLAResource {
 
 			httpInvoker.path("processId", processId);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
@@ -533,19 +535,20 @@ public interface SLAResource {
 
 			httpInvoker.path("processId", processId);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
 
 		public void postProcessSLABatch(
-				Long processId, SLA sla, String callbackURL, Object object)
+				Long processId, String callbackURL, Object object)
 			throws Exception {
 
 			HttpInvoker.HttpResponse httpResponse =
-				postProcessSLABatchHttpResponse(
-					processId, sla, callbackURL, object);
+				postProcessSLABatchHttpResponse(processId, callbackURL, object);
 
 			String content = httpResponse.getContent();
 
@@ -596,7 +599,7 @@ public interface SLAResource {
 		}
 
 		public HttpInvoker.HttpResponse postProcessSLABatchHttpResponse(
-				Long processId, SLA sla, String callbackURL, Object object)
+				Long processId, String callbackURL, Object object)
 			throws Exception {
 
 			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
@@ -634,8 +637,10 @@ public interface SLAResource {
 
 			httpInvoker.path("processId", processId);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
@@ -734,18 +739,19 @@ public interface SLAResource {
 
 			httpInvoker.path("slaId", slaId);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
 
-		public void deleteSLABatch(
-				Long slaId, String callbackURL, Object object)
+		public void deleteSLABatch(String callbackURL, Object object)
 			throws Exception {
 
 			HttpInvoker.HttpResponse httpResponse = deleteSLABatchHttpResponse(
-				slaId, callbackURL, object);
+				callbackURL, object);
 
 			String content = httpResponse.getContent();
 
@@ -796,7 +802,7 @@ public interface SLAResource {
 		}
 
 		public HttpInvoker.HttpResponse deleteSLABatchHttpResponse(
-				Long slaId, String callbackURL, Object object)
+				String callbackURL, Object object)
 			throws Exception {
 
 			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
@@ -830,12 +836,12 @@ public interface SLAResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port + _builder._contextPath +
-						"/o/portal-workflow-metrics/v1.0/slas/{slaId}/batch");
+						"/o/portal-workflow-metrics/v1.0/slas/batch");
 
-			httpInvoker.path("slaId", slaId);
-
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
@@ -933,8 +939,10 @@ public interface SLAResource {
 
 			httpInvoker.path("slaId", slaId);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
@@ -1035,18 +1043,19 @@ public interface SLAResource {
 
 			httpInvoker.path("slaId", slaId);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
 
-		public void putSLABatch(
-				Long slaId, SLA sla, String callbackURL, Object object)
+		public void putSLABatch(String callbackURL, Object object)
 			throws Exception {
 
 			HttpInvoker.HttpResponse httpResponse = putSLABatchHttpResponse(
-				slaId, sla, callbackURL, object);
+				callbackURL, object);
 
 			String content = httpResponse.getContent();
 
@@ -1097,7 +1106,7 @@ public interface SLAResource {
 		}
 
 		public HttpInvoker.HttpResponse putSLABatchHttpResponse(
-				Long slaId, SLA sla, String callbackURL, Object object)
+				String callbackURL, Object object)
 			throws Exception {
 
 			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
@@ -1131,12 +1140,12 @@ public interface SLAResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port + _builder._contextPath +
-						"/o/portal-workflow-metrics/v1.0/slas/{slaId}/batch");
+						"/o/portal-workflow-metrics/v1.0/slas/batch");
 
-			httpInvoker.path("slaId", slaId);
-
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}

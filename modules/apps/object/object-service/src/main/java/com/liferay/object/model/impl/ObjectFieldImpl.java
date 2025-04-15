@@ -12,6 +12,7 @@ import com.liferay.object.field.util.ObjectFieldUtil;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectFieldSetting;
 import com.liferay.object.service.ObjectDefinitionLocalServiceUtil;
+import com.liferay.object.service.ObjectFieldSettingLocalServiceUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.util.GetterUtil;
@@ -28,11 +29,7 @@ public class ObjectFieldImpl extends ObjectFieldBaseImpl {
 
 	@Override
 	public boolean compareBusinessType(String businessType) {
-		if (Objects.equals(getBusinessType(), businessType)) {
-			return true;
-		}
-
-		return false;
+		return Objects.equals(getBusinessType(), businessType);
 	}
 
 	@Override
@@ -48,6 +45,12 @@ public class ObjectFieldImpl extends ObjectFieldBaseImpl {
 
 	@Override
 	public List<ObjectFieldSetting> getObjectFieldSettings() {
+		if (_objectFieldSettings == null) {
+			_objectFieldSettings =
+				ObjectFieldSettingLocalServiceUtil.
+					getObjectFieldObjectFieldSettings(getObjectFieldId());
+		}
+
 		return _objectFieldSettings;
 	}
 
@@ -75,7 +78,7 @@ public class ObjectFieldImpl extends ObjectFieldBaseImpl {
 			GetterUtil.getBoolean(
 				ObjectFieldSettingUtil.getValue(
 					ObjectFieldSettingConstants.NAME_UNIQUE_VALUES,
-					_objectFieldSettings))) {
+					getObjectFieldSettings()))) {
 
 			return true;
 		}
@@ -105,9 +108,11 @@ public class ObjectFieldImpl extends ObjectFieldBaseImpl {
 
 		ObjectDefinition objectDefinition = getObjectDefinition();
 
-		if (objectDefinition.isUnmodifiableSystemObject() &&
-			!Objects.equals(
-				objectDefinition.getExtensionDBTableName(), getDBTableName())) {
+		if ((objectDefinition.isUnmodifiableSystemObject() &&
+			 !Objects.equals(
+				 objectDefinition.getExtensionDBTableName(),
+				 getDBTableName())) ||
+			ObjectFieldUtil.isMetadata(getName())) {
 
 			return false;
 		}

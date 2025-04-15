@@ -145,6 +145,8 @@ public class FragmentCollectionPersistenceTest {
 
 		newFragmentCollection.setDescription(RandomTestUtil.randomString());
 
+		newFragmentCollection.setMarketplace(RandomTestUtil.randomBoolean());
+
 		newFragmentCollection.setLastPublishDate(RandomTestUtil.nextDate());
 
 		_fragmentCollections.add(_persistence.update(newFragmentCollection));
@@ -196,6 +198,9 @@ public class FragmentCollectionPersistenceTest {
 		Assert.assertEquals(
 			existingFragmentCollection.getDescription(),
 			newFragmentCollection.getDescription());
+		Assert.assertEquals(
+			existingFragmentCollection.isMarketplace(),
+			newFragmentCollection.isMarketplace());
 		Assert.assertEquals(
 			Time.getShortTimestamp(
 				existingFragmentCollection.getLastPublishDate()),
@@ -289,6 +294,40 @@ public class FragmentCollectionPersistenceTest {
 	}
 
 	@Test
+	public void testCountByG_M() throws Exception {
+		_persistence.countByG_M(
+			RandomTestUtil.nextLong(), RandomTestUtil.randomBoolean());
+
+		_persistence.countByG_M(0L, RandomTestUtil.randomBoolean());
+	}
+
+	@Test
+	public void testCountByG_MArrayable() throws Exception {
+		_persistence.countByG_M(
+			new long[] {RandomTestUtil.nextLong(), 0L},
+			RandomTestUtil.randomBoolean());
+	}
+
+	@Test
+	public void testCountByG_LikeN_M() throws Exception {
+		_persistence.countByG_LikeN_M(
+			RandomTestUtil.nextLong(), "", RandomTestUtil.randomBoolean());
+
+		_persistence.countByG_LikeN_M(
+			0L, "null", RandomTestUtil.randomBoolean());
+
+		_persistence.countByG_LikeN_M(
+			0L, (String)null, RandomTestUtil.randomBoolean());
+	}
+
+	@Test
+	public void testCountByG_LikeN_MArrayable() throws Exception {
+		_persistence.countByG_LikeN_M(
+			new long[] {RandomTestUtil.nextLong(), 0L},
+			RandomTestUtil.randomString(), RandomTestUtil.randomBoolean());
+	}
+
+	@Test
 	public void testCountByERC_G() throws Exception {
 		_persistence.countByERC_G("", RandomTestUtil.nextLong());
 
@@ -328,7 +367,7 @@ public class FragmentCollectionPersistenceTest {
 			true, "groupId", true, "companyId", true, "userId", true,
 			"userName", true, "createDate", true, "modifiedDate", true,
 			"fragmentCollectionKey", true, "name", true, "description", true,
-			"lastPublishDate", true);
+			"marketplace", true, "lastPublishDate", true);
 	}
 
 	@Test
@@ -673,6 +712,8 @@ public class FragmentCollectionPersistenceTest {
 		fragmentCollection.setName(RandomTestUtil.randomString());
 
 		fragmentCollection.setDescription(RandomTestUtil.randomString());
+
+		fragmentCollection.setMarketplace(RandomTestUtil.randomBoolean());
 
 		fragmentCollection.setLastPublishDate(RandomTestUtil.nextDate());
 

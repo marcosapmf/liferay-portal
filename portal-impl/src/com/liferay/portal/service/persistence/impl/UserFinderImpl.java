@@ -7,8 +7,6 @@ package com.liferay.portal.service.persistence.impl;
 
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.dao.db.DB;
-import com.liferay.portal.kernel.dao.db.DBType;
 import com.liferay.portal.kernel.dao.orm.CustomSQLParam;
 import com.liferay.portal.kernel.dao.orm.QueryPos;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
@@ -391,20 +389,7 @@ public class UserFinderImpl extends UserFinderBaseImpl implements UserFinder {
 				sql = StringUtil.removeSubstring(sql, _STATUS_SQL);
 			}
 
-			StringBundler sb = null;
-
-			DB db = getDB();
-
-			boolean sybase = false;
-
-			if (db.getDBType() == DBType.SYBASE) {
-				sybase = true;
-
-				sb = new StringBundler((paramsList.size() * 7) + 1);
-			}
-			else {
-				sb = new StringBundler((paramsList.size() * 4) + 1);
-			}
+			StringBundler sb = new StringBundler((paramsList.size() * 4) + 1);
 
 			sb.append("SELECT COUNT(userId) AS COUNT_VALUE FROM (");
 
@@ -413,18 +398,9 @@ public class UserFinderImpl extends UserFinderBaseImpl implements UserFinder {
 					sb.append(" UNION ");
 				}
 
-				if (sybase) {
-					sb.append("SELECT userId FROM ");
-				}
-
 				sb.append(StringPool.OPEN_PARENTHESIS);
 				sb.append(replaceJoinAndWhere(sql, paramsList.get(i)));
 				sb.append(StringPool.CLOSE_PARENTHESIS);
-
-				if (sybase) {
-					sb.append(" params");
-					sb.append(i);
-				}
 			}
 
 			sb.append(") userId");
@@ -857,7 +833,7 @@ public class UserFinderImpl extends UserFinderBaseImpl implements UserFinder {
 		for (Map.Entry<String, Object> entry : params.entrySet()) {
 			String key = entry.getKey();
 
-			if (key.equals("expandoAttributes")) {
+			if (key.equals("expandoAttributes") || key.equals("noLDAPUsers")) {
 				continue;
 			}
 
@@ -952,6 +928,8 @@ public class UserFinderImpl extends UserFinderBaseImpl implements UserFinder {
 
 	protected List<LinkedHashMap<String, Object>> getParamsList(
 		LinkedHashMap<String, Object> params) {
+
+		List<LinkedHashMap<String, Object>> paramsList = new ArrayList<>();
 
 		if (params == null) {
 			params = _emptyLinkedHashMap;
@@ -1193,8 +1171,6 @@ public class UserFinderImpl extends UserFinderBaseImpl implements UserFinder {
 			}
 		}
 
-		List<LinkedHashMap<String, Object>> paramsList = new ArrayList<>();
-
 		paramsList.add(params1);
 
 		if (params2 != null) {
@@ -1313,6 +1289,9 @@ public class UserFinderImpl extends UserFinderBaseImpl implements UserFinder {
 		else if (key.equals("noAccountEntriesAndNoOrganizations")) {
 			join = CustomSQLUtil.get(
 				JOIN_BY_NO_ACCOUNT_ENTRIES_AND_NO_ORGANIZATIONS);
+		}
+		else if (key.equals("noLDAPUsers")) {
+			join = "WHERE User_.ldapServerId = -1";
 		}
 		else if (key.equals("noOrganizations")) {
 			join = CustomSQLUtil.get(JOIN_BY_NO_ORGANIZATIONS);

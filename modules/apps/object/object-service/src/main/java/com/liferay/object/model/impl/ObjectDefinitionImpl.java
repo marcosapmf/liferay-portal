@@ -6,18 +6,24 @@
 package com.liferay.object.model.impl;
 
 import com.liferay.object.constants.ObjectDefinitionConstants;
+import com.liferay.object.constants.ObjectPortletKeys;
 import com.liferay.object.definition.util.ObjectDefinitionUtil;
 import com.liferay.object.model.ObjectDefinition;
+import com.liferay.object.model.ObjectDefinitionSetting;
 import com.liferay.object.model.ObjectFolder;
 import com.liferay.object.service.ObjectDefinitionLocalServiceUtil;
+import com.liferay.object.service.ObjectDefinitionSettingLocalServiceUtil;
 import com.liferay.object.service.ObjectFolderLocalServiceUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
+import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.TextFormatter;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
+import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 
 /**
@@ -34,6 +40,11 @@ public class ObjectDefinitionImpl extends ObjectDefinitionBaseImpl {
 		}
 
 		return shortName;
+	}
+
+	@Override
+	public Locale getDefaultLocale() {
+		return LocaleUtil.fromLanguageId(getDefaultLanguageId());
 	}
 
 	@Override
@@ -76,6 +87,17 @@ public class ObjectDefinitionImpl extends ObjectDefinitionBaseImpl {
 	}
 
 	@Override
+	public List<ObjectDefinitionSetting> getObjectDefinitionSettings() {
+		if (_objectDefinitionSettings == null) {
+			_objectDefinitionSettings =
+				ObjectDefinitionSettingLocalServiceUtil.
+					getObjectDefinitionSettings(getObjectDefinitionId());
+		}
+
+		return _objectDefinitionSettings;
+	}
+
+	@Override
 	public String getObjectFolderExternalReferenceCode() {
 		ObjectFolder objectFolder =
 			ObjectFolderLocalServiceUtil.fetchObjectFolder(getObjectFolderId());
@@ -103,8 +125,13 @@ public class ObjectDefinitionImpl extends ObjectDefinitionBaseImpl {
 			throw new UnsupportedOperationException();
 		}
 
-		return "com_liferay_object_web_internal_object_definitions_portlet_" +
-			"ObjectDefinitionsPortlet_" + getObjectDefinitionId();
+		return ObjectPortletKeys.OBJECT_DEFINITIONS + StringPool.UNDERLINE +
+			StringUtil.split(getClassName(), StringPool.POUND)[1];
+	}
+
+	@Override
+	public String getPreviousRESTContextPath() {
+		return _previousRESTContextPath;
 	}
 
 	@Override
@@ -192,14 +219,8 @@ public class ObjectDefinitionImpl extends ObjectDefinitionBaseImpl {
 
 	@Override
 	public boolean isDefaultStorageType() {
-		if (Objects.equals(
-				getStorageType(),
-				ObjectDefinitionConstants.STORAGE_TYPE_DEFAULT)) {
-
-			return true;
-		}
-
-		return false;
+		return Objects.equals(
+			getStorageType(), ObjectDefinitionConstants.STORAGE_TYPE_DEFAULT);
 	}
 
 	@Override
@@ -231,7 +252,7 @@ public class ObjectDefinitionImpl extends ObjectDefinitionBaseImpl {
 
 	@Override
 	public boolean isRootDescendantNode() {
-		if (!FeatureFlagManagerUtil.isEnabled("LPS-187142")) {
+		if (!FeatureFlagManagerUtil.isEnabled(getCompanyId(), "LPD-34594")) {
 			return false;
 		}
 
@@ -244,7 +265,7 @@ public class ObjectDefinitionImpl extends ObjectDefinitionBaseImpl {
 
 	@Override
 	public boolean isRootNode() {
-		if (!FeatureFlagManagerUtil.isEnabled("LPS-187142")) {
+		if (!FeatureFlagManagerUtil.isEnabled(getCompanyId(), "LPD-34594")) {
 			return false;
 		}
 
@@ -263,5 +284,20 @@ public class ObjectDefinitionImpl extends ObjectDefinitionBaseImpl {
 
 		return false;
 	}
+
+	@Override
+	public void setObjectDefinitionSettings(
+		List<ObjectDefinitionSetting> objectDefinitionSettings) {
+
+		_objectDefinitionSettings = objectDefinitionSettings;
+	}
+
+	@Override
+	public void setPreviousRESTContextPath(String previousRESTContextPath) {
+		_previousRESTContextPath = previousRESTContextPath;
+	}
+
+	private List<ObjectDefinitionSetting> _objectDefinitionSettings;
+	private String _previousRESTContextPath;
 
 }

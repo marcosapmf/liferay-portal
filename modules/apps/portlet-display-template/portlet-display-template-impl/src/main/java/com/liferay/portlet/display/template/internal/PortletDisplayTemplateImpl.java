@@ -8,6 +8,7 @@ package com.liferay.portlet.display.template.internal;
 import com.liferay.dynamic.data.mapping.exception.NoSuchTemplateException;
 import com.liferay.dynamic.data.mapping.model.DDMTemplate;
 import com.liferay.dynamic.data.mapping.service.DDMTemplateLocalService;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.bean.ClassLoaderBeanHandler;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.io.unsync.UnsyncStringWriter;
@@ -16,6 +17,7 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Portlet;
 import com.liferay.portal.kernel.portlet.PortletURLUtil;
+import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.PortletLocalService;
 import com.liferay.portal.kernel.servlet.PipingServletResponse;
@@ -43,7 +45,6 @@ import com.liferay.taglib.util.VelocityTaglib;
 
 import java.lang.reflect.InvocationHandler;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -223,34 +224,38 @@ public class PortletDisplayTemplateImpl implements PortletDisplayTemplate {
 
 	@Override
 	public List<TemplateHandler> getPortletDisplayTemplateHandlers() {
-		List<TemplateHandler> portletDisplayTemplateHandlers =
-			new ArrayList<>();
+		return TransformUtil.transform(
+			TemplateHandlerRegistryUtil.getTemplateHandlers(),
+			templateHandler -> {
+				if (!templateHandler.isEnabled(
+						CompanyThreadLocal.getCompanyId())) {
 
-		List<TemplateHandler> templateHandlers =
-			TemplateHandlerRegistryUtil.getTemplateHandlers();
+					return null;
+				}
 
-		for (TemplateHandler templateHandler : templateHandlers) {
-			if (templateHandler instanceof BasePortletDisplayTemplateHandler) {
-				portletDisplayTemplateHandlers.add(templateHandler);
-			}
-			else if (ProxyUtil.isProxyClass(templateHandler.getClass())) {
-				InvocationHandler invocationHandler =
-					ProxyUtil.getInvocationHandler(templateHandler);
+				if (templateHandler instanceof
+						BasePortletDisplayTemplateHandler) {
 
-				if (invocationHandler instanceof ClassLoaderBeanHandler) {
-					ClassLoaderBeanHandler classLoaderBeanHandler =
-						(ClassLoaderBeanHandler)invocationHandler;
+					return templateHandler;
+				}
+				else if (ProxyUtil.isProxyClass(templateHandler.getClass())) {
+					InvocationHandler invocationHandler =
+						ProxyUtil.getInvocationHandler(templateHandler);
 
-					Object bean = classLoaderBeanHandler.getBean();
+					if (invocationHandler instanceof ClassLoaderBeanHandler) {
+						ClassLoaderBeanHandler classLoaderBeanHandler =
+							(ClassLoaderBeanHandler)invocationHandler;
 
-					if (bean instanceof BasePortletDisplayTemplateHandler) {
-						portletDisplayTemplateHandlers.add(templateHandler);
+						Object bean = classLoaderBeanHandler.getBean();
+
+						if (bean instanceof BasePortletDisplayTemplateHandler) {
+							return templateHandler;
+						}
 					}
 				}
-			}
-		}
 
-		return portletDisplayTemplateHandlers;
+				return null;
+			});
 	}
 
 	@Override

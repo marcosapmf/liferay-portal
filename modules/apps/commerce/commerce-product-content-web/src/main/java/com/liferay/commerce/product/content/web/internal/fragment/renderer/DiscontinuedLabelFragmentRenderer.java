@@ -120,7 +120,7 @@ public class DiscontinuedLabelFragmentRenderer implements FragmentRenderer {
 			Object infoItem = httpServletRequest.getAttribute(
 				InfoDisplayWebKeys.INFO_ITEM);
 
-			if ((infoItem == null) || !(infoItem instanceof CPDefinition)) {
+			if (!(infoItem instanceof CPDefinition)) {
 				if (_isEditMode(httpServletRequest)) {
 					_printPortletMessageInfo(
 						httpServletRequest, httpServletResponse,
@@ -193,11 +193,7 @@ public class DiscontinuedLabelFragmentRenderer implements FragmentRenderer {
 		String layoutMode = ParamUtil.getString(
 			originalHttpServletRequest, "p_l_mode", Constants.VIEW);
 
-		if (layoutMode.equals(Constants.EDIT)) {
-			return true;
-		}
-
-		return false;
+		return layoutMode.equals(Constants.EDIT);
 	}
 
 	private void _printPortletMessageInfo(

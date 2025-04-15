@@ -8,280 +8,394 @@ import {expect, mergeTests} from '@playwright/test';
 import {apiHelpersTest} from '../../../fixtures/apiHelpersTest';
 import {commercePagesTest} from '../../../fixtures/commercePagesTest';
 import {dataApiHelpersTest} from '../../../fixtures/dataApiHelpersTest';
+import {isolatedSiteTest} from '../../../fixtures/isolatedSiteTest';
 import {loginTest} from '../../../fixtures/loginTest';
+import {pageViewModePagesTest} from '../../../fixtures/pageViewModePagesTest';
+import getRandomString from '../../../utils/getRandomString';
 
 export const test = mergeTests(
 	apiHelpersTest,
 	commercePagesTest,
 	dataApiHelpersTest,
-	loginTest()
+	isolatedSiteTest,
+	loginTest(),
+	pageViewModePagesTest
 );
 
-test('LPD-13560 Can sort specifications by specification group and label priority', async ({
-	apiHelpers,
-	commerceLayoutsPage,
-	specificationFacetsPage,
-}) => {
-	test.setTimeout(180000);
+test(
+	'Can sort specifications by specification group and label priority',
+	{tag: '@LPD-13560'},
+	async ({apiHelpers, page, site, specificationFacetsPage}) => {
+		test.setTimeout(180000);
 
-	const pageLabel = 'Specification Facet Page';
+		const layout = await apiHelpers.jsonWebServicesLayout.addLayout({
+			groupId: site.id,
+			title: getRandomString(),
+		});
 
-	await commerceLayoutsPage.goToPages();
-	await commerceLayoutsPage.createWidgetPage(pageLabel);
-	await specificationFacetsPage.goToPage();
-	await specificationFacetsPage.addRequiredFacetWidgets();
-	await specificationFacetsPage.configureSearchOptions();
+		await apiHelpers.headlessCommerceAdminChannel.postChannel({
+			name: getRandomString(),
+			siteGroupId: site.id,
+		});
 
-	const site =
-		await apiHelpers.headlessAdminUser.getSiteByFriendlyUrlPath('guest');
+		await page.goto(`/web${site.friendlyUrlPath}${layout.friendlyURL}`);
 
-	await apiHelpers.headlessCommerceAdminChannel.postChannel({
-		name: 'Specification Facet Channel',
-		siteGroupId: site.id,
-	});
+		await specificationFacetsPage.addRequiredFacetWidgets();
+		await specificationFacetsPage.configureSearchOptions();
 
-	const optionCategory1 =
-		await apiHelpers.headlessCommerceAdminCatalog.postOptionCategory(
-			'Warranty',
-			1
-		);
+		const optionCategory1 =
+			await apiHelpers.headlessCommerceAdminCatalog.postOptionCategory(
+				'Warranty',
+				1
+			);
 
-	const optionCategory2 =
-		await apiHelpers.headlessCommerceAdminCatalog.postOptionCategory(
-			'Material',
-			0
-		);
+		const optionCategory2 =
+			await apiHelpers.headlessCommerceAdminCatalog.postOptionCategory(
+				'Material',
+				0
+			);
 
-	const specification1 =
-		await apiHelpers.headlessCommerceAdminCatalog.postSpecification(
-			true,
-			optionCategory2.priority,
-			'Warranty1',
-			{
-				id: optionCategory1.id,
-				key: optionCategory1.key,
-				priority: optionCategory1.priority,
-				title: {
-					en_US: optionCategory1.key,
-				},
-			}
-		);
+		const specification1 =
+			await apiHelpers.headlessCommerceAdminCatalog.postSpecification(
+				true,
+				optionCategory2.priority,
+				'Warranty1',
+				{
+					id: optionCategory1.id,
+					key: optionCategory1.key,
+					priority: optionCategory1.priority,
+					title: {
+						en_US: optionCategory1.key,
+					},
+				}
+			);
 
-	const specification2 =
-		await apiHelpers.headlessCommerceAdminCatalog.postSpecification(
-			true,
-			optionCategory1.priority,
-			'Material1',
-			{
-				id: optionCategory2.id,
-				key: optionCategory2.key,
-				priority: optionCategory2.priority,
-				title: {
-					en_US: optionCategory2.key,
-				},
-			}
-		);
+		const specification2 =
+			await apiHelpers.headlessCommerceAdminCatalog.postSpecification(
+				true,
+				optionCategory1.priority,
+				'Material1',
+				{
+					id: optionCategory2.id,
+					key: optionCategory2.key,
+					priority: optionCategory2.priority,
+					title: {
+						en_US: optionCategory2.key,
+					},
+				}
+			);
 
-	const catalog = await apiHelpers.headlessCommerceAdminCatalog.postCatalog({
-		name: 'Specification Facet Catalog',
-	});
+		const catalog =
+			await apiHelpers.headlessCommerceAdminCatalog.postCatalog({
+				name: getRandomString(),
+			});
 
-	await apiHelpers.headlessCommerceAdminCatalog.postProduct({
-		catalogId: catalog.id,
-		name: {
-			en_US: 'Product1',
-		},
-		productSpecifications: [
-			{
-				specificationKey: specification1.key,
-				value: {
-					en_US: 'Product1',
-				},
+		await apiHelpers.headlessCommerceAdminCatalog.postProduct({
+			catalogId: catalog.id,
+			name: {
+				en_US: 'Product1',
 			},
-		],
-	});
-
-	await apiHelpers.headlessCommerceAdminCatalog.postProduct({
-		catalogId: catalog.id,
-		name: {
-			en_US: 'Product2',
-		},
-		productSpecifications: [
-			{
-				specificationKey: specification2.key,
-				value: {
-					en_US: 'Product2',
+			productSpecifications: [
+				{
+					specificationKey: specification1.key,
+					value: {
+						en_US: 'Product1',
+					},
 				},
+			],
+		});
+
+		await apiHelpers.headlessCommerceAdminCatalog.postProduct({
+			catalogId: catalog.id,
+			name: {
+				en_US: 'Product2',
 			},
-		],
-	});
+			productSpecifications: [
+				{
+					specificationKey: specification2.key,
+					value: {
+						en_US: 'Product2',
+					},
+				},
+			],
+		});
 
-	await specificationFacetsPage.reloadPage();
+		await specificationFacetsPage.reloadPage();
 
-	const panelList = await specificationFacetsPage.panelList.all();
+		const panelList = await specificationFacetsPage.panelList.all();
 
-	const specificationFacetsList = ['Material1', 'Warranty1'];
+		const specificationFacetsList = ['Material1', 'Warranty1'];
 
-	for (let i = 0; i < specificationFacetsList.length; i++) {
-		await expect(panelList[i]).toHaveText(specificationFacetsList[i]);
+		for (let i = 0; i < specificationFacetsList.length; i++) {
+			await expect(panelList[i]).toHaveText(specificationFacetsList[i]);
+		}
+
+		await specificationFacetsPage.configureSpecificationFacetOrdering(
+			'label-priority:asc'
+		);
+
+		await specificationFacetsPage.reloadPage();
+
+		const reverseSpecificationFacetsList =
+			specificationFacetsList.reverse();
+
+		for (let i = 0; i < reverseSpecificationFacetsList.length; i++) {
+			await expect(panelList[i]).toHaveText(
+				reverseSpecificationFacetsList[i]
+			);
+		}
 	}
+);
 
-	await specificationFacetsPage.configureSpecificationFacetOrdering(
-		'label-priority:asc'
-	);
+test(
+	'Option and Specification facet portlets behave the same way',
+	{tag: '@LPD-20340'},
+	async ({apiHelpers, page, site, specificationFacetsPage}) => {
+		const layout = await apiHelpers.jsonWebServicesLayout.addLayout({
+			groupId: site.id,
+			title: getRandomString(),
+		});
 
-	await specificationFacetsPage.reloadPage();
+		await apiHelpers.headlessCommerceAdminChannel.postChannel({
+			name: getRandomString(),
+			siteGroupId: site.id,
+		});
 
-	const reverseSpecificationFacetsList = specificationFacetsList.reverse();
+		const optionCategory1 =
+			await apiHelpers.headlessCommerceAdminCatalog.postOptionCategory(
+				'Warranty',
+				1
+			);
 
-	for (let i = 0; i < reverseSpecificationFacetsList.length; i++) {
-		await expect(panelList[i]).toHaveText(
-			reverseSpecificationFacetsList[i]
-		);
-	}
+		const optionCategory2 =
+			await apiHelpers.headlessCommerceAdminCatalog.postOptionCategory(
+				'Material',
+				0
+			);
 
-	await commerceLayoutsPage.goToPages();
-	await specificationFacetsPage.deleteSpecificationPage();
-});
+		const specification1 =
+			await apiHelpers.headlessCommerceAdminCatalog.postSpecification(
+				true,
+				optionCategory2.priority,
+				'Warranty1',
+				{
+					id: optionCategory1.id,
+					key: optionCategory1.key,
+					priority: optionCategory1.priority,
+					title: {
+						en_US: optionCategory1.key,
+					},
+				}
+			);
 
-test('LPD-20340 Option and Specification facet portlets behave the same way', async ({
-	apiHelpers,
-	commerceLayoutsPage,
-	page,
-	specificationFacetsPage,
-}) => {
-	const site = await apiHelpers.headlessSite.createSite({
-		name: 'Specification Facet Site',
-	});
+		const specification2 =
+			await apiHelpers.headlessCommerceAdminCatalog.postSpecification(
+				true,
+				optionCategory1.priority,
+				'Material1',
+				{
+					id: optionCategory2.id,
+					key: optionCategory2.key,
+					priority: optionCategory2.priority,
+					title: {
+						en_US: optionCategory2.key,
+					},
+				}
+			);
 
-	apiHelpers.data.push({id: site.id, type: 'site'});
+		const catalog =
+			await apiHelpers.headlessCommerceAdminCatalog.postCatalog({
+				name: getRandomString(),
+			});
 
-	await apiHelpers.headlessCommerceAdminChannel.postChannel({
-		name: 'Specification Facet Channel',
-		siteGroupId: site.id,
-	});
-
-	const optionCategory1 =
-		await apiHelpers.headlessCommerceAdminCatalog.postOptionCategory(
-			'Warranty',
-			1
-		);
-
-	const optionCategory2 =
-		await apiHelpers.headlessCommerceAdminCatalog.postOptionCategory(
-			'Material',
-			0
-		);
-
-	const specification1 =
-		await apiHelpers.headlessCommerceAdminCatalog.postSpecification(
-			true,
-			optionCategory2.priority,
-			'Warranty1',
-			{
-				id: optionCategory1.id,
-				key: optionCategory1.key,
-				priority: optionCategory1.priority,
-				title: {
-					en_US: optionCategory1.key,
-				},
-			}
-		);
-
-	const specification2 =
-		await apiHelpers.headlessCommerceAdminCatalog.postSpecification(
-			true,
-			optionCategory1.priority,
-			'Material1',
-			{
-				id: optionCategory2.id,
-				key: optionCategory2.key,
-				priority: optionCategory2.priority,
-				title: {
-					en_US: optionCategory2.key,
-				},
-			}
-		);
-
-	const catalog = await apiHelpers.headlessCommerceAdminCatalog.postCatalog({
-		name: 'Specification Facet Catalog',
-	});
-
-	await apiHelpers.headlessCommerceAdminCatalog.postProduct({
-		catalogId: catalog.id,
-		name: {
-			en_US: 'Product1',
-		},
-		productSpecifications: [
-			{
-				specificationKey: specification1.key,
-				value: {
-					en_US: 'Product1',
-				},
+		await apiHelpers.headlessCommerceAdminCatalog.postProduct({
+			catalogId: catalog.id,
+			name: {
+				en_US: 'Product1',
 			},
-		],
-	});
-
-	await apiHelpers.headlessCommerceAdminCatalog.postProduct({
-		catalogId: catalog.id,
-		name: {
-			en_US: 'Product2',
-		},
-		productSpecifications: [
-			{
-				specificationKey: specification2.key,
-				value: {
-					en_US: 'Product2',
+			productSpecifications: [
+				{
+					specificationKey: specification1.key,
+					value: {
+						en_US: 'Product1',
+					},
 				},
+			],
+		});
+
+		await apiHelpers.headlessCommerceAdminCatalog.postProduct({
+			catalogId: catalog.id,
+			name: {
+				en_US: 'Product2',
 			},
-		],
-	});
+			productSpecifications: [
+				{
+					specificationKey: specification2.key,
+					value: {
+						en_US: 'Product2',
+					},
+				},
+			],
+		});
 
-	await commerceLayoutsPage.goToPages(false, site.name);
-	await commerceLayoutsPage.createWidgetPage('Specification Facet Page');
+		await page.goto(`/web${site.friendlyUrlPath}${layout.friendlyURL}`);
 
-	await page.goto(`/web/${site.name}/specification-facet-page`);
+		await specificationFacetsPage.addRequiredFacetWidgets();
+		await specificationFacetsPage.configureSearchOptions();
 
-	await specificationFacetsPage.addRequiredFacetWidgets();
-	await specificationFacetsPage.configureSearchOptions();
+		await expect(
+			specificationFacetsPage.searchOptionsConfigurationSaveButton
+		).toBeEnabled();
 
-	await expect(
-		specificationFacetsPage.searchOptionsConfigurationSaveButton
-	).toBeEnabled();
+		await page.reload();
 
-	await page.reload();
+		const panelList = await specificationFacetsPage.panelList.all();
 
-	const panelList = await specificationFacetsPage.panelList.all();
+		const specificationFacetsList = ['Material1', 'Warranty1'];
 
-	const specificationFacetsList = ['Material1', 'Warranty1'];
+		for (let i = 0; i < specificationFacetsList.length; i++) {
+			await expect(panelList[i]).toHaveText(specificationFacetsList[i]);
+		}
 
-	for (let i = 0; i < specificationFacetsList.length; i++) {
-		await expect(panelList[i]).toHaveText(specificationFacetsList[i]);
+		await specificationFacetsPage.configureOptionFacetFrequencyThreshold(
+			'60'
+		);
+
+		await expect(
+			specificationFacetsPage.configurationSaveButton
+		).toBeEnabled();
+
+		await page.reload();
+
+		await specificationFacetsPage.configureSpecificationFacetFrequencyThreshold(
+			'60'
+		);
+
+		await expect(
+			specificationFacetsPage.configurationSaveButton
+		).toBeEnabled();
+
+		await page.reload();
+
+		await expect(page.getByText('No facets were found.')).toHaveCount(2);
+
+		await specificationFacetsPage.configureSpecificationFacetFrequencyThreshold(
+			'2'
+		);
+
+		await expect(
+			specificationFacetsPage.configurationSaveButton
+		).toBeEnabled();
+
+		await page.reload();
+
+		await expect(page.getByText('No facets were found.')).toHaveCount(2);
 	}
+);
 
-	await specificationFacetsPage.configureOptionFacetFrequencyThreshold('60');
+test(
+	'Only visible specifications are listed in facet widget',
+	{tag: '@LPD-48103'},
+	async ({apiHelpers, page, site, specificationFacetsPage}) => {
+		test.setTimeout(180000);
 
-	await expect(specificationFacetsPage.configurationSaveButton).toBeEnabled();
+		const layout = await apiHelpers.jsonWebServicesLayout.addLayout({
+			groupId: site.id,
+			title: getRandomString(),
+		});
 
-	await page.reload();
+		await apiHelpers.headlessCommerceAdminChannel.postChannel({
+			name: getRandomString(),
+			siteGroupId: site.id,
+		});
 
-	await specificationFacetsPage.configureSpecificationFacetFrequencyThreshold(
-		'60'
-	);
+		await page.goto(`/web${site.friendlyUrlPath}${layout.friendlyURL}`);
 
-	await expect(specificationFacetsPage.configurationSaveButton).toBeEnabled();
+		await specificationFacetsPage.addRequiredFacetWidgets();
+		await specificationFacetsPage.configureSearchOptions();
 
-	await page.reload();
+		const optionCategory1 =
+			await apiHelpers.headlessCommerceAdminCatalog.postOptionCategory(
+				'Warranty',
+				1
+			);
 
-	await expect(page.getByText('No facets were found.')).toHaveCount(2);
+		const optionCategory2 =
+			await apiHelpers.headlessCommerceAdminCatalog.postOptionCategory(
+				'Material',
+				0
+			);
 
-	await specificationFacetsPage.configureSpecificationFacetFrequencyThreshold(
-		'2'
-	);
+		const specification1 =
+			await apiHelpers.headlessCommerceAdminCatalog.postSpecification(
+				true,
+				optionCategory2.priority,
+				'Warranty1',
+				{
+					id: optionCategory1.id,
+					key: optionCategory1.key,
+					priority: optionCategory1.priority,
+					title: {
+						en_US: optionCategory1.key,
+					},
+				}
+			);
 
-	await expect(specificationFacetsPage.configurationSaveButton).toBeEnabled();
+		const specification2 =
+			await apiHelpers.headlessCommerceAdminCatalog.postSpecification(
+				true,
+				optionCategory1.priority,
+				'Material1',
+				{
+					id: optionCategory2.id,
+					key: optionCategory2.key,
+					priority: optionCategory2.priority,
+					title: {
+						en_US: optionCategory2.key,
+					},
+				}
+			);
 
-	await page.reload();
+		const catalog =
+			await apiHelpers.headlessCommerceAdminCatalog.postCatalog({
+				name: getRandomString(),
+			});
 
-	await expect(page.getByText('No facets were found.')).toHaveCount(2);
-});
+		await apiHelpers.headlessCommerceAdminCatalog.postProduct({
+			catalogId: catalog.id,
+			name: {
+				en_US: 'Product1',
+			},
+			productSpecifications: [
+				{
+					specificationKey: specification1.key,
+					value: {
+						en_US: 'Product1',
+					},
+				},
+			],
+		});
+
+		await apiHelpers.headlessCommerceAdminCatalog.postProduct({
+			catalogId: catalog.id,
+			name: {
+				en_US: 'Product2',
+			},
+			productSpecifications: [
+				{
+					specificationKey: specification2.key,
+					value: {
+						en_US: 'Product2',
+					},
+					visible: false,
+				},
+			],
+		});
+
+		await specificationFacetsPage.reloadPage();
+
+		const panelList = await specificationFacetsPage.panelList.all();
+
+		await expect(panelList[0]).toHaveText('Warranty1');
+	}
+);

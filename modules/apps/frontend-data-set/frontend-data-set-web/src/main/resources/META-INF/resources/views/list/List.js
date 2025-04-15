@@ -10,7 +10,7 @@ import ClayList from '@clayui/list';
 import ClaySticker from '@clayui/sticker';
 import classNames from 'classnames';
 import PropTypes from 'prop-types';
-import React, {useContext, useState} from 'react';
+import React, {useContext} from 'react';
 
 import FrontendDataSetContext from '../../FrontendDataSetContext';
 import Actions from '../../actions/Actions';
@@ -78,40 +78,34 @@ const ListItem = ({item, schema}) => {
 		selectionType,
 	} = useContext(FrontendDataSetContext);
 
-	const [menuActive, setMenuActive] = useState(false);
-
 	const {description, image, sticker, symbol, title, titleRenderer} = schema;
+
+	const SelectionInput =
+		selectionType === 'single' ? ClayRadio : ClayCheckbox;
 
 	return (
 		<ClayList.Item
 			className={classNames({
-				'menu-active': menuActive,
 				selectable,
+				selected: selectedItemsValue.includes(item[selectedItemsKey]),
 			})}
 			flex
 			onClick={() => {
 				if (selectable) {
 					selectItems(item[selectedItemsKey]);
 
-					onSelect?.({selectedItems: [item]});
+					onSelect({selectedItems: [item]});
 				}
 			}}
 		>
 			{selectable && (
-				<ClayList.ItemField className="justify-content-center">
-					{selectionType === 'single' ? (
-						<ClayRadio
-							checked={selectedItemsValue
-								.map((element) => String(element))
-								.includes(String(item[selectedItemsKey]))}
-						/>
-					) : (
-						<ClayCheckbox
-							checked={selectedItemsValue
-								.map((element) => String(element))
-								.includes(String(item[selectedItemsKey]))}
-						/>
-					)}
+				<ClayList.ItemField className="justify-content-center selection-control">
+					<SelectionInput
+						checked={selectedItemsValue
+							.map((element) => String(element))
+							.includes(String(item[selectedItemsKey]))}
+						onChange={() => {}}
+					/>
 				</ClayList.ItemField>
 			)}
 
@@ -153,8 +147,6 @@ const ListItem = ({item, schema}) => {
 						actions={itemsActions || item.actionDropdownItems}
 						itemData={item}
 						itemId={item[selectedItemsKey]}
-						menuActive={menuActive}
-						onMenuActiveChange={setMenuActive}
 					/>
 				)}
 			</ClayList.ItemField>
@@ -166,8 +158,7 @@ List.propTypes = {
 	context: PropTypes.any,
 	items: PropTypes.arrayOf(
 		PropTypes.shape({
-			id: PropTypes.oneOfType([PropTypes.string, PropTypes.number])
-				.isRequired,
+			id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
 		})
 	),
 	schema: PropTypes.shape({

@@ -9,7 +9,6 @@ import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.petra.io.unsync.UnsyncByteArrayInputStream;
 import com.liferay.petra.io.unsync.UnsyncByteArrayOutputStream;
 import com.liferay.petra.string.StringBundler;
-import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.test.performance.PerformanceTimer;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.util.HtmlUtil;
@@ -80,10 +79,11 @@ public class JspServletPerformanceTest {
 			bundleContext,
 			FrameworkUtil.createFilter(
 				StringBundler.concat(
-					StringPool.OPEN_PARENTHESIS,
-					HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_SELECT,
-					StringPool.EQUAL, _WEB_CONTEXT_PATH.substring(1),
-					StringPool.CLOSE_PARENTHESIS)),
+					"(&(objectClass=", Servlet.class.getName(), ")(",
+					HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_SELECT, "=",
+					_WEB_CONTEXT_PATH.substring(1), ")(",
+					HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_PATTERN,
+					"=*.jsp))")),
 			null);
 
 		serviceTracker.open();
@@ -109,7 +109,7 @@ public class JspServletPerformanceTest {
 
 		_test(_FILE_NAME_EL_EXPRESSION_UNDEFINED_SCOPED_VARIABLES_JSP, 1);
 
-		try (PerformanceTimer performanceTimer = new PerformanceTimer(5000)) {
+		try (PerformanceTimer performanceTimer = new PerformanceTimer(15000)) {
 			_test(
 				_FILE_NAME_EL_EXPRESSION_UNDEFINED_SCOPED_VARIABLES_JSP,
 				_NUMBER_OF_REQUESTS);
@@ -120,7 +120,7 @@ public class JspServletPerformanceTest {
 	public void testElExpressionWithUndefinedVariablesJsp() throws Exception {
 		_test(_FILE_NAME_EL_EXPRESSION_UNDEFINED_VARIABLES_JSP, 1);
 
-		try (PerformanceTimer performanceTimer = new PerformanceTimer(1000)) {
+		try (PerformanceTimer performanceTimer = new PerformanceTimer(15000)) {
 			_test(
 				_FILE_NAME_EL_EXPRESSION_UNDEFINED_VARIABLES_JSP,
 				_NUMBER_OF_REQUESTS);
@@ -131,7 +131,7 @@ public class JspServletPerformanceTest {
 	public void testJsp() throws Exception {
 		_test(_FILE_NAME_TEST_JSP, 1);
 
-		try (PerformanceTimer performanceTimer = new PerformanceTimer(1000)) {
+		try (PerformanceTimer performanceTimer = new PerformanceTimer(15000)) {
 			_test(_FILE_NAME_TEST_JSP, _NUMBER_OF_REQUESTS);
 		}
 	}

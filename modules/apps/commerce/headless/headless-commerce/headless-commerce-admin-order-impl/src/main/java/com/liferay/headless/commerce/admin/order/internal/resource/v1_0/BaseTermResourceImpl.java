@@ -11,9 +11,8 @@ import com.liferay.petra.function.UnsafeBiConsumer;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.petra.function.transform.TransformUtil;
+import com.liferay.portal.kernel.exception.NoSuchModelException;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ResourceActionLocalService;
@@ -34,10 +33,12 @@ import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
 import com.liferay.portal.vulcan.batch.engine.VulcanBatchEngineTaskItemDelegate;
 import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineExportTaskResource;
 import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineImportTaskResource;
+import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegate;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 import com.liferay.portal.vulcan.util.ActionUtil;
+import com.liferay.portal.vulcan.util.UriInfoUtil;
 
 import java.io.Serializable;
 
@@ -67,7 +68,8 @@ import javax.ws.rs.core.UriInfo;
 @javax.ws.rs.Path("/v1.0")
 public abstract class BaseTermResourceImpl
 	implements EntityModelResource, TermResource,
-			   VulcanBatchEngineTaskItemDelegate<Term> {
+			   VulcanBatchEngineTaskItemDelegate<Term>,
+			   VulcanCRUDItemDelegate<Term> {
 
 	/**
 	 * Invoke this method with the command line:
@@ -109,9 +111,11 @@ public abstract class BaseTermResourceImpl
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
 			@javax.ws.rs.QueryParam("search")
 			String search,
-			@javax.ws.rs.core.Context Filter filter,
+			@javax.ws.rs.core.Context
+				com.liferay.portal.kernel.search.filter.Filter filter,
 			@javax.ws.rs.core.Context Pagination pagination,
-			@javax.ws.rs.core.Context Sort[] sorts)
+			@javax.ws.rs.core.Context com.liferay.portal.kernel.search.Sort[]
+				sorts)
 		throws Exception {
 
 		return Page.of(Collections.emptyList());
@@ -162,8 +166,10 @@ public abstract class BaseTermResourceImpl
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
 			@javax.ws.rs.QueryParam("search")
 			String search,
-			@javax.ws.rs.core.Context Filter filter,
-			@javax.ws.rs.core.Context Sort[] sorts,
+			@javax.ws.rs.core.Context
+				com.liferay.portal.kernel.search.filter.Filter filter,
+			@javax.ws.rs.core.Context com.liferay.portal.kernel.search.Sort[]
+				sorts,
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
 			@javax.ws.rs.QueryParam("callbackURL")
 			String callbackURL,
@@ -342,6 +348,97 @@ public abstract class BaseTermResourceImpl
 			Term term)
 		throws Exception {
 
+		Term existingTerm = getTermByExternalReferenceCode(
+			externalReferenceCode);
+
+		if (term.getActive() != null) {
+			existingTerm.setActive(term.getActive());
+		}
+
+		if (term.getCreateDate() != null) {
+			existingTerm.setCreateDate(term.getCreateDate());
+		}
+
+		if (term.getDescription() != null) {
+			existingTerm.setDescription(term.getDescription());
+		}
+
+		if (term.getDisplayDate() != null) {
+			existingTerm.setDisplayDate(term.getDisplayDate());
+		}
+
+		if (term.getExpirationDate() != null) {
+			existingTerm.setExpirationDate(term.getExpirationDate());
+		}
+
+		if (term.getExternalReferenceCode() != null) {
+			existingTerm.setExternalReferenceCode(
+				term.getExternalReferenceCode());
+		}
+
+		if (term.getLabel() != null) {
+			existingTerm.setLabel(term.getLabel());
+		}
+
+		if (term.getName() != null) {
+			existingTerm.setName(term.getName());
+		}
+
+		if (term.getNeverExpire() != null) {
+			existingTerm.setNeverExpire(term.getNeverExpire());
+		}
+
+		if (term.getPriority() != null) {
+			existingTerm.setPriority(term.getPriority());
+		}
+
+		if (term.getType() != null) {
+			existingTerm.setType(term.getType());
+		}
+
+		if (term.getTypeLocalized() != null) {
+			existingTerm.setTypeLocalized(term.getTypeLocalized());
+		}
+
+		if (term.getTypeSettings() != null) {
+			existingTerm.setTypeSettings(term.getTypeSettings());
+		}
+
+		preparePatch(term, existingTerm);
+
+		return putTermByExternalReferenceCode(
+			externalReferenceCode, existingTerm);
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'PUT' 'http://localhost:8080/o/headless-commerce-admin-order/v1.0/terms/by-externalReferenceCode/{externalReferenceCode}' -d $'{"active": ___, "createDate": ___, "description": ___, "displayDate": ___, "expirationDate": ___, "externalReferenceCode": ___, "id": ___, "label": ___, "name": ___, "neverExpire": ___, "priority": ___, "termOrderType": ___, "type": ___, "typeLocalized": ___, "typeSettings": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "externalReferenceCode"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Term")}
+	)
+	@javax.ws.rs.Consumes({"application/json", "application/xml"})
+	@javax.ws.rs.Path("/terms/by-externalReferenceCode/{externalReferenceCode}")
+	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@javax.ws.rs.PUT
+	@Override
+	public Term putTermByExternalReferenceCode(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull
+			@javax.ws.rs.PathParam("externalReferenceCode")
+			String externalReferenceCode,
+			Term term)
+		throws Exception {
+
 		return new Term();
 	}
 
@@ -491,6 +588,37 @@ public abstract class BaseTermResourceImpl
 			termUnsafeFunction = term -> postTerm(term);
 		}
 
+		if (StringUtil.equalsIgnoreCase(createStrategy, "UPSERT")) {
+			String updateStrategy = (String)parameters.getOrDefault(
+				"updateStrategy", "UPDATE");
+
+			if (StringUtil.equalsIgnoreCase(updateStrategy, "UPDATE")) {
+				termUnsafeFunction = term -> putTermByExternalReferenceCode(
+					term.getExternalReferenceCode(), term);
+			}
+
+			if (StringUtil.equalsIgnoreCase(updateStrategy, "PARTIAL_UPDATE")) {
+				termUnsafeFunction = term -> {
+					Term persistedTerm = null;
+
+					try {
+						Term getTerm = getTermByExternalReferenceCode(
+							term.getExternalReferenceCode());
+
+						persistedTerm = patchTerm(
+							getTerm.getId() != null ? getTerm.getId() :
+								_parseLong((String)parameters.get("termId")),
+							term);
+					}
+					catch (NoSuchModelException noSuchModelException) {
+						persistedTerm = postTerm(term);
+					}
+
+					return persistedTerm;
+				};
+			}
+		}
+
 		if (termUnsafeFunction == null) {
 			throw new NotSupportedException(
 				"Create strategy \"" + createStrategy +
@@ -515,13 +643,48 @@ public abstract class BaseTermResourceImpl
 			Collection<Term> terms, Map<String, Serializable> parameters)
 		throws Exception {
 
-		for (Term term : terms) {
-			deleteTerm(term.getId());
+		UnsafeFunction<Term, Term, Exception> termUnsafeFunction = term -> {
+			if (term.getId() != null) {
+				try {
+					deleteTerm(term.getId());
+
+					return term;
+				}
+				catch (Exception exception) {
+					if (term.getExternalReferenceCode() != null) {
+						deleteTermByExternalReferenceCode(
+							term.getExternalReferenceCode());
+
+						return term;
+					}
+				}
+			}
+			else if (term.getExternalReferenceCode() != null) {
+				deleteTermByExternalReferenceCode(
+					term.getExternalReferenceCode());
+
+				return term;
+			}
+
+			throw new UnsupportedOperationException(
+				"Unable to delete by external reference code or ID");
+		};
+
+		if (contextBatchUnsafeBiConsumer != null) {
+			contextBatchUnsafeBiConsumer.accept(terms, termUnsafeFunction);
+		}
+		else if (contextBatchUnsafeConsumer != null) {
+			contextBatchUnsafeConsumer.accept(terms, termUnsafeFunction::apply);
+		}
+		else {
+			for (Term term : terms) {
+				termUnsafeFunction.apply(term);
+			}
 		}
 	}
 
 	public Set<String> getAvailableCreateStrategies() {
-		return SetUtil.fromArray("INSERT");
+		return SetUtil.fromArray("INSERT", "UPSERT");
 	}
 
 	public Set<String> getAvailableUpdateStrategies() {
@@ -553,7 +716,9 @@ public abstract class BaseTermResourceImpl
 
 	@Override
 	public Page<Term> read(
-			Filter filter, Pagination pagination, Sort[] sorts,
+			com.liferay.portal.kernel.search.filter.Filter filter,
+			Pagination pagination,
+			com.liferay.portal.kernel.search.Sort[] sorts,
 			Map<String, Serializable> parameters, String search)
 		throws Exception {
 
@@ -626,6 +791,11 @@ public abstract class BaseTermResourceImpl
 		return null;
 	}
 
+	@Override
+	public Term getItem(Long id) throws Exception {
+		return getTerm(id);
+	}
+
 	public void setContextAcceptLanguage(AcceptLanguage contextAcceptLanguage) {
 		this.contextAcceptLanguage = contextAcceptLanguage;
 	}
@@ -665,7 +835,8 @@ public abstract class BaseTermResourceImpl
 	}
 
 	public void setContextUriInfo(UriInfo contextUriInfo) {
-		this.contextUriInfo = contextUriInfo;
+		this.contextUriInfo = UriInfoUtil.getVulcanUriInfo(
+			getApplicationPath(), contextUriInfo);
 	}
 
 	public void setContextUser(
@@ -675,7 +846,8 @@ public abstract class BaseTermResourceImpl
 	}
 
 	public void setExpressionConvert(
-		ExpressionConvert<Filter> expressionConvert) {
+		ExpressionConvert<com.liferay.portal.kernel.search.filter.Filter>
+			expressionConvert) {
 
 		this.expressionConvert = expressionConvert;
 	}
@@ -710,6 +882,10 @@ public abstract class BaseTermResourceImpl
 		this.sortParserProvider = sortParserProvider;
 	}
 
+	protected String getApplicationPath() {
+		return "headless-commerce-admin-order";
+	}
+
 	public void setVulcanBatchEngineExportTaskResource(
 		VulcanBatchEngineExportTaskResource
 			vulcanBatchEngineExportTaskResource) {
@@ -727,7 +903,7 @@ public abstract class BaseTermResourceImpl
 	}
 
 	@Override
-	public Filter toFilter(
+	public com.liferay.portal.kernel.search.filter.Filter toFilter(
 		String filterString, Map<String, List<String>> multivaluedMap) {
 
 		try {
@@ -752,7 +928,7 @@ public abstract class BaseTermResourceImpl
 	}
 
 	@Override
-	public Sort[] toSorts(String sortString) {
+	public com.liferay.portal.kernel.search.Sort[] toSorts(String sortString) {
 		if (Validator.isNull(sortString)) {
 			return null;
 		}
@@ -770,13 +946,13 @@ public abstract class BaseTermResourceImpl
 					sortParser.parse(sortString));
 
 			List<SortField> sortFields = oDataSort.getSortFields();
-
-			Sort[] sorts = new Sort[sortFields.size()];
+			com.liferay.portal.kernel.search.Sort[] sorts =
+				new com.liferay.portal.kernel.search.Sort[sortFields.size()];
 
 			for (int i = 0; i < sortFields.size(); i++) {
 				SortField sortField = sortFields.get(i);
 
-				sorts[i] = new Sort(
+				sorts[i] = new com.liferay.portal.kernel.search.Sort(
 					sortField.getSortableFieldName(
 						contextAcceptLanguage.getPreferredLocale()),
 					!sortField.isAscending());
@@ -787,7 +963,7 @@ public abstract class BaseTermResourceImpl
 		catch (Exception exception) {
 			_log.error("Invalid sort " + sortString, exception);
 
-			return new Sort[0];
+			return new com.liferay.portal.kernel.search.Sort[0];
 		}
 	}
 
@@ -825,6 +1001,9 @@ public abstract class BaseTermResourceImpl
 
 		return addAction(
 			actionName, siteId, methodName, null, permissionName, siteId);
+	}
+
+	protected void preparePatch(Term term, Term existingTerm) {
 	}
 
 	protected <T, R, E extends Throwable> List<R> transform(
@@ -912,7 +1091,8 @@ public abstract class BaseTermResourceImpl
 	protected Object contextScopeChecker;
 	protected UriInfo contextUriInfo;
 	protected com.liferay.portal.kernel.model.User contextUser;
-	protected ExpressionConvert<Filter> expressionConvert;
+	protected ExpressionConvert<com.liferay.portal.kernel.search.filter.Filter>
+		expressionConvert;
 	protected FilterParserProvider filterParserProvider;
 	protected GroupLocalService groupLocalService;
 	protected ResourceActionLocalService resourceActionLocalService;

@@ -9,8 +9,10 @@ import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.commerce.product.model.CPOptionCategory;
 import com.liferay.commerce.product.model.CPSpecificationOption;
 import com.liferay.commerce.product.service.CPOptionCategoryLocalService;
+import com.liferay.commerce.product.service.CPSpecificationOptionListTypeDefinitionRelLocalService;
 import com.liferay.commerce.product.service.CPSpecificationOptionLocalService;
 import com.liferay.headless.commerce.admin.catalog.client.dto.v1_0.ListTypeDefinition;
+import com.liferay.list.type.service.ListTypeDefinitionLocalService;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
@@ -18,11 +20,11 @@ import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.test.rule.Inject;
 
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -56,20 +58,11 @@ public class ListTypeDefinitionResourceTest
 		_cpSpecificationOption =
 			_cpSpecificationOptionLocalService.addCPSpecificationOption(
 				RandomTestUtil.randomString(), TestPropsValues.getUserId(),
-				cpOptionCategory.getCPOptionCategoryId(), 0,
+				cpOptionCategory.getCPOptionCategoryId(), null,
 				RandomTestUtil.randomLocaleStringMap(),
 				RandomTestUtil.randomLocaleStringMap(), true,
 				RandomTestUtil.randomString(), RandomTestUtil.randomDouble(),
-				serviceContext);
-	}
-
-	@Ignore
-	@Override
-	@Test
-	public void testGetSpecificationIdListTypeDefinitionsPage()
-		throws Exception {
-
-		super.testGetSpecificationIdListTypeDefinitionsPage();
+				true, serviceContext);
 	}
 
 	@Override
@@ -77,17 +70,99 @@ public class ListTypeDefinitionResourceTest
 	public void testPostSpecificationIdListTypeDefinition() throws Exception {
 		super.testPostSpecificationIdListTypeDefinition();
 
-		CPSpecificationOption cpSpecificationOption =
-			_cpSpecificationOptionLocalService.getCPSpecificationOption(
-				_cpSpecificationOption.getCPSpecificationOptionId());
+		Assert.assertFalse(
+			ListUtil.isEmpty(
+				_cpSpecificationOptionListTypeDefinitionRelLocalService.
+					getCPSpecificationOptionListTypeDefinitionRels(
+						_cpSpecificationOption.getCPSpecificationOptionId())));
+	}
 
-		Assert.assertTrue(cpSpecificationOption.getListTypeDefinitionId() != 0);
+	@Override
+	@Test
+	public void testPostSpecificationListTypeDefinition() throws Exception {
+		com.liferay.list.type.model.ListTypeDefinition listTypeDefinition =
+			_listTypeDefinitionLocalService.addListTypeDefinition(
+				RandomTestUtil.randomString(), _user.getUserId(), false);
+
+		assertHttpResponseStatusCode(
+			204,
+			listTypeDefinitionResource.
+				postSpecificationListTypeDefinitionHttpResponse(
+					_cpSpecificationOption.getCPSpecificationOptionId(),
+					listTypeDefinition.getListTypeDefinitionId()));
+
+		assertHttpResponseStatusCode(
+			404,
+			listTypeDefinitionResource.
+				postSpecificationListTypeDefinitionHttpResponse(
+					_cpSpecificationOption.getCPSpecificationOptionId(), 0L));
+	}
+
+	@Override
+	protected String[] getAdditionalAssertFieldNames() {
+		return new String[] {"name"};
+	}
+
+	@Override
+	protected ListTypeDefinition
+			testDeleteSpecificationListTypeDefinition_addListTypeDefinition()
+		throws Exception {
+
+		return _addListTypeDefinition(randomListTypeDefinition());
+	}
+
+	@Override
+	protected Long
+			testDeleteSpecificationListTypeDefinition_getSpecificationId()
+		throws Exception {
+
+		return _cpSpecificationOption.getCPSpecificationOptionId();
+	}
+
+	@Override
+	protected ListTypeDefinition
+			testGetSpecificationIdListTypeDefinitionsPage_addListTypeDefinition(
+				Long id, ListTypeDefinition listTypeDefinition)
+		throws Exception {
+
+		return listTypeDefinitionResource.postSpecificationIdListTypeDefinition(
+			id, listTypeDefinition);
+	}
+
+	@Override
+	protected Long testGetSpecificationIdListTypeDefinitionsPage_getId()
+		throws Exception {
+
+		return _cpSpecificationOption.getCPSpecificationOptionId();
+	}
+
+	@Override
+	protected ListTypeDefinition
+			testGraphQLListTypeDefinition_addListTypeDefinition()
+		throws Exception {
+
+		return _addListTypeDefinition(randomListTypeDefinition());
 	}
 
 	@Override
 	protected ListTypeDefinition
 			testPostSpecificationIdListTypeDefinition_addListTypeDefinition(
 				ListTypeDefinition listTypeDefinition)
+		throws Exception {
+
+		return _addListTypeDefinition(listTypeDefinition);
+	}
+
+	@Override
+	protected ListTypeDefinition
+			testPostSpecificationListTypeDefinition_addListTypeDefinition()
+		throws Exception {
+
+		return _addListTypeDefinition(randomListTypeDefinition());
+	}
+
+	private ListTypeDefinition _addListTypeDefinition(
+			ListTypeDefinition listTypeDefinition)
 		throws Exception {
 
 		return listTypeDefinitionResource.postSpecificationIdListTypeDefinition(
@@ -102,8 +177,15 @@ public class ListTypeDefinitionResourceTest
 	private CPSpecificationOption _cpSpecificationOption;
 
 	@Inject
+	private CPSpecificationOptionListTypeDefinitionRelLocalService
+		_cpSpecificationOptionListTypeDefinitionRelLocalService;
+
+	@Inject
 	private CPSpecificationOptionLocalService
 		_cpSpecificationOptionLocalService;
+
+	@Inject
+	private ListTypeDefinitionLocalService _listTypeDefinitionLocalService;
 
 	@DeleteAfterTestRun
 	private User _user;

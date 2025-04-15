@@ -15,6 +15,7 @@ import com.liferay.asset.kernel.model.AssetTag;
 import com.liferay.asset.kernel.model.AssetVocabulary;
 import com.liferay.asset.kernel.model.AssetVocabularyConstants;
 import com.liferay.asset.kernel.service.AssetVocabularyLocalService;
+import com.liferay.depot.group.provider.SiteConnectedGroupGroupProvider;
 import com.liferay.info.exception.NoSuchInfoItemException;
 import com.liferay.info.field.InfoField;
 import com.liferay.info.field.InfoFieldSet;
@@ -29,7 +30,6 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
-import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.SortedArrayList;
 
 import java.util.ArrayList;
@@ -257,11 +257,21 @@ public class AssetEntryInfoItemFieldSetProviderImpl
 	private List<AssetVocabulary> _getNoninternalAssetVocabularies(
 		String itemClassName, long itemClassTypeId, long scopeGroupId) {
 
+		long[] groupsIds = null;
+
+		try {
+			groupsIds =
+				_siteConnectedGroupGroupProvider.
+					getCurrentAndAncestorSiteAndDepotGroupIds(scopeGroupId);
+		}
+		catch (PortalException portalException) {
+			throw new RuntimeException(portalException);
+		}
+
 		if (itemClassTypeId > 0) {
 			List<AssetVocabulary> groupsAssetVocabularies =
 				_assetVocabularyLocalService.getGroupsVocabularies(
-					_portal.getCurrentAndAncestorSiteGroupIds(scopeGroupId),
-					itemClassName, itemClassTypeId);
+					groupsIds, itemClassName, itemClassTypeId);
 
 			return ListUtil.filter(
 				groupsAssetVocabularies,
@@ -272,8 +282,7 @@ public class AssetEntryInfoItemFieldSetProviderImpl
 
 		List<AssetVocabulary> groupsAssetVocabularies =
 			_assetVocabularyLocalService.getGroupsVocabularies(
-				_portal.getCurrentAndAncestorSiteGroupIds(scopeGroupId),
-				itemClassName);
+				groupsIds, itemClassName);
 
 		return ListUtil.filter(
 			groupsAssetVocabularies,
@@ -314,7 +323,7 @@ public class AssetEntryInfoItemFieldSetProviderImpl
 		_infoItemFieldReaderFieldSetProvider;
 
 	@Reference
-	private Portal _portal;
+	private SiteConnectedGroupGroupProvider _siteConnectedGroupGroupProvider;
 
 	private final InfoField<TagsInfoFieldType> _tagsInfoField =
 		InfoField.builder(

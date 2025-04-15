@@ -38,13 +38,15 @@ export class JSONWebServicesLayoutApiHelper {
 		masterLayoutPlid = '0',
 		options = {type: 'portlet'},
 		parentLayoutId = '0',
+		privateLayout = 'false',
 		title,
 	}: {
 		externalReferenceCode?: string;
 		groupId: string;
 		masterLayoutPlid?: string;
-		options?: {publish?: boolean; type: string};
+		options?: {publish?: boolean; type?: string};
 		parentLayoutId?: string;
+		privateLayout?: string;
 		title: string;
 	}): Promise<Layout> {
 		if (options.publish && options.type !== 'content') {
@@ -59,7 +61,7 @@ export class JSONWebServicesLayoutApiHelper {
 
 		urlSearchParams.append('externalReferenceCode', externalReferenceCode);
 		urlSearchParams.append('groupId', groupId);
-		urlSearchParams.append('privateLayout', 'false');
+		urlSearchParams.append('privateLayout', privateLayout);
 		urlSearchParams.append('parentLayoutId', parentLayoutId);
 		urlSearchParams.append('localeNamesMap', JSON.stringify({en_US: name}));
 		urlSearchParams.append(
@@ -117,6 +119,30 @@ export class JSONWebServicesLayoutApiHelper {
 
 		return this.apiHelpers.post(
 			`${liferayConfig.environment.baseUrl}${this.basePath}/delete-layout`,
+			{
+				data: urlSearchParams.toString(),
+				failOnStatusCode: true,
+				headers: await this.apiHelpers.getJSONWebServicesHeaders(),
+			}
+		);
+	}
+
+	async getLayoutsCount(
+		groupId: number,
+		privateLayout: boolean
+	): Promise<void> {
+		const urlSearchParams = new URLSearchParams();
+
+		// @ts-ignore
+
+		urlSearchParams.append('groupId', groupId);
+
+		// @ts-ignore
+
+		urlSearchParams.append('privateLayout', privateLayout);
+
+		return this.apiHelpers.post(
+			`${liferayConfig.environment.baseUrl}${this.basePath}/get-layouts-count`,
 			{
 				data: urlSearchParams.toString(),
 				failOnStatusCode: true,

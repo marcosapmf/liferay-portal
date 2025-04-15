@@ -72,8 +72,8 @@ public interface BlogsEntryLocalService
 	 * Never modify this interface directly. Add custom service methods to <code>com.liferay.blogs.service.impl.BlogsEntryLocalServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface. Consume the blogs entry local service via injection or a <code>org.osgi.util.tracker.ServiceTracker</code>. Use {@link BlogsEntryLocalServiceUtil} if injection and service tracking are not available.
 	 */
 	public FileEntry addAttachmentFileEntry(
-			BlogsEntry entry, long userId, String fileName, String mimeType,
-			InputStream inputStream)
+			String externalReferenceCode, long userId, long groupId,
+			String fileName, String mimeType, InputStream inputStream)
 		throws PortalException;
 
 	public Folder addAttachmentsFolder(long userId, long groupId)
@@ -190,6 +190,9 @@ public interface BlogsEntryLocalService
 	 * @throws PortalException
 	 */
 	public PersistedModel createPersistedModel(Serializable primaryKeyObj)
+		throws PortalException;
+
+	public void deleteAttachmentFileEntry(long fileEntryId)
 		throws PortalException;
 
 	/**
@@ -332,6 +335,15 @@ public interface BlogsEntryLocalService
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public ActionableDynamicQuery getActionableDynamicQuery();
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public FileEntry getAttachmentFileEntry(long fileEntryId)
+		throws PortalException;
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public FileEntry getAttachmentFileEntryByExternalReferenceCode(
+			String externalReferenceCode, long groupId)
+		throws PortalException;
 
 	/**
 	 * Returns a range of all the blogs entries.

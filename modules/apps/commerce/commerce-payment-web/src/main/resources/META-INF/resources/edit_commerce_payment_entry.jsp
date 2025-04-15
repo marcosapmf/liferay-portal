@@ -8,6 +8,8 @@
 <%@ include file="/init.jsp" %>
 
 <%
+String backURL = ParamUtil.getString(request, "backURL", String.valueOf(renderResponse.createRenderURL()));
+
 CommercePaymentEntryDisplayContext commercePaymentEntryDisplayContext = (CommercePaymentEntryDisplayContext)request.getAttribute(WebKeys.PORTLET_DISPLAY_CONTEXT);
 
 CommercePaymentEntry commercePaymentEntry = commercePaymentEntryDisplayContext.getCommercePaymentEntry();
@@ -16,7 +18,7 @@ String note = (commercePaymentEntry == null) ? StringPool.BLANK : commercePaymen
 int paymentStatus = (commercePaymentEntry == null) ? CommercePaymentEntryConstants.STATUS_PENDING : commercePaymentEntry.getPaymentStatus();
 
 portletDisplay.setShowBackIcon(true);
-portletDisplay.setURLBack(String.valueOf(renderResponse.createRenderURL()));
+portletDisplay.setURLBack(backURL);
 %>
 
 <liferay-portlet:renderURL var="editCommercePaymentEntryExternalReferenceCodeURL" windowState="<%= LiferayWindowState.POP_UP.toString() %>">
@@ -40,6 +42,7 @@ portletDisplay.setURLBack(String.valueOf(renderResponse.createRenderURL()));
 	<aui:form action="<%= editCommercePaymentEntryActionURL %>" cssClass="pt-4" method="post" name="fm">
 		<aui:input name="<%= Constants.CMD %>" type="hidden" value="<%= (commercePaymentEntry == null) ? Constants.ADD : Constants.UPDATE %>" />
 		<aui:input name="redirect" type="hidden" value="<%= currentURL %>" />
+		<aui:input name="backURL" type="hidden" value="<%= backURL %>" />
 		<aui:input name="externalReferenceCode" type="hidden" value="<%= (commercePaymentEntry == null) ? StringPool.BLANK : commercePaymentEntry.getExternalReferenceCode() %>" />
 		<aui:input name="commercePaymentEntryId" type="hidden" value="<%= commercePaymentEntryDisplayContext.getCommercePaymentEntryId() %>" />
 		<aui:input name="commerceChannelId" type="hidden" value="<%= commercePaymentEntryDisplayContext.getCommerceChannelId() %>" />
@@ -80,7 +83,17 @@ portletDisplay.setURLBack(String.valueOf(renderResponse.createRenderURL()));
 								title='<%= LanguageUtil.get(request, "related-to") %>'
 							>
 								<p class="mb-0"><%= commercePaymentEntryDisplayContext.getRelatedToClassName() %></p>
-								<p class="mb-0">#<%= commercePaymentEntryDisplayContext.getRelatedToClassPK() %></p>
+
+								<c:choose>
+									<c:when test="<%= commercePaymentEntryDisplayContext.isRelatedToOrder() %>">
+										<a href="<%= commercePaymentEntryDisplayContext.getRelatedToURL() %>">
+											<p class="mb-0">#<%= commercePaymentEntryDisplayContext.getRelatedToClassPK() %></p>
+										</a>
+									</c:when>
+									<c:otherwise>
+										<p class="mb-0">#<%= commercePaymentEntryDisplayContext.getRelatedToClassPK() %></p>
+									</c:otherwise>
+								</c:choose>
 							</commerce-ui:info-box>
 						</div>
 
@@ -114,6 +127,29 @@ portletDisplay.setURLBack(String.valueOf(renderResponse.createRenderURL()));
 						<div class="col-6">
 							<commerce-ui:info-box
 								elementClasses="py-3"
+								title='<%= LanguageUtil.get(request, "payments-total-amount") %>'
+							>
+								<p class="mb-0"><%= commercePaymentEntryDisplayContext.getTotalAmountFormatted() %></p>
+							</commerce-ui:info-box>
+
+							<commerce-ui:info-box
+								elementClasses="py-3"
+								title='<%= LanguageUtil.get(request, "delivery") %>'
+							>
+								<p class="mb-0"><%= commercePaymentEntryDisplayContext.getDeliveryFormatted() %></p>
+							</commerce-ui:info-box>
+
+							<commerce-ui:info-box
+								elementClasses="py-3"
+								title='<%= LanguageUtil.get(request, "refund-already-completed") %>'
+							>
+								<p class="mb-0"><%= commercePaymentEntryDisplayContext.getRefundAlreadyCompleted() %></p>
+							</commerce-ui:info-box>
+						</div>
+
+						<div class="col-6">
+							<commerce-ui:info-box
+								elementClasses="py-3"
 								title='<%= LanguageUtil.get(request, "refund-status") %>'
 							>
 								<span class="mb-0">
@@ -123,9 +159,7 @@ portletDisplay.setURLBack(String.valueOf(renderResponse.createRenderURL()));
 									/>
 								</span>
 							</commerce-ui:info-box>
-						</div>
 
-						<div class="col-6">
 							<liferay-portlet:renderURL var="editCommercePaymentEntryNoteURL" windowState="<%= LiferayWindowState.POP_UP.toString() %>">
 								<portlet:param name="mvcRenderCommandName" value="/commerce_payment/edit_commerce_payment_entry_note" />
 								<portlet:param name="commercePaymentEntryId" value="<%= String.valueOf(commercePaymentEntryDisplayContext.getCommercePaymentEntryId()) %>" />
@@ -173,7 +207,7 @@ portletDisplay.setURLBack(String.valueOf(renderResponse.createRenderURL()));
 				>
 					<div class="row">
 						<div class="col-12">
-							<aui:input disabled="<%= commercePaymentEntryDisplayContext.isDisabled() %>" ignoreRequestValue="<%= true %>" name="amount" required="<%= true %>" suffix="<%= commercePaymentEntryDisplayContext.getCurrencyCode() %>" type="text" value="<%= commercePaymentEntryDisplayContext.getAmount() %>" />
+							<aui:input disabled="<%= commercePaymentEntryDisplayContext.isDisabled() %>" ignoreRequestValue="<%= true %>" name="amount" required="<%= true %>" suffix="<%= commercePaymentEntryDisplayContext.getCurrencyCode() %>" type="text" value="<%= commercePaymentEntryDisplayContext.getFormattedValue(commercePaymentEntryDisplayContext.getAmount()) %>" />
 						</div>
 					</div>
 				</commerce-ui:panel>
@@ -202,6 +236,24 @@ portletDisplay.setURLBack(String.valueOf(renderResponse.createRenderURL()));
 							</aui:select>
 						</div>
 					</div>
+				</commerce-ui:panel>
+			</div>
+		</div>
+
+		<div class="row">
+			<div class="col-12">
+				<commerce-ui:panel
+					bodyClasses="p-0"
+					elementClasses="flex-fill"
+					title='<%= LanguageUtil.get(request, "refund-history") %>'
+				>
+					<frontend-data-set:headless-display
+						apiURL="<%= commercePaymentEntryDisplayContext.getAPIURL() %>"
+						formName="fm"
+						id="<%= CommercePaymentsFDSNames.REFUNDS %>"
+						propsTransformer="{commercePaymentPropsTransformer} from commerce-payment-web"
+						style="fluid"
+					/>
 				</commerce-ui:panel>
 			</div>
 		</div>

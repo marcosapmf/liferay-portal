@@ -11,6 +11,12 @@ import {commercePagesTest} from '../../../fixtures/commercePagesTest';
 import {dataApiHelpersTest} from '../../../fixtures/dataApiHelpersTest';
 import {featureFlagsTest} from '../../../fixtures/featureFlagsTest';
 import {loginTest} from '../../../fixtures/loginTest';
+import {systemSettingsPageTest} from '../../../fixtures/systemSettingsPageTest';
+import {liferayConfig} from '../../../liferay.config';
+import {getRandomInt} from '../../../utils/getRandomInt';
+import getRandomString from '../../../utils/getRandomString';
+import {waitForAlert} from '../../../utils/waitForAlert';
+import {classicCommerceSetUp} from '../utils/commerce';
 
 export const test = mergeTests(
 	apiHelpersTest,
@@ -18,58 +24,131 @@ export const test = mergeTests(
 	commercePagesTest,
 	dataApiHelpersTest,
 	featureFlagsTest({
-		'LPD-20379': true,
+		'LPD-20379': {enabled: true},
 	}),
-	loginTest()
+	loginTest(),
+	systemSettingsPageTest
 );
 
-test('LPD-23780 Commerce Classic Header main fragment is correctly displayed', async ({
-	apiHelpers,
-	page,
-}) => {
-	const site = await apiHelpers.headlessSite.createSite({
-		name: `classic-commerce`,
-		templateKey: 'com.liferay.commerce.site.initializer',
-		templateType: 'site-initializer',
-	});
+test(
+	'Commerce Classic Header main fragment is correctly displayed',
+	{tag: ['@LPD-23780']},
+	async ({apiHelpers, page}) => {
+		test.setTimeout(180000);
 
-	apiHelpers.data.push({id: site.id, type: 'site'});
-
-	const channels =
-		await apiHelpers.headlessCommerceAdminChannel.getChannelsPage(
-			'Liferay Commerce Channel'
+		const {site} = await classicCommerceSetUp(
+			apiHelpers,
+			`classic-commerce`
 		);
 
-	apiHelpers.data.push({id: channels.items[0].id, type: 'channel'});
+		await page.goto(`/web${site.friendlyUrlPath}`);
 
-	await page.goto(`/web${site.friendlyUrlPath}`);
+		await page.getByRole('link', {exact: true, name: 'Edit'}).click();
+		await page.getByLabel('Page Design Options').click();
+		await page.getByLabel('Commerce Classic Master').click();
+		await page.getByLabel('Publish', {exact: true}).click();
 
-	const editPageLink = await page
-		.locator('.control-menu-nav-item .lfr-portal-tooltip[title="Edit"] a')
-		.getAttribute('href');
+		const commerceHeaderTagFragments = page.locator(
+			'#commerce-components-group'
+		);
 
-	await page.goto(editPageLink);
+		await expect(commerceHeaderTagFragments).toBeVisible();
+		await expect(
+			commerceHeaderTagFragments.locator('.account-selector-root')
+		).toHaveClass(/mr-2/);
+		await expect(
+			commerceHeaderTagFragments.locator('.cart-root')
+		).toBeVisible();
+		await expect(page.locator('header .portlet-search-bar')).toBeVisible();
+	}
+);
 
-	await page.locator('button[title="Page Design Options"]').click();
-	await page.locator('div[aria-label="Commerce Classic Master"]').click();
-	await page.getByText('Publish', {exact: true}).click();
+test(
+	'Multishipping tab displays correctly when enabled',
+	{tag: ['@LPD-35323']},
+	async ({
+		apiHelpers,
+		commerceAdminChannelDetailsPage,
+		commerceAdminChannelsPage,
+		page,
+	}) => {
+		test.setTimeout(180000);
 
-	const commerceHeaderTagFragments = page.locator(
-		'#commerce-components-group'
-	);
+		const {catalog, channel, site} = await classicCommerceSetUp(
+			apiHelpers,
+			getRandomString()
+		);
 
-	await expect(commerceHeaderTagFragments).toBeVisible();
+		const account = await apiHelpers.headlessAdminUser.postAccount({
+			name: getRandomString(),
+			type: 'business',
+		});
 
-	await expect(
-		commerceHeaderTagFragments.locator('.account-selector-root')
-	).toHaveClass(/mr-6/);
-	await expect(commerceHeaderTagFragments.locator('.cart-root')).toHaveClass(
-		/sticky-top/
-	);
+		apiHelpers.data.push({id: account.id, type: 'account'});
 
-	const commerceHeaderSearchPortlet = page.locator(
-		'header .portlet-search-bar'
-	);
+		const product =
+			await apiHelpers.headlessCommerceAdminCatalog.postProduct({
+				catalogId: catalog.id,
+				skus: [
+					{
+						cost: 0,
+						price: 20,
+						published: true,
+						purchasable: true,
+						sku: 'Sku' + getRandomInt(),
+					},
+				],
+			});
 
-	await expect(commerceHeaderSearchPortlet).toBeVisible();
-});
+		const sku = product.skus[0];
+
+		const cart = await apiHelpers.headlessCommerceDeliveryCart.postCart(
+			{
+				accountId: account.id,
+				cartItems: [
+					{
+						quantity: 1,
+						skuId: sku.id,
+					},
+				],
+			},
+			channel.id
+		);
+
+		const orderDetailsPageURL =
+			liferayConfig.environment.baseUrl +
+			`/web/${site.name}/order/${cart.id}`;
+
+		await page.goto(orderDetailsPageURL);
+
+		const multishippingTab = page.getByRole('tab', {name: 'Multishipping'});
+
+		await expect(multishippingTab).toHaveCount(0);
+
+		await commerceAdminChannelsPage.goto();
+
+		await (
+			await commerceAdminChannelsPage.channelsTableRowLink(channel.name)
+		).click();
+
+		await commerceAdminChannelDetailsPage.allowMultishippingToggle.setChecked(
+			true
+		);
+
+		await expect(
+			commerceAdminChannelDetailsPage.allowMultishippingToggle
+		).toBeChecked();
+
+		await commerceAdminChannelDetailsPage.saveButton.click();
+
+		await expect(
+			commerceAdminChannelDetailsPage.allowMultishippingToggle
+		).toBeChecked();
+
+		await waitForAlert(page);
+
+		await page.goto(orderDetailsPageURL);
+
+		await expect(multishippingTab).toBeVisible();
+	}
+);

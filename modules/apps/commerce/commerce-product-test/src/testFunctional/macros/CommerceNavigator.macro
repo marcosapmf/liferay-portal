@@ -144,6 +144,17 @@ definition {
 			locator1 = "CommerceEntry#ORDERS_ENTRY_BODY_VERTICAL_ELLIPSIS");
 
 		CommerceEntry.clickNoError(menuItem = "View");
+
+		WaitForPageLoad();
+	}
+
+	@summary = "Default summary"
+	macro gotoOrderEntryViaAdminView(status = null) {
+		ClickNoError(
+			key_value = ${status},
+			locator1 = "CommerceEntry#ORDERS_ENTRY_BODY_VIEW");
+
+		WaitForPageLoad();
 	}
 
 	@summary = "Default summary"

@@ -15,9 +15,13 @@ AssertFailCheck | [Bug Prevention](bug_prevention_checks.markdown#bug-prevention
 AssignAsUsedCheck | [Performance](performance_checks.markdown#performance-checks) | Finds cases where an assign statement can be inlined or moved closer to where it is used. |
 [AvoidNestedBlocksCheck](https://checkstyle.sourceforge.io/checks/blocks/avoidnestedblocks.html) | [Styling](styling_checks.markdown#styling-checks) | Finds nested blocks (blocks that are used freely in the code). |
 [AvoidStarImportCheck](https://checkstyle.sourceforge.io/checks/imports/avoidstarimport.html) | [Bug Prevention](bug_prevention_checks.markdown#bug-prevention-checks) | Checks that there are no import statements that use the * notation. |
+BrandNameCheck | [Naming Conventions](naming_conventions_checks.markdown#naming-conventions-checks) | Checks the correct brand name. |
 [CamelCaseNameCheck](check/camel_case_name_check.markdown#camelcasenamecheck) | [Naming Conventions](naming_conventions_checks.markdown#naming-conventions-checks) | Checks variable names for correct use of `CamelCase`. |
+CapsNameCheck | [Naming Conventions](naming_conventions_checks.markdown#naming-conventions-checks) | Checks the correct caps name. |
 ChainingCheck | [Styling](styling_checks.markdown#styling-checks) | Checks that method chaining can be used when possible. |
+ClassNameIdCheck | [Bug Prevention](bug_prevention_checks.markdown#bug-prevention-checks) | Avoid caching noncompany scoped class name IDs. |
 [CompanyIterationCheck](check/company_iteration_check.markdown#companyiterationcheck) | [Bug Prevention](bug_prevention_checks.markdown#bug-prevention-checks) | Checks that `CompanyLocalService.forEachCompany` or `CompanyLocalService.forEachCompanyId` is used when iterating over companies. |
+[CompanyThreadLocalCheck](check/company_thread_local_check.markdown#companythreadlocalcheck) | [Bug Prevention](bug_prevention_checks.markdown#bug-prevention-checks) | Checks usage of `CompanyThreadLocal`. |
 CompatClassImportsCheck | [Bug Prevention](bug_prevention_checks.markdown#bug-prevention-checks) | Checks that classes are imported from `compat` modules, when possible. |
 ComponentAnnotationCheck | [Bug Prevention](bug_prevention_checks.markdown#bug-prevention-checks) | Performs several checks on classes with @Component annotation. |
 [ComponentExposureCheck](check/component_exposure_check.markdown#componentexposurecheck) | [Bug Prevention](bug_prevention_checks.markdown#bug-prevention-checks) | Avoid exposing static component. |
@@ -66,7 +70,6 @@ JavaAnnotationDefaultAttributeCheck | [Styling](styling_checks.markdown#styling-
 JavaAnnotationsCheck | [Bug Prevention](bug_prevention_checks.markdown#bug-prevention-checks) | Performs several checks on annotations. |
 [JavaAnonymousInnerClassCheck](check/java_anonymous_inner_class_check.markdown#javaanonymousinnerclasscheck) | [Bug Prevention](bug_prevention_checks.markdown#bug-prevention-checks) | Performs several checks on anonymous classes. |
 JavaAssertEqualsCheck | [Styling](styling_checks.markdown#styling-checks) | Validates `Assert.assertEquals` calls. |
-[JavaBaseUpgradeCallableCheck](check/java_base_upgrade_callable_check.markdown#javabaseupgradecallablecheck) | [Bug Prevention](bug_prevention_checks.markdown#bug-prevention-checks) | Checks that BaseUpgradeCallable is used instead of Callable or Runnable in Upgrade and Verify classes. |
 JavaBooleanStatementCheck | [Bug Prevention](bug_prevention_checks.markdown#bug-prevention-checks) | Performs several checks on variable declaration of type `Boolean`. |
 JavaBooleanUsageCheck | [Bug Prevention](bug_prevention_checks.markdown#bug-prevention-checks) | Finds incorrect use of passing boolean values in `setAttribute` calls. |
 JavaClassNameCheck | [Naming Conventions](naming_conventions_checks.markdown#naming-conventions-checks) | Checks if class names follow naming conventions. |
@@ -74,6 +77,7 @@ JavaCleanUpMethodSuperCleanUpCheck | [Bug Prevention](bug_prevention_checks.mark
 [JavaCleanUpMethodVariablesCheck](check/java_clean_up_method_variables_check.markdown#javacleanupmethodvariablescheck) | [Bug Prevention](bug_prevention_checks.markdown#bug-prevention-checks) | Checks that variables in `Tag` classes get cleaned up properly. |
 JavaCollapseImportsCheck | [Performance](performance_checks.markdown#performance-checks) | Collapses imports that use wildcard. |
 [JavaCollatorUtilCheck](check/java_collator_util_check.markdown#javacollatorutilcheck) | [Bug Prevention](bug_prevention_checks.markdown#bug-prevention-checks) | Checks for correct use of `Collator`. |
+JavaCompanyScopedIdsCheck | [Bug Prevention](bug_prevention_checks.markdown#bug-prevention-checks) | Finds cases where company scoped ids are used, see LPD-45118. |
 [JavaComponentActivateCheck](check/java_component_activate_check.markdown#javacomponentactivatecheck) | [Naming Conventions](naming_conventions_checks.markdown#naming-conventions-checks) | Checks if methods with annotation `@Activate` or `@Deactivate` follow naming conventions. |
 JavaComponentAnnotationsCheck | [Bug Prevention](bug_prevention_checks.markdown#bug-prevention-checks) | Performs several checks on classes with `@Component` annotation. |
 [JavaConfigurationAdminCheck](check/java_configuration_admin_check.markdown#javaconfigurationadmincheck) | [Bug Prevention](bug_prevention_checks.markdown#bug-prevention-checks) | Checks for correct use of `location == ?` when calling `org.osgi.service.cm.ConfigurationAdmin#createFactoryConfiguration`. |
@@ -88,9 +92,10 @@ JavaDuplicateVariableCheck | [Miscellaneous](miscellaneous_checks.markdown#misce
 [JavaElseStatementCheck](check/java_else_statement_check.markdown#javaelsestatementcheck) | [Miscellaneous](miscellaneous_checks.markdown#miscellaneous-checks) | Finds unnecessary `else` statements (when the `if` statement ends with a `return` statement). |
 JavaEmptyLineAfterSuperCallCheck | [Miscellaneous](miscellaneous_checks.markdown#miscellaneous-checks) | Finds missing empty line after a `super` call. |
 JavaEmptyLinesCheck | [Styling](styling_checks.markdown#styling-checks) | Finds missing and unnecessary empty lines. |
-JavaEntityModelToEntityFieldsMapCallCheck | [Styling](styling_checks.markdown#styling-checks) | Sorts parameters in EntityModel.toEntityFieldsMap call. |
+JavaEntityFieldsMapOrderCheck | [Styling](styling_checks.markdown#styling-checks) | Sorts entity fields when calling `EntityFieldsMapFactory.create` and `EntityModel.toEntityFieldsMap`. |
 JavaExceptionCheck | [Naming Conventions](naming_conventions_checks.markdown#naming-conventions-checks) | Checks that variable names of exceptions in `catch` statements follow naming conventions. |
 JavaFeatureFlagManagerUtilCheck | [Bug Prevention](bug_prevention_checks.markdown#bug-prevention-checks) | Finds cases where `FeatureFlagManagerUtil.isEnabled` should be used. |
+JavaFeatureFlagsAndTestInfoAnnotationCheck | [Styling](styling_checks.markdown#styling-checks) | Sorts the values in `@FeatureFlags` and `@TestInfo` annotation. |
 JavaFinalVariableCheck | [Styling](styling_checks.markdown#styling-checks) | Finds cases of unneeded `final` modifiers for variables and parameters. |
 [JavaFinderCacheCheck](check/java_finder_cache_check.markdown#javafindercachecheck) | [Bug Prevention](bug_prevention_checks.markdown#bug-prevention-checks) | Checks that the method `BasePersistenceImpl.fetchByPrimaryKey` is overridden, when using `FinderPath`. |
 JavaFinderImplCustomSQLCheck | [Bug Prevention](bug_prevention_checks.markdown#bug-prevention-checks) | Checks that hardcoded SQL values in `*FinderImpl` classes match the SQL in the `.xml` file in the `custom-sql` directory. |
@@ -167,8 +172,8 @@ JavaTaglibMethodCheck | [Bug Prevention](bug_prevention_checks.markdown#bug-prev
 JavaTermDividersCheck | [Styling](styling_checks.markdown#styling-checks) | Finds missing or unnecessary empty lines between javaterms. |
 JavaTermOrderCheck | [Styling](styling_checks.markdown#styling-checks) | Checks the order of javaterms. |
 JavaTermStylingCheck | [Styling](styling_checks.markdown#styling-checks) | Applies rules to enforce consistency in code style. |
-JavaTestInfoAnnotationCheck | [Styling](styling_checks.markdown#styling-checks) | Sorts the values in `@TestInfo` annotation. |
 [JavaTestMethodAnnotationsCheck](check/java_test_method_annotations_check.markdown#javatestmethodannotationscheck) | [Naming Conventions](naming_conventions_checks.markdown#naming-conventions-checks) | Checks if methods with test annotations follow the naming conventions. |
+JavaToJSONArrayCheck | [Styling](styling_checks.markdown#styling-checks) | Finds missing and unnecessary whitespace on `toJSONArray` calls. |
 JavaTransactionBoundaryCheck | [Bug Prevention](bug_prevention_checks.markdown#bug-prevention-checks) | Finds direct `add*` or `get*` calls in `*ServiceImpl` (those should use the `*service` global variable instead). |
 [JavaUnsafeCastingCheck](check/java_unsafe_casting_check.markdown#javaunsafecastingcheck) | [Bug Prevention](bug_prevention_checks.markdown#bug-prevention-checks) | Checks for potential ClassCastException. |
 [JavaUnusedSourceFormatterChecksCheck](check/java_unused_source_formatter_checks_check.markdown#javaunusedsourceformattercheckscheck) | [Miscellaneous](miscellaneous_checks.markdown#miscellaneous-checks) | Finds `*Check` classes that are not configured. |
@@ -196,6 +201,7 @@ LiteralStringEqualsCheck | [Styling](styling_checks.markdown#styling-checks) | F
 [LocalFinalVariableNameCheck](https://checkstyle.sourceforge.io/checks/naming/localfinalvariablename.html) | [Naming Conventions](naming_conventions_checks.markdown#naming-conventions-checks) | Checks that local final variable names conform to a specified pattern. |
 LocalPatternCheck | [Performance](performance_checks.markdown#performance-checks) | Checks that a `java.util.Pattern` variable is declared globally, so that it is initiated only once. |
 [LocalVariableNameCheck](https://checkstyle.sourceforge.io/checks/naming/localvariablename.html) | [Naming Conventions](naming_conventions_checks.markdown#naming-conventions-checks) | Checks that local, non-final variable names conform to a specified pattern. |
+LocalVariableTypeInferenceCheck | [Performance](performance_checks.markdown#performance-checks) | Finds usage of `var` in local variable declaration. |
 LocaleUtilCheck | [Bug Prevention](bug_prevention_checks.markdown#bug-prevention-checks) | Finds cases where `com.liferay.portal.kernel.util.LocaleUtil` should be used (instead of `java.util.Locale`). |
 [LogMessageCheck](check/message_check.markdown#messagecheck) | [Styling](styling_checks.markdown#styling-checks) | Validates messages that are passed to `log.*` calls. |
 LogParametersCheck | [Bug Prevention](bug_prevention_checks.markdown#bug-prevention-checks) | Validates the values of parameters passed to `_log.*` calls. |
@@ -243,6 +249,7 @@ PlusStatementCheck | [Styling](styling_checks.markdown#styling-checks) | Perform
 PrimitiveWrapperInstantiationCheck | [Bug Prevention](bug_prevention_checks.markdown#bug-prevention-checks) | Finds cases where `new Type` is used for primitive types (use `Type.valueOf` instead). |
 PrincipalExceptionCheck | [Bug Prevention](bug_prevention_checks.markdown#bug-prevention-checks) | Finds calls to `PrincipalException.class.getName()` (use `PrincipalException.getNestedClasses()` instead). |
 RESTDTOSetCallCheck | [Performance](performance_checks.markdown#performance-checks) | Ensures using set calls with `UnsafeSupplier` parameter for REST DTO. |
+RecordClassCheck | [Performance](performance_checks.markdown#performance-checks) | Finds usage of `record`. |
 RedundantBranchingStatementCheck | [Performance](performance_checks.markdown#performance-checks) | Finds unnecessary branching (`break`, `continue` or `return`) statements. |
 [RedundantLogCheck](check/redundant_log_check.markdown#redundantlogcheck) | [Performance](performance_checks.markdown#performance-checks) | Finds unnecessary logs. |
 ReferenceAnnotationCheck | [Bug Prevention](bug_prevention_checks.markdown#bug-prevention-checks) | Performs several checks on classes with @Reference annotation. |
@@ -251,6 +258,8 @@ ReferenceAnnotationCheck | [Bug Prevention](bug_prevention_checks.markdown#bug-p
 ResourceImplCheck | [Bug Prevention](bug_prevention_checks.markdown#bug-prevention-checks) | Performs several checks on `*ResourceImpl` classes (except `Base*ResourceImpl` classes). |
 ResourcePermissionCheck | [Bug Prevention](bug_prevention_checks.markdown#bug-prevention-checks) | Performs several checks on `*ResourcePermission` classes. |
 [ResourcePermissionFactoryCheck](check/resource_permission_factory_check.markdown#resourcepermissionfactorycheck) | [Performance](performance_checks.markdown#performance-checks) | Checks usage of `*ResourcePermissionFactory` classes. |
+ReturnVariableDeclarationAsUsedCheck | [Miscellaneous](miscellaneous_checks.markdown#miscellaneous-checks) | Finds cases where a variable declaration should be moved. |
+SealedAndNonsealedModifierCheck | [Performance](performance_checks.markdown#performance-checks) | Finds usage of `sealed` and `non-sealed`. |
 SelfReferenceCheck | [Bug Prevention](bug_prevention_checks.markdown#bug-prevention-checks) | Finds cases of unnecessary reference to its own class. |
 SemiColonCheck | [Styling](styling_checks.markdown#styling-checks) | Finds cases of unnecessary semicolon. |
 [ServiceComponentRuntimeCheck](check/service_component_runtime_check.markdown#servicecomponentruntimecheck) | [Bug Prevention](bug_prevention_checks.markdown#bug-prevention-checks) | Checks `ServiceComponentRuntime` usage in test classes. |
@@ -270,6 +279,7 @@ SystemEventCheck | [Bug Prevention](bug_prevention_checks.markdown#bug-preventio
 TernaryOperatorCheck | [Styling](styling_checks.markdown#styling-checks) | Finds use of ternary operator in `java` files (use if statement instead). |
 TestClassCheck | [Naming Conventions](naming_conventions_checks.markdown#naming-conventions-checks) | Checks that names of test classes follow naming conventions. |
 TestClassMissingLiferayUnitTestRuleCheck | [Bug Prevention](bug_prevention_checks.markdown#bug-prevention-checks) | Finds missing LiferayUnitTestRule. |
+TextBlockCheck | [Styling](styling_checks.markdown#styling-checks) | Finds usage of text block. |
 [ThreadContextClassLoaderCheck](check/thread_context_class_loader_check.markdown#threadcontextclassloadercheck) | [Bug Prevention](bug_prevention_checks.markdown#bug-prevention-checks) | Checks usage of `Thread.setContextClassLoader`. |
 ThreadLocalUtilCheck | [Performance](performance_checks.markdown#performance-checks) | Finds new instances of `java.lang.Thread` (use `ThreadLocalUtil.create` instead). |
 ThreadNameCheck | [Naming Conventions](naming_conventions_checks.markdown#naming-conventions-checks) | Checks that names of threads follow naming conventions. |
@@ -280,7 +290,6 @@ URLInputStreamCheck | [Bug Prevention](bug_prevention_checks.markdown#bug-preven
 [UnicodePropertiesBuilderCheck](check/builder_check.markdown#buildercheck) | [Miscellaneous](miscellaneous_checks.markdown#miscellaneous-checks) | Checks that `UnicodePropertiesBuilder` is used when possible. |
 [UnnecessaryAssignCheck](check/unnecessary_assign_check.markdown#unnecessaryassigncheck) | [Performance](performance_checks.markdown#performance-checks) | Finds unnecessary assign statements (when it is either reassigned or returned right after). |
 UnnecessaryMethodCallCheck | [Styling](styling_checks.markdown#styling-checks) | Finds unnecessary method calls. |
-[UnnecessaryParenthesesCheck](https://checkstyle.sourceforge.io/checks/coding/unnecessaryparentheses.html) | [Styling](styling_checks.markdown#styling-checks) | Checks if unnecessary parentheses are used in a statement or expression. |
 UnnecessaryTypeCastCheck | [Performance](performance_checks.markdown#performance-checks) | Finds unnecessary Type Casting. |
 [UnnecessaryVariableDeclarationCheck](check/unnecessary_variable_declaration_check.markdown#unnecessaryvariabledeclarationcheck) | [Performance](performance_checks.markdown#performance-checks) | Finds unnecessary variable declarations (when it is either reassigned or returned right after). |
 UnparameterizedClassCheck | [Bug Prevention](bug_prevention_checks.markdown#bug-prevention-checks) | Finds `Class` instantiation without generic type. |

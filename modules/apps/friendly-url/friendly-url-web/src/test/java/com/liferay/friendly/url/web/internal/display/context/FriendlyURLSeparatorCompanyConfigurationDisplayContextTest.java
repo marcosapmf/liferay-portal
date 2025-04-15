@@ -77,17 +77,11 @@ public class FriendlyURLSeparatorCompanyConfigurationDisplayContextTest {
 		_friendlyURLSeparatorConfigurationManager = Mockito.mock(
 			FriendlyURLSeparatorConfigurationManager.class);
 
-		Mockito.when(
-			_friendlyURLSeparatorConfigurationManager.
-				getFriendlyURLSeparatorsJSON(Mockito.anyLong())
-		).thenReturn(
-			StringPool.BLANK
-		);
-
 		_jsonFactory = Mockito.mock(JSONFactory.class);
 
 		Mockito.when(
-			_jsonFactory.createJSONObject(Mockito.anyString())
+			_friendlyURLSeparatorConfigurationManager.
+				getFriendlyURLSeparatorsJSONObject(Mockito.anyLong())
 		).thenReturn(
 			JSONUtil.put(
 				_SIMPLE_CLASS_NAME_BLOGS_ENTRY, "blog-test1"
@@ -164,6 +158,7 @@ public class FriendlyURLSeparatorCompanyConfigurationDisplayContextTest {
 		).thenReturn(
 			_getThemeDisplay()
 		);
+
 		Mockito.when(
 			httpServletRequest.getParameterMap()
 		).thenReturn(
@@ -322,6 +317,7 @@ public class FriendlyURLSeparatorCompanyConfigurationDisplayContextTest {
 		Company company = new CompanyImpl();
 
 		company.setCompanyId(0);
+		company.setGroupId(0);
 
 		themeDisplay.setCompany(company);
 

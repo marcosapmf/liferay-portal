@@ -15,8 +15,7 @@ import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.portal.kernel.bean.BeanReference;
 import com.liferay.portal.kernel.dao.db.DB;
 import com.liferay.portal.kernel.dao.db.DBManagerUtil;
-import com.liferay.portal.kernel.dao.jdbc.SqlUpdate;
-import com.liferay.portal.kernel.dao.jdbc.SqlUpdateFactoryUtil;
+import com.liferay.portal.kernel.dao.jdbc.CurrentConnectionUtil;
 import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.DefaultActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
@@ -46,6 +45,8 @@ import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PortalUtil;
 
 import java.io.Serializable;
+
+import java.sql.Connection;
 
 import java.util.List;
 
@@ -254,6 +255,23 @@ public abstract class EmailAddressLocalServiceBaseImpl
 
 		return emailAddressPersistence.fetchByUuid_C_First(
 			uuid, companyId, null);
+	}
+
+	@Override
+	public EmailAddress fetchEmailAddressByExternalReferenceCode(
+		String externalReferenceCode, long companyId) {
+
+		return emailAddressPersistence.fetchByERC_C(
+			externalReferenceCode, companyId);
+	}
+
+	@Override
+	public EmailAddress getEmailAddressByExternalReferenceCode(
+			String externalReferenceCode, long companyId)
+		throws PortalException {
+
+		return emailAddressPersistence.findByERC_C(
+			externalReferenceCode, companyId);
 	}
 
 	/**
@@ -614,18 +632,23 @@ public abstract class EmailAddressLocalServiceBaseImpl
 	 * @param sql the sql query
 	 */
 	protected void runSQL(String sql) {
+		DataSource dataSource = emailAddressPersistence.getDataSource();
+
+		DB db = DBManagerUtil.getDB();
+
+		Connection currentConnection = CurrentConnectionUtil.getConnection(
+			dataSource);
+
 		try {
-			DataSource dataSource = emailAddressPersistence.getDataSource();
+			if (currentConnection != null) {
+				db.runSQL(currentConnection, new String[] {sql});
 
-			DB db = DBManagerUtil.getDB();
+				return;
+			}
 
-			sql = db.buildSQL(sql);
-			sql = PortalUtil.transformSQL(sql);
-
-			SqlUpdate sqlUpdate = SqlUpdateFactoryUtil.getSqlUpdate(
-				dataSource, sql);
-
-			sqlUpdate.update();
+			try (Connection connection = dataSource.getConnection()) {
+				db.runSQL(connection, new String[] {sql});
+			}
 		}
 		catch (Exception exception) {
 			throw new SystemException(exception);

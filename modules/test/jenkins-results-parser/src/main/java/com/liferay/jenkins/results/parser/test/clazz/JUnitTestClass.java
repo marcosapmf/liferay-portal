@@ -6,6 +6,7 @@
 package com.liferay.jenkins.results.parser.test.clazz;
 
 import com.liferay.jenkins.results.parser.JenkinsResultsParserUtil;
+import com.liferay.jenkins.results.parser.PortalGitWorkingDirectory;
 import com.liferay.jenkins.results.parser.test.clazz.group.BatchTestClassGroup;
 import com.liferay.jenkins.results.parser.test.clazz.group.JUnitBatchTestClassGroup;
 
@@ -59,6 +60,15 @@ public class JUnitTestClass extends BaseTestClass {
 
 		super(batchTestClassGroup, testClassFile);
 
+		File modulesBaseDir = _getPortalModulesBaseDir();
+
+		if ((modulesBaseDir != null) && modulesBaseDir.exists()) {
+			_modulesBaseDir = modulesBaseDir;
+		}
+		else {
+			_modulesBaseDir = new File(".");
+		}
+
 		File testPropertiesBaseDir = getTestPropertiesBaseDir(
 			getTestClassFile());
 
@@ -66,9 +76,21 @@ public class JUnitTestClass extends BaseTestClass {
 			_testPropertiesFile = new File(
 				testPropertiesBaseDir, "test.properties");
 
-			_testrayMainComponentName = JenkinsResultsParserUtil.getProperty(
-				JenkinsResultsParserUtil.getProperties(_testPropertiesFile),
-				"testray.main.component.name");
+			String testrayMainComponentName =
+				JenkinsResultsParserUtil.getProperty(
+					JenkinsResultsParserUtil.getProperties(_testPropertiesFile),
+					"testray.main.component.name");
+
+			if ((testrayMainComponentName == null) &&
+				_modulesBaseDir.exists()) {
+
+				testrayMainComponentName = JenkinsResultsParserUtil.getProperty(
+					JenkinsResultsParserUtil.getProperties(
+						_getParentTestPropertiesFile(testPropertiesBaseDir)),
+					"testray.main.component.name");
+			}
+
+			_testrayMainComponentName = testrayMainComponentName;
 		}
 		else {
 			_testPropertiesFile = null;
@@ -97,6 +119,15 @@ public class JUnitTestClass extends BaseTestClass {
 
 		_classIgnored = jsonObject.getBoolean("ignored");
 
+		File modulesBaseDir = _getPortalModulesBaseDir();
+
+		if ((modulesBaseDir != null) && modulesBaseDir.exists()) {
+			_modulesBaseDir = modulesBaseDir;
+		}
+		else {
+			_modulesBaseDir = null;
+		}
+
 		if (jsonObject.has("test_properties_file")) {
 			_testPropertiesFile = new File(
 				jsonObject.getString("test_properties_file"));
@@ -105,8 +136,20 @@ public class JUnitTestClass extends BaseTestClass {
 			_testPropertiesFile = null;
 		}
 
-		_testrayMainComponentName = jsonObject.optString(
+		File testPropertiesBaseDir = getTestPropertiesBaseDir(
+			getTestClassFile());
+
+		String testrayMainComponentName = jsonObject.optString(
 			"testray_main_component_name");
+
+		if ((testrayMainComponentName == null) && _modulesBaseDir.exists()) {
+			testrayMainComponentName = JenkinsResultsParserUtil.getProperty(
+				JenkinsResultsParserUtil.getProperties(
+					_getParentTestPropertiesFile(testPropertiesBaseDir)),
+				"testray.main.component.name");
+		}
+
+		_testrayMainComponentName = testrayMainComponentName;
 	}
 
 	@Override
@@ -218,6 +261,32 @@ public class JUnitTestClass extends BaseTestClass {
 		return _getPackageName();
 	}
 
+	private File _getParentTestPropertiesFile(File currentDir) {
+		if ((currentDir == null) ||
+			(currentDir.compareTo(_modulesBaseDir) == 0)) {
+
+			return null;
+		}
+
+		File parentDir = currentDir.getParentFile();
+
+		File parentPropertiesFile = new File(parentDir, "test.properties");
+
+		if (parentPropertiesFile.exists()) {
+			return parentPropertiesFile;
+		}
+
+		return _getParentTestPropertiesFile(parentDir);
+	}
+
+	private File _getPortalModulesBaseDir() {
+		PortalGitWorkingDirectory portalGitWorkingDirectory =
+			getPortalGitWorkingDirectory();
+
+		return new File(
+			portalGitWorkingDirectory.getWorkingDirectory(), "modules");
+	}
+
 	private void _initTestClassMethods(String fileContent) {
 		Matcher classHeaderMatcher = _classHeaderPattern.matcher(fileContent);
 
@@ -293,6 +362,7 @@ public class JUnitTestClass extends BaseTestClass {
 			"(?<methodName>[^\\(\\s]+)"));
 
 	private boolean _classIgnored;
+	private final File _modulesBaseDir;
 	private final File _testPropertiesFile;
 	private final String _testrayMainComponentName;
 

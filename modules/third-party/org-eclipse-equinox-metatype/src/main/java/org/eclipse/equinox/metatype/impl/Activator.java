@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2005, 2011 IBM Corporation and others.
+ * Copyright (c) 2005, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,8 +12,6 @@ package org.eclipse.equinox.metatype.impl;
 
 import java.util.AbstractMap;
 import java.util.ArrayList;
-import org.eclipse.equinox.metatype.EquinoxMetaTypeService;
-
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.List;
@@ -21,6 +19,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import javax.xml.parsers.SAXParserFactory;
+import org.eclipse.equinox.metatype.EquinoxMetaTypeService;
 import org.osgi.framework.*;
 import org.osgi.service.cm.ManagedService;
 import org.osgi.service.log.LogService;
@@ -144,14 +143,14 @@ public class Activator implements BundleActivator {
 
 	private class SAXParserFactoryTrackerCustomizer implements ServiceTrackerCustomizer<SAXParserFactory, SAXParserFactory> {
 		private final BundleContext bundleCtx;
-		private final LogService logService;
+		private final LogTracker logService;
 		private final Map<Bundle, List<Map.Entry<ServiceReference<Object>, Object>>> _metaTypeProviders;
 
 		private MetaTypeServiceImpl metaTypeService;
 		private ServiceRegistration<?> metaTypeServiceRegistration;
 		private SAXParserFactory saxParserFactory;
 
-		public SAXParserFactoryTrackerCustomizer(BundleContext bundleContext, LogService logService, Map<Bundle, List<Map.Entry<ServiceReference<Object>, Object>>> metaTypeProviders) {
+		public SAXParserFactoryTrackerCustomizer(BundleContext bundleContext, LogTracker logService, Map<Bundle, List<Map.Entry<ServiceReference<Object>, Object>>> metaTypeProviders) {
 			this.bundleCtx = bundleContext;
 			this.logService = logService;
 			this._metaTypeProviders = metaTypeProviders;
@@ -174,8 +173,8 @@ public class Activator implements BundleActivator {
 				else if (saxParserFactory.isNamespaceAware()) {
 					return parserFactory;
 				} else if (parserFactory.isNamespaceAware() || // Previous factory not set for namespace awareness but the new one is case.
-						// Now the fun case. Neither factory is set for namespace awareness. Need to see if we're currently using 
-						// a factory incapable of creating namespace aware parsers and, if so, if it can be replaced with the new one.
+				// Now the fun case. Neither factory is set for namespace awareness. Need to see if we're currently using 
+				// a factory incapable of creating namespace aware parsers and, if so, if it can be replaced with the new one.
 						(!supportsNamespaceAwareness(saxParserFactory) && supportsNamespaceAwareness(parserFactory))) {
 					oldFactory = saxParserFactory;
 					saxParserFactory = parserFactory;

@@ -26,6 +26,27 @@ public class RoleBrief implements Cloneable, Serializable {
 		return RoleBriefSerDes.toDTO(json);
 	}
 
+	public String getExternalReferenceCode() {
+		return externalReferenceCode;
+	}
+
+	public void setExternalReferenceCode(String externalReferenceCode) {
+		this.externalReferenceCode = externalReferenceCode;
+	}
+
+	public void setExternalReferenceCode(
+		UnsafeSupplier<String, Exception> externalReferenceCodeUnsafeSupplier) {
+
+		try {
+			externalReferenceCode = externalReferenceCodeUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String externalReferenceCode;
+
 	public Long getId() {
 		return id;
 	}
@@ -44,6 +65,25 @@ public class RoleBrief implements Cloneable, Serializable {
 	}
 
 	protected Long id;
+
+	public String getKey() {
+		return key;
+	}
+
+	public void setKey(String key) {
+		this.key = key;
+	}
+
+	public void setKey(UnsafeSupplier<String, Exception> keyUnsafeSupplier) {
+		try {
+			key = keyUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String key;
 
 	public String getName() {
 		return name;
@@ -85,6 +125,27 @@ public class RoleBrief implements Cloneable, Serializable {
 	}
 
 	protected Map<String, String> name_i18n;
+
+	public Integer getRoleType() {
+		return roleType;
+	}
+
+	public void setRoleType(Integer roleType) {
+		this.roleType = roleType;
+	}
+
+	public void setRoleType(
+		UnsafeSupplier<Integer, Exception> roleTypeUnsafeSupplier) {
+
+		try {
+			roleType = roleTypeUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Integer roleType;
 
 	@Override
 	public RoleBrief clone() throws CloneNotSupportedException {

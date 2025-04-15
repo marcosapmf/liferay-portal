@@ -9,6 +9,8 @@ import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.dao.jdbc.AutoBatchPreparedStatementUtil;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.upgrade.UpgradeProcess;
+import com.liferay.portal.kernel.util.UnicodeProperties;
+import com.liferay.portal.kernel.util.UnicodePropertiesBuilder;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -27,32 +29,60 @@ public class LayoutUtilityPageEntryUpgradeProcess extends UpgradeProcess {
 
 	@Override
 	protected void doUpgrade() throws Exception {
-		try (PreparedStatement preparedStatement =
+		try (PreparedStatement preparedStatement1 =
 				AutoBatchPreparedStatementUtil.autoBatch(
 					connection,
 					"update Layout set layoutId = ?, privateLayout = ?," +
-						"type_ = 'utility' where plid = ?")) {
+						"type_ = 'utility', typeSettings = ?  where plid = ?");
+			PreparedStatement preparedStatement2 =
+				AutoBatchPreparedStatementUtil.concurrentAutoBatch(
+					connection,
+					"update LayoutFriendlyURL set privateLayout = ? where " +
+						"plid = ?")) {
 
 			try (Statement statement = connection.createStatement();
 				ResultSet resultSet = statement.executeQuery(
 					StringBundler.concat(
-						"select groupId, plid from Layout where classPK in ",
-						"(select plid from LayoutUtilityPageEntry) or plid in ",
-						"(select plid from LayoutUtilityPageEntry)"))) {
+						"select groupId, plid, typeSettings from Layout where ",
+						"classPK in (select plid from LayoutUtilityPageEntry) ",
+						"or plid in (select plid from ",
+						"LayoutUtilityPageEntry)"))) {
 
 				while (resultSet.next()) {
 					long groupId = resultSet.getLong("groupId");
+
+					preparedStatement1.setLong(
+						1, _layoutLocalService.getNextLayoutId(groupId, false));
+
+					preparedStatement1.setBoolean(2, false);
+
+					UnicodeProperties typeSettingsUnicodeProperties =
+						UnicodePropertiesBuilder.create(
+							true
+						).load(
+							resultSet.getString("typeSettings")
+						).build();
+
+					typeSettingsUnicodeProperties.remove("privateLayout");
+
+					preparedStatement1.setString(
+						3, typeSettingsUnicodeProperties.toString());
+
 					long plid = resultSet.getLong("plid");
 
-					preparedStatement.setLong(
-						1, _layoutLocalService.getNextLayoutId(groupId, false));
-					preparedStatement.setBoolean(2, false);
-					preparedStatement.setLong(3, plid);
+					preparedStatement1.setLong(4, plid);
 
-					preparedStatement.addBatch();
+					preparedStatement1.addBatch();
+
+					preparedStatement2.setBoolean(1, false);
+					preparedStatement2.setLong(2, plid);
+
+					preparedStatement2.addBatch();
 				}
 
-				preparedStatement.executeBatch();
+				preparedStatement1.executeBatch();
+
+				preparedStatement2.executeBatch();
 			}
 		}
 	}

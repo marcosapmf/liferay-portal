@@ -15,6 +15,7 @@ import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.kernel.version.Version;
 import com.liferay.portal.search.elasticsearch7.configuration.ElasticsearchConnectionConfiguration;
 import com.liferay.portal.search.elasticsearch7.internal.configuration.ElasticsearchConfigurationWrapper;
 import com.liferay.portal.search.elasticsearch7.internal.connection.ElasticsearchConnection;
@@ -38,7 +39,6 @@ import java.util.Set;
 
 import org.apache.http.util.EntityUtils;
 
-import org.elasticsearch.Version;
 import org.elasticsearch.client.Request;
 import org.elasticsearch.client.Response;
 import org.elasticsearch.client.RestClient;
@@ -58,7 +58,7 @@ public class ElasticsearchSearchEngineInformation
 
 	@Override
 	public String getClientVersionString() {
-		return Version.CURRENT.toString();
+		return org.elasticsearch.Version.CURRENT.toString();
 	}
 
 	@Override
@@ -116,6 +116,26 @@ public class ElasticsearchSearchEngineInformation
 		}
 
 		return connectionInformationList;
+	}
+
+	@Override
+	public int[] getEmbeddingVectorDimensions() {
+		try {
+			Version serverVersion = _getServerVersion();
+
+			if ((serverVersion != null) &&
+				(serverVersion.compareTo(_VERSION_8_11) >= 0)) {
+
+				return new int[] {
+					256, 384, 512, 768, 1024, 1536, 2048, 3072, 4096
+				};
+			}
+		}
+		catch (Exception exception) {
+			_log.error(exception);
+		}
+
+		return new int[] {256, 384, 512, 768, 1024, 1536, 2048};
 	}
 
 	@Override
@@ -334,6 +354,40 @@ public class ElasticsearchSearchEngineInformation
 		}
 	}
 
+	private Version _getServerVersion() throws Exception {
+		String serverVersionString = _getServerVersionString();
+
+		if (Validator.isBlank(serverVersionString)) {
+			return null;
+		}
+
+		return Version.parseVersion(serverVersionString);
+	}
+
+	private String _getServerVersionString() throws Exception {
+		RestHighLevelClient restHighLevelClient =
+			elasticsearchConnectionManager.getRestHighLevelClient();
+
+		RestClient restClient = restHighLevelClient.getLowLevelClient();
+
+		Response response = restClient.performRequest(
+			new Request("GET", StringPool.SLASH));
+
+		String responseBody = EntityUtils.toString(response.getEntity());
+
+		JSONObject responseJSONObject = _jsonFactory.createJSONObject(
+			responseBody);
+
+		JSONObject versionJSONObject = responseJSONObject.getJSONObject(
+			"version");
+
+		if (versionJSONObject != null) {
+			return versionJSONObject.getString("number");
+		}
+
+		return null;
+	}
+
 	private void _setClusterAndNodeInformation(
 			ConnectionInformationBuilder connectionInformationBuilder,
 			RestHighLevelClient restHighLevelClient)
@@ -397,6 +451,8 @@ public class ElasticsearchSearchEngineInformation
 		connectionInformationBuilder.health(
 			String.valueOf(healthClusterResponse.getClusterHealthStatus()));
 	}
+
+	private static final Version _VERSION_8_11 = Version.parseVersion("8.11");
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		ElasticsearchSearchEngineInformation.class);

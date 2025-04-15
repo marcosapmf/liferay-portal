@@ -65,13 +65,11 @@ public interface DSEnvelopeResource {
 		throws Exception;
 
 	public void postSiteDSEnvelopeBatch(
-			Long siteId, DSEnvelope dsEnvelope, String callbackURL,
-			Object object)
+			Long siteId, String callbackURL, Object object)
 		throws Exception;
 
 	public HttpInvoker.HttpResponse postSiteDSEnvelopeBatchHttpResponse(
-			Long siteId, DSEnvelope dsEnvelope, String callbackURL,
-			Object object)
+			Long siteId, String callbackURL, Object object)
 		throws Exception;
 
 	public DSEnvelope getSiteDSEnvelope(Long siteId, String dsEnvelopeId)
@@ -179,8 +177,8 @@ public interface DSEnvelopeResource {
 		private Map<String, String> _headers = new LinkedHashMap<>();
 		private String _host = "localhost";
 		private Locale _locale;
-		private String _login = "";
-		private String _password = "";
+		private String _login;
+		private String _password;
 		private Map<String, String> _parameters = new LinkedHashMap<>();
 		private int _port = 8080;
 		private String _scheme = "http";
@@ -313,8 +311,10 @@ public interface DSEnvelopeResource {
 
 			httpInvoker.path("siteId", siteId);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
@@ -445,8 +445,10 @@ public interface DSEnvelopeResource {
 
 			httpInvoker.path("siteId", siteId);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
@@ -550,20 +552,21 @@ public interface DSEnvelopeResource {
 
 			httpInvoker.path("siteId", siteId);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
 
 		public void postSiteDSEnvelopeBatch(
-				Long siteId, DSEnvelope dsEnvelope, String callbackURL,
-				Object object)
+				Long siteId, String callbackURL, Object object)
 			throws Exception {
 
 			HttpInvoker.HttpResponse httpResponse =
 				postSiteDSEnvelopeBatchHttpResponse(
-					siteId, dsEnvelope, callbackURL, object);
+					siteId, callbackURL, object);
 
 			String content = httpResponse.getContent();
 
@@ -614,8 +617,7 @@ public interface DSEnvelopeResource {
 		}
 
 		public HttpInvoker.HttpResponse postSiteDSEnvelopeBatchHttpResponse(
-				Long siteId, DSEnvelope dsEnvelope, String callbackURL,
-				Object object)
+				Long siteId, String callbackURL, Object object)
 			throws Exception {
 
 			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
@@ -653,8 +655,10 @@ public interface DSEnvelopeResource {
 
 			httpInvoker.path("siteId", siteId);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
@@ -757,8 +761,10 @@ public interface DSEnvelopeResource {
 			httpInvoker.path("siteId", siteId);
 			httpInvoker.path("dsEnvelopeId", dsEnvelopeId);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}

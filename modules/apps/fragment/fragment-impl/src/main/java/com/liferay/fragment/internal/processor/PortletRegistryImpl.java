@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
@@ -65,6 +66,10 @@ public class PortletRegistryImpl implements PortletRegistry {
 				if (Validator.isNotNull(portletId)) {
 					String instanceId = jsonObject.getString("instanceId");
 
+					if (Objects.equals(instanceId, "0")) {
+						instanceId = StringPool.BLANK;
+					}
+
 					portletIds.add(
 						PortletIdCodec.encode(portletId, instanceId));
 				}
@@ -76,8 +81,16 @@ public class PortletRegistryImpl implements PortletRegistry {
 			return portletIds;
 		}
 
+		String html = fragmentEntryLink.getHtml();
+
+		if (!html.contains("@liferay_portlet") &&
+			!html.contains("lfr-widget-")) {
+
+			return portletIds;
+		}
+
 		if (document == null) {
-			document = _getDocument(fragmentEntryLink.getHtml());
+			document = _getDocument(html);
 		}
 
 		for (Element element : document.select("*")) {
@@ -225,7 +238,7 @@ public class PortletRegistryImpl implements PortletRegistry {
 
 		String[] strings = s.split("\\s+");
 
-		if (!ArrayUtil.isEmpty(strings)) {
+		if (ArrayUtil.isNotEmpty(strings)) {
 			return strings[0];
 		}
 
@@ -249,7 +262,7 @@ public class PortletRegistryImpl implements PortletRegistry {
 
 	private static final Pattern _liferayPortletRuntimePattern =
 		Pattern.compile(
-			"\\[@liferay_portlet\\[\"runtime\"\\]([\\s\\S]*)?" +
+			"\\[@liferay_portlet(?=\\.runtime|\\[\"runtime\"\\])([\\s\\S]*)?" +
 				"(portletName=\"\\w+\")([\\s\\S]*)?\\/\\]");
 
 	private final Map<String, String> _aliasPortletNames =

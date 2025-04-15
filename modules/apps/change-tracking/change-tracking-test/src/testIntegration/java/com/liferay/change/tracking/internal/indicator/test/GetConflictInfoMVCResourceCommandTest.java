@@ -28,6 +28,7 @@ import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
@@ -35,6 +36,7 @@ import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 
 import java.io.ByteArrayOutputStream;
 
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -57,9 +59,13 @@ public class GetConflictInfoMVCResourceCommandTest {
 
 	@Before
 	public void setUp() throws Exception {
-		_ctCollection = _ctCollectionLocalService.addCTCollection(
+		_ctCollection1 = _ctCollectionLocalService.addCTCollection(
 			null, TestPropsValues.getCompanyId(), TestPropsValues.getUserId(),
 			0, "P1", null);
+
+		_ctCollection2 = _ctCollectionLocalService.addCTCollection(
+			null, TestPropsValues.getCompanyId(), TestPropsValues.getUserId(),
+			0, "P2", null);
 
 		_group = GroupTestUtil.addGroup();
 
@@ -72,30 +78,31 @@ public class GetConflictInfoMVCResourceCommandTest {
 		}
 	}
 
+	@After
+	public void tearDown() throws Exception {
+		GroupTestUtil.deleteGroup(_group);
+	}
+
 	@Test
 	public void testGetConflictIconWithNoConflicts() throws Exception {
 		try (SafeCloseable safeCloseable =
 				CTCollectionThreadLocal.setCTCollectionIdWithSafeCloseable(
-					_ctCollection.getCtCollectionId())) {
+					_ctCollection1.getCtCollectionId())) {
 
-			_assertGetConflictInfo("change-tracking-conflict-icon", "check");
+			_assertGetConflictInfo(null);
 
 			_journalArticle = JournalTestUtil.updateArticle(
 				_journalArticle, "testModifyJournalArticle");
 
-			_assertGetConflictInfo("change-tracking-conflict-icon", "check");
+			_assertGetConflictInfo(null);
 		}
 	}
 
 	@Test
 	public void testGetConflictIconWithPossibleConflict() throws Exception {
-		CTCollection ctCollection2 = _ctCollectionLocalService.addCTCollection(
-			null, TestPropsValues.getCompanyId(), TestPropsValues.getUserId(),
-			0, "P2", null);
-
 		try (SafeCloseable safeCloseable =
 				CTCollectionThreadLocal.setCTCollectionIdWithSafeCloseable(
-					ctCollection2.getCtCollectionId())) {
+					_ctCollection2.getCtCollectionId())) {
 
 			JournalTestUtil.updateArticle(
 				_journalArticle, "testModifyJournalArticle");
@@ -103,13 +110,12 @@ public class GetConflictInfoMVCResourceCommandTest {
 
 		try (SafeCloseable safeCloseable =
 				CTCollectionThreadLocal.setCTCollectionIdWithSafeCloseable(
-					_ctCollection.getCtCollectionId())) {
+					_ctCollection1.getCtCollectionId())) {
 
 			_journalArticle = JournalTestUtil.updateArticle(
 				_journalArticle, "testModifyJournalArticle");
 
-			_assertGetConflictInfo(
-				"change-tracking-conflict-icon-warning", "warning-full");
+			_assertGetConflictInfo("warning");
 		}
 	}
 
@@ -119,7 +125,7 @@ public class GetConflictInfoMVCResourceCommandTest {
 
 		try (SafeCloseable safeCloseable =
 				CTCollectionThreadLocal.setCTCollectionIdWithSafeCloseable(
-					_ctCollection.getCtCollectionId())) {
+					_ctCollection1.getCtCollectionId())) {
 
 			_journalArticle = JournalTestUtil.updateArticle(
 				_journalArticle, "testModifyJournalArticle");
@@ -134,15 +140,13 @@ public class GetConflictInfoMVCResourceCommandTest {
 
 		try (SafeCloseable safeCloseable =
 				CTCollectionThreadLocal.setCTCollectionIdWithSafeCloseable(
-					_ctCollection.getCtCollectionId())) {
+					_ctCollection1.getCtCollectionId())) {
 
-			_assertGetConflictInfo(
-				"change-tracking-conflict-icon-danger", "warning-full");
+			_assertGetConflictInfo("danger");
 		}
 	}
 
-	private void _assertGetConflictInfo(
-			String expectedConflictIconClass, String expectedConflictIconName)
+	private void _assertGetConflictInfo(String expectedConflictKey)
 		throws Exception {
 
 		MockLiferayResourceResponse mockLiferayResourceResponse =
@@ -152,18 +156,18 @@ public class GetConflictInfoMVCResourceCommandTest {
 			_getMockLiferayResourceRequest(
 				_portal.getClassNameId(JournalArticle.class),
 				_journalArticle.getPrimaryKey(),
-				_ctCollection.getCtCollectionId()),
+				_ctCollection1.getCtCollectionId()),
 			mockLiferayResourceResponse);
 
 		JSONObject jsonObject = _getConflictInfoJSONObject(
 			mockLiferayResourceResponse);
 
-		Assert.assertEquals(
-			expectedConflictIconClass,
-			String.valueOf(jsonObject.get("conflictIconClass")));
-		Assert.assertEquals(
-			expectedConflictIconName,
-			String.valueOf(jsonObject.get("conflictIconName")));
+		if (Validator.isNull(expectedConflictKey)) {
+			Assert.assertEquals(0, jsonObject.length());
+		}
+		else {
+			Assert.assertNotNull(jsonObject.get(expectedConflictKey));
+		}
 	}
 
 	private JSONObject _getConflictInfoJSONObject(
@@ -206,7 +210,10 @@ public class GetConflictInfoMVCResourceCommandTest {
 	}
 
 	@DeleteAfterTestRun
-	private static CTCollection _ctCollection;
+	private static CTCollection _ctCollection1;
+
+	@DeleteAfterTestRun
+	private static CTCollection _ctCollection2;
 
 	@Inject
 	private static CTCollectionLocalService _ctCollectionLocalService;

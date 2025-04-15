@@ -16,6 +16,7 @@ import getFragmentDefinition from '../layout-content-page-editor-web/utils/getFr
 import getGridDefinition from '../layout-content-page-editor-web/utils/getGridDefinition';
 import getPageDefinition from '../layout-content-page-editor-web/utils/getPageDefinition';
 import getWidgetDefinition from '../layout-content-page-editor-web/utils/getWidgetDefinition';
+import {deleteItems} from './utils/deleteItems';
 
 declare global {
 	interface Window {
@@ -26,7 +27,7 @@ declare global {
 export const test = mergeTests(
 	apiHelpersTest,
 	featureFlagsTest({
-		'LPS-178052': true,
+		'LPS-178052': {enabled: true},
 	}),
 	formsPagesTest,
 	isolatedSiteTest,
@@ -46,6 +47,12 @@ const pageFields: {
 		fieldTitle: 'Text',
 	},
 ];
+
+test.afterEach(async ({formsPage}) => {
+	await formsPage.goTo();
+
+	await deleteItems(formsPage);
+});
 
 test.describe('Can render forms with multiple pages through page templates', () => {
 	test('check that form with multiple pages are not triggering scroll events', async ({
@@ -94,7 +101,7 @@ test.describe('Can render forms with multiple pages through page templates', () 
 
 		await pageEditorPage.publishPage();
 
-		await formBuilderPage.goToNew();
+		await formBuilderPage.goToNew(site.friendlyUrlPath);
 
 		await expect(formBuilderPage.newFormHeading).toBeVisible();
 
@@ -120,7 +127,7 @@ test.describe('Can render forms with multiple pages through page templates', () 
 			await formBuilderSidePanelPage.clickBackButton();
 		}
 
-		await formBuilderPage.publishButton.click();
+		await formBuilderPage.clickPublishFormButton();
 
 		await pageEditorPage.goto(layout, site.friendlyUrlPath);
 

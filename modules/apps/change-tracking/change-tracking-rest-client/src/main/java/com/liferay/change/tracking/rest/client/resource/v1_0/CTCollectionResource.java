@@ -65,12 +65,11 @@ public interface CTCollectionResource {
 			CTCollection ctCollection)
 		throws Exception;
 
-	public void postCTCollectionBatch(
-			CTCollection ctCollection, String callbackURL, Object object)
+	public void postCTCollectionBatch(String callbackURL, Object object)
 		throws Exception;
 
 	public HttpInvoker.HttpResponse postCTCollectionBatchHttpResponse(
-			CTCollection ctCollection, String callbackURL, Object object)
+			String callbackURL, Object object)
 		throws Exception;
 
 	public void deleteCTCollectionByExternalReferenceCode(
@@ -134,26 +133,17 @@ public interface CTCollectionResource {
 			Long ctCollectionId)
 		throws Exception;
 
-	public Page<CTCollection> getCTCollectionsHistoryPage(
-			Integer classNameId, Integer classPK)
-		throws Exception;
-
-	public HttpInvoker.HttpResponse getCTCollectionsHistoryPageHttpResponse(
-			Integer classNameId, Integer classPK)
-		throws Exception;
-
 	public void deleteCTCollection(Long ctCollectionId) throws Exception;
 
 	public HttpInvoker.HttpResponse deleteCTCollectionHttpResponse(
 			Long ctCollectionId)
 		throws Exception;
 
-	public void deleteCTCollectionBatch(
-			Long ctCollectionId, String callbackURL, Object object)
+	public void deleteCTCollectionBatch(String callbackURL, Object object)
 		throws Exception;
 
 	public HttpInvoker.HttpResponse deleteCTCollectionBatchHttpResponse(
-			Long ctCollectionId, String callbackURL, Object object)
+			String callbackURL, Object object)
 		throws Exception;
 
 	public CTCollection getCTCollection(Long ctCollectionId) throws Exception;
@@ -178,14 +168,11 @@ public interface CTCollectionResource {
 			Long ctCollectionId, CTCollection ctCollection)
 		throws Exception;
 
-	public void putCTCollectionBatch(
-			Long ctCollectionId, CTCollection ctCollection, String callbackURL,
-			Object object)
+	public void putCTCollectionBatch(String callbackURL, Object object)
 		throws Exception;
 
 	public HttpInvoker.HttpResponse putCTCollectionBatchHttpResponse(
-			Long ctCollectionId, CTCollection ctCollection, String callbackURL,
-			Object object)
+			String callbackURL, Object object)
 		throws Exception;
 
 	public void postCTCollectionCheckout(Long ctCollectionId) throws Exception;
@@ -306,8 +293,8 @@ public interface CTCollectionResource {
 		private Map<String, String> _headers = new LinkedHashMap<>();
 		private String _host = "localhost";
 		private Locale _locale;
-		private String _login = "";
-		private String _password = "";
+		private String _login;
+		private String _password;
 		private Map<String, String> _parameters = new LinkedHashMap<>();
 		private int _port = 8080;
 		private String _scheme = "http";
@@ -437,8 +424,10 @@ public interface CTCollectionResource {
 					_builder._port + _builder._contextPath +
 						"/o/change-tracking-rest/v1.0/ct-collections");
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
@@ -563,8 +552,10 @@ public interface CTCollectionResource {
 					_builder._port + _builder._contextPath +
 						"/o/change-tracking-rest/v1.0/ct-collections/export-batch");
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
@@ -666,19 +657,19 @@ public interface CTCollectionResource {
 					_builder._port + _builder._contextPath +
 						"/o/change-tracking-rest/v1.0/ct-collections");
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
 
-		public void postCTCollectionBatch(
-				CTCollection ctCollection, String callbackURL, Object object)
+		public void postCTCollectionBatch(String callbackURL, Object object)
 			throws Exception {
 
 			HttpInvoker.HttpResponse httpResponse =
-				postCTCollectionBatchHttpResponse(
-					ctCollection, callbackURL, object);
+				postCTCollectionBatchHttpResponse(callbackURL, object);
 
 			String content = httpResponse.getContent();
 
@@ -729,7 +720,7 @@ public interface CTCollectionResource {
 		}
 
 		public HttpInvoker.HttpResponse postCTCollectionBatchHttpResponse(
-				CTCollection ctCollection, String callbackURL, Object object)
+				String callbackURL, Object object)
 			throws Exception {
 
 			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
@@ -765,8 +756,10 @@ public interface CTCollectionResource {
 					_builder._port + _builder._contextPath +
 						"/o/change-tracking-rest/v1.0/ct-collections/batch");
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
@@ -871,8 +864,10 @@ public interface CTCollectionResource {
 
 			httpInvoker.path("externalReferenceCode", externalReferenceCode);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
@@ -977,8 +972,10 @@ public interface CTCollectionResource {
 
 			httpInvoker.path("externalReferenceCode", externalReferenceCode);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
@@ -1085,8 +1082,10 @@ public interface CTCollectionResource {
 
 			httpInvoker.path("externalReferenceCode", externalReferenceCode);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
@@ -1193,8 +1192,10 @@ public interface CTCollectionResource {
 
 			httpInvoker.path("externalReferenceCode", externalReferenceCode);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
@@ -1309,8 +1310,10 @@ public interface CTCollectionResource {
 
 			httpInvoker.path("externalReferenceCode", externalReferenceCode);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
@@ -1415,8 +1418,10 @@ public interface CTCollectionResource {
 
 			httpInvoker.path("externalReferenceCode", externalReferenceCode);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
@@ -1518,119 +1523,10 @@ public interface CTCollectionResource {
 
 			httpInvoker.path("ctCollectionId", ctCollectionId);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
-
-			return httpInvoker.invoke();
-		}
-
-		public Page<CTCollection> getCTCollectionsHistoryPage(
-				Integer classNameId, Integer classPK)
-			throws Exception {
-
-			HttpInvoker.HttpResponse httpResponse =
-				getCTCollectionsHistoryPageHttpResponse(classNameId, classPK);
-
-			String content = httpResponse.getContent();
-
-			if ((httpResponse.getStatusCode() / 100) != 2) {
-				_logger.log(
-					Level.WARNING,
-					"Unable to process HTTP response content: " + content);
-				_logger.log(
-					Level.WARNING,
-					"HTTP response message: " + httpResponse.getMessage());
-				_logger.log(
-					Level.WARNING,
-					"HTTP response status code: " +
-						httpResponse.getStatusCode());
-
-				Problem.ProblemException problemException = null;
-
-				if (Objects.equals(
-						httpResponse.getContentType(), "application/json")) {
-
-					problemException = new Problem.ProblemException(
-						Problem.toDTO(content));
-				}
-				else {
-					_logger.log(
-						Level.WARNING,
-						"Unable to process content type: " +
-							httpResponse.getContentType());
-
-					Problem problem = new Problem();
-
-					problem.setStatus(
-						String.valueOf(httpResponse.getStatusCode()));
-
-					problemException = new Problem.ProblemException(problem);
-				}
-
-				throw problemException;
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
 			}
-			else {
-				_logger.fine("HTTP response content: " + content);
-				_logger.fine(
-					"HTTP response message: " + httpResponse.getMessage());
-				_logger.fine(
-					"HTTP response status code: " +
-						httpResponse.getStatusCode());
-			}
-
-			try {
-				return Page.of(content, CTCollectionSerDes::toDTO);
-			}
-			catch (Exception e) {
-				_logger.log(
-					Level.WARNING,
-					"Unable to process HTTP response: " + content, e);
-
-				throw new Problem.ProblemException(Problem.toDTO(content));
-			}
-		}
-
-		public HttpInvoker.HttpResponse getCTCollectionsHistoryPageHttpResponse(
-				Integer classNameId, Integer classPK)
-			throws Exception {
-
-			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
-
-			if (_builder._locale != null) {
-				httpInvoker.header(
-					"Accept-Language", _builder._locale.toLanguageTag());
-			}
-
-			for (Map.Entry<String, String> entry :
-					_builder._headers.entrySet()) {
-
-				httpInvoker.header(entry.getKey(), entry.getValue());
-			}
-
-			for (Map.Entry<String, String> entry :
-					_builder._parameters.entrySet()) {
-
-				httpInvoker.parameter(entry.getKey(), entry.getValue());
-			}
-
-			httpInvoker.httpMethod(HttpInvoker.HttpMethod.GET);
-
-			if (classNameId != null) {
-				httpInvoker.parameter(
-					"classNameId", String.valueOf(classNameId));
-			}
-
-			if (classPK != null) {
-				httpInvoker.parameter("classPK", String.valueOf(classPK));
-			}
-
-			httpInvoker.path(
-				_builder._scheme + "://" + _builder._host + ":" +
-					_builder._port + _builder._contextPath +
-						"/o/change-tracking-rest/v1.0/ct-collections/history");
-
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
 
 			return httpInvoker.invoke();
 		}
@@ -1730,19 +1626,19 @@ public interface CTCollectionResource {
 
 			httpInvoker.path("ctCollectionId", ctCollectionId);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
 
-		public void deleteCTCollectionBatch(
-				Long ctCollectionId, String callbackURL, Object object)
+		public void deleteCTCollectionBatch(String callbackURL, Object object)
 			throws Exception {
 
 			HttpInvoker.HttpResponse httpResponse =
-				deleteCTCollectionBatchHttpResponse(
-					ctCollectionId, callbackURL, object);
+				deleteCTCollectionBatchHttpResponse(callbackURL, object);
 
 			String content = httpResponse.getContent();
 
@@ -1793,7 +1689,7 @@ public interface CTCollectionResource {
 		}
 
 		public HttpInvoker.HttpResponse deleteCTCollectionBatchHttpResponse(
-				Long ctCollectionId, String callbackURL, Object object)
+				String callbackURL, Object object)
 			throws Exception {
 
 			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
@@ -1827,12 +1723,12 @@ public interface CTCollectionResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port + _builder._contextPath +
-						"/o/change-tracking-rest/v1.0/ct-collections/{ctCollectionId}/batch");
+						"/o/change-tracking-rest/v1.0/ct-collections/batch");
 
-			httpInvoker.path("ctCollectionId", ctCollectionId);
-
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
@@ -1934,8 +1830,10 @@ public interface CTCollectionResource {
 
 			httpInvoker.path("ctCollectionId", ctCollectionId);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
@@ -2040,8 +1938,10 @@ public interface CTCollectionResource {
 
 			httpInvoker.path("ctCollectionId", ctCollectionId);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
@@ -2146,20 +2046,19 @@ public interface CTCollectionResource {
 
 			httpInvoker.path("ctCollectionId", ctCollectionId);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
 
-		public void putCTCollectionBatch(
-				Long ctCollectionId, CTCollection ctCollection,
-				String callbackURL, Object object)
+		public void putCTCollectionBatch(String callbackURL, Object object)
 			throws Exception {
 
 			HttpInvoker.HttpResponse httpResponse =
-				putCTCollectionBatchHttpResponse(
-					ctCollectionId, ctCollection, callbackURL, object);
+				putCTCollectionBatchHttpResponse(callbackURL, object);
 
 			String content = httpResponse.getContent();
 
@@ -2210,7 +2109,6 @@ public interface CTCollectionResource {
 		}
 
 		public HttpInvoker.HttpResponse putCTCollectionBatchHttpResponse(
-				Long ctCollectionId, CTCollection ctCollection,
 				String callbackURL, Object object)
 			throws Exception {
 
@@ -2245,12 +2143,12 @@ public interface CTCollectionResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port + _builder._contextPath +
-						"/o/change-tracking-rest/v1.0/ct-collections/{ctCollectionId}/batch");
+						"/o/change-tracking-rest/v1.0/ct-collections/batch");
 
-			httpInvoker.path("ctCollectionId", ctCollectionId);
-
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
@@ -2354,8 +2252,10 @@ public interface CTCollectionResource {
 
 			httpInvoker.path("ctCollectionId", ctCollectionId);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
@@ -2459,8 +2359,10 @@ public interface CTCollectionResource {
 
 			httpInvoker.path("ctCollectionId", ctCollectionId);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
@@ -2575,8 +2477,10 @@ public interface CTCollectionResource {
 
 			httpInvoker.path("ctCollectionId", ctCollectionId);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}

@@ -13,6 +13,7 @@ Map<String, List<FragmentCollection>> inheritedFragmentCollections = (Map<String
 List<FragmentCollection> systemFragmentCollections = (List<FragmentCollection>)request.getAttribute(FragmentWebKeys.SYSTEM_FRAGMENT_COLLECTIONS);
 
 List<FragmentCollectionContributor> fragmentCollectionContributors = fragmentEntriesDisplayContext.getFragmentCollectionContributors(locale);
+ImportDisplayContext importDisplayContext = new ImportDisplayContext(request, renderRequest, renderResponse);
 %>
 
 <liferay-ui:error embed="<%= false %>" exception="<%= DuplicateFragmentCollectionKeyException.class %>">
@@ -39,6 +40,7 @@ List<FragmentCollectionContributor> fragmentCollectionContributors = fragmentEnt
 
 <clay:container-fluid
 	cssClass="container-view"
+	size="xxxl"
 >
 	<clay:row>
 		<clay:col
@@ -64,12 +66,12 @@ List<FragmentCollectionContributor> fragmentCollectionContributors = fragmentEnt
 						</clay:content-col>
 
 						<clay:content-col>
-							<ul class="navbar-nav">
+							<ul class="align-items-center navbar-nav">
 								<li>
 									<c:if test="<%= FragmentPermission.contains(permissionChecker, scopeGroupId, FragmentActionKeys.MANAGE_FRAGMENT_ENTRIES) %>">
 										<clay:link
 											borderless="<%= true %>"
-											cssClass="component-action"
+											cssClass="component-action lfr-portal-tooltip"
 											href="<%= editFragmentCollectionURL %>"
 											icon="plus"
 											title='<%= LanguageUtil.get(request, "add-fragment-set") %>'
@@ -77,6 +79,34 @@ List<FragmentCollectionContributor> fragmentCollectionContributors = fragmentEnt
 										/>
 									</c:if>
 								</li>
+
+								<c:if test='<%= FeatureFlagManagerUtil.isEnabled("LPD-34938") && permissionChecker.isOmniadmin() %>'>
+									<li>
+										<div class="marketplace-button">
+											<react:component
+												module="{MarketplaceButton} from layout-js-components-web"
+												props='<%=
+													HashMapBuilder.<String, Object>put(
+														"body", LanguageUtil.get(request, "we-are-excited-to-share-that-marketplace-is-now-part-of-fragments")
+													).put(
+														"fragmentPortletNamespace", liferayPortletResponse.getNamespace()
+													).put(
+														"fragmentsImportURL",
+														importDisplayContext.getProps(
+														).get(
+															"importURL"
+														)
+													).put(
+														"heading", LanguageUtil.get(request, "marketplace-is-now-in-fragments")
+													).put(
+														"isMarketplaceButtonVisited", GetterUtil.getBoolean(SessionClicks.get(request, liferayPortletResponse.getNamespace() + "isMarketplaceButtonVisited", "false"))
+													).build()
+												%>'
+											/>
+										</div>
+									</li>
+								</c:if>
+
 								<li>
 
 									<%
@@ -102,6 +132,7 @@ List<FragmentCollectionContributor> fragmentCollectionContributors = fragmentEnt
 										aria-label='<%= LanguageUtil.get(request, "show-actions") %>'
 										dropdownItems="<%= fragmentEntriesDisplayContext.getCollectionsDropdownItems() %>"
 										propsTransformer="{FragmentCollectionViewDefaultPropsTransformer} from fragment-web"
+										title='<%= LanguageUtil.get(request, "fragment-sets-options") %>'
 									/>
 								</li>
 							</ul>
@@ -162,7 +193,12 @@ List<FragmentCollectionContributor> fragmentCollectionContributors = fragmentEnt
 		<clay:col
 			lg="9"
 		>
-			<c:if test="<%= (fragmentEntriesDisplayContext.getFragmentCollection() != null) || (fragmentEntriesDisplayContext.getFragmentCollectionContributor() != null) %>">
+
+			<%
+			FragmentCollectionContributor fragmentCollectionContributor = fragmentEntriesDisplayContext.getFragmentCollectionContributor();
+			%>
+
+			<c:if test="<%= (fragmentEntriesDisplayContext.getFragmentCollection() != null) || (fragmentCollectionContributor != null) %>">
 				<clay:sheet
 					size="full"
 				>
@@ -173,6 +209,15 @@ List<FragmentCollectionContributor> fragmentCollectionContributors = fragmentEnt
 							<clay:content-col>
 								<%= fragmentEntriesDisplayContext.getFragmentCollectionName() %>
 							</clay:content-col>
+
+							<c:if test="<%= (fragmentCollectionContributor != null) && fragmentCollectionContributor.isDeprecated() %>">
+								<div class="c-ml-3">
+									<liferay-frontend:feature-indicator
+										interactive="<%= true %>"
+										type="deprecated"
+									/>
+								</div>
+							</c:if>
 
 							<c:if test="<%= fragmentEntriesDisplayContext.showFragmentCollectionActions() %>">
 								<clay:content-col
@@ -226,8 +271,6 @@ List<FragmentCollectionContributor> fragmentCollectionContributors = fragmentEnt
 </aui:form>
 
 <%
-ImportDisplayContext importDisplayContext = new ImportDisplayContext(request, renderRequest, renderResponse);
-
 List<String> draftFragmentsImporterResultEntries = importDisplayContext.getFragmentsImporterResultEntries(FragmentsImporterResultEntry.Status.IMPORTED_DRAFT);
 %>
 

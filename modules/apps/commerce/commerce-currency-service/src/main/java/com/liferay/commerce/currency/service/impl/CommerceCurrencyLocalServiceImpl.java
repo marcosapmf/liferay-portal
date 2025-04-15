@@ -12,6 +12,7 @@ import com.liferay.commerce.currency.constants.CommerceCurrencyExchangeRateConst
 import com.liferay.commerce.currency.constants.RoundingTypeConstants;
 import com.liferay.commerce.currency.exception.CommerceCurrencyCodeException;
 import com.liferay.commerce.currency.exception.CommerceCurrencyNameException;
+import com.liferay.commerce.currency.exception.DuplicateCommerceCurrencyException;
 import com.liferay.commerce.currency.exception.NoSuchCurrencyException;
 import com.liferay.commerce.currency.internal.model.listener.PortalInstanceLifecycleListenerImpl;
 import com.liferay.commerce.currency.model.CommerceCurrency;
@@ -101,8 +102,8 @@ public class CommerceCurrencyLocalServiceImpl
 	@Indexable(type = IndexableType.REINDEX)
 	@Override
 	public CommerceCurrency addCommerceCurrency(
-			long userId, String code, Map<Locale, String> nameMap,
-			String symbol, BigDecimal rate,
+			String externalReferenceCode, long userId, String code,
+			Map<Locale, String> nameMap, String symbol, BigDecimal rate,
 			Map<Locale, String> formatPatternMap, int maxFractionDigits,
 			int minFractionDigits, String roundingMode, boolean primary,
 			double priority, boolean active)
@@ -140,6 +141,7 @@ public class CommerceCurrencyLocalServiceImpl
 		CommerceCurrency commerceCurrency = commerceCurrencyPersistence.create(
 			commerceCurrencyId);
 
+		commerceCurrency.setExternalReferenceCode(externalReferenceCode);
 		commerceCurrency.setCompanyId(user.getCompanyId());
 		commerceCurrency.setUserId(user.getUserId());
 		commerceCurrency.setUserName(user.getFullName());
@@ -181,6 +183,11 @@ public class CommerceCurrencyLocalServiceImpl
 
 		return commerceCurrencyLocalService.deleteCommerceCurrency(
 			commerceCurrency);
+	}
+
+	@Override
+	public CommerceCurrency fetchCommerceCurrency(long companyId, String code) {
+		return commerceCurrencyPersistence.fetchByC_C(companyId, code);
 	}
 
 	@Override
@@ -258,6 +265,8 @@ public class CommerceCurrencyLocalServiceImpl
 					serviceContext.getCompanyId(), code);
 
 			if (commerceCurrency == null) {
+				String externalReferenceCode = jsonObject.getString(
+					"externalReferenceCode");
 				boolean primary = jsonObject.getBoolean("primary");
 				double priority = jsonObject.getDouble("priority");
 				double rate = jsonObject.getDouble("rate");
@@ -284,8 +293,8 @@ public class CommerceCurrencyLocalServiceImpl
 					roundingTypeConfiguration.roundingMode();
 
 				commerceCurrencyLocalService.addCommerceCurrency(
-					serviceContext.getUserId(), code, nameMap, symbol,
-					BigDecimal.valueOf(rate), formatPatternMap,
+					externalReferenceCode, serviceContext.getUserId(), code,
+					nameMap, symbol, BigDecimal.valueOf(rate), formatPatternMap,
 					roundingTypeConfiguration.maximumFractionDigits(),
 					roundingTypeConfiguration.minimumFractionDigits(),
 					roundingMode.name(), primary, priority, true);
@@ -390,11 +399,11 @@ public class CommerceCurrencyLocalServiceImpl
 	@Indexable(type = IndexableType.REINDEX)
 	@Override
 	public CommerceCurrency updateCommerceCurrency(
-			long commerceCurrencyId, Map<Locale, String> nameMap, String symbol,
-			BigDecimal rate, Map<Locale, String> formatPatternMap,
-			int maxFractionDigits, int minFractionDigits, String roundingMode,
-			boolean primary, double priority, boolean active,
-			ServiceContext serviceContext)
+			String externalReferenceCode, long commerceCurrencyId,
+			Map<Locale, String> nameMap, String symbol, BigDecimal rate,
+			Map<Locale, String> formatPatternMap, int maxFractionDigits,
+			int minFractionDigits, String roundingMode, boolean primary,
+			double priority, boolean active, ServiceContext serviceContext)
 		throws PortalException {
 
 		CommerceCurrency commerceCurrency =
@@ -428,6 +437,7 @@ public class CommerceCurrencyLocalServiceImpl
 			roundingMode = roundingModeEnum.name();
 		}
 
+		commerceCurrency.setExternalReferenceCode(externalReferenceCode);
 		commerceCurrency.setNameMap(nameMap);
 		commerceCurrency.setSymbol(symbol);
 		commerceCurrency.setRate(rate);
@@ -630,6 +640,16 @@ public class CommerceCurrencyLocalServiceImpl
 
 		if (Validator.isNull(code)) {
 			throw new CommerceCurrencyCodeException();
+		}
+
+		CommerceCurrency oldCommerceCurrency =
+			commerceCurrencyPersistence.fetchByC_C(companyId, code);
+
+		if ((oldCommerceCurrency != null) &&
+			(commerceCurrencyId !=
+				oldCommerceCurrency.getCommerceCurrencyId())) {
+
+			throw new DuplicateCommerceCurrencyException();
 		}
 
 		String name = nameMap.get(LocaleUtil.getSiteDefault());

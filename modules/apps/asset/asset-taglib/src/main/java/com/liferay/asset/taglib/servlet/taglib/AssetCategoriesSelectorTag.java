@@ -19,17 +19,24 @@ import com.liferay.depot.util.SiteConnectedGroupGroupProviderUtil;
 import com.liferay.item.selector.ItemSelector;
 import com.liferay.item.selector.criteria.InfoItemItemSelectorReturnType;
 import com.liferay.item.selector.criteria.info.item.criterion.InfoItemItemSelectorCriterion;
+import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
+import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalServiceUtil;
 import com.liferay.learn.LearnMessage;
 import com.liferay.learn.LearnMessageUtil;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.petra.string.StringUtil;
+import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.model.LayoutPrototype;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactory;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactoryUtil;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
+import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
+import com.liferay.portal.kernel.service.LayoutPrototypeLocalServiceUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
@@ -108,6 +115,10 @@ public class AssetCategoriesSelectorTag extends IncludeTag {
 		return _singleSelect;
 	}
 
+	public boolean isUseDataCategoriesAttribute() {
+		return _useDataCategoriesAttribute;
+	}
+
 	public void setCategoryIds(String categoryIds) {
 		_categoryIds = categoryIds;
 	}
@@ -165,6 +176,12 @@ public class AssetCategoriesSelectorTag extends IncludeTag {
 		_singleSelect = singleSelect;
 	}
 
+	public void setUseDataCategoriesAttribute(
+		boolean useDataCategoriesAttribute) {
+
+		_useDataCategoriesAttribute = useDataCategoriesAttribute;
+	}
+
 	public void setVisibilityTypes(int[] visibilityTypes) {
 		_visibilityTypes = visibilityTypes;
 	}
@@ -186,6 +203,7 @@ public class AssetCategoriesSelectorTag extends IncludeTag {
 		_showOnlyRequiredVocabularies = false;
 		_showRequiredLabel = true;
 		_singleSelect = false;
+		_useDataCategoriesAttribute = false;
 		_visibilityTypes = _VISIBILITY_TYPES;
 	}
 
@@ -209,14 +227,14 @@ public class AssetCategoriesSelectorTag extends IncludeTag {
 				String categoryNames = StringPool.BLANK;
 
 				if (Validator.isNotNull(_className) && (_classPK > 0)) {
-					List<AssetCategory> categories =
+					List<AssetCategory> assetCategories =
 						AssetCategoryServiceUtil.getCategories(
 							_className, _classPK);
 
 					categoryIds = ListUtil.toString(
-						categories, AssetCategory.CATEGORY_ID_ACCESSOR);
+						assetCategories, AssetCategory.CATEGORY_ID_ACCESSOR);
 					categoryNames = ListUtil.toString(
-						categories, AssetCategory.NAME_ACCESSOR);
+						assetCategories, AssetCategory.NAME_ACCESSOR);
 				}
 
 				if (!_ignoreRequestValue) {
@@ -269,7 +287,7 @@ public class AssetCategoriesSelectorTag extends IncludeTag {
 			if (ArrayUtil.isEmpty(_groupIds)) {
 				return SiteConnectedGroupGroupProviderUtil.
 					getCurrentAndAncestorSiteAndDepotGroupIds(
-						themeDisplay.getScopeGroupId());
+						_getGroupId(themeDisplay.getScopeGroup()));
 			}
 
 			return SiteConnectedGroupGroupProviderUtil.
@@ -328,15 +346,16 @@ public class AssetCategoriesSelectorTag extends IncludeTag {
 
 		List<String[]> categoryIdsTitles = getCategoryIdsTitles();
 		IntegerWrapper index = new IntegerWrapper(-1);
-		List<AssetVocabulary> vocabularies = _getVocabularies();
+		List<AssetVocabulary> assetVocabularies = _getVocabularies();
 
 		return TransformUtil.transform(
-			vocabularies,
-			vocabulary -> {
+			assetVocabularies,
+			assetVocabulary -> {
 				index.increment();
 
 				if (!ArrayUtil.contains(
-						getVisibilityTypes(), vocabulary.getVisibilityType())) {
+						getVisibilityTypes(),
+						assetVocabulary.getVisibilityType())) {
 
 					return null;
 				}
@@ -345,10 +364,10 @@ public class AssetCategoriesSelectorTag extends IncludeTag {
 					categoryIdsTitles.get(index.getValue())[0];
 
 				return HashMapBuilder.<String, Object>put(
-					"id", vocabulary.getVocabularyId()
+					"id", assetVocabulary.getVocabularyId()
 				).put(
 					"required",
-					vocabulary.isRequired(
+					assetVocabulary.isRequired(
 						PortalUtil.getClassNameId(_className), _classTypePK,
 						themeDisplay.getScopeGroupId()) &&
 					_showRequiredLabel
@@ -385,14 +404,15 @@ public class AssetCategoriesSelectorTag extends IncludeTag {
 						return selectedItems;
 					}
 				).put(
-					"singleSelect", _singleSelect || !vocabulary.isMultiValued()
+					"singleSelect",
+					_singleSelect || !assetVocabulary.isMultiValued()
 				).put(
 					"title",
-					vocabulary.getUnambiguousTitle(
-						vocabularies, themeDisplay.getScopeGroupId(),
+					assetVocabulary.getUnambiguousTitle(
+						assetVocabularies, themeDisplay.getScopeGroupId(),
 						themeDisplay.getLocale())
 				).put(
-					"visibilityType", vocabulary.getVisibilityType()
+					"visibilityType", assetVocabulary.getVisibilityType()
 				).build();
 			});
 	}
@@ -433,12 +453,36 @@ public class AssetCategoriesSelectorTag extends IncludeTag {
 				).put(
 					"showLabel", isShowLabel()
 				).put(
+					"useDataCategoriesAttribute", isUseDataCategoriesAttribute()
+				).put(
 					"vocabularies", getVocabularies()
 				).build());
 		}
 		catch (Exception exception) {
 			_log.error(exception);
 		}
+	}
+
+	private long _getGroupId(Group group) throws PortalException {
+		if (group.isLayoutPrototype()) {
+			LayoutPrototype layoutPrototype =
+				LayoutPrototypeLocalServiceUtil.getLayoutPrototype(
+					group.getClassPK());
+
+			LayoutPageTemplateEntry layoutPageTemplateEntry =
+				LayoutPageTemplateEntryLocalServiceUtil.
+					fetchFirstLayoutPageTemplateEntry(
+						layoutPrototype.getLayoutPrototypeId());
+
+			if ((layoutPageTemplateEntry != null) &&
+				(layoutPageTemplateEntry.getGroupId() > 0)) {
+
+				group = GroupLocalServiceUtil.getGroup(
+					layoutPageTemplateEntry.getGroupId());
+			}
+		}
+
+		return group.getGroupId();
 	}
 
 	private String _getId() {
@@ -482,9 +526,9 @@ public class AssetCategoriesSelectorTag extends IncludeTag {
 	}
 
 	private List<AssetVocabulary> _getVocabularies() {
-		List<AssetVocabulary> vocabularies = new ArrayList<>();
+		List<AssetVocabulary> assetVocabularies = new ArrayList<>();
 
-		vocabularies.addAll(
+		assetVocabularies.addAll(
 			AssetVocabularyServiceUtil.getGroupVocabularies(
 				getGroupIds(), _visibilityTypes));
 
@@ -494,21 +538,21 @@ public class AssetCategoriesSelectorTag extends IncludeTag {
 			(ThemeDisplay)httpServletRequest.getAttribute(
 				WebKeys.THEME_DISPLAY);
 
-		vocabularies.sort(
+		assetVocabularies.sort(
 			new AssetVocabularyGroupLocalizedTitleComparator(
 				themeDisplay.getScopeGroupId(), themeDisplay.getLocale(),
 				true));
 
 		if (Validator.isNotNull(_className)) {
-			vocabularies = AssetVocabularyUtil.filterVocabularies(
-				vocabularies, _className, _classTypePK);
+			assetVocabularies = AssetVocabularyUtil.filterVocabularies(
+				assetVocabularies, _className, _classTypePK);
 		}
 
 		return ListUtil.filter(
-			vocabularies,
-			vocabulary -> {
+			assetVocabularies,
+			assetVocabulary -> {
 				if (_showOnlyRequiredVocabularies &&
-					!vocabulary.isRequired(
+					!assetVocabulary.isRequired(
 						PortalUtil.getClassNameId(_className), _classTypePK,
 						themeDisplay.getScopeGroupId())) {
 
@@ -541,6 +585,7 @@ public class AssetCategoriesSelectorTag extends IncludeTag {
 	private boolean _showOnlyRequiredVocabularies;
 	private boolean _showRequiredLabel = true;
 	private boolean _singleSelect;
+	private boolean _useDataCategoriesAttribute;
 	private int[] _visibilityTypes = _VISIBILITY_TYPES;
 
 }

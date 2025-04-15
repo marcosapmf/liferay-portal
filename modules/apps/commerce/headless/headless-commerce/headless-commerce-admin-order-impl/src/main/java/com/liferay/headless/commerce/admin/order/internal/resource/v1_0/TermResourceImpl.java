@@ -63,8 +63,9 @@ public class TermResourceImpl extends BaseTermResourceImpl {
 		throws Exception {
 
 		CommerceTermEntry commerceTermEntry =
-			_commerceTermEntryService.fetchByExternalReferenceCode(
-				contextCompany.getCompanyId(), externalReferenceCode);
+			_commerceTermEntryService.
+				fetchCommerceTermEntryByExternalReferenceCode(
+					contextCompany.getCompanyId(), externalReferenceCode);
 
 		if (commerceTermEntry == null) {
 			throw new NoSuchTermEntryException(
@@ -93,8 +94,9 @@ public class TermResourceImpl extends BaseTermResourceImpl {
 		throws Exception {
 
 		CommerceTermEntry commerceTermEntry =
-			_commerceTermEntryService.fetchByExternalReferenceCode(
-				contextCompany.getCompanyId(), externalReferenceCode);
+			_commerceTermEntryService.
+				fetchCommerceTermEntryByExternalReferenceCode(
+					contextCompany.getCompanyId(), externalReferenceCode);
 
 		if (commerceTermEntry == null) {
 			throw new NoSuchTermEntryException(
@@ -138,8 +140,9 @@ public class TermResourceImpl extends BaseTermResourceImpl {
 		throws Exception {
 
 		CommerceTermEntry commerceTermEntry =
-			_commerceTermEntryService.fetchByExternalReferenceCode(
-				contextCompany.getCompanyId(), externalReferenceCode);
+			_commerceTermEntryService.
+				fetchCommerceTermEntryByExternalReferenceCode(
+					contextCompany.getCompanyId(), externalReferenceCode);
 
 		if (commerceTermEntry == null) {
 			throw new NoSuchTermEntryException(
@@ -153,6 +156,46 @@ public class TermResourceImpl extends BaseTermResourceImpl {
 	@Override
 	public Term postTerm(Term term) throws Exception {
 		return _toTerm(_addCommerceTermEntry(term));
+	}
+
+	@Override
+	public Term putTermByExternalReferenceCode(
+			String externalReferenceCode, Term term)
+		throws Exception {
+
+		CommerceTermEntry commerceTermEntry =
+			_commerceTermEntryService.
+				fetchCommerceTermEntryByExternalReferenceCode(
+					contextCompany.getCompanyId(), externalReferenceCode);
+
+		if (commerceTermEntry == null) {
+			return postTerm(term);
+		}
+
+		ServiceContext serviceContext =
+			_serviceContextHelper.getServiceContext();
+
+		DateConfig displayDateConfig = DateConfig.toDisplayDateConfig(
+			term.getDisplayDate(), serviceContext.getTimeZone());
+		DateConfig expirationDateConfig = DateConfig.toExpirationDateConfig(
+			term.getExpirationDate(), serviceContext.getTimeZone());
+
+		commerceTermEntry = _commerceTermEntryService.updateCommerceTermEntry(
+			commerceTermEntry.getCommerceTermEntryId(),
+			GetterUtil.getBoolean(term.getActive()),
+			LanguageUtils.getLocalizedMap(term.getDescription()),
+			displayDateConfig.getMonth(), displayDateConfig.getDay(),
+			displayDateConfig.getYear(), displayDateConfig.getHour(),
+			displayDateConfig.getMinute(), expirationDateConfig.getMonth(),
+			expirationDateConfig.getDay(), expirationDateConfig.getYear(),
+			expirationDateConfig.getHour(), expirationDateConfig.getMinute(),
+			GetterUtil.getBoolean(term.getNeverExpire()),
+			LanguageUtils.getLocalizedMap(term.getLabel()),
+			GetterUtil.getString(term.getName()),
+			GetterUtil.getDouble(term.getPriority()),
+			GetterUtil.getString(term.getTypeSettings()), serviceContext);
+
+		return _toTerm(_updateNestedResources(commerceTermEntry, term));
 	}
 
 	private CommerceTermEntry _addCommerceTermEntry(Term term)

@@ -206,7 +206,8 @@ public class JavaComponentAnnotationsCheck extends JavaAnnotationsCheck {
 					addMessage(
 						fileName,
 						"@Component classes should only specify one service " +
-							"type in the 'service' attribute, see LPS-180838");
+							"type in the \"service\" attribute, see " +
+								"LPS-180838");
 
 					break;
 				}
@@ -240,7 +241,8 @@ public class JavaComponentAnnotationsCheck extends JavaAnnotationsCheck {
 		if ((immediateAttributeValue != null) &&
 			immediateAttributeValue.equals("true")) {
 
-			addMessage(fileName, "Do not use 'immediate = true' in @Component");
+			addMessage(
+				fileName, "Do not use \"immediate = true\" in @Component");
 		}
 	}
 
@@ -288,8 +290,9 @@ public class JavaComponentAnnotationsCheck extends JavaAnnotationsCheck {
 			addMessage(
 				fileName,
 				StringBundler.concat(
-					"The 'service' attribute points to '", fullyQualifiedName,
-					"', which is an internal class or interface"));
+					"The \"service\" attribute points to \"",
+					fullyQualifiedName,
+					"\", which is an internal class or interface"));
 
 			return;
 		}
@@ -319,8 +322,9 @@ public class JavaComponentAnnotationsCheck extends JavaAnnotationsCheck {
 			addMessage(
 				fileName,
 				StringBundler.concat(
-					"The 'service' attribute points to '", fullyQualifiedName,
-					"', which is an internal class or interface"));
+					"The \"service\" attribute points to \"",
+					fullyQualifiedName,
+					"\", which is an internal class or interface"));
 		}
 	}
 
@@ -418,7 +422,7 @@ public class JavaComponentAnnotationsCheck extends JavaAnnotationsCheck {
 
 				addMessage(
 					fileName,
-					"Missing @Component 'configurationPid' attribute, see " +
+					"Missing @Component \"configurationPid\" attribute, see " +
 						"LPS-88783");
 
 				break;
@@ -518,8 +522,8 @@ public class JavaComponentAnnotationsCheck extends JavaAnnotationsCheck {
 
 			if (javaFile == null) {
 				String message = StringBundler.concat(
-					"Remove '", configurationClass,
-					"' from 'configurationPid' as the configuration class ",
+					"Remove \"", configurationClass,
+					"\" from \"configurationPid\" as the configuration class ",
 					"does not exist");
 
 				addMessage(fileName, message);
@@ -708,7 +712,7 @@ public class JavaComponentAnnotationsCheck extends JavaAnnotationsCheck {
 		if (checkMismatchedServiceAttribute &&
 			!serviceAttributeValue.equals(expectedServiceAttributeValue)) {
 
-			addMessage(fileName, "Mismatched @Component 'service' attribute");
+			addMessage(fileName, "Mismatched @Component \"service\" attribute");
 		}
 
 		String className = javaClass.getName();
@@ -734,8 +738,8 @@ public class JavaComponentAnnotationsCheck extends JavaAnnotationsCheck {
 			if (!allowed) {
 				addMessage(
 					fileName,
-					"No need to register '" + className +
-						"' in @Component 'service' attribute");
+					"No need to register \"" + className +
+						"\" in @Component \"service\" attribute");
 			}
 		}
 

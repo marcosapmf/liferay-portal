@@ -7,7 +7,8 @@ import ClayButton from '@clayui/button';
 import ClayForm, {ClayInput} from '@clayui/form';
 import ClayModal, {useModal} from '@clayui/modal';
 import {usePrevious} from '@liferay/frontend-js-react-web';
-import {addParams, openSelectionModal, sub} from 'frontend-js-web';
+import {openSelectionModal} from 'frontend-js-components-web';
+import {addParams, sub} from 'frontend-js-web';
 import React, {useState} from 'react';
 
 import FieldBase from '../FieldBase/ReactFieldBase.es';
@@ -119,7 +120,9 @@ const ImagePicker = ({
 		}
 
 		openSelectionModal({
-			onClose: () => onBlur(event),
+			onClose: () => {
+				setTimeout(() => onBlur(event), 100);
+			},
 			onSelect: handleFieldChanged,
 			selectEventName: `${portletNamespace}selectDocumentLibrary`,
 			title: sub(
@@ -256,6 +259,7 @@ const ImagePicker = ({
 								disabled={readOnly}
 								lang={editingLanguageId}
 								name={`${name}-description`}
+								onBlur={onBlur}
 								onChange={({event, target: {value}}) =>
 									dispatchValue(
 										{value: {description: value, event}},

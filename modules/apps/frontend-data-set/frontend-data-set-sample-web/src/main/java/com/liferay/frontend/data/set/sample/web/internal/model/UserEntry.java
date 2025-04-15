@@ -11,8 +11,10 @@ package com.liferay.frontend.data.set.sample.web.internal.model;
 public class UserEntry {
 
 	public UserEntry(
-		String emailAddress, String firstName, Long id, String lastName) {
+		Boolean active, String emailAddress, String firstName, Long id,
+		String lastName) {
 
+		_active = active;
 		_emailAddress = emailAddress;
 		_firstName = firstName;
 		_id = id;
@@ -35,6 +37,11 @@ public class UserEntry {
 		return _lastName;
 	}
 
+	public Boolean isActive() {
+		return _active;
+	}
+
+	private final Boolean _active;
 	private final String _emailAddress;
 	private final String _firstName;
 	private final Long _id;

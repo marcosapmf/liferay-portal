@@ -202,7 +202,7 @@ public class ObjectEntryInfoItemFormProviderTest {
 				null, TestPropsValues.getUserId(),
 				parentObjectDefinition.getObjectDefinitionId(),
 				_childObjectDefinition.getObjectDefinitionId(), 0,
-				ObjectRelationshipConstants.DELETION_TYPE_CASCADE,
+				ObjectRelationshipConstants.DELETION_TYPE_CASCADE, false,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				StringUtil.randomId(), false,
 				ObjectRelationshipConstants.TYPE_ONE_TO_MANY, null);
@@ -295,13 +295,14 @@ public class ObjectEntryInfoItemFormProviderTest {
 		throws Exception {
 
 		return _objectDefinitionLocalService.addCustomObjectDefinition(
-			TestPropsValues.getUserId(), 0, false, true, false, false,
+			TestPropsValues.getUserId(), 0, null, false, false, true, false,
+			false, false,
 			LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 			ObjectDefinitionTestUtil.getRandomName(), null, null,
 			LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 			true, ObjectDefinitionConstants.SCOPE_SITE,
 			ObjectDefinitionConstants.STORAGE_TYPE_DEFAULT,
-			Arrays.asList(objectFields));
+			Collections.emptyList(), Arrays.asList(objectFields));
 	}
 
 	private void _addObjectStateTransition(

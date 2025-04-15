@@ -192,7 +192,7 @@
 			"key": "portalBatchName",
 			"label": "Portal Batch Name",
 			"type": "string",
-			"valueDescription": "e.g. functional-tomcat90-mysql57-jdk8"
+			"valueDescription": "e.g. functional-tomcat90-mysql57"
 		},
 		{
 			"externalReferenceCode": "portalBatchTestSelector",
@@ -276,8 +276,8 @@
 			"key": "portalPatchTicketURL",
 			"label": "Portal Patch Ticket URL",
 			"type": "url",
-			"valueDefault": "https://help.liferay.com/hc/en-us/requests/PATCHERTEST",
-			"valueDescription": "e.g. https://help.liferay.com/hc/en-us/requests/PATCHERTEST",
+			"valueDefault": "https://mirrors.lax.liferay.com/hc/en-us/requests/PATCHERTEST",
+			"valueDescription": "e.g. https://mirrors.lax.liferay.com/hc/en-us/requests/PATCHERTEST",
 			"valueRegex": "https?://.+"
 		},
 		{

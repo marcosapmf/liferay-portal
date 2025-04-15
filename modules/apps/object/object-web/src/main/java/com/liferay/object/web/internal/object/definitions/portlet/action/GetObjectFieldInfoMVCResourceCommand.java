@@ -16,7 +16,6 @@ import com.liferay.object.service.ObjectFieldLocalService;
 import com.liferay.object.service.ObjectRelationshipLocalService;
 import com.liferay.object.web.internal.object.definitions.display.context.util.ObjectCodeEditorUtil;
 import com.liferay.object.web.internal.util.ObjectFieldBusinessTypeUtil;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.portlet.JSONPortletResponseUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCResourceCommand;
@@ -90,19 +89,19 @@ public class GetObjectFieldInfoMVCResourceCommand
 			).put(
 				"objectRelationshipId",
 				() -> {
-					if (StringUtil.equals(
+					if (!StringUtil.equals(
 							objectField.getBusinessType(),
 							ObjectFieldConstants.BUSINESS_TYPE_RELATIONSHIP)) {
 
-						ObjectRelationship objectRelationship =
-							_objectRelationshipLocalService.
-								fetchObjectRelationshipByObjectFieldId2(
-									objectField.getObjectFieldId());
-
-						return objectRelationship.getObjectRelationshipId();
+						return null;
 					}
 
-					return null;
+					ObjectRelationship objectRelationship =
+						_objectRelationshipLocalService.
+							fetchObjectRelationshipByObjectFieldId2(
+								objectField.getObjectFieldId());
+
+					return objectRelationship.getObjectRelationshipId();
 				}
 			).put(
 				"readOnlySidebarElements",
@@ -110,7 +109,7 @@ public class GetObjectFieldInfoMVCResourceCommand
 					ddmExpressionFunction ->
 						!ObjectCodeEditorUtil.DDMExpressionFunction.OLD_VALUE.
 							equals(ddmExpressionFunction),
-					ddmExpressionOperator -> true, true, locale,
+					ddmExpressionOperator -> true, true, false, locale,
 					objectDefinition.getObjectDefinitionId(),
 					objectField1 -> !objectField1.compareBusinessType(
 						ObjectFieldConstants.BUSINESS_TYPE_AGGREGATION))
@@ -119,22 +118,22 @@ public class GetObjectFieldInfoMVCResourceCommand
 				() -> {
 					if (StringUtil.equals(
 							objectField.getBusinessType(),
-							ObjectFieldConstants.BUSINESS_TYPE_FORMULA) &&
-						FeatureFlagManagerUtil.isEnabled("LPS-164948")) {
+							ObjectFieldConstants.BUSINESS_TYPE_FORMULA)) {
 
 						return ObjectCodeEditorUtil.getCodeEditorElements(
 							ddmExpressionFunction -> false,
 							ddmExpressionOperator ->
 								_filterableDDMExpressionOperators.contains(
 									ddmExpressionOperator),
-							false, locale, objectField.getObjectDefinitionId(),
+							false, true, locale,
+							objectField.getObjectDefinitionId(),
 							objectField2 ->
 								_filterableObjectFieldBusinessTypes.contains(
 									objectField2.getBusinessType()));
 					}
 
 					return ObjectCodeEditorUtil.getCodeEditorElements(
-						true, false, locale,
+						true, false, false, locale,
 						objectField.getObjectDefinitionId(),
 						objectField3 -> !objectField3.isSystem());
 				}

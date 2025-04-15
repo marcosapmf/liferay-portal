@@ -168,6 +168,47 @@ public class TestrayStatusMetric implements Serializable {
 	private Supplier<Long> _inProgressSupplier;
 
 	@Schema
+	public Long getIncomplete() {
+		if (_incompleteSupplier != null) {
+			incomplete = _incompleteSupplier.get();
+
+			_incompleteSupplier = null;
+		}
+
+		return incomplete;
+	}
+
+	public void setIncomplete(Long incomplete) {
+		this.incomplete = incomplete;
+
+		_incompleteSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setIncomplete(
+		UnsafeSupplier<Long, Exception> incompleteUnsafeSupplier) {
+
+		_incompleteSupplier = () -> {
+			try {
+				return incompleteUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected Long incomplete;
+
+	@JsonIgnore
+	private Supplier<Long> _incompleteSupplier;
+
+	@Schema
 	public Long getPassed() {
 		if (_passedSupplier != null) {
 			passed = _passedSupplier.get();
@@ -392,6 +433,18 @@ public class TestrayStatusMetric implements Serializable {
 			sb.append(inProgress);
 		}
 
+		Long incomplete = getIncomplete();
+
+		if (incomplete != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"incomplete\": ");
+
+			sb.append(incomplete);
+		}
+
 		Long passed = getPassed();
 
 		if (passed != null) {
@@ -492,7 +545,10 @@ public class TestrayStatusMetric implements Serializable {
 				Object[] valueArray = (Object[])value;
 
 				for (int i = 0; i < valueArray.length; i++) {
-					if (valueArray[i] instanceof String) {
+					if (valueArray[i] instanceof Map) {
+						sb.append(_toJSON((Map<String, ?>)valueArray[i]));
+					}
+					else if (valueArray[i] instanceof String) {
 						sb.append("\"");
 						sb.append(valueArray[i]);
 						sb.append("\"");

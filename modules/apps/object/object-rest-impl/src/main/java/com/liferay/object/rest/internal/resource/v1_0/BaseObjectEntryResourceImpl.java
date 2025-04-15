@@ -6,6 +6,8 @@
 package com.liferay.object.rest.internal.resource.v1_0;
 
 import com.liferay.object.rest.dto.v1_0.ObjectEntry;
+import com.liferay.object.rest.dto.v1_0.ValidationRequest;
+import com.liferay.object.rest.dto.v1_0.ValidationResponse;
 import com.liferay.object.rest.resource.v1_0.ObjectEntryResource;
 import com.liferay.petra.function.UnsafeBiConsumer;
 import com.liferay.petra.function.UnsafeConsumer;
@@ -16,8 +18,6 @@ import com.liferay.portal.kernel.model.Resource;
 import com.liferay.portal.kernel.model.ResourceAction;
 import com.liferay.portal.kernel.model.ResourceConstants;
 import com.liferay.portal.kernel.model.ResourcePermission;
-import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.service.GroupLocalService;
@@ -26,6 +26,7 @@ import com.liferay.portal.kernel.service.ResourceActionLocalService;
 import com.liferay.portal.kernel.service.ResourceLocalServiceUtil;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
+import com.liferay.portal.kernel.service.permission.ModelPermissions;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.GroupThreadLocal;
 import com.liferay.portal.kernel.util.HashMapBuilder;
@@ -44,12 +45,14 @@ import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
 import com.liferay.portal.vulcan.batch.engine.VulcanBatchEngineTaskItemDelegate;
 import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineExportTaskResource;
 import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineImportTaskResource;
+import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegate;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.portal.vulcan.permission.ModelPermissionsUtil;
 import com.liferay.portal.vulcan.permission.Permission;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 import com.liferay.portal.vulcan.util.ActionUtil;
+import com.liferay.portal.vulcan.util.UriInfoUtil;
 
 import java.io.Serializable;
 
@@ -80,7 +83,8 @@ import javax.ws.rs.core.UriInfo;
 @Generated("")
 public abstract class BaseObjectEntryResourceImpl
 	implements EntityModelResource, ObjectEntryResource,
-			   VulcanBatchEngineTaskItemDelegate<ObjectEntry> {
+			   VulcanBatchEngineTaskItemDelegate<ObjectEntry>,
+			   VulcanCRUDItemDelegate<ObjectEntry> {
 
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
@@ -142,9 +146,11 @@ public abstract class BaseObjectEntryResourceImpl
 			String search,
 			@javax.ws.rs.core.Context
 				com.liferay.portal.vulcan.aggregation.Aggregation aggregation,
-			@javax.ws.rs.core.Context Filter filter,
+			@javax.ws.rs.core.Context
+				com.liferay.portal.kernel.search.filter.Filter filter,
 			@javax.ws.rs.core.Context Pagination pagination,
-			@javax.ws.rs.core.Context Sort[] sorts)
+			@javax.ws.rs.core.Context com.liferay.portal.kernel.search.Sort[]
+				sorts)
 		throws Exception {
 
 		return Page.of(Collections.emptyList());
@@ -190,8 +196,10 @@ public abstract class BaseObjectEntryResourceImpl
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
 			@javax.ws.rs.QueryParam("search")
 			String search,
-			@javax.ws.rs.core.Context Filter filter,
-			@javax.ws.rs.core.Context Sort[] sorts,
+			@javax.ws.rs.core.Context
+				com.liferay.portal.kernel.search.filter.Filter filter,
+			@javax.ws.rs.core.Context com.liferay.portal.kernel.search.Sort[]
+				sorts,
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
 			@javax.ws.rs.QueryParam("callbackURL")
 			String callbackURL,
@@ -415,13 +423,42 @@ public abstract class BaseObjectEntryResourceImpl
 			existingObjectEntry.setDateModified(objectEntry.getDateModified());
 		}
 
+		if (objectEntry.getDefaultLanguageId() != null) {
+			existingObjectEntry.setDefaultLanguageId(
+				objectEntry.getDefaultLanguageId());
+		}
+
 		if (objectEntry.getExternalReferenceCode() != null) {
 			existingObjectEntry.setExternalReferenceCode(
 				objectEntry.getExternalReferenceCode());
 		}
 
+		if (objectEntry.getFriendlyUrlPath() != null) {
+			existingObjectEntry.setFriendlyUrlPath(
+				objectEntry.getFriendlyUrlPath());
+		}
+
+		if (objectEntry.getFriendlyUrlPath_i18n() != null) {
+			existingObjectEntry.setFriendlyUrlPath_i18n(
+				objectEntry.getFriendlyUrlPath_i18n());
+		}
+
 		if (objectEntry.getKeywords() != null) {
 			existingObjectEntry.setKeywords(objectEntry.getKeywords());
+		}
+
+		if (objectEntry.getObjectEntryFolderExternalReferenceCode() != null) {
+			existingObjectEntry.setObjectEntryFolderExternalReferenceCode(
+				objectEntry.getObjectEntryFolderExternalReferenceCode());
+		}
+
+		if (objectEntry.getObjectEntryFolderId() != null) {
+			existingObjectEntry.setObjectEntryFolderId(
+				objectEntry.getObjectEntryFolderId());
+		}
+
+		if (objectEntry.getPermissions() != null) {
+			existingObjectEntry.setPermissions(objectEntry.getPermissions());
 		}
 
 		if (objectEntry.getProperties() != null) {
@@ -469,6 +506,112 @@ public abstract class BaseObjectEntryResourceImpl
 		throws Exception {
 
 		return new ObjectEntry();
+	}
+
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "externalReferenceCode"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "version"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "ObjectEntry")}
+	)
+	@javax.ws.rs.GET
+	@javax.ws.rs.Path(
+		"/by-external-reference-code/{externalReferenceCode}/by-version/{version}"
+	)
+	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
+	public ObjectEntry getByExternalReferenceCodeByVersion(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull
+			@javax.ws.rs.PathParam("externalReferenceCode")
+			String externalReferenceCode,
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull
+			@javax.ws.rs.PathParam("version")
+			Integer version)
+		throws Exception {
+
+		return new ObjectEntry();
+	}
+
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "externalReferenceCode"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "version"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "ObjectEntry")}
+	)
+	@javax.ws.rs.Path(
+		"/by-external-reference-code/{externalReferenceCode}/by-version/{version}/restore"
+	)
+	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@javax.ws.rs.PUT
+	@Override
+	public ObjectEntry putByExternalReferenceCodeByVersionRestore(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull
+			@javax.ws.rs.PathParam("externalReferenceCode")
+			String externalReferenceCode,
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull
+			@javax.ws.rs.PathParam("version")
+			Integer version)
+		throws Exception {
+
+		return new ObjectEntry();
+	}
+
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "externalReferenceCode"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "page"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "pageSize"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "ObjectEntry")}
+	)
+	@javax.ws.rs.GET
+	@javax.ws.rs.Path(
+		"/by-external-reference-code/{externalReferenceCode}/versions"
+	)
+	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
+	public Page<ObjectEntry> getByExternalReferenceCodeVersionsPage(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull
+			@javax.ws.rs.PathParam("externalReferenceCode")
+			String externalReferenceCode,
+			@javax.ws.rs.core.Context Pagination pagination)
+		throws Exception {
+
+		return Page.of(Collections.emptyList());
 	}
 
 	@io.swagger.v3.oas.annotations.Parameters(
@@ -631,13 +774,42 @@ public abstract class BaseObjectEntryResourceImpl
 			existingObjectEntry.setDateModified(objectEntry.getDateModified());
 		}
 
+		if (objectEntry.getDefaultLanguageId() != null) {
+			existingObjectEntry.setDefaultLanguageId(
+				objectEntry.getDefaultLanguageId());
+		}
+
 		if (objectEntry.getExternalReferenceCode() != null) {
 			existingObjectEntry.setExternalReferenceCode(
 				objectEntry.getExternalReferenceCode());
 		}
 
+		if (objectEntry.getFriendlyUrlPath() != null) {
+			existingObjectEntry.setFriendlyUrlPath(
+				objectEntry.getFriendlyUrlPath());
+		}
+
+		if (objectEntry.getFriendlyUrlPath_i18n() != null) {
+			existingObjectEntry.setFriendlyUrlPath_i18n(
+				objectEntry.getFriendlyUrlPath_i18n());
+		}
+
 		if (objectEntry.getKeywords() != null) {
 			existingObjectEntry.setKeywords(objectEntry.getKeywords());
+		}
+
+		if (objectEntry.getObjectEntryFolderExternalReferenceCode() != null) {
+			existingObjectEntry.setObjectEntryFolderExternalReferenceCode(
+				objectEntry.getObjectEntryFolderExternalReferenceCode());
+		}
+
+		if (objectEntry.getObjectEntryFolderId() != null) {
+			existingObjectEntry.setObjectEntryFolderId(
+				objectEntry.getObjectEntryFolderId());
+		}
+
+		if (objectEntry.getPermissions() != null) {
+			existingObjectEntry.setPermissions(objectEntry.getPermissions());
 		}
 
 		if (objectEntry.getProperties() != null) {
@@ -736,6 +908,47 @@ public abstract class BaseObjectEntryResourceImpl
 				@javax.ws.rs.PathParam("objectActionName")
 				String objectActionName)
 		throws Exception {
+	}
+
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "scopeKey"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "ObjectEntry")}
+	)
+	@javax.ws.rs.Consumes({"application/json", "application/xml"})
+	@javax.ws.rs.Path("/scopes/{scopeKey}/validate")
+	@javax.ws.rs.POST
+	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
+	public ValidationResponse postScopeScopeKeyValidate(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull
+			@javax.ws.rs.PathParam("scopeKey")
+			String scopeKey,
+			ValidationRequest validationRequest)
+		throws Exception {
+
+		return new ValidationResponse();
+	}
+
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "ObjectEntry")}
+	)
+	@javax.ws.rs.Consumes({"application/json", "application/xml"})
+	@javax.ws.rs.Path("/validate")
+	@javax.ws.rs.POST
+	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
+	public ValidationResponse postValidate(ValidationRequest validationRequest)
+		throws Exception {
+
+		return new ValidationResponse();
 	}
 
 	@io.swagger.v3.oas.annotations.Parameters(
@@ -871,13 +1084,42 @@ public abstract class BaseObjectEntryResourceImpl
 			existingObjectEntry.setDateModified(objectEntry.getDateModified());
 		}
 
+		if (objectEntry.getDefaultLanguageId() != null) {
+			existingObjectEntry.setDefaultLanguageId(
+				objectEntry.getDefaultLanguageId());
+		}
+
 		if (objectEntry.getExternalReferenceCode() != null) {
 			existingObjectEntry.setExternalReferenceCode(
 				objectEntry.getExternalReferenceCode());
 		}
 
+		if (objectEntry.getFriendlyUrlPath() != null) {
+			existingObjectEntry.setFriendlyUrlPath(
+				objectEntry.getFriendlyUrlPath());
+		}
+
+		if (objectEntry.getFriendlyUrlPath_i18n() != null) {
+			existingObjectEntry.setFriendlyUrlPath_i18n(
+				objectEntry.getFriendlyUrlPath_i18n());
+		}
+
 		if (objectEntry.getKeywords() != null) {
 			existingObjectEntry.setKeywords(objectEntry.getKeywords());
+		}
+
+		if (objectEntry.getObjectEntryFolderExternalReferenceCode() != null) {
+			existingObjectEntry.setObjectEntryFolderExternalReferenceCode(
+				objectEntry.getObjectEntryFolderExternalReferenceCode());
+		}
+
+		if (objectEntry.getObjectEntryFolderId() != null) {
+			existingObjectEntry.setObjectEntryFolderId(
+				objectEntry.getObjectEntryFolderId());
+		}
+
+		if (objectEntry.getPermissions() != null) {
+			existingObjectEntry.setPermissions(objectEntry.getPermissions());
 		}
 
 		if (objectEntry.getProperties() != null) {
@@ -963,6 +1205,72 @@ public abstract class BaseObjectEntryResourceImpl
 			vulcanBatchEngineImportTaskResource.putImportTask(
 				ObjectEntry.class.getName(), callbackURL, object)
 		).build();
+	}
+
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "objectEntryId"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "version"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "ObjectEntry")}
+	)
+	@javax.ws.rs.GET
+	@javax.ws.rs.Path("/{objectEntryId}/by-version/{version}")
+	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
+	public ObjectEntry getObjectEntryByVersion(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull
+			@javax.ws.rs.PathParam("objectEntryId")
+			Long objectEntryId,
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull
+			@javax.ws.rs.PathParam("version")
+			Integer version)
+		throws Exception {
+
+		return new ObjectEntry();
+	}
+
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "objectEntryId"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "version"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "ObjectEntry")}
+	)
+	@javax.ws.rs.Path("/{objectEntryId}/by-version/{version}/restore")
+	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@javax.ws.rs.PUT
+	@Override
+	public ObjectEntry putObjectEntryByVersionRestore(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull
+			@javax.ws.rs.PathParam("objectEntryId")
+			Long objectEntryId,
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull
+			@javax.ws.rs.PathParam("version")
+			Integer version)
+		throws Exception {
+
+		return new ObjectEntry();
 	}
 
 	@io.swagger.v3.oas.annotations.Parameters(
@@ -1090,14 +1398,43 @@ public abstract class BaseObjectEntryResourceImpl
 			getPermissionCheckerGroupId(objectEntryId), resourceName,
 			resourceId);
 
-		resourcePermissionLocalService.updateResourcePermissions(
-			contextCompany.getCompanyId(),
-			getPermissionCheckerGroupId(objectEntryId), resourceName,
-			String.valueOf(resourceId),
+		ModelPermissions modelPermissions =
 			ModelPermissionsUtil.toModelPermissions(
 				contextCompany.getCompanyId(), permissions, resourceId,
 				resourceName, resourceActionLocalService,
-				resourcePermissionLocalService, roleLocalService));
+				resourcePermissionLocalService, roleLocalService);
+
+		Collection<String> roleNames = modelPermissions.getRoleNames();
+
+		for (ResourcePermission resourcePermission :
+				resourcePermissionLocalService.getResourcePermissions(
+					contextCompany.getCompanyId(), resourceName,
+					ResourceConstants.SCOPE_INDIVIDUAL,
+					String.valueOf(resourceId))) {
+
+			com.liferay.portal.kernel.model.Role role =
+				roleLocalService.fetchRole(resourcePermission.getRoleId());
+
+			if ((role == null) || roleNames.contains(role.getName())) {
+				continue;
+			}
+
+			for (ResourceAction resourceAction :
+					resourceActionLocalService.getResourceActions(
+						resourceName)) {
+
+				resourcePermissionLocalService.removeResourcePermission(
+					contextCompany.getCompanyId(), resourceName,
+					ResourceConstants.SCOPE_INDIVIDUAL,
+					String.valueOf(resourceId), role.getRoleId(),
+					resourceAction.getActionId());
+			}
+		}
+
+		resourcePermissionLocalService.updateResourcePermissions(
+			contextCompany.getCompanyId(),
+			getPermissionCheckerGroupId(objectEntryId), resourceName,
+			String.valueOf(resourceId), modelPermissions);
 
 		return toPermissionPage(
 			HashMapBuilder.put(
@@ -1112,6 +1449,40 @@ public abstract class BaseObjectEntryResourceImpl
 					resourceName, resourceId)
 			).build(),
 			resourceId, resourceName, null);
+	}
+
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "objectEntryId"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "page"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "pageSize"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "ObjectEntry")}
+	)
+	@javax.ws.rs.GET
+	@javax.ws.rs.Path("/{objectEntryId}/versions")
+	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
+	public Page<ObjectEntry> getObjectEntriesVersionsPage(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull
+			@javax.ws.rs.PathParam("objectEntryId")
+			Long objectEntryId,
+			@javax.ws.rs.core.Context Pagination pagination)
+		throws Exception {
+
+		return Page.of(Collections.emptyList());
 	}
 
 	@io.swagger.v3.oas.annotations.Parameters(
@@ -1181,9 +1552,11 @@ public abstract class BaseObjectEntryResourceImpl
 			String search,
 			@javax.ws.rs.core.Context
 				com.liferay.portal.vulcan.aggregation.Aggregation aggregation,
-			@javax.ws.rs.core.Context Filter filter,
+			@javax.ws.rs.core.Context
+				com.liferay.portal.kernel.search.filter.Filter filter,
 			@javax.ws.rs.core.Context Pagination pagination,
-			@javax.ws.rs.core.Context Sort[] sorts)
+			@javax.ws.rs.core.Context com.liferay.portal.kernel.search.Sort[]
+				sorts)
 		throws Exception {
 
 		return Page.of(Collections.emptyList());
@@ -1271,8 +1644,46 @@ public abstract class BaseObjectEntryResourceImpl
 			Map<String, Serializable> parameters)
 		throws Exception {
 
-		for (ObjectEntry objectEntry : objectEntries) {
-			deleteObjectEntry(objectEntry.getId());
+		UnsafeFunction<ObjectEntry, ObjectEntry, Exception>
+			objectEntryUnsafeFunction = objectEntry -> {
+				if (objectEntry.getId() != null) {
+					try {
+						deleteObjectEntry(objectEntry.getId());
+
+						return objectEntry;
+					}
+					catch (Exception exception) {
+						if (objectEntry.getExternalReferenceCode() != null) {
+							deleteByExternalReferenceCode(
+								objectEntry.getExternalReferenceCode());
+
+							return objectEntry;
+						}
+					}
+				}
+				else if (objectEntry.getExternalReferenceCode() != null) {
+					deleteByExternalReferenceCode(
+						objectEntry.getExternalReferenceCode());
+
+					return objectEntry;
+				}
+
+				throw new UnsupportedOperationException(
+					"Unable to delete by external reference code or ID");
+			};
+
+		if (contextBatchUnsafeBiConsumer != null) {
+			contextBatchUnsafeBiConsumer.accept(
+				objectEntries, objectEntryUnsafeFunction);
+		}
+		else if (contextBatchUnsafeConsumer != null) {
+			contextBatchUnsafeConsumer.accept(
+				objectEntries, objectEntryUnsafeFunction::apply);
+		}
+		else {
+			for (ObjectEntry objectEntry : objectEntries) {
+				objectEntryUnsafeFunction.apply(objectEntry);
+			}
 		}
 	}
 
@@ -1309,7 +1720,9 @@ public abstract class BaseObjectEntryResourceImpl
 
 	@Override
 	public Page<ObjectEntry> read(
-			Filter filter, Pagination pagination, Sort[] sorts,
+			com.liferay.portal.kernel.search.filter.Filter filter,
+			Pagination pagination,
+			com.liferay.portal.kernel.search.Sort[] sorts,
 			Map<String, Serializable> parameters, String search)
 		throws Exception {
 
@@ -1403,6 +1816,11 @@ public abstract class BaseObjectEntryResourceImpl
 		return null;
 	}
 
+	@Override
+	public ObjectEntry getItem(Long id) throws Exception {
+		return getObjectEntry(id);
+	}
+
 	protected String getPermissionCheckerActionsResourceName(Object id)
 		throws Exception {
 
@@ -1455,6 +1873,9 @@ public abstract class BaseObjectEntryResourceImpl
 				resourceName, null));
 	}
 
+	/**
+	 * @see com.liferay.portal.vulcan.permission.PermissionUtil#getPermissions(long, List, long, String, String[])
+	 */
 	private Collection<Permission> _getPermissions(
 			long companyId, List<ResourceAction> resourceActions,
 			long resourceId, String resourceName, String[] roleNames)
@@ -1606,7 +2027,8 @@ public abstract class BaseObjectEntryResourceImpl
 	}
 
 	public void setContextUriInfo(UriInfo contextUriInfo) {
-		this.contextUriInfo = contextUriInfo;
+		this.contextUriInfo = UriInfoUtil.getVulcanUriInfo(
+			getApplicationPath(), contextUriInfo);
 	}
 
 	public void setContextUser(
@@ -1616,7 +2038,8 @@ public abstract class BaseObjectEntryResourceImpl
 	}
 
 	public void setExpressionConvert(
-		ExpressionConvert<Filter> expressionConvert) {
+		ExpressionConvert<com.liferay.portal.kernel.search.filter.Filter>
+			expressionConvert) {
 
 		this.expressionConvert = expressionConvert;
 	}
@@ -1651,6 +2074,10 @@ public abstract class BaseObjectEntryResourceImpl
 		this.sortParserProvider = sortParserProvider;
 	}
 
+	protected String getApplicationPath() {
+		return null;
+	}
+
 	public void setVulcanBatchEngineExportTaskResource(
 		VulcanBatchEngineExportTaskResource
 			vulcanBatchEngineExportTaskResource) {
@@ -1668,7 +2095,7 @@ public abstract class BaseObjectEntryResourceImpl
 	}
 
 	@Override
-	public Filter toFilter(
+	public com.liferay.portal.kernel.search.filter.Filter toFilter(
 		String filterString, Map<String, List<String>> multivaluedMap) {
 
 		try {
@@ -1693,7 +2120,7 @@ public abstract class BaseObjectEntryResourceImpl
 	}
 
 	@Override
-	public Sort[] toSorts(String sortString) {
+	public com.liferay.portal.kernel.search.Sort[] toSorts(String sortString) {
 		if (Validator.isNull(sortString)) {
 			return null;
 		}
@@ -1711,13 +2138,13 @@ public abstract class BaseObjectEntryResourceImpl
 					sortParser.parse(sortString));
 
 			List<SortField> sortFields = oDataSort.getSortFields();
-
-			Sort[] sorts = new Sort[sortFields.size()];
+			com.liferay.portal.kernel.search.Sort[] sorts =
+				new com.liferay.portal.kernel.search.Sort[sortFields.size()];
 
 			for (int i = 0; i < sortFields.size(); i++) {
 				SortField sortField = sortFields.get(i);
 
-				sorts[i] = new Sort(
+				sorts[i] = new com.liferay.portal.kernel.search.Sort(
 					sortField.getSortableFieldName(
 						contextAcceptLanguage.getPreferredLocale()),
 					!sortField.isAscending());
@@ -1728,7 +2155,7 @@ public abstract class BaseObjectEntryResourceImpl
 		catch (Exception exception) {
 			_log.error("Invalid sort " + sortString, exception);
 
-			return new Sort[0];
+			return new com.liferay.portal.kernel.search.Sort[0];
 		}
 	}
 
@@ -1858,7 +2285,8 @@ public abstract class BaseObjectEntryResourceImpl
 	protected Object contextScopeChecker;
 	protected UriInfo contextUriInfo;
 	protected com.liferay.portal.kernel.model.User contextUser;
-	protected ExpressionConvert<Filter> expressionConvert;
+	protected ExpressionConvert<com.liferay.portal.kernel.search.filter.Filter>
+		expressionConvert;
 	protected FilterParserProvider filterParserProvider;
 	protected GroupLocalService groupLocalService;
 	protected ResourceActionLocalService resourceActionLocalService;

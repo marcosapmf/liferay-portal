@@ -8,6 +8,8 @@ package com.liferay.source.formatter.check;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.io.unsync.UnsyncBufferedReader;
+import com.liferay.portal.kernel.io.unsync.UnsyncStringReader;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
@@ -42,7 +44,8 @@ public class GradleDependencyArtifactsCheck extends BaseFileCheck {
 		List<String> enforceVersionArtifacts = getAttributeValues(
 			_ENFORCE_VERSION_ARTIFACTS_KEY, absolutePath);
 
-		content = _enforceDependencyVersions(content, enforceVersionArtifacts);
+		content = _enforceDependencyVersions(
+			content, enforceVersionArtifacts, absolutePath);
 
 		Matcher matcher = _artifactPattern.matcher(content);
 
@@ -64,15 +67,85 @@ public class GradleDependencyArtifactsCheck extends BaseFileCheck {
 			}
 		}
 
+		if (absolutePath.endsWith("/lib/development/dependencies.properties") ||
+			absolutePath.endsWith("/lib/portal/dependencies.properties")) {
+
+			_checkDependenciesPropertiesFile(
+				fileName, content, enforceVersionArtifacts);
+		}
+
 		return content;
 	}
 
+	private void _checkDependenciesPropertiesFile(
+			String fileName, String content,
+			List<String> enforceVersionArtifacts)
+		throws IOException {
+
+		try (UnsyncBufferedReader unsyncBufferedReader =
+				new UnsyncBufferedReader(new UnsyncStringReader(content))) {
+
+			String line = null;
+			int lineNumber = 0;
+
+			while ((line = unsyncBufferedReader.readLine()) != null) {
+				lineNumber++;
+
+				String[] parts = StringUtil.split(line, StringPool.EQUAL);
+
+				if ((parts.length != 2) ||
+					enforceVersionArtifacts.contains(parts[1])) {
+
+					continue;
+				}
+
+				String[] artifactParts = StringUtil.split(
+					parts[1], StringPool.COLON);
+
+				if (artifactParts.length != 3) {
+					continue;
+				}
+
+				String dependencyGroupAndName =
+					artifactParts[0] + ":" + artifactParts[1];
+
+				if (!ListUtil.exists(
+						enforceVersionArtifacts,
+						enforceVersionArtifact ->
+							enforceVersionArtifact.startsWith(
+								dependencyGroupAndName + ":"))) {
+
+					continue;
+				}
+
+				addMessage(
+					fileName,
+					StringBundler.concat(
+						"The version of \"", dependencyGroupAndName,
+						"\" does not match the version in \"",
+						_ENFORCE_VERSION_ARTIFACTS_KEY,
+						"\" property in source-formatter.properties"),
+					lineNumber);
+			}
+		}
+	}
+
 	private String _enforceDependencyVersions(
-		String content, List<String> enforceVersionArtifacts) {
+		String content, List<String> enforceVersionArtifacts,
+		String absolutePath) {
+
+		List<String> allowedVersionArtifacts = getAttributeValues(
+			_ALLOWED_VERSION_ARTIFACTS_KEY, absolutePath);
 
 		for (String artifact : enforceVersionArtifacts) {
 			String[] artifactParts = StringUtil.split(
 				artifact, StringPool.COLON);
+
+			if (allowedVersionArtifacts.contains(
+					artifactParts[0] + ":" + artifactParts[1])) {
+
+				continue;
+			}
 
 			Pattern pattern = Pattern.compile(
 				StringBundler.concat(
@@ -155,12 +228,14 @@ public class GradleDependencyArtifactsCheck extends BaseFileCheck {
 
 			if (version.equals("default")) {
 				addMessage(
-					fileName, "Do not use 'default' version for '" + name + "'",
+					fileName,
+					"Do not use \"default\" version for \"" + name + "\"",
 					getLineNumber(content, pos));
 			}
 			else if (name.startsWith("com.liferay") &&
-					 !name.startsWith("com.liferay.portletmvc4spring") &&
 					 !name.startsWith("com.liferay.gradle") &&
+					 !name.startsWith("com.liferay.jakarta") &&
+					 !name.startsWith("com.liferay.portletmvc4spring") &&
 					 !_isMasterOnlyFile(absolutePath)) {
 
 				for (String enforceVersionArtifact : enforceVersionArtifacts) {
@@ -183,7 +258,7 @@ public class GradleDependencyArtifactsCheck extends BaseFileCheck {
 				}
 
 				addMessage(
-					fileName, "Incorrect dependency '" + name + "'",
+					fileName, "Incorrect dependency \"" + name + "\"",
 					getLineNumber(content, pos));
 			}
 		}
@@ -334,6 +409,9 @@ public class GradleDependencyArtifactsCheck extends BaseFileCheck {
 
 	private static final String _ALLOWED_ARTIFACTS_FILE_NAMES_KEY =
 		"allowedArtifactsFileNames";
+
+	private static final String _ALLOWED_VERSION_ARTIFACTS_KEY =
+		"allowedVersionArtifacts";
 
 	private static final String _ENFORCE_VERSION_ARTIFACTS_KEY =
 		"enforceVersionArtifacts";

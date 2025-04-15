@@ -38,6 +38,16 @@ jest.mock(
 	})
 );
 
+jest.mock(
+	'../../../../src/main/resources/META-INF/resources/page_editor/app/services/serviceFetch',
+	() => jest.fn(() => Promise.resolve({}))
+);
+
+jest.mock(
+	'../../../../src/main/resources/META-INF/resources/page_editor/common/components/ItemSelector.js',
+	() => () => <div />
+);
+
 function renderCollection(itemConfig = {}) {
 	const state = {
 		permissions: {
@@ -96,43 +106,12 @@ describe('Collection', () => {
 	});
 
 	it('renders not collection message when no collection is selected', async () => {
-		CollectionService.getCollectionField.mockImplementation(() =>
-			Promise.resolve()
-		);
-
 		await act(async () => {
 			renderCollection();
 		});
 
 		expect(
-			screen.getByText('no-collection-selected-yet')
-		).toBeInTheDocument();
-	});
-
-	it('renders an item when the collection is empty', async () => {
-		CollectionService.getCollectionField.mockImplementation(() =>
-			Promise.resolve({
-				items: [],
-				length: 0,
-				totalNumberOfItems: 1,
-			})
-		);
-
-		await act(async () => {
-			renderCollection({
-				collection: {
-					itemSubtype: 'CollectionItemSubtype',
-					itemType: 'CollectionItemType',
-				},
-				listStyle: '',
-				numberOfPages: 1,
-			});
-
-			jest.runAllTimers();
-		});
-
-		expect(
-			document.body.querySelector('.page-editor__collection-item')
+			screen.getByText('select-a-collection-to-display')
 		).toBeInTheDocument();
 	});
 
@@ -239,6 +218,44 @@ describe('Collection', () => {
 		expect(
 			screen.getByText(
 				'in-edit-mode,-the-number-of-elements-displayed-is-limited-to-x-due-to-performance'
+			)
+		).toBeInTheDocument();
+	});
+
+	it('shows a permission restriction message when user does not have update permissions', async () => {
+		const items = [
+			{content: 'Item 1 Content', title: 'Item 1 Title'},
+			{content: 'Item 2 Content', title: 'Item 2 Title'},
+			{content: 'Item 3 Content', title: 'Item 3 Title'},
+		];
+
+		CollectionService.getCollectionField.mockImplementation(() =>
+			Promise.resolve({
+				isRestricted: true,
+				items,
+				length: 3,
+				totalNumberOfItems: 3,
+			})
+		);
+
+		await act(async () => {
+			renderCollection({
+				collection: {
+					classNameId: '1',
+					classPK: '1',
+					title: 'collection1',
+				},
+				numberOfItems: 3,
+				numberOfPages: 1,
+				paginationType: 'none',
+			});
+
+			jest.runAllTimers();
+		});
+
+		expect(
+			screen.getByText(
+				'this-content-cannot-be-displayed-due-to-permission-restrictions'
 			)
 		).toBeInTheDocument();
 	});

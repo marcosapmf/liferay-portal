@@ -1,0 +1,152 @@
+/**
+ * SPDX-FileCopyrightText: (c) 2025 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
+ */
+
+import {isNullOrUndefined} from '@liferay/layout-js-components-web';
+import {useCallback} from 'react';
+
+import {State, useSelector, useStateDispatch} from '../contexts/StateContext';
+import selectState from '../selectors/selectState';
+import selectStructureFields from '../selectors/selectStructureFields';
+import {Field, MultiselectField, SingleSelectField} from './field';
+import focusInvalidElement from './focusInvalidElement';
+
+export type ValidationError =
+	| 'no-erc'
+	| 'no-label'
+	| 'no-name'
+	| 'no-picklist'
+	| 'no-space';
+
+export function validateField({
+	currentErrors,
+	data,
+}: {
+	currentErrors?: Set<ValidationError>;
+	data: {
+		erc?: Field['erc'];
+		label?: Field['label'];
+		name?: Field['name'];
+		picklistId?:
+			| SingleSelectField['picklistId']
+			| MultiselectField['picklistId'];
+	};
+}): Set<ValidationError> {
+	const {erc, label, name, picklistId} = data;
+
+	const errors = new Set(currentErrors);
+
+	if (!isNullOrUndefined(erc)) {
+		erc ? errors.delete('no-erc') : errors.add('no-erc');
+	}
+
+	if (!isNullOrUndefined(name)) {
+		name ? errors.delete('no-name') : errors.add('no-name');
+	}
+
+	if (!isNullOrUndefined(label)) {
+		Object.values(label ?? {}).every(Boolean)
+			? errors.delete('no-label')
+			: errors.add('no-label');
+	}
+
+	if (!isNullOrUndefined(picklistId)) {
+		picklistId ? errors.delete('no-picklist') : errors.add('no-picklist');
+	}
+
+	return errors;
+}
+
+export function validateStructure({
+	currentErrors,
+	data,
+}: {
+	currentErrors?: Set<ValidationError>;
+	data: Partial<State>;
+}): Set<ValidationError> {
+	const {erc, label, name, spaces} = data;
+
+	const errors = new Set(currentErrors);
+
+	if (!isNullOrUndefined(erc)) {
+		erc ? errors.delete('no-erc') : errors.add('no-erc');
+	}
+
+	if (!isNullOrUndefined(name)) {
+		name ? errors.delete('no-name') : errors.add('no-name');
+	}
+
+	if (!isNullOrUndefined(label)) {
+		Object.values(label ?? {}).every(Boolean)
+			? errors.delete('no-label')
+			: errors.add('no-label');
+	}
+
+	if (!isNullOrUndefined(spaces)) {
+		spaces.length ? errors.delete('no-space') : errors.add('no-space');
+	}
+
+	return errors;
+}
+
+export function useValidate() {
+	const dispatch = useStateDispatch();
+	const fields = useSelector(selectStructureFields);
+	const state = useSelector(selectState);
+
+	return useCallback(() => {
+
+		// Check at least one field is added
+
+		if (!fields.length) {
+			dispatch({
+				error: Liferay.Language.get(
+					'at-least-one-field-must-be-added-to-save-or-publish-the-structure'
+				),
+				type: 'set-error',
+			});
+
+			return false;
+		}
+
+		// Validate structure
+
+		let errors: Set<ValidationError> = new Set();
+
+		const invalids = new Map(state.invalids);
+
+		errors = validateStructure({data: state});
+
+		if (errors.size) {
+			invalids.set(state.uuid, errors);
+		}
+
+		// Validate fields
+
+		for (const field of fields) {
+			errors = validateField({data: field});
+
+			if (errors.size) {
+				invalids.set(field.uuid, errors);
+			}
+		}
+
+		// If there's some invalid, dispatch validate action
+
+		if (invalids.size) {
+			dispatch({
+				invalids,
+				type: 'validate',
+			});
+
+			focusInvalidElement();
+
+			return false;
+		}
+
+		// It's valid
+
+		return true;
+	}, [dispatch, fields, state]);
+}

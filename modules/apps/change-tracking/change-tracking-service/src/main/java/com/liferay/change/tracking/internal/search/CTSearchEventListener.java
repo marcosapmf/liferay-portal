@@ -116,6 +116,8 @@ public class CTSearchEventListener implements CTEventListener {
 
 						_reindex(
 							ctEntryEntry.getKey(), ctEntryEntry.getValue());
+
+						_ctEntryIndexer.reindex(ctEntries);
 					}
 				}
 
@@ -254,6 +256,11 @@ public class CTSearchEventListener implements CTEventListener {
 
 	@Reference
 	private CTCollectionLocalService _ctCollectionLocalService;
+
+	@Reference(
+		target = "(indexer.class.name=com.liferay.change.tracking.model.CTEntry)"
+	)
+	private Indexer<CTEntry> _ctEntryIndexer;
 
 	@Reference
 	private CTEntryLocalService _ctEntryLocalService;

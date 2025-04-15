@@ -8,13 +8,16 @@ package com.liferay.portal.search.web.internal;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.module.configuration.ConfigurationProviderUtil;
+import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.module.configuration.ConfigurationException;
 import com.liferay.portal.kernel.search.facet.Facet;
 import com.liferay.portal.kernel.search.facet.collector.FacetCollector;
 import com.liferay.portal.kernel.search.facet.collector.TermCollector;
+import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.theme.PortletDisplay;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.search.web.internal.facet.display.context.BucketDisplayContext;
 import com.liferay.portal.search.web.internal.facet.display.context.FacetDisplayContext;
@@ -134,6 +137,37 @@ public abstract class BaseFacetDisplayContextTestCase {
 	}
 
 	@Test
+	public void testGetDisplayStyleGroup() throws Exception {
+		Group group1 = getGroup();
+
+		setUpGroupLocalServiceUtil(group1);
+
+		setUpPortletDisplayStyleGroupExternalReferenceCode(null);
+
+		Group group2 = getGroup();
+
+		_assertDisplayContext(group2);
+
+		groupLocalServiceUtilMockedStatic.verifyNoInteractions();
+	}
+
+	@Test
+	public void testGetDisplayStyleGroupWithConfiguration() throws Exception {
+		Group group = getGroup();
+
+		setUpGroupLocalServiceUtil(group);
+		setUpPortletDisplayStyleGroupExternalReferenceCode(
+			group.getExternalReferenceCode());
+
+		_assertDisplayContext(group);
+
+		groupLocalServiceUtilMockedStatic.verify(
+			() -> GroupLocalServiceUtil.fetchGroupByExternalReferenceCode(
+				group.getExternalReferenceCode(), 0L),
+			Mockito.times(1));
+	}
+
+	@Test
 	public void testOneTerm() throws Exception {
 		String term = createTerm();
 
@@ -218,7 +252,7 @@ public abstract class BaseFacetDisplayContextTestCase {
 		testOrderBy(
 			expectedFrequenciesFrequencyAscending,
 			expectedTermsFrequencyAscending, new int[] {6, 5, 5, 4},
-			"count:asc", new String[] {"charlie", "delta", "bravo", "alpha"});
+			"count:asc", new String[] {"Burro", "Caballo", "Árbol", "Abeja"});
 	}
 
 	@Test
@@ -226,7 +260,7 @@ public abstract class BaseFacetDisplayContextTestCase {
 		testOrderBy(
 			expectedFrequenciesFrequencyDescending,
 			expectedTermsFrequencyDescending, new int[] {4, 5, 5, 6},
-			"count:desc", new String[] {"alpha", "delta", "bravo", "charlie"});
+			"count:desc", new String[] {"Abeja", "Caballo", "Árbol", "Burro"});
 	}
 
 	@Test
@@ -234,7 +268,7 @@ public abstract class BaseFacetDisplayContextTestCase {
 		testOrderBy(
 			expectedFrequenciesValueAscending, expectedTermsValueAscending,
 			new int[] {2, 3, 4, 5}, "key:asc",
-			new String[] {"bravo", "alpha", "bravo", "charlie"});
+			new String[] {"Árbol", "Abeja", "Árbol", "Burro"});
 	}
 
 	@Test
@@ -242,7 +276,7 @@ public abstract class BaseFacetDisplayContextTestCase {
 		testOrderBy(
 			expectedFrequenciesValueDescending, expectedTermsValueDescending,
 			new int[] {2, 3, 4, 5}, "key:desc",
-			new String[] {"bravo", "alpha", "bravo", "charlie"});
+			new String[] {"Árbol", "Abeja", "Árbol", "Burro"});
 	}
 
 	protected static String buildExpectedNameFrequencyString(
@@ -287,7 +321,7 @@ public abstract class BaseFacetDisplayContextTestCase {
 			HttpServletRequest.class);
 
 		Mockito.doReturn(
-			getThemeDisplay()
+			getThemeDisplay(null)
 		).when(
 			httpServletRequest
 		).getAttribute(
@@ -312,10 +346,16 @@ public abstract class BaseFacetDisplayContextTestCase {
 	protected static RenderRequest getRenderRequest()
 		throws ConfigurationException {
 
+		return getRenderRequest(null);
+	}
+
+	protected static RenderRequest getRenderRequest(Group group)
+		throws ConfigurationException {
+
 		RenderRequest renderRequest = Mockito.mock(RenderRequest.class);
 
 		Mockito.doReturn(
-			getThemeDisplay()
+			getThemeDisplay(group)
 		).when(
 			renderRequest
 		).getAttribute(
@@ -337,14 +377,28 @@ public abstract class BaseFacetDisplayContextTestCase {
 		return termCollectors;
 	}
 
-	protected static ThemeDisplay getThemeDisplay() {
+	protected static ThemeDisplay getThemeDisplay(Group group) {
 		ThemeDisplay themeDisplay = Mockito.mock(ThemeDisplay.class);
+
+		Mockito.doReturn(
+			LocaleUtil.getDefault()
+		).when(
+			themeDisplay
+		).getLocale();
 
 		Mockito.doReturn(
 			getPortletDisplay()
 		).when(
 			themeDisplay
 		).getPortletDisplay();
+
+		if (group != null) {
+			Mockito.doReturn(
+				group
+			).when(
+				themeDisplay
+			).getScopeGroup();
+		}
 
 		return themeDisplay;
 	}
@@ -403,12 +457,47 @@ public abstract class BaseFacetDisplayContextTestCase {
 		return RandomTestUtil.randomString();
 	}
 
+	protected abstract FacetDisplayContext getFacetDisplayContext(Group group)
+		throws Exception;
+
 	protected String getFilterValue(String term) {
 		return term;
 	}
 
+	protected Group getGroup() {
+		Group group = Mockito.mock(Group.class);
+
+		Mockito.when(
+			group.getExternalReferenceCode()
+		).thenReturn(
+			RandomTestUtil.randomString()
+		);
+
+		Mockito.when(
+			group.getGroupId()
+		).thenReturn(
+			RandomTestUtil.randomLong()
+		);
+
+		return group;
+	}
+
 	protected void setUpAsset(String term) throws Exception {
 	}
+
+	protected void setUpGroupLocalServiceUtil(Group group) throws Exception {
+		groupLocalServiceUtilMockedStatic.reset();
+
+		Mockito.when(
+			GroupLocalServiceUtil.fetchGroupByExternalReferenceCode(
+				group.getExternalReferenceCode(), 0L)
+		).thenReturn(
+			group
+		);
+	}
+
+	protected abstract void setUpPortletDisplayStyleGroupExternalReferenceCode(
+		String externalReferenceCode);
 
 	protected void testOrderBy(
 			int[] expectedFrequencies, String[] expectedTerms,
@@ -420,25 +509,35 @@ public abstract class BaseFacetDisplayContextTestCase {
 
 	protected static MockedStatic<ConfigurationProviderUtil>
 		configurationProviderUtilMockedStatic;
+	protected static final MockedStatic<GroupLocalServiceUtil>
+		groupLocalServiceUtilMockedStatic = Mockito.mockStatic(
+			GroupLocalServiceUtil.class);
 
 	protected int[] expectedFrequenciesFrequencyAscending = {4, 5, 5, 6};
 	protected int[] expectedFrequenciesFrequencyDescending = {6, 5, 5, 4};
 	protected int[] expectedFrequenciesValueAscending = {3, 4, 2, 5};
 	protected int[] expectedFrequenciesValueDescending = {5, 4, 2, 3};
 	protected String[] expectedTermsFrequencyAscending = {
-		"alpha", "bravo", "delta", "charlie"
+		"Abeja", "Árbol", "Caballo", "Burro"
 	};
 	protected String[] expectedTermsFrequencyDescending = {
-		"charlie", "bravo", "delta", "alpha"
+		"Burro", "Árbol", "Caballo", "Abeja"
 	};
 	protected String[] expectedTermsValueAscending = {
-		"alpha", "bravo", "bravo", "charlie"
+		"Abeja", "Árbol", "Árbol", "Burro"
 	};
 	protected String[] expectedTermsValueDescending = {
-		"charlie", "bravo", "bravo", "alpha"
+		"Burro", "Árbol", "Árbol", "Abeja"
 	};
 	protected final Facet facet = Mockito.mock(Facet.class);
 	protected final FacetCollector facetCollector = Mockito.mock(
 		FacetCollector.class);
+
+	private void _assertDisplayContext(Group group) throws Exception {
+		FacetDisplayContext facetDisplayContext = getFacetDisplayContext(group);
+
+		Assert.assertEquals(
+			group.getGroupId(), facetDisplayContext.getDisplayStyleGroupId());
+	}
 
 }

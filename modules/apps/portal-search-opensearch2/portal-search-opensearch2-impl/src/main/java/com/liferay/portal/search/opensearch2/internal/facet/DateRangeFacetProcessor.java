@@ -62,17 +62,11 @@ public class DateRangeFacetProcessor
 		for (int i = 0; i < jsonArray.length(); i++) {
 			JSONObject rangeJSONObject = jsonArray.getJSONObject(i);
 
-			String label = rangeJSONObject.getString("label");
-
-			if (Validator.isBlank(label)) {
-				label = rangeJSONObject.getString("range");
-			}
+			String range = rangeJSONObject.getString("range");
 
 			dateRangeAggregationBuilder.ranges(
 				_createDateRangeExpression(
-					label,
-					RangeParserUtil.parserRange(
-						rangeJSONObject.getString("range"))));
+					range, RangeParserUtil.parserRange(range)));
 		}
 
 		return aggregationBuilder.dateRange(
@@ -82,16 +76,25 @@ public class DateRangeFacetProcessor
 	private DateRangeExpression _createDateRangeExpression(
 		String key, String[] rangeParts) {
 
-		return DateRangeExpression.of(
-			dateRangeExpression -> dateRangeExpression.key(
-				key
-			).from(
+		DateRangeExpression.Builder builder = new DateRangeExpression.Builder();
+
+		if (!Validator.isBlank(rangeParts[0])) {
+			builder.from(
 				FieldDateMath.of(
-					fieldDateMath -> fieldDateMath.expr(rangeParts[0]))
-			).to(
+					fieldDateMath -> fieldDateMath.expr(rangeParts[0])));
+		}
+
+		if (!Validator.isBlank(key)) {
+			builder.key(key);
+		}
+
+		if (!Validator.isBlank(rangeParts[1])) {
+			builder.to(
 				FieldDateMath.of(
-					fieldDateMath -> fieldDateMath.expr(rangeParts[1]))
-			));
+					fieldDateMath -> fieldDateMath.expr(rangeParts[1])));
+		}
+
+		return builder.build();
 	}
 
 }

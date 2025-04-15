@@ -88,7 +88,7 @@ public class JournalDDMStructuresDisplayContext {
 			groupIds =
 				SiteConnectedGroupGroupProviderUtil.
 					getCurrentAndAncestorSiteAndDepotGroupIds(
-						_themeDisplay.getScopeGroupId(), true);
+						_themeDisplay.getScopeGroupId(), false, true);
 		}
 
 		long[] structureGroupIds = groupIds;
@@ -176,11 +176,7 @@ public class JournalDDMStructuresDisplayContext {
 	}
 
 	public boolean isSearch() {
-		if (Validator.isNotNull(_getKeywords())) {
-			return true;
-		}
-
-		return false;
+		return Validator.isNotNull(_getKeywords());
 	}
 
 	private String _getKeywords() {

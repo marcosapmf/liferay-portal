@@ -31,21 +31,21 @@ public interface AddressResource {
 		return new Builder();
 	}
 
-	public Address getCartByExternalReferenceCodeBillingAddres(
+	public Address getCartByExternalReferenceCodeBillingAddress(
 			String externalReferenceCode)
 		throws Exception;
 
 	public HttpInvoker.HttpResponse
-			getCartByExternalReferenceCodeBillingAddresHttpResponse(
+			getCartByExternalReferenceCodeBillingAddressHttpResponse(
 				String externalReferenceCode)
 		throws Exception;
 
-	public Address getCartByExternalReferenceCodeShippingAddres(
+	public Address getCartByExternalReferenceCodeShippingAddress(
 			String externalReferenceCode)
 		throws Exception;
 
 	public HttpInvoker.HttpResponse
-			getCartByExternalReferenceCodeShippingAddresHttpResponse(
+			getCartByExternalReferenceCodeShippingAddressHttpResponse(
 				String externalReferenceCode)
 		throws Exception;
 
@@ -159,8 +159,8 @@ public interface AddressResource {
 		private Map<String, String> _headers = new LinkedHashMap<>();
 		private String _host = "localhost";
 		private Locale _locale;
-		private String _login = "";
-		private String _password = "";
+		private String _login;
+		private String _password;
 		private Map<String, String> _parameters = new LinkedHashMap<>();
 		private int _port = 8080;
 		private String _scheme = "http";
@@ -169,12 +169,12 @@ public interface AddressResource {
 
 	public static class AddressResourceImpl implements AddressResource {
 
-		public Address getCartByExternalReferenceCodeBillingAddres(
+		public Address getCartByExternalReferenceCodeBillingAddress(
 				String externalReferenceCode)
 			throws Exception {
 
 			HttpInvoker.HttpResponse httpResponse =
-				getCartByExternalReferenceCodeBillingAddresHttpResponse(
+				getCartByExternalReferenceCodeBillingAddressHttpResponse(
 					externalReferenceCode);
 
 			String content = httpResponse.getContent();
@@ -238,7 +238,7 @@ public interface AddressResource {
 		}
 
 		public HttpInvoker.HttpResponse
-				getCartByExternalReferenceCodeBillingAddresHttpResponse(
+				getCartByExternalReferenceCodeBillingAddressHttpResponse(
 					String externalReferenceCode)
 			throws Exception {
 
@@ -270,18 +270,20 @@ public interface AddressResource {
 
 			httpInvoker.path("externalReferenceCode", externalReferenceCode);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
 
-		public Address getCartByExternalReferenceCodeShippingAddres(
+		public Address getCartByExternalReferenceCodeShippingAddress(
 				String externalReferenceCode)
 			throws Exception {
 
 			HttpInvoker.HttpResponse httpResponse =
-				getCartByExternalReferenceCodeShippingAddresHttpResponse(
+				getCartByExternalReferenceCodeShippingAddressHttpResponse(
 					externalReferenceCode);
 
 			String content = httpResponse.getContent();
@@ -345,7 +347,7 @@ public interface AddressResource {
 		}
 
 		public HttpInvoker.HttpResponse
-				getCartByExternalReferenceCodeShippingAddresHttpResponse(
+				getCartByExternalReferenceCodeShippingAddressHttpResponse(
 					String externalReferenceCode)
 			throws Exception {
 
@@ -377,8 +379,10 @@ public interface AddressResource {
 
 			httpInvoker.path("externalReferenceCode", externalReferenceCode);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
@@ -479,8 +483,10 @@ public interface AddressResource {
 
 			httpInvoker.path("cartId", cartId);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
@@ -581,8 +587,10 @@ public interface AddressResource {
 
 			httpInvoker.path("cartId", cartId);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}

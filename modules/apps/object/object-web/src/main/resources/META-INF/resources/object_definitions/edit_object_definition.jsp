@@ -39,6 +39,10 @@ String screenNavigationCategoryKey = ParamUtil.getString(request, "screenNavigat
 						).put(
 							"isApproved", objectDefinition.isApproved()
 						).put(
+							"isRootDescendantNode", objectDefinition.isRootDescendantNode()
+						).put(
+							"isRootNode", objectDefinition.isRootNode()
+						).put(
 							"label", objectDefinition.getLabel(locale, true)
 						).put(
 							"objectDefinitionExternalReferenceCode", objectDefinition.getExternalReferenceCode()
@@ -60,6 +64,7 @@ String screenNavigationCategoryKey = ParamUtil.getString(request, "screenNavigat
 	<liferay-frontend:screen-navigation
 		context="<%= objectDefinition %>"
 		key="<%= ObjectDefinitionsScreenNavigationEntryConstants.SCREEN_NAVIGATION_KEY_OBJECT_DEFINITION %>"
+		navBarCssClass="lfr-object__edit-object-definition__screen-navigation"
 		portletURL='<%=
 			PortletURLBuilder.createRenderURL(
 				renderResponse

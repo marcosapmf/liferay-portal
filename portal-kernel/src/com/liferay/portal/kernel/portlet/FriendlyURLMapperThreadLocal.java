@@ -5,6 +5,9 @@
 
 package com.liferay.portal.kernel.portlet;
 
+import com.liferay.petra.lang.CentralizedThreadLocal;
+import com.liferay.petra.lang.SafeCloseable;
+
 import java.util.Map;
 
 /**
@@ -12,15 +15,31 @@ import java.util.Map;
  */
 public class FriendlyURLMapperThreadLocal {
 
+	public static Map<String, String[]> getParentParameters() {
+		return _parentParameters.get();
+	}
+
 	public static Map<String, String> getPRPIdentifiers() {
 		return _prpIdentifiers.get();
 	}
 
-	public static void setPRPIdentifiers(Map<String, String> prpIdentifiers) {
-		_prpIdentifiers.set(prpIdentifiers);
+	public static SafeCloseable setParentParametersWithSafeCloseable(
+		Map<String, String[]> parentParameters) {
+
+		return _parentParameters.setWithSafeCloseable(parentParameters);
 	}
 
-	private static final ThreadLocal<Map<String, String>> _prpIdentifiers =
-		new ThreadLocal<>();
+	public static SafeCloseable setPRPIdentifiersWithSafeCloseable(
+		Map<String, String> prpIdentifiers) {
+
+		return _prpIdentifiers.setWithSafeCloseable(prpIdentifiers);
+	}
+
+	private static final CentralizedThreadLocal<Map<String, String[]>>
+		_parentParameters = new CentralizedThreadLocal<>(
+			FriendlyURLMapperThreadLocal.class + "._parentParameters");
+	private static final CentralizedThreadLocal<Map<String, String>>
+		_prpIdentifiers = new CentralizedThreadLocal<>(
+			FriendlyURLMapperThreadLocal.class + "._prpIdentifiers");
 
 }

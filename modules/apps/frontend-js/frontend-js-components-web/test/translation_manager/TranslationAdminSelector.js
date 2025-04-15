@@ -3,8 +3,10 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {act, cleanup, fireEvent, render} from '@testing-library/react';
+import {act, cleanup, fireEvent, render, within} from '@testing-library/react';
 import React from 'react';
+
+import '@testing-library/jest-dom';
 
 import '@testing-library/jest-dom/extend-expect';
 
@@ -95,12 +97,15 @@ const availableLocales = [
 
 const defaultLanguageId = 'en_US';
 
+const selectedLanguageId = 'en_US';
+
 const props = {
 	activeLanguageIds,
 	availableLocales,
 	defaultLanguageId,
 	onActiveLanguageIdsChange: jest.fn(),
 	onSelectedLanguageIdChange: jest.fn(),
+	selectedLanguageId,
 };
 
 jest.mock(
@@ -167,6 +172,10 @@ describe('TranslationAdminSelector', () => {
 
 	it('renders a dropdown trigger with the selected locale flag icon as content', () => {
 		const {asFragment} = render(<TranslationAdminSelector {...props} />);
+
+		const buttonElement = document.querySelector('button');
+
+		buttonElement.id = '';
 
 		expect(asFragment()).toMatchSnapshot();
 	});
@@ -267,7 +276,9 @@ describe('TranslationAdminSelector', () => {
 	});
 
 	it('calls onSelectedLocaleChange callback on dropdown locale selection', () => {
-		const {getByTitle} = render(<TranslationAdminSelector {...props} />);
+		const {getByRole, getByTitle} = render(
+			<TranslationAdminSelector {...props} />
+		);
 
 		const trigger = getByTitle('select-a-language');
 
@@ -291,6 +302,10 @@ describe('TranslationAdminSelector', () => {
 		expect(props.onSelectedLanguageIdChange).toHaveBeenLastCalledWith(
 			'ca_ES'
 		);
+
+		const languageSelector = getByRole('combobox');
+
+		expect(within(languageSelector).getByText('ca-ES')).toBeInTheDocument();
 	});
 
 	it('is used as a controlled component', () => {
@@ -356,8 +371,6 @@ describe('TranslationAdminSelector', () => {
 	});
 
 	it('renders horizontal selector when the display type is HORIZONTAL', () => {
-		Liferay.FeatureFlags['LPS-114700'] = true;
-
 		render(
 			<TranslationAdminSelector
 				displayType="HORIZONTAL"
@@ -370,9 +383,7 @@ describe('TranslationAdminSelector', () => {
 			'.form-control-select'
 		);
 
-		expect(horizontalSelector).toBeInTheDocument();
-
-		Liferay.FeatureFlags['LPS-114700'] = false;
+		expect(horizontalSelector).toBeTruthy();
 	});
 
 	it('calls onSelectorActiveChange when the trigger is clicked', () => {

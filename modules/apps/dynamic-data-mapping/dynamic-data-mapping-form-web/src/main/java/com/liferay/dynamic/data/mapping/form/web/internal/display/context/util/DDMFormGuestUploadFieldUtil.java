@@ -19,7 +19,6 @@ import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -46,23 +45,21 @@ public class DDMFormGuestUploadFieldUtil {
 			return false;
 		}
 
+		int count = 0;
+
 		DDMFormInstanceRecordLocalService ddmFormInstanceRecordLocalService =
 			_ddmFormInstanceRecordLocalServiceSnapshot.get();
 
-		List<DDMFormInstanceRecord> ddmFormInstanceRecords =
-			ddmFormInstanceRecordLocalService.getFormInstanceRecords(
-				ddmFormInstance.getFormInstanceId(),
-				WorkflowConstants.STATUS_ANY, QueryUtil.ALL_POS,
-				QueryUtil.ALL_POS, null);
-
-		for (int i = 0; i < ddmFormInstanceRecords.size(); i++) {
-			DDMFormInstanceRecord ddmFormInstanceRecord =
-				ddmFormInstanceRecords.get(i);
+		for (DDMFormInstanceRecord ddmFormInstanceRecord :
+				ddmFormInstanceRecordLocalService.getFormInstanceRecords(
+					ddmFormInstance.getFormInstanceId(),
+					WorkflowConstants.STATUS_ANY, QueryUtil.ALL_POS,
+					QueryUtil.ALL_POS, null)) {
 
 			if (Objects.equals(
 					ddmFormInstanceRecord.getIpAddress(),
 					httpServletRequest.getRemoteAddr()) &&
-				((i + 1) == guestUploadMaximumSubmissions)) {
+				(++count == guestUploadMaximumSubmissions)) {
 
 				return true;
 			}

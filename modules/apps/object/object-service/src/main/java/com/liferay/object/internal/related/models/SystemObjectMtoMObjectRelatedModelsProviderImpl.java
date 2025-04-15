@@ -177,7 +177,8 @@ public class SystemObjectMtoMObjectRelatedModelsProviderImpl
 	@Override
 	public List<T> getUnrelatedModels(
 			long companyId, long groupId, ObjectDefinition objectDefinition,
-			long objectEntryId, long objectRelationshipId, int start, int end)
+			long objectEntryId, long objectRelationshipId, String search,
+			int start, int end)
 		throws PortalException {
 
 		PersistedModelLocalService persistedModelLocalService =
@@ -199,7 +200,7 @@ public class SystemObjectMtoMObjectRelatedModelsProviderImpl
 	@Override
 	public int getUnrelatedModelsCount(
 			long companyId, long groupId, ObjectDefinition objectDefinition,
-			long objectEntryId, long objectRelationshipId)
+			long objectEntryId, long objectRelationshipId, String search)
 		throws PortalException {
 
 		PersistedModelLocalService persistedModelLocalService =
@@ -269,7 +270,10 @@ public class SystemObjectMtoMObjectRelatedModelsProviderImpl
 					if ((groupIdColumn == null) ||
 						Objects.equals(
 							ObjectDefinitionConstants.SCOPE_COMPANY,
-							objectDefinition1.getScope())) {
+							objectDefinition1.getScope()) ||
+						Objects.equals(
+							ObjectDefinitionConstants.SCOPE_COMPANY,
+							objectDefinition2.getScope())) {
 
 						return null;
 					}
@@ -298,7 +302,7 @@ public class SystemObjectMtoMObjectRelatedModelsProviderImpl
 
 	private GroupByStep _getUnrelatedModelsGroupByStep(
 			long companyId, FromStep fromStep, long groupId,
-			ObjectDefinition objectDefinition, long objectEntryId,
+			ObjectDefinition objectDefinition2, long objectEntryId,
 			long objectRelationshipId)
 		throws PortalException {
 
@@ -317,7 +321,7 @@ public class SystemObjectMtoMObjectRelatedModelsProviderImpl
 			dynamicObjectRelationshipMappingTable =
 				new DynamicObjectRelationshipMappingTable(
 					objectDefinition1.getPKObjectFieldDBColumnName(),
-					objectDefinition.getPKObjectFieldDBColumnName(),
+					objectDefinition2.getPKObjectFieldDBColumnName(),
 					objectRelationship.getDBTableName());
 
 		return fromStep.from(
@@ -332,7 +336,10 @@ public class SystemObjectMtoMObjectRelatedModelsProviderImpl
 					if ((groupIdColumn == null) ||
 						Objects.equals(
 							ObjectDefinitionConstants.SCOPE_COMPANY,
-							objectDefinition1.getScope())) {
+							objectDefinition1.getScope()) ||
+						Objects.equals(
+							ObjectDefinitionConstants.SCOPE_COMPANY,
+							objectDefinition2.getScope())) {
 
 						return null;
 					}
@@ -351,12 +358,13 @@ public class SystemObjectMtoMObjectRelatedModelsProviderImpl
 												getPKObjectFieldDBColumnName());
 
 					Column<?, Long> primaryKeyColumn2 = _table.getColumn(
-						objectDefinition.getPKObjectFieldDBColumnName());
+						objectDefinition2.getPKObjectFieldDBColumnName());
 
 					return primaryKeyColumn2.notIn(
 						DSLQueryFactoryUtil.select(
 							dynamicObjectRelationshipMappingTable.getColumn(
-								objectDefinition.getPKObjectFieldDBColumnName())
+								objectDefinition2.
+									getPKObjectFieldDBColumnName())
 						).from(
 							dynamicObjectRelationshipMappingTable
 						).where(

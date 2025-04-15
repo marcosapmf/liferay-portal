@@ -30,13 +30,14 @@ public class KaleoDefinitionServiceWrapper
 
 	@Override
 	public KaleoDefinition addKaleoDefinition(
-			String name, String title, String description, String content,
-			String scope, int version,
+			String externalReferenceCode, String name, String title,
+			String description, String content, String scope, int version,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _kaleoDefinitionService.addKaleoDefinition(
-			name, title, description, content, scope, version, serviceContext);
+			externalReferenceCode, name, title, description, content, scope,
+			version, serviceContext);
 	}
 
 	@Override
@@ -44,6 +45,15 @@ public class KaleoDefinitionServiceWrapper
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _kaleoDefinitionService.getKaleoDefinition(kaleoDefinitionId);
+	}
+
+	@Override
+	public KaleoDefinition getKaleoDefinition(
+			String externalReferenceCode, long companyId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _kaleoDefinitionService.getKaleoDefinition(
+			externalReferenceCode, companyId);
 	}
 
 	@Override
@@ -91,13 +101,14 @@ public class KaleoDefinitionServiceWrapper
 
 	@Override
 	public KaleoDefinition updateKaleoDefinition(
-			long kaleoDefinitionId, String title, String description,
-			String content,
+			String externalReferenceCode, long kaleoDefinitionId, String title,
+			String description, String content,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _kaleoDefinitionService.updateKaleoDefinition(
-			kaleoDefinitionId, title, description, content, serviceContext);
+			externalReferenceCode, kaleoDefinitionId, title, description,
+			content, serviceContext);
 	}
 
 	@Override

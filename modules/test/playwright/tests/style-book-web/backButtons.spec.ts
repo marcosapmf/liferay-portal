@@ -18,7 +18,7 @@ import {navigationMenusPagesTest} from '../site-navigation-admin-web/fixtures/na
 export const test = mergeTests(
 	apiHelpersTest,
 	featureFlagsTest({
-		'LPS-178052': true,
+		'LPS-178052': {enabled: true},
 	}),
 	isolatedSiteTest,
 	journalPagesTest,
@@ -48,7 +48,7 @@ test('Back buttons have correct title in different sections', async ({
 
 	await styleBooksPage.goto(site.friendlyUrlPath);
 
-	await styleBooksPage.createStyleBook(styleBookName);
+	await styleBooksPage.create(styleBookName);
 
 	await checkBackButtonTitle(page, 'Go to Style Books');
 

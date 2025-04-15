@@ -6,7 +6,6 @@
 package com.liferay.headless.commerce.admin.account.internal.resource.v1_0;
 
 import com.liferay.account.exception.NoSuchEntryException;
-import com.liferay.account.exception.NoSuchGroupException;
 import com.liferay.account.model.AccountEntry;
 import com.liferay.account.model.AccountGroup;
 import com.liferay.account.service.AccountEntryService;
@@ -40,11 +39,13 @@ import org.osgi.service.component.annotations.ServiceScope;
 
 /**
  * @author Alessio Antonio Rendina
+ * @deprecated As of Cavanaugh (7.4.x)
  */
 @Component(
 	properties = "OSGI-INF/liferay/rest/v1_0/admin-account-group.properties",
 	scope = ServiceScope.PROTOTYPE, service = AdminAccountGroupResource.class
 )
+@Deprecated
 public class AdminAccountGroupResourceImpl
 	extends BaseAdminAccountGroupResourceImpl {
 
@@ -63,14 +64,8 @@ public class AdminAccountGroupResourceImpl
 		throws Exception {
 
 		AccountGroup accountGroup =
-			_accountGroupService.fetchAccountGroupByExternalReferenceCode(
+			_accountGroupService.getAccountGroupByExternalReferenceCode(
 				externalReferenceCode, contextCompany.getCompanyId());
-
-		if (accountGroup == null) {
-			throw new NoSuchGroupException(
-				"Unable to find account group with external reference code " +
-					externalReferenceCode);
-		}
 
 		_accountGroupService.deleteAccountGroup(
 			accountGroup.getAccountGroupId());
@@ -88,7 +83,7 @@ public class AdminAccountGroupResourceImpl
 
 		AccountEntry accountEntry =
 			_accountEntryService.fetchAccountEntryByExternalReferenceCode(
-				contextCompany.getCompanyId(), externalReferenceCode);
+				externalReferenceCode, contextCompany.getCompanyId());
 
 		if (accountEntry == null) {
 			throw new NoSuchEntryException(
@@ -114,14 +109,8 @@ public class AdminAccountGroupResourceImpl
 		throws Exception {
 
 		AccountGroup accountGroup =
-			_accountGroupService.fetchAccountGroupByExternalReferenceCode(
+			_accountGroupService.getAccountGroupByExternalReferenceCode(
 				externalReferenceCode, contextCompany.getCompanyId());
-
-		if (accountGroup == null) {
-			throw new NoSuchGroupException(
-				"Unable to find account group with external reference code " +
-					externalReferenceCode);
-		}
 
 		return _adminAccountGroupDTOConverter.toDTO(
 			new DefaultDTOConverterContext(
@@ -169,7 +158,8 @@ public class AdminAccountGroupResourceImpl
 		throws Exception {
 
 		_accountGroupService.updateAccountGroup(
-			id, adminAccountGroup.getDescription(), adminAccountGroup.getName(),
+			adminAccountGroup.getExternalReferenceCode(), id,
+			adminAccountGroup.getDescription(), adminAccountGroup.getName(),
 			_serviceContextHelper.getServiceContext());
 
 		Response.ResponseBuilder responseBuilder = Response.ok();
@@ -183,17 +173,11 @@ public class AdminAccountGroupResourceImpl
 		throws Exception {
 
 		AccountGroup accountGroup =
-			_accountGroupService.fetchAccountGroupByExternalReferenceCode(
+			_accountGroupService.getAccountGroupByExternalReferenceCode(
 				externalReferenceCode, contextCompany.getCompanyId());
 
-		if (accountGroup == null) {
-			throw new NoSuchGroupException(
-				"Unable to find account group with external reference code " +
-					externalReferenceCode);
-		}
-
 		_accountGroupService.updateAccountGroup(
-			accountGroup.getAccountGroupId(),
+			externalReferenceCode, accountGroup.getAccountGroupId(),
 			adminAccountGroup.getDescription(), adminAccountGroup.getName(),
 			_serviceContextHelper.getServiceContext());
 
@@ -228,16 +212,14 @@ public class AdminAccountGroupResourceImpl
 
 		if (accountGroup == null) {
 			accountGroup = _accountGroupService.addAccountGroup(
+				adminAccountGroup.getExternalReferenceCode(),
 				contextUser.getUserId(), adminAccountGroup.getDescription(),
 				adminAccountGroup.getName(),
 				_serviceContextHelper.getServiceContext());
-
-			accountGroup = _accountGroupService.updateExternalReferenceCode(
-				accountGroup.getAccountGroupId(),
-				adminAccountGroup.getExternalReferenceCode());
 		}
 		else {
 			accountGroup = _accountGroupService.updateAccountGroup(
+				adminAccountGroup.getExternalReferenceCode(),
 				accountGroup.getAccountGroupId(),
 				adminAccountGroup.getDescription(), adminAccountGroup.getName(),
 				_serviceContextHelper.getServiceContext());

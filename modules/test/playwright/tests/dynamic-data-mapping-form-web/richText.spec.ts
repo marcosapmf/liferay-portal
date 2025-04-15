@@ -9,21 +9,56 @@ import {featureFlagsTest} from '../../fixtures/featureFlagsTest';
 import {formsPagesTest} from '../../fixtures/formsPagesTest';
 import {loginTest} from '../../fixtures/loginTest';
 import {getRandomInt} from '../../utils/getRandomInt';
+import {deleteItems} from './utils/deleteItems';
 
-export const xssBypassTest = mergeTests(
+const baseTest = mergeTests(formsPagesTest, loginTest());
+
+const ckeditor5Test = mergeTests(
+	baseTest,
 	featureFlagsTest({
-		'LPD-31212': true,
-	}),
-	loginTest(),
-	formsPagesTest
+		'LPD-11235': {enabled: true},
+	})
 );
 
-export const xssDisabledTest = mergeTests(
+const xssBypassTest = mergeTests(
+	baseTest,
 	featureFlagsTest({
-		'LPD-31212': false,
-	}),
-	loginTest(),
-	formsPagesTest
+		'LPD-31212': {enabled: true},
+	})
+);
+
+const xssDisabledTest = mergeTests(
+	baseTest,
+	featureFlagsTest({
+		'LPD-31212': {enabled: false},
+	})
+);
+
+[ckeditor5Test, xssBypassTest, xssDisabledTest].forEach((testSuite) => {
+	testSuite.afterEach(async ({formsPage}) => {
+		await formsPage.goTo();
+
+		await deleteItems(formsPage);
+	});
+});
+
+ckeditor5Test(
+	'Added "Rich Text" field includes preview of editor',
+	{
+		tag: ['@LPD-11235'],
+	},
+	async ({formBuilderPage, formBuilderSidePanelPage}) => {
+		await formBuilderPage.goToNew();
+
+		await expect(formBuilderPage.newFormHeading).toBeVisible();
+
+		await formBuilderSidePanelPage.addFieldByDoubleClick('Rich Text');
+
+		const editable = formBuilderSidePanelPage.page.getByRole('textbox', {
+			name: 'Rich Text Editor',
+		});
+		await expect(editable).toBeVisible();
+	}
 );
 
 const content = '<script>alert("Hello! I am an alert box!");</script>';
@@ -78,6 +113,8 @@ const assertRichTextContent = async (
 		.first();
 
 	await expect(input).toHaveValue(expected);
+
+	await newTabPage.close();
 };
 
 xssBypassTest(

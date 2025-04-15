@@ -21,6 +21,7 @@ import com.liferay.portal.kernel.model.BaseModelListener;
 import com.liferay.portal.kernel.model.ModelListener;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
+import com.liferay.portal.kernel.util.BigDecimalUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 
 import java.math.BigDecimal;
@@ -52,6 +53,8 @@ public class CPInstanceUnitOfMeasureModelListener
 							cpInstance.getCPInstanceUuid(), null,
 							StringPool.BLANK)) {
 
+					commercePriceEntry.setPricingQuantity(
+						cpInstanceUnitOfMeasure.getPricingQuantity());
 					commercePriceEntry.setQuantity(
 						cpInstanceUnitOfMeasure.getIncrementalOrderQuantity());
 					commercePriceEntry.setUnitOfMeasureKey(
@@ -100,6 +103,7 @@ public class CPInstanceUnitOfMeasureModelListener
 								getIncrementalOrderQuantity(),
 							cpInstanceUnitOfMeasure.getKey())) {
 
+					commercePriceEntry.setPricingQuantity(null);
 					commercePriceEntry.setQuantity(null);
 					commercePriceEntry.setUnitOfMeasureKey(null);
 
@@ -138,6 +142,17 @@ public class CPInstanceUnitOfMeasureModelListener
 			int compare = originalIncrementalOrderQuantity.compareTo(
 				incrementalOrderQuantity);
 
+			BigDecimal pricingQuantity =
+				cpInstanceUnitOfMeasure.getPricingQuantity();
+
+			if ((compare == 0) &&
+				!BigDecimalUtil.eq(
+					originalCPInstanceUnitOfMeasure.getPricingQuantity(),
+					pricingQuantity)) {
+
+				compare = 1;
+			}
+
 			if (!StringUtil.equals(
 					originalUnitOfMeasureKey, unitOfMeasureKey) ||
 				(compare != 0)) {
@@ -151,6 +166,7 @@ public class CPInstanceUnitOfMeasureModelListener
 							originalIncrementalOrderQuantity,
 							originalUnitOfMeasureKey)) {
 
+					commercePriceEntry.setPricingQuantity(pricingQuantity);
 					commercePriceEntry.setQuantity(incrementalOrderQuantity);
 					commercePriceEntry.setUnitOfMeasureKey(unitOfMeasureKey);
 

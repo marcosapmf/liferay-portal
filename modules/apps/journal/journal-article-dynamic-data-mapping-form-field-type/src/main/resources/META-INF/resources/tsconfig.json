@@ -1,9 +1,8 @@
 {
-	"@generated": "0803236e389fc7703366809799903860c25decb8",
+	"@generated": "6b3c471657ff2a1c4885bc8a7fa8913e2481296d",
 	"@readonly": "** AUTO-GENERATED: DO NOT EDIT **",
 	"compilerOptions": {
 		"allowSyntheticDefaultImports": true,
-		"baseUrl": ".",
 		"checkJs": false,
 		"composite": true,
 		"declarationDir": "../../../../../../../../.tsc/types",
@@ -14,6 +13,9 @@
 		"paths": {
 			"dynamic-data-mapping-form-field-type": [
 				"../../../../../../../dynamic-data-mapping/dynamic-data-mapping-form-field-type/src/main/resources/META-INF/resources/index.ts"
+			],
+			"frontend-js-components-web": [
+				"../../../../../../../frontend-js/frontend-js-components-web/src/main/resources/META-INF/resources/index.ts"
 			],
 			"frontend-js-web": [
 				"../../../../../../../frontend-js/frontend-js-web/src/main/resources/META-INF/resources/index.d.ts"
@@ -37,6 +39,9 @@
 	"references": [
 		{
 			"path": "../../../../../../../dynamic-data-mapping/dynamic-data-mapping-form-field-type/src/main/resources/META-INF/resources/tsconfig.json"
+		},
+		{
+			"path": "../../../../../../../frontend-js/frontend-js-components-web/src/main/resources/META-INF/resources/tsconfig.json"
 		},
 		{
 			"path": "../../../../../../../frontend-js/frontend-js-web/src/main/resources/META-INF/resources/tsconfig.json"

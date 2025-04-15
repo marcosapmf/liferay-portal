@@ -311,11 +311,7 @@ public class StringUtil {
 		if (pos == -1) {
 			String td = text.concat(delimiter);
 
-			if (s.startsWith(td)) {
-				return true;
-			}
-
-			return false;
+			return s.startsWith(td);
 		}
 
 		return true;
@@ -471,11 +467,7 @@ public class StringUtil {
 
 		String temp = s.substring(s.length() - end.length());
 
-		if (equalsIgnoreCase(temp, end)) {
-			return true;
-		}
-
-		return false;
+		return equalsIgnoreCase(temp, end);
 	}
 
 	/**
@@ -2346,7 +2338,7 @@ public class StringUtil {
 			return s;
 		}
 
-		StringBundler sb = new StringBundler(s.length());
+		StringBuilder sb = new StringBuilder(s.length());
 
 		iterate:
 		for (int i = 0; i < s.length(); i++) {
@@ -3532,7 +3524,7 @@ public class StringUtil {
 	 * <p>
 	 * <pre>
 	 * <code>
-	 * splitLines("First;Second;Third", ';') returns {"First","Second","Third"}
+	 * split("First;Second;Third", ';') returns {"First","Second","Third"}
 	 * </code>
 	 * </pre></p>
 	 *
@@ -3647,7 +3639,7 @@ public class StringUtil {
 	 * <p>
 	 * <pre>
 	 * <code>
-	 * splitLines("oneandtwoandthreeandfour", "and") returns {"one","two","three","four"}
+	 * split("oneandtwoandthreeandfour", "and") returns {"one","two","three","four"}
 	 * </code>
 	 * </pre></p>
 	 *

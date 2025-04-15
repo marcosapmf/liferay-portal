@@ -20,6 +20,7 @@ import com.liferay.portal.kernel.util.GetterUtil;
 
 import java.io.Serializable;
 
+import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
@@ -40,8 +41,9 @@ public class MappedProductUtil {
 
 		long skuId = GetterUtil.getLong(mappedProduct.getSkuId());
 
-		CPInstance cpInstance = cpInstanceService.fetchByExternalReferenceCode(
-			mappedProduct.getSkuExternalReferenceCode(), companyId);
+		CPInstance cpInstance =
+			cpInstanceService.fetchCPInstanceByExternalReferenceCode(
+				mappedProduct.getSkuExternalReferenceCode(), companyId);
 
 		if (cpInstance != null) {
 			skuId = cpInstance.getCPInstanceId();
@@ -61,12 +63,8 @@ public class MappedProductUtil {
 		ServiceContext serviceContext = serviceContextHelper.getServiceContext(
 			groupId);
 
-		Map<String, Serializable> expandoBridgeAttributes =
-			getExpandoBridgeAttributes(companyId, locale, mappedProduct);
-
-		if (expandoBridgeAttributes != null) {
-			serviceContext.setExpandoBridgeAttributes(expandoBridgeAttributes);
-		}
+		serviceContext.setExpandoBridgeAttributes(
+			getExpandoBridgeAttributes(companyId, locale, mappedProduct));
 
 		return csDiagramEntryService.addCSDiagramEntry(
 			cpDefinitionId, skuId, productId, isDiagram(null, mappedProduct),
@@ -103,9 +101,16 @@ public class MappedProductUtil {
 	public static Map<String, Serializable> getExpandoBridgeAttributes(
 		long companyId, Locale locale, MappedProduct mappedProduct) {
 
-		return CustomFieldsUtil.toMap(
-			CSDiagramEntry.class.getName(), companyId,
-			mappedProduct.getCustomFields(), locale);
+		Map<String, Serializable> expandoBridgeAttributes =
+			CustomFieldsUtil.toMap(
+				CSDiagramEntry.class.getName(), companyId,
+				mappedProduct.getCustomFields(), locale);
+
+		if (expandoBridgeAttributes == null) {
+			expandoBridgeAttributes = new HashMap<>();
+		}
+
+		return expandoBridgeAttributes;
 	}
 
 	public static boolean isDiagram(
@@ -134,12 +139,8 @@ public class MappedProductUtil {
 		ServiceContext serviceContext = serviceContextHelper.getServiceContext(
 			groupId);
 
-		Map<String, Serializable> expandoBridgeAttributes =
-			getExpandoBridgeAttributes(companyId, locale, mappedProduct);
-
-		if (expandoBridgeAttributes != null) {
-			serviceContext.setExpandoBridgeAttributes(expandoBridgeAttributes);
-		}
+		serviceContext.setExpandoBridgeAttributes(
+			getExpandoBridgeAttributes(companyId, locale, mappedProduct));
 
 		return csDiagramEntryService.updateCSDiagramEntry(
 			csDiagramEntry.getCSDiagramEntryId(),

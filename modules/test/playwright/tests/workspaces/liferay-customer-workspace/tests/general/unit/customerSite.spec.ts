@@ -5,14 +5,20 @@
 
 import {expect, mergeTests} from '@playwright/test';
 
-import {loginTest} from '../../../../../../fixtures/loginTest';
 import {customerPagesTest} from '../../../fixtures/customerPagesTest';
-import {mockOktaApiSession} from '../../../utils/oktaUtil';
+import {
+	customerPerformLogin,
+	customerPerformLogout,
+} from '../../../utils/customerLogin';
 
-export const test = mergeTests(customerPagesTest, loginTest());
+export const test = mergeTests(customerPagesTest);
+
+test.afterEach(async ({page}) => {
+	await customerPerformLogout(page);
+});
 
 test.beforeEach(async ({page}) => {
-	await mockOktaApiSession(page);
+	await customerPerformLogin(page, 'test@liferay.com');
 });
 
 test.describe('Customer Site', () => {
@@ -20,5 +26,7 @@ test.describe('Customer Site', () => {
 		await homePage.goto();
 
 		await expect(homePage.heading).toBeVisible();
+		await expect(homePage.projectCard.first()).toBeVisible();
+		await expect(homePage.searchBar).toBeVisible();
 	});
 });

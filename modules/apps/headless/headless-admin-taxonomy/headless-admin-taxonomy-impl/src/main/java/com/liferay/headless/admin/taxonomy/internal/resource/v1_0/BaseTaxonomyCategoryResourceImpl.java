@@ -17,8 +17,6 @@ import com.liferay.portal.kernel.model.Resource;
 import com.liferay.portal.kernel.model.ResourceAction;
 import com.liferay.portal.kernel.model.ResourceConstants;
 import com.liferay.portal.kernel.model.ResourcePermission;
-import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.service.GroupLocalService;
@@ -27,6 +25,7 @@ import com.liferay.portal.kernel.service.ResourceActionLocalService;
 import com.liferay.portal.kernel.service.ResourceLocalServiceUtil;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
+import com.liferay.portal.kernel.service.permission.ModelPermissions;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.GroupThreadLocal;
 import com.liferay.portal.kernel.util.HashMapBuilder;
@@ -45,12 +44,14 @@ import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
 import com.liferay.portal.vulcan.batch.engine.VulcanBatchEngineTaskItemDelegate;
 import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineExportTaskResource;
 import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineImportTaskResource;
+import com.liferay.portal.vulcan.fields.NestedFieldsSupplier;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.portal.vulcan.permission.ModelPermissionsUtil;
 import com.liferay.portal.vulcan.permission.Permission;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 import com.liferay.portal.vulcan.util.ActionUtil;
+import com.liferay.portal.vulcan.util.UriInfoUtil;
 
 import java.io.Serializable;
 
@@ -201,9 +202,11 @@ public abstract class BaseTaxonomyCategoryResourceImpl
 			String search,
 			@javax.ws.rs.core.Context
 				com.liferay.portal.vulcan.aggregation.Aggregation aggregation,
-			@javax.ws.rs.core.Context Filter filter,
+			@javax.ws.rs.core.Context
+				com.liferay.portal.kernel.search.filter.Filter filter,
 			@javax.ws.rs.core.Context Pagination pagination,
-			@javax.ws.rs.core.Context Sort[] sorts)
+			@javax.ws.rs.core.Context com.liferay.portal.kernel.search.Sort[]
+				sorts)
 		throws Exception {
 
 		return Page.of(Collections.emptyList());
@@ -212,7 +215,7 @@ public abstract class BaseTaxonomyCategoryResourceImpl
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'POST' 'http://localhost:8080/o/headless-admin-taxonomy/v1.0/taxonomy-categories/{parentTaxonomyCategoryId}/taxonomy-categories' -d $'{"description": ___, "description_i18n": ___, "externalReferenceCode": ___, "name": ___, "name_i18n": ___, "parentTaxonomyCategory": ___, "taxonomyCategoryProperties": ___, "taxonomyVocabularyId": ___, "viewableBy": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 * curl -X 'POST' 'http://localhost:8080/o/headless-admin-taxonomy/v1.0/taxonomy-categories/{parentTaxonomyCategoryId}/taxonomy-categories' -d $'{"description": ___, "description_i18n": ___, "externalReferenceCode": ___, "name": ___, "name_i18n": ___, "parentTaxonomyCategory": ___, "permissions": ___, "taxonomyCategoryProperties": ___, "taxonomyVocabularyId": ___, "viewableBy": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Operation(
 		description = "Inserts a new child taxonomy category."
@@ -327,6 +330,10 @@ public abstract class BaseTaxonomyCategoryResourceImpl
 		).build();
 	}
 
+	protected abstract TaxonomyCategory doGetTaxonomyCategory(
+			String taxonomyCategoryId)
+		throws Exception;
+
 	/**
 	 * Invoke this method with the command line:
 	 *
@@ -360,20 +367,38 @@ public abstract class BaseTaxonomyCategoryResourceImpl
 	@javax.ws.rs.Path("/taxonomy-categories/{taxonomyCategoryId}")
 	@javax.ws.rs.Produces({"application/json", "application/xml"})
 	@Override
-	public TaxonomyCategory getTaxonomyCategory(
+	public final TaxonomyCategory getTaxonomyCategory(
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
 			@javax.validation.constraints.NotNull
 			@javax.ws.rs.PathParam("taxonomyCategoryId")
 			String taxonomyCategoryId)
 		throws Exception {
 
-		return new TaxonomyCategory();
+		TaxonomyCategory getTaxonomyCategory = doGetTaxonomyCategory(
+			taxonomyCategoryId);
+
+		getTaxonomyCategory.setPermissions(
+			() -> NestedFieldsSupplier.supply(
+				"permissions",
+				nestedField -> {
+					Page<Permission> permissionPage =
+						getTaxonomyCategoryPermissionsPage(
+							getTaxonomyCategory.getId(), null);
+
+					Collection<Permission> permissions =
+						permissionPage.getItems();
+
+					return permissions.toArray(
+						new Permission[permissions.size()]);
+				}));
+
+		return getTaxonomyCategory;
 	}
 
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'PATCH' 'http://localhost:8080/o/headless-admin-taxonomy/v1.0/taxonomy-categories/{taxonomyCategoryId}' -d $'{"description": ___, "description_i18n": ___, "externalReferenceCode": ___, "name": ___, "name_i18n": ___, "parentTaxonomyCategory": ___, "taxonomyCategoryProperties": ___, "taxonomyVocabularyId": ___, "viewableBy": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 * curl -X 'PATCH' 'http://localhost:8080/o/headless-admin-taxonomy/v1.0/taxonomy-categories/{taxonomyCategoryId}' -d $'{"description": ___, "description_i18n": ___, "externalReferenceCode": ___, "name": ___, "name_i18n": ___, "parentTaxonomyCategory": ___, "permissions": ___, "taxonomyCategoryProperties": ___, "taxonomyVocabularyId": ___, "viewableBy": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Operation(
 		description = "Updates only the fields received in the request body. Other fields are left untouched."
@@ -431,6 +456,11 @@ public abstract class BaseTaxonomyCategoryResourceImpl
 				taxonomyCategory.getName_i18n());
 		}
 
+		if (taxonomyCategory.getPermissions() != null) {
+			existingTaxonomyCategory.setPermissions(
+				taxonomyCategory.getPermissions());
+		}
+
 		if (taxonomyCategory.getTaxonomyVocabularyId() != null) {
 			existingTaxonomyCategory.setTaxonomyVocabularyId(
 				taxonomyCategory.getTaxonomyVocabularyId());
@@ -447,10 +477,14 @@ public abstract class BaseTaxonomyCategoryResourceImpl
 			taxonomyCategoryId, existingTaxonomyCategory);
 	}
 
+	protected abstract TaxonomyCategory doPutTaxonomyCategory(
+			String taxonomyCategoryId, TaxonomyCategory taxonomyCategory)
+		throws Exception;
+
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'PUT' 'http://localhost:8080/o/headless-admin-taxonomy/v1.0/taxonomy-categories/{taxonomyCategoryId}' -d $'{"description": ___, "description_i18n": ___, "externalReferenceCode": ___, "name": ___, "name_i18n": ___, "parentTaxonomyCategory": ___, "taxonomyCategoryProperties": ___, "taxonomyVocabularyId": ___, "viewableBy": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 * curl -X 'PUT' 'http://localhost:8080/o/headless-admin-taxonomy/v1.0/taxonomy-categories/{taxonomyCategoryId}' -d $'{"description": ___, "description_i18n": ___, "externalReferenceCode": ___, "name": ___, "name_i18n": ___, "parentTaxonomyCategory": ___, "permissions": ___, "taxonomyCategoryProperties": ___, "taxonomyVocabularyId": ___, "viewableBy": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Operation(
 		description = "Replaces the taxonomy category with the information sent in the request body. Any missing fields are deleted unless they are required."
@@ -473,7 +507,7 @@ public abstract class BaseTaxonomyCategoryResourceImpl
 	@javax.ws.rs.Produces({"application/json", "application/xml"})
 	@javax.ws.rs.PUT
 	@Override
-	public TaxonomyCategory putTaxonomyCategory(
+	public final TaxonomyCategory putTaxonomyCategory(
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
 			@javax.validation.constraints.NotNull
 			@javax.ws.rs.PathParam("taxonomyCategoryId")
@@ -481,7 +515,29 @@ public abstract class BaseTaxonomyCategoryResourceImpl
 			TaxonomyCategory taxonomyCategory)
 		throws Exception {
 
-		return new TaxonomyCategory();
+		Permission[] permissions = taxonomyCategory.getPermissions();
+
+		TaxonomyCategory putTaxonomyCategory = doPutTaxonomyCategory(
+			taxonomyCategoryId, taxonomyCategory);
+
+		if (permissions != null) {
+			Page<Permission> permissionPage =
+				putTaxonomyCategoryPermissionsPage(
+					putTaxonomyCategory.getId(), permissions);
+
+			putTaxonomyCategory.setPermissions(
+				() -> NestedFieldsSupplier.supply(
+					"permissions",
+					nestedField -> {
+						Collection<Permission> collection =
+							permissionPage.getItems();
+
+						return collection.toArray(
+							new Permission[collection.size()]);
+					}));
+		}
+
+		return putTaxonomyCategory;
 	}
 
 	/**
@@ -638,14 +694,43 @@ public abstract class BaseTaxonomyCategoryResourceImpl
 			getPermissionCheckerGroupId(taxonomyCategoryId), resourceName,
 			resourceId);
 
-		resourcePermissionLocalService.updateResourcePermissions(
-			contextCompany.getCompanyId(),
-			getPermissionCheckerGroupId(taxonomyCategoryId), resourceName,
-			String.valueOf(resourceId),
+		ModelPermissions modelPermissions =
 			ModelPermissionsUtil.toModelPermissions(
 				contextCompany.getCompanyId(), permissions, resourceId,
 				resourceName, resourceActionLocalService,
-				resourcePermissionLocalService, roleLocalService));
+				resourcePermissionLocalService, roleLocalService);
+
+		Collection<String> roleNames = modelPermissions.getRoleNames();
+
+		for (ResourcePermission resourcePermission :
+				resourcePermissionLocalService.getResourcePermissions(
+					contextCompany.getCompanyId(), resourceName,
+					ResourceConstants.SCOPE_INDIVIDUAL,
+					String.valueOf(resourceId))) {
+
+			com.liferay.portal.kernel.model.Role role =
+				roleLocalService.fetchRole(resourcePermission.getRoleId());
+
+			if ((role == null) || roleNames.contains(role.getName())) {
+				continue;
+			}
+
+			for (ResourceAction resourceAction :
+					resourceActionLocalService.getResourceActions(
+						resourceName)) {
+
+				resourcePermissionLocalService.removeResourcePermission(
+					contextCompany.getCompanyId(), resourceName,
+					ResourceConstants.SCOPE_INDIVIDUAL,
+					String.valueOf(resourceId), role.getRoleId(),
+					resourceAction.getActionId());
+			}
+		}
+
+		resourcePermissionLocalService.updateResourcePermissions(
+			contextCompany.getCompanyId(),
+			getPermissionCheckerGroupId(taxonomyCategoryId), resourceName,
+			String.valueOf(resourceId), modelPermissions);
 
 		return toPermissionPage(
 			HashMapBuilder.put(
@@ -663,6 +748,15 @@ public abstract class BaseTaxonomyCategoryResourceImpl
 			).build(),
 			resourceId, resourceName, null);
 	}
+
+	protected abstract Page<TaxonomyCategory>
+			doGetTaxonomyVocabularyTaxonomyCategoriesPage(
+				Long taxonomyVocabularyId, Boolean flatten, String search,
+				com.liferay.portal.vulcan.aggregation.Aggregation aggregation,
+				com.liferay.portal.kernel.search.filter.Filter filter,
+				Pagination pagination,
+				com.liferay.portal.kernel.search.Sort[] sorts)
+		throws Exception;
 
 	/**
 	 * Invoke this method with the command line:
@@ -727,25 +821,53 @@ public abstract class BaseTaxonomyCategoryResourceImpl
 	)
 	@javax.ws.rs.Produces({"application/json", "application/xml"})
 	@Override
-	public Page<TaxonomyCategory> getTaxonomyVocabularyTaxonomyCategoriesPage(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("taxonomyVocabularyId")
-			Long taxonomyVocabularyId,
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.ws.rs.QueryParam("flatten")
-			Boolean flatten,
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.ws.rs.QueryParam("search")
-			String search,
-			@javax.ws.rs.core.Context
-				com.liferay.portal.vulcan.aggregation.Aggregation aggregation,
-			@javax.ws.rs.core.Context Filter filter,
-			@javax.ws.rs.core.Context Pagination pagination,
-			@javax.ws.rs.core.Context Sort[] sorts)
+	public final Page<TaxonomyCategory>
+			getTaxonomyVocabularyTaxonomyCategoriesPage(
+				@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+				@javax.validation.constraints.NotNull
+				@javax.ws.rs.PathParam("taxonomyVocabularyId")
+				Long taxonomyVocabularyId,
+				@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+				@javax.ws.rs.QueryParam("flatten")
+				Boolean flatten,
+				@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+				@javax.ws.rs.QueryParam("search")
+				String search,
+				@javax.ws.rs.core.Context
+					com.liferay.portal.vulcan.aggregation.Aggregation
+						aggregation,
+				@javax.ws.rs.core.Context
+					com.liferay.portal.kernel.search.filter.Filter filter,
+				@javax.ws.rs.core.Context Pagination pagination,
+				@javax.ws.rs.core.Context
+					com.liferay.portal.kernel.search.Sort[] sorts)
 		throws Exception {
 
-		return Page.of(Collections.emptyList());
+		Page<TaxonomyCategory> taxonomyCategoryPage =
+			doGetTaxonomyVocabularyTaxonomyCategoriesPage(
+				taxonomyVocabularyId, flatten, search, aggregation, filter,
+				pagination, sorts);
+
+		for (TaxonomyCategory taxonomyCategory :
+				taxonomyCategoryPage.getItems()) {
+
+			taxonomyCategory.setPermissions(
+				() -> NestedFieldsSupplier.supply(
+					"permissions",
+					nestedField -> {
+						Page<Permission> permissionPage =
+							getTaxonomyCategoryPermissionsPage(
+								taxonomyCategory.getId(), null);
+
+						Collection<Permission> permissions =
+							permissionPage.getItems();
+
+						return permissions.toArray(
+							new Permission[permissions.size()]);
+					}));
+		}
+
+		return taxonomyCategoryPage;
 	}
 
 	/**
@@ -805,8 +927,10 @@ public abstract class BaseTaxonomyCategoryResourceImpl
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
 			@javax.ws.rs.QueryParam("search")
 			String search,
-			@javax.ws.rs.core.Context Filter filter,
-			@javax.ws.rs.core.Context Sort[] sorts,
+			@javax.ws.rs.core.Context
+				com.liferay.portal.kernel.search.filter.Filter filter,
+			@javax.ws.rs.core.Context com.liferay.portal.kernel.search.Sort[]
+				sorts,
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
 			@javax.ws.rs.QueryParam("callbackURL")
 			String callbackURL,
@@ -838,10 +962,15 @@ public abstract class BaseTaxonomyCategoryResourceImpl
 		).build();
 	}
 
+	protected abstract TaxonomyCategory
+			doPostTaxonomyVocabularyTaxonomyCategory(
+				Long taxonomyVocabularyId, TaxonomyCategory taxonomyCategory)
+		throws Exception;
+
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'POST' 'http://localhost:8080/o/headless-admin-taxonomy/v1.0/taxonomy-vocabularies/{taxonomyVocabularyId}/taxonomy-categories' -d $'{"description": ___, "description_i18n": ___, "externalReferenceCode": ___, "name": ___, "name_i18n": ___, "parentTaxonomyCategory": ___, "taxonomyCategoryProperties": ___, "taxonomyVocabularyId": ___, "viewableBy": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 * curl -X 'POST' 'http://localhost:8080/o/headless-admin-taxonomy/v1.0/taxonomy-vocabularies/{taxonomyVocabularyId}/taxonomy-categories' -d $'{"description": ___, "description_i18n": ___, "externalReferenceCode": ___, "name": ___, "name_i18n": ___, "parentTaxonomyCategory": ___, "permissions": ___, "taxonomyCategoryProperties": ___, "taxonomyVocabularyId": ___, "viewableBy": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Operation(
 		description = "Inserts a new taxonomy category in a taxonomy vocabulary."
@@ -866,7 +995,7 @@ public abstract class BaseTaxonomyCategoryResourceImpl
 	@javax.ws.rs.POST
 	@javax.ws.rs.Produces({"application/json", "application/xml"})
 	@Override
-	public TaxonomyCategory postTaxonomyVocabularyTaxonomyCategory(
+	public final TaxonomyCategory postTaxonomyVocabularyTaxonomyCategory(
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
 			@javax.validation.constraints.NotNull
 			@javax.ws.rs.PathParam("taxonomyVocabularyId")
@@ -874,7 +1003,30 @@ public abstract class BaseTaxonomyCategoryResourceImpl
 			TaxonomyCategory taxonomyCategory)
 		throws Exception {
 
-		return new TaxonomyCategory();
+		Permission[] permissions = taxonomyCategory.getPermissions();
+
+		TaxonomyCategory postTaxonomyCategory =
+			doPostTaxonomyVocabularyTaxonomyCategory(
+				taxonomyVocabularyId, taxonomyCategory);
+
+		if (permissions != null) {
+			Page<Permission> permissionPage =
+				putTaxonomyCategoryPermissionsPage(
+					postTaxonomyCategory.getId(), permissions);
+
+			postTaxonomyCategory.setPermissions(
+				() -> NestedFieldsSupplier.supply(
+					"permissions",
+					nestedField -> {
+						Collection<Permission> collection =
+							permissionPage.getItems();
+
+						return collection.toArray(
+							new Permission[collection.size()]);
+					}));
+		}
+
+		return postTaxonomyCategory;
 	}
 
 	/**
@@ -976,6 +1128,11 @@ public abstract class BaseTaxonomyCategoryResourceImpl
 		throws Exception {
 	}
 
+	protected abstract TaxonomyCategory
+			doGetTaxonomyVocabularyTaxonomyCategoryByExternalReferenceCode(
+				Long taxonomyVocabularyId, String externalReferenceCode)
+		throws Exception;
+
 	/**
 	 * Invoke this method with the command line:
 	 *
@@ -1015,7 +1172,7 @@ public abstract class BaseTaxonomyCategoryResourceImpl
 	)
 	@javax.ws.rs.Produces({"application/json", "application/xml"})
 	@Override
-	public TaxonomyCategory
+	public final TaxonomyCategory
 			getTaxonomyVocabularyTaxonomyCategoryByExternalReferenceCode(
 				@io.swagger.v3.oas.annotations.Parameter(hidden = true)
 				@javax.validation.constraints.NotNull
@@ -1027,13 +1184,38 @@ public abstract class BaseTaxonomyCategoryResourceImpl
 				String externalReferenceCode)
 		throws Exception {
 
-		return new TaxonomyCategory();
+		TaxonomyCategory getTaxonomyCategory =
+			doGetTaxonomyVocabularyTaxonomyCategoryByExternalReferenceCode(
+				taxonomyVocabularyId, externalReferenceCode);
+
+		getTaxonomyCategory.setPermissions(
+			() -> NestedFieldsSupplier.supply(
+				"permissions",
+				nestedField -> {
+					Page<Permission> permissionPage =
+						getTaxonomyCategoryPermissionsPage(
+							getTaxonomyCategory.getId(), null);
+
+					Collection<Permission> permissions =
+						permissionPage.getItems();
+
+					return permissions.toArray(
+						new Permission[permissions.size()]);
+				}));
+
+		return getTaxonomyCategory;
 	}
+
+	protected abstract TaxonomyCategory
+			doPutTaxonomyVocabularyTaxonomyCategoryByExternalReferenceCode(
+				Long taxonomyVocabularyId, String externalReferenceCode,
+				TaxonomyCategory taxonomyCategory)
+		throws Exception;
 
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'PUT' 'http://localhost:8080/o/headless-admin-taxonomy/v1.0/taxonomy-vocabularies/{taxonomyVocabularyId}/taxonomy-categories/by-external-reference-code/{externalReferenceCode}' -d $'{"description": ___, "description_i18n": ___, "externalReferenceCode": ___, "name": ___, "name_i18n": ___, "parentTaxonomyCategory": ___, "taxonomyCategoryProperties": ___, "taxonomyVocabularyId": ___, "viewableBy": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 * curl -X 'PUT' 'http://localhost:8080/o/headless-admin-taxonomy/v1.0/taxonomy-vocabularies/{taxonomyVocabularyId}/taxonomy-categories/by-external-reference-code/{externalReferenceCode}' -d $'{"description": ___, "description_i18n": ___, "externalReferenceCode": ___, "name": ___, "name_i18n": ___, "parentTaxonomyCategory": ___, "permissions": ___, "taxonomyCategoryProperties": ___, "taxonomyVocabularyId": ___, "viewableBy": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Operation(
 		description = "Updates the site's taxonomy category with the given external reference code, or creates it if it not exists."
@@ -1062,7 +1244,7 @@ public abstract class BaseTaxonomyCategoryResourceImpl
 	@javax.ws.rs.Produces({"application/json", "application/xml"})
 	@javax.ws.rs.PUT
 	@Override
-	public TaxonomyCategory
+	public final TaxonomyCategory
 			putTaxonomyVocabularyTaxonomyCategoryByExternalReferenceCode(
 				@io.swagger.v3.oas.annotations.Parameter(hidden = true)
 				@javax.validation.constraints.NotNull
@@ -1075,7 +1257,30 @@ public abstract class BaseTaxonomyCategoryResourceImpl
 				TaxonomyCategory taxonomyCategory)
 		throws Exception {
 
-		return new TaxonomyCategory();
+		Permission[] permissions = taxonomyCategory.getPermissions();
+
+		TaxonomyCategory putTaxonomyCategory =
+			doPutTaxonomyVocabularyTaxonomyCategoryByExternalReferenceCode(
+				taxonomyVocabularyId, externalReferenceCode, taxonomyCategory);
+
+		if (permissions != null) {
+			Page<Permission> permissionPage =
+				putTaxonomyCategoryPermissionsPage(
+					putTaxonomyCategory.getId(), permissions);
+
+			putTaxonomyCategory.setPermissions(
+				() -> NestedFieldsSupplier.supply(
+					"permissions",
+					nestedField -> {
+						Collection<Permission> collection =
+							permissionPage.getItems();
+
+						return collection.toArray(
+							new Permission[collection.size()]);
+					}));
+		}
+
+		return putTaxonomyCategory;
 	}
 
 	@Override
@@ -1191,8 +1396,25 @@ public abstract class BaseTaxonomyCategoryResourceImpl
 			Map<String, Serializable> parameters)
 		throws Exception {
 
-		for (TaxonomyCategory taxonomyCategory : taxonomyCategories) {
-			deleteTaxonomyCategory(taxonomyCategory.getId());
+		UnsafeFunction<TaxonomyCategory, TaxonomyCategory, Exception>
+			taxonomyCategoryUnsafeFunction = taxonomyCategory -> {
+				deleteTaxonomyCategory(taxonomyCategory.getId());
+
+				return taxonomyCategory;
+			};
+
+		if (contextBatchUnsafeBiConsumer != null) {
+			contextBatchUnsafeBiConsumer.accept(
+				taxonomyCategories, taxonomyCategoryUnsafeFunction);
+		}
+		else if (contextBatchUnsafeConsumer != null) {
+			contextBatchUnsafeConsumer.accept(
+				taxonomyCategories, taxonomyCategoryUnsafeFunction::apply);
+		}
+		else {
+			for (TaxonomyCategory taxonomyCategory : taxonomyCategories) {
+				taxonomyCategoryUnsafeFunction.apply(taxonomyCategory);
+			}
 		}
 	}
 
@@ -1229,7 +1451,9 @@ public abstract class BaseTaxonomyCategoryResourceImpl
 
 	@Override
 	public Page<TaxonomyCategory> read(
-			Filter filter, Pagination pagination, Sort[] sorts,
+			com.liferay.portal.kernel.search.filter.Filter filter,
+			Pagination pagination,
+			com.liferay.portal.kernel.search.Sort[] sorts,
 			Map<String, Serializable> parameters, String search)
 		throws Exception {
 
@@ -1386,6 +1610,9 @@ public abstract class BaseTaxonomyCategoryResourceImpl
 				resourceName, null));
 	}
 
+	/**
+	 * @see com.liferay.portal.vulcan.permission.PermissionUtil#getPermissions(long, List, long, String, String[])
+	 */
 	private Collection<Permission> _getPermissions(
 			long companyId, List<ResourceAction> resourceActions,
 			long resourceId, String resourceName, String[] roleNames)
@@ -1538,7 +1765,8 @@ public abstract class BaseTaxonomyCategoryResourceImpl
 	}
 
 	public void setContextUriInfo(UriInfo contextUriInfo) {
-		this.contextUriInfo = contextUriInfo;
+		this.contextUriInfo = UriInfoUtil.getVulcanUriInfo(
+			getApplicationPath(), contextUriInfo);
 	}
 
 	public void setContextUser(
@@ -1548,7 +1776,8 @@ public abstract class BaseTaxonomyCategoryResourceImpl
 	}
 
 	public void setExpressionConvert(
-		ExpressionConvert<Filter> expressionConvert) {
+		ExpressionConvert<com.liferay.portal.kernel.search.filter.Filter>
+			expressionConvert) {
 
 		this.expressionConvert = expressionConvert;
 	}
@@ -1583,6 +1812,10 @@ public abstract class BaseTaxonomyCategoryResourceImpl
 		this.sortParserProvider = sortParserProvider;
 	}
 
+	protected String getApplicationPath() {
+		return "headless-admin-taxonomy";
+	}
+
 	public void setVulcanBatchEngineExportTaskResource(
 		VulcanBatchEngineExportTaskResource
 			vulcanBatchEngineExportTaskResource) {
@@ -1600,7 +1833,7 @@ public abstract class BaseTaxonomyCategoryResourceImpl
 	}
 
 	@Override
-	public Filter toFilter(
+	public com.liferay.portal.kernel.search.filter.Filter toFilter(
 		String filterString, Map<String, List<String>> multivaluedMap) {
 
 		try {
@@ -1625,7 +1858,7 @@ public abstract class BaseTaxonomyCategoryResourceImpl
 	}
 
 	@Override
-	public Sort[] toSorts(String sortString) {
+	public com.liferay.portal.kernel.search.Sort[] toSorts(String sortString) {
 		if (Validator.isNull(sortString)) {
 			return null;
 		}
@@ -1643,13 +1876,13 @@ public abstract class BaseTaxonomyCategoryResourceImpl
 					sortParser.parse(sortString));
 
 			List<SortField> sortFields = oDataSort.getSortFields();
-
-			Sort[] sorts = new Sort[sortFields.size()];
+			com.liferay.portal.kernel.search.Sort[] sorts =
+				new com.liferay.portal.kernel.search.Sort[sortFields.size()];
 
 			for (int i = 0; i < sortFields.size(); i++) {
 				SortField sortField = sortFields.get(i);
 
-				sorts[i] = new Sort(
+				sorts[i] = new com.liferay.portal.kernel.search.Sort(
 					sortField.getSortableFieldName(
 						contextAcceptLanguage.getPreferredLocale()),
 					!sortField.isAscending());
@@ -1660,7 +1893,7 @@ public abstract class BaseTaxonomyCategoryResourceImpl
 		catch (Exception exception) {
 			_log.error("Invalid sort " + sortString, exception);
 
-			return new Sort[0];
+			return new com.liferay.portal.kernel.search.Sort[0];
 		}
 	}
 
@@ -1792,7 +2025,8 @@ public abstract class BaseTaxonomyCategoryResourceImpl
 	protected Object contextScopeChecker;
 	protected UriInfo contextUriInfo;
 	protected com.liferay.portal.kernel.model.User contextUser;
-	protected ExpressionConvert<Filter> expressionConvert;
+	protected ExpressionConvert<com.liferay.portal.kernel.search.filter.Filter>
+		expressionConvert;
 	protected FilterParserProvider filterParserProvider;
 	protected GroupLocalService groupLocalService;
 	protected ResourceActionLocalService resourceActionLocalService;

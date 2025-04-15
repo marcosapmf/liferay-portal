@@ -22,6 +22,7 @@ import com.liferay.portal.kernel.model.LayoutTypePortletConstants;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
+import com.liferay.portal.kernel.util.Validator;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -182,8 +183,13 @@ public class DefaultLayoutConverter implements LayoutConverter {
 
 		LayoutTemplate layoutTemplate = layoutTypePortlet.getLayoutTemplate();
 
-		Document document = Jsoup.parseBodyFragment(
-			layoutTemplate.getContent());
+		String content = layoutTemplate.getContent();
+
+		if (Validator.isNull(content)) {
+			return null;
+		}
+
+		Document document = Jsoup.parseBodyFragment(content);
 
 		Document.OutputSettings outputSettings = new Document.OutputSettings();
 
@@ -196,6 +202,10 @@ public class DefaultLayoutConverter implements LayoutConverter {
 
 	private boolean _isLayoutTemplateParseable(Layout layout) {
 		Document layoutTemplateDocument = _getLayoutTemplateDocument(layout);
+
+		if (layoutTemplateDocument == null) {
+			return false;
+		}
 
 		Elements rowElements = layoutTemplateDocument.select(
 			".portlet-layout.row");

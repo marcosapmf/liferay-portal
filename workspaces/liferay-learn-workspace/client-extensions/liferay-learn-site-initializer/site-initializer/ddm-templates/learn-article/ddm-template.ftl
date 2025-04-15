@@ -1,3 +1,29 @@
+<script>
+	const _addEventListener = (selectors) => {
+		var elements = document.querySelectorAll(selectors);
+
+		elements.forEach((element) => {
+			element.addEventListener("click", (event) => {
+				event.preventDefault();
+
+				const anchorElement = document.getElementById(element.getAttribute("id").replace("toc-", ""));
+
+				if (anchorElement) {
+					window.scrollTo({
+						behavior: "smooth",
+						top: anchorElement.getBoundingClientRect().top + window.scrollY - 190,
+					});
+				}
+			});
+		});
+	}
+
+	window.addEventListener('load', function() {
+		_addEventListener("h1 a, h2 a, h3 a");
+		_addEventListener(".toc li a");
+	});
+</script>
+
 <#assign
 	journalArticleId = .vars["reserved-article-id"].data
 	navigationJSONObject = jsonFactoryUtil.createJSONObject(navigation.getData())
@@ -133,6 +159,8 @@
 						</div>
 					</#list>
 				</div>
+
+				<div class="article-related-recipes" data-article-id="${.vars["reserved-article-id"].data}" id="article-related-recipes"></div>
 			</div>
 
 			<div class="learn-article-page-nav">

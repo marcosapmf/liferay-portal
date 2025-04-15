@@ -1,5 +1,6 @@
 .management-bar-wrapper {
 	border-bottom: 1px solid $border-color;
+	margin-bottom: 1rem;
 
 	& > .management-bar + .management-bar {
 		border-top: 1px solid #eee;
@@ -13,6 +14,32 @@
 		position: relative;
 		top: -1px;
 		width: 14px;
+	}
+
+	.bulk-actions {
+		@media (max-width: 992px) {
+			.bulk-action-btn-icon {
+				font-size: 1rem;
+				margin-right: 0;
+			}
+
+			.bulk-action-btn-text {
+				display: none;
+			}
+		}
+
+		@media (max-width: 768px) {
+			.bulk-action-btn {
+				padding-left: 0.5rem;
+				padding-right: 0.5rem;
+			}
+		}
+
+		@media (max-width: 576px) {
+			.bulk-action-btn {
+				display: none;
+			}
+		}
 	}
 
 	.custom-views-selection {

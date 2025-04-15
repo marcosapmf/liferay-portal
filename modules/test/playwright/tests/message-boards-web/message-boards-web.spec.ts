@@ -12,6 +12,7 @@ import {loginTest} from '../../fixtures/loginTest';
 import {messageBoardsPagesTest} from '../../fixtures/messageBoardsTest';
 import {workflowPagesTest} from '../../fixtures/workflowPagesTest';
 import getRandomString from '../../utils/getRandomString';
+import {gotoPage, setItemsPerPage} from '../../utils/pagination';
 
 export const test = mergeTests(
 	apiHelpersTest,
@@ -21,123 +22,219 @@ export const test = mergeTests(
 	workflowPagesTest
 );
 
-test('LPD-25630 Show the status to guest user', async ({
-	messageBoardsEditThreadPage,
-	messageBoardsPage,
-	messageBoardsWidgetPage,
-	page,
-	site,
-	workflowPage,
-}) => {
-	await messageBoardsPage.setGuestCategoryPermissions(site.friendlyUrlPath);
+test(
+	'Thread Priorities can be translated',
+	{tag: '@LPD-41689'},
+	async ({messageBoardsPage, page, site}) => {
+		await messageBoardsPage.goToThreadPriorities(site.friendlyUrlPath);
 
-	await messageBoardsEditThreadPage.publishNewBasicThread(
-		'Thread Subject',
-		'Thread Body',
-		site.friendlyUrlPath
-	);
+		const languageLocator = page.getByLabel('Localized Language');
 
-	await workflowPage.goto(site.friendlyUrlPath);
+		await languageLocator.waitFor();
 
-	await workflowPage.changeWorkflow(
-		'Message Boards Message',
-		'Single Approver'
-	);
+		await languageLocator.selectOption('hu_HU');
 
-	const layout = await messageBoardsWidgetPage.addMessageBoardsPortlet(site);
+		const expectedPriorityName = 'test';
 
-	await messageBoardsWidgetPage.addGuestReply(
+		const priorityNameLocator = page.locator('[id$="priorityName0_temp"]');
+
+		await priorityNameLocator.fill(expectedPriorityName);
+
+		await page.getByRole('button', {name: 'Save'}).click();
+
+		await expect(priorityNameLocator).toBeHidden();
+
+		await languageLocator.selectOption('hu_HU');
+
+		expect(await priorityNameLocator.inputValue()).toBe(
+			expectedPriorityName
+		);
+	}
+);
+
+test(
+	'Show the status to guest user',
+	{tag: '@LPD-25630'},
+	async ({
+		messageBoardsEditThreadPage,
+		messageBoardsPage,
+		messageBoardsWidgetPage,
+		page,
 		site,
-		layout,
-		'Submit for Workflow'
-	);
+		workflowPage,
+	}) => {
+		await messageBoardsPage.setGuestCategoryPermissions(
+			site.friendlyUrlPath
+		);
 
-	await expect(page.getByText('Pending')).toBeVisible();
-});
+		await messageBoardsEditThreadPage.gotoAndPublishNewBasicThread(
+			'Thread Subject',
+			'Thread Body',
+			site.friendlyUrlPath
+		);
 
-test('LPD-29524 Search for message board thread by keywords', async ({
-	apiHelpers,
-	messageBoardsWidgetPage,
-	page,
-	site,
-}) => {
-	const messageBoardThread1 =
-		await apiHelpers.headlessDelivery.postMessageBoardThread({
-			articleBody: getRandomString(),
-			headline: getRandomString(),
-			siteId: site.id,
+		await workflowPage.goto(site.friendlyUrlPath);
+
+		await workflowPage.changeWorkflow(
+			'Message Boards Message',
+			'Single Approver'
+		);
+
+		const layout =
+			await messageBoardsWidgetPage.addMessageBoardsPortlet(site);
+
+		await messageBoardsWidgetPage.addGuestReply(
+			site,
+			layout,
+			'Submit for Workflow'
+		);
+
+		await expect(page.getByText('Pending')).toBeVisible();
+	}
+);
+
+test(
+	'Search for message board thread by keywords',
+	{tag: '@LPD-29524'},
+	async ({apiHelpers, messageBoardsWidgetPage, page, site}) => {
+		const messageBoardThread1 =
+			await apiHelpers.headlessDelivery.postMessageBoardThread({
+				articleBody: getRandomString(),
+				headline: getRandomString(),
+				siteId: site.id,
+			});
+		const messageBoardThread2 =
+			await apiHelpers.headlessDelivery.postMessageBoardThread({
+				articleBody: getRandomString(),
+				headline: getRandomString(),
+				siteId: site.id,
+			});
+
+		await messageBoardsWidgetPage.addMessageBoardsPortlet(site);
+
+		await expect(
+			page.getByRole('link', {name: messageBoardThread1.headline})
+		).toBeVisible();
+
+		await expect(
+			page.getByRole('link', {name: messageBoardThread2.headline})
+		).toBeVisible();
+
+		await page
+			.getByTestId('searchInput')
+			.fill(messageBoardThread1.headline);
+		await page.getByTestId('searchButton').click();
+
+		await expect(
+			page.getByRole('link', {name: messageBoardThread1.headline})
+		).toBeVisible();
+
+		await expect(
+			page.getByRole('link', {name: messageBoardThread2.headline})
+		).toBeHidden();
+	}
+);
+
+test(
+	'Do not show site in breadcrumb',
+	{tag: '@LPD-27633'},
+	async ({messageBoardsWidgetPage, page, site}) => {
+		const layout =
+			await messageBoardsWidgetPage.addMessageBoardsPortlet(site);
+
+		const categoryName = getRandomString();
+
+		await messageBoardsWidgetPage.addCategory(site, layout, categoryName);
+
+		const searchMenu = page.locator(
+			'[id="_com_liferay_message_boards_web_portlet_MBPortlet_mbCategoriesSearchContainer_1_menu"]'
+		);
+
+		await searchMenu.waitFor();
+		await searchMenu.click();
+
+		await page.getByRole('menuitem', {name: 'Move'}).click();
+
+		await page.getByRole('button', {name: 'Select'}).click();
+
+		await expect(
+			page
+				.frameLocator('iframe[title="Select Category"]')
+				.getByText(site.name)
+		).toBeHidden();
+	}
+);
+
+test(
+	'Posting a Document to Forums',
+	{tag: '@LPD-33132'},
+	async ({messageBoardsEditThreadPage, page, site}) => {
+		const fileName = 'attachment , file.txt';
+
+		await messageBoardsEditThreadPage.gotoAndPublishNewBasicThread(
+			'Thread Subject',
+			'Thread Body',
+			site.friendlyUrlPath,
+			path.join(__dirname, '/dependencies/' + fileName)
+		);
+
+		await expect(
+			page.locator('li').filter({hasText: fileName})
+		).toBeVisible();
+	}
+);
+
+test(
+	'Message Boards Admin: Change delta to a higher value when on last page',
+	{tag: '@LPD-37727'},
+	async ({apiHelpers, messageBoardsPage, page, site}) => {
+		const threadsLinks = page.getByRole('link', {
+			name: /Thread with headline #\d+/,
 		});
-	const messageBoardThread2 =
-		await apiHelpers.headlessDelivery.postMessageBoardThread({
-			articleBody: getRandomString(),
-			headline: getRandomString(),
-			siteId: site.id,
+		for (let i = 0; i < 5; i++) {
+			await apiHelpers.headlessDelivery.postMessageBoardThread({
+				articleBody: getRandomString(),
+				headline: 'Thread with headline #' + i,
+				siteId: site.id,
+			});
+		}
+
+		await messageBoardsPage.goto(site.friendlyUrlPath);
+
+		await setItemsPerPage(page, 4);
+		await expect(threadsLinks).toHaveCount(4);
+
+		await gotoPage(page, 2);
+		await expect(threadsLinks).toHaveCount(1);
+
+		await setItemsPerPage(page, 8);
+		await expect(threadsLinks).toHaveCount(5);
+	}
+);
+
+test(
+	'Message Boards Widget: Change delta to a higher value when on last page',
+	{tag: '@LPD-39570'},
+	async ({apiHelpers, messageBoardsWidgetPage, page, site}) => {
+		const threadsLinks = page.getByRole('link', {
+			name: /Thread with headline #\d+/,
 		});
+		for (let i = 0; i < 5; i++) {
+			await apiHelpers.headlessDelivery.postMessageBoardThread({
+				articleBody: getRandomString(),
+				headline: 'Thread with headline #' + i,
+				siteId: site.id,
+			});
+		}
+		await messageBoardsWidgetPage.addMessageBoardsPortlet(site);
 
-	await messageBoardsWidgetPage.addMessageBoardsPortlet(site);
+		await setItemsPerPage(page, 4);
+		await expect(threadsLinks).toHaveCount(4);
 
-	await expect(
-		page.getByRole('link', {name: messageBoardThread1.headline})
-	).toBeVisible();
+		await gotoPage(page, 2);
+		await expect(threadsLinks).toHaveCount(1);
 
-	await expect(
-		page.getByRole('link', {name: messageBoardThread2.headline})
-	).toBeVisible();
-
-	await page.getByTestId('searchInput').fill(messageBoardThread1.headline);
-	await page.getByTestId('searchButton').click();
-
-	await expect(
-		page.getByRole('link', {name: messageBoardThread1.headline})
-	).toBeVisible();
-
-	await expect(
-		page.getByRole('link', {name: messageBoardThread2.headline})
-	).toBeHidden();
-});
-
-test('LPD-27633 Do not show site in breadcrumb', async ({
-	messageBoardsWidgetPage,
-	page,
-	site,
-}) => {
-	const layout = await messageBoardsWidgetPage.addMessageBoardsPortlet(site);
-
-	const categoryName = getRandomString();
-
-	await messageBoardsWidgetPage.addCategory(site, layout, categoryName);
-
-	const searchMenu = page.locator(
-		'[id="_com_liferay_message_boards_web_portlet_MBPortlet_mbCategoriesSearchContainer_1_menu"]'
-	);
-
-	await searchMenu.waitFor();
-	await searchMenu.click();
-
-	await page.getByRole('menuitem', {name: 'Move'}).click();
-
-	await page.getByRole('button', {name: 'Select'}).click();
-
-	await expect(
-		page
-			.frameLocator('iframe[title="Select Category"]')
-			.getByText(site.name)
-	).toBeHidden();
-});
-
-test('LPD-33132 Posting a Document to Forums', async ({
-	messageBoardsEditThreadPage,
-	page,
-	site,
-}) => {
-	const fileName = 'attachment , file.txt';
-
-	await messageBoardsEditThreadPage.publishNewBasicThread(
-		'Thread Subject',
-		'Thread Body',
-		site.friendlyUrlPath,
-		path.join(__dirname, '/dependencies/' + fileName)
-	);
-
-	await expect(page.locator('li').filter({hasText: fileName})).toBeVisible();
-});
+		await setItemsPerPage(page, 8);
+		await expect(threadsLinks).toHaveCount(5);
+	}
+);

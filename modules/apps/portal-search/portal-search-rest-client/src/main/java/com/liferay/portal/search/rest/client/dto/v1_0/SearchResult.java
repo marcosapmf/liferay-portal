@@ -11,6 +11,7 @@ import com.liferay.portal.search.rest.client.serdes.v1_0.SearchResultSerDes;
 import java.io.Serializable;
 
 import java.util.Date;
+import java.util.Map;
 import java.util.Objects;
 
 import javax.annotation.Generated;
@@ -25,6 +26,28 @@ public class SearchResult implements Cloneable, Serializable {
 	public static SearchResult toDTO(String json) {
 		return SearchResultSerDes.toDTO(json);
 	}
+
+	public Map<String, Map<String, String>> getActions() {
+		return actions;
+	}
+
+	public void setActions(Map<String, Map<String, String>> actions) {
+		this.actions = actions;
+	}
+
+	public void setActions(
+		UnsafeSupplier<Map<String, Map<String, String>>, Exception>
+			actionsUnsafeSupplier) {
+
+		try {
+			actions = actionsUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Map<String, Map<String, String>> actions;
 
 	public Date getDateCreated() {
 		return dateCreated;
@@ -109,6 +132,27 @@ public class SearchResult implements Cloneable, Serializable {
 	}
 
 	protected Object embedded;
+
+	public String getEntryClassName() {
+		return entryClassName;
+	}
+
+	public void setEntryClassName(String entryClassName) {
+		this.entryClassName = entryClassName;
+	}
+
+	public void setEntryClassName(
+		UnsafeSupplier<String, Exception> entryClassNameUnsafeSupplier) {
+
+		try {
+			entryClassName = entryClassNameUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String entryClassName;
 
 	public String getItemURL() {
 		return itemURL;

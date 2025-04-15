@@ -183,8 +183,7 @@ public class DuplicateItemMVCActionCommandTest {
 			headingFragmentStyledLayoutStructureItem.getParentItemId());
 
 		JSONObject jsonObject = ReflectionTestUtil.invoke(
-			_mvcActionCommand,
-			"_addDuplicateFragmentEntryLinkToLayoutDataJSONObject",
+			_mvcActionCommand, "doTransactionalCommand",
 			new Class<?>[] {ActionRequest.class, ActionResponse.class},
 			_getMockLiferayPortletActionRequest(
 				new String[] {
@@ -317,7 +316,7 @@ public class DuplicateItemMVCActionCommandTest {
 				fragmentCollection.getFragmentCollectionId(),
 				RandomTestUtil.randomString(), RandomTestUtil.randomString(),
 				StringPool.BLANK, html, StringPool.BLANK, false,
-				StringPool.BLANK, null, 0, false,
+				StringPool.BLANK, null, 0, false, false,
 				FragmentConstants.TYPE_COMPONENT, null,
 				WorkflowConstants.STATUS_APPROVED, _serviceContext);
 
@@ -440,6 +439,7 @@ public class DuplicateItemMVCActionCommandTest {
 		themeDisplay.setCompany(_company);
 		themeDisplay.setLayout(_layout);
 		themeDisplay.setLayoutSet(_layout.getLayoutSet());
+		themeDisplay.setLocale(LocaleUtil.US);
 		themeDisplay.setPermissionChecker(
 			PermissionThreadLocal.getPermissionChecker());
 		themeDisplay.setPlid(_layout.getPlid());

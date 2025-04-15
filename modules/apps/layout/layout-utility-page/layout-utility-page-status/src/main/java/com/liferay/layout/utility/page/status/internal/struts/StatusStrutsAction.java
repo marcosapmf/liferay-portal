@@ -6,7 +6,10 @@
 package com.liferay.layout.utility.page.status.internal.struts;
 
 import com.liferay.petra.io.unsync.UnsyncStringWriter;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.LayoutSet;
+import com.liferay.portal.kernel.security.auth.PrincipalThreadLocal;
 import com.liferay.portal.kernel.service.LayoutSetLocalService;
 import com.liferay.portal.kernel.servlet.PipingServletResponse;
 import com.liferay.portal.kernel.servlet.PortalMessages;
@@ -67,23 +70,48 @@ public class StatusStrutsAction implements StrutsAction {
 
 		SessionErrors.clear(httpServletRequest);
 
-		Document document = Jsoup.parse(
-			ThemeUtil.include(
-				httpServletRequest.getServletContext(), httpServletRequest,
-				httpServletResponse, "portal_normal.ftl", layoutSet.getTheme(),
-				false));
+		Document document = null;
+
+		String originalPrincipalName = PrincipalThreadLocal.getName();
+
+		try {
+			PrincipalThreadLocal.setName(themeDisplay.getUserId());
+
+			document = Jsoup.parse(
+				ThemeUtil.include(
+					httpServletRequest.getServletContext(), httpServletRequest,
+					httpServletResponse, "portal_normal.ftl",
+					layoutSet.getTheme(), false));
+		}
+		finally {
+			PrincipalThreadLocal.setName(originalPrincipalName);
+		}
 
 		PortalMessages.clear(httpServletRequest);
 		SessionMessages.clear(httpServletRequest);
 
-		Element contentElement = document.getElementById("content");
+		Element element = document.getElementById("content");
 
-		contentElement.html(unsyncStringWriter.toString());
+		if (element == null) {
+			if (_log.isWarnEnabled()) {
+				_log.warn(
+					"Replacing all body content because theme " +
+						layoutSet.getThemeId() +
+							" lacks a tag with ID \"content\"");
+			}
+
+			element = document.body();
+		}
+
+		element.html(unsyncStringWriter.toString());
 
 		ServletResponseUtil.write(httpServletResponse, document.html());
 
 		return null;
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		StatusStrutsAction.class);
 
 	@Reference
 	private LayoutSetLocalService _layoutSetLocalService;

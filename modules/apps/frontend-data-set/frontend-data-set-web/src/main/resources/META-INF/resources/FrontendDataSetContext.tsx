@@ -5,16 +5,20 @@
 
 import React from 'react';
 
-import {IInlineEditingSettings, IItemsActions} from '.';
+import {IInlineEditingSettings, IItemsActions, ISchema} from '.';
 
 export interface IFrontendDataSetContext {
 	actionParameterName?: string | null;
+	allItemsSelectedActive: boolean;
 	apiURL?: string;
 	appURL?: string;
 	applyItemInlineUpdates: Function;
 	createInlineItem: Function;
 	customDataRenderers?: Array<any>;
-	customRenderers?: {tableCell?: Array<TRenderer>};
+	customRenderers?: {
+		tableCell?: Array<TRenderer>;
+		views?: Array<TRenderer>;
+	};
 	executeAsyncItemAction: Function;
 	formId?: string;
 	formName?: string;
@@ -26,7 +30,7 @@ export interface IFrontendDataSetContext {
 		defaultBodyContent?: object;
 	};
 	inlineEditingSettings?: IInlineEditingSettings;
-	itemsActions?: IItemsActions[];
+	itemsActions?: Array<IItemsActions>;
 	itemsChanges?: Array<any>;
 	loadData: Function;
 	modalId?: string;
@@ -35,6 +39,14 @@ export interface IFrontendDataSetContext {
 	nestedItemsReferenceKey?: string;
 	onActionDropdownItemClick: Function;
 	onBulkActionItemClick: Function;
+	onItemsChange: ({
+		itemKey,
+		items,
+	}: {
+		itemKey?: string;
+		items: Array<any>;
+	}) => void;
+	onSearch: ({query}: {query: string}) => void;
 	onSelect: Function;
 	openModal: Function;
 	openSidePanel: Function;
@@ -52,7 +64,6 @@ export interface IFrontendDataSetContext {
 	uniformActionsDisplay?: boolean;
 	updateDataSetItems: Function;
 	updateItem: Function;
-	updateSearchParam: Function;
 }
 
 export interface IHTMLElementBuilder {
@@ -69,8 +80,11 @@ export interface IClientExtensionRenderer {
 
 export interface IInternalRenderer {
 	component: React.ComponentType<any>;
+	default?: boolean;
 	label?: string;
 	name?: string;
+	schema?: ISchema;
+	symbol?: string;
 	type: 'internal';
 	url?: string;
 }
@@ -78,6 +92,7 @@ export interface IInternalRenderer {
 export type TRenderer = IClientExtensionRenderer | IInternalRenderer;
 
 const FrontendDataSetContext = React.createContext({
+	allItemsSelectedActive: false,
 	applyItemInlineUpdates: () => {},
 	createInlineItem: () => {},
 	executeAsyncItemAction: () => {},
@@ -85,6 +100,8 @@ const FrontendDataSetContext = React.createContext({
 	loadData: () => {},
 	onActionDropdownItemClick: () => {},
 	onBulkActionItemClick: () => {},
+	onItemsChange: () => {},
+	onSearch: () => {},
 	onSelect: () => {},
 	openModal: () => {},
 	openSidePanel: () => {},
@@ -94,7 +111,6 @@ const FrontendDataSetContext = React.createContext({
 	toggleItemInlineEdit: () => {},
 	updateDataSetItems: () => {},
 	updateItem: () => {},
-	updateSearchParam: () => {},
 } as IFrontendDataSetContext);
 
 export default FrontendDataSetContext;

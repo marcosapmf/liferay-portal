@@ -153,7 +153,7 @@ if (portletTitleBasedNavigation) {
 		%>
 
 		<liferay-ui:error exception="<%= FileExtensionException.class %>">
-			<liferay-ui:message key="document-names-must-end-with-one-of-the-following-extensions" /><%= StringUtil.merge(dlConfiguration.fileExtensions(), StringPool.COMMA_AND_SPACE) %>.
+			<liferay-ui:message arguments="<%= StringUtil.merge(dlConfiguration.fileExtensions(), StringPool.COMMA_AND_SPACE) %>" key="please-enter-a-file-with-a-valid-extension-x" />
 		</liferay-ui:error>
 
 		<liferay-ui:error exception="<%= FileNameException.class %>" message="please-enter-a-file-with-a-valid-file-name" />
@@ -275,19 +275,9 @@ if (portletTitleBasedNavigation) {
 											<portlet:param name="fileName" value="<%= HtmlUtil.unescape(fileEntry.getTitle()) %>" />
 										</liferay-portlet:actionURL>
 
-										<liferay-ui:icon-menu
-											direction="left-side"
-											icon="<%= StringPool.BLANK %>"
-											markupView="lexicon"
-											message="actions"
-										>
-											<div class="delete-attachment" data-rowid="<%= fileEntry.getFileEntryId() %>" data-url="<%= deleteURL.toString() %>">
-												<liferay-ui:icon-delete
-													trash="<%= trashHelper.isTrashEnabled(scopeGroupId) %>"
-													url="javascript:void(0);"
-												/>
-											</div>
-										</liferay-ui:icon-menu>
+										<a class="delete-attachment" data-rowid="<%= fileEntry.getFileEntryId() %>" href="<%= deleteURL.toString() %>">
+											<liferay-ui:message key="delete" />
+										</a>
 									</liferay-ui:search-container-column-text>
 								</liferay-ui:search-container-row>
 
@@ -467,7 +457,7 @@ if (portletTitleBasedNavigation) {
 </clay:container-fluid>
 
 <%
-MBEditMessageDisplayContext mbEditMessageDisplayContext = new MBEditMessageDisplayContext(liferayPortletRequest, liferayPortletResponse, message);
+MBEditMessageDisplayContext mbEditMessageDisplayContext = new MBEditMessageDisplayContext(request, liferayPortletRequest, liferayPortletResponse, message, trashHelper);
 %>
 
 <liferay-frontend:component

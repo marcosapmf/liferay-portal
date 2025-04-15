@@ -3,25 +3,25 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
+import {
+	ObjectDefinitionAPI,
+	ObjectRelationshipAPI,
+	ObjectViewAPI,
+} from '@liferay/object-admin-rest-client-js';
 import {expect, mergeTests} from '@playwright/test';
 
-import {apiHelpersTest} from '../../fixtures/apiHelpersTest';
+import {dataApiHelpersTest} from '../../fixtures/dataApiHelpersTest';
 import {loginTest} from '../../fixtures/loginTest';
 import {objectPagesTest} from '../../fixtures/objectPagesTest';
 import {getRandomInt} from '../../utils/getRandomInt';
 import getRandomString from '../../utils/getRandomString';
+import {mockObjectFields} from './utils/mockObjectFields';
 
-export const test = mergeTests(apiHelpersTest, loginTest(), objectPagesTest);
-
-const objectDefinitions: ObjectDefinition[] = [];
-
-test.afterEach(async ({apiHelpers}) => {
-	for (const objectDefinition of objectDefinitions) {
-		await apiHelpers.objectAdmin.deleteObjectDefinition(
-			objectDefinition.id
-		);
-	}
-});
+export const test = mergeTests(
+	dataApiHelpersTest,
+	loginTest(),
+	objectPagesTest
+);
 
 test('can create an object custom view using object relationship entry', async ({
 	apiHelpers,
@@ -40,30 +40,35 @@ test('can create an object custom view using object relationship entry', async (
 			objectFolderExternalReferenceCode: 'default',
 			status: {code: 0},
 		});
+	apiHelpers.data.push({id: objectDefinition1.id, type: 'objectDefinition'});
 
-	objectDefinitions.push(objectDefinition1);
-	objectDefinitions.push(objectDefinition2);
+	apiHelpers.data.push({id: objectDefinition2.id, type: 'objectDefinition'});
 
 	const objectRelationshipLabel = 'objectRelationshipLabel' + getRandomInt();
 	const objectRelationshipName =
 		'objectRelationshipName' + Math.floor(Math.random() * 99);
 
-	const objectRelationshipData: Partial<ObjectRelationship> = {
-		label: {
-			en_US: objectRelationshipLabel,
-		},
-		name: objectRelationshipName,
-		objectDefinitionExternalReferenceCode1:
-			objectDefinition1.externalReferenceCode,
-		objectDefinitionExternalReferenceCode2:
-			objectDefinition2.externalReferenceCode,
-		objectDefinitionId1: objectDefinition1.id,
-		objectDefinitionId2: objectDefinition2.id,
-		objectDefinitionName2: objectDefinition2.name,
-		type: 'oneToMany' as ObjectRelationshipType,
-	};
+	const objectRelationshipAPIClient = await apiHelpers.buildRestClient(
+		ObjectRelationshipAPI
+	);
 
-	await apiHelpers.objectAdmin.postObjectRelationship(objectRelationshipData);
+	await objectRelationshipAPIClient.postObjectDefinitionByExternalReferenceCodeObjectRelationship(
+		objectDefinition1.externalReferenceCode,
+		{
+			label: {
+				en_US: objectRelationshipLabel,
+			},
+			name: objectRelationshipName,
+			objectDefinitionExternalReferenceCode1:
+				objectDefinition1.externalReferenceCode,
+			objectDefinitionExternalReferenceCode2:
+				objectDefinition2.externalReferenceCode,
+			objectDefinitionId1: objectDefinition1.id,
+			objectDefinitionId2: objectDefinition2.id,
+			objectDefinitionName2: objectDefinition2.name,
+			type: 'oneToMany',
+		}
+	);
 
 	const applicationName = 'c/' + objectDefinition1.name.toLowerCase() + 's';
 
@@ -85,8 +90,8 @@ test('can create an object custom view using object relationship entry', async (
 	await page.getByRole('link', {name: objectViewName}).click();
 
 	editObjectViewPage.createFilter(
-		'Includes',
 		objectRelationshipLabel,
+		'Includes',
 		`${objectEntryResponse.id}`
 	);
 
@@ -101,4 +106,153 @@ test('can create an object custom view using object relationship entry', async (
 	await expect(
 		editObjectViewPage.sidePanel.getByText(`${objectEntryResponse.id}`)
 	).toBeVisible();
+});
+
+test('cannot create an object custom view using empty multiselectpicklist entry', async ({
+	apiHelpers,
+	editObjectViewPage,
+	objectViewPage,
+	page,
+}) => {
+	const listTypeDefinition =
+		await apiHelpers.listTypeAdmin.postRandomListTypeDefinition();
+
+	apiHelpers.data.push({
+		id: listTypeDefinition.id,
+		type: 'listTypeDefinition',
+	});
+
+	const objectDefinition =
+		await apiHelpers.objectAdmin.postRandomObjectDefinition({
+			objectFields: [
+				{
+					DBType: 'String',
+					businessType: 'MultiselectPicklist',
+					externalReferenceCode: 'customPicklist',
+					indexed: true,
+					indexedAsKeyword: false,
+					indexedLanguageId: 'en_US',
+					label: {
+						en_US: 'customPicklist',
+					},
+					listTypeDefinitionExternalReferenceCode:
+						listTypeDefinition.externalReferenceCode,
+					name: 'customPicklist',
+					required: false,
+					state: false,
+				},
+			],
+			objectFolderExternalReferenceCode: 'default',
+			status: {code: 0},
+		});
+
+	apiHelpers.data.push({id: objectDefinition.id, type: 'objectDefinition'});
+
+	const objectViewName = getRandomString();
+
+	await objectViewPage.goto(objectDefinition.label['en_US']);
+
+	await objectViewPage.createObjectView(objectViewName);
+
+	await page.getByRole('link', {name: objectViewName}).click();
+
+	await editObjectViewPage.createFilter('customPicklist', 'Includes');
+
+	await expect(
+		page.frameLocator('iframe').getByText('Required')
+	).toBeVisible();
+});
+
+test('assert that the user is able to use the ERC field in Sort, on the Custom Views tab', async ({
+	apiHelpers,
+	page,
+	viewObjectEntriesPage,
+}) => {
+	const objectDefinitionLabel = 'ObjectDefinitionLabel' + getRandomInt();
+	const objectDefinitionName = 'ObjectDefinitionName' + getRandomInt();
+
+	const {objectEntry, objectFields, titleObjectFieldName} =
+		await mockObjectFields({
+			apiHelpers,
+			objectEntryReturn: {format: 'API'},
+			objectFieldBusinessTypes: ['text'],
+			titleObjectFieldName: 'text',
+		});
+
+	const objectDefinitionAPIClient =
+		await apiHelpers.buildRestClient(ObjectDefinitionAPI);
+
+	const {body: objectDefinition} =
+		await objectDefinitionAPIClient.postObjectDefinition({
+			active: true,
+			enableLocalization: true,
+			label: {
+				en_US: objectDefinitionLabel,
+			},
+			name: objectDefinitionName,
+			objectFields,
+			pluralLabel: {
+				en_US: objectDefinitionLabel,
+			},
+			portlet: true,
+			scope: 'company',
+			status: {
+				code: 0,
+			},
+			titleObjectFieldName,
+		});
+
+	apiHelpers.data.push({
+		id: objectDefinition.id,
+		type: 'objectDefinition',
+	});
+
+	const objectViewAPIClient = await apiHelpers.buildRestClient(ObjectViewAPI);
+
+	await objectViewAPIClient.postObjectDefinitionObjectView(
+		objectDefinition.id,
+		{
+			defaultObjectView: true,
+			name: {en_US: getRandomString()},
+			objectViewColumns: [
+				{
+					objectFieldName: titleObjectFieldName,
+					priority: 0,
+				},
+				{
+					objectFieldName: 'externalReferenceCode',
+					priority: 1,
+				},
+			],
+			objectViewSortColumns: [
+				{
+					objectFieldName: 'externalReferenceCode',
+					priority: 0,
+					sortOrder: 'asc',
+				},
+			],
+		}
+	);
+
+	const applicationName = 'c/' + objectDefinition.name.toLowerCase() + 's';
+	const entry1 = 'Entry A';
+	const entry2 = 'Entry B';
+
+	await apiHelpers.objectEntry.postObjectEntry(
+		{...objectEntry, externalReferenceCode: entry1},
+		applicationName
+	);
+
+	await apiHelpers.objectEntry.postObjectEntry(
+		{...objectEntry, externalReferenceCode: entry2},
+		applicationName
+	);
+
+	await viewObjectEntriesPage.goto(objectDefinition.className);
+
+	await expect(page.getByRole('cell').nth(2)).toHaveText(entry1);
+
+	await page.getByTitle('Sortable Column').dblclick();
+
+	await expect(page.getByRole('cell').nth(2)).toHaveText(entry2);
 });

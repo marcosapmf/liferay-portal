@@ -27,6 +27,7 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 
+import java.util.List;
 import java.util.Objects;
 
 import javax.servlet.http.HttpServletRequest;
@@ -52,29 +53,7 @@ public class ClientExtensionsServicePreAction extends Action {
 			(ThemeDisplay)httpServletRequest.getAttribute(
 				WebKeys.THEME_DISPLAY);
 
-		Layout layout = themeDisplay.getLayout();
-
-		if (layout.isTypeControlPanel()) {
-			String mode = ParamUtil.getString(
-				httpServletRequest, "p_l_mode", Constants.VIEW);
-
-			if (!Objects.equals(mode, Constants.PREVIEW)) {
-				return;
-			}
-
-			long selPlid = ParamUtil.getLong(
-				httpServletRequest,
-				StringBundler.concat(
-					StringPool.UNDERLINE,
-					ParamUtil.getString(httpServletRequest, "p_p_id"),
-					"_selPlid"));
-
-			if (selPlid <= 0) {
-				return;
-			}
-
-			layout = _layoutLocalService.fetchLayout(selPlid);
-		}
+		Layout layout = _getLayout(httpServletRequest, themeDisplay);
 
 		if (layout == null) {
 			return;
@@ -115,6 +94,26 @@ public class ClientExtensionsServicePreAction extends Action {
 
 		return _cetManager.getCET(
 			companyId, clientExtensionEntryRel.getCETExternalReferenceCode());
+	}
+
+	private ThemeCSSCET _getControlPanelThemeCSSCET(Layout layout) {
+		List<ClientExtensionEntryRel> clientExtensionEntryRels =
+			_clientExtensionEntryRelLocalService.getClientExtensionEntryRels(
+				_portal.getClassNameId(Layout.class), layout.getPlid(),
+				ClientExtensionEntryConstants.TYPE_THEME_CSS);
+
+		if ((clientExtensionEntryRels == null) ||
+			(clientExtensionEntryRels.size() != 1)) {
+
+			return null;
+		}
+
+		ClientExtensionEntryRel clientExtensionEntryRel =
+			clientExtensionEntryRels.get(0);
+
+		return (ThemeCSSCET)_cetManager.getCET(
+			layout.getCompanyId(),
+			clientExtensionEntryRel.getCETExternalReferenceCode());
 	}
 
 	private String _getFaviconURL(Layout layout) {
@@ -174,7 +173,40 @@ public class ClientExtensionsServicePreAction extends Action {
 		return null;
 	}
 
+	private Layout _getLayout(
+		HttpServletRequest httpServletRequest, ThemeDisplay themeDisplay) {
+
+		Layout layout = themeDisplay.getLayout();
+
+		if (!layout.isTypeControlPanel()) {
+			return layout;
+		}
+
+		String mode = ParamUtil.getString(
+			httpServletRequest, "p_l_mode", Constants.VIEW);
+
+		if (!Objects.equals(mode, Constants.PREVIEW)) {
+			return layout;
+		}
+
+		long selPlid = ParamUtil.getLong(
+			httpServletRequest,
+			StringBundler.concat(
+				StringPool.UNDERLINE,
+				ParamUtil.getString(httpServletRequest, "p_p_id"), "_selPlid"));
+
+		if (selPlid <= 0) {
+			return layout;
+		}
+
+		return _layoutLocalService.fetchLayout(selPlid);
+	}
+
 	private ThemeCSSCET _getThemeCSSCET(Layout layout) {
+		if (layout.isTypeControlPanel()) {
+			return _getControlPanelThemeCSSCET(layout);
+		}
+
 		CET cet = _getCET(
 			_portal.getClassNameId(Layout.class), layout.getPlid(),
 			layout.getCompanyId(),

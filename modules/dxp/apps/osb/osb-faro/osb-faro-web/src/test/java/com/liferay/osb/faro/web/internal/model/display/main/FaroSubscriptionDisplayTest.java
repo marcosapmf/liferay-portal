@@ -26,6 +26,7 @@ import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Set;
@@ -67,7 +68,10 @@ public class FaroSubscriptionDisplayTest {
 
 	@Test
 	public void testSetUsageCounts1() throws Exception {
-		LocalDate localDate = LocalDate.now();
+		LocalDate localDate = LocalDate.now(
+		).withDayOfMonth(
+			10
+		);
 
 		LocalDateTime localDateTime1 = LocalDateTime.of(
 			localDate.minusYears(1), LocalTime.MIN);
@@ -81,13 +85,20 @@ public class FaroSubscriptionDisplayTest {
 
 		FaroProject faroProject = _mockFaroProject(
 			ProductConstants.BUSINESS_PRODUCT_NAME,
-			JSONFactoryUtil.createJSONObject(), instant.toEpochMilli());
+			JSONUtil.put(
+				"individualsCountSinceLastAnniversary", 1
+			).put(
+				"pageViewsCountSinceLastAnniversary", 1
+			),
+			instant.toEpochMilli());
 
 		LocalDateTime localDateTime2 = localDateTime1.plusDays(5);
 
+		Date date = _toDate(localDateTime2);
+
 		faroSubscriptionDisplay.setUsageCounts(
-			_cerebroEngineClient, _contactsEngineClient,
-			_toDate(localDateTime2), faroProject);
+			_cerebroEngineClient, _contactsEngineClient, date, faroProject,
+			_addToDate(date, Calendar.DATE, -1));
 
 		_assertCounts(
 			JSONUtil.put(
@@ -127,7 +138,10 @@ public class FaroSubscriptionDisplayTest {
 
 	@Test
 	public void testSetUsageCounts2() throws Exception {
-		LocalDate localDate = LocalDate.now();
+		LocalDate localDate = LocalDate.now(
+		).withDayOfMonth(
+			10
+		);
 
 		LocalDateTime localDateTime1 = LocalDateTime.of(
 			localDate.minusYears(1), LocalTime.MIN);
@@ -178,9 +192,11 @@ public class FaroSubscriptionDisplayTest {
 
 		LocalDateTime localDateTime2 = localDateTime1.plusDays(5);
 
+		Date date = _toDate(localDateTime2);
+
 		faroSubscriptionDisplay.setUsageCounts(
-			_cerebroEngineClient, _contactsEngineClient,
-			_toDate(localDateTime2), faroProject);
+			_cerebroEngineClient, _contactsEngineClient, date, faroProject,
+			_addToDate(date, Calendar.DATE, -1));
 
 		_assertCounts(
 			JSONUtil.put(
@@ -220,7 +236,10 @@ public class FaroSubscriptionDisplayTest {
 
 	@Test
 	public void testSetUsageCounts3() throws Exception {
-		LocalDate localDate = LocalDate.now();
+		LocalDate localDate = LocalDate.now(
+		).withDayOfMonth(
+			10
+		);
 
 		LocalDateTime localDateTime1 = LocalDateTime.of(
 			localDate.minusYears(1), LocalTime.MIN);
@@ -271,9 +290,11 @@ public class FaroSubscriptionDisplayTest {
 
 		LocalDateTime localDateTime2 = localDateTime1.plusMonths(1);
 
+		Date date = _toDate(localDateTime2);
+
 		faroSubscriptionDisplay.setUsageCounts(
-			_cerebroEngineClient, _contactsEngineClient,
-			_toDate(localDateTime2), faroProject);
+			_cerebroEngineClient, _contactsEngineClient, date, faroProject,
+			_addToDate(date, Calendar.DATE, -1));
 
 		_assertCounts(
 			JSONUtil.put(
@@ -329,7 +350,10 @@ public class FaroSubscriptionDisplayTest {
 
 	@Test
 	public void testSetUsageCounts4() throws Exception {
-		LocalDate localDate = LocalDate.now();
+		LocalDate localDate = LocalDate.now(
+		).withDayOfMonth(
+			10
+		);
 
 		LocalDateTime localDateTime1 = LocalDateTime.of(
 			localDate.minusYears(1), LocalTime.MIN);
@@ -398,9 +422,11 @@ public class FaroSubscriptionDisplayTest {
 
 		localDateTime2 = localDateTime2.plusDays(1);
 
+		Date date = _toDate(localDateTime2);
+
 		faroSubscriptionDisplay.setUsageCounts(
-			_cerebroEngineClient, _contactsEngineClient,
-			_toDate(localDateTime2), faroProject);
+			_cerebroEngineClient, _contactsEngineClient, date, faroProject,
+			_addToDate(date, Calendar.DATE, -1));
 
 		_assertCounts(
 			JSONUtil.put(
@@ -456,7 +482,10 @@ public class FaroSubscriptionDisplayTest {
 
 	@Test
 	public void testSetUsageCounts5() throws Exception {
-		LocalDate localDate = LocalDate.now();
+		LocalDate localDate = LocalDate.now(
+		).withDayOfMonth(
+			10
+		);
 
 		LocalDateTime localDateTime1 = LocalDateTime.of(
 			localDate.minusYears(1), LocalTime.MIN);
@@ -523,9 +552,11 @@ public class FaroSubscriptionDisplayTest {
 
 		LocalDateTime localDateTime2 = localDateTime1.plusYears(1);
 
+		Date date = _toDate(localDateTime2);
+
 		faroSubscriptionDisplay.setUsageCounts(
-			_cerebroEngineClient, _contactsEngineClient,
-			_toDate(localDateTime2), faroProject);
+			_cerebroEngineClient, _contactsEngineClient, date, faroProject,
+			_addToDate(date, Calendar.DATE, -1));
 
 		_assertCounts(
 			JSONUtil.put(
@@ -551,7 +582,10 @@ public class FaroSubscriptionDisplayTest {
 
 	@Test
 	public void testSetUsageCounts6() throws Exception {
-		LocalDate localDate = LocalDate.now();
+		LocalDate localDate = LocalDate.now(
+		).withDayOfMonth(
+			10
+		);
 
 		LocalDateTime localDateTime1 = LocalDateTime.of(
 			localDate.minusYears(1), LocalTime.MIN);
@@ -618,9 +652,11 @@ public class FaroSubscriptionDisplayTest {
 
 		LocalDateTime localDateTime2 = localDateTime1.plusYears(1);
 
+		Date date = _toDate(localDateTime2);
+
 		faroSubscriptionDisplay.setUsageCounts(
-			_cerebroEngineClient, _contactsEngineClient,
-			_toDate(localDateTime2), faroProject);
+			_cerebroEngineClient, _contactsEngineClient, date, faroProject,
+			_addToDate(date, Calendar.DATE, -1));
 
 		_assertCounts(
 			JSONUtil.put(
@@ -690,7 +726,10 @@ public class FaroSubscriptionDisplayTest {
 
 	@Test
 	public void testSetUsageCounts7() throws Exception {
-		LocalDate localDate = LocalDate.now();
+		LocalDate localDate = LocalDate.now(
+		).withDayOfMonth(
+			10
+		);
 
 		LocalDateTime localDateTime1 = LocalDateTime.of(
 			localDate.minusYears(1), LocalTime.MIN);
@@ -713,9 +752,11 @@ public class FaroSubscriptionDisplayTest {
 
 		LocalDateTime localDateTime2 = localDateTime1.plusDays(5);
 
+		Date date = _toDate(localDateTime2);
+
 		faroSubscriptionDisplay.setUsageCounts(
-			_cerebroEngineClient, _contactsEngineClient,
-			_toDate(localDateTime2), faroProject);
+			_cerebroEngineClient, _contactsEngineClient, date, faroProject,
+			_addToDate(date, Calendar.DATE, -1));
 
 		_assertCounts(
 			JSONUtil.put(
@@ -725,12 +766,12 @@ public class FaroSubscriptionDisplayTest {
 					JSONUtil.put(
 						"count", 1
 					).put(
-						"countSinceLastAnniversary", 11
+						"countSinceLastAnniversary", 10
 					))
 			).put(
-				"total", 11
+				"total", 10
 			).put(
-				"totalSinceLastAnniversary", 11
+				"totalSinceLastAnniversary", 10
 			),
 			JSONFactoryUtil.createJSONObject(
 				faroSubscriptionDisplay.getIndividualsCounts()));
@@ -742,15 +783,25 @@ public class FaroSubscriptionDisplayTest {
 					JSONUtil.put(
 						"count", 1
 					).put(
-						"countSinceLastAnniversary", 501
+						"countSinceLastAnniversary", 500
 					))
 			).put(
-				"total", 501
+				"total", 500
 			).put(
-				"totalSinceLastAnniversary", 501
+				"totalSinceLastAnniversary", 500
 			),
 			JSONFactoryUtil.createJSONObject(
 				faroSubscriptionDisplay.getPageViewsCounts()));
+	}
+
+	private Date _addToDate(Date date, int field, int increment) {
+		Calendar calendar = Calendar.getInstance();
+
+		calendar.setTime(date);
+
+		calendar.add(field, increment);
+
+		return calendar.getTime();
 	}
 
 	private void _assertCounts(

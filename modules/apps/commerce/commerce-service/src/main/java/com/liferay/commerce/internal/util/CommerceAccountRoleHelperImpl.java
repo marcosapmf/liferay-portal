@@ -13,20 +13,24 @@ import com.liferay.account.model.AccountRole;
 import com.liferay.account.service.AccountRoleLocalService;
 import com.liferay.commerce.constants.CommerceAccountActionKeys;
 import com.liferay.commerce.constants.CommerceActionKeys;
+import com.liferay.commerce.constants.CommerceOrderActionKeys;
 import com.liferay.commerce.constants.CommercePortletKeys;
+import com.liferay.commerce.currency.constants.CommerceCurrencyActionKeys;
 import com.liferay.commerce.notification.constants.CommerceNotificationActionKeys;
+import com.liferay.commerce.payment.constants.CommercePaymentEntryActionKeys;
+import com.liferay.commerce.payment.model.CommercePaymentEntry;
 import com.liferay.commerce.price.list.constants.CommercePriceListActionKeys;
 import com.liferay.commerce.pricing.constants.CommercePricingClassActionKeys;
 import com.liferay.commerce.pricing.constants.CommercePricingPortletKeys;
 import com.liferay.commerce.product.constants.CPActionKeys;
 import com.liferay.commerce.product.constants.CPPortletKeys;
+import com.liferay.commerce.product.model.CommerceChannel;
 import com.liferay.commerce.util.CommerceAccountRoleHelper;
 import com.liferay.list.type.model.ListTypeDefinition;
 import com.liferay.list.type.service.ListTypeDefinitionLocalService;
 import com.liferay.object.constants.ObjectActionKeys;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.service.ObjectDefinitionLocalService;
-import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.db.partition.util.DBPartitionUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
@@ -197,15 +201,23 @@ public class CommerceAccountRoleHelperImpl
 			groupResourceActionIds.put(
 				"com.liferay.commerce.order",
 				new String[] {
-					"ADD_COMMERCE_ORDER", "APPROVE_OPEN_COMMERCE_ORDERS",
-					"CHECKOUT_OPEN_COMMERCE_ORDERS", "DELETE_COMMERCE_ORDERS",
-					"MANAGE_COMMERCE_ORDER_DELIVERY_TERMS",
-					"MANAGE_COMMERCE_ORDER_PAYMENT_METHODS",
-					"MANAGE_COMMERCE_ORDER_PAYMENT_STATUSES",
-					"MANAGE_COMMERCE_ORDER_PAYMENT_TERMS",
-					"MANAGE_COMMERCE_ORDER_SHIPPING_OPTIONS",
-					"MANAGE_COMMERCE_ORDERS", "VIEW_BILLING_ADDRESS",
-					"VIEW_COMMERCE_ORDERS", "VIEW_OPEN_COMMERCE_ORDERS"
+					CommerceOrderActionKeys.ADD_COMMERCE_ORDER,
+					CommerceOrderActionKeys.APPROVE_OPEN_COMMERCE_ORDERS,
+					CommerceOrderActionKeys.CHECKOUT_OPEN_COMMERCE_ORDERS,
+					CommerceOrderActionKeys.DELETE_COMMERCE_ORDERS,
+					CommerceOrderActionKeys.
+						MANAGE_COMMERCE_ORDER_DELIVERY_TERMS,
+					CommerceOrderActionKeys.
+						MANAGE_COMMERCE_ORDER_PAYMENT_METHODS,
+					CommerceOrderActionKeys.
+						MANAGE_COMMERCE_ORDER_PAYMENT_STATUSES,
+					CommerceOrderActionKeys.MANAGE_COMMERCE_ORDER_PAYMENT_TERMS,
+					CommerceOrderActionKeys.
+						MANAGE_COMMERCE_ORDER_SHIPPING_OPTIONS,
+					CommerceOrderActionKeys.MANAGE_COMMERCE_ORDERS,
+					CommerceOrderActionKeys.VIEW_BILLING_ADDRESS,
+					CommerceOrderActionKeys.VIEW_COMMERCE_ORDERS,
+					CommerceOrderActionKeys.VIEW_OPEN_COMMERCE_ORDERS
 				});
 		}
 		else if (name.equals(
@@ -246,13 +258,19 @@ public class CommerceAccountRoleHelperImpl
 			groupResourceActionIds.put(
 				"com.liferay.commerce.order",
 				new String[] {
-					"ADD_COMMERCE_ORDER", "CHECKOUT_OPEN_COMMERCE_ORDERS",
-					"MANAGE_COMMERCE_ORDER_DELIVERY_TERMS",
-					"MANAGE_COMMERCE_ORDER_PAYMENT_METHODS",
-					"MANAGE_COMMERCE_ORDER_PAYMENT_TERMS",
-					"MANAGE_COMMERCE_ORDER_SHIPPING_OPTIONS",
-					"VIEW_BILLING_ADDRESS", "VIEW_COMMERCE_ORDERS",
-					"VIEW_OPEN_COMMERCE_ORDERS"
+					CommerceOrderActionKeys.ADD_COMMERCE_ORDER,
+					CommerceOrderActionKeys.CHECKOUT_OPEN_COMMERCE_ORDERS,
+					CommerceOrderActionKeys.
+						MANAGE_COMMERCE_ORDER_DELIVERY_TERMS,
+					CommerceOrderActionKeys.MANAGE_COMMERCE_ORDER_MULTISHIPPING,
+					CommerceOrderActionKeys.
+						MANAGE_COMMERCE_ORDER_PAYMENT_METHODS,
+					CommerceOrderActionKeys.MANAGE_COMMERCE_ORDER_PAYMENT_TERMS,
+					CommerceOrderActionKeys.
+						MANAGE_COMMERCE_ORDER_SHIPPING_OPTIONS,
+					CommerceOrderActionKeys.VIEW_BILLING_ADDRESS,
+					CommerceOrderActionKeys.VIEW_COMMERCE_ORDERS,
+					CommerceOrderActionKeys.VIEW_OPEN_COMMERCE_ORDERS
 				});
 		}
 		else if (name.equals(
@@ -265,16 +283,30 @@ public class CommerceAccountRoleHelperImpl
 			groupResourceActionIds.put(
 				"com.liferay.commerce.order",
 				new String[] {
-					"ADD_COMMERCE_ORDER", "APPROVE_OPEN_COMMERCE_ORDERS",
-					"CHECKOUT_OPEN_COMMERCE_ORDERS", "DELETE_COMMERCE_ORDERS",
-					"MANAGE_COMMERCE_ORDER_DELIVERY_TERMS",
-					"MANAGE_COMMERCE_ORDER_PAYMENT_METHODS",
-					"MANAGE_COMMERCE_ORDER_PAYMENT_STATUSES",
-					"MANAGE_COMMERCE_ORDER_PAYMENT_TERMS",
-					"MANAGE_COMMERCE_ORDER_SHIPPING_OPTIONS",
-					"MANAGE_COMMERCE_ORDERS", "VIEW_BILLING_ADDRESS",
-					"VIEW_COMMERCE_ORDERS", "VIEW_OPEN_COMMERCE_ORDERS"
+					CommerceOrderActionKeys.ADD_COMMERCE_ORDER,
+					CommerceOrderActionKeys.APPROVE_OPEN_COMMERCE_ORDERS,
+					CommerceOrderActionKeys.CHECKOUT_OPEN_COMMERCE_ORDERS,
+					CommerceOrderActionKeys.DELETE_COMMERCE_ORDERS,
+					CommerceOrderActionKeys.
+						MANAGE_COMMERCE_ORDER_DELIVERY_TERMS,
+					CommerceOrderActionKeys.MANAGE_COMMERCE_ORDER_MULTISHIPPING,
+					CommerceOrderActionKeys.
+						MANAGE_COMMERCE_ORDER_PAYMENT_METHODS,
+					CommerceOrderActionKeys.
+						MANAGE_COMMERCE_ORDER_PAYMENT_STATUSES,
+					CommerceOrderActionKeys.MANAGE_COMMERCE_ORDER_PAYMENT_TERMS,
+					CommerceOrderActionKeys.
+						MANAGE_COMMERCE_ORDER_SHIPPING_OPTIONS,
+					CommerceOrderActionKeys.MANAGE_COMMERCE_ORDERS,
+					CommerceOrderActionKeys.VIEW_BILLING_ADDRESS,
+					CommerceOrderActionKeys.VIEW_COMMERCE_ORDERS,
+					CommerceOrderActionKeys.VIEW_OPEN_COMMERCE_ORDERS
 				});
+		}
+		else if (name.equals(AccountRoleConstants.ROLE_NAME_ACCOUNT_SUPPLIER)) {
+			groupResourceActionIds.put(
+				AccountEntry.class.getName(),
+				new String[] {AccountActionKeys.VIEW_ACCOUNT_GROUPS});
 		}
 		else if (name.equals(AccountRoleConstants.ROLE_NAME_SUPPLIER)) {
 			for (String portletId : _SUPPLIER_CONTROL_PANEL_PORTLET_IDS) {
@@ -303,14 +335,19 @@ public class CommerceAccountRoleHelperImpl
 			companyResourceActionIds.put(
 				"com.liferay.commerce.order",
 				new String[] {
-					"MANAGE_COMMERCE_ORDER_DELIVERY_TERMS",
-					"MANAGE_COMMERCE_ORDER_NOTES",
-					"MANAGE_COMMERCE_ORDER_PAYMENT_METHODS",
-					"MANAGE_COMMERCE_ORDER_PAYMENT_STATUSES",
-					"MANAGE_COMMERCE_ORDER_PAYMENT_TERMS",
-					"MANAGE_COMMERCE_ORDER_PRICES",
-					"MANAGE_COMMERCE_ORDER_RESTRICTED_NOTES",
-					"MANAGE_COMMERCE_ORDER_SHIPPING_OPTIONS"
+					CommerceOrderActionKeys.
+						MANAGE_COMMERCE_ORDER_DELIVERY_TERMS,
+					CommerceOrderActionKeys.MANAGE_COMMERCE_ORDER_NOTES,
+					CommerceOrderActionKeys.
+						MANAGE_COMMERCE_ORDER_PAYMENT_METHODS,
+					CommerceOrderActionKeys.
+						MANAGE_COMMERCE_ORDER_PAYMENT_STATUSES,
+					CommerceOrderActionKeys.MANAGE_COMMERCE_ORDER_PAYMENT_TERMS,
+					CommerceOrderActionKeys.MANAGE_COMMERCE_ORDER_PRICES,
+					CommerceOrderActionKeys.
+						MANAGE_COMMERCE_ORDER_RESTRICTED_NOTES,
+					CommerceOrderActionKeys.
+						MANAGE_COMMERCE_ORDER_SHIPPING_OPTIONS
 				});
 			companyResourceActionIds.put(
 				"com.liferay.commerce.price.list",
@@ -370,8 +407,28 @@ public class CommerceAccountRoleHelperImpl
 			}
 
 			companyResourceActionIds.put(
+				CommerceChannel.class.getName(),
+				new String[] {ActionKeys.UPDATE, ActionKeys.VIEW});
+			companyResourceActionIds.put(
+				CommercePaymentEntry.class.getName(),
+				new String[] {ActionKeys.VIEW});
+			companyResourceActionIds.put(
 				PortletKeys.PORTAL,
 				new String[] {ActionKeys.VIEW_CONTROL_PANEL});
+			companyResourceActionIds.put(
+				"com.liferay.commerce.currency",
+				new String[] {
+					CommerceCurrencyActionKeys.MANAGE_COMMERCE_CURRENCIES
+				});
+			companyResourceActionIds.put(
+				"com.liferay.commerce.order",
+				new String[] {CommerceOrderActionKeys.VIEW_COMMERCE_ORDERS});
+			companyResourceActionIds.put(
+				"com.liferay.commerce.payment",
+				new String[] {CommercePaymentEntryActionKeys.ADD_REFUND});
+			companyResourceActionIds.put(
+				"com.liferay.commerce.return",
+				new String[] {CommerceActionKeys.MANAGE_RETURNS});
 
 			for (String objectDefinitionName :
 					_RETURNS_MANAGER_OBJECT_DEFINITION_NAMES) {
@@ -385,21 +442,16 @@ public class CommerceAccountRoleHelperImpl
 				}
 
 				companyResourceActionIds.put(
-					"com.liferay.object#" +
-						objectDefinition.getObjectDefinitionId(),
+					objectDefinition.getResourceName(),
 					new String[] {ObjectActionKeys.ADD_OBJECT_ENTRY});
 				companyResourceActionIds.put(
-					"com.liferay.object.model.ObjectDefinition#" +
-						objectDefinition.getObjectDefinitionId(),
+					objectDefinition.getClassName(),
 					new String[] {
 						ActionKeys.DELETE, ActionKeys.PERMISSIONS,
 						ActionKeys.UPDATE, ActionKeys.VIEW
 					});
 				companyResourceActionIds.put(
-					StringBundler.concat(
-						"com_liferay_object_web_internal_object_",
-						"definitions_portlet_ObjectDefinitionsPortlet_",
-						objectDefinition.getObjectDefinitionId()),
+					objectDefinition.getPortletId(),
 					new String[] {ActionKeys.VIEW});
 			}
 		}
@@ -416,8 +468,7 @@ public class CommerceAccountRoleHelperImpl
 				}
 
 				companyResourceActionIds.put(
-					"com.liferay.object#" +
-						objectDefinition.getObjectDefinitionId(),
+					objectDefinition.getResourceName(),
 					new String[] {ObjectActionKeys.ADD_OBJECT_ENTRY});
 			}
 
@@ -455,6 +506,7 @@ public class CommerceAccountRoleHelperImpl
 	}
 
 	private static final String[] _RETURNS_MANAGER_CONTROL_PANEL_PORTLET_IDS = {
+		CommercePortletKeys.COMMERCE_PAYMENT,
 		CommercePortletKeys.COMMERCE_RETURN
 	};
 

@@ -8,7 +8,7 @@ import ClayDropDown from '@clayui/drop-down';
 import ClayIcon from '@clayui/icon';
 import {FocusScope} from '@clayui/shared';
 import classNames from 'classnames';
-import {openToast} from 'frontend-js-web';
+import {openToast} from 'frontend-js-components-web';
 import React, {useCallback, useMemo, useRef, useState} from 'react';
 import {flushSync} from 'react-dom';
 
@@ -16,6 +16,10 @@ import SaveFragmentCompositionModal from '../../../../../app/components/SaveFrag
 import hasDropZoneChild from '../../../../../app/components/layout_data_items/hasDropZoneChild';
 import {ITEM_ACTIVATION_ORIGINS} from '../../../../../app/config/constants/itemActivationOrigins';
 import {LAYOUT_DATA_ITEM_TYPES} from '../../../../../app/config/constants/layoutDataItemTypes';
+import {
+	useClipboard,
+	useSetClipboard,
+} from '../../../../../app/contexts/ClipboardContext';
 import {
 	useSelectItem,
 	useSelectMultipleItems,
@@ -26,8 +30,10 @@ import {
 	useDispatch,
 	useSelector,
 } from '../../../../../app/contexts/StoreContext';
+import {useGetWidgets} from '../../../../../app/contexts/WidgetsContext';
 import deleteItem from '../../../../../app/thunks/deleteItem';
 import duplicateItem from '../../../../../app/thunks/duplicateItem';
+import pasteItems from '../../../../../app/thunks/pasteItems';
 import canBeDuplicated from '../../../../../app/utils/canBeDuplicated';
 import canBeRemoved from '../../../../../app/utils/canBeRemoved';
 import canBeRenamed from '../../../../../app/utils/canBeRenamed';
@@ -36,7 +42,12 @@ import {
 	FORM_ERROR_TYPES,
 	getFormErrorDescription,
 } from '../../../../../app/utils/getFormErrorDescription';
+import isCuttable from '../../../../../app/utils/isCuttable';
 import isInputFragment from '../../../../../app/utils/isInputFragment';
+import {isMovementValid} from '../../../../../app/utils/isMovementValid';
+import isStepper from '../../../../../app/utils/isStepper';
+import removeFormStep from '../../../../../app/utils/removeFormStep';
+import toMovementItem from '../../../../../app/utils/toMovementItem';
 import updateItemStyle from '../../../../../app/utils/updateItemStyle';
 import useHasRequiredChild from '../../../../../app/utils/useHasRequiredChild';
 
@@ -68,7 +79,7 @@ export default function StructureTreeNodeActions({disabled, item, visible}) {
 				aria-haspopup="true"
 				aria-label={Liferay.Language.get('options')}
 				className={classNames(
-					'ml-0 page-editor__page-structure__tree-node__actions-button',
+					'ml-0 page-editor__page-structure__tree-node__actions-button position-relative',
 					{
 						'page-editor__page-structure__tree-node__actions-button--visible':
 							visible,
@@ -89,6 +100,17 @@ export default function StructureTreeNodeActions({disabled, item, visible}) {
 				}
 				title={Liferay.Language.get('options')}
 			>
+				{active ? (
+					<div
+						className="position-absolute"
+						style={{
+							height: '50px',
+							transform: 'translateX(-10px, -10px)',
+							width: '50px',
+						}}
+					/>
+				) : null}
+
 				<ClayIcon symbol="ellipsis-v" />
 			</ClayButton>
 
@@ -98,6 +120,7 @@ export default function StructureTreeNodeActions({disabled, item, visible}) {
 				containerProps={{
 					className: 'cadmin',
 				}}
+				hasLeftSymbols
 				onActiveChange={updateActive}
 				ref={dropdownRef}
 			>
@@ -127,25 +150,33 @@ const ActionList = ({item, setActive, setOpenSaveModal}) => {
 	const selectMultipleItems = useSelectMultipleItems();
 	const setEditedNodeId = useSetEditedNodeId();
 	const setText = useSetMovementText();
-	const widgets = useSelector((state) => state.widgets);
+	const getWidgets = useGetWidgets();
 
-	const selectItems = Liferay.FeatureFlags['LPD-18221']
-		? selectMultipleItems
-		: selectItem;
+	const clipboard = useClipboard();
+	const setClipboard = useSetClipboard();
+
+	const selectItems = selectMultipleItems;
 
 	const {fragmentEntryLinks, layoutData, selectedViewportSize} = useSelector(
 		(state) => state
 	);
 
-	const isHidden = item.config.styles.display === 'none';
+	const layoutDataItem = useSelector(
+		(state) => state.layoutData.items[item.id]
+	);
+
+	const isHidden = item.config?.styles?.display === 'none';
 
 	const dropdownItems = useMemo(() => {
 		const items = [];
 
 		if (
+			item.type !== LAYOUT_DATA_ITEM_TYPES.column &&
+			item.type !== LAYOUT_DATA_ITEM_TYPES.formStep &&
+			item.type !== LAYOUT_DATA_ITEM_TYPES.fragmentDropZone &&
 			item.type !== LAYOUT_DATA_ITEM_TYPES.dropZone &&
-			!hasDropZoneChild(item, layoutData) &&
-			!isInputFragment(item, fragmentEntryLinks)
+			!hasDropZoneChild(layoutDataItem, layoutData) &&
+			!isInputFragment(layoutDataItem, fragmentEntryLinks)
 		) {
 			items.push({
 				action: () => {
@@ -185,7 +216,7 @@ const ActionList = ({item, setActive, setOpenSaveModal}) => {
 			});
 		}
 
-		if (canBeSaved(item, layoutData)) {
+		if (canBeSaved(layoutDataItem, layoutData)) {
 			items.push({
 				action: () => setOpenSaveModal(true),
 				icon: 'disk',
@@ -195,11 +226,54 @@ const ActionList = ({item, setActive, setOpenSaveModal}) => {
 
 		if (items.length) {
 			items.push({
-				type: 'separator',
+				type: 'divider',
 			});
 		}
 
-		if (canBeDuplicated(fragmentEntryLinks, item, layoutData, widgets)) {
+		if (isCuttable(item.id, fragmentEntryLinks, layoutData)) {
+			items.push({
+				action: () => {
+					setClipboard([item.id]);
+					dispatch(
+						deleteItem({
+							itemIds: [item.id],
+							selectItems,
+						})
+					);
+					setText(Liferay.Language.get('item-was-cut'));
+				},
+				icon: 'cut',
+				label: Liferay.Language.get('cut'),
+			});
+		}
+
+		if (
+			canBeDuplicated(
+				fragmentEntryLinks,
+				layoutDataItem,
+				layoutData,
+				getWidgets
+			)
+		) {
+			items.push({
+				action: () => {
+					setClipboard([item.id]);
+
+					setText(Liferay.Language.get('item-copied'));
+				},
+				icon: 'copy',
+				label: Liferay.Language.get('copy'),
+			});
+		}
+
+		if (
+			canBeDuplicated(
+				fragmentEntryLinks,
+				layoutDataItem,
+				layoutData,
+				getWidgets
+			)
+		) {
 			items.push({
 				action: () => {
 					dispatch(
@@ -216,7 +290,47 @@ const ActionList = ({item, setActive, setOpenSaveModal}) => {
 			});
 		}
 
-		if (canBeRenamed(item)) {
+		if (
+			!isStepper(fragmentEntryLinks[item.config.fragmentEntryLinkId]) ||
+			item.type === LAYOUT_DATA_ITEM_TYPES.column ||
+			item.type === LAYOUT_DATA_ITEM_TYPES.fragmentDropZone ||
+			item.type === LAYOUT_DATA_ITEM_TYPES.formStep
+		) {
+			items.push({
+				action: () => {
+					if (
+						isMovementValid({
+							fragmentEntryLinks,
+							getWidgets,
+							layoutData,
+							sources: clipboard.map((id) =>
+								toMovementItem(
+									id,
+									layoutData,
+									fragmentEntryLinks
+								)
+							),
+							targetId: item.id,
+						})
+					) {
+						dispatch(
+							pasteItems({
+								clipboard,
+								parentItemId: item.id,
+								selectItems,
+							})
+						);
+
+						setText(Liferay.Language.get('item-pasted'));
+					}
+				},
+				disabled: !clipboard?.length,
+				icon: 'paste',
+				label: Liferay.Language.get('paste'),
+			});
+		}
+
+		if (canBeRenamed(layoutDataItem)) {
 			items.push({
 				action: () => {
 					setEditedNodeId(item.id);
@@ -225,37 +339,58 @@ const ActionList = ({item, setActive, setOpenSaveModal}) => {
 			});
 		}
 
-		items.push({
-			type: 'separator',
-		});
-
-		if (canBeRemoved(item, layoutData)) {
+		if (canBeRemoved(layoutDataItem, layoutData)) {
 			items.push({
-				action: () => {
-					dispatch(
-						deleteItem({
-							itemIds: [item.id],
-							selectItems,
-						})
-					);
-
-					setText(Liferay.Language.get('item-removed'));
-				},
-				icon: 'trash',
-				label: Liferay.Language.get('delete'),
+				type: 'divider',
 			});
+
+			if (layoutDataItem.type === LAYOUT_DATA_ITEM_TYPES.formStep) {
+				items.push({
+					action: () => {
+						removeFormStep({
+							dispatch,
+							item: layoutDataItem,
+							layoutData,
+							selectItem,
+						});
+
+						setText(Liferay.Language.get('item-removed'));
+					},
+					icon: 'trash',
+					label: Liferay.Language.get('remove-step'),
+				});
+			}
+			else {
+				items.push({
+					action: () => {
+						dispatch(
+							deleteItem({
+								itemIds: [item.id],
+								selectItems,
+							})
+						);
+
+						setText(Liferay.Language.get('item-removed'));
+					},
+					icon: 'trash',
+					label: Liferay.Language.get('delete'),
+				});
+			}
 		}
 
 		return items;
 	}, [
+		clipboard,
 		dispatch,
 		fragmentEntryLinks,
+		getWidgets,
 		hasRequiredChild,
 		item,
 		layoutData,
+		layoutDataItem,
 		selectedViewportSize,
 		selectItem,
-		widgets,
+		setClipboard,
 		setEditedNodeId,
 		setOpenSaveModal,
 		setText,
@@ -266,32 +401,25 @@ const ActionList = ({item, setActive, setOpenSaveModal}) => {
 	return (
 		<FocusScope>
 			<div>
-				<ClayDropDown.ItemList>
-					{dropdownItems.map((dropdownItem, index, array) =>
-						dropdownItem.type === 'separator' ? (
-							index !== array.length - 1 && (
-								<ClayDropDown.Divider key={index} />
-							)
+				<ClayDropDown.ItemList items={dropdownItems}>
+					{(item) =>
+						item.type === 'divider' ? (
+							<ClayDropDown.Divider />
 						) : (
-							<React.Fragment key={index}>
-								<ClayDropDown.Item
-									aria-label={Liferay.Language.get(
-										dropdownItem.label
-									)}
-									onClick={() => {
-										setActive(false);
+							<ClayDropDown.Item
+								aria-label={item.label}
+								disabled={item.disabled}
+								onClick={() => {
+									setActive(false);
 
-										dropdownItem.action();
-									}}
-									symbolLeft={dropdownItem.icon}
-								>
-									<p className="d-inline-block m-0 ml-4">
-										{dropdownItem.label}
-									</p>
-								</ClayDropDown.Item>
-							</React.Fragment>
+									item.action();
+								}}
+								symbolLeft={item.icon}
+							>
+								{item.label}
+							</ClayDropDown.Item>
 						)
-					)}
+					}
 				</ClayDropDown.ItemList>
 			</div>
 		</FocusScope>

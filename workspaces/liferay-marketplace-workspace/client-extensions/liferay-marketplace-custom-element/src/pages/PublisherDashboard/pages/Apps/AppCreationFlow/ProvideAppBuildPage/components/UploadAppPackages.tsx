@@ -7,7 +7,6 @@ import {filesize} from 'filesize';
 
 import {DropzoneUpload} from '../../../../../../../components/DropzoneUpload/DropzoneUpload';
 import {FileList} from '../../../../../../../components/FileList/FileList';
-import {useMarketplaceContext} from '../../../../../../../context/MarketplaceContext';
 import {ProductType} from '../../../../../../../enums/ProductType';
 import i18n from '../../../../../../../i18n';
 import {getRandomID} from '../../../../../../../utils/string';
@@ -20,12 +19,21 @@ type UploadAppPackagesComponentProps = {
 };
 
 export const acceptFileTypes = {
+	[ProductType.CLIENT_EXTENSION]: {
+		'application/java-archive': ['.zip'],
+	},
 	[ProductType.CLOUD]: {
+		'application/java-archive': ['.zip'],
+	},
+	[ProductType.COMPOSITE_APP]: {
 		'application/java-archive': ['.zip'],
 	},
 	[ProductType.DXP]: {
 		'application/java-archive': ['.jar'],
 		'application/octet-stream': ['.war'],
+	},
+	[ProductType.LOW_CODE_CONFIGURATION]: {
+		'application/java-archive': ['.zip'],
 	},
 };
 
@@ -36,7 +44,6 @@ export function UploadAppPackagesComponent({
 	versionName,
 }: UploadAppPackagesComponentProps) {
 	const [{appType, buildAppPackages}, dispatch] = useAppContext();
-	const {properties} = useMarketplaceContext();
 
 	const enableUploadFiles =
 		!isProcessing &&
@@ -105,17 +112,15 @@ export function UploadAppPackagesComponent({
 					}
 					buttonText={i18n.translate('select-a-file')}
 					description={
-						appType.value === ProductType.CLOUD
+						appType.value === ProductType.DXP
 							? i18n.translate(
-									'only-zip-files-are-allowed-max-file-size-is-500-mb'
-								)
-							: i18n.translate(
 									'only-jar-war-files-are-allowed-max-file-size-is-500mb'
 								)
+							: i18n.translate(
+									'only-zip-files-are-allowed-max-file-size-is-500-mb'
+								)
 					}
-					maxFiles={
-						properties.featureFlags?.includes('LPD-21582') ? 1 : 10
-					}
+					maxFiles={1}
 					maxSize={UPLOAD_MAX_SIZE}
 					multiple={true}
 					onHandleUpload={handleUploadAppPackages}

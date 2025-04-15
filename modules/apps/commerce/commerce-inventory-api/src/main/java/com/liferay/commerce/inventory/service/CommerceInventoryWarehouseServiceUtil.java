@@ -63,12 +63,14 @@ public class CommerceInventoryWarehouseServiceUtil {
 			commerceInventoryWarehouseId);
 	}
 
-	public static CommerceInventoryWarehouse fetchByExternalReferenceCode(
-			String externalReferenceCode, long companyId)
+	public static CommerceInventoryWarehouse
+			fetchCommerceInventoryWarehouseByExternalReferenceCode(
+				String externalReferenceCode, long companyId)
 		throws PortalException {
 
-		return getService().fetchByExternalReferenceCode(
-			externalReferenceCode, companyId);
+		return getService().
+			fetchCommerceInventoryWarehouseByExternalReferenceCode(
+				externalReferenceCode, companyId);
 	}
 
 	public static CommerceInventoryWarehouse
@@ -123,11 +125,12 @@ public class CommerceInventoryWarehouseServiceUtil {
 
 	public static List<CommerceInventoryWarehouse>
 			getCommerceInventoryWarehouses(
-				long companyId, long groupId, boolean active)
+				long companyId, long accountEntryId, long groupId,
+				boolean active)
 		throws PortalException {
 
 		return getService().getCommerceInventoryWarehouses(
-			companyId, groupId, active);
+			companyId, accountEntryId, groupId, active);
 	}
 
 	public static int getCommerceInventoryWarehousesCount(long companyId)

@@ -6,11 +6,18 @@
 package com.liferay.fragment.internal.renderer.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.asset.kernel.model.AssetCategory;
+import com.liferay.asset.kernel.model.AssetVocabulary;
+import com.liferay.asset.test.util.AssetTestUtil;
+import com.liferay.blogs.model.BlogsEntry;
+import com.liferay.blogs.service.BlogsEntryLocalService;
 import com.liferay.change.tracking.model.CTCollection;
 import com.liferay.change.tracking.service.CTCollectionLocalService;
 import com.liferay.change.tracking.service.CTCollectionService;
+import com.liferay.document.library.kernel.model.DLFolderConstants;
+import com.liferay.document.library.kernel.service.DLAppLocalService;
 import com.liferay.fragment.cache.FragmentEntryLinkCache;
-import com.liferay.fragment.configuration.FragmentJavascriptConfiguration;
+import com.liferay.fragment.configuration.FragmentJavaScriptConfiguration;
 import com.liferay.fragment.constants.FragmentConstants;
 import com.liferay.fragment.contributor.FragmentCollectionContributorRegistry;
 import com.liferay.fragment.entry.processor.constants.FragmentEntryProcessorConstants;
@@ -23,6 +30,9 @@ import com.liferay.fragment.renderer.FragmentRendererContext;
 import com.liferay.fragment.service.FragmentEntryLinkLocalService;
 import com.liferay.fragment.service.FragmentEntryLocalService;
 import com.liferay.fragment.test.util.FragmentTestUtil;
+import com.liferay.journal.constants.JournalFolderConstants;
+import com.liferay.journal.model.JournalArticle;
+import com.liferay.journal.test.util.JournalTestUtil;
 import com.liferay.layout.test.util.LayoutTestUtil;
 import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.petra.string.StringPool;
@@ -34,6 +44,7 @@ import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutSet;
+import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.security.permission.PermissionCheckerFactoryUtil;
 import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
@@ -46,9 +57,15 @@ import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.ContentTypes;
+import com.liferay.portal.kernel.util.DateUtil;
+import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.MimeTypesUtil;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.struts.Definition;
@@ -62,6 +79,11 @@ import java.util.HashMap;
 import java.util.Locale;
 
 import javax.servlet.http.HttpServletRequest;
+
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -101,6 +123,37 @@ public class FragmentEntryFragmentRendererTest {
 		_defaultSegmentsExperienceId =
 			_segmentsExperienceLocalService.fetchDefaultSegmentsExperienceId(
 				_layout.getPlid());
+	}
+
+	@Test
+	@TestInfo("LPS-146373")
+	public void testAddMappedFragmentEntryLinkWithPrefixURL() throws Exception {
+		FragmentEntryLink fragmentEntryLink = _addHeadingFragmentEntryLink(
+			JSONUtil.put(
+				"element-text",
+				JSONUtil.put(
+					"config",
+					JSONUtil.put(
+						"href",
+						JSONUtil.put(
+							LocaleUtil.toLanguageId(
+								LocaleUtil.getSiteDefault()),
+							"test@liferay.com")
+					).put(
+						"mapperType", "link"
+					).put(
+						"prefix", "mailto:"
+					)
+				).put(
+					"defaultValue", "Heading Example"
+				)));
+
+		MockHttpServletResponse mockHttpServletResponse =
+			_renderFragmentEntryLink(fragmentEntryLink);
+
+		String content = mockHttpServletResponse.getContentAsString();
+
+		Assert.assertTrue(content.contains("mailto:test@liferay.com"));
 	}
 
 	@Test
@@ -154,7 +207,89 @@ public class FragmentEntryFragmentRendererTest {
 	}
 
 	@Test
-	public void testJavascriptModuleConfiguration() throws Exception {
+	public void testCacheableFragmentEntryLinkNonceAttribute()
+		throws Exception {
+
+		FragmentEntry fragmentEntry = _getFragmentEntry(true);
+
+		FragmentEntryLink fragmentEntryLink =
+			_fragmentEntryLinkLocalService.addFragmentEntryLink(
+				null, TestPropsValues.getUserId(), _group.getGroupId(), 0,
+				fragmentEntry.getFragmentEntryId(),
+				_defaultSegmentsExperienceId, _layout.getPlid(),
+				fragmentEntry.getCss(), fragmentEntry.getHtml(),
+				fragmentEntry.getJs(), fragmentEntry.getConfiguration(), null,
+				StringPool.BLANK, 0, null, fragmentEntry.getType(),
+				_serviceContext);
+
+		String nonce = RandomTestUtil.randomString();
+
+		_testRenderWithNonce(fragmentEntryLink, nonce);
+
+		String content = _fragmentEntryLinkCache.getFragmentEntryLinkContent(
+			fragmentEntryLink, _locale);
+
+		Assert.assertFalse(content, content.contains(nonce));
+		Assert.assertEquals(
+			content, 2, StringUtil.count(content, "data-lfr-nonce"));
+	}
+
+	@Test
+	@TestInfo("LPS-101333")
+	public void testCannotExecuteFreeMarkerCodeInHTMLFragment()
+		throws Exception {
+
+		FragmentEntryLink fragmentEntryLink = _addHTMLFragmentEntryLink(
+			JSONUtil.put(
+				"element-html",
+				JSONUtil.put(
+					"defaultValue",
+					"<div class=\"fragment-html-test\">${test}</div>")));
+
+		MockHttpServletResponse mockHttpServletResponse =
+			_renderFragmentEntryLink(fragmentEntryLink);
+
+		String content = mockHttpServletResponse.getContentAsString();
+
+		Assert.assertTrue(
+			content.contains(
+				"<div class=\"fragment-html-test\">${test}</div>"));
+	}
+
+	@Test
+	public void testFragmentEntryLinkJavaScriptVariables() throws Exception {
+		FragmentEntry fragmentEntry = _getFragmentEntry(true);
+
+		FragmentEntryLink fragmentEntryLink =
+			_fragmentEntryLinkLocalService.addFragmentEntryLink(
+				null, TestPropsValues.getUserId(), _group.getGroupId(), 0,
+				fragmentEntry.getFragmentEntryId(),
+				_defaultSegmentsExperienceId, _layout.getPlid(),
+				fragmentEntry.getCss(), fragmentEntry.getHtml(),
+				fragmentEntry.getJs(), _read("configuration.json"), null,
+				StringPool.BLANK, 0, null, fragmentEntry.getType(),
+				_serviceContext);
+
+		_renderFragmentEntryLink(fragmentEntryLink);
+
+		String content = _fragmentEntryLinkCache.getFragmentEntryLinkContent(
+			fragmentEntryLink, _locale);
+
+		Assert.assertTrue(
+			content.contains(
+				"fragmentEntryLinkNamespace = '" +
+					fragmentEntryLink.getNamespace()));
+
+		Assert.assertTrue(
+			content.contains(
+				"fragmentNamespace = '" + fragmentEntryLink.getNamespace()));
+
+		Assert.assertTrue(content.contains("\"buttonSize\":\"nm\""));
+		Assert.assertTrue(content.contains("\"buttonType\":\"primary\""));
+	}
+
+	@Test
+	public void testJavaScriptModuleConfiguration() throws Exception {
 		FragmentEntry fragmentEntry = _getFragmentEntry(false);
 
 		FragmentEntryLink fragmentEntryLink =
@@ -193,9 +328,9 @@ public class FragmentEntryFragmentRendererTest {
 				companyConfigurationTemporarySwapper =
 					new CompanyConfigurationTemporarySwapper(
 						TestPropsValues.getCompanyId(),
-						FragmentJavascriptConfiguration.class.getName(),
+						FragmentJavaScriptConfiguration.class.getName(),
 						HashMapDictionaryBuilder.<String, Object>put(
-							"javascriptModuleEnabled", false
+							"javaScriptModuleEnabled", false
 						).build())) {
 
 			mockHttpServletResponse = new MockHttpServletResponse();
@@ -208,6 +343,85 @@ public class FragmentEntryFragmentRendererTest {
 
 			Assert.assertFalse(content.contains("type=\"module\""));
 		}
+	}
+
+	@Test
+	@TestInfo("LPS-118276")
+	public void testMapAssetVocabularyToInfoField() throws Exception {
+		AssetVocabulary assetVocabulary = AssetTestUtil.addVocabulary(
+			_group.getGroupId());
+
+		AssetCategory assetCategory = AssetTestUtil.addCategory(
+			_group.getGroupId(), assetVocabulary.getVocabularyId());
+
+		_serviceContext.setAssetCategoryIds(
+			new long[] {assetCategory.getCategoryId()});
+
+		BlogsEntry blogsEntry = _addBlogsEntry();
+
+		String fieldId = "AssetVocabulary_" + assetVocabulary.getVocabularyId();
+
+		String title = assetCategory.getTitle(LocaleUtil.getDefault());
+
+		_assertRenderFragmentEntryLink(
+			title,
+			JSONUtil.put(
+				"element-text",
+				JSONUtil.put(
+					"className", BlogsEntry.class.getName()
+				).put(
+					"classNameId",
+					String.valueOf(
+						_portal.getClassNameId(BlogsEntry.class.getName()))
+				).put(
+					"classPK", String.valueOf(blogsEntry.getEntryId())
+				).put(
+					"classTypeId", "0"
+				).put(
+					"fieldId", fieldId
+				)));
+
+		FileEntry fileEntry = _addFileEntry();
+
+		_assertRenderFragmentEntryLink(
+			title,
+			JSONUtil.put(
+				"element-text",
+				JSONUtil.put(
+					"className", FileEntry.class.getName()
+				).put(
+					"classNameId",
+					String.valueOf(
+						_portal.getClassNameId(FileEntry.class.getName()))
+				).put(
+					"classPK", String.valueOf(fileEntry.getFileEntryId())
+				).put(
+					"classTypeId", "0"
+				).put(
+					"fieldId", fieldId
+				)));
+
+		JournalArticle journalArticle = _addJournalArticle();
+
+		_assertRenderFragmentEntryLink(
+			title,
+			JSONUtil.put(
+				"element-text",
+				JSONUtil.put(
+					"className", JournalArticle.class.getName()
+				).put(
+					"classNameId",
+					String.valueOf(
+						_portal.getClassNameId(JournalArticle.class.getName()))
+				).put(
+					"classPK",
+					String.valueOf(journalArticle.getResourcePrimKey())
+				).put(
+					"classTypeId",
+					String.valueOf(journalArticle.getDDMStructureId())
+				).put(
+					"fieldId", fieldId
+				)));
 	}
 
 	@Test
@@ -229,6 +443,25 @@ public class FragmentEntryFragmentRendererTest {
 		Assert.assertNull(
 			_fragmentEntryLinkCache.getFragmentEntryLinkContent(
 				fragmentEntryLink, _locale));
+	}
+
+	@Test
+	public void testNoncacheableFragmentEntryLinkNonceAttribute()
+		throws Exception {
+
+		FragmentEntry fragmentEntry = _getFragmentEntry(false);
+
+		FragmentEntryLink fragmentEntryLink =
+			_fragmentEntryLinkLocalService.addFragmentEntryLink(
+				null, TestPropsValues.getUserId(), _group.getGroupId(), 0,
+				fragmentEntry.getFragmentEntryId(),
+				_defaultSegmentsExperienceId, _layout.getPlid(),
+				fragmentEntry.getCss(), fragmentEntry.getHtml(),
+				fragmentEntry.getJs(), fragmentEntry.getConfiguration(), null,
+				StringPool.BLANK, 0, null, fragmentEntry.getType(),
+				_serviceContext);
+
+		_testRenderWithNonce(fragmentEntryLink, RandomTestUtil.randomString());
 	}
 
 	@Test
@@ -396,6 +629,24 @@ public class FragmentEntryFragmentRendererTest {
 		Assert.assertTrue(content.contains(fragmentEntry.getHtml()));
 	}
 
+	private BlogsEntry _addBlogsEntry() throws Exception {
+		return _blogsEntryLocalService.addEntry(
+			TestPropsValues.getUserId(), RandomTestUtil.randomString(),
+			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
+			RandomTestUtil.randomString(),
+			DateUtil.newDate(System.currentTimeMillis() - Time.DAY), true, true,
+			new String[0], StringPool.BLANK, null, null, _serviceContext);
+	}
+
+	private FileEntry _addFileEntry() throws Exception {
+		return _dlAppLocalService.addFileEntry(
+			RandomTestUtil.randomString(), TestPropsValues.getUserId(),
+			_group.getGroupId(), DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
+			RandomTestUtil.randomString() + "." + ContentTypes.IMAGE_JPEG,
+			MimeTypesUtil.getExtensionContentType(ContentTypes.IMAGE_JPEG),
+			new byte[0], null, null, null, _serviceContext);
+	}
+
 	private FragmentEntryLink _addHeadingFragmentEntryLink(
 			JSONObject jsonObject)
 		throws Exception {
@@ -418,6 +669,49 @@ public class FragmentEntryFragmentRendererTest {
 			fragmentEntry.getType(), _serviceContext);
 	}
 
+	private FragmentEntryLink _addHTMLFragmentEntryLink(JSONObject jsonObject)
+		throws Exception {
+
+		FragmentEntry fragmentEntry =
+			_fragmentCollectionContributorRegistry.getFragmentEntry(
+				"BASIC_COMPONENT-html");
+
+		return _fragmentEntryLinkLocalService.addFragmentEntryLink(
+			null, TestPropsValues.getUserId(), _group.getGroupId(), 0,
+			fragmentEntry.getFragmentEntryId(), _defaultSegmentsExperienceId,
+			_layout.getPlid(), fragmentEntry.getCss(), fragmentEntry.getHtml(),
+			fragmentEntry.getJs(), fragmentEntry.getConfiguration(),
+			JSONUtil.put(
+				FragmentEntryProcessorConstants.
+					KEY_EDITABLE_FRAGMENT_ENTRY_PROCESSOR,
+				jsonObject
+			).toString(),
+			StringPool.BLANK, 0, fragmentEntry.getFragmentEntryKey(),
+			fragmentEntry.getType(), _serviceContext);
+	}
+
+	private JournalArticle _addJournalArticle() throws Exception {
+		return JournalTestUtil.addArticle(
+			_group.getGroupId(),
+			JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID, StringPool.BLANK,
+			true, _serviceContext);
+	}
+
+	private void _assertRenderFragmentEntryLink(
+			String expected, JSONObject jsonObject)
+		throws Exception {
+
+		FragmentEntryLink fileHeadingFragmentEntryLink =
+			_addHeadingFragmentEntryLink(jsonObject);
+
+		MockHttpServletResponse mockHttpServletResponse =
+			_renderFragmentEntryLink(fileHeadingFragmentEntryLink);
+
+		String content = mockHttpServletResponse.getContentAsString();
+
+		Assert.assertTrue(content, content.contains(expected));
+	}
+
 	private FragmentEntry _getFragmentEntry(boolean cacheable)
 		throws Exception {
 
@@ -427,10 +721,23 @@ public class FragmentEntryFragmentRendererTest {
 		return _fragmentEntryLocalService.addFragmentEntry(
 			null, TestPropsValues.getUserId(), _group.getGroupId(),
 			fragmentCollection.getFragmentCollectionId(), null,
-			RandomTestUtil.randomString(), StringPool.BLANK,
+			RandomTestUtil.randomString(), ".component{color:blue;}",
 			"Fragment Entry HTML", "console.log('test');", cacheable, null,
-			null, 0, false, FragmentConstants.TYPE_COMPONENT, null,
+			null, 0, false, false, FragmentConstants.TYPE_COMPONENT, null,
 			WorkflowConstants.STATUS_APPROVED, _serviceContext);
+	}
+
+	private HttpServletRequest _getHttpServletRequest() throws Exception {
+		HttpServletRequest mockHttpServletRequest =
+			new MockHttpServletRequest();
+
+		mockHttpServletRequest.setAttribute(
+			TilesUtil.DEFINITION,
+			new Definition(StringPool.BLANK, new HashMap<>()));
+		mockHttpServletRequest.setAttribute(
+			WebKeys.THEME_DISPLAY, _getThemeDisplay(mockHttpServletRequest));
+
+		return mockHttpServletRequest;
 	}
 
 	private ThemeDisplay _getThemeDisplay(HttpServletRequest httpServletRequest)
@@ -470,6 +777,11 @@ public class FragmentEntryFragmentRendererTest {
 			fragmentEntryLink, defaultFragmentRendererContext);
 	}
 
+	private String _read(String fileName) throws Exception {
+		return new String(
+			FileUtil.getBytes(getClass(), "dependencies/" + fileName));
+	}
+
 	private MockHttpServletResponse _renderFragmentEntryLink(
 			FragmentEntryLink fragmentEntryLink)
 		throws Exception {
@@ -479,27 +791,60 @@ public class FragmentEntryFragmentRendererTest {
 
 		defaultFragmentRendererContext.setLocale(_locale);
 
-		HttpServletRequest mockHttpServletRequest =
-			new MockHttpServletRequest();
-
-		mockHttpServletRequest.setAttribute(
-			TilesUtil.DEFINITION,
-			new Definition(StringPool.BLANK, new HashMap<>()));
-		mockHttpServletRequest.setAttribute(
-			WebKeys.THEME_DISPLAY, _getThemeDisplay(mockHttpServletRequest));
-
 		MockHttpServletResponse mockHttpServletResponse =
 			new MockHttpServletResponse();
 
 		_fragmentRenderer.render(
-			defaultFragmentRendererContext, mockHttpServletRequest,
+			defaultFragmentRendererContext, _getHttpServletRequest(),
 			mockHttpServletResponse);
 
 		return mockHttpServletResponse;
 	}
 
+	private void _testRenderWithNonce(
+			FragmentEntryLink fragmentEntryLink, String nonce)
+		throws Exception {
+
+		DefaultFragmentRendererContext defaultFragmentRendererContext =
+			new DefaultFragmentRendererContext(fragmentEntryLink);
+
+		defaultFragmentRendererContext.setLocale(_locale);
+
+		HttpServletRequest httpServletRequest = _getHttpServletRequest();
+
+		MockHttpServletResponse mockHttpServletResponse =
+			new MockHttpServletResponse();
+
+		httpServletRequest.setAttribute(
+			"com.liferay.portal.security.content.security.policy.internal." +
+				"ContentSecurityPolicyNonceManager#NONCE",
+			nonce);
+
+		_fragmentRenderer.render(
+			defaultFragmentRendererContext, httpServletRequest,
+			mockHttpServletResponse);
+
+		Document document = Jsoup.parseBodyFragment(
+			mockHttpServletResponse.getContentAsString());
+
+		Elements styleElements = document.getElementsByTag("style");
+
+		Element styleElement = styleElements.get(0);
+
+		Assert.assertEquals(nonce, styleElement.attr("nonce"));
+
+		Elements scriptElements = document.getElementsByTag("script");
+
+		Element scriptElement = scriptElements.get(0);
+
+		Assert.assertEquals(nonce, scriptElement.attr("nonce"));
+	}
+
 	@Inject
 	private static CTCollectionLocalService _ctCollectionLocalService;
+
+	@Inject
+	private BlogsEntryLocalService _blogsEntryLocalService;
 
 	@Inject
 	private CompanyLocalService _companyLocalService;
@@ -514,6 +859,9 @@ public class FragmentEntryFragmentRendererTest {
 	private CTCollectionService _ctCollectionService;
 
 	private long _defaultSegmentsExperienceId;
+
+	@Inject
+	private DLAppLocalService _dlAppLocalService;
 
 	@Inject
 	private FragmentCollectionContributorRegistry

@@ -7,13 +7,9 @@ import {expect, mergeTests} from '@playwright/test';
 
 import {isolatedSiteTest} from '../../fixtures/isolatedSiteTest';
 import {loginTest} from '../../fixtures/loginTest';
-import {documentLibraryPagesTest} from './fixtures/documentLibraryPagesTest';
+import {dmSettingsPagesTest} from './fixtures/dmSettingsPagesTest';
 
-const test = mergeTests(
-	documentLibraryPagesTest,
-	isolatedSiteTest,
-	loginTest()
-);
+const test = mergeTests(dmSettingsPagesTest, isolatedSiteTest, loginTest());
 
 test(
 	'Updating Maximum File Upload Size at Instance level, not overrides site configuration',
@@ -22,13 +18,14 @@ test(
 		fileSizeLimitsInstanceSettingsPage,
 		fileSizeLimitsSiteSettingsPage,
 		page,
+		site,
 	}) => {
 		await fileSizeLimitsInstanceSettingsPage.goto();
 		await fileSizeLimitsInstanceSettingsPage.modifyInputAndSave(
 			'Maximum File Upload Size',
 			'2000'
 		);
-		await fileSizeLimitsSiteSettingsPage.goto();
+		await fileSizeLimitsSiteSettingsPage.goto(site.friendlyUrlPath);
 		await fileSizeLimitsSiteSettingsPage.modifyInputAndSave(
 			'Maximum File Upload Size',
 			'1000'
@@ -38,7 +35,7 @@ test(
 			'Maximum File Upload Size',
 			'2000'
 		);
-		await fileSizeLimitsSiteSettingsPage.goto();
+		await fileSizeLimitsSiteSettingsPage.goto(site.friendlyUrlPath);
 
 		await expect(page.getByLabel('Maximum File Upload Size')).toHaveValue(
 			'1000'

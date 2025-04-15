@@ -294,6 +294,15 @@ public class ResourcePermissionLocalServiceWrapper
 			resourcePermission);
 	}
 
+	@Override
+	public void deleteResourcePermissions(
+			long companyId, String name, int scope)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		_resourcePermissionLocalService.deleteResourcePermissions(
+			companyId, name, scope);
+	}
+
 	/**
 	 * Deletes all resource permissions at the scope to resources of the type.
 	 * This method should not be confused with any of the
@@ -352,6 +361,11 @@ public class ResourcePermissionLocalServiceWrapper
 
 		_resourcePermissionLocalService.deleteResourcePermissions(
 			companyId, name, scope, primKey);
+	}
+
+	@Override
+	public void deleteResourcePermissions(String name) {
+		_resourcePermissionLocalService.deleteResourcePermissions(name);
 	}
 
 	@Override
@@ -607,6 +621,15 @@ public class ResourcePermissionLocalServiceWrapper
 
 		return _resourcePermissionLocalService.getResourcePermissions(
 			start, end);
+	}
+
+	@Override
+	public java.util.List<ResourcePermission> getResourcePermissions(
+		long companyId, String name, int scope, long roleId,
+		boolean viewActionId) {
+
+		return _resourcePermissionLocalService.getResourcePermissions(
+			companyId, name, scope, roleId, viewActionId);
 	}
 
 	/**
@@ -890,6 +913,15 @@ public class ResourcePermissionLocalServiceWrapper
 
 		return _resourcePermissionLocalService.hasScopeResourcePermission(
 			companyId, name, scope, roleId, actionId);
+	}
+
+	@Override
+	public void initDefaultModelResourcePermissions(
+			long companyId, java.util.Collection<String> modelResources)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		_resourcePermissionLocalService.initDefaultModelResourcePermissions(
+			companyId, modelResources);
 	}
 
 	@Override

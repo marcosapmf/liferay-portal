@@ -1,9 +1,8 @@
 {
-	"@generated": "d9d51d9736cc2c865e357a19b5543cb728907e90",
+	"@generated": "fb4a230095c72d274c650fadc32921f508a615c3",
 	"@readonly": "** AUTO-GENERATED: DO NOT EDIT **",
 	"compilerOptions": {
 		"allowSyntheticDefaultImports": true,
-		"baseUrl": ".",
 		"checkJs": false,
 		"composite": true,
 		"declarationDir": "../../../../../../../../../.tsc/types",
@@ -16,7 +15,7 @@
 				"../../../../../../../../../apps/object/object-js-components-web/src/main/resources/META-INF/resources/index.ts"
 			],
 			"frontend-editor-ckeditor-web": [
-				"../../../../../../../../../apps/frontend-editor/frontend-editor-ckeditor-web/src/main/resources/META-INF/resources/index.d.ts"
+				"../../../../../../../../../apps/frontend-editor/frontend-editor-ckeditor-web/src/main/resources/META-INF/resources/js/index.ts"
 			],
 			"frontend-js-components-web": [
 				"../../../../../../../../../apps/frontend-js/frontend-js-components-web/src/main/resources/META-INF/resources/index.ts"

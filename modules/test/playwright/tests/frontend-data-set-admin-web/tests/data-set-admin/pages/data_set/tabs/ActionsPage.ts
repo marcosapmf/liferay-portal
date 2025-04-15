@@ -5,7 +5,7 @@
 
 import {Locator, Page, expect} from '@playwright/test';
 
-import {waitForSuccessAlert} from '../../../../../../../utils/waitForSuccessAlert';
+import {waitForAlert} from '../../../../../../../utils/waitForAlert';
 import {ICreationAction, IItemAction} from '../../../../../utils/types';
 import {DataSetPage} from '../DataSetPage';
 
@@ -22,6 +22,7 @@ export class ActionsPage {
 		iconInput: Locator;
 		labelInput: Locator;
 		methodSelect: Locator;
+		requestBodyInput: Locator;
 		saveButton: Locator;
 		selectIconModal: Locator;
 		successStatusMessageInput: Locator;
@@ -30,10 +31,12 @@ export class ActionsPage {
 		urlInput: Locator;
 		variantSelect: Locator;
 	};
+	readonly activeToggle: Locator;
 	readonly creationActionsTab: Locator;
 	readonly creationActionsTable: Locator;
 	readonly dataSetPage: DataSetPage;
 	readonly deletionConfirmationModal: Locator;
+	readonly inactiveToggle: Locator;
 	readonly itemActionsTab: Locator;
 	readonly itemActionsTable: Locator;
 	readonly newItemActionPlusButton: Locator;
@@ -43,7 +46,7 @@ export class ActionsPage {
 	readonly noActionsWereCreatedMessage: Locator;
 	readonly page: Page;
 	readonly statusMessagesTabs: Locator;
-	private readonly actionsTabs: Locator;
+	readonly actionsTabs: Locator;
 
 	constructor(page: Page) {
 		this.actionForm = {
@@ -64,6 +67,7 @@ export class ActionsPage {
 			iconInput: page.getByPlaceholder('No Icon Selected'),
 			labelInput: page.getByPlaceholder('Action Name'),
 			methodSelect: page.getByLabel('MethodRequired', {exact: true}),
+			requestBodyInput: page.getByPlaceholder('Add a request body here'),
 			saveButton: page.getByRole('button', {name: 'Save'}),
 			selectIconModal: page.locator('.dsm-actions-icon-selection-modal'),
 			successStatusMessageInput: page.getByTestId(
@@ -74,6 +78,7 @@ export class ActionsPage {
 			urlInput: page.getByPlaceholder('Add a URL here.'),
 			variantSelect: page.getByLabel('VariantRequired', {exact: true}),
 		};
+		this.activeToggle = page.getByLabel('Active', {exact: true});
 		this.creationActionsTab = page.getByRole('tab', {
 			name: 'Creation Actions',
 		});
@@ -84,6 +89,7 @@ export class ActionsPage {
 		this.deletionConfirmationModal = page
 			.getByRole('dialog')
 			.and(page.getByLabel('Delete Action'));
+		this.inactiveToggle = page.getByLabel('Inactive', {exact: true});
 		this.itemActionsTab = page.getByRole('tab', {name: 'Item Actions'});
 		this.itemActionsTable = page.locator('.item-actions-tab-pane table');
 		this.newItemActionPlusButton = page.getByTitle('New Item Action');
@@ -138,7 +144,7 @@ export class ActionsPage {
 
 		await this.actionForm.saveButton.click();
 
-		await waitForSuccessAlert(this.page);
+		await waitForAlert(this.page);
 	}
 
 	async createItemAction(itemActionProps: IItemAction) {
@@ -148,7 +154,7 @@ export class ActionsPage {
 
 		await this.actionForm.saveButton.click();
 
-		await waitForSuccessAlert(this.page);
+		await waitForAlert(this.page);
 	}
 
 	async fillCreationActionFormValues(creationActionProps: ICreationAction) {
@@ -169,6 +175,7 @@ export class ActionsPage {
 			confirmationMessageType,
 			errorStatusMessage,
 			method,
+			requestBody,
 			successStatusMessage,
 			type,
 		} = itemActionProps;
@@ -191,6 +198,10 @@ export class ActionsPage {
 
 		if (method) {
 			await this.actionForm.methodSelect.selectOption(method);
+		}
+
+		if (requestBody) {
+			await this.actionForm.requestBodyInput.fill(requestBody);
 		}
 
 		if (successStatusMessage) {
@@ -261,6 +272,14 @@ export class ActionsPage {
 
 			await this.actionForm.variantSelect.selectOption(variant);
 		}
+	}
+
+	async open({dataSetLabel}: {dataSetLabel: string}) {
+		await this.dataSetPage.open({
+			dataSetLabel,
+		});
+
+		await this.dataSetPage.selectTab('Actions');
 	}
 
 	async selectTab({container, label}: {container: Locator; label: string}) {

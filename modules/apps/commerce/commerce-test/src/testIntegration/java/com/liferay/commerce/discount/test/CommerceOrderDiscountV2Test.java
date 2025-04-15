@@ -11,6 +11,7 @@ import com.liferay.commerce.account.test.util.CommerceAccountTestUtil;
 import com.liferay.commerce.context.CommerceContext;
 import com.liferay.commerce.currency.model.CommerceCurrency;
 import com.liferay.commerce.currency.model.CommerceMoney;
+import com.liferay.commerce.currency.service.CommerceCurrencyLocalServiceUtil;
 import com.liferay.commerce.currency.test.util.CommerceCurrencyTestUtil;
 import com.liferay.commerce.discount.constants.CommerceDiscountConstants;
 import com.liferay.commerce.discount.model.CommerceDiscount;
@@ -89,8 +90,14 @@ public class CommerceOrderDiscountV2Test {
 		_accountEntry = CommerceAccountTestUtil.getPersonAccountEntry(
 			_user.getUserId());
 
-		_commerceCurrency = CommerceCurrencyTestUtil.addCommerceCurrency(
-			_group.getCompanyId());
+		_commerceCurrency =
+			CommerceCurrencyLocalServiceUtil.fetchPrimaryCommerceCurrency(
+				_group.getCompanyId());
+
+		if (_commerceCurrency == null) {
+			_commerceCurrency = CommerceCurrencyTestUtil.addCommerceCurrency(
+				_group.getCompanyId());
+		}
 
 		_commerceChannel = CommerceTestUtil.addCommerceChannel(
 			_group.getGroupId(), _commerceCurrency.getCode());
@@ -123,13 +130,12 @@ public class CommerceOrderDiscountV2Test {
 
 		_commerceOrders.add(commerceOrder);
 
-		commerceOrder.setCommerceCurrencyId(
-			_commerceCurrency.getCommerceCurrencyId());
+		commerceOrder.setCommerceCurrencyCode(_commerceCurrency.getCode());
 
 		commerceOrder = _commerceOrderLocalService.updateCommerceOrder(
 			commerceOrder);
 
-		CommerceCatalog catalog =
+		CommerceCatalog commerceCatalog =
 			_commerceCatalogLocalService.addCommerceCatalog(
 				null, RandomTestUtil.randomString(),
 				_commerceCurrency.getCode(), LocaleUtil.US.getDisplayLanguage(),
@@ -137,10 +143,10 @@ public class CommerceOrderDiscountV2Test {
 
 		CommercePriceList commercePriceList =
 			CommercePriceListTestUtil.addCommercePriceList(
-				catalog.getGroupId(), 0.0);
+				commerceCatalog.getGroupId(), 0.0);
 
 		CPInstance cpInstance = CPTestUtil.addCPInstanceFromCatalog(
-			catalog.getGroupId());
+			commerceCatalog.getGroupId());
 
 		CPDefinition cpDefinition = cpInstance.getCPDefinition();
 
@@ -151,7 +157,8 @@ public class CommerceOrderDiscountV2Test {
 				HashMapBuilder.put(
 					LocaleUtil.getDefault(), "NOME"
 				).build(),
-				0, true, 0.0, BigDecimal.ONE, cpInstance.getSku());
+				0, BigDecimal.ZERO, true, 0.0, BigDecimal.ONE,
+				cpInstance.getSku());
 
 		CommercePriceEntry commercePriceEntry =
 			CommercePriceEntryTestUtil.addCommercePriceEntry(
@@ -243,13 +250,12 @@ public class CommerceOrderDiscountV2Test {
 
 		_commerceOrders.add(commerceOrder);
 
-		commerceOrder.setCommerceCurrencyId(
-			_commerceCurrency.getCommerceCurrencyId());
+		commerceOrder.setCommerceCurrencyCode(_commerceCurrency.getCode());
 
 		commerceOrder = _commerceOrderLocalService.updateCommerceOrder(
 			commerceOrder);
 
-		CommerceCatalog catalog =
+		CommerceCatalog commerceCatalog =
 			_commerceCatalogLocalService.addCommerceCatalog(
 				null, RandomTestUtil.randomString(),
 				_commerceCurrency.getCode(), LocaleUtil.US.getDisplayLanguage(),
@@ -257,11 +263,11 @@ public class CommerceOrderDiscountV2Test {
 
 		CPInstance cpInstanceDiscount =
 			CPTestUtil.addCPInstanceWithRandomSkuFromCatalog(
-				catalog.getGroupId());
+				commerceCatalog.getGroupId());
 
 		CommercePriceList commercePriceList =
 			_commercePriceListLocalService.fetchCatalogBaseCommercePriceList(
-				catalog.getGroupId());
+				commerceCatalog.getGroupId());
 
 		CPDefinition cpDefinition = cpInstanceDiscount.getCPDefinition();
 
@@ -332,13 +338,12 @@ public class CommerceOrderDiscountV2Test {
 
 		_commerceOrders.add(commerceOrder);
 
-		commerceOrder.setCommerceCurrencyId(
-			_commerceCurrency.getCommerceCurrencyId());
+		commerceOrder.setCommerceCurrencyCode(_commerceCurrency.getCode());
 
 		commerceOrder = _commerceOrderLocalService.updateCommerceOrder(
 			commerceOrder);
 
-		CommerceCatalog catalog =
+		CommerceCatalog commerceCatalog =
 			_commerceCatalogLocalService.addCommerceCatalog(
 				null, RandomTestUtil.randomString(),
 				_commerceCurrency.getCode(), LocaleUtil.US.getDisplayLanguage(),
@@ -346,17 +351,17 @@ public class CommerceOrderDiscountV2Test {
 
 		CPInstance cpInstanceDiscount =
 			CPTestUtil.addCPInstanceWithRandomSkuFromCatalog(
-				catalog.getGroupId());
+				commerceCatalog.getGroupId());
 		CPInstance cpInstancePlain =
 			CPTestUtil.addCPInstanceWithRandomSkuFromCatalog(
-				catalog.getGroupId());
+				commerceCatalog.getGroupId());
 
 		CPDefinition cpDefinition = cpInstanceDiscount.getCPDefinition();
 		CPDefinition cpDefinitionPlan = cpInstancePlain.getCPDefinition();
 
 		CommercePriceList commercePriceList =
 			_commercePriceListLocalService.fetchCatalogBaseCommercePriceList(
-				catalog.getGroupId());
+				commerceCatalog.getGroupId());
 
 		CommercePriceEntry commercePriceEntryDiscount =
 			CommercePriceEntryTestUtil.addCommercePriceEntry(
@@ -468,13 +473,12 @@ public class CommerceOrderDiscountV2Test {
 
 		_commerceOrders.add(commerceOrder);
 
-		commerceOrder.setCommerceCurrencyId(
-			_commerceCurrency.getCommerceCurrencyId());
+		commerceOrder.setCommerceCurrencyCode(_commerceCurrency.getCode());
 
 		commerceOrder = _commerceOrderLocalService.updateCommerceOrder(
 			commerceOrder);
 
-		CommerceCatalog catalog =
+		CommerceCatalog commerceCatalog =
 			_commerceCatalogLocalService.addCommerceCatalog(
 				null, RandomTestUtil.randomString(),
 				_commerceCurrency.getCode(), LocaleUtil.US.getDisplayLanguage(),
@@ -482,17 +486,17 @@ public class CommerceOrderDiscountV2Test {
 
 		CPInstance cpInstanceDiscount =
 			CPTestUtil.addCPInstanceWithRandomSkuFromCatalog(
-				catalog.getGroupId());
+				commerceCatalog.getGroupId());
 		CPInstance cpInstancePlain =
 			CPTestUtil.addCPInstanceWithRandomSkuFromCatalog(
-				catalog.getGroupId());
+				commerceCatalog.getGroupId());
 
 		CPDefinition cpDefinition = cpInstanceDiscount.getCPDefinition();
 		CPDefinition cpDefinitionPlan = cpInstancePlain.getCPDefinition();
 
 		CommercePriceList commercePriceList =
 			_commercePriceListLocalService.fetchCatalogBaseCommercePriceList(
-				catalog.getGroupId());
+				commerceCatalog.getGroupId());
 
 		CommercePriceEntry commercePriceEntryDiscount =
 			CommercePriceEntryTestUtil.addCommercePriceEntry(

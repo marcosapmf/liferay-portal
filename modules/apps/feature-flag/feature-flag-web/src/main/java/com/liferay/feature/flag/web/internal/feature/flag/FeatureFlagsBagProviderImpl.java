@@ -29,6 +29,7 @@ import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.CompanyConstants;
+import com.liferay.portal.kernel.module.framework.ModuleServiceLifecycle;
 import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiService;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.CompanyLocalService;
@@ -188,7 +189,8 @@ public class FeatureFlagsBagProviderImpl
 		}
 		else {
 			try (SafeCloseable safeCloseable =
-					CompanyThreadLocal.setWithSafeCloseable(companyId)) {
+					CompanyThreadLocal.setCompanyIdWithSafeCloseable(
+						companyId)) {
 
 				_populateFeatureFlagsMap(
 					companyId, featureFlags, systemFeatureFlags);
@@ -248,7 +250,9 @@ public class FeatureFlagsBagProviderImpl
 		Map<String, FeatureFlag> systemFeatureFlags) {
 
 		Properties properties = PropsUtil.getProperties(
-			FeatureFlagConstants.FEATURE_FLAG + StringPool.PERIOD, true);
+			FeatureFlagConstants.PORTAL_PROPERTY_KEY_FEATURE_FLAG +
+				StringPool.PERIOD,
+			true);
 
 		for (String stringPropertyName : properties.stringPropertyNames()) {
 			if (!_isFeatureFlagKey(stringPropertyName)) {
@@ -351,6 +355,9 @@ public class FeatureFlagsBagProviderImpl
 
 	@Reference
 	private Language _language;
+
+	@Reference(target = ModuleServiceLifecycle.PORTAL_INITIALIZED)
+	private ModuleServiceLifecycle _moduleServiceLifecycle;
 
 	private ServiceTrackerMap<String, List<FeatureFlagListener>>
 		_serviceTrackerMap;

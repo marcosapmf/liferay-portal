@@ -10,11 +10,11 @@ import ClayPanel from '@clayui/panel';
 import {ScreenReaderAnnouncerContext} from '@liferay/layout-js-components-web';
 import React, {Dispatch, SetStateAction, useContext, useMemo} from 'react';
 import {flushSync} from 'react-dom';
-
-// @ts-ignore
-
 import {v4 as uuidv4} from 'uuid';
 
+import {LAYOUT_DATA_ITEM_TYPES} from '../../../app/config/constants/layoutDataItemTypes';
+import {useSelector} from '../../../app/contexts/StoreContext';
+import selectLayoutDataItemLabel from '../../../app/selectors/selectLayoutDataItemLabel';
 import ActionComponent, {Action} from './Action';
 import ConditionComponent, {Condition} from './Condition';
 
@@ -35,16 +35,63 @@ const TriggerLabel = React.forwardRef<HTMLButtonElement, any>(
 
 type RuleBuilderActionProps = {
 	actions: Action[];
-	layoutDataItems: {label: string; value: string}[];
 	setActions: Dispatch<SetStateAction<Action[]>>;
 };
 
 export function RuleBuilderActionSection({
 	actions,
-	layoutDataItems,
 	setActions,
 }: RuleBuilderActionProps) {
 	const {sendMessage} = useContext(ScreenReaderAnnouncerContext);
+
+	const fragmentEntryLinks = useSelector((state) => state.fragmentEntryLinks);
+	const layoutData = useSelector((state) => state.layoutData);
+
+	const [layoutDataItems, inputFragmentItems] = useMemo(() => {
+		const layoutItems: {label: string; value: string}[] = [];
+		const inputFragments: {label: string; value: string}[] = [];
+
+		Object.values(layoutData.items).forEach((item) => {
+			if (
+				item.type !== LAYOUT_DATA_ITEM_TYPES.collectionItem &&
+				item.type !== LAYOUT_DATA_ITEM_TYPES.column &&
+				item.type !== LAYOUT_DATA_ITEM_TYPES.dropZone &&
+				item.type !== LAYOUT_DATA_ITEM_TYPES.fragmentDropZone &&
+				item.type !== LAYOUT_DATA_ITEM_TYPES.root
+			) {
+				layoutItems.push({
+					label: selectLayoutDataItemLabel(
+						{fragmentEntryLinks, layoutData},
+						item
+					),
+					value: item.itemId,
+				});
+			}
+
+			if (item.type === LAYOUT_DATA_ITEM_TYPES.fragment) {
+				const fragment =
+					fragmentEntryLinks[item.config.fragmentEntryLinkId];
+
+				if (
+					fragment &&
+					fragment.fragmentEntryType === 'input' &&
+					!fragment.fieldTypes?.includes('categorization') &&
+					!fragment.fieldTypes?.includes('localizationSelect') &&
+					!fragment.fieldTypes?.includes('stepper')
+				) {
+					inputFragments.push({
+						label: selectLayoutDataItemLabel(
+							{fragmentEntryLinks, layoutData},
+							item
+						),
+						value: item.itemId,
+					});
+				}
+			}
+		});
+
+		return [layoutItems, inputFragments];
+	}, [layoutData, fragmentEntryLinks]);
 
 	const actionsRefMap = useMemo(() => new Map(), []);
 
@@ -116,6 +163,7 @@ export function RuleBuilderActionSection({
 					{actions.map((action, index) => (
 						<ActionComponent
 							action={action}
+							inputFragmentItems={inputFragmentItems}
 							key={action.id}
 							layoutDataItems={layoutDataItems}
 							onActionChange={(action) =>
@@ -169,6 +217,36 @@ export function RuleBuilderConditionSection({
 	setConditions,
 }: RuleBuilderConditionProps) {
 	const {sendMessage} = useContext(ScreenReaderAnnouncerContext);
+
+	const fragmentEntryLinks = useSelector((state) => state.fragmentEntryLinks);
+	const layoutData = useSelector((state) => state.layoutData);
+
+	const inputFragmentItems = useMemo(() => {
+		const inputFragments: {label: string; value: string}[] = [];
+
+		Object.values(layoutData.items).forEach((item) => {
+			if (item.type === LAYOUT_DATA_ITEM_TYPES.fragment) {
+				const fragment =
+					fragmentEntryLinks[item.config.fragmentEntryLinkId];
+
+				if (
+					fragment &&
+					fragment.fragmentEntryType === 'input' &&
+					fragment.fieldTypes?.includes('boolean')
+				) {
+					inputFragments.push({
+						label: selectLayoutDataItemLabel(
+							{fragmentEntryLinks, layoutData},
+							item
+						),
+						value: item.itemId,
+					});
+				}
+			}
+		});
+
+		return inputFragments;
+	}, [layoutData, fragmentEntryLinks]);
 
 	const conditionRefMap = useMemo(() => new Map(), []);
 
@@ -288,6 +366,7 @@ export function RuleBuilderConditionSection({
 					{conditions.map((condition, index, conditions) => (
 						<ConditionComponent
 							condition={condition}
+							inputFragmentItems={inputFragmentItems}
 							key={condition.id}
 							onConditionChange={(condition) =>
 								setConditions((previousConditions) => {

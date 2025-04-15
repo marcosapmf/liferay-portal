@@ -39,13 +39,14 @@ public class StyleBookEntryLocalServiceUtil {
 	public static StyleBookEntry addStyleBookEntry(
 			String externalReferenceCode, long userId, long groupId,
 			boolean defaultStyleBookEntry, String frontendTokensValues,
-			String name, String styleBookEntryKey,
+			String name, String styleBookEntryKey, String themeId,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws PortalException {
 
 		return getService().addStyleBookEntry(
 			externalReferenceCode, userId, groupId, defaultStyleBookEntry,
-			frontendTokensValues, name, styleBookEntryKey, serviceContext);
+			frontendTokensValues, name, styleBookEntryKey, themeId,
+			serviceContext);
 	}
 
 	/**
@@ -119,6 +120,12 @@ public class StyleBookEntryLocalServiceUtil {
 		throws PortalException {
 
 		return getService().deletePersistedModel(persistedModel);
+	}
+
+	public static void deleteStyleBookEntries(long groupId)
+		throws PortalException {
+
+		getService().deleteStyleBookEntries(groupId);
 	}
 
 	/**
@@ -258,8 +265,10 @@ public class StyleBookEntryLocalServiceUtil {
 		return getService().dynamicQueryCount(dynamicQuery, projection);
 	}
 
-	public static StyleBookEntry fetchDefaultStyleBookEntry(long groupId) {
-		return getService().fetchDefaultStyleBookEntry(groupId);
+	public static StyleBookEntry fetchDefaultStyleBookEntry(
+		long groupId, String themeId) {
+
+		return getService().fetchDefaultStyleBookEntry(groupId, themeId);
 	}
 
 	public static StyleBookEntry fetchDraft(long primaryKey) {
@@ -376,6 +385,12 @@ public class StyleBookEntryLocalServiceUtil {
 
 		return getService().getStyleBookEntries(
 			groupId, start, end, orderByComparator);
+	}
+
+	public static List<StyleBookEntry> getStyleBookEntries(
+		long groupId, String themeId) {
+
+		return getService().getStyleBookEntries(groupId, themeId);
 	}
 
 	public static List<StyleBookEntry> getStyleBookEntries(

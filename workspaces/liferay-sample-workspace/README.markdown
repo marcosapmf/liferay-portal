@@ -42,6 +42,10 @@ For `liferay-sample-etc-cron` and `liferay-sample-etc-spring-boot` the third typ
 
 	Use Spring Boot to provide a new commerce shipping engine.
 
+- *liferay-sample-commerce-tax-engine*
+
+	Use Spring Boot to provide a new commerce tax engine.
+
 - *liferay-sample-custom-element-1*
 
 	A custom element can be self contained (i.e. does not depend on any external packages).
@@ -102,7 +106,11 @@ For `liferay-sample-etc-cron` and `liferay-sample-etc-spring-boot` the third typ
 
 	Build a custom filter in a frontend data set.
 
-- *liferay-sample-global-css*
+- *liferay-sample-global-css-1*
+
+	Add a global CSS to a company.
+
+- *liferay-sample-global-css-2*
 
 	Add a global CSS to a page.
 
@@ -113,6 +121,10 @@ For `liferay-sample-etc-cron` and `liferay-sample-etc-spring-boot` the third typ
 - *liferay-sample-global-js-2*
 
 	Add a global script element with attributes to a page.
+
+- *liferay-sample-global-js-3*
+
+	Add a global script element to a company.
 
 - *liferay-sample-iframe-1*
 
@@ -140,15 +152,19 @@ For `liferay-sample-etc-cron` and `liferay-sample-etc-spring-boot` the third typ
 
 - *liferay-sample-theme-css-1*
 
-	Extend a theme's CSS with a CSS that uses `styled` as its base theme.
+	Extend the CSS of the `styled` theme.
 
 - *liferay-sample-theme-css-2*
 
-	Extend a theme's CSS with a CSS that uses `unstyled` as its base theme.
+	Extend the CSS of the `styled` theme and apply it to admin pages.
 
 - *liferay-sample-theme-css-3*
 
-	Extend a theme's CSS with CSS that uses a frontend-token-definition.json file.
+	Extend the CSS of the `unstyled` theme.
+
+- *liferay-sample-theme-css-4*
+
+	Extend the CSS of the `unstyled` theme and provide frontend token definitions.
 
 - *liferay-sample-theme-favicon*
 

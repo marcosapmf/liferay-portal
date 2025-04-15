@@ -17,6 +17,7 @@ import com.liferay.headless.commerce.admin.account.dto.v1_0.Account;
 import com.liferay.headless.commerce.admin.account.dto.v1_0.AccountAddress;
 import com.liferay.headless.commerce.admin.account.resource.v1_0.AccountAddressResource;
 import com.liferay.headless.commerce.core.util.ServiceContextHelper;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.model.Country;
 import com.liferay.portal.kernel.model.Region;
 import com.liferay.portal.kernel.service.CountryLocalService;
@@ -29,7 +30,6 @@ import com.liferay.portal.vulcan.fields.NestedField;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import javax.ws.rs.core.Response;
@@ -40,12 +40,14 @@ import org.osgi.service.component.annotations.ServiceScope;
 
 /**
  * @author Alessio Antonio Rendina
+ * @deprecated As of Cavanaugh (7.4.x)
  */
 @Component(
 	properties = "OSGI-INF/liferay/rest/v1_0/account-address.properties",
 	property = "nested.field.support=true", scope = ServiceScope.PROTOTYPE,
 	service = AccountAddressResource.class
 )
+@Deprecated
 public class AccountAddressResourceImpl extends BaseAccountAddressResourceImpl {
 
 	@Override
@@ -63,7 +65,7 @@ public class AccountAddressResourceImpl extends BaseAccountAddressResourceImpl {
 		throws Exception {
 
 		CommerceAddress commerceAddress =
-			_commerceAddressService.fetchByExternalReferenceCode(
+			_commerceAddressService.fetchCommerceAddressByExternalReferenceCode(
 				externalReferenceCode, contextCompany.getCompanyId());
 
 		if (commerceAddress == null) {
@@ -92,7 +94,7 @@ public class AccountAddressResourceImpl extends BaseAccountAddressResourceImpl {
 		throws Exception {
 
 		CommerceAddress commerceAddress =
-			_commerceAddressService.fetchByExternalReferenceCode(
+			_commerceAddressService.fetchCommerceAddressByExternalReferenceCode(
 				externalReferenceCode, contextCompany.getCompanyId());
 
 		if (commerceAddress == null) {
@@ -112,7 +114,7 @@ public class AccountAddressResourceImpl extends BaseAccountAddressResourceImpl {
 
 		AccountEntry accountEntry =
 			_accountEntryService.fetchAccountEntryByExternalReferenceCode(
-				contextCompany.getCompanyId(), externalReferenceCode);
+				externalReferenceCode, contextCompany.getCompanyId());
 
 		if (accountEntry == null) {
 			throw new NoSuchEntryException(
@@ -145,32 +147,36 @@ public class AccountAddressResourceImpl extends BaseAccountAddressResourceImpl {
 			commerceAddress.getCompanyId(), accountAddress.getCountryISOCode());
 
 		commerceAddress = _commerceAddressService.updateCommerceAddress(
-			commerceAddress.getCommerceAddressId(),
 			GetterUtil.getString(
-				accountAddress.getName(), commerceAddress.getName()),
+				accountAddress.getExternalReferenceCode(),
+				commerceAddress.getExternalReferenceCode()),
+			commerceAddress.getCommerceAddressId(),
+			GetterUtil.getLong(
+				_getCountryId(country), commerceAddress.getCountryId()),
+			GetterUtil.getLong(
+				_getRegionId(country, accountAddress),
+				commerceAddress.getRegionId()),
+			GetterUtil.getString(
+				accountAddress.getCity(), commerceAddress.getCity()),
 			GetterUtil.getString(
 				accountAddress.getDescription(),
 				commerceAddress.getDescription()),
+			GetterUtil.getString(
+				accountAddress.getName(), commerceAddress.getName()),
+			GetterUtil.getString(
+				accountAddress.getPhoneNumber(),
+				commerceAddress.getPhoneNumber()),
 			GetterUtil.getString(
 				accountAddress.getStreet1(), commerceAddress.getStreet1()),
 			GetterUtil.getString(
 				accountAddress.getStreet2(), commerceAddress.getStreet2()),
 			GetterUtil.getString(
 				accountAddress.getStreet3(), commerceAddress.getStreet3()),
-			GetterUtil.getString(
-				accountAddress.getCity(), commerceAddress.getCity()),
-			GetterUtil.getString(
-				accountAddress.getZip(), commerceAddress.getZip()),
-			GetterUtil.getLong(
-				_getRegionId(country, accountAddress),
-				commerceAddress.getRegionId()),
-			GetterUtil.getLong(
-				_getCountryId(country), commerceAddress.getCountryId()),
-			GetterUtil.getString(
-				accountAddress.getPhoneNumber(),
-				commerceAddress.getPhoneNumber()),
+			commerceAddress.getSubtype(),
 			GetterUtil.getInteger(
 				accountAddress.getType(), commerceAddress.getType()),
+			GetterUtil.getString(
+				accountAddress.getZip(), commerceAddress.getZip()),
 			_serviceContextHelper.getServiceContext());
 
 		_updateDefaultBillingShippingAddressId(
@@ -185,7 +191,7 @@ public class AccountAddressResourceImpl extends BaseAccountAddressResourceImpl {
 		throws Exception {
 
 		CommerceAddress commerceAddress =
-			_commerceAddressService.fetchByExternalReferenceCode(
+			_commerceAddressService.fetchCommerceAddressByExternalReferenceCode(
 				externalReferenceCode, contextCompany.getCompanyId());
 
 		if (commerceAddress == null) {
@@ -198,32 +204,36 @@ public class AccountAddressResourceImpl extends BaseAccountAddressResourceImpl {
 			commerceAddress.getCompanyId(), accountAddress.getCountryISOCode());
 
 		_commerceAddressService.updateCommerceAddress(
-			commerceAddress.getCommerceAddressId(),
 			GetterUtil.getString(
-				accountAddress.getName(), commerceAddress.getName()),
+				accountAddress.getExternalReferenceCode(),
+				commerceAddress.getExternalReferenceCode()),
+			commerceAddress.getCommerceAddressId(),
+			GetterUtil.getLong(
+				_getCountryId(country), commerceAddress.getCountryId()),
+			GetterUtil.getLong(
+				_getRegionId(country, accountAddress),
+				commerceAddress.getRegionId()),
+			GetterUtil.getString(
+				accountAddress.getCity(), commerceAddress.getCity()),
 			GetterUtil.getString(
 				accountAddress.getDescription(),
 				commerceAddress.getDescription()),
+			GetterUtil.getString(
+				accountAddress.getName(), commerceAddress.getName()),
+			GetterUtil.getString(
+				accountAddress.getPhoneNumber(),
+				commerceAddress.getPhoneNumber()),
 			GetterUtil.getString(
 				accountAddress.getStreet1(), commerceAddress.getStreet1()),
 			GetterUtil.getString(
 				accountAddress.getStreet2(), commerceAddress.getStreet2()),
 			GetterUtil.getString(
 				accountAddress.getStreet3(), commerceAddress.getStreet3()),
-			GetterUtil.getString(
-				accountAddress.getCity(), commerceAddress.getCity()),
-			GetterUtil.getString(
-				accountAddress.getZip(), commerceAddress.getZip()),
-			GetterUtil.getLong(
-				_getRegionId(country, accountAddress),
-				commerceAddress.getRegionId()),
-			GetterUtil.getLong(
-				_getCountryId(country), commerceAddress.getCountryId()),
-			GetterUtil.getString(
-				accountAddress.getPhoneNumber(),
-				commerceAddress.getPhoneNumber()),
+			commerceAddress.getSubtype(),
 			GetterUtil.getInteger(
 				accountAddress.getType(), commerceAddress.getType()),
+			GetterUtil.getString(
+				accountAddress.getZip(), commerceAddress.getZip()),
 			_serviceContextHelper.getServiceContext());
 
 		_updateDefaultBillingShippingAddressId(
@@ -241,7 +251,7 @@ public class AccountAddressResourceImpl extends BaseAccountAddressResourceImpl {
 
 		AccountEntry accountEntry =
 			_accountEntryService.fetchAccountEntryByExternalReferenceCode(
-				contextCompany.getCompanyId(), externalReferenceCode);
+				externalReferenceCode, contextCompany.getCompanyId());
 
 		if (accountEntry == null) {
 			throw new NoSuchEntryException(
@@ -257,9 +267,10 @@ public class AccountAddressResourceImpl extends BaseAccountAddressResourceImpl {
 		}
 		else if (accountAddress.getExternalReferenceCode() != null) {
 			commerceAddress =
-				_commerceAddressService.fetchByExternalReferenceCode(
-					accountAddress.getExternalReferenceCode(),
-					contextCompany.getCompanyId());
+				_commerceAddressService.
+					fetchCommerceAddressByExternalReferenceCode(
+						accountAddress.getExternalReferenceCode(),
+						contextCompany.getCompanyId());
 		}
 
 		if (commerceAddress != null) {
@@ -269,22 +280,26 @@ public class AccountAddressResourceImpl extends BaseAccountAddressResourceImpl {
 
 			return _toAccountAddress(
 				_commerceAddressService.updateCommerceAddress(
+					GetterUtil.getString(
+						accountAddress.getExternalReferenceCode(),
+						commerceAddress.getExternalReferenceCode()),
 					commerceAddress.getCommerceAddressId(),
-					GetterUtil.getString(accountAddress.getName(), null),
-					GetterUtil.getString(accountAddress.getDescription(), null),
-					GetterUtil.getString(accountAddress.getStreet1(), null),
-					GetterUtil.getString(accountAddress.getStreet2(), null),
-					GetterUtil.getString(accountAddress.getStreet3(), null),
-					GetterUtil.getString(accountAddress.getCity(), null),
-					GetterUtil.getString(accountAddress.getZip(), null),
+					GetterUtil.getLong(
+						_getCountryId(country), commerceAddress.getCountryId()),
 					GetterUtil.getLong(
 						_getRegionId(country, accountAddress),
 						commerceAddress.getRegionId()),
-					GetterUtil.getLong(
-						_getCountryId(country), commerceAddress.getCountryId()),
+					GetterUtil.getString(accountAddress.getCity(), null),
+					GetterUtil.getString(accountAddress.getDescription(), null),
+					GetterUtil.getString(accountAddress.getName(), null),
 					GetterUtil.getString(accountAddress.getPhoneNumber(), null),
+					GetterUtil.getString(accountAddress.getStreet1(), null),
+					GetterUtil.getString(accountAddress.getStreet2(), null),
+					GetterUtil.getString(accountAddress.getStreet3(), null),
+					StringPool.BLANK,
 					GetterUtil.getInteger(
 						accountAddress.getType(), commerceAddress.getType()),
+					GetterUtil.getString(accountAddress.getZip(), null),
 					_serviceContextHelper.getServiceContext()));
 		}
 
@@ -312,21 +327,24 @@ public class AccountAddressResourceImpl extends BaseAccountAddressResourceImpl {
 			commerceAddress.getCompanyId(), accountAddress.getCountryISOCode());
 
 		commerceAddress = _commerceAddressService.updateCommerceAddress(
+			GetterUtil.getString(
+				accountAddress.getExternalReferenceCode(),
+				commerceAddress.getExternalReferenceCode()),
 			commerceAddress.getCommerceAddressId(),
-			GetterUtil.getString(accountAddress.getName()),
-			GetterUtil.getString(accountAddress.getDescription()),
-			GetterUtil.getString(accountAddress.getStreet1()),
-			GetterUtil.getString(accountAddress.getStreet2()),
-			GetterUtil.getString(accountAddress.getStreet3()),
-			GetterUtil.getString(accountAddress.getCity()),
-			GetterUtil.getString(accountAddress.getZip()),
+			GetterUtil.getLong(
+				_getCountryId(country), commerceAddress.getCountryId()),
 			GetterUtil.getLong(
 				_getRegionId(country, accountAddress),
 				commerceAddress.getRegionId()),
-			GetterUtil.getLong(
-				_getCountryId(country), commerceAddress.getCountryId()),
+			GetterUtil.getString(accountAddress.getCity()),
+			GetterUtil.getString(accountAddress.getDescription()),
+			GetterUtil.getString(accountAddress.getName()),
 			GetterUtil.getString(accountAddress.getPhoneNumber()),
+			GetterUtil.getString(accountAddress.getStreet1()),
+			GetterUtil.getString(accountAddress.getStreet2()),
+			GetterUtil.getString(accountAddress.getStreet3()), StringPool.BLANK,
 			GetterUtil.getInteger(accountAddress.getType()),
+			GetterUtil.getString(accountAddress.getZip()),
 			_serviceContextHelper.getServiceContext());
 
 		return _toAccountAddress(commerceAddress);
@@ -341,17 +359,17 @@ public class AccountAddressResourceImpl extends BaseAccountAddressResourceImpl {
 
 		CommerceAddress commerceAddress =
 			_commerceAddressService.addCommerceAddress(
-				GetterUtil.getString(
-					accountAddress.getExternalReferenceCode(), null),
+				accountAddress.getExternalReferenceCode(),
 				AccountEntry.class.getName(), accountEntry.getAccountEntryId(),
-				accountAddress.getName(), accountAddress.getDescription(),
+				country.getCountryId(), _getRegionId(country, accountAddress),
+				accountAddress.getCity(), accountAddress.getDescription(),
+				accountAddress.getName(), accountAddress.getPhoneNumber(),
 				accountAddress.getStreet1(), accountAddress.getStreet2(),
-				accountAddress.getStreet3(), accountAddress.getCity(),
-				accountAddress.getZip(), _getRegionId(country, accountAddress),
-				country.getCountryId(), accountAddress.getPhoneNumber(),
+				accountAddress.getStreet3(), StringPool.BLANK,
 				GetterUtil.getInteger(
 					accountAddress.getType(),
 					CommerceAddressConstants.ADDRESS_TYPE_BILLING_AND_SHIPPING),
+				accountAddress.getZip(),
 				_serviceContextHelper.getServiceContext());
 
 		_updateDefaultBillingShippingAddressId(
@@ -373,11 +391,11 @@ public class AccountAddressResourceImpl extends BaseAccountAddressResourceImpl {
 				pagination.getStartPosition(), pagination.getEndPosition(),
 				null);
 
-		int totalItems = _commerceAddressService.getCommerceAddressesCount(
+		int totalCount = _commerceAddressService.getCommerceAddressesCount(
 			AccountEntry.class.getName(), accountEntry.getAccountEntryId());
 
 		return Page.of(
-			_toAccountAddresses(commerceAddresses), pagination, totalItems);
+			_toAccountAddresses(commerceAddresses), pagination, totalCount);
 	}
 
 	private long _getCountryId(Country country) {
@@ -416,17 +434,12 @@ public class AccountAddressResourceImpl extends BaseAccountAddressResourceImpl {
 			List<CommerceAddress> commerceAddresses)
 		throws Exception {
 
-		List<AccountAddress> accountAddresses = new ArrayList<>();
-
-		for (CommerceAddress commerceAddress : commerceAddresses) {
-			accountAddresses.add(
-				_accountAddressDTOConverter.toDTO(
-					new DefaultDTOConverterContext(
-						commerceAddress.getCommerceAddressId(),
-						contextAcceptLanguage.getPreferredLocale())));
-		}
-
-		return accountAddresses;
+		return transform(
+			commerceAddresses,
+			commerceAddress -> _accountAddressDTOConverter.toDTO(
+				new DefaultDTOConverterContext(
+					commerceAddress.getCommerceAddressId(),
+					contextAcceptLanguage.getPreferredLocale())));
 	}
 
 	private void _updateDefaultBillingShippingAddressId(

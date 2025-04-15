@@ -90,12 +90,24 @@ public class ConfigYAML {
 		return _generateBatch;
 	}
 
+	public boolean isGenerateClientJS() {
+		return _generateClientJS;
+	}
+
+	public boolean isGenerateCRUD() {
+		return _generateCRUD;
+	}
+
 	public boolean isGenerateGraphQL() {
 		return _generateGraphQL;
 	}
 
 	public boolean isGenerateOpenAPI() {
 		return _generateOpenAPI;
+	}
+
+	public boolean isGeneratePermissions() {
+		return _generatePermissions;
 	}
 
 	public boolean isGenerateREST() {
@@ -176,12 +188,24 @@ public class ConfigYAML {
 		_generateBatch = generateBatch;
 	}
 
+	public void setGenerateClientJS(boolean generateClientJS) {
+		_generateClientJS = generateClientJS;
+	}
+
+	public void setGenerateCRUD(boolean generateCRUD) {
+		_generateCRUD = generateCRUD;
+	}
+
 	public void setGenerateGraphQL(boolean generateGraphQL) {
 		_generateGraphQL = generateGraphQL;
 	}
 
 	public void setGenerateOpenAPI(boolean generateOpenAPI) {
 		_generateOpenAPI = generateOpenAPI;
+	}
+
+	public void setGeneratePermissions(boolean generatePermissions) {
+		_generatePermissions = generatePermissions;
 	}
 
 	public void setGenerateREST(boolean generateREST) {
@@ -234,8 +258,11 @@ public class ConfigYAML {
 	private boolean _forcePredictableSchemaPropertyName = true;
 	private boolean _generateActionProviders;
 	private boolean _generateBatch = true;
+	private boolean _generateClientJS;
+	private boolean _generateCRUD = true;
 	private boolean _generateGraphQL = true;
 	private boolean _generateOpenAPI = true;
+	private boolean _generatePermissions;
 	private boolean _generateREST = true;
 	private String _graphQLNamespace;
 	private String _implDir = "src/main/java";

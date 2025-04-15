@@ -16,9 +16,15 @@ import {getDescendantIds} from './getDescendantIds';
 import {FORM_ERROR_TYPES} from './getFormErrorDescription';
 import getLayoutDataItemUniqueClassName from './getLayoutDataItemUniqueClassName';
 import hasDraftSubmitChild from './hasDraftSubmitChild';
+import {hasLocalizableFields} from './hasLocalizableFields';
+import {hasLocalizationSelect} from './hasLocalizationSelect';
 import hasRequiredInputChild from './hasRequiredInputChild';
-import hasVisibleSubmitChild from './hasVisibleSubmitChild';
+import {hasVisibleFormButtonChild} from './hasVisibleFormButtonChild';
+import {isItemHidden} from './isItemHidden';
 import {isLayoutDataItemDeleted} from './isLayoutDataItemDeleted';
+import isLocalizationSelect from './isLocalizationSelect';
+import {isMultistepForm} from './isMultistepForm';
+import isStepper from './isStepper';
 import isVisible from './isVisible';
 
 export default function useCheckFormsValidity() {
@@ -45,8 +51,76 @@ export default function useCheckFormsValidity() {
 		}
 
 		for (const form of forms) {
-			if (!hasVisibleSubmitChild(form.itemId, globalContext)) {
+			if (
+				hasLocalizationSelect(fragmentEntryLinks) &&
+				!(await hasLocalizableFields(stateRef.current, form.itemId))
+			) {
+				addError(
+					validations,
+					form,
+					FORM_ERROR_TYPES.missingLocalizableFields
+				);
+			}
+
+			if (
+				!hasVisibleFormButtonChild({
+					fragmentEntryLinks,
+					itemId: form.itemId,
+					layoutData,
+					type: 'submit',
+					viewportSize: selectedViewportSize,
+				})
+			) {
 				addError(validations, form, FORM_ERROR_TYPES.missingSubmit);
+			}
+
+			if (isMultistepForm(form)) {
+				const emptySteps = getEmptySteps(
+					form.itemId,
+					layoutData,
+					selectedViewportSize
+				);
+
+				const stepsWithoutNext = getStepsWithoutNext(
+					form.itemId,
+					layoutData,
+					fragmentEntryLinks,
+					selectedViewportSize
+				);
+
+				const stepsWithoutPrevious = getStepsWithoutPrevious(
+					form.itemId,
+					layoutData,
+					fragmentEntryLinks,
+					selectedViewportSize
+				);
+
+				if (emptySteps.length) {
+					addError(
+						validations,
+						form,
+						FORM_ERROR_TYPES.emptySteps,
+						emptySteps
+					);
+				}
+
+				if (stepsWithoutNext.length) {
+					addError(
+						validations,
+						form,
+						FORM_ERROR_TYPES.missingNextButton,
+						stepsWithoutNext
+					);
+				}
+
+				if (stepsWithoutPrevious.length) {
+					addError(
+						validations,
+						form,
+						FORM_ERROR_TYPES.missingPreviousButton,
+						stepsWithoutPrevious
+					);
+				}
 			}
 
 			await checkUnmappedInputChild(
@@ -150,14 +224,14 @@ export default function useCheckFormsValidity() {
 	};
 }
 
-function addError(validations, formItem, type) {
+function addError(validations, formItem, type, steps) {
 	if (formIsRestricted(formItem)) {
 		return;
 	}
 
 	const formValidation = validations.get(formItem.itemId);
 	const errors = formValidation ? formValidation.errors : [];
-	const nextFormErrors = [...errors, type];
+	const nextFormErrors = [...errors, {steps, type}];
 
 	validations.set(formItem.itemId, {
 		classNameId: formItem.config.classNameId,
@@ -193,7 +267,10 @@ async function checkUnmappedInputChild(
 			fragmentEntryLinks[item.config.fragmentEntryLinkId];
 
 		if (
-			fragmentEntryLink.fragmentEntryType !== FRAGMENT_ENTRY_TYPES.input
+			fragmentEntryLink.fragmentEntryType !==
+				FRAGMENT_ENTRY_TYPES.input ||
+			isStepper(fragmentEntryLink) ||
+			isLocalizationSelect(fragmentEntryLink)
 		) {
 			continue;
 		}
@@ -215,7 +292,8 @@ async function checkUnmappedInputChild(
 
 		const isSpecialFieldType =
 			allowedFieldTypes.includes('captcha') ||
-			allowedFieldTypes.includes('categorization');
+			allowedFieldTypes.includes('categorization') ||
+			allowedFieldTypes.includes('formButton');
 
 		if (isSpecialFieldType) {
 			continue;
@@ -259,4 +337,106 @@ function hasUnmappedRequiredField(
 				return inputFieldId === field.key;
 			})
 	);
+}
+
+function getStepContainer(formId, layoutData) {
+	const form = layoutData.items[formId];
+
+	const stepContainerId = form.children.find(
+		(childId) =>
+			layoutData.items[childId].type ===
+			LAYOUT_DATA_ITEM_TYPES.formStepContainer
+	);
+
+	return layoutData.items[stepContainerId];
+}
+
+function getEmptySteps(formId, layoutData, viewportSize) {
+	const stepContainer = getStepContainer(formId, layoutData);
+
+	const indexes = [];
+
+	for (const [index, stepId] of stepContainer.children.entries()) {
+		const step = layoutData.items[stepId];
+
+		if (
+			!step.children.length ||
+			step.children.every((childId) => {
+				isItemHidden(layoutData, childId, viewportSize);
+			})
+		) {
+			indexes.push(index + 1);
+		}
+	}
+
+	return indexes;
+}
+
+function getStepsWithoutNext(
+	formId,
+	layoutData,
+	fragmentEntryLinks,
+	viewportSize
+) {
+	const stepContainer = getStepContainer(formId, layoutData);
+
+	const indexes = [];
+
+	for (const [index, stepId] of stepContainer.children.entries()) {
+		const step = layoutData.items[stepId];
+
+		if (
+			index === stepContainer.children.length - 1 ||
+			!step.children.length
+		) {
+			continue;
+		}
+
+		if (
+			!hasVisibleFormButtonChild({
+				fragmentEntryLinks,
+				itemId: stepId,
+				layoutData,
+				type: 'next',
+				viewportSize,
+			})
+		) {
+			indexes.push(index + 1);
+		}
+	}
+
+	return indexes;
+}
+
+function getStepsWithoutPrevious(
+	formId,
+	layoutData,
+	fragmentEntryLinks,
+	viewportSize
+) {
+	const stepContainer = getStepContainer(formId, layoutData);
+
+	const indexes = [];
+
+	for (const [index, stepId] of stepContainer.children.entries()) {
+		const step = layoutData.items[stepId];
+
+		if (index === 0 || !step.children.length) {
+			continue;
+		}
+
+		if (
+			!hasVisibleFormButtonChild({
+				fragmentEntryLinks,
+				itemId: stepId,
+				layoutData,
+				type: 'previous',
+				viewportSize,
+			})
+		) {
+			indexes.push(index + 1);
+		}
+	}
+
+	return indexes;
 }

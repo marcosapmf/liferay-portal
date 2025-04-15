@@ -3,17 +3,52 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {openCreationModal} from '@liferay/layout-js-components-web';
 import {
-	openModal,
-	openSelectionModal,
-	setFormValues,
-	sub,
-} from 'frontend-js-web';
+	CreationModal,
+	openModalComponent,
+} from '@liferay/layout-js-components-web';
+import {openModal, openSelectionModal} from 'frontend-js-components-web';
+import {setFormValues, sub} from 'frontend-js-web';
 
 import openDeletePageTemplateModal from '../commands/openDeletePageTemplateModal';
 
 const ACTIONS = {
+	copyLayoutPageTemplateCollection(
+		{
+			copySelectedEntriesURL,
+			itemSelectorURL,
+			layoutPageTemplateCollectionId,
+			layoutPageTemplateCollectionName,
+		},
+		portletNamespace
+	) {
+		openSelectionModal({
+			height: '70vh',
+			onSelect: (selectedItem) => {
+				const form = document.getElementById(
+					`${portletNamespace}actionEntriesFm`
+				);
+
+				setFormValues(form, {
+					copyPermissions: true,
+					layoutPageTemplateCollectionsIds:
+						layoutPageTemplateCollectionId,
+					layoutParentPageTemplateCollectionId:
+						selectedItem.resourceid,
+				});
+
+				submitForm(form, copySelectedEntriesURL);
+			},
+			selectEventName: 'selectFolder',
+			size: 'md',
+			title: sub(
+				Liferay.Language.get('copy-x-to'),
+				layoutPageTemplateCollectionName
+			),
+			url: itemSelectorURL,
+		});
+	},
+
 	deleteLayoutPageTemplateCollection({
 		deleteLayoutPageTemplateCollectionURL,
 		dialogTitle,
@@ -34,6 +69,7 @@ const ACTIONS = {
 			itemSelectorURL,
 			layoutPageTemplateCollectionId,
 			layoutPageTemplateCollectionName,
+			moveSelectedEntriesURL,
 		},
 		portletNamespace
 	) {
@@ -47,17 +83,17 @@ const ACTIONS = {
 				setFormValues(form, {
 					layoutPageTemplateCollectionsIds:
 						layoutPageTemplateCollectionId,
-					targetLayoutPageTemplateCollectionId:
+					layoutParentPageTemplateCollectionId:
 						selectedItem.resourceid,
 				});
 
-				submitForm(form);
+				submitForm(form, moveSelectedEntriesURL);
 			},
 			selectEventName: 'selectFolder',
 			size: 'md',
 			title: sub(
 				Liferay.Language.get('move-x-to'),
-				`"${layoutPageTemplateCollectionName}"`
+				layoutPageTemplateCollectionName
 			),
 			url: itemSelectorURL,
 		});
@@ -81,12 +117,15 @@ const ACTIONS = {
 		},
 		portletNamespace
 	) {
-		openCreationModal({
-			descriptionInputValue: layoutPageTemplateCollectionDescription,
-			formSubmitURL: updateLayoutPageTemplateCollectionURL,
-			heading: dialogTitle,
-			nameInputValue: layoutPageTemplateCollectionName,
-			portletNamespace,
+		openModalComponent({
+			ModalComponent: CreationModal,
+			modalComponentProps: {
+				descriptionInputValue: layoutPageTemplateCollectionDescription,
+				formSubmitURL: updateLayoutPageTemplateCollectionURL,
+				heading: dialogTitle,
+				nameInputValue: layoutPageTemplateCollectionName,
+				portletNamespace,
+			},
 		});
 	},
 };

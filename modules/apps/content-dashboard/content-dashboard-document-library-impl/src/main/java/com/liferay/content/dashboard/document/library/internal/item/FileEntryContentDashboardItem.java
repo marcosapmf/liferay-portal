@@ -16,7 +16,6 @@ import com.liferay.content.dashboard.item.action.ContentDashboardItemVersionActi
 import com.liferay.content.dashboard.item.action.exception.ContentDashboardItemActionException;
 import com.liferay.content.dashboard.item.action.exception.ContentDashboardItemVersionActionException;
 import com.liferay.content.dashboard.item.action.provider.ContentDashboardItemActionProvider;
-import com.liferay.content.dashboard.item.action.provider.ContentDashboardItemVersionActionProvider;
 import com.liferay.content.dashboard.item.type.ContentDashboardItemSubtype;
 import com.liferay.document.library.constants.DLPortletKeys;
 import com.liferay.document.library.display.context.DLDisplayContextProvider;
@@ -27,16 +26,12 @@ import com.liferay.document.library.util.DLURLHelper;
 import com.liferay.dynamic.data.mapping.model.DDMField;
 import com.liferay.dynamic.data.mapping.model.DDMFieldAttribute;
 import com.liferay.dynamic.data.mapping.service.DDMFieldLocalService;
-import com.liferay.info.field.InfoFieldValue;
 import com.liferay.info.item.InfoItemClassDetails;
-import com.liferay.info.item.InfoItemFieldValues;
 import com.liferay.info.item.InfoItemReference;
-import com.liferay.info.item.provider.InfoItemFieldValuesProvider;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
@@ -96,7 +91,6 @@ public class FileEntryContentDashboardItem
 		DLDisplayContextProvider dlDisplayContextProvider,
 		DLFileEntryMetadataLocalService dlFileEntryMetadataLocalService,
 		DLURLHelper dlURLHelper, FileEntry fileEntry, Group group,
-		InfoItemFieldValuesProvider<FileEntry> infoItemFieldValuesProvider,
 		Language language, Portal portal) {
 
 		if (ListUtil.isEmpty(assetCategories)) {
@@ -124,7 +118,6 @@ public class FileEntryContentDashboardItem
 		_dlURLHelper = dlURLHelper;
 		_fileEntry = fileEntry;
 		_group = group;
-		_infoItemFieldValuesProvider = infoItemFieldValuesProvider;
 		_language = language;
 		_portal = portal;
 	}
@@ -236,7 +229,7 @@ public class FileEntryContentDashboardItem
 		ContentDashboardItemVersion contentDashboardItemVersion =
 			_getLastContentDashboardItemVersion(locale);
 
-		if ((getUserId() == userId) &&
+		if ((contentDashboardItemVersion != null) && (getUserId() == userId) &&
 			Objects.equals(
 				contentDashboardItemVersion.getLabel(),
 				_language.get(
@@ -302,7 +295,7 @@ public class FileEntryContentDashboardItem
 
 	@Override
 	public String getDescription(Locale locale) {
-		return _getStringValue("description");
+		return _fileEntry.getDescription();
 	}
 
 	@Override
@@ -555,45 +548,36 @@ public class FileEntryContentDashboardItem
 		_getContentDashboardItemVersionActions(
 			FileVersion fileVersion, HttpServletRequest httpServletRequest) {
 
-		List<ContentDashboardItemVersionAction>
-			contentDashboardItemVersionActions = new ArrayList<>();
+		return TransformUtil.transform(
+			_contentDashboardItemVersionActionProviderRegistry.
+				getContentDashboardItemVersionActionProviders(
+					FileVersion.class.getName()),
+			contentDashboardItemVersionActionProvider -> {
+				if (!contentDashboardItemVersionActionProvider.isShow(
+						fileVersion, httpServletRequest)) {
 
-		List<ContentDashboardItemVersionActionProvider>
-			contentDashboardItemVersionActionProviders =
-				_contentDashboardItemVersionActionProviderRegistry.
-					getContentDashboardItemVersionActionProviders(
-						FileVersion.class.getName());
-
-		for (ContentDashboardItemVersionActionProvider
-				contentDashboardItemVersionActionProvider :
-					contentDashboardItemVersionActionProviders) {
-
-			if (!contentDashboardItemVersionActionProvider.isShow(
-					fileVersion, httpServletRequest)) {
-
-				continue;
-			}
-
-			try {
-				ContentDashboardItemVersionAction
-					contentDashboardItemVersionAction =
-						contentDashboardItemVersionActionProvider.
-							getContentDashboardItemVersionAction(
-								fileVersion, httpServletRequest);
-
-				if (contentDashboardItemVersionAction != null) {
-					contentDashboardItemVersionActions.add(
-						contentDashboardItemVersionAction);
+					return null;
 				}
-			}
-			catch (ContentDashboardItemVersionActionException
-						contentDashboardItemVersionActionException) {
 
-				_log.error(contentDashboardItemVersionActionException);
-			}
-		}
+				try {
+					ContentDashboardItemVersionAction
+						contentDashboardItemVersionAction =
+							contentDashboardItemVersionActionProvider.
+								getContentDashboardItemVersionAction(
+									fileVersion, httpServletRequest);
 
-		return contentDashboardItemVersionActions;
+					if (contentDashboardItemVersionAction != null) {
+						return contentDashboardItemVersionAction;
+					}
+				}
+				catch (ContentDashboardItemVersionActionException
+							contentDashboardItemVersionActionException) {
+
+					_log.error(contentDashboardItemVersionActionException);
+				}
+
+				return null;
+			});
 	}
 
 	private long _getDDMFormFieldsValueValue(
@@ -642,12 +626,6 @@ public class FileEntryContentDashboardItem
 	}
 
 	private List<DLFileEntryMetadata> _getDLFileEntryMetadatas() {
-		if (!FeatureFlagManagerUtil.isEnabled(
-				_fileEntry.getCompanyId(), "LPD-30087")) {
-
-			return null;
-		}
-
 		FileVersion fileVersion = null;
 
 		try {
@@ -672,7 +650,7 @@ public class FileEntryContentDashboardItem
 	}
 
 	private String _getFileName() {
-		return _getStringValue("fileName");
+		return _fileEntry.getFileName();
 	}
 
 	private ContentDashboardItemVersion _getLastContentDashboardItemVersion(
@@ -680,6 +658,10 @@ public class FileEntryContentDashboardItem
 
 		List<ContentDashboardItemVersion> contentDashboardItemVersions =
 			getLatestContentDashboardItemVersions(locale);
+
+		if (ListUtil.isEmpty(contentDashboardItemVersions)) {
+			return null;
+		}
 
 		return contentDashboardItemVersions.get(
 			contentDashboardItemVersions.size() - 1);
@@ -716,16 +698,18 @@ public class FileEntryContentDashboardItem
 				_portal.getHttpServletRequest(liferayPortletRequest),
 				ContentDashboardItemAction.Type.PREVIEW);
 
-		if (!contentDashboardItemActions.isEmpty()) {
-			ContentDashboardItemAction contentDashboardItemAction =
-				contentDashboardItemActions.get(0);
+		if (contentDashboardItemActions.isEmpty()) {
+			return null;
+		}
 
-			try {
-				return new URL(contentDashboardItemAction.getURL());
-			}
-			catch (MalformedURLException malformedURLException) {
-				_log.error(malformedURLException);
-			}
+		ContentDashboardItemAction contentDashboardItemAction =
+			contentDashboardItemActions.get(0);
+
+		try {
+			return new URL(contentDashboardItemAction.getURL());
+		}
+		catch (MalformedURLException malformedURLException) {
+			_log.error(malformedURLException);
 		}
 
 		return null;
@@ -747,26 +731,6 @@ public class FileEntryContentDashboardItem
 
 	private String _getSize(Locale locale) {
 		return LanguageUtil.formatStorageSize(_fileEntry.getSize(), locale);
-	}
-
-	private String _getStringValue(String infoFieldName) {
-		InfoItemFieldValues infoItemFieldValues =
-			_infoItemFieldValuesProvider.getInfoItemFieldValues(_fileEntry);
-
-		InfoFieldValue<Object> infoFieldValue =
-			infoItemFieldValues.getInfoFieldValue(infoFieldName);
-
-		if (infoFieldValue == null) {
-			return StringPool.BLANK;
-		}
-
-		Object value = infoFieldValue.getValue();
-
-		if (value == null) {
-			return StringPool.BLANK;
-		}
-
-		return value.toString();
 	}
 
 	private URL _getWebDAVURL() {
@@ -848,8 +812,6 @@ public class FileEntryContentDashboardItem
 	private final DLURLHelper _dlURLHelper;
 	private final FileEntry _fileEntry;
 	private final Group _group;
-	private final InfoItemFieldValuesProvider<FileEntry>
-		_infoItemFieldValuesProvider;
 	private final Language _language;
 	private final Portal _portal;
 

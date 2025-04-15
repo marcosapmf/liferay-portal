@@ -965,6 +965,51 @@
 		<dynamic-attributes>true</dynamic-attributes>
 	</tag>
 	<tag>
+		<name>link</name>
+		<tag-class>com.liferay.taglib.aui.LinkTag</tag-class>
+		<body-content>empty</body-content>
+		<attribute>
+			<name>crossOrigin</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<name>cssClass</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<name>href</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<name>id</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<name>integrity</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<name>rel</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<name>senna</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<name>type</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+	</tag>
+	<tag>
 		<description>Creates a configurable model context object that can be used as a model for other components.</description>
 		<name>model-context</name>
 		<tag-class>com.liferay.taglib.aui.ModelContextTag</tag-class>
@@ -1345,45 +1390,38 @@
 		<tag-class>com.liferay.taglib.aui.ScriptTag</tag-class>
 		<body-content>JSP</body-content>
 		<attribute>
-			<description></description>
 			<name>async</name>
 			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
 			<type>boolean</type>
 		</attribute>
 		<attribute>
-			<description></description>
 			<name>blocking</name>
 			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
 		<attribute>
-			<description></description>
 			<name>crossOrigin</name>
 			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
 		<attribute>
-			<description></description>
 			<name>defer</name>
 			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
 			<type>boolean</type>
 		</attribute>
 		<attribute>
-			<description></description>
 			<name>fetchPriority</name>
 			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
 		<attribute>
-			<description></description>
 			<name>id</name>
 			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
 		<attribute>
-			<description></description>
 			<name>integrity</name>
 			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
@@ -1395,7 +1433,6 @@
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
 		<attribute>
-			<description></description>
 			<name>referrerPolicy</name>
 			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
@@ -1412,19 +1449,16 @@
 			<type>boolean</type>
 		</attribute>
 		<attribute>
-			<description></description>
 			<name>senna</name>
 			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
 		<attribute>
-			<description></description>
 			<name>src</name>
 			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
 		<attribute>
-			<description></description>
 			<name>type</name>
 			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
@@ -1435,7 +1469,6 @@
 			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
-
 	</tag>
 	<tag>
 		<description>Creates a select field (or combo box) for holding <![CDATA[<code>&lt;aui:option&gt;</code>]]> components.</description>
@@ -1641,6 +1674,21 @@
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
 		<dynamic-attributes>true</dynamic-attributes>
+	</tag>
+	<tag>
+		<name>style</name>
+		<tag-class>com.liferay.taglib.aui.StyleTag</tag-class>
+		<body-content>JSP</body-content>
+		<attribute>
+			<name>senna</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<name>type</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
 	</tag>
 	<tag>
 		<description>Creates a UI component for managing translation of associated content.</description>

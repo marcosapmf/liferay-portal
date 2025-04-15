@@ -42,6 +42,12 @@ export class HeadlessCommerceAdminChannelApiHelper {
 		);
 	}
 
+	async getTaxCategories() {
+		return this.apiHelpers.get(
+			`${this.apiHelpers.baseUrl}${this.basePath}/tax-categories`
+		);
+	}
+
 	async patchChannelWithAccountId(accountId: number, channel: TChannel) {
 		await this.apiHelpers.patch(
 			`${this.apiHelpers.baseUrl}${this.basePath}/channels/${channel.id}`,
@@ -71,5 +77,21 @@ export class HeadlessCommerceAdminChannelApiHelper {
 		}
 
 		return channel;
+	}
+
+	async putChannel(channelId: number, channel: TChannel) {
+		await this.apiHelpers.put(
+			`${this.apiHelpers.baseUrl}${this.basePath}/channels/${channelId}`,
+			{
+				data: {
+					accountId: 0,
+					currencyCode: 'USD',
+					name: 'Channel' + getRandomInt(),
+					siteGroupId: 0,
+					type: 'site',
+					...channel,
+				},
+			}
+		);
 	}
 }

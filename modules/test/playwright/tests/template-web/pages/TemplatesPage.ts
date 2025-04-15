@@ -3,27 +3,36 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {Locator, Page} from '@playwright/test';
+import {Locator, Page, expect} from '@playwright/test';
+import path from 'path';
 
 import {clickAndExpectToBeVisible} from '../../../utils/clickAndExpectToBeVisible';
 import fillAndClickOutside from '../../../utils/fillAndClickOutside';
 import {PORTLET_URLS} from '../../../utils/portletUrls';
-import {waitForSuccessAlert} from '../../../utils/waitForSuccessAlert';
+import {waitForAlert} from '../../../utils/waitForAlert';
 
 export class TemplatesPage {
 	readonly page: Page;
 
 	readonly newButton: Locator;
+	readonly saveButton: Locator;
 
 	constructor(page: Page) {
 		this.page = page;
 
 		this.newButton = page.getByRole('button', {name: 'Add'});
+		this.saveButton = page.getByRole('button', {exact: true, name: 'Save'});
 	}
 
 	async goto(siteUrl?: Site['friendlyUrlPath']) {
 		await this.page.goto(
 			`/group${siteUrl || '/guest'}${PORTLET_URLS.templates}`
+		);
+	}
+
+	async gotoWidgetTemplates(siteUrl?: Site['friendlyUrlPath']) {
+		await this.page.goto(
+			`/group${siteUrl || '/guest'}${PORTLET_URLS.widgetTemplates}`
 		);
 	}
 
@@ -49,7 +58,7 @@ export class TemplatesPage {
 
 		await this.page.getByRole('button', {name: 'Copy'}).click();
 
-		await waitForSuccessAlert(this.page);
+		await waitForAlert(this.page);
 	}
 
 	async createInformationTemplate({
@@ -75,7 +84,43 @@ export class TemplatesPage {
 
 		await this.page.getByRole('button', {name: 'Save'}).click();
 
-		await waitForSuccessAlert(this.page);
+		await waitForAlert(this.page);
+	}
+
+	async createWidgetTemplate(name: string, type: string) {
+		const typeOption = this.page.getByRole('menuitem', {
+			name: type,
+		});
+
+		const moreButton = this.page.getByRole('button', {name: 'More'});
+
+		await clickAndExpectToBeVisible({
+			target: moreButton,
+			trigger: this.page.getByRole('button', {name: 'New'}),
+		});
+
+		if (await typeOption.isVisible()) {
+			await typeOption.click();
+		}
+		else {
+			await clickAndExpectToBeVisible({
+				autoClick: true,
+				target: typeOption,
+				trigger: moreButton,
+			});
+		}
+
+		// Wait until the editor is loaded
+
+		await this.page.locator('.ddm_template_editor__App').waitFor();
+
+		await fillAndClickOutside(
+			this.page,
+			this.page.getByPlaceholder('Untitled Template'),
+			name
+		);
+
+		await this.saveTemplate(name);
 	}
 
 	async deleteInformationTemplate(title: string) {
@@ -83,6 +128,53 @@ export class TemplatesPage {
 
 		await this.page.getByRole('button', {name: 'Delete'}).click();
 
-		await waitForSuccessAlert(this.page);
+		await waitForAlert(this.page);
+	}
+
+	async editTemplate(name: string) {
+		await this.page.getByRole('link', {exact: true, name}).click();
+	}
+
+	async getTemplateKey() {
+		await this.page.getByLabel('Properties').click();
+
+		return await this.page.getByLabel('Template Key').getAttribute('value');
+	}
+
+	async importInformationTemplate(dirname: string, fileName: string) {
+		const fileChooserPromise = this.page.waitForEvent('filechooser');
+
+		await clickAndExpectToBeVisible({
+			autoClick: true,
+			target: this.page
+				.locator('.dropdown-menu')
+				.getByRole('menuitem', {name: 'Import Script'}),
+			trigger: this.page
+				.locator('.control-menu-nav-item')
+				.getByLabel('Options', {exact: true}),
+		});
+
+		const fileChooser = await fileChooserPromise;
+
+		await fileChooser.setFiles(
+			path.join(dirname, '/dependencies/' + fileName)
+		);
+
+		await waitForAlert(this.page, `Success:${fileName} Imported`);
+	}
+
+	async saveTemplate(name: string) {
+		await expect(async () => {
+			await this.saveButton.click();
+
+			await waitForAlert(this.page);
+
+			await expect(
+				this.page.getByRole('link', {
+					exact: true,
+					name,
+				})
+			).toBeAttached();
+		}).toPass();
 	}
 }

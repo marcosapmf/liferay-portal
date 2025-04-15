@@ -53,7 +53,6 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
-import com.liferay.portal.test.rule.FeatureFlags;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
@@ -73,7 +72,6 @@ import org.springframework.mock.web.MockHttpServletResponse;
 /**
  * @author Mikel Lorza
  */
-@FeatureFlags("LPS-187284")
 @RunWith(Arquillian.class)
 public class GetLayoutReportsLayoutItemDataStrutsActionTest {
 
@@ -167,7 +165,7 @@ public class GetLayoutReportsLayoutItemDataStrutsActionTest {
 
 		LayoutPageTemplateEntry masterLayoutPageTemplateEntry =
 			_layoutPageTemplateEntryLocalService.addLayoutPageTemplateEntry(
-				null, TestPropsValues.getUserId(), _group.getGroupId(), 0,
+				null, TestPropsValues.getUserId(), _group.getGroupId(), 0, null,
 				RandomTestUtil.randomString(),
 				LayoutPageTemplateEntryTypeConstants.MASTER_LAYOUT, 0,
 				WorkflowConstants.STATUS_APPROVED,
@@ -389,7 +387,7 @@ public class GetLayoutReportsLayoutItemDataStrutsActionTest {
 			fragmentCollection.getFragmentCollectionId(), null,
 			RandomTestUtil.randomString(), StringPool.BLANK,
 			"Fragment Entry HTML", StringPool.BLANK, cacheable, null, null, 0,
-			false, FragmentConstants.TYPE_COMPONENT, null,
+			false, false, FragmentConstants.TYPE_COMPONENT, null,
 			WorkflowConstants.STATUS_APPROVED, _serviceContext);
 	}
 

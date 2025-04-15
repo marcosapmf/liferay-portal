@@ -133,7 +133,7 @@ public class AccountEntryServiceImpl extends AccountEntryServiceBaseImpl {
 		PermissionChecker permissionChecker = getPermissionChecker();
 
 		_accountEntryModelResourcePermission.check(
-			permissionChecker, accountEntryId, ActionKeys.DELETE);
+			permissionChecker, accountEntryId, ActionKeys.DEACTIVATE);
 
 		return _withServiceContext(
 			() -> accountEntryLocalService.deactivateAccountEntry(
@@ -170,7 +170,7 @@ public class AccountEntryServiceImpl extends AccountEntryServiceBaseImpl {
 
 	@Override
 	public AccountEntry fetchAccountEntryByExternalReferenceCode(
-			long companyId, String externalReferenceCode)
+			String externalReferenceCode, long companyId)
 		throws PortalException {
 
 		AccountEntry accountEntry =
@@ -216,6 +216,22 @@ public class AccountEntryServiceImpl extends AccountEntryServiceBaseImpl {
 
 		_accountEntryModelResourcePermission.check(
 			getPermissionChecker(), accountEntryId, ActionKeys.VIEW);
+
+		return accountEntry;
+	}
+
+	@Override
+	public AccountEntry getAccountEntryByExternalReferenceCode(
+			String externalReferenceCode, long companyId)
+		throws PortalException {
+
+		AccountEntry accountEntry =
+			accountEntryLocalService.getAccountEntryByExternalReferenceCode(
+				externalReferenceCode, companyId);
+
+		_accountEntryModelResourcePermission.check(
+			getPermissionChecker(), accountEntry.getAccountEntryId(),
+			ActionKeys.VIEW);
 
 		return accountEntry;
 	}

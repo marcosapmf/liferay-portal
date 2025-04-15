@@ -115,11 +115,11 @@ export function UniqueCompositeKey({
 					),
 				},
 				getName: ({label, name}: ObjectField) =>
-					stringUtils.getLocalizableLabel(
-						creationLanguageId,
-						label,
-						name
-					),
+					stringUtils.getLocalizableLabel({
+						fallbackLabel: name,
+						fallbackLanguageId: creationLanguageId,
+						labels: label,
+					}),
 				header: Liferay.Language.get(
 					'add-fields-to-unique-composite-key'
 				),
@@ -298,11 +298,12 @@ export function UniqueCompositeKey({
 					);
 
 				if (filteredObjectFieldObjectValidationRuleSetting) {
-					const label = stringUtils.getLocalizableLabel(
-						creationLanguageId,
-						filteredObjectFieldObjectValidationRuleSetting.label,
-						filteredObjectFieldObjectValidationRuleSetting.name
-					);
+					const label = stringUtils.getLocalizableLabel({
+						fallbackLabel:
+							filteredObjectFieldObjectValidationRuleSetting.name,
+						fallbackLanguageId: creationLanguageId,
+						labels: filteredObjectFieldObjectValidationRuleSetting.label,
+					});
 
 					newBuilderScreenItems.push({
 						externalReferenceCode:
@@ -426,7 +427,7 @@ export function UniqueCompositeKey({
 							const parentWindow = Liferay.Util.getOpener();
 
 							parentWindow.Liferay.fire(
-								'openModalObjectFieldDeletionNotAllowed',
+								'openModalDeletionNotAllowed',
 								{
 									contentLiferayFire: (
 										<span>

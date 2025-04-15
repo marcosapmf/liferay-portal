@@ -6,14 +6,18 @@
 package com.liferay.asset.categories.internal.search.spi.model.index.contributor;
 
 import com.liferay.asset.kernel.model.AssetVocabulary;
+import com.liferay.asset.kernel.model.AssetVocabularyGroupRel;
+import com.liferay.asset.kernel.service.AssetVocabularyGroupRelLocalService;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.search.Field;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.Localization;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.search.localization.SearchLocalizationHelper;
 import com.liferay.portal.search.spi.model.index.contributor.ModelDocumentContributor;
+import com.liferay.portlet.asset.util.AssetVocabularySettingsHelper;
 
 import java.util.Locale;
 
@@ -51,6 +55,9 @@ public class AssetVocabularyModelDocumentContributor
 
 		document.addNumber(
 			Field.VISIBILITY_TYPE, assetVocabulary.getVisibilityType());
+		document.addKeyword("classNameIds", _getClassNameIds(assetVocabulary));
+		document.addKeyword(
+			"groupIds", _getGroupIds(assetVocabulary.getVocabularyId()));
 		document.addLocalizedKeyword(
 			"localized_title",
 			_localization.populateLocalizationMap(
@@ -58,6 +65,20 @@ public class AssetVocabularyModelDocumentContributor
 				assetVocabulary.getDefaultLanguageId(),
 				assetVocabulary.getGroupId()),
 			true, true);
+	}
+
+	private long[] _getClassNameIds(AssetVocabulary assetVocabulary) {
+		AssetVocabularySettingsHelper assetVocabularySettingsHelper =
+			new AssetVocabularySettingsHelper(assetVocabulary.getSettings());
+
+		return assetVocabularySettingsHelper.getClassNameIds();
+	}
+
+	private long[] _getGroupIds(long vocabularyId) {
+		return ListUtil.toLongArray(
+			_assetVocabularyGroupRelLocalService.
+				getAssetVocabularyGroupRelsByVocabularyId(vocabularyId),
+			AssetVocabularyGroupRel::getGroupId);
 	}
 
 	private Locale _getSiteDefaultLocale(long groupId) {
@@ -68,6 +89,10 @@ public class AssetVocabularyModelDocumentContributor
 			throw new SystemException(portalException);
 		}
 	}
+
+	@Reference
+	private AssetVocabularyGroupRelLocalService
+		_assetVocabularyGroupRelLocalService;
 
 	@Reference
 	private Localization _localization;

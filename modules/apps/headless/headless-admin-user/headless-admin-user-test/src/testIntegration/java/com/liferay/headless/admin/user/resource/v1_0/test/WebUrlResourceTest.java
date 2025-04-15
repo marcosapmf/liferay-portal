@@ -11,6 +11,7 @@ import com.liferay.account.model.AccountEntry;
 import com.liferay.account.service.AccountEntryLocalService;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.headless.admin.user.client.dto.v1_0.WebUrl;
+import com.liferay.headless.admin.user.client.pagination.Page;
 import com.liferay.portal.kernel.model.Contact;
 import com.liferay.portal.kernel.model.ListType;
 import com.liferay.portal.kernel.model.ListTypeConstants;
@@ -25,15 +26,19 @@ import com.liferay.portal.kernel.test.util.OrganizationTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.SynchronousMailTestRule;
 
 import java.util.List;
+import java.util.Objects;
 
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 
 /**
@@ -66,6 +71,22 @@ public class WebUrlResourceTest extends BaseWebUrlResourceTestCase {
 	}
 
 	@Override
+	@Test
+	public void testDeleteWebUrl() throws Exception {
+		super.testDeleteWebUrl();
+
+		_testDeletePrimaryWebUrl();
+	}
+
+	@Override
+	@Test
+	public void testPatchWebUrl() throws Exception {
+		super.testPatchWebUrl();
+
+		_testPatchWebUrlNotPrimary();
+	}
+
+	@Override
 	protected String[] getAdditionalAssertFieldNames() {
 		return new String[] {"url"};
 	}
@@ -74,9 +95,27 @@ public class WebUrlResourceTest extends BaseWebUrlResourceTestCase {
 	protected WebUrl randomWebUrl() {
 		return new WebUrl() {
 			{
+				primary = false;
 				url = "http://" + RandomTestUtil.randomString() + ".com";
+				urlType = "blog";
 			}
 		};
+	}
+
+	@Override
+	protected WebUrl testDeleteWebUrl_addWebUrl() throws Exception {
+		return _addWebUrl(
+			randomWebUrl(), Contact.class.getName(), _user.getContactId(),
+			ListTypeConstants.CONTACT_WEBSITE);
+	}
+
+	@Override
+	protected WebUrl testDeleteWebUrlByExternalReferenceCode_addWebUrl()
+		throws Exception {
+
+		return _addWebUrl(
+			randomWebUrl(), Contact.class.getName(), _user.getContactId(),
+			ListTypeConstants.CONTACT_WEBSITE);
 	}
 
 	@Override
@@ -191,8 +230,33 @@ public class WebUrlResourceTest extends BaseWebUrlResourceTestCase {
 	}
 
 	@Override
+	protected WebUrl testGetWebUrlByExternalReferenceCode_addWebUrl()
+		throws Exception {
+
+		return _addWebUrl(
+			randomWebUrl(), Contact.class.getName(), _user.getContactId(),
+			ListTypeConstants.CONTACT_WEBSITE);
+	}
+
+	@Override
 	protected WebUrl testGraphQLWebUrl_addWebUrl() throws Exception {
 		return testGetWebUrl_addWebUrl();
+	}
+
+	@Override
+	protected WebUrl testPatchWebUrl_addWebUrl() throws Exception {
+		return _addWebUrl(
+			randomWebUrl(), Contact.class.getName(), _user.getContactId(),
+			ListTypeConstants.CONTACT_WEBSITE);
+	}
+
+	@Override
+	protected WebUrl testPatchWebUrlByExternalReferenceCode_addWebUrl()
+		throws Exception {
+
+		return _addWebUrl(
+			randomWebUrl(), Contact.class.getName(), _user.getContactId(),
+			ListTypeConstants.CONTACT_WEBSITE);
 	}
 
 	private WebUrl _addWebUrl(
@@ -201,8 +265,9 @@ public class WebUrlResourceTest extends BaseWebUrlResourceTestCase {
 
 		return _toWebUrl(
 			WebsiteLocalServiceUtil.addWebsite(
-				_user.getUserId(), className, classPK, webUrl.getUrl(),
-				_getListTypeId(listTypeId), false, new ServiceContext()));
+				RandomTestUtil.randomString(), _user.getUserId(), className,
+				classPK, webUrl.getUrl(), _getListTypeId(listTypeId),
+				webUrl.getPrimary(), new ServiceContext()));
 	}
 
 	private long _getListTypeId(String listTypeId) {
@@ -214,10 +279,62 @@ public class WebUrlResourceTest extends BaseWebUrlResourceTestCase {
 		return listType.getListTypeId();
 	}
 
+	private void _testDeletePrimaryWebUrl() throws Exception {
+		WebUrl webUrl1 = randomWebUrl();
+
+		webUrl1 = _toWebUrl(
+			WebsiteLocalServiceUtil.addWebsite(
+				RandomTestUtil.randomString(), _user.getUserId(),
+				Contact.class.getName(), _user.getContactId(), webUrl1.getUrl(),
+				_getListTypeId(ListTypeConstants.CONTACT_WEBSITE), true,
+				new ServiceContext()));
+
+		Assert.assertTrue(webUrl1.getPrimary());
+
+		WebUrl webUrl2 = testDeleteWebUrl_addWebUrl();
+
+		Assert.assertFalse(webUrl2.getPrimary());
+
+		webUrlResource.deleteWebUrl(webUrl1.getId());
+
+		webUrl2 = webUrlResource.getWebUrl(webUrl2.getId());
+
+		Assert.assertTrue(webUrl2.getPrimary());
+	}
+
+	private void _testPatchWebUrlNotPrimary() throws Exception {
+		WebUrl randomWebUrl = randomWebUrl();
+
+		randomWebUrl.setPrimary(true);
+
+		randomWebUrl = _addWebUrl(
+			randomWebUrl, Contact.class.getName(), _user.getContactId(),
+			ListTypeConstants.CONTACT_WEBSITE);
+
+		testPatchWebUrl_addWebUrl();
+
+		randomWebUrl.setPrimary(false);
+
+		WebUrl patchWebUrl = webUrlResource.patchWebUrl(
+			randomWebUrl.getId(), randomWebUrl);
+
+		Page<WebUrl> webUrlsPage = webUrlResource.getUserAccountWebUrlsPage(
+			_user.getUserId());
+
+		Assert.assertTrue(
+			ListUtil.exists(
+				ListUtil.fromCollection(webUrlsPage.getItems()),
+				webUrl ->
+					webUrl.getPrimary() &&
+					!Objects.equals(webUrl.getId(), patchWebUrl.getId())));
+	}
+
 	private WebUrl _toWebUrl(Website website) {
 		return new WebUrl() {
 			{
+				externalReferenceCode = website.getExternalReferenceCode();
 				id = website.getWebsiteId();
+				primary = website.isPrimary();
 				url = website.getUrl();
 			}
 		};

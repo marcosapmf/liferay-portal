@@ -25,11 +25,13 @@ import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Pedro Victor Silvestre
+ * @deprecated As of Cavanaugh (7.4.x)
  */
 @Component(
 	property = "screen.navigation.entry.order:Integer=10",
 	service = ScreenNavigationEntry.class
 )
+@Deprecated
 public class CommerceChannelNotificationsTemplatesScreenNavigationEntry
 	extends CommerceChannelNotificationsTemplatesScreenNavigationCategory
 	implements ScreenNavigationEntry<CommerceChannel> {
@@ -41,13 +43,8 @@ public class CommerceChannelNotificationsTemplatesScreenNavigationEntry
 
 	@Override
 	public boolean isVisible(User user, CommerceChannel commerceChannel) {
-		if (CommerceChannelConstants.CHANNEL_TYPE_SITE.equals(
-				commerceChannel.getType())) {
-
-			return true;
-		}
-
-		return false;
+		return CommerceChannelConstants.CHANNEL_TYPE_SITE.equals(
+			commerceChannel.getType());
 	}
 
 	@Override

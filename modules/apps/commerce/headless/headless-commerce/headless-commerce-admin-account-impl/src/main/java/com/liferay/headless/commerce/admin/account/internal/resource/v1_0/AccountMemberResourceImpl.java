@@ -28,7 +28,6 @@ import com.liferay.portal.vulcan.fields.NestedField;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -42,12 +41,14 @@ import org.osgi.service.component.annotations.ServiceScope;
 
 /**
  * @author Alessio Antonio Rendina
+ * @deprecated As of Cavanaugh (7.4.x)
  */
 @Component(
 	properties = "OSGI-INF/liferay/rest/v1_0/account-member.properties",
 	property = "nested.field.support=true", scope = ServiceScope.PROTOTYPE,
 	service = AccountMemberResource.class
 )
+@Deprecated
 public class AccountMemberResourceImpl extends BaseAccountMemberResourceImpl {
 
 	@Override
@@ -57,7 +58,7 @@ public class AccountMemberResourceImpl extends BaseAccountMemberResourceImpl {
 
 		AccountEntry accountEntry =
 			_accountEntryService.fetchAccountEntryByExternalReferenceCode(
-				contextCompany.getCompanyId(), externalReferenceCode);
+				externalReferenceCode, contextCompany.getCompanyId());
 
 		if (accountEntry == null) {
 			throw new NoSuchEntryException(
@@ -92,7 +93,7 @@ public class AccountMemberResourceImpl extends BaseAccountMemberResourceImpl {
 
 		AccountEntry accountEntry =
 			_accountEntryService.fetchAccountEntryByExternalReferenceCode(
-				contextCompany.getCompanyId(), externalReferenceCode);
+				externalReferenceCode, contextCompany.getCompanyId());
 
 		if (accountEntry == null) {
 			throw new NoSuchEntryException(
@@ -118,7 +119,7 @@ public class AccountMemberResourceImpl extends BaseAccountMemberResourceImpl {
 
 		AccountEntry accountEntry =
 			_accountEntryService.fetchAccountEntryByExternalReferenceCode(
-				contextCompany.getCompanyId(), externalReferenceCode);
+				externalReferenceCode, contextCompany.getCompanyId());
 
 		if (accountEntry == null) {
 			throw new NoSuchEntryException(
@@ -179,7 +180,7 @@ public class AccountMemberResourceImpl extends BaseAccountMemberResourceImpl {
 
 		AccountEntry accountEntry =
 			_accountEntryService.fetchAccountEntryByExternalReferenceCode(
-				contextCompany.getCompanyId(), externalReferenceCode);
+				externalReferenceCode, contextCompany.getCompanyId());
 
 		if (accountEntry == null) {
 			throw new NoSuchEntryException(
@@ -216,7 +217,7 @@ public class AccountMemberResourceImpl extends BaseAccountMemberResourceImpl {
 
 		AccountEntry accountEntry =
 			_accountEntryService.fetchAccountEntryByExternalReferenceCode(
-				contextCompany.getCompanyId(), externalReferenceCode);
+				externalReferenceCode, contextCompany.getCompanyId());
 
 		if (accountEntry == null) {
 			throw new NoSuchEntryException(
@@ -266,17 +267,12 @@ public class AccountMemberResourceImpl extends BaseAccountMemberResourceImpl {
 			List<AccountEntryUserRel> accountEntryUserRels)
 		throws Exception {
 
-		List<AccountMember> accountMembers = new ArrayList<>();
-
-		for (AccountEntryUserRel accountEntryUserRel : accountEntryUserRels) {
-			accountMembers.add(
-				_accountMemberDTOConverter.toDTO(
-					new DefaultDTOConverterContext(
-						accountEntryUserRel.getPrimaryKey(),
-						contextAcceptLanguage.getPreferredLocale())));
-		}
-
-		return accountMembers;
+		return transform(
+			accountEntryUserRels,
+			accountEntryUserRel -> _accountMemberDTOConverter.toDTO(
+				new DefaultDTOConverterContext(
+					accountEntryUserRel.getPrimaryKey(),
+					contextAcceptLanguage.getPreferredLocale())));
 	}
 
 	private void _updateAccountEntryUserRel(

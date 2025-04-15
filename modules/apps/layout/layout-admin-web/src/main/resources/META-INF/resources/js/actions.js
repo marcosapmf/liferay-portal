@@ -4,12 +4,11 @@
  */
 
 import {
-	fetch,
-	navigate,
 	openConfirmModal,
 	openModal,
 	openToast,
-} from 'frontend-js-web';
+} from 'frontend-js-components-web';
+import {fetch, navigate} from 'frontend-js-web';
 
 import openDeleteLayoutModal from './openDeleteLayoutModal';
 
@@ -92,13 +91,6 @@ const ACTIONS = {
 		openModal({
 			title: Liferay.Language.get('permissions'),
 			url: permissionLayoutURL,
-		});
-	},
-
-	viewCollectionItems: ({viewCollectionItemsURL}) => {
-		openModal({
-			title: Liferay.Language.get('collection-items'),
-			url: viewCollectionItemsURL,
 		});
 	},
 };

@@ -9,9 +9,10 @@ import {Header} from '../../../../../../components/Header/Header';
 import {NewAppPageFooterButtons} from '../../../../../../components/NewAppPageFooterButtons/NewAppPageFooterButtons';
 import {RadioCard} from '../../../../../../components/RadioCard/RadioCard';
 import {Section} from '../../../../../../components/Section/Section';
+import {PRODUCT_SPECIFICATION_KEY} from '../../../../../../enums/Product';
+import {ProductType} from '../../../../../../enums/ProductType';
 import HeadlessCommerceAdminCatalogImpl from '../../../../../../services/rest/HeadlessCommerceAdminCatalog';
 import {
-	addExpandoValue,
 	createAppSKU,
 	createProductSpecification,
 	deleteTrialSKU,
@@ -25,8 +26,6 @@ import {useAppContext} from '../AppContext/AppManageState';
 import {TYPES} from '../AppContext/actionTypes';
 
 import './InformLicensingTermsPage.scss';
-import useFeaturePreview from '../../../../../../hooks/useFeaturePreview';
-import {Liferay} from '../../../../../../liferay/liferay';
 
 type InformLicensingTermsPageProps = {
 	onClickBack: () => void;
@@ -39,7 +38,6 @@ export function InformLicensingTermsPage({
 }: InformLicensingTermsPageProps) {
 	const [
 		{
-			appId,
 			appLicense,
 			appLicensePrice,
 			appNotes,
@@ -55,13 +53,6 @@ export function InformLicensingTermsPage({
 		dispatch,
 	] = useAppContext();
 
-	const {getTemporaryProductIdForSpefication} = useFeaturePreview();
-
-	const _tempProductId = getTemporaryProductIdForSpefication({
-		appId,
-		productId: appProductId,
-	});
-
 	const [isProcessing, setProcessing] = useState(false);
 
 	const isDXP = appType.value === 'dxp';
@@ -75,14 +66,17 @@ export function InformLicensingTermsPage({
 		if (appLicense.id) {
 			return updateProductSpecification({
 				body: {
-					specificationKey: 'license-type',
+					specificationKey:
+						PRODUCT_SPECIFICATION_KEY.APP_LICENSING_TYPE,
 					value,
 				},
 				id: appLicense.id,
 			});
 		}
 
-		const dataSpecification = await getSpecification('license-type');
+		const dataSpecification = await getSpecification(
+			PRODUCT_SPECIFICATION_KEY.APP_LICENSING_TYPE
+		);
 
 		const {id} = await createProductSpecification({
 			body: {
@@ -90,7 +84,7 @@ export function InformLicensingTermsPage({
 				specificationKey: dataSpecification.key,
 				value,
 			},
-			id: _tempProductId,
+			id: appProductId,
 		});
 
 		dispatch({
@@ -104,11 +98,24 @@ export function InformLicensingTermsPage({
 			await HeadlessCommerceAdminCatalogImpl.getProductSkus(appProductId);
 
 		for (const sku of skus) {
-			const freeOrPerpertual =
-				priceModel.value === 'Free' || appLicense.value === 'Perpetual';
-
 			await patchSKUById(sku.id, {
-				neverExpire: freeOrPerpertual,
+				customFields: [
+					{
+						customValue: {
+							data: appNotes,
+						},
+						dataType: 'Text',
+						name: 'Version Description',
+					},
+					{
+						customValue: {
+							data: appVersion,
+						},
+						dataType: 'Text',
+						name: 'Version',
+					},
+				],
+				neverExpire: true,
 				price:
 					priceModel.value === 'Free'
 						? 0
@@ -164,17 +171,6 @@ export function InformLicensingTermsPage({
 			},
 			type: TYPES.UPDATE_SKU_TRIAL_ID,
 		});
-
-		addExpandoValue({
-			attributeValues: {
-				'Version': appVersion,
-				'Version Description': appNotes,
-			},
-			className: 'com.liferay.commerce.product.model.CPInstance',
-			classPK: skuTrialId,
-			companyId: Liferay.ThemeDisplay.getCompanyId(),
-			tableName: 'CUSTOM_FIELDS',
-		});
 	};
 
 	return (
@@ -210,7 +206,10 @@ export function InformLicensingTermsPage({
 
 					<RadioCard
 						description="App License must be renewed annually."
-						disabled={priceModel.value === 'Free'}
+						disabled={
+							priceModel.value === 'Free' ||
+							appType.value === ProductType.LOW_CODE_CONFIGURATION
+						}
 						icon="document-pending"
 						onChange={() => {
 							dispatch({
@@ -237,7 +236,10 @@ export function InformLicensingTermsPage({
 				<div className="informing-licensing-terms-page-day-trial-container">
 					<RadioCard
 						description="Offer a 30-day free trial for this app."
-						disabled={priceModel.value === 'Free'}
+						disabled={
+							priceModel.value === 'Free' ||
+							appType.value === ProductType.LOW_CODE_CONFIGURATION
+						}
 						icon="check-circle"
 						onChange={() =>
 							dispatch({

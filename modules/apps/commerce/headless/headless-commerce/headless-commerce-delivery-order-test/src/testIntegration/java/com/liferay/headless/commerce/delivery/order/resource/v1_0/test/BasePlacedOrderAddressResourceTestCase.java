@@ -28,8 +28,9 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
-import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
+import com.liferay.portal.kernel.util.FastDateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.odata.entity.EntityField;
@@ -41,7 +42,7 @@ import com.liferay.portal.vulcan.resource.EntityModelResource;
 
 import java.lang.reflect.Method;
 
-import java.text.DateFormat;
+import java.text.Format;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -80,7 +81,7 @@ public abstract class BasePlacedOrderAddressResourceTestCase {
 
 	@BeforeClass
 	public static void setUpClass() throws Exception {
-		_dateFormat = DateFormatFactoryUtil.getSimpleDateFormat(
+		_format = FastDateFormatFactoryUtil.getSimpleDateFormat(
 			"yyyy-MM-dd'T'HH:mm:ss'Z'");
 	}
 
@@ -94,11 +95,15 @@ public abstract class BasePlacedOrderAddressResourceTestCase {
 
 		_placedOrderAddressResource.setContextCompany(testCompany);
 
-		PlacedOrderAddressResource.Builder builder =
-			PlacedOrderAddressResource.builder();
+		_testCompanyAdminUser = UserTestUtil.getAdminUser(
+			testCompany.getCompanyId());
 
-		placedOrderAddressResource = builder.authentication(
-			"test@liferay.com", PropsValues.DEFAULT_ADMIN_PASSWORD
+		placedOrderAddressResource = PlacedOrderAddressResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
 		).locale(
 			LocaleUtil.getDefault()
 		).build();
@@ -112,7 +117,33 @@ public abstract class BasePlacedOrderAddressResourceTestCase {
 
 	@Test
 	public void testClientSerDesToDTO() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		PlacedOrderAddress placedOrderAddress1 = randomPlacedOrderAddress();
+
+		String json = objectMapper.writeValueAsString(placedOrderAddress1);
+
+		PlacedOrderAddress placedOrderAddress2 = PlacedOrderAddressSerDes.toDTO(
+			json);
+
+		Assert.assertTrue(equals(placedOrderAddress1, placedOrderAddress2));
+	}
+
+	@Test
+	public void testClientSerDesToJSON() throws Exception {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		PlacedOrderAddress placedOrderAddress = randomPlacedOrderAddress();
+
+		String json1 = objectMapper.writeValueAsString(placedOrderAddress);
+		String json2 = PlacedOrderAddressSerDes.toJSON(placedOrderAddress);
+
+		Assert.assertEquals(
+			objectMapper.readTree(json1), objectMapper.readTree(json2));
+	}
+
+	protected ObjectMapper getClientSerDesObjectMapper() {
+		return new ObjectMapper() {
 			{
 				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
 				configure(
@@ -127,41 +158,6 @@ public abstract class BasePlacedOrderAddressResourceTestCase {
 					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
 			}
 		};
-
-		PlacedOrderAddress placedOrderAddress1 = randomPlacedOrderAddress();
-
-		String json = objectMapper.writeValueAsString(placedOrderAddress1);
-
-		PlacedOrderAddress placedOrderAddress2 = PlacedOrderAddressSerDes.toDTO(
-			json);
-
-		Assert.assertTrue(equals(placedOrderAddress1, placedOrderAddress2));
-	}
-
-	@Test
-	public void testClientSerDesToJSON() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
-			{
-				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
-				configure(
-					SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true);
-				setDateFormat(new ISO8601DateFormat());
-				setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
-				setSerializationInclusion(JsonInclude.Include.NON_NULL);
-				setVisibility(
-					PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-				setVisibility(
-					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
-			}
-		};
-
-		PlacedOrderAddress placedOrderAddress = randomPlacedOrderAddress();
-
-		String json1 = objectMapper.writeValueAsString(placedOrderAddress);
-		String json2 = PlacedOrderAddressSerDes.toJSON(placedOrderAddress);
-
-		Assert.assertEquals(
-			objectMapper.readTree(json1), objectMapper.readTree(json2));
 	}
 
 	@Test
@@ -182,6 +178,7 @@ public abstract class BasePlacedOrderAddressResourceTestCase {
 		placedOrderAddress.setStreet1(regex);
 		placedOrderAddress.setStreet2(regex);
 		placedOrderAddress.setStreet3(regex);
+		placedOrderAddress.setSubtype(regex);
 		placedOrderAddress.setType(regex);
 		placedOrderAddress.setVatNumber(regex);
 		placedOrderAddress.setZip(regex);
@@ -205,6 +202,7 @@ public abstract class BasePlacedOrderAddressResourceTestCase {
 		Assert.assertEquals(regex, placedOrderAddress.getStreet1());
 		Assert.assertEquals(regex, placedOrderAddress.getStreet2());
 		Assert.assertEquals(regex, placedOrderAddress.getStreet3());
+		Assert.assertEquals(regex, placedOrderAddress.getSubtype());
 		Assert.assertEquals(regex, placedOrderAddress.getType());
 		Assert.assertEquals(regex, placedOrderAddress.getVatNumber());
 		Assert.assertEquals(regex, placedOrderAddress.getZip());
@@ -519,19 +517,20 @@ public abstract class BasePlacedOrderAddressResourceTestCase {
 	}
 
 	@Test
-	public void testGetPlacedOrderPlacedOrderBillingAddres() throws Exception {
+	public void testGetPlacedOrderPlacedOrderBillingAddress() throws Exception {
 		PlacedOrderAddress postPlacedOrderAddress =
-			testGetPlacedOrderPlacedOrderBillingAddres_addPlacedOrderAddress();
+			testGetPlacedOrderPlacedOrderBillingAddress_addPlacedOrderAddress();
 
 		PlacedOrderAddress getPlacedOrderAddress =
-			placedOrderAddressResource.getPlacedOrderPlacedOrderBillingAddres(
-				testGetPlacedOrderPlacedOrderBillingAddres_getPlacedOrderId());
+			placedOrderAddressResource.getPlacedOrderPlacedOrderBillingAddress(
+				testGetPlacedOrderPlacedOrderBillingAddress_getPlacedOrderId());
 
 		assertEquals(postPlacedOrderAddress, getPlacedOrderAddress);
 		assertValid(getPlacedOrderAddress);
 	}
 
-	protected Long testGetPlacedOrderPlacedOrderBillingAddres_getPlacedOrderId()
+	protected Long
+			testGetPlacedOrderPlacedOrderBillingAddress_getPlacedOrderId()
 		throws Exception {
 
 		throw new UnsupportedOperationException(
@@ -539,7 +538,7 @@ public abstract class BasePlacedOrderAddressResourceTestCase {
 	}
 
 	protected PlacedOrderAddress
-			testGetPlacedOrderPlacedOrderBillingAddres_addPlacedOrderAddress()
+			testGetPlacedOrderPlacedOrderBillingAddress_addPlacedOrderAddress()
 		throws Exception {
 
 		throw new UnsupportedOperationException(
@@ -547,11 +546,11 @@ public abstract class BasePlacedOrderAddressResourceTestCase {
 	}
 
 	@Test
-	public void testGraphQLGetPlacedOrderPlacedOrderBillingAddres()
+	public void testGraphQLGetPlacedOrderPlacedOrderBillingAddress()
 		throws Exception {
 
 		PlacedOrderAddress placedOrderAddress =
-			testGraphQLGetPlacedOrderPlacedOrderBillingAddres_addPlacedOrderAddress();
+			testGraphQLGetPlacedOrderPlacedOrderBillingAddress_addPlacedOrderAddress();
 
 		// No namespace
 
@@ -562,17 +561,17 @@ public abstract class BasePlacedOrderAddressResourceTestCase {
 					JSONUtil.getValueAsString(
 						invokeGraphQLQuery(
 							new GraphQLField(
-								"placedOrderPlacedOrderBillingAddres",
+								"placedOrderPlacedOrderBillingAddress",
 								new HashMap<String, Object>() {
 									{
 										put(
 											"placedOrderId",
-											testGraphQLGetPlacedOrderPlacedOrderBillingAddres_getPlacedOrderId());
+											testGraphQLGetPlacedOrderPlacedOrderBillingAddress_getPlacedOrderId());
 									}
 								},
 								getGraphQLFields())),
 						"JSONObject/data",
-						"Object/placedOrderPlacedOrderBillingAddres"))));
+						"Object/placedOrderPlacedOrderBillingAddress"))));
 
 		// Using the namespace headlessCommerceDeliveryOrder_v1_0
 
@@ -585,22 +584,22 @@ public abstract class BasePlacedOrderAddressResourceTestCase {
 							new GraphQLField(
 								"headlessCommerceDeliveryOrder_v1_0",
 								new GraphQLField(
-									"placedOrderPlacedOrderBillingAddres",
+									"placedOrderPlacedOrderBillingAddress",
 									new HashMap<String, Object>() {
 										{
 											put(
 												"placedOrderId",
-												testGraphQLGetPlacedOrderPlacedOrderBillingAddres_getPlacedOrderId());
+												testGraphQLGetPlacedOrderPlacedOrderBillingAddress_getPlacedOrderId());
 										}
 									},
 									getGraphQLFields()))),
 						"JSONObject/data",
 						"JSONObject/headlessCommerceDeliveryOrder_v1_0",
-						"Object/placedOrderPlacedOrderBillingAddres"))));
+						"Object/placedOrderPlacedOrderBillingAddress"))));
 	}
 
 	protected Long
-			testGraphQLGetPlacedOrderPlacedOrderBillingAddres_getPlacedOrderId()
+			testGraphQLGetPlacedOrderPlacedOrderBillingAddress_getPlacedOrderId()
 		throws Exception {
 
 		throw new UnsupportedOperationException(
@@ -608,7 +607,7 @@ public abstract class BasePlacedOrderAddressResourceTestCase {
 	}
 
 	@Test
-	public void testGraphQLGetPlacedOrderPlacedOrderBillingAddresNotFound()
+	public void testGraphQLGetPlacedOrderPlacedOrderBillingAddressNotFound()
 		throws Exception {
 
 		Long irrelevantPlacedOrderId = RandomTestUtil.randomLong();
@@ -620,7 +619,7 @@ public abstract class BasePlacedOrderAddressResourceTestCase {
 			JSONUtil.getValueAsString(
 				invokeGraphQLQuery(
 					new GraphQLField(
-						"placedOrderPlacedOrderBillingAddres",
+						"placedOrderPlacedOrderBillingAddress",
 						new HashMap<String, Object>() {
 							{
 								put("placedOrderId", irrelevantPlacedOrderId);
@@ -639,7 +638,7 @@ public abstract class BasePlacedOrderAddressResourceTestCase {
 					new GraphQLField(
 						"headlessCommerceDeliveryOrder_v1_0",
 						new GraphQLField(
-							"placedOrderPlacedOrderBillingAddres",
+							"placedOrderPlacedOrderBillingAddress",
 							new HashMap<String, Object>() {
 								{
 									put(
@@ -653,27 +652,29 @@ public abstract class BasePlacedOrderAddressResourceTestCase {
 	}
 
 	protected PlacedOrderAddress
-			testGraphQLGetPlacedOrderPlacedOrderBillingAddres_addPlacedOrderAddress()
+			testGraphQLGetPlacedOrderPlacedOrderBillingAddress_addPlacedOrderAddress()
 		throws Exception {
 
 		return testGraphQLPlacedOrderAddress_addPlacedOrderAddress();
 	}
 
 	@Test
-	public void testGetPlacedOrderPlacedOrderShippingAddres() throws Exception {
+	public void testGetPlacedOrderPlacedOrderShippingAddress()
+		throws Exception {
+
 		PlacedOrderAddress postPlacedOrderAddress =
-			testGetPlacedOrderPlacedOrderShippingAddres_addPlacedOrderAddress();
+			testGetPlacedOrderPlacedOrderShippingAddress_addPlacedOrderAddress();
 
 		PlacedOrderAddress getPlacedOrderAddress =
-			placedOrderAddressResource.getPlacedOrderPlacedOrderShippingAddres(
-				testGetPlacedOrderPlacedOrderShippingAddres_getPlacedOrderId());
+			placedOrderAddressResource.getPlacedOrderPlacedOrderShippingAddress(
+				testGetPlacedOrderPlacedOrderShippingAddress_getPlacedOrderId());
 
 		assertEquals(postPlacedOrderAddress, getPlacedOrderAddress);
 		assertValid(getPlacedOrderAddress);
 	}
 
 	protected Long
-			testGetPlacedOrderPlacedOrderShippingAddres_getPlacedOrderId()
+			testGetPlacedOrderPlacedOrderShippingAddress_getPlacedOrderId()
 		throws Exception {
 
 		throw new UnsupportedOperationException(
@@ -681,7 +682,7 @@ public abstract class BasePlacedOrderAddressResourceTestCase {
 	}
 
 	protected PlacedOrderAddress
-			testGetPlacedOrderPlacedOrderShippingAddres_addPlacedOrderAddress()
+			testGetPlacedOrderPlacedOrderShippingAddress_addPlacedOrderAddress()
 		throws Exception {
 
 		throw new UnsupportedOperationException(
@@ -689,11 +690,11 @@ public abstract class BasePlacedOrderAddressResourceTestCase {
 	}
 
 	@Test
-	public void testGraphQLGetPlacedOrderPlacedOrderShippingAddres()
+	public void testGraphQLGetPlacedOrderPlacedOrderShippingAddress()
 		throws Exception {
 
 		PlacedOrderAddress placedOrderAddress =
-			testGraphQLGetPlacedOrderPlacedOrderShippingAddres_addPlacedOrderAddress();
+			testGraphQLGetPlacedOrderPlacedOrderShippingAddress_addPlacedOrderAddress();
 
 		// No namespace
 
@@ -704,17 +705,17 @@ public abstract class BasePlacedOrderAddressResourceTestCase {
 					JSONUtil.getValueAsString(
 						invokeGraphQLQuery(
 							new GraphQLField(
-								"placedOrderPlacedOrderShippingAddres",
+								"placedOrderPlacedOrderShippingAddress",
 								new HashMap<String, Object>() {
 									{
 										put(
 											"placedOrderId",
-											testGraphQLGetPlacedOrderPlacedOrderShippingAddres_getPlacedOrderId());
+											testGraphQLGetPlacedOrderPlacedOrderShippingAddress_getPlacedOrderId());
 									}
 								},
 								getGraphQLFields())),
 						"JSONObject/data",
-						"Object/placedOrderPlacedOrderShippingAddres"))));
+						"Object/placedOrderPlacedOrderShippingAddress"))));
 
 		// Using the namespace headlessCommerceDeliveryOrder_v1_0
 
@@ -727,22 +728,22 @@ public abstract class BasePlacedOrderAddressResourceTestCase {
 							new GraphQLField(
 								"headlessCommerceDeliveryOrder_v1_0",
 								new GraphQLField(
-									"placedOrderPlacedOrderShippingAddres",
+									"placedOrderPlacedOrderShippingAddress",
 									new HashMap<String, Object>() {
 										{
 											put(
 												"placedOrderId",
-												testGraphQLGetPlacedOrderPlacedOrderShippingAddres_getPlacedOrderId());
+												testGraphQLGetPlacedOrderPlacedOrderShippingAddress_getPlacedOrderId());
 										}
 									},
 									getGraphQLFields()))),
 						"JSONObject/data",
 						"JSONObject/headlessCommerceDeliveryOrder_v1_0",
-						"Object/placedOrderPlacedOrderShippingAddres"))));
+						"Object/placedOrderPlacedOrderShippingAddress"))));
 	}
 
 	protected Long
-			testGraphQLGetPlacedOrderPlacedOrderShippingAddres_getPlacedOrderId()
+			testGraphQLGetPlacedOrderPlacedOrderShippingAddress_getPlacedOrderId()
 		throws Exception {
 
 		throw new UnsupportedOperationException(
@@ -750,7 +751,7 @@ public abstract class BasePlacedOrderAddressResourceTestCase {
 	}
 
 	@Test
-	public void testGraphQLGetPlacedOrderPlacedOrderShippingAddresNotFound()
+	public void testGraphQLGetPlacedOrderPlacedOrderShippingAddressNotFound()
 		throws Exception {
 
 		Long irrelevantPlacedOrderId = RandomTestUtil.randomLong();
@@ -762,7 +763,7 @@ public abstract class BasePlacedOrderAddressResourceTestCase {
 			JSONUtil.getValueAsString(
 				invokeGraphQLQuery(
 					new GraphQLField(
-						"placedOrderPlacedOrderShippingAddres",
+						"placedOrderPlacedOrderShippingAddress",
 						new HashMap<String, Object>() {
 							{
 								put("placedOrderId", irrelevantPlacedOrderId);
@@ -781,7 +782,7 @@ public abstract class BasePlacedOrderAddressResourceTestCase {
 					new GraphQLField(
 						"headlessCommerceDeliveryOrder_v1_0",
 						new GraphQLField(
-							"placedOrderPlacedOrderShippingAddres",
+							"placedOrderPlacedOrderShippingAddress",
 							new HashMap<String, Object>() {
 								{
 									put(
@@ -795,7 +796,7 @@ public abstract class BasePlacedOrderAddressResourceTestCase {
 	}
 
 	protected PlacedOrderAddress
-			testGraphQLGetPlacedOrderPlacedOrderShippingAddres_addPlacedOrderAddress()
+			testGraphQLGetPlacedOrderPlacedOrderShippingAddress_addPlacedOrderAddress()
 		throws Exception {
 
 		return testGraphQLPlacedOrderAddress_addPlacedOrderAddress();
@@ -1009,6 +1010,14 @@ public abstract class BasePlacedOrderAddressResourceTestCase {
 
 			if (Objects.equals("street3", additionalAssertFieldName)) {
 				if (placedOrderAddress.getStreet3() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("subtype", additionalAssertFieldName)) {
+				if (placedOrderAddress.getSubtype() == null) {
 					valid = false;
 				}
 
@@ -1328,6 +1337,17 @@ public abstract class BasePlacedOrderAddressResourceTestCase {
 				if (!Objects.deepEquals(
 						placedOrderAddress1.getStreet3(),
 						placedOrderAddress2.getStreet3())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("subtype", additionalAssertFieldName)) {
+				if (!Objects.deepEquals(
+						placedOrderAddress1.getSubtype(),
+						placedOrderAddress2.getSubtype())) {
 
 					return false;
 				}
@@ -2056,6 +2076,52 @@ public abstract class BasePlacedOrderAddressResourceTestCase {
 			return sb.toString();
 		}
 
+		if (entityFieldName.equals("subtype")) {
+			Object object = placedOrderAddress.getSubtype();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
+
+			return sb.toString();
+		}
+
 		if (entityFieldName.equals("type")) {
 			Object object = placedOrderAddress.getType();
 
@@ -2265,6 +2331,7 @@ public abstract class BasePlacedOrderAddressResourceTestCase {
 				street1 = StringUtil.toLowerCase(RandomTestUtil.randomString());
 				street2 = StringUtil.toLowerCase(RandomTestUtil.randomString());
 				street3 = StringUtil.toLowerCase(RandomTestUtil.randomString());
+				subtype = StringUtil.toLowerCase(RandomTestUtil.randomString());
 				type = StringUtil.toLowerCase(RandomTestUtil.randomString());
 				typeId = RandomTestUtil.randomInt();
 				vatNumber = StringUtil.toLowerCase(
@@ -2299,12 +2366,12 @@ public abstract class BasePlacedOrderAddressResourceTestCase {
 		public static void copyProperties(Object source, Object target)
 			throws Exception {
 
-			Class<?> sourceClass = _getSuperClass(source.getClass());
+			Class<?> sourceClass = source.getClass();
 
 			Class<?> targetClass = target.getClass();
 
 			for (java.lang.reflect.Field field :
-					sourceClass.getDeclaredFields()) {
+					_getAllDeclaredFields(sourceClass)) {
 
 				if (field.isSynthetic()) {
 					continue;
@@ -2313,11 +2380,16 @@ public abstract class BasePlacedOrderAddressResourceTestCase {
 				Method getMethod = _getMethod(
 					sourceClass, field.getName(), "get");
 
-				Method setMethod = _getMethod(
-					targetClass, field.getName(), "set",
-					getMethod.getReturnType());
+				try {
+					Method setMethod = _getMethod(
+						targetClass, field.getName(), "set",
+						getMethod.getReturnType());
 
-				setMethod.invoke(target, getMethod.invoke(source));
+					setMethod.invoke(target, getMethod.invoke(source));
+				}
+				catch (Exception e) {
+					continue;
+				}
 			}
 		}
 
@@ -2349,6 +2421,24 @@ public abstract class BasePlacedOrderAddressResourceTestCase {
 			setMethod.invoke(bean, _translateValue(parameterTypes[0], value));
 		}
 
+		private static List<java.lang.reflect.Field> _getAllDeclaredFields(
+			Class<?> clazz) {
+
+			List<java.lang.reflect.Field> fields = new ArrayList<>();
+
+			while ((clazz != null) && (clazz != Object.class)) {
+				for (java.lang.reflect.Field field :
+						clazz.getDeclaredFields()) {
+
+					fields.add(field);
+				}
+
+				clazz = clazz.getSuperclass();
+			}
+
+			return fields;
+		}
+
 		private static Method _getMethod(Class<?> clazz, String name) {
 			for (Method method : clazz.getMethods()) {
 				if (name.equals(method.getName()) &&
@@ -2370,16 +2460,6 @@ public abstract class BasePlacedOrderAddressResourceTestCase {
 			return clazz.getMethod(
 				prefix + StringUtil.upperCaseFirstLetter(fieldName),
 				parameterTypes);
-		}
-
-		private static Class<?> _getSuperClass(Class<?> clazz) {
-			Class<?> superClass = clazz.getSuperclass();
-
-			if ((superClass == null) || (superClass == Object.class)) {
-				return clazz;
-			}
-
-			return superClass;
 		}
 
 		private static Object _translateValue(
@@ -2477,7 +2557,9 @@ public abstract class BasePlacedOrderAddressResourceTestCase {
 	private static final com.liferay.portal.kernel.log.Log _log =
 		LogFactoryUtil.getLog(BasePlacedOrderAddressResourceTestCase.class);
 
-	private static DateFormat _dateFormat;
+	private static Format _format;
+
+	private com.liferay.portal.kernel.model.User _testCompanyAdminUser;
 
 	@Inject
 	private com.liferay.headless.commerce.delivery.order.resource.v1_0.

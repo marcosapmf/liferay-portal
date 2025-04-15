@@ -8,28 +8,25 @@ import {expect, mergeTests} from '@playwright/test';
 import {apiHelpersTest} from '../../fixtures/apiHelpersTest';
 import {loginTest} from '../../fixtures/loginTest';
 import {workflowPagesTest} from '../../fixtures/workflowPagesTest';
-import {getRandomInt} from '../../utils/getRandomInt';
+import {clientExtensionsPageTest} from '../client-extension-web/fixtures/clientExtensionsPageTest';
+import {getWorkflowDefinition} from './utils/getWorkflowDefinition';
+import postSingleApproverCopy from './utils/postSingleApproverCopy';
 
-export const test = mergeTests(apiHelpersTest, loginTest(), workflowPagesTest);
+export const test = mergeTests(
+	apiHelpersTest,
+	loginTest(),
+	workflowPagesTest,
+	clientExtensionsPageTest
+);
 
 let workflowDefinitionId: number;
 let workflowDefinitionName: string;
 
 test.beforeEach(async ({apiHelpers, scriptManagementPage}) => {
-	const singleApproverWorkflowDefinition =
-		await apiHelpers.headlessAdminWorkflow.getWorkflowDefinitionByName(
-			'Single Approver'
-		);
+	const workFlowDefinition = await postSingleApproverCopy(apiHelpers);
 
-	workflowDefinitionName = 'Copy of Single Approver' + getRandomInt();
-
-	const workflowDefinition =
-		await apiHelpers.headlessAdminWorkflow.postWorkflowDefinitionSave(
-			workflowDefinitionName,
-			singleApproverWorkflowDefinition
-		);
-
-	workflowDefinitionId = workflowDefinition.id;
+	workflowDefinitionId = workFlowDefinition.id;
+	workflowDefinitionName = workFlowDefinition.name;
 
 	await scriptManagementPage.enableScriptManagementConfiguration();
 });
@@ -157,4 +154,70 @@ test('cannot save a workflow definition that has a java action when the script m
 	await diagramViewPage.saveWorkflowDefinition();
 
 	await expect(page.getByText('Error Updating Definition')).toBeVisible();
+});
+
+test('can save a workflow definition that has a customer extension action after changing from an UpdateStatus to a customer extension action', async ({
+	apiHelpers,
+	diagramViewPage,
+	page,
+	processBuilderPage,
+}) => {
+	const workflowDefinition =
+		await apiHelpers.headlessAdminWorkflow.postWorkflowDefinitionSave(
+			workflowDefinitionName,
+			getWorkflowDefinition('sample-client-extension')
+		);
+
+	workflowDefinitionName = workflowDefinition.name;
+
+	await processBuilderPage.goto();
+
+	await processBuilderPage.clickWorkflowDefinitionName(
+		workflowDefinitionName
+	);
+
+	await diagramViewPage.clickNode('Review');
+
+	await page
+		.locator('#type')
+		.selectOption(
+			'function#liferay-sample-etc-spring-boot-workflow-action-1'
+		);
+
+	await diagramViewPage.saveWorkflowDefinition();
+
+	await diagramViewPage.publishWorkflowDefinition();
+
+	await expect(
+		page.getByText('Workflow published successfully.')
+	).toBeVisible();
+});
+
+test('can save a workflow definition that uses a script type action filling it type before the action name', async ({
+	actionPage,
+	diagramViewPage,
+	nodePropertiesSidebarPage,
+	page,
+	processBuilderPage,
+}) => {
+	await processBuilderPage.goto();
+
+	await processBuilderPage.clickWorkflowDefinitionName(
+		workflowDefinitionName
+	);
+
+	await diagramViewPage.clickNode('created');
+
+	await nodePropertiesSidebarPage.addActionButton.click();
+
+	await actionPage.selectActionType.selectOption('Groovy');
+	await actionPage.scriptInput.fill('scriptTest');
+	await actionPage.scriptInput.blur();
+	await actionPage.nameInput.fill('Groovy Action');
+
+	await diagramViewPage.publishWorkflowDefinition();
+
+	await expect(
+		page.getByText('Workflow published successfully.')
+	).toBeVisible();
 });

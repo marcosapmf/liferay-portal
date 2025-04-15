@@ -21,6 +21,7 @@ import {
 	useSelectItem,
 } from '../../../../../src/main/resources/META-INF/resources/page_editor/app/contexts/ControlsContext';
 import {StoreAPIContextProvider} from '../../../../../src/main/resources/META-INF/resources/page_editor/app/contexts/StoreContext';
+import {DragAndDropContextProvider} from '../../../../../src/main/resources/META-INF/resources/page_editor/app/utils/drag_and_drop/useDragAndDrop';
 
 jest.mock(
 	'../../../../../src/main/resources/META-INF/resources/page_editor/app/contexts/ControlsContext',
@@ -56,6 +57,7 @@ const LAYOUT_DATA = {
 const renderTopper = ({
 	Component = Row,
 	activeItemIds = [],
+	fragmentEntryLinks = {},
 	hasUpdatePermissions = true,
 	isActive = true,
 	itemId = 'itemId',
@@ -69,7 +71,7 @@ const renderTopper = ({
 			<ControlsProvider activeInitialState={{activeItemIds}}>
 				<StoreAPIContextProvider
 					getState={() => ({
-						fragmentEntryLinks: {},
+						fragmentEntryLinks,
 						layoutData,
 						permissions: {
 							LOCKED_SEGMENTS_EXPERIMENT: lockedExperience,
@@ -78,13 +80,15 @@ const renderTopper = ({
 						selectedViewportSize: VIEWPORT_SIZES.desktop,
 					})}
 				>
-					<Topper
-						isActive={isActive}
-						item={item}
-						layoutData={layoutData}
-					>
-						<Component item={item} layoutData={layoutData} />
-					</Topper>
+					<DragAndDropContextProvider>
+						<Topper
+							isActive={isActive}
+							item={item}
+							layoutData={layoutData}
+						>
+							<Component item={item} layoutData={layoutData} />
+						</Topper>
+					</DragAndDropContextProvider>
 				</StoreAPIContextProvider>
 			</ControlsProvider>
 		</DndProvider>
@@ -135,13 +139,40 @@ describe('Topper', () => {
 	});
 
 	it('disables options when multiple items are selected', () => {
-		Liferay.FeatureFlags['LPD-18221'] = true;
+		const layoutData = {
+			items: {
+				'item-1': {
+					children: [],
+					config: {name: 'Item 1'},
+					itemId: 'item-1',
+					parentId: null,
+					type: LAYOUT_DATA_ITEM_TYPES.fragment,
+				},
+				'item-2': {
+					children: [],
+					config: {name: 'Item 2'},
+					itemId: 'item-2',
+					parentId: null,
+					type: LAYOUT_DATA_ITEM_TYPES.fragment,
+				},
+				'item-3': {
+					children: [],
+					config: {styles: {}},
+					itemId: 'item-3',
+					parentId: null,
+					type: LAYOUT_DATA_ITEM_TYPES.row,
+				},
+			},
+		};
 
-		renderTopper({activeItemIds: ['item-1', 'item-2'], isActive: true});
+		renderTopper({
+			activeItemIds: ['item-1', 'item-2'],
+			isActive: true,
+			itemId: 'item-3',
+			layoutData,
+		});
 
 		expect(screen.getByLabelText('options')).toBeDisabled();
-
-		Liferay.FeatureFlags['LPD-18221'] = false;
 	});
 
 	describe('Ensures that selectItem() is not called when the topper buttons are clicked', () => {
@@ -149,7 +180,10 @@ describe('Topper', () => {
 			items: {
 				fragment: {
 					children: [],
-					config: {name: 'customName'},
+					config: {
+						fragmentEntryLinkId: 'fragment',
+						name: 'customName',
+					},
 					itemId: 'fragment',
 					parentId: null,
 					type: LAYOUT_DATA_ITEM_TYPES.fragment,
@@ -157,39 +191,44 @@ describe('Topper', () => {
 			},
 		};
 
+		const fragmentEntryLinks = {
+			fragment: {editableValues: {}},
+		};
+
 		const params = {
 			activeItemIds: ['item-1'],
+			fragmentEntryLinks,
 			isActive: true,
 			itemId: 'fragment',
 			layoutData,
 		};
 
-		it('clicks on options dropdown', () => {
+		it('clicks on options dropdown', async () => {
 			renderTopper(params);
 
 			const selectItem = useSelectItem();
 
-			userEvent.click(screen.getByLabelText('options'));
+			await userEvent.click(screen.getByLabelText('options'));
 
 			expect(selectItem).not.toBeCalled();
 		});
 
-		it('clicks in an options action', () => {
+		it('clicks in an options action', async () => {
 			renderTopper(params);
 
 			const selectItem = useSelectItem();
 
-			userEvent.click(screen.getByText('duplicate'));
+			await userEvent.click(screen.getByText('duplicate'));
 
 			expect(selectItem).not.toBeCalled();
 		});
 
-		it('clicks on comments button', () => {
+		it('clicks on comments button', async () => {
 			renderTopper(params);
 
 			const selectItem = useSelectItem();
 
-			userEvent.click(screen.getByLabelText('comments'));
+			await userEvent.click(screen.getByLabelText('comments'));
 
 			expect(selectItem).not.toBeCalled();
 		});
@@ -201,6 +240,7 @@ describe('Topper', () => {
 				items: {
 					formStep1: {
 						children: [],
+						config: {},
 						itemId: 'formStep1',
 						parentId: 'formStepContainer',
 						type: LAYOUT_DATA_ITEM_TYPES.formStep,
@@ -208,6 +248,7 @@ describe('Topper', () => {
 
 					formStep2: {
 						children: [],
+						config: {},
 						itemId: 'formStep2',
 						parentId: 'formStepContainer',
 						type: LAYOUT_DATA_ITEM_TYPES.formStep,
@@ -215,6 +256,7 @@ describe('Topper', () => {
 
 					formStepContainer: {
 						children: ['formStep1', 'formStep2'],
+						config: {},
 						itemId: 'formStepContainer',
 						parentId: null,
 						type: LAYOUT_DATA_ITEM_TYPES.formStepContainer,

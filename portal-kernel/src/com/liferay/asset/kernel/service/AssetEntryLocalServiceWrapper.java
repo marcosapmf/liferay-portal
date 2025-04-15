@@ -152,24 +152,31 @@ public class AssetEntryLocalServiceWrapper
 	}
 
 	@Override
-	public void deleteEntry(AssetEntry entry)
+	public void deleteEntries(long companyId, String className)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
-		_assetEntryLocalService.deleteEntry(entry);
+		_assetEntryLocalService.deleteEntries(companyId, className);
 	}
 
 	@Override
-	public void deleteEntry(long entryId)
+	public AssetEntry deleteEntry(AssetEntry entry)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
-		_assetEntryLocalService.deleteEntry(entryId);
+		return _assetEntryLocalService.deleteEntry(entry);
 	}
 
 	@Override
-	public void deleteEntry(String className, long classPK)
+	public AssetEntry deleteEntry(long entryId)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
-		_assetEntryLocalService.deleteEntry(className, classPK);
+		return _assetEntryLocalService.deleteEntry(entryId);
+	}
+
+	@Override
+	public AssetEntry deleteEntry(String className, long classPK)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _assetEntryLocalService.deleteEntry(className, classPK);
 	}
 
 	@Override

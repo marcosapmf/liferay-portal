@@ -150,6 +150,17 @@ public class CommerceReturnEditDisplayContext {
 			_commerceReturnRequestHelper.getLocale());
 	}
 
+	public String getCommerceOrderShippingAmountFormatted()
+		throws PortalException {
+
+		CommerceOrder commerceOrder = getCommerceReturnCommerceOrder();
+
+		return _commercePriceFormatter.format(
+			commerceOrder.getCommerceCurrency(),
+			commerceOrder.getShippingAmount(),
+			_commerceReturnRequestHelper.getLocale());
+	}
+
 	public CommerceReturn getCommerceReturn() {
 		return _commerceReturn;
 	}
@@ -618,6 +629,40 @@ public class CommerceReturnEditDisplayContext {
 
 			return listTypeEntry.getName(
 				_commerceReturnRequestHelper.getLocale());
+		}
+
+		return StringPool.BLANK;
+	}
+
+	public String getReturnReasonName() throws PortalException {
+		ListTypeDefinition listTypeDefinition =
+			_listTypeDefinitionService.
+				fetchListTypeDefinitionByExternalReferenceCode(
+					"L_COMMERCE_RETURN_REASONS",
+					_commerceReturnRequestHelper.getCompanyId());
+
+		if (listTypeDefinition == null) {
+			return StringPool.BLANK;
+		}
+
+		CommerceReturnItem commerceReturnItem = getCommerceReturnItem();
+
+		if (commerceReturnItem == null) {
+			return StringPool.BLANK;
+		}
+
+		for (ListTypeEntry listTypeEntry :
+				_listTypeEntryService.getListTypeEntries(
+					listTypeDefinition.getListTypeDefinitionId(),
+					QueryUtil.ALL_POS, QueryUtil.ALL_POS)) {
+
+			if (Objects.equals(
+					listTypeEntry.getKey(),
+					commerceReturnItem.getReturnReason())) {
+
+				return listTypeEntry.getName(
+					_commerceReturnRequestHelper.getLocale());
+			}
 		}
 
 		return StringPool.BLANK;

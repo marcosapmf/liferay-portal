@@ -6,13 +6,12 @@
 import {Locator, Page, expect} from '@playwright/test';
 
 import {clickAndExpectToBeVisible} from '../../utils/clickAndExpectToBeVisible';
-import fillAndClickOutside from '../../utils/fillAndClickOutside';
 import {PORTLET_URLS} from '../../utils/portletUrls';
-import {waitForSuccessAlert} from '../../utils/waitForSuccessAlert';
+import {waitForAlert} from '../../utils/waitForAlert';
 
-export type TTranslation = {
+export type TLanguageKey = {
 	key: string;
-	values: {
+	translations: {
 		languageId: string;
 		value: string;
 	}[];
@@ -36,36 +35,30 @@ export class LanguageOverridePage {
 		this.saveButton = page.getByRole('button', {name: 'Save'});
 	}
 
-	async addTranslation({key, values}: TTranslation) {
+	async addLanguageKey({key, translations}: TLanguageKey) {
 		await this.newButton.click();
 
 		await this.page.getByLabel('key required').fill(key);
 
-		for (let i = 0; i < values.length; i++) {
-			const {languageId, value} = values[i];
-
-			await fillAndClickOutside(
-				this.page,
-				this.page.getByLabel(languageId),
-				value,
-				false
-			);
+		for (const {languageId, value} of translations) {
+			await this.page.getByLabel(languageId).click();
+			await this.page.getByLabel(languageId).fill(value);
 		}
 
 		await this.saveButton.click();
 
-		await waitForSuccessAlert(this.page);
+		await waitForAlert(this.page);
 	}
 
-	async addTranslations(languageOverrides: TTranslation[]) {
+	async addLanguageKeys(languageOverrides: TLanguageKey[]) {
 		for (const languageOverride of languageOverrides) {
-			await this.addTranslation(languageOverride);
+			await this.addLanguageKey(languageOverride);
 		}
 	}
 
-	async assertTranslationInListView({key, values}: TTranslation) {
-		if (values.length) {
-			const normalizedLanguageIds = values.map(({languageId}) =>
+	async assertLanguageKeyInListView({key, translations}: TLanguageKey) {
+		if (translations.length) {
+			const normalizedLanguageIds = translations.map(({languageId}) =>
 				languageId.replace('-', '_')
 			);
 
@@ -82,8 +75,22 @@ export class LanguageOverridePage {
 		}
 	}
 
-	async assertTranslationNotInListView({key}: TTranslation) {
+	async assertLanguageKeyNotInListView(key: string) {
 		await expect(this.page.getByRole('link', {name: key})).toBeHidden();
+	}
+
+	async assertLanguageKeyTranslationIsEmpty(languageId: string) {
+		await expect(this.page.getByLabel(languageId)).toHaveValue('');
+	}
+
+	async assertLanguageKeyTranslations({key, translations}: TLanguageKey) {
+		await this.page.getByRole('link', {name: key}).click();
+
+		await this.page.waitForLoadState();
+
+		for (const {languageId, value} of translations) {
+			await expect(this.page.getByLabel(languageId)).toHaveValue(value);
+		}
 	}
 
 	async changeFilter(option: 'Any Language' | 'Selected Language') {
@@ -120,13 +127,9 @@ export class LanguageOverridePage {
 		await this.page.goto(`/group/guest${PORTLET_URLS.languageOverride}`);
 	}
 
-	async searchTranslation(key: string) {
-		await fillAndClickOutside(
-			this.page,
-			this.page.getByRole('searchbox'),
-			key,
-			false
-		);
+	async searchLanguageKey(key: string) {
+		await this.page.getByRole('searchbox').click();
+		await this.page.getByRole('searchbox').fill(key);
 
 		await this.page
 			.getByRole('button', {exact: true, name: 'Search for'})

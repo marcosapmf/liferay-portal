@@ -4,45 +4,124 @@
  */
 
 import {expect, mergeTests} from '@playwright/test';
-import moment from 'moment';
+import {createReadStream} from 'fs';
 import path from 'path';
 
 import {apiHelpersTest} from '../../fixtures/apiHelpersTest';
+import {applicationsMenuPageTest} from '../../fixtures/applicationsMenuPageTest';
 import {documentLibraryPagesTest} from '../../fixtures/documentLibraryPages.fixtures';
 import {featureFlagsTest} from '../../fixtures/featureFlagsTest';
 import {isolatedSiteTest} from '../../fixtures/isolatedSiteTest';
 import {loginTest} from '../../fixtures/loginTest';
+import {pageEditorPagesTest} from '../../fixtures/pageEditorPagesTest';
+import {siteSettingsPagesTest} from '../../fixtures/siteSettingsPagesTest';
+import {createCategories} from '../../helpers/CreateCategories';
+import {DLFILE_STATUS} from '../../helpers/json-web-services/JSONWebServicesDocumentLibraryApiHelper';
+import {clickAndExpectToBeHidden} from '../../utils/clickAndExpectToBeHidden';
 import {clickAndExpectToBeVisible} from '../../utils/clickAndExpectToBeVisible';
 import getRandomString from '../../utils/getRandomString';
 import {performLogout} from '../../utils/performLogin';
-import {waitForSuccessAlert} from '../../utils/waitForSuccessAlert';
+import getBasicWebContentStructureId from '../../utils/structured-content/getBasicWebContentStructureId';
+import {waitForAlert} from '../../utils/waitForAlert';
+import getFragmentDefinition from '../layout-content-page-editor-web/utils/getFragmentDefinition';
 import getPageDefinition from '../layout-content-page-editor-web/utils/getPageDefinition';
 import getWidgetDefinition from '../layout-content-page-editor-web/utils/getWidgetDefinition';
 
-const baseTest = mergeTests(
-	documentLibraryPagesTest,
-	isolatedSiteTest,
-	loginTest()
-);
-
-export const testSearchInDlPortlet = mergeTests(
+const test = mergeTests(
 	apiHelpersTest,
-	baseTest,
+	applicationsMenuPageTest,
+	documentLibraryPagesTest,
 	featureFlagsTest({
-		'LPS-178052': true,
-	})
-);
-export const testFeatureFlagsEnabled = mergeTests(
-	baseTest,
-	featureFlagsTest({
-		'LPD-10701': true,
-	})
+		'LPS-178052': {enabled: true},
+	}),
+	isolatedSiteTest,
+	loginTest(),
+	pageEditorPagesTest,
+	siteSettingsPagesTest
 );
 
-export const testUploadMultipleFieldsWithCustomDocumentType =
-	mergeTests(baseTest);
+test(
+	'Check View Usage in Action Menu',
+	{
+		tag: '@LPD-43391',
+	},
+	async ({apiHelpers, documentLibraryPage, page, pageEditorPage, site}) => {
+		const documentTest = await apiHelpers.headlessDelivery.postDocument(
+			site.id,
+			createReadStream(path.join(__dirname, '/dependencies/image1.jpeg')),
+			{
+				description: getRandomString(),
+				fileName: getRandomString(),
+				title: getRandomString(),
+			}
+		);
+		await documentLibraryPage.goto(site.friendlyUrlPath);
+		await clickAndExpectToBeVisible({
+			autoClick: false,
+			target: page.getByRole('menuitem', {name: 'View Usages'}),
+			trigger: page.getByLabel('Actions', {exact: true}),
+		});
+		await expect(
+			page.getByRole('menuitem', {name: 'View Usages'})
+		).toHaveClass(/disabled/);
 
-baseTest(
+		const imageId = getRandomString();
+		const imageFragment = getFragmentDefinition({
+			id: imageId,
+			key: 'BASIC_COMPONENT-image',
+		});
+
+		const layoutTitle = getRandomString();
+		const layout = await apiHelpers.headlessDelivery.createSitePage({
+			pageDefinition: getPageDefinition([imageFragment]),
+			siteId: site.id,
+			title: layoutTitle,
+		});
+
+		await pageEditorPage.goto(layout, site.friendlyUrlPath);
+
+		await pageEditorPage.selectEditable(imageId, 'image-square');
+
+		await page.getByTitle('Select Image').click();
+
+		const imageCard = page
+			.frameLocator('iframe[title="Select"]')
+			.getByText(documentTest.title);
+
+		await clickAndExpectToBeHidden({
+			target: page.locator('.modal-dialog'),
+			trigger: imageCard,
+		});
+
+		await pageEditorPage.waitForChangesSaved();
+
+		await documentLibraryPage.goto(site.friendlyUrlPath);
+
+		await clickAndExpectToBeVisible({
+			autoClick: true,
+			target: page.getByRole('menuitem', {name: 'View Usages'}),
+			trigger: page.getByLabel('Actions', {exact: true}),
+		});
+		await expect(page.getByRole('menubar')).toContainText('Pages (1)');
+		await expect(
+			page.getByRole('cell', {name: `${layoutTitle} (Draft)`})
+		).toBeVisible();
+
+		await clickAndExpectToBeVisible({
+			autoClick: true,
+			target: page.getByRole('menuitem', {name: 'View in Page'}),
+			trigger: page
+				.getByRole('row', {name: `${layoutTitle} (Draft) Page Image`})
+				.getByLabel('Show Actions'),
+		});
+
+		await expect(
+			page.getByRole('heading', {name: layoutTitle})
+		).toBeVisible();
+	}
+);
+
+test(
 	'Check order by Relevance in Search of DL',
 	{
 		tag: '@LPD-32481',
@@ -77,7 +156,7 @@ baseTest(
 	}
 );
 
-baseTest(
+test(
 	'Check if Ordering by Modified Date working, after editing a document',
 	{
 		tag: '@LPD-32483',
@@ -95,12 +174,12 @@ baseTest(
 			site.friendlyUrlPath
 		);
 
-		await documentLibraryPage.editFileEntry(title);
+		await documentLibraryPage.goToEditFileEntry(title);
 		await documentLibraryEditFilePage.descriptionInput.fill(
 			getRandomString()
 		);
 		await documentLibraryEditFilePage.publishButton.click();
-		await waitForSuccessAlert(
+		await waitForAlert(
 			page,
 			'Success:Your request completed successfully.'
 		);
@@ -117,15 +196,17 @@ baseTest(
 	}
 );
 
-testFeatureFlagsEnabled(
-	'LPD-16658 Show a success message after scheduling a new file',
-	async ({documentLibraryEditFilePage, documentLibraryPage, page}) => {
+test(
+	'Show a success message after scheduling a new file',
+	{tag: '@LPD-16658'},
+	async ({documentLibraryEditFilePage, page, site}) => {
 		const scheduleDate = `01/01/${new Date().getFullYear() + 1}`;
 		const title = getRandomString();
 
-		await documentLibraryEditFilePage.publishNewFileWithScheduleDate(
+		await documentLibraryEditFilePage.goToPublishNewFileWithScheduleDate(
 			scheduleDate,
-			title
+			title,
+			site.friendlyUrlPath
 		);
 
 		await expect(page.getByRole('link', {name: title})).toBeVisible();
@@ -134,86 +215,90 @@ testFeatureFlagsEnabled(
 
 		await expect(toastAlertContainer).toBeVisible();
 
-		await expect(toastAlertContainer).toHaveText(
-			'Success:' +
-				title +
-				' will be published on ' +
-				moment(new Date(scheduleDate)).format('M/D/YY h:mm A') +
-				'.'
+		await expect(toastAlertContainer).toContainText(`Success:${title}`);
+
+		await expect(toastAlertContainer).toContainText(
+			new Intl.DateTimeFormat('en-US', {
+				day: 'numeric',
+				month: 'numeric',
+				year: '2-digit',
+			}).format(new Date(scheduleDate))
 		);
-		await documentLibraryPage.deleteFileEntry(title);
 	}
 );
 
-testFeatureFlagsEnabled(
-	'LPD-16313 Identify at a glance if a Document is visible for guests',
-	async ({documentLibraryEditFilePage, documentLibraryPage}) => {
+test(
+	'Identify at a glance if a Document is visible for guests',
+	{tag: '@LPD-16313'},
+	async ({documentLibraryEditFilePage, documentLibraryPage, site}) => {
 		const title = getRandomString();
 
 		await documentLibraryEditFilePage.publishNewFileWithoutGuestViewPermission(
-			title
+			title,
+			site.friendlyUrlPath
 		);
 
 		await documentLibraryPage.changeView('cards');
-
 		await documentLibraryPage.assertPrivateFileIcon();
 
 		await documentLibraryPage.changeView('table');
-
 		await documentLibraryPage.assertPrivateFileIcon();
 
 		await documentLibraryPage.changeView('list');
-
 		await documentLibraryPage.assertPrivateFileIcon();
-
-		await documentLibraryPage.deleteFileEntry(title);
 	}
 );
 
-testFeatureFlagsEnabled(
-	'LPD-16313 Show icon in the content admin and content editor',
-	async ({documentLibraryEditFilePage, documentLibraryPage, page}) => {
+test(
+	'Show icon in the content admin and content editor',
+	{tag: '@LPD-16313'},
+	async ({documentLibraryEditFilePage, documentLibraryPage, page, site}) => {
 		const title = getRandomString();
 
 		await documentLibraryEditFilePage.publishNewFileWithoutGuestViewPermission(
-			title
+			title,
+			site.friendlyUrlPath
 		);
 
 		await documentLibraryPage.changeView('cards');
 
-		await documentLibraryPage.editFileEntry(title);
+		await documentLibraryPage.goToEditFileEntry(title);
 
 		await documentLibraryPage.assertPrivateFileIcon();
 
-		await documentLibraryEditFilePage.goBack();
+		await documentLibraryPage.goto(site.friendlyUrlPath);
 
 		await page.getByRole('link', {name: title}).click();
 
 		await documentLibraryPage.assertPrivateFileIcon();
-
-		await documentLibraryPage.deleteFileEntry(title);
 	}
 );
 
-testFeatureFlagsEnabled(
-	'LPD-16313 Show icon in the DL item selector',
+test(
+	'Show icon in the DL item selector',
+	{tag: '@LPD-16313'},
 	async ({
 		documentLibraryEditDocumentTypesPage,
 		documentLibraryEditFilePage,
-		documentLibraryPage,
+		site,
 	}) => {
 		const dTypeTitle = getRandomString();
 		const title = getRandomString();
 
 		await documentLibraryEditDocumentTypesPage.createNewDLTypeWithUploadField(
-			dTypeTitle
+			dTypeTitle,
+			site.friendlyUrlPath
 		);
 
 		await documentLibraryEditFilePage.publishNewFileWithoutGuestViewPermission(
-			title
+			title,
+			site.friendlyUrlPath
 		);
 
-		await documentLibraryEditFilePage.goToNewFileDifferentType(dTypeTitle);
+		await documentLibraryEditFilePage.goToNewFileDifferentType(
+			dTypeTitle,
+			site.friendlyUrlPath
+		);
 
 		await documentLibraryEditFilePage.selectForUpdateButton.click();
 
@@ -238,15 +323,15 @@ testFeatureFlagsEnabled(
 		await documentLibraryEditFilePage.assertPrivateFileIconInSelectPopUp(
 			'Document'
 		);
-
-		await documentLibraryPage.deleteFileEntry(title);
-
-		await documentLibraryPage.deleteDocumentType(dTypeTitle);
 	}
 );
 
-testUploadMultipleFieldsWithCustomDocumentType(
-	'LPD-29609 Error uploading multiples files with custom document type',
+test(
+	'Error uploading multiples files with custom document type',
+	{
+		tag: '@LPD-29609',
+	},
+
 	async ({
 		documentLibraryEditDocumentTypesPage,
 		documentLibraryEditFilePage,
@@ -271,8 +356,131 @@ testUploadMultipleFieldsWithCustomDocumentType(
 	}
 );
 
-testSearchInDlPortlet(
-	'LPD-31694 Search in DL portlet does not show results in card view for LPS-202909',
+test(
+	'Unable to filter by category if their vocabulary is related with a specific document type',
+	{
+		tag: '@LPD-50971',
+	},
+
+	async ({apiHelpers, documentLibraryPage, page, site}) => {
+		const vocabularyName = getRandomString();
+
+		const categories = await createCategories({
+			apiHelpers,
+			assetTypes: [
+				{
+					required: false,
+					subtype: 'Basic Document',
+					type: 'Document',
+				},
+			],
+			categoryNames: [{name: 'Books'}],
+			siteId: site.id,
+			vocabularyName,
+		});
+
+		await apiHelpers.headlessDelivery.postDocument(
+			site.id,
+			createReadStream(path.join(__dirname, '/dependencies/image1.jpeg')),
+			{
+				description: getRandomString(),
+				fileName: getRandomString(),
+				taxonomyCategoryIds: [categories[0].id],
+				title: getRandomString(),
+			}
+		);
+
+		await documentLibraryPage.goto(site.friendlyUrlPath);
+
+		await page.getByLabel('Filter', {exact: true}).click();
+
+		await page.getByRole('menuitem', {name: 'Categories'}).click();
+
+		await expect(
+			page
+				.frameLocator('iframe[title="Filter by Categories"]')
+				.getByText(vocabularyName)
+		).toBeVisible();
+	}
+);
+
+test(
+	'Only one well formatted success message on scheduling file from widget page',
+	{
+		tag: ['@LPD-45614', '@LPD-45658'],
+	},
+	async ({
+		apiHelpers,
+		documentLibraryEditFilePage,
+		documentLibraryPage,
+		page,
+		site,
+	}) => {
+		const portletId = getRandomString();
+		const widgetDefinition = getWidgetDefinition({
+			id: portletId,
+			widgetName: 'com_liferay_document_library_web_portlet_DLPortlet',
+		});
+		const layout = await apiHelpers.headlessDelivery.createSitePage({
+			pageDefinition: getPageDefinition([widgetDefinition]),
+			siteId: site.id,
+			title: getRandomString(),
+		});
+
+		await page.goto(`/web/${site.name}${layout.friendlyUrlPath}`);
+
+		await documentLibraryPage.goToCreateNewFile();
+
+		const scheduleDate = `01/01/${new Date().getFullYear() + 1}`;
+		const title = getRandomString();
+
+		await documentLibraryEditFilePage.publishNewFileWithScheduleDate(
+			scheduleDate,
+			title
+		);
+
+		await expect(page.getByRole('link', {name: title})).toBeVisible();
+
+		const toastAlertContainer = page.locator('[id="ToastAlertContainer"]');
+
+		await expect(toastAlertContainer).not.toContainText(`<strong>`);
+		await expect(toastAlertContainer).toContainText(`Success:${title}`);
+
+		await expect(toastAlertContainer).toContainText(
+			new Intl.DateTimeFormat('en-US', {
+				day: 'numeric',
+				month: 'numeric',
+				year: '2-digit',
+			}).format(new Date(scheduleDate))
+		);
+
+		let firstAlertAppear = false;
+		let moreAlertsAppear = false;
+
+		await expect(async () => {
+			const toastAlertContainers = await page
+				.locator('.alert-success', {
+					hasText: `Success:${title}`,
+				})
+				.all();
+
+			if (toastAlertContainers.length >= 1) {
+				firstAlertAppear = true;
+			}
+
+			if (toastAlertContainers.length > 1) {
+				moreAlertsAppear = true;
+			}
+
+			expect(firstAlertAppear).toBe(true);
+			expect(moreAlertsAppear).toBe(false);
+		}).toPass();
+	}
+);
+
+test(
+	'Search in DL portlet does not show results in card view',
+	{tag: ['@LPD-31694', '@LPD-202909']},
 	async ({
 		apiHelpers,
 		documentLibraryEditFilePage,
@@ -302,7 +510,7 @@ testSearchInDlPortlet(
 
 		await page.goto('/web' + site.friendlyUrlPath);
 
-		await documentLibraryPage.searchFor(title);
+		await documentLibraryPage.search(title);
 
 		await clickAndExpectToBeVisible({
 			autoClick: true,
@@ -314,5 +522,293 @@ testSearchInDlPortlet(
 				.locator('.portlet-document-library')
 				.getByRole('link', {name: title})
 		).toBeVisible();
+	}
+);
+
+test(
+	'Replace option does not work on Categories Selector',
+	{
+		tag: ['@LPD-27899', '@LPSA-74819'],
+	},
+
+	async ({
+		apiHelpers,
+		documentLibraryEditFilePage,
+		documentLibraryPage,
+		page,
+		site,
+	}) => {
+		const vocabularyName = getRandomString();
+
+		const categories = await createCategories({
+			apiHelpers,
+			categoryNames: [
+				{name: 'Books'},
+				{name: 'Plants'},
+				{name: 'Pets'},
+				{name: 'Furniture'},
+			],
+			siteId: site.id,
+			vocabularyName,
+		});
+
+		const document1 = await apiHelpers.headlessDelivery.postDocument(
+			site.id,
+			createReadStream(path.join(__dirname, '/dependencies/image1.jpeg')),
+			{
+				description: getRandomString(),
+				fileName: getRandomString(),
+				taxonomyCategoryIds: [categories[0].id, categories[1].id],
+				title: getRandomString(),
+			}
+		);
+
+		const document2 = await apiHelpers.headlessDelivery.postDocument(
+			site.id,
+			createReadStream(path.join(__dirname, '/dependencies/image1.jpeg')),
+			{
+				description: getRandomString(),
+				fileName: getRandomString(),
+				taxonomyCategoryIds: [categories[0].id, categories[2].id],
+				title: getRandomString(),
+			}
+		);
+
+		await documentLibraryPage.goto(site.friendlyUrlPath);
+
+		await documentLibraryPage.openBulkEditCategoriesModal([
+			document1.title,
+			document2.title,
+		]);
+
+		await expect(
+			page.locator('.modal .label-item-expand', {hasText: 'Books'})
+		).toBeVisible();
+
+		await documentLibraryPage.goto(site.friendlyUrlPath);
+
+		await documentLibraryPage.replaceCategoriesUsingBulkEditCategoriesModal(
+			[document1.title, document2.title],
+			[{categoryNames: ['Furniture'], vocabularyName}]
+		);
+
+		await waitForAlert(page, 'Success:Changes Saved');
+
+		for (const document of [document1, document2]) {
+			await documentLibraryPage.goto(site.friendlyUrlPath);
+			await documentLibraryPage.goToEditFileEntry(document.title);
+			await documentLibraryEditFilePage.openFieldset('Categorization');
+			await page.getByText(vocabularyName).waitFor();
+
+			await expect(await page.getByText(document.title)).toBeVisible();
+		}
+	}
+);
+
+test(
+	'Categories, related assets and tags of an expired versioned document should be visible',
+	{
+		tag: '@LPD-42737',
+	},
+
+	async ({
+		apiHelpers,
+		documentLibraryPage,
+		documentLibraryViewFileEntryPage,
+		site,
+	}) => {
+		const documentTitle = 'Title' + getRandomString();
+
+		const documentId =
+			await test.step('Create a new document', async () => {
+				const document = await apiHelpers.headlessDelivery.postDocument(
+					site.id,
+					createReadStream(
+						path.join(__dirname, '/dependencies/image1.jpeg')
+					),
+					{
+						description: getRandomString(),
+						fileName: getRandomString(),
+						title: documentTitle,
+					}
+				);
+
+				expect(document).toHaveProperty('title', documentTitle);
+
+				return document.id;
+			});
+
+		const [categoryName, keyword, structuredContentTitle] =
+			await test.step('Update the document with a new version: add category, related asset and tag', async () => {
+				const categories = await createCategories({
+					apiHelpers,
+					categoryNames: [{name: 'Category' + getRandomString()}],
+					siteId: site.id,
+					vocabularyName: getRandomString(),
+				});
+
+				const keyword = 'Keyword' + getRandomString();
+
+				const contentStructureId =
+					await getBasicWebContentStructureId(apiHelpers);
+				const structuredContentTitle =
+					'StructuredContent' + getRandomString();
+
+				await apiHelpers.headlessDelivery.postStructuredContent({
+					contentStructureId,
+					datePublished: null,
+					description: getRandomString(),
+					relatedContents: [
+						{
+							contentType: 'Document',
+							id: documentId,
+							title: documentTitle,
+						},
+					],
+					siteId: site.id,
+					title: structuredContentTitle,
+					viewableBy: 'Anyone',
+				});
+
+				const updatedDocument =
+					await apiHelpers.headlessDelivery.patchDocument({
+						document: {
+							keywords: [keyword],
+							taxonomyCategoryIds: [categories[0].id],
+						},
+						documentId,
+					});
+
+				expect(updatedDocument.keywords).toContain(keyword);
+				expect(
+					updatedDocument.relatedContents.map((r) => r.title)
+				).toContain(structuredContentTitle);
+				expect(
+					updatedDocument.taxonomyCategoryBriefs.map(
+						(t) => t.taxonomyCategoryName
+					)
+				).toContain(categories[0].name);
+
+				return [categories[0].name, keyword, structuredContentTitle];
+			});
+
+		const user =
+			await apiHelpers.headlessAdminUser.getUserAccountByEmailAddress(
+				'test@liferay.com'
+			);
+
+		await test.step('Expire the document', async () => {
+			const fileVersion =
+				await apiHelpers.jsonWebServicesDocumentLibrary.getLastestFileVersion(
+					documentId
+				);
+
+			const fileEntry =
+				await apiHelpers.jsonWebServicesDocumentLibrary.updateStatus(
+					user.id,
+					fileVersion.fileVersionId,
+					DLFILE_STATUS.EXPIRED
+				);
+
+			expect(fileEntry.fileEntryId).toBe(String(documentId));
+		});
+
+		await test.step('Check that category, related asset and tag are visible in document view page', async () => {
+			await documentLibraryPage.goto(site.friendlyUrlPath);
+			await documentLibraryPage.goToViewFileEntry(documentTitle);
+			await documentLibraryViewFileEntryPage.openInfoPanel(
+				documentTitle,
+				'Details'
+			);
+			await documentLibraryViewFileEntryPage.assertInfoPanelCategories([
+				categoryName,
+			]);
+			await documentLibraryViewFileEntryPage.assertInfoPanelRelatedAssets(
+				[structuredContentTitle]
+			);
+			await documentLibraryViewFileEntryPage.assertInfoPanelTags([
+				keyword,
+			]);
+		});
+	}
+);
+
+test(
+	'Back button works when viewing file entry history',
+	{
+		tag: '@LPD-44784',
+	},
+	async ({documentLibraryEditFilePage, documentLibraryPage, page, site}) => {
+		const title = getRandomString();
+		await documentLibraryEditFilePage.publishNewBasicFileEntry(
+			title,
+			site.friendlyUrlPath
+		);
+
+		await documentLibraryPage.goToViewHistoryFileEntry(title);
+
+		await page.getByRole('link', {name: 'Back'}).click();
+
+		await expect(
+			page.getByRole('button', {name: 'Versions'})
+		).not.toBeVisible();
+	}
+);
+
+test(
+	'A non-localizable field in a Document Type cannot be entered if accessed from a site that does not use the global site language',
+	{
+		tag: '@LPP-53324',
+	},
+
+	async ({
+		apiHelpers,
+		applicationsMenuPage,
+		documentLibraryEditDocumentTypesPage,
+		documentLibraryEditFilePage,
+		documentLibraryPage,
+		page,
+		site,
+		siteSettingsLocalizationPage,
+	}) => {
+		const dTypeTitle = getRandomString();
+
+		await documentLibraryEditDocumentTypesPage.createNewDLTypeWithTextFieldRequiredNonLocalizable(
+			dTypeTitle,
+			'/global'
+		);
+
+		await siteSettingsLocalizationPage.setCustomDefaultLanguage(
+			'Spanish (Spain)',
+			site.friendlyUrlPath
+		);
+
+		await siteSettingsLocalizationPage.disableAllLanguagesExceptSp(
+			site.friendlyUrlPath
+		);
+
+		await documentLibraryEditFilePage.goToNewFileDifferentType(
+			dTypeTitle,
+			site.friendlyUrlPath
+		);
+
+		await page.getByLabel('Title Required').fill(getRandomString());
+		await page.getByLabel('Text').fill(getRandomString());
+
+		await documentLibraryEditFilePage.publishButton.click();
+
+		await waitForAlert(
+			page,
+			'Success:Your request completed successfully.'
+		);
+
+		await apiHelpers.headlessSite.deleteSite(site.id);
+		await applicationsMenuPage.goToGlobalSite();
+		await documentLibraryPage.deleteDocumentType(dTypeTitle);
+
+		await waitForAlert(
+			page,
+			'Success:Your request completed successfully.'
+		);
 	}
 );

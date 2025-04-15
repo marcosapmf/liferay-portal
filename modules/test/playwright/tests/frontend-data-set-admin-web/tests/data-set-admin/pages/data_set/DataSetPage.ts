@@ -5,32 +5,37 @@
 
 import {Locator, Page, expect} from '@playwright/test';
 
-import {DataSetsPage} from '../DataSetsPage';
+import {CustomDataSetsPage} from '../CustomDataSetsPage';
 
 export class DataSetPage {
 	readonly page: Page;
 	private readonly pageContainer: Locator;
 	private readonly tabsContainer: Locator;
-	private readonly dataSetsPage: DataSetsPage;
+	private readonly customDataSetsPage: CustomDataSetsPage;
 
 	constructor(page: Page) {
 		this.page = page;
 		this.pageContainer = page.locator('.fds-view');
 		this.tabsContainer = page.locator('nav.navbar');
-		this.dataSetsPage = new DataSetsPage(page);
+		this.customDataSetsPage = new CustomDataSetsPage(page);
 	}
 
 	async goto({dataSetLabel}: {dataSetLabel: string}) {
-		await this.dataSetsPage.goto();
+		await this.customDataSetsPage.goto();
 
-		await this.dataSetsPage.openDataSet(dataSetLabel);
+		await this.open({dataSetLabel});
+	}
+
+	async open({dataSetLabel}: {dataSetLabel: string}) {
+		await this.page.getByRole('link', {name: dataSetLabel}).first().click();
 
 		await Promise.all([
 			expect(this.pageContainer).toBeInViewport(),
 			this.page.waitForResponse(
 				(resp) =>
-					resp.status() === 200 &&
-					resp.url().includes('/openapi.json')
+					resp.status() === 404 ||
+					(resp.status() === 200 &&
+						resp.url().includes('/openapi.json'))
 			),
 		]);
 	}

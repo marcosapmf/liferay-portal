@@ -5,7 +5,8 @@
 
 import ClayIcon from '@clayui/icon';
 import ClayLink from '@clayui/link';
-import {navigate, openConfirmModal} from 'frontend-js-web';
+import {openConfirmModal} from 'frontend-js-components-web';
+import {navigate} from 'frontend-js-web';
 import PropTypes from 'prop-types';
 import React, {useContext} from 'react';
 
@@ -187,7 +188,7 @@ ActionLinkRenderer.propTypes = {
 	options: PropTypes.shape({
 		actionId: PropTypes.string,
 	}),
-	value: PropTypes.string,
+	value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
 };
 
 export default ActionLinkRenderer;

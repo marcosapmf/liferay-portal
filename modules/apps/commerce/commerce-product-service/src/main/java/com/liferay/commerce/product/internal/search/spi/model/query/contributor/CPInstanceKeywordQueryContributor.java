@@ -49,6 +49,8 @@ public class CPInstanceKeywordQueryContributor
 		_queryHelper.addSearchTerm(
 			booleanQuery, searchContext, CPField.EXTERNAL_REFERENCE_CODE,
 			false);
+		_queryHelper.addSearchTerm(
+			booleanQuery, searchContext, CPField.GTIN, false);
 		_queryHelper.addSearchLocalizedTerm(
 			booleanQuery, searchContext, Field.CONTENT, false);
 		_queryHelper.addSearchTerm(

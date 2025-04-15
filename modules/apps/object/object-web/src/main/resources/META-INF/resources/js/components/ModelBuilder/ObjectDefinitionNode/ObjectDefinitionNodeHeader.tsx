@@ -19,6 +19,8 @@ interface ObjectDefinitionNodeHeaderProps {
 	dropDownItems: DropDownItems[];
 	handleSelectObjectDefinitionNode: () => void;
 	isLinkedObjectDefinition: boolean;
+	isRootDescendantNode: boolean;
+	isRootNode: boolean;
 	objectDefinitionLabel: string;
 	status: {
 		code: number;
@@ -33,6 +35,8 @@ export default function ObjectDefinitionNodeHeader({
 	dropDownItems,
 	handleSelectObjectDefinitionNode,
 	isLinkedObjectDefinition,
+	isRootDescendantNode,
+	isRootNode,
 	objectDefinitionLabel,
 	status,
 	system,
@@ -88,8 +92,25 @@ export default function ObjectDefinitionNodeHeader({
 				</div>
 
 				<div>
+					{Liferay.FeatureFlags['LPD-34594'] && (
+						<ClayLabel
+							className={classNames('label-inverse-secondary', {
+								'label-inverse-info':
+									isRootDescendantNode || isRootNode,
+							})}
+						>
+							{isRootNode
+								? Liferay.Language.get('root-object')
+								: isRootDescendantNode
+									? Liferay.Language.get('inherited')
+									: Liferay.Language.get('standard')}
+						</ClayLabel>
+					)}
+
 					<ClayLabel displayType={system ? 'info' : 'warning'}>
-						{Liferay.Language.get(system ? 'system' : 'custom')}
+						{system
+							? Liferay.Language.get('system')
+							: Liferay.Language.get('custom')}
 					</ClayLabel>
 
 					<ClayLabel
@@ -101,13 +122,11 @@ export default function ObjectDefinitionNodeHeader({
 									: 'secondary'
 						}
 					>
-						{Liferay.Language.get(
-							status?.label === 'approved'
-								? 'approved'
-								: status?.label === 'pending'
-									? 'pending'
-									: 'draft'
-						)}
+						{status?.label === 'approved'
+							? Liferay.Language.get('approved')
+							: status?.label === 'pending'
+								? Liferay.Language.get('pending')
+								: Liferay.Language.get('draft')}
 					</ClayLabel>
 				</div>
 			</div>

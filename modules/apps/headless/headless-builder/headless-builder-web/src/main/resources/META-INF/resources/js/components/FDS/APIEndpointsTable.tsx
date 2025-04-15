@@ -4,7 +4,7 @@
  */
 
 import {FrontendDataSet} from '@liferay/frontend-data-set-web';
-import {openModal} from 'frontend-js-web';
+import {openModal} from 'frontend-js-components-web';
 import React, {Dispatch, SetStateAction, useContext, useEffect} from 'react';
 
 import {EditAPIApplicationContext} from '../EditAPIApplicationContext';
@@ -56,7 +56,7 @@ export default function APIEndpointsTable({
 
 	const endpointAPIURLPath = getFilterRelatedItemURL({
 		apiURLPath: apiURLPaths.endpoints,
-		filterQuery: `r_apiApplicationToAPIEndpoints_c_apiApplicationId eq '${currentAPIApplicationId}'`,
+		filterQuery: `r_apiApplicationToAPIEndpoints_l_apiApplicationId eq '${currentAPIApplicationId}'`,
 	});
 
 	const deleteAPIEnpoint = (

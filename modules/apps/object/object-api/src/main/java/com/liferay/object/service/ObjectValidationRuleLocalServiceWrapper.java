@@ -503,6 +503,16 @@ public class ObjectValidationRuleLocalServiceWrapper
 	}
 
 	@Override
+	public void validate(
+			java.util.List<String> externalReferenceCodes,
+			com.liferay.object.model.ObjectEntry objectEntry, long userId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		_objectValidationRuleLocalService.validate(
+			externalReferenceCodes, objectEntry, userId);
+	}
+
+	@Override
 	public BasePersistence<?> getBasePersistence() {
 		return _objectValidationRuleLocalService.getBasePersistence();
 	}

@@ -9,7 +9,6 @@ import com.liferay.petra.function.UnsafeBiConsumer;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.petra.function.UnsafeSupplier;
-import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
@@ -18,8 +17,9 @@ import com.liferay.portal.kernel.dao.jdbc.DataAccess;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.module.framework.ThrowableCollector;
-import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
+import com.liferay.portal.kernel.security.auth.CompanyInheritableThreadLocalCallable;
 import com.liferay.portal.kernel.upgrade.recorder.UpgradeSQLRecorder;
+import com.liferay.portal.kernel.util.ClassUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LoggingTimer;
 import com.liferay.portal.kernel.util.NotificationThreadLocal;
@@ -294,6 +294,14 @@ public abstract class BaseDBProcess implements DBProcess {
 		return dbInspector.hasTable(tableName);
 	}
 
+	protected void dropIndexes(List<String> indexNames, String tableName)
+		throws Exception {
+
+		DB db = DBManagerUtil.getDB();
+
+		db.dropIndexes(connection, indexNames, tableName);
+	}
+
 	protected List<IndexMetadata> dropIndexes(
 			String tableName, String columnName)
 		throws Exception {
@@ -312,7 +320,8 @@ public abstract class BaseDBProcess implements DBProcess {
 			(Connection)ProxyUtil.newProxyInstance(
 				ClassLoader.getSystemClassLoader(),
 				new Class<?>[] {Connection.class},
-				new ConnectionThreadProxyInvocationHandler()));
+				new ConnectionThreadProxyInvocationHandler()),
+			ClassUtil.getClassName(this));
 	}
 
 	protected String[] getPrimaryKeyColumnNames(
@@ -582,7 +591,10 @@ public abstract class BaseDBProcess implements DBProcess {
 			Objects.requireNonNull(unsafeBiConsumer);
 		}
 
-		ExecutorService executorService = Executors.newWorkStealingPool();
+		Runtime runtime = Runtime.getRuntime();
+
+		ExecutorService executorService = Executors.newFixedThreadPool(
+			runtime.availableProcessors());
 
 		ThrowableCollector throwableCollector = new ThrowableCollector();
 
@@ -595,37 +607,36 @@ public abstract class BaseDBProcess implements DBProcess {
 			boolean notificationEnabled = NotificationThreadLocal.isEnabled();
 			boolean workflowEnabled = WorkflowThreadLocal.isEnabled();
 
-			long companyId = CompanyThreadLocal.getCompanyId();
-
 			T next = null;
 
 			while ((next = unsafeSupplier.get()) != null) {
 				T current = next;
 
 				Future<Void> future = executorService.submit(
-					() -> {
-						NotificationThreadLocal.setEnabled(notificationEnabled);
-						WorkflowThreadLocal.setEnabled(workflowEnabled);
+					new CompanyInheritableThreadLocalCallable<>(
+						() -> {
+							NotificationThreadLocal.setEnabled(
+								notificationEnabled);
+							WorkflowThreadLocal.setEnabled(workflowEnabled);
 
-						try (SafeCloseable safeCloseable =
-								CompanyThreadLocal.lock(companyId)) {
-
-							if (Validator.isNull(updateSQL)) {
-								unsafeConsumer.accept(current);
+							try {
+								if (Validator.isNull(updateSQL)) {
+									unsafeConsumer.accept(current);
+								}
+								else {
+									unsafeBiConsumer.accept(
+										current,
+										_getConcurrentPreparedStatement(
+											updateSQL,
+											preparedStatementHashMap));
+								}
 							}
-							else {
-								unsafeBiConsumer.accept(
-									current,
-									_getConcurrentPreparedStatement(
-										updateSQL, preparedStatementHashMap));
+							catch (Exception exception) {
+								throwableCollector.collect(exception);
 							}
-						}
-						catch (Exception exception) {
-							throwableCollector.collect(exception);
-						}
 
-						return null;
-					});
+							return null;
+						}));
 
 				int futuresMaxSize = GetterUtil.getInteger(
 					PropsUtil.get(

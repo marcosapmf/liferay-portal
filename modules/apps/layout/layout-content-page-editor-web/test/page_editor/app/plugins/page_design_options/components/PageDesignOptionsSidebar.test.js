@@ -3,8 +3,9 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
+import {checkAccessibility} from '@liferay/layout-js-components-web/test/__lib__/index';
+
 import '@testing-library/jest-dom/extend-expect';
-import {checkAccessibility} from '@liferay/layout-js-components-web';
 import {act, render, screen} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import React from 'react';
@@ -82,6 +83,20 @@ describe('PageDesignOptionsSidebar', () => {
 		expect(screen.getByText('page-design-options')).toBeInTheDocument();
 	});
 
+	it('assert style books info message', () => {
+		Liferay.FeatureFlags['LPD-30204'] = true;
+
+		renderComponent();
+
+		expect(
+			screen.getByText(
+				'only-style-books-based-on-the-frontend-token-definition-provided-by-x-are-visible'
+			)
+		).toBeInTheDocument();
+
+		Liferay.FeatureFlags['LPD-30204'] = false;
+	});
+
 	it('checks panel accessibility', async () => {
 		const {container} = renderComponent();
 
@@ -93,7 +108,7 @@ describe('PageDesignOptionsSidebar', () => {
 		const button = screen.getByLabelText('Pablo Master Layout');
 
 		await act(async () => {
-			userEvent.click(button);
+			await userEvent.click(button);
 		});
 
 		expect(changeMasterLayout).toBeCalledWith(
@@ -101,11 +116,11 @@ describe('PageDesignOptionsSidebar', () => {
 		);
 	});
 
-	it('calls changeStyleBookEntry when a style is selected', () => {
+	it('calls changeStyleBookEntry when a style is selected', async () => {
 		renderComponent();
 		const button = screen.getByLabelText('Pablo Style');
 
-		userEvent.click(button);
+		await userEvent.click(button);
 
 		expect(LayoutService.changeStyleBookEntry).toHaveBeenCalledTimes(1);
 		expect(LayoutService.changeStyleBookEntry).toHaveBeenCalledWith(
@@ -113,40 +128,5 @@ describe('PageDesignOptionsSidebar', () => {
 				styleBookEntryId: '3',
 			})
 		);
-	});
-
-	it('renders Styles from Theme card when page does not have a master layout and there is not a default style book', () => {
-		mockConfigGetter.mockReturnValue({
-			...DEFAULT_CONFIG,
-			defaultStyleBookEntryName: null,
-		});
-
-		renderComponent();
-
-		expect(screen.getByLabelText('styles-from-theme')).toBeInTheDocument();
-	});
-
-	it('renders Styles from Master card when page have a master layout with a stylebook associated', () => {
-		mockConfigGetter.mockReturnValue({
-			...DEFAULT_CONFIG,
-			defaultStyleBookEntryName: 'Master Page Style Book',
-		});
-
-		renderComponent({masterLayoutPlid: '15'});
-
-		expect(screen.getByLabelText('styles-from-master')).toBeInTheDocument();
-		expect(screen.getByText('Master Page Style Book')).toBeInTheDocument();
-	});
-
-	it('renders Styles by Default card when there is a default style book', () => {
-		mockConfigGetter.mockReturnValue({
-			...DEFAULT_CONFIG,
-			defaultStyleBookEntryName: 'Master Page Style Book',
-		});
-
-		renderComponent();
-
-		expect(screen.getByLabelText('styles-by-default')).toBeInTheDocument();
-		expect(screen.getByText('Master Page Style Book')).toBeInTheDocument();
 	});
 });

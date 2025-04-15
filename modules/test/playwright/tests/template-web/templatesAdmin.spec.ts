@@ -4,14 +4,74 @@
  */
 
 import {expect, mergeTests} from '@playwright/test';
+import {createReadStream} from 'fs';
+import path from 'node:path';
 
+import {apiHelpersTest} from '../../fixtures/apiHelpersTest';
 import {isolatedSiteTest} from '../../fixtures/isolatedSiteTest';
 import {loginTest} from '../../fixtures/loginTest';
+import {pageViewModePagesTest} from '../../fixtures/pageViewModePagesTest';
+import {liferayConfig} from '../../liferay.config';
+import {clickAndExpectToBeVisible} from '../../utils/clickAndExpectToBeVisible';
+import fillAndClickOutside from '../../utils/fillAndClickOutside';
 import getRandomString from '../../utils/getRandomString';
-import {waitForSuccessAlert} from '../../utils/waitForSuccessAlert';
 import {templatesPageTest} from './fixtures/templatesPageTest';
 
-const test = mergeTests(isolatedSiteTest, loginTest(), templatesPageTest);
+const test = mergeTests(
+	apiHelpersTest,
+	isolatedSiteTest,
+	loginTest(),
+	templatesPageTest,
+	pageViewModePagesTest
+);
+
+test(
+	'Add an information template via script file',
+	{
+		tag: '@LPS-124478',
+	},
+	async ({page, site, templatesPage}) => {
+
+		// Go to templates administration
+
+		await templatesPage.goto(site.friendlyUrlPath);
+
+		// Create information template
+
+		const informationTemplateName = getRandomString();
+
+		await templatesPage.createInformationTemplate({
+			itemType: 'Blogs Entry',
+			name: informationTemplateName,
+		});
+
+		// Import from script file
+
+		await templatesPage.importInformationTemplate(
+			__dirname,
+			'information_template_blogs.ftl'
+		);
+
+		await templatesPage.saveTemplate(informationTemplateName);
+
+		// View the script content is shown in code mirror
+
+		await templatesPage.editTemplate(informationTemplateName);
+
+		await expect(page.locator('.ddm_template_editor__App')).toContainText(
+			'coverImage.getData()'
+		);
+		await expect(page.locator('.ddm_template_editor__App')).toContainText(
+			'description.getData()'
+		);
+		await expect(page.locator('.ddm_template_editor__App')).toContainText(
+			'displayDate.getData()'
+		);
+		await expect(page.locator('.ddm_template_editor__App')).toContainText(
+			'title.getData()'
+		);
+	}
+);
 
 test(
 	'Can add, copy and delete an information template',
@@ -108,14 +168,11 @@ test(
 
 		// Save information template
 
-		await page.getByRole('button', {exact: true, name: 'Save'}).click();
-		await waitForSuccessAlert(page);
+		await templatesPage.saveTemplate(informationTemplateName);
 
-		// Edit
+		// View the script content is shown in code mirror
 
-		await page
-			.getByRole('link', {exact: true, name: informationTemplateName})
-			.click();
+		await templatesPage.editTemplate(informationTemplateName);
 
 		await expect(page.locator('.ddm_template_editor__App')).toContainText(
 			'${JournalArticle_title.getData()}'
@@ -125,3 +182,271 @@ test(
 		);
 	}
 );
+
+test(
+	'Edit a widget template',
+	{
+		tag: '@LPS-137903',
+	},
+	async ({page, site, templatesPage}) => {
+		const elements = [
+			'Asset Entries*',
+			'Asset Entry',
+			'Asset Publisher Helper',
+			'Current URL',
+			'HTTP Request',
+			'Locale',
+			'Portlet Preferences',
+			'Render Request',
+			'Render Response',
+			'Template ID',
+			'Theme Display',
+		];
+
+		// Go to widget templates administration
+
+		await templatesPage.gotoWidgetTemplates(site.friendlyUrlPath);
+
+		// Create widget template
+
+		const widgetTemplateName = getRandomString();
+
+		await templatesPage.createWidgetTemplate(
+			widgetTemplateName,
+			'Asset Publisher Template'
+		);
+
+		// Edit widget template
+
+		await templatesPage.editTemplate(widgetTemplateName);
+
+		// Assert elements
+
+		for (const element of elements) {
+			await expect(page.getByLabel(element)).toBeVisible();
+		}
+
+		// Check properties tab
+
+		await page.getByLabel('Properties').click();
+
+		// Assert properties
+
+		await expect(page.getByLabel('Template Key')).toBeVisible();
+
+		await expect(page.getByLabel('URL', {exact: true})).toBeVisible();
+
+		await expect(
+			page.getByLabel('WebDAV URL', {exact: true})
+		).toBeVisible();
+
+		await expect(
+			page.getByTitle('small-image-source', {exact: true})
+		).toBeVisible();
+	}
+);
+
+test(
+	'View usages of widget templates',
+	{
+		tag: '@LPS-169118',
+	},
+	async ({apiHelpers, page, site, templatesPage, widgetPagePage}) => {
+
+		// Create a page
+
+		const layout = await apiHelpers.jsonWebServicesLayout.addLayout({
+			groupId: site.id,
+			title: getRandomString(),
+		});
+
+		// Go to widget templates administration
+
+		await templatesPage.gotoWidgetTemplates(site.friendlyUrlPath);
+
+		// Create widget template
+
+		const widgetTemplateName = getRandomString();
+
+		await templatesPage.createWidgetTemplate(
+			widgetTemplateName,
+			'Language Selector Template'
+		);
+
+		// Go to page
+
+		await page.goto(`/web${site.friendlyUrlPath}${layout.friendlyURL}`);
+
+		// Add an language selector widget configured with new widget template
+
+		await widgetPagePage.addPortlet('Language Selector');
+
+		await widgetPagePage.clickOnAction(
+			'Language Selector',
+			'Configuration'
+		);
+
+		const configurationIFrame = page.frameLocator(
+			'iframe[title*="Language Selector"]'
+		);
+
+		await clickAndExpectToBeVisible({
+			autoClick: true,
+			target: configurationIFrame.getByRole('option', {
+				exact: true,
+				name: widgetTemplateName,
+			}),
+			trigger: configurationIFrame.getByLabel('Display Template'),
+		});
+
+		await widgetPagePage.saveAndClose('Language Selector');
+
+		// Assert usages
+
+		await templatesPage.gotoWidgetTemplates(site.friendlyUrlPath);
+
+		await expect(
+			page
+				.locator('tr')
+				.filter({hasText: widgetTemplateName})
+				.locator('.lfr-usages-column')
+		).toHaveText('1');
+
+		// Assert delete message clicking on dropdown delete action
+
+		await templatesPage.clickAction('Delete', widgetTemplateName);
+
+		await expect(
+			page.getByText(
+				'This template is being used in 1 pages. Are you sure you want to delete this? It will be deleted immediately.'
+			)
+		).toBeVisible();
+
+		await page.getByRole('button', {name: 'Cancel'}).click();
+
+		// Assert delete message clicking on management toolbar action
+
+		await page.getByLabel('Select All Items on the Page').check();
+
+		await page.getByRole('button', {name: 'Delete'}).click();
+
+		await expect(
+			page.getByText(
+				'Some of these templates are being used in pages. Are you sure you want to delete this? It will be deleted immediately.'
+			)
+		).toBeVisible();
+	}
+);
+
+test('View widget template based on script file applied and with corrupt script applied to rss publisher widget', async ({
+	apiHelpers,
+	page,
+	site,
+	templatesPage,
+	widgetPagePage,
+}) => {
+
+	// Create a page
+
+	const layout = await apiHelpers.jsonWebServicesLayout.addLayout({
+		groupId: site.id,
+		title: getRandomString(),
+	});
+
+	// Go to widget templates administration
+
+	await templatesPage.gotoWidgetTemplates(site.friendlyUrlPath);
+
+	// Create information template
+
+	const widgetTemplateName = getRandomString();
+
+	await clickAndExpectToBeVisible({
+		autoClick: true,
+		target: page.getByRole('button', {name: 'More'}),
+		trigger: page.getByRole('button', {name: 'New'}),
+	});
+
+	await page
+		.getByRole('menuitem', {
+			name: 'RSS Publisher',
+		})
+		.click();
+
+	// Wait until the editor is loaded
+
+	await page.locator('.ddm_template_editor__App').waitFor();
+
+	await fillAndClickOutside(
+		page,
+		page.getByPlaceholder('Untitled Template'),
+		widgetTemplateName
+	);
+
+	// Import from script file
+
+	await templatesPage.importInformationTemplate(
+		__dirname,
+		'rss_publisher_corrupt_script.ftl'
+	);
+
+	await templatesPage.saveTemplate(widgetTemplateName);
+
+	// Go to page
+
+	await page.goto(`/web${site.friendlyUrlPath}${layout.friendlyURL}`);
+
+	// Add rss publisher widget and open configuration
+
+	await widgetPagePage.addPortlet('RSS Publisher');
+
+	await widgetPagePage.clickOnAction('RSS Publisher', 'Configuration');
+
+	const configurationIFrame = page.frameLocator(
+		'iframe[title*="RSS Publisher"]'
+	);
+
+	// Add url
+
+	await configurationIFrame
+		.getByLabel('Title', {exact: true})
+		.fill('LA Times: Technology News');
+
+	const file = await apiHelpers.headlessDelivery.postDocument(
+		site.id,
+		createReadStream(path.join(__dirname, '/dependencies/rss2.0.xml'))
+	);
+
+	await configurationIFrame
+		.getByLabel('URL')
+		.fill(liferayConfig.environment.baseUrl + file.contentUrl);
+
+	await widgetPagePage.save('RSS Publisher');
+
+	// Configure display template
+
+	await configurationIFrame
+		.getByRole('tab', {name: 'Display Settings'})
+		.click();
+
+	await clickAndExpectToBeVisible({
+		autoClick: true,
+		target: configurationIFrame.getByRole('option', {
+			exact: true,
+			name: widgetTemplateName,
+		}),
+		trigger: configurationIFrame.getByLabel('Display Template'),
+	});
+
+	await widgetPagePage.saveAndClose('RSS Publisher');
+
+	// Assert error message
+
+	await expect(
+		page.getByText('An error occurred while processing the template.')
+	).toBeVisible();
+
+	await expect(
+		page.getByText('Unexpected end of file reached.')
+	).toBeVisible();
+});

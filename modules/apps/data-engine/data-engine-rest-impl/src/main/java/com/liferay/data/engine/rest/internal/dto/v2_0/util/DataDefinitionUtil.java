@@ -26,6 +26,18 @@ import javax.servlet.http.HttpServletRequest;
  */
 public class DataDefinitionUtil {
 
+	public static String getContentType(DDMStructure structure) {
+		DataDefinitionContentType dataDefinitionContentType =
+			DataDefinitionContentTypeRegistryUtil.getDataDefinitionContentType(
+				structure.getClassNameId());
+
+		if (dataDefinitionContentType == null) {
+			return null;
+		}
+
+		return dataDefinitionContentType.getContentType();
+	}
+
 	public static DataDefinition toDataDefinition(
 			DDMFormFieldTypeServicesRegistry ddmFormFieldTypeServicesRegistry,
 			DDMStructure ddmStructure,
@@ -44,18 +56,7 @@ public class DataDefinitionUtil {
 						ddmForm.getAvailableLocales(),
 						LanguageUtil::getLanguageId, String.class));
 				setContentType(
-					() -> {
-						DataDefinitionContentType dataDefinitionContentType =
-							DataDefinitionContentTypeRegistryUtil.
-								getDataDefinitionContentType(
-									ddmStructure.getClassNameId());
-
-						if (dataDefinitionContentType == null) {
-							return null;
-						}
-
-						return dataDefinitionContentType.getContentType();
-					});
+					() -> DataDefinitionUtil.getContentType(ddmStructure));
 				setDataDefinitionFields(
 					() -> TransformUtil.transformToArray(
 						ddmForm.getDDMFormFields(),
@@ -79,6 +80,8 @@ public class DataDefinitionUtil {
 				setDescription(
 					() -> LocalizedValueUtil.toStringObjectMap(
 						ddmStructure.getDescriptionMap()));
+				setExternalReferenceCode(
+					ddmStructure::getExternalReferenceCode);
 				setId(ddmStructure::getStructureId);
 				setName(
 					() -> LocalizedValueUtil.toStringObjectMap(

@@ -59,6 +59,7 @@ import com.liferay.portal.kernel.service.permission.OrganizationPermissionUtil;
 import com.liferay.portal.kernel.service.permission.RolePermissionUtil;
 import com.liferay.portal.kernel.service.permission.UserGroupRolePermissionUtil;
 import com.liferay.portal.kernel.service.permission.UserPermissionUtil;
+import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Accessor;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
@@ -72,6 +73,7 @@ import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.util.comparator.GroupNameComparator;
 import com.liferay.portal.kernel.util.comparator.GroupTypeComparator;
 import com.liferay.portal.kernel.util.comparator.OrganizationNameComparator;
@@ -84,6 +86,7 @@ import com.liferay.portal.kernel.util.comparator.UserFirstNameComparator;
 import com.liferay.portal.kernel.util.comparator.UserGroupDescriptionComparator;
 import com.liferay.portal.kernel.util.comparator.UserGroupNameComparator;
 import com.liferay.portal.kernel.util.comparator.UserJobTitleComparator;
+import com.liferay.portal.kernel.util.comparator.UserLastLoginDateComparator;
 import com.liferay.portal.kernel.util.comparator.UserLastNameComparator;
 import com.liferay.portal.kernel.util.comparator.UserScreenNameComparator;
 import com.liferay.portal.security.membershippolicy.SiteMembershipPolicyUtil;
@@ -305,6 +308,13 @@ public class UsersAdminUtil {
 			RenderResponse renderResponse)
 		throws Exception {
 
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
+
+		PermissionChecker permissionChecker =
+			themeDisplay.getPermissionChecker();
+
 		PortletURL portletURL = PortletURLBuilder.createRenderURL(
 			renderResponse
 		).setMVCRenderCommandName(
@@ -324,9 +334,13 @@ public class UsersAdminUtil {
 				"organizationId",
 				String.valueOf(ancestorOrganization.getOrganizationId()));
 
-			PortalUtil.addPortletBreadcrumbEntry(
-				httpServletRequest, ancestorOrganization.getName(),
-				portletURL.toString());
+			if (OrganizationPermissionUtil.contains(
+					permissionChecker, ancestorOrganization, ActionKeys.VIEW)) {
+
+				PortalUtil.addPortletBreadcrumbEntry(
+					httpServletRequest, ancestorOrganization.getName(),
+					portletURL.toString());
+			}
 		}
 
 		Organization unescapedOrganization = organization.toUnescapedModel();
@@ -1208,6 +1222,10 @@ public class UsersAdminUtil {
 		else if (orderByCol.equals("job-title")) {
 			orderByComparator = UserJobTitleComparator.getInstance(orderByAsc);
 		}
+		else if (orderByCol.equals("last-login-date")) {
+			orderByComparator = UserLastLoginDateComparator.getInstance(
+				orderByAsc);
+		}
 		else if (orderByCol.equals("last-name")) {
 			orderByComparator = UserLastNameComparator.getInstance(orderByAsc);
 		}
@@ -1407,34 +1425,30 @@ public class UsersAdminUtil {
 		for (Address address : addresses) {
 			long addressId = address.getAddressId();
 
-			String name = address.getName();
-			String description = address.getDescription();
-			String street1 = address.getStreet1();
-			String street2 = address.getStreet2();
-			String street3 = address.getStreet3();
-			String city = address.getCity();
-			String zip = address.getZip();
-			long regionId = address.getRegionId();
-			long countryId = address.getCountryId();
-			long listTypeId = address.getListTypeId();
-			boolean mailing = address.isMailing();
-			boolean primary = address.isPrimary();
-			String phoneNumber = address.getPhoneNumber();
-
 			if (addressId <= 0) {
 				address = AddressServiceUtil.addAddress(
 					address.getExternalReferenceCode(), className, classPK,
-					name, description, street1, street2, street3, city, zip,
-					regionId, countryId, listTypeId, mailing, primary,
-					phoneNumber, new ServiceContext());
+					address.getCountryId(), address.getListTypeId(),
+					address.getRegionId(), address.getCity(),
+					address.getDescription(), address.isMailing(),
+					address.getName(), address.isPrimary(),
+					address.getStreet1(), address.getStreet2(),
+					address.getStreet3(), address.getSubtype(),
+					address.getZip(), address.getPhoneNumber(),
+					new ServiceContext());
 
 				addressId = address.getAddressId();
 			}
 			else {
 				AddressServiceUtil.updateAddress(
-					addressId, name, description, street1, street2, street3,
-					city, zip, regionId, countryId, listTypeId, mailing,
-					primary, phoneNumber);
+					address.getExternalReferenceCode(), addressId,
+					address.getCountryId(), address.getListTypeId(),
+					address.getRegionId(), address.getCity(),
+					address.getDescription(), address.isMailing(),
+					address.getName(), address.isPrimary(),
+					address.getStreet1(), address.getStreet2(),
+					address.getStreet3(), address.getSubtype(),
+					address.getZip(), address.getPhoneNumber());
 			}
 
 			addressIds.add(addressId);
@@ -1464,14 +1478,15 @@ public class UsersAdminUtil {
 
 			if (emailAddressId <= 0) {
 				emailAddress = EmailAddressServiceUtil.addEmailAddress(
-					className, classPK, address, listTypeId, primary,
-					new ServiceContext());
+					emailAddress.getExternalReferenceCode(), className, classPK,
+					address, listTypeId, primary, new ServiceContext());
 
 				emailAddressId = emailAddress.getEmailAddressId();
 			}
 			else {
 				EmailAddressServiceUtil.updateEmailAddress(
-					emailAddressId, address, listTypeId, primary);
+					emailAddress.getExternalReferenceCode(), emailAddressId,
+					address, listTypeId, primary);
 			}
 
 			emailAddressIds.add(emailAddressId);
@@ -1548,6 +1563,7 @@ public class UsersAdminUtil {
 		for (Phone phone : phones) {
 			long phoneId = phone.getPhoneId();
 
+			String externalReferenceCode = phone.getExternalReferenceCode();
 			String number = phone.getNumber();
 			String extension = phone.getExtension();
 			long listTypeId = phone.getListTypeId();
@@ -1555,14 +1571,15 @@ public class UsersAdminUtil {
 
 			if (phoneId <= 0) {
 				phone = PhoneServiceUtil.addPhone(
-					className, classPK, number, extension, listTypeId, primary,
-					new ServiceContext());
+					externalReferenceCode, className, classPK, number,
+					extension, listTypeId, primary, new ServiceContext());
 
 				phoneId = phone.getPhoneId();
 			}
 			else {
 				PhoneServiceUtil.updatePhone(
-					phoneId, number, extension, listTypeId, primary);
+					externalReferenceCode, phoneId, number, extension,
+					listTypeId, primary);
 			}
 
 			phoneIds.add(phoneId);
@@ -1584,22 +1601,22 @@ public class UsersAdminUtil {
 		Set<Long> websiteIds = new HashSet<>();
 
 		for (Website website : websites) {
+			String externalReferenceCode = website.getExternalReferenceCode();
 			long websiteId = website.getWebsiteId();
-
 			String url = website.getUrl();
 			long listTypeId = website.getListTypeId();
 			boolean primary = website.isPrimary();
 
 			if (websiteId <= 0) {
 				website = WebsiteServiceUtil.addWebsite(
-					className, classPK, url, listTypeId, primary,
-					new ServiceContext());
+					externalReferenceCode, className, classPK, url, listTypeId,
+					primary, new ServiceContext());
 
 				websiteId = website.getWebsiteId();
 			}
 			else {
 				WebsiteServiceUtil.updateWebsite(
-					websiteId, url, listTypeId, primary);
+					externalReferenceCode, websiteId, url, listTypeId, primary);
 			}
 
 			websiteIds.add(websiteId);

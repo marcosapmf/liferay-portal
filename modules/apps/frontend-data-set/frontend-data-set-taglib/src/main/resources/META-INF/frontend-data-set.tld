@@ -139,6 +139,16 @@
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
 		<attribute>
+			<name>showBulkActionsManagementBar</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<name>showBulkActionsManagementBarActions</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
 			<name>showManagementBar</name>
 			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
@@ -150,6 +160,11 @@
 		</attribute>
 		<attribute>
 			<name>showSearch</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<name>showSelectAll</name>
 			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
@@ -297,6 +312,16 @@
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
 		<attribute>
+			<name>showBulkActionsManagementBar</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<name>showBulkActionsManagementBarActions</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
 			<name>showManagementBar</name>
 			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
@@ -308,6 +333,11 @@
 		</attribute>
 		<attribute>
 			<name>showSearch</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<name>showSelectAll</name>
 			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>

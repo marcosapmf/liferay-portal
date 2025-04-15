@@ -5,11 +5,15 @@
 
 package com.liferay.journal.web.internal.display.context;
 
+import com.liferay.dynamic.data.mapping.model.DDMStructure;
+import com.liferay.dynamic.data.mapping.service.DDMStructureLocalServiceUtil;
 import com.liferay.dynamic.data.mapping.storage.DDMFormValues;
 import com.liferay.journal.model.JournalArticle;
 import com.liferay.journal.model.JournalFolder;
+import com.liferay.journal.service.JournalArticleServiceUtil;
 import com.liferay.journal.service.JournalFolderLocalService;
 import com.liferay.journal.service.JournalFolderLocalServiceUtil;
+import com.liferay.journal.web.internal.configuration.JournalWebConfiguration;
 import com.liferay.portal.kernel.bean.BeanProperties;
 import com.liferay.portal.kernel.bean.BeanPropertiesUtil;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -26,14 +30,20 @@ import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
+import java.util.HashSet;
+import java.util.Locale;
+import java.util.Set;
+
 import javax.servlet.http.HttpServletRequest;
 
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 
+import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 
 /**
@@ -73,6 +83,12 @@ public class JournalEditArticleDisplayContextTest {
 		portalUtil.setPortal(_portal);
 	}
 
+	@After
+	public void tearDown() {
+		_ddmStructureLocalServiceUtilMockedStatic.close();
+		_journalArticleServiceUtilMockedStatic.close();
+	}
+
 	@Test
 	public void testFolderNameValueIsCached() {
 		String expectedResult = "Home translation";
@@ -85,7 +101,8 @@ public class JournalEditArticleDisplayContextTest {
 
 		_journalEditArticleDisplayContext =
 			new JournalEditArticleDisplayContext(
-				_httpServletRequest, _liferayPortletResponse, null);
+				_httpServletRequest, _liferayPortletResponse, null, null, null,
+				null);
 
 		Assert.assertEquals(
 			_UNEXPECTED_FOLDER_NAME_MESSAGE, expectedResult,
@@ -104,6 +121,10 @@ public class JournalEditArticleDisplayContextTest {
 	@Test
 	public void testGetDefaultArticleLanguageId() throws PortalException {
 		_testGetDefaultArticleLanguageIdFromArticle();
+		_testGetDefaultArticleLanguageIdWithChangeableDefaultLanguageAndAvailableLocale(
+			LocaleUtil.US, LocaleUtil.UK);
+		_testGetDefaultArticleLanguageIdWithChangeableDefaultLanguageAndAvailableLocale(
+			LocaleUtil.CHINA, LocaleUtil.CHINA);
 		_testGetDefaultArticleLanguageIdWithParameter();
 		_testGetDefaultArticleLanguageIdWithUnavailableLocale();
 	}
@@ -120,7 +141,8 @@ public class JournalEditArticleDisplayContextTest {
 
 		_journalEditArticleDisplayContext =
 			new JournalEditArticleDisplayContext(
-				_httpServletRequest, _liferayPortletResponse, null);
+				_httpServletRequest, _liferayPortletResponse, null, null, null,
+				null);
 
 		Assert.assertEquals(
 			_UNEXPECTED_FOLDER_NAME_MESSAGE, expectedResult,
@@ -176,7 +198,8 @@ public class JournalEditArticleDisplayContextTest {
 
 		_journalEditArticleDisplayContext =
 			new JournalEditArticleDisplayContext(
-				_httpServletRequest, _liferayPortletResponse, null);
+				_httpServletRequest, _liferayPortletResponse, null, null, null,
+				null);
 
 		Assert.assertEquals(
 			_UNEXPECTED_FOLDER_NAME_MESSAGE, expectedResult,
@@ -224,7 +247,8 @@ public class JournalEditArticleDisplayContextTest {
 
 		_journalEditArticleDisplayContext =
 			new JournalEditArticleDisplayContext(
-				_httpServletRequest, _liferayPortletResponse, null);
+				_httpServletRequest, _liferayPortletResponse, null, null, null,
+				null);
 
 		Assert.assertEquals(
 			_UNEXPECTED_FOLDER_NAME_MESSAGE, expectedResult,
@@ -247,7 +271,8 @@ public class JournalEditArticleDisplayContextTest {
 	public void testIsShowSelectFolderAddActionFalseParamValue() {
 		_journalEditArticleDisplayContext =
 			new JournalEditArticleDisplayContext(
-				_httpServletRequest, _liferayPortletResponse, null);
+				_httpServletRequest, _liferayPortletResponse, null, null, null,
+				null);
 
 		Mockito.when(
 			_httpServletRequest.getParameter("showSelectFolder")
@@ -269,7 +294,8 @@ public class JournalEditArticleDisplayContextTest {
 	public void testIsShowSelectFolderAddActionMissingParam() {
 		_journalEditArticleDisplayContext =
 			new JournalEditArticleDisplayContext(
-				_httpServletRequest, _liferayPortletResponse, null);
+				_httpServletRequest, _liferayPortletResponse, null, null, null,
+				null);
 
 		Mockito.when(
 			_httpServletRequest.getParameter("showSelectFolder")
@@ -291,7 +317,8 @@ public class JournalEditArticleDisplayContextTest {
 	public void testIsShowSelectFolderAddActionTrueParamValue() {
 		_journalEditArticleDisplayContext =
 			new JournalEditArticleDisplayContext(
-				_httpServletRequest, _liferayPortletResponse, null);
+				_httpServletRequest, _liferayPortletResponse, null, null, null,
+				null);
 
 		Mockito.when(
 			_httpServletRequest.getParameter("showSelectFolder")
@@ -313,7 +340,8 @@ public class JournalEditArticleDisplayContextTest {
 	public void testIsShowSelectFolderEditActionDoesntMatterParamValue() {
 		_journalEditArticleDisplayContext =
 			new JournalEditArticleDisplayContext(
-				_httpServletRequest, _liferayPortletResponse, _journalArticle);
+				_httpServletRequest, _liferayPortletResponse, _journalArticle,
+				null, null, null);
 
 		Assert.assertFalse(
 			_journalEditArticleDisplayContext.isShowSelectFolder());
@@ -329,7 +357,8 @@ public class JournalEditArticleDisplayContextTest {
 	public void testShowSelectFolderValueIsCached() {
 		_journalEditArticleDisplayContext =
 			new JournalEditArticleDisplayContext(
-				_httpServletRequest, _liferayPortletResponse, null);
+				_httpServletRequest, _liferayPortletResponse, null, null, null,
+				null);
 
 		Mockito.when(
 			_httpServletRequest.getParameter("showSelectFolder")
@@ -397,10 +426,115 @@ public class JournalEditArticleDisplayContextTest {
 
 		_journalEditArticleDisplayContext =
 			new JournalEditArticleDisplayContext(
-				_httpServletRequest, _liferayPortletResponse, journalArticle);
+				_httpServletRequest, _liferayPortletResponse, journalArticle,
+				null, null, null);
 
 		Assert.assertEquals(
 			LocaleUtil.toLanguageId(LocaleUtil.SPAIN),
+			_journalEditArticleDisplayContext.getDefaultArticleLanguageId());
+	}
+
+	private void
+			_testGetDefaultArticleLanguageIdWithChangeableDefaultLanguageAndAvailableLocale(
+				Locale availableLocale, Locale expectedLocale)
+		throws PortalException {
+
+		JournalArticle journalArticle = Mockito.mock(JournalArticle.class);
+
+		Mockito.when(
+			journalArticle.getArticleId()
+		).thenReturn(
+			null
+		);
+
+		Mockito.when(
+			journalArticle.getDefaultLanguageId()
+		).thenReturn(
+			LocaleUtil.toLanguageId(LocaleUtil.CHINA)
+		);
+
+		long ddmStructureId = RandomTestUtil.randomLong();
+
+		DDMStructure ddmStructure = Mockito.mock(DDMStructure.class);
+
+		Mockito.when(
+			ddmStructure.getStructureId()
+		).thenReturn(
+			ddmStructureId
+		);
+
+		Mockito.when(
+			DDMStructureLocalServiceUtil.fetchStructure(ddmStructureId)
+		).thenReturn(
+			ddmStructure
+		);
+
+		Mockito.when(
+			JournalArticleServiceUtil.getArticle(
+				ddmStructure.getGroupId(), DDMStructure.class.getName(),
+				ddmStructure.getStructureId())
+		).thenReturn(
+			journalArticle
+		);
+
+		JournalWebConfiguration journalWebConfiguration = Mockito.mock(
+			JournalWebConfiguration.class);
+
+		Mockito.when(
+			journalWebConfiguration.changeableDefaultLanguage()
+		).thenReturn(
+			true
+		);
+
+		Mockito.when(
+			_httpServletRequest.getAttribute(
+				JournalWebConfiguration.class.getName())
+		).thenReturn(
+			journalWebConfiguration
+		);
+
+		Mockito.when(
+			_httpServletRequest.getAttribute(WebKeys.THEME_DISPLAY)
+		).thenReturn(
+			_themeDisplay
+		);
+
+		Mockito.when(
+			_httpServletRequest.getParameter("ddmStructureId")
+		).thenReturn(
+			String.valueOf(ddmStructureId)
+		);
+
+		Mockito.when(
+			_httpServletRequest.getParameter("defaultLanguageId")
+		).thenReturn(
+			null
+		);
+
+		Set<Locale> availableLocales = new HashSet<>();
+
+		availableLocales.add(availableLocale);
+
+		Mockito.when(
+			_language.getAvailableLocales(Mockito.anyLong())
+		).thenReturn(
+			availableLocales
+		);
+
+		Mockito.when(
+			_language.isAvailableLocale(
+				0, LocaleUtil.toLanguageId(LocaleUtil.CHINA))
+		).thenReturn(
+			true
+		);
+
+		_journalEditArticleDisplayContext =
+			new JournalEditArticleDisplayContext(
+				_httpServletRequest, _liferayPortletResponse, journalArticle,
+				null, null, null);
+
+		Assert.assertEquals(
+			LocaleUtil.toLanguageId(expectedLocale),
 			_journalEditArticleDisplayContext.getDefaultArticleLanguageId());
 	}
 
@@ -421,7 +555,8 @@ public class JournalEditArticleDisplayContextTest {
 
 		_journalEditArticleDisplayContext =
 			new JournalEditArticleDisplayContext(
-				_httpServletRequest, _liferayPortletResponse, null);
+				_httpServletRequest, _liferayPortletResponse, null, null, null,
+				null);
 
 		Assert.assertEquals(
 			defaultLanguageId,
@@ -453,7 +588,8 @@ public class JournalEditArticleDisplayContextTest {
 
 		_journalEditArticleDisplayContext =
 			new JournalEditArticleDisplayContext(
-				_httpServletRequest, _liferayPortletResponse, null);
+				_httpServletRequest, _liferayPortletResponse, null, null, null,
+				null);
 
 		Assert.assertEquals(
 			LocaleUtil.toLanguageId(LocaleUtil.UK),
@@ -465,10 +601,16 @@ public class JournalEditArticleDisplayContextTest {
 
 	private final BeanProperties _beanProperties = Mockito.mock(
 		BeanProperties.class);
+	private final MockedStatic<DDMStructureLocalServiceUtil>
+		_ddmStructureLocalServiceUtilMockedStatic = Mockito.mockStatic(
+			DDMStructureLocalServiceUtil.class);
 	private final HttpServletRequest _httpServletRequest = Mockito.mock(
 		HttpServletRequest.class);
 	private final JournalArticle _journalArticle = Mockito.mock(
 		JournalArticle.class);
+	private final MockedStatic<JournalArticleServiceUtil>
+		_journalArticleServiceUtilMockedStatic = Mockito.mockStatic(
+			JournalArticleServiceUtil.class);
 	private JournalEditArticleDisplayContext _journalEditArticleDisplayContext;
 	private final JournalFolderLocalService _journalFolderLocalService =
 		Mockito.mock(JournalFolderLocalService.class);

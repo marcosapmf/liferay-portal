@@ -1,1 +1,2 @@
-workspaces/liferay-sample-workspace/client-extensions/liferay-sample-fds-filter
+liferay-sample-fds-cell-renderer
+liferay-sample-fds-filter

@@ -13,11 +13,11 @@ import com.liferay.asset.kernel.service.AssetEntryLocalServiceUtil;
 import com.liferay.asset.kernel.service.AssetEntryServiceUtil;
 import com.liferay.asset.util.LinkedAssetEntryIdsUtil;
 import com.liferay.document.library.kernel.document.conversion.DocumentConversionUtil;
+import com.liferay.dynamic.data.mapping.item.selector.DDMTemplateItemSelectorCriterion;
 import com.liferay.dynamic.data.mapping.item.selector.DDMTemplateItemSelectorReturnType;
-import com.liferay.dynamic.data.mapping.item.selector.criterion.DDMTemplateItemSelectorCriterion;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.dynamic.data.mapping.model.DDMTemplate;
-import com.liferay.dynamic.data.mapping.service.DDMTemplateLocalServiceUtil;
+import com.liferay.dynamic.data.mapping.service.DDMTemplateLocalService;
 import com.liferay.item.selector.ItemSelector;
 import com.liferay.item.selector.criteria.JournalArticleItemSelectorReturnType;
 import com.liferay.item.selector.criteria.info.item.criterion.InfoItemItemSelectorCriterion;
@@ -60,6 +60,7 @@ import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.ParamUtil;
+import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.PropsUtil;
@@ -78,6 +79,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import javax.portlet.PortletMode;
 import javax.portlet.PortletPreferences;
@@ -92,10 +94,10 @@ public class JournalContentDisplayContext {
 
 	public static JournalContentDisplayContext create(
 			PortletRequest portletRequest, PortletResponse portletResponse,
-			long ddmStructureClassNameId,
+			DDMTemplateLocalService ddmTemplateLocalService,
 			ModelResourcePermission<DDMTemplate>
 				ddmTemplateModelResourcePermission,
-			ItemSelector itemSelector, TrashHelper trashHelper)
+			ItemSelector itemSelector, Portal portal, TrashHelper trashHelper)
 		throws PortalException {
 
 		ThemeDisplay themeDisplay = (ThemeDisplay)portletRequest.getAttribute(
@@ -117,8 +119,8 @@ public class JournalContentDisplayContext {
 			journalContentDisplayContext = new JournalContentDisplayContext(
 				portletRequest, portletResponse, themeDisplay,
 				journalContentPortletInstanceConfiguration,
-				ddmStructureClassNameId, ddmTemplateModelResourcePermission,
-				itemSelector, trashHelper);
+				ddmTemplateLocalService, ddmTemplateModelResourcePermission,
+				itemSelector, portal, trashHelper);
 
 			portletRequest.setAttribute(
 				getRequestAttributeName(portletDisplay.getId()),
@@ -164,11 +166,13 @@ public class JournalContentDisplayContext {
 			return _article;
 		}
 
-		if (articleResourcePrimKey == 0) {
-			if (Validator.isBlank(getArticleId())) {
-				return null;
-			}
+		JournalArticle article = null;
 
+		if (articleResourcePrimKey != 0) {
+			article = JournalArticleLocalServiceUtil.fetchLatestArticle(
+				articleResourcePrimKey, WorkflowConstants.STATUS_ANY, true);
+		}
+		else if (!Validator.isBlank(getArticleId())) {
 			JournalArticleResource articleResource =
 				JournalArticleResourceLocalServiceUtil.fetchArticleResource(
 					getArticleGroupId(), getArticleId());
@@ -176,10 +180,26 @@ public class JournalContentDisplayContext {
 			if (articleResource != null) {
 				articleResourcePrimKey = articleResource.getResourcePrimKey();
 			}
+
+			article = JournalArticleLocalServiceUtil.fetchLatestArticle(
+				articleResourcePrimKey, WorkflowConstants.STATUS_ANY, true);
+		}
+		else if (!Validator.isBlank(getArticleExternalReferenceCode())) {
+			article =
+				JournalArticleLocalServiceUtil.
+					fetchLatestArticleByExternalReferenceCode(
+						getArticleGroupId(), getArticleExternalReferenceCode(),
+						WorkflowConstants.STATUS_ANY, true);
+
+			if ((article != null) &&
+				Objects.equals(
+					article.getStatus(), WorkflowConstants.STATUS_IN_TRASH)) {
+
+				article = null;
+			}
 		}
 
-		_article = JournalArticleLocalServiceUtil.fetchLatestArticle(
-			articleResourcePrimKey, WorkflowConstants.STATUS_ANY, true);
+		_article = article;
 
 		return _article;
 	}
@@ -235,14 +255,45 @@ public class JournalContentDisplayContext {
 		return _articleDisplay;
 	}
 
+	public String getArticleExternalReferenceCode() {
+		if (_articleExternalReferenceCode != null) {
+			return _articleExternalReferenceCode;
+		}
+
+		_articleExternalReferenceCode = ParamUtil.getString(
+			_portletRequest, "articleExternalReferenceCode",
+			_journalContentPortletInstanceConfiguration.
+				articleExternalReferenceCode());
+
+		return _articleExternalReferenceCode;
+	}
+
 	public long getArticleGroupId() {
 		if (_articleGroupId != null) {
 			return _articleGroupId;
 		}
 
-		_articleGroupId = ParamUtil.getLong(
-			_portletRequest, "groupId",
-			_journalContentPortletInstanceConfiguration.groupId());
+		_articleGroupId = ParamUtil.getLong(_portletRequest, "groupId");
+
+		if (_articleGroupId > 0) {
+			return _articleGroupId;
+		}
+
+		String groupExternalReferenceCode =
+			_journalContentPortletInstanceConfiguration.
+				groupExternalReferenceCode();
+
+		if (Validator.isNotNull(groupExternalReferenceCode)) {
+			Group group =
+				GroupLocalServiceUtil.fetchGroupByExternalReferenceCode(
+					groupExternalReferenceCode, _themeDisplay.getCompanyId());
+
+			if (group != null) {
+				_articleGroupId = group.getGroupId();
+
+				return _articleGroupId;
+			}
+		}
 
 		if (_articleGroupId <= 0) {
 			_articleGroupId = _themeDisplay.getScopeGroupId();
@@ -318,9 +369,24 @@ public class JournalContentDisplayContext {
 			return _ddmTemplateKey;
 		}
 
+		String ddmTemplateExternalReferenceCode =
+			_journalContentPortletInstanceConfiguration.
+				ddmTemplateExternalReferenceCode();
+
 		String ddmTemplateKey = ParamUtil.getString(
-			_portletRequest, "ddmTemplateKey",
-			_journalContentPortletInstanceConfiguration.ddmTemplateKey());
+			_portletRequest, "ddmTemplateKey");
+
+		if (Validator.isNotNull(ddmTemplateExternalReferenceCode)) {
+			DDMTemplate ddmTemplate =
+				_ddmTemplateLocalService.
+					fetchDDMTemplateByExternalReferenceCode(
+						ddmTemplateExternalReferenceCode,
+						_themeDisplay.getScopeGroupId(), true);
+
+			if (ddmTemplate != null) {
+				ddmTemplateKey = ddmTemplate.getTemplateKey();
+			}
+		}
 
 		if (Validator.isNotNull(ddmTemplateKey)) {
 			_ddmTemplateKey = ddmTemplateKey;
@@ -363,7 +429,7 @@ public class JournalContentDisplayContext {
 		}
 
 		try {
-			_ddmTemplates = DDMTemplateLocalServiceUtil.getTemplates(
+			_ddmTemplates = _ddmTemplateLocalService.getTemplates(
 				article.getGroupId(),
 				PortalUtil.getClassNameId(DDMStructure.class),
 				article.getDDMStructureId(), true);
@@ -545,15 +611,38 @@ public class JournalContentDisplayContext {
 		long assetEntryId = GetterUtil.getLong(
 			portletPreferences.getValue("assetEntryId", StringPool.BLANK));
 
-		AssetEntry assetEntry = AssetEntryLocalServiceUtil.fetchAssetEntry(
-			assetEntryId);
+		if (assetEntryId > 0) {
+			AssetEntry assetEntry = AssetEntryLocalServiceUtil.fetchAssetEntry(
+				assetEntryId);
 
-		if (assetEntry == null) {
+			if (assetEntry != null) {
+				return JournalArticleLocalServiceUtil.fetchLatestArticle(
+					assetEntry.getClassPK());
+			}
+		}
+
+		String articleExternalReferenceCode = portletPreferences.getValue(
+			"articleExternalReferenceCode", null);
+		String groupExternalReferenceCode = GetterUtil.getString(
+			portletPreferences.getValue("groupExternalReferenceCode", null));
+
+		if ((articleExternalReferenceCode == null) ||
+			(groupExternalReferenceCode == null)) {
+
 			return null;
 		}
 
-		return JournalArticleLocalServiceUtil.fetchLatestArticle(
-			assetEntry.getClassPK());
+		Group group = GroupLocalServiceUtil.fetchGroupByExternalReferenceCode(
+			groupExternalReferenceCode, _themeDisplay.getCompanyId());
+
+		if (group == null) {
+			return null;
+		}
+
+		return JournalArticleLocalServiceUtil.
+			fetchLatestArticleByExternalReferenceCode(
+				group.getGroupId(), articleExternalReferenceCode,
+				WorkflowConstants.STATUS_ANY, true);
 	}
 
 	public String getURLEdit() {
@@ -683,6 +772,16 @@ public class JournalContentDisplayContext {
 			articleDisplay.getResourcePrimKey());
 	}
 
+	public boolean isArticleVisible() {
+		if (Validator.isNotNull(getArticleExternalReferenceCode()) ||
+			Validator.isNotNull(getArticleId())) {
+
+			return true;
+		}
+
+		return false;
+	}
+
 	public boolean isDefaultTemplate() {
 		String ddmTemplateKey = ParamUtil.getString(
 			_portletRequest, "ddmTemplateKey");
@@ -691,14 +790,18 @@ public class JournalContentDisplayContext {
 			return false;
 		}
 
-		ddmTemplateKey =
-			_journalContentPortletInstanceConfiguration.ddmTemplateKey();
+		String ddmTemplateExternalReferenceCode = ParamUtil.getString(
+			_portletRequest, "ddmTemplateExternalReferenceCode");
 
-		if (Validator.isNotNull(ddmTemplateKey)) {
+		if (Validator.isNotNull(ddmTemplateExternalReferenceCode)) {
 			return false;
 		}
 
-		return true;
+		ddmTemplateExternalReferenceCode =
+			_journalContentPortletInstanceConfiguration.
+				ddmTemplateExternalReferenceCode();
+
+		return Validator.isNull(ddmTemplateExternalReferenceCode);
 	}
 
 	public boolean isEnabledContentMetadataAssetAddonEntry(String key) {
@@ -713,11 +816,7 @@ public class JournalContentDisplayContext {
 		String[] contentMetadataAssetAddonEntryKeys = StringUtil.split(
 			contentMetadataAssetAddonEntryKeysString);
 
-		if (ArrayUtil.contains(contentMetadataAssetAddonEntryKeys, key)) {
-			return true;
-		}
-
-		return false;
+		return ArrayUtil.contains(contentMetadataAssetAddonEntryKeys, key);
 	}
 
 	public boolean isEnabledConversion(String extension) {
@@ -743,11 +842,7 @@ public class JournalContentDisplayContext {
 		String[] userToolAssetAddonEntryKeys = StringUtil.split(
 			userToolAssetAddonEntryKeysString);
 
-		if (ArrayUtil.contains(userToolAssetAddonEntryKeys, key)) {
-			return true;
-		}
-
-		return false;
+		return ArrayUtil.contains(userToolAssetAddonEntryKeys, key);
 	}
 
 	public boolean isEnableViewCountIncrement() {
@@ -918,10 +1013,10 @@ public class JournalContentDisplayContext {
 			ThemeDisplay themeDisplay,
 			JournalContentPortletInstanceConfiguration
 				journalContentPortletInstanceConfiguration,
-			long ddmStructureClassNameId,
+			DDMTemplateLocalService ddmTemplateLocalService,
 			ModelResourcePermission<DDMTemplate>
 				ddmTemplateModelResourcePermission,
-			ItemSelector itemSelector, TrashHelper trashHelper)
+			ItemSelector itemSelector, Portal portal, TrashHelper trashHelper)
 		throws PortalException {
 
 		_portletRequest = portletRequest;
@@ -929,10 +1024,11 @@ public class JournalContentDisplayContext {
 		_themeDisplay = themeDisplay;
 		_journalContentPortletInstanceConfiguration =
 			journalContentPortletInstanceConfiguration;
-		_ddmStructureClassNameId = ddmStructureClassNameId;
+		_ddmTemplateLocalService = ddmTemplateLocalService;
 		_ddmTemplateModelResourcePermission =
 			ddmTemplateModelResourcePermission;
 		_itemSelector = itemSelector;
+		_portal = portal;
 		_trashHelper = trashHelper;
 
 		AssetEntry assetEntry = _getAssetEntry();
@@ -1019,9 +1115,9 @@ public class JournalContentDisplayContext {
 			return null;
 		}
 
-		return DDMTemplateLocalServiceUtil.fetchTemplate(
-			article.getGroupId(), _ddmStructureClassNameId, ddmTemplateKey,
-			true);
+		return _ddmTemplateLocalService.fetchTemplate(
+			_themeDisplay.getScopeGroupId(),
+			_portal.getClassNameId(DDMStructure.class), ddmTemplateKey, true);
 	}
 
 	private Group _getGroup() {
@@ -1041,11 +1137,12 @@ public class JournalContentDisplayContext {
 
 	private JournalArticle _article;
 	private JournalArticleDisplay _articleDisplay;
+	private String _articleExternalReferenceCode;
 	private Long _articleGroupId;
 	private String _articleId;
-	private final long _ddmStructureClassNameId;
 	private DDMTemplate _ddmTemplate;
 	private String _ddmTemplateKey;
+	private final DDMTemplateLocalService _ddmTemplateLocalService;
 	private final ModelResourcePermission<DDMTemplate>
 		_ddmTemplateModelResourcePermission;
 	private List<DDMTemplate> _ddmTemplates;
@@ -1056,6 +1153,7 @@ public class JournalContentDisplayContext {
 	private final JournalContentPortletInstanceConfiguration
 		_journalContentPortletInstanceConfiguration;
 	private JournalArticle _latestArticle;
+	private final Portal _portal;
 	private final PortletRequest _portletRequest;
 	private String _portletResource;
 	private final PortletResponse _portletResponse;

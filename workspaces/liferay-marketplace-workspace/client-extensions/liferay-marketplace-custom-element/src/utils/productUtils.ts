@@ -3,6 +3,53 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
+import productIconFallback from '../assets/icons/purchased_app_icon.svg';
+import productImageFallback from '../assets/images/app_placeholder.png';
+import {
+	PRODUCT_IMAGE_FALLBACK_CATEGORIES,
+	PRODUCT_SPECIFICATION_KEY,
+} from '../enums/Product';
+import {ProductType} from '../enums/ProductType';
+import i18n from '../i18n';
+
+export function getProductFallback(): DeliveryProduct {
+	return {
+		attachments: [],
+		categories: [],
+		createDate: '',
+		description: i18n.translate('this-product-is-no-longer-available'),
+		externalReferenceCode: '--',
+		id: 0,
+		images: [],
+		modifiedDate: '',
+		name: i18n.translate('product-unavailable'),
+		productId: 0,
+		productSpecifications: [],
+		productType: i18n.translate('product-unavailable'),
+		shortDescription: i18n.translate('this-product-is-no-longer-available'),
+		skus: [],
+		urlImage: '',
+		urls: {en_US: ''},
+	};
+}
+
+export function getProductImageFallback(
+	type: PRODUCT_IMAGE_FALLBACK_CATEGORIES
+) {
+	const productImagesFallback = {
+		[PRODUCT_IMAGE_FALLBACK_CATEGORIES.PRODUCT_IMAGE]: productImageFallback,
+		[PRODUCT_IMAGE_FALLBACK_CATEGORIES.PRODUCT_ICON]: productIconFallback,
+	};
+
+	return productImagesFallback[type] || '';
+}
+
+export function getSpecificationByKey(key: string, product: DeliveryProduct) {
+	return product?.productSpecifications?.find(
+		({specificationKey}) => specificationKey === key
+	);
+}
+
 export function isCloudProduct(product?: DeliveryProduct) {
 	return (
 		product?.productSpecifications?.some(
@@ -51,7 +98,23 @@ export function getProductCategoriesByVocabularyName(
 ) {
 	return categories
 		.filter((category) =>
-			vocabulary.includes(category.vocabulary.replaceAll(' ', '-'))
+			vocabulary
+				.toLowerCase()
+				.includes(
+					category.vocabulary.replaceAll(' ', '-').toLowerCase()
+				)
 		)
 		.map(({name}) => name);
+}
+
+export function getProductType(product: DeliveryProduct) {
+	const specification = getSpecificationByKey(
+		PRODUCT_SPECIFICATION_KEY.APP_TYPE,
+		product
+	);
+
+	return {
+		isCloud: specification?.value === ProductType.CLOUD,
+		isDXP: specification?.value === ProductType.DXP,
+	};
 }

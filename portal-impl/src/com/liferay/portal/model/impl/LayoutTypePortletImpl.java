@@ -6,6 +6,7 @@
 package com.liferay.portal.model.impl;
 
 import com.liferay.counter.kernel.service.CounterLocalServiceUtil;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.configuration.Filter;
@@ -307,17 +308,15 @@ public class LayoutTypePortletImpl
 			return portlets;
 		}
 
-		List<Portlet> filteredPortlets = new ArrayList<>();
+		return TransformUtil.transform(
+			portlets,
+			portlet -> {
+				if (portlet.isSystem() && !includeSystem) {
+					return null;
+				}
 
-		for (Portlet portlet : portlets) {
-			if (portlet.isSystem() && !includeSystem) {
-				continue;
-			}
-
-			filteredPortlets.add(portlet);
-		}
-
-		return filteredPortlets;
+				return portlet;
+			});
 	}
 
 	@Override
@@ -342,6 +341,61 @@ public class LayoutTypePortletImpl
 			PropsKeys.LAYOUT_STATIC_PORTLETS_END + columnId);
 
 		return addStaticPortlets(portlets, startPortlets, endPortlets);
+	}
+
+	@Override
+	public String getColumn(String portletId) {
+		String portletIdColumnId = StringPool.BLANK;
+
+		List<String> columnIds = getColumns();
+
+		for (String columnId : columnIds) {
+			String[] portletIds = StringUtil.split(getColumnValue(columnId));
+
+			for (String columnPortletId : portletIds) {
+				if (columnPortletId.equals(portletId)) {
+					return columnId;
+				}
+
+				if (Validator.isNull(portletIdColumnId) &&
+					Objects.equals(
+						PortletIdCodec.decodePortletName(columnPortletId),
+						PortletIdCodec.decodePortletName(portletId))) {
+
+					portletIdColumnId = columnId;
+				}
+			}
+		}
+
+		return portletIdColumnId;
+	}
+
+	@Override
+	public List<String> getColumns() {
+		List<String> columns = new ArrayList<>();
+
+		Layout layout = getLayout();
+
+		if (layout.isTypePanel()) {
+			columns.add("panelSelectedPortlets");
+		}
+		else if (layout.isTypePortlet()) {
+			if (Objects.equals(
+					layout.getType(),
+					LayoutConstants.TYPE_FULL_PAGE_APPLICATION)) {
+
+				columns.add("fullPageApplicationPortlet");
+			}
+			else {
+				LayoutTemplate layoutTemplate = getLayoutTemplate();
+
+				columns.addAll(layoutTemplate.getColumns());
+
+				Collections.addAll(columns, getNestedColumns());
+			}
+		}
+
+		return columns;
 	}
 
 	@Override
@@ -1720,59 +1774,6 @@ public class LayoutTypePortletImpl
 			ResourcePermissionLocalServiceUtil.addResourcePermission(
 				resourcePermission);
 		}
-	}
-
-	protected String getColumn(String portletId) {
-		String portletIdColumnId = StringPool.BLANK;
-
-		List<String> columnIds = getColumns();
-
-		for (String columnId : columnIds) {
-			String[] portletIds = StringUtil.split(getColumnValue(columnId));
-
-			for (String columnPortletId : portletIds) {
-				if (columnPortletId.equals(portletId)) {
-					return columnId;
-				}
-
-				if (Validator.isNull(portletIdColumnId) &&
-					Objects.equals(
-						PortletIdCodec.decodePortletName(columnPortletId),
-						PortletIdCodec.decodePortletName(portletId))) {
-
-					portletIdColumnId = columnId;
-				}
-			}
-		}
-
-		return portletIdColumnId;
-	}
-
-	protected List<String> getColumns() {
-		List<String> columns = new ArrayList<>();
-
-		Layout layout = getLayout();
-
-		if (layout.isTypePortlet()) {
-			if (Objects.equals(
-					layout.getType(),
-					LayoutConstants.TYPE_FULL_PAGE_APPLICATION)) {
-
-				columns.add("fullPageApplicationPortlet");
-			}
-			else {
-				LayoutTemplate layoutTemplate = getLayoutTemplate();
-
-				columns.addAll(layoutTemplate.getColumns());
-
-				Collections.addAll(columns, getNestedColumns());
-			}
-		}
-		else if (layout.isTypePanel()) {
-			columns.add("panelSelectedPortlets");
-		}
-
-		return columns;
 	}
 
 	protected String getColumnValue(String columnId) {

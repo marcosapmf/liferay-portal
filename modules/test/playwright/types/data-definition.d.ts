@@ -19,18 +19,20 @@ type DefinitionField = {
 		dataType: 'string';
 		displayStyle: 'singleline' | 'multiline';
 		fieldReference: string;
+		options?: Options;
 	};
 	defaultValue: {[keys: string]: string};
-	fieldType: 'text' | 'select';
+	fieldType: 'journal_article' | 'select' | 'text';
 	indexType: 'keyword' | 'text' | 'none';
 	label: {[keys: string]: string};
 	localizable: boolean;
 	name: string;
 	repeatable: boolean;
+	required?: boolean;
 	showLabel: boolean;
 };
 
-type DataLayouRow = {
+type DataLayoutRow = {
 	dataLayoutColumns: [
 		{
 			columnSize: number;
@@ -42,11 +44,21 @@ type DataLayouRow = {
 type DataLayout = {
 	dataLayoutPages: [
 		{
-			dataLayoutRows: DataLayouRow[];
+			dataLayoutRows: DataLayoutRow[];
 			description: {[keys: string]: string};
 			title: {[keys: string]: string};
 		},
 	];
 	name: {[keys: string]: string};
 	paginationMode: 'single-page';
+};
+
+type Option = {
+	label: string;
+	reference: string;
+	value: string;
+};
+
+type Options = {
+	[key: string]: Option[];
 };

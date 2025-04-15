@@ -10,6 +10,7 @@ import com.liferay.asset.kernel.model.AssetVocabulary;
 import com.liferay.asset.kernel.service.AssetCategoryLocalService;
 import com.liferay.asset.kernel.service.AssetVocabularyLocalService;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.configuration.module.configuration.ConfigurationProviderUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.module.configuration.ConfigurationException;
 import com.liferay.portal.kernel.search.facet.collector.TermCollector;
@@ -17,7 +18,9 @@ import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.search.web.internal.BaseFacetDisplayContextTestCase;
+import com.liferay.portal.search.web.internal.category.facet.configuration.CategoryFacetPortletInstanceConfiguration;
 import com.liferay.portal.search.web.internal.facet.display.context.builder.AssetCategoriesSearchFacetDisplayContextBuilder;
 import com.liferay.portal.search.web.internal.facet.display.context.builder.AssetCategoryPermissionChecker;
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
@@ -28,6 +31,8 @@ import java.util.List;
 import java.util.Locale;
 
 import javax.portlet.RenderRequest;
+
+import javax.servlet.http.HttpServletRequest;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -88,7 +93,8 @@ public class AssetCategoriesSearchFacetDisplayContextTest
 			facet.getFieldId());
 		assetCategoriesSearchFacetDisplayContextBuilder.setParameterValue(
 			parameterValue);
-		assetCategoriesSearchFacetDisplayContextBuilder.setPortal(_getPortal());
+		assetCategoriesSearchFacetDisplayContextBuilder.setPortal(
+			_getPortal(null));
 
 		if (_excludedGroupId > 0) {
 			assetCategoriesSearchFacetDisplayContextBuilder.setExcludedGroupId(
@@ -283,6 +289,22 @@ public class AssetCategoriesSearchFacetDisplayContextTest
 	}
 
 	@Test
+	public void testSelectionOfNonexistentTerms() throws Exception {
+		FacetDisplayContext facetDisplayContext = createFacetDisplayContext(
+			RandomTestUtil.randomString());
+
+		List<BucketDisplayContext> bucketDisplayContexts =
+			facetDisplayContext.getBucketDisplayContexts();
+
+		Assert.assertEquals(
+			bucketDisplayContexts.toString(), 0, bucketDisplayContexts.size());
+
+		Assert.assertEquals("0", facetDisplayContext.getParameterValue());
+		Assert.assertFalse(facetDisplayContext.isNothingSelected());
+		Assert.assertFalse(facetDisplayContext.isRenderNothing());
+	}
+
+	@Test
 	public void testUnauthorized() throws Exception {
 		long assetCategoryId = RandomTestUtil.randomLong();
 
@@ -378,6 +400,21 @@ public class AssetCategoriesSearchFacetDisplayContextTest
 		return termCollector;
 	}
 
+	@Override
+	protected FacetDisplayContext getFacetDisplayContext(Group group)
+		throws Exception {
+
+		AssetCategoriesSearchFacetDisplayContextBuilder
+			assetCategoriesSearchFacetDisplayContextBuilder =
+				new AssetCategoriesSearchFacetDisplayContextBuilder(
+					getRenderRequest(group));
+
+		assetCategoriesSearchFacetDisplayContextBuilder.setPortal(
+			_getPortal(group));
+
+		return assetCategoriesSearchFacetDisplayContextBuilder.build();
+	}
+
 	protected String getFacetFieldName() {
 		return "assetVocabularyCategoryIds";
 	}
@@ -428,6 +465,29 @@ public class AssetCategoriesSearchFacetDisplayContextTest
 		).getTermCollectors();
 	}
 
+	@Override
+	protected void setUpPortletDisplayStyleGroupExternalReferenceCode(
+		String externalReferenceCode) {
+
+		CategoryFacetPortletInstanceConfiguration
+			categoryFacetPortletInstanceConfiguration = Mockito.mock(
+				CategoryFacetPortletInstanceConfiguration.class);
+
+		Mockito.when(
+			categoryFacetPortletInstanceConfiguration.
+				displayStyleGroupExternalReferenceCode()
+		).thenReturn(
+			externalReferenceCode
+		);
+
+		configurationProviderUtilMockedStatic.when(
+			() -> ConfigurationProviderUtil.getPortletInstanceConfiguration(
+				Mockito.any(), Mockito.any())
+		).thenReturn(
+			categoryFacetPortletInstanceConfiguration
+		);
+	}
+
 	private AssetCategory _createAssetCategory(
 		long assetCategoryId, long groupId) {
 
@@ -464,11 +524,26 @@ public class AssetCategoriesSearchFacetDisplayContextTest
 		return assetCategory;
 	}
 
-	private Portal _getPortal() throws ConfigurationException {
+	private HttpServletRequest _getHttpServletRequest(Group group) {
+		HttpServletRequest httpServletRequest = Mockito.mock(
+			HttpServletRequest.class);
+
+		Mockito.doReturn(
+			getThemeDisplay(group)
+		).when(
+			httpServletRequest
+		).getAttribute(
+			WebKeys.THEME_DISPLAY
+		);
+
+		return httpServletRequest;
+	}
+
+	private Portal _getPortal(Group group) throws ConfigurationException {
 		Portal portal = Mockito.mock(Portal.class);
 
 		Mockito.doReturn(
-			getHttpServletRequest()
+			_getHttpServletRequest(group)
 		).when(
 			portal
 		).getHttpServletRequest(

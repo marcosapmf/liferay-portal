@@ -17,6 +17,7 @@ import com.liferay.portal.kernel.dao.orm.Projection;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.model.PersistedModel;
+import com.liferay.portal.kernel.model.SystemEventConstants;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.UserGroupRole;
 import com.liferay.portal.kernel.search.BaseModelSearchResult;
@@ -27,6 +28,7 @@ import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.service.change.tracking.CTService;
 import com.liferay.portal.kernel.service.persistence.change.tracking.CTPersistence;
 import com.liferay.portal.kernel.spring.osgi.OSGiBeanProperties;
+import com.liferay.portal.kernel.systemevent.SystemEvent;
 import com.liferay.portal.kernel.transaction.Isolation;
 import com.liferay.portal.kernel.transaction.Propagation;
 import com.liferay.portal.kernel.transaction.Transactional;
@@ -561,10 +563,8 @@ public interface UserLocalService
 	 * the confirmation email.
 	 *
 	 * @param user the user
-	 * @param serviceContext the service context to be applied. You can specify
-	 an unencrypted custom password for the user via attribute
-	 <code>passwordUnencrypted</code>. You automatically generate a
-	 password for the user by setting attribute
+	 * @param serviceContext the service context to be applied. You
+	 automatically generate a password for the user by setting attribute
 	 <code>autoPassword</code> to <code>true</code>. You can send a
 	 confirmation email to the user by setting attribute
 	 <code>sendEmail</code> to <code>true</code>.
@@ -666,6 +666,7 @@ public interface UserLocalService
 	 * @throws PortalException
 	 */
 	@Indexable(type = IndexableType.DELETE)
+	@SystemEvent(type = SystemEventConstants.TYPE_DELETE)
 	public User deleteUser(User user) throws PortalException;
 
 	/**
@@ -811,22 +812,9 @@ public interface UserLocalService
 	 * @param facebookId the user's Facebook ID
 	 * @return the user with the Facebook ID, or <code>null</code> if a user
 	 with the Facebook ID could not be found
-	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
 	 */
-	@Deprecated
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public User fetchUserByFacebookId(long companyId, long facebookId);
-
-	/**
-	 * Returns the user with the Google user ID.
-	 *
-	 * @param companyId the primary key of the user's company
-	 * @param googleUserId the user's Google user ID
-	 * @return the user with the Google user ID, or <code>null</code> if a user
-	 with the Google user ID could not be found
-	 */
-	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public User fetchUserByGoogleUserId(long companyId, String googleUserId);
 
 	/**
 	 * Returns the user with the primary key.
@@ -837,19 +825,6 @@ public interface UserLocalService
 	 */
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public User fetchUserById(long userId);
-
-	/**
-	 * Returns the user with the OpenID.
-	 *
-	 * @param companyId the primary key of the user's company
-	 * @param openId the user's OpenID
-	 * @return the user with the OpenID, or <code>null</code> if a user with
-	 the OpenID could not be found
-	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
-	 */
-	@Deprecated
-	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public User fetchUserByOpenId(long companyId, String openId);
 
 	/**
 	 * Returns the user with the portrait ID.
@@ -1370,30 +1345,6 @@ public interface UserLocalService
 		throws PortalException;
 
 	/**
-	 * Returns the user with the Facebook ID.
-	 *
-	 * @param companyId the primary key of the user's company
-	 * @param facebookId the user's Facebook ID
-	 * @return the user with the Facebook ID
-	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
-	 */
-	@Deprecated
-	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public User getUserByFacebookId(long companyId, long facebookId)
-		throws PortalException;
-
-	/**
-	 * Returns the user with the Google user ID.
-	 *
-	 * @param companyId the primary key of the user's company
-	 * @param googleUserId the user's Google user ID
-	 * @return the user with the Google user ID
-	 */
-	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public User getUserByGoogleUserId(long companyId, String googleUserId)
-		throws PortalException;
-
-	/**
 	 * Returns the user with the primary key.
 	 *
 	 * @param userId the primary key of the user
@@ -1411,28 +1362,6 @@ public interface UserLocalService
 	 */
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public User getUserById(long companyId, long userId) throws PortalException;
-
-	/**
-	 * Returns the user with the OpenID.
-	 *
-	 * @param companyId the primary key of the user's company
-	 * @param openId the user's OpenID
-	 * @return the user with the OpenID
-	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
-	 */
-	@Deprecated
-	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public User getUserByOpenId(long companyId, String openId)
-		throws PortalException;
-
-	/**
-	 * Returns the user with the portrait ID.
-	 *
-	 * @param portraitId the user's portrait ID
-	 * @return the user with the portrait ID
-	 */
-	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public User getUserByPortraitId(long portraitId) throws PortalException;
 
 	/**
 	 * Returns the user with the screen name.
@@ -1531,6 +1460,15 @@ public interface UserLocalService
 	public List<User> getUsers(
 		long companyId, int status, int start, int end,
 		OrderByComparator<User> orderByComparator);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<User> getUsersByRoleId(long roleId, int start, int end)
+		throws PortalException;
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<User> getUsersByRoleName(
+			long companyId, String roleName, int start, int end)
+		throws PortalException;
 
 	/**
 	 * Returns the number of users.
@@ -2169,28 +2107,6 @@ public interface UserLocalService
 		throws PortalException;
 
 	/**
-	 * Updates the user's Facebook ID.
-	 *
-	 * @param userId the primary key of the user
-	 * @param facebookId the user's new Facebook ID
-	 * @return the user
-	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
-	 */
-	@Deprecated
-	public User updateFacebookId(long userId, long facebookId)
-		throws PortalException;
-
-	/**
-	 * Updates the user's Google user ID.
-	 *
-	 * @param userId the primary key of the user
-	 * @param googleUserId the new Google user ID
-	 * @return the user
-	 */
-	public User updateGoogleUserId(long userId, String googleUserId)
-		throws PortalException;
-
-	/**
 	 * Sets the groups the user is in, removing and adding groups as necessary.
 	 *
 	 * @param userId the primary key of the user
@@ -2269,19 +2185,19 @@ public interface UserLocalService
 	 * @param loginIP the IP address the user logged in from
 	 * @return the user
 	 */
-	@CTAware(onProduction = true)
 	@Indexable(
 		callbackKey = "com.liferay.portal.kernel.model.User#lastLoginDate",
 		type = IndexableType.REINDEX
 	)
+	@Transactional(enabled = false)
 	public User updateLastLogin(long userId, String loginIP)
 		throws PortalException;
 
-	@CTAware(onProduction = true)
 	@Indexable(
 		callbackKey = "com.liferay.portal.kernel.model.User#lastLoginDate",
 		type = IndexableType.REINDEX
 	)
+	@Transactional(enabled = false)
 	public User updateLastLogin(User user, String loginIP)
 		throws PortalException;
 
@@ -2339,17 +2255,6 @@ public interface UserLocalService
 	@Indexable(type = IndexableType.REINDEX)
 	public User updateModifiedDate(long userId, Date modifiedDate)
 		throws PortalException;
-
-	/**
-	 * Updates the user's OpenID.
-	 *
-	 * @param userId the primary key of the user
-	 * @param openId the new OpenID
-	 * @return the user
-	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
-	 */
-	@Deprecated
-	public User updateOpenId(long userId, String openId) throws PortalException;
 
 	/**
 	 * Sets the organizations that the user is in, removing and adding

@@ -100,7 +100,12 @@ if (inlineEdit && Validator.isNotNull(inlineEditSaveURL)) {
 			<liferay-ui:message key="<%= placeholder %>" />
 
 			<c:if test="<%= required %>">
-				<span class="text-warning">*</span>
+				<clay:icon
+					cssClass="reference-mark text-warning"
+					symbol="asterisk"
+				/>
+
+				<span class="hide-accessible sr-only"><liferay-ui:message key="required" /></span>
 			</c:if>
 		</label>
 	</c:if>
@@ -344,7 +349,7 @@ name = HtmlUtil.escapeJS(name);
 			if (iframe) {
 				iframe.attr(
 					'aria-labelledby',
-					'<%= namespace %>Aria ' +
+					'<%= HtmlUtil.escapeAttribute(namespace) %>Aria ' +
 						iframe._node.attributes['aria-describedby'].value
 				);
 			}

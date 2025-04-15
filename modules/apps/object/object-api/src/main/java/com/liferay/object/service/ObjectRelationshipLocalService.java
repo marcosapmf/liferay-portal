@@ -80,8 +80,8 @@ public interface ObjectRelationshipLocalService
 	public ObjectRelationship addObjectRelationship(
 			String externalReferenceCode, long userId, long objectDefinitionId1,
 			long objectDefinitionId2, long parameterObjectFieldId,
-			String deletionType, Map<Locale, String> labelMap, String name,
-			boolean system, String type, ObjectField objectField)
+			String deletionType, boolean edge, Map<Locale, String> labelMap,
+			String name, boolean system, String type, ObjectField objectField)
 		throws PortalException;
 
 	@Indexable(type = IndexableType.REINDEX)
@@ -245,10 +245,6 @@ public interface ObjectRelationshipLocalService
 	public long dynamicQueryCount(
 		DynamicQuery dynamicQuery, Projection projection);
 
-	public ObjectRelationship enableEdge(
-			long objectRelationshipId, boolean edge)
-		throws PortalException;
-
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public ObjectRelationship fetchObjectRelationship(
 		long objectRelationshipId);
@@ -392,6 +388,10 @@ public interface ObjectRelationshipLocalService
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public int getObjectRelationshipsCount();
 
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public Map<Long, List<ObjectRelationship>> getObjectRelationshipsMap(
+		long companyId);
+
 	/**
 	 * Returns the OSGi service identifier.
 	 *
@@ -409,7 +409,8 @@ public interface ObjectRelationshipLocalService
 
 	public void registerObjectRelationshipsRelatedInfoCollectionProviders(
 		ObjectDefinition objectDefinition1,
-		ObjectDefinitionLocalService objectDefinitionLocalService);
+		ObjectDefinitionLocalService objectDefinitionLocalService,
+		List<ObjectRelationship> objectRelationships);
 
 	/**
 	 * Updates the object relationship in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
@@ -430,6 +431,9 @@ public interface ObjectRelationshipLocalService
 			String externalReferenceCode, long objectRelationshipId,
 			long parameterObjectFieldId, String deletionType, boolean edge,
 			Map<Locale, String> labelMap, ObjectField objectField)
+		throws PortalException;
+
+	public void updateUserId(long companyId, long oldUserId, long newUserId)
 		throws PortalException;
 
 }

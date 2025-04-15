@@ -6,6 +6,8 @@
 package com.liferay.product.navigation.control.menu.theme.contributor.internal.servlet.taglib;
 
 import com.liferay.petra.string.StringBundler;
+import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.content.security.policy.ContentSecurityPolicyNonceProviderUtil;
 import com.liferay.portal.kernel.servlet.taglib.DynamicInclude;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.WebKeys;
@@ -48,7 +50,7 @@ public class ProductNavigationControlMenuTopHeadDynamicInclude
 
 		PrintWriter printWriter = httpServletResponse.getWriter();
 
-		StringBundler sb = new StringBundler(3);
+		StringBundler sb = new StringBundler(5);
 
 		sb.append("<link data-senna-track=\"permanent\" href=\"");
 
@@ -61,7 +63,11 @@ public class ProductNavigationControlMenuTopHeadDynamicInclude
 				_bundle, "/product_navigation_control_menu.css"
 			).build());
 
-		sb.append("\" rel=\"stylesheet\" type = \"text/css\" />\n");
+		sb.append(StringPool.QUOTE);
+		sb.append(
+			ContentSecurityPolicyNonceProviderUtil.getNonceAttribute(
+				httpServletRequest));
+		sb.append(" rel=\"stylesheet\" type = \"text/css\" />\n");
 
 		printWriter.println(sb.toString());
 	}

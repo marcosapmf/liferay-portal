@@ -1639,7 +1639,6 @@ public class CSDiagramEntryPersistenceImpl
 		"csDiagramEntry.CProductId = ?";
 
 	private FinderPath _finderPathFetchByCPDI_S;
-	private FinderPath _finderPathCountByCPDI_S;
 
 	/**
 	 * Returns the cs diagram entry where CPDefinitionId = &#63; and sequence = &#63; or throws a <code>NoSuchCSDiagramEntryException</code> if it could not be found.
@@ -1824,68 +1823,13 @@ public class CSDiagramEntryPersistenceImpl
 	 */
 	@Override
 	public int countByCPDI_S(long CPDefinitionId, String sequence) {
-		try (SafeCloseable safeCloseable =
-				ctPersistenceHelper.setCTCollectionIdWithSafeCloseable(
-					CSDiagramEntry.class)) {
+		CSDiagramEntry csDiagramEntry = fetchByCPDI_S(CPDefinitionId, sequence);
 
-			sequence = Objects.toString(sequence, "");
-
-			FinderPath finderPath = _finderPathCountByCPDI_S;
-
-			Object[] finderArgs = new Object[] {CPDefinitionId, sequence};
-
-			Long count = (Long)finderCache.getResult(
-				finderPath, finderArgs, this);
-
-			if (count == null) {
-				StringBundler sb = new StringBundler(3);
-
-				sb.append(_SQL_COUNT_CSDIAGRAMENTRY_WHERE);
-
-				sb.append(_FINDER_COLUMN_CPDI_S_CPDEFINITIONID_2);
-
-				boolean bindSequence = false;
-
-				if (sequence.isEmpty()) {
-					sb.append(_FINDER_COLUMN_CPDI_S_SEQUENCE_3);
-				}
-				else {
-					bindSequence = true;
-
-					sb.append(_FINDER_COLUMN_CPDI_S_SEQUENCE_2);
-				}
-
-				String sql = sb.toString();
-
-				Session session = null;
-
-				try {
-					session = openSession();
-
-					Query query = session.createQuery(sql);
-
-					QueryPos queryPos = QueryPos.getInstance(query);
-
-					queryPos.add(CPDefinitionId);
-
-					if (bindSequence) {
-						queryPos.add(sequence);
-					}
-
-					count = (Long)query.uniqueResult();
-
-					finderCache.putResult(finderPath, finderArgs, count);
-				}
-				catch (Exception exception) {
-					throw processException(exception);
-				}
-				finally {
-					closeSession(session);
-				}
-			}
-
-			return count.intValue();
+		if (csDiagramEntry == null) {
+			return 0;
 		}
+
+		return 1;
 	}
 
 	private static final String _FINDER_COLUMN_CPDI_S_CPDEFINITIONID_2 =
@@ -2017,8 +1961,6 @@ public class CSDiagramEntryPersistenceImpl
 				csDiagramEntryModelImpl.getSequence()
 			};
 
-			finderCache.putResult(
-				_finderPathCountByCPDI_S, args, Long.valueOf(1));
 			finderCache.putResult(
 				_finderPathFetchByCPDI_S, args, csDiagramEntryModelImpl);
 		}
@@ -2687,6 +2629,7 @@ public class CSDiagramEntryPersistenceImpl
 	static {
 		Set<String> ctControlColumnNames = new HashSet<String>();
 		Set<String> ctIgnoreColumnNames = new HashSet<String>();
+		Set<String> ctMergeColumnNames = new HashSet<String>();
 		Set<String> ctStrictColumnNames = new HashSet<String>();
 
 		ctControlColumnNames.add("mvccVersion");
@@ -2696,18 +2639,19 @@ public class CSDiagramEntryPersistenceImpl
 		ctStrictColumnNames.add("userName");
 		ctStrictColumnNames.add("createDate");
 		ctIgnoreColumnNames.add("modifiedDate");
-		ctStrictColumnNames.add("CPDefinitionId");
-		ctStrictColumnNames.add("CPInstanceId");
-		ctStrictColumnNames.add("CProductId");
-		ctStrictColumnNames.add("diagram");
-		ctStrictColumnNames.add("quantity");
-		ctStrictColumnNames.add("sequence");
-		ctStrictColumnNames.add("sku");
+		ctMergeColumnNames.add("CPDefinitionId");
+		ctMergeColumnNames.add("CPInstanceId");
+		ctMergeColumnNames.add("CProductId");
+		ctMergeColumnNames.add("diagram");
+		ctMergeColumnNames.add("quantity");
+		ctMergeColumnNames.add("sequence");
+		ctMergeColumnNames.add("sku");
 
 		_ctColumnNamesMap.put(
 			CTColumnResolutionType.CONTROL, ctControlColumnNames);
 		_ctColumnNamesMap.put(
 			CTColumnResolutionType.IGNORE, ctIgnoreColumnNames);
+		_ctColumnNamesMap.put(CTColumnResolutionType.MERGE, ctMergeColumnNames);
 		_ctColumnNamesMap.put(
 			CTColumnResolutionType.PK,
 			Collections.singleton("CSDiagramEntryId"));
@@ -2796,11 +2740,6 @@ public class CSDiagramEntryPersistenceImpl
 			FINDER_CLASS_NAME_ENTITY, "fetchByCPDI_S",
 			new String[] {Long.class.getName(), String.class.getName()},
 			new String[] {"CPDefinitionId", "sequence"}, true);
-
-		_finderPathCountByCPDI_S = new FinderPath(
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByCPDI_S",
-			new String[] {Long.class.getName(), String.class.getName()},
-			new String[] {"CPDefinitionId", "sequence"}, false);
 
 		CSDiagramEntryUtil.setPersistence(this);
 	}

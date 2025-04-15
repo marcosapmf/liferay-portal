@@ -5,6 +5,7 @@
 
 package com.liferay.dynamic.data.mapping.form.web.internal.portlet;
 
+import com.liferay.change.tracking.spi.history.util.CTTimelineUtil;
 import com.liferay.dynamic.data.mapping.constants.DDMPortletKeys;
 import com.liferay.dynamic.data.mapping.form.builder.context.DDMFormBuilderContextFactory;
 import com.liferay.dynamic.data.mapping.form.builder.context.DDMFormContextDeserializer;
@@ -18,6 +19,8 @@ import com.liferay.dynamic.data.mapping.form.web.internal.display.context.DDMFor
 import com.liferay.dynamic.data.mapping.form.web.internal.display.context.DDMFormAdminFieldSetDisplayContext;
 import com.liferay.dynamic.data.mapping.io.DDMFormFieldTypesSerializer;
 import com.liferay.dynamic.data.mapping.io.exporter.DDMFormInstanceRecordWriterRegistry;
+import com.liferay.dynamic.data.mapping.model.DDMFormInstance;
+import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.dynamic.data.mapping.service.DDMFormInstanceLocalService;
 import com.liferay.dynamic.data.mapping.service.DDMFormInstanceRecordLocalService;
 import com.liferay.dynamic.data.mapping.service.DDMFormInstanceService;
@@ -158,6 +161,8 @@ public class DDMFormAdminPortlet extends MVCPortlet {
 					_ddmStorageAdapterRegistry, _ddmStructureLocalService,
 					_ddmStructureService, _jsonFactory, _npmResolver,
 					_objectDefinitionLocalService, _portal));
+
+			CTTimelineUtil.setClassName(renderRequest, DDMStructure.class);
 		}
 		else {
 			renderRequest.setAttribute(
@@ -178,6 +183,8 @@ public class DDMFormAdminPortlet extends MVCPortlet {
 					_ddmStorageAdapterRegistry, _ddmStructureLocalService,
 					_ddmStructureService, _jsonFactory, _npmResolver,
 					_objectDefinitionLocalService, _portal));
+
+			CTTimelineUtil.setClassName(renderRequest, DDMFormInstance.class);
 		}
 	}
 

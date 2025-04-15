@@ -1,0 +1,44 @@
+{
+	"fieldSets": [
+		{
+			"fields": [
+				{
+					"defaultValue": "com_liferay_commerce_order_content_web_internal_fragment_renderer_OrdersDataSetFragmentRenderer-pendingOrders",
+					"label": "Order status",
+					"name": "fdsName",
+					"type": "select",
+					"typeOptions": {
+						"validValues": [
+							{
+								"label": "Pending orders",
+								"value": "com_liferay_commerce_order_content_web_internal_fragment_renderer_OrdersDataSetFragmentRenderer-pendingOrders"
+							},
+							{
+								"label": "Placed orders",
+								"value": "com_liferay_commerce_order_content_web_internal_fragment_renderer_OrdersDataSetFragmentRenderer-placedOrders"
+							}
+						]
+					}
+				},
+				{
+					"defaultValue": "fluid",
+					"label": "Style",
+					"name": "displayStyle",
+					"type": "select",
+					"typeOptions": {
+						"validValues": [
+							{
+								"label": "Fluid",
+								"value": "fluid"
+							},
+							{
+								"label": "Stacked",
+								"value": "stacked"
+							}
+						]
+					}
+				}
+			]
+		}
+	]
+}

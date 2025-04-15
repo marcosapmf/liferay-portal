@@ -5,12 +5,12 @@
 
 import {APIResponse, expect as baseExpect, mergeTests} from '@playwright/test';
 
-import {apiHelpersTest} from '../../fixtures/apiHelpersTest';
+import {dataApiHelpersTest} from '../../fixtures/dataApiHelpersTest';
 import {loginTest} from '../../fixtures/loginTest';
 import {headlessBuilderTest} from '../headless-builder-web/fixtures/headlessBuilderTest';
 
 export const test = mergeTests(
-	apiHelpersTest,
+	dataApiHelpersTest,
 	headlessBuilderTest(),
 	loginTest()
 );
@@ -38,6 +38,7 @@ test('can GET with API Filter', async ({apiHelpers}) => {
 		await apiHelpers.objectAdmin.postRandomObjectDefinition({
 			status: {code: 0},
 		});
+	apiHelpers.data.push({id: objectDefinition.id, type: 'objectDefinition'});
 
 	const apiApplication = await apiHelpers.apiBuilder.postApiApplication({
 		apiApplicationToAPIEndpoints: [
@@ -71,6 +72,8 @@ test('can GET with API Filter', async ({apiHelpers}) => {
 		title: 'title',
 	});
 
+	apiHelpers.data.push({id: apiApplication.id, type: 'apiApplication'});
+
 	expect(apiApplication.status).toStrictEqual({
 		code: 0,
 		label: 'approved',
@@ -92,7 +95,7 @@ test('can GET with API Filter', async ({apiHelpers}) => {
 		await apiHelpers.apiBuilder.postApiResource(
 			{
 				oDataFilter: "textField eq 'value5' or textField eq 'value24'",
-				r_apiEndpointToAPIFilters_c_apiEndpointERC: 'ENDPOINT',
+				r_apiEndpointToAPIFilters_l_apiEndpointERC: 'ENDPOINT',
 			},
 			'filters'
 		)
@@ -129,7 +132,4 @@ test('can GET with API Filter', async ({apiHelpers}) => {
 			textProperty: 'value5',
 		},
 	]);
-
-	await apiHelpers.objectAdmin.deleteObjectDefinition(objectDefinition.id);
-	await apiHelpers.apiBuilder.deleteApiApplication(apiApplication.id);
 });

@@ -159,8 +159,9 @@ public class AssetTagStagedModelDataHandler
 
 			try {
 				importedAssetTag = _assetTagLocalService.addTag(
-					userId, portletDataContext.getScopeGroupId(),
-					assetTag.getName(), serviceContext);
+					assetTag.getExternalReferenceCode(), userId,
+					portletDataContext.getScopeGroupId(), assetTag.getName(),
+					serviceContext);
 			}
 			catch (DuplicateTagException duplicateTagException) {
 				if (_log.isDebugEnabled()) {
@@ -168,14 +169,16 @@ public class AssetTagStagedModelDataHandler
 				}
 
 				importedAssetTag = _assetTagLocalService.addTag(
-					userId, portletDataContext.getScopeGroupId(),
+					assetTag.getExternalReferenceCode(), userId,
+					portletDataContext.getScopeGroupId(),
 					assetTag.getName() + " (Duplicate)", serviceContext);
 			}
 		}
 		else {
 			try {
 				importedAssetTag = _assetTagLocalService.updateTag(
-					userId, existingAssetTag.getTagId(), assetTag.getName(),
+					existingAssetTag.getExternalReferenceCode(), userId,
+					existingAssetTag.getTagId(), assetTag.getName(),
 					serviceContext);
 			}
 			catch (DuplicateTagException duplicateTagException) {
@@ -184,7 +187,8 @@ public class AssetTagStagedModelDataHandler
 				}
 
 				importedAssetTag = _assetTagLocalService.updateTag(
-					userId, existingAssetTag.getTagId(),
+					existingAssetTag.getExternalReferenceCode(), userId,
+					existingAssetTag.getTagId(),
 					assetTag.getName() + " (Duplicate)", serviceContext);
 			}
 		}

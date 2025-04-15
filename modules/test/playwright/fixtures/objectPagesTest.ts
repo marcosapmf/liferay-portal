@@ -8,11 +8,17 @@ import {test} from '@playwright/test';
 import {EditObjectDefinitionPage} from '../pages/object-web/EditObjectDefinitionPage';
 import {ModalAddObjectDefinitionPage} from '../pages/object-web/ModalAddObjectDefinitionPage';
 import {ModalEditObjectFolderPage} from '../pages/object-web/ModalEditObjectFolderPage';
-import {ModelBuilderPage} from '../pages/object-web/ModelBuilderPage';
 import {ViewObjectDefinitionsPage} from '../pages/object-web/ViewObjectDefinitionsPage';
+import {ModelBuilderDiagramPage} from '../pages/object-web/model-builder/ModelBuilderDiagramPage';
+import {ModelBuilderLeftSidebarPage} from '../pages/object-web/model-builder/ModelBuilderLeftSidebarPage';
+import {ModelBuilderObjectDefinitionNodePage} from '../pages/object-web/model-builder/ModelBuilderObjectDefinitionNodePage';
+import {ModelBuilderRightSidebarPage} from '../pages/object-web/model-builder/ModelBuilderRightSidebarPage';
 import {EditObjectDetailsPage} from '../pages/object-web/object-details/EditObjectDetailsPage';
 import {ViewObjectEntriesPage} from '../pages/object-web/object-entries/ViewObjectEntriesPage';
 import {ObjectFieldsPage} from '../pages/object-web/object-fields/ObjectFieldsPage';
+import {AddNewObjectRelationshipModalPage} from '../pages/object-web/object-relationship/AddObjectRelationshipModalPage';
+import {ObjectRelationshipFormPage} from '../pages/object-web/object-relationship/ObjectRelationshipFormPage';
+import {ObjectRelationshipsPage} from '../pages/object-web/object-relationship/ObjectRelationshipsPage';
 import {EditObjectValidationPage} from '../pages/object-web/object-validation/EditObjectValidationPage';
 import {ModalAddObjectValidationPage} from '../pages/object-web/object-validation/ModalAddObjectValidationPage';
 import {ObjectValidationsPage} from '../pages/object-web/object-validation/ObjectValidationsPage';
@@ -21,6 +27,7 @@ import {ObjectDetailsPage} from '../pages/object-web/object-view/ObjectDetailsPa
 import {ObjectViewPage} from '../pages/object-web/object-view/ObjectViewsPage';
 
 const objectPagesTest = test.extend<{
+	addNewObjectRelationshipModalPage: AddNewObjectRelationshipModalPage;
 	editObjectDefinitionPage: EditObjectDefinitionPage;
 	editObjectDetailsPage: EditObjectDetailsPage;
 	editObjectValidationPage: EditObjectValidationPage;
@@ -28,14 +35,22 @@ const objectPagesTest = test.extend<{
 	modalAddObjectDefinitionPage: ModalAddObjectDefinitionPage;
 	modalAddObjectValidationPage: ModalAddObjectValidationPage;
 	modalEditObjectFolderPage: ModalEditObjectFolderPage;
-	modelBuilderPage: ModelBuilderPage;
+	modelBuilderDiagramPage: ModelBuilderDiagramPage;
+	modelBuilderLeftSidebarPage: ModelBuilderLeftSidebarPage;
+	modelBuilderObjectDefinitionNodePage: ModelBuilderObjectDefinitionNodePage;
+	modelBuilderRightSidebarPage: ModelBuilderRightSidebarPage;
 	objectDetailsPage: ObjectDetailsPage;
 	objectFieldsPage: ObjectFieldsPage;
+	objectRelationshipFormPage: ObjectRelationshipFormPage;
+	objectRelationshipsPage: ObjectRelationshipsPage;
 	objectValidationsPage: ObjectValidationsPage;
 	objectViewPage: ObjectViewPage;
 	viewObjectDefinitionsPage: ViewObjectDefinitionsPage;
 	viewObjectEntriesPage: ViewObjectEntriesPage;
 }>({
+	addNewObjectRelationshipModalPage: async ({page}, use) => {
+		await use(new AddNewObjectRelationshipModalPage(page));
+	},
 	editObjectDefinitionPage: async ({page}, use) => {
 		await use(new EditObjectDefinitionPage(page));
 	},
@@ -57,14 +72,26 @@ const objectPagesTest = test.extend<{
 	modalEditObjectFolderPage: async ({page}, use) => {
 		await use(new ModalEditObjectFolderPage(page));
 	},
-	modelBuilderPage: async ({page}, use) => {
-		await use(new ModelBuilderPage(page));
+	modelBuilderDiagramPage: async ({page}, use) => {
+		await use(new ModelBuilderDiagramPage(page));
+	},
+	modelBuilderLeftSidebarPage: async ({page}, use) => {
+		await use(new ModelBuilderLeftSidebarPage(page));
+	},
+	modelBuilderObjectDefinitionNodePage: async ({page}, use) => {
+		await use(new ModelBuilderObjectDefinitionNodePage(page));
+	},
+	modelBuilderRightSidebarPage: async ({page}, use) => {
+		await use(new ModelBuilderRightSidebarPage(page));
 	},
 	objectDetailsPage: async ({page}, use) => {
 		await use(new ObjectDetailsPage(page));
 	},
 	objectFieldsPage: async ({page}, use) => {
 		await use(new ObjectFieldsPage(page));
+	},
+	objectRelationshipsPage: async ({page}, use) => {
+		await use(new ObjectRelationshipsPage(page));
 	},
 	objectValidationsPage: async ({page}, use) => {
 		await use(new ObjectValidationsPage(page));

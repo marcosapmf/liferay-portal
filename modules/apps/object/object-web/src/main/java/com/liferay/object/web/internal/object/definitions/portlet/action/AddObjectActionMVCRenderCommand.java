@@ -13,6 +13,8 @@ import com.liferay.object.constants.ObjectWebKeys;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.object.service.ObjectDefinitionService;
+import com.liferay.object.service.ObjectFieldLocalService;
+import com.liferay.object.service.ObjectFolderLocalService;
 import com.liferay.object.web.internal.object.definitions.display.context.ObjectDefinitionsActionsDisplayContext;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONFactory;
@@ -64,6 +66,7 @@ public class AddObjectActionMVCRenderCommand implements MVCRenderCommand {
 					_objectActionExecutorRegistry, _objectActionTriggerRegistry,
 					_objectDefinitionLocalService,
 					_objectDefinitionModelResourcePermission,
+					_objectFieldLocalService, _objectFolderLocalService,
 					_scriptManagementConfigurationHelper));
 		}
 		catch (PortalException portalException) {
@@ -96,6 +99,12 @@ public class AddObjectActionMVCRenderCommand implements MVCRenderCommand {
 
 	@Reference
 	private ObjectDefinitionService _objectDefinitionService;
+
+	@Reference
+	private ObjectFieldLocalService _objectFieldLocalService;
+
+	@Reference
+	private ObjectFolderLocalService _objectFolderLocalService;
 
 	@Reference
 	private Portal _portal;

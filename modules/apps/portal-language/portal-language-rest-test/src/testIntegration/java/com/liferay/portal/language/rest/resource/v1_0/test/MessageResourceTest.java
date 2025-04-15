@@ -11,7 +11,7 @@ import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.language.override.service.PLOEntryLocalService;
 import com.liferay.portal.language.rest.client.dto.v1_0.Message;
-import com.liferay.portal.test.rule.FeatureFlags;
+import com.liferay.portal.language.rest.client.pagination.Page;
 import com.liferay.portal.test.rule.Inject;
 
 import java.io.File;
@@ -33,7 +33,6 @@ import org.junit.runner.RunWith;
 /**
  * @author Thiago Buarque
  */
-@FeatureFlags("LPD-27222")
 @RunWith(Arquillian.class)
 public class MessageResourceTest extends BaseMessageResourceTestCase {
 
@@ -133,6 +132,44 @@ public class MessageResourceTest extends BaseMessageResourceTestCase {
 		finally {
 			FileUtil.delete(file);
 		}
+	}
+
+	@Override
+	@Test
+	public void testPostMessagesExportPage() throws Exception {
+		Message message1 = _createMessage();
+
+		_postMessage(message1);
+
+		Message message2 = _createMessage();
+
+		_postMessage(message2);
+
+		Message message3 = _createMessage();
+
+		_postMessage(message3);
+
+		Page<Message> messagesPage = messageResource.postMessagesExportPage(
+			"en_US",
+			new String[] {
+				message1.getKey(), message2.getKey(), message3.getKey()
+			});
+
+		Assert.assertEquals(3, messagesPage.getTotalCount());
+
+		List<Message> items = new ArrayList<>(messagesPage.getItems());
+
+		Message message4 = items.get(0);
+
+		Assert.assertEquals(message1.getValue(), message4.getValue());
+
+		message4 = items.get(1);
+
+		Assert.assertEquals(message2.getValue(), message4.getValue());
+
+		message4 = items.get(2);
+
+		Assert.assertEquals(message3.getValue(), message4.getValue());
 	}
 
 	@Override

@@ -53,6 +53,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.BiFunction;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -229,16 +230,6 @@ public class ComboServlet extends HttpServlet {
 			}
 		}
 
-		boolean cacheEnabled = true;
-
-		if (PropsValues.WORK_DIR_OVERRIDE_ENABLED) {
-			cacheEnabled = false;
-
-			httpServletResponse.setHeader(
-				HttpHeaders.CACHE_CONTROL,
-				HttpHeaders.CACHE_CONTROL_NO_CACHE_VALUE);
-		}
-
 		String minifierType = ParamUtil.getString(
 			httpServletRequest, "minifierType");
 
@@ -270,6 +261,8 @@ public class ComboServlet extends HttpServlet {
 
 		if (bytesArray == null) {
 			bytesArray = new byte[modulePaths.length][];
+
+			boolean cacheEnabled = true;
 
 			for (int i = 0; i < modulePaths.length; i++) {
 				String modulePath = modulePaths[i];
@@ -314,6 +307,12 @@ public class ComboServlet extends HttpServlet {
 
 					httpServletResponse.setHeader(
 						HttpHeaders.CACHE_CONTROL, "max-age=1, no-cache");
+				}
+				else if ((PropsValues.COMBO_ALLOWED_FILE_MAX_SIZE > 0) &&
+						 (bytes.length >
+							 PropsValues.COMBO_ALLOWED_FILE_MAX_SIZE)) {
+
+					cacheEnabled = false;
 				}
 
 				bytesArray[i] = bytes;
@@ -427,6 +426,11 @@ public class ComboServlet extends HttpServlet {
 
 			String stringFileContent = bufferCacheServletResponse.getString();
 
+			if (_textReplacerBiFunction != null) {
+				stringFileContent = _textReplacerBiFunction.apply(
+					"ComboServlet#" + modulePath, stringFileContent);
+			}
+
 			if (!StringUtil.endsWith(resourcePath, _CSS_MINIFIED_DASH_SUFFIX) &&
 				!StringUtil.endsWith(resourcePath, _CSS_MINIFIED_DOT_SUFFIX) &&
 				!StringUtil.endsWith(
@@ -489,10 +493,6 @@ public class ComboServlet extends HttpServlet {
 					if (matcher.matches()) {
 						stringFileContent =
 							matcher.group(1) + "../o/" + matcher.group(3);
-					}
-					else {
-						stringFileContent = MinifierUtil.minifyJavaScript(
-							resourcePath, stringFileContent);
 					}
 
 					stringFileContent =
@@ -673,6 +673,32 @@ public class ComboServlet extends HttpServlet {
 	private static final Pattern _importModulePattern = Pattern.compile(
 		"(import\\s*\\*\\s*as\\s*\\w*\\s*from\\s*[\"'])((?:\\.\\./)+)(.*)",
 		Pattern.DOTALL);
+	private static final BiFunction<String, String, String>
+		_textReplacerBiFunction;
+
+	static {
+		ClassLoader classLoader = ClassLoader.getSystemClassLoader();
+
+		Object instance = null;
+
+		try {
+			Class<?> clazz = classLoader.loadClass(
+				"com.liferay.portal.tools.jakarta.ee.transformer.function." +
+					"TextReplacerBiFunction");
+
+			instance = clazz.newInstance();
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			if (!(reflectiveOperationException instanceof
+					ClassNotFoundException)) {
+
+				throw new ExceptionInInitializerError(
+					reflectiveOperationException);
+			}
+		}
+
+		_textReplacerBiFunction = (BiFunction<String, String, String>)instance;
+	}
 
 	private final Set<String> _protectedParameters = SetUtil.fromArray(
 		"browserId", "minifierType", "languageId", "t", "themeId", "zx");

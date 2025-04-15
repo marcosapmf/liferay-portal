@@ -11,13 +11,28 @@
 ClientExtensionAdminDisplayContext clientExtensionAdminDisplayContext = (ClientExtensionAdminDisplayContext)renderRequest.getAttribute(ClientExtensionAdminWebKeys.CLIENT_EXTENSION_ADMIN_DISPLAY_CONTEXT);
 %>
 
-<frontend-data-set:classic-display
-	actionParameterName="externalReferenceCode"
-	creationMenu="<%= clientExtensionAdminDisplayContext.getCreationMenu() %>"
-	dataProviderKey="<%= ClientExtensionAdminFDSNames.CLIENT_EXTENSION_TYPES %>"
-	id="<%= ClientExtensionAdminFDSNames.CLIENT_EXTENSION_TYPES %>"
-	itemsPerPage="<%= 10 %>"
-	selectedItemsKey="externalReferenceCode"
-	style="fluid"
-	uniformActionsDisplay="<%= true %>"
-/>
+<aui:style type="text/css">
+	.management-bar-wrapper {
+		background: #fff;
+		margin-left: -100%;
+		margin-right: -100%;
+		padding-left: 100%;
+		padding-right: 100%;
+	}
+
+	.portlet-body {
+		overflow: hidden;
+	}
+</aui:style>
+
+<div class="container-fluid container-fluid-max-xxxl">
+	<frontend-data-set:classic-display
+		actionParameterName="externalReferenceCode"
+		creationMenu="<%= clientExtensionAdminDisplayContext.getCreationMenu() %>"
+		dataProviderKey="<%= ClientExtensionAdminFDSNames.CLIENT_EXTENSION_TYPES %>"
+		id="<%= ClientExtensionAdminFDSNames.CLIENT_EXTENSION_TYPES %>"
+		itemsPerPage="<%= 10 %>"
+		selectedItemsKey="externalReferenceCode"
+		uniformActionsDisplay="<%= true %>"
+	/>
+</div>

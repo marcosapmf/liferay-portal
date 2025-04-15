@@ -162,6 +162,19 @@ portletDisplay.setURLBack(String.valueOf(renderResponse.createRenderURL()));
 							propsTransformer="{commerceReturnItemsPropsTransformer} from commerce-order-content-web"
 							style="stacked"
 						/>
+
+						<liferay-frontend:component
+							context='<%=
+								HashMapBuilder.<String, Object>put(
+									"namespace", liferayPortletResponse.getNamespace()
+								).put(
+									"returnableOrderItemsContextParams", commerceReturnContentDisplayContext.getReturnableOrderItemsContextParams()
+								).put(
+									"viewReturnableOrderItemsURL", commerceReturnContentDisplayContext.getViewReturnableOrderItemsURL()
+								).build()
+							%>'
+							module="{viewCommerceOrderDetailsCTAs} from commerce-order-content-web"
+						/>
 					</div>
 				</commerce-ui:panel>
 			</div>

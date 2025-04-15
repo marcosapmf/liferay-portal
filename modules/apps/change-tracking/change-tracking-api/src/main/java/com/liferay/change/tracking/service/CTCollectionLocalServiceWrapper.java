@@ -188,6 +188,17 @@ public class CTCollectionLocalServiceWrapper
 
 	@Override
 	public void discardCTEntry(
+			long ctCollectionId,
+			java.util.List<com.liferay.change.tracking.model.CTEntry> ctEntries,
+			boolean force)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		_ctCollectionLocalService.discardCTEntry(
+			ctCollectionId, ctEntries, force);
+	}
+
+	@Override
+	public void discardCTEntry(
 			long ctCollectionId, long modelClassNameId, long modelClassPK,
 			boolean force)
 		throws com.liferay.portal.kernel.exception.PortalException {
@@ -409,6 +420,18 @@ public class CTCollectionLocalServiceWrapper
 			companyId, status, start, end, orderByComparator);
 	}
 
+	@Override
+	public java.util.List<com.liferay.change.tracking.model.CTCollection>
+		getCTCollections(
+			long companyId, int[] statuses, int start, int end,
+			com.liferay.portal.kernel.util.OrderByComparator
+				<com.liferay.change.tracking.model.CTCollection>
+					orderByComparator) {
+
+		return _ctCollectionLocalService.getCTCollections(
+			companyId, statuses, start, end, orderByComparator);
+	}
+
 	/**
 	 * Returns the number of ct collections.
 	 *
@@ -488,12 +511,35 @@ public class CTCollectionLocalServiceWrapper
 	public java.util.Map
 		<Long, java.util.List<com.liferay.change.tracking.model.CTEntry>>
 				getRelatedCTEntriesMap(
+					long ctCollectionId,
+					java.util.List<com.liferay.change.tracking.model.CTEntry>
+						ctEntries)
+			throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _ctCollectionLocalService.getRelatedCTEntriesMap(
+			ctCollectionId, ctEntries);
+	}
+
+	@Override
+	public java.util.Map
+		<Long, java.util.List<com.liferay.change.tracking.model.CTEntry>>
+				getRelatedCTEntriesMap(
 					long ctCollectionId, long modelClassNameId,
 					long modelClassPK)
 			throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _ctCollectionLocalService.getRelatedCTEntriesMap(
 			ctCollectionId, modelClassNameId, modelClassPK);
+	}
+
+	@Override
+	public java.util.Map
+		<Long, java.util.List<com.liferay.change.tracking.model.CTEntry>>
+				getRelatedCTEntriesMap(long ctCollectionId, long[] ctEntryIds)
+			throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _ctCollectionLocalService.getRelatedCTEntriesMap(
+			ctCollectionId, ctEntryIds);
 	}
 
 	@Override
@@ -509,6 +555,16 @@ public class CTCollectionLocalServiceWrapper
 
 		return _ctCollectionLocalService.isCTEntryEnclosed(
 			ctCollectionId, modelClassNameId, modelClassPK);
+	}
+
+	@Override
+	public void moveCTEntries(
+			long fromCTCollectionId, long toCTCollectionId,
+			java.util.List<com.liferay.change.tracking.model.CTEntry> ctEntries)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		_ctCollectionLocalService.moveCTEntries(
+			fromCTCollectionId, toCTCollectionId, ctEntries);
 	}
 
 	@Override

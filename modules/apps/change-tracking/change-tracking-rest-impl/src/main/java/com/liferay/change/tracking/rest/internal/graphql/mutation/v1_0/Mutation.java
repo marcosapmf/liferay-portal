@@ -12,8 +12,6 @@ import com.liferay.change.tracking.rest.resource.v1_0.CTProcessResource;
 import com.liferay.change.tracking.rest.resource.v1_0.CTRemoteResource;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.function.UnsafeFunction;
-import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
@@ -100,7 +98,6 @@ public class Mutation {
 
 	@GraphQLField
 	public Response createCTCollectionBatch(
-			@GraphQLName("ctCollection") CTCollection ctCollection,
 			@GraphQLName("callbackURL") String callbackURL,
 			@GraphQLName("object") Object object)
 		throws Exception {
@@ -109,7 +106,7 @@ public class Mutation {
 			_ctCollectionResourceComponentServiceObjects,
 			this::_populateResourceContext,
 			ctCollectionResource -> ctCollectionResource.postCTCollectionBatch(
-				ctCollection, callbackURL, object));
+				callbackURL, object));
 	}
 
 	@GraphQLField
@@ -190,7 +187,6 @@ public class Mutation {
 
 	@GraphQLField
 	public Response deleteCTCollectionBatch(
-			@GraphQLName("ctCollectionId") Long ctCollectionId,
 			@GraphQLName("callbackURL") String callbackURL,
 			@GraphQLName("object") Object object)
 		throws Exception {
@@ -200,7 +196,7 @@ public class Mutation {
 			this::_populateResourceContext,
 			ctCollectionResource ->
 				ctCollectionResource.deleteCTCollectionBatch(
-					ctCollectionId, callbackURL, object));
+					callbackURL, object));
 	}
 
 	@GraphQLField
@@ -231,8 +227,6 @@ public class Mutation {
 
 	@GraphQLField
 	public Response updateCTCollectionBatch(
-			@GraphQLName("ctCollectionId") Long ctCollectionId,
-			@GraphQLName("ctCollection") CTCollection ctCollection,
 			@GraphQLName("callbackURL") String callbackURL,
 			@GraphQLName("object") Object object)
 		throws Exception {
@@ -241,7 +235,7 @@ public class Mutation {
 			_ctCollectionResourceComponentServiceObjects,
 			this::_populateResourceContext,
 			ctCollectionResource -> ctCollectionResource.putCTCollectionBatch(
-				ctCollectionId, ctCollection, callbackURL, object));
+				callbackURL, object));
 	}
 
 	@GraphQLField
@@ -311,6 +305,32 @@ public class Mutation {
 	}
 
 	@GraphQLField
+	public boolean deleteCTProcess(@GraphQLName("ctProcessId") Long ctProcessId)
+		throws Exception {
+
+		_applyVoidComponentServiceObjects(
+			_ctProcessResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			ctProcessResource -> ctProcessResource.deleteCTProcess(
+				ctProcessId));
+
+		return true;
+	}
+
+	@GraphQLField
+	public Response deleteCTProcessBatch(
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("object") Object object)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_ctProcessResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			ctProcessResource -> ctProcessResource.deleteCTProcessBatch(
+				callbackURL, object));
+	}
+
+	@GraphQLField
 	public boolean createCTProcessRevert(
 			@GraphQLName("ctProcessId") Long ctProcessId,
 			@GraphQLName("description") String description,
@@ -355,7 +375,6 @@ public class Mutation {
 
 	@GraphQLField
 	public Response createCTRemoteBatch(
-			@GraphQLName("ctRemote") CTRemote ctRemote,
 			@GraphQLName("callbackURL") String callbackURL,
 			@GraphQLName("object") Object object)
 		throws Exception {
@@ -364,7 +383,7 @@ public class Mutation {
 			_ctRemoteResourceComponentServiceObjects,
 			this::_populateResourceContext,
 			ctRemoteResource -> ctRemoteResource.postCTRemoteBatch(
-				ctRemote, callbackURL, object));
+				callbackURL, object));
 	}
 
 	@GraphQLField
@@ -416,7 +435,6 @@ public class Mutation {
 
 	@GraphQLField
 	public Response updateCTRemoteBatch(
-			@GraphQLName("ctRemote") CTRemote ctRemote,
 			@GraphQLName("callbackURL") String callbackURL,
 			@GraphQLName("object") Object object)
 		throws Exception {
@@ -425,7 +443,7 @@ public class Mutation {
 			_ctRemoteResourceComponentServiceObjects,
 			this::_populateResourceContext,
 			ctRemoteResource -> ctRemoteResource.putCTRemoteBatch(
-				ctRemote, callbackURL, object));
+				callbackURL, object));
 	}
 
 	private <T, R, E1 extends Throwable, E2 extends Throwable> R
@@ -534,12 +552,15 @@ public class Mutation {
 
 	private AcceptLanguage _acceptLanguage;
 	private com.liferay.portal.kernel.model.Company _company;
-	private BiFunction<Object, String, Filter> _filterBiFunction;
+	private BiFunction
+		<Object, String, com.liferay.portal.kernel.search.filter.Filter>
+			_filterBiFunction;
 	private GroupLocalService _groupLocalService;
 	private HttpServletRequest _httpServletRequest;
 	private HttpServletResponse _httpServletResponse;
 	private RoleLocalService _roleLocalService;
-	private BiFunction<Object, String, Sort[]> _sortsBiFunction;
+	private BiFunction<Object, String, com.liferay.portal.kernel.search.Sort[]>
+		_sortsBiFunction;
 	private UriInfo _uriInfo;
 	private com.liferay.portal.kernel.model.User _user;
 	private VulcanBatchEngineExportTaskResource

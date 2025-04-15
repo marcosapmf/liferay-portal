@@ -114,6 +114,19 @@ components:
                     type: integer
                 product:
                     type: integer
+        RecommendationConfiguration:
+            properties:
+                contentRecommenderMostPopularItems:
+                    $ref: "#/components/schemas/RecommendationItem"
+                contentRecommenderUserPersonalization:
+                    $ref: "#/components/schemas/RecommendationItem"
+        RecommendationItem:
+            properties:
+                enabled:
+                    type: boolean
+                status:
+                    enum: [Configuring, Disabled, Enabled, Failed]
+                    type: string
         Site:
             properties:
                 channelName:
@@ -137,22 +150,22 @@ paths:
         get:
             operationId: getChannelsPage
             parameters:
-                - in: query
-                  name: keywords
-                  schema:
-                      type: string
-                - in: query
-                  name: page
-                  schema:
-                      type: integer
-                - in: query
-                  name: pageSize
-                  schema:
-                      type: integer
-                - in: query
-                  name: sort
-                  schema:
-                      type: string
+                -   in: query
+                    name: keywords
+                    schema:
+                        type: string
+                -   in: query
+                    name: page
+                    schema:
+                        type: integer
+                -   in: query
+                    name: pageSize
+                    schema:
+                        type: integer
+                -   in: query
+                    name: sort
+                    schema:
+                        type: string
             responses:
                 200:
                     content:
@@ -235,22 +248,22 @@ paths:
         get:
             operationId: getCommerceChannelsPage
             parameters:
-                - in: query
-                  name: keywords
-                  schema:
-                      type: string
-                - in: query
-                  name: page
-                  schema:
-                      type: integer
-                - in: query
-                  name: pageSize
-                  schema:
-                      type: integer
-                - in: query
-                  name: sort
-                  schema:
-                      type: string
+                -   in: query
+                    name: keywords
+                    schema:
+                        type: string
+                -   in: query
+                    name: page
+                    schema:
+                        type: integer
+                -   in: query
+                    name: pageSize
+                    schema:
+                        type: integer
+                -   in: query
+                    name: sort
+                    schema:
+                        type: string
             responses:
                 200:
                     content:
@@ -277,22 +290,22 @@ paths:
         get:
             operationId: getContactAccountGroupsPage
             parameters:
-                - in: query
-                  name: keywords
-                  schema:
-                      type: string
-                - in: query
-                  name: page
-                  schema:
-                      type: integer
-                - in: query
-                  name: pageSize
-                  schema:
-                      type: integer
-                - in: query
-                  name: sort
-                  schema:
-                      type: string
+                -   in: query
+                    name: keywords
+                    schema:
+                        type: string
+                -   in: query
+                    name: page
+                    schema:
+                        type: integer
+                -   in: query
+                    name: pageSize
+                    schema:
+                        type: integer
+                -   in: query
+                    name: sort
+                    schema:
+                        type: string
             responses:
                 200:
                     content:
@@ -340,22 +353,22 @@ paths:
         get:
             operationId: getContactOrganizationsPage
             parameters:
-                - in: query
-                  name: keywords
-                  schema:
-                      type: string
-                - in: query
-                  name: page
-                  schema:
-                      type: integer
-                - in: query
-                  name: pageSize
-                  schema:
-                      type: integer
-                - in: query
-                  name: sort
-                  schema:
-                      type: string
+                -   in: query
+                    name: keywords
+                    schema:
+                        type: string
+                -   in: query
+                    name: page
+                    schema:
+                        type: integer
+                -   in: query
+                    name: pageSize
+                    schema:
+                        type: integer
+                -   in: query
+                    name: sort
+                    schema:
+                        type: string
             responses:
                 200:
                     content:
@@ -374,22 +387,22 @@ paths:
         get:
             operationId: getContactUserGroupsPage
             parameters:
-                - in: query
-                  name: keywords
-                  schema:
-                      type: string
-                - in: query
-                  name: page
-                  schema:
-                      type: integer
-                - in: query
-                  name: pageSize
-                  schema:
-                      type: integer
-                - in: query
-                  name: sort
-                  schema:
-                      type: string
+                -   in: query
+                    name: keywords
+                    schema:
+                        type: string
+                -   in: query
+                    name: page
+                    schema:
+                        type: integer
+                -   in: query
+                    name: pageSize
+                    schema:
+                        type: integer
+                -   in: query
+                    name: sort
+                    schema:
+                        type: string
             responses:
                 200:
                     content:
@@ -470,22 +483,22 @@ paths:
         get:
             operationId: getFieldsAccountsPage
             parameters:
-                - in: query
-                  name: keyword
-                  schema:
-                      type: string
-                - in: query
-                  name: page
-                  schema:
-                      type: integer
-                - in: query
-                  name: pageSize
-                  schema:
-                      type: integer
-                - in: query
-                  name: sort
-                  schema:
-                      type: string
+                -   in: query
+                    name: keyword
+                    schema:
+                        type: string
+                -   in: query
+                    name: page
+                    schema:
+                        type: integer
+                -   in: query
+                    name: pageSize
+                    schema:
+                        type: integer
+                -   in: query
+                    name: sort
+                    schema:
+                        type: string
             responses:
                 200:
                     content:
@@ -524,22 +537,22 @@ paths:
         get:
             operationId: getFieldsOrdersPage
             parameters:
-                - in: query
-                  name: keyword
-                  schema:
-                      type: string
-                - in: query
-                  name: page
-                  schema:
-                      type: integer
-                - in: query
-                  name: pageSize
-                  schema:
-                      type: integer
-                - in: query
-                  name: sort
-                  schema:
-                      type: string
+                -   in: query
+                    name: keyword
+                    schema:
+                        type: string
+                -   in: query
+                    name: page
+                    schema:
+                        type: integer
+                -   in: query
+                    name: pageSize
+                    schema:
+                        type: integer
+                -   in: query
+                    name: sort
+                    schema:
+                        type: string
             responses:
                 200:
                     content:
@@ -578,22 +591,22 @@ paths:
         get:
             operationId: getFieldsPeoplePage
             parameters:
-                - in: query
-                  name: keyword
-                  schema:
-                      type: string
-                - in: query
-                  name: page
-                  schema:
-                      type: integer
-                - in: query
-                  name: pageSize
-                  schema:
-                      type: integer
-                - in: query
-                  name: sort
-                  schema:
-                      type: string
+                -   in: query
+                    name: keyword
+                    schema:
+                        type: string
+                -   in: query
+                    name: page
+                    schema:
+                        type: integer
+                -   in: query
+                    name: pageSize
+                    schema:
+                        type: integer
+                -   in: query
+                    name: sort
+                    schema:
+                        type: string
             responses:
                 200:
                     content:
@@ -632,22 +645,22 @@ paths:
         get:
             operationId: getFieldsProductsPage
             parameters:
-                - in: query
-                  name: keyword
-                  schema:
-                      type: string
-                - in: query
-                  name: page
-                  schema:
-                      type: integer
-                - in: query
-                  name: pageSize
-                  schema:
-                      type: integer
-                - in: query
-                  name: sort
-                  schema:
-                      type: string
+                -   in: query
+                    name: keyword
+                    schema:
+                        type: string
+                -   in: query
+                    name: page
+                    schema:
+                        type: integer
+                -   in: query
+                    name: pageSize
+                    schema:
+                        type: integer
+                -   in: query
+                    name: sort
+                    schema:
+                        type: string
             responses:
                 200:
                     content:
@@ -682,26 +695,55 @@ paths:
                         application/json: {}
                         application/xml: {}
             tags: ["Field"]
+    "/recommendation/configuration":
+        get:
+            operationId: getRecommendationConfiguration
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/RecommendationConfiguration"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/RecommendationConfiguration"
+            tags: ["RecommendationConfiguration"]
+        put:
+            operationId: putRecommendationConfiguration
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/RecommendationConfiguration"
+                    application/xml:
+                        schema:
+                            $ref: "#/components/schemas/RecommendationConfiguration"
+            responses:
+                204:
+                    content:
+                        application/json: {}
+                        application/xml: {}
+            tags: ["RecommendationConfiguration"]
     "/sites":
         get:
             operationId: getSitesPage
             parameters:
-                - in: query
-                  name: keywords
-                  schema:
-                      type: string
-                - in: query
-                  name: page
-                  schema:
-                      type: integer
-                - in: query
-                  name: pageSize
-                  schema:
-                      type: integer
-                - in: query
-                  name: sort
-                  schema:
-                      type: string
+                -   in: query
+                    name: keywords
+                    schema:
+                        type: string
+                -   in: query
+                    name: page
+                    schema:
+                        type: integer
+                -   in: query
+                    name: pageSize
+                    schema:
+                        type: integer
+                -   in: query
+                    name: sort
+                    schema:
+                        type: string
             responses:
                 200:
                     content:

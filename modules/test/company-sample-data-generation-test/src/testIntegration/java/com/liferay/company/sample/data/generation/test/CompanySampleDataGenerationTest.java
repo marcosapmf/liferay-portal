@@ -114,8 +114,8 @@ public class CompanySampleDataGenerationTest {
 				futures.add(
 					_executorService.submit(
 						() -> {
-							BufferedIncrementThreadLocal.setWithSafeCloseable(
-								true);
+							BufferedIncrementThreadLocal.
+								setForceSyncWithSafeCloseable(true);
 
 							_addCompany(companyIndex);
 
@@ -154,7 +154,7 @@ public class CompanySampleDataGenerationTest {
 			// Add user
 
 			try (SafeCloseable safeCloseable =
-					CompanyThreadLocal.setWithSafeCloseable(
+					CompanyThreadLocal.setCompanyIdWithSafeCloseable(
 						company.getCompanyId())) {
 
 				int originalCompanyUsersCount =

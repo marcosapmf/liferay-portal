@@ -11,6 +11,7 @@ import com.liferay.commerce.account.test.util.CommerceAccountTestUtil;
 import com.liferay.commerce.context.CommerceContext;
 import com.liferay.commerce.currency.model.CommerceCurrency;
 import com.liferay.commerce.currency.model.CommerceMoney;
+import com.liferay.commerce.currency.service.CommerceCurrencyLocalServiceUtil;
 import com.liferay.commerce.currency.test.util.CommerceCurrencyTestUtil;
 import com.liferay.commerce.price.CommerceProductPrice;
 import com.liferay.commerce.price.CommerceProductPriceCalculation;
@@ -85,8 +86,14 @@ public class CommerceProductPriceCalculationWithTaxV2Test {
 		_accountEntry = CommerceAccountTestUtil.getPersonAccountEntry(
 			_user.getUserId());
 
-		_commerceCurrency = CommerceCurrencyTestUtil.addCommerceCurrency(
-			_group.getCompanyId());
+		_commerceCurrency =
+			CommerceCurrencyLocalServiceUtil.fetchPrimaryCommerceCurrency(
+				_group.getCompanyId());
+
+		if (_commerceCurrency == null) {
+			_commerceCurrency = CommerceCurrencyTestUtil.addCommerceCurrency(
+				_group.getCompanyId());
+		}
 
 		_serviceContext = ServiceContextTestUtil.getServiceContext(
 			_group.getCompanyId(), _group.getGroupId(), _user.getUserId());
@@ -115,7 +122,7 @@ public class CommerceProductPriceCalculationWithTaxV2Test {
 			_user.getUserId(), _commerceChannel.getGroupId(), cpTaxCategoryId,
 			_commerceTaxMethod.getCommerceTaxMethodId(), rate);
 
-		CommerceCatalog catalog =
+		CommerceCatalog commerceCatalog =
 			_commerceCatalogLocalService.addCommerceCatalog(
 				null, RandomTestUtil.randomString(),
 				_commerceCurrency.getCode(), LocaleUtil.US.getDisplayLanguage(),
@@ -123,7 +130,7 @@ public class CommerceProductPriceCalculationWithTaxV2Test {
 
 		CommercePriceList commercePriceList =
 			CommercePriceListTestUtil.addCommercePriceList(
-				catalog.getGroupId(), 0.0);
+				commerceCatalog.getGroupId(), 0.0);
 
 		commercePriceList.setNetPrice(false);
 
@@ -133,7 +140,7 @@ public class CommerceProductPriceCalculationWithTaxV2Test {
 
 		CPInstance cpInstance =
 			CPTestUtil.addCPInstanceWithRandomSkuFromCatalog(
-				catalog.getGroupId());
+				commerceCatalog.getGroupId());
 
 		CPDefinition cpDefinition = cpInstance.getCPDefinition();
 
@@ -196,7 +203,7 @@ public class CommerceProductPriceCalculationWithTaxV2Test {
 			_user.getUserId(), commerceTaxIncludedChannel.getGroupId(),
 			cpTaxCategoryId, commerceTaxMethod.getCommerceTaxMethodId(), rate);
 
-		CommerceCatalog catalog =
+		CommerceCatalog commerceCatalog =
 			_commerceCatalogLocalService.addCommerceCatalog(
 				null, RandomTestUtil.randomString(),
 				_commerceCurrency.getCode(), LocaleUtil.US.getDisplayLanguage(),
@@ -204,7 +211,7 @@ public class CommerceProductPriceCalculationWithTaxV2Test {
 
 		CommercePriceList commercePriceList =
 			CommercePriceListTestUtil.addCommercePriceList(
-				catalog.getGroupId(), 0.0);
+				commerceCatalog.getGroupId(), 0.0);
 
 		commercePriceList.setNetPrice(true);
 
@@ -214,7 +221,7 @@ public class CommerceProductPriceCalculationWithTaxV2Test {
 
 		CPInstance cpInstance =
 			CPTestUtil.addCPInstanceWithRandomSkuFromCatalog(
-				catalog.getGroupId());
+				commerceCatalog.getGroupId());
 
 		CPDefinition cpDefinition = cpInstance.getCPDefinition();
 

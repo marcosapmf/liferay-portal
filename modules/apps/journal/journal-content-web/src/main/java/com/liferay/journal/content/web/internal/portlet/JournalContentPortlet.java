@@ -5,8 +5,8 @@
 
 package com.liferay.journal.content.web.internal.portlet;
 
-import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.dynamic.data.mapping.model.DDMTemplate;
+import com.liferay.dynamic.data.mapping.service.DDMTemplateLocalService;
 import com.liferay.fragment.processor.PortletRegistry;
 import com.liferay.item.selector.ItemSelector;
 import com.liferay.journal.constants.JournalContentPortletKeys;
@@ -21,10 +21,12 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Release;
 import com.liferay.portal.kernel.portlet.PortletRequestModel;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
+import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.theme.PortletDisplay;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ArrayUtil;
@@ -99,12 +101,26 @@ public class JournalContentPortlet extends MVCPortlet {
 		ThemeDisplay themeDisplay = (ThemeDisplay)renderRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
-		long articleGroupId = PrefsParamUtil.getLong(
-			portletPreferences, renderRequest, "groupId",
-			themeDisplay.getScopeGroupId());
+		long articleGroupId = 0;
 
-		String articleId = PrefsParamUtil.getString(
-			portletPreferences, renderRequest, "articleId");
+		String articleGroupExternalReferenceCode = PrefsParamUtil.getString(
+			portletPreferences, renderRequest, "groupExternalReferenceCode");
+
+		if (Validator.isNotNull(articleGroupExternalReferenceCode)) {
+			Group group = _groupLocalService.fetchGroupByExternalReferenceCode(
+				articleGroupExternalReferenceCode, themeDisplay.getCompanyId());
+
+			if (group != null) {
+				articleGroupId = group.getGroupId();
+			}
+		}
+
+		if (articleGroupId == 0) {
+			articleGroupId = themeDisplay.getScopeGroupId();
+		}
+
+		String articleExternalReferenceCode = PrefsParamUtil.getString(
+			portletPreferences, renderRequest, "articleExternalReferenceCode");
 
 		JournalArticle article = null;
 		JournalArticleDisplay articleDisplay = null;
@@ -126,23 +142,44 @@ public class JournalContentPortlet extends MVCPortlet {
 				_log.error("Unable to get journal article", portalException);
 			}
 		}
-		else if ((articleGroupId > 0) && Validator.isNotNull(articleId)) {
+		else if ((articleGroupId > 0) &&
+				 Validator.isNotNull(articleExternalReferenceCode)) {
+
 			String viewMode = ParamUtil.getString(renderRequest, "viewMode");
 			String languageId = _language.getLanguageId(renderRequest);
 			int page = ParamUtil.getInteger(renderRequest, "page", 1);
 
-			article = _journalArticleLocalService.fetchLatestArticle(
-				articleGroupId, articleId, WorkflowConstants.STATUS_APPROVED);
+			article =
+				_journalArticleLocalService.
+					fetchLatestArticleByExternalReferenceCode(
+						articleGroupId, articleExternalReferenceCode,
+						WorkflowConstants.STATUS_APPROVED, false);
 
 			try {
 				if (article == null) {
-					article = _journalArticleLocalService.getLatestArticle(
-						articleGroupId, articleId,
-						WorkflowConstants.STATUS_ANY);
+					article =
+						_journalArticleLocalService.
+							getLatestArticleByExternalReferenceCode(
+								articleGroupId, articleExternalReferenceCode,
+								WorkflowConstants.STATUS_ANY, false);
 				}
 
-				String ddmTemplateKey = PrefsParamUtil.getString(
-					portletPreferences, renderRequest, "ddmTemplateKey");
+				String ddmTemplateKey = null;
+
+				String ddmTemplateExternalReferenceCode =
+					PrefsParamUtil.getString(
+						portletPreferences, renderRequest,
+						"ddmTemplateExternalReferenceCode");
+
+				DDMTemplate ddmTemplate =
+					_ddmTemplateLocalService.
+						fetchDDMTemplateByExternalReferenceCode(
+							ddmTemplateExternalReferenceCode,
+							article.getGroupId(), true);
+
+				if (ddmTemplate != null) {
+					ddmTemplateKey = ddmTemplate.getTemplateKey();
+				}
 
 				if (Validator.isNull(ddmTemplateKey)) {
 					ddmTemplateKey = article.getDDMTemplateKey();
@@ -187,9 +224,8 @@ public class JournalContentPortlet extends MVCPortlet {
 
 		try {
 			JournalContentDisplayContext.create(
-				renderRequest, renderResponse,
-				_portal.getClassNameId(DDMStructure.class),
-				_ddmTemplateModelResourcePermission, _itemSelector,
+				renderRequest, renderResponse, _ddmTemplateLocalService,
+				_ddmTemplateModelResourcePermission, _itemSelector, _portal,
 				_trashHelper);
 		}
 		catch (PortalException portalException) {
@@ -246,9 +282,8 @@ public class JournalContentPortlet extends MVCPortlet {
 
 			try {
 				JournalContentDisplayContext.create(
-					resourceRequest, resourceResponse,
-					_portal.getClassNameId(DDMStructure.class),
-					_ddmTemplateModelResourcePermission, _itemSelector,
+					resourceRequest, resourceResponse, _ddmTemplateLocalService,
+					_ddmTemplateModelResourcePermission, _itemSelector, _portal,
 					_trashHelper);
 			}
 			catch (PortalException portalException) {
@@ -277,6 +312,9 @@ public class JournalContentPortlet extends MVCPortlet {
 	private static final Log _log = LogFactoryUtil.getLog(
 		JournalContentPortlet.class);
 
+	@Reference
+	private DDMTemplateLocalService _ddmTemplateLocalService;
+
 	@Reference(
 		target = "(model.class.name=com.liferay.dynamic.data.mapping.model.DDMTemplate)"
 	)
@@ -285,6 +323,9 @@ public class JournalContentPortlet extends MVCPortlet {
 
 	@Reference
 	private ExportArticleHelper _exportArticleHelper;
+
+	@Reference
+	private GroupLocalService _groupLocalService;
 
 	@Reference
 	private ItemSelector _itemSelector;

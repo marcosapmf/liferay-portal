@@ -10,8 +10,15 @@ import com.liferay.commerce.constants.CommerceOrderPaymentConstants;
 import com.liferay.commerce.currency.model.CommerceCurrency;
 import com.liferay.commerce.currency.model.CommerceMoney;
 import com.liferay.commerce.currency.util.CommercePriceFormatter;
+import com.liferay.commerce.frontend.helper.CommerceOrderStepTrackerHelper;
+import com.liferay.commerce.frontend.model.StepModel;
+import com.liferay.commerce.model.CommerceAddress;
 import com.liferay.commerce.model.CommerceOrder;
 import com.liferay.commerce.model.CommerceOrderType;
+import com.liferay.commerce.model.CommerceShippingEngine;
+import com.liferay.commerce.model.CommerceShippingMethod;
+import com.liferay.commerce.payment.method.CommercePaymentMethod;
+import com.liferay.commerce.payment.method.CommercePaymentMethodRegistry;
 import com.liferay.commerce.payment.model.CommercePaymentMethodGroupRel;
 import com.liferay.commerce.payment.service.CommercePaymentMethodGroupRelLocalService;
 import com.liferay.commerce.pricing.constants.CommercePricingConstants;
@@ -20,12 +27,29 @@ import com.liferay.commerce.product.service.CommerceChannelLocalService;
 import com.liferay.commerce.service.CommerceOrderItemService;
 import com.liferay.commerce.service.CommerceOrderService;
 import com.liferay.commerce.service.CommerceOrderTypeService;
+import com.liferay.commerce.term.model.CommerceTermEntry;
+import com.liferay.commerce.term.service.CommerceTermEntryLocalService;
+import com.liferay.commerce.util.CommerceShippingEngineRegistry;
 import com.liferay.expando.kernel.model.ExpandoBridge;
+import com.liferay.friendly.url.provider.FriendlyURLSeparatorProvider;
+import com.liferay.headless.commerce.delivery.cart.dto.v1_0.Address;
+import com.liferay.headless.commerce.delivery.cart.dto.v1_0.Attachment;
 import com.liferay.headless.commerce.delivery.cart.dto.v1_0.Cart;
 import com.liferay.headless.commerce.delivery.cart.dto.v1_0.Status;
+import com.liferay.headless.commerce.delivery.cart.dto.v1_0.Step;
 import com.liferay.headless.commerce.delivery.cart.dto.v1_0.Summary;
+import com.liferay.headless.commerce.delivery.cart.internal.dto.v1_0.converter.constants.DTOConverterConstants;
+import com.liferay.petra.function.transform.TransformUtil;
+import com.liferay.portal.kernel.dao.orm.QueryUtil;
+import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.language.Language;
+import com.liferay.portal.kernel.model.Country;
+import com.liferay.portal.kernel.model.Region;
+import com.liferay.portal.kernel.module.service.Snapshot;
+import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.util.BigDecimalUtil;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.language.LanguageResources;
 import com.liferay.portal.vulcan.dto.converter.DTOConverter;
@@ -63,6 +87,9 @@ public class CartDTOConverter implements DTOConverter<CommerceOrder, Cart> {
 		CommerceOrder commerceOrder = _commerceOrderService.getCommerceOrder(
 			(Long)dtoConverterContext.getId());
 
+		CommerceShippingMethod commerceShippingMethod =
+			commerceOrder.getCommerceShippingMethod();
+
 		Locale locale = dtoConverterContext.getLocale();
 
 		ResourceBundle resourceBundle = LanguageResources.getResourceBundle(
@@ -72,7 +99,23 @@ public class CartDTOConverter implements DTOConverter<CommerceOrder, Cart> {
 			{
 				setAccount(commerceOrder::getCommerceAccountName);
 				setAccountId(commerceOrder::getCommerceAccountId);
+				setAttachments(() -> _getAttachments(commerceOrder));
 				setAuthor(commerceOrder::getUserName);
+				setBillingAddress(
+					() -> _toAddress(
+						commerceOrder.getBillingAddress(), locale));
+				setBillingAddressExternalReferenceCode(
+					() -> {
+						CommerceAddress billingCommerceAddress =
+							commerceOrder.getBillingAddress();
+
+						if (billingCommerceAddress == null) {
+							return null;
+						}
+
+						return billingCommerceAddress.
+							getExternalReferenceCode();
+					});
 				setBillingAddressId(commerceOrder::getBillingAddressId);
 				setCouponCode(commerceOrder::getCouponCode);
 				setCreateDate(commerceOrder::getCreateDate);
@@ -83,8 +126,44 @@ public class CartDTOConverter implements DTOConverter<CommerceOrder, Cart> {
 
 						return expandoBridge.getAttributes();
 					});
+				setDeliveryTermId(
+					commerceOrder::getDeliveryCommerceTermEntryId);
+				setDeliveryTermLabel(
+					() -> {
+						if (commerceOrder.getDeliveryCommerceTermEntryId() <=
+								0) {
+
+							return null;
+						}
+
+						CommerceTermEntry commerceTermEntry =
+							_commerceTermEntryLocalService.getCommerceTermEntry(
+								commerceOrder.getDeliveryCommerceTermEntryId());
+
+						return commerceTermEntry.getLabel(
+							_language.getLanguageId(locale));
+					});
 				setExternalReferenceCode(
 					commerceOrder::getExternalReferenceCode);
+				setFriendlyURLSeparator(
+					() -> {
+						if (!FeatureFlagManagerUtil.isEnabled("LPD-20379")) {
+							return null;
+						}
+
+						FriendlyURLSeparatorProvider
+							friendlyURLSeparatorProvider =
+								_friendlyURLSeparatorProviderSnapshot.get();
+
+						if (friendlyURLSeparatorProvider == null) {
+							return null;
+						}
+
+						return friendlyURLSeparatorProvider.
+							getFriendlyURLSeparator(
+								commerceOrder.getCompanyId(),
+								CommerceOrder.class.getName());
+					});
 				setId(commerceOrder::getCommerceOrderId);
 				setLastPriceUpdateDate(commerceOrder::getLastPriceUpdateDate);
 				setModifiedDate(commerceOrder::getModifiedDate);
@@ -105,6 +184,18 @@ public class CartDTOConverter implements DTOConverter<CommerceOrder, Cart> {
 							commerceOrderStatusLabel,
 							commerceOrderStatusLabelI18n);
 					});
+				setOrderType(
+					() -> {
+						CommerceOrderType commerceOrderType =
+							_commerceOrderTypeService.fetchCommerceOrderType(
+								commerceOrder.getCommerceOrderTypeId());
+
+						if (commerceOrderType == null) {
+							return null;
+						}
+
+						return commerceOrderType.getName(locale);
+					});
 				setOrderTypeExternalReferenceCode(
 					() -> _getOrderTypeExternalReferenceCode(
 						commerceOrder.getCommerceOrderTypeId()));
@@ -116,21 +207,37 @@ public class CartDTOConverter implements DTOConverter<CommerceOrder, Cart> {
 						String paymentMethodKey =
 							commerceOrder.getCommercePaymentMethodKey();
 
-						if ((paymentMethodKey != null) &&
-							!paymentMethodKey.isEmpty()) {
-
-							CommercePaymentMethodGroupRel
-								commercePaymentMethodGroupRel =
-									_commercePaymentMethodGroupRelLocalService.
-										getCommercePaymentMethodGroupRel(
-											commerceOrder.getGroupId(),
-											paymentMethodKey);
-
-							return commercePaymentMethodGroupRel.getName(
-								locale);
+						if (Validator.isNull(paymentMethodKey)) {
+							return null;
 						}
 
-						return null;
+						CommercePaymentMethodGroupRel
+							commercePaymentMethodGroupRel =
+								_commercePaymentMethodGroupRelLocalService.
+									getCommercePaymentMethodGroupRel(
+										commerceOrder.getGroupId(),
+										paymentMethodKey);
+
+						return commercePaymentMethodGroupRel.getName(locale);
+					});
+				setPaymentMethodType(
+					() -> {
+						String paymentMethodKey =
+							commerceOrder.getCommercePaymentMethodKey();
+
+						if (Validator.isNull(paymentMethodKey)) {
+							return null;
+						}
+
+						CommercePaymentMethod commercePaymentMethod =
+							_commercePaymentMethodRegistry.
+								getCommercePaymentMethod(paymentMethodKey);
+
+						if (commercePaymentMethod == null) {
+							return null;
+						}
+
+						return commercePaymentMethod.getPaymentType();
 					});
 				setPaymentStatus(commerceOrder::getPaymentStatus);
 				setPaymentStatusInfo(
@@ -152,12 +259,73 @@ public class CartDTOConverter implements DTOConverter<CommerceOrder, Cart> {
 						CommerceOrderPaymentConstants.
 							getOrderPaymentStatusLabel(
 								commerceOrder.getPaymentStatus()));
+				setPaymentTermId(commerceOrder::getPaymentCommerceTermEntryId);
+				setPaymentTermLabel(
+					() -> {
+						if (commerceOrder.getPaymentCommerceTermEntryId() <=
+								0) {
+
+							return null;
+						}
+
+						CommerceTermEntry commerceTermEntry =
+							_commerceTermEntryLocalService.getCommerceTermEntry(
+								commerceOrder.getPaymentCommerceTermEntryId());
+
+						return commerceTermEntry.getLabel(
+							_language.getLanguageId(locale));
+					});
 				setPrintedNote(commerceOrder::getPrintedNote);
 				setPurchaseOrderNumber(commerceOrder::getPurchaseOrderNumber);
+				setRequestedDeliveryDate(
+					commerceOrder::getRequestedDeliveryDate);
+				setShippingAddress(
+					() -> _toAddress(
+						commerceOrder.getShippingAddress(), locale));
+				setShippingAddressExternalReferenceCode(
+					() -> {
+						CommerceAddress shippingCommerceAddress =
+							commerceOrder.getShippingAddress();
+
+						if (shippingCommerceAddress == null) {
+							return null;
+						}
+
+						return shippingCommerceAddress.
+							getExternalReferenceCode();
+					});
 				setShippingAddressId(commerceOrder::getShippingAddressId);
+				setShippingMethod(
+					() -> {
+						if (commerceShippingMethod == null) {
+							return null;
+						}
+
+						return commerceShippingMethod.getName(locale);
+					});
+				setShippingOption(
+					() -> {
+						if (commerceShippingMethod == null) {
+							return null;
+						}
+
+						CommerceShippingEngine commerceShippingEngine =
+							_commerceShippingEngineRegistry.
+								getCommerceShippingEngine(
+									commerceShippingMethod.getEngineKey());
+
+						return commerceShippingEngine.
+							getCommerceShippingOptionLabel(
+								commerceOrder.getShippingOptionName(), locale);
+					});
 				setStatus(
 					() -> WorkflowConstants.getStatusLabel(
 						commerceOrder.getStatus()));
+				setSteps(
+					() -> TransformUtil.transformToArray(
+						_commerceOrderStepTrackerHelper.getCommerceOrderSteps(
+							false, commerceOrder, locale),
+						stepModel -> _toStep(stepModel), Step.class));
 				setSummary(() -> _getSummary(commerceOrder, locale));
 				setWorkflowStatusInfo(
 					() -> {
@@ -184,6 +352,15 @@ public class CartDTOConverter implements DTOConverter<CommerceOrder, Cart> {
 		}
 
 		return _commercePriceFormatter.format(commerceCurrency, price, locale);
+	}
+
+	private Attachment[] _getAttachments(CommerceOrder commerceOrder)
+		throws PortalException {
+
+		return TransformUtil.transformToArray(
+			commerceOrder.getAttachmentFileEntries(
+				QueryUtil.ALL_POS, QueryUtil.ALL_POS),
+			_attachmentDTOConverter::toDTO, Attachment.class);
 	}
 
 	private String[] _getFormattedDiscountPercentages(
@@ -547,6 +724,68 @@ public class CartDTOConverter implements DTOConverter<CommerceOrder, Cart> {
 				finalTotalDiscountAmount, commerceCurrency, locale));
 	}
 
+	private Address _toAddress(CommerceAddress commerceAddress, Locale locale) {
+		if (commerceAddress == null) {
+			return null;
+		}
+
+		return new Address() {
+			{
+				setCity(commerceAddress::getCity);
+				setCountry(
+					() -> {
+						Country commerceAddressCountry =
+							commerceAddress.getCountry();
+
+						return commerceAddressCountry.getName(locale);
+					});
+				setCountryISOCode(
+					() -> {
+						Country commerceAddressCountry =
+							commerceAddress.getCountry();
+
+						return commerceAddressCountry.getA2();
+					});
+				setDescription(commerceAddress::getDescription);
+				setExternalReferenceCode(
+					commerceAddress::getExternalReferenceCode);
+				setId(commerceAddress::getCommerceAddressId);
+				setLatitude(commerceAddress::getLatitude);
+				setLongitude(commerceAddress::getLongitude);
+				setName(commerceAddress::getName);
+				setPhoneNumber(commerceAddress::getPhoneNumber);
+				setRegion(
+					() -> {
+						Region commerceAddressRegion =
+							commerceAddress.getRegion();
+
+						if (commerceAddressRegion == null) {
+							return null;
+						}
+
+						return commerceAddressRegion.getTitle(
+							_language.getLanguageId(locale));
+					});
+				setRegionISOCode(
+					() -> {
+						Region commerceAddressRegion =
+							commerceAddress.getRegion();
+
+						if (commerceAddressRegion == null) {
+							return null;
+						}
+
+						return commerceAddressRegion.getRegionCode();
+					});
+				setStreet1(commerceAddress::getStreet1);
+				setStreet2(commerceAddress::getStreet2);
+				setStreet3(commerceAddress::getStreet3);
+				setSubtype(commerceAddress::getSubtype);
+				setZip(commerceAddress::getZip);
+			}
+		};
+	}
+
 	private Status _toStatus(
 		int orderStatus, String commerceOrderWorkflowStatusLabel,
 		String commerceOrderWorkflowStatusLabelI18n) {
@@ -560,6 +799,23 @@ public class CartDTOConverter implements DTOConverter<CommerceOrder, Cart> {
 		};
 	}
 
+	private Step _toStep(StepModel stepModel) {
+		return new Step() {
+			{
+				setId(stepModel::getId);
+				setLabel(stepModel::getLabel);
+				setState(stepModel::getState);
+			}
+		};
+	}
+
+	private static final Snapshot<FriendlyURLSeparatorProvider>
+		_friendlyURLSeparatorProviderSnapshot = new Snapshot<>(
+			CartDTOConverter.class, FriendlyURLSeparatorProvider.class);
+
+	@Reference(target = DTOConverterConstants.ATTACHMENT_DTO_CONVERTER)
+	private DTOConverter<FileEntry, Attachment> _attachmentDTOConverter;
+
 	@Reference
 	private CommerceChannelLocalService _commerceChannelLocalService;
 
@@ -570,6 +826,9 @@ public class CartDTOConverter implements DTOConverter<CommerceOrder, Cart> {
 	private CommerceOrderService _commerceOrderService;
 
 	@Reference
+	private CommerceOrderStepTrackerHelper _commerceOrderStepTrackerHelper;
+
+	@Reference
 	private CommerceOrderTypeService _commerceOrderTypeService;
 
 	@Reference
@@ -577,7 +836,16 @@ public class CartDTOConverter implements DTOConverter<CommerceOrder, Cart> {
 		_commercePaymentMethodGroupRelLocalService;
 
 	@Reference
+	private CommercePaymentMethodRegistry _commercePaymentMethodRegistry;
+
+	@Reference
 	private CommercePriceFormatter _commercePriceFormatter;
+
+	@Reference
+	private CommerceShippingEngineRegistry _commerceShippingEngineRegistry;
+
+	@Reference
+	private CommerceTermEntryLocalService _commerceTermEntryLocalService;
 
 	@Reference
 	private Language _language;

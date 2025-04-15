@@ -3,6 +3,10 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
+import {
+	ObjectDefinition,
+	ObjectDefinitionAPI,
+} from '@liferay/object-admin-rest-client-js';
 import {expect, mergeTests} from '@playwright/test';
 
 import {apiHelpersTest} from '../../fixtures/apiHelpersTest';
@@ -26,7 +30,10 @@ test.beforeEach(async ({apiHelpers}) => {
 });
 
 test.afterEach(async ({apiHelpers, notificationTemplatesPage, page}) => {
-	await apiHelpers.objectAdmin.deleteObjectDefinition(objectDefinition.id);
+	const objectDefinitionAPIClient =
+		await apiHelpers.buildRestClient(ObjectDefinitionAPI);
+
+	await objectDefinitionAPIClient.deleteObjectDefinition(objectDefinition.id);
 
 	await notificationTemplatesPage.goto();
 
@@ -383,7 +390,7 @@ test('can use notification terms and freeMarker variables in notification templa
 	];
 
 	for (const term of terms) {
-		await expect(page.locator('div.dnd-td').getByText(term)).toBeVisible();
+		await expect(page.locator('.fds td').getByText(term)).toBeVisible();
 	}
 
 	const copyButtons = [
@@ -433,17 +440,13 @@ test('can use notification terms and freeMarker variables in notification templa
 	const freeMarkerVariables = [
 		'Author',
 		'Create Date',
-		'Current URL',
 		'Default',
 		'External Reference Code',
-		'HTTP Request',
 		'ID',
 		'Locale',
 		'Modified Date',
 		'Portal URL',
 		'Publish Date',
-		'Template ID',
-		'Theme Display',
 		'Status',
 		'User Profile Image',
 		objectFieldName,
@@ -454,8 +457,6 @@ test('can use notification terms and freeMarker variables in notification templa
 			page.getByRole('button', {exact: true, name: freeMarkerVariable})
 		).toBeVisible();
 	}
-
-	await page.getByRole('button', {name: 'Current URL'}).click();
 
 	await page.getByRole('button', {name: objectFieldName}).click();
 
@@ -468,8 +469,6 @@ test('can use notification terms and freeMarker variables in notification templa
 	await expect(
 		page
 			.locator('.CodeMirror-lines')
-			.getByText(
-				'currentURL$' + `{ObjectField_${objectFieldName}.getData()}`
-			)
+			.getByText(`{ObjectField_${objectFieldName}.getData()}`)
 	).toBeVisible();
 });

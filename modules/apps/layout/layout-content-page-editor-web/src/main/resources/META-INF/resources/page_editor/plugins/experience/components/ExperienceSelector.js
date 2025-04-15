@@ -15,8 +15,8 @@ import {
 	useEventListener,
 	useIsMounted,
 } from '@liferay/frontend-js-react-web';
-import {useId, useSessionState} from 'frontend-js-components-web';
-import {COOKIE_TYPES, navigate, openToast} from 'frontend-js-web';
+import {openToast, useId, useSessionState} from 'frontend-js-components-web';
+import {COOKIE_TYPES, navigate} from 'frontend-js-web';
 import React, {useCallback, useEffect, useRef, useState} from 'react';
 
 import {config} from '../../../app/config/index';
@@ -566,7 +566,7 @@ const ExperiencesSelectorHeader = ({canCreateExperiences, onNewExperience}) => {
 				</>
 			)}
 
-			{!config.isSegmentationEnabled && !dismissAlert ? (
+			{!config.isSegmentationEnabled && !dismissAlert && (
 				<ClayAlert
 					className="mx-0 segmentation-disabled-alert"
 					displayType="warning"
@@ -588,16 +588,6 @@ const ExperiencesSelectorHeader = ({canCreateExperiences, onNewExperience}) => {
 						Liferay.Language.get(
 							'contact-your-system-administrator-to-enable-it'
 						)
-					)}
-				</ClayAlert>
-			) : (
-				<ClayAlert
-					className="mx-0"
-					displayType="warning"
-					title={Liferay.Language.get('warning')}
-				>
-					{Liferay.Language.get(
-						'changes-to-experiences-are-applied-immediately'
 					)}
 				</ClayAlert>
 			)}

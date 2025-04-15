@@ -5,9 +5,11 @@
 
 package com.liferay.commerce.product.content.web.internal.info.item.provider;
 
+import com.liferay.account.model.AccountEntry;
 import com.liferay.asset.info.item.provider.AssetEntryInfoItemFieldSetProvider;
 import com.liferay.asset.kernel.model.AssetCategory;
 import com.liferay.asset.kernel.service.AssetCategoryLocalService;
+import com.liferay.commerce.context.CommerceContext;
 import com.liferay.commerce.context.CommerceContextThreadLocal;
 import com.liferay.commerce.currency.model.CommerceMoney;
 import com.liferay.commerce.inventory.CPDefinitionInventoryEngine;
@@ -17,6 +19,7 @@ import com.liferay.commerce.model.CPDefinitionInventory;
 import com.liferay.commerce.price.CommerceProductPriceCalculation;
 import com.liferay.commerce.product.content.helper.CPContentHelper;
 import com.liferay.commerce.product.content.web.internal.info.CPDefinitionInfoItemFields;
+import com.liferay.commerce.product.model.CPConfigurationList;
 import com.liferay.commerce.product.model.CPDefinition;
 import com.liferay.commerce.product.model.CPInstance;
 import com.liferay.commerce.product.model.CommerceChannel;
@@ -98,8 +101,20 @@ public class CPDefinitionInfoItemFieldValuesProvider
 			return ReflectionUtil.throwException(noSuchInfoItemException);
 		}
 		catch (Exception exception) {
-			throw new RuntimeException("Unexpected exception", exception);
+			throw new RuntimeException(exception);
 		}
+	}
+
+	private long _getAccountEntryId() throws PortalException {
+		CommerceContext commerceContext = CommerceContextThreadLocal.get();
+
+		if (commerceContext != null) {
+			AccountEntry accountEntry = commerceContext.getAccountEntry();
+
+			return accountEntry.getAccountEntryId();
+		}
+
+		return 0;
 	}
 
 	private String _getAvailabilityStatus(
@@ -127,14 +142,34 @@ public class CPDefinitionInfoItemFieldValuesProvider
 			_cpDefinitionInventoryEngineRegistry.getCPDefinitionInventoryEngine(
 				cpDefinitionInventory);
 
+		long cpConfigurationListId = 0;
+
+		CommerceContext commerceContext = CommerceContextThreadLocal.get();
+
+		if (commerceContext != null) {
+			cpConfigurationListId = commerceContext.getCPConfigurationListId(
+				cpInstance.getGroupId());
+		}
+		else {
+			CPDefinition cpDefinition = cpInstance.getCPDefinition();
+
+			CPConfigurationList masterCPConfigurationList =
+				cpDefinition.getMasterCPConfigurationList();
+
+			cpConfigurationListId =
+				masterCPConfigurationList.getCPConfigurationListId();
+		}
+
 		boolean displayAvailability =
-			cpDefinitionInventoryEngine.isDisplayAvailability(cpInstance);
+			cpDefinitionInventoryEngine.isDisplayAvailability(
+				cpConfigurationListId, cpInstance);
 
 		if (displayAvailability) {
 			return _commerceInventoryEngine.getAvailabilityStatus(
-				cpInstance.getCompanyId(), cpInstance.getGroupId(),
-				commerceChannel.getGroupId(),
-				cpDefinitionInventoryEngine.getMinStockQuantity(cpInstance),
+				cpInstance.getCompanyId(), _getAccountEntryId(),
+				cpInstance.getGroupId(), commerceChannel.getGroupId(),
+				cpDefinitionInventoryEngine.getMinStockQuantity(
+					cpConfigurationListId, cpInstance),
 				cpInstance.getSku(), StringPool.BLANK);
 		}
 
@@ -547,21 +582,40 @@ public class CPDefinitionInfoItemFieldValuesProvider
 			_cpDefinitionInventoryEngineRegistry.getCPDefinitionInventoryEngine(
 				cpDefinitionInventory);
 
-		boolean displayStockQuantity =
-			cpDefinitionInventoryEngine.isDisplayStockQuantity(cpInstance);
+		long cpConfigurationListId = 0;
 
-		if (displayStockQuantity) {
-			long commerceChannelGroupId =
-				_commerceChannelLocalService.
-					getCommerceChannelGroupIdBySiteGroupId(
-						themeDisplay.getScopeGroupId());
+		CommerceContext commerceContext = CommerceContextThreadLocal.get();
 
-			return _commerceInventoryEngine.getStockQuantity(
-				cpInstance.getCompanyId(), cpInstance.getGroupId(),
-				commerceChannelGroupId, cpInstance.getSku(), StringPool.BLANK);
+		if (commerceContext != null) {
+			cpConfigurationListId = commerceContext.getCPConfigurationListId(
+				cpInstance.getGroupId());
+		}
+		else {
+			CPDefinition cpDefinition = cpInstance.getCPDefinition();
+
+			CPConfigurationList masterCPConfigurationList =
+				cpDefinition.getMasterCPConfigurationList();
+
+			cpConfigurationListId =
+				masterCPConfigurationList.getCPConfigurationListId();
 		}
 
-		return null;
+		boolean displayStockQuantity =
+			cpDefinitionInventoryEngine.isDisplayStockQuantity(
+				cpConfigurationListId, cpInstance);
+
+		if (!displayStockQuantity) {
+			return null;
+		}
+
+		long commerceChannelGroupId =
+			_commerceChannelLocalService.getCommerceChannelGroupIdBySiteGroupId(
+				themeDisplay.getScopeGroupId());
+
+		return _commerceInventoryEngine.getStockQuantity(
+			cpInstance.getCompanyId(), _getAccountEntryId(),
+			cpInstance.getGroupId(), commerceChannelGroupId,
+			cpInstance.getSku(), StringPool.BLANK);
 	}
 
 	private String _getSKU(CPInstance cpInstance) throws PortalException {

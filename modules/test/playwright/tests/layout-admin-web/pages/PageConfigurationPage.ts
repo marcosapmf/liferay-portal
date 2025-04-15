@@ -6,9 +6,17 @@
 import {Locator, Page} from '@playwright/test';
 
 import {PagesAdminPage} from '../../../pages/layout-admin-web/PagesAdminPage';
+import {clickAndExpectToBeHidden} from '../../../utils/clickAndExpectToBeHidden';
 import {clickAndExpectToBeVisible} from '../../../utils/clickAndExpectToBeVisible';
 import fillAndClickOutside from '../../../utils/fillAndClickOutside';
-import {waitForSuccessAlert} from '../../../utils/waitForSuccessAlert';
+import {waitForAlert} from '../../../utils/waitForAlert';
+
+type PageConfigurationSection =
+	| 'General'
+	| 'Design'
+	| 'SEO'
+	| 'Open Graph'
+	| 'Custom Meta Tags';
 
 export class PageConfigurationPage {
 	readonly page: Page;
@@ -43,7 +51,7 @@ export class PageConfigurationPage {
 		await fillAndClickOutside(this.page, this.url, url);
 	}
 
-	async goToSection(pageTitle: string, section: string) {
+	async goToSection(pageTitle: string, section: PageConfigurationSection) {
 		await this.pagesAdminPage.clickOnAction('Configure', pageTitle);
 
 		await this.page
@@ -54,10 +62,21 @@ export class PageConfigurationPage {
 	async save() {
 		await this.saveButton.click();
 
-		await waitForSuccessAlert(
+		await waitForAlert(
 			this.page,
 			'Success:The page was updated successfully.'
 		);
+	}
+
+	async selectMasterLayout(name: string) {
+		await this.page.getByLabel('Change Master').click();
+
+		const iframe = this.page.frameLocator('iframe[title="Select Master"]');
+
+		await clickAndExpectToBeHidden({
+			target: this.page.locator('.modal-dialog'),
+			trigger: iframe.getByRole('button', {name: `Select ${name}`}),
+		});
 	}
 
 	async setCanonicalURL(canonicalURL: string) {
@@ -104,7 +123,7 @@ export class PageConfigurationPage {
 	async setInputValueAndSave(
 		element: Locator,
 		layoutTitle: string,
-		section: string,
+		section: PageConfigurationSection,
 		value: string
 	) {
 		await this.goToSection(layoutTitle, section);

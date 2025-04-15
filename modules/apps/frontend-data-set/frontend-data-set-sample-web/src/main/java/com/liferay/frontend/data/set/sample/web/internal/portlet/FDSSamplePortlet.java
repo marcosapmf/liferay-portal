@@ -9,6 +9,7 @@ import com.liferay.frontend.data.set.sample.web.internal.constants.FDSSamplePort
 import com.liferay.frontend.data.set.sample.web.internal.constants.FDSSampleWebKeys;
 import com.liferay.frontend.data.set.sample.web.internal.display.context.FDSSampleDisplayContext;
 import com.liferay.object.constants.ObjectDefinitionConstants;
+import com.liferay.object.constants.ObjectEntryFolderConstants;
 import com.liferay.object.constants.ObjectFieldConstants;
 import com.liferay.object.field.util.ObjectFieldUtil;
 import com.liferay.object.model.ObjectDefinition;
@@ -31,6 +32,7 @@ import java.io.Serializable;
 
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collections;
 
 import javax.portlet.Portlet;
 import javax.portlet.PortletException;
@@ -106,12 +108,14 @@ public class FDSSamplePortlet extends MVCPortlet {
 
 		objectDefinition =
 			_objectDefinitionLocalService.addCustomObjectDefinition(
-				user.getUserId(), 0, false, true, false, false,
+				user.getUserId(), 0, null, false, false, true, false, false,
+				false,
 				LocalizedMapUtil.getLocalizedMap("Frontend Data Set Sample"),
 				"FDSSample", "100", null,
 				LocalizedMapUtil.getLocalizedMap("Frontend Data Set Samples"),
 				true, ObjectDefinitionConstants.SCOPE_COMPANY,
 				ObjectDefinitionConstants.STORAGE_TYPE_DEFAULT,
+				Collections.emptyList(),
 				Arrays.asList(
 					ObjectFieldUtil.createObjectField(
 						ObjectFieldConstants.BUSINESS_TYPE_TEXT,
@@ -129,6 +133,10 @@ public class FDSSamplePortlet extends MVCPortlet {
 						ObjectFieldConstants.BUSINESS_TYPE_TEXT,
 						ObjectFieldConstants.DB_TYPE_STRING, true, false, null,
 						"Color", "color", false),
+					ObjectFieldUtil.createObjectField(
+						ObjectFieldConstants.BUSINESS_TYPE_TEXT,
+						ObjectFieldConstants.DB_TYPE_STRING, true, false, null,
+						"ImageURL", "imageURL", false),
 					ObjectFieldUtil.createObjectField(
 						ObjectFieldConstants.BUSINESS_TYPE_TEXT,
 						ObjectFieldConstants.DB_TYPE_STRING, true, false, null,
@@ -151,12 +159,17 @@ public class FDSSamplePortlet extends MVCPortlet {
 		for (int i = 1; i <= 100; i++) {
 			_objectEntryLocalService.addObjectEntry(
 				user.getUserId(), 0, objectDefinition.getObjectDefinitionId(),
+				ObjectEntryFolderConstants.
+					PARENT_OBJECT_ENTRY_FOLDER_ID_DEFAULT,
+				null,
 				HashMapBuilder.<String, Serializable>put(
 					"color", colors[i % 4]
 				).put(
 					"date", calendar.getTime()
 				).put(
 					"description", "This is a description for sample " + i + "."
+				).put(
+					"imageURL", "/image/company_logo"
 				).put(
 					"size", sizes[i % 6]
 				).put(

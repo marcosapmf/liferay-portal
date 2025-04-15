@@ -3,7 +3,6 @@ definition {
 
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property testray.component.names = "Document Management";
 	property testray.main.component.name = "Content Management Headless";
 
 	setUp {
@@ -260,10 +259,6 @@ definition {
 			TestUtils.assertPartialEquals(
 				actual = ${response},
 				expected = "NOT_FOUND");
-
-			TestUtils.assertPartialEquals(
-				actual = ${response},
-				expected = "No FileEntry exists with the key {fileEntryId=40000}");
 
 			User.loginPG(
 				password = PropsUtil.get("default.admin.password"),

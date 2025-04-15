@@ -57,12 +57,11 @@ public interface CTRemoteResource {
 	public HttpInvoker.HttpResponse postCTRemoteHttpResponse(CTRemote ctRemote)
 		throws Exception;
 
-	public void postCTRemoteBatch(
-			CTRemote ctRemote, String callbackURL, Object object)
+	public void postCTRemoteBatch(String callbackURL, Object object)
 		throws Exception;
 
 	public HttpInvoker.HttpResponse postCTRemoteBatchHttpResponse(
-			CTRemote ctRemote, String callbackURL, Object object)
+			String callbackURL, Object object)
 		throws Exception;
 
 	public void deleteCTRemote(Long id) throws Exception;
@@ -94,12 +93,11 @@ public interface CTRemoteResource {
 			Long id, CTRemote ctRemote)
 		throws Exception;
 
-	public void putCTRemoteBatch(
-			CTRemote ctRemote, String callbackURL, Object object)
+	public void putCTRemoteBatch(String callbackURL, Object object)
 		throws Exception;
 
 	public HttpInvoker.HttpResponse putCTRemoteBatchHttpResponse(
-			CTRemote ctRemote, String callbackURL, Object object)
+			String callbackURL, Object object)
 		throws Exception;
 
 	public static class Builder {
@@ -200,8 +198,8 @@ public interface CTRemoteResource {
 		private Map<String, String> _headers = new LinkedHashMap<>();
 		private String _host = "localhost";
 		private Locale _locale;
-		private String _login = "";
-		private String _password = "";
+		private String _login;
+		private String _password;
 		private Map<String, String> _parameters = new LinkedHashMap<>();
 		private int _port = 8080;
 		private String _scheme = "http";
@@ -321,8 +319,10 @@ public interface CTRemoteResource {
 					_builder._port + _builder._contextPath +
 						"/o/change-tracking-rest/v1.0/ct-remotes");
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
@@ -440,8 +440,10 @@ public interface CTRemoteResource {
 					_builder._port + _builder._contextPath +
 						"/o/change-tracking-rest/v1.0/ct-remotes/export-batch");
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
@@ -541,18 +543,19 @@ public interface CTRemoteResource {
 					_builder._port + _builder._contextPath +
 						"/o/change-tracking-rest/v1.0/ct-remotes");
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
 
-		public void postCTRemoteBatch(
-				CTRemote ctRemote, String callbackURL, Object object)
+		public void postCTRemoteBatch(String callbackURL, Object object)
 			throws Exception {
 
 			HttpInvoker.HttpResponse httpResponse =
-				postCTRemoteBatchHttpResponse(ctRemote, callbackURL, object);
+				postCTRemoteBatchHttpResponse(callbackURL, object);
 
 			String content = httpResponse.getContent();
 
@@ -603,7 +606,7 @@ public interface CTRemoteResource {
 		}
 
 		public HttpInvoker.HttpResponse postCTRemoteBatchHttpResponse(
-				CTRemote ctRemote, String callbackURL, Object object)
+				String callbackURL, Object object)
 			throws Exception {
 
 			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
@@ -639,8 +642,10 @@ public interface CTRemoteResource {
 					_builder._port + _builder._contextPath +
 						"/o/change-tracking-rest/v1.0/ct-remotes/batch");
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
@@ -739,8 +744,10 @@ public interface CTRemoteResource {
 
 			httpInvoker.path("id", id);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
@@ -836,8 +843,10 @@ public interface CTRemoteResource {
 					_builder._port + _builder._contextPath +
 						"/o/change-tracking-rest/v1.0/ct-remotes/batch");
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
@@ -935,8 +944,10 @@ public interface CTRemoteResource {
 
 			httpInvoker.path("id", id);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
@@ -1040,8 +1051,10 @@ public interface CTRemoteResource {
 
 			httpInvoker.path("id", id);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
@@ -1145,18 +1158,19 @@ public interface CTRemoteResource {
 
 			httpInvoker.path("id", id);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
 
-		public void putCTRemoteBatch(
-				CTRemote ctRemote, String callbackURL, Object object)
+		public void putCTRemoteBatch(String callbackURL, Object object)
 			throws Exception {
 
 			HttpInvoker.HttpResponse httpResponse =
-				putCTRemoteBatchHttpResponse(ctRemote, callbackURL, object);
+				putCTRemoteBatchHttpResponse(callbackURL, object);
 
 			String content = httpResponse.getContent();
 
@@ -1207,7 +1221,7 @@ public interface CTRemoteResource {
 		}
 
 		public HttpInvoker.HttpResponse putCTRemoteBatchHttpResponse(
-				CTRemote ctRemote, String callbackURL, Object object)
+				String callbackURL, Object object)
 			throws Exception {
 
 			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
@@ -1243,8 +1257,10 @@ public interface CTRemoteResource {
 					_builder._port + _builder._contextPath +
 						"/o/change-tracking-rest/v1.0/ct-remotes/batch");
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}

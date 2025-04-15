@@ -58,6 +58,10 @@ public class JenkinsConsoleTextLoader {
 		String consoleText = JenkinsResultsParserUtil.getCachedText(
 			consoleLogFileKey);
 
+		if (JenkinsResultsParserUtil.isNullOrEmpty(consoleText)) {
+			return "";
+		}
+
 		if (truncated) {
 			consoleText = consoleText + "\n[TRUNCATED]";
 		}
@@ -125,6 +129,16 @@ public class JenkinsConsoleTextLoader {
 
 				HttpURLConnection httpURLConnection =
 					(HttpURLConnection)urlObject.openConnection();
+
+				JenkinsResultsParserUtil.HTTPAuthorization httpAuthorization =
+					new JenkinsResultsParserUtil.BasicHTTPAuthorization(
+						JenkinsResultsParserUtil.getBuildProperty(
+							"jenkins.admin.user.token"),
+						JenkinsResultsParserUtil.getBuildProperty(
+							"jenkins.admin.user.name"));
+
+				httpURLConnection.setRequestProperty(
+					"Authorization", httpAuthorization.toString());
 
 				long latestServerLogSize = httpURLConnection.getHeaderFieldLong(
 					"X-Text-Size", serverLogSize);

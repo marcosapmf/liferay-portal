@@ -43,11 +43,14 @@ interface IProps {
 	decimalSymbols: ISelectProps<DecimalSymbol>[];
 	defaultLanguageId: Locale;
 	editingLanguageId: Locale;
+	errorMessage: string;
 	ffDecimalPlacesSettingsEnabled: boolean;
+	fieldName: string;
 	onBlur: FocusEventHandler<HTMLInputElement>;
 	onChange: FieldChangeEventHandler<unknown>;
 	onFocus: FocusEventHandler<HTMLInputElement>;
 	readOnly: boolean;
+	required: boolean;
 	thousandsSeparator: ThousandsSeparator[] | ThousandsSeparator;
 	thousandsSeparators: ISelectProps<ThousandsSeparator>[];
 	value: INumericInputMaskValue;
@@ -66,17 +69,22 @@ interface ISelectProps<T> {
 	value: T;
 }
 
-const NumericInputMask: React.FC<IProps> = ({
+const NumericInputMask: React.FC<
+	{children?: React.ReactNode | undefined} & IProps
+> = ({
 	append: appendInitial,
 	appendType: appendTypeInitial,
 	decimalPlaces: decimalPlacesInitial,
 	decimalSymbol: decimalSymbolInitial,
 	decimalSymbols: decimalSymbolsProp,
 	editingLanguageId,
+	errorMessage,
+	fieldName,
 	onBlur,
 	onChange,
 	onFocus,
 	readOnly,
+	required,
 	thousandsSeparator: thousandsSeparatorInitial,
 	thousandsSeparators: thousandsSeparatorsProp,
 	value,
@@ -164,6 +172,9 @@ const NumericInputMask: React.FC<IProps> = ({
 			<div className="align-items-end d-flex position-relative">
 				<div className="pr-2 w-50">
 					<Select
+						defaultLanguageId={editingLanguageId}
+						errorMessage={errorMessage}
+						fieldName={fieldName}
 						label={Liferay.Language.get('thousands-separator')}
 						name="thousandsSeparator"
 						onChange={(_: any, value: ThousandsSeparator[]) => {
@@ -178,6 +189,7 @@ const NumericInputMask: React.FC<IProps> = ({
 						}}
 						options={thousandsSeparators}
 						readOnly={readOnly}
+						required={required}
 						selectedKey={
 							thousandsSeparator === '.'
 								? '$.2'
@@ -191,6 +203,9 @@ const NumericInputMask: React.FC<IProps> = ({
 
 				<div className="pl-2 w-50">
 					<Select
+						defaultLanguageId={editingLanguageId}
+						errorMessage={errorMessage}
+						fieldName={fieldName}
 						label={Liferay.Language.get('decimal-separator')}
 						name="decimalSymbol"
 						onChange={(_: any, value: DecimalSymbol[]) => {
@@ -206,6 +221,7 @@ const NumericInputMask: React.FC<IProps> = ({
 						}}
 						options={decimalSymbols}
 						readOnly={readOnly}
+						required={required}
 						selectedKey={
 							decimalSymbol === '.'
 								? '$.0'

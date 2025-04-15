@@ -13,8 +13,6 @@ import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ResourceActionLocalService;
@@ -35,10 +33,12 @@ import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
 import com.liferay.portal.vulcan.batch.engine.VulcanBatchEngineTaskItemDelegate;
 import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineExportTaskResource;
 import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineImportTaskResource;
+import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegate;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 import com.liferay.portal.vulcan.util.ActionUtil;
+import com.liferay.portal.vulcan.util.UriInfoUtil;
 
 import java.io.Serializable;
 
@@ -69,7 +69,8 @@ import javax.ws.rs.core.UriInfo;
 @javax.ws.rs.Path("/v1.0")
 public abstract class BaseCTCollectionResourceImpl
 	implements CTCollectionResource, EntityModelResource,
-			   VulcanBatchEngineTaskItemDelegate<CTCollection> {
+			   VulcanBatchEngineTaskItemDelegate<CTCollection>,
+			   VulcanCRUDItemDelegate<CTCollection> {
 
 	/**
 	 * Invoke this method with the command line:
@@ -115,7 +116,8 @@ public abstract class BaseCTCollectionResourceImpl
 			@javax.ws.rs.QueryParam("status")
 			Integer[] status,
 			@javax.ws.rs.core.Context Pagination pagination,
-			@javax.ws.rs.core.Context Sort[] sorts)
+			@javax.ws.rs.core.Context com.liferay.portal.kernel.search.Sort[]
+				sorts)
 		throws Exception {
 
 		return Page.of(Collections.emptyList());
@@ -169,7 +171,8 @@ public abstract class BaseCTCollectionResourceImpl
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
 			@javax.ws.rs.QueryParam("status")
 			Integer[] status,
-			@javax.ws.rs.core.Context Sort[] sorts,
+			@javax.ws.rs.core.Context com.liferay.portal.kernel.search.Sort[]
+				sorts,
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
 			@javax.ws.rs.QueryParam("callbackURL")
 			String callbackURL,
@@ -223,7 +226,7 @@ public abstract class BaseCTCollectionResourceImpl
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'POST' 'http://localhost:8080/o/change-tracking-rest/v1.0/ct-collections/batch' -d $'{"description": ___, "externalReferenceCode": ___, "name": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 * curl -X 'POST' 'http://localhost:8080/o/change-tracking-rest/v1.0/ct-collections/batch'  -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
@@ -242,7 +245,6 @@ public abstract class BaseCTCollectionResourceImpl
 	@javax.ws.rs.Produces("application/json")
 	@Override
 	public Response postCTCollectionBatch(
-			CTCollection ctCollection,
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
 			@javax.ws.rs.QueryParam("callbackURL")
 			String callbackURL,
@@ -493,42 +495,6 @@ public abstract class BaseCTCollectionResourceImpl
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'GET' 'http://localhost:8080/o/change-tracking-rest/v1.0/ct-collections/history'  -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "classNameId"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "classPK"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "CTCollection")}
-	)
-	@javax.ws.rs.GET
-	@javax.ws.rs.Path("/ct-collections/history")
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
-	@Override
-	public Page<CTCollection> getCTCollectionsHistoryPage(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.ws.rs.QueryParam("classNameId")
-			Integer classNameId,
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.ws.rs.QueryParam("classPK")
-			Integer classPK)
-		throws Exception {
-
-		return Page.of(Collections.emptyList());
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
 	 * curl -X 'DELETE' 'http://localhost:8080/o/change-tracking-rest/v1.0/ct-collections/{ctCollectionId}'  -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Parameters(
@@ -557,14 +523,10 @@ public abstract class BaseCTCollectionResourceImpl
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'DELETE' 'http://localhost:8080/o/change-tracking-rest/v1.0/ct-collections/{ctCollectionId}/batch'  -u 'test@liferay.com:test'
+	 * curl -X 'DELETE' 'http://localhost:8080/o/change-tracking-rest/v1.0/ct-collections/batch'  -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "ctCollectionId"
-			),
 			@io.swagger.v3.oas.annotations.Parameter(
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
 				name = "callbackURL"
@@ -576,14 +538,10 @@ public abstract class BaseCTCollectionResourceImpl
 	)
 	@javax.ws.rs.Consumes("application/json")
 	@javax.ws.rs.DELETE
-	@javax.ws.rs.Path("/ct-collections/{ctCollectionId}/batch")
+	@javax.ws.rs.Path("/ct-collections/batch")
 	@javax.ws.rs.Produces("application/json")
 	@Override
 	public Response deleteCTCollectionBatch(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("ctCollectionId")
-			Long ctCollectionId,
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
 			@javax.ws.rs.QueryParam("callbackURL")
 			String callbackURL,
@@ -720,14 +678,10 @@ public abstract class BaseCTCollectionResourceImpl
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'PUT' 'http://localhost:8080/o/change-tracking-rest/v1.0/ct-collections/{ctCollectionId}/batch' -d $'{"description": ___, "externalReferenceCode": ___, "name": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 * curl -X 'PUT' 'http://localhost:8080/o/change-tracking-rest/v1.0/ct-collections/batch'  -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "ctCollectionId"
-			),
 			@io.swagger.v3.oas.annotations.Parameter(
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
 				name = "callbackURL"
@@ -738,16 +692,11 @@ public abstract class BaseCTCollectionResourceImpl
 		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "CTCollection")}
 	)
 	@javax.ws.rs.Consumes("application/json")
-	@javax.ws.rs.Path("/ct-collections/{ctCollectionId}/batch")
+	@javax.ws.rs.Path("/ct-collections/batch")
 	@javax.ws.rs.Produces("application/json")
 	@javax.ws.rs.PUT
 	@Override
 	public Response putCTCollectionBatch(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("ctCollectionId")
-			Long ctCollectionId,
-			CTCollection ctCollection,
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
 			@javax.ws.rs.QueryParam("callbackURL")
 			String callbackURL,
@@ -906,8 +855,46 @@ public abstract class BaseCTCollectionResourceImpl
 			Map<String, Serializable> parameters)
 		throws Exception {
 
-		for (CTCollection ctCollection : ctCollections) {
-			deleteCTCollection(ctCollection.getId());
+		UnsafeFunction<CTCollection, CTCollection, Exception>
+			ctCollectionUnsafeFunction = ctCollection -> {
+				if (ctCollection.getId() != null) {
+					try {
+						deleteCTCollection(ctCollection.getId());
+
+						return ctCollection;
+					}
+					catch (Exception exception) {
+						if (ctCollection.getExternalReferenceCode() != null) {
+							deleteCTCollectionByExternalReferenceCode(
+								ctCollection.getExternalReferenceCode());
+
+							return ctCollection;
+						}
+					}
+				}
+				else if (ctCollection.getExternalReferenceCode() != null) {
+					deleteCTCollectionByExternalReferenceCode(
+						ctCollection.getExternalReferenceCode());
+
+					return ctCollection;
+				}
+
+				throw new UnsupportedOperationException(
+					"Unable to delete by external reference code or ID");
+			};
+
+		if (contextBatchUnsafeBiConsumer != null) {
+			contextBatchUnsafeBiConsumer.accept(
+				ctCollections, ctCollectionUnsafeFunction);
+		}
+		else if (contextBatchUnsafeConsumer != null) {
+			contextBatchUnsafeConsumer.accept(
+				ctCollections, ctCollectionUnsafeFunction::apply);
+		}
+		else {
+			for (CTCollection ctCollection : ctCollections) {
+				ctCollectionUnsafeFunction.apply(ctCollection);
+			}
 		}
 	}
 
@@ -944,7 +931,9 @@ public abstract class BaseCTCollectionResourceImpl
 
 	@Override
 	public Page<CTCollection> read(
-			Filter filter, Pagination pagination, Sort[] sorts,
+			com.liferay.portal.kernel.search.filter.Filter filter,
+			Pagination pagination,
+			com.liferay.portal.kernel.search.Sort[] sorts,
 			Map<String, Serializable> parameters, String search)
 		throws Exception {
 
@@ -1029,6 +1018,11 @@ public abstract class BaseCTCollectionResourceImpl
 		return null;
 	}
 
+	@Override
+	public CTCollection getItem(Long id) throws Exception {
+		return getCTCollection(id);
+	}
+
 	public void setContextAcceptLanguage(AcceptLanguage contextAcceptLanguage) {
 		this.contextAcceptLanguage = contextAcceptLanguage;
 	}
@@ -1069,7 +1063,8 @@ public abstract class BaseCTCollectionResourceImpl
 	}
 
 	public void setContextUriInfo(UriInfo contextUriInfo) {
-		this.contextUriInfo = contextUriInfo;
+		this.contextUriInfo = UriInfoUtil.getVulcanUriInfo(
+			getApplicationPath(), contextUriInfo);
 	}
 
 	public void setContextUser(
@@ -1079,7 +1074,8 @@ public abstract class BaseCTCollectionResourceImpl
 	}
 
 	public void setExpressionConvert(
-		ExpressionConvert<Filter> expressionConvert) {
+		ExpressionConvert<com.liferay.portal.kernel.search.filter.Filter>
+			expressionConvert) {
 
 		this.expressionConvert = expressionConvert;
 	}
@@ -1114,6 +1110,10 @@ public abstract class BaseCTCollectionResourceImpl
 		this.sortParserProvider = sortParserProvider;
 	}
 
+	protected String getApplicationPath() {
+		return "change-tracking-rest";
+	}
+
 	public void setVulcanBatchEngineExportTaskResource(
 		VulcanBatchEngineExportTaskResource
 			vulcanBatchEngineExportTaskResource) {
@@ -1131,7 +1131,7 @@ public abstract class BaseCTCollectionResourceImpl
 	}
 
 	@Override
-	public Filter toFilter(
+	public com.liferay.portal.kernel.search.filter.Filter toFilter(
 		String filterString, Map<String, List<String>> multivaluedMap) {
 
 		try {
@@ -1156,7 +1156,7 @@ public abstract class BaseCTCollectionResourceImpl
 	}
 
 	@Override
-	public Sort[] toSorts(String sortString) {
+	public com.liferay.portal.kernel.search.Sort[] toSorts(String sortString) {
 		if (Validator.isNull(sortString)) {
 			return null;
 		}
@@ -1174,13 +1174,13 @@ public abstract class BaseCTCollectionResourceImpl
 					sortParser.parse(sortString));
 
 			List<SortField> sortFields = oDataSort.getSortFields();
-
-			Sort[] sorts = new Sort[sortFields.size()];
+			com.liferay.portal.kernel.search.Sort[] sorts =
+				new com.liferay.portal.kernel.search.Sort[sortFields.size()];
 
 			for (int i = 0; i < sortFields.size(); i++) {
 				SortField sortField = sortFields.get(i);
 
-				sorts[i] = new Sort(
+				sorts[i] = new com.liferay.portal.kernel.search.Sort(
 					sortField.getSortableFieldName(
 						contextAcceptLanguage.getPreferredLocale()),
 					!sortField.isAscending());
@@ -1191,7 +1191,7 @@ public abstract class BaseCTCollectionResourceImpl
 		catch (Exception exception) {
 			_log.error("Invalid sort " + sortString, exception);
 
-			return new Sort[0];
+			return new com.liferay.portal.kernel.search.Sort[0];
 		}
 	}
 
@@ -1321,7 +1321,8 @@ public abstract class BaseCTCollectionResourceImpl
 	protected Object contextScopeChecker;
 	protected UriInfo contextUriInfo;
 	protected com.liferay.portal.kernel.model.User contextUser;
-	protected ExpressionConvert<Filter> expressionConvert;
+	protected ExpressionConvert<com.liferay.portal.kernel.search.filter.Filter>
+		expressionConvert;
 	protected FilterParserProvider filterParserProvider;
 	protected GroupLocalService groupLocalService;
 	protected ResourceActionLocalService resourceActionLocalService;

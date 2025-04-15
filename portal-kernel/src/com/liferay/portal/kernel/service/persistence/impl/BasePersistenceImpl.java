@@ -67,6 +67,7 @@ import com.liferay.portal.kernel.model.ModelWrapper;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.service.persistence.BasePersistence;
+import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.OrderByComparator;
@@ -94,6 +95,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Function;
 
 import javax.sql.DataSource;
 
@@ -214,8 +216,9 @@ public class BasePersistenceImpl<T extends BaseModel<T>>
 
 		FinderPath finderPath = new FinderPath(
 			FinderPath.encodeDSLQueryCacheName(tableNames), "dslQuery",
-			sb.getStrings(), new String[0],
-			projectionType == ProjectionType.MODELS);
+			ArrayUtil.append(
+				sb.getStrings(), _getAliasTypes(select.getExpressions())),
+			new String[0], projectionType == ProjectionType.MODELS);
 
 		Object[] arguments = _getArguments(defaultASTNodeListener);
 
@@ -647,6 +650,11 @@ public class BasePersistenceImpl<T extends BaseModel<T>>
 
 	@Override
 	public T remove(T model) {
+		return removeByFunction(model, this::removeImpl);
+	}
+
+	@Override
+	public T removeByFunction(T model, Function<T, T> function) {
 		if (ReadOnlyTransactionThreadLocal.isReadOnly()) {
 			throw new IllegalStateException(
 				"Remove called with read only transaction");
@@ -664,7 +672,7 @@ public class BasePersistenceImpl<T extends BaseModel<T>>
 			modelListener.onBeforeRemove(model);
 		}
 
-		T removedModel = removeImpl(model);
+		T removedModel = function.apply(model);
 
 		if (removedModel != null) {
 			model = removedModel;
@@ -1036,6 +1044,33 @@ public class BasePersistenceImpl<T extends BaseModel<T>>
 	 */
 	@Deprecated
 	protected boolean finderCacheEnabled = true;
+
+	private String[] _getAliasTypes(
+		Collection<? extends Expression<?>> expressions) {
+
+		List<String> aliasTypes = new ArrayList<>();
+
+		for (Expression<?> expression : expressions) {
+			Type type = null;
+
+			if (expression instanceof TypeAlias) {
+				TypeAlias<?> typeAlias = (TypeAlias<?>)expression;
+
+				type = _types.get(typeAlias.getJavaType());
+			}
+			else if (expression instanceof Alias) {
+				Alias<?> alias = (Alias<?>)expression;
+
+				type = _getType(alias.getExpression());
+			}
+
+			if (type != null) {
+				aliasTypes.add(String.valueOf(type));
+			}
+		}
+
+		return aliasTypes.toArray(new String[0]);
+	}
 
 	private Object[] _getArguments(
 		DefaultASTNodeListener defaultASTNodeListener) {

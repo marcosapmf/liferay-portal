@@ -108,6 +108,21 @@ public interface SamlSpAuthRequestModel
 	public void setSamlIdpEntityId(String samlIdpEntityId);
 
 	/**
+	 * Returns the saml relay state of this saml sp auth request.
+	 *
+	 * @return the saml relay state of this saml sp auth request
+	 */
+	@AutoEscape
+	public String getSamlRelayState();
+
+	/**
+	 * Sets the saml relay state of this saml sp auth request.
+	 *
+	 * @param samlRelayState the saml relay state of this saml sp auth request
+	 */
+	public void setSamlRelayState(String samlRelayState);
+
+	/**
 	 * Returns the saml sp auth request key of this saml sp auth request.
 	 *
 	 * @return the saml sp auth request key of this saml sp auth request

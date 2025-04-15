@@ -13,6 +13,7 @@ import com.liferay.asset.kernel.model.AssetTag;
 import com.liferay.asset.kernel.service.AssetTagLocalService;
 import com.liferay.asset.kernel.service.AssetTagService;
 import com.liferay.asset.tags.constants.AssetTagsAdminPortletKeys;
+import com.liferay.change.tracking.spi.history.util.CTTimelineUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.service.ServiceContext;
@@ -94,13 +95,13 @@ public class AssetTagsAdminPortlet extends MVCPortlet {
 			// Add tag
 
 			_assetTagService.addTag(
-				serviceContext.getScopeGroupId(), name, serviceContext);
+				null, serviceContext.getScopeGroupId(), name, serviceContext);
 		}
 		else {
 
 			// Update tag
 
-			_assetTagService.updateTag(tagId, name, serviceContext);
+			_assetTagService.updateTag(null, tagId, name, serviceContext);
 		}
 	}
 
@@ -143,6 +144,8 @@ public class AssetTagsAdminPortlet extends MVCPortlet {
 	protected void doDispatch(
 			RenderRequest renderRequest, RenderResponse renderResponse)
 		throws IOException, PortletException {
+
+		CTTimelineUtil.setClassName(renderRequest, AssetTag.class);
 
 		if (SessionErrors.contains(
 				renderRequest, NoSuchTagException.class.getName()) ||

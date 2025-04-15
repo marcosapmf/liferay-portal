@@ -25,6 +25,7 @@ import com.liferay.journal.model.JournalArticle;
 import com.liferay.journal.service.JournalArticleService;
 import com.liferay.layout.dynamic.data.mapping.form.field.type.constants.LayoutDDMFormFieldTypeConstants;
 import com.liferay.petra.function.transform.TransformUtil;
+import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
@@ -34,6 +35,7 @@ import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.util.DateUtil;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.vulcan.dto.converter.DTOConverter;
@@ -327,34 +329,9 @@ public class ContentFieldUtil {
 				return new ContentFieldValue() {
 					{
 						setImage(
-							() -> {
-								ContentDocument contentDocument =
-									ContentDocumentUtil.toContentDocument(
-										dlURLHelper,
-										"contentFields.contentFieldValue.image",
-										dlAppService.getFileEntry(fileEntryId),
-										uriInfo);
-
-								String alt = jsonObject.getString("alt");
-
-								contentDocument.setDescription(
-									() -> {
-										if (Validator.isNotNull(alt) &&
-											JSONUtil.isJSONObject(alt)) {
-
-											JSONObject altJSONObject =
-												jsonObject.getJSONObject("alt");
-
-											return altJSONObject.getString(
-												LocaleUtil.toLanguageId(
-													locale));
-										}
-
-										return alt;
-									});
-
-								return contentDocument;
-							});
+							() -> _toImage(
+								dlURLHelper, dlAppService, fileEntryId, uriInfo,
+								jsonObject, locale));
 					}
 				};
 			}
@@ -391,7 +368,8 @@ public class ContentFieldUtil {
 										() ->
 											journalArticle.
 												getResourcePrimKey());
-									setTitle(journalArticle::getTitle);
+									setTitle(
+										() -> journalArticle.getTitle(locale));
 								}
 							});
 					}
@@ -550,7 +528,7 @@ public class ContentFieldUtil {
 			return new ContentFieldValue();
 		}
 
-		String valueString = String.valueOf(value.getString(locale));
+		String valueString = GetterUtil.getString(value.getString(locale));
 
 		return _getContentFieldValue(
 			ddmFormField, dlAppService, dlURLHelper, dtoConverterContext,
@@ -573,6 +551,46 @@ public class ContentFieldUtil {
 				"Unable to parse date that does not conform to ISO-8601",
 				parseException);
 		}
+	}
+
+	private static ContentDocument _toImage(
+			DLURLHelper dlURLHelper, DLAppService dlAppService,
+			long fileEntryId, UriInfo uriInfo, JSONObject jsonObject,
+			Locale locale)
+		throws Exception {
+
+		try {
+			ContentDocument contentDocument =
+				ContentDocumentUtil.toContentDocument(
+					dlURLHelper, "contentFields.contentFieldValue.image",
+					dlAppService.getFileEntry(fileEntryId), uriInfo);
+
+			String alt = jsonObject.getString("alt");
+
+			contentDocument.setDescription(
+				() -> {
+					if (Validator.isNotNull(alt) &&
+						JSONUtil.isJSONObject(alt)) {
+
+						JSONObject altJSONObject = jsonObject.getJSONObject(
+							"alt");
+
+						return altJSONObject.getString(
+							LocaleUtil.toLanguageId(locale));
+					}
+
+					return alt;
+				});
+
+			return contentDocument;
+		}
+		catch (PortalException portalException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(portalException);
+			}
+		}
+
+		return null;
 	}
 
 	private static StructuredContent _toStructuredContent(

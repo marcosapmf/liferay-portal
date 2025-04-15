@@ -56,14 +56,14 @@ public class FragmentCollectionLocalServiceImpl
 
 		return addFragmentCollection(
 			externalReferenceCode, userId, groupId, StringPool.BLANK, name,
-			description, serviceContext);
+			description, false, serviceContext);
 	}
 
 	@Override
 	public FragmentCollection addFragmentCollection(
 			String externalReferenceCode, long userId, long groupId,
 			String fragmentCollectionKey, String name, String description,
-			ServiceContext serviceContext)
+			boolean marketplace, ServiceContext serviceContext)
 		throws PortalException {
 
 		// Fragment collection
@@ -109,6 +109,7 @@ public class FragmentCollectionLocalServiceImpl
 		fragmentCollection.setFragmentCollectionKey(fragmentCollectionKey);
 		fragmentCollection.setName(name);
 		fragmentCollection.setDescription(description);
+		fragmentCollection.setMarketplace(marketplace);
 
 		return fragmentCollectionPersistence.update(fragmentCollection);
 	}

@@ -62,11 +62,13 @@ import org.osgi.service.component.annotations.ServiceScope;
 
 /**
  * @author Alessio Antonio Rendina
+ * @deprecated As of Cavanaugh (7.4.x)
  */
 @Component(
 	properties = "OSGI-INF/liferay/rest/v1_0/account-channel-entry.properties",
 	scope = ServiceScope.PROTOTYPE, service = AccountChannelEntryResource.class
 )
+@Deprecated
 public class AccountChannelEntryResourceImpl
 	extends BaseAccountChannelEntryResourceImpl {
 
@@ -999,10 +1001,12 @@ public class AccountChannelEntryResourceImpl
 				CommerceChannelAccountEntryRelConstants.TYPE_BILLING_ADDRESS) {
 
 			CommerceAddress commerceAddress =
-				_commerceAddressService.fetchByExternalReferenceCode(
-					GetterUtil.getString(
-						accountChannelEntry.getClassExternalReferenceCode()),
-					contextCompany.getCompanyId());
+				_commerceAddressService.
+					fetchCommerceAddressByExternalReferenceCode(
+						GetterUtil.getString(
+							accountChannelEntry.
+								getClassExternalReferenceCode()),
+						contextCompany.getCompanyId());
 
 			if (commerceAddress == null) {
 				commerceAddress = _commerceAddressService.getCommerceAddress(
@@ -1037,10 +1041,12 @@ public class AccountChannelEntryResourceImpl
 						TYPE_DELIVERY_TERM) {
 
 			CommerceTermEntry commerceTermEntry =
-				_commerceTermEntryService.fetchByExternalReferenceCode(
-					contextCompany.getCompanyId(),
-					GetterUtil.getString(
-						accountChannelEntry.getClassExternalReferenceCode()));
+				_commerceTermEntryService.
+					fetchCommerceTermEntryByExternalReferenceCode(
+						contextCompany.getCompanyId(),
+						GetterUtil.getString(
+							accountChannelEntry.
+								getClassExternalReferenceCode()));
 
 			if (commerceTermEntry == null) {
 				commerceTermEntry =
@@ -1058,10 +1064,12 @@ public class AccountChannelEntryResourceImpl
 					CommerceChannelAccountEntryRelConstants.TYPE_DISCOUNT) {
 
 			CommerceDiscount commerceDiscount =
-				_commerceDiscountService.fetchByExternalReferenceCode(
-					GetterUtil.getString(
-						accountChannelEntry.getClassExternalReferenceCode()),
-					contextCompany.getCompanyId());
+				_commerceDiscountService.
+					fetchCommerceDiscountByExternalReferenceCode(
+						GetterUtil.getString(
+							accountChannelEntry.
+								getClassExternalReferenceCode()),
+						contextCompany.getCompanyId());
 
 			if (commerceDiscount == null) {
 				commerceDiscount = _commerceDiscountService.getCommerceDiscount(
@@ -1118,10 +1126,12 @@ public class AccountChannelEntryResourceImpl
 					CommerceChannelAccountEntryRelConstants.TYPE_PAYMENT_TERM) {
 
 			CommerceTermEntry commerceTermEntry =
-				_commerceTermEntryService.fetchByExternalReferenceCode(
-					contextCompany.getCompanyId(),
-					GetterUtil.getString(
-						accountChannelEntry.getClassExternalReferenceCode()));
+				_commerceTermEntryService.
+					fetchCommerceTermEntryByExternalReferenceCode(
+						contextCompany.getCompanyId(),
+						GetterUtil.getString(
+							accountChannelEntry.
+								getClassExternalReferenceCode()));
 
 			if (commerceTermEntry == null) {
 				commerceTermEntry =
@@ -1139,10 +1149,12 @@ public class AccountChannelEntryResourceImpl
 					CommerceChannelAccountEntryRelConstants.TYPE_PRICE_LIST) {
 
 			CommercePriceList commercePriceList =
-				_commercePriceListService.fetchByExternalReferenceCode(
-					GetterUtil.getString(
-						accountChannelEntry.getClassExternalReferenceCode()),
-					contextCompany.getCompanyId());
+				_commercePriceListService.
+					fetchCommercePriceListByExternalReferenceCode(
+						GetterUtil.getString(
+							accountChannelEntry.
+								getClassExternalReferenceCode()),
+						contextCompany.getCompanyId());
 
 			if (commercePriceList == null) {
 				commercePriceList =
@@ -1161,10 +1173,12 @@ public class AccountChannelEntryResourceImpl
 						TYPE_SHIPPING_ADDRESS) {
 
 			CommerceAddress commerceAddress =
-				_commerceAddressService.fetchByExternalReferenceCode(
-					GetterUtil.getString(
-						accountChannelEntry.getClassExternalReferenceCode()),
-					contextCompany.getCompanyId());
+				_commerceAddressService.
+					fetchCommerceAddressByExternalReferenceCode(
+						GetterUtil.getString(
+							accountChannelEntry.
+								getClassExternalReferenceCode()),
+						contextCompany.getCompanyId());
 
 			if (commerceAddress == null) {
 				commerceAddress = _commerceAddressService.getCommerceAddress(
@@ -1183,8 +1197,8 @@ public class AccountChannelEntryResourceImpl
 		}
 		else if (type == CommerceChannelAccountEntryRelConstants.TYPE_USER) {
 			User user = _userService.fetchUserByExternalReferenceCode(
-				contextCompany.getCompanyId(),
-				accountChannelEntry.getClassExternalReferenceCode());
+				accountChannelEntry.getClassExternalReferenceCode(),
+				contextCompany.getCompanyId());
 
 			if (user == null) {
 				user = _userService.getUserById(
@@ -1223,7 +1237,7 @@ public class AccountChannelEntryResourceImpl
 		throws Exception {
 
 		CommerceChannel commerceChannel =
-			_commerceChannelService.fetchByExternalReferenceCode(
+			_commerceChannelService.fetchCommerceChannelByExternalReferenceCode(
 				GetterUtil.getString(
 					accountChannelEntry.getChannelExternalReferenceCode()),
 				contextCompany.getCompanyId());

@@ -42,6 +42,7 @@ import com.liferay.portal.upload.test.util.UploadTestUtil;
 
 import java.util.Objects;
 
+import org.junit.Assert;
 import org.junit.Before;
 
 import org.skyscreamer.jsonassert.JSONAssert;
@@ -77,7 +78,8 @@ public abstract class BaseExportImportTestCase {
 	protected JSONObject createOneToManyObjectRelationship(
 			String objectDefinitionExternalReferenceCode1,
 			String objectDefinitionExternalReferenceCode2,
-			String objectDefinitionName2, String objectRelationshipName)
+			String objectDefinitionName2, String objectDefinitionScope2,
+			String objectRelationshipName)
 		throws Exception {
 
 		return jsonFactory.createJSONObject(
@@ -94,6 +96,8 @@ public abstract class BaseExportImportTestCase {
 			objectDefinitionExternalReferenceCode2
 		).put(
 			"objectDefinitionName2", objectDefinitionName2
+		).put(
+			"objectDefinitionScope2", objectDefinitionScope2
 		).put(
 			"type", "oneToMany"
 		);
@@ -137,7 +141,15 @@ public abstract class BaseExportImportTestCase {
 
 		// MVCActionCommand
 
-		_importJSON(externalReferenceCode, actualJSON, name);
+		MockLiferayPortletActionResponse mockLiferayPortletActionResponse =
+			_importJSON(externalReferenceCode, actualJSON, name);
+
+		MockHttpServletResponse mockHttpServletResponse =
+			(MockHttpServletResponse)
+				mockLiferayPortletActionResponse.getHttpServletResponse();
+
+		Assert.assertTrue(
+			Validator.isNull(mockHttpServletResponse.getContentAsString()));
 
 		// MVCResourceCommand
 
@@ -198,9 +210,9 @@ public abstract class BaseExportImportTestCase {
 
 		themeDisplay.setLayout(layout);
 
-		themeDisplay.setLocale(LocaleUtil.US);
+		themeDisplay.setLocale(LocaleUtil.getDefault());
 		themeDisplay.setScopeGroupId(TestPropsValues.getGroupId());
-		themeDisplay.setSiteDefaultLocale(LocaleUtil.US);
+		themeDisplay.setSiteDefaultLocale(LocaleUtil.getSiteDefault());
 		themeDisplay.setUser(user);
 
 		return themeDisplay;

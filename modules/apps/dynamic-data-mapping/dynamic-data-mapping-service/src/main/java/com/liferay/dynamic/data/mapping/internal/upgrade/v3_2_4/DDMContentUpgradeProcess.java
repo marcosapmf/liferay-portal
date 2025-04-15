@@ -16,6 +16,7 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.upgrade.UpgradeProcess;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.Validator;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -66,7 +67,7 @@ public class DDMContentUpgradeProcess extends UpgradeProcess {
 					JSONObject dataJSONObject = _jsonFactory.createJSONObject(
 						data);
 
-					if (_upgradeDDMContentData(
+					if (upgradeDDMContentData(
 							dataJSONObject.getJSONArray("fieldValues"),
 							definitionJSONObject.getJSONArray("fields"))) {
 
@@ -86,24 +87,7 @@ public class DDMContentUpgradeProcess extends UpgradeProcess {
 		}
 	}
 
-	private HashMap<String, JSONObject> _mapDataFieldValues(
-		JSONArray fieldValuesJSONArray) {
-
-		HashMap<String, JSONObject> dataFieldValuesMap = new HashMap<>();
-
-		fieldValuesJSONArray.forEach(
-			object -> {
-				JSONObject fieldValueJSONObject = (JSONObject)object;
-
-				dataFieldValuesMap.put(
-					fieldValueJSONObject.getString("name"),
-					fieldValueJSONObject.getJSONObject("value"));
-			});
-
-		return dataFieldValuesMap;
-	}
-
-	private boolean _upgradeDDMContentData(
+	protected boolean upgradeDDMContentData(
 		JSONArray fieldValuesJSONArray, JSONArray fieldsJSONArray) {
 
 		AtomicBoolean upgraded = new AtomicBoolean(false);
@@ -127,53 +111,68 @@ public class DDMContentUpgradeProcess extends UpgradeProcess {
 						return;
 					}
 
-					JSONArray namesJSONArray = fieldValueJSONObject.names();
+					for (String key : fieldValueJSONObject.keySet()) {
+						try {
+							String valueString = fieldValueJSONObject.getString(
+								key);
 
-					namesJSONArray.forEach(
-						languageId -> {
-							try {
-								DecimalFormat decimalFormat =
-									NumericDDMFormFieldUtil.getDecimalFormat(
-										LocaleUtil.fromLanguageId(
-											GetterUtil.getString(languageId)));
-
-								String valueString =
-									fieldValueJSONObject.getString(
-										GetterUtil.getString(languageId));
-
-								Number number = GetterUtil.getNumber(
-									decimalFormat.parse(valueString));
-
-								String formattedNumber = decimalFormat.format(
-									number);
-
-								if (!valueString.equals(formattedNumber)) {
-									DecimalFormat defaultDecimalFormat =
-										NumericDDMFormFieldUtil.
-											getDecimalFormat(LocaleUtil.US);
-
-									number = defaultDecimalFormat.parse(
-										valueString);
-
-									formattedNumber = decimalFormat.format(
-										number);
-
-									upgraded.set(true);
-
-									fieldValueJSONObject.put(
-										languageId.toString(), formattedNumber);
-								}
+							if (Validator.isNull(valueString)) {
+								continue;
 							}
-							catch (ParseException parseException) {
-								if (_log.isWarnEnabled()) {
-									_log.warn(parseException);
-								}
+
+							DecimalFormat decimalFormat =
+								NumericDDMFormFieldUtil.getDecimalFormat(
+									LocaleUtil.fromLanguageId(key));
+
+							Number number = GetterUtil.getNumber(
+								decimalFormat.parse(valueString));
+
+							String formattedNumber = decimalFormat.format(
+								number);
+
+							if (valueString.equals(formattedNumber)) {
+								continue;
 							}
-						});
+
+							DecimalFormat defaultDecimalFormat =
+								NumericDDMFormFieldUtil.getDecimalFormat(
+									LocaleUtil.US);
+
+							number = defaultDecimalFormat.parse(valueString);
+
+							formattedNumber = decimalFormat.format(number);
+
+							upgraded.set(true);
+
+							fieldValueJSONObject.put(key, formattedNumber);
+						}
+						catch (ParseException parseException) {
+							if (_log.isWarnEnabled()) {
+								_log.warn(parseException);
+							}
+						}
+					}
 				}
 			});
 
 		return upgraded.get();
+	}
+
+	private HashMap<String, JSONObject> _mapDataFieldValues(
+		JSONArray fieldValuesJSONArray) {
+
+		HashMap<String, JSONObject> dataFieldValuesMap = new HashMap<>();
+
+		fieldValuesJSONArray.forEach(
+			object -> {
+				JSONObject fieldValueJSONObject = (JSONObject)object;
+
+				dataFieldValuesMap.put(
+					fieldValueJSONObject.getString("name"),
+					fieldValueJSONObject.getJSONObject("value"));
+			});
+
+		return dataFieldValuesMap;
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

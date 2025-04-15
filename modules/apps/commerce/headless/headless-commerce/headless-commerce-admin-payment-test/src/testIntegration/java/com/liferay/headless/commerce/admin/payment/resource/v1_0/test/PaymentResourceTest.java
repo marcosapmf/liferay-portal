@@ -142,6 +142,9 @@ public class PaymentResourceTest extends BasePaymentResourceTestCase {
 				channelId = _commerceChannel.getCommerceChannelId();
 				comment = RandomTestUtil.randomString();
 				currencyCode = _commerceCurrency.getCode();
+				currencyExternalReferenceCode =
+					_commerceCurrency.getExternalReferenceCode();
+				currencyId = _commerceCurrency.getCommerceCurrencyId();
 				externalReferenceCode = RandomTestUtil.randomString();
 				languageId = RandomTestUtil.randomString();
 				paymentIntegrationKey = RandomTestUtil.randomString();
@@ -208,6 +211,13 @@ public class PaymentResourceTest extends BasePaymentResourceTestCase {
 		throws Exception {
 
 		return _addPayment(payment);
+	}
+
+	@Override
+	protected Payment testPutPaymentByExternalReferenceCode_addPayment()
+		throws Exception {
+
+		return _addPayment(randomPayment());
 	}
 
 	private Payment _addPayment(Payment payment) throws Exception {

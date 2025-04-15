@@ -15,7 +15,6 @@ import com.liferay.journal.model.JournalFolder;
 import com.liferay.journal.service.JournalFolderLocalServiceUtil;
 import com.liferay.journal.test.util.JournalTestUtil;
 import com.liferay.petra.function.UnsafeFunction;
-import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
@@ -57,12 +56,7 @@ public class StructuredContentFolderResourceTest
 			Problem problem = problemException.getProblem();
 
 			Assert.assertEquals("NOT_FOUND", problem.getStatus());
-			Assert.assertEquals(
-				StringBundler.concat(
-					"No JournalFolder exists with the key {",
-					"externalReferenceCode=", externalReferenceCode,
-					", groupId=", testDepotEntry.getGroupId(), "}"),
-				problem.getTitle());
+			Assert.assertNull(problem.getTitle());
 		}
 
 		StructuredContentFolder parentStructuredContentFolder1 =
@@ -261,12 +255,7 @@ public class StructuredContentFolderResourceTest
 			Problem problem = problemException.getProblem();
 
 			Assert.assertEquals("NOT_FOUND", problem.getStatus());
-			Assert.assertEquals(
-				StringBundler.concat(
-					"No JournalFolder exists with the key {",
-					"externalReferenceCode=", externalReferenceCode,
-					", groupId=", testDepotEntry.getGroupId(), "}"),
-				problem.getTitle());
+			Assert.assertNull(problem.getTitle());
 		}
 
 		long assetLibraryId = RandomTestUtil.randomLong();
@@ -283,9 +272,7 @@ public class StructuredContentFolderResourceTest
 			Problem problem = problemException.getProblem();
 
 			Assert.assertEquals("NOT_FOUND", problem.getStatus());
-			Assert.assertEquals(
-				"Unable to get a valid asset library with ID " + assetLibraryId,
-				problem.getTitle());
+			Assert.assertNull(problem.getTitle());
 		}
 	}
 
@@ -554,29 +541,11 @@ public class StructuredContentFolderResourceTest
 	}
 
 	@Override
-	protected StructuredContentFolder
-			testDeleteAssetLibraryStructuredContentFolderByExternalReferenceCode_addStructuredContentFolder()
-		throws Exception {
-
-		return testPostAssetLibraryStructuredContentFolder_addStructuredContentFolder(
-			randomStructuredContentFolder());
-	}
-
-	@Override
 	protected Long
 			testDeleteAssetLibraryStructuredContentFolderByExternalReferenceCode_getAssetLibraryId()
 		throws Exception {
 
 		return testDepotEntry.getDepotEntryId();
-	}
-
-	@Override
-	protected StructuredContentFolder
-			testGetAssetLibraryStructuredContentFolderByExternalReferenceCode_addStructuredContentFolder()
-		throws Exception {
-
-		return testPostAssetLibraryStructuredContentFolder_addStructuredContentFolder(
-			randomStructuredContentFolder());
 	}
 
 	@Override
@@ -623,15 +592,6 @@ public class StructuredContentFolderResourceTest
 		throws Exception {
 
 		return testDepotEntry.getDepotEntryId();
-	}
-
-	@Override
-	protected StructuredContentFolder
-			testPutAssetLibraryStructuredContentFolderByExternalReferenceCode_addStructuredContentFolder()
-		throws Exception {
-
-		return testPostAssetLibraryStructuredContentFolder_addStructuredContentFolder(
-			randomStructuredContentFolder());
 	}
 
 	@Override

@@ -3,28 +3,33 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
+import {
+	ObjectDefinition,
+	ObjectDefinitionAPI,
+} from '@liferay/object-admin-rest-client-js';
 import {expect, mergeTests} from '@playwright/test';
 import * as path from 'path';
 
-import {apiHelpersTest} from '../../fixtures/apiHelpersTest';
+import {dataApiHelpersTest} from '../../fixtures/dataApiHelpersTest';
 import {featureFlagsTest} from '../../fixtures/featureFlagsTest';
 import {loginTest} from '../../fixtures/loginTest';
 import {objectPagesTest} from '../../fixtures/objectPagesTest';
+import createTempFile from '../../utils/createTempFile';
+import getRandomString from '../../utils/getRandomString';
 import {dataMigrationCenterPagesTest} from './fixtures/dataMigrationCenterPagesTest';
 import {OBJECT_ENTRY_ENTITY_TYPE} from './utils/constants';
 
 export const test = mergeTests(
-	apiHelpersTest,
+	dataApiHelpersTest,
 	featureFlagsTest({
-		'COMMERCE-8087': true,
-		'LPS-164948': true,
+		'COMMERCE-8087': {enabled: true},
 	}),
 	loginTest(),
 	dataMigrationCenterPagesTest,
 	objectPagesTest
 );
 
-const companyObjectDefinition = {
+const companyObjectDefinition: ObjectDefinition = {
 	active: true,
 	externalReferenceCode: 'Test',
 	label: {'en-US': 'Test'},
@@ -41,8 +46,11 @@ const companyObjectDefinition = {
 			listTypeDefinitionId: 0,
 			name: 'testAggregationField',
 			objectFieldSettings: [
-				{name: 'objectRelationshipName', value: 'testRelationship'},
-				{name: 'function', value: 'COUNT'},
+				{
+					name: 'objectRelationshipName',
+					value: 'testRelationship',
+				} as any,
+				{name: 'function', value: 'COUNT'} as any,
 			],
 			required: false,
 			system: false,
@@ -59,9 +67,9 @@ const companyObjectDefinition = {
 			listTypeDefinitionId: 0,
 			name: 'testAutoIncrementField',
 			objectFieldSettings: [
-				{name: 'prefix', value: 'prefix-'},
-				{name: 'initialValue', value: '1'},
-				{name: 'suffix', value: '-suffix'},
+				{name: 'prefix', value: 'prefix-'} as any,
+				{name: 'initialValue', value: '1'} as any,
+				{name: 'suffix', value: '-suffix'} as any,
 			],
 			required: false,
 			system: false,
@@ -105,7 +113,9 @@ const companyObjectDefinition = {
 			label: {en_US: 'testDateTimeField'},
 			listTypeDefinitionId: 0,
 			name: 'testDateTimeField',
-			objectFieldSettings: [{name: 'timeStorage', value: 'convertToUTC'}],
+			objectFieldSettings: [
+				{name: 'timeStorage', value: 'convertToUTC'} as any,
+			],
 			required: false,
 			system: false,
 			type: 'DateTime',
@@ -135,8 +145,8 @@ const companyObjectDefinition = {
 			listTypeDefinitionId: 0,
 			name: 'testFormulaField',
 			objectFieldSettings: [
-				{name: 'output', value: 'Integer'},
-				{name: 'script', value: 'id / id'},
+				{name: 'output', value: 'Integer'} as any,
+				{name: 'script', value: 'id / id'} as any,
 			],
 			required: false,
 			system: false,
@@ -252,7 +262,7 @@ const companyObjectDefinition = {
 	status: {code: 0},
 };
 
-const siteObjectDefinition = {
+const siteObjectDefinition: ObjectDefinition = {
 	active: true,
 	externalReferenceCode: 'Test',
 	label: {'en-US': 'Test'},
@@ -269,8 +279,11 @@ const siteObjectDefinition = {
 			listTypeDefinitionId: 0,
 			name: 'testAggregationField',
 			objectFieldSettings: [
-				{name: 'objectRelationshipName', value: 'testRelationship'},
-				{name: 'function', value: 'COUNT'},
+				{
+					name: 'objectRelationshipName',
+					value: 'testRelationship',
+				} as any,
+				{name: 'function', value: 'COUNT'} as any,
 			],
 			required: false,
 			system: false,
@@ -287,9 +300,9 @@ const siteObjectDefinition = {
 			listTypeDefinitionId: 0,
 			name: 'testAutoIncrementField',
 			objectFieldSettings: [
-				{name: 'prefix', value: 'prefix-'},
-				{name: 'initialValue', value: '1'},
-				{name: 'suffix', value: '-suffix'},
+				{name: 'prefix', value: 'prefix-'} as any,
+				{name: 'initialValue', value: '1'} as any,
+				{name: 'suffix', value: '-suffix'} as any,
 			],
 			required: false,
 			system: false,
@@ -333,7 +346,9 @@ const siteObjectDefinition = {
 			label: {en_US: 'testDateTimeField'},
 			listTypeDefinitionId: 0,
 			name: 'testDateTimeField',
-			objectFieldSettings: [{name: 'timeStorage', value: 'convertToUTC'}],
+			objectFieldSettings: [
+				{name: 'timeStorage', value: 'convertToUTC'} as any,
+			],
 			required: false,
 			system: false,
 			type: 'DateTime',
@@ -363,8 +378,8 @@ const siteObjectDefinition = {
 			listTypeDefinitionId: 0,
 			name: 'testFormulaField',
 			objectFieldSettings: [
-				{name: 'output', value: 'Integer'},
-				{name: 'script', value: 'id / id'},
+				{name: 'output', value: 'Integer'} as any,
+				{name: 'script', value: 'id / id'} as any,
 			],
 			required: false,
 			system: false,
@@ -480,14 +495,65 @@ const siteObjectDefinition = {
 	status: {code: 0},
 };
 
+test('can handle OnlyAddNewRecords and UpdateChangedRecordFields import strategies with duplicate ERCs', async ({
+	apiHelpers,
+	dataMigrationCenterPage,
+	page,
+}) => {
+	const objectDefinitionAPIClient =
+		await apiHelpers.buildRestClient(ObjectDefinitionAPI);
+
+	const {body: objectDefinition} =
+		await objectDefinitionAPIClient.postObjectDefinition(
+			companyObjectDefinition
+		);
+
+	apiHelpers.data.push({id: objectDefinition.id, type: 'objectDefinition'});
+
+	await dataMigrationCenterPage.goto();
+	await dataMigrationCenterPage.goToImportFile();
+
+	await dataMigrationCenterPage.importFile(
+		OBJECT_ENTRY_ENTITY_TYPE,
+		path.join(__dirname, '/dependencies/object_entries.csv'),
+		'INSERT',
+		'PARTIAL_UPDATE'
+	);
+
+	await expect(
+		page.getByText('The import process completed successfully.')
+	).toBeVisible();
+
+	await page.getByRole('button', {exact: true, name: 'Close'}).click();
+
+	await dataMigrationCenterPage.importFile(
+		OBJECT_ENTRY_ENTITY_TYPE,
+		path.join(__dirname, '/dependencies/object_entry_same_erc.csv'),
+		'INSERT',
+		'PARTIAL_UPDATE'
+	);
+
+	await expect(
+		page.getByText(
+			'com.liferay.object.exception.DuplicateObjectEntryExternalReferenceCodeException'
+		)
+	).toBeVisible();
+});
+
 test('can import CSV file with an unexisting field', async ({
 	apiHelpers,
 	dataMigrationCenterPage,
 	page,
 }) => {
-	const response = await apiHelpers.objectAdmin.postObjectDefinition(
-		companyObjectDefinition
-	);
+	const objectDefinitionAPIClient =
+		await apiHelpers.buildRestClient(ObjectDefinitionAPI);
+
+	const {body: objectDefinition} =
+		await objectDefinitionAPIClient.postObjectDefinition(
+			companyObjectDefinition
+		);
+
+	apiHelpers.data.push({id: objectDefinition.id, type: 'objectDefinition'});
 
 	await dataMigrationCenterPage.goto();
 	await dataMigrationCenterPage.goToImportFile();
@@ -512,20 +578,9 @@ test('can import CSV file with an unexisting field', async ({
 				'c/tests'
 			)
 		).items
-	).toEqual([
+	).toMatchObject([
 		{
-			actions: expect.any(Object),
-			creator: expect.any(Object),
-			dateCreated: expect.any(String),
-			dateModified: expect.any(String),
 			externalReferenceCode: '83b46736-f89b-9b90-188c-497d06c08271',
-			id: expect.any(Number),
-			keywords: [],
-			r_testRelationship_c_testERC: '',
-			r_testRelationship_c_testId: 0,
-			status: expect.any(Object),
-			taxonomyCategoryBriefs: [],
-			testAggregationField: '0',
 			testAutoIncrementField: 'prefix-1-suffix',
 			testBooleanField: false,
 			testDateField: '2024-01-05T00:00:00.000Z',
@@ -536,14 +591,9 @@ test('can import CSV file with an unexisting field', async ({
 			testLongInteger: 123456789,
 			testLongTextField: 'This is a long text to test testLongTextField',
 			testPrecisionDecimalField: 321.123,
-			testRelationshipERC: '',
-			testRichTextField: '',
-			testRichTextFieldRawText: '',
 			testTextField: 'Test',
 		},
 	]);
-
-	await apiHelpers.objectAdmin.deleteObjectDefinition(response.id);
 });
 
 test('can import CSV file with custom columns order', async ({
@@ -551,8 +601,15 @@ test('can import CSV file with custom columns order', async ({
 	dataMigrationCenterPage,
 	page,
 }) => {
-	const objectDefinition =
-		await apiHelpers.objectAdmin.postObjectDefinition(siteObjectDefinition);
+	const objectDefinitionAPIClient =
+		await apiHelpers.buildRestClient(ObjectDefinitionAPI);
+
+	const {body: objectDefinition} =
+		await objectDefinitionAPIClient.postObjectDefinition(
+			siteObjectDefinition
+		);
+
+	apiHelpers.data.push({id: objectDefinition.id, type: 'objectDefinition'});
 
 	await dataMigrationCenterPage.goto();
 	await dataMigrationCenterPage.goToImportFile();
@@ -577,21 +634,10 @@ test('can import CSV file with custom columns order', async ({
 				'Guest'
 			)
 		).items
-	).toEqual([
+	).toMatchObject([
 		{
-			actions: expect.any(Object),
-			creator: expect.any(Object),
-			dateCreated: expect.any(String),
-			dateModified: expect.any(String),
 			externalReferenceCode: '83b46736-f89b-9b90-188c-497d06c08271',
-			id: expect.any(Number),
-			keywords: [],
-			r_testRelationship_c_testERC: '',
-			r_testRelationship_c_testId: 0,
 			scopeKey: 'Guest',
-			status: expect.any(Object),
-			taxonomyCategoryBriefs: [],
-			testAggregationField: '0',
 			testAutoIncrementField: 'prefix-1-suffix',
 			testBooleanField: true,
 			testDateField: '2024-01-05T00:00:00.000Z',
@@ -602,7 +648,6 @@ test('can import CSV file with custom columns order', async ({
 			testLongInteger: 123456789,
 			testLongTextField: 'This is a long text to test testLongTextField',
 			testPrecisionDecimalField: 321.123,
-			testRelationshipERC: '',
 			testRichTextField:
 				'<p>This is a long text <strong>with some fomatting</strong> to text\n  testRichTextField  </p>',
 			testRichTextFieldRawText:
@@ -610,8 +655,6 @@ test('can import CSV file with custom columns order', async ({
 			testTextField: 'Test',
 		},
 	]);
-
-	await apiHelpers.objectAdmin.deleteObjectDefinition(objectDefinition.id);
 });
 
 test('can import CSV file with multiple site scoped object entries', async ({
@@ -619,8 +662,15 @@ test('can import CSV file with multiple site scoped object entries', async ({
 	dataMigrationCenterPage,
 	page,
 }) => {
-	const response =
-		await apiHelpers.objectAdmin.postObjectDefinition(siteObjectDefinition);
+	const objectDefinitionAPIClient =
+		await apiHelpers.buildRestClient(ObjectDefinitionAPI);
+
+	const {body: objectDefinition} =
+		await objectDefinitionAPIClient.postObjectDefinition(
+			siteObjectDefinition
+		);
+
+	apiHelpers.data.push({id: objectDefinition.id, type: 'objectDefinition'});
 
 	await dataMigrationCenterPage.goto();
 	await dataMigrationCenterPage.goToImportFile();
@@ -643,21 +693,10 @@ test('can import CSV file with multiple site scoped object entries', async ({
 				'Guest'
 			)
 		).items
-	).toEqual([
+	).toMatchObject([
 		{
-			actions: expect.any(Object),
-			creator: expect.any(Object),
-			dateCreated: expect.any(String),
-			dateModified: expect.any(String),
 			externalReferenceCode: '83b46736-f89b-9b90-188c-497d06c08271',
-			id: expect.any(Number),
-			keywords: [],
-			r_testRelationship_c_testERC: '',
-			r_testRelationship_c_testId: 0,
 			scopeKey: 'Guest',
-			status: expect.any(Object),
-			taxonomyCategoryBriefs: [],
-			testAggregationField: '0',
 			testAutoIncrementField: 'prefix-1-suffix',
 			testBooleanField: true,
 			testDateField: '2024-01-05T00:00:00.000Z',
@@ -669,7 +708,6 @@ test('can import CSV file with multiple site scoped object entries', async ({
 			testLongTextField:
 				'This is a long text to test testLongTextField. The first entry',
 			testPrecisionDecimalField: 321.123,
-			testRelationshipERC: '',
 			testRichTextField:
 				'<p>This is a long text <strong>with some fomatting</strong> to text\n  testRichTextField. The first entry.  </p>',
 			testRichTextFieldRawText:
@@ -677,19 +715,8 @@ test('can import CSV file with multiple site scoped object entries', async ({
 			testTextField: 'Test_FirstEntry',
 		},
 		{
-			actions: expect.any(Object),
-			creator: expect.any(Object),
-			dateCreated: expect.any(String),
-			dateModified: expect.any(String),
 			externalReferenceCode: '83b46736-f89b-9b90-188c-497d06c08273',
-			id: expect.any(Number),
-			keywords: [],
-			r_testRelationship_c_testERC: '',
-			r_testRelationship_c_testId: 0,
 			scopeKey: 'Guest',
-			status: expect.any(Object),
-			taxonomyCategoryBriefs: [],
-			testAggregationField: '0',
 			testAutoIncrementField: 'prefix-2-suffix',
 			testBooleanField: false,
 			testDateField: '2024-01-06T00:00:00.000Z',
@@ -701,7 +728,6 @@ test('can import CSV file with multiple site scoped object entries', async ({
 			testLongTextField:
 				'This is a long text to test testLongTextField. The second entry',
 			testPrecisionDecimalField: 123.321,
-			testRelationshipERC: '',
 			testRichTextField:
 				'<p>This is a long text <strong>with some fomatting</strong> to text\n  testRichTextField. The second entry.  </p>',
 			testRichTextFieldRawText:
@@ -709,8 +735,6 @@ test('can import CSV file with multiple site scoped object entries', async ({
 			testTextField: 'Test_SecondEntry',
 		},
 	]);
-
-	await apiHelpers.objectAdmin.deleteObjectDefinition(response.id);
 });
 
 test('can import CSV file with new and existing site scoped object entries', async ({
@@ -718,8 +742,15 @@ test('can import CSV file with new and existing site scoped object entries', asy
 	dataMigrationCenterPage,
 	page,
 }) => {
-	const response =
-		await apiHelpers.objectAdmin.postObjectDefinition(siteObjectDefinition);
+	const objectDefinitionAPIClient =
+		await apiHelpers.buildRestClient(ObjectDefinitionAPI);
+
+	const {body: objectDefinition} =
+		await objectDefinitionAPIClient.postObjectDefinition(
+			siteObjectDefinition
+		);
+
+	apiHelpers.data.push({id: objectDefinition.id, type: 'objectDefinition'});
 
 	await dataMigrationCenterPage.goto();
 	await dataMigrationCenterPage.goToImportFile();
@@ -754,21 +785,10 @@ test('can import CSV file with new and existing site scoped object entries', asy
 				'Guest'
 			)
 		).items
-	).toEqual([
+	).toMatchObject([
 		{
-			actions: expect.any(Object),
-			creator: expect.any(Object),
-			dateCreated: expect.any(String),
-			dateModified: expect.any(String),
 			externalReferenceCode: '83b46736-f89b-9b90-188c-497d06c08271',
-			id: expect.any(Number),
-			keywords: [],
-			r_testRelationship_c_testERC: '',
-			r_testRelationship_c_testId: 0,
 			scopeKey: 'Guest',
-			status: expect.any(Object),
-			taxonomyCategoryBriefs: [],
-			testAggregationField: '0',
 			testAutoIncrementField: 'prefix-1-suffix',
 			testBooleanField: false,
 			testDateField: '2024-01-05T00:00:00.000Z',
@@ -780,7 +800,6 @@ test('can import CSV file with new and existing site scoped object entries', asy
 			testLongTextField:
 				'This is a long text to test testLongTextField. The first entry',
 			testPrecisionDecimalField: 321.123,
-			testRelationshipERC: '',
 			testRichTextField:
 				'<p>This is a long text <strong>with some fomatting</strong> to text\n  testRichTextField.  </p>',
 			testRichTextFieldRawText:
@@ -788,19 +807,8 @@ test('can import CSV file with new and existing site scoped object entries', asy
 			testTextField: 'Test',
 		},
 		{
-			actions: expect.any(Object),
-			creator: expect.any(Object),
-			dateCreated: expect.any(String),
-			dateModified: expect.any(String),
 			externalReferenceCode: '83b46736-f89b-9b90-188c-497d06c08273',
-			id: expect.any(Number),
-			keywords: [],
-			r_testRelationship_c_testERC: '',
-			r_testRelationship_c_testId: 0,
 			scopeKey: 'Guest',
-			status: expect.any(Object),
-			taxonomyCategoryBriefs: [],
-			testAggregationField: '0',
 			testAutoIncrementField: 'prefix-2-suffix',
 			testBooleanField: true,
 			testDateField: '2024-01-06T00:00:00.000Z',
@@ -812,7 +820,6 @@ test('can import CSV file with new and existing site scoped object entries', asy
 			testLongTextField:
 				'This is a long text to test testLongTextField. The second entry',
 			testPrecisionDecimalField: 123.321,
-			testRelationshipERC: '',
 			testRichTextField:
 				'<p>This is a long text <strong>with some fomatting</strong> to text\n  testRichTextField. New entry.  </p>',
 			testRichTextFieldRawText:
@@ -820,8 +827,6 @@ test('can import CSV file with new and existing site scoped object entries', asy
 			testTextField: 'Test_SecondEntry',
 		},
 	]);
-
-	await apiHelpers.objectAdmin.deleteObjectDefinition(response.id);
 });
 
 test('can import CSV file with new and modified existing company scoped object entries', async ({
@@ -829,9 +834,15 @@ test('can import CSV file with new and modified existing company scoped object e
 	dataMigrationCenterPage,
 	page,
 }) => {
-	const response = await apiHelpers.objectAdmin.postObjectDefinition(
-		companyObjectDefinition
-	);
+	const objectDefinitionAPIClient =
+		await apiHelpers.buildRestClient(ObjectDefinitionAPI);
+
+	const {body: objectDefinition} =
+		await objectDefinitionAPIClient.postObjectDefinition(
+			companyObjectDefinition
+		);
+
+	apiHelpers.data.push({id: objectDefinition.id, type: 'objectDefinition'});
 
 	await dataMigrationCenterPage.goto();
 	await dataMigrationCenterPage.goToImportFile();
@@ -865,20 +876,9 @@ test('can import CSV file with new and modified existing company scoped object e
 				'c/tests'
 			)
 		).items
-	).toEqual([
+	).toMatchObject([
 		{
-			actions: expect.any(Object),
-			creator: expect.any(Object),
-			dateCreated: expect.any(String),
-			dateModified: expect.any(String),
 			externalReferenceCode: '83b46736-f89b-9b90-188c-497d06c08271',
-			id: expect.any(Number),
-			keywords: [],
-			r_testRelationship_c_testERC: '',
-			r_testRelationship_c_testId: 0,
-			status: expect.any(Object),
-			taxonomyCategoryBriefs: [],
-			testAggregationField: '0',
 			testAutoIncrementField: 'prefix-1-suffix',
 			testBooleanField: true,
 			testDateField: '2024-01-05T00:00:00.000Z',
@@ -890,7 +890,6 @@ test('can import CSV file with new and modified existing company scoped object e
 			testLongTextField:
 				'This is a long text to test testLongTextField. The first entry',
 			testPrecisionDecimalField: 321.123,
-			testRelationshipERC: '',
 			testRichTextField:
 				'<p>This is a long text <strong>with some fomatting</strong> to text\n  testRichTextField. The modified entry.  </p>',
 			testRichTextFieldRawText:
@@ -898,18 +897,7 @@ test('can import CSV file with new and modified existing company scoped object e
 			testTextField: 'Test_Modified',
 		},
 		{
-			actions: expect.any(Object),
-			creator: expect.any(Object),
-			dateCreated: expect.any(String),
-			dateModified: expect.any(String),
 			externalReferenceCode: '83b46736-f89b-9b90-188c-497d06c08273',
-			id: expect.any(Number),
-			keywords: [],
-			r_testRelationship_c_testERC: '',
-			r_testRelationship_c_testId: 0,
-			status: expect.any(Object),
-			taxonomyCategoryBriefs: [],
-			testAggregationField: '0',
 			testAutoIncrementField: 'prefix-2-suffix',
 			testBooleanField: false,
 			testDateField: '2024-01-06T00:00:00.000Z',
@@ -921,7 +909,6 @@ test('can import CSV file with new and modified existing company scoped object e
 			testLongTextField:
 				'This is a long text to test testLongTextField. The second entry',
 			testPrecisionDecimalField: 123.321,
-			testRelationshipERC: '',
 			testRichTextField:
 				'<p>This is a long text <strong>with some fomatting</strong> to text\n  testRichTextField. The new entry.  </p>',
 			testRichTextFieldRawText:
@@ -929,8 +916,290 @@ test('can import CSV file with new and modified existing company scoped object e
 			testTextField: 'Test_NewEntry',
 		},
 	]);
+});
 
-	await apiHelpers.objectAdmin.deleteObjectDefinition(response.id);
+test('can import json file with attachment field', async ({
+	apiHelpers,
+	dataMigrationCenterPage,
+	page,
+}) => {
+	const studentObjectDefinitionWithAttachment: ObjectDefinition = {
+		active: true,
+		externalReferenceCode: 'student-def',
+		label: {
+			en_US: 'Student',
+		},
+		name: 'Student',
+		objectFields: [
+			{
+				DBType: 'String',
+				businessType: 'Text',
+				externalReferenceCode: 'studentName',
+				indexed: true,
+				indexedAsKeyword: false,
+				indexedLanguageId: 'en_US',
+				label: {
+					en_US: 'Student name',
+				},
+				listTypeDefinitionId: 0,
+				name: 'name',
+				required: true,
+				state: false,
+				system: false,
+				type: 'String',
+			},
+			{
+				DBType: 'Long',
+				businessType: 'Attachment',
+				indexed: true,
+				indexedAsKeyword: false,
+				label: {
+					en_US: 'customAttachment',
+				},
+				name: 'diploma',
+				objectFieldSettings: [
+					{
+						name: 'acceptedFileExtensions',
+						value: 'jpeg, jpg, pdf, png',
+					} as any,
+					{
+						name: 'fileSource',
+						value: 'documentsAndMedia',
+					} as any,
+					{
+						name: 'maximumFileSize',
+						value: '100',
+					} as any,
+				],
+				required: false,
+				type: 'Long',
+			},
+		],
+		panelCategoryKey: 'control_panel.object',
+		pluralLabel: {
+			en_US: 'Students',
+		},
+		portlet: true,
+		restContextPath: '/o/c/students',
+		scope: 'company',
+		status: {
+			code: 0,
+		},
+	};
+	const objectDefinitionAPIClient =
+		await apiHelpers.buildRestClient(ObjectDefinitionAPI);
+
+	const {body: studentResponse} =
+		await objectDefinitionAPIClient.postObjectDefinition(
+			studentObjectDefinitionWithAttachment
+		);
+
+	apiHelpers.data.push({id: studentResponse.id, type: 'objectDefinition'});
+
+	const subjectObjectDefinition: ObjectDefinition = {
+		active: true,
+		externalReferenceCode: 'subject-def',
+		label: {
+			en_US: 'Subject',
+		},
+		name: 'Subject',
+		objectFields: [
+			{
+				DBType: 'String',
+				businessType: 'Text',
+				externalReferenceCode: 'subject-name-field',
+				indexed: true,
+				indexedAsKeyword: false,
+				indexedLanguageId: 'en_US',
+				label: {
+					en_US: 'name',
+				},
+				listTypeDefinitionId: 0,
+				name: 'name',
+				required: false,
+				state: false,
+				system: false,
+				type: 'String',
+			},
+		],
+		objectRelationships: [
+			{
+				deletionType: 'cascade',
+				externalReferenceCode: 'student-subjects-relationship',
+				label: {
+					en_US: 'Student subjects',
+				},
+				name: 'subjectStudents',
+				objectDefinitionExternalReferenceCode1: 'subject-def',
+				objectDefinitionExternalReferenceCode2: 'student-def',
+				objectDefinitionModifiable2: true,
+				objectDefinitionName2: 'Student',
+				objectDefinitionSystem2: false,
+				objectField: {
+					DBType: 'Long',
+					businessType: 'Relationship',
+					externalReferenceCode:
+						'student-subjects-relationship-field',
+					indexed: true,
+					indexedAsKeyword: false,
+					indexedLanguageId: '',
+					label: {
+						en_US: 'Student subjects',
+					},
+					name: 'r_subjectStudents_c_subjectId',
+					readOnly: 'false',
+					relationshipType: 'oneToMany',
+					state: false,
+					system: false,
+					type: 'Long',
+					unique: false,
+				},
+				parameterObjectFieldId: 0,
+				parameterObjectFieldName: '',
+				reverse: false,
+				system: false,
+				type: 'oneToMany',
+			},
+		],
+		panelCategoryKey: 'control_panel.object',
+		pluralLabel: {
+			en_US: 'Subjects',
+		},
+		portlet: true,
+		restContextPath: '/c/subjects',
+		scope: 'company',
+		status: {
+			code: 0,
+		},
+	};
+
+	const {body: subjectResponse} =
+		await objectDefinitionAPIClient.postObjectDefinition(
+			subjectObjectDefinition
+		);
+
+	apiHelpers.data.push({
+		id: subjectResponse.id,
+		type: 'objectDefinition',
+	});
+
+	await apiHelpers.objectEntry.postObjectEntry(
+		{
+			externalReferenceCode: 'Math',
+			name: 'Math',
+		},
+		'c/subjects'
+	);
+
+	const objectEntry = await apiHelpers.objectEntry.postObjectEntry(
+		{
+			diploma: {
+				fileBase64: 'R0lGODlhAQABAAAAACw=',
+				name: 'diploma.png',
+			},
+			externalReferenceCode: 'studentERC',
+			name: 'Jane',
+			r_subjectStudents_c_subjectERC: 'Math',
+		},
+		'c/students'
+	);
+
+	apiHelpers.data.push({
+		id: objectEntry.diploma.id,
+		type: 'document',
+	});
+
+	const filePath = createTempFile(
+		getRandomString() + '.json',
+		`[{"diploma": {
+			"id":${objectEntry.diploma.id},
+			"link":
+				{
+					"href": "${objectEntry.diploma.link.href}",
+					"label": "${objectEntry.diploma.link.label}"
+				},
+				"name": "${objectEntry.diploma.name}"
+			},
+			"name": "John",
+			"r_subjectStudents_c_subjectERC": "Math"
+		}]`
+	);
+
+	await dataMigrationCenterPage.goto();
+	await dataMigrationCenterPage.goToImportFile();
+
+	await dataMigrationCenterPage.importFile(
+		'com.liferay.object.rest.dto.v1_0.ObjectEntry#C_Student',
+		filePath,
+		'INSERT',
+		'PARTIAL_UPDATE'
+	);
+
+	await expect(
+		page.getByText('The import process completed successfully.')
+	).toBeVisible();
+	expect(
+		(
+			await apiHelpers.objectEntry.getObjectDefinitionObjectEntries(
+				'c/students'
+			)
+		).items
+	).toEqual([
+		{
+			actions: expect.any(Object),
+			creator: expect.any(Object),
+			dateCreated: expect.any(String),
+			dateModified: expect.any(String),
+			diploma: {
+				externalReferenceCode: expect.any(String),
+				id: expect.any(Number),
+				link: {
+					href: expect.any(String),
+					label: 'diploma.png',
+				},
+				name: 'diploma.png',
+				scope: expect.any(Object),
+			},
+			externalReferenceCode: expect.any(String),
+			id: expect.any(Number),
+			keywords: [],
+			name: 'Jane',
+			objectEntryFolderExternalReferenceCode: '',
+			objectEntryFolderId: 0,
+			r_subjectStudents_c_subjectERC: 'Math',
+			r_subjectStudents_c_subjectId: expect.any(Number),
+			status: expect.any(Object),
+			subjectStudentsERC: 'Math',
+			taxonomyCategoryBriefs: [],
+		},
+		{
+			actions: expect.any(Object),
+			creator: expect.any(Object),
+			dateCreated: expect.any(String),
+			dateModified: expect.any(String),
+			diploma: {
+				externalReferenceCode: expect.any(String),
+				id: expect.any(Number),
+				link: {
+					href: expect.any(String),
+					label: 'diploma.png',
+				},
+				name: 'diploma.png',
+				scope: expect.any(Object),
+			},
+			externalReferenceCode: expect.any(String),
+			id: expect.any(Number),
+			keywords: [],
+			name: 'John',
+			objectEntryFolderExternalReferenceCode: '',
+			objectEntryFolderId: 0,
+			r_subjectStudents_c_subjectERC: 'Math',
+			r_subjectStudents_c_subjectId: expect.any(Number),
+			status: expect.any(Object),
+			subjectStudentsERC: 'Math',
+			taxonomyCategoryBriefs: [],
+		},
+	]);
 });
 
 test('can map all imported fields', async ({
@@ -938,15 +1207,22 @@ test('can map all imported fields', async ({
 	dataMigrationCenterPage,
 	page,
 }) => {
-	const response =
-		await apiHelpers.objectAdmin.postObjectDefinition(siteObjectDefinition);
+	const objectDefinitionAPIClient =
+		await apiHelpers.buildRestClient(ObjectDefinitionAPI);
+	const {body: objectDefinition} =
+		await objectDefinitionAPIClient.postObjectDefinition(
+			siteObjectDefinition
+		);
+	apiHelpers.data.push({id: objectDefinition.id, type: 'objectDefinition'});
 
 	await dataMigrationCenterPage.goto();
 	await dataMigrationCenterPage.goToImportFile();
 
 	await dataMigrationCenterPage.selectEntityType(OBJECT_ENTRY_ENTITY_TYPE);
 
-	await expect(page.getByText('externalReferenceCode')).toBeVisible();
+	await expect(
+		page.getByText('externalReferenceCode', {exact: true})
+	).toBeVisible();
 	await expect(page.getByText('keywords', {exact: true})).toBeVisible();
 	await expect(page.getByText('taxonomyCategoryIds')).toBeVisible();
 	await expect(page.getByText('testAutoIncrementField')).toBeVisible();
@@ -959,8 +1235,6 @@ test('can map all imported fields', async ({
 	await expect(page.getByText('testPrecisionDecimalField')).toBeVisible();
 	await expect(page.getByText('testRichTextField')).toBeVisible();
 	await expect(page.getByText('testTextField')).toBeVisible();
-
-	await apiHelpers.objectAdmin.deleteObjectDefinition(response.id);
 });
 
 test('can preview CSV file', async ({
@@ -968,8 +1242,15 @@ test('can preview CSV file', async ({
 	dataMigrationCenterPage,
 	page,
 }) => {
-	const response =
-		await apiHelpers.objectAdmin.postObjectDefinition(siteObjectDefinition);
+	const objectDefinitionAPIClient =
+		await apiHelpers.buildRestClient(ObjectDefinitionAPI);
+
+	const {body: objectDefinition} =
+		await objectDefinitionAPIClient.postObjectDefinition(
+			siteObjectDefinition
+		);
+
+	apiHelpers.data.push({id: objectDefinition.id, type: 'objectDefinition'});
 
 	await dataMigrationCenterPage.goto();
 	await dataMigrationCenterPage.goToImportFile();
@@ -1036,8 +1317,6 @@ test('can preview CSV file', async ({
 			.getByLabel('Preview')
 			.getByRole('cell', {exact: true, name: 'testTextField'})
 	).toBeVisible();
-
-	await apiHelpers.objectAdmin.deleteObjectDefinition(response.id);
 });
 
 test('can show duplicate error message with CSV import existing entry and only add new record fields', async ({
@@ -1045,9 +1324,15 @@ test('can show duplicate error message with CSV import existing entry and only a
 	dataMigrationCenterPage,
 	page,
 }) => {
-	const response = await apiHelpers.objectAdmin.postObjectDefinition(
-		companyObjectDefinition
-	);
+	const objectDefinitionAPIClient =
+		await apiHelpers.buildRestClient(ObjectDefinitionAPI);
+
+	const {body: objectDefinition} =
+		await objectDefinitionAPIClient.postObjectDefinition(
+			companyObjectDefinition
+		);
+
+	apiHelpers.data.push({id: objectDefinition.id, type: 'objectDefinition'});
 
 	await dataMigrationCenterPage.goto();
 	await dataMigrationCenterPage.goToImportFile();
@@ -1073,8 +1358,6 @@ test('can show duplicate error message with CSV import existing entry and only a
 			'com.liferay.object.exception.DuplicateObjectEntryExternalReferenceCodeException'
 		)
 	).toBeVisible();
-
-	await apiHelpers.objectAdmin.deleteObjectDefinition(response.id);
 });
 
 test('can show unique contraint error message with CSV import existing entry and only add new record fields', async ({
@@ -1082,9 +1365,15 @@ test('can show unique contraint error message with CSV import existing entry and
 	dataMigrationCenterPage,
 	page,
 }) => {
-	const response = await apiHelpers.objectAdmin.postObjectDefinition(
-		companyObjectDefinition
-	);
+	const objectDefinitionAPIClient =
+		await apiHelpers.buildRestClient(ObjectDefinitionAPI);
+
+	const {body: objectDefinition} =
+		await objectDefinitionAPIClient.postObjectDefinition(
+			companyObjectDefinition
+		);
+
+	apiHelpers.data.push({id: objectDefinition.id, type: 'objectDefinition'});
 
 	await dataMigrationCenterPage.goto();
 	await dataMigrationCenterPage.goToImportFile();
@@ -1110,8 +1399,6 @@ test('can show unique contraint error message with CSV import existing entry and
 			'com.liferay.object.exception.ObjectEntryValuesException$UniqueValueConstraintViolation'
 		)
 	).toBeVisible();
-
-	await apiHelpers.objectAdmin.deleteObjectDefinition(response.id);
 });
 
 test('cannot import CSV file without headers row', async ({
@@ -1140,8 +1427,15 @@ test('cannot import CSV file with empty headers row', async ({
 	dataMigrationCenterPage,
 	page,
 }) => {
-	const response =
-		await apiHelpers.objectAdmin.postObjectDefinition(siteObjectDefinition);
+	const objectDefinitionAPIClient =
+		await apiHelpers.buildRestClient(ObjectDefinitionAPI);
+
+	const {body: objectDefinition} =
+		await objectDefinitionAPIClient.postObjectDefinition(
+			siteObjectDefinition
+		);
+
+	apiHelpers.data.push({id: objectDefinition.id, type: 'objectDefinition'});
 
 	await dataMigrationCenterPage.goto();
 	await dataMigrationCenterPage.goToImportFile();
@@ -1164,8 +1458,6 @@ test('cannot import CSV file with empty headers row', async ({
 			'Error:You must map at least one field and all required fields before continuing.'
 		)
 	).toBeVisible();
-
-	await apiHelpers.objectAdmin.deleteObjectDefinition(response.id);
 });
 
 test('cannot import CSV file with object entry with UPSERT strategy', async ({
@@ -1173,9 +1465,15 @@ test('cannot import CSV file with object entry with UPSERT strategy', async ({
 	dataMigrationCenterPage,
 	page,
 }) => {
-	const response = await apiHelpers.objectAdmin.postObjectDefinition(
-		companyObjectDefinition
-	);
+	const objectDefinitionAPIClient =
+		await apiHelpers.buildRestClient(ObjectDefinitionAPI);
+
+	const {body: objectDefinition} =
+		await objectDefinitionAPIClient.postObjectDefinition(
+			companyObjectDefinition
+		);
+
+	apiHelpers.data.push({id: objectDefinition.id, type: 'objectDefinition'});
 
 	await dataMigrationCenterPage.goto();
 	await dataMigrationCenterPage.goToImportFile();
@@ -1192,8 +1490,6 @@ test('cannot import CSV file with object entry with UPSERT strategy', async ({
 			'javax.ws.rs.NotSupportedException: Create strategy "UPSERT" is not supported for'
 		)
 	).toBeVisible();
-
-	await apiHelpers.objectAdmin.deleteObjectDefinition(response.id);
 });
 
 test('cannot import empty CSV file', async ({
@@ -1201,9 +1497,15 @@ test('cannot import empty CSV file', async ({
 	dataMigrationCenterPage,
 	page,
 }) => {
-	const response = await apiHelpers.objectAdmin.postObjectDefinition(
-		companyObjectDefinition
-	);
+	const objectDefinitionAPIClient =
+		await apiHelpers.buildRestClient(ObjectDefinitionAPI);
+
+	const {body: objectDefinition} =
+		await objectDefinitionAPIClient.postObjectDefinition(
+			companyObjectDefinition
+		);
+
+	apiHelpers.data.push({id: objectDefinition.id, type: 'objectDefinition'});
 
 	await dataMigrationCenterPage.goto();
 	await dataMigrationCenterPage.goToImportFile();
@@ -1219,44 +1521,48 @@ test('cannot import empty CSV file', async ({
 	await page.getByRole('button', {name: 'Next'}).click();
 
 	await expect(page.getByText('Error:Please upload a file.')).toBeVisible();
-
-	await apiHelpers.objectAdmin.deleteObjectDefinition(response.id);
 });
 
 test('can see correct custom object name in dropdown', async ({
 	apiHelpers,
 	dataMigrationCenterPage,
 }) => {
-	const objectDefinition = await apiHelpers.objectAdmin.postObjectDefinition({
-		active: true,
-		externalReferenceCode: 'stockERC',
-		label: {
-			en_US: 'stock',
-		},
-		name: 'Stock',
-		objectFields: [
-			{
-				DBType: 'String',
-				businessType: 'Text',
-				externalReferenceCode: 'nameERC',
-				indexed: true,
-				indexedAsKeyword: true,
-				label: {
-					en_US: 'name',
-				},
-				name: 'name',
-				required: true,
+	const objectDefinitionAPIClient =
+		await apiHelpers.buildRestClient(ObjectDefinitionAPI);
+
+	const {body: objectDefinition} =
+		await objectDefinitionAPIClient.postObjectDefinition({
+			active: true,
+			externalReferenceCode: 'stockERC',
+			label: {
+				en_US: 'stock',
 			},
-		],
-		pluralLabel: {
-			en_US: 'stocks',
-		},
-		portlet: true,
-		scope: 'company',
-		status: {
-			code: 0,
-		},
-	});
+			name: 'Stock',
+			objectFields: [
+				{
+					DBType: 'String',
+					businessType: 'Text',
+					externalReferenceCode: 'nameERC',
+					indexed: true,
+					indexedAsKeyword: true,
+					label: {
+						en_US: 'name',
+					},
+					name: 'name',
+					required: true,
+				},
+			],
+			pluralLabel: {
+				en_US: 'stocks',
+			},
+			portlet: true,
+			scope: 'company',
+			status: {
+				code: 0,
+			},
+		});
+
+	apiHelpers.data.push({id: objectDefinition.id, type: 'objectDefinition'});
 
 	await apiHelpers.objectEntry.postObjectEntry(
 		{
@@ -1274,6 +1580,451 @@ test('can see correct custom object name in dropdown', async ({
 			.getByLabel('Entity Type')
 			.textContent()
 	).toContain('Stock (v1.0 - Liferay Object REST)');
+});
 
-	await apiHelpers.objectAdmin.deleteObjectDefinition(objectDefinition.id);
+test('can see ObjectDefinition entity type in dropdown', async ({
+	dataMigrationCenterPage,
+}) => {
+	await dataMigrationCenterPage.goto();
+	await dataMigrationCenterPage.goToImportFile();
+
+	expect(
+		await dataMigrationCenterPage.page
+			.getByLabel('Entity Type')
+			.textContent()
+	).toContain('ObjectDefinition (v1.0 - Liferay Object Admin REST)');
+});
+
+test('cannot see relationship nested field', async ({
+	apiHelpers,
+	dataMigrationCenterPage,
+	page,
+}) => {
+	const objectDefinitionAPIClient =
+		await apiHelpers.buildRestClient(ObjectDefinitionAPI);
+
+	const {body: objectDefinition} =
+		await objectDefinitionAPIClient.postObjectDefinition(
+			companyObjectDefinition
+		);
+
+	apiHelpers.data.push({id: objectDefinition.id, type: 'objectDefinition'});
+
+	await dataMigrationCenterPage.goto();
+	await dataMigrationCenterPage.goToImportFile();
+
+	await dataMigrationCenterPage.selectEntityType(OBJECT_ENTRY_ENTITY_TYPE);
+
+	await expect(page.getByText('testRelationship')).not.toBeVisible();
+});
+
+test.describe('can rely on anyOf form validation', () => {
+	const studentObjectDefinition: ObjectDefinition = {
+		active: true,
+		externalReferenceCode: 'student-definition',
+		label: {
+			en_US: 'Student',
+		},
+		name: 'Student',
+		objectFields: [
+			{
+				DBType: 'String',
+				businessType: 'Text',
+				externalReferenceCode: 'student-name-field',
+				indexed: true,
+				indexedAsKeyword: false,
+				indexedLanguageId: 'en_US',
+				label: {
+					en_US: 'Student name',
+				},
+				listTypeDefinitionId: 0,
+				name: 'studentName',
+				required: true,
+				state: false,
+				system: false,
+				type: 'String',
+			},
+		],
+		objectRelationships: [
+			{
+				deletionType: 'cascade',
+				externalReferenceCode: 'student-subjects-relationship-1',
+				label: {
+					en_US: 'Student subjects 1',
+				},
+				name: 'studentSubjects1',
+				objectDefinitionExternalReferenceCode1: 'student-definition',
+				objectDefinitionExternalReferenceCode2: 'subject-definition',
+				objectDefinitionModifiable2: true,
+				objectDefinitionName2: 'Subject',
+				objectDefinitionSystem2: false,
+				objectField: {
+					DBType: 'Long',
+					businessType: 'Relationship',
+					externalReferenceCode:
+						'student-subjects-relationship-field-1',
+					indexed: true,
+					indexedAsKeyword: false,
+					indexedLanguageId: '',
+					label: {
+						en_US: 'Student subjects 1',
+					},
+					name: 'r_studentSubjects1_c_studentId',
+					readOnly: 'false',
+					relationshipType: 'oneToMany',
+					required: true,
+					state: false,
+					system: false,
+					type: 'Long',
+					unique: false,
+				},
+				parameterObjectFieldId: 0,
+				parameterObjectFieldName: '',
+				reverse: false,
+				system: false,
+				type: 'oneToMany',
+			},
+			{
+				deletionType: 'cascade',
+				externalReferenceCode: 'student-subjects-relationship-2',
+				label: {
+					en_US: 'Student subjects 2',
+				},
+				name: 'studentSubjects2',
+				objectDefinitionExternalReferenceCode1: 'student-definition',
+				objectDefinitionExternalReferenceCode2: 'subject-definition',
+				objectDefinitionModifiable2: true,
+				objectDefinitionName2: 'Subject',
+				objectDefinitionSystem2: false,
+				objectField: {
+					DBType: 'Long',
+					businessType: 'Relationship',
+					externalReferenceCode:
+						'student-subjects-relationship-field-2',
+					indexed: true,
+					indexedAsKeyword: false,
+					indexedLanguageId: '',
+					label: {
+						en_US: 'Student subjects 2',
+					},
+					name: 'r_studentSubjects2_c_studentId',
+					readOnly: 'false',
+					relationshipType: 'oneToMany',
+					required: true,
+					state: false,
+					system: false,
+					type: 'Long',
+					unique: false,
+				},
+				parameterObjectFieldId: 0,
+				parameterObjectFieldName: '',
+				reverse: false,
+				system: false,
+				type: 'oneToMany',
+			},
+			{
+				deletionType: 'cascade',
+				externalReferenceCode: 'student-subjects-relationship-3',
+				label: {
+					en_US: 'Student subjects 3',
+				},
+				name: 'studentSubjects3',
+				objectDefinitionExternalReferenceCode1: 'student-definition',
+				objectDefinitionExternalReferenceCode2: 'subject-definition',
+				objectDefinitionModifiable2: true,
+				objectDefinitionName2: 'Subject',
+				objectDefinitionSystem2: false,
+				objectField: {
+					DBType: 'Long',
+					businessType: 'Relationship',
+					externalReferenceCode:
+						'student-subjects-relationship-field-3',
+					indexed: true,
+					indexedAsKeyword: false,
+					indexedLanguageId: '',
+					label: {
+						en_US: 'Student subjects 3',
+					},
+					name: 'r_studentSubjects3_c_studentId',
+					readOnly: 'false',
+					relationshipType: 'oneToMany',
+					required: false,
+					state: false,
+					system: false,
+					type: 'Long',
+					unique: false,
+				},
+				parameterObjectFieldId: 0,
+				parameterObjectFieldName: '',
+				reverse: false,
+				system: false,
+				type: 'oneToMany',
+			},
+		],
+		panelCategoryKey: 'control_panel.object',
+		pluralLabel: {
+			en_US: 'Students',
+		},
+		portlet: true,
+		restContextPath: '/o/c/students',
+		scope: 'company',
+		status: {
+			code: 0,
+		},
+	};
+
+	const subjectObjectDefinition: ObjectDefinition = {
+		active: true,
+		externalReferenceCode: 'subject-definition',
+		label: {
+			en_US: 'Subject',
+		},
+		name: 'Subject',
+		objectFields: [
+			{
+				DBType: 'String',
+				businessType: 'Text',
+				externalReferenceCode: 'subject-name-field',
+				indexed: true,
+				indexedAsKeyword: false,
+				indexedLanguageId: 'en_US',
+				label: {
+					en_US: 'Subject name',
+				},
+				listTypeDefinitionId: 0,
+				name: 'subjectName',
+				required: false,
+				state: false,
+				system: false,
+				type: 'String',
+			},
+		],
+		panelCategoryKey: 'control_panel.object',
+		pluralLabel: {
+			en_US: 'Subjects',
+		},
+		portlet: true,
+		restContextPath: '/o/c/subjects',
+		scope: 'company',
+		status: {
+			code: 0,
+		},
+	};
+
+	test('cannot preview fields with no required anyOf fields selected', async ({
+		apiHelpers,
+		dataMigrationCenterPage,
+		page,
+	}) => {
+		const objectDefinitionAPIClient =
+			await apiHelpers.buildRestClient(ObjectDefinitionAPI);
+
+		const {body: subjectResponse} =
+			await objectDefinitionAPIClient.postObjectDefinition(
+				subjectObjectDefinition
+			);
+
+		apiHelpers.data.push({
+			id: subjectResponse.id,
+			type: 'objectDefinition',
+		});
+
+		const {body: studentResponse} =
+			await objectDefinitionAPIClient.postObjectDefinition(
+				studentObjectDefinition
+			);
+
+		apiHelpers.data.push({
+			id: studentResponse.id,
+			type: 'objectDefinition',
+		});
+
+		await dataMigrationCenterPage.goto();
+		await dataMigrationCenterPage.goToImportFile();
+
+		await dataMigrationCenterPage.selectEntityType(
+			'com.liferay.object.rest.dto.v1_0.ObjectEntry#C_Subject'
+		);
+
+		await expect(
+			page.getByLabel('r_studentSubjects1_c_studentERC', {exact: true})
+		).toBeEmpty();
+		await expect(
+			page.getByLabel('r_studentSubjects1_c_studentId', {exact: true})
+		).toBeEmpty();
+		await expect(
+			page.getByLabel('r_studentSubjects2_c_studentERC', {exact: true})
+		).toBeEmpty();
+		await expect(
+			page.getByLabel('r_studentSubjects2_c_studentId', {exact: true})
+		).toBeEmpty();
+		await expect(
+			page.getByLabel('r_studentSubjects3_c_studentERC', {exact: true})
+		).toBeEmpty();
+		await expect(
+			page.getByLabel('r_studentSubjects3_c_studentId', {exact: true})
+		).toBeEmpty();
+
+		await dataMigrationCenterPage.selectFile(
+			path.join(__dirname, '/dependencies/any_of_object_entries.csv')
+		);
+		await page.getByRole('button', {name: 'Next'}).click();
+		await expect(
+			page.getByText(
+				'Error:You must map at least one field and all required fields before continuing.'
+			)
+		).toBeVisible();
+	});
+
+	test('cannot preview fields with one required anyOf field missing', async ({
+		apiHelpers,
+		dataMigrationCenterPage,
+		page,
+	}) => {
+		const objectDefinitionAPIClient =
+			await apiHelpers.buildRestClient(ObjectDefinitionAPI);
+
+		const {body: subjectResponse} =
+			await objectDefinitionAPIClient.postObjectDefinition(
+				subjectObjectDefinition
+			);
+
+		apiHelpers.data.push({
+			id: subjectResponse.id,
+			type: 'objectDefinition',
+		});
+
+		const {body: studentResponse} =
+			await objectDefinitionAPIClient.postObjectDefinition(
+				studentObjectDefinition
+			);
+
+		apiHelpers.data.push({
+			id: studentResponse.id,
+			type: 'objectDefinition',
+		});
+
+		await dataMigrationCenterPage.goto();
+		await dataMigrationCenterPage.goToImportFile();
+
+		await dataMigrationCenterPage.selectEntityType(
+			'com.liferay.object.rest.dto.v1_0.ObjectEntry#C_Subject'
+		);
+
+		await expect(
+			page.getByLabel('r_studentSubjects1_c_studentERC', {exact: true})
+		).toBeEmpty();
+		await expect(
+			page.getByLabel('r_studentSubjects1_c_studentId', {exact: true})
+		).toBeEmpty();
+		await expect(
+			page.getByLabel('r_studentSubjects2_c_studentERC', {exact: true})
+		).toBeEmpty();
+		await expect(
+			page.getByLabel('r_studentSubjects2_c_studentId', {exact: true})
+		).toBeEmpty();
+		await expect(
+			page.getByLabel('r_studentSubjects3_c_studentERC', {exact: true})
+		).toBeEmpty();
+		await expect(
+			page.getByLabel('r_studentSubjects3_c_studentId', {exact: true})
+		).toBeEmpty();
+
+		await dataMigrationCenterPage.selectFile(
+			path.join(__dirname, '/dependencies/any_of_object_entries.csv')
+		);
+
+		await page
+			.getByLabel('r_studentSubjects1_c_studentERC')
+			.selectOption('studentSubjects1_ERC');
+
+		await page.getByRole('button', {name: 'Next'}).click();
+
+		await expect(
+			page
+				.getByText(
+					'Error:You must map at least one field and all required fields before continuing.'
+				)
+				.first()
+		).toBeVisible();
+	});
+
+	test('can preview import with all required anyOf fields selected', async ({
+		apiHelpers,
+		dataMigrationCenterPage,
+		page,
+	}) => {
+		const objectDefinitionAPIClient =
+			await apiHelpers.buildRestClient(ObjectDefinitionAPI);
+
+		const {body: subjectResponse} =
+			await objectDefinitionAPIClient.postObjectDefinition(
+				subjectObjectDefinition
+			);
+
+		apiHelpers.data.push({
+			id: subjectResponse.id,
+			type: 'objectDefinition',
+		});
+
+		const {body: studentResponse} =
+			await objectDefinitionAPIClient.postObjectDefinition(
+				studentObjectDefinition
+			);
+
+		apiHelpers.data.push({
+			id: studentResponse.id,
+			type: 'objectDefinition',
+		});
+
+		await dataMigrationCenterPage.goto();
+		await dataMigrationCenterPage.goToImportFile();
+
+		await dataMigrationCenterPage.selectEntityType(
+			'com.liferay.object.rest.dto.v1_0.ObjectEntry#C_Subject'
+		);
+
+		await expect(
+			page.getByLabel('r_studentSubjects1_c_studentERC', {exact: true})
+		).toBeEmpty();
+		await expect(
+			page.getByLabel('r_studentSubjects1_c_studentId', {exact: true})
+		).toBeEmpty();
+		await expect(
+			page.getByLabel('r_studentSubjects2_c_studentERC', {exact: true})
+		).toBeEmpty();
+		await expect(
+			page.getByLabel('r_studentSubjects2_c_studentId', {exact: true})
+		).toBeEmpty();
+		await expect(
+			page.getByLabel('r_studentSubjects3_c_studentERC', {exact: true})
+		).toBeEmpty();
+		await expect(
+			page.getByLabel('r_studentSubjects3_c_studentId', {exact: true})
+		).toBeEmpty();
+
+		await dataMigrationCenterPage.selectFile(
+			path.join(__dirname, '/dependencies/any_of_object_entries.csv')
+		);
+
+		await page
+			.getByLabel('r_studentSubjects1_c_studentERC')
+			.selectOption('studentSubjects1_ERC');
+		await page
+			.getByLabel('r_studentSubjects2_c_studentERC')
+			.selectOption('studentSubjects2_ERC');
+
+		await page.getByRole('button', {name: 'Next'}).click();
+
+		await expect(
+			page
+				.getByLabel('Preview')
+				.getByRole('cell', {name: 'r_studentSubjects1_c_studentERC'})
+		).toBeVisible();
+		await expect(
+			page
+				.getByLabel('Preview')
+				.getByRole('cell', {name: 'r_studentSubjects2_c_studentERC'})
+		).toBeVisible();
+	});
 });

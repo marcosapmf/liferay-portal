@@ -38,6 +38,30 @@ portletDisplay.setURLBack(backURL);
 					<%= objectEntryDisplayContext.renderDDMForm(pageContext) %>
 				</clay:col>
 			</clay:row>
+
+			<c:if test='<%= FeatureFlagManagerUtil.isEnabled("LPD-21926") && objectDefinition.isEnableFriendlyURLCustomization() && (objectEntryDisplayContext.getObjectLayoutTab() == null) %>'>
+				<clay:panel-group>
+					<clay:panel
+						collapsable="<%= false %>"
+						displayTitle='<%= LanguageUtil.get(request, "seo") %>'
+						expanded="<%= true %>"
+					>
+						<div class="panel-body">
+							<div class="ddm-row">
+								<div class="ddm-field-container">
+									<liferay-friendly-url:input
+										className="<%= objectDefinition.getClassName() %>"
+										classPK="<%= (objectEntry == null) ? 0 : objectEntry.getObjectEntryId() %>"
+										helpMessage='<%= LanguageUtil.get(request, "the-friendly-url-is-automatically-generated-based-on-the-entry-title-field") %>'
+										inputAddon="<%= objectEntryDisplayContext.getURLSeparator() %>"
+										name="friendlyURL"
+									/>
+								</div>
+							</div>
+						</div>
+					</clay:panel>
+				</clay:panel-group>
+			</c:if>
 		</clay:sheet-section>
 
 		<%@ include file="/object_entries/object_entry/categorization.jspf" %>
@@ -93,13 +117,17 @@ portletDisplay.setURLBack(backURL);
 				}
 
 				let value = field.value;
-				if (field.type === 'select' && !field.multiple) {
+				if (
+					field.type === 'select' &&
+					!field.multiple &&
+					!field.localizedObjectField
+				) {
 					value = {key: value.length ? field.value[0] : ''};
 				}
 
 				let fieldName = field.fieldName;
 
-				if (field.localizable) {
+				if (value && field.localizable) {
 					fieldName += '_i18n';
 
 					if (typeof value == 'string') {
@@ -199,6 +227,24 @@ portletDisplay.setURLBack(backURL);
 							});
 						}
 
+						const friendlyURLInputs = document.querySelectorAll(
+							'[data-field-name="friendlyURL"]'
+						);
+
+						if (friendlyURLInputs) {
+							const friendlyURLValues = {};
+
+							friendlyURLInputs.forEach((input) => {
+								friendlyURLValues[input.dataset.languageid] =
+									input.value;
+							});
+
+							values = Object.assign(values, {
+								['friendlyUrlPath']: '',
+								['friendlyUrlPath_i18n']: friendlyURLValues,
+							});
+						}
+
 						Liferay.Util.fetch(path, {
 							body: JSON.stringify(values),
 							headers: new Headers({
@@ -210,6 +256,8 @@ portletDisplay.setURLBack(backURL);
 							method: externalReferenceCode ? 'PATCH' : 'POST',
 						})
 							.then((response) => {
+								Liferay.fire('submitButtonClicked');
+
 								if (response.status === 401) {
 									window.location.reload();
 								}
@@ -245,6 +293,15 @@ portletDisplay.setURLBack(backURL);
 										response.detail
 									);
 
+									const alertClassName = '<portlet:namespace />alert';
+
+									const alertElements =
+										document.getElementsByClassName(alertClassName);
+
+									for (let i = 0; i < alertElements.length; i++) {
+										alertElements[i].remove();
+									}
+
 									for (const error of errorMessageArray) {
 										const portletBody =
 											document.querySelector('.portlet-body');
@@ -259,7 +316,8 @@ portletDisplay.setURLBack(backURL);
 										const alertElement =
 											document.createElement('div');
 
-										alertElement.className = 'alert alert-danger';
+										alertElement.className =
+											'alert alert-danger ' + alertClassName;
 										alertElement.setAttribute('role', 'alert');
 										alertElement.style.bottom = '20px';
 										alertElement.style.margin = '2rem auto 0';
@@ -308,6 +366,8 @@ portletDisplay.setURLBack(backURL);
 					}
 				}
 				else {
+					current.updateLocalesDropdownToDefaultLanguage();
+
 					loadingElement.remove();
 				}
 			});

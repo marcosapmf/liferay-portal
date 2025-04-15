@@ -5,6 +5,7 @@
 
 import {Locator, Page} from '@playwright/test';
 
+import {waitForAlert} from '../../utils/waitForAlert';
 import {ApplicationsMenuPage} from '../product-navigation-applications-menu/ApplicationsMenuPage';
 
 export class InstanceSettingsPage {
@@ -22,8 +23,8 @@ export class InstanceSettingsPage {
 			.or(page.getByRole('button', {name: 'Update'}));
 	}
 
-	async goto() {
-		await this.applicationsMenuPage.goToInstanceSettings();
+	async goto(forceReload = true) {
+		await this.applicationsMenuPage.goToInstanceSettings(forceReload);
 	}
 
 	async exportInstanceSetting() {
@@ -32,15 +33,32 @@ export class InstanceSettingsPage {
 		await this.page.getByRole('menuitem', {name: 'Export'}).click();
 	}
 
-	async goToInstanceSetting(categoryKey: string, configurationName: string) {
-		await this.goto();
+	async goToInstanceSetting(
+		categoryKey: string,
+		configurationName: string,
+		forceReload = true,
+		sectionName?: string
+	) {
+		await this.goto(forceReload);
+
 		await this.page
 			.getByRole('link', {
 				exact: true,
 				name: categoryKey,
 			})
 			.click();
-		await this.page
+
+		let parent: Locator | Page = this.page;
+
+		if (sectionName) {
+			parent = this.page
+				.locator('div')
+				.filter({hasText: sectionName})
+				.locator('+ div')
+				.getByRole('menubar');
+		}
+
+		await parent
 			.getByRole('menuitem', {
 				exact: true,
 				name: configurationName,
@@ -51,5 +69,19 @@ export class InstanceSettingsPage {
 	async goToSSO() {
 		await this.goto();
 		await this.page.getByRole('link', {name: 'SSO'}).click();
+	}
+
+	async saveAndWaitForAlert({
+		autoClose,
+		text = 'Success:Your request completed successfully.',
+		type,
+	}: {
+		autoClose?: boolean;
+		text?: string;
+		type?: 'success' | 'info' | 'warning' | 'danger';
+	} = {}) {
+		await this.saveButton.click();
+
+		await waitForAlert(this.page, text, {autoClose, type});
 	}
 }

@@ -151,6 +151,12 @@ public class SkuResourceTest extends BaseSkuResourceTestCase {
 	}
 
 	@Override
+	@Test
+	public void testPutSkuByExternalReferenceCode() throws Exception {
+		_testPatchSkuExternalReferenceCode();
+	}
+
+	@Override
 	protected String[] getAdditionalAssertFieldNames() {
 		return new String[] {
 			"depth", "discontinued", "gtin", "height", "manufacturerPartNumber",
@@ -281,6 +287,14 @@ public class SkuResourceTest extends BaseSkuResourceTestCase {
 	@Override
 	protected Sku testPostProductIdSku_addSku(Sku sku) throws Exception {
 		return skuResource.postProductIdSku(_cProduct.getCProductId(), sku);
+	}
+
+	@Override
+	protected Sku testPutSkuByExternalReferenceCode_createSku()
+		throws Exception {
+
+		return skuResource.postProductByExternalReferenceCodeSku(
+			_cProduct.getExternalReferenceCode(), randomSku());
 	}
 
 	private Sku _randomSkuWithSkuOptions(
@@ -506,16 +520,16 @@ public class SkuResourceTest extends BaseSkuResourceTestCase {
 	private void _testPostProductIdSkuWithSkuVirtualSettings()
 		throws Exception {
 
-		User omniAdminUser = UserTestUtil.addOmniadminUser();
+		User omniadminUser = UserTestUtil.addOmniadminUser();
 
 		String password = RandomTestUtil.randomString();
 
 		_userLocalService.updatePassword(
-			omniAdminUser.getUserId(), password, password, false, true);
+			omniadminUser.getUserId(), password, password, false, true);
 
 		SkuResource skuResource = SkuResource.builder(
 		).authentication(
-			omniAdminUser.getEmailAddress(), password
+			omniadminUser.getEmailAddress(), password
 		).locale(
 			LocaleUtil.getDefault()
 		).parameters(

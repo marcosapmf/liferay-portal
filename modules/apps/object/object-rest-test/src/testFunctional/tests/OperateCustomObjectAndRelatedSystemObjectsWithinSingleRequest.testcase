@@ -3,7 +3,6 @@ definition {
 
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property testray.component.names = "Object";
 	property testray.main.component.name = "Object Entries REST APIs";
 
 	setUp {
@@ -125,7 +124,7 @@ definition {
 			var studentId = JSONPathUtil.getIdValue(response = ${response});
 			var user1ExternalReferenceCode = UserAccountAPI.getUserFieldWithFilter(
 				filter = "alternateName%20eq%20%27user1%27",
-				jsonPath = "$..externalReferenceCode");
+				jsonPath = "$.items[0].externalReferenceCode");
 
 			CustomObjectAPI.updateObjectEntryAndRelatedObjectsByPut(
 				alternateName = "user",
@@ -175,10 +174,10 @@ definition {
 			var studentId = JSONPathUtil.getIdValue(response = ${response});
 			var user1ExternalReferenceCode = UserAccountAPI.getUserFieldWithFilter(
 				filter = "alternateName%20eq%20%27user1%27",
-				jsonPath = "$..externalReferenceCode");
+				jsonPath = "$.items[0].externalReferenceCode");
 			var user2ExternalReferenceCode = UserAccountAPI.getUserFieldWithFilter(
 				filter = "alternateName%20eq%20%27user2%27",
-				jsonPath = "$..externalReferenceCode");
+				jsonPath = "$.items[0].externalReferenceCode");
 
 			CustomObjectAPI.updateObjectEntryAndRelatedObjectsByPatch(
 				alternateName = "user",
@@ -227,10 +226,10 @@ definition {
 			var studentId = JSONPathUtil.getIdValue(response = ${response});
 			var user1ExternalReferenceCode = UserAccountAPI.getUserFieldWithFilter(
 				filter = "alternateName%20eq%20%27user1%27",
-				jsonPath = "$..externalReferenceCode");
+				jsonPath = "$.items[0].externalReferenceCode");
 			var user2ExternalReferenceCode = UserAccountAPI.getUserFieldWithFilter(
 				filter = "alternateName%20eq%20%27user2%27",
-				jsonPath = "$..externalReferenceCode");
+				jsonPath = "$.items[0].externalReferenceCode");
 
 			CustomObjectAPI.updateObjectEntryAndRelatedObjectsByPatch(
 				alternateName = "user",
@@ -279,10 +278,10 @@ definition {
 			var studentId = JSONPathUtil.getIdValue(response = ${response});
 			var user1ExternalReferenceCode = UserAccountAPI.getUserFieldWithFilter(
 				filter = "alternateName%20eq%20%27user1%27",
-				jsonPath = "$..externalReferenceCode");
+				jsonPath = "$.items[0].externalReferenceCode");
 			var user2ExternalReferenceCode = UserAccountAPI.getUserFieldWithFilter(
 				filter = "alternateName%20eq%20%27user2%27",
-				jsonPath = "$..externalReferenceCode");
+				jsonPath = "$.items[0].externalReferenceCode");
 
 			CustomObjectAPI.updateObjectEntryAndRelatedObjectsByPut(
 				alternateName = "user",
@@ -331,10 +330,10 @@ definition {
 			var studentId = JSONPathUtil.getIdValue(response = ${response});
 			var user1ExternalReferenceCode = UserAccountAPI.getUserFieldWithFilter(
 				filter = "alternateName%20eq%20%27user1%27",
-				jsonPath = "$..externalReferenceCode");
+				jsonPath = "$.items[0].externalReferenceCode");
 			var user2ExternalReferenceCode = UserAccountAPI.getUserFieldWithFilter(
 				filter = "alternateName%20eq%20%27user2%27",
-				jsonPath = "$..externalReferenceCode");
+				jsonPath = "$.items[0].externalReferenceCode");
 
 			CustomObjectAPI.updateObjectEntryAndRelatedObjectsByPut(
 				alternateName = "user",

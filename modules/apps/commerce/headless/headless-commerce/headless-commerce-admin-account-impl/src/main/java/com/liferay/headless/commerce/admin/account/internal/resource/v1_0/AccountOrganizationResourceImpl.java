@@ -21,7 +21,6 @@ import com.liferay.portal.vulcan.fields.NestedField;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import javax.ws.rs.core.Response;
@@ -32,12 +31,14 @@ import org.osgi.service.component.annotations.ServiceScope;
 
 /**
  * @author Alessio Antonio Rendina
+ * @deprecated As of Cavanaugh (7.4.x)
  */
 @Component(
 	properties = "OSGI-INF/liferay/rest/v1_0/account-organization.properties",
 	property = "nested.field.support=true", scope = ServiceScope.PROTOTYPE,
 	service = AccountOrganizationResource.class
 )
+@Deprecated
 public class AccountOrganizationResourceImpl
 	extends BaseAccountOrganizationResourceImpl {
 
@@ -48,7 +49,7 @@ public class AccountOrganizationResourceImpl
 
 		AccountEntry accountEntry =
 			_accountEntryService.fetchAccountEntryByExternalReferenceCode(
-				contextCompany.getCompanyId(), externalReferenceCode);
+				externalReferenceCode, contextCompany.getCompanyId());
 
 		if (accountEntry == null) {
 			throw new NoSuchEntryException(
@@ -85,7 +86,7 @@ public class AccountOrganizationResourceImpl
 
 		AccountEntry accountEntry =
 			_accountEntryService.fetchAccountEntryByExternalReferenceCode(
-				contextCompany.getCompanyId(), externalReferenceCode);
+				externalReferenceCode, contextCompany.getCompanyId());
 
 		if (accountEntry == null) {
 			throw new NoSuchEntryException(
@@ -111,7 +112,7 @@ public class AccountOrganizationResourceImpl
 
 		AccountEntry accountEntry =
 			_accountEntryService.fetchAccountEntryByExternalReferenceCode(
-				contextCompany.getCompanyId(), externalReferenceCode);
+				externalReferenceCode, contextCompany.getCompanyId());
 
 		if (accountEntry == null) {
 			throw new NoSuchEntryException(
@@ -177,7 +178,7 @@ public class AccountOrganizationResourceImpl
 
 		AccountEntry accountEntry =
 			_accountEntryService.fetchAccountEntryByExternalReferenceCode(
-				contextCompany.getCompanyId(), externalReferenceCode);
+				externalReferenceCode, contextCompany.getCompanyId());
 
 		if (accountEntry == null) {
 			throw new NoSuchEntryException(
@@ -220,19 +221,13 @@ public class AccountOrganizationResourceImpl
 			List<AccountEntryOrganizationRel> accountEntryOrganizationRels)
 		throws Exception {
 
-		List<AccountOrganization> accountOrganizations = new ArrayList<>();
-
-		for (AccountEntryOrganizationRel accountEntryOrganizationRel :
-				accountEntryOrganizationRels) {
-
-			accountOrganizations.add(
+		return transform(
+			accountEntryOrganizationRels,
+			accountEntryOrganizationRel ->
 				_accountOrganizationDTOConverter.toDTO(
 					new DefaultDTOConverterContext(
 						accountEntryOrganizationRel.getPrimaryKey(),
 						contextAcceptLanguage.getPreferredLocale())));
-		}
-
-		return accountOrganizations;
 	}
 
 	@Reference

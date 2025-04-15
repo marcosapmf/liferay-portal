@@ -14,6 +14,7 @@
 
 <clay:container-fluid
 	cssClass="container-view"
+	size="xl"
 >
 	<liferay-site-navigation:breadcrumb
 		breadcrumbEntries="<%= BreadcrumbEntriesUtil.getBreadcrumbEntries(request, true, false, false, true, true) %>"
@@ -47,6 +48,7 @@
 										%>
 
 										<clay:link
+											aria-label='<%= LanguageUtil.get(request, "add-new-vocabulary") %>'
 											borderless="<%= true %>"
 											cssClass="component-action"
 											href="<%= editVocabularyURL.toString() %>"

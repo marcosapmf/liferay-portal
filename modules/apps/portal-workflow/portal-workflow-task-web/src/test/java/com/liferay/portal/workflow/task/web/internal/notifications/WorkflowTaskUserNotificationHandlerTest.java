@@ -5,9 +5,12 @@
 
 package com.liferay.portal.workflow.task.web.internal.notifications;
 
+import com.liferay.change.tracking.service.CTCollectionLocalService;
+import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.json.JSONFactoryImpl;
+import com.liferay.portal.kernel.change.tracking.CTCollectionThreadLocal;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
@@ -65,6 +68,7 @@ public class WorkflowTaskUserNotificationHandlerTest {
 
 	@BeforeClass
 	public static void setUpClass() throws Exception {
+		_setUpCTCollectionLocalService();
 		_setUpUserNotificationEventLocalService();
 		_setUpWorkflowTaskManagerUtil();
 		_setUpWorkflowTaskPermission();
@@ -142,6 +146,24 @@ public class WorkflowTaskUserNotificationHandlerTest {
 	}
 
 	@Test
+	public void testIsApplicable() {
+		Assert.assertTrue(
+			_workflowTaskUserNotificationHandler.isApplicable(
+				mockUserNotificationEvent(null, "Sample Object", 0),
+				_serviceContext));
+
+		try (SafeCloseable safeCloseable =
+				CTCollectionThreadLocal.setCTCollectionIdWithSafeCloseable(
+					RandomTestUtil.randomInt())) {
+
+			Assert.assertFalse(
+				_workflowTaskUserNotificationHandler.isApplicable(
+					mockUserNotificationEvent(null, "Sample Object", 0),
+					_serviceContext));
+		}
+	}
+
+	@Test
 	public void testNullWorkflowTaskIdShouldReturnBlankLink() throws Exception {
 		Assert.assertEquals(
 			StringPool.BLANK,
@@ -183,6 +205,14 @@ public class WorkflowTaskUserNotificationHandlerTest {
 	@Test
 	public void testValidWorkflowTaskIdNotAllowedUserShouldReturnBlankLink()
 		throws Exception {
+
+		Mockito.doReturn(
+			false
+		).when(
+			_workflowTaskManager
+		).isNotifiableUser(
+			Mockito.anyLong(), Mockito.anyLong()
+		);
 
 		Assert.assertEquals(
 			StringPool.BLANK,
@@ -229,6 +259,12 @@ public class WorkflowTaskUserNotificationHandlerTest {
 		};
 	}
 
+	private static void _setUpCTCollectionLocalService() throws Exception {
+		ReflectionTestUtil.setFieldValue(
+			_workflowTaskUserNotificationHandler, "_ctCollectionLocalService",
+			ProxyFactory.newDummyInstance(CTCollectionLocalService.class));
+	}
+
 	private static void _setUpUserNotificationEventLocalService()
 		throws Exception {
 
@@ -240,8 +276,7 @@ public class WorkflowTaskUserNotificationHandlerTest {
 	}
 
 	private static void _setUpWorkflowTaskManagerUtil() throws Exception {
-		WorkflowTaskManager workflowTaskManager = Mockito.spy(
-			WorkflowTaskManager.class);
+		_workflowTaskManager = Mockito.spy(WorkflowTaskManager.class);
 
 		WorkflowTask workflowTask = new DefaultWorkflowTask() {
 
@@ -255,17 +290,17 @@ public class WorkflowTaskUserNotificationHandlerTest {
 		Mockito.doReturn(
 			workflowTask
 		).when(
-			workflowTaskManager
+			_workflowTaskManager
 		).fetchWorkflowTask(
 			_VALID_WORKFLOW_TASK_ID
 		);
 
 		Mockito.doReturn(
-			_allowedUsers
+			true
 		).when(
-			workflowTaskManager
-		).getNotifiableUsers(
-			Mockito.anyLong()
+			_workflowTaskManager
+		).isNotifiableUser(
+			Mockito.anyLong(), Mockito.anyLong()
 		);
 
 		Snapshot<WorkflowTaskManager> workflowTaskManagerSnapshot = Mockito.spy(
@@ -273,7 +308,7 @@ public class WorkflowTaskUserNotificationHandlerTest {
 				WorkflowTaskManagerUtil.class, WorkflowTaskManager.class));
 
 		Mockito.doReturn(
-			workflowTaskManager
+			_workflowTaskManager
 		).when(
 			workflowTaskManagerSnapshot
 		).get();
@@ -379,6 +414,7 @@ public class WorkflowTaskUserNotificationHandlerTest {
 
 	};
 
+	private static WorkflowTaskManager _workflowTaskManager;
 	private static final WorkflowTaskUserNotificationHandler
 		_workflowTaskUserNotificationHandler =
 			new WorkflowTaskUserNotificationHandler();

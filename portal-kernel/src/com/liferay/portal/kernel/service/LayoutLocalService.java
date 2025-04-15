@@ -386,12 +386,8 @@ public interface LayoutLocalService
 		throws Exception;
 
 	public Layout copyLayoutContent(
-			long segmentsExperienceId, Layout sourceLayout, Layout targetLayout)
-		throws Exception;
-
-	public Layout copyLayoutContent(
-			long[] segmentsExperienceIds, Layout sourceLayout,
-			Layout targetLayout)
+			long sourceSegmentsExperienceId, Layout sourceLayout,
+			long targetSegmentsExperienceId, Layout targetLayout)
 		throws Exception;
 
 	/**
@@ -598,9 +594,6 @@ public interface LayoutLocalService
 		long groupId, boolean privateLayout, long layoutId);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public Layout fetchLayout(long classNameId, long classPK);
-
-	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public Layout fetchLayout(String uuid, long groupId, boolean privateLayout);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
@@ -613,8 +606,7 @@ public interface LayoutLocalService
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public Layout fetchLayoutByIconImageId(
-			boolean privateLayout, long iconImageId)
-		throws PortalException;
+		boolean privateLayout, long iconImageId);
 
 	/**
 	 * Returns the layout matching the UUID, group, and privacy.
@@ -738,18 +730,6 @@ public interface LayoutLocalService
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public Layout getLayoutByFriendlyURL(
 			long groupId, boolean privateLayout, String friendlyURL)
-		throws PortalException;
-
-	/**
-	 * Returns the layout for the icon image; throws a {@link
-	 * NoSuchLayoutException} otherwise.
-	 *
-	 * @param iconImageId the primary key of the icon image
-	 * @return Returns the layout for the icon image
-	 * @throws PortalException if a portal exception occurred
-	 */
-	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public Layout getLayoutByIconImageId(long iconImageId)
 		throws PortalException;
 
 	/**
@@ -1473,6 +1453,10 @@ public interface LayoutLocalService
 			String colorSchemeId, long styleBookEntryId, String css,
 			long faviconFileEntryId, long masterLayoutPlid)
 		throws PortalException;
+
+	public void updateLayoutContent(
+			String data, Layout layout, long segmentsExperienceId)
+		throws Exception;
 
 	/**
 	 * Updates the look and feel of the layout.

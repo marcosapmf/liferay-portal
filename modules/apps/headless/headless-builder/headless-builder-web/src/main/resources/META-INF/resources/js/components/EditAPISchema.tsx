@@ -6,7 +6,7 @@
 import ClayBreadcrumb from '@clayui/breadcrumb';
 import ClayCard from '@clayui/card';
 import ClayTabs from '@clayui/tabs';
-import {openModal, openToast} from 'frontend-js-web';
+import {openModal, openToast} from 'frontend-js-components-web';
 import React, {
 	Dispatch,
 	SetStateAction,
@@ -253,10 +253,14 @@ export default function EditAPISchema({
 										...(!!property.description && {
 											description: property.description,
 										}),
+										externalReferenceCode:
+											property.externalReferenceCode,
 										name: property.name,
 										objectFieldERC: property.objectFieldERC,
-										r_apiSchemaToAPIProperties_c_apiSchemaId:
-											property.r_apiSchemaToAPIProperties_c_apiSchemaId,
+										r_apiPropertyToAPIProperties_l_apiPropertyId:
+											property.r_apiPropertyToAPIProperties_l_apiPropertyId,
+										r_apiSchemaToAPIProperties_l_apiSchemaId:
+											property.r_apiSchemaToAPIProperties_l_apiSchemaId,
 										...(property.objectRelationshipNames && {
 											objectRelationshipNames:
 												property.objectRelationshipNames,

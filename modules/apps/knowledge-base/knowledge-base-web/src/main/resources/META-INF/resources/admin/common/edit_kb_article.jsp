@@ -33,7 +33,9 @@ if (editKBArticleDisplayContext.isPortletTitleBasedNavigation()) {
 	<aui:input name="workflowAction" type="hidden" value="<%= WorkflowConstants.ACTION_SAVE_DRAFT %>" />
 
 	<nav class="component-tbar subnav-tbar-light tbar tbar-knowledge-base-edit-article">
-		<clay:container-fluid>
+		<clay:container-fluid
+			fullWidth="<%= true %>"
+		>
 			<ul class="tbar-nav">
 				<li class="tbar-item tbar-item-expand">
 					<aui:input autocomplete="off" cssClass="form-control-inline" label='<%= LanguageUtil.get(request, "name") %>' labelCssClass="sr-only" name="title" placeholder='<%= LanguageUtil.format(request, "untitled-x", "article") %>' required="<%= true %>" type="text" value="<%= HtmlUtil.escape(editKBArticleDisplayContext.getKBArticleTitle()) %>" wrapperCssClass="mb-0" />
@@ -59,7 +61,7 @@ if (editKBArticleDisplayContext.isPortletTitleBasedNavigation()) {
 						/>
 
 						<c:choose>
-							<c:when test='<%= FeatureFlagManagerUtil.isEnabled("LPS-188058") && editKBArticleDisplayContext.isSchedulerEnabled() %>'>
+							<c:when test="<%= editKBArticleDisplayContext.isSchedulerEnabled() %>">
 								<c:choose>
 									<c:when test="<%= editKBArticleDisplayContext.isScheduled() %>">
 										<span class="lfr-portal-tooltip">
@@ -86,6 +88,7 @@ if (editKBArticleDisplayContext.isPortletTitleBasedNavigation()) {
 											name="publishDropdown"
 											small="<%= true %>"
 											swapIconSide="<%= true %>"
+											__reactDOMFlushSync="<%= true %>"
 										/>
 									</c:otherwise>
 								</c:choose>
@@ -381,7 +384,7 @@ if (editKBArticleDisplayContext.isPortletTitleBasedNavigation()) {
 		).put(
 			"publishAction", WorkflowConstants.ACTION_PUBLISH
 		).put(
-			"schedulerEnabled", FeatureFlagManagerUtil.isEnabled("LPS-188058") && editKBArticleDisplayContext.isSchedulerEnabled()
+			"schedulerEnabled", editKBArticleDisplayContext.isSchedulerEnabled()
 		).build()
 	%>'
 	module="{EditKBArticle} from knowledge-base-web"

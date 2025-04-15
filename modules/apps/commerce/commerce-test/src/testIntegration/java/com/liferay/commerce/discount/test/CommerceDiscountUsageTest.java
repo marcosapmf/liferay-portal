@@ -108,10 +108,9 @@ public class CommerceDiscountUsageTest {
 		_serviceContext = ServiceContextTestUtil.getServiceContext();
 
 		_accountGroup = _accountGroupLocalService.addAccountGroup(
-			_serviceContext.getUserId(), null, RandomTestUtil.randomString(),
-			_serviceContext);
+			StringPool.BLANK, _serviceContext.getUserId(), null,
+			RandomTestUtil.randomString(), _serviceContext);
 
-		_accountGroup.setExternalReferenceCode(null);
 		_accountGroup.setDefaultAccountGroup(false);
 		_accountGroup.setType(AccountConstants.ACCOUNT_GROUP_TYPE_STATIC);
 		_accountGroup.setExpandoBridgeAttributes(_serviceContext);
@@ -268,20 +267,20 @@ public class CommerceDiscountUsageTest {
 		CommerceChannel commerceChannel = CommerceTestUtil.addCommerceChannel(
 			_group.getGroupId(), _commerceCurrency.getCode());
 
-		CommerceCatalog catalog =
+		CommerceCatalog commerceCatalog =
 			_commerceCatalogLocalService.addCommerceCatalog(
 				null, RandomTestUtil.randomString(),
 				_commerceCurrency.getCode(), LocaleUtil.US.getDisplayLanguage(),
 				ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
 
 		CPInstance cpInstance = CPTestUtil.addCPInstanceFromCatalog(
-			catalog.getGroupId());
+			commerceCatalog.getGroupId());
 
 		CPDefinition cpDefinition = cpInstance.getCPDefinition();
 
 		CommercePriceList commercePriceList =
 			_commercePriceListLocalService.fetchCatalogBaseCommercePriceList(
-				catalog.getGroupId());
+				commerceCatalog.getGroupId());
 
 		BigDecimal priceEntryPrice = BigDecimal.valueOf(35);
 
@@ -311,8 +310,7 @@ public class CommerceDiscountUsageTest {
 		CommerceOrder commerceOrder = CommerceTestUtil.addB2CCommerceOrder(
 			_user.getUserId(), commerceChannel.getGroupId(), _commerceCurrency);
 
-		commerceOrder.setCommerceCurrencyId(
-			_commerceCurrency.getCommerceCurrencyId());
+		commerceOrder.setCommerceCurrencyCode(_commerceCurrency.getCode());
 
 		commerceOrder = _commerceOrderLocalService.updateCommerceOrder(
 			commerceOrder);
@@ -478,26 +476,25 @@ public class CommerceDiscountUsageTest {
 		CommerceOrder commerceOrder = CommerceTestUtil.addB2CCommerceOrder(
 			_user.getUserId(), commerceChannel.getGroupId(), _commerceCurrency);
 
-		commerceOrder.setCommerceCurrencyId(
-			_commerceCurrency.getCommerceCurrencyId());
+		commerceOrder.setCommerceCurrencyCode(_commerceCurrency.getCode());
 
 		commerceOrder = _commerceOrderLocalService.updateCommerceOrder(
 			commerceOrder);
 
-		CommerceCatalog catalog =
+		CommerceCatalog commerceCatalog =
 			_commerceCatalogLocalService.addCommerceCatalog(
 				null, RandomTestUtil.randomString(),
 				_commerceCurrency.getCode(), LocaleUtil.US.getDisplayLanguage(),
 				ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
 
 		CPInstance cpInstance = CPTestUtil.addCPInstanceFromCatalog(
-			catalog.getGroupId());
+			commerceCatalog.getGroupId());
 
 		CPDefinition cpDefinition = cpInstance.getCPDefinition();
 
 		CommercePriceList commercePriceList =
 			_commercePriceListLocalService.fetchCatalogBaseCommercePriceList(
-				catalog.getGroupId());
+				commerceCatalog.getGroupId());
 
 		BigDecimal priceEntryPrice = BigDecimal.valueOf(35);
 
@@ -696,8 +693,7 @@ public class CommerceDiscountUsageTest {
 				_user.getUserId(), _commerceChannel.getGroupId(),
 				_commerceCurrency);
 
-			commerceOrder.setCommerceCurrencyId(
-				_commerceCurrency.getCommerceCurrencyId());
+			commerceOrder.setCommerceCurrencyCode(_commerceCurrency.getCode());
 
 			commerceOrder = _commerceOrderLocalService.updateCommerceOrder(
 				commerceOrder);
@@ -765,8 +761,7 @@ public class CommerceDiscountUsageTest {
 			_user.getUserId(), _commerceChannel.getGroupId(),
 			_commerceCurrency);
 
-		commerceOrder.setCommerceCurrencyId(
-			_commerceCurrency.getCommerceCurrencyId());
+		commerceOrder.setCommerceCurrencyCode(_commerceCurrency.getCode());
 
 		commerceOrder = _commerceOrderLocalService.updateCommerceOrder(
 			commerceOrder);

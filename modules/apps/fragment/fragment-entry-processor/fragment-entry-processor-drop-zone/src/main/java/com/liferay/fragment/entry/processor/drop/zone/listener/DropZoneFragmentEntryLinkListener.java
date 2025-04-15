@@ -27,6 +27,7 @@ import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.Validator;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -56,6 +57,24 @@ public class DropZoneFragmentEntryLinkListener
 	public void onAddFragmentEntryLink(FragmentEntryLink fragmentEntryLink) {
 		try {
 			updateLayoutPageTemplateStructure(fragmentEntryLink, null);
+		}
+		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(
+					"Unable to update layout page template structure",
+					exception);
+			}
+		}
+	}
+
+	@Override
+	public void onCopyFragmentEntryLink(
+		FragmentEntryLink fragmentEntryLink,
+		FragmentEntryLink originalFragmentEntryLink) {
+
+		try {
+			updateLayoutPageTemplateStructure(
+				fragmentEntryLink, originalFragmentEntryLink);
 		}
 		catch (Exception exception) {
 			if (_log.isDebugEnabled()) {
@@ -184,14 +203,11 @@ public class DropZoneFragmentEntryLinkListener
 			}
 
 			if (childrenItemIds.size() > elements.size()) {
-				List<String> childrenItemIdsToRemove = childrenItemIds.subList(
-					elements.size(), childrenItemIds.size());
-
-				childrenItemIdsToRemove.forEach(
-					itemId ->
-						layoutStructure.markLayoutStructureItemForDeletion(
-							Collections.singletonList(itemId),
-							Collections.emptyList()));
+				layoutStructure.markLayoutStructureItemForDeletion(
+					new ArrayList<>(
+						childrenItemIds.subList(
+							elements.size(), childrenItemIds.size())),
+					Collections.emptyList());
 			}
 			else {
 				for (int i = childrenItemIds.size(); i < elements.size(); i++) {
@@ -201,8 +217,8 @@ public class DropZoneFragmentEntryLinkListener
 			}
 
 			try (SafeCloseable safeCloseable =
-					CheckUnlockedLayoutThreadLocal.setWithSafeCloseable(
-						false)) {
+					CheckUnlockedLayoutThreadLocal.
+						setCheckUnlockedLayoutWithSafeCloseable(false)) {
 
 				_layoutPageTemplateStructureLocalService.
 					updateLayoutPageTemplateStructureData(
@@ -401,8 +417,8 @@ public class DropZoneFragmentEntryLinkListener
 
 		if (update) {
 			try (SafeCloseable safeCloseable =
-					CheckUnlockedLayoutThreadLocal.setWithSafeCloseable(
-						false)) {
+					CheckUnlockedLayoutThreadLocal.
+						setCheckUnlockedLayoutWithSafeCloseable(false)) {
 
 				_layoutPageTemplateStructureLocalService.
 					updateLayoutPageTemplateStructureData(

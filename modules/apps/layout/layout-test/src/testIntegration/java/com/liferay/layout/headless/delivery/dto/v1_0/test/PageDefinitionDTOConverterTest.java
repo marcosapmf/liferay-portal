@@ -117,7 +117,7 @@ public class PageDefinitionDTOConverterTest {
 					null, TestPropsValues.getUserId(), _group.getGroupId(),
 					LayoutPageTemplateConstants.
 						PARENT_LAYOUT_PAGE_TEMPLATE_COLLECTION_ID_DEFAULT,
-					RandomTestUtil.randomString(), StringPool.BLANK,
+					null, RandomTestUtil.randomString(), StringPool.BLANK,
 					LayoutPageTemplateCollectionTypeConstants.BASIC,
 					_serviceContext);
 
@@ -127,7 +127,7 @@ public class PageDefinitionDTOConverterTest {
 				_serviceContext.getScopeGroupId(),
 				layoutPageTemplateCollection.
 					getLayoutPageTemplateCollectionId(),
-				RandomTestUtil.randomString(),
+				null, RandomTestUtil.randomString(),
 				LayoutPageTemplateEntryTypeConstants.BASIC, 0,
 				WorkflowConstants.STATUS_DRAFT, _serviceContext);
 
@@ -659,8 +659,9 @@ public class PageDefinitionDTOConverterTest {
 				null, TestPropsValues.getUserId(), _group.getGroupId(),
 				_fragmentCollection.getFragmentCollectionId(), fragmentEntryKey,
 				fragmentName, StringPool.BLANK, html, StringPool.BLANK, false,
-				configuration, null, 0, false, FragmentConstants.TYPE_COMPONENT,
-				null, WorkflowConstants.STATUS_APPROVED, _serviceContext);
+				configuration, null, 0, false, false,
+				FragmentConstants.TYPE_COMPONENT, null,
+				WorkflowConstants.STATUS_APPROVED, _serviceContext);
 
 		FragmentEntryLink fragmentEntryLink =
 			_fragmentEntryLinkLocalService.addFragmentEntryLink(

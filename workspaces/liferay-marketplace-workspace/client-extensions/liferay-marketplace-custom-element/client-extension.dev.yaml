@@ -1,8 +1,7 @@
 liferay-marketplace-custom-element:
     properties:
-        contactSupportUrl: https://www.liferay.com/contact-us
-        featureFlags: LPD-20220,LPD-20229,LPD-21582
+        cloudConsoleURL: https://console.marketplace.liferay.sh
     urls:
-        - http://localhost:5173/@vite/client
-        - http://localhost:5173/@vite/refresh.ts
-        - http://localhost:5173/src/main.tsx
+        -   http://localhost:5173/@vite/client
+        -   http://localhost:5173/@vite/refresh.ts
+        -   http://localhost:5173/src/main.tsx

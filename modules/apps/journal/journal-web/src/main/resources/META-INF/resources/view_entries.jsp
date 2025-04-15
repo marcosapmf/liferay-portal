@@ -126,7 +126,7 @@ Map<String, Object> componentContext = journalDisplayContext.getComponentContext
 								<%= journalDisplayContext.getArticleSubtitle(curArticle) %>
 							</span>
 
-							<c:if test="<%= journalDisplayContext.isSearch() && ((curArticle.getFolderId() <= 0) || JournalFolderPermission.contains(permissionChecker, curArticle.getFolder(), ActionKeys.VIEW)) %>">
+							<c:if test="<%= journalDisplayContext.isShowBreadcrumb(curArticle.getFolder()) %>">
 								<c:choose>
 									<c:when test="<%= curArticle.getFolderId() != JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID %>">
 										<liferay-site-navigation:breadcrumb
@@ -156,7 +156,7 @@ Map<String, Object> componentContext = journalDisplayContext.getComponentContext
 									label="<%= WorkflowConstants.getStatusLabel(curArticle.getStatus()) %>"
 								/>
 
-							<c:if test='<%= FeatureFlagManagerUtil.isEnabled("LPD-15596") && curArticle.isScheduled() %>'>
+							<c:if test="<%= curArticle.isScheduled() %>">
 
 								<%
 								String scheduledArticleMessage = journalDisplayContext.getScheduledArticleMessage(curArticle);
@@ -247,11 +247,11 @@ Map<String, Object> componentContext = journalDisplayContext.getComponentContext
 							/>
 						</c:if>
 
-						<c:if test="<%= journalDisplayContext.isSearch() && ((curArticle.getFolderId() <= 0) || JournalFolderPermission.contains(permissionChecker, curArticle.getFolder(), ActionKeys.VIEW)) %>">
-							<liferay-ui:search-container-column-text
-								cssClass="table-cell-expand-smallest table-cell-minw-200"
-								name="path"
-							>
+						<liferay-ui:search-container-column-text
+							cssClass="table-cell-expand-smallest table-cell-minw-200"
+							name="path"
+						>
+							<c:if test="<%= journalDisplayContext.isShowBreadcrumb(curArticle.getFolder()) %>">
 								<c:choose>
 									<c:when test="<%= curArticle.getFolderId() != JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID %>">
 										<liferay-site-navigation:breadcrumb
@@ -266,8 +266,8 @@ Map<String, Object> componentContext = journalDisplayContext.getComponentContext
 										/>
 									</c:otherwise>
 								</c:choose>
-							</liferay-ui:search-container-column-text>
-						</c:if>
+							</c:if>
+						</liferay-ui:search-container-column-text>
 
 						<liferay-ui:search-container-column-text
 							cssClass="table-cell-expand-smallest table-cell-minw-100"
@@ -306,8 +306,9 @@ Map<String, Object> componentContext = journalDisplayContext.getComponentContext
 						</c:if>
 
 						<liferay-ui:search-container-column-date
-							cssClass="table-cell-expand-smallest table-cell-ws-nowrap"
+							cssClass="table-cell-expand-smallest"
 							name="modified-date"
+							userName="<%= curArticle.getStatusByUserName() %>"
 							value="<%= curArticle.getModifiedDate() %>"
 						/>
 
@@ -317,11 +318,11 @@ Map<String, Object> componentContext = journalDisplayContext.getComponentContext
 							value="<%= curArticle.getDisplayDate() %>"
 						/>
 
-							<liferay-ui:search-container-column-date
-								cssClass="table-cell-expand-smallest table-cell-ws-nowrap"
-								name="create-date"
-								value="<%= curArticle.getCreateDate() %>"
-							/>
+						<liferay-ui:search-container-column-date
+							cssClass="table-cell-expand-smallest table-cell-ws-nowrap"
+							name="create-date"
+							value="<%= curArticle.getCreateDate() %>"
+						/>
 
 						<liferay-ui:search-container-column-text>
 							<clay:dropdown-actions
@@ -399,7 +400,7 @@ Map<String, Object> componentContext = journalDisplayContext.getComponentContext
 								<%= journalDisplayContext.getFolderSubtitle(curFolder) %>
 							</span>
 
-							<c:if test="<%= journalDisplayContext.isSearch() && ((curFolder.getParentFolderId() <= 0) || JournalFolderPermission.contains(permissionChecker, curFolder.getParentFolder(), ActionKeys.VIEW)) %>">
+							<c:if test="<%= journalDisplayContext.isShowBreadcrumb(curFolder.getParentFolder()) %>">
 								<liferay-site-navigation:breadcrumb
 									breadcrumbEntries="<%= JournalPortletUtil.getPortletBreadcrumbEntries(curFolder.getParentFolder(), request, true, liferayPortletResponse) %>"
 									cssClass="c-pl-0 c-pt-0"
@@ -473,17 +474,25 @@ Map<String, Object> componentContext = journalDisplayContext.getComponentContext
 							</div>
 						</liferay-ui:search-container-column-text>
 
-						<c:if test="<%= journalDisplayContext.isSearch() && ((curFolder.getParentFolderId() <= 0) || JournalFolderPermission.contains(permissionChecker, curFolder.getParentFolder(), ActionKeys.VIEW)) %>">
+						<c:if test="<%= !journalDisplayContext.hasHighlightedDDMStructure() %>">
 							<liferay-ui:search-container-column-text
-								cssClass="table-cell-expand-smallest table-cell-minw-200"
-								name="path"
-							>
+								cssClass="table-cell-expand table-cell-minw-200 text-truncate"
+								name="description"
+								value="<%= StringUtil.shorten(HtmlUtil.stripHtml(curFolder.getDescription()), 200) %>"
+							/>
+						</c:if>
+
+						<liferay-ui:search-container-column-text
+							cssClass="table-cell-expand-smallest table-cell-minw-200"
+							name="path"
+						>
+							<c:if test="<%= journalDisplayContext.isShowBreadcrumb(curFolder.getParentFolder()) %>">
 								<liferay-site-navigation:breadcrumb
 									breadcrumbEntries="<%= JournalPortletUtil.getPortletBreadcrumbEntries(curFolder.getParentFolder(), request, true, liferayPortletResponse) %>"
 									cssClass="c-pl-0 c-pt-0"
 								/>
-							</liferay-ui:search-container-column-text>
-						</c:if>
+							</c:if>
+						</liferay-ui:search-container-column-text>
 
 						<liferay-ui:search-container-column-text
 							cssClass="table-cell-expand-smallest table-cell-minw-150"

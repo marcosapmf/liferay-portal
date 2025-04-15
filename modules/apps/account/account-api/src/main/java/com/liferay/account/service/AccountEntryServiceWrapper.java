@@ -108,11 +108,11 @@ public class AccountEntryServiceWrapper
 	@Override
 	public com.liferay.account.model.AccountEntry
 			fetchAccountEntryByExternalReferenceCode(
-				long companyId, String externalReferenceCode)
+				String externalReferenceCode, long companyId)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _accountEntryService.fetchAccountEntryByExternalReferenceCode(
-			companyId, externalReferenceCode);
+			externalReferenceCode, companyId);
 	}
 
 	@Override
@@ -133,6 +133,16 @@ public class AccountEntryServiceWrapper
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _accountEntryService.getAccountEntry(accountEntryId);
+	}
+
+	@Override
+	public com.liferay.account.model.AccountEntry
+			getAccountEntryByExternalReferenceCode(
+				String externalReferenceCode, long companyId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _accountEntryService.getAccountEntryByExternalReferenceCode(
+			externalReferenceCode, companyId);
 	}
 
 	/**

@@ -62,6 +62,7 @@ import org.osgi.service.component.annotations.Reference;
 		"com.liferay.portlet.add-default-resource=true",
 		"com.liferay.portlet.css-class-wrapper=portlet-commerce-checkout",
 		"com.liferay.portlet.display-category=commerce",
+		"com.liferay.portlet.header-portlet-css=/css/main.css",
 		"com.liferay.portlet.layout-cacheable=true",
 		"com.liferay.portlet.preferences-owned-by-group=true",
 		"com.liferay.portlet.private-request-attributes=false",
@@ -224,15 +225,8 @@ public class CommerceCheckoutPortlet extends MVCPortlet {
 			PortletRequest portletRequest, CommerceOrder commerceOrder)
 		throws PortalException {
 
-		PortletURL portletURL =
-			_commerceOrderHttpHelper.getCommerceCartPortletURL(
-				_portal.getHttpServletRequest(portletRequest), commerceOrder);
-
-		if (portletURL == null) {
-			return StringPool.BLANK;
-		}
-
-		return portletURL.toString();
+		return _commerceOrderHttpHelper.getCommerceCartPortletURL(
+			_portal.getHttpServletRequest(portletRequest), commerceOrder);
 	}
 
 	private boolean _isOrderApproved(CommerceOrder commerceOrder)

@@ -17,6 +17,7 @@ import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.layout.page.template.service.LayoutPageTemplateCollectionService;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalService;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryService;
+import com.liferay.layout.validator.LayoutValidator;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.LockedLayoutException;
@@ -100,7 +101,7 @@ public class CreateLayoutPageTemplateEntryMVCActionCommand
 						null, themeDisplay.getScopeGroupId(),
 						LayoutPageTemplateConstants.
 							PARENT_LAYOUT_PAGE_TEMPLATE_COLLECTION_ID_DEFAULT,
-						layoutPageTemplateCollectionName,
+						null, layoutPageTemplateCollectionName,
 						layoutPageTemplateCollectionDescription,
 						LayoutPageTemplateCollectionTypeConstants.BASIC,
 						serviceContext);
@@ -120,6 +121,9 @@ public class CreateLayoutPageTemplateEntryMVCActionCommand
 					layoutPageTemplateCollectionId, serviceContext);
 
 		return JSONUtil.put(
+			"layoutPageTemplateEntryId",
+			layoutPageTemplateEntry.getLayoutPageTemplateEntryId()
+		).put(
 			"url",
 			PortletURLBuilder.create(
 				_portal.getControlPanelPortletURL(
@@ -134,7 +138,8 @@ public class CreateLayoutPageTemplateEntryMVCActionCommand
 				layoutPageTemplateEntry.getLayoutPageTemplateCollectionId()
 			).setParameter(
 				"orderByType", "desc"
-			).buildString());
+			).buildString()
+		);
 	}
 
 	@Override
@@ -201,9 +206,11 @@ public class CreateLayoutPageTemplateEntryMVCActionCommand
 	private String _getUniqueName(
 		Layout layout, long layoutPageTemplateCollectionId, Locale locale) {
 
+		String layoutName = LayoutValidator.replaceBlacklistedChars(
+			layout.getName(locale));
+
 		String name = StringBundler.concat(
-			layout.getName(locale), " - ",
-			_language.get(locale, "page-template"));
+			layoutName, " - ", _language.get(locale, "page-template"));
 
 		for (int i = 2;; i++) {
 			LayoutPageTemplateEntry targetLayoutPageTemplateEntry =
@@ -217,8 +224,8 @@ public class CreateLayoutPageTemplateEntryMVCActionCommand
 			}
 
 			name = StringBundler.concat(
-				layout.getName(locale), " - ",
-				_language.get(locale, "page-template"), StringPool.SPACE, i);
+				layoutName, " - ", _language.get(locale, "page-template"),
+				StringPool.SPACE, i);
 		}
 
 		return name;

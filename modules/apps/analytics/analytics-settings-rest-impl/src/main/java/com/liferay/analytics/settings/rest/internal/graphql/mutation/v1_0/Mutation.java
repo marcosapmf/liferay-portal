@@ -9,13 +9,14 @@ import com.liferay.analytics.settings.rest.dto.v1_0.Channel;
 import com.liferay.analytics.settings.rest.dto.v1_0.ContactConfiguration;
 import com.liferay.analytics.settings.rest.dto.v1_0.DataSourceToken;
 import com.liferay.analytics.settings.rest.dto.v1_0.Field;
+import com.liferay.analytics.settings.rest.dto.v1_0.RecommendationConfiguration;
 import com.liferay.analytics.settings.rest.resource.v1_0.ChannelResource;
 import com.liferay.analytics.settings.rest.resource.v1_0.ContactConfigurationResource;
 import com.liferay.analytics.settings.rest.resource.v1_0.DataSourceResource;
 import com.liferay.analytics.settings.rest.resource.v1_0.FieldResource;
+import com.liferay.analytics.settings.rest.resource.v1_0.RecommendationConfigurationResource;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.function.UnsafeFunction;
-import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
@@ -70,6 +71,15 @@ public class Mutation {
 
 		_fieldResourceComponentServiceObjects =
 			fieldResourceComponentServiceObjects;
+	}
+
+	public static void
+		setRecommendationConfigurationResourceComponentServiceObjects(
+			ComponentServiceObjects<RecommendationConfigurationResource>
+				recommendationConfigurationResourceComponentServiceObjects) {
+
+		_recommendationConfigurationResourceComponentServiceObjects =
+			recommendationConfigurationResourceComponentServiceObjects;
 	}
 
 	@GraphQLField
@@ -180,6 +190,23 @@ public class Mutation {
 		return true;
 	}
 
+	@GraphQLField
+	public boolean updateRecommendationConfiguration(
+			@GraphQLName("recommendationConfiguration")
+				RecommendationConfiguration recommendationConfiguration)
+		throws Exception {
+
+		_applyVoidComponentServiceObjects(
+			_recommendationConfigurationResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			recommendationConfigurationResource ->
+				recommendationConfigurationResource.
+					putRecommendationConfiguration(
+						recommendationConfiguration));
+
+		return true;
+	}
+
 	private <T, R, E1 extends Throwable, E2 extends Throwable> R
 			_applyComponentServiceObjects(
 				ComponentServiceObjects<T> componentServiceObjects,
@@ -273,6 +300,26 @@ public class Mutation {
 		fieldResource.setRoleLocalService(_roleLocalService);
 	}
 
+	private void _populateResourceContext(
+			RecommendationConfigurationResource
+				recommendationConfigurationResource)
+		throws Exception {
+
+		recommendationConfigurationResource.setContextAcceptLanguage(
+			_acceptLanguage);
+		recommendationConfigurationResource.setContextCompany(_company);
+		recommendationConfigurationResource.setContextHttpServletRequest(
+			_httpServletRequest);
+		recommendationConfigurationResource.setContextHttpServletResponse(
+			_httpServletResponse);
+		recommendationConfigurationResource.setContextUriInfo(_uriInfo);
+		recommendationConfigurationResource.setContextUser(_user);
+		recommendationConfigurationResource.setGroupLocalService(
+			_groupLocalService);
+		recommendationConfigurationResource.setRoleLocalService(
+			_roleLocalService);
+	}
+
 	private static ComponentServiceObjects<ChannelResource>
 		_channelResourceComponentServiceObjects;
 	private static ComponentServiceObjects<ContactConfigurationResource>
@@ -281,6 +328,8 @@ public class Mutation {
 		_dataSourceResourceComponentServiceObjects;
 	private static ComponentServiceObjects<FieldResource>
 		_fieldResourceComponentServiceObjects;
+	private static ComponentServiceObjects<RecommendationConfigurationResource>
+		_recommendationConfigurationResourceComponentServiceObjects;
 
 	private AcceptLanguage _acceptLanguage;
 	private com.liferay.portal.kernel.model.Company _company;
@@ -288,7 +337,8 @@ public class Mutation {
 	private HttpServletRequest _httpServletRequest;
 	private HttpServletResponse _httpServletResponse;
 	private RoleLocalService _roleLocalService;
-	private BiFunction<Object, String, Sort[]> _sortsBiFunction;
+	private BiFunction<Object, String, com.liferay.portal.kernel.search.Sort[]>
+		_sortsBiFunction;
 	private UriInfo _uriInfo;
 	private com.liferay.portal.kernel.model.User _user;
 

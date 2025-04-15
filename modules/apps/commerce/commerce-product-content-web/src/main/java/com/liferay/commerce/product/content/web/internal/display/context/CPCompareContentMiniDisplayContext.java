@@ -23,9 +23,12 @@ import com.liferay.commerce.product.util.CPCompareHelper;
 import com.liferay.commerce.product.util.CPDefinitionHelper;
 import com.liferay.commerce.util.CommerceUtil;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.configuration.module.configuration.ConfigurationProviderUtil;
+import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.cookies.CookiesManagerUtil;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.service.GroupLocalService;
+import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.Validator;
 
@@ -45,34 +48,41 @@ import javax.servlet.http.HttpServletRequest;
 public class CPCompareContentMiniDisplayContext {
 
 	public CPCompareContentMiniDisplayContext(
+			ConfigurationProvider configurationProvider,
 			CPCompareHelper cpCompareHelper,
 			CPContentListEntryRendererRegistry
 				cpContentListEntryRendererRegistry,
 			CPContentListRendererRegistry cpContentListRendererRegistry,
 			CPDefinitionHelper cpDefinitionHelper,
-			CPTypeRegistry cpTypeRegistry,
+			CPTypeRegistry cpTypeRegistry, GroupLocalService groupLocalService,
 			HttpServletRequest httpServletRequest)
 		throws PortalException {
 
+		_configurationProvider = configurationProvider;
 		_cpCompareHelper = cpCompareHelper;
 		_cpContentListEntryRendererRegistry =
 			cpContentListEntryRendererRegistry;
 		_cpContentListRendererRegistry = cpContentListRendererRegistry;
 		_cpDefinitionHelper = cpDefinitionHelper;
 		_cpTypeRegistry = cpTypeRegistry;
+		_groupLocalService = groupLocalService;
 
 		_cpRequestHelper = new CPRequestHelper(httpServletRequest);
 
 		_cpCompareContentMiniPortletInstanceConfiguration =
-			ConfigurationProviderUtil.getPortletInstanceConfiguration(
+			configurationProvider.getPortletInstanceConfiguration(
 				CPCompareContentMiniPortletInstanceConfiguration.class,
 				_cpRequestHelper.getThemeDisplay());
+
+		AccountEntry accountEntry = null;
 
 		CommerceContext commerceContext =
 			(CommerceContext)httpServletRequest.getAttribute(
 				CommerceWebKeys.COMMERCE_CONTEXT);
 
-		AccountEntry accountEntry = commerceContext.getAccountEntry();
+		if (commerceContext != null) {
+			accountEntry = commerceContext.getAccountEntry();
+		}
 
 		if (accountEntry != null) {
 			HttpServletRequest originalHttpServletRequest =
@@ -210,8 +220,61 @@ public class CPCompareContentMiniDisplayContext {
 	}
 
 	public long getDisplayStyleGroupId() {
-		return _cpCompareContentMiniPortletInstanceConfiguration.
-			displayStyleGroupId();
+		if (_displayStyleGroupId != null) {
+			return _displayStyleGroupId;
+		}
+
+		String displayStyleGroupExternalReferenceCode =
+			_cpCompareContentMiniPortletInstanceConfiguration.
+				displayStyleGroupExternalReferenceCode();
+
+		ThemeDisplay themeDisplay = _cpRequestHelper.getThemeDisplay();
+
+		Group group = themeDisplay.getScopeGroup();
+
+		if (Validator.isNotNull(displayStyleGroupExternalReferenceCode)) {
+			group = _groupLocalService.fetchGroupByExternalReferenceCode(
+				displayStyleGroupExternalReferenceCode,
+				themeDisplay.getCompanyId());
+		}
+
+		if (group != null) {
+			_displayStyleGroupId = group.getGroupId();
+		}
+		else {
+			_displayStyleGroupId = themeDisplay.getScopeGroupId();
+		}
+
+		return _displayStyleGroupId;
+	}
+
+	public String getDisplayStyleGroupKey() {
+		if (Validator.isNotNull(_displayStyleGroupKey)) {
+			return _displayStyleGroupKey;
+		}
+
+		String displayStyleGroupExternalReferenceCode =
+			_cpCompareContentMiniPortletInstanceConfiguration.
+				displayStyleGroupExternalReferenceCode();
+
+		ThemeDisplay themeDisplay = _cpRequestHelper.getThemeDisplay();
+
+		Group group = themeDisplay.getScopeGroup();
+
+		if (Validator.isNotNull(displayStyleGroupExternalReferenceCode)) {
+			group = _groupLocalService.fetchGroupByExternalReferenceCode(
+				displayStyleGroupExternalReferenceCode,
+				themeDisplay.getCompanyId());
+		}
+
+		if (group != null) {
+			_displayStyleGroupKey = group.getGroupKey();
+		}
+		else {
+			_displayStyleGroupKey = StringPool.BLANK;
+		}
+
+		return _displayStyleGroupKey;
 	}
 
 	public int getProductsLimit() {
@@ -231,6 +294,10 @@ public class CPCompareContentMiniDisplayContext {
 			(CommerceContext)httpServletRequest.getAttribute(
 				CommerceWebKeys.COMMERCE_CONTEXT);
 
+		if (commerceContext == null) {
+			return false;
+		}
+
 		long commerceChannelId = commerceContext.getCommerceChannelId();
 
 		if (commerceChannelId > 0) {
@@ -243,23 +310,16 @@ public class CPCompareContentMiniDisplayContext {
 	public boolean isSelectionStyleADT() {
 		String selectionStyle = getSelectionStyle();
 
-		if (selectionStyle.equals("adt")) {
-			return true;
-		}
-
-		return false;
+		return selectionStyle.equals("adt");
 	}
 
 	public boolean isSelectionStyleCustomRenderer() {
 		String selectionStyle = getSelectionStyle();
 
-		if (selectionStyle.equals("custom")) {
-			return true;
-		}
-
-		return false;
+		return selectionStyle.equals("custom");
 	}
 
+	private final ConfigurationProvider _configurationProvider;
 	private final CPCompareContentMiniPortletInstanceConfiguration
 		_cpCompareContentMiniPortletInstanceConfiguration;
 	private final CPCompareHelper _cpCompareHelper;
@@ -270,5 +330,8 @@ public class CPCompareContentMiniDisplayContext {
 	private final List<Long> _cpDefinitionIds;
 	private final CPRequestHelper _cpRequestHelper;
 	private final CPTypeRegistry _cpTypeRegistry;
+	private Long _displayStyleGroupId;
+	private String _displayStyleGroupKey;
+	private final GroupLocalService _groupLocalService;
 
 }

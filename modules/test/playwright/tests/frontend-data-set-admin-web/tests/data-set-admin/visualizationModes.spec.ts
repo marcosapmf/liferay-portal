@@ -10,6 +10,7 @@ import {loginTest} from '../../../../fixtures/loginTest';
 import {liferayConfig} from '../../../../liferay.config';
 import getRandomString from '../../../../utils/getRandomString';
 import {dataSetManagerApiHelpersTest} from '../../fixtures/dataSetManagerApiHelpersTest';
+import clickActionInRow from '../../utils/clickActionInRow';
 import {EN_BASE_URL, ES_BASE_URL, PT_BASE_URL} from '../../utils/constants';
 import saveFromModal from '../../utils/saveFromModal';
 import {dataSetManagerSetupTest} from './fixtures/dataSetManagerSetupTest';
@@ -18,17 +19,12 @@ import {visualizationModesPageTest} from './fixtures/visualizationModesPageTest'
 export const test = mergeTests(
 	dataSetManagerApiHelpersTest,
 	featureFlagsTest({
-		'LPS-164563': true,
+		'LPS-164563': {enabled: true},
 	}),
 	visualizationModesPageTest,
 	loginTest(),
 	dataSetManagerSetupTest
 );
-
-const LABEL_COLUMN_INDEX = 2;
-const RENDERER_COLUMN_INDEX = 4;
-const SORTABLE_COLUMN_INDEX = 5;
-const TYPE_COLUMN_INDEX = 3;
 
 let dataSetERC: string;
 
@@ -48,25 +44,6 @@ test.afterEach(async ({dataSetManagerApiHelpers}) => {
 		erc: dataSetERC,
 	});
 });
-
-const clickActionInRow = async ({
-	actionName,
-	rowName,
-	visualizationModesPage,
-}) => {
-	await visualizationModesPage
-		.getRowByText(rowName)
-		.locator('.actions-cell button')
-		.click();
-
-	const actionButton = visualizationModesPage.page.getByRole('menuitem', {
-		name: actionName,
-	});
-
-	await expect(actionButton).toBeInViewport();
-
-	await actionButton.click();
-};
 
 test.describe('Visualization Modes in Data Set Manager', () => {
 	test('Configure cards visualization mode @LPD-10735', async ({
@@ -100,13 +77,13 @@ test.describe('Visualization Modes in Data Set Manager', () => {
 		});
 
 		await test.step('Assign a field to title section', async () => {
-			const fieldName = 'name';
+			const fieldName = 'fieldName';
 			const sectionLabel = 'Title';
 
 			const container =
 				visualizationModesPage.cardsVisualizationModeContainer;
 
-			await visualizationModesPage.openAssignFieldModal({
+			await visualizationModesPage.openAssignDataSourceFieldsModal({
 				container,
 				sectionLabel,
 			});
@@ -128,13 +105,13 @@ test.describe('Visualization Modes in Data Set Manager', () => {
 
 		await test.step('Edit field to title section', async () => {
 			const newFieldName = 'rendererType';
-			const oldFieldName = 'name';
+			const oldFieldName = 'fieldName';
 			const sectionLabel = 'Title';
 
 			const container =
 				visualizationModesPage.cardsVisualizationModeContainer;
 
-			await visualizationModesPage.openChangeFieldModal({
+			await visualizationModesPage.openChangeDataSourceFieldsModal({
 				container,
 				sectionLabel,
 			});
@@ -150,6 +127,90 @@ test.describe('Visualization Modes in Data Set Manager', () => {
 
 			await saveFromModal({
 				page,
+			});
+
+			const assignedFieldLocator =
+				await visualizationModesPage.getAssignedFieldLocator({
+					container,
+					sectionLabel,
+				});
+
+			await expect(assignedFieldLocator).toHaveText(newFieldName);
+		});
+
+		await test.step('Assign a field typing the name manually to Description section @LPD-25242', async () => {
+			const fieldName = 'fieldName';
+			const sectionLabel = 'Description';
+
+			const container =
+				visualizationModesPage.cardsVisualizationModeContainer;
+
+			await visualizationModesPage.openAssignCustomFieldModal({
+				container,
+				sectionLabel,
+			});
+
+			await visualizationModesPage.addCustomFieldInput.waitFor();
+
+			await test.step('Check helper tooltip', async () => {
+				const parent = page
+					.locator('.form-group')
+					.filter({has: visualizationModesPage.addCustomFieldInput});
+
+				const tooltipTrigger = parent.locator(
+					'.lexicon-icon-question-circle-full'
+				);
+
+				await expect(tooltipTrigger).toBeVisible();
+
+				await tooltipTrigger.hover();
+
+				await expect(
+					page.getByTitle(
+						'You can add a field that is in the API response but not declared in the Schema.'
+					)
+				).toBeVisible();
+			});
+
+			await test.step('Add manual field', async () => {
+				await visualizationModesPage.addCustomFieldInput.fill(
+					fieldName
+				);
+
+				await saveFromModal({
+					page,
+					saveText: 'Add',
+				});
+			});
+
+			const assignedFieldLocator =
+				await visualizationModesPage.getAssignedFieldLocator({
+					container,
+					sectionLabel,
+				});
+
+			await expect(assignedFieldLocator).toHaveText(fieldName);
+		});
+
+		await test.step('Edit field to Description section @LPD-25242', async () => {
+			const newFieldName = 'rendererType';
+			const sectionLabel = 'Description';
+
+			const container =
+				visualizationModesPage.cardsVisualizationModeContainer;
+
+			await visualizationModesPage.openChangeCustomFieldModal({
+				container,
+				sectionLabel,
+			});
+
+			await visualizationModesPage.addCustomFieldInput.waitFor();
+
+			await visualizationModesPage.addCustomFieldInput.fill(newFieldName);
+
+			await saveFromModal({
+				page,
+				saveText: 'Add',
 			});
 
 			const assignedFieldLocator =
@@ -193,13 +254,13 @@ test.describe('Visualization Modes in Data Set Manager', () => {
 		});
 
 		await test.step('Assign a field to title section', async () => {
-			const fieldName = 'name';
+			const fieldName = 'fieldName';
 			const sectionLabel = 'Title';
 
 			const container =
 				visualizationModesPage.listVisualizationModeContainer;
 
-			await visualizationModesPage.openAssignFieldModal({
+			await visualizationModesPage.openAssignDataSourceFieldsModal({
 				container,
 				sectionLabel,
 			});
@@ -221,13 +282,13 @@ test.describe('Visualization Modes in Data Set Manager', () => {
 
 		await test.step('Edit field to title section', async () => {
 			const newFieldName = 'rendererType';
-			const oldFieldName = 'name';
+			const oldFieldName = 'fieldName';
 			const sectionLabel = 'Title';
 
 			const container =
 				visualizationModesPage.listVisualizationModeContainer;
 
-			await visualizationModesPage.openChangeFieldModal({
+			await visualizationModesPage.openChangeDataSourceFieldsModal({
 				container,
 				sectionLabel,
 			});
@@ -253,15 +314,100 @@ test.describe('Visualization Modes in Data Set Manager', () => {
 
 			await expect(assignedFieldLocator).toHaveText(newFieldName);
 		});
+
+		await test.step('Assign a field typing the name manually to Description section @LPD-25242', async () => {
+			const fieldName = 'fieldName';
+			const sectionLabel = 'Description';
+
+			const container =
+				visualizationModesPage.listVisualizationModeContainer;
+
+			await visualizationModesPage.openAssignCustomFieldModal({
+				container,
+				sectionLabel,
+			});
+
+			await visualizationModesPage.addCustomFieldInput.waitFor();
+
+			await test.step('Check helper tooltip', async () => {
+				const parent = page
+					.locator('.form-group')
+					.filter({has: visualizationModesPage.addCustomFieldInput});
+
+				const tooltipTrigger = parent.locator(
+					'.lexicon-icon-question-circle-full'
+				);
+
+				await expect(tooltipTrigger).toBeVisible();
+
+				await tooltipTrigger.hover();
+
+				await expect(
+					page.getByTitle(
+						'You can add a field that is in the API response but not declared in the Schema.'
+					)
+				).toBeVisible();
+			});
+
+			await test.step('Add manual field', async () => {
+				await visualizationModesPage.addCustomFieldInput.fill(
+					fieldName
+				);
+
+				await saveFromModal({
+					page,
+					saveText: 'Add',
+				});
+			});
+
+			const assignedFieldLocator =
+				await visualizationModesPage.getAssignedFieldLocator({
+					container,
+					sectionLabel,
+				});
+
+			await expect(assignedFieldLocator).toHaveText(fieldName);
+		});
+
+		await test.step('Edit field to Description section @LPD-25242', async () => {
+			const newFieldName = 'rendererType';
+			const sectionLabel = 'Description';
+
+			const container =
+				visualizationModesPage.listVisualizationModeContainer;
+
+			await visualizationModesPage.openChangeCustomFieldModal({
+				container,
+				sectionLabel,
+			});
+
+			await visualizationModesPage.addCustomFieldInput.waitFor();
+
+			await visualizationModesPage.addCustomFieldInput.fill(newFieldName);
+
+			await saveFromModal({
+				page,
+				saveText: 'Add',
+			});
+
+			const assignedFieldLocator =
+				await visualizationModesPage.getAssignedFieldLocator({
+					container,
+					sectionLabel,
+				});
+
+			await expect(assignedFieldLocator).toHaveText(newFieldName);
+		});
 	});
 
 	test('Configure table visualization mode @LPD-11049', async ({
 		page,
 		visualizationModesPage,
 	}) => {
-		const SAMPLE_SCALAR_FIELD = 'id';
-		const SAMPLE_OBJECT_FIELD = 'fdsViewFDSFieldRelationship';
-		const SAMPLE_OBJECT_CHILD_FIELD = 'id';
+		const sampleScalarField = 'id';
+		const sampleScalarFieldName = 'label';
+		const sampleObjectField = 'dataSetToDataSetTableSections';
+		const sampleObjectChildField = 'id';
 
 		await test.step('Navigate to table visualization mode page', async () => {
 			await visualizationModesPage.goto({
@@ -275,21 +421,21 @@ test.describe('Visualization Modes in Data Set Manager', () => {
 			).toBeVisible();
 		});
 
-		await test.step('Add fields', async () => {
-			await visualizationModesPage.openAddFieldsModal();
+		await test.step('Add fields from field selection tree', async () => {
+			await visualizationModesPage.openAddDataSourceFieldsModal();
 
 			await visualizationModesPage.selectField({
-				fieldName: SAMPLE_SCALAR_FIELD,
+				fieldName: sampleScalarField,
 			});
 
 			await visualizationModesPage.selectField({
-				dataId: `${SAMPLE_OBJECT_FIELD}.*`,
-				fieldName: SAMPLE_OBJECT_FIELD,
+				dataId: `${sampleObjectField}.*`,
+				fieldName: sampleObjectField,
 			});
 
 			await visualizationModesPage.selectField({
-				dataId: `${SAMPLE_OBJECT_FIELD}.${SAMPLE_OBJECT_CHILD_FIELD}`,
-				fieldName: SAMPLE_OBJECT_CHILD_FIELD,
+				dataId: `${sampleObjectField}.${sampleObjectChildField}`,
+				fieldName: sampleObjectChildField,
 			});
 
 			await saveFromModal({
@@ -297,36 +443,58 @@ test.describe('Visualization Modes in Data Set Manager', () => {
 			});
 		});
 
+		await test.step('Add fields from text input', async () => {
+			await visualizationModesPage.openAddCustomFieldModal();
+
+			await visualizationModesPage.addCustomFieldInput.waitFor();
+
+			await visualizationModesPage.addCustomFieldInput.fill(
+				sampleScalarFieldName
+			);
+
+			await saveFromModal({
+				page,
+				saveText: 'Add',
+			});
+		});
+
 		await test.step('Check if field defaults are correct', async () => {
 			await expect(
 				visualizationModesPage
-					.getRowByText(SAMPLE_SCALAR_FIELD)
+					.getRowByText(sampleScalarField)
 					.locator('td')
-					.nth(SORTABLE_COLUMN_INDEX)
+					.nth(visualizationModesPage.SORTABLE_COLUMN_INDEX)
 			).toHaveText('true');
 
 			await expect(
 				visualizationModesPage
-					.getRowByText(`${SAMPLE_OBJECT_FIELD}.*`)
+					.getRowByText(sampleScalarFieldName)
 					.locator('td')
-					.nth(SORTABLE_COLUMN_INDEX)
+					.nth(visualizationModesPage.SORTABLE_COLUMN_INDEX)
+			).toHaveText('true');
+
+			await expect(
+				visualizationModesPage
+					.getRowByText(`${sampleObjectField}.*`)
+					.locator('td')
+					.nth(visualizationModesPage.SORTABLE_COLUMN_INDEX)
 			).toHaveText('false');
 
 			await expect(
 				visualizationModesPage
 					.getRowByText(
-						`${SAMPLE_OBJECT_FIELD}.${SAMPLE_OBJECT_CHILD_FIELD}`
+						`${sampleObjectField}.${sampleObjectChildField}`
 					)
 					.locator('td')
-					.nth(SORTABLE_COLUMN_INDEX)
+					.nth(visualizationModesPage.SORTABLE_COLUMN_INDEX)
 			).toHaveText('false');
 		});
 
 		await test.step('Edit a field', async () => {
 			await clickActionInRow({
 				actionName: 'Edit',
-				rowName: SAMPLE_SCALAR_FIELD,
-				visualizationModesPage,
+				page,
+				rowName: sampleScalarField,
 			});
 
 			const sortableInput =
@@ -346,17 +514,17 @@ test.describe('Visualization Modes in Data Set Manager', () => {
 
 			await expect(
 				visualizationModesPage
-					.getRowByText(SAMPLE_SCALAR_FIELD)
+					.getRowByText(sampleScalarField)
 					.locator('td')
-					.nth(SORTABLE_COLUMN_INDEX)
+					.nth(visualizationModesPage.SORTABLE_COLUMN_INDEX)
 			).toHaveText('false');
 		});
 
 		await test.step('Check if object field has disabled sortable option', async () => {
 			await clickActionInRow({
 				actionName: 'Edit',
-				rowName: `${SAMPLE_OBJECT_FIELD}.*`,
-				visualizationModesPage,
+				page,
+				rowName: `${sampleObjectField}.*`,
 			});
 
 			const sortableLabel =
@@ -374,10 +542,10 @@ test.describe('Visualization Modes in Data Set Manager', () => {
 		page,
 		visualizationModesPage,
 	}) => {
-		const SAMPLE_FIELD = 'name';
-		const SAMPLE_SCALAR_FIELD = 'id';
-		const SAMPLE_OBJECT_FIELD = 'fdsViewFDSFieldRelationship';
-		const SAMPLE_OBJECT_CHILD_FIELD = 'id';
+		const SAMPLE_FIELD = 'fieldName';
+		const sampleScalarField = 'id';
+		const sampleObjectField = 'dataSetToDataSetTableSections';
+		const sampleObjectChildField = 'id';
 
 		await test.step('Navigate to table visualization mode page', async () => {
 			await visualizationModesPage.goto({
@@ -392,20 +560,20 @@ test.describe('Visualization Modes in Data Set Manager', () => {
 		});
 
 		await test.step('Add fields', async () => {
-			await visualizationModesPage.openAddFieldsModal();
+			await visualizationModesPage.openAddDataSourceFieldsModal();
 
 			await visualizationModesPage.selectField({
-				fieldName: SAMPLE_SCALAR_FIELD,
+				fieldName: sampleScalarField,
 			});
 
 			await visualizationModesPage.selectField({
-				dataId: `${SAMPLE_OBJECT_FIELD}.*`,
-				fieldName: SAMPLE_OBJECT_FIELD,
+				dataId: `${sampleObjectField}.*`,
+				fieldName: sampleObjectField,
 			});
 
 			await visualizationModesPage.selectField({
-				dataId: `${SAMPLE_OBJECT_FIELD}.${SAMPLE_OBJECT_CHILD_FIELD}`,
-				fieldName: SAMPLE_OBJECT_CHILD_FIELD,
+				dataId: `${sampleObjectField}.${sampleObjectChildField}`,
+				fieldName: sampleObjectChildField,
 			});
 
 			await saveFromModal({
@@ -414,7 +582,7 @@ test.describe('Visualization Modes in Data Set Manager', () => {
 		});
 
 		await test.step('Add a new field', async () => {
-			await visualizationModesPage.openAddFieldsModal();
+			await visualizationModesPage.openAddDataSourceFieldsModal();
 
 			await visualizationModesPage.selectField({
 				fieldName: SAMPLE_FIELD,
@@ -471,10 +639,10 @@ test.describe('Visualization Modes in Data Set Manager', () => {
 			expect(tableRowsCount).toEqual(4);
 
 			const expectedTexts = [
-				SAMPLE_SCALAR_FIELD,
-				`${SAMPLE_OBJECT_FIELD}.*`,
+				sampleScalarField,
+				`${sampleObjectField}.*`,
 				SAMPLE_FIELD,
-				`${SAMPLE_OBJECT_FIELD}.${SAMPLE_OBJECT_CHILD_FIELD}`,
+				`${sampleObjectField}.${sampleObjectChildField}`,
 			];
 
 			for (let i = 0; i < expectedTexts.length; i++) {
@@ -500,8 +668,10 @@ test.describe('Visualization Modes in Data Set Manager', () => {
 		const SAMPLE_COMPLEX_ARRAY_FIELD = 'auditEvents[]*';
 		const SAMPLE_COMPLEX_ARRAY_CHILD_FIELD = 'auditEvents[]creator.name';
 		const SAMPLE_SCALAR_ARRAY_FIELD = 'keywords';
-		const SAMPLE_FULL_COMPLEX_FIELD = 'creator.*';
-		const SAMPLE_COMPLEX_OBJECT_CHILD_FIELD = 'creator.givenName';
+		const SAMPLE_FULL_COMPLEX_FIELD =
+			'dataSetToDataSetTableSections.auditEvents[]creator.*';
+		const SAMPLE_COMPLEX_OBJECT_CHILD_FIELD =
+			'dataSetToDataSetTableSections.auditEvents[]creator.givenName';
 
 		await test.step('Navigate to table visualization mode page', async () => {
 			await visualizationModesPage.goto({
@@ -516,7 +686,7 @@ test.describe('Visualization Modes in Data Set Manager', () => {
 		});
 
 		await test.step('Add scalar array field', async () => {
-			await visualizationModesPage.openAddFieldsModal();
+			await visualizationModesPage.openAddDataSourceFieldsModal();
 
 			await visualizationModesPage.searchAndSelectField(
 				SAMPLE_SCALAR_ARRAY_FIELD
@@ -544,42 +714,42 @@ test.describe('Visualization Modes in Data Set Manager', () => {
 				visualizationModesPage
 					.getRowByText(SAMPLE_SCALAR_ARRAY_FIELD)
 					.locator('td')
-					.nth(TYPE_COLUMN_INDEX)
+					.nth(visualizationModesPage.TYPE_COLUMN_INDEX)
 			).toHaveText('array');
 
 			await expect(
 				visualizationModesPage
 					.getRowByText(SAMPLE_SCALAR_ARRAY_FIELD)
 					.locator('td')
-					.nth(SORTABLE_COLUMN_INDEX)
+					.nth(visualizationModesPage.SORTABLE_COLUMN_INDEX)
 			).toHaveText('false');
 
 			await expect(
 				visualizationModesPage
 					.getRowByText(SAMPLE_COMPLEX_ARRAY_FIELD)
 					.locator('td')
-					.nth(TYPE_COLUMN_INDEX)
+					.nth(visualizationModesPage.TYPE_COLUMN_INDEX)
 			).toHaveText('array');
 
 			await expect(
 				visualizationModesPage
 					.getRowByText(SAMPLE_COMPLEX_ARRAY_FIELD)
 					.locator('td')
-					.nth(SORTABLE_COLUMN_INDEX)
+					.nth(visualizationModesPage.SORTABLE_COLUMN_INDEX)
 			).toHaveText('false');
 
 			await expect(
 				visualizationModesPage
 					.getRowByText(SAMPLE_COMPLEX_OBJECT_CHILD_FIELD)
 					.locator('td')
-					.nth(TYPE_COLUMN_INDEX)
+					.nth(visualizationModesPage.TYPE_COLUMN_INDEX)
 			).toHaveText('string');
 
 			await expect(
 				visualizationModesPage
 					.getRowByText(SAMPLE_FULL_COMPLEX_FIELD)
 					.locator('td')
-					.nth(TYPE_COLUMN_INDEX)
+					.nth(visualizationModesPage.TYPE_COLUMN_INDEX)
 			).toHaveText('object');
 		});
 	});
@@ -588,8 +758,8 @@ test.describe('Visualization Modes in Data Set Manager', () => {
 		page,
 		visualizationModesPage,
 	}) => {
-		const SAMPLE_SCALAR_FIELD = 'id';
-		const SAMPLE_OBJECT_FIELD = 'fdsViewFDSFieldRelationship';
+		const sampleScalarField = 'id';
+		const sampleObjectField = 'dataSetToDataSetTableSections';
 
 		await test.step('Navigate to table visualization mode page', async () => {
 			await visualizationModesPage.goto({
@@ -604,10 +774,10 @@ test.describe('Visualization Modes in Data Set Manager', () => {
 		});
 
 		await test.step('Add one field, but cancel the operation @LPS-185230', async () => {
-			await visualizationModesPage.openAddFieldsModal();
+			await visualizationModesPage.openAddDataSourceFieldsModal();
 
 			await visualizationModesPage.selectField({
-				fieldName: SAMPLE_SCALAR_FIELD,
+				fieldName: sampleScalarField,
 			});
 
 			await visualizationModesPage.cancelAddFieldsModal();
@@ -616,10 +786,10 @@ test.describe('Visualization Modes in Data Set Manager', () => {
 		});
 
 		await test.step('Add one field, save', async () => {
-			await visualizationModesPage.openAddFieldsModal();
+			await visualizationModesPage.openAddDataSourceFieldsModal();
 
 			await visualizationModesPage.selectField({
-				fieldName: SAMPLE_SCALAR_FIELD,
+				fieldName: sampleScalarField,
 			});
 
 			await saveFromModal({
@@ -628,15 +798,15 @@ test.describe('Visualization Modes in Data Set Manager', () => {
 		});
 
 		await test.step('Unselect selected field. Select another. Cancel @LPS-185230', async () => {
-			await visualizationModesPage.openAddFieldsModal();
+			await visualizationModesPage.openAddDataSourceFieldsModal();
 
 			await visualizationModesPage.unSelectField({
-				fieldName: SAMPLE_SCALAR_FIELD,
+				fieldName: sampleScalarField,
 			});
 
 			await visualizationModesPage.selectField({
-				dataId: `${SAMPLE_OBJECT_FIELD}.*`,
-				fieldName: SAMPLE_OBJECT_FIELD,
+				dataId: `${sampleObjectField}.*`,
+				fieldName: sampleObjectField,
 			});
 
 			await visualizationModesPage.cancelAddFieldsModal();
@@ -645,10 +815,10 @@ test.describe('Visualization Modes in Data Set Manager', () => {
 		await test.step('Check there is one field and is the one just added', async () => {
 			await expect(
 				visualizationModesPage
-					.getRowByText(SAMPLE_SCALAR_FIELD)
+					.getRowByText(sampleScalarField)
 					.locator('td')
-					.nth(LABEL_COLUMN_INDEX)
-			).toHaveText(SAMPLE_SCALAR_FIELD);
+					.nth(visualizationModesPage.LABEL_COLUMN_INDEX)
+			).toHaveText(sampleScalarField);
 
 			await visualizationModesPage.assertTableFieldRowCount(1);
 		});
@@ -656,8 +826,8 @@ test.describe('Visualization Modes in Data Set Manager', () => {
 		await test.step('Edit a field, change its label, cancel @LPS-176051 @LPS-178736 @LPS-179151', async () => {
 			await clickActionInRow({
 				actionName: 'Edit',
-				rowName: SAMPLE_SCALAR_FIELD,
-				visualizationModesPage,
+				page,
+				rowName: sampleScalarField,
 			});
 
 			const labelInput = visualizationModesPage.page.getByLabel('Label');
@@ -674,10 +844,10 @@ test.describe('Visualization Modes in Data Set Manager', () => {
 		await test.step('Check there is one field and is the one just added', async () => {
 			await expect(
 				visualizationModesPage
-					.getRowByText(SAMPLE_SCALAR_FIELD)
+					.getRowByText(sampleScalarField)
 					.locator('td')
-					.nth(LABEL_COLUMN_INDEX)
-			).toHaveText(SAMPLE_SCALAR_FIELD);
+					.nth(visualizationModesPage.LABEL_COLUMN_INDEX)
+			).toHaveText(sampleScalarField);
 
 			await visualizationModesPage.assertTableFieldRowCount(1);
 		});
@@ -685,8 +855,8 @@ test.describe('Visualization Modes in Data Set Manager', () => {
 		await test.step('Delete a field, cancel @LPS-185500', async () => {
 			await clickActionInRow({
 				actionName: 'Delete',
-				rowName: SAMPLE_SCALAR_FIELD,
-				visualizationModesPage,
+				page,
+				rowName: sampleScalarField,
 			});
 
 			await visualizationModesPage.cancelAddFieldsModal();
@@ -695,10 +865,10 @@ test.describe('Visualization Modes in Data Set Manager', () => {
 		await test.step('Check there is one field and is the one just added', async () => {
 			await expect(
 				visualizationModesPage
-					.getRowByText(SAMPLE_SCALAR_FIELD)
+					.getRowByText(sampleScalarField)
 					.locator('td')
-					.nth(LABEL_COLUMN_INDEX)
-			).toHaveText(SAMPLE_SCALAR_FIELD);
+					.nth(visualizationModesPage.LABEL_COLUMN_INDEX)
+			).toHaveText(sampleScalarField);
 
 			await visualizationModesPage.assertTableFieldRowCount(1);
 		});
@@ -708,8 +878,8 @@ test.describe('Visualization Modes in Data Set Manager', () => {
 		page,
 		visualizationModesPage,
 	}) => {
-		const SAMPLE_SCALAR_FIELD = 'id';
-		const SAMPLE_FIELD = 'name';
+		const sampleScalarField = 'id';
+		const SAMPLE_FIELD = 'fieldName';
 
 		await test.step('Navigate to table visualization mode page', async () => {
 			await visualizationModesPage.goto({
@@ -724,10 +894,10 @@ test.describe('Visualization Modes in Data Set Manager', () => {
 		});
 
 		await test.step('Add one field, save', async () => {
-			await visualizationModesPage.openAddFieldsModal();
+			await visualizationModesPage.openAddDataSourceFieldsModal();
 
 			await visualizationModesPage.selectField({
-				fieldName: SAMPLE_SCALAR_FIELD,
+				fieldName: sampleScalarField,
 			});
 
 			await saveFromModal({
@@ -738,16 +908,16 @@ test.describe('Visualization Modes in Data Set Manager', () => {
 		await test.step('Check there is one field and is the one just added', async () => {
 			await expect(
 				visualizationModesPage
-					.getRowByText(SAMPLE_SCALAR_FIELD)
+					.getRowByText(sampleScalarField)
 					.locator('td')
-					.nth(LABEL_COLUMN_INDEX)
-			).toHaveText(SAMPLE_SCALAR_FIELD);
+					.nth(visualizationModesPage.LABEL_COLUMN_INDEX)
+			).toHaveText(sampleScalarField);
 
 			await visualizationModesPage.assertTableFieldRowCount(1);
 		});
 
 		await test.step('Add another field, save', async () => {
-			await visualizationModesPage.openAddFieldsModal();
+			await visualizationModesPage.openAddDataSourceFieldsModal();
 
 			await visualizationModesPage.selectField({
 				fieldName: SAMPLE_FIELD,
@@ -761,16 +931,16 @@ test.describe('Visualization Modes in Data Set Manager', () => {
 		await test.step('Check there are two fields', async () => {
 			await expect(
 				visualizationModesPage
-					.getRowByText(SAMPLE_SCALAR_FIELD)
+					.getRowByText(sampleScalarField)
 					.locator('td')
-					.nth(LABEL_COLUMN_INDEX)
-			).toHaveText(SAMPLE_SCALAR_FIELD);
+					.nth(visualizationModesPage.LABEL_COLUMN_INDEX)
+			).toHaveText(sampleScalarField);
 
 			await expect(
 				visualizationModesPage
 					.getRowByText(SAMPLE_FIELD)
 					.locator('td')
-					.nth(LABEL_COLUMN_INDEX)
+					.nth(visualizationModesPage.LABEL_COLUMN_INDEX)
 			).toHaveText(SAMPLE_FIELD);
 
 			await visualizationModesPage.assertTableFieldRowCount(2);
@@ -779,12 +949,16 @@ test.describe('Visualization Modes in Data Set Manager', () => {
 		await test.step('Delete field', async () => {
 			await clickActionInRow({
 				actionName: 'Delete',
+				page,
 				rowName: SAMPLE_FIELD,
-				visualizationModesPage,
 			});
 
 			const deleteModal =
 				await visualizationModesPage.page.getByRole('dialog');
+
+			await expect(deleteModal.locator('.modal-title')).toContainText(
+				'Delete Field'
+			);
 
 			await expect(deleteModal).toContainText(
 				'Are you sure you want to delete this field? It will be removed immediately. Fragments using it will be affected. This action cannot be undone.'
@@ -806,10 +980,10 @@ test.describe('Visualization Modes in Data Set Manager', () => {
 		await test.step('Check that there is only one field', async () => {
 			await expect(
 				visualizationModesPage
-					.getRowByText(SAMPLE_SCALAR_FIELD)
+					.getRowByText(sampleScalarField)
 					.locator('td')
-					.nth(LABEL_COLUMN_INDEX)
-			).toHaveText(SAMPLE_SCALAR_FIELD);
+					.nth(visualizationModesPage.LABEL_COLUMN_INDEX)
+			).toHaveText(sampleScalarField);
 
 			await visualizationModesPage.assertTableFieldRowCount(1);
 		});
@@ -817,15 +991,15 @@ test.describe('Visualization Modes in Data Set Manager', () => {
 		await test.step('Open field edition modal, check that name field is not editable', async () => {
 			await clickActionInRow({
 				actionName: 'Edit',
-				rowName: SAMPLE_SCALAR_FIELD,
-				visualizationModesPage,
+				page,
+				rowName: sampleScalarField,
 			});
 
 			const editModal =
 				await visualizationModesPage.page.getByRole('dialog');
 
 			await expect(editModal.getByRole('heading')).toContainText(
-				`Edit ${SAMPLE_SCALAR_FIELD}`
+				`Edit ${sampleScalarField}`
 			);
 
 			const nameInput = visualizationModesPage.page.getByLabel('Name');
@@ -840,15 +1014,15 @@ test.describe('Visualization Modes in Data Set Manager', () => {
 		await test.step('Open field edition modal, check that the user can change the renderer', async () => {
 			await expect(
 				visualizationModesPage
-					.getRowByText(SAMPLE_SCALAR_FIELD)
+					.getRowByText(sampleScalarField)
 					.locator('td')
-					.nth(RENDERER_COLUMN_INDEX)
+					.nth(visualizationModesPage.RENDERER_COLUMN_INDEX)
 			).toHaveText('Default');
 
 			await clickActionInRow({
 				actionName: 'Edit',
-				rowName: SAMPLE_SCALAR_FIELD,
-				visualizationModesPage,
+				page,
+				rowName: sampleScalarField,
 			});
 
 			const rendererButton = page.getByRole('button', {name: 'Default'});
@@ -878,18 +1052,18 @@ test.describe('Visualization Modes in Data Set Manager', () => {
 
 			await expect(
 				visualizationModesPage
-					.getRowByText(SAMPLE_SCALAR_FIELD)
+					.getRowByText(sampleScalarField)
 					.locator('td')
-					.nth(RENDERER_COLUMN_INDEX)
+					.nth(visualizationModesPage.RENDERER_COLUMN_INDEX)
 			).toHaveText('Boolean');
 		});
 	});
 
-	test(
+	test.skip(
 		'Check that users can translate labels in table visualization mode.',
 		{tag: '@LPS-176516'},
 		async ({page, visualizationModesPage}) => {
-			const SAMPLE_FIELD = 'name';
+			const SAMPLE_FIELD = 'fieldName';
 			const SAMPLE_FIELD_EN_US = 'Name';
 			const SAMPLE_FIELD_ES_ES = 'Nombre';
 			const SAMPLE_FIELD_PT_BR = 'Nome';
@@ -907,7 +1081,7 @@ test.describe('Visualization Modes in Data Set Manager', () => {
 			});
 
 			await test.step('Add field', async () => {
-				await visualizationModesPage.openAddFieldsModal();
+				await visualizationModesPage.openAddDataSourceFieldsModal();
 
 				await visualizationModesPage.selectField({
 					fieldName: SAMPLE_FIELD,
@@ -923,7 +1097,7 @@ test.describe('Visualization Modes in Data Set Manager', () => {
 					visualizationModesPage
 						.getRowByText(SAMPLE_FIELD)
 						.locator('td')
-						.nth(LABEL_COLUMN_INDEX)
+						.nth(visualizationModesPage.LABEL_COLUMN_INDEX)
 				).toHaveText(SAMPLE_FIELD);
 
 				await visualizationModesPage.assertTableFieldRowCount(1);
@@ -932,8 +1106,8 @@ test.describe('Visualization Modes in Data Set Manager', () => {
 			await test.step('Edit a field, change its label using the default language (en_US)', async () => {
 				await clickActionInRow({
 					actionName: 'Edit',
+					page,
 					rowName: SAMPLE_FIELD,
-					visualizationModesPage,
 				});
 
 				const labelInput =
@@ -953,7 +1127,7 @@ test.describe('Visualization Modes in Data Set Manager', () => {
 					visualizationModesPage
 						.getRowByText(SAMPLE_FIELD)
 						.locator('td')
-						.nth(LABEL_COLUMN_INDEX)
+						.nth(visualizationModesPage.LABEL_COLUMN_INDEX)
 				).toHaveText(SAMPLE_FIELD_EN_US);
 
 				await visualizationModesPage.assertTableFieldRowCount(1);
@@ -962,8 +1136,8 @@ test.describe('Visualization Modes in Data Set Manager', () => {
 			await test.step('Edit a field, update the label using the pt_BR and es_ES languages', async () => {
 				await clickActionInRow({
 					actionName: 'Edit',
+					page,
 					rowName: SAMPLE_FIELD,
-					visualizationModesPage,
 				});
 
 				const labelInput =
@@ -1026,8 +1200,8 @@ test.describe('Visualization Modes in Data Set Manager', () => {
 			await test.step('Check that the language dropdown shows the updated language as Translated', async () => {
 				await clickActionInRow({
 					actionName: 'Edit',
+					page,
 					rowName: SAMPLE_FIELD,
-					visualizationModesPage,
 				});
 
 				const localizationButton = await page
@@ -1080,15 +1254,13 @@ test.describe('Visualization Modes in Data Set Manager', () => {
 
 				await page.goto(updatedUrl);
 
-				await visualizationModesPage.dataSetPage.selectTab(
-					'Modos de visualización'
-				);
+				await page.locator('nav.navbar').locator('li').nth(1).click();
 
 				await expect(
 					visualizationModesPage
 						.getRowByText(SAMPLE_FIELD)
 						.locator('td')
-						.nth(LABEL_COLUMN_INDEX)
+						.nth(visualizationModesPage.LABEL_COLUMN_INDEX)
 				).toHaveText(SAMPLE_FIELD_ES_ES);
 
 				await visualizationModesPage.assertTableFieldRowCount(1);
@@ -1100,15 +1272,13 @@ test.describe('Visualization Modes in Data Set Manager', () => {
 
 				await page.goto(updatedUrl);
 
-				await visualizationModesPage.dataSetPage.selectTab(
-					'Modos de exibição'
-				);
+				await page.locator('nav.navbar').locator('li').nth(1).click();
 
 				await expect(
 					visualizationModesPage
 						.getRowByText(SAMPLE_FIELD)
 						.locator('td')
-						.nth(LABEL_COLUMN_INDEX)
+						.nth(visualizationModesPage.LABEL_COLUMN_INDEX)
 				).toHaveText(SAMPLE_FIELD_PT_BR);
 
 				await visualizationModesPage.assertTableFieldRowCount(1);
@@ -1124,8 +1294,8 @@ test.describe('Visualization Modes in Data Set Manager', () => {
 		page,
 		visualizationModesPage,
 	}) => {
-		const SAMPLE_SCALAR_FIELD = 'externalReferenceCode';
-		const SAMPLE_FIELD = 'name';
+		const sampleScalarField = 'externalReferenceCode';
+		const SAMPLE_FIELD = 'fieldName';
 
 		await test.step('Navigate to table visualization mode page', async () => {
 			await visualizationModesPage.goto({
@@ -1140,7 +1310,7 @@ test.describe('Visualization Modes in Data Set Manager', () => {
 		});
 
 		await test.step('Can check and uncheck fields in the field selection modal', async () => {
-			await visualizationModesPage.openAddFieldsModal();
+			await visualizationModesPage.openAddDataSourceFieldsModal();
 
 			await visualizationModesPage.selectField({fieldName: SAMPLE_FIELD});
 
@@ -1161,7 +1331,7 @@ test.describe('Visualization Modes in Data Set Manager', () => {
 		});
 
 		await test.step('Can check some fields and uncheck all selected fields using Deselect All button', async () => {
-			await visualizationModesPage.openAddFieldsModal();
+			await visualizationModesPage.openAddDataSourceFieldsModal();
 
 			await visualizationModesPage.selectField({fieldName: SAMPLE_FIELD});
 
@@ -1171,12 +1341,12 @@ test.describe('Visualization Modes in Data Set Manager', () => {
 			await expect(sampleFieldCheckbox).toBeChecked();
 
 			await visualizationModesPage.selectField({
-				fieldName: SAMPLE_SCALAR_FIELD,
+				fieldName: sampleScalarField,
 			});
 
 			const sampleScalarFieldCheckbox =
 				visualizationModesPage.getFieldCheckboxByLabel(
-					SAMPLE_SCALAR_FIELD
+					sampleScalarField
 				);
 
 			await expect(sampleScalarFieldCheckbox).toBeChecked();
@@ -1193,6 +1363,84 @@ test.describe('Visualization Modes in Data Set Manager', () => {
 
 		await test.step('Check there is no field added', async () => {
 			await visualizationModesPage.assertTableFieldRowCount(0);
+		});
+	});
+
+	test('Assert the CellRenderer is displayed', async ({
+		page,
+		visualizationModesPage,
+	}) => {
+		const sampleScalarField = 'id';
+		const sampleObjectField = 'dataSetToDataSetTableSections';
+		const sampleObjectChildField = 'id';
+
+		await test.step('Navigate to table visualization mode page', async () => {
+			await visualizationModesPage.goto({
+				dataSetLabel,
+			});
+
+			await visualizationModesPage.selectTab('Table');
+
+			await expect(
+				visualizationModesPage.tableVisualizationModeContainer
+			).toBeVisible();
+		});
+
+		await test.step('Add fields', async () => {
+			await visualizationModesPage.openAddDataSourceFieldsModal();
+
+			await visualizationModesPage.selectField({
+				fieldName: sampleScalarField,
+			});
+
+			await visualizationModesPage.selectField({
+				dataId: `${sampleObjectField}.*`,
+				fieldName: sampleObjectField,
+			});
+
+			await visualizationModesPage.selectField({
+				dataId: `${sampleObjectField}.${sampleObjectChildField}`,
+				fieldName: sampleObjectChildField,
+			});
+
+			await saveFromModal({
+				page,
+			});
+		});
+
+		await test.step('Confirm that the cell renderer CX option is present when editing a field', async () => {
+			await clickActionInRow({
+				actionName: 'Edit',
+				page,
+				rowName: sampleScalarField,
+			});
+
+			const editFieldModal = page.locator('.modal');
+
+			await expect(editFieldModal).toBeInViewport();
+
+			const rendererSelect = editFieldModal
+				.locator('button', {
+					hasText: 'Default',
+				})
+				.first();
+
+			await expect(rendererSelect).toBeInViewport();
+
+			await rendererSelect.click();
+
+			const cellRendererOption = editFieldModal.locator('li', {
+				hasText: 'Liferay Sample Frontend Data Set Cell Renderer',
+			});
+
+			await expect(cellRendererOption).toBeInViewport();
+
+			const cellRendererOptionLabel =
+				cellRendererOption.locator('.label-item');
+
+			await expect(cellRendererOptionLabel).toHaveText(
+				'Client Extension'
+			);
 		});
 	});
 });

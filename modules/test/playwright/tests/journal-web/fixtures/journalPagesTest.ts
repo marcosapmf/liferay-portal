@@ -9,20 +9,24 @@ import {FriendlyUrlInstanceSettingsPage} from '../../../pages/friendly-url-web/F
 import {DisplayPageTemplatesPage} from '../../../pages/layout-page-template-admin-web/DisplayPageTemplatesPage';
 import {JournalEditArticlePage} from '../pages/JournalEditArticlePage';
 import {JournalEditArticleTranslationsPage} from '../pages/JournalEditArticleTranslationsPage';
+import {JournalEditFolderPage} from '../pages/JournalEditFolderPage';
 import {JournalEditStructureDefaultValuesPage} from '../pages/JournalEditStructureDefaultValuesPage';
 import {JournalEditStructurePage} from '../pages/JournalEditStructurePage';
 import {JournalEditTemplatePage} from '../pages/JournalEditTemplatePage';
 import {JournalPage} from '../pages/JournalPage';
+import {JournalStructuresPage} from '../pages/JournalStructuresPage';
 
 const journalPagesTest = test.extend<{
 	displayPageTemplatesPage: DisplayPageTemplatesPage;
 	friendlyUrlInstanceSettingsPage: FriendlyUrlInstanceSettingsPage;
 	journalEditArticlePage: JournalEditArticlePage;
 	journalEditArticleTranslationsPage: JournalEditArticleTranslationsPage;
+	journalEditFolderPage: JournalEditFolderPage;
 	journalEditStructureDefaultValuesPage: JournalEditStructureDefaultValuesPage;
 	journalEditStructurePage: JournalEditStructurePage;
 	journalEditTemplatePage: JournalEditTemplatePage;
 	journalPage: JournalPage;
+	journalStructuresPage: JournalStructuresPage;
 }>({
 	displayPageTemplatesPage: async ({page}, use) => {
 		await use(new DisplayPageTemplatesPage(page));
@@ -36,6 +40,9 @@ const journalPagesTest = test.extend<{
 	journalEditArticleTranslationsPage: async ({page}, use) => {
 		await use(new JournalEditArticleTranslationsPage(page));
 	},
+	journalEditFolderPage: async ({page}, use) => {
+		await use(new JournalEditFolderPage(page));
+	},
 	journalEditStructureDefaultValuesPage: async ({page}, use) => {
 		await use(new JournalEditStructureDefaultValuesPage(page));
 	},
@@ -47,6 +54,9 @@ const journalPagesTest = test.extend<{
 	},
 	journalPage: async ({page}, use) => {
 		await use(new JournalPage(page));
+	},
+	journalStructuresPage: async ({page}, use) => {
+		await use(new JournalStructuresPage(page));
 	},
 });
 

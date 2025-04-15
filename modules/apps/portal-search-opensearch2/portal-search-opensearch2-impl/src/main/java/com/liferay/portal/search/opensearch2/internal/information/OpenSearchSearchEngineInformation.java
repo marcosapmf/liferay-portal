@@ -58,22 +58,7 @@ public class OpenSearchSearchEngineInformation
 
 	@Override
 	public String getClientVersionString() {
-		Version version = Version.VERSION;
-
-		StringBundler sb = new StringBundler(6);
-
-		sb.append(version.major());
-		sb.append(".");
-		sb.append(version.minor());
-
-		if (version.maintenance() != -1) {
-			sb.append(".");
-			sb.append(version.maintenance());
-		}
-
-		sb.append(".LIFERAY_PATCHED");
-
-		return sb.toString();
+		return Version.VERSION.toString();
 	}
 
 	@Override
@@ -127,6 +112,11 @@ public class OpenSearchSearchEngineInformation
 		}
 
 		return connectionInformationList;
+	}
+
+	@Override
+	public int[] getEmbeddingVectorDimensions() {
+		return new int[] {256, 384, 512, 768, 1024, 1536, 2048, 3072, 4096};
 	}
 
 	@Override

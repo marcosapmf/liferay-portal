@@ -34,7 +34,6 @@ import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.SetUtil;
-import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.uuid.PortalUUIDUtil;
 import com.liferay.portal.model.impl.PasswordPolicyImpl;
@@ -44,7 +43,6 @@ import java.io.Serializable;
 
 import java.lang.reflect.InvocationHandler;
 
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -2946,245 +2944,7 @@ public class PasswordPolicyPersistenceImpl
 	private static final String _FINDER_COLUMN_COMPANYID_COMPANYID_2 =
 		"passwordPolicy.companyId = ?";
 
-	private FinderPath _finderPathFetchByC_DP;
-	private FinderPath _finderPathCountByC_DP;
-
-	/**
-	 * Returns the password policy where companyId = &#63; and defaultPolicy = &#63; or throws a <code>NoSuchPasswordPolicyException</code> if it could not be found.
-	 *
-	 * @param companyId the company ID
-	 * @param defaultPolicy the default policy
-	 * @return the matching password policy
-	 * @throws NoSuchPasswordPolicyException if a matching password policy could not be found
-	 */
-	@Override
-	public PasswordPolicy findByC_DP(long companyId, boolean defaultPolicy)
-		throws NoSuchPasswordPolicyException {
-
-		PasswordPolicy passwordPolicy = fetchByC_DP(companyId, defaultPolicy);
-
-		if (passwordPolicy == null) {
-			StringBundler sb = new StringBundler(6);
-
-			sb.append(_NO_SUCH_ENTITY_WITH_KEY);
-
-			sb.append("companyId=");
-			sb.append(companyId);
-
-			sb.append(", defaultPolicy=");
-			sb.append(defaultPolicy);
-
-			sb.append("}");
-
-			if (_log.isDebugEnabled()) {
-				_log.debug(sb.toString());
-			}
-
-			throw new NoSuchPasswordPolicyException(sb.toString());
-		}
-
-		return passwordPolicy;
-	}
-
-	/**
-	 * Returns the password policy where companyId = &#63; and defaultPolicy = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
-	 *
-	 * @param companyId the company ID
-	 * @param defaultPolicy the default policy
-	 * @return the matching password policy, or <code>null</code> if a matching password policy could not be found
-	 */
-	@Override
-	public PasswordPolicy fetchByC_DP(long companyId, boolean defaultPolicy) {
-		return fetchByC_DP(companyId, defaultPolicy, true);
-	}
-
-	/**
-	 * Returns the password policy where companyId = &#63; and defaultPolicy = &#63; or returns <code>null</code> if it could not be found, optionally using the finder cache.
-	 *
-	 * @param companyId the company ID
-	 * @param defaultPolicy the default policy
-	 * @param useFinderCache whether to use the finder cache
-	 * @return the matching password policy, or <code>null</code> if a matching password policy could not be found
-	 */
-	@Override
-	public PasswordPolicy fetchByC_DP(
-		long companyId, boolean defaultPolicy, boolean useFinderCache) {
-
-		Object[] finderArgs = null;
-
-		if (useFinderCache) {
-			finderArgs = new Object[] {companyId, defaultPolicy};
-		}
-
-		Object result = null;
-
-		if (useFinderCache) {
-			result = FinderCacheUtil.getResult(
-				_finderPathFetchByC_DP, finderArgs, this);
-		}
-
-		if (result instanceof PasswordPolicy) {
-			PasswordPolicy passwordPolicy = (PasswordPolicy)result;
-
-			if ((companyId != passwordPolicy.getCompanyId()) ||
-				(defaultPolicy != passwordPolicy.isDefaultPolicy())) {
-
-				result = null;
-			}
-		}
-
-		if (result == null) {
-			StringBundler sb = new StringBundler(4);
-
-			sb.append(_SQL_SELECT_PASSWORDPOLICY_WHERE);
-
-			sb.append(_FINDER_COLUMN_C_DP_COMPANYID_2);
-
-			sb.append(_FINDER_COLUMN_C_DP_DEFAULTPOLICY_2);
-
-			String sql = sb.toString();
-
-			Session session = null;
-
-			try {
-				session = openSession();
-
-				Query query = session.createQuery(sql);
-
-				QueryPos queryPos = QueryPos.getInstance(query);
-
-				queryPos.add(companyId);
-
-				queryPos.add(defaultPolicy);
-
-				List<PasswordPolicy> list = query.list();
-
-				if (list.isEmpty()) {
-					if (useFinderCache) {
-						FinderCacheUtil.putResult(
-							_finderPathFetchByC_DP, finderArgs, list);
-					}
-				}
-				else {
-					if (list.size() > 1) {
-						Collections.sort(list, Collections.reverseOrder());
-
-						if (_log.isWarnEnabled()) {
-							if (!useFinderCache) {
-								finderArgs = new Object[] {
-									companyId, defaultPolicy
-								};
-							}
-
-							_log.warn(
-								"PasswordPolicyPersistenceImpl.fetchByC_DP(long, boolean, boolean) with parameters (" +
-									StringUtil.merge(finderArgs) +
-										") yields a result set with more than 1 result. This violates the logical unique restriction. There is no order guarantee on which result is returned by this finder.");
-						}
-					}
-
-					PasswordPolicy passwordPolicy = list.get(0);
-
-					result = passwordPolicy;
-
-					cacheResult(passwordPolicy);
-				}
-			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
-		}
-
-		if (result instanceof List<?>) {
-			return null;
-		}
-		else {
-			return (PasswordPolicy)result;
-		}
-	}
-
-	/**
-	 * Removes the password policy where companyId = &#63; and defaultPolicy = &#63; from the database.
-	 *
-	 * @param companyId the company ID
-	 * @param defaultPolicy the default policy
-	 * @return the password policy that was removed
-	 */
-	@Override
-	public PasswordPolicy removeByC_DP(long companyId, boolean defaultPolicy)
-		throws NoSuchPasswordPolicyException {
-
-		PasswordPolicy passwordPolicy = findByC_DP(companyId, defaultPolicy);
-
-		return remove(passwordPolicy);
-	}
-
-	/**
-	 * Returns the number of password policies where companyId = &#63; and defaultPolicy = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @param defaultPolicy the default policy
-	 * @return the number of matching password policies
-	 */
-	@Override
-	public int countByC_DP(long companyId, boolean defaultPolicy) {
-		FinderPath finderPath = _finderPathCountByC_DP;
-
-		Object[] finderArgs = new Object[] {companyId, defaultPolicy};
-
-		Long count = (Long)FinderCacheUtil.getResult(
-			finderPath, finderArgs, this);
-
-		if (count == null) {
-			StringBundler sb = new StringBundler(3);
-
-			sb.append(_SQL_COUNT_PASSWORDPOLICY_WHERE);
-
-			sb.append(_FINDER_COLUMN_C_DP_COMPANYID_2);
-
-			sb.append(_FINDER_COLUMN_C_DP_DEFAULTPOLICY_2);
-
-			String sql = sb.toString();
-
-			Session session = null;
-
-			try {
-				session = openSession();
-
-				Query query = session.createQuery(sql);
-
-				QueryPos queryPos = QueryPos.getInstance(query);
-
-				queryPos.add(companyId);
-
-				queryPos.add(defaultPolicy);
-
-				count = (Long)query.uniqueResult();
-
-				FinderCacheUtil.putResult(finderPath, finderArgs, count);
-			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
-		}
-
-		return count.intValue();
-	}
-
-	private static final String _FINDER_COLUMN_C_DP_COMPANYID_2 =
-		"passwordPolicy.companyId = ? AND ";
-
-	private static final String _FINDER_COLUMN_C_DP_DEFAULTPOLICY_2 =
-		"passwordPolicy.defaultPolicy = ?";
-
 	private FinderPath _finderPathFetchByC_N;
-	private FinderPath _finderPathCountByC_N;
 
 	/**
 	 * Returns the password policy where companyId = &#63; and name = &#63; or throws a <code>NoSuchPasswordPolicyException</code> if it could not be found.
@@ -3364,63 +3124,13 @@ public class PasswordPolicyPersistenceImpl
 	 */
 	@Override
 	public int countByC_N(long companyId, String name) {
-		name = Objects.toString(name, "");
+		PasswordPolicy passwordPolicy = fetchByC_N(companyId, name);
 
-		FinderPath finderPath = _finderPathCountByC_N;
-
-		Object[] finderArgs = new Object[] {companyId, name};
-
-		Long count = (Long)FinderCacheUtil.getResult(
-			finderPath, finderArgs, this);
-
-		if (count == null) {
-			StringBundler sb = new StringBundler(3);
-
-			sb.append(_SQL_COUNT_PASSWORDPOLICY_WHERE);
-
-			sb.append(_FINDER_COLUMN_C_N_COMPANYID_2);
-
-			boolean bindName = false;
-
-			if (name.isEmpty()) {
-				sb.append(_FINDER_COLUMN_C_N_NAME_3);
-			}
-			else {
-				bindName = true;
-
-				sb.append(_FINDER_COLUMN_C_N_NAME_2);
-			}
-
-			String sql = sb.toString();
-
-			Session session = null;
-
-			try {
-				session = openSession();
-
-				Query query = session.createQuery(sql);
-
-				QueryPos queryPos = QueryPos.getInstance(query);
-
-				queryPos.add(companyId);
-
-				if (bindName) {
-					queryPos.add(name);
-				}
-
-				count = (Long)query.uniqueResult();
-
-				FinderCacheUtil.putResult(finderPath, finderArgs, count);
-			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
+		if (passwordPolicy == null) {
+			return 0;
 		}
 
-		return count.intValue();
+		return 1;
 	}
 
 	private static final String _FINDER_COLUMN_C_N_COMPANYID_2 =
@@ -3456,13 +3166,6 @@ public class PasswordPolicyPersistenceImpl
 	public void cacheResult(PasswordPolicy passwordPolicy) {
 		EntityCacheUtil.putResult(
 			PasswordPolicyImpl.class, passwordPolicy.getPrimaryKey(),
-			passwordPolicy);
-
-		FinderCacheUtil.putResult(
-			_finderPathFetchByC_DP,
-			new Object[] {
-				passwordPolicy.getCompanyId(), passwordPolicy.isDefaultPolicy()
-			},
 			passwordPolicy);
 
 		FinderCacheUtil.putResult(
@@ -3548,20 +3251,9 @@ public class PasswordPolicyPersistenceImpl
 
 		Object[] args = new Object[] {
 			passwordPolicyModelImpl.getCompanyId(),
-			passwordPolicyModelImpl.isDefaultPolicy()
-		};
-
-		FinderCacheUtil.putResult(
-			_finderPathCountByC_DP, args, Long.valueOf(1));
-		FinderCacheUtil.putResult(
-			_finderPathFetchByC_DP, args, passwordPolicyModelImpl);
-
-		args = new Object[] {
-			passwordPolicyModelImpl.getCompanyId(),
 			passwordPolicyModelImpl.getName()
 		};
 
-		FinderCacheUtil.putResult(_finderPathCountByC_N, args, Long.valueOf(1));
 		FinderCacheUtil.putResult(
 			_finderPathFetchByC_N, args, passwordPolicyModelImpl);
 	}
@@ -4091,25 +3783,10 @@ public class PasswordPolicyPersistenceImpl
 			new String[] {Long.class.getName()}, new String[] {"companyId"},
 			false);
 
-		_finderPathFetchByC_DP = new FinderPath(
-			FINDER_CLASS_NAME_ENTITY, "fetchByC_DP",
-			new String[] {Long.class.getName(), Boolean.class.getName()},
-			new String[] {"companyId", "defaultPolicy"}, true);
-
-		_finderPathCountByC_DP = new FinderPath(
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByC_DP",
-			new String[] {Long.class.getName(), Boolean.class.getName()},
-			new String[] {"companyId", "defaultPolicy"}, false);
-
 		_finderPathFetchByC_N = new FinderPath(
 			FINDER_CLASS_NAME_ENTITY, "fetchByC_N",
 			new String[] {Long.class.getName(), String.class.getName()},
 			new String[] {"companyId", "name"}, true);
-
-		_finderPathCountByC_N = new FinderPath(
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByC_N",
-			new String[] {Long.class.getName(), String.class.getName()},
-			new String[] {"companyId", "name"}, false);
 
 		PasswordPolicyUtil.setPersistence(this);
 	}

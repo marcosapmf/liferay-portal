@@ -6,6 +6,7 @@
 package com.liferay.layout.internal.importer.structure.util;
 
 import com.liferay.headless.delivery.dto.v1_0.ContextReference;
+import com.liferay.headless.delivery.dto.v1_0.LocalizationConfig;
 import com.liferay.headless.delivery.dto.v1_0.MessageFormSubmissionResult;
 import com.liferay.headless.delivery.dto.v1_0.PageElement;
 import com.liferay.layout.converter.AlignConverter;
@@ -13,6 +14,8 @@ import com.liferay.layout.converter.ContentDisplayConverter;
 import com.liferay.layout.converter.FlexWrapConverter;
 import com.liferay.layout.converter.JustifyConverter;
 import com.liferay.layout.internal.importer.LayoutStructureItemImporterContext;
+import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
+import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalService;
 import com.liferay.layout.util.structure.FormStyledLayoutStructureItem;
 import com.liferay.layout.util.structure.LayoutStructure;
 import com.liferay.layout.util.structure.LayoutStructureItem;
@@ -20,6 +23,8 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
+import com.liferay.portal.kernel.model.Layout;
+import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
@@ -97,6 +102,17 @@ public class FormLayoutStructureItemImporter
 					ContextReference.ContextSource.DISPLAY_PAGE_ITEM.getValue(),
 					(String)itemReferenceMap.get("contextSource"))) {
 
+				LayoutPageTemplateEntry layoutPageTemplateEntry =
+					_getLayoutPageTemplateEntry(
+						layoutStructureItemImporterContext);
+
+				if (layoutPageTemplateEntry != null) {
+					formStyledLayoutStructureItem.setClassNameId(
+						layoutPageTemplateEntry.getClassNameId());
+					formStyledLayoutStructureItem.setClassTypeId(
+						layoutPageTemplateEntry.getClassTypeId());
+				}
+
 				formStyledLayoutStructureItem.setFormConfig(
 					FormStyledLayoutStructureItem.
 						FORM_CONFIG_DISPLAY_PAGE_ITEM_TYPE);
@@ -119,6 +135,14 @@ public class FormLayoutStructureItemImporter
 			if (sourceMap.containsKey("formType")) {
 				formStyledLayoutStructureItem.setFormType(
 					(String)sourceMap.get("formType"));
+			}
+
+			JSONObject localizationConfigJSONObject =
+				_getLocalizationConfigJSONObject(sourceMap);
+
+			if (localizationConfigJSONObject != null) {
+				formStyledLayoutStructureItem.setLocalizationConfigJSONObject(
+					localizationConfigJSONObject);
 			}
 
 			if (sourceMap.containsKey("numberOfSteps")) {
@@ -224,6 +248,79 @@ public class FormLayoutStructureItemImporter
 		return PageElement.Type.FORM;
 	}
 
+	private LayoutPageTemplateEntry _getLayoutPageTemplateEntry(
+		LayoutStructureItemImporterContext layoutStructureItemImporterContext) {
+
+		Layout layout = layoutStructureItemImporterContext.getLayout();
+
+		if (!layout.isTypeAssetDisplay()) {
+			return null;
+		}
+
+		if (layout.isDraftLayout()) {
+			LayoutLocalService layoutLocalService =
+				layoutStructureItemImporterContext.getLayoutLocalService();
+
+			layout = layoutLocalService.fetchLayout(layout.getClassPK());
+		}
+
+		if (layout == null) {
+			return null;
+		}
+
+		LayoutPageTemplateEntryLocalService
+			layoutPageTemplateEntryLocalService =
+				layoutStructureItemImporterContext.
+					getLayoutPageTemplateEntryLocalService();
+
+		return layoutPageTemplateEntryLocalService.
+			fetchLayoutPageTemplateEntryByPlid(layout.getPlid());
+	}
+
+	private JSONObject _getLocalizationConfigJSONObject(
+		Map<String, Object> sourceMap) {
+
+		Map<String, Object> localizationConfigResultMap =
+			(Map<String, Object>)sourceMap.get("localizationConfig");
+
+		if (MapUtil.isEmpty(localizationConfigResultMap)) {
+			return null;
+		}
+
+		return JSONUtil.put(
+			"unlocalizedFieldsMessage",
+			() -> {
+				if (!localizationConfigResultMap.containsKey(
+						"unlocalizedFieldsMessage")) {
+
+					return null;
+				}
+
+				return _getLocalizedValuesJSONObject(
+					"unlocalizedFieldsMessage", localizationConfigResultMap);
+			}
+		).put(
+			"unlocalizedFieldsState",
+			() -> {
+				if (!localizationConfigResultMap.containsKey(
+						"unlocalizedFieldsState")) {
+
+					return null;
+				}
+
+				if (Objects.equals(
+						localizationConfigResultMap.get(
+							"unlocalizedFieldsState"),
+						LocalizationConfig.UnlocalizedFieldsState.DISABLED)) {
+
+					return "disabled";
+				}
+
+				return "read-only";
+			}
+		);
+	}
+
 	private JSONObject _getLocalizedValuesJSONObject(
 		String key, Map<String, Object> propertiesMap) {
 
@@ -290,15 +387,15 @@ public class FormLayoutStructureItemImporter
 				).put(
 					"showNotification",
 					() -> {
-						if (formSuccessSubmissionResultMap.containsKey(
+						if (!formSuccessSubmissionResultMap.containsKey(
 								"showNotification")) {
 
-							return GetterUtil.getBoolean(
-								formSuccessSubmissionResultMap.get(
-									"showNotification"));
+							return null;
 						}
 
-						return null;
+						return GetterUtil.getBoolean(
+							formSuccessSubmissionResultMap.get(
+								"showNotification"));
 					}
 				).put(
 					"type", "none"

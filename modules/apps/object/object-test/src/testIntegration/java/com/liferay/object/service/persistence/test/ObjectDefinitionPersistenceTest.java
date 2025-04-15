@@ -151,16 +151,17 @@ public class ObjectDefinitionPersistenceTest {
 
 		newObjectDefinition.setActive(RandomTestUtil.randomBoolean());
 
-		newObjectDefinition.setDBTableName(RandomTestUtil.randomString());
-
-		newObjectDefinition.setLabel(RandomTestUtil.randomString());
-
 		newObjectDefinition.setClassName(RandomTestUtil.randomString());
+
+		newObjectDefinition.setDBTableName(RandomTestUtil.randomString());
 
 		newObjectDefinition.setEnableCategorization(
 			RandomTestUtil.randomBoolean());
 
 		newObjectDefinition.setEnableComments(RandomTestUtil.randomBoolean());
+
+		newObjectDefinition.setEnableFriendlyURLCustomization(
+			RandomTestUtil.randomBoolean());
 
 		newObjectDefinition.setEnableIndexSearch(
 			RandomTestUtil.randomBoolean());
@@ -173,6 +174,11 @@ public class ObjectDefinitionPersistenceTest {
 
 		newObjectDefinition.setEnableObjectEntryHistory(
 			RandomTestUtil.randomBoolean());
+
+		newObjectDefinition.setEnableObjectEntryVersioning(
+			RandomTestUtil.randomBoolean());
+
+		newObjectDefinition.setLabel(RandomTestUtil.randomString());
 
 		newObjectDefinition.setModifiable(RandomTestUtil.randomBoolean());
 
@@ -254,20 +260,20 @@ public class ObjectDefinitionPersistenceTest {
 			existingObjectDefinition.isActive(),
 			newObjectDefinition.isActive());
 		Assert.assertEquals(
-			existingObjectDefinition.getDBTableName(),
-			newObjectDefinition.getDBTableName());
-		Assert.assertEquals(
-			existingObjectDefinition.getLabel(),
-			newObjectDefinition.getLabel());
-		Assert.assertEquals(
 			existingObjectDefinition.getClassName(),
 			newObjectDefinition.getClassName());
+		Assert.assertEquals(
+			existingObjectDefinition.getDBTableName(),
+			newObjectDefinition.getDBTableName());
 		Assert.assertEquals(
 			existingObjectDefinition.isEnableCategorization(),
 			newObjectDefinition.isEnableCategorization());
 		Assert.assertEquals(
 			existingObjectDefinition.isEnableComments(),
 			newObjectDefinition.isEnableComments());
+		Assert.assertEquals(
+			existingObjectDefinition.isEnableFriendlyURLCustomization(),
+			newObjectDefinition.isEnableFriendlyURLCustomization());
 		Assert.assertEquals(
 			existingObjectDefinition.isEnableIndexSearch(),
 			newObjectDefinition.isEnableIndexSearch());
@@ -280,6 +286,12 @@ public class ObjectDefinitionPersistenceTest {
 		Assert.assertEquals(
 			existingObjectDefinition.isEnableObjectEntryHistory(),
 			newObjectDefinition.isEnableObjectEntryHistory());
+		Assert.assertEquals(
+			existingObjectDefinition.isEnableObjectEntryVersioning(),
+			newObjectDefinition.isEnableObjectEntryVersioning());
+		Assert.assertEquals(
+			existingObjectDefinition.getLabel(),
+			newObjectDefinition.getLabel());
 		Assert.assertEquals(
 			existingObjectDefinition.isModifiable(),
 			newObjectDefinition.isModifiable());
@@ -471,6 +483,31 @@ public class ObjectDefinitionPersistenceTest {
 	}
 
 	@Test
+	public void testCountByC_OFI_A_E_S_S() throws Exception {
+		_persistence.countByC_OFI_A_E_S_S(
+			RandomTestUtil.nextLong(), RandomTestUtil.nextLong(),
+			RandomTestUtil.randomBoolean(), RandomTestUtil.randomBoolean(), "",
+			RandomTestUtil.nextInt());
+
+		_persistence.countByC_OFI_A_E_S_S(
+			0L, 0L, RandomTestUtil.randomBoolean(),
+			RandomTestUtil.randomBoolean(), "null", 0);
+
+		_persistence.countByC_OFI_A_E_S_S(
+			0L, 0L, RandomTestUtil.randomBoolean(),
+			RandomTestUtil.randomBoolean(), (String)null, 0);
+	}
+
+	@Test
+	public void testCountByC_OFI_A_E_S_SArrayable() throws Exception {
+		_persistence.countByC_OFI_A_E_S_S(
+			RandomTestUtil.nextLong(),
+			new long[] {RandomTestUtil.nextLong(), 0L},
+			RandomTestUtil.randomBoolean(), RandomTestUtil.randomBoolean(),
+			RandomTestUtil.randomString(), RandomTestUtil.nextInt());
+	}
+
+	@Test
 	public void testCountByERC_C() throws Exception {
 		_persistence.countByERC_C("", RandomTestUtil.nextLong());
 
@@ -510,11 +547,12 @@ public class ObjectDefinitionPersistenceTest {
 			true, "modifiedDate", true, "accountEntryRestrictedObjectFieldId",
 			true, "descriptionObjectFieldId", true, "objectFolderId", true,
 			"rootObjectDefinitionId", true, "titleObjectFieldId", true,
-			"accountEntryRestricted", true, "active", true, "dbTableName", true,
-			"label", true, "className", true, "enableCategorization", true,
-			"enableComments", true, "enableIndexSearch", true,
-			"enableLocalization", true, "enableObjectEntryDraft", true,
-			"enableObjectEntryHistory", true, "modifiable", true, "name", true,
+			"accountEntryRestricted", true, "active", true, "className", true,
+			"dbTableName", true, "enableCategorization", true, "enableComments",
+			true, "enableFriendlyURLCustomization", true, "enableIndexSearch",
+			true, "enableLocalization", true, "enableObjectEntryDraft", true,
+			"enableObjectEntryHistory", true, "enableObjectEntryVersioning",
+			true, "label", true, "modifiable", true, "name", true,
 			"panelAppOrder", true, "panelCategoryKey", true,
 			"pkObjectFieldDBColumnName", true, "pkObjectFieldName", true,
 			"pluralLabel", true, "portlet", true, "scope", true, "storageType",
@@ -862,16 +900,17 @@ public class ObjectDefinitionPersistenceTest {
 
 		objectDefinition.setActive(RandomTestUtil.randomBoolean());
 
-		objectDefinition.setDBTableName(RandomTestUtil.randomString());
-
-		objectDefinition.setLabel(RandomTestUtil.randomString());
-
 		objectDefinition.setClassName(RandomTestUtil.randomString());
+
+		objectDefinition.setDBTableName(RandomTestUtil.randomString());
 
 		objectDefinition.setEnableCategorization(
 			RandomTestUtil.randomBoolean());
 
 		objectDefinition.setEnableComments(RandomTestUtil.randomBoolean());
+
+		objectDefinition.setEnableFriendlyURLCustomization(
+			RandomTestUtil.randomBoolean());
 
 		objectDefinition.setEnableIndexSearch(RandomTestUtil.randomBoolean());
 
@@ -882,6 +921,11 @@ public class ObjectDefinitionPersistenceTest {
 
 		objectDefinition.setEnableObjectEntryHistory(
 			RandomTestUtil.randomBoolean());
+
+		objectDefinition.setEnableObjectEntryVersioning(
+			RandomTestUtil.randomBoolean());
+
+		objectDefinition.setLabel(RandomTestUtil.randomString());
 
 		objectDefinition.setModifiable(RandomTestUtil.randomBoolean());
 

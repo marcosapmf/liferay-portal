@@ -6,11 +6,17 @@
 package com.liferay.change.tracking.web.internal.portlet.action;
 
 import com.liferay.change.tracking.constants.CTPortletKeys;
+import com.liferay.change.tracking.model.CTEntry;
 import com.liferay.change.tracking.service.CTCollectionService;
+import com.liferay.change.tracking.service.CTEntryLocalService;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.util.ParamUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
@@ -37,13 +43,28 @@ public class DiscardChangesMVCActionCommand extends BaseMVCActionCommand {
 
 		long ctCollectionId = ParamUtil.getLong(
 			actionRequest, "ctCollectionId");
-
+		long[] ctEntryIds = StringUtil.split(
+			ParamUtil.getString(actionRequest, "ctEntryIds"), 0L);
 		long modelClassNameId = ParamUtil.getLong(
 			actionRequest, "modelClassNameId");
 		long modelClassPK = ParamUtil.getLong(actionRequest, "modelClassPK");
 
-		_ctCollectionService.discardCTEntry(
-			ctCollectionId, modelClassNameId, modelClassPK);
+		List<CTEntry> ctEntries = new ArrayList<>();
+
+		if ((modelClassNameId > 0) && (modelClassPK > 0)) {
+			CTEntry ctEntry = _ctEntryLocalService.fetchCTEntry(
+				ctCollectionId, modelClassNameId, modelClassPK);
+
+			ctEntries.add(ctEntry);
+		}
+
+		for (long ctEntryId : ctEntryIds) {
+			CTEntry ctEntry = _ctEntryLocalService.fetchCTEntry(ctEntryId);
+
+			ctEntries.add(ctEntry);
+		}
+
+		_ctCollectionService.discardCTEntry(ctCollectionId, ctEntries);
 
 		String redirect = ParamUtil.getString(actionRequest, "redirect");
 
@@ -54,5 +75,8 @@ public class DiscardChangesMVCActionCommand extends BaseMVCActionCommand {
 
 	@Reference
 	private CTCollectionService _ctCollectionService;
+
+	@Reference
+	private CTEntryLocalService _ctEntryLocalService;
 
 }

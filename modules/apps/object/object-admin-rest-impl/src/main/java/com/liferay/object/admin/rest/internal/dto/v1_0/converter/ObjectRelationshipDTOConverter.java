@@ -65,7 +65,10 @@ public class ObjectRelationshipDTOConverter
 						serviceBuilderObjectRelationship.getDeletionType()));
 				setEdge(
 					() -> {
-						if (!FeatureFlagManagerUtil.isEnabled("LPS-187142")) {
+						if (!FeatureFlagManagerUtil.isEnabled(
+								serviceBuilderObjectRelationship.getCompanyId(),
+								"LPD-34594")) {
+
 							return null;
 						}
 
@@ -97,6 +100,7 @@ public class ObjectRelationshipDTOConverter
 							getObjectDefinitionId2());
 				setObjectDefinitionModifiable2(objectDefinition2::isModifiable);
 				setObjectDefinitionName2(objectDefinition2::getShortName);
+				setObjectDefinitionScope2(objectDefinition2::getScope);
 				setObjectDefinitionSystem2(objectDefinition2::isSystem);
 				setObjectField(
 					() -> {

@@ -5,10 +5,11 @@
 
 import {FrameLocator, Locator, Page} from '@playwright/test';
 
-import {CommerceLayoutsPage} from '../commerceLayoutsPage';
+import {CommerceDNDTablePage} from '../commerceDNDTablePage';
+import {CommerceLayoutsPage} from './commerceLayoutsPage';
 
-export class PlacedOrdersPage {
-	readonly billingAddress: Locator;
+export class PlacedOrdersPage extends CommerceDNDTablePage {
+	readonly commerceBillingAddress: Locator;
 	readonly configurationIFrame: FrameLocator;
 	readonly configurationIFrameSaveButton: Locator;
 	readonly configurationIFrameShowFullAddressToggle: Locator;
@@ -17,19 +18,32 @@ export class PlacedOrdersPage {
 	readonly layoutsPage: CommerceLayoutsPage;
 	readonly optionsButton: Locator;
 	readonly orderAccountName: (accountName: string) => Locator;
+	readonly orderCell: (orderId: string) => Locator;
+	readonly orderColumn: (rowIndex: number, rowColumn: number) => Locator;
+	readonly orderDateSortButton: Locator;
 	readonly orderItemActionsButton: Locator;
 	readonly orderItemActionsButtonEdit: Locator;
 	readonly page: Page;
 	readonly pageLabel: Locator;
 	readonly pageTitle: Locator;
 	readonly panelList: Locator;
+	readonly placedOrdersTable: Locator;
+	readonly placedOrderTableOrderDate: (orderDate: string) => Locator;
+	readonly placedOrderTableViewButton: Locator;
 	readonly searchButton: Locator;
 	readonly searchInput: Locator;
-	readonly shippingAddress: Locator;
+	readonly commerceShippingAddress: Locator;
 	readonly viewButton: Locator;
 
 	constructor(page: Page) {
-		this.billingAddress = page.getByTestId('commerceBillingAddress');
+		super(
+			page,
+			'#portlet_com_liferay_commerce_order_content_web_internal_portlet_CommerceOrderContentPortlet .fds table'
+		);
+
+		this.commerceBillingAddress = page.getByTestId(
+			'commerceBillingAddress'
+		);
 		this.configurationIFrame = page.frameLocator(
 			'iframe[id="modalIframe"]'
 		);
@@ -54,6 +68,12 @@ export class PlacedOrdersPage {
 			.getByLabel('Options');
 		this.orderAccountName = (accountName: string) =>
 			page.getByText(accountName);
+		this.orderCell = (orderId) => page.getByRole('cell', {name: orderId});
+		this.orderColumn = (rowIndex, colIndex) =>
+			page.getByRole('row').nth(rowIndex).locator('td').nth(colIndex);
+		this.orderDateSortButton = page
+			.getByRole('columnheader', {name: 'Order Date'})
+			.getByRole('button');
 		this.orderItemActionsButton = page.getByRole('button', {
 			name: 'Actions',
 		});
@@ -70,9 +90,18 @@ export class PlacedOrdersPage {
 		this.panelList = page
 			.getByTestId('specificationFacetPanel')
 			.getByRole('button');
+		this.placedOrdersTable = page.locator(
+			'#portlet_com_liferay_commerce_order_content_web_internal_portlet_CommerceOrderContentPortlet .fds table'
+		);
+		this.placedOrderTableOrderDate = (orderDate) =>
+			this.placedOrdersTable.getByText(orderDate);
+		this.placedOrderTableViewButton =
+			this.placedOrdersTable.getByLabel('View');
 		this.searchButton = page.getByRole('button', {name: 'Search'});
 		this.searchInput = page.getByPlaceholder('Search');
-		this.shippingAddress = page.getByTestId('commerceShippingAddress');
+		this.commerceShippingAddress = page.getByTestId(
+			'commerceShippingAddress'
+		);
 		this.viewButton = page.getByLabel('View');
 	}
 

@@ -15,8 +15,6 @@ import com.liferay.change.tracking.rest.resource.v1_0.CTProcessResource;
 import com.liferay.change.tracking.rest.resource.v1_0.CTRemoteResource;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.function.UnsafeFunction;
-import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
@@ -33,6 +31,8 @@ import javax.annotation.Generated;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
+import javax.validation.constraints.NotEmpty;
 
 import javax.ws.rs.core.UriInfo;
 
@@ -158,25 +158,6 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {cTCollectionsHistory(classNameId: ___, classPK: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
-	 */
-	@GraphQLField
-	public CTCollectionPage cTCollectionsHistory(
-			@GraphQLName("classNameId") Integer classNameId,
-			@GraphQLName("classPK") Integer classPK)
-		throws Exception {
-
-		return _applyComponentServiceObjects(
-			_ctCollectionResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			ctCollectionResource -> new CTCollectionPage(
-				ctCollectionResource.getCTCollectionsHistoryPage(
-					classNameId, classPK)));
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
 	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {cTCollection(ctCollectionId: ___){actions, dateCreated, dateModified, dateScheduled, description, externalReferenceCode, id, name, ownerName, status, statusMessage}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField
@@ -221,7 +202,7 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {ctCollectionCTEntryByModelClassNameByModelClassPkModelClassPK(ctCollectionId: ___, modelClassNameId: ___, modelClassPK: ___){actions, changeType, ctCollectionId, dateCreated, dateModified, hideable, id, modelClassNameId, modelClassPK, ownerId, ownerName, siteId, siteName, status, title, typeName}}"}' -u 'test@liferay.com:test'
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {ctCollectionCTEntryByModelClassNameByModelClassPkModelClassPK(ctCollectionId: ___, modelClassNameId: ___, modelClassPK: ___){actions, changeType, ctCollectionId, ctCollectionName, ctCollectionStatus, ctCollectionStatusDate, ctCollectionStatusUserName, dateCreated, dateModified, hideable, id, modelClassNameId, modelClassPK, ownerId, ownerName, siteId, siteName, status, statusMessage, title, typeName}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField
 	public CTEntry
@@ -243,7 +224,35 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {cTEntry(ctEntryId: ___){actions, changeType, ctCollectionId, dateCreated, dateModified, hideable, id, modelClassNameId, modelClassPK, ownerId, ownerName, siteId, siteName, status, title, typeName}}"}' -u 'test@liferay.com:test'
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {cTEntriesHistory(classNameId: ___, classPK: ___, filter: ___, page: ___, pageSize: ___, search: ___, siteKey: ___, sorts: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
+	 */
+	@GraphQLField
+	public CTEntryPage cTEntriesHistory(
+			@GraphQLName("classNameId") Long classNameId,
+			@GraphQLName("classPK") Long classPK,
+			@GraphQLName("search") String search,
+			@GraphQLName("siteKey") @NotEmpty String siteKey,
+			@GraphQLName("filter") String filterString,
+			@GraphQLName("pageSize") int pageSize,
+			@GraphQLName("page") int page,
+			@GraphQLName("sort") String sortsString)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_ctEntryResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			ctEntryResource -> new CTEntryPage(
+				ctEntryResource.getCTEntriesHistoryPage(
+					classNameId, classPK, search, Long.valueOf(siteKey),
+					_filterBiFunction.apply(ctEntryResource, filterString),
+					Pagination.of(page, pageSize),
+					_sortsBiFunction.apply(ctEntryResource, sortsString))));
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {cTEntry(ctEntryId: ___){actions, changeType, ctCollectionId, ctCollectionName, ctCollectionStatus, ctCollectionStatusDate, ctCollectionStatusUserName, dateCreated, dateModified, hideable, id, modelClassNameId, modelClassPK, ownerId, ownerName, siteId, siteName, status, statusMessage, title, typeName}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField
 	public CTEntry cTEntry(@GraphQLName("ctEntryId") Long ctEntryId)
@@ -679,12 +688,15 @@ public class Query {
 
 	private AcceptLanguage _acceptLanguage;
 	private com.liferay.portal.kernel.model.Company _company;
-	private BiFunction<Object, String, Filter> _filterBiFunction;
+	private BiFunction
+		<Object, String, com.liferay.portal.kernel.search.filter.Filter>
+			_filterBiFunction;
 	private GroupLocalService _groupLocalService;
 	private HttpServletRequest _httpServletRequest;
 	private HttpServletResponse _httpServletResponse;
 	private RoleLocalService _roleLocalService;
-	private BiFunction<Object, String, Sort[]> _sortsBiFunction;
+	private BiFunction<Object, String, com.liferay.portal.kernel.search.Sort[]>
+		_sortsBiFunction;
 	private UriInfo _uriInfo;
 	private com.liferay.portal.kernel.model.User _user;
 

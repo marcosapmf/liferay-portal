@@ -3,12 +3,8 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {
-	addParams,
-	openConfirmModal,
-	openSelectionModal,
-	sub,
-} from 'frontend-js-web';
+import {openConfirmModal, openSelectionModal} from 'frontend-js-components-web';
+import {addParams, sub} from 'frontend-js-web';
 
 export default function propsTransformer({portletNamespace, ...otherProps}) {
 	const deleteSelectedUserGroups = () => {
@@ -24,6 +20,23 @@ export default function propsTransformer({portletNamespace, ...otherProps}) {
 
 					if (form) {
 						submitForm(form);
+					}
+				}
+			},
+		});
+	};
+
+	const removeUserGroupRole = (itemData) => {
+		openConfirmModal({
+			message: Liferay.Language.get(itemData?.message),
+			onConfirm: (isConfirmed) => {
+				if (isConfirmed) {
+					const form = document.getElementById(
+						`${portletNamespace}fm`
+					);
+
+					if (form) {
+						submitForm(form, itemData?.removeUserGroupRoleURL);
 					}
 				}
 			},
@@ -120,6 +133,9 @@ export default function propsTransformer({portletNamespace, ...otherProps}) {
 
 			if (action === 'deleteSelectedUserGroups') {
 				deleteSelectedUserGroups();
+			}
+			else if (action === 'removeUserGroupRole') {
+				removeUserGroupRole(data);
 			}
 			else if (action === 'selectRole') {
 				selectRole(data);

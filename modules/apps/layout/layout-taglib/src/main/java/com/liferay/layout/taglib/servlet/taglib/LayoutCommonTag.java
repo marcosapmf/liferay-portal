@@ -163,7 +163,7 @@ public class LayoutCommonTag extends IncludeTag {
 		StringBundler sb = new StringBundler(7);
 
 		sb.append("Liferay.Util.openToast({autoClose: 10000, message: '");
-		sb.append(HtmlUtil.escape(message));
+		sb.append(HtmlUtil.escapeJS(message));
 		sb.append("', title: '");
 		sb.append(LanguageUtil.get(getRequest(), type));
 		sb.append(":', type: '");
@@ -210,6 +210,13 @@ public class LayoutCommonTag extends IncludeTag {
 						httpServletRequest,
 						"your-request-completed-successfully");
 				}
+
+				sb.append(_getScript(message, "success"));
+
+				keys.add(key);
+			}
+			else if (key.endsWith("_requestProcessedSuccess") &&
+					 Validator.isNotNull(message)) {
 
 				sb.append(_getScript(message, "success"));
 

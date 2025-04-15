@@ -13,8 +13,6 @@ import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.exception.NoSuchModelException;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ResourceActionLocalService;
@@ -35,10 +33,12 @@ import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
 import com.liferay.portal.vulcan.batch.engine.VulcanBatchEngineTaskItemDelegate;
 import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineExportTaskResource;
 import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineImportTaskResource;
+import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegate;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 import com.liferay.portal.vulcan.util.ActionUtil;
+import com.liferay.portal.vulcan.util.UriInfoUtil;
 
 import java.io.Serializable;
 
@@ -68,7 +68,8 @@ import javax.ws.rs.core.UriInfo;
 @javax.ws.rs.Path("/v1.0")
 public abstract class BasePostalAddressResourceImpl
 	implements EntityModelResource, PostalAddressResource,
-			   VulcanBatchEngineTaskItemDelegate<PostalAddress> {
+			   VulcanBatchEngineTaskItemDelegate<PostalAddress>,
+			   VulcanCRUDItemDelegate<PostalAddress> {
 
 	/**
 	 * Invoke this method with the command line:
@@ -217,7 +218,7 @@ public abstract class BasePostalAddressResourceImpl
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'POST' 'http://localhost:8080/o/headless-admin-user/v1.0/accounts/{accountId}/postal-addresses' -d $'{"addressCountry": ___, "addressCountry_i18n": ___, "addressLocality": ___, "addressRegion": ___, "addressType": ___, "externalReferenceCode": ___, "name": ___, "phoneNumber": ___, "postalCode": ___, "primary": ___, "streetAddressLine1": ___, "streetAddressLine2": ___, "streetAddressLine3": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 * curl -X 'POST' 'http://localhost:8080/o/headless-admin-user/v1.0/accounts/{accountId}/postal-addresses' -d $'{"addressCountry": ___, "addressCountry_i18n": ___, "addressLocality": ___, "addressRegion": ___, "addressSubtype": ___, "addressType": ___, "externalReferenceCode": ___, "name": ___, "phoneNumber": ___, "postalCode": ___, "primary": ___, "streetAddressLine1": ___, "streetAddressLine2": ___, "streetAddressLine3": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
@@ -523,7 +524,7 @@ public abstract class BasePostalAddressResourceImpl
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'PATCH' 'http://localhost:8080/o/headless-admin-user/v1.0/postal-addresses/by-external-reference-code/{externalReferenceCode}' -d $'{"addressCountry": ___, "addressCountry_i18n": ___, "addressLocality": ___, "addressRegion": ___, "addressType": ___, "externalReferenceCode": ___, "name": ___, "phoneNumber": ___, "postalCode": ___, "primary": ___, "streetAddressLine1": ___, "streetAddressLine2": ___, "streetAddressLine3": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 * curl -X 'PATCH' 'http://localhost:8080/o/headless-admin-user/v1.0/postal-addresses/by-external-reference-code/{externalReferenceCode}' -d $'{"addressCountry": ___, "addressCountry_i18n": ___, "addressLocality": ___, "addressRegion": ___, "addressSubtype": ___, "addressType": ___, "externalReferenceCode": ___, "name": ___, "phoneNumber": ___, "postalCode": ___, "primary": ___, "streetAddressLine1": ___, "streetAddressLine2": ___, "streetAddressLine3": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Operation(
 		description = "Updates the postal address using external reference code."
@@ -579,6 +580,11 @@ public abstract class BasePostalAddressResourceImpl
 				postalAddress.getAddressRegion());
 		}
 
+		if (postalAddress.getAddressSubtype() != null) {
+			existingPostalAddress.setAddressSubtype(
+				postalAddress.getAddressSubtype());
+		}
+
 		if (postalAddress.getAddressType() != null) {
 			existingPostalAddress.setAddressType(
 				postalAddress.getAddressType());
@@ -630,7 +636,7 @@ public abstract class BasePostalAddressResourceImpl
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'PUT' 'http://localhost:8080/o/headless-admin-user/v1.0/postal-addresses/by-external-reference-code/{externalReferenceCode}' -d $'{"addressCountry": ___, "addressCountry_i18n": ___, "addressLocality": ___, "addressRegion": ___, "addressType": ___, "externalReferenceCode": ___, "name": ___, "phoneNumber": ___, "postalCode": ___, "primary": ___, "streetAddressLine1": ___, "streetAddressLine2": ___, "streetAddressLine3": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 * curl -X 'PUT' 'http://localhost:8080/o/headless-admin-user/v1.0/postal-addresses/by-external-reference-code/{externalReferenceCode}' -d $'{"addressCountry": ___, "addressCountry_i18n": ___, "addressLocality": ___, "addressRegion": ___, "addressSubtype": ___, "addressType": ___, "externalReferenceCode": ___, "name": ___, "phoneNumber": ___, "postalCode": ___, "primary": ___, "streetAddressLine1": ___, "streetAddressLine2": ___, "streetAddressLine3": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Operation(
 		description = "Updates the postal address using external reference code."
@@ -783,7 +789,7 @@ public abstract class BasePostalAddressResourceImpl
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'PATCH' 'http://localhost:8080/o/headless-admin-user/v1.0/postal-addresses/{postalAddressId}' -d $'{"addressCountry": ___, "addressCountry_i18n": ___, "addressLocality": ___, "addressRegion": ___, "addressType": ___, "externalReferenceCode": ___, "name": ___, "phoneNumber": ___, "postalCode": ___, "primary": ___, "streetAddressLine1": ___, "streetAddressLine2": ___, "streetAddressLine3": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 * curl -X 'PATCH' 'http://localhost:8080/o/headless-admin-user/v1.0/postal-addresses/{postalAddressId}' -d $'{"addressCountry": ___, "addressCountry_i18n": ___, "addressLocality": ___, "addressRegion": ___, "addressSubtype": ___, "addressType": ___, "externalReferenceCode": ___, "name": ___, "phoneNumber": ___, "postalCode": ___, "primary": ___, "streetAddressLine1": ___, "streetAddressLine2": ___, "streetAddressLine3": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
@@ -831,6 +837,11 @@ public abstract class BasePostalAddressResourceImpl
 		if (postalAddress.getAddressRegion() != null) {
 			existingPostalAddress.setAddressRegion(
 				postalAddress.getAddressRegion());
+		}
+
+		if (postalAddress.getAddressSubtype() != null) {
+			existingPostalAddress.setAddressSubtype(
+				postalAddress.getAddressSubtype());
 		}
 
 		if (postalAddress.getAddressType() != null) {
@@ -883,7 +894,7 @@ public abstract class BasePostalAddressResourceImpl
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'PUT' 'http://localhost:8080/o/headless-admin-user/v1.0/postal-addresses/{postalAddressId}' -d $'{"addressCountry": ___, "addressCountry_i18n": ___, "addressLocality": ___, "addressRegion": ___, "addressType": ___, "externalReferenceCode": ___, "name": ___, "phoneNumber": ___, "postalCode": ___, "primary": ___, "streetAddressLine1": ___, "streetAddressLine2": ___, "streetAddressLine3": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 * curl -X 'PUT' 'http://localhost:8080/o/headless-admin-user/v1.0/postal-addresses/{postalAddressId}' -d $'{"addressCountry": ___, "addressCountry_i18n": ___, "addressLocality": ___, "addressRegion": ___, "addressSubtype": ___, "addressType": ___, "externalReferenceCode": ___, "name": ___, "phoneNumber": ___, "postalCode": ___, "primary": ___, "streetAddressLine1": ___, "streetAddressLine2": ___, "streetAddressLine3": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
@@ -1204,8 +1215,46 @@ public abstract class BasePostalAddressResourceImpl
 			Map<String, Serializable> parameters)
 		throws Exception {
 
-		for (PostalAddress postalAddress : postalAddresses) {
-			deletePostalAddress(postalAddress.getId());
+		UnsafeFunction<PostalAddress, PostalAddress, Exception>
+			postalAddressUnsafeFunction = postalAddress -> {
+				if (postalAddress.getId() != null) {
+					try {
+						deletePostalAddress(postalAddress.getId());
+
+						return postalAddress;
+					}
+					catch (Exception exception) {
+						if (postalAddress.getExternalReferenceCode() != null) {
+							deletePostalAddressByExternalReferenceCode(
+								postalAddress.getExternalReferenceCode());
+
+							return postalAddress;
+						}
+					}
+				}
+				else if (postalAddress.getExternalReferenceCode() != null) {
+					deletePostalAddressByExternalReferenceCode(
+						postalAddress.getExternalReferenceCode());
+
+					return postalAddress;
+				}
+
+				throw new UnsupportedOperationException(
+					"Unable to delete by external reference code or ID");
+			};
+
+		if (contextBatchUnsafeBiConsumer != null) {
+			contextBatchUnsafeBiConsumer.accept(
+				postalAddresses, postalAddressUnsafeFunction);
+		}
+		else if (contextBatchUnsafeConsumer != null) {
+			contextBatchUnsafeConsumer.accept(
+				postalAddresses, postalAddressUnsafeFunction::apply);
+		}
+		else {
+			for (PostalAddress postalAddress : postalAddresses) {
+				postalAddressUnsafeFunction.apply(postalAddress);
+			}
 		}
 	}
 
@@ -1242,7 +1291,9 @@ public abstract class BasePostalAddressResourceImpl
 
 	@Override
 	public Page<PostalAddress> read(
-			Filter filter, Pagination pagination, Sort[] sorts,
+			com.liferay.portal.kernel.search.filter.Filter filter,
+			Pagination pagination,
+			com.liferay.portal.kernel.search.Sort[] sorts,
 			Map<String, Serializable> parameters, String search)
 		throws Exception {
 
@@ -1341,6 +1392,11 @@ public abstract class BasePostalAddressResourceImpl
 		return null;
 	}
 
+	@Override
+	public PostalAddress getItem(Long id) throws Exception {
+		return getPostalAddress(id);
+	}
+
 	public void setContextAcceptLanguage(AcceptLanguage contextAcceptLanguage) {
 		this.contextAcceptLanguage = contextAcceptLanguage;
 	}
@@ -1382,7 +1438,8 @@ public abstract class BasePostalAddressResourceImpl
 	}
 
 	public void setContextUriInfo(UriInfo contextUriInfo) {
-		this.contextUriInfo = contextUriInfo;
+		this.contextUriInfo = UriInfoUtil.getVulcanUriInfo(
+			getApplicationPath(), contextUriInfo);
 	}
 
 	public void setContextUser(
@@ -1392,7 +1449,8 @@ public abstract class BasePostalAddressResourceImpl
 	}
 
 	public void setExpressionConvert(
-		ExpressionConvert<Filter> expressionConvert) {
+		ExpressionConvert<com.liferay.portal.kernel.search.filter.Filter>
+			expressionConvert) {
 
 		this.expressionConvert = expressionConvert;
 	}
@@ -1427,6 +1485,10 @@ public abstract class BasePostalAddressResourceImpl
 		this.sortParserProvider = sortParserProvider;
 	}
 
+	protected String getApplicationPath() {
+		return "headless-admin-user";
+	}
+
 	public void setVulcanBatchEngineExportTaskResource(
 		VulcanBatchEngineExportTaskResource
 			vulcanBatchEngineExportTaskResource) {
@@ -1444,7 +1506,7 @@ public abstract class BasePostalAddressResourceImpl
 	}
 
 	@Override
-	public Filter toFilter(
+	public com.liferay.portal.kernel.search.filter.Filter toFilter(
 		String filterString, Map<String, List<String>> multivaluedMap) {
 
 		try {
@@ -1469,7 +1531,7 @@ public abstract class BasePostalAddressResourceImpl
 	}
 
 	@Override
-	public Sort[] toSorts(String sortString) {
+	public com.liferay.portal.kernel.search.Sort[] toSorts(String sortString) {
 		if (Validator.isNull(sortString)) {
 			return null;
 		}
@@ -1487,13 +1549,13 @@ public abstract class BasePostalAddressResourceImpl
 					sortParser.parse(sortString));
 
 			List<SortField> sortFields = oDataSort.getSortFields();
-
-			Sort[] sorts = new Sort[sortFields.size()];
+			com.liferay.portal.kernel.search.Sort[] sorts =
+				new com.liferay.portal.kernel.search.Sort[sortFields.size()];
 
 			for (int i = 0; i < sortFields.size(); i++) {
 				SortField sortField = sortFields.get(i);
 
-				sorts[i] = new Sort(
+				sorts[i] = new com.liferay.portal.kernel.search.Sort(
 					sortField.getSortableFieldName(
 						contextAcceptLanguage.getPreferredLocale()),
 					!sortField.isAscending());
@@ -1504,7 +1566,7 @@ public abstract class BasePostalAddressResourceImpl
 		catch (Exception exception) {
 			_log.error("Invalid sort " + sortString, exception);
 
-			return new Sort[0];
+			return new com.liferay.portal.kernel.search.Sort[0];
 		}
 	}
 
@@ -1634,7 +1696,8 @@ public abstract class BasePostalAddressResourceImpl
 	protected Object contextScopeChecker;
 	protected UriInfo contextUriInfo;
 	protected com.liferay.portal.kernel.model.User contextUser;
-	protected ExpressionConvert<Filter> expressionConvert;
+	protected ExpressionConvert<com.liferay.portal.kernel.search.filter.Filter>
+		expressionConvert;
 	protected FilterParserProvider filterParserProvider;
 	protected GroupLocalService groupLocalService;
 	protected ResourceActionLocalService resourceActionLocalService;

@@ -160,6 +160,12 @@ export async function deleteItem(url: string) {
 	}
 }
 
+export function deleteListTypeEntry(listTypeEntryId: number) {
+	return deleteItem(
+		`/o/headless-admin-list-type/v1.0/list-type-entries/${listTypeEntryId}`
+	);
+}
+
 export function deleteObjectDefinition(objectDefinitionId: number) {
 	return deleteItem(
 		`/o/object-admin/v1.0/object-definitions/${objectDefinitionId}`
@@ -195,7 +201,7 @@ export async function getAllObjectDefinitions() {
 }
 
 export async function getAllObjectFolders() {
-	return await fetchJSON<ObjectFolderRequestInfo>(
+	return await fetchJSON<ObjectFolderRequestInfo | undefined>(
 		'/o/object-admin/v1.0/object-folders?pageSize=-1'
 	);
 }
@@ -379,6 +385,17 @@ export async function postObjectDefinitionPublish(objectDefinitionId: number) {
 			method: 'POST',
 		}
 	);
+}
+
+export async function putObjectDefinition(
+	objectDefinition: Partial<ObjectDefinition>
+) {
+	return await save<ObjectDefinition>({
+		item: objectDefinition,
+		method: 'PUT',
+		returnValue: true,
+		url: `/o/object-admin/v1.0/object-definitions/${objectDefinition.id}`,
+	});
 }
 
 export async function putObjectDefinitionByExternalReferenceCode(

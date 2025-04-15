@@ -181,8 +181,14 @@ renderResponse.setTitle(workflowTaskDisplayContext.getHeaderTitle(workflowTask))
 									</portlet:renderURL>
 
 									<c:if test="<%= !workflowTaskDisplayContext.isReadOnly() %>">
-										<span class="lfr-portal-tooltip" title="<%= LanguageUtil.get(request, "view[action]") %>">
+
+										<%
+										String viewTaskContentAriaLabel = LanguageUtil.get(request, "view[action]");
+										%>
+
+										<span class="lfr-portal-tooltip" title="<%= viewTaskContentAriaLabel %>">
 											<clay:link
+												aria-label="<%= viewTaskContentAriaLabel %>"
 												cssClass="btn btn-monospaced btn-outline-secondary lfr-icon-item taglib-icon"
 												href="<%= assetRenderer.isPreviewInContext() ? workflowHandler.getURLViewInContext(assetRenderer.getClassPK(), liferayPortletRequest, liferayPortletResponse, null) : viewFullContentURL.toString() %>"
 												icon="view"
@@ -193,11 +199,18 @@ renderResponse.setTitle(workflowTaskDisplayContext.getHeaderTitle(workflowTask))
 										</span>
 
 										<c:if test="<%= workflowTaskDisplayContext.hasViewDiffsPortletURL(workflowTask) %>">
-											<span class="lfr-portal-tooltip" title="<%= LanguageUtil.get(request, "diffs") %>">
+
+											<%
+											String diffsTaskContentsAriaLabel = LanguageUtil.get(request, "diffs");
+											%>
+
+											<span class="lfr-portal-tooltip" title="<%= diffsTaskContentsAriaLabel %>">
 												<clay:link
+													aria-label="<%= diffsTaskContentsAriaLabel %>"
 													cssClass="btn btn-monospaced btn-outline-secondary lfr-icon-item taglib-icon"
 													href="<%= workflowTaskDisplayContext.getTaglibViewDiffsURL(workflowTask) %>"
 													icon="paste"
+													id='<%= liferayPortletResponse.getNamespace() + "diffs" %>'
 												/>
 											</span>
 										</c:if>
@@ -211,11 +224,17 @@ renderResponse.setTitle(workflowTaskDisplayContext.getHeaderTitle(workflowTask))
 												<portlet:param name="workflowTaskId" value="<%= String.valueOf(workflowTask.getWorkflowTaskId()) %>" />
 											</portlet:renderURL>
 
-											<span class="lfr-portal-tooltip" title="<%= LanguageUtil.get(request, "view-usages") %>">
+											<%
+											String viewUsagesTaskContentAriaLabel = LanguageUtil.get(request, "view-usages");
+											%>
+
+											<span class="lfr-portal-tooltip" title="<%= viewUsagesTaskContentAriaLabel %>">
 												<clay:link
+													aria-label="<%= viewUsagesTaskContentAriaLabel %>"
 													cssClass="btn btn-monospaced btn-outline-secondary lfr-icon-item taglib-icon"
 													href="<%= viewLayoutClassedModelUsagesURL %>"
 													icon="list"
+													id='<%= liferayPortletResponse.getNamespace() + "viewUsages" %>'
 												/>
 											</span>
 										</c:if>
@@ -225,8 +244,14 @@ renderResponse.setTitle(workflowTaskDisplayContext.getHeaderTitle(workflowTask))
 								<c:if test="<%= workflowTaskDisplayContext.hasEditPortletURL(workflowTask) %>">
 									<c:choose>
 										<c:when test="<%= assetRenderer.hasEditPermission(permissionChecker) && workflowTaskDisplayContext.isShowEditURL(workflowTask) %>">
-											<span class="lfr-portal-tooltip" title="<%= LanguageUtil.get(request, "edit") %>">
+
+											<%
+											String editTaskContentAriaLabel = LanguageUtil.get(request, "edit");
+											%>
+
+											<span class="lfr-portal-tooltip" title="<%= editTaskContentAriaLabel %>">
 												<clay:link
+													aria-label="<%= editTaskContentAriaLabel %>"
 													cssClass="btn btn-monospaced btn-outline-secondary lfr-icon-item taglib-icon"
 													href="<%= workflowTaskDisplayContext.getTaglibEditURL(workflowTask) %>"
 													icon="pencil"
@@ -295,6 +320,7 @@ renderResponse.setTitle(workflowTaskDisplayContext.getHeaderTitle(workflowTask))
 									formName='<%= "fm" + discussionClassPK %>'
 									ratingsEnabled="<%= false %>"
 									redirect="<%= currentURL %>"
+									refreshPageOnReply="<%= true %>"
 									userId="<%= user.getUserId() %>"
 								/>
 							</div>

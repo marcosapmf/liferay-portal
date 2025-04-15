@@ -12,9 +12,13 @@ import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
+import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.model.UserGroup;
 import com.liferay.portal.kernel.module.configuration.ConfigurationException;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
+import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.service.LayoutLocalService;
+import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.theme.PortletDisplay;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
@@ -34,8 +38,11 @@ import com.liferay.portal.search.web.internal.search.bar.portlet.display.context
 import com.liferay.portal.search.web.internal.search.bar.portlet.helper.SearchBarPrecedenceHelper;
 import com.liferay.portal.search.web.portlet.shared.search.PortletSharedSearchRequest;
 import com.liferay.portal.search.web.portlet.shared.search.PortletSharedSearchResponse;
+import com.liferay.portal.test.rule.FeatureFlags;
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
 import com.liferay.portlet.PortletPreferencesImpl;
+
+import java.util.Collections;
 
 import javax.portlet.PortletPreferences;
 import javax.portlet.RenderRequest;
@@ -56,7 +63,9 @@ import org.mockito.Mockito;
 
 /**
  * @author Adam Brandizzi
+ * @author Petteri Karttunne
  */
+@FeatureFlags("LPD-35128")
 public class SearchBarPortletDisplayContextFactoryTest {
 
 	@ClassRule
@@ -92,6 +101,37 @@ public class SearchBarPortletDisplayContextFactoryTest {
 			searchBarPortletDisplayContextFactory.create(
 				_portletPreferencesLookup, _portletSharedSearchRequest,
 				_searchBarPrecedenceHelper, _searchCapabilities);
+
+		Assert.assertFalse(
+			searchBarPortletDisplayContext.isDestinationUnreachable());
+	}
+
+	@Test
+	public void testDestinationFromUserGroupLayout() throws Exception {
+		String destination = RandomTestUtil.randomString();
+
+		Layout layout = Mockito.mock(Layout.class);
+
+		_whenLayoutLocalServiceFetchLayoutByFriendlyURL(
+			destination, _USER_GROUP_ID, layout);
+
+		String layoutFriendlyURL = RandomTestUtil.randomString();
+
+		_whenPortalGetLayoutFriendlyURL(layout, layoutFriendlyURL);
+
+		_whenUserLocalServiceFetchUserById();
+
+		SearchBarPortletDisplayContextFactory
+			searchBarPortletDisplayContextFactory =
+				_createSearchBarPortletDisplayContextFactory(destination);
+
+		SearchBarPortletDisplayContext searchBarPortletDisplayContext =
+			searchBarPortletDisplayContextFactory.create(
+				_portletPreferencesLookup, _portletSharedSearchRequest,
+				_searchBarPrecedenceHelper, _searchCapabilities);
+
+		Assert.assertEquals(
+			layoutFriendlyURL, searchBarPortletDisplayContext.getSearchURL());
 
 		Assert.assertFalse(
 			searchBarPortletDisplayContext.isDestinationUnreachable());
@@ -186,6 +226,32 @@ public class SearchBarPortletDisplayContextFactoryTest {
 
 		Assert.assertFalse(
 			searchBarPortletDisplayContext.isDestinationUnreachable());
+	}
+
+	@Test
+	public void testGetDisplayStyleGroup() throws Exception {
+		_setUpGroupLocalServiceUtil(_getGroup());
+		_setUpPortletDisplayStyleGroupExternalReferenceCode(null);
+
+		_assertDisplayContext(_group);
+
+		_groupLocalServiceUtilMockedStatic.verifyNoInteractions();
+	}
+
+	@Test
+	public void testGetDisplayStyleGroupWithConfiguration() throws Exception {
+		Group group = _getGroup();
+
+		_setUpGroupLocalServiceUtil(group);
+		_setUpPortletDisplayStyleGroupExternalReferenceCode(
+			group.getExternalReferenceCode());
+
+		_assertDisplayContext(group);
+
+		_groupLocalServiceUtilMockedStatic.verify(
+			() -> GroupLocalServiceUtil.fetchGroupByExternalReferenceCode(
+				group.getExternalReferenceCode(), 0L),
+			Mockito.times(1));
 	}
 
 	@Test
@@ -325,6 +391,14 @@ public class SearchBarPortletDisplayContextFactoryTest {
 		_assertScope(searchBarPortletDisplayContextFactory, false, true, false);
 	}
 
+	@Test
+	public void testsIncludeAttachmentsInSuggestionsContributorConfiguration()
+		throws Exception {
+
+		_testIncludeAttachmentsInSuggestionsContributorConfiguration(false);
+		_testIncludeAttachmentsInSuggestionsContributorConfiguration(true);
+	}
+
 	@Rule
 	public ExpectedException expectedException = ExpectedException.none();
 
@@ -360,6 +434,21 @@ public class SearchBarPortletDisplayContextFactoryTest {
 		}
 
 		return url.substring(0, pos);
+	}
+
+	private void _assertDisplayContext(Group group) throws Exception {
+		SearchBarPortletDisplayContextFactory
+			searchBarPortletDisplayContextFactory =
+				_createSearchBarPortletDisplayContextFactory(null);
+
+		SearchBarPortletDisplayContext searchBarPortletDisplayContext =
+			searchBarPortletDisplayContextFactory.create(
+				_portletPreferencesLookup, _portletSharedSearchRequest,
+				_searchBarPrecedenceHelper, _searchCapabilities);
+
+		Assert.assertEquals(
+			group.getGroupId(),
+			searchBarPortletDisplayContext.getDisplayStyleGroupId());
 	}
 
 	private void _assertScope(
@@ -402,23 +491,14 @@ public class SearchBarPortletDisplayContextFactoryTest {
 		throws Exception {
 
 		return _createSearchBarPortletDisplayContextFactory(
-			destination, null, null, null);
+			destination, false, false, null, null, null);
 	}
 
 	private SearchBarPortletDisplayContextFactory
 			_createSearchBarPortletDisplayContextFactory(
-				String scope, String scopeParameterName,
-				String scopeParameterValue)
-		throws Exception {
-
-		return _createSearchBarPortletDisplayContextFactory(
-			null, scope, scopeParameterName, scopeParameterValue);
-	}
-
-	private SearchBarPortletDisplayContextFactory
-			_createSearchBarPortletDisplayContextFactory(
-				String destination, String scope, String scopeParameterName,
-				String scopeParameterValue)
+				String destination, boolean enableSuggestionsPoint,
+				boolean includeAttachments, String scope,
+				String scopeParameterName, String scopeParameterValue)
 		throws Exception {
 
 		RenderRequest renderRequest = Mockito.mock(RenderRequest.class);
@@ -432,13 +512,17 @@ public class SearchBarPortletDisplayContextFactoryTest {
 		SearchBarPortletDisplayContextFactory
 			searchBarPortletDisplayContextFactory =
 				new SearchBarPortletDisplayContextFactory(
-					_layoutLocalService, _portal, renderRequest);
+					_layoutLocalService, _portal, renderRequest,
+					_userLocalService);
 
 		PortletPreferences portletPreferences = new PortletPreferencesImpl();
 
 		portletPreferences.setValue(
 			SearchBarPortletPreferences.PREFERENCE_KEY_DESTINATION,
 			destination);
+		portletPreferences.setValue(
+			SearchBarPortletPreferences.PREFERENCE_KEY_INCLUDE_ATTACHMENTS,
+			Boolean.toString(includeAttachments));
 		portletPreferences.setValue(
 			SearchBarPortletPreferences.PREFERENCE_KEY_SEARCH_SCOPE, scope);
 
@@ -475,6 +559,13 @@ public class SearchBarPortletDisplayContextFactoryTest {
 			_searchBarPortletInstanceConfiguration.destination()
 		).thenReturn(
 			destination
+		);
+
+		Mockito.when(
+			_searchBarPortletInstanceConfiguration.
+				suggestionsContributorConfigurations()
+		).thenReturn(
+			new String[] {"{}"}
 		);
 
 		Mockito.when(
@@ -522,7 +613,52 @@ public class SearchBarPortletDisplayContextFactoryTest {
 			0
 		);
 
+		Mockito.doReturn(
+			enableSuggestionsPoint
+		).when(
+			_searchSuggestionsCompanyConfiguration
+		).enableSuggestionsEndpoint();
+
 		return searchBarPortletDisplayContextFactory;
+	}
+
+	private SearchBarPortletDisplayContextFactory
+			_createSearchBarPortletDisplayContextFactory(
+				String scope, String scopeParameterName,
+				String scopeParameterValue)
+		throws Exception {
+
+		return _createSearchBarPortletDisplayContextFactory(
+			null, false, false, scope, scopeParameterName, scopeParameterValue);
+	}
+
+	private Group _getGroup() {
+		Group group = Mockito.mock(Group.class);
+
+		Mockito.when(
+			group.getExternalReferenceCode()
+		).thenReturn(
+			RandomTestUtil.randomString()
+		);
+
+		Mockito.when(
+			group.getGroupId()
+		).thenReturn(
+			RandomTestUtil.randomLong()
+		);
+
+		return group;
+	}
+
+	private void _setUpGroupLocalServiceUtil(Group group) throws Exception {
+		_groupLocalServiceUtilMockedStatic.reset();
+
+		Mockito.when(
+			GroupLocalServiceUtil.fetchGroupByExternalReferenceCode(
+				group.getExternalReferenceCode(), 0L)
+		).thenReturn(
+			group
+		);
 	}
 
 	private void _setUpLanguageUtil() {
@@ -541,11 +677,53 @@ public class SearchBarPortletDisplayContextFactoryTest {
 		);
 	}
 
+	private void _setUpPortletDisplayStyleGroupExternalReferenceCode(
+		String externalReferenceCode) {
+
+		SearchBarPortletInstanceConfiguration
+			searchBarPortletInstanceConfiguration = Mockito.mock(
+				SearchBarPortletInstanceConfiguration.class);
+
+		Mockito.when(
+			searchBarPortletInstanceConfiguration.
+				displayStyleGroupExternalReferenceCode()
+		).thenReturn(
+			externalReferenceCode
+		);
+
+		_configurationProviderUtilMockedStatic.reset();
+
+		_configurationProviderUtilMockedStatic.when(
+			() -> ConfigurationProviderUtil.getPortletInstanceConfiguration(
+				Mockito.any(), Mockito.any())
+		).thenReturn(
+			searchBarPortletInstanceConfiguration
+		);
+	}
+
 	private void _setUpThemeDisplay() throws ConfigurationException {
 		Mockito.when(
 			_themeDisplay.getScopeGroup()
 		).thenReturn(
 			_group
+		);
+
+		Mockito.when(
+			_group.getClassPK()
+		).thenReturn(
+			_CLASS_PK
+		);
+
+		Mockito.when(
+			_group.getExternalReferenceCode()
+		).thenReturn(
+			RandomTestUtil.randomString()
+		);
+
+		Mockito.when(
+			_group.getGroupId()
+		).thenReturn(
+			RandomTestUtil.randomLong()
 		);
 
 		Mockito.when(
@@ -566,6 +744,18 @@ public class SearchBarPortletDisplayContextFactoryTest {
 			_portletDisplay
 		);
 
+		Mockito.when(
+			_themeDisplay.getScopeGroupId()
+		).thenReturn(
+			_SCOPE_GROUP_ID
+		);
+
+		Mockito.when(
+			_themeDisplay.getUser()
+		).thenReturn(
+			_user
+		);
+
 		_configurationProviderUtilMockedStatic.when(
 			() -> ConfigurationProviderUtil.getPortletInstanceConfiguration(
 				Mockito.any(), Mockito.any())
@@ -574,8 +764,39 @@ public class SearchBarPortletDisplayContextFactoryTest {
 		);
 	}
 
+	private void _testIncludeAttachmentsInSuggestionsContributorConfiguration(
+			boolean includeAttachments)
+		throws Exception {
+
+		SearchBarPortletDisplayContextFactory
+			searchBarPortletDisplayContextFactory =
+				_createSearchBarPortletDisplayContextFactory(
+					null, true, includeAttachments, null, null, null);
+
+		SearchBarPortletDisplayContext searchBarPortletDisplayContext =
+			searchBarPortletDisplayContextFactory.create(
+				_portletPreferencesLookup, _portletSharedSearchRequest,
+				_searchBarPrecedenceHelper, _searchCapabilities);
+
+		String suggestionsContributorConfiguration =
+			searchBarPortletDisplayContext.
+				getSuggestionsContributorConfiguration();
+
+		Assert.assertTrue(
+			suggestionsContributorConfiguration,
+			suggestionsContributorConfiguration.contains(
+				"\"includeAttachments\":" + includeAttachments));
+	}
+
 	private void _whenLayoutLocalServiceFetchLayoutByFriendlyURL(
 		String friendlyURL, Layout layout) {
+
+		_whenLayoutLocalServiceFetchLayoutByFriendlyURL(
+			friendlyURL, _SCOPE_GROUP_ID, layout);
+	}
+
+	private void _whenLayoutLocalServiceFetchLayoutByFriendlyURL(
+		String friendlyURL, long groupId, Layout layout) {
 
 		if (!StringUtil.startsWith(friendlyURL, CharPool.SLASH)) {
 			friendlyURL = StringPool.SLASH.concat(friendlyURL);
@@ -586,7 +807,7 @@ public class SearchBarPortletDisplayContextFactoryTest {
 		).when(
 			_layoutLocalService
 		).fetchLayoutByFriendlyURL(
-			Mockito.anyLong(), Mockito.anyBoolean(), Mockito.eq(friendlyURL)
+			groupId, false, friendlyURL
 		);
 	}
 
@@ -603,10 +824,41 @@ public class SearchBarPortletDisplayContextFactoryTest {
 		);
 	}
 
+	private void _whenUserLocalServiceFetchUserById() throws Exception {
+		Mockito.doReturn(
+			Collections.singletonList(_userGroup)
+		).when(
+			_user
+		).getUserGroups();
+
+		Mockito.doReturn(
+			_USER_GROUP_ID
+		).when(
+			_userGroup
+		).getGroupId();
+
+		Mockito.doReturn(
+			_user
+		).when(
+			_userLocalService
+		).fetchUserById(
+			_CLASS_PK
+		);
+	}
+
+	private static final long _CLASS_PK = RandomTestUtil.randomLong();
+
 	private static final String _DEFAULT_SCOPE_PARAMETER_NAME = "scope";
+
+	private static final long _SCOPE_GROUP_ID = 0L;
+
+	private static final long _USER_GROUP_ID = RandomTestUtil.randomLong();
 
 	private static MockedStatic<ConfigurationProviderUtil>
 		_configurationProviderUtilMockedStatic;
+	private static final MockedStatic<GroupLocalServiceUtil>
+		_groupLocalServiceUtilMockedStatic = Mockito.mockStatic(
+			GroupLocalServiceUtil.class);
 
 	private final Group _group = Mockito.mock(Group.class);
 	private final LayoutLocalService _layoutLocalService = Mockito.mock(
@@ -629,5 +881,9 @@ public class SearchBarPortletDisplayContextFactoryTest {
 		_searchSuggestionsCompanyConfiguration = Mockito.mock(
 			SearchSuggestionsCompanyConfiguration.class);
 	private final ThemeDisplay _themeDisplay = Mockito.mock(ThemeDisplay.class);
+	private final User _user = Mockito.mock(User.class);
+	private final UserGroup _userGroup = Mockito.mock(UserGroup.class);
+	private final UserLocalService _userLocalService = Mockito.mock(
+		UserLocalService.class);
 
 }

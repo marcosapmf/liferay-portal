@@ -7,20 +7,24 @@ package com.liferay.portal.upgrade.v7_0_0;
 
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.dao.db.DB;
 import com.liferay.portal.kernel.dao.db.DBInspector;
 import com.liferay.portal.kernel.dao.db.DBManagerUtil;
 import com.liferay.portal.kernel.dao.db.DBType;
-import com.liferay.portal.kernel.dao.jdbc.AutoBatchPreparedStatementUtil;
+import com.liferay.portal.kernel.dao.db.IndexMetadata;
 import com.liferay.portal.kernel.dao.orm.WildcardMode;
 import com.liferay.portal.kernel.upgrade.UpgradeException;
 import com.liferay.portal.kernel.upgrade.UpgradeProcess;
-import com.liferay.portal.kernel.util.ArrayUtil;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LoggingTimer;
 import com.liferay.portal.kernel.util.StringUtil;
 
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.Statement;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * @author Preston Crary
@@ -43,9 +47,9 @@ public class UpgradeKernelPackage extends UpgradeProcess {
 			upgradeTable(
 				"ResourcePermission", "name", getClassNames(),
 				WildcardMode.SURROUND);
-			upgradeLongTextTable(
-				"UserNotificationEvent", "payload", "userNotificationEventId",
-				getClassNames(), WildcardMode.SURROUND);
+			upgradeTable(
+				"UserNotificationEvent", "payload", getClassNames(),
+				WildcardMode.SURROUND);
 
 			upgradeTable(
 				"ListType", "type_", getClassNames(), WildcardMode.TRAILING);
@@ -55,9 +59,9 @@ public class UpgradeKernelPackage extends UpgradeProcess {
 			upgradeTable(
 				"ResourcePermission", "name", getResourceNames(),
 				WildcardMode.LEADING);
-			upgradeLongTextTable(
-				"UserNotificationEvent", "payload", "userNotificationEventId",
-				getResourceNames(), WildcardMode.LEADING);
+			upgradeTable(
+				"UserNotificationEvent", "payload", getResourceNames(),
+				WildcardMode.LEADING);
 
 			DBInspector dbInspector = new DBInspector(connection);
 
@@ -84,68 +88,6 @@ public class UpgradeKernelPackage extends UpgradeProcess {
 		return _RESOURCE_NAMES;
 	}
 
-	protected void upgradeLongTextTable(
-			String columnName, String primaryKeyColumnName, String selectSQL,
-			String updateSQL, String[] name)
-		throws SQLException {
-
-		try (PreparedStatement preparedStatement1 = connection.prepareStatement(
-				selectSQL);
-			ResultSet resultSet = preparedStatement1.executeQuery();
-			PreparedStatement preparedStatement2 =
-				AutoBatchPreparedStatementUtil.autoBatch(
-					connection, updateSQL)) {
-
-			while (resultSet.next()) {
-				preparedStatement2.setString(
-					1,
-					StringUtil.replace(
-						resultSet.getString(columnName), name[0], name[1]));
-				preparedStatement2.setLong(
-					2, resultSet.getLong(primaryKeyColumnName));
-
-				preparedStatement2.addBatch();
-			}
-
-			preparedStatement2.executeBatch();
-		}
-	}
-
-	protected void upgradeLongTextTable(
-			String tableName, String columnName, String primaryKeyColumnName,
-			String[][] names, WildcardMode wildcardMode)
-		throws Exception {
-
-		if (DBManagerUtil.getDBType() != DBType.SYBASE) {
-			upgradeTable(tableName, columnName, names, wildcardMode);
-
-			return;
-		}
-
-		try (LoggingTimer loggingTimer = new LoggingTimer(
-				getClass(), tableName)) {
-
-			String updateSQL = StringBundler.concat(
-				"update ", tableName, " set ", columnName, " = ? where ",
-				primaryKeyColumnName, " = ?");
-
-			String selectPrefix = StringBundler.concat(
-				"select ", columnName, ", ", primaryKeyColumnName, " from ",
-				tableName, " where ", columnName, " like '",
-				wildcardMode.getLeadingWildcard());
-
-			String selectPostfix =
-				wildcardMode.getTrailingWildcard() + StringPool.APOSTROPHE;
-
-			for (String[] name : names) {
-				upgradeLongTextTable(
-					columnName, primaryKeyColumnName,
-					StringBundler.concat(selectPrefix, name[0], selectPostfix),
-					updateSQL, name);
-			}
-		}
-	}
-
 	protected void upgradeTable(
 			String tableName, String columnName, String[][] names,
 			WildcardMode wildcardMode)
@@ -159,30 +101,70 @@ public class UpgradeKernelPackage extends UpgradeProcess {
 			WildcardMode wildcardMode, boolean preventDuplicates)
 		throws Exception {
 
+		if (!preventDuplicates) {
+			try (LoggingTimer loggingTimer = new LoggingTimer(
+					getClass(), tableName)) {
+
+				_executeUpdate(tableName, columnName, names, wildcardMode);
+			}
+
+			return;
+		}
+
 		try (LoggingTimer loggingTimer = new LoggingTimer(
 				getClass(), tableName)) {
 
-			if (preventDuplicates) {
-				_executeDelete(tableName, columnName, names, wildcardMode);
+			DB db = DBManagerUtil.getDB();
+
+			List<IndexMetadata> indexMetadatas = db.getIndexMetadatas(
+				connection, tableName, columnName, true);
+
+			IndexMetadata indexMetadata = indexMetadatas.get(0);
+
+			runSQL(indexMetadata.getDropSQL());
+
+			try {
+				_executeUpdate(tableName, columnName, names, wildcardMode);
+
+				String[] primaryKeyColumnNames = db.getPrimaryKeyColumnNames(
+					connection, tableName);
+
+				List<String> primaryKeys = new ArrayList<>();
+
+				try (Statement s = connection.createStatement();
+					ResultSet resultSet = s.executeQuery(
+						StringBundler.concat(
+							"select MAX(", primaryKeyColumnNames[0], ") from ",
+							tableName, " group by ",
+							StringUtil.merge(indexMetadata.getColumnNames()),
+							" having count(*) > 1"))) {
+
+					while (resultSet.next()) {
+						primaryKeys.add(String.valueOf(resultSet.getLong(1)));
+					}
+				}
+
+				int start = 0;
+				int end = DBManagerUtil.getDBInMaxParameters();
+
+				while (start < primaryKeys.size()) {
+					runSQL(
+						StringBundler.concat(
+							"delete from ", tableName, " where ",
+							primaryKeyColumnNames[0], " in (",
+							String.join(
+								StringPool.COMMA_AND_SPACE,
+								ListUtil.subList(primaryKeys, start, end)),
+							StringPool.CLOSE_PARENTHESIS));
+
+					end += DBManagerUtil.getDBInMaxParameters();
+					start += DBManagerUtil.getDBInMaxParameters();
+				}
 			}
-
-			_executeUpdate(tableName, columnName, names, wildcardMode);
-		}
-	}
-
-	private void _executeDelete(
-			String tableName, String columnName, String[][] names,
-			WildcardMode wildcardMode)
-		throws Exception {
-
-		for (String[] name : names) {
-			runSQL(
-				StringBundler.concat(
-					"delete from ", tableName,
-					_getWhereClause(columnName, name[1], wildcardMode),
-					_getNotLikeClause(
-						columnName, (String)ArrayUtil.getValue(name, 2),
-						wildcardMode)));
+			finally {
+				addIndexes(
+					connection, Collections.singletonList(indexMetadata));
+			}
 		}
 	}
 
@@ -209,19 +191,6 @@ public class UpgradeKernelPackage extends UpgradeProcess {
 
 			sb2.setIndex(0);
 		}
-	}
-
-	private String _getNotLikeClause(
-		String columnName, String value, WildcardMode wildcardMode) {
-
-		if (value == null) {
-			return StringPool.BLANK;
-		}
-
-		return StringBundler.concat(
-			" and ", columnName, " not like '",
-			wildcardMode.getLeadingWildcard(), value,
-			wildcardMode.getTrailingWildcard(), StringPool.APOSTROPHE);
 	}
 
 	private String _getWhereClause(

@@ -6,6 +6,7 @@
 package com.liferay.commerce.product.service.persistence.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.commerce.product.exception.DuplicateCPDefinitionSpecificationOptionValueExternalReferenceCodeException;
 import com.liferay.commerce.product.exception.NoSuchCPDefinitionSpecificationOptionValueException;
 import com.liferay.commerce.product.model.CPDefinitionSpecificationOptionValue;
 import com.liferay.commerce.product.service.CPDefinitionSpecificationOptionValueLocalServiceUtil;
@@ -134,6 +135,9 @@ public class CPDefinitionSpecificationOptionValuePersistenceTest {
 		newCPDefinitionSpecificationOptionValue.setUuid(
 			RandomTestUtil.randomString());
 
+		newCPDefinitionSpecificationOptionValue.setExternalReferenceCode(
+			RandomTestUtil.randomString());
+
 		newCPDefinitionSpecificationOptionValue.setGroupId(
 			RandomTestUtil.nextLong());
 
@@ -170,6 +174,9 @@ public class CPDefinitionSpecificationOptionValuePersistenceTest {
 		newCPDefinitionSpecificationOptionValue.setValue(
 			RandomTestUtil.randomString());
 
+		newCPDefinitionSpecificationOptionValue.setVisible(
+			RandomTestUtil.randomBoolean());
+
 		newCPDefinitionSpecificationOptionValue.setLastPublishDate(
 			RandomTestUtil.nextDate());
 
@@ -190,6 +197,10 @@ public class CPDefinitionSpecificationOptionValuePersistenceTest {
 		Assert.assertEquals(
 			existingCPDefinitionSpecificationOptionValue.getUuid(),
 			newCPDefinitionSpecificationOptionValue.getUuid());
+		Assert.assertEquals(
+			existingCPDefinitionSpecificationOptionValue.
+				getExternalReferenceCode(),
+			newCPDefinitionSpecificationOptionValue.getExternalReferenceCode());
 		Assert.assertEquals(
 			existingCPDefinitionSpecificationOptionValue.
 				getCPDefinitionSpecificationOptionValueId(),
@@ -239,11 +250,42 @@ public class CPDefinitionSpecificationOptionValuePersistenceTest {
 			existingCPDefinitionSpecificationOptionValue.getValue(),
 			newCPDefinitionSpecificationOptionValue.getValue());
 		Assert.assertEquals(
+			existingCPDefinitionSpecificationOptionValue.isVisible(),
+			newCPDefinitionSpecificationOptionValue.isVisible());
+		Assert.assertEquals(
 			Time.getShortTimestamp(
 				existingCPDefinitionSpecificationOptionValue.
 					getLastPublishDate()),
 			Time.getShortTimestamp(
 				newCPDefinitionSpecificationOptionValue.getLastPublishDate()));
+	}
+
+	@Test(
+		expected = DuplicateCPDefinitionSpecificationOptionValueExternalReferenceCodeException.class
+	)
+	public void testUpdateWithExistingExternalReferenceCode() throws Exception {
+		CPDefinitionSpecificationOptionValue
+			cpDefinitionSpecificationOptionValue =
+				addCPDefinitionSpecificationOptionValue();
+
+		CPDefinitionSpecificationOptionValue
+			newCPDefinitionSpecificationOptionValue =
+				addCPDefinitionSpecificationOptionValue();
+
+		newCPDefinitionSpecificationOptionValue.setCompanyId(
+			cpDefinitionSpecificationOptionValue.getCompanyId());
+
+		newCPDefinitionSpecificationOptionValue = _persistence.update(
+			newCPDefinitionSpecificationOptionValue);
+
+		Session session = _persistence.getCurrentSession();
+
+		session.evict(newCPDefinitionSpecificationOptionValue);
+
+		newCPDefinitionSpecificationOptionValue.setExternalReferenceCode(
+			cpDefinitionSpecificationOptionValue.getExternalReferenceCode());
+
+		_persistence.update(newCPDefinitionSpecificationOptionValue);
 	}
 
 	@Test
@@ -335,6 +377,15 @@ public class CPDefinitionSpecificationOptionValuePersistenceTest {
 	}
 
 	@Test
+	public void testCountByERC_C() throws Exception {
+		_persistence.countByERC_C("", RandomTestUtil.nextLong());
+
+		_persistence.countByERC_C("null", 0L);
+
+		_persistence.countByERC_C((String)null, 0L);
+	}
+
+	@Test
 	public void testFindByPrimaryKeyExisting() throws Exception {
 		CPDefinitionSpecificationOptionValue
 			newCPDefinitionSpecificationOptionValue =
@@ -368,12 +419,13 @@ public class CPDefinitionSpecificationOptionValuePersistenceTest {
 
 		return OrderByComparatorFactoryUtil.create(
 			"CPDSpecificationOptionValue", "mvccVersion", true,
-			"ctCollectionId", true, "uuid", true,
+			"ctCollectionId", true, "uuid", true, "externalReferenceCode", true,
 			"CPDefinitionSpecificationOptionValueId", true, "groupId", true,
 			"companyId", true, "userId", true, "userName", true, "createDate",
 			true, "modifiedDate", true, "CPDefinitionId", true,
 			"CPSpecificationOptionId", true, "CPOptionCategoryId", true, "key",
-			true, "priority", true, "value", true, "lastPublishDate", true);
+			true, "priority", true, "value", true, "visible", true,
+			"lastPublishDate", true);
 	}
 
 	@Test
@@ -744,6 +796,17 @@ public class CPDefinitionSpecificationOptionValuePersistenceTest {
 			ReflectionTestUtil.invoke(
 				cpDefinitionSpecificationOptionValue, "getColumnOriginalValue",
 				new Class<?>[] {String.class}, "key_"));
+
+		Assert.assertEquals(
+			cpDefinitionSpecificationOptionValue.getExternalReferenceCode(),
+			ReflectionTestUtil.invoke(
+				cpDefinitionSpecificationOptionValue, "getColumnOriginalValue",
+				new Class<?>[] {String.class}, "externalReferenceCode"));
+		Assert.assertEquals(
+			Long.valueOf(cpDefinitionSpecificationOptionValue.getCompanyId()),
+			ReflectionTestUtil.<Long>invoke(
+				cpDefinitionSpecificationOptionValue, "getColumnOriginalValue",
+				new Class<?>[] {String.class}, "companyId"));
 	}
 
 	protected CPDefinitionSpecificationOptionValue
@@ -762,6 +825,9 @@ public class CPDefinitionSpecificationOptionValuePersistenceTest {
 			RandomTestUtil.nextLong());
 
 		cpDefinitionSpecificationOptionValue.setUuid(
+			RandomTestUtil.randomString());
+
+		cpDefinitionSpecificationOptionValue.setExternalReferenceCode(
 			RandomTestUtil.randomString());
 
 		cpDefinitionSpecificationOptionValue.setGroupId(
@@ -799,6 +865,9 @@ public class CPDefinitionSpecificationOptionValuePersistenceTest {
 
 		cpDefinitionSpecificationOptionValue.setValue(
 			RandomTestUtil.randomString());
+
+		cpDefinitionSpecificationOptionValue.setVisible(
+			RandomTestUtil.randomBoolean());
 
 		cpDefinitionSpecificationOptionValue.setLastPublishDate(
 			RandomTestUtil.nextDate());

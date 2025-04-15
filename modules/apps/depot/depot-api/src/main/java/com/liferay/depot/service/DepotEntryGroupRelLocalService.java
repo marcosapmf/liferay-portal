@@ -248,6 +248,11 @@ public interface DepotEntryGroupRelLocalService
 	public DepotEntryGroupRel getDepotEntryGroupRel(long depotEntryGroupRelId)
 		throws PortalException;
 
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public DepotEntryGroupRel getDepotEntryGroupRelByDepotEntryIdToGroupId(
+			long depotEntryId, long toGroupId)
+		throws PortalException;
+
 	/**
 	 * Returns the depot entry group rel matching the UUID and group.
 	 *
@@ -264,6 +269,10 @@ public interface DepotEntryGroupRelLocalService
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<DepotEntryGroupRel> getDepotEntryGroupRels(
 		DepotEntry depotEntry);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<DepotEntryGroupRel> getDepotEntryGroupRels(
+		DepotEntry depotEntry, int start, int end);
 
 	/**
 	 * Returns a range of all the depot entry group rels.

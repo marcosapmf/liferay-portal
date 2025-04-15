@@ -13,8 +13,6 @@ import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.exception.NoSuchModelException;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ResourceActionLocalService;
@@ -35,10 +33,12 @@ import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
 import com.liferay.portal.vulcan.batch.engine.VulcanBatchEngineTaskItemDelegate;
 import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineExportTaskResource;
 import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineImportTaskResource;
+import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegate;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 import com.liferay.portal.vulcan.util.ActionUtil;
+import com.liferay.portal.vulcan.util.UriInfoUtil;
 
 import java.io.Serializable;
 
@@ -68,7 +68,8 @@ import javax.ws.rs.core.UriInfo;
 @javax.ws.rs.Path("/v1.0")
 public abstract class BaseAccountGroupResourceImpl
 	implements AccountGroupResource, EntityModelResource,
-			   VulcanBatchEngineTaskItemDelegate<AccountGroup> {
+			   VulcanBatchEngineTaskItemDelegate<AccountGroup>,
+			   VulcanCRUDItemDelegate<AccountGroup> {
 
 	/**
 	 * Invoke this method with the command line:
@@ -113,9 +114,11 @@ public abstract class BaseAccountGroupResourceImpl
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
 			@javax.ws.rs.QueryParam("search")
 			String search,
-			@javax.ws.rs.core.Context Filter filter,
+			@javax.ws.rs.core.Context
+				com.liferay.portal.kernel.search.filter.Filter filter,
 			@javax.ws.rs.core.Context Pagination pagination,
-			@javax.ws.rs.core.Context Sort[] sorts)
+			@javax.ws.rs.core.Context com.liferay.portal.kernel.search.Sort[]
+				sorts)
 		throws Exception {
 
 		return Page.of(Collections.emptyList());
@@ -166,8 +169,10 @@ public abstract class BaseAccountGroupResourceImpl
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
 			@javax.ws.rs.QueryParam("search")
 			String search,
-			@javax.ws.rs.core.Context Filter filter,
-			@javax.ws.rs.core.Context Sort[] sorts,
+			@javax.ws.rs.core.Context
+				com.liferay.portal.kernel.search.filter.Filter filter,
+			@javax.ws.rs.core.Context com.liferay.portal.kernel.search.Sort[]
+				sorts,
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
 			@javax.ws.rs.QueryParam("callbackURL")
 			String callbackURL,
@@ -202,7 +207,7 @@ public abstract class BaseAccountGroupResourceImpl
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'POST' 'http://localhost:8080/o/headless-admin-user/v1.0/account-groups' -d $'{"customFields": ___, "description": ___, "externalReferenceCode": ___, "name": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 * curl -X 'POST' 'http://localhost:8080/o/headless-admin-user/v1.0/account-groups' -d $'{"accountBriefs": ___, "customFields": ___, "description": ___, "externalReferenceCode": ___, "name": ___, "permissions": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Operation(
 		description = "Creates a new account group"
@@ -417,7 +422,7 @@ public abstract class BaseAccountGroupResourceImpl
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'PATCH' 'http://localhost:8080/o/headless-admin-user/v1.0/account-groups/by-external-reference-code/{externalReferenceCode}' -d $'{"customFields": ___, "description": ___, "externalReferenceCode": ___, "name": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 * curl -X 'PATCH' 'http://localhost:8080/o/headless-admin-user/v1.0/account-groups/by-external-reference-code/{externalReferenceCode}' -d $'{"accountBriefs": ___, "customFields": ___, "description": ___, "externalReferenceCode": ___, "name": ___, "permissions": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Operation(
 		description = "Updates the account with information sent in the request body. Only the provided fields are updated."
@@ -466,6 +471,10 @@ public abstract class BaseAccountGroupResourceImpl
 			existingAccountGroup.setName(accountGroup.getName());
 		}
 
+		if (accountGroup.getPermissions() != null) {
+			existingAccountGroup.setPermissions(accountGroup.getPermissions());
+		}
+
 		preparePatch(accountGroup, existingAccountGroup);
 
 		return putAccountGroupByExternalReferenceCode(
@@ -475,7 +484,7 @@ public abstract class BaseAccountGroupResourceImpl
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'PUT' 'http://localhost:8080/o/headless-admin-user/v1.0/account-groups/by-external-reference-code/{externalReferenceCode}' -d $'{"customFields": ___, "description": ___, "externalReferenceCode": ___, "name": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 * curl -X 'PUT' 'http://localhost:8080/o/headless-admin-user/v1.0/account-groups/by-external-reference-code/{externalReferenceCode}' -d $'{"accountBriefs": ___, "customFields": ___, "description": ___, "externalReferenceCode": ___, "name": ___, "permissions": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Operation(
 		description = "Replaces the account group with information sent in the request body. Any missing fields are deleted unless they are required."
@@ -617,7 +626,7 @@ public abstract class BaseAccountGroupResourceImpl
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'PATCH' 'http://localhost:8080/o/headless-admin-user/v1.0/account-groups/{accountGroupId}' -d $'{"customFields": ___, "description": ___, "externalReferenceCode": ___, "name": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 * curl -X 'PATCH' 'http://localhost:8080/o/headless-admin-user/v1.0/account-groups/{accountGroupId}' -d $'{"accountBriefs": ___, "customFields": ___, "description": ___, "externalReferenceCode": ___, "name": ___, "permissions": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Operation(
 		description = "Updates the account group with information sent in the request body. Only the provided fields are updated."
@@ -663,6 +672,10 @@ public abstract class BaseAccountGroupResourceImpl
 			existingAccountGroup.setName(accountGroup.getName());
 		}
 
+		if (accountGroup.getPermissions() != null) {
+			existingAccountGroup.setPermissions(accountGroup.getPermissions());
+		}
+
 		preparePatch(accountGroup, existingAccountGroup);
 
 		return putAccountGroup(accountGroupId, existingAccountGroup);
@@ -671,7 +684,7 @@ public abstract class BaseAccountGroupResourceImpl
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'PUT' 'http://localhost:8080/o/headless-admin-user/v1.0/account-groups/{accountGroupId}' -d $'{"customFields": ___, "description": ___, "externalReferenceCode": ___, "name": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 * curl -X 'PUT' 'http://localhost:8080/o/headless-admin-user/v1.0/account-groups/{accountGroupId}' -d $'{"accountBriefs": ___, "customFields": ___, "description": ___, "externalReferenceCode": ___, "name": ___, "permissions": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Operation(
 		description = "Replaces the account group with information sent in the request body. Any missing fields are deleted unless they are required."
@@ -978,8 +991,46 @@ public abstract class BaseAccountGroupResourceImpl
 			Map<String, Serializable> parameters)
 		throws Exception {
 
-		for (AccountGroup accountGroup : accountGroups) {
-			deleteAccountGroup(accountGroup.getId());
+		UnsafeFunction<AccountGroup, AccountGroup, Exception>
+			accountGroupUnsafeFunction = accountGroup -> {
+				if (accountGroup.getId() != null) {
+					try {
+						deleteAccountGroup(accountGroup.getId());
+
+						return accountGroup;
+					}
+					catch (Exception exception) {
+						if (accountGroup.getExternalReferenceCode() != null) {
+							deleteAccountGroupByExternalReferenceCode(
+								accountGroup.getExternalReferenceCode());
+
+							return accountGroup;
+						}
+					}
+				}
+				else if (accountGroup.getExternalReferenceCode() != null) {
+					deleteAccountGroupByExternalReferenceCode(
+						accountGroup.getExternalReferenceCode());
+
+					return accountGroup;
+				}
+
+				throw new UnsupportedOperationException(
+					"Unable to delete by external reference code or ID");
+			};
+
+		if (contextBatchUnsafeBiConsumer != null) {
+			contextBatchUnsafeBiConsumer.accept(
+				accountGroups, accountGroupUnsafeFunction);
+		}
+		else if (contextBatchUnsafeConsumer != null) {
+			contextBatchUnsafeConsumer.accept(
+				accountGroups, accountGroupUnsafeFunction::apply);
+		}
+		else {
+			for (AccountGroup accountGroup : accountGroups) {
+				accountGroupUnsafeFunction.apply(accountGroup);
+			}
 		}
 	}
 
@@ -1016,7 +1067,9 @@ public abstract class BaseAccountGroupResourceImpl
 
 	@Override
 	public Page<AccountGroup> read(
-			Filter filter, Pagination pagination, Sort[] sorts,
+			com.liferay.portal.kernel.search.filter.Filter filter,
+			Pagination pagination,
+			com.liferay.portal.kernel.search.Sort[] sorts,
 			Map<String, Serializable> parameters, String search)
 		throws Exception {
 
@@ -1106,6 +1159,11 @@ public abstract class BaseAccountGroupResourceImpl
 		return null;
 	}
 
+	@Override
+	public AccountGroup getItem(Long id) throws Exception {
+		return getAccountGroup(id);
+	}
+
 	public void setContextAcceptLanguage(AcceptLanguage contextAcceptLanguage) {
 		this.contextAcceptLanguage = contextAcceptLanguage;
 	}
@@ -1146,7 +1204,8 @@ public abstract class BaseAccountGroupResourceImpl
 	}
 
 	public void setContextUriInfo(UriInfo contextUriInfo) {
-		this.contextUriInfo = contextUriInfo;
+		this.contextUriInfo = UriInfoUtil.getVulcanUriInfo(
+			getApplicationPath(), contextUriInfo);
 	}
 
 	public void setContextUser(
@@ -1156,7 +1215,8 @@ public abstract class BaseAccountGroupResourceImpl
 	}
 
 	public void setExpressionConvert(
-		ExpressionConvert<Filter> expressionConvert) {
+		ExpressionConvert<com.liferay.portal.kernel.search.filter.Filter>
+			expressionConvert) {
 
 		this.expressionConvert = expressionConvert;
 	}
@@ -1191,6 +1251,10 @@ public abstract class BaseAccountGroupResourceImpl
 		this.sortParserProvider = sortParserProvider;
 	}
 
+	protected String getApplicationPath() {
+		return "headless-admin-user";
+	}
+
 	public void setVulcanBatchEngineExportTaskResource(
 		VulcanBatchEngineExportTaskResource
 			vulcanBatchEngineExportTaskResource) {
@@ -1208,7 +1272,7 @@ public abstract class BaseAccountGroupResourceImpl
 	}
 
 	@Override
-	public Filter toFilter(
+	public com.liferay.portal.kernel.search.filter.Filter toFilter(
 		String filterString, Map<String, List<String>> multivaluedMap) {
 
 		try {
@@ -1233,7 +1297,7 @@ public abstract class BaseAccountGroupResourceImpl
 	}
 
 	@Override
-	public Sort[] toSorts(String sortString) {
+	public com.liferay.portal.kernel.search.Sort[] toSorts(String sortString) {
 		if (Validator.isNull(sortString)) {
 			return null;
 		}
@@ -1251,13 +1315,13 @@ public abstract class BaseAccountGroupResourceImpl
 					sortParser.parse(sortString));
 
 			List<SortField> sortFields = oDataSort.getSortFields();
-
-			Sort[] sorts = new Sort[sortFields.size()];
+			com.liferay.portal.kernel.search.Sort[] sorts =
+				new com.liferay.portal.kernel.search.Sort[sortFields.size()];
 
 			for (int i = 0; i < sortFields.size(); i++) {
 				SortField sortField = sortFields.get(i);
 
-				sorts[i] = new Sort(
+				sorts[i] = new com.liferay.portal.kernel.search.Sort(
 					sortField.getSortableFieldName(
 						contextAcceptLanguage.getPreferredLocale()),
 					!sortField.isAscending());
@@ -1268,7 +1332,7 @@ public abstract class BaseAccountGroupResourceImpl
 		catch (Exception exception) {
 			_log.error("Invalid sort " + sortString, exception);
 
-			return new Sort[0];
+			return new com.liferay.portal.kernel.search.Sort[0];
 		}
 	}
 
@@ -1398,7 +1462,8 @@ public abstract class BaseAccountGroupResourceImpl
 	protected Object contextScopeChecker;
 	protected UriInfo contextUriInfo;
 	protected com.liferay.portal.kernel.model.User contextUser;
-	protected ExpressionConvert<Filter> expressionConvert;
+	protected ExpressionConvert<com.liferay.portal.kernel.search.filter.Filter>
+		expressionConvert;
 	protected FilterParserProvider filterParserProvider;
 	protected GroupLocalService groupLocalService;
 	protected ResourceActionLocalService resourceActionLocalService;

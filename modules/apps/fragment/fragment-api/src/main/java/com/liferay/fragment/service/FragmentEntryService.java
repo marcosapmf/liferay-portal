@@ -58,8 +58,8 @@ public interface FragmentEntryService extends BaseService {
 			long fragmentCollectionId, String fragmentEntryKey, String name,
 			String css, String html, String js, boolean cacheable,
 			String configuration, String icon, long previewFileEntryId,
-			boolean readOnly, int type, String typeOptions, int status,
-			ServiceContext serviceContext)
+			boolean marketplace, boolean readOnly, int type, String typeOptions,
+			int status, ServiceContext serviceContext)
 		throws PortalException;
 
 	public FragmentEntry copyFragmentEntry(

@@ -1,7 +1,7 @@
 dependencies {
-	testIntegrationImplementation group: "com.fasterxml.jackson.core", name: "jackson-annotations", version: "2.16.1"
-	testIntegrationImplementation group: "com.fasterxml.jackson.core", name: "jackson-core", version: "2.16.1"
-	testIntegrationImplementation group: "com.fasterxml.jackson.core", name: "jackson-databind", version: "2.16.1"
+	testIntegrationImplementation group: "com.fasterxml.jackson.core", name: "jackson-annotations", version: "2.18.2"
+	testIntegrationImplementation group: "com.fasterxml.jackson.core", name: "jackson-core", version: "2.18.2"
+	testIntegrationImplementation group: "com.fasterxml.jackson.core", name: "jackson-databind", version: "2.18.2"
 	testIntegrationImplementation group: "com.liferay.portal", name: "com.liferay.portal.test", version: "default"
 	testIntegrationImplementation group: "com.liferay.portal", name: "com.liferay.portal.test.integration", version: "default"
 	testIntegrationImplementation group: "commons-lang", name: "commons-lang", version: "2.6"
@@ -25,7 +25,9 @@ dependencies {
 	testIntegrationImplementation project(":apps:commerce:headless:headless-commerce-core-api")
 	testIntegrationImplementation project(":apps:commerce:headless:headless-commerce:headless-commerce-admin-channel-api")
 	testIntegrationImplementation project(":apps:commerce:headless:headless-commerce:headless-commerce-admin-channel-client")
+	testIntegrationImplementation project(":apps:headless:headless-batch-engine:headless-batch-engine-client")
 	testIntegrationImplementation project(":apps:layout:layout-test-util")
+	testIntegrationImplementation project(":apps:oauth2-provider:oauth2-provider-scope-api")
 	testIntegrationImplementation project(":apps:portal-odata:portal-odata-api")
 	testIntegrationImplementation project(":apps:portal-search:portal-search-test-util")
 	testIntegrationImplementation project(":apps:portal-vulcan:portal-vulcan-api")

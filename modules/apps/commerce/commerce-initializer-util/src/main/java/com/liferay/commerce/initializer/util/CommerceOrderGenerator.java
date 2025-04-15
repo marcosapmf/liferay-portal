@@ -14,6 +14,7 @@ import com.liferay.commerce.constants.CommerceOrderConstants;
 import com.liferay.commerce.constants.CommerceOrderPaymentConstants;
 import com.liferay.commerce.context.CommerceContext;
 import com.liferay.commerce.context.CommerceContextFactory;
+import com.liferay.commerce.context.CommerceContextThreadLocal;
 import com.liferay.commerce.currency.model.CommerceCurrency;
 import com.liferay.commerce.currency.service.CommerceCurrencyLocalService;
 import com.liferay.commerce.inventory.CPDefinitionInventoryEngine;
@@ -165,15 +166,16 @@ public class CommerceOrderGenerator {
 				_commerceChannelLocalService.
 					getCommerceChannelGroupIdBySiteGroupId(groupId),
 				accountEntryUserRel.getAccountEntryId(),
-				commerceCurrency.getCommerceCurrencyId(), 0);
+				commerceCurrency.getCode(), 0);
 
 		// Commerce order items
 
 		CommerceContext commerceContext = _commerceContextFactory.create(
-			commerceOrder.getCompanyId(), commerceOrder.getGroupId(),
-			accountEntryUserRel.getAccountUserId(),
-			commerceOrder.getCommerceOrderId(),
-			accountEntryUserRel.getAccountEntryId());
+			accountEntryUserRel.getAccountEntryId(), commerceOrder.getGroupId(),
+			null, commerceOrder.getCommerceOrderId(),
+			commerceOrder.getCompanyId());
+
+		CommerceContextThreadLocal.set(commerceContext);
 
 		ServiceContext serviceContext = _getServiceContext(commerceOrder);
 
@@ -263,6 +265,8 @@ public class CommerceOrderGenerator {
 					getCPDefinitionInventoryEngine(cpDefinitionInventory);
 
 			BigDecimal maxOrderQuantity = _getMaxOrderQuantity(
+				commerceContext.getCPConfigurationListId(
+					cpInstance.getGroupId()),
 				cpInstance, cpDefinitionInventoryEngine);
 
 			if (BigDecimalUtil.lt(maxOrderQuantity, BigDecimal.ZERO)) {
@@ -273,7 +277,10 @@ public class CommerceOrderGenerator {
 
 			try {
 				BigDecimal minOrderQuantity =
-					cpDefinitionInventoryEngine.getMinOrderQuantity(cpInstance);
+					cpDefinitionInventoryEngine.getMinOrderQuantity(
+						commerceContext.getCPConfigurationListId(
+							cpInstance.getGroupId()),
+						cpInstance);
 
 				if (BigDecimalUtil.lt(maxOrderQuantity, minOrderQuantity)) {
 					continue;
@@ -441,7 +448,7 @@ public class CommerceOrderGenerator {
 	}
 
 	private BigDecimal _getMaxOrderQuantity(
-			CPInstance cpInstance,
+			long cpConfigurationListId, CPInstance cpInstance,
 			CPDefinitionInventoryEngine cpDefinitionInventoryEngine)
 		throws PortalException {
 
@@ -450,7 +457,8 @@ public class CommerceOrderGenerator {
 			cpInstance.getSku(), StringPool.BLANK);
 
 		BigDecimal maxOrderQuantity =
-			cpDefinitionInventoryEngine.getMaxOrderQuantity(cpInstance);
+			cpDefinitionInventoryEngine.getMaxOrderQuantity(
+				cpConfigurationListId, cpInstance);
 
 		if (BigDecimalUtil.lt(stockQuantity, maxOrderQuantity)) {
 			return stockQuantity;

@@ -41,6 +41,7 @@ import com.liferay.object.admin.rest.resource.v1_0.ObjectDefinitionResource;
 import com.liferay.object.constants.ObjectActionExecutorConstants;
 import com.liferay.object.constants.ObjectActionTriggerConstants;
 import com.liferay.object.constants.ObjectDefinitionConstants;
+import com.liferay.object.constants.ObjectEntryFolderConstants;
 import com.liferay.object.constants.ObjectFieldSettingConstants;
 import com.liferay.object.constants.ObjectRelationshipConstants;
 import com.liferay.object.constants.ObjectValidationRuleConstants;
@@ -176,7 +177,7 @@ import org.junit.runner.RunWith;
 /**
  * @author Matija Petanjek
  */
-@FeatureFlags({"LPS-135430", "LPS-164948", "LPS-187142"})
+@FeatureFlags({"LPD-34594", "LPS-135430"})
 @RunWith(Arquillian.class)
 public class BatchEngineBrokerTest {
 
@@ -568,6 +569,7 @@ public class BatchEngineBrokerTest {
 			externalReferenceCode, userId,
 			_getGroupId(groupId, objectDefinition),
 			objectDefinition.getObjectDefinitionId(),
+			ObjectEntryFolderConstants.PARENT_OBJECT_ENTRY_FOLDER_ID_DEFAULT,
 			HashMapBuilder.<String, Serializable>put(
 				"testAttachmentField", dlFileEntry.getFileEntryId()
 			).put(
@@ -625,7 +627,7 @@ public class BatchEngineBrokerTest {
 		_company2 = CompanyTestUtil.addCompany(true);
 
 		try (SafeCloseable safeCloseable =
-				CompanyThreadLocal.setWithSafeCloseable(
+				CompanyThreadLocal.setCompanyIdWithSafeCloseable(
 					_company2.getCompanyId())) {
 
 			User user = UserTestUtil.getAdminUser(_company2.getCompanyId());
@@ -1162,11 +1164,13 @@ public class BatchEngineBrokerTest {
 
 		ObjectDefinition objectDefinition =
 			_objectDefinitionLocalService.addCustomObjectDefinition(
-				user.getUserId(), 0, false, true, false, false,
+				user.getUserId(), 0, null, false, false, true, false, false,
+				false,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				name, null, null,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				false, scope, ObjectDefinitionConstants.STORAGE_TYPE_DEFAULT,
+				Collections.emptyList(),
 				Arrays.asList(
 					new AttachmentObjectFieldBuilder(
 					).labelMap(
@@ -1311,7 +1315,7 @@ public class BatchEngineBrokerTest {
 				null, TestPropsValues.getUserId(),
 				objectDefinition.getObjectDefinitionId(),
 				objectDefinition.getObjectDefinitionId(), 0,
-				ObjectRelationshipConstants.DELETION_TYPE_PREVENT,
+				ObjectRelationshipConstants.DELETION_TYPE_PREVENT, false,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				"a" + RandomTestUtil.randomString(), false,
 				ObjectRelationshipConstants.TYPE_ONE_TO_MANY, null);
@@ -1396,7 +1400,7 @@ public class BatchEngineBrokerTest {
 			null, TestPropsValues.getUserId(),
 			_objectDefinition1.getObjectDefinitionId(),
 			_objectDefinition2.getObjectDefinitionId(), 0,
-			ObjectRelationshipConstants.DELETION_TYPE_PREVENT,
+			ObjectRelationshipConstants.DELETION_TYPE_PREVENT, false,
 			LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 			"a" + RandomTestUtil.randomString(), false,
 			ObjectRelationshipConstants.TYPE_ONE_TO_MANY, null);

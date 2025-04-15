@@ -7,19 +7,18 @@ package com.liferay.site.navigation.breadcrumb.web.internal.display.context;
 
 import com.liferay.portal.configuration.module.configuration.ConfigurationProviderUtil;
 import com.liferay.portal.kernel.model.Group;
-import com.liferay.portal.kernel.model.GroupConstants;
 import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
+import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.WebKeys;
-import com.liferay.portal.model.impl.GroupImpl;
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
 import com.liferay.site.navigation.breadcrumb.web.internal.configuration.SiteNavigationBreadcrumbPortletInstanceConfiguration;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Assert;
-import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 
@@ -35,56 +34,104 @@ public class SiteNavigationBreadcrumbDisplayContextTest {
 	public static LiferayUnitTestRule liferayUnitTestRule =
 		LiferayUnitTestRule.INSTANCE;
 
-	@Before
-	public void setUp() {
-		_setUpConfigurationProviderUtil();
-		_setUpGroupLocalServiceUtil();
+	@BeforeClass
+	public static void setUpClass() {
+		_configurationProviderUtilMockedStatic.when(
+			() -> ConfigurationProviderUtil.getPortletInstanceConfiguration(
+				Mockito.any(), Mockito.any())
+		).thenReturn(
+			_siteNavigationBreadcrumbPortletInstanceConfiguration
+		);
 	}
 
-	@After
-	public void tearDown() {
+	@AfterClass
+	public static void tearDownClass() {
 		_configurationProviderUtilMockedStatic.close();
 		_groupLocalServiceUtilMockedStatic.close();
 	}
 
 	@Test
-	public void testGetDisplayStyleGroupKey() throws Exception {
-		SiteNavigationBreadcrumbDisplayContext
-			siteNavigationBreadcrumbDisplayContext =
-				new SiteNavigationBreadcrumbDisplayContext(
-					_mockHttpServletRequest(), null);
+	public void testGetDisplayStyleGroup() throws Exception {
+		_setUpDisplayStyleGroupExternalReferenceCode(null);
+		_setUpGroupLocalServiceUtil(_getGroup());
 
-		Assert.assertEquals(
-			GroupConstants.GUEST,
-			siteNavigationBreadcrumbDisplayContext.getDisplayStyleGroupKey());
+		Group group = _getGroup();
+
+		_assertSiteNavigationBreadcrumbDisplayContext(
+			_mockHttpServletRequest(group), group);
+
+		_groupLocalServiceUtilMockedStatic.verifyNoInteractions();
 	}
 
 	@Test
-	public void testGetDisplayStyleGroupKeyWithConfiguration()
-		throws Exception {
+	public void testGetDisplayStyleGroupWithConfiguration() throws Exception {
+		Group group = _getGroup();
 
-		Mockito.when(
-			_siteNavigationBreadcrumbPortletInstanceConfiguration.
-				displayStyleGroupKey()
-		).thenReturn(
-			GroupConstants.CONTROL_PANEL
-		);
+		_setUpDisplayStyleGroupExternalReferenceCode(
+			group.getExternalReferenceCode());
+		_setUpGroupLocalServiceUtil(group);
+
+		_assertSiteNavigationBreadcrumbDisplayContext(
+			_mockHttpServletRequest(_getGroup()), group);
+
+		_groupLocalServiceUtilMockedStatic.verify(
+			() -> GroupLocalServiceUtil.fetchGroupByExternalReferenceCode(
+				group.getExternalReferenceCode(), 0L),
+			Mockito.times(2));
+	}
+
+	private void _assertSiteNavigationBreadcrumbDisplayContext(
+			HttpServletRequest httpServletRequest, Group group)
+		throws Exception {
 
 		SiteNavigationBreadcrumbDisplayContext
 			siteNavigationBreadcrumbDisplayContext =
 				new SiteNavigationBreadcrumbDisplayContext(
-					_mockHttpServletRequest(), null);
+					httpServletRequest, null);
 
 		Assert.assertEquals(
-			GroupConstants.CONTROL_PANEL,
+			group.getGroupId(),
+			siteNavigationBreadcrumbDisplayContext.getDisplayStyleGroupId());
+		Assert.assertEquals(
+			group.getGroupKey(),
 			siteNavigationBreadcrumbDisplayContext.getDisplayStyleGroupKey());
 	}
 
-	private HttpServletRequest _mockHttpServletRequest() {
+	private Group _getGroup() {
+		Group group = Mockito.mock(Group.class);
+
+		Mockito.when(
+			group.getExternalReferenceCode()
+		).thenReturn(
+			RandomTestUtil.randomString()
+		);
+
+		Mockito.when(
+			group.getGroupId()
+		).thenReturn(
+			RandomTestUtil.randomLong()
+		);
+
+		Mockito.when(
+			group.getGroupKey()
+		).thenReturn(
+			RandomTestUtil.randomString()
+		);
+
+		return group;
+	}
+
+	private HttpServletRequest _mockHttpServletRequest(Group group) {
 		HttpServletRequest httpServletRequest = Mockito.mock(
 			HttpServletRequest.class);
 
 		ThemeDisplay themeDisplay = Mockito.mock(ThemeDisplay.class);
+
+		Mockito.when(
+			themeDisplay.getScopeGroup()
+		).thenReturn(
+			group
+		);
 
 		Mockito.when(
 			(ThemeDisplay)httpServletRequest.getAttribute(WebKeys.THEME_DISPLAY)
@@ -95,34 +142,37 @@ public class SiteNavigationBreadcrumbDisplayContextTest {
 		return httpServletRequest;
 	}
 
-	private void _setUpConfigurationProviderUtil() {
-		_configurationProviderUtilMockedStatic.when(
-			() -> ConfigurationProviderUtil.getPortletInstanceConfiguration(
-				Mockito.any(), Mockito.any())
+	private void _setUpDisplayStyleGroupExternalReferenceCode(
+		String externalReferenceCode) {
+
+		Mockito.reset(_siteNavigationBreadcrumbPortletInstanceConfiguration);
+
+		Mockito.when(
+			_siteNavigationBreadcrumbPortletInstanceConfiguration.
+				displayStyleGroupExternalReferenceCode()
 		).thenReturn(
-			_siteNavigationBreadcrumbPortletInstanceConfiguration
+			externalReferenceCode
 		);
 	}
 
-	private void _setUpGroupLocalServiceUtil() {
-		Group group = new GroupImpl();
-
-		group.setGroupKey(GroupConstants.GUEST);
+	private void _setUpGroupLocalServiceUtil(Group group) throws Exception {
+		_groupLocalServiceUtilMockedStatic.reset();
 
 		Mockito.when(
-			GroupLocalServiceUtil.fetchGroup(Mockito.anyLong())
+			GroupLocalServiceUtil.fetchGroupByExternalReferenceCode(
+				group.getExternalReferenceCode(), 0L)
 		).thenReturn(
 			group
 		);
 	}
 
-	private final MockedStatic<ConfigurationProviderUtil>
+	private static final MockedStatic<ConfigurationProviderUtil>
 		_configurationProviderUtilMockedStatic = Mockito.mockStatic(
 			ConfigurationProviderUtil.class);
-	private final MockedStatic<GroupLocalServiceUtil>
+	private static final MockedStatic<GroupLocalServiceUtil>
 		_groupLocalServiceUtilMockedStatic = Mockito.mockStatic(
 			GroupLocalServiceUtil.class);
-	private final SiteNavigationBreadcrumbPortletInstanceConfiguration
+	private static final SiteNavigationBreadcrumbPortletInstanceConfiguration
 		_siteNavigationBreadcrumbPortletInstanceConfiguration = Mockito.mock(
 			SiteNavigationBreadcrumbPortletInstanceConfiguration.class);
 

@@ -8,7 +8,7 @@ import {FrameLocator, Locator, Page, expect} from '@playwright/test';
 import {clickAndExpectToBeVisible} from '../../../utils/clickAndExpectToBeVisible';
 import {expandSection} from '../../../utils/expandSection';
 import {PORTLET_URLS} from '../../../utils/portletUrls';
-import {waitForSuccessAlert} from '../../../utils/waitForSuccessAlert';
+import {waitForAlert} from '../../../utils/waitForAlert';
 
 export class JournalPage {
 	readonly page: Page;
@@ -53,14 +53,26 @@ export class JournalPage {
 		);
 	}
 
-	async fillArticleData(title: string, content: string) {
-		await this.articleTitleInput.fill(title);
-
+	async fillArticleContent(content: string) {
 		await this.articleContentTextBox.click();
 
 		await this.page.keyboard.press('Control+KeyA');
 		await this.page.keyboard.press('Backspace');
 		await this.page.keyboard.type(content);
+	}
+
+	async fillArticleData(title: string, content: string) {
+		await this.articleTitleInput.fill(title);
+
+		await this.fillArticleContent(content);
+	}
+
+	async fillArticleDataSiteTemplate(title: string, content: string) {
+		await this.articleTitleInput.focus();
+		await this.articleTitleInput.click();
+		await this.page.keyboard.type(title);
+
+		await this.fillArticleContent(content);
 	}
 
 	async goToCreateArticle(structureName?: string) {
@@ -79,6 +91,14 @@ export class JournalPage {
 		await this.page.locator('.article-content-content').waitFor();
 	}
 
+	async goToCreateFolder() {
+		await clickAndExpectToBeVisible({
+			autoClick: true,
+			target: this.page.getByRole('menuitem', {name: 'Folder'}),
+			trigger: this.newButton,
+		});
+	}
+
 	async goToJournalArticleAction(action: string, title: string) {
 		await this.page.getByLabel(`Actions for ${title}`).waitFor();
 
@@ -94,6 +114,31 @@ export class JournalPage {
 		});
 	}
 
+	async goToJournalFolderAction(action: string, title: string) {
+		await clickAndExpectToBeVisible({
+			autoClick: true,
+			target: this.page.getByRole('menuitem', {name: 'cards'}),
+			trigger: this.page.getByLabel('Select View, Currently Selected: '),
+		});
+
+		const folder = this.page.locator(
+			`[data-qa-id="row"][data-title="${title}"]`
+		);
+
+		await folder.waitFor();
+
+		await clickAndExpectToBeVisible({
+			autoClick: true,
+			target: this.page.getByRole('menuitem', {
+				exact: true,
+				name: action,
+			}),
+			trigger: folder.getByLabel('More actions', {
+				exact: true,
+			}),
+		});
+	}
+
 	async assertJournalArticlePermissions(
 		title: string,
 		permissions: {enabled: boolean; locator: string}[]
@@ -101,6 +146,10 @@ export class JournalPage {
 		await this.goToJournalArticleAction('Permissions', title);
 
 		await this.assertPermissions(permissions);
+	}
+
+	async assertTitle(title: string) {
+		await expect(this.page.locator(`a[title='${title}']`)).toBeVisible();
 	}
 
 	async assertPermissions(
@@ -142,10 +191,32 @@ export class JournalPage {
 		});
 	}
 
+	async moveToFolder(folderName: String) {
+		await this.page.getByRole('button', {name: 'Move'}).click();
+
+		await this.page.getByRole('button', {name: 'Select'}).click();
+
+		await this.page
+			.frameLocator('iframe[title="Select Folder"]')
+			.getByRole('button')
+			.click();
+
+		await this.page
+			.frameLocator('iframe[title="Select Folder"]')
+			.getByText(`${folderName}`)
+			.click();
+
+		await this.page.getByRole('button', {name: 'Move'}).click();
+
+		await expect(
+			this.page.getByText('Success:Your request completed successfully.')
+		).toBeVisible();
+	}
+
 	async publishArticle() {
 		await this.publishButton.click();
 
-		await waitForSuccessAlert(this.page, `was created successfully.`);
+		await waitForAlert(this.page, `was created successfully.`);
 	}
 
 	async setJournalArticlePermissions(
@@ -188,7 +259,7 @@ export class JournalPage {
 	}
 
 	async setArticleViewableBy(value: 'Anyone' | 'Site Members' | 'Owner') {
-		const permissionsGroup = this.page.getByRole('link', {
+		const permissionsGroup = this.page.getByRole('button', {
 			name: 'Permissions',
 		});
 

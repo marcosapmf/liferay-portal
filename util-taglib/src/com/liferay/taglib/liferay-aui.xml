@@ -883,6 +883,50 @@
 			</attribute>
 		</attributes>
 	</component>
+	<component dynamicAttributes="false" name="Link" parentClass="com.liferay.taglib.util.PositionTagSupport" writeJSP="false">
+		<attributes>
+			<attribute>
+				<name>crossOrigin</name>
+				<required>false</required>
+				<rtexprvalue>true</rtexprvalue>
+			</attribute>
+			<attribute>
+				<name>cssClass</name>
+				<inputType>java.lang.String</inputType>
+				<outputType>java.lang.String</outputType>
+			</attribute>
+			<attribute>
+				<name>href</name>
+				<inputType>java.lang.String</inputType>
+				<outputType>java.lang.String</outputType>
+			</attribute>
+			<attribute>
+				<name>id</name>
+				<inputType>java.lang.String</inputType>
+				<outputType>java.lang.String</outputType>
+			</attribute>
+			<attribute>
+				<name>integrity</name>
+				<inputType>java.lang.String</inputType>
+				<outputType>java.lang.String</outputType>
+			</attribute>
+			<attribute>
+				<name>rel</name>
+				<inputType>java.lang.String</inputType>
+				<outputType>java.lang.String</outputType>
+			</attribute>
+			<attribute>
+				<name>senna</name>
+				<inputType>java.lang.String</inputType>
+				<outputType>java.lang.String</outputType>
+			</attribute>
+			<attribute>
+				<name>type</name>
+				<inputType>java.lang.String</inputType>
+				<outputType>java.lang.String</outputType>
+			</attribute>
+		</attributes>
+	</component>
 	<component dynamicAttributes="false" name="ModelContext" writeJSP="false">
 		<description>Creates a configurable model context object that can be used as a model for other components.</description>
 		<attributes>
@@ -1233,43 +1277,36 @@
 		<description>Creates a script component in which to write JavaScript that facilitates using AlloyUI modules.</description>
 		<attributes>
 			<attribute>
-				<description></description>
 				<name>async</name>
 				<inputType>boolean</inputType>
 				<outputType>boolean</outputType>
 			</attribute>
 			<attribute>
-				<description></description>
 				<name>blocking</name>
 				<inputType>java.lang.String</inputType>
 				<outputType>java.lang.String</outputType>
 			</attribute>
 			<attribute>
-				<description></description>
 				<name>crossOrigin</name>
 				<inputType>java.lang.String</inputType>
 				<outputType>java.lang.String</outputType>
 			</attribute>
 			<attribute>
-				<description></description>
 				<name>defer</name>
 				<inputType>boolean</inputType>
 				<outputType>boolean</outputType>
 			</attribute>
 			<attribute>
-				<description></description>
 				<name>fetchPriority</name>
 				<inputType>java.lang.String</inputType>
 				<outputType>java.lang.String</outputType>
 			</attribute>
 			<attribute>
-				<description></description>
 				<name>id</name>
 				<inputType>java.lang.String</inputType>
 				<outputType>java.lang.String</outputType>
 			</attribute>
 			<attribute>
-				<description></description>
 				<name>integrity</name>
 				<inputType>java.lang.String</inputType>
 				<outputType>java.lang.String</outputType>
@@ -1283,7 +1320,6 @@
 				<settable>false</settable>
 			</attribute>
 			<attribute>
-				<description></description>
 				<name>referrerPolicy</name>
 				<inputType>java.lang.String</inputType>
 				<outputType>java.lang.String</outputType>
@@ -1299,19 +1335,16 @@
 				<outputType>boolean</outputType>
 			</attribute>
 			<attribute>
-				<description></description>
 				<name>senna</name>
 				<inputType>java.lang.String</inputType>
 				<outputType>java.lang.String</outputType>
 			</attribute>
 			<attribute>
-				<description></description>
 				<name>src</name>
 				<inputType>java.lang.String</inputType>
 				<outputType>java.lang.String</outputType>
 			</attribute>
 			<attribute>
-				<description></description>
 				<name>type</name>
 				<inputType>java.lang.String</inputType>
 				<outputType>java.lang.String</outputType>
@@ -1510,6 +1543,20 @@
 			<attribute>
 				<description>A CSS class for styling the <![CDATA[<code>div</code>]]> that wraps the select field.</description>
 				<name>wrapperCssClass</name>
+				<inputType>java.lang.String</inputType>
+				<outputType>java.lang.String</outputType>
+			</attribute>
+		</attributes>
+	</component>
+	<component dynamicAttributes="false" name="Style" parentClass="com.liferay.taglib.util.PositionTagSupport" writeJSP="false">
+		<attributes>
+			<attribute>
+				<name>senna</name>
+				<inputType>java.lang.String</inputType>
+				<outputType>java.lang.String</outputType>
+			</attribute>
+			<attribute>
+				<name>type</name>
 				<inputType>java.lang.String</inputType>
 				<outputType>java.lang.String</outputType>
 			</attribute>

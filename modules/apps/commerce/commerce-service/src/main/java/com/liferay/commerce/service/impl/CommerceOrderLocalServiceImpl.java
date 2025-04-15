@@ -8,6 +8,7 @@ package com.liferay.commerce.service.impl;
 import com.liferay.account.model.AccountEntry;
 import com.liferay.commerce.configuration.CommerceOrderConfiguration;
 import com.liferay.commerce.configuration.CommerceOrderFieldsConfiguration;
+import com.liferay.commerce.constants.CommerceAddressConstants;
 import com.liferay.commerce.constants.CommerceConstants;
 import com.liferay.commerce.constants.CommerceOrderConstants;
 import com.liferay.commerce.constants.CommerceOrderPaymentConstants;
@@ -57,6 +58,7 @@ import com.liferay.commerce.term.model.CommerceTermEntry;
 import com.liferay.commerce.term.service.CommerceTermEntryLocalService;
 import com.liferay.commerce.util.CommerceShippingEngineRegistry;
 import com.liferay.commerce.util.CommerceUtil;
+import com.liferay.document.library.kernel.util.DLAppHelperThreadLocal;
 import com.liferay.expando.kernel.service.ExpandoRowLocalService;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.aop.AopService;
@@ -64,6 +66,7 @@ import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
@@ -77,6 +80,9 @@ import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.SystemEventConstants;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.UserConstants;
+import com.liferay.portal.kernel.repository.LocalRepository;
+import com.liferay.portal.kernel.repository.model.FileEntry;
+import com.liferay.portal.kernel.repository.model.Folder;
 import com.liferay.portal.kernel.search.BaseModelSearchResult;
 import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.search.Field;
@@ -99,8 +105,10 @@ import com.liferay.portal.kernel.service.WorkflowInstanceLinkLocalService;
 import com.liferay.portal.kernel.settings.GroupServiceSettingsLocator;
 import com.liferay.portal.kernel.systemevent.SystemEvent;
 import com.liferay.portal.kernel.transaction.TransactionCommitCallbackUtil;
+import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.MimeTypesUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Validator;
@@ -112,6 +120,9 @@ import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterRegistry;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.Serializable;
 
 import java.math.BigDecimal;
@@ -144,41 +155,76 @@ import org.osgi.service.component.annotations.Reference;
 public class CommerceOrderLocalServiceImpl
 	extends CommerceOrderLocalServiceBaseImpl {
 
-	/**
-	 * @deprecated As of Cavanaugh (7.4.x)
-	 */
-	@Deprecated
 	@Override
-	public CommerceOrder addCommerceOrder(
-			long userId, long groupId, long commerceAccountId,
-			long commerceCurrencyId)
+	public FileEntry addAttachmentFileEntry(
+			String externalReferenceCode, long userId, long commerceOrderId,
+			String fileName, InputStream inputStream)
 		throws PortalException {
 
-		return commerceOrderLocalService.addCommerceOrder(
-			userId, groupId, commerceAccountId, commerceCurrencyId, 0);
-	}
+		if (Validator.isNull(fileName)) {
+			return null;
+		}
 
-	@Override
-	public CommerceOrder addCommerceOrder(
-			long userId, long groupId, long commerceAccountId,
-			long commerceCurrencyId, long commerceOrderTypeId)
-		throws PortalException {
+		File file = null;
 
-		return commerceOrderLocalService.addCommerceOrder(
-			userId, groupId, 0, commerceAccountId, commerceCurrencyId,
-			commerceOrderTypeId, 0, 0, null, null, 0, 0, 0, 0, 0,
-			CommerceOrderConstants.ORDER_STATUS_OPEN,
-			CommerceOrderPaymentConstants.STATUS_PENDING, null, BigDecimal.ZERO,
-			null, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO,
-			BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO,
-			new ServiceContext());
+		try {
+			CommerceOrder commerceOrder =
+				commerceOrderLocalService.getCommerceOrder(commerceOrderId);
+
+			DLAppHelperThreadLocal.setEnabled(false);
+
+			LocalRepository localRepository =
+				commerceOrder.getLocalRepository();
+
+			Folder folder = commerceOrder.getFolder(localRepository);
+
+			if (folder == null) {
+				ServiceContext serviceContext = new ServiceContext();
+
+				serviceContext.setAddGroupPermissions(true);
+				serviceContext.setAddGuestPermissions(true);
+				serviceContext.setCompanyId(commerceOrder.getCompanyId());
+				serviceContext.setUserId(commerceOrder.getUserId());
+
+				folder = localRepository.addFolder(
+					"order-" + commerceOrderId, commerceOrder.getUserId(), 0,
+					String.valueOf(commerceOrderId), StringPool.BLANK,
+					serviceContext);
+			}
+
+			file = FileUtil.createTempFile(inputStream);
+
+			ServiceContext serviceContext = new ServiceContext();
+
+			serviceContext.setAddGroupPermissions(true);
+			serviceContext.setAddGuestPermissions(true);
+			serviceContext.setAttribute(
+				"className", CommerceOrder.class.getName());
+			serviceContext.setAttribute(
+				"classPK", String.valueOf(commerceOrderId));
+			serviceContext.setIndexingEnabled(false);
+
+			return localRepository.addFileEntry(
+				externalReferenceCode, userId, folder.getFolderId(), fileName,
+				MimeTypesUtil.getContentType(file, fileName), fileName,
+				fileName, StringPool.BLANK, StringPool.BLANK, file, null, null,
+				null, serviceContext);
+		}
+		catch (IOException ioException) {
+			throw new SystemException(
+				"Unable to write temporary file", ioException);
+		}
+		finally {
+			DLAppHelperThreadLocal.setEnabled(true);
+			FileUtil.delete(file);
+		}
 	}
 
 	@Indexable(type = IndexableType.REINDEX)
 	@Override
 	public CommerceOrder addCommerceOrder(
 			long userId, long groupId, long billingAddressId,
-			long commerceAccountId, long commerceCurrencyId,
+			long commerceAccountId, String commerceCurrencyCode,
 			long commerceOrderTypeId, long commerceShippingMethodId,
 			long shippingAddressId, String commercePaymentMethodKey,
 			String name, int orderDateMonth, int orderDateDay,
@@ -219,17 +265,17 @@ public class CommerceOrderLocalServiceImpl
 
 		// Commerce order
 
-		_validateAccountOrdersLimit(groupId, commerceAccountId);
+		_validateAccountLimit(groupId, commerceAccountId);
 		_validateCommerceChannelAccount(groupId, commerceAccountId);
 		_validateGuestOrders();
 
-		if (commerceCurrencyId <= 0) {
+		if (Validator.isNull(commerceCurrencyCode)) {
 			CommerceCurrency commerceCurrency =
 				_commerceCurrencyLocalService.fetchPrimaryCommerceCurrency(
 					serviceContext.getCompanyId());
 
 			if (commerceCurrency != null) {
-				commerceCurrencyId = commerceCurrency.getCommerceCurrencyId();
+				commerceCurrencyCode = commerceCurrency.getCode();
 			}
 		}
 
@@ -262,7 +308,7 @@ public class CommerceOrderLocalServiceImpl
 		commerceOrder.setUserName(user.getFullName());
 		commerceOrder.setBillingAddressId(billingAddressId);
 		commerceOrder.setCommerceAccountId(commerceAccountId);
-		commerceOrder.setCommerceCurrencyId(commerceCurrencyId);
+		commerceOrder.setCommerceCurrencyCode(commerceCurrencyCode);
 		commerceOrder.setCommerceOrderTypeId(commerceOrderTypeId);
 		commerceOrder.setCommerceShippingMethodId(commerceShippingMethodId);
 		commerceOrder.setShippingAddressId(shippingAddressId);
@@ -305,6 +351,17 @@ public class CommerceOrderLocalServiceImpl
 
 		commerceOrder = commerceOrderPersistence.update(commerceOrder);
 
+		// Repository
+
+		LocalRepository localRepository = commerceOrder.getLocalRepository();
+
+		serviceContext.setAddGroupPermissions(true);
+		serviceContext.setAddGuestPermissions(true);
+
+		localRepository.addFolder(
+			"order-" + commerceOrderId, user.getUserId(), 0,
+			String.valueOf(commerceOrderId), StringPool.BLANK, serviceContext);
+
 		// Workflow
 
 		return WorkflowHandlerRegistryUtil.startWorkflowInstance(
@@ -315,10 +372,26 @@ public class CommerceOrderLocalServiceImpl
 	}
 
 	@Override
+	public CommerceOrder addCommerceOrder(
+			long userId, long groupId, long commerceAccountId,
+			String commerceCurrencyCode, long commerceOrderTypeId)
+		throws PortalException {
+
+		return commerceOrderLocalService.addCommerceOrder(
+			userId, groupId, 0, commerceAccountId, commerceCurrencyCode,
+			commerceOrderTypeId, 0, 0, null, null, 0, 0, 0, 0, 0,
+			CommerceOrderConstants.ORDER_STATUS_OPEN,
+			CommerceOrderPaymentConstants.STATUS_PENDING, null, BigDecimal.ZERO,
+			null, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO,
+			BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO,
+			new ServiceContext());
+	}
+
+	@Override
 	public CommerceOrder addOrUpdateCommerceOrder(
 			String externalReferenceCode, long userId, long groupId,
 			long billingAddressId, long commerceAccountId,
-			long commerceCurrencyId, long commerceOrderTypeId,
+			String commerceCurrencyCode, long commerceOrderTypeId,
 			long commerceShippingMethodId, long shippingAddressId,
 			String advanceStatus, String commercePaymentMethodKey, String name,
 			int orderDateMonth, int orderDateDay, int orderDateYear,
@@ -330,10 +403,6 @@ public class CommerceOrderLocalServiceImpl
 			BigDecimal total, BigDecimal totalWithTaxAmount,
 			CommerceContext commerceContext, ServiceContext serviceContext)
 		throws PortalException {
-
-		if (Validator.isBlank(externalReferenceCode)) {
-			externalReferenceCode = null;
-		}
 
 		// Update
 
@@ -376,7 +445,7 @@ public class CommerceOrderLocalServiceImpl
 
 		commerceOrder = commerceOrderLocalService.addCommerceOrder(
 			userId, groupId, billingAddressId, commerceAccountId,
-			commerceCurrencyId, commerceOrderTypeId, commerceShippingMethodId,
+			commerceCurrencyCode, commerceOrderTypeId, commerceShippingMethodId,
 			shippingAddressId, commercePaymentMethodKey, name, orderDateMonth,
 			orderDateDay, orderDateYear, orderDateHour, orderDateMinute,
 			orderStatus, paymentStatus, purchaseOrderNumber, shippingAmount,
@@ -387,38 +456,6 @@ public class CommerceOrderLocalServiceImpl
 		commerceOrder.setExternalReferenceCode(externalReferenceCode);
 
 		return commerceOrderPersistence.update(commerceOrder);
-	}
-
-	/**
-	 * @deprecated As of Cavanaugh (7.4.x)
-	 */
-	@Deprecated
-	@Override
-	public CommerceOrder addOrUpdateCommerceOrder(
-			String externalReferenceCode, long userId, long groupId,
-			long commerceAccountId, long commerceCurrencyId,
-			long billingAddressId, long shippingAddressId,
-			String commercePaymentMethodKey, long commerceShippingMethodId,
-			String shippingOptionName, String purchaseOrderNumber,
-			BigDecimal subtotal, BigDecimal shippingAmount,
-			BigDecimal taxAmount, BigDecimal total,
-			BigDecimal subtotalWithTaxAmount, BigDecimal shippingWithTaxAmount,
-			BigDecimal totalWithTaxAmount, int paymentStatus,
-			int orderDateMonth, int orderDateDay, int orderDateYear,
-			int orderDateHour, int orderDateMinute, int orderStatus,
-			String advanceStatus, CommerceContext commerceContext,
-			ServiceContext serviceContext)
-		throws PortalException {
-
-		return commerceOrderLocalService.addOrUpdateCommerceOrder(
-			externalReferenceCode, userId, groupId, billingAddressId,
-			commerceAccountId, commerceCurrencyId, 0, commerceShippingMethodId,
-			shippingAddressId, advanceStatus, commercePaymentMethodKey, null,
-			orderDateMonth, orderDateDay, orderDateYear, orderDateHour,
-			orderDateMinute, orderStatus, paymentStatus, purchaseOrderNumber,
-			shippingAmount, shippingOptionName, shippingWithTaxAmount, subtotal,
-			subtotalWithTaxAmount, taxAmount, total, totalWithTaxAmount,
-			commerceContext, serviceContext);
 	}
 
 	@Override
@@ -467,6 +504,19 @@ public class CommerceOrderLocalServiceImpl
 
 		return commerceOrderLocalService.recalculatePrice(
 			commerceOrderId, commerceContext);
+	}
+
+	@Override
+	public void deleteAttachmentFileEntry(
+			long attachmentFileEntryId, long commerceOrderId)
+		throws PortalException {
+
+		CommerceOrder commerceOrder =
+			commerceOrderLocalService.getCommerceOrder(commerceOrderId);
+
+		LocalRepository localRepository = commerceOrder.getLocalRepository();
+
+		localRepository.deleteFileEntry(attachmentFileEntryId);
 	}
 
 	@Indexable(type = IndexableType.DELETE)
@@ -595,18 +645,6 @@ public class CommerceOrderLocalServiceImpl
 		return commerceOrder;
 	}
 
-	@Override
-	public CommerceOrder fetchByExternalReferenceCode(
-		String externalReferenceCode, long companyId) {
-
-		if (Validator.isBlank(externalReferenceCode)) {
-			return null;
-		}
-
-		return commerceOrderPersistence.fetchByERC_C(
-			externalReferenceCode, companyId);
-	}
-
 	/**
 	 * @deprecated As of Athanasius (7.3.x)
 	 */
@@ -617,7 +655,7 @@ public class CommerceOrderLocalServiceImpl
 
 		return commerceOrderPersistence.fetchByG_C_O_First(
 			groupId, commerceAccountId, orderStatus,
-			new CommerceOrderModifiedDateComparator());
+			CommerceOrderModifiedDateComparator.getInstance(false));
 	}
 
 	@Override
@@ -992,11 +1030,25 @@ public class CommerceOrderLocalServiceImpl
 			shippingAddressId = shippingAddress.getCommerceAddressId();
 		}
 
+		String commerceCurrencyCode = commerceOrder.getCommerceCurrencyCode();
+		boolean recalculate = false;
+
+		CommerceCurrency commerceContextCommerceCurrency =
+			commerceContext.getCommerceCurrency();
+
+		if ((commerceContextCommerceCurrency != null) &&
+			!Objects.equals(
+				commerceContextCommerceCurrency.getCode(),
+				commerceCurrencyCode)) {
+
+			commerceCurrencyCode = commerceContextCommerceCurrency.getCode();
+			recalculate = true;
+		}
+
 		CommerceOrder newCommerceOrder =
 			commerceOrderLocalService.addCommerceOrder(
 				userId, commerceOrder.getGroupId(), billingAddressId,
-				commerceOrder.getCommerceAccountId(),
-				commerceOrder.getCommerceCurrencyId(),
+				commerceOrder.getCommerceAccountId(), commerceCurrencyCode,
 				commerceOrder.getCommerceOrderTypeId(),
 				commerceOrder.getCommerceShippingMethodId(), shippingAddressId,
 				commerceOrder.getCommercePaymentMethodKey(),
@@ -1030,6 +1082,18 @@ public class CommerceOrderLocalServiceImpl
 				commerceOrderItem.getReplacedCPInstanceId(), BigDecimal.ZERO,
 				commerceOrderItem.getUnitOfMeasureKey(), commerceContext,
 				serviceContext);
+		}
+
+		if (recalculate) {
+			newCommerceOrder =
+				commerceOrderLocalService.updateCommerceShippingMethod(
+					newCommerceOrder.getCommerceOrderId(),
+					commerceOrder.getCommerceShippingMethodId(),
+					commerceOrder.getShippingOptionName(), commerceContext,
+					serviceContext.getLocale());
+
+			newCommerceOrder = commerceOrderLocalService.recalculatePrice(
+				newCommerceOrder.getCommerceOrderId(), commerceContext);
 		}
 
 		return newCommerceOrder;
@@ -1180,17 +1244,17 @@ public class CommerceOrderLocalServiceImpl
 	@Indexable(type = IndexableType.REINDEX)
 	@Override
 	public CommerceOrder updateBillingAddress(
-			long commerceOrderId, String name, String description,
-			String street1, String street2, String street3, String city,
-			String zip, long regionId, long countryId, String phoneNumber,
+			long commerceOrderId, long countryId, long regionId, String city,
+			String description, String name, String phoneNumber, String street1,
+			String street2, String street3, String subtype, String zip,
 			ServiceContext serviceContext)
 		throws PortalException {
 
 		return _updateAddress(
-			commerceOrderId, name, description, street1, street2, street3, city,
-			zip, regionId, countryId, phoneNumber,
-			CommerceOrder::getBillingAddressId,
-			CommerceOrder::setBillingAddressId, serviceContext);
+			city, CommerceOrder::getBillingAddressId,
+			CommerceOrder::setBillingAddressId, commerceOrderId, countryId,
+			description, name, phoneNumber, regionId, street1, street2, street3,
+			serviceContext, subtype, zip);
 	}
 
 	@Indexable(type = IndexableType.REINDEX)
@@ -1198,7 +1262,7 @@ public class CommerceOrderLocalServiceImpl
 	public CommerceOrder updateCommerceOrder(
 			long userId, String externalReferenceCode, long commerceOrderId,
 			long billingAddressId, long commerceAccountId,
-			long commerceCurrencyId, long commerceOrderTypeId,
+			String commerceCurrencyCode, long commerceOrderTypeId,
 			long commerceShippingMethodId, long deliveryCommerceTermEntryId,
 			long paymentCommerceTermEntryId, long shippingAddressId,
 			String advanceStatus, String commercePaymentMethodKey,
@@ -1246,10 +1310,6 @@ public class CommerceOrderLocalServiceImpl
 			boolean recalculate, CommerceContext commerceContext)
 		throws PortalException {
 
-		if (Validator.isBlank(externalReferenceCode)) {
-			externalReferenceCode = null;
-		}
-
 		CommerceOrder commerceOrder = commerceOrderPersistence.findByPrimaryKey(
 			commerceOrderId);
 
@@ -1265,7 +1325,7 @@ public class CommerceOrderLocalServiceImpl
 		commerceOrder.setExternalReferenceCode(externalReferenceCode);
 		commerceOrder.setBillingAddressId(billingAddressId);
 		commerceOrder.setCommerceAccountId(commerceAccountId);
-		commerceOrder.setCommerceCurrencyId(commerceCurrencyId);
+		commerceOrder.setCommerceCurrencyCode(commerceCurrencyCode);
 		commerceOrder.setCommerceOrderTypeId(commerceOrderTypeId);
 		commerceOrder.setCommerceShippingMethodId(commerceShippingMethodId);
 		commerceOrder.setDeliveryCommerceTermEntryId(
@@ -1600,10 +1660,6 @@ public class CommerceOrderLocalServiceImpl
 			BigDecimal taxAmount, BigDecimal total,
 			BigDecimal totalDiscountAmount, BigDecimal totalWithTaxAmount)
 		throws PortalException {
-
-		if (Validator.isBlank(externalReferenceCode)) {
-			externalReferenceCode = null;
-		}
 
 		CommerceOrder commerceOrder = commerceOrderPersistence.findByPrimaryKey(
 			commerceOrderId);
@@ -2051,17 +2107,17 @@ public class CommerceOrderLocalServiceImpl
 	@Indexable(type = IndexableType.REINDEX)
 	@Override
 	public CommerceOrder updateShippingAddress(
-			long commerceOrderId, String name, String description,
-			String street1, String street2, String street3, String city,
-			String zip, long regionId, long countryId, String phoneNumber,
+			long commerceOrderId, long countryId, long regionId, String city,
+			String description, String name, String phoneNumber, String street1,
+			String street2, String street3, String subtype, String zip,
 			ServiceContext serviceContext)
 		throws PortalException {
 
 		return _updateAddress(
-			commerceOrderId, name, description, street1, street2, street3, city,
-			zip, regionId, countryId, phoneNumber,
-			CommerceOrder::getShippingAddressId,
-			CommerceOrder::setShippingAddressId, serviceContext);
+			city, CommerceOrder::getShippingAddressId,
+			CommerceOrder::setShippingAddressId, commerceOrderId, countryId,
+			description, name, phoneNumber, regionId, street1, street2, street3,
+			serviceContext, subtype, zip);
 	}
 
 	@Indexable(type = IndexableType.REINDEX)
@@ -2124,66 +2180,6 @@ public class CommerceOrderLocalServiceImpl
 			commerceOrder.setPaymentCommerceTermEntryName(
 				paymentCommerceTermEntry.getLabel(languageId, true));
 		}
-
-		return commerceOrderPersistence.update(commerceOrder);
-	}
-
-	/**
-	 * @deprecated As of Athanasius (7.3.x)
-	 */
-	@Deprecated
-	@Override
-	public CommerceOrder upsertCommerceOrder(
-			String externalReferenceCode, long userId, long groupId,
-			long commerceAccountId, long commerceCurrencyId,
-			long billingAddressId, long shippingAddressId,
-			String commercePaymentMethodKey, long commerceShippingMethodId,
-			String shippingOptionName, String purchaseOrderNumber,
-			BigDecimal subtotal, BigDecimal shippingAmount, BigDecimal total,
-			int paymentStatus, int orderStatus, String advanceStatus,
-			CommerceContext commerceContext, ServiceContext serviceContext)
-		throws PortalException {
-
-		if (Validator.isBlank(externalReferenceCode)) {
-			externalReferenceCode = null;
-		}
-
-		// Update
-
-		CommerceOrder commerceOrder = null;
-
-		if (Validator.isNotNull(externalReferenceCode)) {
-			commerceOrder = commerceOrderPersistence.fetchByERC_C(
-				externalReferenceCode, serviceContext.getCompanyId());
-		}
-
-		if (commerceOrder != null) {
-			commerceOrder = commerceOrderLocalService.updateCommerceOrder(
-				externalReferenceCode, commerceOrder.getCommerceOrderId(),
-				billingAddressId, commerceShippingMethodId, shippingAddressId,
-				advanceStatus, commercePaymentMethodKey, null,
-				purchaseOrderNumber, shippingAmount, shippingOptionName,
-				subtotal, total);
-
-			commerceOrder = commerceOrderLocalService.updatePaymentStatus(
-				userId, commerceOrder.getCommerceOrderId(), paymentStatus);
-
-			commerceOrder.setOrderStatus(paymentStatus);
-
-			return commerceOrderPersistence.update(commerceOrder);
-		}
-
-		// Add
-
-		commerceOrder = commerceOrderLocalService.addCommerceOrder(
-			userId, groupId, billingAddressId, commerceAccountId,
-			commerceCurrencyId, 0, commerceShippingMethodId, shippingAddressId,
-			commercePaymentMethodKey, null, 0, 0, 0, 0, 0, orderStatus,
-			paymentStatus, purchaseOrderNumber, shippingAmount,
-			shippingOptionName, BigDecimal.ZERO, subtotal, BigDecimal.ZERO,
-			BigDecimal.ZERO, total, BigDecimal.ZERO, serviceContext);
-
-		commerceOrder.setExternalReferenceCode(externalReferenceCode);
 
 		return commerceOrderPersistence.update(commerceOrder);
 	}
@@ -2251,7 +2247,7 @@ public class CommerceOrderLocalServiceImpl
 		dtoConverterContext.setAttribute("secure", Boolean.FALSE);
 
 		JSONObject commerceOrderJSONObject = _jsonFactory.createJSONObject(
-			String.valueOf(
+			_jsonFactory.looseSerializeDeep(
 				commerceOrderDTOConverter.toDTO(dtoConverterContext)));
 
 		JSONArray commerceOrderItemsJSONArray = _jsonFactory.createJSONArray();
@@ -2714,12 +2710,12 @@ public class CommerceOrderLocalServiceImpl
 	}
 
 	private CommerceOrder _updateAddress(
-			long commerceOrderId, String name, String description,
-			String street1, String street2, String street3, String city,
-			String zip, long regionId, long countryId, String phoneNumber,
-			Function<CommerceOrder, Long> commerceAddressIdGetter,
+			String city, Function<CommerceOrder, Long> commerceAddressIdGetter,
 			BiConsumer<CommerceOrder, Long> commerceAddressIdSetter,
-			ServiceContext serviceContext)
+			long commerceOrderId, long countryId, String description,
+			String name, String phoneNumber, long regionId, String street1,
+			String street2, String street3, ServiceContext serviceContext,
+			String subtype, String zip)
 		throws PortalException {
 
 		CommerceOrder commerceOrder = commerceOrderPersistence.findByPrimaryKey(
@@ -2730,18 +2726,24 @@ public class CommerceOrderLocalServiceImpl
 		long commerceAddressId = commerceAddressIdGetter.apply(commerceOrder);
 
 		if (commerceAddressId > 0) {
+			commerceAddress = _commerceAddressLocalService.getCommerceAddress(
+				commerceAddressId);
+
 			commerceAddress =
 				_commerceAddressLocalService.updateCommerceAddress(
-					commerceAddressId, name, description, street1, street2,
-					street3, city, zip, regionId, countryId, phoneNumber, false,
-					false, serviceContext);
+					commerceAddress.getExternalReferenceCode(),
+					commerceAddressId, countryId, regionId, city, description,
+					name, phoneNumber, street1, street2, street3, subtype,
+					commerceAddress.getType(), zip, serviceContext);
 		}
 		else {
 			commerceAddress = _commerceAddressLocalService.addCommerceAddress(
-				commerceOrder.getModelClassName(),
-				commerceOrder.getCommerceOrderId(), name, description, street1,
-				street2, street3, city, zip, regionId, countryId, phoneNumber,
-				false, false, serviceContext);
+				StringPool.BLANK, commerceOrder.getModelClassName(),
+				commerceOrder.getCommerceOrderId(), countryId, regionId, city,
+				description, name, phoneNumber, street1, street2, street3,
+				subtype,
+				CommerceAddressConstants.ADDRESS_TYPE_BILLING_AND_SHIPPING, zip,
+				serviceContext);
 		}
 
 		commerceAddressIdSetter.accept(
@@ -2786,9 +2788,13 @@ public class CommerceOrderLocalServiceImpl
 		}
 	}
 
-	private void _validateAccountOrdersLimit(
+	private void _validateAccountLimit(
 			long commerceChannelGroupId, long commerceAccountId)
 		throws PortalException {
+
+		if (CommerceOrderThreadLocal.isSkipValidateAccountLimit()) {
+			return;
+		}
 
 		Group group = _groupLocalService.getGroup(commerceChannelGroupId);
 

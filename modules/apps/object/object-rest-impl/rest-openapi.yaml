@@ -28,7 +28,6 @@ components:
         FileEntry:
             properties:
                 externalReferenceCode:
-                    readOnly: true
                     type: string
                 fileBase64:
                     # @review
@@ -36,6 +35,13 @@ components:
                         optional field with the content of the document in Base64, can be embedded with nestedFields
                         (the format of the nested field must be `<attachment field name>.fileBase64`)
                     type: string
+                fileURL:
+                    # @review
+                    description:
+                        optional field that specifies the source of the file to be downloaded, can be embedded with
+                        nestedFields (the format of the nested field must be `<attachment field name>.fileURL`)
+                    type: string
+                    writeOnly: true
                 folder:
                     $ref: "#/components/schemas/Folder"
                 id:
@@ -48,7 +54,6 @@ components:
                     type: string
                 scope:
                     $ref: "#/components/schemas/Scope"
-                    readOnly: true
             type: object
         Folder:
             properties:
@@ -101,8 +106,20 @@ components:
                 dateModified:
                     format: date
                     type: string
+                defaultLanguageId:
+                    type: string
                 externalReferenceCode:
                     type: string
+                friendlyUrlPath:
+                    description:
+                        A relative URL to the page's rendered content.
+                    type: string
+                friendlyUrlPath_i18n:
+                    additionalProperties:
+                        type: string
+                    description:
+                        The localized relative URLs to the page's rendered content.
+                    type: object
                 id:
                     format: int64
                     type: integer
@@ -111,6 +128,15 @@ components:
                         A list of keywords describing the object entry.
                     items:
                         type: string
+                    type: array
+                objectEntryFolderExternalReferenceCode:
+                    type: string
+                objectEntryFolderId:
+                    format: int64
+                    type: integer
+                permissions:
+                    items:
+                        type: permission
                     type: array
                 properties:
                     additionalProperties:
@@ -138,6 +164,8 @@ components:
                         type: integer
                     type: array
                     writeOnly: true
+                version:
+                    $ref: "#/components/schemas/Version"
             type: object
         Scope:
             properties:
@@ -156,6 +184,8 @@ components:
                     type: string
                 label_i18n:
                     type: string
+            required:
+                -   code
             type: object
         TaxonomyCategoryBrief:
             properties:
@@ -185,6 +215,35 @@ components:
                     readOnly: true
                     type: object
             type: object
+        ValidationError:
+            properties:
+                errorMessage:
+                    type: string
+                objectFieldName:
+                    type: string
+                objectValidationRuleExternalReferenceCode:
+                    type: string
+        ValidationRequest:
+            properties:
+                objectValidationRuleExternalReferenceCodes:
+                    items:
+                        type: string
+                    type: array
+                values:
+                    $ref: "#/components/schemas/ObjectEntry"
+        ValidationResponse:
+            properties:
+                validationErrors:
+                    items:
+                        $ref: "#/components/schemas/ValidationError"
+                    type: array
+        Version:
+            properties:
+                number:
+                    format: int32
+                    readOnly: true
+                    type: integer
+            type: object
 info:
     license:
         name: "Apache 2.0"
@@ -197,52 +256,52 @@ paths:
         get:
             operationId: getObjectEntriesPage
             parameters:
-                - in: query
-                  name: aggregationTerms
-                  schema:
-                      items:
-                          type: string
-                      type: array
-                - in: query
-                  name: fields
-                  schema:
-                      type: string
-                - in: query
-                  name: filter
-                  schema:
-                      type: string
-                - in: query
-                  name: flatten
-                  schema:
-                      type: boolean
-                - in: query
-                  name: nestedFields
-                  schema:
-                      type: string
-                - in: query
-                  name: page
-                  schema:
-                      type: integer
-                - in: query
-                  name: pageSize
-                  schema:
-                      type: integer
-                - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
-                  name: search
-                  schema:
-                      type: string
-                - in: query
-                  name: sort
-                  schema:
-                      type: string
-                - in: header
-                  name: Accept-Language
-                  schema:
-                      type: string
+                -   in: query
+                    name: aggregationTerms
+                    schema:
+                        items:
+                            type: string
+                        type: array
+                -   in: query
+                    name: fields
+                    schema:
+                        type: string
+                -   in: query
+                    name: filter
+                    schema:
+                        type: string
+                -   in: query
+                    name: flatten
+                    schema:
+                        type: boolean
+                -   in: query
+                    name: nestedFields
+                    schema:
+                        type: string
+                -   in: query
+                    name: page
+                    schema:
+                        type: integer
+                -   in: query
+                    name: pageSize
+                    schema:
+                        type: integer
+                -   in: query
+                    name: restrictFields
+                    schema:
+                        type: string
+                -   in: query
+                    name: search
+                    schema:
+                        type: string
+                -   in: query
+                    name: sort
+                    schema:
+                        type: string
+                -   in: header
+                    name: Accept-Language
+                    schema:
+                        type: string
             responses:
                 200:
                     content:
@@ -281,21 +340,21 @@ paths:
         put:
             operationId: putByExternalReferenceCodeCurrentExternalReferenceCodeObjectRelationshipNameRelatedExternalReferenceCode
             parameters:
-                - in: path
-                  name: currentExternalReferenceCode
-                  required: true
-                  schema:
-                      type: string
-                - in: path
-                  name: objectRelationshipName
-                  required: true
-                  schema:
-                      type: string
-                - in: path
-                  name: relatedExternalReferenceCode
-                  required: true
-                  schema:
-                      type: string
+                -   in: path
+                    name: currentExternalReferenceCode
+                    required: true
+                    schema:
+                        type: string
+                -   in: path
+                    name: objectRelationshipName
+                    required: true
+                    schema:
+                        type: string
+                -   in: path
+                    name: relatedExternalReferenceCode
+                    required: true
+                    schema:
+                        type: string
             responses:
                 200:
                     content:
@@ -310,11 +369,11 @@ paths:
         delete:
             operationId: deleteByExternalReferenceCode
             parameters:
-                - in: path
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      type: string
+                -   in: path
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        type: string
             responses:
                 204:
                     content:
@@ -324,23 +383,23 @@ paths:
         get:
             operationId: getByExternalReferenceCode
             parameters:
-                - in: path
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      type: string
-                - in: query
-                  name: fields
-                  schema:
-                      type: string
-                - in: query
-                  name: nestedFields
-                  schema:
-                      type: string
-                - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
+                -   in: path
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        type: string
+                -   in: query
+                    name: fields
+                    schema:
+                        type: string
+                -   in: query
+                    name: nestedFields
+                    schema:
+                        type: string
+                -   in: query
+                    name: restrictFields
+                    schema:
+                        type: string
             responses:
                 200:
                     content:
@@ -354,11 +413,11 @@ paths:
         patch:
             operationId: patchByExternalReferenceCode
             parameters:
-                - in: path
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      type: string
+                -   in: path
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        type: string
             requestBody:
                 content:
                     application/json:
@@ -380,11 +439,11 @@ paths:
         put:
             operationId: putByExternalReferenceCode
             parameters:
-                - in: path
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      type: string
+                -   in: path
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        type: string
             requestBody:
                 content:
                     application/json:
@@ -403,20 +462,101 @@ paths:
                             schema:
                                 $ref: "#/components/schemas/ObjectEntry"
             tags: ["ObjectEntry"]
+    "/by-external-reference-code/{externalReferenceCode}/by-version/{version}":
+        get:
+            operationId: getByExternalReferenceCodeByVersion
+            parameters:
+                -   in: path
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        type: string
+                -   in: path
+                    name: version
+                    required: true
+                    schema:
+                        format: int32
+                        type: integer
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/ObjectEntry"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/ObjectEntry"
+            tags: ["ObjectEntry"]
+    "/by-external-reference-code/{externalReferenceCode}/by-version/{version}/restore":
+        put:
+            operationId: putByExternalReferenceCodeByVersionRestore
+            parameters:
+                -   in: path
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        type: string
+                -   in: path
+                    name: version
+                    required: true
+                    schema:
+                        format: int32
+                        type: integer
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/ObjectEntry"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/ObjectEntry"
+            tags: ["ObjectEntry"]
+    "/by-external-reference-code/{externalReferenceCode}/versions":
+        get:
+            operationId: getByExternalReferenceCodeVersionsPage
+            parameters:
+                -   in: path
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        type: string
+                -   in: query
+                    name: page
+                    schema:
+                        type: integer
+                -   in: query
+                    name: pageSize
+                    schema:
+                        type: integer
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/ObjectEntry"
+                                type: array
+                        application/xml:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/ObjectEntry"
+                                type: array
+            tags: ["ObjectEntry"]
     "/by-external-reference-code/{objectEntryExternalReferenceCode}/object-actions/{objectActionName}":
         put:
             operationId: putByExternalReferenceCodeObjectEntryExternalReferenceCodeObjectActionObjectActionName
             parameters:
-                - in: path
-                  name: objectEntryExternalReferenceCode
-                  required: true
-                  schema:
-                      type: string
-                - in: path
-                  name: objectActionName
-                  required: true
-                  schema:
-                      type: string
+                -   in: path
+                    name: objectEntryExternalReferenceCode
+                    required: true
+                    schema:
+                        type: string
+                -   in: path
+                    name: objectActionName
+                    required: true
+                    schema:
+                        type: string
             responses:
                 200:
                     content:
@@ -427,16 +567,16 @@ paths:
         delete:
             operationId: deleteScopeScopeKeyByExternalReferenceCode
             parameters:
-                - in: path
-                  name: scopeKey
-                  required: true
-                  schema:
-                      type: string
-                - in: path
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      type: string
+                -   in: path
+                    name: scopeKey
+                    required: true
+                    schema:
+                        type: string
+                -   in: path
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        type: string
             responses:
                 204:
                     content:
@@ -446,28 +586,28 @@ paths:
         get:
             operationId: getScopeScopeKeyByExternalReferenceCode
             parameters:
-                - in: path
-                  name: scopeKey
-                  required: true
-                  schema:
-                      type: string
-                - in: path
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      type: string
-                - in: query
-                  name: fields
-                  schema:
-                      type: string
-                - in: query
-                  name: nestedFields
-                  schema:
-                      type: string
-                - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
+                -   in: path
+                    name: scopeKey
+                    required: true
+                    schema:
+                        type: string
+                -   in: path
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        type: string
+                -   in: query
+                    name: fields
+                    schema:
+                        type: string
+                -   in: query
+                    name: nestedFields
+                    schema:
+                        type: string
+                -   in: query
+                    name: restrictFields
+                    schema:
+                        type: string
             responses:
                 200:
                     content:
@@ -481,16 +621,16 @@ paths:
         patch:
             operationId: patchScopeScopeKeyByExternalReferenceCode
             parameters:
-                - in: path
-                  name: scopeKey
-                  required: true
-                  schema:
-                      type: string
-                - in: path
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      type: string
+                -   in: path
+                    name: scopeKey
+                    required: true
+                    schema:
+                        type: string
+                -   in: path
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        type: string
             requestBody:
                 content:
                     application/json:
@@ -512,16 +652,16 @@ paths:
         put:
             operationId: putScopeScopeKeyByExternalReferenceCode
             parameters:
-                - in: path
-                  name: scopeKey
-                  required: true
-                  schema:
-                      type: string
-                - in: path
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      type: string
+                -   in: path
+                    name: scopeKey
+                    required: true
+                    schema:
+                        type: string
+                -   in: path
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        type: string
             requestBody:
                 content:
                     application/json:
@@ -544,36 +684,86 @@ paths:
         put:
             operationId: putScopeScopeKeyByExternalReferenceCodeObjectActionObjectActionName
             parameters:
-                - in: path
-                  name: scopeKey
-                  schema:
-                      type: string
-                - in: path
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      type: string
-                - in: path
-                  name: objectActionName
-                  required: true
-                  schema:
-                      type: string
+                -   in: path
+                    name: scopeKey
+                    schema:
+                        type: string
+                -   in: path
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        type: string
+                -   in: path
+                    name: objectActionName
+                    required: true
+                    schema:
+                        type: string
             responses:
                 200:
                     content:
                         application/json: {}
                         application/xml: {}
             tags: ["ObjectEntry"]
+    "/scopes/{scopeKey}/validate":
+        post:
+            operationId: postScopeScopeKeyValidate
+            parameters:
+                -   in: path
+                    name: scopeKey
+                    required: true
+                    schema:
+                        type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/ValidationRequest"
+                    application/xml:
+                        schema:
+                            $ref: "#/components/schemas/ValidationRequest"
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/ValidationResponse"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/ValidationResponse"
+                                type: array
+            tags: ["ObjectEntry"]
+    "/validate":
+        post:
+            operationId: postValidate
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/ValidationRequest"
+                    application/xml:
+                        schema:
+                            $ref: "#/components/schemas/ValidationRequest"
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/ValidationResponse"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/ValidationResponse"
+                                type: array
+            tags: ["ObjectEntry"]
     "/{objectEntryId}":
         delete:
             operationId: deleteObjectEntry
             parameters:
-                - in: path
-                  name: objectEntryId
-                  required: true
-                  schema:
-                      format: int64
-                      type: integer
+                -   in: path
+                    name: objectEntryId
+                    required: true
+                    schema:
+                        format: int64
+                        type: integer
             responses:
                 204:
                     content:
@@ -583,24 +773,24 @@ paths:
         get:
             operationId: getObjectEntry
             parameters:
-                - in: path
-                  name: objectEntryId
-                  required: true
-                  schema:
-                      format: int64
-                      type: integer
-                - in: query
-                  name: fields
-                  schema:
-                      type: string
-                - in: query
-                  name: nestedFields
-                  schema:
-                      type: string
-                - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
+                -   in: path
+                    name: objectEntryId
+                    required: true
+                    schema:
+                        format: int64
+                        type: integer
+                -   in: query
+                    name: fields
+                    schema:
+                        type: string
+                -   in: query
+                    name: nestedFields
+                    schema:
+                        type: string
+                -   in: query
+                    name: restrictFields
+                    schema:
+                        type: string
             responses:
                 200:
                     content:
@@ -614,12 +804,12 @@ paths:
         patch:
             operationId: patchObjectEntry
             parameters:
-                - in: path
-                  name: objectEntryId
-                  required: true
-                  schema:
-                      format: int64
-                      type: integer
+                -   in: path
+                    name: objectEntryId
+                    required: true
+                    schema:
+                        format: int64
+                        type: integer
             requestBody:
                 content:
                     application/json:
@@ -641,12 +831,12 @@ paths:
         put:
             operationId: putObjectEntry
             parameters:
-                - in: path
-                  name: objectEntryId
-                  required: true
-                  schema:
-                      format: int64
-                      type: integer
+                -   in: path
+                    name: objectEntryId
+                    required: true
+                    schema:
+                        format: int64
+                        type: integer
             requestBody:
                 content:
                     application/json:
@@ -665,21 +855,73 @@ paths:
                             schema:
                                 $ref: "#/components/schemas/ObjectEntry"
             tags: ["ObjectEntry"]
+    "/{objectEntryId}/by-version/{version}":
+        get:
+            operationId: getObjectEntryByVersion
+            parameters:
+                -   in: path
+                    name: objectEntryId
+                    required: true
+                    schema:
+                        format: int64
+                        type: integer
+                -   in: path
+                    name: version
+                    required: true
+                    schema:
+                        format: int32
+                        type: integer
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/ObjectEntry"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/ObjectEntry"
+            tags: ["ObjectEntry"]
+    "/{objectEntryId}/by-version/{version}/restore":
+        put:
+            operationId: putObjectEntryByVersionRestore
+            parameters:
+                -   in: path
+                    name: objectEntryId
+                    required: true
+                    schema:
+                        format: int64
+                        type: integer
+                -   in: path
+                    name: version
+                    required: true
+                    schema:
+                        format: int32
+                        type: integer
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/ObjectEntry"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/ObjectEntry"
+            tags: ["ObjectEntry"]
     "/{objectEntryId}/object-actions/{objectActionName}":
         put:
             operationId: putObjectEntryObjectActionObjectActionName
             parameters:
-                - in: path
-                  name: objectEntryId
-                  required: true
-                  schema:
-                      format: int64
-                      type: integer
-                - in: path
-                  name: objectActionName
-                  required: true
-                  schema:
-                      type: string
+                -   in: path
+                    name: objectEntryId
+                    required: true
+                    schema:
+                        format: int64
+                        type: integer
+                -   in: path
+                    name: objectActionName
+                    required: true
+                    schema:
+                        type: string
             responses:
                 200:
                     content:
@@ -690,28 +932,28 @@ paths:
         get:
             operationId: getObjectEntryPermissionsPage
             parameters:
-                - in: path
-                  name: objectEntryId
-                  required: true
-                  schema:
-                      format: int64
-                      type: integer
-                - in: query
-                  name: fields
-                  schema:
-                      type: string
-                - in: query
-                  name: nestedFields
-                  schema:
-                      type: string
-                - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
-                  name: roleNames
-                  schema:
-                      type: string
+                -   in: path
+                    name: objectEntryId
+                    required: true
+                    schema:
+                        format: int64
+                        type: integer
+                -   in: query
+                    name: fields
+                    schema:
+                        type: string
+                -   in: query
+                    name: nestedFields
+                    schema:
+                        type: string
+                -   in: query
+                    name: restrictFields
+                    schema:
+                        type: string
+                -   in: query
+                    name: roleNames
+                    schema:
+                        type: string
             responses:
                 200:
                     content:
@@ -721,12 +963,12 @@ paths:
         put:
             operationId: putObjectEntryPermissionsPage
             parameters:
-                - in: path
-                  name: objectEntryId
-                  required: true
-                  schema:
-                      format: int64
-                      type: integer
+                -   in: path
+                    name: objectEntryId
+                    required: true
+                    schema:
+                        format: int64
+                        type: integer
             requestBody:
                 content:
                     application/json: {}
@@ -737,60 +979,92 @@ paths:
                         application/json: {}
                         application/xml: {}
             tags: ["ObjectEntry"]
+    "/{objectEntryId}/versions":
+        get:
+            operationId: getObjectEntriesVersionsPage
+            parameters:
+                -   in: path
+                    name: objectEntryId
+                    required: true
+                    schema:
+                        format: int64
+                        type: integer
+                -   in: query
+                    name: page
+                    schema:
+                        type: integer
+                -   in: query
+                    name: pageSize
+                    schema:
+                        type: integer
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/ObjectEntry"
+                                type: array
+                        application/xml:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/ObjectEntry"
+                                type: array
+            tags: ["ObjectEntry"]
     /scopes/{scopeKey}:
         get:
             operationId: getScopeScopeKeyPage
             parameters:
-                - in: path
-                  name: scopeKey
-                  schema:
-                      type: string
-                - in: query
-                  name: aggregationTerms
-                  schema:
-                      items:
-                          type: string
-                      type: array
-                - in: query
-                  name: fields
-                  schema:
-                      type: string
-                - in: query
-                  name: filter
-                  schema:
-                      type: string
-                - in: query
-                  name: flatten
-                  schema:
-                      type: boolean
-                - in: query
-                  name: nestedFields
-                  schema:
-                      type: string
-                - in: query
-                  name: page
-                  schema:
-                      type: integer
-                - in: query
-                  name: pageSize
-                  schema:
-                      type: integer
-                - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
-                  name: search
-                  schema:
-                      type: string
-                - in: query
-                  name: sort
-                  schema:
-                      type: string
-                - in: header
-                  name: Accept-Language
-                  schema:
-                      type: string
+                -   in: path
+                    name: scopeKey
+                    schema:
+                        type: string
+                -   in: query
+                    name: aggregationTerms
+                    schema:
+                        items:
+                            type: string
+                        type: array
+                -   in: query
+                    name: fields
+                    schema:
+                        type: string
+                -   in: query
+                    name: filter
+                    schema:
+                        type: string
+                -   in: query
+                    name: flatten
+                    schema:
+                        type: boolean
+                -   in: query
+                    name: nestedFields
+                    schema:
+                        type: string
+                -   in: query
+                    name: page
+                    schema:
+                        type: integer
+                -   in: query
+                    name: pageSize
+                    schema:
+                        type: integer
+                -   in: query
+                    name: restrictFields
+                    schema:
+                        type: string
+                -   in: query
+                    name: search
+                    schema:
+                        type: string
+                -   in: query
+                    name: sort
+                    schema:
+                        type: string
+                -   in: header
+                    name: Accept-Language
+                    schema:
+                        type: string
             responses:
                 200:
                     content:
@@ -808,10 +1082,10 @@ paths:
         post:
             operationId: postScopeScopeKey
             parameters:
-                - in: path
-                  name: scopeKey
-                  schema:
-                      type: string
+                -   in: path
+                    name: scopeKey
+                    schema:
+                        type: string
             requestBody:
                 content:
                     application/json:

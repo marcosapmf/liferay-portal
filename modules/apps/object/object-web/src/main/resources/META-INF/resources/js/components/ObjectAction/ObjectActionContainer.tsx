@@ -19,8 +19,14 @@ import BasicInfo from './tabs/BasicInfo';
 import {useObjectActionForm} from './useObjectActionForm';
 
 const TABS = [
-	Liferay.Language.get('basic-info'),
-	Liferay.Language.get('action-builder'),
+	{
+		key: 'basic-info',
+		label: Liferay.Language.get('basic-info'),
+	},
+	{
+		key: 'action-builder',
+		label: Liferay.Language.get('action-builder'),
+	},
 ];
 
 interface ObjectActionContainerProps {
@@ -34,6 +40,7 @@ interface ObjectActionContainerProps {
 	objectDefinitionExternalReferenceCode: string;
 	objectDefinitionId: number;
 	objectDefinitionsRelationshipsURL: string;
+	objectFields: ObjectField[];
 	readOnly?: boolean;
 	requestParams: {
 		method: 'POST' | 'PUT';
@@ -71,6 +78,7 @@ export function ObjectActionContainer({
 	objectDefinitionExternalReferenceCode,
 	objectDefinitionId,
 	objectDefinitionsRelationshipsURL,
+	objectFields,
 	readOnly,
 	requestParams: {method, url},
 	scriptManagementConfigurationPortletURL,
@@ -173,11 +181,17 @@ export function ObjectActionContainer({
 			title={Liferay.Language.get('new-action')}
 		>
 			<ClayTabs>
-				{TABS.map((label, index) => (
+				{TABS.map(({key, label}, index) => (
 					<ClayTabs.Item
 						active={activeIndex === index}
 						key={index}
-						onClick={() => setActiveIndex(index)}
+						onClick={() => {
+							setActiveIndex(index);
+
+							if (key === 'action-builder') {
+								Liferay.fire('reloadFDS');
+							}
+						}}
 					>
 						{label}
 					</ClayTabs.Item>
@@ -224,6 +238,7 @@ export function ObjectActionContainer({
 						objectDefinitionsRelationshipsURL={
 							objectDefinitionsRelationshipsURL
 						}
+						objectFields={objectFields}
 						scriptManagementConfigurationPortletURL={
 							scriptManagementConfigurationPortletURL
 						}

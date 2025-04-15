@@ -17,6 +17,7 @@ import com.liferay.portal.search.web.internal.sort.configuration.SortPortletInst
 import com.liferay.portal.search.web.internal.sort.display.context.SortDisplayContext;
 import com.liferay.portal.search.web.internal.sort.display.context.SortTermDisplayContext;
 import com.liferay.portal.search.web.internal.sort.portlet.SortPortletPreferences;
+import com.liferay.portal.search.web.internal.util.DisplayContextHelperUtil;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -96,14 +97,10 @@ public class SortDisplayContextBuilder {
 	}
 
 	protected long getDisplayStyleGroupId() {
-		long displayStyleGroupId =
-			_sortPortletInstanceConfiguration.displayStyleGroupId();
-
-		if (displayStyleGroupId <= 0) {
-			displayStyleGroupId = _themeDisplay.getScopeGroupId();
-		}
-
-		return displayStyleGroupId;
+		return DisplayContextHelperUtil.getDisplayStyleGroupId(
+			_sortPortletInstanceConfiguration.
+				displayStyleGroupExternalReferenceCode(),
+			_themeDisplay);
 	}
 
 	protected String getParameterValue() {

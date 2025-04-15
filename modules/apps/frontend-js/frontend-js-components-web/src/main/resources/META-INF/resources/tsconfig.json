@@ -1,9 +1,8 @@
 {
-	"@generated": "0e6c376f7a242f17063d7324717a2d001ff423fd",
+	"@generated": "517b3228f9ef4acc742418bb17dc0e368fa2ed64",
 	"@readonly": "** AUTO-GENERATED: DO NOT EDIT **",
 	"compilerOptions": {
 		"allowSyntheticDefaultImports": true,
-		"baseUrl": ".",
 		"checkJs": false,
 		"composite": true,
 		"declarationDir": "../../../../../../../../.tsc/types",
@@ -16,7 +15,10 @@
 				"../../../../../../frontend-js-react-web/src/main/resources/META-INF/resources/js/index.ts"
 			],
 			"@liferay/frontend-js-state-web": [
-				"../../../../../../frontend-js-state-web/src/main/resources/META-INF/resources/index.ts"
+				"../../../../../../frontend-js-state-web/src/main/resources/META-INF/resources/main/index.ts"
+			],
+			"@liferay/frontend-js-state-web/react": [
+				"../../../../../../frontend-js-state-web/src/main/resources/META-INF/resources/react/index.ts"
 			],
 			"frontend-js-web": [
 				"../../../../../../frontend-js-web/src/main/resources/META-INF/resources/index.d.ts"

@@ -13,6 +13,7 @@ import com.liferay.exportimport.kernel.lar.ExportImportHelper;
 import com.liferay.exportimport.kernel.model.ExportImportConfiguration;
 import com.liferay.exportimport.kernel.service.ExportImportConfigurationLocalService;
 import com.liferay.exportimport.kernel.service.ExportImportService;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -48,6 +49,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = {
+		"javax.portlet.name=" + ExportImportPortletKeys.COMPANY_EXPORT,
 		"javax.portlet.name=" + ExportImportPortletKeys.EXPORT,
 		"mvc.command.name=/export_import/export_layouts"
 	},
@@ -133,20 +135,26 @@ public class ExportLayoutsMVCActionCommand extends BaseMVCActionCommand {
 		String taskName = ParamUtil.getString(actionRequest, "name");
 
 		if (Validator.isNull(taskName)) {
-			Group group = themeDisplay.getScopeGroup();
+			if (FeatureFlagManagerUtil.isEnabled("LPD-35914")) {
+				taskName = _language.get(actionRequest.getLocale(), "export");
+			}
+			else {
+				Group group = themeDisplay.getScopeGroup();
 
-			if (group.isPrivateLayoutsEnabled()) {
-				if (privateLayout) {
-					taskName = _language.get(
-						actionRequest.getLocale(), "private-pages");
+				if (group.isPrivateLayoutsEnabled()) {
+					if (privateLayout) {
+						taskName = _language.get(
+							actionRequest.getLocale(), "private-pages");
+					}
+					else {
+						taskName = _language.get(
+							actionRequest.getLocale(), "public-pages");
+					}
 				}
 				else {
 					taskName = _language.get(
-						actionRequest.getLocale(), "public-pages");
+						actionRequest.getLocale(), "pages");
 				}
-			}
-			else {
-				taskName = _language.get(actionRequest.getLocale(), "pages");
 			}
 		}
 

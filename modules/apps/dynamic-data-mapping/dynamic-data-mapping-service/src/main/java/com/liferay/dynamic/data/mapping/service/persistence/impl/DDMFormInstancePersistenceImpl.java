@@ -646,7 +646,6 @@ public class DDMFormInstancePersistenceImpl
 		"(ddmFormInstance.uuid IS NULL OR ddmFormInstance.uuid = '')";
 
 	private FinderPath _finderPathFetchByUUID_G;
-	private FinderPath _finderPathCountByUUID_G;
 
 	/**
 	 * Returns the ddm form instance where uuid = &#63; and groupId = &#63; or throws a <code>NoSuchFormInstanceException</code> if it could not be found.
@@ -831,68 +830,13 @@ public class DDMFormInstancePersistenceImpl
 	 */
 	@Override
 	public int countByUUID_G(String uuid, long groupId) {
-		try (SafeCloseable safeCloseable =
-				ctPersistenceHelper.setCTCollectionIdWithSafeCloseable(
-					DDMFormInstance.class)) {
+		DDMFormInstance ddmFormInstance = fetchByUUID_G(uuid, groupId);
 
-			uuid = Objects.toString(uuid, "");
-
-			FinderPath finderPath = _finderPathCountByUUID_G;
-
-			Object[] finderArgs = new Object[] {uuid, groupId};
-
-			Long count = (Long)finderCache.getResult(
-				finderPath, finderArgs, this);
-
-			if (count == null) {
-				StringBundler sb = new StringBundler(3);
-
-				sb.append(_SQL_COUNT_DDMFORMINSTANCE_WHERE);
-
-				boolean bindUuid = false;
-
-				if (uuid.isEmpty()) {
-					sb.append(_FINDER_COLUMN_UUID_G_UUID_3);
-				}
-				else {
-					bindUuid = true;
-
-					sb.append(_FINDER_COLUMN_UUID_G_UUID_2);
-				}
-
-				sb.append(_FINDER_COLUMN_UUID_G_GROUPID_2);
-
-				String sql = sb.toString();
-
-				Session session = null;
-
-				try {
-					session = openSession();
-
-					Query query = session.createQuery(sql);
-
-					QueryPos queryPos = QueryPos.getInstance(query);
-
-					if (bindUuid) {
-						queryPos.add(uuid);
-					}
-
-					queryPos.add(groupId);
-
-					count = (Long)query.uniqueResult();
-
-					finderCache.putResult(finderPath, finderArgs, count);
-				}
-				catch (Exception exception) {
-					throw processException(exception);
-				}
-				finally {
-					closeSession(session);
-				}
-			}
-
-			return count.intValue();
+		if (ddmFormInstance == null) {
+			return 0;
 		}
+
+		return 1;
 	}
 
 	private static final String _FINDER_COLUMN_UUID_G_UUID_2 =
@@ -2855,6 +2799,177 @@ public class DDMFormInstancePersistenceImpl
 	private static final String _FINDER_COLUMN_GROUPID_GROUPID_7 =
 		"ddmFormInstance.groupId IN (";
 
+	private FinderPath _finderPathFetchByStructureId;
+
+	/**
+	 * Returns the ddm form instance where structureId = &#63; or throws a <code>NoSuchFormInstanceException</code> if it could not be found.
+	 *
+	 * @param structureId the structure ID
+	 * @return the matching ddm form instance
+	 * @throws NoSuchFormInstanceException if a matching ddm form instance could not be found
+	 */
+	@Override
+	public DDMFormInstance findByStructureId(long structureId)
+		throws NoSuchFormInstanceException {
+
+		DDMFormInstance ddmFormInstance = fetchByStructureId(structureId);
+
+		if (ddmFormInstance == null) {
+			StringBundler sb = new StringBundler(4);
+
+			sb.append(_NO_SUCH_ENTITY_WITH_KEY);
+
+			sb.append("structureId=");
+			sb.append(structureId);
+
+			sb.append("}");
+
+			if (_log.isDebugEnabled()) {
+				_log.debug(sb.toString());
+			}
+
+			throw new NoSuchFormInstanceException(sb.toString());
+		}
+
+		return ddmFormInstance;
+	}
+
+	/**
+	 * Returns the ddm form instance where structureId = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
+	 *
+	 * @param structureId the structure ID
+	 * @return the matching ddm form instance, or <code>null</code> if a matching ddm form instance could not be found
+	 */
+	@Override
+	public DDMFormInstance fetchByStructureId(long structureId) {
+		return fetchByStructureId(structureId, true);
+	}
+
+	/**
+	 * Returns the ddm form instance where structureId = &#63; or returns <code>null</code> if it could not be found, optionally using the finder cache.
+	 *
+	 * @param structureId the structure ID
+	 * @param useFinderCache whether to use the finder cache
+	 * @return the matching ddm form instance, or <code>null</code> if a matching ddm form instance could not be found
+	 */
+	@Override
+	public DDMFormInstance fetchByStructureId(
+		long structureId, boolean useFinderCache) {
+
+		try (SafeCloseable safeCloseable =
+				ctPersistenceHelper.setCTCollectionIdWithSafeCloseable(
+					DDMFormInstance.class)) {
+
+			Object[] finderArgs = null;
+
+			if (useFinderCache) {
+				finderArgs = new Object[] {structureId};
+			}
+
+			Object result = null;
+
+			if (useFinderCache) {
+				result = finderCache.getResult(
+					_finderPathFetchByStructureId, finderArgs, this);
+			}
+
+			if (result instanceof DDMFormInstance) {
+				DDMFormInstance ddmFormInstance = (DDMFormInstance)result;
+
+				if (structureId != ddmFormInstance.getStructureId()) {
+					result = null;
+				}
+			}
+
+			if (result == null) {
+				StringBundler sb = new StringBundler(3);
+
+				sb.append(_SQL_SELECT_DDMFORMINSTANCE_WHERE);
+
+				sb.append(_FINDER_COLUMN_STRUCTUREID_STRUCTUREID_2);
+
+				String sql = sb.toString();
+
+				Session session = null;
+
+				try {
+					session = openSession();
+
+					Query query = session.createQuery(sql);
+
+					QueryPos queryPos = QueryPos.getInstance(query);
+
+					queryPos.add(structureId);
+
+					List<DDMFormInstance> list = query.list();
+
+					if (list.isEmpty()) {
+						if (useFinderCache) {
+							finderCache.putResult(
+								_finderPathFetchByStructureId, finderArgs,
+								list);
+						}
+					}
+					else {
+						DDMFormInstance ddmFormInstance = list.get(0);
+
+						result = ddmFormInstance;
+
+						cacheResult(ddmFormInstance);
+					}
+				}
+				catch (Exception exception) {
+					throw processException(exception);
+				}
+				finally {
+					closeSession(session);
+				}
+			}
+
+			if (result instanceof List<?>) {
+				return null;
+			}
+			else {
+				return (DDMFormInstance)result;
+			}
+		}
+	}
+
+	/**
+	 * Removes the ddm form instance where structureId = &#63; from the database.
+	 *
+	 * @param structureId the structure ID
+	 * @return the ddm form instance that was removed
+	 */
+	@Override
+	public DDMFormInstance removeByStructureId(long structureId)
+		throws NoSuchFormInstanceException {
+
+		DDMFormInstance ddmFormInstance = findByStructureId(structureId);
+
+		return remove(ddmFormInstance);
+	}
+
+	/**
+	 * Returns the number of ddm form instances where structureId = &#63;.
+	 *
+	 * @param structureId the structure ID
+	 * @return the number of matching ddm form instances
+	 */
+	@Override
+	public int countByStructureId(long structureId) {
+		DDMFormInstance ddmFormInstance = fetchByStructureId(structureId);
+
+		if (ddmFormInstance == null) {
+			return 0;
+		}
+
+		return 1;
+	}
+
+	private static final String _FINDER_COLUMN_STRUCTUREID_STRUCTUREID_2 =
+		"ddmFormInstance.structureId = ?";
+
 	public DDMFormInstancePersistenceImpl() {
 		Map<String, String> dbColumnNames = new HashMap<String, String>();
 
@@ -2891,6 +3006,11 @@ public class DDMFormInstancePersistenceImpl
 				new Object[] {
 					ddmFormInstance.getUuid(), ddmFormInstance.getGroupId()
 				},
+				ddmFormInstance);
+
+			finderCache.putResult(
+				_finderPathFetchByStructureId,
+				new Object[] {ddmFormInstance.getStructureId()},
 				ddmFormInstance);
 		}
 	}
@@ -2994,9 +3114,12 @@ public class DDMFormInstancePersistenceImpl
 			};
 
 			finderCache.putResult(
-				_finderPathCountByUUID_G, args, Long.valueOf(1));
-			finderCache.putResult(
 				_finderPathFetchByUUID_G, args, ddmFormInstanceModelImpl);
+
+			args = new Object[] {ddmFormInstanceModelImpl.getStructureId()};
+
+			finderCache.putResult(
+				_finderPathFetchByStructureId, args, ddmFormInstanceModelImpl);
 		}
 	}
 
@@ -3681,6 +3804,7 @@ public class DDMFormInstancePersistenceImpl
 	static {
 		Set<String> ctControlColumnNames = new HashSet<String>();
 		Set<String> ctIgnoreColumnNames = new HashSet<String>();
+		Set<String> ctMergeColumnNames = new HashSet<String>();
 		Set<String> ctStrictColumnNames = new HashSet<String>();
 
 		ctControlColumnNames.add("mvccVersion");
@@ -3690,27 +3814,30 @@ public class DDMFormInstancePersistenceImpl
 		ctStrictColumnNames.add("companyId");
 		ctStrictColumnNames.add("userId");
 		ctStrictColumnNames.add("userName");
-		ctStrictColumnNames.add("versionUserId");
-		ctStrictColumnNames.add("versionUserName");
+		ctMergeColumnNames.add("versionUserId");
+		ctMergeColumnNames.add("versionUserName");
 		ctStrictColumnNames.add("createDate");
 		ctIgnoreColumnNames.add("modifiedDate");
-		ctStrictColumnNames.add("structureId");
-		ctStrictColumnNames.add("version");
-		ctStrictColumnNames.add("name");
-		ctStrictColumnNames.add("description");
-		ctStrictColumnNames.add("settings_");
-		ctStrictColumnNames.add("lastPublishDate");
+		ctMergeColumnNames.add("structureId");
+		ctMergeColumnNames.add("version");
+		ctMergeColumnNames.add("name");
+		ctMergeColumnNames.add("description");
+		ctMergeColumnNames.add("settings_");
+		ctMergeColumnNames.add("lastPublishDate");
 
 		_ctColumnNamesMap.put(
 			CTColumnResolutionType.CONTROL, ctControlColumnNames);
 		_ctColumnNamesMap.put(
 			CTColumnResolutionType.IGNORE, ctIgnoreColumnNames);
+		_ctColumnNamesMap.put(CTColumnResolutionType.MERGE, ctMergeColumnNames);
 		_ctColumnNamesMap.put(
 			CTColumnResolutionType.PK, Collections.singleton("formInstanceId"));
 		_ctColumnNamesMap.put(
 			CTColumnResolutionType.STRICT, ctStrictColumnNames);
 
 		_uniqueIndexColumnNames.add(new String[] {"uuid_", "groupId"});
+
+		_uniqueIndexColumnNames.add(new String[] {"structureId"});
 	}
 
 	/**
@@ -3756,11 +3883,6 @@ public class DDMFormInstancePersistenceImpl
 			new String[] {String.class.getName(), Long.class.getName()},
 			new String[] {"uuid_", "groupId"}, true);
 
-		_finderPathCountByUUID_G = new FinderPath(
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByUUID_G",
-			new String[] {String.class.getName(), Long.class.getName()},
-			new String[] {"uuid_", "groupId"}, false);
-
 		_finderPathWithPaginationFindByUuid_C = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByUuid_C",
 			new String[] {
@@ -3802,6 +3924,11 @@ public class DDMFormInstancePersistenceImpl
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "countByGroupId",
 			new String[] {Long.class.getName()}, new String[] {"groupId"},
 			false);
+
+		_finderPathFetchByStructureId = new FinderPath(
+			FINDER_CLASS_NAME_ENTITY, "fetchByStructureId",
+			new String[] {Long.class.getName()}, new String[] {"structureId"},
+			true);
 
 		DDMFormInstanceUtil.setPersistence(this);
 	}

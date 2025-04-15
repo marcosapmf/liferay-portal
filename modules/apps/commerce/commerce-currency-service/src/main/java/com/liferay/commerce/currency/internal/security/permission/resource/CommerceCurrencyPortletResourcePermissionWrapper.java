@@ -5,7 +5,7 @@
 
 package com.liferay.commerce.currency.internal.security.permission.resource;
 
-import com.liferay.commerce.currency.model.CommerceCurrencyConstants;
+import com.liferay.commerce.currency.constants.CommerceCurrencyConstants;
 import com.liferay.portal.kernel.security.permission.resource.BasePortletResourcePermissionWrapper;
 import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermission;
 import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermissionFactory;
@@ -27,13 +27,8 @@ public class CommerceCurrencyPortletResourcePermissionWrapper
 	protected PortletResourcePermission doGetPortletResourcePermission() {
 		return PortletResourcePermissionFactory.create(
 			CommerceCurrencyConstants.RESOURCE_NAME,
-			(permissionChecker, name, group, actionId) -> {
-				if (permissionChecker.hasPermission(group, name, 0, actionId)) {
-					return true;
-				}
-
-				return false;
-			});
+			(permissionChecker, name, group, actionId) ->
+				permissionChecker.hasPermission(group, name, 0, actionId));
 	}
 
 }

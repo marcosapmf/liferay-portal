@@ -8,11 +8,20 @@ import {FrameLocator, Locator, Page, expect} from '@playwright/test';
 import {clickAndExpectToBeVisible} from '../../utils/clickAndExpectToBeVisible';
 import {PORTLET_URLS} from '../../utils/portletUrls';
 
+export type TVocabularyCategory = {
+	categoryNames: string[];
+	vocabularyName: string;
+};
+
 export class DocumentLibraryPage {
 	readonly exportImportOptionsMenuItem: Locator;
+	readonly infoPanel: Locator;
+	readonly infoPanelButton: Locator;
+	readonly infoPanelTab: Locator;
 	readonly optionsMenu: Locator;
 	readonly orderMenu: Locator;
 	readonly page: Page;
+	readonly permissionsFrameLocator: FrameLocator;
 	readonly searchButton: Locator;
 	readonly searchInput: Locator;
 
@@ -20,11 +29,21 @@ export class DocumentLibraryPage {
 		this.exportImportOptionsMenuItem = page.getByRole('menuitem', {
 			name: 'Export / Import',
 		});
+		this.infoPanel = page.getByLabel('Info Panel');
+		this.infoPanelButton = page.locator(
+			'[id="_com_liferay_document_library_web_portlet_DLAdminPortlet_infoPanelId_trigger"]'
+		);
+		this.infoPanelTab = page.locator(
+			'[id^=_com_liferay_document_library_web_portlet_DLAdminPortlet_tabs_]'
+		);
 		this.optionsMenu = page
 			.getByTestId('headerOptions')
 			.getByLabel('Options');
 		this.orderMenu = page.getByLabel('Order');
 		this.page = page;
+		this.permissionsFrameLocator = page.frameLocator(
+			'iframe[title="Permissions"]'
+		);
 		this.searchButton = page.getByRole('button', {
 			name: 'Search for',
 		});
@@ -39,14 +58,34 @@ export class DocumentLibraryPage {
 		);
 	}
 
-	async assertPrivateFileIcon(frameLocator?: FrameLocator) {
-		const privateFileIcon = await (frameLocator ?? this.page)
-			.getByLabel('Not Visible to Guest Users')
-			.last();
+	async assertPrivateFileIcon(parent: Page | FrameLocator = this.page) {
+		await expect(async () => {
+			await expect(
+				await parent.getByLabel('Not Visible to Guest Users').last()
+			).toBeVisible();
+		}).toPass();
+	}
 
-		await privateFileIcon.waitFor();
+	async openInfoPanel(entryTitle: string, tabName: 'Details' | 'Versions') {
+		const infoPanelHeading = this.infoPanel.getByRole('heading', {
+			name: entryTitle,
+		});
 
-		await expect(privateFileIcon).toBeVisible();
+		if (await infoPanelHeading.isHidden()) {
+			this.infoPanelButton.click();
+		}
+
+		await infoPanelHeading.waitFor();
+
+		const infoPanelTab = this.page.getByRole('tab', {name: tabName});
+
+		if (
+			await infoPanelTab.evaluate(
+				(element) => !element.classList.contains('active')
+			)
+		) {
+			await infoPanelTab.click();
+		}
 	}
 
 	async changeTab(tabName: string) {
@@ -59,22 +98,20 @@ export class DocumentLibraryPage {
 			target: this.page.getByRole('menuitem', {name: viewName}),
 			trigger: this.page.getByLabel('Select View, Currently Selected: '),
 		});
+
+		await expect(
+			this.page.getByLabel(`Select View, Currently Selected: ${viewName}`)
+		).toBeVisible();
 	}
 
 	async deleteAllFileEntries() {
 		await this.goto();
-		await this.page
+		for (const checkbox of await this.page
 			.locator('input[data-modelclassname="FileEntry"]')
-			.check();
+			.all()) {
+			await checkbox.check();
+		}
 		await this.page.getByRole('button', {name: 'Delete'}).click();
-	}
-
-	async deleteFileEntry(name: string) {
-		await this.goto();
-		await this.changeView('list');
-		await this.page.getByLabel(name).check();
-		await this.page.getByRole('button', {name: 'Delete'}).click();
-		await this.changeView('cards');
 	}
 
 	async deleteDocumentType(name: string) {
@@ -100,24 +137,53 @@ export class DocumentLibraryPage {
 			.click();
 	}
 
-	async editEntry(entryTitle: string) {
+	async goToViewFileEntry(entryTitle: string) {
 		await this.page
-			.locator(`.card-body:has-text('${entryTitle}')`)
-			.getByLabel('More actions')
+			.getByRole('link', {exact: true, name: entryTitle})
 			.click();
-		await this.page.getByRole('menuitem', {name: 'Edit'}).click();
+
+		await this.page
+			.getByLabel('Control Menu')
+			.getByRole('heading', {name: entryTitle})
+			.waitFor();
 	}
 
-	async editFileEntry(entryTitle: string) {
+	async goToViewHistoryFileEntry(entryTitle: string) {
 		await this.page
 			.getByRole('link', {exact: true, name: entryTitle})
 			.click();
 
 		await clickAndExpectToBeVisible({
 			autoClick: true,
-			target: this.page.getByRole('menuitem', {name: 'Edit'}),
+			target: this.page.getByRole('menuitem', {
+				exact: true,
+				name: 'View History',
+			}),
 			trigger: this.page.getByRole('button', {name: 'Show Actions'}),
 		});
+	}
+
+	async goToEditFileEntry(entryTitle: string) {
+		await this.page
+			.getByRole('link', {exact: true, name: entryTitle})
+			.click();
+
+		await clickAndExpectToBeVisible({
+			autoClick: true,
+			target: this.page.getByRole('menuitem', {
+				exact: true,
+				name: 'Edit',
+			}),
+			trigger: this.page.getByRole('button', {name: 'Show Actions'}),
+		});
+	}
+
+	async goToEditFolder(entryTitle: string) {
+		await this.page
+			.locator(`.card-body:has-text('${entryTitle}')`)
+			.getByLabel('More actions')
+			.click();
+		await this.page.getByRole('menuitem', {name: 'Edit'}).click();
 	}
 
 	async goToCreateNewFile() {
@@ -142,6 +208,52 @@ export class DocumentLibraryPage {
 			target: this.page.getByRole('menuitem', {name: 'Folder'}),
 			trigger: this.page.getByRole('button', {exact: true, name: 'New'}),
 		});
+	}
+
+	async goToFileEntryAction(action: string, entryTitle: string) {
+		await clickAndExpectToBeVisible({
+			autoClick: true,
+			target: this.page.getByRole('menuitem', {
+				exact: true,
+				name: action,
+			}),
+			trigger: this.page
+				.locator(`.card-body:has-text('${entryTitle}')`)
+				.getByLabel('Actions'),
+		});
+	}
+
+	async goToFolderAction(action: string, entryTitle: string) {
+		await clickAndExpectToBeVisible({
+			autoClick: true,
+			target: this.page.getByRole('menuitem', {
+				exact: true,
+				name: action,
+			}),
+			trigger: this.page
+				.locator(`.card-body:has-text('${entryTitle}')`)
+				.getByLabel('More actions'),
+		});
+	}
+
+	async assertFileEntryAction(action: string, entryTitle: string) {
+		await clickAndExpectToBeVisible({
+			target: this.page.getByRole('menuitem', {
+				exact: true,
+				name: action,
+			}),
+			trigger: this.page
+				.locator(`.card-body:has-text('${entryTitle}')`)
+				.getByLabel('Actions'),
+		});
+	}
+
+	async openBulkEditCategoriesModal(titles: string[]) {
+		await this.selectFileEntries(titles);
+		await this.page.getByRole('button', {name: 'Edit Categories'}).click();
+		await this.page
+			.getByRole('heading', {name: 'Edit Categories'})
+			.waitFor();
 	}
 
 	async openCreateAIImage() {
@@ -176,7 +288,28 @@ export class DocumentLibraryPage {
 		});
 	}
 
-	async searchFor(entryTitle: string) {
+	async replaceCategoriesUsingBulkEditCategoriesModal(
+		fileNames: string[],
+		vocabularyCategories: TVocabularyCategory[]
+	) {
+		await this.openBulkEditCategoriesModal(fileNames);
+		await this.page.getByLabel('ReplaceThese categories').check();
+		for (const vocabularyCategory of vocabularyCategories) {
+			for (const categoryName of vocabularyCategory.categoryNames) {
+				await this.page
+					.getByLabel(vocabularyCategory.vocabularyName, {
+						exact: true,
+					})
+					.fill(categoryName);
+				await this.page
+					.getByRole('option', {name: categoryName})
+					.click();
+			}
+		}
+		await this.page.getByRole('button', {name: 'Save'}).click();
+	}
+
+	async search(entryTitle: string) {
 		const dlPortlet = this.page.locator('.portlet-document-library');
 
 		await dlPortlet.getByPlaceholder('Search for').first().fill(entryTitle);
@@ -188,17 +321,65 @@ export class DocumentLibraryPage {
 		await this.searchButton.click();
 	}
 
+	async selectFileEntries(entryTitles: string[]) {
+		for (const entryTitle of entryTitles) {
+			await this.selectFileEntry(entryTitle);
+		}
+	}
+
 	async selectFileEntry(entryTitle: string) {
 		const fileEntryCheckbox = this.page
 			.locator(`.card:has-text('${entryTitle}')`)
 			.getByRole('checkbox');
 
 		if (await fileEntryCheckbox.isHidden()) {
-			await this.searchFor(entryTitle);
+			await this.search(entryTitle);
 
 			await expect(fileEntryCheckbox).toBeVisible();
 		}
 
 		await fileEntryCheckbox.check();
+	}
+
+	async selectFolder(folderName: string) {
+		const folderCheckbox = this.page
+			.locator(`label:has-text('${folderName}')`)
+			.getByRole('checkbox');
+
+		if (await folderCheckbox.isHidden()) {
+			await this.search(folderName);
+
+			await expect(folderCheckbox).toBeVisible();
+		}
+
+		await folderCheckbox.check();
+	}
+
+	async assertFileEntryPermissions(
+		permissions: {enabled: boolean; locator: string}[],
+		title: string
+	) {
+		await this.goToFileEntryAction('Permissions', title);
+
+		await this.permissionsFrameLocator
+			.locator(permissions[0].locator)
+			.waitFor();
+
+		for (const permission of permissions) {
+			const permissionCheckbox = this.permissionsFrameLocator.locator(
+				permission.locator
+			);
+
+			if (permission.enabled) {
+				await expect(permissionCheckbox).toBeChecked();
+			}
+			else {
+				await expect(permissionCheckbox).not.toBeChecked();
+			}
+		}
+
+		await this.permissionsFrameLocator
+			.getByRole('button', {name: 'Cancel'})
+			.click();
 	}
 }

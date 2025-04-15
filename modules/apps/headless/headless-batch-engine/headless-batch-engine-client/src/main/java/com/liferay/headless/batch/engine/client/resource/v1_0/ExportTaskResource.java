@@ -51,14 +51,14 @@ public interface ExportTaskResource {
 		throws Exception;
 
 	public ExportTask postExportTask(
-			String className, String contentType, String callbackURL,
-			String externalReferenceCode, String fieldNames,
+			String className, String contentType, String batchNestedFields,
+			String callbackURL, String externalReferenceCode, String fieldNames,
 			String taskItemDelegateName)
 		throws Exception;
 
 	public HttpInvoker.HttpResponse postExportTaskHttpResponse(
-			String className, String contentType, String callbackURL,
-			String externalReferenceCode, String fieldNames,
+			String className, String contentType, String batchNestedFields,
+			String callbackURL, String externalReferenceCode, String fieldNames,
 			String taskItemDelegateName)
 		throws Exception;
 
@@ -171,8 +171,8 @@ public interface ExportTaskResource {
 		private Map<String, String> _headers = new LinkedHashMap<>();
 		private String _host = "localhost";
 		private Locale _locale;
-		private String _login = "";
-		private String _password = "";
+		private String _login;
+		private String _password;
 		private Map<String, String> _parameters = new LinkedHashMap<>();
 		private int _port = 8080;
 		private String _scheme = "http";
@@ -281,8 +281,10 @@ public interface ExportTaskResource {
 
 			httpInvoker.path("externalReferenceCode", externalReferenceCode);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
@@ -376,21 +378,23 @@ public interface ExportTaskResource {
 
 			httpInvoker.path("externalReferenceCode", externalReferenceCode);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
 
 		public ExportTask postExportTask(
-				String className, String contentType, String callbackURL,
-				String externalReferenceCode, String fieldNames,
-				String taskItemDelegateName)
+				String className, String contentType, String batchNestedFields,
+				String callbackURL, String externalReferenceCode,
+				String fieldNames, String taskItemDelegateName)
 			throws Exception {
 
 			HttpInvoker.HttpResponse httpResponse = postExportTaskHttpResponse(
-				className, contentType, callbackURL, externalReferenceCode,
-				fieldNames, taskItemDelegateName);
+				className, contentType, batchNestedFields, callbackURL,
+				externalReferenceCode, fieldNames, taskItemDelegateName);
 
 			String content = httpResponse.getContent();
 
@@ -452,9 +456,9 @@ public interface ExportTaskResource {
 		}
 
 		public HttpInvoker.HttpResponse postExportTaskHttpResponse(
-				String className, String contentType, String callbackURL,
-				String externalReferenceCode, String fieldNames,
-				String taskItemDelegateName)
+				String className, String contentType, String batchNestedFields,
+				String callbackURL, String externalReferenceCode,
+				String fieldNames, String taskItemDelegateName)
 			throws Exception {
 
 			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
@@ -479,6 +483,11 @@ public interface ExportTaskResource {
 			}
 
 			httpInvoker.httpMethod(HttpInvoker.HttpMethod.POST);
+
+			if (batchNestedFields != null) {
+				httpInvoker.parameter(
+					"batchNestedFields", String.valueOf(batchNestedFields));
+			}
 
 			if (callbackURL != null) {
 				httpInvoker.parameter(
@@ -509,8 +518,10 @@ public interface ExportTaskResource {
 			httpInvoker.path("className", className);
 			httpInvoker.path("contentType", contentType);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
@@ -610,8 +621,10 @@ public interface ExportTaskResource {
 
 			httpInvoker.path("exportTaskId", exportTaskId);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
@@ -700,8 +713,10 @@ public interface ExportTaskResource {
 
 			httpInvoker.path("exportTaskId", exportTaskId);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}

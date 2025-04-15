@@ -5,12 +5,11 @@
 
 package com.liferay.search.experiences.rest.internal.resource.v1_0;
 
+import com.liferay.object.constants.ObjectDefinitionConstants;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.portal.kernel.security.permission.ResourceActionsUtil;
-import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
-import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.search.asset.SearchableAssetClassNamesProvider;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.search.experiences.rest.dto.v1_0.SearchableAssetNameDisplay;
@@ -54,14 +53,17 @@ public class SearchableAssetNameDisplayResourceImpl
 		String modelResource = ResourceActionsUtil.getModelResource(
 			LocaleUtil.fromLanguageId(languageId), className);
 
-		if (className.startsWith(ObjectDefinition.class.getName() + "#")) {
-			String[] parts = StringUtil.split(className, "#");
+		if (className.startsWith(
+				ObjectDefinitionConstants.
+					CLASS_NAME_PREFIX_CUSTOM_OBJECT_DEFINITION)) {
 
 			ObjectDefinition objectDefinition =
-				_objectDefinitionLocalService.fetchObjectDefinition(
-					GetterUtil.getLong(parts[1]));
+				_objectDefinitionLocalService.fetchObjectDefinitionByClassName(
+					contextCompany.getCompanyId(), className);
 
-			modelResource = objectDefinition.getLabel(languageId);
+			if (objectDefinition != null) {
+				modelResource = objectDefinition.getLabel(languageId);
+			}
 		}
 
 		return modelResource;

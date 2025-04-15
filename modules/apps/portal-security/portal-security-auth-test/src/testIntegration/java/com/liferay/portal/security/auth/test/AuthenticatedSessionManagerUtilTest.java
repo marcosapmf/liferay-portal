@@ -11,8 +11,8 @@ import com.liferay.portal.kernel.cookies.CookiesManager;
 import com.liferay.portal.kernel.cookies.constants.CookiesConstants;
 import com.liferay.portal.kernel.model.RememberMeToken;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.RememberMeTokenLocalService;
-import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.test.randomizerbumpers.NumericStringRandomizerBumper;
 import com.liferay.portal.kernel.test.randomizerbumpers.UniqueStringRandomizerBumper;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
@@ -21,11 +21,13 @@ import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
+import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.security.auth.session.AuthenticatedSessionManagerUtil;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.theme.ThemeDisplayFactory;
 
 import java.util.Date;
 
@@ -104,6 +106,9 @@ public class AuthenticatedSessionManagerUtilTest {
 		MockHttpServletResponse mockHttpServletResponse =
 			new MockHttpServletResponse();
 
+		mockHttpServletRequest.setAttribute(
+			WebKeys.COMPANY_ID, TestPropsValues.getCompanyId());
+
 		_cookiesManager.addCookie(
 			CookiesConstants.CONSENT_TYPE_FUNCTIONAL,
 			_createCookie(
@@ -128,6 +133,20 @@ public class AuthenticatedSessionManagerUtilTest {
 		_cookiesManager.addCookie(
 			CookiesConstants.CONSENT_TYPE_FUNCTIONAL, cookie,
 			mockHttpServletRequest, mockHttpServletResponse);
+
+		mockHttpServletRequest.setCookies(mockHttpServletResponse.getCookies());
+
+		mockHttpServletRequest.setPathInfo(StringPool.SLASH);
+
+		ThemeDisplay themeDisplay = ThemeDisplayFactory.create();
+
+		themeDisplay.setCompany(
+			_companyLocalService.getCompany(TestPropsValues.getCompanyId()));
+		themeDisplay.setSiteGroupId(TestPropsValues.getGroupId());
+		themeDisplay.setUser(_user);
+
+		mockHttpServletRequest.setAttribute(
+			WebKeys.THEME_DISPLAY, themeDisplay);
 
 		AuthenticatedSessionManagerUtil.logout(
 			mockHttpServletRequest, mockHttpServletResponse);
@@ -157,6 +176,9 @@ public class AuthenticatedSessionManagerUtilTest {
 	private static final String _PASSWORD = RandomTestUtil.randomString();
 
 	@Inject
+	private CompanyLocalService _companyLocalService;
+
+	@Inject
 	private CookiesManager _cookiesManager;
 
 	@Inject
@@ -164,8 +186,5 @@ public class AuthenticatedSessionManagerUtilTest {
 
 	@DeleteAfterTestRun
 	private User _user;
-
-	@Inject
-	private UserLocalService _userLocalService;
 
 }

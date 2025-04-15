@@ -5,8 +5,8 @@
 
 import {Locator, Page} from '@playwright/test';
 
-import {SiteSettingsPage} from '../../../pages/configuration-admin-web/SiteSettingsPage';
-import {waitForSuccessAlert} from '../../../utils/waitForSuccessAlert';
+import {SiteSettingsPage} from '../../../pages/site-admin-web/SiteSettingsPage';
+import {waitForAlert} from '../../../utils/waitForAlert';
 
 export class FileSizeLimitsSiteSettingsPage {
 	readonly page: Page;
@@ -19,10 +19,11 @@ export class FileSizeLimitsSiteSettingsPage {
 		this.siteSettingsPage = new SiteSettingsPage(page);
 	}
 
-	async goto() {
+	async goto(siteUrl?: Site['friendlyUrlPath']) {
 		await this.siteSettingsPage.goToSiteSetting(
 			'Documents and Media',
-			'File Size Limits'
+			'File Size Limits',
+			siteUrl
 		);
 	}
 
@@ -32,6 +33,6 @@ export class FileSizeLimitsSiteSettingsPage {
 		await inputField.fill(value);
 
 		await this.saveButton.click();
-		await waitForSuccessAlert(this.page);
+		await waitForAlert(this.page);
 	}
 }

@@ -51,6 +51,10 @@ public class YMLDefinitionOrderCheck extends BaseFileCheck {
 
 		content = _sortFeatureFlags(sb.toString());
 
+		if (fileName.endsWith("docker-compose.yaml")) {
+			content = _sortPorts(sb.toString());
+		}
+
 		return _sortPathParameters(content);
 	}
 
@@ -171,8 +175,8 @@ public class YMLDefinitionOrderCheck extends BaseFileCheck {
 					String trimmedDefinition2 = StringUtil.trimLeading(
 						definition2);
 
-					if (trimmedDefinition1.startsWith("{{") ||
-						trimmedDefinition2.startsWith("{{") ||
+					if (trimmedDefinition1.matches("( *#.*\n)* *\\{\\{.*") ||
+						trimmedDefinition2.matches("( *#.*\n)* *\\{\\{.*") ||
 						Validator.isNull(trimmedDefinition1) ||
 						Validator.isNull(trimmedDefinition2)) {
 
@@ -252,6 +256,12 @@ public class YMLDefinitionOrderCheck extends BaseFileCheck {
 		definitions = YMLSourceUtil.getDefinitions(content, indent);
 
 		for (String definition : definitions) {
+			String trimmedDefinition = StringUtil.trimLeading(definition);
+
+			if (trimmedDefinition.startsWith("|")) {
+				continue;
+			}
+
 			String[] lines = StringUtil.splitLines(definition);
 
 			if ((lines.length != 0) &&
@@ -359,6 +369,45 @@ public class YMLDefinitionOrderCheck extends BaseFileCheck {
 		return content;
 	}
 
+	private String _sortPorts(String content) {
+		Matcher matcher = _portsPattern.matcher(content);
+
+		while (matcher.find()) {
+			String indent = matcher.group(1) + StringPool.FOUR_SPACES;
+
+			String ports = matcher.group(2);
+
+			String trimmedPorts = StringUtil.trimLeading(ports);
+
+			trimmedPorts = trimmedPorts.replaceAll(" *-\n +", "");
+
+			String[] portsArray = StringUtil.splitLines(trimmedPorts);
+
+			Arrays.sort(portsArray);
+
+			StringBundler sb = new StringBundler(portsArray.length * 8);
+
+			for (String port : portsArray) {
+				sb.append(StringPool.NEW_LINE);
+				sb.append(indent);
+				sb.append(StringPool.DASH);
+				sb.append(StringPool.NEW_LINE);
+				sb.append(indent);
+				sb.append(StringPool.FOUR_SPACES);
+				sb.append(port);
+			}
+
+			String newPorts = sb.toString();
+
+			if (!ports.equals(newPorts)) {
+				return StringUtil.replaceFirst(
+					content, ports, newPorts, matcher.start(2));
+			}
+		}
+
+		return content;
+	}
+
 	private int _sortSpecificDefinitions(
 		String definition1, String definition2, String key) {
 
@@ -408,5 +457,7 @@ public class YMLDefinitionOrderCheck extends BaseFileCheck {
 		"\\{([^{}]+)\\}");
 	private static final Pattern _pathPattern3 = Pattern.compile(
 		" *-\n( +)in: path(\n\\1.+)*\n");
+	private static final Pattern _portsPattern = Pattern.compile(
+		"\n( +)ports:((\n +-\\s+\\d{4}:\\d{4}){2,})");
 
 }

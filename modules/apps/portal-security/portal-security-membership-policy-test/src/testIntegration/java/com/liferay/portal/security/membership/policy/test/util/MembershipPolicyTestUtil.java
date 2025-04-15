@@ -146,7 +146,8 @@ public class MembershipPolicyTestUtil {
 		String description = RandomTestUtil.randomString(50);
 
 		return UserGroupServiceUtil.addUserGroup(
-			name, description, populateServiceContext(UserGroup.class, false));
+			StringPool.BLANK, name, description,
+			populateServiceContext(UserGroup.class, false));
 	}
 
 	public static void updateUser(
@@ -242,7 +243,7 @@ public class MembershipPolicyTestUtil {
 
 		if (includeCategorization) {
 			AssetTag tag = AssetTagLocalServiceUtil.addTag(
-				TestPropsValues.getUserId(), TestPropsValues.getGroupId(),
+				null, TestPropsValues.getUserId(), TestPropsValues.getGroupId(),
 				RandomTestUtil.randomString(), new ServiceContext());
 
 			serviceContext.setAssetTagNames(new String[] {tag.getName()});

@@ -1818,7 +1818,6 @@ public class DDMFormInstanceRecordVersionPersistenceImpl
 		"(ddmFormInstanceRecordVersion.formInstanceVersion IS NULL OR ddmFormInstanceRecordVersion.formInstanceVersion = '')";
 
 	private FinderPath _finderPathFetchByF_V;
-	private FinderPath _finderPathCountByF_V;
 
 	/**
 	 * Returns the ddm form instance record version where formInstanceRecordId = &#63; and version = &#63; or throws a <code>NoSuchFormInstanceRecordVersionException</code> if it could not be found.
@@ -2014,68 +2013,14 @@ public class DDMFormInstanceRecordVersionPersistenceImpl
 	 */
 	@Override
 	public int countByF_V(long formInstanceRecordId, String version) {
-		try (SafeCloseable safeCloseable =
-				ctPersistenceHelper.setCTCollectionIdWithSafeCloseable(
-					DDMFormInstanceRecordVersion.class)) {
+		DDMFormInstanceRecordVersion ddmFormInstanceRecordVersion = fetchByF_V(
+			formInstanceRecordId, version);
 
-			version = Objects.toString(version, "");
-
-			FinderPath finderPath = _finderPathCountByF_V;
-
-			Object[] finderArgs = new Object[] {formInstanceRecordId, version};
-
-			Long count = (Long)finderCache.getResult(
-				finderPath, finderArgs, this);
-
-			if (count == null) {
-				StringBundler sb = new StringBundler(3);
-
-				sb.append(_SQL_COUNT_DDMFORMINSTANCERECORDVERSION_WHERE);
-
-				sb.append(_FINDER_COLUMN_F_V_FORMINSTANCERECORDID_2);
-
-				boolean bindVersion = false;
-
-				if (version.isEmpty()) {
-					sb.append(_FINDER_COLUMN_F_V_VERSION_3);
-				}
-				else {
-					bindVersion = true;
-
-					sb.append(_FINDER_COLUMN_F_V_VERSION_2);
-				}
-
-				String sql = sb.toString();
-
-				Session session = null;
-
-				try {
-					session = openSession();
-
-					Query query = session.createQuery(sql);
-
-					QueryPos queryPos = QueryPos.getInstance(query);
-
-					queryPos.add(formInstanceRecordId);
-
-					if (bindVersion) {
-						queryPos.add(version);
-					}
-
-					count = (Long)query.uniqueResult();
-
-					finderCache.putResult(finderPath, finderArgs, count);
-				}
-				catch (Exception exception) {
-					throw processException(exception);
-				}
-				finally {
-					closeSession(session);
-				}
-			}
-
-			return count.intValue();
+		if (ddmFormInstanceRecordVersion == null) {
+			return 0;
 		}
+
+		return 1;
 	}
 
 	private static final String _FINDER_COLUMN_F_V_FORMINSTANCERECORDID_2 =
@@ -3499,7 +3444,6 @@ public class DDMFormInstanceRecordVersionPersistenceImpl
 				ddmFormInstanceRecordVersionModelImpl.getVersion()
 			};
 
-			finderCache.putResult(_finderPathCountByF_V, args, Long.valueOf(1));
 			finderCache.putResult(
 				_finderPathFetchByF_V, args,
 				ddmFormInstanceRecordVersionModelImpl);
@@ -4196,6 +4140,7 @@ public class DDMFormInstanceRecordVersionPersistenceImpl
 
 	static {
 		Set<String> ctControlColumnNames = new HashSet<String>();
+		Set<String> ctMergeColumnNames = new HashSet<String>();
 		Set<String> ctStrictColumnNames = new HashSet<String>();
 
 		ctControlColumnNames.add("mvccVersion");
@@ -4205,18 +4150,19 @@ public class DDMFormInstanceRecordVersionPersistenceImpl
 		ctStrictColumnNames.add("userId");
 		ctStrictColumnNames.add("userName");
 		ctStrictColumnNames.add("createDate");
-		ctStrictColumnNames.add("formInstanceId");
-		ctStrictColumnNames.add("formInstanceVersion");
-		ctStrictColumnNames.add("formInstanceRecordId");
-		ctStrictColumnNames.add("version");
-		ctStrictColumnNames.add("storageId");
-		ctStrictColumnNames.add("status");
-		ctStrictColumnNames.add("statusByUserId");
-		ctStrictColumnNames.add("statusByUserName");
-		ctStrictColumnNames.add("statusDate");
+		ctMergeColumnNames.add("formInstanceId");
+		ctMergeColumnNames.add("formInstanceVersion");
+		ctMergeColumnNames.add("formInstanceRecordId");
+		ctMergeColumnNames.add("version");
+		ctMergeColumnNames.add("storageId");
+		ctMergeColumnNames.add("status");
+		ctMergeColumnNames.add("statusByUserId");
+		ctMergeColumnNames.add("statusByUserName");
+		ctMergeColumnNames.add("statusDate");
 
 		_ctColumnNamesMap.put(
 			CTColumnResolutionType.CONTROL, ctControlColumnNames);
+		_ctColumnNamesMap.put(CTColumnResolutionType.MERGE, ctMergeColumnNames);
 		_ctColumnNamesMap.put(
 			CTColumnResolutionType.PK,
 			Collections.singleton("formInstanceRecordVersionId"));
@@ -4308,11 +4254,6 @@ public class DDMFormInstanceRecordVersionPersistenceImpl
 			FINDER_CLASS_NAME_ENTITY, "fetchByF_V",
 			new String[] {Long.class.getName(), String.class.getName()},
 			new String[] {"formInstanceRecordId", "version"}, true);
-
-		_finderPathCountByF_V = new FinderPath(
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByF_V",
-			new String[] {Long.class.getName(), String.class.getName()},
-			new String[] {"formInstanceRecordId", "version"}, false);
 
 		_finderPathWithPaginationFindByF_S = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByF_S",

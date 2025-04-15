@@ -1,4 +1,4 @@
-@component-name = "portal-bpm-ee"
+@component-name = "portal-bpm"
 definition {
 
 	property portal.release = "true";
@@ -2708,7 +2708,7 @@ definition {
 			infoValue = "");
 
 		ProcessBuilderKaleoDesignerReact.viewRequiredField(
-			requiredField = "nodeName",
+			requiredField = "workflowDefinitionBaseNodeName",
 			save = "true");
 	}
 
@@ -4656,7 +4656,7 @@ definition {
 		ProcessBuilderKaleoDesignerReact.selectNode(nodeType = "task");
 	}
 
-	@description = "Verify that each type of Node has Description property"
+	@description = "Verify that node has description property"
 	@priority = 4
 	test HasDescriptionProperty {
 		property test.liferay.virtual.instance = "false";
@@ -4683,16 +4683,6 @@ definition {
 		ProcessBuilderKaleoDesignerReact.viewNodeInfo(
 			descriptionValue = "Split the workflow into multiple paths.",
 			nodeType = "fork");
-
-		ProcessBuilderKaleoDesignerReact.backArrowOnSidebar();
-
-		ProcessBuilderKaleoDesignerReact.dragSidebarNodeAndMove(
-			nodeLabel = "Condition",
-			nodePosition = "20,100");
-
-		ProcessBuilderKaleoDesignerReact.viewNodeInfo(
-			descriptionValue = "Execute conditional logic.",
-			nodeType = "condition");
 	}
 
 	@description = "LPS-141713 - Verify that the imported workflow definition is shown in the Process Builder"
@@ -5038,7 +5028,7 @@ definition {
 
 	@description = "LPS-139387 - Verify that the Step Label is a required field"
 	@priority = 3
-	test StepLabelIsRequired {
+	test StepLabelAndNameAreRequired {
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
@@ -5054,31 +5044,16 @@ definition {
 			infoOption = "Label",
 			infoValue = " ");
 
-		ProcessBuilderKaleoDesignerReact.viewRequiredField(
-			requiredField = "nodeLabel",
-			save = "true");
-	}
-
-	@description = "LPS-139387 - Verify that the Node Name is a required field"
-	@priority = 3
-	test StepNameIsRequired {
-		property test.liferay.virtual.instance = "false";
-		property test.run.type = "single";
-
-		Workflow.openWorkflowListView();
-
-		Workflow.addNewDefinition(workflowDefinitionTitle = "New Workflow Definition");
-
-		ProcessBuilderKaleoDesignerReact.dragSidebarNodeAndMove(
-			nodeLabel = "Task",
-			nodePosition = "-20,-40");
-
 		ProcessBuilderKaleoDesignerReact.editNodeInformationField(
 			infoOption = "Name",
 			infoValue = " ");
 
 		ProcessBuilderKaleoDesignerReact.viewRequiredField(
-			requiredField = "nodeName",
+			requiredField = "workflowDefinitionBaseNodeLabel",
+			save = "true");
+
+		ProcessBuilderKaleoDesignerReact.viewRequiredField(
+			requiredField = "workflowDefinitionBaseNodeName",
 			save = "true");
 	}
 

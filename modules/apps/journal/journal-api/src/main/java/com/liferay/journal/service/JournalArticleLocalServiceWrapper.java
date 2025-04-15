@@ -942,6 +942,25 @@ public class JournalArticleLocalServiceWrapper
 	}
 
 	@Override
+	public JournalArticle fetchLatestArticleByExternalReferenceCode(
+		long groupId, String externalReferenceCode, int status,
+		boolean preferApproved) {
+
+		return _journalArticleLocalService.
+			fetchLatestArticleByExternalReferenceCode(
+				groupId, externalReferenceCode, status, preferApproved);
+	}
+
+	@Override
+	public JournalArticle fetchLatestArticleByExternalReferenceCode(
+		long groupId, String externalReferenceCode, int[] statuses) {
+
+		return _journalArticleLocalService.
+			fetchLatestArticleByExternalReferenceCode(
+				groupId, externalReferenceCode, statuses);
+	}
+
+	@Override
 	public JournalArticle fetchLatestArticleByUrlTitle(
 		long groupId, String urlTitle, int status) {
 
@@ -962,6 +981,13 @@ public class JournalArticleLocalServiceWrapper
 	public JournalArticle fetchLatestIndexableArticle(long resourcePrimKey) {
 		return _journalArticleLocalService.fetchLatestIndexableArticle(
 			resourcePrimKey);
+	}
+
+	@Override
+	public com.liferay.portal.kernel.model.PersistedModel fetchPersistedModel(
+		java.io.Serializable primaryKeyObj) {
+
+		return _journalArticleLocalService.fetchPersistedModel(primaryKeyObj);
 	}
 
 	@Override
@@ -1634,10 +1660,11 @@ public class JournalArticleLocalServiceWrapper
 
 	@Override
 	public java.util.List<JournalArticle> getArticlesByReviewDate(
-		java.util.Date previousCheckDate, java.util.Date reviewDate) {
+		long companyId, java.util.Date previousCheckDate,
+		java.util.Date reviewDate) {
 
 		return _journalArticleLocalService.getArticlesByReviewDate(
-			previousCheckDate, reviewDate);
+			companyId, previousCheckDate, reviewDate);
 	}
 
 	/**
@@ -2200,6 +2227,17 @@ public class JournalArticleLocalServiceWrapper
 		return _journalArticleLocalService.
 			getLatestArticleByExternalReferenceCode(
 				groupId, externalReferenceCode);
+	}
+
+	@Override
+	public JournalArticle getLatestArticleByExternalReferenceCode(
+			long groupId, String externalReferenceCode, int status,
+			boolean preferApproved)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _journalArticleLocalService.
+			getLatestArticleByExternalReferenceCode(
+				groupId, externalReferenceCode, status, preferApproved);
 	}
 
 	/**

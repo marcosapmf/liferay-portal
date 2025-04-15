@@ -1,4 +1,4 @@
-@component-name = "portal-core-infra"
+@component-name = "portal-db-infrastructure"
 definition {
 
 	property portal.release = "true";
@@ -253,16 +253,6 @@ definition {
 			category = "Site Builder",
 			portlet = "Pages");
 
-		PagesAdmin.addPage(pageName = "Wiki Page");
-
-		Navigator.gotoPage(pageName = "Wiki Page");
-
-		Portlet.addPG(portletName = "Wiki");
-
-		ProductMenu.gotoPortlet(
-			category = "Site Builder",
-			portlet = "Pages");
-
 		PagesAdmin.addPage(pageName = "Language Page");
 
 		Navigator.gotoPage(pageName = "Language Page");
@@ -277,8 +267,6 @@ definition {
 			virtualHostsURL = "http://www.able.com:8080");
 
 		Page.viewNoPG(pageName = "Blogs Page");
-
-		Page.viewNoPG(pageName = "Wiki Page");
 
 		Page.viewNoPG(pageName = "Language Page");
 
@@ -319,13 +307,42 @@ definition {
 		Page.viewInactiveRequestMessage(resource = "instance");
 	}
 
+	@description = "This test covers LPS-127840. It ensures that the Canonical URL has page name."
+	@priority = 3
+	test ViewPageNameInCanonicalURL {
+		property custom.properties = "virtual.hosts.valid.hosts=localhost,127.0.0.1,www.able.com";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		for (var num : list "1,2") {
+			JSONLayout.addPublicLayout(
+				groupName = "Guest",
+				layoutName = "page${num}");
+		}
+
+		Site.openSiteSettingsAdmin(siteURLKey = "guest");
+
+		Site.addVirtualHostsURLCP(
+			pageVirtualHosts = "true",
+			pageVirtualHostURL = "www.able.com");
+
+		User.logoutPG();
+
+		Navigator.openSpecificURL(url = "http://www.able.com:8080/page2");
+
+		Page.assertCanonicalURL(customCanonicalURL = "http://www.able.com:8080/page2");
+	}
+
 	@ignore = "true"
 	@priority = 4
 	test ViewVirtualHostPrivateSitePage {
-		property custom.properties = "virtual.hosts.valid.hosts=localhost,127.0.0.1,www.able.com,www.baker.com,www.charlie.com";
-		property release.feature.flags.disable.DISABLE_PRIVATE_LAYOUTS = "true";
+		property custom.properties = "feature.flag.LPD-35013=false${line.separator}virtual.hosts.valid.hosts=localhost,127.0.0.1,www.able.com,www.baker.com,www.charlie.com";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
+
+		task ("Enable private pages") {
+			PagesAdmin.enablePrivatePages();
+		}
 
 		PortalSettings.gotoConfiguration(
 			configurationCategory = "Instance Configuration",

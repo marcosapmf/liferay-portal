@@ -15,7 +15,7 @@ import {getRandomInt} from '../../utils/getRandomInt';
 import getRandomString from '../../utils/getRandomString';
 import {PORTLET_URLS} from '../../utils/portletUrls';
 import {getTempDir} from '../../utils/temp';
-import {waitForSuccessAlert} from '../../utils/waitForSuccessAlert';
+import {waitForAlert} from '../../utils/waitForAlert';
 import {journalPagesTest} from '../journal-web/fixtures/journalPagesTest';
 
 export const test = mergeTests(
@@ -26,7 +26,9 @@ export const test = mergeTests(
 );
 
 test.afterEach(async ({apiHelpers, ctCollection}) => {
-	await apiHelpers.headlessChangeTracking.deleteCTCollection(ctCollection.id);
+	await apiHelpers.headlessChangeTracking.deleteCTCollection(
+		ctCollection.body.id
+	);
 });
 
 test('LPD-33336 Buffered increment runnable processing occurs in the same thread when not in production mode', async ({
@@ -74,6 +76,7 @@ test('LPD-33336 Buffered increment runnable processing occurs in the same thread
 });
 
 test('LPS-117642 NoSuchTagException throws when adding a web content with tag within a Change List', async ({
+	journalEditArticlePage,
 	journalPage,
 	page,
 }) => {
@@ -84,14 +87,14 @@ test('LPS-117642 NoSuchTagException throws when adding a web content with tag wi
 	const tagName = getRandomString();
 	await page.getByPlaceholder('Name').fill(tagName);
 	await page.getByRole('button', {name: 'Save'}).click();
-	await waitForSuccessAlert(page);
+	await waitForAlert(page);
 
 	await journalPage.goto();
 	await journalPage.goToCreateArticle();
 
 	await clickAndExpectToBeVisible({
 		autoClick: true,
-		target: page.getByRole('link', {
+		target: page.getByRole('button', {
 			name: 'Categorization',
 		}),
 		trigger: page.getByTitle('Actions', {exact: true}),
@@ -102,5 +105,5 @@ test('LPS-117642 NoSuchTagException throws when adding a web content with tag wi
 
 	const articleTitle = 'My Test ' + getRandomInt() + ' Web Content';
 	await journalPage.fillArticleData(articleTitle, getRandomString());
-	await journalPage.publishArticle();
+	await journalEditArticlePage.publishArticle();
 });

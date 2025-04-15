@@ -18,18 +18,25 @@ import com.liferay.portal.kernel.dao.orm.Query;
 import com.liferay.portal.kernel.dao.orm.QueryPos;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.dao.orm.Session;
+import com.liferay.portal.kernel.exception.DuplicateRepositoryExternalReferenceCodeException;
 import com.liferay.portal.kernel.exception.NoSuchRepositoryException;
+import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Repository;
 import com.liferay.portal.kernel.model.RepositoryTable;
+import com.liferay.portal.kernel.sanitizer.Sanitizer;
+import com.liferay.portal.kernel.sanitizer.SanitizerException;
+import com.liferay.portal.kernel.sanitizer.SanitizerUtil;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
+import com.liferay.portal.kernel.security.auth.PrincipalThreadLocal;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.service.persistence.RepositoryPersistence;
 import com.liferay.portal.kernel.service.persistence.RepositoryUtil;
 import com.liferay.portal.kernel.service.persistence.change.tracking.helper.CTPersistenceHelperUtil;
 import com.liferay.portal.kernel.service.persistence.impl.BasePersistenceImpl;
+import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PropsKeys;
@@ -628,7 +635,6 @@ public class RepositoryPersistenceImpl
 		"(repository.uuid IS NULL OR repository.uuid = '')";
 
 	private FinderPath _finderPathFetchByUUID_G;
-	private FinderPath _finderPathCountByUUID_G;
 
 	/**
 	 * Returns the repository where uuid = &#63; and groupId = &#63; or throws a <code>NoSuchRepositoryException</code> if it could not be found.
@@ -813,68 +819,13 @@ public class RepositoryPersistenceImpl
 	 */
 	@Override
 	public int countByUUID_G(String uuid, long groupId) {
-		try (SafeCloseable safeCloseable =
-				CTPersistenceHelperUtil.setCTCollectionIdWithSafeCloseable(
-					Repository.class)) {
+		Repository repository = fetchByUUID_G(uuid, groupId);
 
-			uuid = Objects.toString(uuid, "");
-
-			FinderPath finderPath = _finderPathCountByUUID_G;
-
-			Object[] finderArgs = new Object[] {uuid, groupId};
-
-			Long count = (Long)FinderCacheUtil.getResult(
-				finderPath, finderArgs, this);
-
-			if (count == null) {
-				StringBundler sb = new StringBundler(3);
-
-				sb.append(_SQL_COUNT_REPOSITORY_WHERE);
-
-				boolean bindUuid = false;
-
-				if (uuid.isEmpty()) {
-					sb.append(_FINDER_COLUMN_UUID_G_UUID_3);
-				}
-				else {
-					bindUuid = true;
-
-					sb.append(_FINDER_COLUMN_UUID_G_UUID_2);
-				}
-
-				sb.append(_FINDER_COLUMN_UUID_G_GROUPID_2);
-
-				String sql = sb.toString();
-
-				Session session = null;
-
-				try {
-					session = openSession();
-
-					Query query = session.createQuery(sql);
-
-					QueryPos queryPos = QueryPos.getInstance(query);
-
-					if (bindUuid) {
-						queryPos.add(uuid);
-					}
-
-					queryPos.add(groupId);
-
-					count = (Long)query.uniqueResult();
-
-					FinderCacheUtil.putResult(finderPath, finderArgs, count);
-				}
-				catch (Exception exception) {
-					throw processException(exception);
-				}
-				finally {
-					closeSession(session);
-				}
-			}
-
-			return count.intValue();
+		if (repository == null) {
+			return 0;
 		}
+
+		return 1;
 	}
 
 	private static final String _FINDER_COLUMN_UUID_G_UUID_2 =
@@ -1979,7 +1930,6 @@ public class RepositoryPersistenceImpl
 		"repository.groupId = ?";
 
 	private FinderPath _finderPathFetchByG_N_P;
-	private FinderPath _finderPathCountByG_N_P;
 
 	/**
 	 * Returns the repository where groupId = &#63; and name = &#63; and portletId = &#63; or throws a <code>NoSuchRepositoryException</code> if it could not be found.
@@ -2191,84 +2141,13 @@ public class RepositoryPersistenceImpl
 	 */
 	@Override
 	public int countByG_N_P(long groupId, String name, String portletId) {
-		try (SafeCloseable safeCloseable =
-				CTPersistenceHelperUtil.setCTCollectionIdWithSafeCloseable(
-					Repository.class)) {
+		Repository repository = fetchByG_N_P(groupId, name, portletId);
 
-			name = Objects.toString(name, "");
-			portletId = Objects.toString(portletId, "");
-
-			FinderPath finderPath = _finderPathCountByG_N_P;
-
-			Object[] finderArgs = new Object[] {groupId, name, portletId};
-
-			Long count = (Long)FinderCacheUtil.getResult(
-				finderPath, finderArgs, this);
-
-			if (count == null) {
-				StringBundler sb = new StringBundler(4);
-
-				sb.append(_SQL_COUNT_REPOSITORY_WHERE);
-
-				sb.append(_FINDER_COLUMN_G_N_P_GROUPID_2);
-
-				boolean bindName = false;
-
-				if (name.isEmpty()) {
-					sb.append(_FINDER_COLUMN_G_N_P_NAME_3);
-				}
-				else {
-					bindName = true;
-
-					sb.append(_FINDER_COLUMN_G_N_P_NAME_2);
-				}
-
-				boolean bindPortletId = false;
-
-				if (portletId.isEmpty()) {
-					sb.append(_FINDER_COLUMN_G_N_P_PORTLETID_3);
-				}
-				else {
-					bindPortletId = true;
-
-					sb.append(_FINDER_COLUMN_G_N_P_PORTLETID_2);
-				}
-
-				String sql = sb.toString();
-
-				Session session = null;
-
-				try {
-					session = openSession();
-
-					Query query = session.createQuery(sql);
-
-					QueryPos queryPos = QueryPos.getInstance(query);
-
-					queryPos.add(groupId);
-
-					if (bindName) {
-						queryPos.add(name);
-					}
-
-					if (bindPortletId) {
-						queryPos.add(portletId);
-					}
-
-					count = (Long)query.uniqueResult();
-
-					FinderCacheUtil.putResult(finderPath, finderArgs, count);
-				}
-				catch (Exception exception) {
-					throw processException(exception);
-				}
-				finally {
-					closeSession(session);
-				}
-			}
-
-			return count.intValue();
+		if (repository == null) {
+			return 0;
 		}
+
+		return 1;
 	}
 
 	private static final String _FINDER_COLUMN_G_N_P_GROUPID_2 =
@@ -2285,6 +2164,211 @@ public class RepositoryPersistenceImpl
 
 	private static final String _FINDER_COLUMN_G_N_P_PORTLETID_3 =
 		"(repository.portletId IS NULL OR repository.portletId = '')";
+
+	private FinderPath _finderPathFetchByERC_G;
+
+	/**
+	 * Returns the repository where externalReferenceCode = &#63; and groupId = &#63; or throws a <code>NoSuchRepositoryException</code> if it could not be found.
+	 *
+	 * @param externalReferenceCode the external reference code
+	 * @param groupId the group ID
+	 * @return the matching repository
+	 * @throws NoSuchRepositoryException if a matching repository could not be found
+	 */
+	@Override
+	public Repository findByERC_G(String externalReferenceCode, long groupId)
+		throws NoSuchRepositoryException {
+
+		Repository repository = fetchByERC_G(externalReferenceCode, groupId);
+
+		if (repository == null) {
+			StringBundler sb = new StringBundler(6);
+
+			sb.append(_NO_SUCH_ENTITY_WITH_KEY);
+
+			sb.append("externalReferenceCode=");
+			sb.append(externalReferenceCode);
+
+			sb.append(", groupId=");
+			sb.append(groupId);
+
+			sb.append("}");
+
+			if (_log.isDebugEnabled()) {
+				_log.debug(sb.toString());
+			}
+
+			throw new NoSuchRepositoryException(sb.toString());
+		}
+
+		return repository;
+	}
+
+	/**
+	 * Returns the repository where externalReferenceCode = &#63; and groupId = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
+	 *
+	 * @param externalReferenceCode the external reference code
+	 * @param groupId the group ID
+	 * @return the matching repository, or <code>null</code> if a matching repository could not be found
+	 */
+	@Override
+	public Repository fetchByERC_G(String externalReferenceCode, long groupId) {
+		return fetchByERC_G(externalReferenceCode, groupId, true);
+	}
+
+	/**
+	 * Returns the repository where externalReferenceCode = &#63; and groupId = &#63; or returns <code>null</code> if it could not be found, optionally using the finder cache.
+	 *
+	 * @param externalReferenceCode the external reference code
+	 * @param groupId the group ID
+	 * @param useFinderCache whether to use the finder cache
+	 * @return the matching repository, or <code>null</code> if a matching repository could not be found
+	 */
+	@Override
+	public Repository fetchByERC_G(
+		String externalReferenceCode, long groupId, boolean useFinderCache) {
+
+		try (SafeCloseable safeCloseable =
+				CTPersistenceHelperUtil.setCTCollectionIdWithSafeCloseable(
+					Repository.class)) {
+
+			externalReferenceCode = Objects.toString(externalReferenceCode, "");
+
+			Object[] finderArgs = null;
+
+			if (useFinderCache) {
+				finderArgs = new Object[] {externalReferenceCode, groupId};
+			}
+
+			Object result = null;
+
+			if (useFinderCache) {
+				result = FinderCacheUtil.getResult(
+					_finderPathFetchByERC_G, finderArgs, this);
+			}
+
+			if (result instanceof Repository) {
+				Repository repository = (Repository)result;
+
+				if (!Objects.equals(
+						externalReferenceCode,
+						repository.getExternalReferenceCode()) ||
+					(groupId != repository.getGroupId())) {
+
+					result = null;
+				}
+			}
+
+			if (result == null) {
+				StringBundler sb = new StringBundler(4);
+
+				sb.append(_SQL_SELECT_REPOSITORY_WHERE);
+
+				boolean bindExternalReferenceCode = false;
+
+				if (externalReferenceCode.isEmpty()) {
+					sb.append(_FINDER_COLUMN_ERC_G_EXTERNALREFERENCECODE_3);
+				}
+				else {
+					bindExternalReferenceCode = true;
+
+					sb.append(_FINDER_COLUMN_ERC_G_EXTERNALREFERENCECODE_2);
+				}
+
+				sb.append(_FINDER_COLUMN_ERC_G_GROUPID_2);
+
+				String sql = sb.toString();
+
+				Session session = null;
+
+				try {
+					session = openSession();
+
+					Query query = session.createQuery(sql);
+
+					QueryPos queryPos = QueryPos.getInstance(query);
+
+					if (bindExternalReferenceCode) {
+						queryPos.add(externalReferenceCode);
+					}
+
+					queryPos.add(groupId);
+
+					List<Repository> list = query.list();
+
+					if (list.isEmpty()) {
+						if (useFinderCache) {
+							FinderCacheUtil.putResult(
+								_finderPathFetchByERC_G, finderArgs, list);
+						}
+					}
+					else {
+						Repository repository = list.get(0);
+
+						result = repository;
+
+						cacheResult(repository);
+					}
+				}
+				catch (Exception exception) {
+					throw processException(exception);
+				}
+				finally {
+					closeSession(session);
+				}
+			}
+
+			if (result instanceof List<?>) {
+				return null;
+			}
+			else {
+				return (Repository)result;
+			}
+		}
+	}
+
+	/**
+	 * Removes the repository where externalReferenceCode = &#63; and groupId = &#63; from the database.
+	 *
+	 * @param externalReferenceCode the external reference code
+	 * @param groupId the group ID
+	 * @return the repository that was removed
+	 */
+	@Override
+	public Repository removeByERC_G(String externalReferenceCode, long groupId)
+		throws NoSuchRepositoryException {
+
+		Repository repository = findByERC_G(externalReferenceCode, groupId);
+
+		return remove(repository);
+	}
+
+	/**
+	 * Returns the number of repositories where externalReferenceCode = &#63; and groupId = &#63;.
+	 *
+	 * @param externalReferenceCode the external reference code
+	 * @param groupId the group ID
+	 * @return the number of matching repositories
+	 */
+	@Override
+	public int countByERC_G(String externalReferenceCode, long groupId) {
+		Repository repository = fetchByERC_G(externalReferenceCode, groupId);
+
+		if (repository == null) {
+			return 0;
+		}
+
+		return 1;
+	}
+
+	private static final String _FINDER_COLUMN_ERC_G_EXTERNALREFERENCECODE_2 =
+		"repository.externalReferenceCode = ? AND ";
+
+	private static final String _FINDER_COLUMN_ERC_G_EXTERNALREFERENCECODE_3 =
+		"(repository.externalReferenceCode IS NULL OR repository.externalReferenceCode = '') AND ";
+
+	private static final String _FINDER_COLUMN_ERC_G_GROUPID_2 =
+		"repository.groupId = ?";
 
 	public RepositoryPersistenceImpl() {
 		Map<String, String> dbColumnNames = new HashMap<String, String>();
@@ -2325,6 +2409,14 @@ public class RepositoryPersistenceImpl
 				new Object[] {
 					repository.getGroupId(), repository.getName(),
 					repository.getPortletId()
+				},
+				repository);
+
+			FinderCacheUtil.putResult(
+				_finderPathFetchByERC_G,
+				new Object[] {
+					repository.getExternalReferenceCode(),
+					repository.getGroupId()
 				},
 				repository);
 		}
@@ -2415,8 +2507,6 @@ public class RepositoryPersistenceImpl
 			};
 
 			FinderCacheUtil.putResult(
-				_finderPathCountByUUID_G, args, Long.valueOf(1));
-			FinderCacheUtil.putResult(
 				_finderPathFetchByUUID_G, args, repositoryModelImpl);
 
 			args = new Object[] {
@@ -2425,9 +2515,15 @@ public class RepositoryPersistenceImpl
 			};
 
 			FinderCacheUtil.putResult(
-				_finderPathCountByG_N_P, args, Long.valueOf(1));
-			FinderCacheUtil.putResult(
 				_finderPathFetchByG_N_P, args, repositoryModelImpl);
+
+			args = new Object[] {
+				repositoryModelImpl.getExternalReferenceCode(),
+				repositoryModelImpl.getGroupId()
+			};
+
+			FinderCacheUtil.putResult(
+				_finderPathFetchByERC_G, args, repositoryModelImpl);
 		}
 	}
 
@@ -2567,6 +2663,67 @@ public class RepositoryPersistenceImpl
 			String uuid = PortalUUIDUtil.generate();
 
 			repository.setUuid(uuid);
+		}
+
+		if (Validator.isNull(repository.getExternalReferenceCode())) {
+			repository.setExternalReferenceCode(repository.getUuid());
+		}
+		else {
+			if (!Objects.equals(
+					repositoryModelImpl.getColumnOriginalValue(
+						"externalReferenceCode"),
+					repository.getExternalReferenceCode())) {
+
+				long userId = GetterUtil.getLong(
+					PrincipalThreadLocal.getName());
+
+				if (userId > 0) {
+					long companyId = repository.getCompanyId();
+
+					long groupId = repository.getGroupId();
+
+					long classPK = 0;
+
+					if (!isNew) {
+						classPK = repository.getPrimaryKey();
+					}
+
+					try {
+						repository.setExternalReferenceCode(
+							SanitizerUtil.sanitize(
+								companyId, groupId, userId,
+								Repository.class.getName(), classPK,
+								ContentTypes.TEXT_HTML, Sanitizer.MODE_ALL,
+								repository.getExternalReferenceCode(), null));
+					}
+					catch (SanitizerException sanitizerException) {
+						throw new SystemException(sanitizerException);
+					}
+				}
+			}
+
+			Repository ercRepository = fetchByERC_G(
+				repository.getExternalReferenceCode(), repository.getGroupId());
+
+			if (isNew) {
+				if (ercRepository != null) {
+					throw new DuplicateRepositoryExternalReferenceCodeException(
+						"Duplicate repository with external reference code " +
+							repository.getExternalReferenceCode() +
+								" and group " + repository.getGroupId());
+				}
+			}
+			else {
+				if ((ercRepository != null) &&
+					(repository.getRepositoryId() !=
+						ercRepository.getRepositoryId())) {
+
+					throw new DuplicateRepositoryExternalReferenceCodeException(
+						"Duplicate repository with external reference code " +
+							repository.getExternalReferenceCode() +
+								" and group " + repository.getGroupId());
+				}
+			}
 		}
 
 		ServiceContext serviceContext =
@@ -3100,11 +3257,13 @@ public class RepositoryPersistenceImpl
 	static {
 		Set<String> ctControlColumnNames = new HashSet<String>();
 		Set<String> ctIgnoreColumnNames = new HashSet<String>();
+		Set<String> ctMergeColumnNames = new HashSet<String>();
 		Set<String> ctStrictColumnNames = new HashSet<String>();
 
 		ctControlColumnNames.add("mvccVersion");
 		ctControlColumnNames.add("ctCollectionId");
 		ctStrictColumnNames.add("uuid_");
+		ctStrictColumnNames.add("externalReferenceCode");
 		ctStrictColumnNames.add("groupId");
 		ctStrictColumnNames.add("companyId");
 		ctStrictColumnNames.add("userId");
@@ -3112,17 +3271,18 @@ public class RepositoryPersistenceImpl
 		ctStrictColumnNames.add("createDate");
 		ctIgnoreColumnNames.add("modifiedDate");
 		ctStrictColumnNames.add("classNameId");
-		ctStrictColumnNames.add("name");
-		ctStrictColumnNames.add("description");
-		ctStrictColumnNames.add("portletId");
-		ctStrictColumnNames.add("typeSettings");
-		ctStrictColumnNames.add("dlFolderId");
-		ctStrictColumnNames.add("lastPublishDate");
+		ctMergeColumnNames.add("name");
+		ctMergeColumnNames.add("description");
+		ctMergeColumnNames.add("portletId");
+		ctMergeColumnNames.add("typeSettings");
+		ctMergeColumnNames.add("dlFolderId");
+		ctMergeColumnNames.add("lastPublishDate");
 
 		_ctColumnNamesMap.put(
 			CTColumnResolutionType.CONTROL, ctControlColumnNames);
 		_ctColumnNamesMap.put(
 			CTColumnResolutionType.IGNORE, ctIgnoreColumnNames);
+		_ctColumnNamesMap.put(CTColumnResolutionType.MERGE, ctMergeColumnNames);
 		_ctColumnNamesMap.put(
 			CTColumnResolutionType.PK, Collections.singleton("repositoryId"));
 		_ctColumnNamesMap.put(
@@ -3132,6 +3292,9 @@ public class RepositoryPersistenceImpl
 
 		_uniqueIndexColumnNames.add(
 			new String[] {"groupId", "name", "portletId"});
+
+		_uniqueIndexColumnNames.add(
+			new String[] {"externalReferenceCode", "groupId"});
 	}
 
 	/**
@@ -3175,11 +3338,6 @@ public class RepositoryPersistenceImpl
 			FINDER_CLASS_NAME_ENTITY, "fetchByUUID_G",
 			new String[] {String.class.getName(), Long.class.getName()},
 			new String[] {"uuid_", "groupId"}, true);
-
-		_finderPathCountByUUID_G = new FinderPath(
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByUUID_G",
-			new String[] {String.class.getName(), Long.class.getName()},
-			new String[] {"uuid_", "groupId"}, false);
 
 		_finderPathWithPaginationFindByUuid_C = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByUuid_C",
@@ -3226,13 +3384,10 @@ public class RepositoryPersistenceImpl
 			},
 			new String[] {"groupId", "name", "portletId"}, true);
 
-		_finderPathCountByG_N_P = new FinderPath(
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByG_N_P",
-			new String[] {
-				Long.class.getName(), String.class.getName(),
-				String.class.getName()
-			},
-			new String[] {"groupId", "name", "portletId"}, false);
+		_finderPathFetchByERC_G = new FinderPath(
+			FINDER_CLASS_NAME_ENTITY, "fetchByERC_G",
+			new String[] {String.class.getName(), Long.class.getName()},
+			new String[] {"externalReferenceCode", "groupId"}, true);
 
 		RepositoryUtil.setPersistence(this);
 	}

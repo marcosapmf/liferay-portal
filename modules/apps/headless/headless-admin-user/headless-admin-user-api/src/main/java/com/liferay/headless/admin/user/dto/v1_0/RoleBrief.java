@@ -16,8 +16,6 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
-import io.swagger.v3.oas.annotations.media.Schema;
-
 import java.io.Serializable;
 
 import java.util.Iterator;
@@ -53,7 +51,51 @@ public class RoleBrief implements Serializable {
 		return ObjectMapperUtil.unsafeReadValue(RoleBrief.class, json);
 	}
 
-	@Schema(description = "The role's ID.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The role's external reference code.",
+		example = "AB-34098-789-N"
+	)
+	public String getExternalReferenceCode() {
+		if (_externalReferenceCodeSupplier != null) {
+			externalReferenceCode = _externalReferenceCodeSupplier.get();
+
+			_externalReferenceCodeSupplier = null;
+		}
+
+		return externalReferenceCode;
+	}
+
+	public void setExternalReferenceCode(String externalReferenceCode) {
+		this.externalReferenceCode = externalReferenceCode;
+
+		_externalReferenceCodeSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setExternalReferenceCode(
+		UnsafeSupplier<String, Exception> externalReferenceCodeUnsafeSupplier) {
+
+		_externalReferenceCodeSupplier = () -> {
+			try {
+				return externalReferenceCodeUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField(description = "The role's external reference code.")
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected String externalReferenceCode;
+
+	@JsonIgnore
+	private Supplier<String> _externalReferenceCodeSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema(description = "The role's ID.")
 	public Long getId() {
 		if (_idSupplier != null) {
 			id = _idSupplier.get();
@@ -92,7 +134,48 @@ public class RoleBrief implements Serializable {
 	@JsonIgnore
 	private Supplier<Long> _idSupplier;
 
-	@Schema(description = "The role's name.")
+	@io.swagger.v3.oas.annotations.media.Schema(description = "The role's key.")
+	public String getKey() {
+		if (_keySupplier != null) {
+			key = _keySupplier.get();
+
+			_keySupplier = null;
+		}
+
+		return key;
+	}
+
+	public void setKey(String key) {
+		this.key = key;
+
+		_keySupplier = null;
+	}
+
+	@JsonIgnore
+	public void setKey(UnsafeSupplier<String, Exception> keyUnsafeSupplier) {
+		_keySupplier = () -> {
+			try {
+				return keyUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField(description = "The role's key.")
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected String key;
+
+	@JsonIgnore
+	private Supplier<String> _keySupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The role's name."
+	)
 	public String getName() {
 		if (_nameSupplier != null) {
 			name = _nameSupplier.get();
@@ -131,7 +214,7 @@ public class RoleBrief implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _nameSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
 	public Map<String, String> getName_i18n() {
 		if (_name_i18nSupplier != null) {
@@ -174,6 +257,49 @@ public class RoleBrief implements Serializable {
 	@JsonIgnore
 	private Supplier<Map<String, String>> _name_i18nSupplier;
 
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The role's type."
+	)
+	public Integer getRoleType() {
+		if (_roleTypeSupplier != null) {
+			roleType = _roleTypeSupplier.get();
+
+			_roleTypeSupplier = null;
+		}
+
+		return roleType;
+	}
+
+	public void setRoleType(Integer roleType) {
+		this.roleType = roleType;
+
+		_roleTypeSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setRoleType(
+		UnsafeSupplier<Integer, Exception> roleTypeUnsafeSupplier) {
+
+		_roleTypeSupplier = () -> {
+			try {
+				return roleTypeUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField(description = "The role's type.")
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected Integer roleType;
+
+	@JsonIgnore
+	private Supplier<Integer> _roleTypeSupplier;
+
 	@Override
 	public boolean equals(Object object) {
 		if (this == object) {
@@ -201,6 +327,22 @@ public class RoleBrief implements Serializable {
 
 		sb.append("{");
 
+		String externalReferenceCode = getExternalReferenceCode();
+
+		if (externalReferenceCode != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"externalReferenceCode\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(externalReferenceCode));
+
+			sb.append("\"");
+		}
+
 		Long id = getId();
 
 		if (id != null) {
@@ -211,6 +353,22 @@ public class RoleBrief implements Serializable {
 			sb.append("\"id\": ");
 
 			sb.append(id);
+		}
+
+		String key = getKey();
+
+		if (key != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"key\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(key));
+
+			sb.append("\"");
 		}
 
 		String name = getName();
@@ -241,13 +399,25 @@ public class RoleBrief implements Serializable {
 			sb.append(_toJSON(name_i18n));
 		}
 
+		Integer roleType = getRoleType();
+
+		if (roleType != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"roleType\": ");
+
+			sb.append(roleType);
+		}
+
 		sb.append("}");
 
 		return sb.toString();
 	}
 
-	@Schema(
-		accessMode = Schema.AccessMode.READ_ONLY,
+	@io.swagger.v3.oas.annotations.media.Schema(
+		accessMode = io.swagger.v3.oas.annotations.media.Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.admin.user.dto.v1_0.RoleBrief",
 		name = "x-class-name"
 	)

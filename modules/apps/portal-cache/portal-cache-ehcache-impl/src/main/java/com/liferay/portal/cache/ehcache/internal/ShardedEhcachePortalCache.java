@@ -5,20 +5,23 @@
 
 package com.liferay.portal.cache.ehcache.internal;
 
-import com.liferay.portal.cache.ehcache.internal.event.PortalCacheCacheEventListener;
+import com.liferay.portal.cache.ehcache.internal.configuration.EhcachePortalCacheConfiguration;
+import com.liferay.portal.cache.ehcache.internal.events.PortalCacheCacheEventListener;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 
 import java.io.Serializable;
 
+import java.util.EnumSet;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import net.sf.ehcache.Cache;
-import net.sf.ehcache.CacheManager;
-import net.sf.ehcache.Ehcache;
-import net.sf.ehcache.config.CacheConfiguration;
-import net.sf.ehcache.event.NotificationScope;
-import net.sf.ehcache.event.RegisteredEventListeners;
+import org.ehcache.Cache;
+import org.ehcache.CacheManager;
+import org.ehcache.config.CacheRuntimeConfiguration;
+import org.ehcache.config.FluentCacheConfigurationBuilder;
+import org.ehcache.event.EventFiring;
+import org.ehcache.event.EventOrdering;
+import org.ehcache.event.EventType;
 
 /**
  * @author Tina Tian
@@ -36,51 +39,62 @@ public class ShardedEhcachePortalCache<K extends Serializable, V>
 	}
 
 	@Override
-	public Ehcache getEhcache() {
+	public Cache<?, ?> getEhcache() {
 		long companyId = CompanyThreadLocal.getNonsystemCompanyId();
 
-		return _ehcaches.computeIfAbsent(
+		return _caches.computeIfAbsent(
 			companyId,
 			key -> {
-				String shardedPortalCacheName =
-					getPortalCacheName() + _SHARDED_SEPARATOR + key;
+				String shardedPortalCacheName = _getCacheName(key);
 
 				synchronized (_cacheManager) {
-					if (!_cacheManager.cacheExists(shardedPortalCacheName)) {
-						if (_cacheManager.cacheExists(getPortalCacheName())) {
-							Cache cache = _cacheManager.getCache(
-								getPortalCacheName());
+					Cache<?, ?> cache = _cacheManager.getCache(
+						shardedPortalCacheName, keyType, valueType);
 
-							CacheConfiguration cacheConfiguration =
-								cache.getCacheConfiguration();
+					if (cache == null) {
+						cache = _cacheManager.getCache(
+							getPortalCacheName(), keyType, valueType);
 
-							CacheConfiguration clonedCacheConfiguration =
-								cacheConfiguration.clone();
+						if (cache != null) {
+							CacheRuntimeConfiguration<?, ?>
+								cacheRuntimeConfiguration =
+									cache.getRuntimeConfiguration();
 
-							clonedCacheConfiguration.setName(
-								shardedPortalCacheName);
+							FluentCacheConfigurationBuilder<?, ?, ?>
+								fluentCacheConfigurationBuilder =
+									cacheRuntimeConfiguration.derive();
 
-							_cacheManager.addCache(
-								new Cache(clonedCacheConfiguration));
+							_cacheManager.createCache(
+								shardedPortalCacheName,
+								fluentCacheConfigurationBuilder.build());
 						}
 						else {
-							_cacheManager.addCache(shardedPortalCacheName);
+							BaseEhcachePortalCacheManager<?, ?>
+								baseEhcachePortalCacheManager =
+									(BaseEhcachePortalCacheManager<?, ?>)
+										getPortalCacheManager();
+
+							_cacheManager.createCache(
+								shardedPortalCacheName,
+								baseEhcachePortalCacheManager.
+									getDefaultCacheConfiguration());
 						}
 					}
 				}
 
-				Ehcache ehcache = _cacheManager.getCache(
-					shardedPortalCacheName);
+				Cache<?, ?> cache = _cacheManager.getCache(
+					shardedPortalCacheName, keyType, valueType);
 
-				RegisteredEventListeners registeredEventListeners =
-					ehcache.getCacheEventNotificationService();
+				CacheRuntimeConfiguration<?, ?> cacheRuntimeConfiguration =
+					cache.getRuntimeConfiguration();
 
-				registeredEventListeners.registerListener(
+				cacheRuntimeConfiguration.registerCacheEventListener(
 					new PortalCacheCacheEventListener<>(
 						aggregatedPortalCacheListener, this),
-					NotificationScope.ALL);
+					EventOrdering.ORDERED, EventFiring.SYNCHRONOUS,
+					EnumSet.allOf(EventType.class));
 
-				return ehcache;
+				return cache;
 			});
 	}
 
@@ -93,29 +107,33 @@ public class ShardedEhcachePortalCache<K extends Serializable, V>
 	protected void dispose() {
 		_cacheManager.removeCache(getPortalCacheName());
 
-		for (Ehcache ehcache : _ehcaches.values()) {
-			_cacheManager.removeCache(ehcache.getName());
+		for (Long key : _caches.keySet()) {
+			_cacheManager.removeCache(_getCacheName(key));
 		}
 	}
 
 	protected void removeEhcache(long companyId) {
-		Ehcache ehcache = _ehcaches.remove(companyId);
+		Cache<?, ?> cache = _caches.remove(companyId);
 
-		if (ehcache == null) {
+		if (cache == null) {
 			return;
 		}
 
-		_cacheManager.removeCache(ehcache.getName());
+		_cacheManager.removeCache(_getCacheName(companyId));
 	}
 
 	@Override
 	protected void resetEhcache() {
-		_ehcaches.clear();
+		_caches.clear();
+	}
+
+	private String _getCacheName(long companyId) {
+		return getPortalCacheName() + _SHARDED_SEPARATOR + companyId;
 	}
 
 	private static final String _SHARDED_SEPARATOR = "_SHARDED_SEPARATOR_";
 
 	private final CacheManager _cacheManager;
-	private final Map<Long, Ehcache> _ehcaches = new ConcurrentHashMap<>();
+	private final Map<Long, Cache<?, ?>> _caches = new ConcurrentHashMap<>();
 
 }

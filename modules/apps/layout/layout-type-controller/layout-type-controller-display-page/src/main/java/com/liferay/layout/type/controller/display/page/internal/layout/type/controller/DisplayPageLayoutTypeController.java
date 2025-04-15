@@ -34,6 +34,7 @@ import com.liferay.portal.kernel.servlet.PipingServletResponse;
 import com.liferay.portal.kernel.servlet.TransferHeadersHelperUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Constants;
+import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
@@ -82,12 +83,16 @@ public class DisplayPageLayoutTypeController
 			return null;
 		}
 
-		if (friendlyURL.contains(StringPool.QUESTION)) {
+		if (friendlyURL.contains(Portal.FRIENDLY_URL_SEPARATOR)) {
+			friendlyURL = friendlyURL.substring(
+				0, friendlyURL.indexOf(Portal.FRIENDLY_URL_SEPARATOR));
+		}
+		else if (friendlyURL.contains(StringPool.QUESTION)) {
 			friendlyURL = friendlyURL.substring(
 				0, friendlyURL.lastIndexOf(StringPool.QUESTION));
 		}
 
-		return friendlyURL;
+		return HtmlUtil.escape(friendlyURL);
 	}
 
 	@Override
@@ -326,15 +331,15 @@ public class DisplayPageLayoutTypeController
 			return layoutPageTemplateEntry;
 		}
 
-		if (layout.isDraftLayout()) {
-			Layout publishedLayout = _layoutLocalService.fetchLayout(
-				layout.getClassPK());
-
-			return _layoutPageTemplateEntryLocalService.
-				fetchLayoutPageTemplateEntryByPlid(publishedLayout.getPlid());
+		if (!layout.isDraftLayout()) {
+			return null;
 		}
 
-		return null;
+		Layout publishedLayout = _layoutLocalService.fetchLayout(
+			layout.getClassPK());
+
+		return _layoutPageTemplateEntryLocalService.
+			fetchLayoutPageTemplateEntryByPlid(publishedLayout.getPlid());
 	}
 
 	private boolean _hasUpdatePermissions(

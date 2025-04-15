@@ -42,13 +42,13 @@ public class JSONReplacementsFileCheck extends BaseFileCheck {
 
 		JSONArray jsonArray = new JSONArrayImpl(content);
 
-		List<Object> objectList = JSONUtil.toObjectList(jsonArray);
+		List<Object> objects = JSONUtil.toObjectList(jsonArray);
 
-		Collections.sort(objectList, new ReplacementComparator());
+		Collections.sort(objects, new ReplacementComparator());
 
 		jsonArray = new JSONArrayImpl();
 
-		for (Object object : objectList) {
+		for (Object object : objects) {
 			jsonArray.put(object);
 		}
 
@@ -85,12 +85,14 @@ public class JSONReplacementsFileCheck extends BaseFileCheck {
 			List<String> parameterTypes1 = new ArrayList<>();
 			List<String> parameterTypes2 = new ArrayList<>();
 
-			if (from1.indexOf("(") != -1) {
-				parameterTypes1 = JavaSourceUtil.getParameterTypes(from1);
-			}
+			if (!from1.startsWith("regex:") && !from2.startsWith("regex:")) {
+				if (from1.indexOf("(") != -1) {
+					parameterTypes1 = JavaSourceUtil.getParameterTypes(from1);
+				}
 
-			if (from2.indexOf("(") != -1) {
-				parameterTypes2 = JavaSourceUtil.getParameterTypes(from2);
+				if (from2.indexOf("(") != -1) {
+					parameterTypes2 = JavaSourceUtil.getParameterTypes(from2);
+				}
 			}
 
 			if (parameterTypes1.isEmpty() && !parameterTypes2.isEmpty()) {

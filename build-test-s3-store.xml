@@ -43,34 +43,45 @@
 				</then>
 			</if>
 
-			<script language="javascript"><![CDATA[
-				var bucketList = project.getProperty("bucket.list");
+			<beanshell>
+				<![CDATA[
+					import java.time.Instant;
+					import java.time.OffsetDateTime;
 
-				var expiredBuckets = [];
+					import org.json.JSONArray;
+					import org.json.JSONObject;
 
-				var json = JSON.parse(bucketList);
+					List expiredBuckets = new ArrayList();
 
-				for (var i = 0; i < json.Buckets.length; i++) {
-					var bucket = json.Buckets[i];
+					JSONObject bucketListJSONObject = new JSONObject(project.getProperty("bucket.list"));
 
-					var name = JSON.stringify(bucket.Name);
+					JSONArray bucketsJSONArray = bucketListJSONObject.getJSONArray("Buckets");
 
-					if (name.indexOf('lfr-qa-poshi-test') > -1) {
-						var createDate = bucket.CreationDate;
+					for (int i = 0; i < bucketsJSONArray.length(); i++) {
+						JSONObject bucketJSONObject = bucketsJSONArray.getJSONObject(i);
 
-						var currentDate = new Date();
-						var bucketDate = new Date(createDate);
+						String bucketName = bucketJSONObject.getString("Name");
 
-						var diffHours = (currentDate - bucketDate) / (1000 * 60 * 60);
+						if (!bucketName.contains("lfr-qa-poshi-test")) {
+							continue;
+						}
 
-						if (diffHours > 12) {
-							expiredBuckets.push(name);
+						OffsetDateTime offsetDateTime = OffsetDateTime.parse(bucketJSONObject.getString("CreationDate"));
+
+						Instant instant = offsetDateTime.toInstant();
+
+						if (((System.currentTimeMillis() - instant.toEpochMilli()) / (1000 * 60 * 60)) > 12) {
+							expiredBuckets.add(bucketName);
 						}
 					}
-				}
 
-				project.setProperty("expired.buckets", expiredBuckets.toString());]]>
-			</script>
+					String expiredBucketsString = expiredBuckets.toString();
+
+					expiredBucketsString = expiredBucketsString.replaceAll(" ", "");
+
+					project.setProperty("expired.buckets", expiredBucketsString.substring(1, expiredBucketsString.length() - 1));
+				]]>
+			</beanshell>
 
 			<for list="${expired.buckets}" param="delete.name">
 				<sequential>

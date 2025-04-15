@@ -52,6 +52,7 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.UnicodePropertiesBuilder;
 import com.liferay.portal.test.rule.Inject;
+import com.liferay.portal.test.rule.LanguageIds;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import com.liferay.portal.util.PropsValues;
@@ -80,6 +81,9 @@ import org.junit.runner.RunWith;
 /**
  * @author Javier Gamarra
  */
+@LanguageIds(
+	availableLanguageIds = {"en_US", "es_ES"}, defaultLanguageId = "en_US"
+)
 @RunWith(Arquillian.class)
 public class NavigationMenuResourceTest
 	extends BaseNavigationMenuResourceTestCase {
@@ -293,6 +297,14 @@ public class NavigationMenuResourceTest
 			"structured-contents/" + journalArticle.getResourcePrimKey(),
 			JournalArticle.class.getName(), journalArticle.getTitle(),
 			"structuredContent", true);
+	}
+
+	@Override
+	@Test
+	public void testPostSiteNavigationMenu() throws Exception {
+		super.testPostSiteNavigationMenu();
+
+		_testPostSiteNavigationMenuWithNavigationType();
 	}
 
 	@Override
@@ -938,6 +950,21 @@ public class NavigationMenuResourceTest
 				customFields, _getExpectedCustomFields(serviceContext)));
 
 		navigationMenuResource.deleteNavigationMenu(postNavigationMenu.getId());
+	}
+
+	private void _testPostSiteNavigationMenuWithNavigationType()
+		throws Exception {
+
+		NavigationMenu navigationMenu = _randomNavigationMenu(false);
+
+		navigationMenu.setNavigationType(NavigationMenu.NavigationType.PRIMARY);
+
+		navigationMenu = navigationMenuResource.postSiteNavigationMenu(
+			testGroup.getGroupId(), navigationMenu);
+
+		Assert.assertEquals(
+			NavigationMenu.NavigationType.PRIMARY,
+			navigationMenu.getNavigationType());
 	}
 
 	@Inject

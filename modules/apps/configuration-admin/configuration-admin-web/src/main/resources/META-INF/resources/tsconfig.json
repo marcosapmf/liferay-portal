@@ -1,0 +1,38 @@
+{
+	"@generated": "85af27ff9f8599e8937a68aff94892c12248e022",
+	"@readonly": "** AUTO-GENERATED: DO NOT EDIT **",
+	"compilerOptions": {
+		"allowSyntheticDefaultImports": true,
+		"checkJs": false,
+		"composite": true,
+		"declarationDir": "../../../../../../../../.tsc/types",
+		"emitDeclarationOnly": true,
+		"jsx": "react",
+		"module": "es6",
+		"moduleResolution": "node",
+		"paths": {
+			"frontend-js-components-web": [
+				"../../../../../../../frontend-js/frontend-js-components-web/src/main/resources/META-INF/resources/index.ts"
+			]
+		},
+		"rootDir": "../../../../../../../..",
+		"skipLibCheck": true,
+		"sourceMap": false,
+		"strict": true,
+		"target": "esnext",
+		"tsBuildInfoFile": "../../../../../../../../.tsc/buildinfo/@liferay/configuration-admin-web.tsbuildinfo",
+		"typeRoots": [
+			"../../../../../../../../node_modules/@types"
+		]
+	},
+	"include": [
+		"**/*.ts",
+		"**/*.tsx",
+		"../../../../../../../../global.d.ts"
+	],
+	"references": [
+		{
+			"path": "../../../../../../../frontend-js/frontend-js-components-web/src/main/resources/META-INF/resources/tsconfig.json"
+		}
+	]
+}

@@ -532,7 +532,7 @@
 </tr>
 <tr>
 	<td>LOCALIZATION_GENERIC</td>
-	<td>//div[contains(@class,'form-group')]//div[contains(@class,'localized')]//button[contains(@class,'localized')] | //button[contains(@class,'localized')]</td>
+	<td>//div[contains(@class,'form-group')]//div[contains(@class,'localized')]//button[contains(@class,'localized')] | //button[contains(@class,'localized')] | //div[contains(@class,'translation-manager')]/button</td>
 	<td></td>
 </tr>
 <tr>
@@ -553,6 +553,11 @@
 <tr>
 	<td>LOCALIZATION_SUMMARY</td>
 	<td>//button[@id='_com_liferay_journal_web_portlet_JournalPortlet__com_liferay_journal_web_portlet_JournalPortlet_descriptionMapAsXMLMenu']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>LOCALIZATION_TRANSLATED</td>
+	<td>//div[@role='group']//ul[@class='tbar-nav']//button[@role='combobox']</td>
 	<td></td>
 </tr>
 <tr>

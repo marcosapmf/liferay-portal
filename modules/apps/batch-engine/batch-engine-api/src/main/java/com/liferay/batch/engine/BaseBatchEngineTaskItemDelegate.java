@@ -48,9 +48,13 @@ public abstract class BaseBatchEngineTaskItemDelegate<T>
 			Collection<T> items, Map<String, Serializable> parameters)
 		throws Exception {
 
-		for (T item : items) {
-			deleteItem(item, parameters);
-		}
+		batchEngineImportStrategy.apply(
+			items,
+			item -> {
+				deleteItem(item, parameters);
+
+				return item;
+			});
 	}
 
 	public void deleteItem(T item, Map<String, Serializable> parameters)
@@ -76,20 +80,12 @@ public abstract class BaseBatchEngineTaskItemDelegate<T>
 
 	@Override
 	public boolean hasCreateStrategy(String createStrategy) {
-		if (_availableCreateStrategies.contains(createStrategy)) {
-			return true;
-		}
-
-		return false;
+		return _availableCreateStrategies.contains(createStrategy);
 	}
 
 	@Override
 	public boolean hasUpdateStrategy(String updateStrategy) {
-		if (_availableUpdateStrategies.contains(updateStrategy)) {
-			return true;
-		}
-
-		return false;
+		return _availableUpdateStrategies.contains(updateStrategy);
 	}
 
 	@Override

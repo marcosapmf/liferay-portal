@@ -4,13 +4,16 @@ definition {
 	property custom.properties = "jsonws.web.service.paths.excludes=";
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property release.feature.flags.disable.DISABLE_PRIVATE_LAYOUTS = "true";
 	property testray.main.component.name = "Product Info Management";
 
 	setUp {
 		CommerceConfiguration.commerceSetUp(
 			minium = "true",
 			storeFront = "true");
+
+		task ("Enable private pages") {
+			PagesAdmin.enablePrivatePages();
+		}
 	}
 
 	tearDown {
@@ -2048,7 +2051,7 @@ definition {
 				locator1 = "CommerceEntry#CURRENT_LANGUAGE");
 
 			Click(
-				ariaLabel = "Transfer Item Right to Left",
+				ariaLabel = "Transfer Item Left to Right",
 				locator1 = "Button#ANY_WITH_ARIA_LABEL");
 
 			PortalSettings._saveDisplaySettings();

@@ -75,7 +75,7 @@ public class CPDefinitionSpecificationOptionValueCacheModel
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(35);
+		StringBundler sb = new StringBundler(39);
 
 		sb.append("{mvccVersion=");
 		sb.append(mvccVersion);
@@ -83,6 +83,8 @@ public class CPDefinitionSpecificationOptionValueCacheModel
 		sb.append(ctCollectionId);
 		sb.append(", uuid=");
 		sb.append(uuid);
+		sb.append(", externalReferenceCode=");
+		sb.append(externalReferenceCode);
 		sb.append(", CPDefinitionSpecificationOptionValueId=");
 		sb.append(CPDefinitionSpecificationOptionValueId);
 		sb.append(", groupId=");
@@ -109,6 +111,8 @@ public class CPDefinitionSpecificationOptionValueCacheModel
 		sb.append(priority);
 		sb.append(", value=");
 		sb.append(value);
+		sb.append(", visible=");
+		sb.append(visible);
 		sb.append(", lastPublishDate=");
 		sb.append(lastPublishDate);
 		sb.append("}");
@@ -131,6 +135,15 @@ public class CPDefinitionSpecificationOptionValueCacheModel
 		}
 		else {
 			cpDefinitionSpecificationOptionValueImpl.setUuid(uuid);
+		}
+
+		if (externalReferenceCode == null) {
+			cpDefinitionSpecificationOptionValueImpl.setExternalReferenceCode(
+				"");
+		}
+		else {
+			cpDefinitionSpecificationOptionValueImpl.setExternalReferenceCode(
+				externalReferenceCode);
 		}
 
 		cpDefinitionSpecificationOptionValueImpl.
@@ -186,6 +199,8 @@ public class CPDefinitionSpecificationOptionValueCacheModel
 			cpDefinitionSpecificationOptionValueImpl.setValue(value);
 		}
 
+		cpDefinitionSpecificationOptionValueImpl.setVisible(visible);
+
 		if (lastPublishDate == Long.MIN_VALUE) {
 			cpDefinitionSpecificationOptionValueImpl.setLastPublishDate(null);
 		}
@@ -205,6 +220,7 @@ public class CPDefinitionSpecificationOptionValueCacheModel
 
 		ctCollectionId = objectInput.readLong();
 		uuid = objectInput.readUTF();
+		externalReferenceCode = objectInput.readUTF();
 
 		CPDefinitionSpecificationOptionValueId = objectInput.readLong();
 
@@ -226,6 +242,8 @@ public class CPDefinitionSpecificationOptionValueCacheModel
 
 		priority = objectInput.readDouble();
 		value = objectInput.readUTF();
+
+		visible = objectInput.readBoolean();
 		lastPublishDate = objectInput.readLong();
 	}
 
@@ -240,6 +258,13 @@ public class CPDefinitionSpecificationOptionValueCacheModel
 		}
 		else {
 			objectOutput.writeUTF(uuid);
+		}
+
+		if (externalReferenceCode == null) {
+			objectOutput.writeUTF("");
+		}
+		else {
+			objectOutput.writeUTF(externalReferenceCode);
 		}
 
 		objectOutput.writeLong(CPDefinitionSpecificationOptionValueId);
@@ -282,12 +307,14 @@ public class CPDefinitionSpecificationOptionValueCacheModel
 			objectOutput.writeUTF(value);
 		}
 
+		objectOutput.writeBoolean(visible);
 		objectOutput.writeLong(lastPublishDate);
 	}
 
 	public long mvccVersion;
 	public long ctCollectionId;
 	public String uuid;
+	public String externalReferenceCode;
 	public long CPDefinitionSpecificationOptionValueId;
 	public long groupId;
 	public long companyId;
@@ -301,6 +328,7 @@ public class CPDefinitionSpecificationOptionValueCacheModel
 	public String key;
 	public double priority;
 	public String value;
+	public boolean visible;
 	public long lastPublishDate;
 
 }

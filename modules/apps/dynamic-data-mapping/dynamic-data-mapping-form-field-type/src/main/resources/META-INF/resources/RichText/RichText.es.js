@@ -4,7 +4,11 @@
  */
 
 import {ClayInput} from '@clayui/form';
-import {ClassicEditor} from 'frontend-editor-ckeditor-web';
+import {useConfig, useFormState} from 'data-engine-js-components-web';
+import {
+	CKEditor5ClassicEditor,
+	ClassicEditor,
+} from 'frontend-editor-ckeditor-web';
 import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 
 import FieldBase from '../FieldBase/ReactFieldBase.es';
@@ -12,6 +16,7 @@ import LocalesDropdown from '../util/localizable/LocalesDropdown';
 import {
 	convertStringToObject,
 	getEditingValue,
+	getISO639LanguageCode,
 	getInitialInternalValue,
 	normalizeLocaleId,
 	transformAvailableLocalesAndValue,
@@ -35,15 +40,25 @@ const HTML_TAG_WITH_ON_ATTRIBUTE_REGEX =
 	/<[^>]+?(\s+\bon\w+=(?:'[^']*'|"[^"]*"|[^'"\s>]+))*\s*\/?>/gi;
 const ON_ATTRIBUTE_REGEX = /(\s+\bon\w+=(?:'[^']*'|"[^"]*"|[^'"\s>]+))/gi;
 
+const ddmFormAdminPortlet =
+	'_com_liferay_dynamic_data_mapping_form_web_portlet_DDMFormAdminPortlet_';
+
+const fieldNeedsToFireOnChange = ['predefinedValue', 'text'];
+
+const skipsChangeValidation = (fieldName) => {
+	return !fieldNeedsToFireOnChange.includes(fieldName);
+};
+
 const RichText = ({
 	availableLocales,
 	defaultLocale = INITIAL_DEFAULT_LOCALE,
 	editable,
-	editingLanguageId,
 	editingLocale = INITIAL_EDITING_LOCALE,
 	editorConfig,
+	evaluable,
 	fieldName,
 	id,
+	label,
 	locale,
 	name,
 	localizedObjectField,
@@ -56,6 +71,8 @@ const RichText = ({
 	visible,
 	...otherProps
 }) => {
+	const {editingLanguageId} = useFormState();
+
 	const editorRef = useRef();
 
 	const contents = useMemo(
@@ -79,16 +96,39 @@ const RichText = ({
 			value: currentValue,
 		})
 	);
+	const [ckEditor5Config, setCKEditor5Config] = useState({
+		...editorConfig,
+		initialData: contents,
+		language: {
+			content: getISO639LanguageCode(editingLocale?.localeId),
+		},
+	});
+
+	const {portletNamespace} = useConfig();
 
 	useEffect(() => {
-		const editor = editorRef.current?.editor;
-
-		if (editor) {
-			editor.config.contentsLangDirection =
-				Liferay.Language.direction[currentEditingLocale.localeId];
-			editor.config.contentsLanguage = currentEditingLocale.localeId;
-			editor.setData(currentInternalValue);
+		if (Liferay.FeatureFlags['LPD-11235']) {
+			setCKEditor5Config({
+				...ckEditor5Config,
+				initialData: currentInternalValue,
+				language: {
+					content: getISO639LanguageCode(
+						currentEditingLocale.localeId
+					),
+				},
+			});
 		}
+		else {
+			const editor = editorRef.current?.editor;
+
+			if (editor) {
+				editor.config.contentsLangDirection =
+					Liferay.Language.direction[currentEditingLocale.localeId];
+				editor.config.contentsLanguage = currentEditingLocale.localeId;
+				editor.setData(currentInternalValue);
+			}
+		}
+
 		const {availableLocales} = {
 			...transformAvailableLocalesAndValue({
 				availableLocales: currentAvailableLocales,
@@ -124,6 +164,8 @@ const RichText = ({
 			newEditingLocale = {localeId};
 		}
 
+		const newValue = convertStringToObject(contents, localeId);
+
 		setCurrentEditingLocale({
 			...newEditingLocale,
 			icon: normalizeLocaleId(newEditingLocale.localeId),
@@ -133,9 +175,11 @@ const RichText = ({
 				defaultLocale,
 				editingLocale: newEditingLocale,
 				fieldName,
-				value: convertStringToObject(contents, localeId),
+				value: newValue,
 			})
 		);
+
+		setCurrentValue(newValue);
 	};
 
 	const handleContentChange = (content) => {
@@ -155,6 +199,14 @@ const RichText = ({
 			};
 
 			setCurrentAvailableLocales(availableLocales);
+
+			if (
+				evaluable &&
+				portletNamespace === ddmFormAdminPortlet &&
+				skipsChangeValidation(fieldName)
+			) {
+				return;
+			}
 
 			if (
 				currentValue[currentEditingLocale?.localeId] ||
@@ -198,12 +250,30 @@ const RichText = ({
 	}
 
 	const resetTranslation = useCallback(() => {
-		editorRef.current.editor.setData(currentValue[defaultLocale.localeId]);
-	}, [editorRef, currentValue, defaultLocale]);
+		const data = currentValue[defaultLocale.localeId];
+
+		if (Liferay.FeatureFlags['LPD-11235']) {
+			setCKEditor5Config({
+				...ckEditor5Config,
+				initialData: data ?? '',
+			});
+		}
+		else {
+			editorRef.current.editor.setData(data);
+		}
+	}, [ckEditor5Config, currentValue, defaultLocale, editorRef]);
 
 	useEffect(() => {
 		const handleRestoreState = () => {
-			editorRef.current.editor.setData(value);
+			if (Liferay.FeatureFlags['LPD-11235']) {
+				setCKEditor5Config({
+					...ckEditor5Config,
+					initialData: value,
+				});
+			}
+			else {
+				editorRef.current.editor.setData(value);
+			}
 		};
 
 		Liferay.after('ddm:restoreState', handleRestoreState);
@@ -211,7 +281,7 @@ const RichText = ({
 		return () => {
 			Liferay.detach('ddm:restoreState', handleRestoreState);
 		};
-	}, [value, currentValue]);
+	}, [ckEditor5Config, currentValue, value]);
 
 	useEffect(() => {
 		Liferay.after('inputLocalized:resetTranslations', resetTranslation);
@@ -229,6 +299,7 @@ const RichText = ({
 			{...otherProps}
 			fieldName={fieldName}
 			id={id}
+			label={label}
 			name={name}
 			readOnly={readOnly}
 			style={readOnly ? {pointerEvents: 'none'} : null}
@@ -236,35 +307,49 @@ const RichText = ({
 		>
 			<ClayInput.Group>
 				<ClayInput.GroupItem>
-					<ClassicEditor
-						ariaRequired={otherProps.required}
-						className="w-100"
-						contents={
-							currentValue
-								? currentValue[currentEditingLocale?.localeId]
-								: ''
-						}
-						editorConfig={editorConfig}
-						name={name}
-						onBlur={onBlur}
-						onChange={(content) => handleContentChange(content)}
-						onFocus={onFocus}
-						onSetData={(event) => {
-							const editor = event.editor;
-
-							if (editor.mode === 'source') {
-								const value = event.data.dataValue;
-
-								const sanitizedValue = sanitezeHTML(value);
-
-								handleContentChange(sanitizedValue);
-
-								event.data.dataValue = sanitizedValue;
+					{Liferay.FeatureFlags['LPD-11235'] ? (
+						<CKEditor5ClassicEditor
+							className="w-100"
+							config={ckEditor5Config}
+							key={JSON.stringify(ckEditor5Config)}
+							onChange={(event, editor) =>
+								handleContentChange(editor.getData())
 							}
-						}}
-						readOnly={readOnly}
-						ref={editorRef}
-					/>
+						/>
+					) : (
+						<ClassicEditor
+							ariaLabel={label}
+							ariaRequired={otherProps.required}
+							className="w-100"
+							contents={
+								currentValue
+									? currentValue[
+											currentEditingLocale?.localeId
+										]
+									: ''
+							}
+							editorConfig={editorConfig}
+							name={name}
+							onBlur={onBlur}
+							onChange={(content) => handleContentChange(content)}
+							onFocus={onFocus}
+							onSetData={(event) => {
+								const editor = event.editor;
+
+								if (editor.mode === 'source') {
+									const value = event.data.dataValue;
+
+									const sanitizedValue = sanitezeHTML(value);
+
+									handleContentChange(sanitizedValue);
+
+									event.data.dataValue = sanitizedValue;
+								}
+							}}
+							readOnly={readOnly}
+							ref={editorRef}
+						/>
+					)}
 				</ClayInput.GroupItem>
 
 				<input
@@ -286,12 +371,16 @@ const RichText = ({
 						shrink
 					>
 						<LocalesDropdown
-							availableLocales={currentAvailableLocales}
-							editingLocale={currentEditingLocale}
+							availableLocales={
+								localizedObjectField
+									? availableLocales
+									: currentAvailableLocales
+							}
 							fieldName={fieldName}
 							onLanguageClicked={(localeId) => {
 								changeLanguage(localeId);
 							}}
+							value={currentValue}
 						/>
 					</ClayInput.GroupItem>
 				)}

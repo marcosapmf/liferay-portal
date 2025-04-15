@@ -48,10 +48,6 @@ public class UpgradeRecorder {
 		return _errorMessages;
 	}
 
-	public List<String> getFailedSQLs() {
-		return UpgradeSQLRecorder.getFailedSQLs();
-	}
-
 	public String getFinalSchemaVersion(String servletContextName) {
 		SchemaVersions schemaVersions = _schemaVersionsMap.get(
 			servletContextName);
@@ -330,9 +326,7 @@ public class UpgradeRecorder {
 		new ConcurrentHashMap<>();
 
 	static {
-		if (DBUpgrader.isUpgradeDatabaseAutoRunEnabled() ||
-			DBUpgrader.isUpgradeClient()) {
-
+		if (DBUpgrader.isUpgradeDatabaseAutoRunEnabled()) {
 			_result = "pending";
 			_type = "pending";
 		}

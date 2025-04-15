@@ -19,6 +19,7 @@ import com.liferay.commerce.service.CommerceAddressLocalService;
 import com.liferay.commerce.service.CommerceOrderLocalService;
 import com.liferay.commerce.test.util.CommerceTestUtil;
 import com.liferay.headless.commerce.delivery.cart.client.dto.v1_0.Address;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.model.Country;
 import com.liferay.portal.kernel.model.Region;
 import com.liferay.portal.kernel.model.User;
@@ -116,7 +117,7 @@ public class AddressResourceTest extends BaseAddressResourceTestCase {
 	protected String[] getAdditionalAssertFieldNames() {
 		return new String[] {
 			"city", "country", "description", "name", "phoneNumber", "region",
-			"zip"
+			"subtype", "zip"
 		};
 	}
 
@@ -132,7 +133,7 @@ public class AddressResourceTest extends BaseAddressResourceTestCase {
 
 	@Override
 	protected Address
-			testGetCartByExternalReferenceCodeBillingAddres_addAddress()
+			testGetCartByExternalReferenceCodeBillingAddress_addAddress()
 		throws Exception {
 
 		return _toAddress(_getCommerceAddress());
@@ -140,7 +141,7 @@ public class AddressResourceTest extends BaseAddressResourceTestCase {
 
 	@Override
 	protected String
-			testGetCartByExternalReferenceCodeBillingAddres_getExternalReferenceCode(
+			testGetCartByExternalReferenceCodeBillingAddress_getExternalReferenceCode(
 				Address address)
 		throws Exception {
 
@@ -149,7 +150,7 @@ public class AddressResourceTest extends BaseAddressResourceTestCase {
 
 	@Override
 	protected Address
-			testGetCartByExternalReferenceCodeShippingAddres_addAddress()
+			testGetCartByExternalReferenceCodeShippingAddress_addAddress()
 		throws Exception {
 
 		return _toAddress(_getCommerceAddress());
@@ -157,7 +158,7 @@ public class AddressResourceTest extends BaseAddressResourceTestCase {
 
 	@Override
 	protected String
-			testGetCartByExternalReferenceCodeShippingAddres_getExternalReferenceCode(
+			testGetCartByExternalReferenceCodeShippingAddress_getExternalReferenceCode(
 				Address address)
 		throws Exception {
 
@@ -188,7 +189,7 @@ public class AddressResourceTest extends BaseAddressResourceTestCase {
 
 	@Override
 	protected String
-			testGraphQLGetCartByExternalReferenceCodeBillingAddres_getExternalReferenceCode(
+			testGraphQLGetCartByExternalReferenceCodeBillingAddress_getExternalReferenceCode(
 				Address address)
 		throws Exception {
 
@@ -197,7 +198,7 @@ public class AddressResourceTest extends BaseAddressResourceTestCase {
 
 	@Override
 	protected String
-			testGraphQLGetCartByExternalReferenceCodeShippingAddres_getExternalReferenceCode(
+			testGraphQLGetCartByExternalReferenceCodeShippingAddress_getExternalReferenceCode(
 				Address address)
 		throws Exception {
 
@@ -270,14 +271,14 @@ public class AddressResourceTest extends BaseAddressResourceTestCase {
 
 		_commerceAddress = _commerceAddressLocalService.addCommerceAddress(
 			RandomTestUtil.randomString(), AccountEntry.class.getName(),
-			_accountEntry.getAccountEntryId(), RandomTestUtil.randomString(),
+			_accountEntry.getAccountEntryId(), _country.getCountryId(),
+			_region.getRegionId(), RandomTestUtil.randomString(),
 			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
 			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
-			RandomTestUtil.randomString(), String.valueOf(30133),
-			_region.getRegionId(), _country.getCountryId(),
-			RandomTestUtil.randomString(),
+			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
+			StringPool.BLANK,
 			CommerceAddressConstants.ADDRESS_TYPE_BILLING_AND_SHIPPING,
-			_serviceContext);
+			String.valueOf(30133), _serviceContext);
 
 		return _commerceAddress;
 	}
@@ -289,8 +290,7 @@ public class AddressResourceTest extends BaseAddressResourceTestCase {
 
 		_commerceOrder = _commerceOrderLocalService.addCommerceOrder(
 			_user.getUserId(), _commerceChannel.getGroupId(),
-			_accountEntry.getAccountEntryId(),
-			_commerceCurrency.getCommerceCurrencyId(), 0);
+			_accountEntry.getAccountEntryId(), _commerceCurrency.getCode(), 0);
 
 		return _commerceOrder;
 	}
@@ -312,6 +312,7 @@ public class AddressResourceTest extends BaseAddressResourceTestCase {
 				name = commerceAddress.getName();
 				phoneNumber = commerceAddress.getPhoneNumber();
 				region = region1.getName();
+				subtype = commerceAddress.getSubtype();
 				zip = commerceAddress.getZip();
 			}
 		};

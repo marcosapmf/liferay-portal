@@ -12,11 +12,12 @@ SiteNavigationMenuContextualMenusItemSelectorViewDisplayContext siteNavigationMe
 %>
 
 <liferay-util:html-top>
-	<link href="<%= PortalUtil.getStaticResourceURL(request, PortalUtil.getPathModule() + "/site-navigation-item-selector-web/css/ContextualMenus.css") %>" rel="stylesheet" />
+	<aui:link href='<%= PortalUtil.getStaticResourceURL(request, PortalUtil.getPathModule() + "/site-navigation-item-selector-web/css/ContextualMenus.css") %>' rel="stylesheet" />
 </liferay-util:html-top>
 
 <clay:container-fluid
 	cssClass="contextual-menu-selector p-4 text-3"
+	fullWidth="<%= true %>"
 	id='<%= liferayPortletResponse.getNamespace() + "contextualMenuSelector" %>'
 >
 	<clay:alert

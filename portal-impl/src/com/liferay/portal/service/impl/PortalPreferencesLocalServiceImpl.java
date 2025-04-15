@@ -166,9 +166,18 @@ public class PortalPreferencesLocalServiceImpl
 			ownerId, ownerType);
 
 		if (portalPreferences == null) {
-			portalPreferences =
-				portalPreferencesLocalService.addPortalPreferences(
-					ownerId, ownerType, defaultPreferences);
+			try {
+				portalPreferences =
+					portalPreferencesLocalService.addPortalPreferences(
+						ownerId, ownerType, defaultPreferences);
+			}
+			catch (Throwable throwable) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(throwable);
+				}
+
+				portalPreferences = fetchPortalPreferences(ownerId, ownerType);
+			}
 		}
 
 		PortalPreferencesImpl portalPreferencesImpl =
@@ -334,6 +343,13 @@ public class PortalPreferencesLocalServiceImpl
 					PortalPreferenceValue portalPreferenceValue =
 						_portalPreferenceValuePersistence.create(
 							++batchCounter);
+
+					if (portalPreferences.getOwnerType() ==
+							PortletKeys.PREFS_OWNER_TYPE_COMPANY) {
+
+						portalPreferenceValue.setCompanyId(
+							portalPreferences.getOwnerId());
+					}
 
 					portalPreferenceValue.setPortalPreferencesId(
 						portalPreferences.getPortalPreferencesId());

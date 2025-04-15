@@ -60,12 +60,11 @@ public interface SXPElementResource {
 			SXPElement sxpElement)
 		throws Exception;
 
-	public void postSXPElementBatch(
-			SXPElement sxpElement, String callbackURL, Object object)
+	public void postSXPElementBatch(String callbackURL, Object object)
 		throws Exception;
 
 	public HttpInvoker.HttpResponse postSXPElementBatchHttpResponse(
-			SXPElement sxpElement, String callbackURL, Object object)
+			String callbackURL, Object object)
 		throws Exception;
 
 	public SXPElement getSXPElementByExternalReferenceCode(
@@ -105,12 +104,11 @@ public interface SXPElementResource {
 			Long sxpElementId)
 		throws Exception;
 
-	public void deleteSXPElementBatch(
-			Long sxpElementId, String callbackURL, Object object)
+	public void deleteSXPElementBatch(String callbackURL, Object object)
 		throws Exception;
 
 	public HttpInvoker.HttpResponse deleteSXPElementBatchHttpResponse(
-			Long sxpElementId, String callbackURL, Object object)
+			String callbackURL, Object object)
 		throws Exception;
 
 	public SXPElement getSXPElement(Long sxpElementId) throws Exception;
@@ -132,14 +130,11 @@ public interface SXPElementResource {
 			Long sxpElementId, SXPElement sxpElement)
 		throws Exception;
 
-	public void putSXPElementBatch(
-			Long sxpElementId, SXPElement sxpElement, String callbackURL,
-			Object object)
+	public void putSXPElementBatch(String callbackURL, Object object)
 		throws Exception;
 
 	public HttpInvoker.HttpResponse putSXPElementBatchHttpResponse(
-			Long sxpElementId, SXPElement sxpElement, String callbackURL,
-			Object object)
+			String callbackURL, Object object)
 		throws Exception;
 
 	public SXPElement postSXPElementCopy(Long sxpElementId) throws Exception;
@@ -252,8 +247,8 @@ public interface SXPElementResource {
 		private Map<String, String> _headers = new LinkedHashMap<>();
 		private String _host = "localhost";
 		private Locale _locale;
-		private String _login = "";
-		private String _password = "";
+		private String _login;
+		private String _password;
 		private Map<String, String> _parameters = new LinkedHashMap<>();
 		private int _port = 8080;
 		private String _scheme = "http";
@@ -380,8 +375,10 @@ public interface SXPElementResource {
 					_builder._port + _builder._contextPath +
 						"/o/search-experiences-rest/v1.0/sxp-elements");
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
@@ -504,8 +501,10 @@ public interface SXPElementResource {
 					_builder._port + _builder._contextPath +
 						"/o/search-experiences-rest/v1.0/sxp-elements/export-batch");
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
@@ -607,19 +606,19 @@ public interface SXPElementResource {
 					_builder._port + _builder._contextPath +
 						"/o/search-experiences-rest/v1.0/sxp-elements");
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
 
-		public void postSXPElementBatch(
-				SXPElement sxpElement, String callbackURL, Object object)
+		public void postSXPElementBatch(String callbackURL, Object object)
 			throws Exception {
 
 			HttpInvoker.HttpResponse httpResponse =
-				postSXPElementBatchHttpResponse(
-					sxpElement, callbackURL, object);
+				postSXPElementBatchHttpResponse(callbackURL, object);
 
 			String content = httpResponse.getContent();
 
@@ -670,7 +669,7 @@ public interface SXPElementResource {
 		}
 
 		public HttpInvoker.HttpResponse postSXPElementBatchHttpResponse(
-				SXPElement sxpElement, String callbackURL, Object object)
+				String callbackURL, Object object)
 			throws Exception {
 
 			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
@@ -706,8 +705,10 @@ public interface SXPElementResource {
 					_builder._port + _builder._contextPath +
 						"/o/search-experiences-rest/v1.0/sxp-elements/batch");
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
@@ -812,8 +813,10 @@ public interface SXPElementResource {
 
 			httpInvoker.path("externalReferenceCode", externalReferenceCode);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
@@ -920,8 +923,10 @@ public interface SXPElementResource {
 
 			httpInvoker.path("externalReferenceCode", externalReferenceCode);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
@@ -1023,8 +1028,10 @@ public interface SXPElementResource {
 					_builder._port + _builder._contextPath +
 						"/o/search-experiences-rest/v1.0/sxp-elements/preview");
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
@@ -1126,8 +1133,10 @@ public interface SXPElementResource {
 					_builder._port + _builder._contextPath +
 						"/o/search-experiences-rest/v1.0/sxp-elements/validate");
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
@@ -1227,19 +1236,19 @@ public interface SXPElementResource {
 
 			httpInvoker.path("sxpElementId", sxpElementId);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
 
-		public void deleteSXPElementBatch(
-				Long sxpElementId, String callbackURL, Object object)
+		public void deleteSXPElementBatch(String callbackURL, Object object)
 			throws Exception {
 
 			HttpInvoker.HttpResponse httpResponse =
-				deleteSXPElementBatchHttpResponse(
-					sxpElementId, callbackURL, object);
+				deleteSXPElementBatchHttpResponse(callbackURL, object);
 
 			String content = httpResponse.getContent();
 
@@ -1290,7 +1299,7 @@ public interface SXPElementResource {
 		}
 
 		public HttpInvoker.HttpResponse deleteSXPElementBatchHttpResponse(
-				Long sxpElementId, String callbackURL, Object object)
+				String callbackURL, Object object)
 			throws Exception {
 
 			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
@@ -1324,12 +1333,12 @@ public interface SXPElementResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port + _builder._contextPath +
-						"/o/search-experiences-rest/v1.0/sxp-elements/{sxpElementId}/batch");
+						"/o/search-experiences-rest/v1.0/sxp-elements/batch");
 
-			httpInvoker.path("sxpElementId", sxpElementId);
-
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
@@ -1429,8 +1438,10 @@ public interface SXPElementResource {
 
 			httpInvoker.path("sxpElementId", sxpElementId);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
@@ -1535,8 +1546,10 @@ public interface SXPElementResource {
 
 			httpInvoker.path("sxpElementId", sxpElementId);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
@@ -1641,20 +1654,19 @@ public interface SXPElementResource {
 
 			httpInvoker.path("sxpElementId", sxpElementId);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
 
-		public void putSXPElementBatch(
-				Long sxpElementId, SXPElement sxpElement, String callbackURL,
-				Object object)
+		public void putSXPElementBatch(String callbackURL, Object object)
 			throws Exception {
 
 			HttpInvoker.HttpResponse httpResponse =
-				putSXPElementBatchHttpResponse(
-					sxpElementId, sxpElement, callbackURL, object);
+				putSXPElementBatchHttpResponse(callbackURL, object);
 
 			String content = httpResponse.getContent();
 
@@ -1705,8 +1717,7 @@ public interface SXPElementResource {
 		}
 
 		public HttpInvoker.HttpResponse putSXPElementBatchHttpResponse(
-				Long sxpElementId, SXPElement sxpElement, String callbackURL,
-				Object object)
+				String callbackURL, Object object)
 			throws Exception {
 
 			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
@@ -1740,12 +1751,12 @@ public interface SXPElementResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port + _builder._contextPath +
-						"/o/search-experiences-rest/v1.0/sxp-elements/{sxpElementId}/batch");
+						"/o/search-experiences-rest/v1.0/sxp-elements/batch");
 
-			httpInvoker.path("sxpElementId", sxpElementId);
-
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
@@ -1849,8 +1860,10 @@ public interface SXPElementResource {
 
 			httpInvoker.path("sxpElementId", sxpElementId);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
@@ -1939,8 +1952,10 @@ public interface SXPElementResource {
 
 			httpInvoker.path("sxpElementId", sxpElementId);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}

@@ -7,9 +7,7 @@ package com.liferay.portal.vulcan.util;
 
 import com.liferay.depot.model.DepotEntry;
 import com.liferay.depot.service.DepotEntryLocalService;
-import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.log.Log;
-import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.util.GetterUtil;
@@ -32,27 +30,9 @@ public class GroupUtil {
 		DepotEntryLocalService depotEntryLocalService,
 		GroupLocalService groupLocalService) {
 
-		Group group = groupLocalService.fetchGroup(companyId, assetLibraryKey);
-
-		if (group == null) {
-			try {
-				DepotEntry depotEntry = depotEntryLocalService.fetchDepotEntry(
-					GetterUtil.getLong(assetLibraryKey));
-
-				if (depotEntry == null) {
-					return null;
-				}
-
-				group = depotEntry.getGroup();
-			}
-			catch (PortalException portalException) {
-				if (_log.isDebugEnabled()) {
-					_log.debug(portalException);
-				}
-
-				return null;
-			}
-		}
+		Group group = _getGroup(
+			assetLibraryKey, companyId, depotEntryLocalService,
+			groupLocalService);
 
 		if (_checkGroup(group)) {
 			return group.getGroupId();
@@ -77,6 +57,14 @@ public class GroupUtil {
 		return null;
 	}
 
+	public static String getSiteExternalReferenceCode(Group group) {
+		if (group.isDepot()) {
+			return null;
+		}
+
+		return group.getExternalReferenceCode();
+	}
+
 	public static Long getSiteId(Group group) {
 		if (group.isDepot()) {
 			return null;
@@ -95,6 +83,38 @@ public class GroupUtil {
 		return false;
 	}
 
+	private static Group _getGroup(
+		String assetLibraryKey, long companyId,
+		DepotEntryLocalService depotEntryLocalService,
+		GroupLocalService groupLocalService) {
+
+		Group group = groupLocalService.fetchGroup(companyId, assetLibraryKey);
+
+		if (group != null) {
+			return group;
+		}
+
+		long assetLibraryId = GetterUtil.getLong(assetLibraryKey);
+
+		DepotEntry depotEntry = depotEntryLocalService.fetchDepotEntry(
+			assetLibraryId);
+
+		if (depotEntry != null) {
+			Group depotEntryGroup = groupLocalService.fetchGroup(
+				depotEntry.getGroupId());
+
+			if (depotEntryGroup != null) {
+				return depotEntryGroup;
+			}
+		}
+
+		if (!FeatureFlagManagerUtil.isEnabled(companyId, "LPD-17564")) {
+			return null;
+		}
+
+		return groupLocalService.fetchGroup(assetLibraryId);
+	}
+
 	private static boolean _isDepotOrSite(Group group) {
 		if ((group != null) && (group.isDepot() || group.isSite())) {
 			return true;
@@ -102,7 +122,5 @@ public class GroupUtil {
 
 		return false;
 	}
-
-	private static final Log _log = LogFactoryUtil.getLog(GroupUtil.class);
 
 }

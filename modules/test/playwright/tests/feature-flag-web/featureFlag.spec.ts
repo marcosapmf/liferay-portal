@@ -16,8 +16,8 @@ const DEPENDENT_FEATURE_FLAG = 'LPD-00001';
 export const test = mergeTests(
 	featureFlagPagesTest,
 	featureFlagsTest({
-		[DEPENDENCY_FEATURE_FLAG]: false,
-		[DEPENDENT_FEATURE_FLAG]: false,
+		[DEPENDENCY_FEATURE_FLAG]: {enabled: false},
+		[DEPENDENT_FEATURE_FLAG]: {enabled: false},
 	}),
 	loginTest()
 );
@@ -54,7 +54,7 @@ test('LPS-167698 - Assert that a feature flag with dependencies can be enabled w
 }) => {
 	await featureFlagsInstanceSettingsPage.goto();
 
-	await featureFlagsInstanceSettingsPage.searchFor('LPD-0000');
+	await featureFlagsInstanceSettingsPage.search('LPD-0000');
 
 	// Enable feature flag dependency
 

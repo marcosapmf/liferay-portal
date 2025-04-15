@@ -6,7 +6,6 @@
 import {expect, mergeTests} from '@playwright/test';
 
 import {apiHelpersTest} from '../../fixtures/apiHelpersTest';
-import {featureFlagsTest} from '../../fixtures/featureFlagsTest';
 import {isolatedSiteTest} from '../../fixtures/isolatedSiteTest';
 import {loginTest} from '../../fixtures/loginTest';
 import getBasicWebContentStructureId from '../../utils/structured-content/getBasicWebContentStructureId';
@@ -15,85 +14,187 @@ import getDataStructureDefinition from './utils/getDataStructureDefinition';
 
 export const test = mergeTests(
 	apiHelpersTest,
-	featureFlagsTest({
-		'LPD-15596': true,
-	}),
 	isolatedSiteTest,
 	journalPagesTest,
 	loginTest()
 );
 
-test('LPP-50468 After clicking on Clear (filter by structrure) you can see all the web contents', async ({
-	apiHelpers,
-	journalEditArticlePage,
-	journalPage,
-	page,
-	site,
-}) => {
-	const basicWebContentStructureId =
-		await getBasicWebContentStructureId(apiHelpers);
+test(
+	'Table view displays folders and articles correctly',
+	{
+		tag: '@LPD-42429',
+	},
+	async ({apiHelpers, journalPage, page, site}) => {
+		const basicWebContentStructureId =
+			await getBasicWebContentStructureId(apiHelpers);
 
-	await apiHelpers.jsonWebServicesJournal.addWebContent({
-		ddmStructureId: basicWebContentStructureId,
-		groupId: site.id,
-		titleMap: {en_US: 'First Web content'},
-	});
+		await apiHelpers.jsonWebServicesJournal.addWebContent({
+			ddmStructureId: basicWebContentStructureId,
+			groupId: site.id,
+			titleMap: {en_US: 'First Web content'},
+		});
 
-	const structureName = 'Structure Test';
+		await apiHelpers.jsonWebServicesJournal.addFolder({
+			groupId: site.id,
+		});
 
-	const dataDefinition = getDataStructureDefinition({
-		defaultLanguageId: 'en_US',
-		fields: [{name: 'Text', repeatable: false}],
-		name: structureName,
-	});
+		await journalPage.goto(site.friendlyUrlPath);
 
-	await apiHelpers.dataEngine.createStructure(site.id, dataDefinition);
+		await journalPage.changeView('table');
 
-	await journalEditArticlePage.goto({
-		siteUrl: site.friendlyUrlPath,
-		structureName,
-	});
+		await expect(page.getByRole('cell', {name: 'Title'})).toBeVisible();
 
-	await journalEditArticlePage.createArticleForStructure({
-		structureName,
-		title: 'Second Web Content',
-	});
+		await expect(
+			page.getByRole('cell', {name: 'Description'})
+		).toBeVisible();
 
-	await journalPage.goto(site.friendlyUrlPath);
+		await expect(page.getByRole('cell', {name: 'Author'})).toBeVisible();
 
-	await expect(
-		page.getByRole('link', {name: 'First Web content'})
-	).toBeVisible();
+		await expect(page.getByRole('cell', {name: 'Status'})).toBeVisible();
 
-	await expect(
-		page.getByRole('link', {name: 'Second Web content'})
-	).toBeVisible();
+		await expect(page.getByRole('cell', {name: 'Type'})).toBeVisible();
 
-	await page.getByLabel('Filter', {exact: true}).click();
+		await expect(
+			page.getByRole('cell', {name: 'Modified Date'})
+		).toBeVisible();
 
-	await page.getByRole('menuitem', {name: 'Structures'}).click();
+		await expect(
+			page.getByRole('cell', {name: 'Display Date'})
+		).toBeVisible();
 
-	const structuresFrame = await page.frameLocator(
-		'iframe[title="Structures"]'
-	);
+		await expect(
+			page.getByRole('cell', {name: 'Create Date'})
+		).toBeVisible();
+	}
+);
 
-	await structuresFrame
-		.getByLabel('Reverse Order Direction: Currently Descending')
-		.waitFor();
+test(
+	'After clicking on Clear (filter by structure) you can see all the web contents',
+	{
+		tag: '@LPS-191026',
+	},
+	async ({apiHelpers, journalEditArticlePage, journalPage, page, site}) => {
+		const basicWebContentStructureId =
+			await getBasicWebContentStructureId(apiHelpers);
 
-	await structuresFrame
-		.getByRole('cell', {name: 'Basic Web Content'})
-		.click();
+		await apiHelpers.jsonWebServicesJournal.addWebContent({
+			ddmStructureId: basicWebContentStructureId,
+			groupId: site.id,
+			titleMap: {en_US: 'First Web content'},
+		});
 
-	await expect(
-		page.getByRole('link', {name: 'Second Web content'})
-	).toBeHidden();
+		const structureName = 'Structure Test';
 
-	await page
-		.getByLabel('Clear 1 Result for Structures: Basic Web Content')
-		.click();
+		const dataDefinition = getDataStructureDefinition({
+			defaultLanguageId: 'en_US',
+			fields: [{name: 'Text', repeatable: false}],
+			name: structureName,
+		});
 
-	await expect(
-		page.getByRole('link', {name: 'Second Web content'})
-	).toBeVisible();
-});
+		await apiHelpers.dataEngine.createStructure(site.id, dataDefinition);
+
+		await journalEditArticlePage.goto({
+			siteUrl: site.friendlyUrlPath,
+			structureName,
+		});
+
+		await journalEditArticlePage.createArticleForStructure({
+			structureName,
+			title: 'Second Web Content',
+		});
+
+		await journalPage.goto(site.friendlyUrlPath);
+
+		await expect(
+			page.getByRole('link', {name: 'First Web content'})
+		).toBeVisible();
+
+		await expect(
+			page.getByRole('link', {name: 'Second Web content'})
+		).toBeVisible();
+
+		await page.getByLabel('Filter', {exact: true}).click();
+
+		await page.getByRole('menuitem', {name: 'Structures'}).click();
+
+		const structuresFrame = await page.frameLocator(
+			'iframe[title="Structures"]'
+		);
+
+		await structuresFrame
+			.getByLabel('Reverse Order Direction: Currently Descending')
+			.waitFor();
+
+		await structuresFrame
+			.getByRole('cell', {name: 'Basic Web Content'})
+			.click();
+
+		await expect(
+			page.getByRole('link', {name: 'Second Web content'})
+		).toBeHidden();
+
+		await page
+			.getByLabel('Clear 1 Result for Structures: Basic Web Content')
+			.click();
+
+		await expect(
+			page.getByRole('link', {name: 'Second Web content'})
+		).toBeVisible();
+	}
+);
+
+test(
+	'Validate Modified Date format in Table View',
+	{
+		tag: '@LPD-48258',
+	},
+	async ({apiHelpers, journalPage, page, site}) => {
+		const basicWebContentStructureId =
+			await getBasicWebContentStructureId(apiHelpers);
+
+		await apiHelpers.jsonWebServicesJournal.addWebContent({
+			ddmStructureId: basicWebContentStructureId,
+			groupId: site.id,
+			titleMap: {en_US: 'First Web content'},
+		});
+
+		await journalPage.goto(site.friendlyUrlPath);
+
+		expect(
+			page.getByRole('row', {name: /\d+ .* ago by .*/i})
+		).toBeVisible();
+	}
+);
+
+test(
+	'Latest version of Web Content should not have delete option',
+	{
+		tag: '@LPD-52126',
+	},
+	async ({apiHelpers, journalPage, page, site}) => {
+		const basicWebContentStructureId =
+			await getBasicWebContentStructureId(apiHelpers);
+
+		await apiHelpers.jsonWebServicesJournal.addWebContent({
+			ddmStructureId: basicWebContentStructureId,
+			groupId: site.id,
+			titleMap: {en_US: 'Basic Web content'},
+		});
+
+		await journalPage.goto(site.friendlyUrlPath);
+
+		await page.getByRole('button', {name: 'Actions'}).click();
+
+		await page.getByRole('menuitem', {name: 'View History'}).click();
+
+		await page.getByRole('button', {name: 'Actions'}).first().click();
+
+		await expect(
+			page.getByRole('menuitem', {name: 'Delete'})
+		).not.toBeVisible();
+
+		await page.locator('.management-bar input[type="checkbox"]').click();
+
+		await expect(page.getByRole('button', {name: 'Delete'})).toBeDisabled();
+	}
+);

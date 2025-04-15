@@ -27,6 +27,7 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONArray;
+import com.liferay.portal.kernel.json.JSONException;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.log.Log;
@@ -45,6 +46,7 @@ import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HtmlParser;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.SortedArrayList;
@@ -70,6 +72,7 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -537,7 +540,6 @@ public class DDMIndexerImpl implements DDMIndexer {
 		throws Exception {
 
 		if (type.equals(DDMFormFieldTypeConstants.DOCUMENT_LIBRARY) ||
-			type.equals(DDMFormFieldTypeConstants.JOURNAL_ARTICLE) ||
 			type.equals(DDMFormFieldTypeConstants.LINK_TO_LAYOUT)) {
 
 			JSONObject jsonObject = _jsonFactory.createJSONObject(valueString);
@@ -562,6 +564,31 @@ public class DDMIndexerImpl implements DDMIndexer {
 					 Validator.isNotNull(jsonObject.getString("alt"))) {
 
 				sb.append(jsonObject.getString("alt"));
+			}
+			else if (jsonObject.has("title")) {
+				sb.append(jsonObject.getString("title"));
+			}
+		}
+		else if (type.equals(DDMFormFieldTypeConstants.JOURNAL_ARTICLE)) {
+			JSONObject jsonObject = _jsonFactory.createJSONObject(valueString);
+
+			if (jsonObject == null) {
+				return;
+			}
+
+			if (jsonObject.has("titleMap")) {
+				JSONObject titleMapJSONObject = jsonObject.getJSONObject(
+					"titleMap");
+
+				Iterator<String> iterator = titleMapJSONObject.keys();
+
+				while (iterator.hasNext()) {
+					sb.append(titleMapJSONObject.getString(iterator.next()));
+
+					if (iterator.hasNext()) {
+						sb.append(StringPool.SPACE);
+					}
+				}
 			}
 			else if (jsonObject.has("title")) {
 				sb.append(jsonObject.getString("title"));
@@ -671,6 +698,8 @@ public class DDMIndexerImpl implements DDMIndexer {
 		else if (value instanceof Object[]) {
 			String[] valuesString = ArrayUtil.toStringArray((Object[])value);
 
+			String[] truncatedValuesString = valuesString;
+
 			String type = field.getType();
 
 			if (type.equals(DDMFormFieldTypeConstants.DATE) ||
@@ -685,23 +714,42 @@ public class DDMIndexerImpl implements DDMIndexer {
 			else if (type.equals(DDMFormFieldTypeConstants.RICH_TEXT)) {
 				List<String> richTextValues = new ArrayList<>(
 					valuesString.length);
+				List<String> truncatedValues = new ArrayList<>(
+					valuesString.length);
 
 				for (String valueString : valuesString) {
-					richTextValues.add(_htmlParser.extractText(valueString));
+					String richTextValue = _htmlParser.extractText(valueString);
+
+					richTextValues.add(richTextValue);
+
+					truncatedValues.add(_truncate(richTextValue));
 				}
 
 				valuesString = richTextValues.toArray(new String[0]);
+				truncatedValuesString = truncatedValues.toArray(new String[0]);
+			}
+			else if (type.equals(DDMFormFieldTypeConstants.TEXT)) {
+				List<String> truncatedValues = new ArrayList<>(
+					valuesString.length);
+
+				for (String valueString : valuesString) {
+					truncatedValues.add(_truncate(valueString));
+				}
+
+				truncatedValuesString = truncatedValues.toArray(new String[0]);
 			}
 
 			if (indexType.equals("keyword")) {
 				document.addKeywordSortable(name, valuesString);
 
-				document.addKeyword(_getSortableFieldName(name), valuesString);
+				document.addKeyword(
+					_getSortableFieldName(name), truncatedValuesString);
 			}
 			else {
 				document.addTextSortable(name, valuesString);
 
-				document.addText(_getSortableFieldName(name), valuesString);
+				document.addText(
+					_getSortableFieldName(name), truncatedValuesString);
 			}
 		}
 		else {
@@ -723,13 +771,11 @@ public class DDMIndexerImpl implements DDMIndexer {
 			}
 			else if (type.equals(DDMFormFieldTypeConstants.SELECT)) {
 				document.addKeyword(
-					_getSortableFieldName(name),
-					ArrayUtil.toStringArray(
-						_jsonFactory.createJSONArray(sortableValueString)));
+					_getFieldName(name), _toStringArray(sortableValue));
 				document.addKeyword(
-					name,
-					ArrayUtil.toStringArray(
-						_jsonFactory.createJSONArray(valueString)));
+					_getSortableFieldName(name),
+					_toStringArray(sortableValueString));
+				document.addKeyword(name, _toStringArray(valueString));
 			}
 			else {
 				if ((type.equals(DDMFormFieldTypeConstants.DATE) ||
@@ -768,14 +814,8 @@ public class DDMIndexerImpl implements DDMIndexer {
 			return;
 		}
 
-		if (sortableValueString.length() >
-				_SORTABLE_TEXT_FIELDS_TRUNCATED_LENGTH) {
-
-			sortableValueString = sortableValueString.substring(
-				0, _SORTABLE_TEXT_FIELDS_TRUNCATED_LENGTH);
-		}
-
-		document.addKeyword(_getSortableFieldName(name), sortableValueString);
+		document.addKeyword(
+			_getSortableFieldName(name), _truncate(sortableValueString));
 	}
 
 	private void _extractIndexableAttribute(
@@ -896,9 +936,13 @@ public class DDMIndexerImpl implements DDMIndexer {
 		return dateValues.toArray(new Date[0]);
 	}
 
+	private String _getFieldName(String name) {
+		return name + "_String";
+	}
+
 	private String _getSortableFieldName(String name) {
 		return com.liferay.portal.kernel.search.Field.getSortableFieldName(
-			name + "_String");
+			_getFieldName(name));
 	}
 
 	private String _getSortableValue(
@@ -913,9 +957,39 @@ public class DDMIndexerImpl implements DDMIndexer {
 		DDMFormFieldOptions ddmFormFieldOptions =
 			(DDMFormFieldOptions)ddmFormField.getProperty("options");
 
-		Map<String, LocalizedValue> map = ddmFormFieldOptions.getOptions();
+		Map<String, LocalizedValue> options = ddmFormFieldOptions.getOptions();
 
-		for (Map.Entry<String, LocalizedValue> entry : map.entrySet()) {
+		if (MapUtil.isEmpty(options)) {
+			return sortableValue;
+		}
+
+		try {
+			JSONArray jsonArray = _jsonFactory.createJSONArray();
+
+			JSONArray sortableValueJSONArray = _jsonFactory.createJSONArray(
+				sortableValue);
+
+			for (int i = 0; i < sortableValueJSONArray.length(); i++) {
+				LocalizedValue localizedValue = options.get(
+					sortableValueJSONArray.getString(i));
+
+				if (localizedValue == null) {
+					jsonArray.put(sortableValueJSONArray.getString(i));
+				}
+				else {
+					jsonArray.put(localizedValue.getString(locale));
+				}
+			}
+
+			return jsonArray.toString();
+		}
+		catch (JSONException jsonException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(jsonException);
+			}
+		}
+
+		for (Map.Entry<String, LocalizedValue> entry : options.entrySet()) {
 			LocalizedValue localizedValue = entry.getValue();
 
 			sortableValue = StringUtil.replace(
@@ -939,6 +1013,19 @@ public class DDMIndexerImpl implements DDMIndexer {
 		}
 
 		return new Fields();
+	}
+
+	private String[] _toStringArray(Object value) throws PortalException {
+		return ArrayUtil.toStringArray(
+			_jsonFactory.createJSONArray(String.valueOf(value)));
+	}
+
+	private String _truncate(String string) {
+		if (string.length() > _SORTABLE_TEXT_FIELDS_TRUNCATED_LENGTH) {
+			return string.substring(0, _SORTABLE_TEXT_FIELDS_TRUNCATED_LENGTH);
+		}
+
+		return string;
 	}
 
 	private static final int _SORTABLE_TEXT_FIELDS_TRUNCATED_LENGTH =

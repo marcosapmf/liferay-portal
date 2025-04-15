@@ -5,15 +5,20 @@
 
 package com.liferay.portal.search.web.internal.portlet.shared.search;
 
+import com.liferay.fragment.model.FragmentEntryLink;
+import com.liferay.fragment.service.FragmentEntryLinkLocalService;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMap;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMapFactory;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.dao.search.DisplayTerms;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
+import com.liferay.portal.kernel.json.JSONFactory;
+import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutConstants;
 import com.liferay.portal.kernel.model.LayoutTypePortlet;
 import com.liferay.portal.kernel.model.Portlet;
-import com.liferay.portal.kernel.model.PortletPreferences;
+import com.liferay.portal.kernel.portlet.PortletIdCodec;
 import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.search.QueryConfig;
 import com.liferay.portal.kernel.search.SearchContext;
@@ -22,7 +27,7 @@ import com.liferay.portal.kernel.service.PortletLocalService;
 import com.liferay.portal.kernel.service.PortletPreferencesLocalService;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.PortletKeys;
+import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.search.legacy.searcher.SearchRequestBuilderFactory;
 import com.liferay.portal.search.searcher.Searcher;
@@ -40,10 +45,13 @@ import com.liferay.portal.search.web.portlet.shared.search.PortletSharedSearchRe
 import com.liferay.portal.search.web.portlet.shared.task.PortletSharedTaskExecutor;
 import com.liferay.portal.search.web.search.request.SearchSettings;
 import com.liferay.portal.search.web.search.request.SearchSettingsContributor;
+import com.liferay.segments.manager.SegmentsExperienceManager;
+import com.liferay.segments.service.SegmentsExperienceLocalService;
 
-import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 import javax.portlet.PortletRequest;
 import javax.portlet.PortletURL;
@@ -170,30 +178,27 @@ public class PortletSharedSearchRequestImpl
 	}
 
 	private List<Portlet> _getInstantiatedPortlets(
-		Layout layout, long companyId) {
+		Layout layout, long segmentsExperienceId) {
 
-		List<Portlet> portlets = new ArrayList<>();
+		return TransformUtil.transform(
+			_getSegmentExperiencePortletIds(layout, segmentsExperienceId),
+			segmentExperiencePortletId -> {
+				Portlet portlet = portletLocalService.getPortletById(
+					layout.getCompanyId(), segmentExperiencePortletId);
 
-		List<PortletPreferences> portletPreferencesList =
-			portletPreferencesLocalService.getPortletPreferences(
-				PortletKeys.PREFS_OWNER_ID_DEFAULT,
-				PortletKeys.PREFS_OWNER_TYPE_LAYOUT, layout.getPlid());
+				if (portlet.isInstanceable() &&
+					Validator.isNotNull(portlet.getInstanceId())) {
 
-		for (PortletPreferences portletPreferences : portletPreferencesList) {
-			Portlet portlet = portletLocalService.getPortletById(
-				companyId, portletPreferences.getPortletId());
+					return portlet;
+				}
 
-			if (portlet.isInstanceable() &&
-				Validator.isNotNull(portlet.getInstanceId())) {
-
-				portlets.add(portlet);
-			}
-		}
-
-		return portlets;
+				return null;
+			});
 	}
 
-	private List<Portlet> _getPortlets(Layout layout, long companyId) {
+	private List<Portlet> _getPortlets(
+		Layout layout, long segmentsExperienceId) {
+
 		LayoutTypePortlet layoutTypePortlet =
 			(LayoutTypePortlet)layout.getLayoutType();
 
@@ -204,7 +209,7 @@ public class PortletSharedSearchRequestImpl
 		}
 
 		List<Portlet> instantiatedPortlets = _getInstantiatedPortlets(
-			layout, companyId);
+			layout, segmentsExperienceId);
 
 		for (Portlet instantiatedPortlet : instantiatedPortlets) {
 			if (!portlets.contains(instantiatedPortlet)) {
@@ -226,7 +231,7 @@ public class PortletSharedSearchRequestImpl
 		}
 
 		instantiatedPortlets = _getInstantiatedPortlets(
-			masterLayout, companyId);
+			masterLayout, segmentsExperienceId);
 
 		for (Portlet instantiatedPortlet : instantiatedPortlets) {
 			if (!portlets.contains(instantiatedPortlet)) {
@@ -269,23 +274,58 @@ public class PortletSharedSearchRequestImpl
 	private List<SearchSettingsContributor> _getSearchSettingsContributors(
 		ThemeDisplay themeDisplay, RenderRequest renderRequest) {
 
-		List<SearchSettingsContributor> searchSettingsContributors =
-			new ArrayList<>();
+		SegmentsExperienceManager segmentsExperienceManager =
+			new SegmentsExperienceManager(_segmentsExperienceLocalService);
 
-		List<Portlet> portlets = _getPortlets(
-			themeDisplay.getLayout(), themeDisplay.getCompanyId());
+		return TransformUtil.transform(
+			_getPortlets(
+				themeDisplay.getLayout(),
+				segmentsExperienceManager.getSegmentsExperienceId(
+					_portal.getHttpServletRequest(renderRequest))),
+			portlet -> _getSearchSettingsContributor(
+				portlet, themeDisplay, renderRequest));
+	}
 
-		for (Portlet portlet : portlets) {
-			SearchSettingsContributor searchSettingsContributor =
-				_getSearchSettingsContributor(
-					portlet, themeDisplay, renderRequest);
+	private Set<String> _getSegmentExperiencePortletIds(
+		Layout layout, long segmentsExperienceId) {
 
-			if (searchSettingsContributor != null) {
-				searchSettingsContributors.add(searchSettingsContributor);
+		Set<String> segmentExperiencePortletIds = new HashSet<>();
+
+		List<FragmentEntryLink> fragmentEntryLinks =
+			_fragmentEntryLinkLocalService.
+				getFragmentEntryLinksBySegmentsExperienceId(
+					layout.getGroupId(), segmentsExperienceId,
+					layout.getPlid());
+
+		for (FragmentEntryLink fragmentEntryLink : fragmentEntryLinks) {
+			if (!fragmentEntryLink.isTypePortlet()) {
+				continue;
+			}
+
+			try {
+				JSONObject editableValuesJSONObject =
+					_jsonFactory.createJSONObject(
+						fragmentEntryLink.getEditableValues());
+
+				String portletId = editableValuesJSONObject.getString(
+					"portletId");
+
+				if (Validator.isNull(portletId)) {
+					continue;
+				}
+
+				String instanceId = editableValuesJSONObject.getString(
+					"instanceId");
+
+				segmentExperiencePortletIds.add(
+					PortletIdCodec.encode(portletId, instanceId));
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
 			}
 		}
 
-		return searchSettingsContributors;
+		return segmentExperiencePortletIds;
 	}
 
 	private PortletSharedSearchResponse _search(RenderRequest renderRequest) {
@@ -311,7 +351,19 @@ public class PortletSharedSearchRequestImpl
 	}
 
 	@Reference
+	private FragmentEntryLinkLocalService _fragmentEntryLinkLocalService;
+
+	@Reference
+	private JSONFactory _jsonFactory;
+
+	@Reference
 	private LayoutLocalService _layoutLocalService;
+
+	@Reference
+	private Portal _portal;
+
+	@Reference
+	private SegmentsExperienceLocalService _segmentsExperienceLocalService;
 
 	private ServiceTrackerMap<String, PortletSharedSearchContributor>
 		_serviceTrackerMap;

@@ -9,6 +9,8 @@ import {ProductMenuPage} from '../product-navigation-control-menu-web/ProductMen
 
 export class PortletConfigurationPermissionsPage {
 	readonly clearLink: Locator;
+	readonly editPageLink: Locator;
+	readonly editPageOptionsMenu: Locator;
 	readonly ownerRoleCell: Locator;
 	readonly page: Page;
 	readonly pageOptionsMenu: Locator;
@@ -22,6 +24,13 @@ export class PortletConfigurationPermissionsPage {
 	readonly successMessage: Locator;
 
 	constructor(page: Page) {
+		this.editPageLink = page.locator(
+			'.control-menu-nav-item .lfr-portal-tooltip[title="Edit"] a'
+		);
+		this.editPageOptionsMenu = page.getByRole('button', {
+			exact: true,
+			name: 'Options',
+		});
 		this.page = page;
 		this.pageOptionsMenu = page.getByTitle('Open Page Options Menu');
 		this.permissionsFrame = page.frameLocator(
@@ -50,6 +59,18 @@ export class PortletConfigurationPermissionsPage {
 		);
 	}
 
+	async changePagination(startValue: number, endValue: number) {
+		await this.permissionsFrame
+			.getByText(startValue + ' Entries', {exact: true})
+			.click();
+		await this.permissionsFrame
+			.getByRole('option', {name: endValue + ' Entries'})
+			.click();
+		await expect(
+			this.permissionsFrame.getByText('Showing 1 to ' + endValue)
+		).toBeVisible();
+	}
+
 	async goto() {
 		await this.productMenuPage.openProductMenuIfClosed();
 		await this.productMenuPage.goToPages();
@@ -57,15 +78,10 @@ export class PortletConfigurationPermissionsPage {
 		await this.permissionsMenuItem.click();
 	}
 
-	async changePagination(startValue: number, endValue: number) {
-		await this.permissionsFrame
-			.getByText(startValue + ' Entries', {exact: true})
-			.click();
-		await this.permissionsFrame
-			.getByRole('link', {name: endValue + ' Entries'})
-			.click();
-		await expect(
-			this.permissionsFrame.getByText('Showing 1 to ' + endValue)
-		).toBeVisible();
+	async goToEditPagePermissions() {
+		const editPageLink = await this.editPageLink.getAttribute('href');
+		await this.page.goto(editPageLink);
+		await this.editPageOptionsMenu.click();
+		await this.permissionsMenuItem.click();
 	}
 }

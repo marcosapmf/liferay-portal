@@ -8,8 +8,8 @@ package com.liferay.headless.commerce.admin.pricing.internal.resource.v2_0;
 import com.liferay.account.service.AccountEntryService;
 import com.liferay.account.service.AccountGroupService;
 import com.liferay.asset.kernel.service.AssetCategoryLocalService;
+import com.liferay.commerce.currency.exception.NoSuchCurrencyException;
 import com.liferay.commerce.currency.model.CommerceCurrency;
-import com.liferay.commerce.currency.service.CommerceCurrencyService;
 import com.liferay.commerce.discount.service.CommerceDiscountService;
 import com.liferay.commerce.price.list.constants.CommercePriceListConstants;
 import com.liferay.commerce.price.list.exception.NoSuchPriceListException;
@@ -55,9 +55,12 @@ import com.liferay.headless.commerce.admin.pricing.internal.util.v2_0.PriceListO
 import com.liferay.headless.commerce.admin.pricing.internal.util.v2_0.PriceModifierUtil;
 import com.liferay.headless.commerce.admin.pricing.internal.util.v2_0.TierPriceUtil;
 import com.liferay.headless.commerce.admin.pricing.resource.v2_0.PriceListResource;
+import com.liferay.headless.commerce.core.util.CommerceCurrencyUtil;
 import com.liferay.headless.commerce.core.util.DateConfig;
 import com.liferay.headless.commerce.core.util.ExpandoUtil;
 import com.liferay.headless.commerce.core.util.ServiceContextHelper;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.search.filter.Filter;
@@ -104,8 +107,9 @@ public class PriceListResourceImpl extends BasePriceListResourceImpl {
 		throws Exception {
 
 		CommercePriceList commercePriceList =
-			_commercePriceListService.fetchByExternalReferenceCode(
-				externalReferenceCode, contextCompany.getCompanyId());
+			_commercePriceListService.
+				fetchCommercePriceListByExternalReferenceCode(
+					externalReferenceCode, contextCompany.getCompanyId());
 
 		if (commercePriceList == null) {
 			throw new NoSuchPriceListException(
@@ -135,8 +139,9 @@ public class PriceListResourceImpl extends BasePriceListResourceImpl {
 		throws Exception {
 
 		CommercePriceList commercePriceList =
-			_commercePriceListService.fetchByExternalReferenceCode(
-				externalReferenceCode, contextCompany.getCompanyId());
+			_commercePriceListService.
+				fetchCommercePriceListByExternalReferenceCode(
+					externalReferenceCode, contextCompany.getCompanyId());
 
 		if (commercePriceList == null) {
 			throw new NoSuchPriceListException(
@@ -182,8 +187,9 @@ public class PriceListResourceImpl extends BasePriceListResourceImpl {
 		throws Exception {
 
 		CommercePriceList commercePriceList =
-			_commercePriceListService.fetchByExternalReferenceCode(
-				externalReferenceCode, contextCompany.getCompanyId());
+			_commercePriceListService.
+				fetchCommercePriceListByExternalReferenceCode(
+					externalReferenceCode, contextCompany.getCompanyId());
 
 		if (commercePriceList == null) {
 			throw new NoSuchPriceListException(
@@ -196,20 +202,36 @@ public class PriceListResourceImpl extends BasePriceListResourceImpl {
 
 	@Override
 	public PriceList postPriceList(PriceList priceList) throws Exception {
-		CommercePriceList commercePriceList = _addOrUpdatePriceList(priceList);
+		CommercePriceList commercePriceList = _addOrUpdatePriceList(
+			priceList.getExternalReferenceCode(), priceList);
 
 		return _toPriceList(commercePriceList.getCommercePriceListId());
 	}
 
-	private CommercePriceList _addOrUpdatePriceList(PriceList priceList)
+	@Override
+	public PriceList putPriceListByExternalReferenceCode(
+			String externalReferenceCode, PriceList priceList)
+		throws Exception {
+
+		CommercePriceList commercePriceList = _addOrUpdatePriceList(
+			externalReferenceCode, priceList);
+
+		return _toPriceList(commercePriceList.getCommercePriceListId());
+	}
+
+	private CommercePriceList _addOrUpdatePriceList(
+			String externalReferenceCode, PriceList priceList)
 		throws Exception {
 
 		CommerceCatalog commerceCatalog =
 			_commerceCatalogService.getCommerceCatalog(
 				priceList.getCatalogId());
+
 		CommerceCurrency commerceCurrency =
-			_commerceCurrencyService.getCommerceCurrency(
-				contextCompany.getCompanyId(), priceList.getCurrencyCode());
+			CommerceCurrencyUtil.getCommerceCurrency(
+				contextCompany.getCompanyId(), priceList.getCurrencyCode(),
+				priceList.getCurrencyExternalReferenceCode(),
+				GetterUtil.getLong(priceList.getCurrencyId()));
 
 		ServiceContext serviceContext =
 			_serviceContextHelper.getServiceContext();
@@ -221,9 +243,8 @@ public class PriceListResourceImpl extends BasePriceListResourceImpl {
 
 		CommercePriceList commercePriceList =
 			_commercePriceListService.addOrUpdateCommercePriceList(
-				priceList.getExternalReferenceCode(),
-				commerceCatalog.getGroupId(), 0L,
-				commerceCurrency.getCommerceCurrencyId(),
+				externalReferenceCode, commerceCatalog.getGroupId(), 0L,
+				commerceCurrency.getCode(),
 				GetterUtil.get(priceList.getNetPrice(), true),
 				GetterUtil.get(
 					priceList.getTypeAsString(),
@@ -547,11 +568,17 @@ public class PriceListResourceImpl extends BasePriceListResourceImpl {
 		CommerceCurrency commerceCurrency =
 			commercePriceList.getCommerceCurrency();
 
-		CommerceCurrency updatedCommerceCurrency =
-			_commerceCurrencyService.getCommerceCurrency(
-				contextCompany.getCompanyId(),
-				GetterUtil.get(
-					priceList.getCurrencyCode(), commerceCurrency.getCode()));
+		try {
+			commerceCurrency = CommerceCurrencyUtil.getCommerceCurrency(
+				contextCompany.getCompanyId(), priceList.getCurrencyCode(),
+				priceList.getCurrencyExternalReferenceCode(),
+				GetterUtil.getLong(priceList.getCurrencyId()));
+		}
+		catch (NoSuchCurrencyException noSuchCurrencyException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(noSuchCurrencyException);
+			}
+		}
 
 		ServiceContext serviceContext = _serviceContextHelper.getServiceContext(
 			commercePriceList.getGroupId());
@@ -563,7 +590,7 @@ public class PriceListResourceImpl extends BasePriceListResourceImpl {
 
 		commercePriceList = _commercePriceListService.updateCommercePriceList(
 			commercePriceList.getCommercePriceListId(),
-			updatedCommerceCurrency.getCommerceCurrencyId(),
+			commerceCurrency.getCode(),
 			GetterUtil.get(
 				priceList.getNetPrice(), commercePriceList.isNetPrice()),
 			GetterUtil.get(
@@ -596,6 +623,9 @@ public class PriceListResourceImpl extends BasePriceListResourceImpl {
 			priceList, commercePriceList, serviceContext);
 	}
 
+	private static final Log _log = LogFactoryUtil.getLog(
+		PriceListResourceImpl.class);
+
 	private static final EntityModel _entityModel = new PriceListEntityModel();
 
 	@Reference
@@ -612,9 +642,6 @@ public class PriceListResourceImpl extends BasePriceListResourceImpl {
 
 	@Reference
 	private CommerceChannelService _commerceChannelService;
-
-	@Reference
-	private CommerceCurrencyService _commerceCurrencyService;
 
 	@Reference
 	private CommerceDiscountService _commerceDiscountService;

@@ -28,7 +28,6 @@ import com.liferay.portal.vulcan.fields.NestedField;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -59,8 +58,9 @@ public class DiscountCategoryResourceImpl
 		throws Exception {
 
 		CommerceDiscount commerceDiscount =
-			_commerceDiscountService.fetchByExternalReferenceCode(
-				externalReferenceCode, contextCompany.getCompanyId());
+			_commerceDiscountService.
+				fetchCommerceDiscountByExternalReferenceCode(
+					externalReferenceCode, contextCompany.getCompanyId());
 
 		if (commerceDiscount == null) {
 			throw new NoSuchDiscountException(
@@ -74,14 +74,14 @@ public class DiscountCategoryResourceImpl
 				AssetCategory.class.getName(), pagination.getStartPosition(),
 				pagination.getEndPosition(), null);
 
-		int totalItems =
+		int totalCount =
 			_commerceDiscountRelService.getCommerceDiscountRelsCount(
 				commerceDiscount.getCommerceDiscountId(),
 				AssetCategory.class.getName());
 
 		return Page.of(
 			_toDiscountCategories(commerceDiscountRels), pagination,
-			totalItems);
+			totalCount);
 	}
 
 	@NestedField(parentClass = Discount.class, value = "discountCategories")
@@ -96,13 +96,13 @@ public class DiscountCategoryResourceImpl
 				id, search, pagination.getStartPosition(),
 				pagination.getEndPosition());
 
-		int totalItems =
+		int totalCount =
 			_commerceDiscountRelService.getCategoriesByCommerceDiscountIdCount(
 				id, search);
 
 		return Page.of(
 			_toDiscountCategories(commerceDiscountRels), pagination,
-			totalItems);
+			totalCount);
 	}
 
 	@Override
@@ -111,8 +111,9 @@ public class DiscountCategoryResourceImpl
 		throws Exception {
 
 		CommerceDiscount commerceDiscount =
-			_commerceDiscountService.fetchByExternalReferenceCode(
-				externalReferenceCode, contextCompany.getCompanyId());
+			_commerceDiscountService.
+				fetchCommerceDiscountByExternalReferenceCode(
+					externalReferenceCode, contextCompany.getCompanyId());
 
 		if (commerceDiscount == null) {
 			throw new NoSuchDiscountException(
@@ -163,15 +164,10 @@ public class DiscountCategoryResourceImpl
 			List<CommerceDiscountRel> commerceDiscountRels)
 		throws Exception {
 
-		List<DiscountCategory> discountCategories = new ArrayList<>();
-
-		for (CommerceDiscountRel commerceDiscountRel : commerceDiscountRels) {
-			discountCategories.add(
-				_toDiscountCategory(
-					commerceDiscountRel.getCommerceDiscountRelId()));
-		}
-
-		return discountCategories;
+		return transform(
+			commerceDiscountRels,
+			commerceDiscountRel -> _toDiscountCategory(
+				commerceDiscountRel.getCommerceDiscountRelId()));
 	}
 
 	private DiscountCategory _toDiscountCategory(Long commerceDiscountRelId)

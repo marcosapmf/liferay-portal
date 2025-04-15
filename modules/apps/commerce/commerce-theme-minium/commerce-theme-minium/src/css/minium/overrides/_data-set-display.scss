@@ -5,15 +5,15 @@
 		overflow: hidden;
 	}
 
-	.dnd-table {
+	table {
 		background-color: transparent;
 
 		.with-bg {
 			background-color: transparent;
 		}
 
-		.dnd-td,
-		.dnd-th {
+		td,
+		th {
 			border-right: none;
 		}
 
@@ -30,7 +30,7 @@
 			}
 		}
 
-		.dnd-tr {
+		tr {
 			background-color: $color-bg;
 			border-bottom: none;
 			border-radius: $border-radius;
@@ -42,7 +42,7 @@
 			}
 		}
 
-		.dnd-thead {
+		thead {
 			color: $color-fg-alt;
 			font-size: 12px;
 			font-weight: 500;
@@ -85,5 +85,35 @@
 	.table-style-fluid,
 	.table-style-stacked {
 		border: none;
+	}
+
+	/* ---------- Custom minium fds cell customization ---------- */
+
+	table {
+		th {
+			&.cell-externalReferenceCode {
+				min-width: 150px;
+			}
+
+			&.cell-promoPrice {
+				max-width: 132px;
+			}
+
+			&.cell-purchaseOrderNumber {
+				max-width: 175px;
+			}
+
+			&.cell-name {
+				min-width: 150px;
+			}
+
+			&.cell-shippedQuantity {
+				max-width: 150px;
+			}
+
+			&.cell-sku {
+				min-width: 100px;
+			}
+		}
 	}
 }

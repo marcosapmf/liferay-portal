@@ -23,7 +23,6 @@ import com.liferay.layout.model.LayoutClassedModelUsage;
 import com.liferay.layout.service.LayoutClassedModelUsageLocalService;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Portlet;
@@ -33,6 +32,7 @@ import com.liferay.portal.kernel.portlet.PortletURLFactoryUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
+import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextFactory;
@@ -126,7 +126,6 @@ public class UpdateArticleMVCActionCommand extends BaseMVCActionCommand {
 
 		String portletResource = ParamUtil.getString(
 			actionRequest, "portletResource");
-
 		long refererPlid = ParamUtil.getLong(actionRequest, "refererPlid");
 
 		if (Validator.isNotNull(portletResource) && (refererPlid > 0)) {
@@ -139,16 +138,18 @@ public class UpdateArticleMVCActionCommand extends BaseMVCActionCommand {
 					portletResource);
 
 			if (portletPreferences != null) {
-				portletPreferences.setValue(
-					"groupId", String.valueOf(article.getGroupId()));
-				portletPreferences.setValue(
-					"articleId", article.getArticleId());
+				Group group = _groupLocalService.fetchGroup(
+					article.getGroupId());
 
-				if (assetEntry != null) {
+				if (group != null) {
 					portletPreferences.setValue(
-						"assetEntryId",
-						String.valueOf(assetEntry.getEntryId()));
+						"groupExternalReferenceCode",
+						group.getExternalReferenceCode());
 				}
+
+				portletPreferences.setValue(
+					"articleExternalReferenceCode",
+					article.getExternalReferenceCode());
 
 				portletPreferences.store();
 			}
@@ -189,63 +190,54 @@ public class UpdateArticleMVCActionCommand extends BaseMVCActionCommand {
 					actionRequest, portletResource + "requestProcessed");
 			}
 
-			if (FeatureFlagManagerUtil.isEnabled("LPD-15596")) {
-				if (article.isPending()) {
-					ThemeDisplay themeDisplay =
-						(ThemeDisplay)actionRequest.getAttribute(
-							WebKeys.THEME_DISPLAY);
+			if (article.isPending()) {
+				ThemeDisplay themeDisplay =
+					(ThemeDisplay)actionRequest.getAttribute(
+						WebKeys.THEME_DISPLAY);
 
-					User user = themeDisplay.getUser();
+				User user = themeDisplay.getUser();
 
-					Date displayDate = _portal.getDate(
-						ParamUtil.getInteger(
-							uploadPortletRequest, "displayDateMonth"),
-						ParamUtil.getInteger(
-							uploadPortletRequest, "displayDateDay"),
-						ParamUtil.getInteger(
-							uploadPortletRequest, "displayDateYear"),
-						ParamUtil.getInteger(
-							uploadPortletRequest, "displayDateHour"),
-						ParamUtil.getInteger(
-							uploadPortletRequest, "displayDateMinute"),
-						user.getTimeZone(), null);
+				Date displayDate = _portal.getDate(
+					ParamUtil.getInteger(
+						uploadPortletRequest, "displayDateMonth"),
+					ParamUtil.getInteger(
+						uploadPortletRequest, "displayDateDay"),
+					ParamUtil.getInteger(
+						uploadPortletRequest, "displayDateYear"),
+					ParamUtil.getInteger(
+						uploadPortletRequest, "displayDateHour"),
+					ParamUtil.getInteger(
+						uploadPortletRequest, "displayDateMinute"),
+					user.getTimeZone(), null);
 
-					if (displayDate != null) {
-						MultiSessionMessages.add(
-							actionRequest, "articlePendingScheduled",
-							article.getId());
-					}
-					else {
-						MultiSessionMessages.add(
-							actionRequest, "articlePending", article.getId());
-					}
-				}
-				else if (article.isScheduled()) {
+				if (displayDate != null) {
 					MultiSessionMessages.add(
-						actionRequest, "articleScheduled", article.getId());
+						actionRequest, "articlePendingScheduled",
+						article.getId());
 				}
 				else {
-					if (actionName.equals("/journal/add_article")) {
-						MultiSessionMessages.add(
-							actionRequest, "articleCreated", article.getId());
-					}
-					else {
-						MultiSessionMessages.add(
-							actionRequest, "articleUpdated", article.getId());
-					}
+					MultiSessionMessages.add(
+						actionRequest, "articlePending", article.getId());
+				}
+			}
+			else if (article.isScheduled()) {
+				MultiSessionMessages.add(
+					actionRequest, "articleScheduled", article.getId());
+			}
+			else {
+				if (actionName.equals("/journal/add_article")) {
+					MultiSessionMessages.add(
+						actionRequest, "articleCreated", article.getId());
+				}
+				else {
+					MultiSessionMessages.add(
+						actionRequest, "articleUpdated", article.getId());
 				}
 			}
 		}
-
-		if (!FeatureFlagManagerUtil.isEnabled("LPD-15596")) {
-			if (actionName.equals("/journal/add_article")) {
-				MultiSessionMessages.add(
-					actionRequest, "articleCreated", article.getId());
-			}
-			else {
-				MultiSessionMessages.add(
-					actionRequest, "articleUpdated", article.getId());
-			}
+		else {
+			MultiSessionMessages.add(
+				actionRequest, "articleSavedAsDraft", article.getId());
 		}
 
 		HttpServletRequest httpServletRequest = _portal.getHttpServletRequest(
@@ -611,6 +603,9 @@ public class UpdateArticleMVCActionCommand extends BaseMVCActionCommand {
 
 	@Reference
 	private FriendlyURLNormalizer _friendlyURLNormalizer;
+
+	@Reference
+	private GroupLocalService _groupLocalService;
 
 	@Reference
 	private JournalArticleLocalService _journalArticleLocalService;

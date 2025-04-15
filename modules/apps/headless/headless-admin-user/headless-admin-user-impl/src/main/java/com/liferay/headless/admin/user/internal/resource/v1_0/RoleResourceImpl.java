@@ -7,6 +7,7 @@ package com.liferay.headless.admin.user.internal.resource.v1_0;
 
 import com.liferay.headless.admin.user.dto.v1_0.Role;
 import com.liferay.headless.admin.user.dto.v1_0.RolePermission;
+import com.liferay.headless.admin.user.internal.odata.entity.v1_0.RoleEntityModel;
 import com.liferay.headless.admin.user.resource.v1_0.RoleResource;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.exception.NoSuchRoleException;
@@ -14,6 +15,8 @@ import com.liferay.portal.kernel.exception.RoleAssignmentException;
 import com.liferay.portal.kernel.model.Organization;
 import com.liferay.portal.kernel.model.ResourceConstants;
 import com.liferay.portal.kernel.model.role.RoleConstants;
+import com.liferay.portal.kernel.search.Field;
+import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.service.OrganizationService;
@@ -30,18 +33,22 @@ import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterRegistry;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.portal.vulcan.util.LocalizedMapUtil;
+import com.liferay.portal.vulcan.util.SearchUtil;
 import com.liferay.roles.admin.role.type.contributor.RoleTypeContributor;
 import com.liferay.roles.admin.role.type.contributor.provider.RoleTypeContributorProvider;
 
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+
+import javax.ws.rs.core.MultivaluedMap;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -64,11 +71,12 @@ public class RoleResourceImpl extends BaseRoleResourceImpl {
 				Long organizationId)
 		throws Exception {
 
-		com.liferay.portal.kernel.model.Role serviceBuilderRole =
-			_getServiceBuilderRole(externalReferenceCode);
+		com.liferay.portal.kernel.model.Role role =
+			_roleService.getRoleByExternalReferenceCode(
+				externalReferenceCode, contextCompany.getCompanyId());
 
 		deleteOrganizationRoleUserAccountAssociation(
-			serviceBuilderRole.getRoleId(), userAccountId, organizationId);
+			role.getRoleId(), userAccountId, organizationId);
 	}
 
 	@Override
@@ -86,15 +94,31 @@ public class RoleResourceImpl extends BaseRoleResourceImpl {
 	}
 
 	@Override
+	public void deleteRole(Long roleId) throws Exception {
+		_roleService.deleteRole(roleId);
+	}
+
+	@Override
+	public void deleteRoleByExternalReferenceCode(String externalReferenceCode)
+		throws Exception {
+
+		com.liferay.portal.kernel.model.Role role =
+			_roleService.getRoleByExternalReferenceCode(
+				externalReferenceCode, contextCompany.getCompanyId());
+
+		deleteRole(role.getRoleId());
+	}
+
+	@Override
 	public void deleteRoleByExternalReferenceCodeUserAccountAssociation(
 			String externalReferenceCode, Long userAccountId)
 		throws Exception {
 
-		com.liferay.portal.kernel.model.Role serviceBuilderRole =
-			_getServiceBuilderRole(externalReferenceCode);
+		com.liferay.portal.kernel.model.Role role =
+			_roleService.getRoleByExternalReferenceCode(
+				externalReferenceCode, contextCompany.getCompanyId());
 
-		deleteRoleUserAccountAssociation(
-			serviceBuilderRole.getRoleId(), userAccountId);
+		deleteRoleUserAccountAssociation(role.getRoleId(), userAccountId);
 	}
 
 	@Override
@@ -110,11 +134,12 @@ public class RoleResourceImpl extends BaseRoleResourceImpl {
 			String externalReferenceCode, Long userAccountId, Long siteId)
 		throws Exception {
 
-		com.liferay.portal.kernel.model.Role serviceBuilderRole =
-			_getServiceBuilderRole(externalReferenceCode);
+		com.liferay.portal.kernel.model.Role role =
+			_roleService.getRoleByExternalReferenceCode(
+				externalReferenceCode, contextCompany.getCompanyId());
 
 		deleteSiteRoleUserAccountAssociation(
-			serviceBuilderRole.getRoleId(), userAccountId, siteId);
+			role.getRoleId(), userAccountId, siteId);
 	}
 
 	@Override
@@ -126,6 +151,13 @@ public class RoleResourceImpl extends BaseRoleResourceImpl {
 
 		_userGroupRoleService.deleteUserGroupRoles(
 			userAccountId, siteId, new long[] {roleId});
+	}
+
+	@Override
+	public EntityModel getEntityModel(MultivaluedMap multivaluedMap)
+		throws Exception {
+
+		return _entityModel;
 	}
 
 	@Override
@@ -150,54 +182,59 @@ public class RoleResourceImpl extends BaseRoleResourceImpl {
 	public Role getRoleByExternalReferenceCode(String externalReferenceCode)
 		throws Exception {
 
-		com.liferay.portal.kernel.model.Role serviceBuilderRole =
-			_getServiceBuilderRole(externalReferenceCode);
+		com.liferay.portal.kernel.model.Role role =
+			_roleService.getRoleByExternalReferenceCode(
+				externalReferenceCode, contextCompany.getCompanyId());
 
-		return getRole(serviceBuilderRole.getRoleId());
+		return getRole(role.getRoleId());
 	}
 
 	@Override
 	public Page<Role> getRolesPage(
-			String search, Integer[] types, Pagination pagination)
+			String search, Integer[] types, Filter filter,
+			Pagination pagination)
 		throws Exception {
 
-		if (types == null) {
-			types = new Integer[] {
-				RoleConstants.TYPE_ORGANIZATION, RoleConstants.TYPE_REGULAR,
-				RoleConstants.TYPE_SITE
-			};
-		}
-
-		return Page.of(
+		return SearchUtil.search(
 			HashMapBuilder.<String, Map<String, String>>put(
 				"get",
 				addAction(
 					ActionKeys.VIEW, "getRolesPage", Role.class.getName(), 0L)
 			).build(),
-			transform(
-				_roleService.search(
-					contextCompany.getCompanyId(), search, types, null,
-					pagination.getStartPosition(), pagination.getEndPosition(),
-					null),
-				role -> _roleDTOConverter.toDTO(
+			booleanQuery -> {
+			},
+			filter, com.liferay.portal.kernel.model.Role.class.getName(),
+			search, pagination,
+			queryConfig -> queryConfig.setSelectedFieldNames(
+				Field.ENTRY_CLASS_PK),
+			searchContext -> {
+				if (ArrayUtil.isNotEmpty(types)) {
+					searchContext.setAttribute("types", types);
+				}
+
+				searchContext.setCompanyId(contextCompany.getCompanyId());
+				searchContext.setUserId(contextUser.getUserId());
+			},
+			null,
+			document -> {
+				com.liferay.portal.kernel.model.Role role =
+					_roleService.getRole(
+						GetterUtil.getLong(document.get(Field.ENTRY_CLASS_PK)));
+
+				return _roleDTOConverter.toDTO(
 					new DefaultDTOConverterContext(
 						true, _getActions(role.getRoleId()),
 						_dtoConverterRegistry, role.getRoleId(),
 						contextAcceptLanguage.getPreferredLocale(),
 						contextUriInfo, contextUser),
-					role)),
-			pagination,
-			_roleService.searchCount(
-				contextCompany.getCompanyId(), search, types, null));
+					role);
+			});
 	}
 
 	@Override
-	public Role patchRoleByExternalReferenceCode(
-			String externalReferenceCode, Role role)
-		throws Exception {
-
+	public Role patchRole(Long roleId, Role role) throws Exception {
 		com.liferay.portal.kernel.model.Role serviceBuilderRole =
-			_getServiceBuilderRole(externalReferenceCode);
+			_roleService.getRole(roleId);
 
 		serviceBuilderRole = _roleService.updateRole(
 			serviceBuilderRole.getRoleId(),
@@ -228,17 +265,30 @@ public class RoleResourceImpl extends BaseRoleResourceImpl {
 	}
 
 	@Override
+	public Role patchRoleByExternalReferenceCode(
+			String externalReferenceCode, Role role)
+		throws Exception {
+
+		com.liferay.portal.kernel.model.Role serviceBuilderRole =
+			_roleService.getRoleByExternalReferenceCode(
+				externalReferenceCode, contextCompany.getCompanyId());
+
+		return patchRole(serviceBuilderRole.getRoleId(), role);
+	}
+
+	@Override
 	public void
 			postOrganizationRoleByExternalReferenceCodeUserAccountAssociation(
 				String externalReferenceCode, Long userAccountId,
 				Long organizationId)
 		throws Exception {
 
-		com.liferay.portal.kernel.model.Role serviceBuilderRole =
-			_getServiceBuilderRole(externalReferenceCode);
+		com.liferay.portal.kernel.model.Role role =
+			_roleService.getRoleByExternalReferenceCode(
+				externalReferenceCode, contextCompany.getCompanyId());
 
 		postOrganizationRoleUserAccountAssociation(
-			serviceBuilderRole.getRoleId(), userAccountId, organizationId);
+			role.getRoleId(), userAccountId, organizationId);
 	}
 
 	@Override
@@ -301,11 +351,11 @@ public class RoleResourceImpl extends BaseRoleResourceImpl {
 			String externalReferenceCode, Long userAccountId)
 		throws Exception {
 
-		com.liferay.portal.kernel.model.Role serviceBuilderRole =
-			_getServiceBuilderRole(externalReferenceCode);
+		com.liferay.portal.kernel.model.Role role =
+			_roleService.getRoleByExternalReferenceCode(
+				externalReferenceCode, contextCompany.getCompanyId());
 
-		postRoleUserAccountAssociation(
-			serviceBuilderRole.getRoleId(), userAccountId);
+		postRoleUserAccountAssociation(role.getRoleId(), userAccountId);
 	}
 
 	@Override
@@ -322,11 +372,12 @@ public class RoleResourceImpl extends BaseRoleResourceImpl {
 			String externalReferenceCode, Long userAccountId, Long siteId)
 		throws Exception {
 
-		com.liferay.portal.kernel.model.Role serviceBuilderRole =
-			_getServiceBuilderRole(externalReferenceCode);
+		com.liferay.portal.kernel.model.Role role =
+			_roleService.getRoleByExternalReferenceCode(
+				externalReferenceCode, contextCompany.getCompanyId());
 
 		postSiteRoleUserAccountAssociation(
-			serviceBuilderRole.getRoleId(), userAccountId, siteId);
+			role.getRoleId(), userAccountId, siteId);
 	}
 
 	@Override
@@ -341,13 +392,9 @@ public class RoleResourceImpl extends BaseRoleResourceImpl {
 	}
 
 	@Override
-	public Role putRoleByExternalReferenceCode(
-			String externalReferenceCode, Role role)
-		throws Exception {
-
+	public Role putRole(Long roleId, Role role) throws Exception {
 		com.liferay.portal.kernel.model.Role serviceBuilderRole =
-			_roleService.fetchRoleByExternalReferenceCode(
-				externalReferenceCode, contextCompany.getCompanyId());
+			_roleService.fetchRole(roleId);
 
 		String className = null;
 		int type = 0;
@@ -403,6 +450,22 @@ public class RoleResourceImpl extends BaseRoleResourceImpl {
 				contextAcceptLanguage.getPreferredLocale(), contextUriInfo,
 				contextUser),
 			serviceBuilderRole);
+	}
+
+	@Override
+	public Role putRoleByExternalReferenceCode(
+			String externalReferenceCode, Role role)
+		throws Exception {
+
+		com.liferay.portal.kernel.model.Role serviceBuilderRole =
+			_roleService.fetchRoleByExternalReferenceCode(
+				externalReferenceCode, contextCompany.getCompanyId());
+
+		if (serviceBuilderRole == null) {
+			return putRole(0L, role);
+		}
+
+		return putRole(serviceBuilderRole.getRoleId(), role);
 	}
 
 	private void _addResourcePermission(
@@ -497,23 +560,6 @@ public class RoleResourceImpl extends BaseRoleResourceImpl {
 		return descriptionMap;
 	}
 
-	private com.liferay.portal.kernel.model.Role _getServiceBuilderRole(
-			String externalReferenceCode)
-		throws Exception {
-
-		com.liferay.portal.kernel.model.Role serviceBuilderRole =
-			_roleService.fetchRoleByExternalReferenceCode(
-				externalReferenceCode, contextCompany.getCompanyId());
-
-		if (serviceBuilderRole == null) {
-			throw new NoSuchRoleException(
-				"No role exists with external reference code " +
-					externalReferenceCode);
-		}
-
-		return serviceBuilderRole;
-	}
-
 	private Map<Locale, String> _getTitleMap(Role role) {
 		Map<Locale, String> titleMap = null;
 
@@ -526,6 +572,8 @@ public class RoleResourceImpl extends BaseRoleResourceImpl {
 
 	@Reference
 	private DTOConverterRegistry _dtoConverterRegistry;
+
+	private final EntityModel _entityModel = new RoleEntityModel();
 
 	@Reference
 	private OrganizationService _organizationService;

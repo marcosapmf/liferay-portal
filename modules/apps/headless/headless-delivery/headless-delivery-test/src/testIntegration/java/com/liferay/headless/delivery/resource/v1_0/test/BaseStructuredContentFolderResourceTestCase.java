@@ -15,6 +15,8 @@ import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 
 import com.liferay.depot.model.DepotEntry;
 import com.liferay.depot.service.DepotEntryLocalServiceUtil;
+import com.liferay.headless.batch.engine.client.dto.v1_0.ImportTask;
+import com.liferay.headless.batch.engine.client.resource.v1_0.ImportTaskResource;
 import com.liferay.headless.delivery.client.dto.v1_0.Field;
 import com.liferay.headless.delivery.client.dto.v1_0.StructuredContentFolder;
 import com.liferay.headless.delivery.client.http.HttpInvoker;
@@ -23,6 +25,7 @@ import com.liferay.headless.delivery.client.pagination.Pagination;
 import com.liferay.headless.delivery.client.permission.Permission;
 import com.liferay.headless.delivery.client.resource.v1_0.StructuredContentFolderResource;
 import com.liferay.headless.delivery.client.serdes.v1_0.StructuredContentFolderSerDes;
+import com.liferay.oauth2.provider.scope.ScopeChecker;
 import com.liferay.petra.function.UnsafeTriConsumer;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.reflect.ReflectionUtil;
@@ -35,13 +38,20 @@ import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.RoleConstants;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
+import com.liferay.portal.kernel.service.GroupLocalService;
+import com.liferay.portal.kernel.service.ResourceActionLocalService;
+import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
+import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.UserLocalService;
+import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.RoleTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
+import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
-import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
+import com.liferay.portal.kernel.util.FastDateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -51,12 +61,18 @@ import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.search.test.rule.SearchTestRule;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import com.liferay.portal.util.PropsValues;
+import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
+import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegate;
+import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegateBuilderRegistry;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
 import java.lang.reflect.Method;
 
-import java.text.DateFormat;
+import java.net.URI;
+
+import java.text.Format;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -65,13 +81,20 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
 import javax.annotation.Generated;
 
+import javax.servlet.http.HttpServletRequest;
+
 import javax.ws.rs.core.MultivaluedHashMap;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.PathSegment;
+import javax.ws.rs.core.UriBuilder;
+import javax.ws.rs.core.UriInfo;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -80,6 +103,9 @@ import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
+
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.mock.web.MockHttpServletResponse;
 
 /**
  * @author Javier Gamarra
@@ -90,12 +116,14 @@ public abstract class BaseStructuredContentFolderResourceTestCase {
 
 	@ClassRule
 	@Rule
-	public static final LiferayIntegrationTestRule liferayIntegrationTestRule =
-		new LiferayIntegrationTestRule();
+	public static final AggregateTestRule aggregateTestRule =
+		new AggregateTestRule(
+			new LiferayIntegrationTestRule(),
+			PermissionCheckerMethodTestRule.INSTANCE);
 
 	@BeforeClass
 	public static void setUpClass() throws Exception {
-		_dateFormat = DateFormatFactoryUtil.getSimpleDateFormat(
+		_format = FastDateFormatFactoryUtil.getSimpleDateFormat(
 			"yyyy-MM-dd'T'HH:mm:ss'Z'");
 	}
 
@@ -120,11 +148,26 @@ public abstract class BaseStructuredContentFolderResourceTestCase {
 
 		_structuredContentFolderResource.setContextCompany(testCompany);
 
-		StructuredContentFolderResource.Builder builder =
-			StructuredContentFolderResource.builder();
+		_testCompanyAdminUser = UserTestUtil.getAdminUser(
+			testCompany.getCompanyId());
 
-		structuredContentFolderResource = builder.authentication(
-			"test@liferay.com", PropsValues.DEFAULT_ADMIN_PASSWORD
+		structuredContentFolderResource =
+			StructuredContentFolderResource.builder(
+			).authentication(
+				_testCompanyAdminUser.getEmailAddress(),
+				PropsValues.DEFAULT_ADMIN_PASSWORD
+			).endpoint(
+				testCompany.getVirtualHostname(), 8080, "http"
+			).locale(
+				LocaleUtil.getDefault()
+			).build();
+
+		importTaskResource = ImportTaskResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
 		).locale(
 			LocaleUtil.getDefault()
 		).build();
@@ -138,21 +181,7 @@ public abstract class BaseStructuredContentFolderResourceTestCase {
 
 	@Test
 	public void testClientSerDesToDTO() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
-			{
-				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
-				configure(
-					SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true);
-				enable(SerializationFeature.INDENT_OUTPUT);
-				setDateFormat(new ISO8601DateFormat());
-				setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
-				setSerializationInclusion(JsonInclude.Include.NON_NULL);
-				setVisibility(
-					PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-				setVisibility(
-					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
-			}
-		};
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
 
 		StructuredContentFolder structuredContentFolder1 =
 			randomStructuredContentFolder();
@@ -168,20 +197,7 @@ public abstract class BaseStructuredContentFolderResourceTestCase {
 
 	@Test
 	public void testClientSerDesToJSON() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
-			{
-				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
-				configure(
-					SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true);
-				setDateFormat(new ISO8601DateFormat());
-				setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
-				setSerializationInclusion(JsonInclude.Include.NON_NULL);
-				setVisibility(
-					PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-				setVisibility(
-					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
-			}
-		};
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
 
 		StructuredContentFolder structuredContentFolder =
 			randomStructuredContentFolder();
@@ -192,6 +208,24 @@ public abstract class BaseStructuredContentFolderResourceTestCase {
 
 		Assert.assertEquals(
 			objectMapper.readTree(json1), objectMapper.readTree(json2));
+	}
+
+	protected ObjectMapper getClientSerDesObjectMapper() {
+		return new ObjectMapper() {
+			{
+				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
+				configure(
+					SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true);
+				enable(SerializationFeature.INDENT_OUTPUT);
+				setDateFormat(new ISO8601DateFormat());
+				setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
+				setSerializationInclusion(JsonInclude.Include.NON_NULL);
+				setVisibility(
+					PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
+				setVisibility(
+					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
+			}
+		};
 	}
 
 	@Test
@@ -775,13 +809,12 @@ public abstract class BaseStructuredContentFolderResourceTestCase {
 				getAssetLibraryStructuredContentFolderByExternalReferenceCodeHttpResponse(
 					testDeleteAssetLibraryStructuredContentFolderByExternalReferenceCode_getAssetLibraryId(),
 					structuredContentFolder.getExternalReferenceCode()));
-
 		assertHttpResponseStatusCode(
 			404,
 			structuredContentFolderResource.
 				getAssetLibraryStructuredContentFolderByExternalReferenceCodeHttpResponse(
 					testDeleteAssetLibraryStructuredContentFolderByExternalReferenceCode_getAssetLibraryId(),
-					structuredContentFolder.getExternalReferenceCode()));
+					"-"));
 	}
 
 	protected Long
@@ -796,8 +829,10 @@ public abstract class BaseStructuredContentFolderResourceTestCase {
 			testDeleteAssetLibraryStructuredContentFolderByExternalReferenceCode_addStructuredContentFolder()
 		throws Exception {
 
-		return structuredContentFolderResource.postSiteStructuredContentFolder(
-			testGroup.getGroupId(), randomStructuredContentFolder());
+		return structuredContentFolderResource.
+			postAssetLibraryStructuredContentFolder(
+				testDepotEntry.getDepotEntryId(),
+				randomStructuredContentFolder());
 	}
 
 	@Test
@@ -829,8 +864,10 @@ public abstract class BaseStructuredContentFolderResourceTestCase {
 			testGetAssetLibraryStructuredContentFolderByExternalReferenceCode_addStructuredContentFolder()
 		throws Exception {
 
-		return structuredContentFolderResource.postSiteStructuredContentFolder(
-			testGroup.getGroupId(), randomStructuredContentFolder());
+		return structuredContentFolderResource.
+			postAssetLibraryStructuredContentFolder(
+				testDepotEntry.getDepotEntryId(),
+				randomStructuredContentFolder());
 	}
 
 	@Test
@@ -1050,8 +1087,10 @@ public abstract class BaseStructuredContentFolderResourceTestCase {
 			testPutAssetLibraryStructuredContentFolderByExternalReferenceCode_addStructuredContentFolder()
 		throws Exception {
 
-		return structuredContentFolderResource.postSiteStructuredContentFolder(
-			testGroup.getGroupId(), randomStructuredContentFolder());
+		return structuredContentFolderResource.
+			postAssetLibraryStructuredContentFolder(
+				testDepotEntry.getDepotEntryId(),
+				randomStructuredContentFolder());
 	}
 
 	@Test
@@ -1759,14 +1798,13 @@ public abstract class BaseStructuredContentFolderResourceTestCase {
 					testDeleteSiteStructuredContentFolderByExternalReferenceCode_getSiteId(
 						structuredContentFolder),
 					structuredContentFolder.getExternalReferenceCode()));
-
 		assertHttpResponseStatusCode(
 			404,
 			structuredContentFolderResource.
 				getSiteStructuredContentFolderByExternalReferenceCodeHttpResponse(
 					testDeleteSiteStructuredContentFolderByExternalReferenceCode_getSiteId(
 						structuredContentFolder),
-					structuredContentFolder.getExternalReferenceCode()));
+					"-"));
 	}
 
 	protected Long
@@ -2739,7 +2777,6 @@ public abstract class BaseStructuredContentFolderResourceTestCase {
 			structuredContentFolderResource.
 				getStructuredContentFolderHttpResponse(
 					structuredContentFolder.getId()));
-
 		assertHttpResponseStatusCode(
 			404,
 			structuredContentFolderResource.
@@ -2841,6 +2878,52 @@ public abstract class BaseStructuredContentFolderResourceTestCase {
 	}
 
 	@Test
+	public void testDeleteStructuredContentFolderBatch() throws Exception {
+		StructuredContentFolder structuredContentFolder1 =
+			testDeleteStructuredContentFolderBatch_addStructuredContentFolder();
+
+		testDeleteStructuredContentFolderBatch_deleteStructuredContentFolder(
+			"COMPLETED", null, structuredContentFolder1.getId());
+
+		assertHttpResponseStatusCode(
+			404,
+			structuredContentFolderResource.
+				getStructuredContentFolderHttpResponse(
+					structuredContentFolder1.getId()));
+	}
+
+	protected StructuredContentFolder
+			testDeleteStructuredContentFolderBatch_addStructuredContentFolder()
+		throws Exception {
+
+		return testDeleteStructuredContentFolder_addStructuredContentFolder();
+	}
+
+	protected void
+			testDeleteStructuredContentFolderBatch_deleteStructuredContentFolder(
+				String expectedExecuteStatus, String externalReferenceCode,
+				Long id)
+		throws Exception {
+
+		HttpInvoker.HttpResponse httpResponse =
+			structuredContentFolderResource.
+				deleteStructuredContentFolderBatchHttpResponse(
+					null,
+					JSONUtil.putAll(
+						JSONUtil.put(
+							"externalReferenceCode", () -> externalReferenceCode
+						).put(
+							"id", () -> id
+						)));
+
+		Assert.assertEquals(202, httpResponse.getStatusCode());
+
+		waitForFinish(
+			expectedExecuteStatus,
+			JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
+	}
+
+	@Test
 	public void testGetStructuredContentFolder() throws Exception {
 		StructuredContentFolder postStructuredContentFolder =
 			testGetStructuredContentFolder_addStructuredContentFolder();
@@ -2851,6 +2934,199 @@ public abstract class BaseStructuredContentFolderResourceTestCase {
 
 		assertEquals(postStructuredContentFolder, getStructuredContentFolder);
 		assertValid(getStructuredContentFolder);
+	}
+
+	@Test
+	public void testVulcanCRUDItemDelegateGetItem() throws Exception {
+		StructuredContentFolder postStructuredContentFolder =
+			testGetStructuredContentFolder_addStructuredContentFolder();
+
+		StructuredContentFolder getStructuredContentFolder =
+			structuredContentFolderResource.getStructuredContentFolder(
+				postStructuredContentFolder.getId());
+
+		VulcanCRUDItemDelegate vulcanCRUDItemDelegate =
+			_vulcanCRUDItemDelegateBuilderRegistry.builder(
+				testCompany,
+				"com.liferay.headless.delivery.dto.v1_0.StructuredContentFolder"
+			).acceptLanguage(
+				new AcceptLanguage() {
+
+					@Override
+					public List<Locale> getLocales() {
+						return Arrays.asList(LocaleUtil.getDefault());
+					}
+
+					@Override
+					public String getPreferredLanguageId() {
+						return LocaleUtil.toLanguageId(LocaleUtil.getDefault());
+					}
+
+					@Override
+					public Locale getPreferredLocale() {
+						return LocaleUtil.getDefault();
+					}
+
+				}
+			).groupLocalService(
+				_groupLocalService
+			).httpServletRequest(
+				testVulcanCRUDItemDelegate_getHttpServletRequest()
+			).httpServletResponse(
+				new MockHttpServletResponse()
+			).resourceActionLocalService(
+				_resourceActionLocalService
+			).resourcePermissionLocalService(
+				_resourcePermissionLocalService
+			).roleLocalService(
+				_roleLocalService
+			).scopeChecker(
+				_scopeChecker
+			).uriInfo(
+				testVulcanCRUDItemDelegate_getUriInfo()
+			).user(
+				testVulcanCRUDItemDelegate_getUser()
+			).build();
+
+		Object item = vulcanCRUDItemDelegate.getItem(
+			postStructuredContentFolder.getId());
+
+		assertEquals(
+			getStructuredContentFolder,
+			StructuredContentFolderSerDes.toDTO(item.toString()));
+	}
+
+	protected HttpServletRequest
+		testVulcanCRUDItemDelegate_getHttpServletRequest() {
+
+		return new MockHttpServletRequest() {
+
+			@Override
+			public StringBuffer getRequestURL() {
+				return new StringBuffer(
+					StringBundler.concat(
+						"http://localhost:8080/o/v1.0/",
+						RandomTestUtil.randomString(), "/",
+						RandomTestUtil.randomString()));
+			}
+
+		};
+	}
+
+	protected UriInfo testVulcanCRUDItemDelegate_getUriInfo() {
+		String applicationPath = RandomTestUtil.randomString() + "/";
+		String resourcePath = RandomTestUtil.randomString();
+
+		return new UriInfo() {
+
+			@Override
+			public String getPath() {
+				return resourcePath;
+			}
+
+			@Override
+			public String getPath(boolean decode) {
+				return getPath();
+			}
+
+			@Override
+			public List<PathSegment> getPathSegments() {
+				return Collections.emptyList();
+			}
+
+			@Override
+			public List<PathSegment> getPathSegments(boolean decode) {
+				return getPathSegments();
+			}
+
+			@Override
+			public URI getRequestUri() {
+				return URI.create(
+					"http://localhost:8080/o/" + applicationPath +
+						resourcePath);
+			}
+
+			@Override
+			public UriBuilder getRequestUriBuilder() {
+				return UriBuilder.fromUri(getRequestUri());
+			}
+
+			@Override
+			public URI getAbsolutePath() {
+				return getRequestUri();
+			}
+
+			@Override
+			public UriBuilder getAbsolutePathBuilder() {
+				return getRequestUriBuilder();
+			}
+
+			@Override
+			public URI getBaseUri() {
+				return URI.create("http://localhost:8080/o/" + applicationPath);
+			}
+
+			@Override
+			public UriBuilder getBaseUriBuilder() {
+				return UriBuilder.fromUri(getBaseUri());
+			}
+
+			@Override
+			public MultivaluedMap<String, String> getPathParameters() {
+				return new MultivaluedHashMap<>();
+			}
+
+			@Override
+			public MultivaluedMap<String, String> getPathParameters(
+				boolean decode) {
+
+				return getPathParameters();
+			}
+
+			@Override
+			public MultivaluedMap<String, String> getQueryParameters() {
+				return new MultivaluedHashMap<>();
+			}
+
+			@Override
+			public MultivaluedMap<String, String> getQueryParameters(
+				boolean decode) {
+
+				return getQueryParameters();
+			}
+
+			@Override
+			public List<String> getMatchedURIs() {
+				return Collections.emptyList();
+			}
+
+			@Override
+			public List<String> getMatchedURIs(boolean decode) {
+				return getMatchedURIs();
+			}
+
+			@Override
+			public List<Object> getMatchedResources() {
+				return Collections.emptyList();
+			}
+
+			@Override
+			public URI resolve(URI requestUri) {
+				return getBaseUri().resolve(requestUri);
+			}
+
+			@Override
+			public URI relativize(URI uri) {
+				return getBaseUri().relativize(uri);
+			}
+
+		};
+	}
+
+	protected com.liferay.portal.kernel.model.User
+		testVulcanCRUDItemDelegate_getUser() {
+
+		return _testCompanyAdminUser;
 	}
 
 	protected StructuredContentFolder
@@ -3903,13 +4179,11 @@ public abstract class BaseStructuredContentFolderResourceTestCase {
 				sb.append("(");
 				sb.append(entityFieldName);
 				sb.append(" gt ");
-				sb.append(
-					_dateFormat.format(date.getTime() - (2 * Time.SECOND)));
+				sb.append(_format.format(date.getTime() - (2 * Time.SECOND)));
 				sb.append(" and ");
 				sb.append(entityFieldName);
 				sb.append(" lt ");
-				sb.append(
-					_dateFormat.format(date.getTime() + (2 * Time.SECOND)));
+				sb.append(_format.format(date.getTime() + (2 * Time.SECOND)));
 				sb.append(")");
 			}
 			else {
@@ -3920,8 +4194,7 @@ public abstract class BaseStructuredContentFolderResourceTestCase {
 				sb.append(" ");
 
 				sb.append(
-					_dateFormat.format(
-						structuredContentFolder.getDateCreated()));
+					_format.format(structuredContentFolder.getDateCreated()));
 			}
 
 			return sb.toString();
@@ -3936,13 +4209,11 @@ public abstract class BaseStructuredContentFolderResourceTestCase {
 				sb.append("(");
 				sb.append(entityFieldName);
 				sb.append(" gt ");
-				sb.append(
-					_dateFormat.format(date.getTime() - (2 * Time.SECOND)));
+				sb.append(_format.format(date.getTime() - (2 * Time.SECOND)));
 				sb.append(" and ");
 				sb.append(entityFieldName);
 				sb.append(" lt ");
-				sb.append(
-					_dateFormat.format(date.getTime() + (2 * Time.SECOND)));
+				sb.append(_format.format(date.getTime() + (2 * Time.SECOND)));
 				sb.append(")");
 			}
 			else {
@@ -3953,8 +4224,7 @@ public abstract class BaseStructuredContentFolderResourceTestCase {
 				sb.append(" ");
 
 				sb.append(
-					_dateFormat.format(
-						structuredContentFolder.getDateModified()));
+					_format.format(structuredContentFolder.getDateModified()));
 			}
 
 			return sb.toString();
@@ -4224,7 +4494,30 @@ public abstract class BaseStructuredContentFolderResourceTestCase {
 		return randomStructuredContentFolder();
 	}
 
+	protected final JSONObject waitForFinish(
+			String expectedExecuteStatus, JSONObject jsonObject)
+		throws Exception {
+
+		while (true) {
+			ImportTask importTask = importTaskResource.getImportTask(
+				jsonObject.getLong("id"));
+
+			ImportTask.ExecuteStatus executeStatus =
+				importTask.getExecuteStatus();
+
+			if (StringUtil.equals(executeStatus.getValue(), "COMPLETED") ||
+				StringUtil.equals(executeStatus.getValue(), "FAILED")) {
+
+				Assert.assertEquals(
+					expectedExecuteStatus, executeStatus.getValue());
+
+				return jsonObject;
+			}
+		}
+	}
+
 	protected StructuredContentFolderResource structuredContentFolderResource;
+	protected ImportTaskResource importTaskResource;
 	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
 	protected com.liferay.portal.kernel.model.Company testCompany;
 	protected DepotEntry testDepotEntry;
@@ -4235,12 +4528,12 @@ public abstract class BaseStructuredContentFolderResourceTestCase {
 		public static void copyProperties(Object source, Object target)
 			throws Exception {
 
-			Class<?> sourceClass = _getSuperClass(source.getClass());
+			Class<?> sourceClass = source.getClass();
 
 			Class<?> targetClass = target.getClass();
 
 			for (java.lang.reflect.Field field :
-					sourceClass.getDeclaredFields()) {
+					_getAllDeclaredFields(sourceClass)) {
 
 				if (field.isSynthetic()) {
 					continue;
@@ -4249,11 +4542,16 @@ public abstract class BaseStructuredContentFolderResourceTestCase {
 				Method getMethod = _getMethod(
 					sourceClass, field.getName(), "get");
 
-				Method setMethod = _getMethod(
-					targetClass, field.getName(), "set",
-					getMethod.getReturnType());
+				try {
+					Method setMethod = _getMethod(
+						targetClass, field.getName(), "set",
+						getMethod.getReturnType());
 
-				setMethod.invoke(target, getMethod.invoke(source));
+					setMethod.invoke(target, getMethod.invoke(source));
+				}
+				catch (Exception e) {
+					continue;
+				}
 			}
 		}
 
@@ -4285,6 +4583,24 @@ public abstract class BaseStructuredContentFolderResourceTestCase {
 			setMethod.invoke(bean, _translateValue(parameterTypes[0], value));
 		}
 
+		private static List<java.lang.reflect.Field> _getAllDeclaredFields(
+			Class<?> clazz) {
+
+			List<java.lang.reflect.Field> fields = new ArrayList<>();
+
+			while ((clazz != null) && (clazz != Object.class)) {
+				for (java.lang.reflect.Field field :
+						clazz.getDeclaredFields()) {
+
+					fields.add(field);
+				}
+
+				clazz = clazz.getSuperclass();
+			}
+
+			return fields;
+		}
+
 		private static Method _getMethod(Class<?> clazz, String name) {
 			for (Method method : clazz.getMethods()) {
 				if (name.equals(method.getName()) &&
@@ -4306,16 +4622,6 @@ public abstract class BaseStructuredContentFolderResourceTestCase {
 			return clazz.getMethod(
 				prefix + StringUtil.upperCaseFirstLetter(fieldName),
 				parameterTypes);
-		}
-
-		private static Class<?> _getSuperClass(Class<?> clazz) {
-			Class<?> superClass = clazz.getSuperclass();
-
-			if ((superClass == null) || (superClass == Object.class)) {
-				return clazz;
-			}
-
-			return superClass;
 		}
 
 		private static Object _translateValue(
@@ -4414,11 +4720,35 @@ public abstract class BaseStructuredContentFolderResourceTestCase {
 		LogFactoryUtil.getLog(
 			BaseStructuredContentFolderResourceTestCase.class);
 
-	private static DateFormat _dateFormat;
+	private static Format _format;
+
+	private com.liferay.portal.kernel.model.User _testCompanyAdminUser;
 
 	@Inject
 	private
 		com.liferay.headless.delivery.resource.v1_0.
 			StructuredContentFolderResource _structuredContentFolderResource;
+
+	@Inject
+	private GroupLocalService _groupLocalService;
+
+	@Inject
+	private ResourceActionLocalService _resourceActionLocalService;
+
+	@Inject
+	private ResourcePermissionLocalService _resourcePermissionLocalService;
+
+	@Inject
+	private RoleLocalService _roleLocalService;
+
+	@Inject
+	private ScopeChecker _scopeChecker;
+
+	@Inject
+	private UserLocalService _userLocalService;
+
+	@Inject
+	private VulcanCRUDItemDelegateBuilderRegistry
+		_vulcanCRUDItemDelegateBuilderRegistry;
 
 }

@@ -1,0 +1,28 @@
+[
+	{
+		"accountBriefs": [
+			{
+				"externalReferenceCode": "ERC-001"
+			}
+		],
+		"alternateName": "customer",
+		"emailAddress": "customer@customer.com",
+		"externalReferenceCode": "USER_CUSTOMER",
+		"familyName": "Customer",
+		"givenName": "Customer",
+		"name": "Customer"
+	},
+	{
+		"accountBriefs": [
+			{
+				"externalReferenceCode": "ERC-001"
+			}
+		],
+		"alternateName": "partner",
+		"emailAddress": "partner@partner.com",
+		"externalReferenceCode": "USER_PARTNER",
+		"familyName": "Partner",
+		"givenName": "Partner",
+		"name": "Partner"
+	}
+]

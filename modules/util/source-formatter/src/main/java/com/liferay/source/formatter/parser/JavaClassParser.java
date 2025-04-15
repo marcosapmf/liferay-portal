@@ -49,11 +49,11 @@ public class JavaClassParser {
 			if (anonymousClassContent != null) {
 				anonymousClasses.add(
 					_parseJavaClass(
-						StringPool.BLANK, packageName, importNames,
+						JavaTerm.ACCESS_MODIFIER_PRIVATE, true,
 						anonymousClassContent,
 						SourceUtil.getLineNumber(content, matcher.start()),
-						JavaTerm.ACCESS_MODIFIER_PRIVATE, false, false, false,
-						false, false, true));
+						StringPool.BLANK, importNames, false, false, false,
+						false, false, false, false, packageName, false));
 			}
 		}
 
@@ -68,8 +68,9 @@ public class JavaClassParser {
 		Pattern pattern = Pattern.compile(
 			StringBundler.concat(
 				"\n(public\\s+)?(abstract\\s+)?(final\\s+)?@?",
-				"(class|enum|interface)\\s+", className,
-				"([<|\\s][^\\{]*)\\{"));
+				"(strictfp\\s+)?((non-)?sealed\\s+)?(class|enum|interface|",
+				"record)\\s+", className,
+				"(\\s*\\(.*?\\))?([<|\\s][^\\{]*)\\{"));
 
 		Matcher matcher = pattern.matcher(content);
 
@@ -111,10 +112,32 @@ public class JavaClassParser {
 			isFinal = true;
 		}
 
-		boolean isInterface = false;
+		boolean isStrictfp = false;
 
 		if (matcher.group(4) != null) {
-			String token = matcher.group(4);
+			isStrictfp = true;
+		}
+
+		boolean nonsealed = false;
+		boolean sealed = false;
+
+		String s = matcher.group(5);
+
+		if (s != null) {
+			s = s.trim();
+
+			if (s.equals("sealed")) {
+				sealed = true;
+			}
+			else {
+				nonsealed = true;
+			}
+		}
+
+		boolean isInterface = false;
+
+		if (matcher.group(7) != null) {
+			String token = matcher.group(7);
 
 			if (token.equals("enum")) {
 				isEnum = true;
@@ -125,13 +148,13 @@ public class JavaClassParser {
 		}
 
 		JavaClass javaClass = _parseJavaClass(
-			className, JavaSourceUtil.getPackageName(content),
-			JavaSourceUtil.getImportNames(content), classContent, lineNumber,
-			JavaTerm.ACCESS_MODIFIER_PUBLIC, isAbstract, isFinal, false, isEnum,
-			isInterface, false);
+			JavaTerm.ACCESS_MODIFIER_PUBLIC, false, classContent, lineNumber,
+			className, JavaSourceUtil.getImportNames(content), isAbstract,
+			isEnum, isFinal, isInterface, false, isStrictfp, nonsealed,
+			JavaSourceUtil.getPackageName(content), sealed);
 
-		return _parseExtendsImplements(
-			javaClass, StringUtil.trim(matcher.group(5)));
+		return _parseExtendsImplementsPermits(
+			javaClass, StringUtil.trim(matcher.group(9)));
 	}
 
 	private static String _getAnonymousClassContent(
@@ -298,9 +321,10 @@ public class JavaClassParser {
 			SourceUtil.containsUnquoted(startLine, " interface ")) {
 
 			JavaClass javaClass = _parseJavaClass(
-				_getClassName(startLine), packageName, importNames,
-				javaTermContent, lineNumber, accessModifier, isAbstract,
-				isFinal, isStatic, isEnum, isInterface, false);
+				accessModifier, false, javaTermContent, lineNumber,
+				_getClassName(startLine), importNames, isAbstract, isEnum,
+				isFinal, isInterface, isStatic, false, false, packageName,
+				false);
 
 			Pattern pattern = Pattern.compile(
 				StringBundler.concat(
@@ -310,7 +334,7 @@ public class JavaClassParser {
 			Matcher matcher2 = pattern.matcher(javaTermContent);
 
 			if (matcher2.find()) {
-				javaClass = _parseExtendsImplements(
+				javaClass = _parseExtendsImplementsPermits(
 					javaClass, matcher2.group(2));
 			}
 
@@ -321,23 +345,31 @@ public class JavaClassParser {
 			(startLine.endsWith(StringPool.SEMICOLON) && (x == -1))) {
 
 			return new JavaVariable(
-				_getVariableName(startLine), javaTermContent, accessModifier,
-				lineNumber, isAbstract, isFinal, isStatic);
-		}
-
-		if (x == -1) {
-			return null;
+				accessModifier, javaTermContent, isAbstract, isFinal, isStatic,
+				lineNumber, _getVariableName(startLine));
 		}
 
 		int spaceCount = StringUtil.count(startLine, CharPool.SPACE);
+
+		if (x == -1) {
+			if (!accessModifier.equals(JavaTerm.ACCESS_MODIFIER_PUBLIC) ||
+				(spaceCount != 2)) {
+
+				return null;
+			}
+
+			return new JavaConstructor(
+				accessModifier, javaTermContent, isAbstract, isFinal, isStatic,
+				lineNumber, _getConstructorOrMethodName(startLine));
+		}
 
 		if (isStatic || (spaceCount > 1) ||
 			(accessModifier.equals(JavaTerm.ACCESS_MODIFIER_DEFAULT) &&
 			 (spaceCount > 0))) {
 
 			return new JavaMethod(
-				_getConstructorOrMethodName(startLine), javaTermContent,
-				accessModifier, lineNumber, isAbstract, isFinal, isStatic);
+				accessModifier, javaTermContent, isAbstract, isFinal, isStatic,
+				lineNumber, _getConstructorOrMethodName(startLine));
 		}
 
 		if ((spaceCount == 1) ||
@@ -345,8 +377,8 @@ public class JavaClassParser {
 			 (spaceCount == 0))) {
 
 			return new JavaConstructor(
-				_getConstructorOrMethodName(startLine), javaTermContent,
-				accessModifier, lineNumber, isAbstract, isFinal, isStatic);
+				accessModifier, javaTermContent, isAbstract, isFinal, isStatic,
+				lineNumber, _getConstructorOrMethodName(startLine));
 		}
 
 		return null;
@@ -413,7 +445,7 @@ public class JavaClassParser {
 		return StringPool.BLANK;
 	}
 
-	private static JavaClass _parseExtendsImplements(
+	private static JavaClass _parseExtendsImplementsPermits(
 			JavaClass javaClass, String s)
 		throws ParseException {
 
@@ -442,13 +474,24 @@ public class JavaClassParser {
 			}
 		}
 
-		Matcher matcher = _implementsPattern.matcher(s);
+		Matcher matcher = _permitsPattern.matcher(s);
+
+		if (matcher.find()) {
+			javaClass.addPermittedClassNames(
+				StringUtil.split(s.substring(matcher.end())));
+
+			s = s.substring(0, matcher.start());
+		}
+
+		s = StringUtil.trim(s);
+
+		matcher = _implementsPattern.matcher(s);
 
 		if (matcher.find()) {
 			javaClass.addImplementedClassNames(
 				StringUtil.split(s.substring(matcher.end())));
 
-			s = StringUtil.trim(s.substring(0, matcher.start()));
+			s = s.substring(0, matcher.start());
 		}
 
 		s = StringUtil.trim(s);
@@ -461,16 +504,17 @@ public class JavaClassParser {
 	}
 
 	private static JavaClass _parseJavaClass(
-			String className, String packageName, List<String> importNames,
-			String classContent, int classLineNumber, String accessModifier,
-			boolean isAbstract, boolean isFinal, boolean isStatic,
-			boolean isEnum, boolean isInterface, boolean anonymous)
+			String accessModifier, boolean anonymous, String classContent,
+			int classLineNumber, String className, List<String> importNames,
+			boolean isAbstract, boolean isEnum, boolean isFinal,
+			boolean isInterface, boolean isStatic, boolean isStrictfp,
+			boolean nonsealed, String packageName, boolean sealed)
 		throws IOException, ParseException {
 
 		JavaClass javaClass = new JavaClass(
-			className, packageName, importNames, classContent, accessModifier,
-			classLineNumber, isAbstract, isFinal, isStatic, isInterface,
-			anonymous);
+			accessModifier, anonymous, classContent, importNames, isAbstract,
+			isFinal, isInterface, isStatic, isStrictfp, classLineNumber,
+			className, nonsealed, packageName, sealed);
 
 		int lineNumber = 0;
 
@@ -565,8 +609,8 @@ public class JavaClassParser {
 
 				if (javaTermEndLineNumber == -1) {
 					throw new ParseException(
-						"Parsing error at line '" + StringUtil.trim(line) +
-							"'");
+						"Parsing error at line \"" + StringUtil.trim(line) +
+							"\"");
 				}
 
 				int z = SourceUtil.getLineStartPos(
@@ -580,8 +624,8 @@ public class JavaClassParser {
 
 				if (javaTerm == null) {
 					throw new ParseException(
-						"Parsing error at line '" + StringUtil.trim(line) +
-							"'");
+						"Parsing error at line \"" + StringUtil.trim(line) +
+							"\"");
 				}
 
 				javaClass.addChildJavaTerm(javaTerm);
@@ -600,5 +644,7 @@ public class JavaClassParser {
 		"[;}]\\s*?\n");
 	private static final Pattern _javaTermStartLinePattern = Pattern.compile(
 		".*?[{;]\\s*?\n", Pattern.DOTALL);
+	private static final Pattern _permitsPattern = Pattern.compile(
+		"(\\A|\\s)permits\\s");
 
 }

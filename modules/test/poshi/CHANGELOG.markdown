@@ -1,5 +1,28 @@
 # Poshi Runner Change Log
 
+## 1.0.495
+
+### Other
+
+* [LRCI-5090](https://liferay.atlassian.net/browse/LRCI-5090) - failing test related to Poshi Runner when compiled with JDK 17
+* [LRCI-5173](https://liferay.atlassian.net/browse/LRCI-5173) - Change source compatibility to JDK8 for poshi
+
+## 1.0.494
+
+### Other
+
+* [LRCI-3714](https://liferay.atlassian.net/browse/LRCI-3714) - When a test fails in the setUp block of a Poshi test, import into testray with BLOCKED status
+* [LRCI-4654](https://liferay.atlassian.net/browse/LRCI-4654) - Fix all Poshi unit tests in acceptance
+* [LRCI-4789](https://liferay.atlassian.net/browse/LRCI-4789) - Investigate and fix Poshi Unit test failing in acceptance
+
+## 1.0.493
+
+### Utils
+
+* [LPD-38993](https://liferay.atlassian.net/browse/LPD-38993) - Technical task | fix Poshi Runner DateUtils method
+* [POSHI-702](https://liferay.atlassian.net/browse/POSHI-702) - Update ExecUtil to redirect error stream
+* [POSHI-704](https://liferay.atlassian.net/browse/POSHI-704) - Print log regardless of exit value
+
 ## 1.0.491
 
 ### Runner

@@ -58,6 +58,8 @@ export function objectRelationshipEdgeFactory({
 		objectRelationship.objectDefinitionExternalReferenceCode1 ===
 		objectRelationship.objectDefinitionExternalReferenceCode2;
 
+	const isTreeStructureRelationship = objectRelationship.edge === true;
+
 	objectRelationships.push(
 		...getObjectRelationships({
 			objectDefinitionExternalReferenceCode1:
@@ -83,12 +85,13 @@ export function objectRelationshipEdgeFactory({
 			data: objectRelationships.map((objectRelationship) => {
 				return {
 					defaultLanguageId: objectDefinition.defaultLanguageId,
+					edge: objectRelationship.edge,
 					id: objectRelationship.id,
-					label: stringUtils.getLocalizableLabel(
-						objectDefinition.defaultLanguageId,
-						objectRelationship.label,
-						objectRelationship.name
-					),
+					label: stringUtils.getLocalizableLabel({
+						fallbackLabel: objectRelationship.name,
+						fallbackLanguageId: objectDefinition.defaultLanguageId,
+						labels: objectRelationship.label,
+					}),
 					markerEndId: `${manyMarkerId}#${objectRelationship.id}`,
 					markerStartId:
 						objectRelationship.type === 'manyToMany'
@@ -107,7 +110,9 @@ export function objectRelationshipEdgeFactory({
 			targetHandle: isSelfObjectRelationship ? 'fixedRightHandle' : null,
 			type: isSelfObjectRelationship
 				? 'selfObjectRelationshipEdge'
-				: 'defaultObjectRelationshipEdge',
+				: isTreeStructureRelationship
+					? 'treeStructureObjectRelationshipEdge'
+					: 'defaultObjectRelationshipEdge',
 		};
 	}
 }

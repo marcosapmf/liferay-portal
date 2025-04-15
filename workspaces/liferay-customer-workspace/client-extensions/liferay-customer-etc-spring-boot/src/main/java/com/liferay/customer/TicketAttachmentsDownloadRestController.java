@@ -5,9 +5,10 @@
 
 package com.liferay.customer;
 
+import com.liferay.client.extension.util.spring.boot3.BaseRestController;
 import com.liferay.customer.model.TicketAttachment;
-import com.liferay.customer.service.GoogleCloudStorageWebService;
-import com.liferay.customer.service.TicketAttachmentWebService;
+import com.liferay.customer.service.GoogleCloudStorageService;
+import com.liferay.customer.service.TicketAttachmentService;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -38,7 +39,7 @@ public class TicketAttachmentsDownloadRestController
 
 		try {
 			TicketAttachment ticketAttachment =
-				_ticketAttachmentWebService.fetchTicketAttachment(
+				_ticketAttachmentService.fetchTicketAttachment(
 					jwt, ticketAttachmentId);
 
 			if (ticketAttachment == null) {
@@ -49,13 +50,13 @@ public class TicketAttachmentsDownloadRestController
 			}
 
 			return new ResponseEntity<>(
-				_googleCloudStorageWebService.getDownloadURL(
+				_googleCloudStorageService.getDownloadURL(
 					ticketAttachment.getGCSBucketName(),
 					ticketAttachment.getGCSObjectName()),
 				HttpStatus.OK);
 		}
 		catch (Exception exception) {
-			_log.error(exception);
+			_log.error(exception, exception);
 
 			return new ResponseEntity(
 				exception.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
@@ -66,9 +67,9 @@ public class TicketAttachmentsDownloadRestController
 		TicketAttachmentsDownloadRestController.class);
 
 	@Autowired
-	private GoogleCloudStorageWebService _googleCloudStorageWebService;
+	private GoogleCloudStorageService _googleCloudStorageService;
 
 	@Autowired
-	private TicketAttachmentWebService _ticketAttachmentWebService;
+	private TicketAttachmentService _ticketAttachmentService;
 
 }

@@ -13,10 +13,12 @@ import com.liferay.commerce.constants.CommerceOrderConstants;
 import com.liferay.commerce.currency.model.CommerceCurrency;
 import com.liferay.commerce.currency.service.CommerceCurrencyLocalService;
 import com.liferay.commerce.model.CommerceOrder;
+import com.liferay.commerce.model.CommerceOrderType;
 import com.liferay.commerce.product.constants.CommerceChannelConstants;
 import com.liferay.commerce.product.model.CommerceChannel;
 import com.liferay.commerce.product.service.CommerceChannelLocalService;
 import com.liferay.commerce.service.CommerceOrderLocalService;
+import com.liferay.commerce.service.CommerceOrderTypeLocalService;
 import com.liferay.headless.commerce.core.util.DateConfig;
 import com.liferay.headless.commerce.delivery.order.client.dto.v1_0.PlacedOrder;
 import com.liferay.portal.kernel.model.User;
@@ -31,6 +33,7 @@ import com.liferay.portal.test.rule.Inject;
 import java.math.BigDecimal;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
@@ -63,7 +66,7 @@ public class PlacedOrderResourceTest extends BasePlacedOrderResourceTestCase {
 			RandomTestUtil.randomString(), "business", 1, _serviceContext);
 
 		_commerceCurrency = _commerceCurrencyLocalService.addCommerceCurrency(
-			_user.getUserId(), RandomTestUtil.randomString(),
+			null, _user.getUserId(), RandomTestUtil.randomString(),
 			RandomTestUtil.randomLocaleStringMap(),
 			RandomTestUtil.randomString(), BigDecimal.ONE, new HashMap<>(), 2,
 			2, "HALF_EVEN", false, RandomTestUtil.nextDouble(), true);
@@ -95,13 +98,34 @@ public class PlacedOrderResourceTest extends BasePlacedOrderResourceTestCase {
 	@Override
 	protected String[] getAdditionalAssertFieldNames() {
 		return new String[] {
-			"accountId", "orderUUID", "paymentMethod", "paymentStatus",
-			"printedNote", "purchaseOrderNumber", "shippingOption"
+			"accountId", "name", "printedNote", "purchaseOrderNumber"
+		};
+	}
+
+	@Override
+	protected String[] getIgnoredEntityFieldNames() {
+		return new String[] {
+			"account", "accountId", "author", "orderDate", "orderId",
+			"orderType"
 		};
 	}
 
 	@Override
 	protected PlacedOrder randomPlacedOrder() throws Exception {
+		DateConfig dateConfig = DateConfig.toDisplayDateConfig(
+			new Date(), _user.getTimeZone());
+
+		CommerceOrderType commerceOrderType =
+			_commerceOrderTypeLocalService.addCommerceOrderType(
+				RandomTestUtil.randomString(), _user.getUserId(),
+				RandomTestUtil.randomLocaleStringMap(),
+				RandomTestUtil.randomLocaleStringMap(), true,
+				dateConfig.getMonth(), dateConfig.getDay(),
+				dateConfig.getYear(), dateConfig.getHour(),
+				dateConfig.getMinute(), 0, dateConfig.getMonth() + 1,
+				dateConfig.getDay(), dateConfig.getYear(), dateConfig.getHour(),
+				dateConfig.getMinute(), true, _serviceContext);
+
 		return new PlacedOrder() {
 			{
 				accountId = _accountEntry.getAccountEntryId();
@@ -116,7 +140,9 @@ public class PlacedOrderResourceTest extends BasePlacedOrderResourceTestCase {
 				lastPriceUpdateDate = RandomTestUtil.nextDate();
 				modifiedDate = RandomTestUtil.nextDate();
 				name = RandomTestUtil.randomString();
-				orderTypeId = 1L;
+				orderTypeExternalReferenceCode =
+					commerceOrderType.getExternalReferenceCode();
+				orderTypeId = commerceOrderType.getCommerceOrderTypeId();
 				orderUUID = StringUtil.toLowerCase(
 					RandomTestUtil.randomString());
 				paymentStatus = RandomTestUtil.randomInt();
@@ -188,6 +214,38 @@ public class PlacedOrderResourceTest extends BasePlacedOrderResourceTestCase {
 	}
 
 	@Override
+	protected PlacedOrder
+			testGetChannelByExternalReferenceCodePlacedOrdersPage_addPlacedOrder(
+				String externalReferenceCode, PlacedOrder placedOrder)
+		throws Exception {
+
+		return _addCommerceOrder(placedOrder);
+	}
+
+	@Override
+	protected String
+			testGetChannelByExternalReferenceCodePlacedOrdersPage_getExternalReferenceCode()
+		throws Exception {
+
+		return _commerceChannel.getExternalReferenceCode();
+	}
+
+	@Override
+	protected PlacedOrder testGetChannelPlacedOrdersPage_addPlacedOrder(
+			Long channelId, PlacedOrder placedOrder)
+		throws Exception {
+
+		return _addCommerceOrder(placedOrder);
+	}
+
+	@Override
+	protected Long testGetChannelPlacedOrdersPage_getChannelId()
+		throws Exception {
+
+		return _commerceChannel.getCommerceChannelId();
+	}
+
+	@Override
 	protected PlacedOrder testGetPlacedOrder_addPlacedOrder() throws Exception {
 		return _addCommerceOrder(randomPlacedOrder());
 	}
@@ -207,6 +265,21 @@ public class PlacedOrderResourceTest extends BasePlacedOrderResourceTestCase {
 		return _addCommerceOrder(randomPlacedOrder());
 	}
 
+	@Override
+	protected PlacedOrder testPatchPlacedOrder_addPlacedOrder()
+		throws Exception {
+
+		return _addCommerceOrder(randomPlacedOrder());
+	}
+
+	@Override
+	protected PlacedOrder
+			testPatchPlacedOrderByExternalReferenceCode_addPlacedOrder()
+		throws Exception {
+
+		return _addCommerceOrder(randomPlacedOrder());
+	}
+
 	private PlacedOrder _addCommerceOrder(PlacedOrder placedOrder)
 		throws Exception {
 
@@ -217,8 +290,7 @@ public class PlacedOrderResourceTest extends BasePlacedOrderResourceTestCase {
 			_commerceOrderLocalService.addCommerceOrder(
 				_user.getUserId(), _commerceChannel.getGroupId(),
 				placedOrder.getPlacedOrderBillingAddressId(),
-				placedOrder.getAccountId(),
-				_commerceCurrency.getCommerceCurrencyId(),
+				placedOrder.getAccountId(), _commerceCurrency.getCode(),
 				placedOrder.getOrderTypeId(), 0,
 				placedOrder.getPlacedOrderShippingAddressId(),
 				placedOrder.getPaymentMethod(), placedOrder.getName(),
@@ -234,6 +306,10 @@ public class PlacedOrderResourceTest extends BasePlacedOrderResourceTestCase {
 
 		_commerceOrders.add(commerceOrder);
 
+		CommerceOrderType commerceOrderType =
+			_commerceOrderTypeLocalService.getCommerceOrderType(
+				commerceOrder.getCommerceOrderTypeId());
+
 		return new PlacedOrder() {
 			{
 				accountId = commerceOrder.getCommerceAccountId();
@@ -246,6 +322,10 @@ public class PlacedOrderResourceTest extends BasePlacedOrderResourceTestCase {
 				id = commerceOrder.getCommerceOrderId();
 				lastPriceUpdateDate = commerceOrder.getLastPriceUpdateDate();
 				modifiedDate = commerceOrder.getModifiedDate();
+				name = commerceOrder.getName();
+				orderTypeExternalReferenceCode =
+					commerceOrderType.getExternalReferenceCode();
+				orderTypeId = commerceOrder.getCommerceOrderTypeId();
 				orderUUID = commerceOrder.getUuid();
 				paymentMethod = commerceOrder.getCommercePaymentMethodKey();
 				paymentStatus = commerceOrder.getPaymentStatus();
@@ -285,6 +365,9 @@ public class PlacedOrderResourceTest extends BasePlacedOrderResourceTestCase {
 
 	@DeleteAfterTestRun
 	private final List<CommerceOrder> _commerceOrders = new ArrayList<>();
+
+	@Inject
+	private CommerceOrderTypeLocalService _commerceOrderTypeLocalService;
 
 	private ServiceContext _serviceContext;
 

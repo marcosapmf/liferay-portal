@@ -57,15 +57,15 @@ public class ObjectRelationshipLocalServiceUtil {
 	public static ObjectRelationship addObjectRelationship(
 			String externalReferenceCode, long userId, long objectDefinitionId1,
 			long objectDefinitionId2, long parameterObjectFieldId,
-			String deletionType, Map<java.util.Locale, String> labelMap,
-			String name, boolean system, String type,
-			com.liferay.object.model.ObjectField objectField)
+			String deletionType, boolean edge,
+			Map<java.util.Locale, String> labelMap, String name, boolean system,
+			String type, com.liferay.object.model.ObjectField objectField)
 		throws PortalException {
 
 		return getService().addObjectRelationship(
 			externalReferenceCode, userId, objectDefinitionId1,
-			objectDefinitionId2, parameterObjectFieldId, deletionType, labelMap,
-			name, system, type, objectField);
+			objectDefinitionId2, parameterObjectFieldId, deletionType, edge,
+			labelMap, name, system, type, objectField);
 	}
 
 	public static ObjectRelationship addObjectRelationship(
@@ -284,13 +284,6 @@ public class ObjectRelationshipLocalServiceUtil {
 		com.liferay.portal.kernel.dao.orm.Projection projection) {
 
 		return getService().dynamicQueryCount(dynamicQuery, projection);
-	}
-
-	public static ObjectRelationship enableEdge(
-			long objectRelationshipId, boolean edge)
-		throws PortalException {
-
-		return getService().enableEdge(objectRelationshipId, edge);
 	}
 
 	public static ObjectRelationship fetchObjectRelationship(
@@ -514,6 +507,12 @@ public class ObjectRelationshipLocalServiceUtil {
 		return getService().getObjectRelationshipsCount();
 	}
 
+	public static Map<Long, List<ObjectRelationship>> getObjectRelationshipsMap(
+		long companyId) {
+
+		return getService().getObjectRelationshipsMap(companyId);
+	}
+
 	/**
 	 * Returns the OSGi service identifier.
 	 *
@@ -535,10 +534,12 @@ public class ObjectRelationshipLocalServiceUtil {
 	public static void
 		registerObjectRelationshipsRelatedInfoCollectionProviders(
 			com.liferay.object.model.ObjectDefinition objectDefinition1,
-			ObjectDefinitionLocalService objectDefinitionLocalService) {
+			ObjectDefinitionLocalService objectDefinitionLocalService,
+			List<ObjectRelationship> objectRelationships) {
 
 		getService().registerObjectRelationshipsRelatedInfoCollectionProviders(
-			objectDefinition1, objectDefinitionLocalService);
+			objectDefinition1, objectDefinitionLocalService,
+			objectRelationships);
 	}
 
 	/**
@@ -567,6 +568,13 @@ public class ObjectRelationshipLocalServiceUtil {
 		return getService().updateObjectRelationship(
 			externalReferenceCode, objectRelationshipId, parameterObjectFieldId,
 			deletionType, edge, labelMap, objectField);
+	}
+
+	public static void updateUserId(
+			long companyId, long oldUserId, long newUserId)
+		throws PortalException {
+
+		getService().updateUserId(companyId, oldUserId, newUserId);
 	}
 
 	public static ObjectRelationshipLocalService getService() {

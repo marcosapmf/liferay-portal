@@ -62,7 +62,7 @@
 </tr>
 <tr>
 	<td>ASTERISK_DATE_FIELD</td>
-	<td>//label[contains(.,'${key_fieldFieldLabel}')]//span[*[name()='svg'][contains(@class,'icon-asterisk')]] | //label[contains(.,'${key_fieldFieldLabel}')]//span[contains(.,'*')]</td>
+	<td>//label[contains(.,'${key_fieldFieldLabel}')]//*[name()='svg'][contains(@class,'lexicon-icon-asterisk')] | //label[contains(.,'${key_fieldFieldLabel}')]//span[contains(.,'*')] | //span[contains(@class, 'ddm-label-required') and contains(@class, 'reference-mark')]//*[name()='svg'][contains(@class,'lexicon-icon-asterisk')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -97,7 +97,7 @@
 </tr>
 <tr>
 	<td>COG_PAGE</td>
-	<td>//li/div[contains(.,'${key_pageName}')]/..//a[*[name()='svg'][contains(@class,'icon-cog')]]</td>
+	<td>//li//div[contains(.,'${key_pageName}')]/..//a[*[name()='svg'][contains(@class,'icon-cog')]]</td>
 	<td></td>
 </tr>
 <tr>
@@ -485,7 +485,7 @@
 </tr>
 <tr>
 	<td>ROW_VERTICAL_ELLIPSIS</td>
-	<td>//*[@data-qa-id='row' and contains(.,'${key_rowEntry}')]//*[*[name()='svg'][contains(@class,'icon-ellipsis')]] | //*[@class="dnd-tr" and contains (., '${key_rowEntry}')]//*[*[name()='svg'][contains(@class,'icon-ellipsis')]]</td>
+	<td>//*[@data-qa-id='row' and contains(.,'${key_rowEntry}')]//*[*[name()='svg'][contains(@class,'icon-ellipsis')]] | //tr[contains(., '${key_rowEntry}')]//*[*[name()='svg'][contains(@class,'icon-ellipsis')]]</td>
 	<td></td>
 </tr>
 <tr>
@@ -495,7 +495,7 @@
 </tr>
 <tr>
 	<td>ROW_VERTICAL_ELLIPSIS_SAFARI</td>
-	<td>//*[@data-qa-id='row' and contains(.,'${key_rowEntry}')]//a[contains(@class,'dropdown-toggle')] | //*[@class="dnd-tr" and contains (., '${key_rowEntry}')]//*[contains(@class, 'dropdown-toggle')]</td>
+	<td>//*[@data-qa-id='row' and contains(.,'${key_rowEntry}')]//a[contains(@class,'dropdown-toggle')] | //tr[contains(., '${key_rowEntry}')]//*[contains(@class, 'dropdown-toggle')]</td>
 	<td></td>
 </tr>
 <tr>

@@ -66,8 +66,9 @@ public interface CommerceInventoryWarehouseService extends BaseService {
 		throws PortalException;
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public CommerceInventoryWarehouse fetchByExternalReferenceCode(
-			String externalReferenceCode, long companyId)
+	public CommerceInventoryWarehouse
+			fetchCommerceInventoryWarehouseByExternalReferenceCode(
+				String externalReferenceCode, long companyId)
 		throws PortalException;
 
 	public CommerceInventoryWarehouse geolocateCommerceInventoryWarehouse(
@@ -101,7 +102,7 @@ public interface CommerceInventoryWarehouseService extends BaseService {
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<CommerceInventoryWarehouse> getCommerceInventoryWarehouses(
-			long companyId, long groupId, boolean active)
+			long companyId, long accountEntryId, long groupId, boolean active)
 		throws PortalException;
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)

@@ -1,7 +1,9 @@
 @component-name = "portal-bpm"
 definition {
 
-	property portal.release = "true";
+	property custom.properties = "feature.flag.LPD-35013=false";
+	property osgi.modules.includes = "wiki";
+	property portal.release = "false";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Workflow";
 
@@ -9,6 +11,8 @@ definition {
 		TestCase.setUpPortalInstance();
 
 		User.firstLoginPG();
+
+		WikiPortlet.enableWiki();
 	}
 
 	tearDown {
@@ -291,7 +295,6 @@ definition {
 		property portal.acceptance = "true";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
-		property testray.component.names = "Training";
 
 		Workflow.openWorkflowListView();
 
@@ -952,7 +955,7 @@ definition {
 			assetType = "Blogs Entry",
 			user = "Test Test");
 
-		LexiconEntry.gotoEllipsisMenuItem(menuItem = "Assign to Me");
+		LexiconEntry.gotoVerticalEllipsisMenuItemNoError(menuItem = "Assign to Me");
 
 		Workflow.confirmWorkflowAction();
 
@@ -968,7 +971,7 @@ definition {
 			workflowAssignedTo = "Test Test",
 			workflowTask = "Review");
 
-		LexiconEntry.gotoEllipsisMenuItem(menuItem = "Approve");
+		LexiconEntry.gotoVerticalEllipsisMenuItemNoError(menuItem = "Approve");
 
 		Button.clickDone();
 
@@ -1241,6 +1244,10 @@ definition {
 
 	@priority = 4
 	test XSSScriptWebContent {
+		task ("Enable dynamic and manual selection") {
+			AssetPublisherPortlet.enableDynamicAndManualSelection();
+		}
+
 		var siteName = TestCase.getSiteName(siteName = ${siteName});
 
 		Navigator.openURL();

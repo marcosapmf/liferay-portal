@@ -9,6 +9,7 @@ import com.liferay.asset.kernel.exception.AssetCategoryException;
 import com.liferay.asset.kernel.exception.AssetTagException;
 import com.liferay.asset.kernel.model.AssetVocabulary;
 import com.liferay.document.library.configuration.DLConfiguration;
+import com.liferay.document.library.configuration.DLFileEntryMimeTypeConfiguration;
 import com.liferay.document.library.constants.DLPortletKeys;
 import com.liferay.document.library.exception.DLStorageQuotaExceededException;
 import com.liferay.document.library.kernel.antivirus.AntivirusScannerException;
@@ -49,8 +50,8 @@ import com.liferay.friendly.url.service.FriendlyURLEntryLocalService;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
+import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
@@ -518,9 +519,7 @@ public class EditFileEntryMVCActionCommand extends BaseMVCActionCommand {
 		ActionRequest actionRequest, FileVersion fileVersion,
 		ThemeDisplay themeDisplay) {
 
-		if (!FeatureFlagManagerUtil.isEnabled("LPD-10701") ||
-			!fileVersion.isScheduled()) {
-
+		if (!fileVersion.isScheduled()) {
 			String portletResource = ParamUtil.getString(
 				actionRequest, "portletResource");
 
@@ -539,7 +538,7 @@ public class EditFileEntryMVCActionCommand extends BaseMVCActionCommand {
 			themeDisplay.getLocale(), themeDisplay.getTimeZone());
 
 		SessionMessages.add(
-			httpServletRequest, "scheduledDocumentRequestProcessedSuccess",
+			httpServletRequest, "scheduledDocument_requestProcessedSuccess",
 			_language.format(
 				_portal.getHttpServletRequest(actionRequest),
 				"x-will-be-published-on-x",
@@ -909,6 +908,19 @@ public class EditFileEntryMVCActionCommand extends BaseMVCActionCommand {
 				StringUtil.merge(
 					_getAllowedFileExtensions(portletConfig, actionRequest)));
 		}
+		else if (exception instanceof FileMimeTypeException) {
+			DLFileEntryMimeTypeConfiguration dlFileEntryMimeTypeConfiguration =
+				_configurationProvider.getCompanyConfiguration(
+					DLFileEntryMimeTypeConfiguration.class,
+					themeDisplay.getCompanyId());
+
+			errorMessage = _language.format(
+				themeDisplay.getLocale(),
+				"please-enter-a-file-with-a-valid-mime-type-x",
+				StringUtil.merge(
+					dlFileEntryMimeTypeConfiguration.fileMimeTypes(),
+					StringPool.COMMA_AND_SPACE));
+		}
 		else if (exception instanceof FileNameException) {
 			errorMessage = _language.get(
 				themeDisplay.getLocale(),
@@ -996,9 +1008,7 @@ public class EditFileEntryMVCActionCommand extends BaseMVCActionCommand {
 			TimeZone timeZone)
 		throws PortalException {
 
-		if (addDynamic || !PropsValues.SCHEDULER_ENABLED ||
-			!FeatureFlagManagerUtil.isEnabled("LPD-10701")) {
-
+		if (addDynamic || !PropsValues.SCHEDULER_ENABLED) {
 			return null;
 		}
 
@@ -1187,6 +1197,7 @@ public class EditFileEntryMVCActionCommand extends BaseMVCActionCommand {
 				exception instanceof DLStorageQuotaExceededException ||
 				exception instanceof DuplicateFileEntryException ||
 				exception instanceof FileExtensionException ||
+				exception instanceof FileMimeTypeException ||
 				exception instanceof FileNameException ||
 				exception instanceof FileSizeException ||
 				exception instanceof UploadRequestSizeException) {
@@ -1547,6 +1558,9 @@ public class EditFileEntryMVCActionCommand extends BaseMVCActionCommand {
 
 	@Reference
 	private ClassNameLocalService _classNameLocalService;
+
+	@Reference
+	private ConfigurationProvider _configurationProvider;
 
 	@Reference
 	private DDMBeanTranslator _ddmBeanTranslator;

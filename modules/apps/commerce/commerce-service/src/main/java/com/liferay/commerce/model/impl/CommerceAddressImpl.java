@@ -31,7 +31,9 @@ import java.util.function.BiConsumer;
 
 /**
  * @author Andrea Di Giorgi
+ * @deprecated As of Cavanaugh (7.4.x)
  */
+@Deprecated
 public class CommerceAddressImpl extends CommerceAddressBaseImpl {
 
 	public static CommerceAddress fromAddress(Address address) {
@@ -80,13 +82,8 @@ public class CommerceAddressImpl extends CommerceAddressBaseImpl {
 	}
 
 	public static boolean isAccountEntryAddress(Address address) {
-		if (Objects.equals(
-				AccountEntry.class.getName(), address.getClassName())) {
-
-			return true;
-		}
-
-		return false;
+		return Objects.equals(
+			AccountEntry.class.getName(), address.getClassName());
 	}
 
 	public static long toAddressTypeId(int commerceAddressType) {

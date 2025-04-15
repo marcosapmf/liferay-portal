@@ -32,6 +32,7 @@ import com.liferay.exportimport.kernel.lar.UserIdStrategy;
 import com.liferay.exportimport.kernel.xstream.XStreamAlias;
 import com.liferay.exportimport.kernel.xstream.XStreamConverter;
 import com.liferay.exportimport.kernel.xstream.XStreamType;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
@@ -1480,13 +1481,8 @@ public class PortletDataContextImpl implements PortletDataContext {
 
 	@Override
 	public boolean isDataStrategyMirrorWithOverwriting() {
-		if (_dataStrategy.equals(
-				PortletDataHandlerKeys.DATA_STRATEGY_MIRROR_OVERWRITE)) {
-
-			return true;
-		}
-
-		return false;
+		return _dataStrategy.equals(
+			PortletDataHandlerKeys.DATA_STRATEGY_MIRROR_OVERWRITE);
 	}
 
 	@Override
@@ -1599,6 +1595,11 @@ public class PortletDataContextImpl implements PortletDataContext {
 		return isModelCounted(
 			ExportImportClassedModelUtil.getClassName(stagedModel),
 			ExportImportClassedModelUtil.getPrimaryKeyObj(stagedModel));
+	}
+
+	@Override
+	public boolean isValidateExistingDataHandler() {
+		return _validateExistingDataHandler;
 	}
 
 	/**
@@ -1800,6 +1801,13 @@ public class PortletDataContextImpl implements PortletDataContext {
 	@Override
 	public void setUserPersonalSiteGroupId(long userPersonalSiteGroupId) {
 		_userPersonalSiteGroupId = userPersonalSiteGroupId;
+	}
+
+	@Override
+	public void setValidateExistingDataHandler(
+		boolean validateExistingDataHandler) {
+
+		_validateExistingDataHandler = validateExistingDataHandler;
 	}
 
 	@Override
@@ -2061,46 +2069,48 @@ public class PortletDataContextImpl implements PortletDataContext {
 	protected List<Element> getReferenceDataElements(
 		List<Element> referenceElements, Class<?> clazz) {
 
-		List<Element> referenceDataElements = new ArrayList<>();
+		return TransformUtil.transform(
+			referenceElements,
+			referenceElement -> {
+				Element referenceDataElement = null;
 
-		for (Element referenceElement : referenceElements) {
-			Element referenceDataElement = null;
+				String path = referenceElement.attributeValue("path");
 
-			String path = referenceElement.attributeValue("path");
+				if (Validator.isNotNull(path)) {
+					referenceDataElement = getImportDataElement(
+						clazz.getSimpleName(), "path", path);
+				}
+				else {
+					String groupId = referenceElement.attributeValue(
+						"group-id");
+					String uuid = referenceElement.attributeValue("uuid");
 
-			if (Validator.isNotNull(path)) {
-				referenceDataElement = getImportDataElement(
-					clazz.getSimpleName(), "path", path);
-			}
-			else {
-				String groupId = referenceElement.attributeValue("group-id");
-				String uuid = referenceElement.attributeValue("uuid");
+					Element groupElement = getImportDataGroupElement(
+						clazz.getSimpleName());
 
-				Element groupElement = getImportDataGroupElement(
-					clazz.getSimpleName());
-
-				Predicate<Element> childElementPredicate =
-					childElement -> Objects.equals(
-						childElement.attributeValue("uuid"), uuid);
-
-				if (groupId != null) {
-					childElementPredicate = childElementPredicate.and(
+					Predicate<Element> childElementPredicate =
 						childElement -> Objects.equals(
-							childElement.attributeValue("group-id"), groupId));
+							childElement.attributeValue("uuid"), uuid);
+
+					if (groupId != null) {
+						childElementPredicate = childElementPredicate.and(
+							childElement -> Objects.equals(
+								childElement.attributeValue("group-id"),
+								groupId));
+					}
+
+					referenceDataElement =
+						_searchFirstChildElementWithPredicate(
+							groupElement, "staged-model",
+							childElementPredicate);
 				}
 
-				referenceDataElement = _searchFirstChildElementWithPredicate(
-					groupElement, "staged-model", childElementPredicate);
-			}
+				if (referenceDataElement == null) {
+					return null;
+				}
 
-			if (referenceDataElement == null) {
-				continue;
-			}
-
-			referenceDataElements.add(referenceDataElement);
-		}
-
-		return referenceDataElements;
+				return referenceDataElement;
+			});
 	}
 
 	protected List<Element> getReferenceElements(
@@ -2609,21 +2619,6 @@ public class PortletDataContextImpl implements PortletDataContext {
 
 		_xStream.omitField(HashMap.class, "cache_bitmask");
 
-		try {
-			Class<?> timestampClass = classLoader.loadClass(
-				"com.sybase.jdbc4.tds.SybTimestamp");
-
-			_xStream.alias("sql-timestamp", timestampClass);
-		}
-		catch (ClassNotFoundException classNotFoundException) {
-			if (_log.isDebugEnabled()) {
-				_log.debug(
-					"Unable to load class com.sybase.jdbc4.tds.SybTimestamp " +
-						"because the Sybase driver is not available",
-					classNotFoundException);
-			}
-		}
-
 		_xStream.registerConverter(
 			new ConverterAdapter(new TimestampConverter()),
 			XStream.PRIORITY_VERY_HIGH);
@@ -2697,11 +2692,7 @@ public class PortletDataContextImpl implements PortletDataContext {
 	private boolean _isGroupLayoutSetPrototype() throws PortalException {
 		Group group = GroupLocalServiceUtil.getGroup(getGroupId());
 
-		if (group.isLayoutSetPrototype()) {
-			return true;
-		}
-
-		return false;
+		return group.isLayoutSetPrototype();
 	}
 
 	private boolean _isResourceMain(ClassedModel classedModel) {
@@ -2800,6 +2791,7 @@ public class PortletDataContextImpl implements PortletDataContext {
 	private String _type;
 	private transient UserIdStrategy _userIdStrategy;
 	private long _userPersonalSiteGroupId;
+	private boolean _validateExistingDataHandler;
 	private transient ZipReader _zipReader;
 	private transient ZipWriter _zipWriter;
 

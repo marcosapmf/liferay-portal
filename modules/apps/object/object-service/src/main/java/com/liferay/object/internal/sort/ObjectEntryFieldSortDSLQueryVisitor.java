@@ -46,9 +46,10 @@ public class ObjectEntryFieldSortDSLQueryVisitor
 	@Override
 	public DSLQuery visit(DSLQuery dslQuery, Sort sort) throws PortalException {
 		ObjectDefinition objectDefinition = sort.getObjectDefinition();
+		String fieldName = _getSortFieldName(sort);
 
 		ObjectField objectField = objectFieldLocalService.fetchObjectField(
-			objectDefinition.getObjectDefinitionId(), sort.getFieldName());
+			objectDefinition.getObjectDefinitionId(), fieldName);
 
 		Expression<?> columnExpression = null;
 		Table fieldTable = null;
@@ -57,12 +58,11 @@ public class ObjectEntryFieldSortDSLQueryVisitor
 		if (objectField == null) {
 			Column<?, Object> column =
 				(Column<?, Object>)objectFieldLocalService.getColumn(
-					objectDefinition.getObjectDefinitionId(),
-					sort.getFieldName());
+					objectDefinition.getObjectDefinitionId(), fieldName);
 
 			fieldTable = getAliasedTable(_getSuffix(sort), column.getTable());
 
-			columnExpression = fieldTable.getColumn(sort.getFieldName());
+			columnExpression = fieldTable.getColumn(fieldName);
 		}
 		else {
 			fieldTable = getAliasedTable(
@@ -152,24 +152,30 @@ public class ObjectEntryFieldSortDSLQueryVisitor
 		return expression.ascending();
 	}
 
-	private String _getSuffix(Sort sort) {
-		if (_isParentComplexField(sort)) {
-			return StringUtil.replace(
-				StringUtil.removeLast(
-					sort.getFieldPath(),
-					CharPool.FORWARD_SLASH + sort.getFieldName()),
-				CharPool.FORWARD_SLASH, CharPool.UNDERLINE);
+	private String _getSortFieldName(Sort sort) {
+		String fieldName = sort.getFieldName();
+
+		if (!fieldName.contains(StringPool.SLASH)) {
+			return fieldName;
 		}
 
-		return null;
+		return StringUtil.extractLast(fieldName, StringPool.SLASH);
+	}
+
+	private String _getSuffix(Sort sort) {
+		if (!_isParentComplexField(sort)) {
+			return null;
+		}
+
+		return StringUtil.replace(
+			StringUtil.removeLast(
+				sort.getFieldPath(),
+				CharPool.FORWARD_SLASH + _getSortFieldName(sort)),
+			CharPool.FORWARD_SLASH, CharPool.UNDERLINE);
 	}
 
 	private boolean _isParentComplexField(Sort sort) {
-		if (StringUtil.equals(sort.getFieldName(), sort.getFieldPath())) {
-			return false;
-		}
-
-		return true;
+		return !StringUtil.equals(_getSortFieldName(sort), sort.getFieldPath());
 	}
 
 }

@@ -331,6 +331,21 @@ public interface ObjectDefinitionModel
 	public void setActive(boolean active);
 
 	/**
+	 * Returns the class name of this object definition.
+	 *
+	 * @return the class name of this object definition
+	 */
+	@AutoEscape
+	public String getClassName();
+
+	/**
+	 * Sets the class name of this object definition.
+	 *
+	 * @param className the class name of this object definition
+	 */
+	public void setClassName(String className);
+
+	/**
 	 * Returns the db table name of this object definition.
 	 *
 	 * @return the db table name of this object definition
@@ -344,6 +359,176 @@ public interface ObjectDefinitionModel
 	 * @param dbTableName the db table name of this object definition
 	 */
 	public void setDBTableName(String dbTableName);
+
+	/**
+	 * Returns the enable categorization of this object definition.
+	 *
+	 * @return the enable categorization of this object definition
+	 */
+	public boolean getEnableCategorization();
+
+	/**
+	 * Returns <code>true</code> if this object definition is enable categorization.
+	 *
+	 * @return <code>true</code> if this object definition is enable categorization; <code>false</code> otherwise
+	 */
+	public boolean isEnableCategorization();
+
+	/**
+	 * Sets whether this object definition is enable categorization.
+	 *
+	 * @param enableCategorization the enable categorization of this object definition
+	 */
+	public void setEnableCategorization(boolean enableCategorization);
+
+	/**
+	 * Returns the enable comments of this object definition.
+	 *
+	 * @return the enable comments of this object definition
+	 */
+	public boolean getEnableComments();
+
+	/**
+	 * Returns <code>true</code> if this object definition is enable comments.
+	 *
+	 * @return <code>true</code> if this object definition is enable comments; <code>false</code> otherwise
+	 */
+	public boolean isEnableComments();
+
+	/**
+	 * Sets whether this object definition is enable comments.
+	 *
+	 * @param enableComments the enable comments of this object definition
+	 */
+	public void setEnableComments(boolean enableComments);
+
+	/**
+	 * Returns the enable friendly url customization of this object definition.
+	 *
+	 * @return the enable friendly url customization of this object definition
+	 */
+	public boolean getEnableFriendlyURLCustomization();
+
+	/**
+	 * Returns <code>true</code> if this object definition is enable friendly url customization.
+	 *
+	 * @return <code>true</code> if this object definition is enable friendly url customization; <code>false</code> otherwise
+	 */
+	public boolean isEnableFriendlyURLCustomization();
+
+	/**
+	 * Sets whether this object definition is enable friendly url customization.
+	 *
+	 * @param enableFriendlyURLCustomization the enable friendly url customization of this object definition
+	 */
+	public void setEnableFriendlyURLCustomization(
+		boolean enableFriendlyURLCustomization);
+
+	/**
+	 * Returns the enable index search of this object definition.
+	 *
+	 * @return the enable index search of this object definition
+	 */
+	public boolean getEnableIndexSearch();
+
+	/**
+	 * Returns <code>true</code> if this object definition is enable index search.
+	 *
+	 * @return <code>true</code> if this object definition is enable index search; <code>false</code> otherwise
+	 */
+	public boolean isEnableIndexSearch();
+
+	/**
+	 * Sets whether this object definition is enable index search.
+	 *
+	 * @param enableIndexSearch the enable index search of this object definition
+	 */
+	public void setEnableIndexSearch(boolean enableIndexSearch);
+
+	/**
+	 * Returns the enable localization of this object definition.
+	 *
+	 * @return the enable localization of this object definition
+	 */
+	public boolean getEnableLocalization();
+
+	/**
+	 * Returns <code>true</code> if this object definition is enable localization.
+	 *
+	 * @return <code>true</code> if this object definition is enable localization; <code>false</code> otherwise
+	 */
+	public boolean isEnableLocalization();
+
+	/**
+	 * Sets whether this object definition is enable localization.
+	 *
+	 * @param enableLocalization the enable localization of this object definition
+	 */
+	public void setEnableLocalization(boolean enableLocalization);
+
+	/**
+	 * Returns the enable object entry draft of this object definition.
+	 *
+	 * @return the enable object entry draft of this object definition
+	 */
+	public boolean getEnableObjectEntryDraft();
+
+	/**
+	 * Returns <code>true</code> if this object definition is enable object entry draft.
+	 *
+	 * @return <code>true</code> if this object definition is enable object entry draft; <code>false</code> otherwise
+	 */
+	public boolean isEnableObjectEntryDraft();
+
+	/**
+	 * Sets whether this object definition is enable object entry draft.
+	 *
+	 * @param enableObjectEntryDraft the enable object entry draft of this object definition
+	 */
+	public void setEnableObjectEntryDraft(boolean enableObjectEntryDraft);
+
+	/**
+	 * Returns the enable object entry history of this object definition.
+	 *
+	 * @return the enable object entry history of this object definition
+	 */
+	public boolean getEnableObjectEntryHistory();
+
+	/**
+	 * Returns <code>true</code> if this object definition is enable object entry history.
+	 *
+	 * @return <code>true</code> if this object definition is enable object entry history; <code>false</code> otherwise
+	 */
+	public boolean isEnableObjectEntryHistory();
+
+	/**
+	 * Sets whether this object definition is enable object entry history.
+	 *
+	 * @param enableObjectEntryHistory the enable object entry history of this object definition
+	 */
+	public void setEnableObjectEntryHistory(boolean enableObjectEntryHistory);
+
+	/**
+	 * Returns the enable object entry versioning of this object definition.
+	 *
+	 * @return the enable object entry versioning of this object definition
+	 */
+	public boolean getEnableObjectEntryVersioning();
+
+	/**
+	 * Returns <code>true</code> if this object definition is enable object entry versioning.
+	 *
+	 * @return <code>true</code> if this object definition is enable object entry versioning; <code>false</code> otherwise
+	 */
+	public boolean isEnableObjectEntryVersioning();
+
+	/**
+	 * Sets whether this object definition is enable object entry versioning.
+	 *
+	 * @param enableObjectEntryVersioning the enable object entry versioning of this object definition
+	 */
+	public void setEnableObjectEntryVersioning(
+		boolean enableObjectEntryVersioning);
 
 	/**
 	 * Returns the label of this object definition.
@@ -443,147 +628,6 @@ public interface ObjectDefinitionModel
 	 * @param defaultLocale the default locale
 	 */
 	public void setLabelMap(Map<Locale, String> labelMap, Locale defaultLocale);
-
-	/**
-	 * Returns the class name of this object definition.
-	 *
-	 * @return the class name of this object definition
-	 */
-	@AutoEscape
-	public String getClassName();
-
-	/**
-	 * Sets the class name of this object definition.
-	 *
-	 * @param className the class name of this object definition
-	 */
-	public void setClassName(String className);
-
-	/**
-	 * Returns the enable categorization of this object definition.
-	 *
-	 * @return the enable categorization of this object definition
-	 */
-	public boolean getEnableCategorization();
-
-	/**
-	 * Returns <code>true</code> if this object definition is enable categorization.
-	 *
-	 * @return <code>true</code> if this object definition is enable categorization; <code>false</code> otherwise
-	 */
-	public boolean isEnableCategorization();
-
-	/**
-	 * Sets whether this object definition is enable categorization.
-	 *
-	 * @param enableCategorization the enable categorization of this object definition
-	 */
-	public void setEnableCategorization(boolean enableCategorization);
-
-	/**
-	 * Returns the enable comments of this object definition.
-	 *
-	 * @return the enable comments of this object definition
-	 */
-	public boolean getEnableComments();
-
-	/**
-	 * Returns <code>true</code> if this object definition is enable comments.
-	 *
-	 * @return <code>true</code> if this object definition is enable comments; <code>false</code> otherwise
-	 */
-	public boolean isEnableComments();
-
-	/**
-	 * Sets whether this object definition is enable comments.
-	 *
-	 * @param enableComments the enable comments of this object definition
-	 */
-	public void setEnableComments(boolean enableComments);
-
-	/**
-	 * Returns the enable index search of this object definition.
-	 *
-	 * @return the enable index search of this object definition
-	 */
-	public boolean getEnableIndexSearch();
-
-	/**
-	 * Returns <code>true</code> if this object definition is enable index search.
-	 *
-	 * @return <code>true</code> if this object definition is enable index search; <code>false</code> otherwise
-	 */
-	public boolean isEnableIndexSearch();
-
-	/**
-	 * Sets whether this object definition is enable index search.
-	 *
-	 * @param enableIndexSearch the enable index search of this object definition
-	 */
-	public void setEnableIndexSearch(boolean enableIndexSearch);
-
-	/**
-	 * Returns the enable localization of this object definition.
-	 *
-	 * @return the enable localization of this object definition
-	 */
-	public boolean getEnableLocalization();
-
-	/**
-	 * Returns <code>true</code> if this object definition is enable localization.
-	 *
-	 * @return <code>true</code> if this object definition is enable localization; <code>false</code> otherwise
-	 */
-	public boolean isEnableLocalization();
-
-	/**
-	 * Sets whether this object definition is enable localization.
-	 *
-	 * @param enableLocalization the enable localization of this object definition
-	 */
-	public void setEnableLocalization(boolean enableLocalization);
-
-	/**
-	 * Returns the enable object entry draft of this object definition.
-	 *
-	 * @return the enable object entry draft of this object definition
-	 */
-	public boolean getEnableObjectEntryDraft();
-
-	/**
-	 * Returns <code>true</code> if this object definition is enable object entry draft.
-	 *
-	 * @return <code>true</code> if this object definition is enable object entry draft; <code>false</code> otherwise
-	 */
-	public boolean isEnableObjectEntryDraft();
-
-	/**
-	 * Sets whether this object definition is enable object entry draft.
-	 *
-	 * @param enableObjectEntryDraft the enable object entry draft of this object definition
-	 */
-	public void setEnableObjectEntryDraft(boolean enableObjectEntryDraft);
-
-	/**
-	 * Returns the enable object entry history of this object definition.
-	 *
-	 * @return the enable object entry history of this object definition
-	 */
-	public boolean getEnableObjectEntryHistory();
-
-	/**
-	 * Returns <code>true</code> if this object definition is enable object entry history.
-	 *
-	 * @return <code>true</code> if this object definition is enable object entry history; <code>false</code> otherwise
-	 */
-	public boolean isEnableObjectEntryHistory();
-
-	/**
-	 * Sets whether this object definition is enable object entry history.
-	 *
-	 * @param enableObjectEntryHistory the enable object entry history of this object definition
-	 */
-	public void setEnableObjectEntryHistory(boolean enableObjectEntryHistory);
 
 	/**
 	 * Returns the modifiable of this object definition.

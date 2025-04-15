@@ -6,8 +6,8 @@
 import {Locator, Page} from '@playwright/test';
 
 import {clickAndExpectToBeHidden} from '../../../utils/clickAndExpectToBeHidden';
-import {expandSection} from '../../../utils/expandSection';
-import {waitForSuccessAlert} from '../../../utils/waitForSuccessAlert';
+import {openFieldset} from '../../../utils/openFieldset';
+import {waitForAlert} from '../../../utils/waitForAlert';
 import {BlogsPage} from './BlogsPage';
 
 import type {postTaxonomyVocabularyTaxonomyCategoryProps} from '../../../helpers/HeadlessAdminTaxonomyApiHelper';
@@ -43,35 +43,46 @@ export class BlogsEditBlogEntryPage {
 		await this.blogsPage.goToCreateBlogEntry();
 	}
 
+	private async editBlogEntryAddCategories({
+		categories,
+		vocabularyName,
+	}: editBlogEntryAddfriendlyUrlType) {
+		const fieldset = await openFieldset(this.page, 'Categorization');
+
+		await fieldset.getByLabel(`Select ${vocabularyName}`).click();
+
+		const categoriesSelectorIframe = await this.page.frameLocator(
+			`iframe[title="Select ${vocabularyName}"]`
+		);
+
+		for (const {name} of categories) {
+			await categoriesSelectorIframe
+				.locator('.treeview-item', {hasText: name})
+				.getByRole('checkbox')
+				.check();
+		}
+
+		await this.page.getByRole('button', {name: 'Done'}).click();
+	}
+
 	private async editBlogEntryAddfriendlyUrl({
 		categories,
 		vocabularyName,
 	}: editBlogEntryAddfriendlyUrlType) {
-		const fieldset = await this.page.locator(
-			'#_com_liferay_blogs_web_portlet_BlogsAdminPortlet_friendly-url'
-		);
+		await this.editBlogEntryAddCategories({
+			categories,
+			vocabularyName,
+		});
 
-		if (await fieldset.locator('.panel-body').isHidden()) {
-			await fieldset.getByRole('button', {name: 'Friendly URL'}).click();
-		}
+		const fieldset = await openFieldset(this.page, 'Friendly URL');
 
 		await fieldset.getByText('Use a Customized URL').click();
-		await fieldset.getByRole('button', {name: 'Select'}).click();
-
-		const categoriesSelectorIframe = await this.page.frameLocator(
-			'iframe[title="Filter by Categories"]'
-		);
-
-		await categoriesSelectorIframe.getByText(vocabularyName).click();
-
-		for (const {name} of categories) {
-			await categoriesSelectorIframe.getByText(name).click();
-		}
 
 		await this.page
-			.getByLabel('Filter by Categories')
-			.getByRole('button', {name: 'Select'})
-			.click();
+			.getByLabel('Available')
+			.selectOption(categories.map(({name}) => ({label: name})));
+
+		await this.page.getByLabel('Transfer Item Left to Right').click();
 	}
 
 	async editBlogEntry({
@@ -110,42 +121,59 @@ export class BlogsEditBlogEntryPage {
 
 	async publishBlogEntry() {
 		await this.publishButton.click();
-		await waitForSuccessAlert(this.page);
+		await waitForAlert(this.page);
+	}
+
+	async selectCoverImage(coverImageTitle) {
+		await this.page
+			.getByRole('button', {name: 'Select File'})
+			.first()
+			.click();
+
+		const itemSelectorDialog = await this.page.frameLocator(
+			'iframe[title="Select File"]'
+		);
+
+		await itemSelectorDialog
+			.getByRole('link', {name: 'Documents and Media'})
+			.click();
+
+		await itemSelectorDialog.getByText('Sites and Libraries').waitFor();
+
+		await itemSelectorDialog.getByText(coverImageTitle).click();
 	}
 
 	async selectSpecificDisplayPage(displayPageName: string) {
-		const displayPageFieldSet = this.page.locator('fieldset', {
-			hasText: 'Display Page',
-		});
+		const displayPageFieldSet = await openFieldset(
+			this.page,
+			'Display Page'
+		);
 
-		await expandSection(displayPageFieldSet);
 		await displayPageFieldSet
 			.getByLabel('Display Page Template')
 			.selectOption('Specific');
 		await displayPageFieldSet.getByRole('button', {name: 'Select'}).click();
-		const selectDisplayPageModal = await this.page.frameLocator(
+		const selectDisplayPageModal = this.page.frameLocator(
 			'iframe[title*="Select Page"]'
 		);
-		await this.page
-			.locator('.modal-title', {
-				hasText: 'Select Page',
-			})
-			.waitFor({
-				state: 'visible',
-			});
+
+		await selectDisplayPageModal
+			.locator('.card-type-asset')
+			.filter({hasText: displayPageName})
+			.click({trial: true});
 
 		await clickAndExpectToBeHidden({
 			target: this.page.locator('.modal-title', {
 				hasText: 'Select Page',
 			}),
-			trigger: selectDisplayPageModal.getByLabel(
-				'Select ' + displayPageName
-			),
+			trigger: selectDisplayPageModal
+				.locator('.card-type-asset')
+				.filter({hasText: displayPageName}),
 		});
 	}
 
 	async submitBlogEntryToWorkflow() {
 		await this.submitToWorkflowButton.click();
-		await waitForSuccessAlert(this.page);
+		await waitForAlert(this.page);
 	}
 }

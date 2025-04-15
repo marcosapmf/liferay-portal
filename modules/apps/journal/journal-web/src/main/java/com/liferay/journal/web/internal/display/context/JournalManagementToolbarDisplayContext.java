@@ -9,8 +9,8 @@ import com.liferay.asset.kernel.model.AssetCategory;
 import com.liferay.asset.kernel.model.AssetVocabulary;
 import com.liferay.asset.kernel.service.AssetCategoryServiceUtil;
 import com.liferay.asset.kernel.service.AssetVocabularyLocalService;
+import com.liferay.asset.tags.item.selector.AssetTagsItemSelectorCriterion;
 import com.liferay.asset.tags.item.selector.AssetTagsItemSelectorReturnType;
-import com.liferay.asset.tags.item.selector.criterion.AssetTagsItemSelectorCriterion;
 import com.liferay.depot.group.provider.SiteConnectedGroupGroupProvider;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.dynamic.data.mapping.util.comparator.StructureModifiedDateComparator;
@@ -548,12 +548,11 @@ public class JournalManagementToolbarDisplayContext
 		).setParameter(
 			"highlightedDDMStructureId",
 			() -> {
-				if (_journalDisplayContext.isHighlightedDDMStructure()) {
-					return _journalDisplayContext.
-						getHighlightedDDMStructureId();
+				if (!_journalDisplayContext.isHighlightedDDMStructure()) {
+					return null;
 				}
 
-				return null;
+				return _journalDisplayContext.getHighlightedDDMStructureId();
 			}
 		).buildString();
 	}
@@ -1237,11 +1236,7 @@ public class JournalManagementToolbarDisplayContext
 	}
 
 	private boolean _isShowPublishArticlesAction() {
-		if (_isShowPublishAction()) {
-			return true;
-		}
-
-		return false;
+		return _isShowPublishAction();
 	}
 
 	private boolean _isTrashEnabled() {

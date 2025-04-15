@@ -23,6 +23,7 @@ import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.search.web.internal.facet.display.context.BucketDisplayContext;
 import com.liferay.portal.search.web.internal.facet.display.context.ScopeSearchFacetDisplayContext;
 import com.liferay.portal.search.web.internal.site.facet.configuration.SiteFacetPortletInstanceConfiguration;
+import com.liferay.portal.search.web.internal.util.DisplayContextHelperUtil;
 import com.liferay.portal.search.web.internal.util.comparator.BucketDisplayContextComparatorFactoryUtil;
 
 import java.util.ArrayList;
@@ -150,6 +151,7 @@ public class ScopeSearchFacetDisplayContextBuilder {
 		bucketDisplayContext.setFilterValue(String.valueOf(groupId));
 		bucketDisplayContext.setFrequency(count);
 		bucketDisplayContext.setFrequencyVisible(_showCounts);
+		bucketDisplayContext.setLocale(_locale);
 		bucketDisplayContext.setSelected(selected);
 
 		return bucketDisplayContext;
@@ -176,14 +178,10 @@ public class ScopeSearchFacetDisplayContextBuilder {
 	}
 
 	protected long getDisplayStyleGroupId() {
-		long displayStyleGroupId =
-			_siteFacetPortletInstanceConfiguration.displayStyleGroupId();
-
-		if (displayStyleGroupId <= 0) {
-			displayStyleGroupId = _themeDisplay.getScopeGroupId();
-		}
-
-		return displayStyleGroupId;
+		return DisplayContextHelperUtil.getDisplayStyleGroupId(
+			_siteFacetPortletInstanceConfiguration.
+				displayStyleGroupExternalReferenceCode(),
+			_themeDisplay);
 	}
 
 	protected List<BucketDisplayContext>
@@ -221,11 +219,7 @@ public class ScopeSearchFacetDisplayContextBuilder {
 	}
 
 	protected boolean isNothingSelected() {
-		if (_selectedGroupIds.isEmpty()) {
-			return true;
-		}
-
-		return false;
+		return _selectedGroupIds.isEmpty();
 	}
 
 	protected boolean isRenderNothing() {
@@ -239,19 +233,11 @@ public class ScopeSearchFacetDisplayContextBuilder {
 
 		List<TermCollector> termCollectors = getTermCollectors();
 
-		if (!termCollectors.isEmpty()) {
-			return false;
-		}
-
-		return true;
+		return termCollectors.isEmpty();
 	}
 
 	protected boolean isSelected(Long groupId) {
-		if (_selectedGroupIds.contains(groupId)) {
-			return true;
-		}
-
-		return false;
+		return _selectedGroupIds.contains(groupId);
 	}
 
 	private List<BucketDisplayContext> _buildBucketDisplayContexts(

@@ -521,6 +521,15 @@ public class ContactsEngineClientImpl
 	}
 
 	@Override
+	public void disconnectDataSources(FaroProject faroProject)
+		throws FaroEngineClientException {
+
+		post(
+			faroProject, Rels.DATA_SOURCE_DISCONNECT_ALL, null, Void.class,
+			getUriVariables(faroProject));
+	}
+
+	@Override
 	public <T> T get(
 			FaroProject faroProject, Map<String, String> headers, String path,
 			Map<String, List<String>> queryParameters, Class<T> responseType)
@@ -2209,11 +2218,13 @@ public class ContactsEngineClientImpl
 
 	@Override
 	public Results<String> getInterestKeywords(
-		FaroProject faroProject, String query, int cur, int delta) {
+		String channelId, FaroProject faroProject, String query, int cur,
+		int delta) {
 
 		Map<String, Object> uriVariables = getUriVariables(
 			faroProject, cur, delta, null);
 
+		uriVariables.put("channelId", channelId);
 		uriVariables.put("name", query);
 
 		PagedModel<?, String> pagedModel = get(

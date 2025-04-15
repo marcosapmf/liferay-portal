@@ -1,17 +1,24 @@
 @component-name = "portal-publications"
 definition {
 
+	property custom.properties = "feature.flag.LPD-35013=false";
 	property osgi.module.configuration.file.names = "com.liferay.change.tracking.configuration.CTSettingsConfiguration.config";
 	property osgi.module.configurations = "enabled=B\"true\"";
-	property portal.release = "true";
+	property osgi.modules.includes = "wiki";
+	property portal.release = "false";
 	property portal.upstream = "true";
-	property testray.component.names = "Wiki";
 	property testray.main.component.name = "Publications";
 
 	setUp {
 		TestCase.setUpPortalInstance();
 
 		User.firstLoginPG();
+
+		WikiPortlet.enableWiki();
+
+		task ("Enable dynamic and manual selection") {
+			AssetPublisherPortlet.enableDynamicAndManualSelection();
+		}
 	}
 
 	tearDown {
@@ -356,9 +363,7 @@ definition {
 	@description = "Assert that the search results shows only wiki pages from the active publication"
 	@priority = 3
 	test ViewSearchResultsFromActivePublication {
-		ProductMenu.gotoPortlet(
-			category = "Content & Data",
-			portlet = "Wiki");
+		WikiNavigator.openWikiAdmin(siteURLKey = "guest");
 
 		WikiNode.addCP(wikiNodeName = "Wiki Node");
 

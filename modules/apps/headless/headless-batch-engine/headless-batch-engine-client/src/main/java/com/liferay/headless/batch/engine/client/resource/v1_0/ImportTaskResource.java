@@ -84,29 +84,37 @@ public interface ImportTaskResource {
 		throws Exception;
 
 	public ImportTask postImportTask(
-			String className, String callbackURL, String createStrategy,
-			String externalReferenceCode, String fieldNameMapping,
-			String importStrategy, String taskItemDelegateName, Object object)
+			String className, String batchExternalReferenceCode,
+			String batchRestrictFields, String callbackURL,
+			String createStrategy, String externalReferenceCode,
+			String fieldNameMapping, String importStrategy,
+			String taskItemDelegateName, Object object)
 		throws Exception;
 
 	public HttpInvoker.HttpResponse postImportTaskHttpResponse(
-			String className, String callbackURL, String createStrategy,
-			String externalReferenceCode, String fieldNameMapping,
-			String importStrategy, String taskItemDelegateName, Object object)
+			String className, String batchExternalReferenceCode,
+			String batchRestrictFields, String callbackURL,
+			String createStrategy, String externalReferenceCode,
+			String fieldNameMapping, String importStrategy,
+			String taskItemDelegateName, Object object)
 		throws Exception;
 
 	public ImportTask postFormDataImportTask(
-			String className, String callbackURL, String createStrategy,
-			String externalReferenceCode, String fieldNameMapping,
-			String importStrategy, String taskItemDelegateName,
-			ImportTask importTask, Map<String, File> multipartFiles)
+			String className, String batchExternalReferenceCode,
+			String batchRestrictFields, String callbackURL,
+			String createStrategy, String externalReferenceCode,
+			String fieldNameMapping, String importStrategy,
+			String taskItemDelegateName, ImportTask importTask,
+			Map<String, File> multipartFiles)
 		throws Exception;
 
 	public HttpInvoker.HttpResponse postFormDataImportTaskHttpResponse(
-			String className, String callbackURL, String createStrategy,
-			String externalReferenceCode, String fieldNameMapping,
-			String importStrategy, String taskItemDelegateName,
-			ImportTask importTask, Map<String, File> multipartFiles)
+			String className, String batchExternalReferenceCode,
+			String batchRestrictFields, String callbackURL,
+			String createStrategy, String externalReferenceCode,
+			String fieldNameMapping, String importStrategy,
+			String taskItemDelegateName, ImportTask importTask,
+			Map<String, File> multipartFiles)
 		throws Exception;
 
 	public ImportTask putImportTask(
@@ -251,8 +259,8 @@ public interface ImportTaskResource {
 		private Map<String, String> _headers = new LinkedHashMap<>();
 		private String _host = "localhost";
 		private Locale _locale;
-		private String _login = "";
-		private String _password = "";
+		private String _login;
+		private String _password;
 		private Map<String, String> _parameters = new LinkedHashMap<>();
 		private int _port = 8080;
 		private String _scheme = "http";
@@ -361,8 +369,10 @@ public interface ImportTaskResource {
 
 			httpInvoker.path("externalReferenceCode", externalReferenceCode);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
@@ -456,8 +466,10 @@ public interface ImportTaskResource {
 
 			httpInvoker.path("externalReferenceCode", externalReferenceCode);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
@@ -551,8 +563,10 @@ public interface ImportTaskResource {
 
 			httpInvoker.path("externalReferenceCode", externalReferenceCode);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
@@ -685,8 +699,10 @@ public interface ImportTaskResource {
 
 			httpInvoker.path("className", className);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
@@ -828,21 +844,25 @@ public interface ImportTaskResource {
 
 			httpInvoker.path("className", className);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
 
 		public ImportTask postImportTask(
-				String className, String callbackURL, String createStrategy,
-				String externalReferenceCode, String fieldNameMapping,
-				String importStrategy, String taskItemDelegateName,
-				Object object)
+				String className, String batchExternalReferenceCode,
+				String batchRestrictFields, String callbackURL,
+				String createStrategy, String externalReferenceCode,
+				String fieldNameMapping, String importStrategy,
+				String taskItemDelegateName, Object object)
 			throws Exception {
 
 			HttpInvoker.HttpResponse httpResponse = postImportTaskHttpResponse(
-				className, callbackURL, createStrategy, externalReferenceCode,
+				className, batchExternalReferenceCode, batchRestrictFields,
+				callbackURL, createStrategy, externalReferenceCode,
 				fieldNameMapping, importStrategy, taskItemDelegateName, object);
 
 			String content = httpResponse.getContent();
@@ -905,10 +925,11 @@ public interface ImportTaskResource {
 		}
 
 		public HttpInvoker.HttpResponse postImportTaskHttpResponse(
-				String className, String callbackURL, String createStrategy,
-				String externalReferenceCode, String fieldNameMapping,
-				String importStrategy, String taskItemDelegateName,
-				Object object)
+				String className, String batchExternalReferenceCode,
+				String batchRestrictFields, String callbackURL,
+				String createStrategy, String externalReferenceCode,
+				String fieldNameMapping, String importStrategy,
+				String taskItemDelegateName, Object object)
 			throws Exception {
 
 			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
@@ -933,6 +954,17 @@ public interface ImportTaskResource {
 			}
 
 			httpInvoker.httpMethod(HttpInvoker.HttpMethod.POST);
+
+			if (batchExternalReferenceCode != null) {
+				httpInvoker.parameter(
+					"batchExternalReferenceCode",
+					String.valueOf(batchExternalReferenceCode));
+			}
+
+			if (batchRestrictFields != null) {
+				httpInvoker.parameter(
+					"batchRestrictFields", String.valueOf(batchRestrictFields));
+			}
 
 			if (callbackURL != null) {
 				httpInvoker.parameter(
@@ -973,24 +1005,29 @@ public interface ImportTaskResource {
 
 			httpInvoker.path("className", className);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
 
 		public ImportTask postFormDataImportTask(
-				String className, String callbackURL, String createStrategy,
-				String externalReferenceCode, String fieldNameMapping,
-				String importStrategy, String taskItemDelegateName,
-				ImportTask importTask, Map<String, File> multipartFiles)
+				String className, String batchExternalReferenceCode,
+				String batchRestrictFields, String callbackURL,
+				String createStrategy, String externalReferenceCode,
+				String fieldNameMapping, String importStrategy,
+				String taskItemDelegateName, ImportTask importTask,
+				Map<String, File> multipartFiles)
 			throws Exception {
 
 			HttpInvoker.HttpResponse httpResponse =
 				postFormDataImportTaskHttpResponse(
-					className, callbackURL, createStrategy,
-					externalReferenceCode, fieldNameMapping, importStrategy,
-					taskItemDelegateName, importTask, multipartFiles);
+					className, batchExternalReferenceCode, batchRestrictFields,
+					callbackURL, createStrategy, externalReferenceCode,
+					fieldNameMapping, importStrategy, taskItemDelegateName,
+					importTask, multipartFiles);
 
 			String content = httpResponse.getContent();
 
@@ -1052,10 +1089,12 @@ public interface ImportTaskResource {
 		}
 
 		public HttpInvoker.HttpResponse postFormDataImportTaskHttpResponse(
-				String className, String callbackURL, String createStrategy,
-				String externalReferenceCode, String fieldNameMapping,
-				String importStrategy, String taskItemDelegateName,
-				ImportTask importTask, Map<String, File> multipartFiles)
+				String className, String batchExternalReferenceCode,
+				String batchRestrictFields, String callbackURL,
+				String createStrategy, String externalReferenceCode,
+				String fieldNameMapping, String importStrategy,
+				String taskItemDelegateName, ImportTask importTask,
+				Map<String, File> multipartFiles)
 			throws Exception {
 
 			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
@@ -1086,6 +1125,17 @@ public interface ImportTaskResource {
 			}
 
 			httpInvoker.httpMethod(HttpInvoker.HttpMethod.POST);
+
+			if (batchExternalReferenceCode != null) {
+				httpInvoker.parameter(
+					"batchExternalReferenceCode",
+					String.valueOf(batchExternalReferenceCode));
+			}
+
+			if (batchRestrictFields != null) {
+				httpInvoker.parameter(
+					"batchRestrictFields", String.valueOf(batchRestrictFields));
+			}
 
 			if (callbackURL != null) {
 				httpInvoker.parameter(
@@ -1126,8 +1176,10 @@ public interface ImportTaskResource {
 
 			httpInvoker.path("className", className);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
@@ -1266,8 +1318,10 @@ public interface ImportTaskResource {
 
 			httpInvoker.path("className", className);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
@@ -1414,8 +1468,10 @@ public interface ImportTaskResource {
 
 			httpInvoker.path("className", className);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
@@ -1515,8 +1571,10 @@ public interface ImportTaskResource {
 
 			httpInvoker.path("importTaskId", importTaskId);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
@@ -1605,8 +1663,10 @@ public interface ImportTaskResource {
 
 			httpInvoker.path("importTaskId", importTaskId);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
@@ -1697,8 +1757,10 @@ public interface ImportTaskResource {
 
 			httpInvoker.path("importTaskId", importTaskId);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}

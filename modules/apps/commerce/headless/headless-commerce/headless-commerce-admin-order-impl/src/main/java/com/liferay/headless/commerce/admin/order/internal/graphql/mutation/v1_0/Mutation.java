@@ -35,8 +35,6 @@ import com.liferay.headless.commerce.admin.order.resource.v1_0.TermOrderTypeReso
 import com.liferay.headless.commerce.admin.order.resource.v1_0.TermResource;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.function.UnsafeFunction;
-import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
@@ -268,6 +266,19 @@ public class Mutation {
 			_orderResourceComponentServiceObjects,
 			this::_populateResourceContext,
 			orderResource -> orderResource.patchOrderByExternalReferenceCode(
+				externalReferenceCode, order));
+	}
+
+	@GraphQLField
+	public Order updateOrderByExternalReferenceCode(
+			@GraphQLName("externalReferenceCode") String externalReferenceCode,
+			@GraphQLName("order") Order order)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_orderResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			orderResource -> orderResource.putOrderByExternalReferenceCode(
 				externalReferenceCode, order));
 	}
 
@@ -640,6 +651,20 @@ public class Mutation {
 			this::_populateResourceContext,
 			orderRuleResource ->
 				orderRuleResource.patchOrderRuleByExternalReferenceCode(
+					externalReferenceCode, orderRule));
+	}
+
+	@GraphQLField
+	public OrderRule updateOrderRuleByExternalReferenceCode(
+			@GraphQLName("externalReferenceCode") String externalReferenceCode,
+			@GraphQLName("orderRule") OrderRule orderRule)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_orderRuleResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			orderRuleResource ->
+				orderRuleResource.putOrderRuleByExternalReferenceCode(
 					externalReferenceCode, orderRule));
 	}
 
@@ -1062,6 +1087,20 @@ public class Mutation {
 	}
 
 	@GraphQLField
+	public OrderType updateOrderTypeByExternalReferenceCode(
+			@GraphQLName("externalReferenceCode") String externalReferenceCode,
+			@GraphQLName("orderType") OrderType orderType)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_orderTypeResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			orderTypeResource ->
+				orderTypeResource.putOrderTypeByExternalReferenceCode(
+					externalReferenceCode, orderType));
+	}
+
+	@GraphQLField
 	public boolean deleteOrderType(@GraphQLName("id") Long id)
 		throws Exception {
 
@@ -1266,6 +1305,19 @@ public class Mutation {
 			_termResourceComponentServiceObjects,
 			this::_populateResourceContext,
 			termResource -> termResource.patchTermByExternalReferenceCode(
+				externalReferenceCode, term));
+	}
+
+	@GraphQLField
+	public Term updateTermByExternalReferenceCode(
+			@GraphQLName("externalReferenceCode") String externalReferenceCode,
+			@GraphQLName("term") Term term)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_termResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			termResource -> termResource.putTermByExternalReferenceCode(
 				externalReferenceCode, term));
 	}
 
@@ -1719,12 +1771,15 @@ public class Mutation {
 
 	private AcceptLanguage _acceptLanguage;
 	private com.liferay.portal.kernel.model.Company _company;
-	private BiFunction<Object, String, Filter> _filterBiFunction;
+	private BiFunction
+		<Object, String, com.liferay.portal.kernel.search.filter.Filter>
+			_filterBiFunction;
 	private GroupLocalService _groupLocalService;
 	private HttpServletRequest _httpServletRequest;
 	private HttpServletResponse _httpServletResponse;
 	private RoleLocalService _roleLocalService;
-	private BiFunction<Object, String, Sort[]> _sortsBiFunction;
+	private BiFunction<Object, String, com.liferay.portal.kernel.search.Sort[]>
+		_sortsBiFunction;
 	private UriInfo _uriInfo;
 	private com.liferay.portal.kernel.model.User _user;
 	private VulcanBatchEngineExportTaskResource

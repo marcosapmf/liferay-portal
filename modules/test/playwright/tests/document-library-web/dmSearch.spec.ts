@@ -7,18 +7,24 @@ import {expect, mergeTests} from '@playwright/test';
 
 import {documentLibraryPagesTest} from '../../fixtures/documentLibraryPages.fixtures';
 import {featureFlagsTest} from '../../fixtures/featureFlagsTest';
+import {isolatedSiteTest} from '../../fixtures/isolatedSiteTest';
 import {loginTest} from '../../fixtures/loginTest';
 
-export const test = mergeTests(
-	loginTest(),
+const test = mergeTests(
+	documentLibraryPagesTest,
 	featureFlagsTest({
-		'LPD-11313': true,
+		'LPD-11313': {enabled: true},
 	}),
-	documentLibraryPagesTest
+	isolatedSiteTest,
+	loginTest()
 );
 
-test('LPD-6878 DM Search bar hint', async ({documentLibraryPage, page}) => {
-	await documentLibraryPage.goto();
+test(
+	'DM Search bar hint',
+	{tag: '@LPD-6878'},
+	async ({documentLibraryPage, page, site}) => {
+		await documentLibraryPage.goto(site.friendlyUrlPath);
 
-	await expect(page.getByPlaceholder('Search')).toBeVisible();
-});
+		await expect(page.getByPlaceholder('Search')).toBeVisible();
+	}
+);

@@ -54,7 +54,7 @@ SearchBarPortletDisplayContext searchBarPortletDisplayContext = (SearchBarPortle
 		</div>
 	</c:when>
 	<c:otherwise>
-		<form action="<%= searchBarPortletDisplayContext.getSearchURL() %>" id="<%= randomNamespace %>fm" method="get" name="<%= randomNamespace %>fm">
+		<form action="<%= HtmlUtil.escapeAttribute(searchBarPortletDisplayContext.getSearchURL()) %>" id="<%= randomNamespace %>fm" method="get" name="<%= randomNamespace %>fm">
 			<c:if test="<%= !Validator.isBlank(searchBarPortletDisplayContext.getPaginationStartParameterName()) %>">
 				<input class="search-bar-reset-start-page" name="<%= searchBarPortletDisplayContext.getPaginationStartParameterName() %>" type="hidden" value="0" />
 			</c:if>
@@ -80,7 +80,7 @@ SearchBarPortletDisplayContext searchBarPortletDisplayContext = (SearchBarPortle
 					<c:when test="<%= searchBarPortletDisplayContext.isSuggestionsEnabled() %>">
 						<div id="<portlet:namespace />reactSearchBar">
 							<react:component
-								module="{ReactSearchBar} from portal-search-web"
+								module="{ReactSearchBar} from portal-search-web/search-bar"
 								props='<%=
 									HashMapBuilder.<String, Object>put(
 										"destinationFriendlyURL", searchBarPortletDisplayContext.getDestinationFriendlyURL()
@@ -185,7 +185,7 @@ SearchBarPortletDisplayContext searchBarPortletDisplayContext = (SearchBarPortle
 					"retainFacetSelections", searchBarPortletDisplayContext.isRetainFacetSelections()
 				).build()
 			%>'
-			module="{SearchBar} from portal-search-web"
+			module="{SearchBar} from portal-search-web/search-bar"
 		/>
 	</c:otherwise>
 </c:choose>

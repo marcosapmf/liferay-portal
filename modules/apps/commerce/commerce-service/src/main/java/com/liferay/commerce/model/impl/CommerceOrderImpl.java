@@ -8,6 +8,7 @@ package com.liferay.commerce.model.impl;
 import com.liferay.account.constants.AccountConstants;
 import com.liferay.account.model.AccountEntry;
 import com.liferay.account.service.AccountEntryLocalServiceUtil;
+import com.liferay.commerce.constants.CommerceConstants;
 import com.liferay.commerce.constants.CommerceOrderConstants;
 import com.liferay.commerce.currency.model.CommerceCurrency;
 import com.liferay.commerce.currency.model.CommerceMoney;
@@ -22,9 +23,16 @@ import com.liferay.commerce.service.CommerceOrderItemLocalServiceUtil;
 import com.liferay.commerce.service.CommerceShippingMethodLocalServiceUtil;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.model.Repository;
+import com.liferay.portal.kernel.repository.LocalRepository;
+import com.liferay.portal.kernel.repository.RepositoryProviderUtil;
+import com.liferay.portal.kernel.repository.model.FileEntry;
+import com.liferay.portal.kernel.repository.model.Folder;
+import com.liferay.portal.kernel.service.RepositoryLocalServiceUtil;
 
 import java.math.BigDecimal;
 
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -47,15 +55,52 @@ public class CommerceOrderImpl extends CommerceOrderBaseImpl {
 	}
 
 	@Override
+	public List<FileEntry> getAttachmentFileEntries(int start, int end)
+		throws PortalException {
+
+		LocalRepository localRepository = getLocalRepository();
+
+		if (localRepository == null) {
+			return Collections.emptyList();
+		}
+
+		Folder folder = getFolder(localRepository);
+
+		if (folder == null) {
+			return Collections.emptyList();
+		}
+
+		return localRepository.getFileEntries(
+			folder.getFolderId(), start, end, null);
+	}
+
+	@Override
+	public int getAttachmentFileEntriesCount() throws PortalException {
+		LocalRepository localRepository = getLocalRepository();
+
+		if (localRepository == null) {
+			return 0;
+		}
+
+		Folder folder = getFolder(localRepository);
+
+		if (folder == null) {
+			return 0;
+		}
+
+		return localRepository.getFileEntriesCount(folder.getFolderId());
+	}
+
+	@Override
 	public CommerceAddress getBillingAddress() throws PortalException {
 		long billingAddressId = getBillingAddressId();
 
-		if (billingAddressId > 0) {
-			return CommerceAddressLocalServiceUtil.fetchCommerceAddress(
-				getBillingAddressId());
+		if (billingAddressId <= 0) {
+			return null;
 		}
 
-		return null;
+		return CommerceAddressLocalServiceUtil.fetchCommerceAddress(
+			getBillingAddressId());
 	}
 
 	@Override
@@ -72,7 +117,7 @@ public class CommerceOrderImpl extends CommerceOrderBaseImpl {
 	@Override
 	public CommerceCurrency getCommerceCurrency() throws PortalException {
 		return CommerceCurrencyLocalServiceUtil.getCommerceCurrency(
-			getCommerceCurrencyId());
+			getCompanyId(), getCommerceCurrencyCode());
 	}
 
 	@Override
@@ -100,12 +145,12 @@ public class CommerceOrderImpl extends CommerceOrderBaseImpl {
 
 		long commerceShippingMethodId = getCommerceShippingMethodId();
 
-		if (commerceShippingMethodId > 0) {
-			return CommerceShippingMethodLocalServiceUtil.
-				getCommerceShippingMethod(commerceShippingMethodId);
+		if (commerceShippingMethodId <= 0) {
+			return null;
 		}
 
-		return null;
+		return CommerceShippingMethodLocalServiceUtil.getCommerceShippingMethod(
+			commerceShippingMethodId);
 	}
 
 	@Override
@@ -118,6 +163,29 @@ public class CommerceOrderImpl extends CommerceOrderBaseImpl {
 	public int getCustomerCommerceOrderIdsCount() {
 		return CommerceOrderItemLocalServiceUtil.
 			getCustomerCommerceOrderIdsCount(getCommerceOrderId());
+	}
+
+	@Override
+	public Folder getFolder(LocalRepository localRepository) {
+		if (localRepository == null) {
+			return null;
+		}
+
+		return localRepository.fetchFolderByExternalReferenceCode(
+			"order-" + getCommerceOrderId());
+	}
+
+	@Override
+	public LocalRepository getLocalRepository() throws PortalException {
+		Repository repository = RepositoryLocalServiceUtil.fetchRepository(
+			getGroupId(), CommerceConstants.SERVICE_NAME_COMMERCE_ORDER);
+
+		if (repository == null) {
+			return null;
+		}
+
+		return RepositoryProviderUtil.getLocalRepository(
+			repository.getRepositoryId());
 	}
 
 	@Override
@@ -135,18 +203,18 @@ public class CommerceOrderImpl extends CommerceOrderBaseImpl {
 	public CommerceAddress getShippingAddress() throws PortalException {
 		long shippingAddressId = getShippingAddressId();
 
-		if (shippingAddressId > 0) {
-			return CommerceAddressLocalServiceUtil.fetchCommerceAddress(
-				getShippingAddressId());
+		if (shippingAddressId <= 0) {
+			return null;
 		}
 
-		return null;
+		return CommerceAddressLocalServiceUtil.fetchCommerceAddress(
+			getShippingAddressId());
 	}
 
 	@Override
 	public CommerceMoney getShippingMoney() throws PortalException {
 		return CommerceMoneyFactoryUtil.create(
-			getCommerceCurrencyId(), getShippingAmount());
+			getCommerceCurrency(), getShippingAmount());
 	}
 
 	@Override
@@ -154,13 +222,13 @@ public class CommerceOrderImpl extends CommerceOrderBaseImpl {
 		throws PortalException {
 
 		return CommerceMoneyFactoryUtil.create(
-			getCommerceCurrencyId(), getShippingWithTaxAmount());
+			getCommerceCurrency(), getShippingWithTaxAmount());
 	}
 
 	@Override
 	public CommerceMoney getSubtotalMoney() throws PortalException {
 		return CommerceMoneyFactoryUtil.create(
-			getCommerceCurrencyId(), getSubtotal());
+			getCommerceCurrency(), getSubtotal());
 	}
 
 	@Override
@@ -168,7 +236,7 @@ public class CommerceOrderImpl extends CommerceOrderBaseImpl {
 		throws PortalException {
 
 		return CommerceMoneyFactoryUtil.create(
-			getCommerceCurrencyId(), getSubtotalWithTaxAmount());
+			getCommerceCurrency(), getSubtotalWithTaxAmount());
 	}
 
 	@Override
@@ -186,13 +254,13 @@ public class CommerceOrderImpl extends CommerceOrderBaseImpl {
 	@Override
 	public CommerceMoney getTotalMoney() throws PortalException {
 		return CommerceMoneyFactoryUtil.create(
-			getCommerceCurrencyId(), getTotal());
+			getCommerceCurrency(), getTotal());
 	}
 
 	@Override
 	public CommerceMoney getTotalWithTaxAmountMoney() throws PortalException {
 		return CommerceMoneyFactoryUtil.create(
-			getCommerceCurrencyId(), getTotalWithTaxAmount());
+			getCommerceCurrency(), getTotalWithTaxAmount());
 	}
 
 	@Override
@@ -219,11 +287,7 @@ public class CommerceOrderImpl extends CommerceOrderBaseImpl {
 	public boolean isGuestOrder() throws PortalException {
 		AccountEntry accountEntry = getAccountEntry();
 
-		if (accountEntry.isGuestAccount()) {
-			return true;
-		}
-
-		return false;
+		return accountEntry.isGuestAccount();
 	}
 
 	@Override
@@ -269,11 +333,7 @@ public class CommerceOrderImpl extends CommerceOrderBaseImpl {
 
 		CommerceOrderItem commerceOrderItem = commerceOrderItems.get(0);
 
-		if (commerceOrderItem.isSubscription()) {
-			return true;
-		}
-
-		return false;
+		return commerceOrderItem.isSubscription();
 	}
 
 	@Override

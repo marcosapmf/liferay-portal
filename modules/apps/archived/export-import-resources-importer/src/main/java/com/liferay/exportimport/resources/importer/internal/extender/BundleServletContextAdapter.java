@@ -222,18 +222,20 @@ public class BundleServletContextAdapter
 	public InputStream getResourceAsStream(String name) {
 		URL url = getResource(name);
 
-		if (url != null) {
-			try {
-				return url.openStream();
-			}
-			catch (IOException ioException) {
-				if (_log.isDebugEnabled()) {
-					_log.debug("Unable to open resource: " + name, ioException);
-				}
-			}
+		if (url == null) {
+			return null;
 		}
 
-		return null;
+		try {
+			return url.openStream();
+		}
+		catch (IOException ioException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug("Unable to open resource: " + name, ioException);
+			}
+
+			return null;
+		}
 	}
 
 	@Override
@@ -314,7 +316,9 @@ public class BundleServletContextAdapter
 	}
 
 	@Override
-	public void setSessionTrackingModes(Set<SessionTrackingMode> set) {
+	public void setSessionTrackingModes(
+		Set<SessionTrackingMode> sessionTrackingModes) {
+
 		throw new UnsupportedOperationException();
 	}
 

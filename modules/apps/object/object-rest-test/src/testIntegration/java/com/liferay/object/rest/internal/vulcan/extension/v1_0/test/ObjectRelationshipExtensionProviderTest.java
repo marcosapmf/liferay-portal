@@ -8,6 +8,7 @@ package com.liferay.object.rest.internal.vulcan.extension.v1_0.test;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.headless.admin.user.dto.v1_0.UserAccount;
 import com.liferay.object.constants.ObjectDefinitionConstants;
+import com.liferay.object.constants.ObjectEntryFolderConstants;
 import com.liferay.object.constants.ObjectRelationshipConstants;
 import com.liferay.object.field.util.ObjectFieldUtil;
 import com.liferay.object.model.ObjectDefinition;
@@ -80,6 +81,7 @@ public class ObjectRelationshipExtensionProviderTest {
 
 		ObjectDefinition userSystemObjectDefinition =
 			_objectDefinitionLocalService.fetchSystemObjectDefinition(
+				TestPropsValues.getCompanyId(),
 				_userSystemObjectDefinitionManager.getName());
 
 		_user = TestPropsValues.getUser();
@@ -89,7 +91,7 @@ public class ObjectRelationshipExtensionProviderTest {
 				null, _user.getUserId(),
 				_objectDefinition.getObjectDefinitionId(),
 				userSystemObjectDefinition.getObjectDefinitionId(), 0,
-				ObjectRelationshipConstants.DELETION_TYPE_PREVENT,
+				ObjectRelationshipConstants.DELETION_TYPE_PREVENT, false,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				StringUtil.randomId(), false,
 				ObjectRelationshipConstants.TYPE_MANY_TO_MANY, null);
@@ -200,6 +202,8 @@ public class ObjectRelationshipExtensionProviderTest {
 		return ObjectEntryLocalServiceUtil.addObjectEntry(
 			TestPropsValues.getUserId(), 0,
 			_objectDefinition.getObjectDefinitionId(),
+			ObjectEntryFolderConstants.PARENT_OBJECT_ENTRY_FOLDER_ID_DEFAULT,
+			null,
 			HashMapBuilder.<String, Serializable>put(
 				_OBJECT_FIELD_NAME, objectFieldValue
 			).build(),
@@ -210,7 +214,7 @@ public class ObjectRelationshipExtensionProviderTest {
 		String nestedFieldName) {
 
 		return new NestedFieldsContext(
-			1, Collections.singletonList(nestedFieldName), null, null, null,
+			1, null, Collections.singletonList(nestedFieldName), null, null,
 			null);
 	}
 
@@ -220,12 +224,14 @@ public class ObjectRelationshipExtensionProviderTest {
 
 		ObjectDefinition objectDefinition =
 			_objectDefinitionLocalService.addCustomObjectDefinition(
-				TestPropsValues.getUserId(), 0, false, true, false, false,
+				TestPropsValues.getUserId(), 0, null, false, false, true, false,
+				false, false,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				ObjectDefinitionTestUtil.getRandomName(), null, null,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				true, ObjectDefinitionConstants.SCOPE_COMPANY,
-				ObjectDefinitionConstants.STORAGE_TYPE_DEFAULT, objectFields);
+				ObjectDefinitionConstants.STORAGE_TYPE_DEFAULT,
+				Collections.emptyList(), objectFields);
 
 		return _objectDefinitionLocalService.publishCustomObjectDefinition(
 			TestPropsValues.getUserId(),

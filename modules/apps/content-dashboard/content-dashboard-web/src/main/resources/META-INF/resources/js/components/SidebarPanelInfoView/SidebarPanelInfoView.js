@@ -10,6 +10,7 @@ import ClayLabel from '@clayui/label';
 import ClayLayout from '@clayui/layout';
 import ClaySticker from '@clayui/sticker';
 import ClayTabs from '@clayui/tabs';
+import {AnalyticsReports} from '@liferay/analytics-reports-js-components-web';
 import classNames from 'classnames';
 import PropTypes from 'prop-types';
 import React, {useCallback, useState} from 'react';
@@ -24,10 +25,12 @@ import VersionsContent from './VersionsContent';
 const TABS = {
 	categorization: 1,
 	details: 0,
-	version: 2,
+	performance: 2,
+	version: 3,
 };
 
 const SidebarPanelInfoView = ({
+	contentPerformanceDataFetchURL,
 	classPK,
 	createDate,
 	description,
@@ -62,7 +65,13 @@ const SidebarPanelInfoView = ({
 	const hasCategorization =
 		!!tags.length || !!Object.keys(vocabularies).length;
 
-	const showTabs = !!getItemVersionsURL || hasCategorization;
+	const hasPerformanceTab =
+		type === 'Blogs Entry' ||
+		type === 'Document' ||
+		type === 'Web Content Article';
+
+	const showTabs =
+		!!getItemVersionsURL || hasCategorization || hasPerformanceTab;
 
 	const allTabs = !!getItemVersionsURL && hasCategorization;
 
@@ -199,6 +208,19 @@ const SidebarPanelInfoView = ({
 							</ClayTabs.Item>
 						)}
 
+						<ClayTabs.Item
+							active={activeTabKeyValue === TABS.performance}
+							className="flex-shrink-0"
+							innerProps={{
+								'aria-controls': 'performance',
+							}}
+							onClick={() =>
+								setActiveTabKeyValue(TABS.performance)
+							}
+						>
+							{Liferay.Language.get('performance')}
+						</ClayTabs.Item>
+
 						{!!getItemVersionsURL && !hasCategorization && (
 							<ClayTabs.Item
 								active={activeTabKeyValue === TABS.version}
@@ -247,7 +269,7 @@ const SidebarPanelInfoView = ({
 				<div>
 					<ClayTabs.Content activeIndex={activeTabKeyValue} fade>
 						<ClayTabs.TabPane
-							aria-labelledby="tab-1"
+							aria-labelledby={`tab-${TABS.details}`}
 							className="flex-shrink-0"
 						>
 							<DetailsContent
@@ -265,23 +287,35 @@ const SidebarPanelInfoView = ({
 							/>
 						</ClayTabs.TabPane>
 
-						{hasCategorization &&
-							showTabs &&
-							activeTabKeyValue === TABS.categorization && (
-								<ClayTabs.TabPane
-									aria-labelledby="tab-2"
-									className="flex-shrink-0"
-								>
-									<Categorization
-										tags={tags}
-										vocabularies={vocabularies}
-									/>
-								</ClayTabs.TabPane>
-							)}
-
-						{showTabs && activeTabKeyValue === TABS.version && (
+						{hasCategorization && showTabs && (
 							<ClayTabs.TabPane
-								aria-labelledby="tab-2"
+								aria-labelledby={`tab-${TABS.categorization}`}
+								className="flex-shrink-0"
+							>
+								<Categorization
+									tags={tags}
+									vocabularies={vocabularies}
+								/>
+							</ClayTabs.TabPane>
+						)}
+
+						{showTabs && (
+							<ClayTabs.TabPane
+								aria-labelledby={`tab-${TABS.performance}`}
+								className="flex-shrink-0"
+							>
+								<AnalyticsReports
+									contentPerformanceDataFetchURL={
+										contentPerformanceDataFetchURL
+									}
+									getItemVersionsURL={getItemVersionsURL}
+								/>
+							</ClayTabs.TabPane>
+						)}
+
+						{showTabs && (
+							<ClayTabs.TabPane
+								aria-labelledby={`tab-${TABS.version}`}
 								className="flex-shrink-0"
 							>
 								<VersionsContent

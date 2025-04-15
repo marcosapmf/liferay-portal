@@ -28,6 +28,7 @@ import com.liferay.exportimport.kernel.exception.LARFileException;
 import com.liferay.exportimport.kernel.exception.LARFileSizeException;
 import com.liferay.exportimport.kernel.exception.LARTypeException;
 import com.liferay.exportimport.kernel.exception.LayoutImportException;
+import com.liferay.exportimport.kernel.exception.MissingPortletDataHandlerException;
 import com.liferay.exportimport.kernel.exception.MissingReferenceException;
 import com.liferay.exportimport.kernel.exception.RemoteExportException;
 import com.liferay.exportimport.kernel.lar.ExportImportClassedModelUtil;
@@ -691,7 +692,7 @@ public class StagingImpl implements Staging {
 						new String[] {
 							MapUtil.toString(
 								exportImportContentValidationException.
-									getDlReferenceParameters()),
+									getDLReferenceParameters()),
 							exportImportContentValidationException.
 								getStagedModelClassName(),
 							String.valueOf(
@@ -705,7 +706,7 @@ public class StagingImpl implements Staging {
 						"unable-to-validate-referenced-file-entry-because-it-" +
 							"cannot-be-found-with-the-following-parameters-x",
 						exportImportContentValidationException.
-							getDlReferenceParameters());
+							getDLReferenceParameters());
 				}
 			}
 			else if (exportImportContentValidationException.getType() ==
@@ -1094,9 +1095,8 @@ public class StagingImpl implements Staging {
 		}
 		else if (exception instanceof FileExtensionException) {
 			errorMessage = _language.format(
-				locale,
-				"document-names-must-end-with-one-of-the-following-extensions",
-				".lar", false);
+				locale, "please-enter-a-file-with-a-valid-extension-x", ".lar",
+				false);
 			errorType = ServletResponseConstants.SC_FILE_EXTENSION_EXCEPTION;
 		}
 		else if (exception instanceof FileNameException) {
@@ -1312,6 +1312,18 @@ public class StagingImpl implements Staging {
 						StringPool.COMMA_AND_SPACE)
 				},
 				false);
+
+			errorType = ServletResponseConstants.SC_FILE_CUSTOM_EXCEPTION;
+		}
+		else if (exception instanceof MissingPortletDataHandlerException) {
+			MissingPortletDataHandlerException
+				missingPortletDataHandlerException =
+					(MissingPortletDataHandlerException)exception;
+
+			errorMessage = _language.format(
+				locale,
+				"the-data-handler-for-the-x-portlet-is-missing-from-the-system",
+				missingPortletDataHandlerException.getPortletDisplayName());
 
 			errorType = ServletResponseConstants.SC_FILE_CUSTOM_EXCEPTION;
 		}
@@ -2016,19 +2028,17 @@ public class StagingImpl implements Staging {
 				JSONUtil.put(
 					"info",
 					() -> {
-						if (Validator.isNotNull(
-								missingReference.getClassName())) {
-
-							return _language.format(
-								locale,
-								"the-original-x-does-not-exist-in-the-" +
-									"current-environment",
-								ResourceActionsUtil.getModelResource(
-									locale, missingReference.getClassName()),
-								false);
+						if (Validator.isNull(missingReference.getClassName())) {
+							return null;
 						}
 
-						return null;
+						return _language.format(
+							locale,
+							"the-original-x-does-not-exist-in-the-current-" +
+								"environment",
+							ResourceActionsUtil.getModelResource(
+								locale, missingReference.getClassName()),
+							false);
 					}
 				).put(
 					"size",
@@ -3979,11 +3989,7 @@ public class StagingImpl implements Staging {
 		String tabs1 = ParamUtil.getString(portletRequest, "tabs1");
 
 		if (Validator.isNotNull(tabs1)) {
-			if (tabs1.equals("public-pages")) {
-				return false;
-			}
-
-			return true;
+			return !tabs1.equals("public-pages");
 		}
 
 		return ParamUtil.getBoolean(portletRequest, "privateLayout", true);

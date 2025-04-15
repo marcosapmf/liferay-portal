@@ -6,11 +6,7 @@
 package com.liferay.layout.admin.web.internal.frontend.taglib.clay.servlet.taglib;
 
 import com.liferay.frontend.taglib.clay.servlet.taglib.VerticalCard;
-import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
-import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
-import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalServiceUtil;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.HashMapBuilder;
@@ -114,25 +110,8 @@ public class SelectStylebookLayoutVerticalCard implements VerticalCard {
 
 	@Override
 	public String getTitle() {
-		if (_styleBookEntry.getStyleBookEntryId() > 0) {
-			return _styleBookEntry.getName();
-		}
-
-		StyleBookEntry defaultStyleBookEntry = getDefaultStyleBookEntry();
-
-		if (defaultStyleBookEntry == null) {
-			return LanguageUtil.get(
-				_themeDisplay.getLocale(), "styles-from-theme");
-		}
-
-		if (_hasEditableMasterLayout() &&
-			(_selLayout.getMasterLayoutPlid() > 0)) {
-
-			return LanguageUtil.get(
-				_themeDisplay.getLocale(), "styles-from-master");
-		}
-
-		return LanguageUtil.get(_themeDisplay.getLocale(), "styles-by-default");
+		return DefaultStyleBookEntryUtil.getStyleBookEntryName(
+			_selLayout, _themeDisplay.getLocale(), _styleBookEntry);
 	}
 
 	@Override
@@ -140,39 +119,12 @@ public class SelectStylebookLayoutVerticalCard implements VerticalCard {
 		return false;
 	}
 
-	private boolean _hasEditableMasterLayout() {
-		LayoutPageTemplateEntry layoutPageTemplateEntry =
-			LayoutPageTemplateEntryLocalServiceUtil.
-				fetchLayoutPageTemplateEntryByPlid(_selLayout.getPlid());
-
-		if (layoutPageTemplateEntry == null) {
-			layoutPageTemplateEntry =
-				LayoutPageTemplateEntryLocalServiceUtil.
-					fetchLayoutPageTemplateEntryByPlid(_selLayout.getClassPK());
-		}
-
-		if ((layoutPageTemplateEntry == null) ||
-			!Objects.equals(
-				layoutPageTemplateEntry.getType(),
-				LayoutPageTemplateEntryTypeConstants.MASTER_LAYOUT)) {
-
-			return true;
-		}
-
-		return false;
-	}
-
 	private boolean _isSelected() {
 		long styleBookEntryId = ParamUtil.getLong(
 			_renderRequest, "styleBookEntryId");
 
-		if (Objects.equals(
-				styleBookEntryId, _styleBookEntry.getStyleBookEntryId())) {
-
-			return true;
-		}
-
-		return false;
+		return Objects.equals(
+			styleBookEntryId, _styleBookEntry.getStyleBookEntryId());
 	}
 
 	private StyleBookEntry _defaultStyleBookEntry;

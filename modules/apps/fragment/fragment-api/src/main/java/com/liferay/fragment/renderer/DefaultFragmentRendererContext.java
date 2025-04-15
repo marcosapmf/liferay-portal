@@ -12,7 +12,11 @@ import com.liferay.info.item.InfoItemReference;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.uuid.PortalUUIDUtil;
 
+import java.io.Serializable;
+
+import java.util.LinkedHashMap;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -24,6 +28,16 @@ public class DefaultFragmentRendererContext implements FragmentRendererContext {
 		_fragmentEntryLink = fragmentEntryLink;
 
 		_fragmentEntryElementId = "fragment-" + PortalUUIDUtil.generate();
+	}
+
+	@Override
+	public Serializable getAttribute(String name) {
+		return _attributes.get(name);
+	}
+
+	@Override
+	public Map<String, Serializable> getAttributes() {
+		return _attributes;
 	}
 
 	@Override
@@ -83,29 +97,17 @@ public class DefaultFragmentRendererContext implements FragmentRendererContext {
 
 	@Override
 	public boolean isEditMode() {
-		if (Objects.equals(getMode(), FragmentEntryLinkConstants.EDIT)) {
-			return true;
-		}
-
-		return false;
+		return Objects.equals(getMode(), FragmentEntryLinkConstants.EDIT);
 	}
 
 	@Override
 	public boolean isIndexMode() {
-		if (Objects.equals(getMode(), FragmentEntryLinkConstants.INDEX)) {
-			return true;
-		}
-
-		return false;
+		return Objects.equals(getMode(), FragmentEntryLinkConstants.INDEX);
 	}
 
 	@Override
 	public boolean isPreviewMode() {
-		if (Objects.equals(getMode(), FragmentEntryLinkConstants.PREVIEW)) {
-			return true;
-		}
-
-		return false;
+		return Objects.equals(getMode(), FragmentEntryLinkConstants.PREVIEW);
 	}
 
 	@Override
@@ -115,11 +117,15 @@ public class DefaultFragmentRendererContext implements FragmentRendererContext {
 
 	@Override
 	public boolean isViewMode() {
-		if (Objects.equals(getMode(), FragmentEntryLinkConstants.VIEW)) {
-			return true;
-		}
+		return Objects.equals(getMode(), FragmentEntryLinkConstants.VIEW);
+	}
 
-		return false;
+	public void setAttribute(String name, Serializable value) {
+		_attributes.put(name, value);
+	}
+
+	public void setAttributes(Map<String, Serializable> attributes) {
+		_attributes = attributes;
 	}
 
 	public void setContextInfoItemReference(
@@ -164,6 +170,7 @@ public class DefaultFragmentRendererContext implements FragmentRendererContext {
 		_useCachedContent = useCachedContent;
 	}
 
+	private Map<String, Serializable> _attributes = new LinkedHashMap<>();
 	private final String _fragmentEntryElementId;
 	private final FragmentEntryLink _fragmentEntryLink;
 	private InfoForm _infoForm;

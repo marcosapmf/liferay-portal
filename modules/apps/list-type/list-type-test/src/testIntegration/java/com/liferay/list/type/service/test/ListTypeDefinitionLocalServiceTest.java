@@ -106,11 +106,12 @@ public class ListTypeDefinitionLocalServiceTest {
 
 		ObjectDefinition objectDefinition =
 			_objectDefinitionLocalService.addCustomObjectDefinition(
-				TestPropsValues.getUserId(), 0, false, true, false, false,
-				LocalizedMapUtil.getLocalizedMap("Test"), "Test", null, null,
-				LocalizedMapUtil.getLocalizedMap("Tests"), true,
+				TestPropsValues.getUserId(), 0, null, false, false, true, false,
+				false, false, LocalizedMapUtil.getLocalizedMap("Test"), "Test",
+				null, null, LocalizedMapUtil.getLocalizedMap("Tests"), true,
 				ObjectDefinitionConstants.SCOPE_COMPANY,
 				ObjectDefinitionConstants.STORAGE_TYPE_DEFAULT,
+				Collections.emptyList(),
 				Collections.singletonList(objectField));
 
 		AssertUtils.assertFailure(

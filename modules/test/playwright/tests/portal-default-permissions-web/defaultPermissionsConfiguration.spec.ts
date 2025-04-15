@@ -10,13 +10,12 @@ import {featureFlagsTest} from '../../fixtures/featureFlagsTest';
 import {loginTest} from '../../fixtures/loginTest';
 import {portalDefaultPermissionsPagesTest} from '../../fixtures/portalDefaultPermissionsPagesTest';
 import getRandomString from '../../utils/getRandomString';
-import {waitForSuccessAlert} from '../../utils/waitForSuccessAlert';
+import {waitForAlert} from '../../utils/waitForAlert';
 
 export const test = mergeTests(
 	dataApiHelpersTest,
 	featureFlagsTest({
-		'LPD-21265': true,
-		'LPS-178052': true,
+		'LPS-178052': {enabled: true},
 	}),
 	loginTest(),
 	portalDefaultPermissionsPagesTest
@@ -53,7 +52,7 @@ const setupInstanceDefaultPermissions = async ({
 		state: 'detached',
 	});
 
-	await waitForSuccessAlert(page);
+	await waitForAlert(page);
 };
 
 const setupSiteDefaultPermissions = async ({
@@ -86,7 +85,7 @@ const setupSiteDefaultPermissions = async ({
 		state: 'detached',
 	});
 
-	await waitForSuccessAlert(page);
+	await waitForAlert(page);
 };
 
 test('LPD-21645 Set up the default permissions for pages', async ({
@@ -125,7 +124,7 @@ test('LPD-21645 Set up the default permissions for pages', async ({
 		state: 'detached',
 	});
 
-	await waitForSuccessAlert(page);
+	await waitForAlert(page);
 });
 
 test('LPD-22038 Set up the default site permissions for pages', async ({
@@ -171,7 +170,7 @@ test('LPD-22038 Set up the default site permissions for pages', async ({
 		state: 'detached',
 	});
 
-	await waitForSuccessAlert(page);
+	await waitForAlert(page);
 
 	const dialogPromise = page.waitForEvent('dialog').then(async (dialog) => {
 		await dialog.accept();
@@ -184,7 +183,7 @@ test('LPD-22038 Set up the default site permissions for pages', async ({
 
 	await dialogPromise;
 
-	await waitForSuccessAlert(page);
+	await waitForAlert(page);
 
 	await defaultPermissionsSiteConfigurationPage.actionsPageButton.click();
 	await defaultPermissionsSiteConfigurationPage.editPageButton.click();
@@ -265,6 +264,94 @@ test('LPD-22040 Check default permissions for pages', async ({
 			expect(
 				pagePermission.actionKeys.indexOf('UPDATE_DISCUSSION')
 			).toBeLessThan(0);
+		}
+	});
+});
+
+test('LPD-35542 Default Permissions changes Unlock the values checked', async ({
+	apiHelpers,
+	defaultPermissionsConfigurationPage,
+	defaultPermissionsSiteConfigurationPage,
+	page,
+}) => {
+	await defaultPermissionsConfigurationPage.goto();
+
+	await expect(
+		defaultPermissionsConfigurationPage.portalDefaultPermissionsSearchContainer
+	).toBeVisible();
+	await page.waitForTimeout(500);
+
+	await defaultPermissionsConfigurationPage.editPageButton.click();
+
+	await defaultPermissionsConfigurationPage.frameSaveButton.waitFor({
+		state: 'attached',
+	});
+	await page.waitForTimeout(300);
+
+	await expect(
+		defaultPermissionsConfigurationPage.guestUpdateDiscussionCheckbox
+	).toBeDisabled();
+
+	await defaultPermissionsConfigurationPage.guestViewCheckbox.setChecked(
+		false
+	);
+
+	await expect(
+		defaultPermissionsConfigurationPage.guestViewCheckbox
+	).toBeChecked({checked: false});
+
+	await defaultPermissionsConfigurationPage.ownerUpdateDiscussionCheckbox.setChecked(
+		false
+	);
+
+	await expect(
+		defaultPermissionsConfigurationPage.ownerUpdateDiscussionCheckbox
+	).toBeChecked({checked: false});
+
+	await defaultPermissionsConfigurationPage.siteMemberCustomizeCheckbox.setChecked(
+		false
+	);
+
+	await expect(
+		defaultPermissionsConfigurationPage.siteMemberCustomizeCheckbox
+	).toBeChecked({checked: false});
+
+	await defaultPermissionsSiteConfigurationPage.frameSaveButton.click();
+
+	await defaultPermissionsSiteConfigurationPage.frameSaveButton.waitFor({
+		state: 'detached',
+	});
+
+	await waitForAlert(page);
+
+	const site = await apiHelpers.headlessSite.createSite({
+		name: getRandomString(),
+	});
+
+	apiHelpers.data.push({id: site.id, type: 'site'});
+
+	const layout = await apiHelpers.headlessDelivery.createSitePage({
+		siteId: site.id,
+		title: getRandomString(),
+	});
+
+	// @ts-ignore
+
+	layout.pagePermissions.forEach((pagePermission) => {
+		if (['Guest'].indexOf(pagePermission.roleKey) >= 0) {
+			expect(
+				pagePermission.actionKeys.indexOf('VIEW')
+			).toBeLessThanOrEqual(0);
+		}
+		else if (['Owner'].indexOf(pagePermission.roleKey) >= 0) {
+			expect(
+				pagePermission.actionKeys.indexOf('UPDATE_DISCUSSION')
+			).toBeLessThanOrEqual(0);
+		}
+		else if (['Site Member'].indexOf(pagePermission.roleKey) >= 0) {
+			expect(
+				pagePermission.actionKeys.indexOf('CUSTOMIZE')
+			).toBeLessThanOrEqual(0);
 		}
 	});
 });

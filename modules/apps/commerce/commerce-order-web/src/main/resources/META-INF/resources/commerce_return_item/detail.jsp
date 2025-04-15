@@ -17,6 +17,7 @@ CommerceReturnItem commerceReturnItem = commerceReturnEditDisplayContext.getComm
 
 <aui:form name="commerceReturnItemsFm" onSubmit="event.preventDefault();">
 	<aui:input name="commerceReturnItemId" type="hidden" value="<%= commerceReturnEditDisplayContext.getCommerceReturnItemId() %>" />
+	<aui:input name="commerceReturnStatus" type="hidden" value="<%= commerceReturn.getReturnStatus() %>" />
 
 	<commerce-ui:panel
 		title='<%= LanguageUtil.get(request, "details") %>'
@@ -45,7 +46,7 @@ CommerceReturnItem commerceReturnItem = commerceReturnEditDisplayContext.getComm
 					elementClasses="py-3"
 					title='<%= LanguageUtil.get(request, "return-reason") %>'
 				>
-					<p class="mb-0" data-qa-id="commerceReturnReturnReason"><%= commerceReturnItem.getReturnReason() %></p>
+					<p class="mb-0" data-qa-id="commerceReturnReturnReason"><%= commerceReturnEditDisplayContext.getReturnReasonName() %></p>
 				</commerce-ui:info-box>
 			</div>
 		</div>
@@ -55,7 +56,7 @@ CommerceReturnItem commerceReturnItem = commerceReturnEditDisplayContext.getComm
 		title='<%= LanguageUtil.get(request, "workflow-actions") %>'
 	>
 		<div class="sheet-section">
-			<aui:field-wrapper cssClass="sheet-subtitle" helpMessage="authorization-step-help" label="authorization-step" />
+			<aui:field-wrapper cssClass="sheet-subtitle" helpMessage="authorization-step" label="authorization-step" />
 
 			<div class="row">
 				<div class="col">
@@ -64,7 +65,7 @@ CommerceReturnItem commerceReturnItem = commerceReturnEditDisplayContext.getComm
 				</div>
 			</div>
 
-			<aui:field-wrapper cssClass="sheet-subtitle" helpMessage="item-acceptance-step-help" label="item-acceptance-step" />
+			<aui:field-wrapper cssClass="sheet-subtitle" helpMessage="item-acceptance-step" label="item-acceptance-step" />
 
 			<div class="row">
 				<div class="col">
@@ -72,7 +73,7 @@ CommerceReturnItem commerceReturnItem = commerceReturnEditDisplayContext.getComm
 				</div>
 			</div>
 
-			<aui:field-wrapper cssClass="sheet-subtitle" helpMessage="resolution-method-step-help" label="resolution-method-step" />
+			<aui:field-wrapper cssClass="sheet-subtitle" helpMessage="resolution-method-step" label="resolution-method-step" />
 
 			<div class="row">
 				<div class="col">
@@ -193,7 +194,7 @@ CommerceReturnItem commerceReturnItem = commerceReturnEditDisplayContext.getComm
 	</commerce-ui:panel>
 
 	<aui:button-row>
-		<aui:button cssClass="btn-lg" disabled="<%= ArrayUtil.contains(CommerceReturnConstants.RETURN_STATUSES_LATEST, commerceReturn.getReturnStatus()) || StringUtil.equals(CommerceReturnConstants.RETURN_ITEM_STATUS_PROCESSED, commerceReturnItem.getReturnItemStatus()) %>" type="submit" value="save" />
+		<aui:button cssClass="btn-lg" type="submit" value="save" />
 
 		<aui:button cssClass="btn-lg" type="cancel" />
 	</aui:button-row>

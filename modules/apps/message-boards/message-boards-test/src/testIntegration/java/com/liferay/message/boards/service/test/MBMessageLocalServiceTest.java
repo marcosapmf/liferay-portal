@@ -11,10 +11,12 @@ import com.liferay.message.boards.constants.MBMessageConstants;
 import com.liferay.message.boards.model.MBMessage;
 import com.liferay.message.boards.model.MBThread;
 import com.liferay.message.boards.service.MBMessageLocalServiceUtil;
+import com.liferay.message.boards.service.MBThreadLocalServiceUtil;
 import com.liferay.message.boards.test.util.MBTestUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.model.ModelHintsUtil;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
@@ -89,6 +91,25 @@ public class MBMessageLocalServiceTest {
 	}
 
 	@Test
+	public void testAddBBCodeSubjectWithLineBreakInBodyInBBCode()
+		throws Exception {
+
+		String subject = "<u>subject</u>";
+		String body = "a\nbc";
+		List<ObjectValuePair<String, InputStream>> inputStreamOVPs =
+			Collections.emptyList();
+
+		MBMessage message = MBMessageLocalServiceUtil.addMessage(
+			TestPropsValues.getUserId(), RandomTestUtil.randomString(),
+			_group.getGroupId(), MBCategoryConstants.DEFAULT_PARENT_CATEGORY_ID,
+			subject, body, "bbcode", inputStreamOVPs, false, 0.0, false,
+			ServiceContextTestUtil.getServiceContext(
+				_group.getGroupId(), TestPropsValues.getUserId()));
+
+		Assert.assertEquals(body, message.getBody());
+	}
+
+	@Test
 	public void testAddHtmlSubjectWithEmptyBodyMessage() throws Exception {
 		String subject = "<u>subject</u>";
 		String body = StringPool.BLANK;
@@ -153,6 +174,42 @@ public class MBMessageLocalServiceTest {
 			StringPool.BLANK, ServiceContextTestUtil.getServiceContext());
 
 		Assert.assertEquals(subject, mbMessage.getBody());
+	}
+
+	@Test
+	public void testAddMessageWithMultipleRepliesToParentThreadWithMaxSubjectLength()
+		throws Exception {
+
+		String subject = StringUtil.randomString(
+			ModelHintsUtil.getMaxLength(MBMessage.class.getName(), "subject"));
+
+		ServiceContext serviceContext =
+			ServiceContextTestUtil.getServiceContext(
+				_group.getGroupId(), TestPropsValues.getUserId());
+
+		MBMessage parentMessage = MBMessageLocalServiceUtil.addMessage(
+			TestPropsValues.getUserId(), RandomTestUtil.randomString(),
+			_group.getGroupId(), MBCategoryConstants.DEFAULT_PARENT_CATEGORY_ID,
+			subject, StringPool.BLANK, "bbcode", Collections.emptyList(), false,
+			0.0, false, serviceContext);
+
+		for (int i = 0; i < 3; i++) {
+			MBMessageLocalServiceUtil.addMessage(
+				TestPropsValues.getUserId(), RandomTestUtil.randomString(),
+				_group.getGroupId(),
+				MBCategoryConstants.DEFAULT_PARENT_CATEGORY_ID,
+				parentMessage.getThreadId(), parentMessage.getMessageId(),
+				subject, StringPool.BLANK, "bbcode", null, false, 0.0, false,
+				serviceContext);
+		}
+
+		MBThread thread = MBThreadLocalServiceUtil.getThread(
+			parentMessage.getThreadId());
+
+		List<MBMessage> messages = MBMessageLocalServiceUtil.getThreadMessages(
+			thread.getThreadId(), WorkflowConstants.STATUS_ANY);
+
+		Assert.assertEquals(messages.toString(), 4, messages.size());
 	}
 
 	@Test

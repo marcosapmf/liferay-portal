@@ -434,7 +434,7 @@ public class MBMessageLocalServiceImpl extends MBMessageLocalServiceBaseImpl {
 
 		body = SanitizerUtil.sanitize(
 			user.getCompanyId(), groupId, userId, MBMessage.class.getName(),
-			messageId, ContentTypes.TEXT_HTML, Sanitizer.MODE_ALL, body,
+			messageId, "text/" + format, Sanitizer.MODE_ALL, body,
 			HashMapBuilder.<String, Object>put(
 				"discussion",
 				() -> {
@@ -2183,7 +2183,7 @@ public class MBMessageLocalServiceImpl extends MBMessageLocalServiceBaseImpl {
 
 		HttpServletRequest httpServletRequest = serviceContext.getRequest();
 
-		if (httpServletRequest == null) {
+		if ((httpServletRequest == null) || message.isDiscussion()) {
 			if (Validator.isNull(serviceContext.getLayoutFullURL())) {
 				return StringPool.BLANK;
 			}
@@ -2358,12 +2358,23 @@ public class MBMessageLocalServiceImpl extends MBMessageLocalServiceBaseImpl {
 			return uniqueUrlSubject;
 		}
 
-		if (!StringUtil.endsWith(uniqueUrlSubject, StringPool.DASH)) {
-			urlSubject = urlSubject + StringPool.DASH;
-		}
+		int maxLength = ModelHintsUtil.getMaxLength(
+			MBMessage.class.getName(), "urlSubject");
 
 		for (int i = 1; mbMessage != null; i++) {
-			uniqueUrlSubject = urlSubject + i;
+			String suffix = StringPool.DASH + i;
+
+			if (urlSubject.length() > (maxLength - suffix.length())) {
+				urlSubject = urlSubject.substring(
+					0, maxLength - suffix.length());
+			}
+
+			if (urlSubject.endsWith(StringPool.DASH)) {
+				uniqueUrlSubject = urlSubject + i;
+			}
+			else {
+				uniqueUrlSubject = urlSubject + suffix;
+			}
 
 			mbMessage = mbMessagePersistence.fetchByG_US(
 				groupId, uniqueUrlSubject);
@@ -2801,7 +2812,7 @@ public class MBMessageLocalServiceImpl extends MBMessageLocalServiceBaseImpl {
 
 		body = SanitizerUtil.sanitize(
 			message.getCompanyId(), message.getGroupId(), userId,
-			MBMessage.class.getName(), messageId, ContentTypes.TEXT_HTML,
+			MBMessage.class.getName(), messageId, "text/" + message.getFormat(),
 			Sanitizer.MODE_ALL, body,
 			HashMapBuilder.<String, Object>put(
 				"discussion", message.isDiscussion()

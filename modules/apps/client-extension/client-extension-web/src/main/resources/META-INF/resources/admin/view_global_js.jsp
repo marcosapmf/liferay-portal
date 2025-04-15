@@ -17,6 +17,10 @@ for (Method method : methods) {
 	String label = viewClientExtensionEntryDisplayContext.getLabel(method);
 	String name = cetProperty.name();
 	Object value = viewClientExtensionEntryDisplayContext.getValue(method);
+
+	if (!FeatureFlagManagerUtil.isEnabled("LPD-30371") && (name.equals("scope") || name.equals("scriptLocation"))) {
+		continue;
+	}
 %>
 
 	<c:choose>

@@ -87,7 +87,7 @@ public class DLFileEntryMetadataTableReferenceDefinitionTest
 			ServiceContextTestUtil.getServiceContext(group.getGroupId()));
 
 		_ddmStructure = _ddmStructureLocalService.addStructure(
-			group.getCreatorUserId(), group.getGroupId(),
+			null, group.getCreatorUserId(), group.getGroupId(),
 			DDMStructureConstants.DEFAULT_PARENT_STRUCTURE_ID,
 			PortalUtil.getClassNameId(DLFileEntryMetadata.class),
 			StringPool.BLANK,
@@ -118,7 +118,7 @@ public class DLFileEntryMetadataTableReferenceDefinitionTest
 		DLFileVersion dlFileVersion = _dlFileEntry.getFileVersion();
 
 		_dlFileEntryMetadataLocalService.updateFileEntryMetadata(
-			_dlFileEntryType.getFileEntryTypeId(),
+			null, _dlFileEntryType.getFileEntryTypeId(),
 			_dlFileEntry.getFileEntryId(), dlFileVersion.getFileVersionId(),
 			_createDDMFormValuesMap(),
 			ServiceContextTestUtil.getServiceContext(group.getGroupId()));

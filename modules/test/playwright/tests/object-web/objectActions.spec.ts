@@ -3,35 +3,30 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
+import {
+	ObjectAction,
+	ObjectActionAPI,
+	ObjectDefinition,
+} from '@liferay/object-admin-rest-client-js';
 import {expect, mergeTests} from '@playwright/test';
 import path from 'node:path';
 
-import {apiHelpersTest} from '../../fixtures/apiHelpersTest';
+import {dataApiHelpersTest} from '../../fixtures/dataApiHelpersTest';
 import {editObjectDefinitionPagesTest} from '../../fixtures/editObjectDefinitionPagesTest';
 import {loginTest} from '../../fixtures/loginTest';
 import {objectPagesTest} from '../../fixtures/objectPagesTest';
 import {getRandomInt} from '../../utils/getRandomInt';
-import {waitForSuccessAlert} from '../../utils/waitForSuccessAlert';
+import {waitForAlert} from '../../utils/waitForAlert';
 import {mockedObjectFields} from './dependencies/objectMockedFields';
 
 export const test = mergeTests(
-	apiHelpersTest,
+	dataApiHelpersTest,
 	editObjectDefinitionPagesTest,
 	loginTest(),
 	objectPagesTest
 );
 
-const createdEntities = {
-	notificationQueueEntriesId: [],
-	notificationTemplatesId: [],
-	objectActionsId: [],
-	objectDefinition: {},
-} as {
-	notificationQueueEntriesId: number[];
-	notificationTemplatesId: number[];
-	objectActionsId: number[];
-	objectDefinition: ObjectDefinition;
-};
+let createdObjectDefinition: ObjectDefinition;
 
 test.beforeEach(async ({apiHelpers}) => {
 	const newObjectDefinition =
@@ -40,33 +35,12 @@ test.beforeEach(async ({apiHelpers}) => {
 			status: {code: 0},
 		});
 
-	createdEntities.objectDefinition = newObjectDefinition;
-});
+	apiHelpers.data.push({
+		id: newObjectDefinition.id,
+		type: 'objectDefinition',
+	});
 
-test.afterEach(async ({apiHelpers}) => {
-	await apiHelpers.objectAdmin.deleteObjectDefinition(
-		createdEntities.objectDefinition.id
-	);
-
-	for (const queueEntryId of createdEntities.notificationQueueEntriesId) {
-		await apiHelpers.notification.deleteNotificationQueueEntry(
-			queueEntryId
-		);
-	}
-
-	createdEntities.notificationQueueEntriesId = [];
-
-	for (const templateId of createdEntities.notificationTemplatesId) {
-		await apiHelpers.notification.deleteNotificationTemplate(templateId);
-	}
-
-	createdEntities.notificationTemplatesId = [];
-
-	for (const actionId of createdEntities.objectActionsId) {
-		await apiHelpers.objectAdmin.deleteObjectAction(actionId);
-	}
-
-	createdEntities.objectActionsId = [];
+	createdObjectDefinition = newObjectDefinition;
 });
 
 test.describe('Manage object actions through object actions tab', () => {
@@ -78,20 +52,25 @@ test.describe('Manage object actions through object actions tab', () => {
 	}) => {
 		const names: string[] = [];
 
-		const {notificationTemplatesId, objectDefinition} = createdEntities;
-
 		for (let index = 1; index <= 21; index++) {
 			const notificationTemplate =
 				await apiHelpers.notification.postRandomNotificationTemplate(
 					'notification template test ' + getRandomInt()
 				);
-			notificationTemplatesId.push(notificationTemplate.id);
+
+			apiHelpers.data.push({
+				id: notificationTemplate.id,
+				type: 'notificationTemplate',
+			});
+
 			names.push(
 				notificationTemplate.name + ' ' + notificationTemplate.type
 			);
 		}
 
-		await viewObjectActionsPage.goto(objectDefinition.label['en_US']);
+		await viewObjectActionsPage.goto(
+			createdObjectDefinition.label['en_US']
+		);
 
 		await viewObjectActionsPage.openObjectActionSidePanel();
 
@@ -116,8 +95,6 @@ test.describe('Manage object actions through object actions tab', () => {
 		page,
 		viewObjectActionsPage,
 	}) => {
-		const {objectActionsId} = createdEntities;
-
 		await viewObjectActionsPage.goto('Commerce Order');
 
 		const objectActionsMock = [
@@ -139,13 +116,16 @@ test.describe('Manage object actions through object actions tab', () => {
 			);
 		}
 
-		const objectActions =
-			await apiHelpers.objectAdmin.getObjectActionsByExternalReferenceCode(
+		const objectActionAPIClient =
+			await apiHelpers.buildRestClient(ObjectActionAPI);
+
+		const {body: objectActions} =
+			await objectActionAPIClient.getObjectDefinitionByExternalReferenceCodeObjectActionsPage(
 				'L_COMMERCE_ORDER'
 			);
 
 		objectActions.items.forEach((objectAction: ObjectAction) =>
-			objectActionsId.push(objectAction.id)
+			apiHelpers.data.push({id: objectAction.id, type: 'objectAction'})
 		);
 
 		for (const {objectAction} of objectActionsMock) {
@@ -159,8 +139,6 @@ test.describe('Manage object actions through object actions tab', () => {
 		page,
 		viewObjectActionsPage,
 	}) => {
-		const {objectDefinition} = createdEntities;
-
 		const notificationTemplateName =
 			'notification template test ' + getRandomInt();
 
@@ -170,9 +148,14 @@ test.describe('Manage object actions through object actions tab', () => {
 				'test' + getRandomInt() + '@liferay.com'
 			);
 
-		createdEntities.notificationTemplatesId = [notificationTemplate.id];
+		apiHelpers.data.push({
+			id: notificationTemplate.id,
+			type: 'notificationTemplate',
+		});
 
-		await viewObjectActionsPage.goto(objectDefinition.label['en_US']);
+		await viewObjectActionsPage.goto(
+			createdObjectDefinition.label['en_US']
+		);
 
 		await editObjectActionPage.addNewAction(
 			'Notification',
@@ -228,7 +211,10 @@ test('can send notification email via download action', async ({
 			senderEmail
 		);
 
-	createdEntities.notificationTemplatesId = [notificationTemplate.id];
+	apiHelpers.data.push({
+		id: notificationTemplate.id,
+		type: 'notificationTemplate',
+	});
 
 	// Create object definition with an attachment field
 
@@ -239,11 +225,14 @@ test('can send notification email via download action', async ({
 			status: {code: 0},
 		});
 
-	createdEntities.objectDefinition = objectDefinition;
+	apiHelpers.data.push({id: objectDefinition.id, type: 'objectDefinition'});
 
 	// Create an action to send notification after attachment download
 
-	await apiHelpers.objectAdmin.postObjectActionByExternalReferenceCode(
+	const objectActionAPIClient =
+		await apiHelpers.buildRestClient(ObjectActionAPI);
+
+	await objectActionAPIClient.postObjectDefinitionByExternalReferenceCodeObjectAction(
 		objectDefinition.externalReferenceCode,
 		{
 			active: true,
@@ -262,7 +251,7 @@ test('can send notification email via download action', async ({
 
 	// Create an object entry
 
-	await viewObjectEntriesPage.goto(objectDefinition.id);
+	await viewObjectEntriesPage.goto(objectDefinition.className);
 
 	await viewObjectEntriesPage.clickAddObjectEntry(objectDefinition.name);
 
@@ -282,11 +271,11 @@ test('can send notification email via download action', async ({
 
 	await viewObjectEntriesPage.saveObjectEntryButton.click();
 
-	await waitForSuccessAlert(page);
+	await waitForAlert(page);
 
 	// Download attachment from object entry
 
-	await viewObjectEntriesPage.goto(objectDefinition.id);
+	await viewObjectEntriesPage.goto(objectDefinition.className);
 
 	await page
 		.getByRole('button', {name: 'Search'})
@@ -301,8 +290,16 @@ test('can send notification email via download action', async ({
 			senderEmail
 		);
 
-	createdEntities.notificationQueueEntriesId =
-		notificationQueueEntries.items.map((item: any) => item.id);
+	const notificationQueueEntriesId = notificationQueueEntries.items.map(
+		(item: any) => item.id
+	);
+
+	for (const notificationQueueEntryId of notificationQueueEntriesId) {
+		apiHelpers.data.push({
+			id: notificationQueueEntryId,
+			type: 'notificationQueueEntry',
+		});
+	}
 
 	expect(notificationQueueEntries.items.length).toBeTruthy();
 });

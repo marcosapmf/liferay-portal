@@ -35,13 +35,14 @@ public interface WishListResource {
 	}
 
 	public Page<WishList> getChannelByExternalReferenceCodeWishListsPage(
-			String externalReferenceCode, Long accountId, Pagination pagination)
+			String externalReferenceCode, Long accountId, String currencyCode,
+			Pagination pagination)
 		throws Exception;
 
 	public HttpInvoker.HttpResponse
 			getChannelByExternalReferenceCodeWishListsPageHttpResponse(
 				String externalReferenceCode, Long accountId,
-				Pagination pagination)
+				String currencyCode, Pagination pagination)
 		throws Exception;
 
 	public WishList postChannelByExternalReferenceCodeWishList(
@@ -54,11 +55,13 @@ public interface WishListResource {
 		throws Exception;
 
 	public Page<WishList> getChannelWishListsPage(
-			Long channelId, Long accountId, Pagination pagination)
+			Long channelId, Long accountId, String currencyCode,
+			Pagination pagination)
 		throws Exception;
 
 	public HttpInvoker.HttpResponse getChannelWishListsPageHttpResponse(
-			Long channelId, Long accountId, Pagination pagination)
+			Long channelId, Long accountId, String currencyCode,
+			Pagination pagination)
 		throws Exception;
 
 	public WishList postChannelWishList(
@@ -86,11 +89,12 @@ public interface WishListResource {
 	public HttpInvoker.HttpResponse getWishListHttpResponse(Long wishListId)
 		throws Exception;
 
-	public WishList patchWishList(Long wishListId, WishList wishList)
+	public WishList patchWishList(
+			Long wishListId, Long accountId, WishList wishList)
 		throws Exception;
 
 	public HttpInvoker.HttpResponse patchWishListHttpResponse(
-			Long wishListId, WishList wishList)
+			Long wishListId, Long accountId, WishList wishList)
 		throws Exception;
 
 	public static class Builder {
@@ -191,8 +195,8 @@ public interface WishListResource {
 		private Map<String, String> _headers = new LinkedHashMap<>();
 		private String _host = "localhost";
 		private Locale _locale;
-		private String _login = "";
-		private String _password = "";
+		private String _login;
+		private String _password;
 		private Map<String, String> _parameters = new LinkedHashMap<>();
 		private int _port = 8080;
 		private String _scheme = "http";
@@ -203,12 +207,12 @@ public interface WishListResource {
 
 		public Page<WishList> getChannelByExternalReferenceCodeWishListsPage(
 				String externalReferenceCode, Long accountId,
-				Pagination pagination)
+				String currencyCode, Pagination pagination)
 			throws Exception {
 
 			HttpInvoker.HttpResponse httpResponse =
 				getChannelByExternalReferenceCodeWishListsPageHttpResponse(
-					externalReferenceCode, accountId, pagination);
+					externalReferenceCode, accountId, currencyCode, pagination);
 
 			String content = httpResponse.getContent();
 
@@ -272,7 +276,7 @@ public interface WishListResource {
 		public HttpInvoker.HttpResponse
 				getChannelByExternalReferenceCodeWishListsPageHttpResponse(
 					String externalReferenceCode, Long accountId,
-					Pagination pagination)
+					String currencyCode, Pagination pagination)
 			throws Exception {
 
 			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
@@ -300,6 +304,11 @@ public interface WishListResource {
 				httpInvoker.parameter("accountId", String.valueOf(accountId));
 			}
 
+			if (currencyCode != null) {
+				httpInvoker.parameter(
+					"currencyCode", String.valueOf(currencyCode));
+			}
+
 			if (pagination != null) {
 				httpInvoker.parameter(
 					"page", String.valueOf(pagination.getPage()));
@@ -314,8 +323,10 @@ public interface WishListResource {
 
 			httpInvoker.path("externalReferenceCode", externalReferenceCode);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
@@ -427,19 +438,22 @@ public interface WishListResource {
 
 			httpInvoker.path("externalReferenceCode", externalReferenceCode);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
 
 		public Page<WishList> getChannelWishListsPage(
-				Long channelId, Long accountId, Pagination pagination)
+				Long channelId, Long accountId, String currencyCode,
+				Pagination pagination)
 			throws Exception {
 
 			HttpInvoker.HttpResponse httpResponse =
 				getChannelWishListsPageHttpResponse(
-					channelId, accountId, pagination);
+					channelId, accountId, currencyCode, pagination);
 
 			String content = httpResponse.getContent();
 
@@ -501,7 +515,8 @@ public interface WishListResource {
 		}
 
 		public HttpInvoker.HttpResponse getChannelWishListsPageHttpResponse(
-				Long channelId, Long accountId, Pagination pagination)
+				Long channelId, Long accountId, String currencyCode,
+				Pagination pagination)
 			throws Exception {
 
 			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
@@ -529,6 +544,11 @@ public interface WishListResource {
 				httpInvoker.parameter("accountId", String.valueOf(accountId));
 			}
 
+			if (currencyCode != null) {
+				httpInvoker.parameter(
+					"currencyCode", String.valueOf(currencyCode));
+			}
+
 			if (pagination != null) {
 				httpInvoker.parameter(
 					"page", String.valueOf(pagination.getPage()));
@@ -543,8 +563,10 @@ public interface WishListResource {
 
 			httpInvoker.path("channelId", channelId);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
@@ -653,8 +675,10 @@ public interface WishListResource {
 
 			httpInvoker.path("channelId", channelId);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
@@ -754,8 +778,10 @@ public interface WishListResource {
 
 			httpInvoker.path("wishListId", wishListId);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
@@ -851,8 +877,10 @@ public interface WishListResource {
 					_builder._port + _builder._contextPath +
 						"/o/headless-commerce-delivery-catalog/v1.0/wishlists/batch");
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
@@ -951,17 +979,20 @@ public interface WishListResource {
 
 			httpInvoker.path("wishListId", wishListId);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
 
-		public WishList patchWishList(Long wishListId, WishList wishList)
+		public WishList patchWishList(
+				Long wishListId, Long accountId, WishList wishList)
 			throws Exception {
 
 			HttpInvoker.HttpResponse httpResponse = patchWishListHttpResponse(
-				wishListId, wishList);
+				wishListId, accountId, wishList);
 
 			String content = httpResponse.getContent();
 
@@ -1023,7 +1054,7 @@ public interface WishListResource {
 		}
 
 		public HttpInvoker.HttpResponse patchWishListHttpResponse(
-				Long wishListId, WishList wishList)
+				Long wishListId, Long accountId, WishList wishList)
 			throws Exception {
 
 			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
@@ -1049,6 +1080,10 @@ public interface WishListResource {
 
 			httpInvoker.httpMethod(HttpInvoker.HttpMethod.PATCH);
 
+			if (accountId != null) {
+				httpInvoker.parameter("accountId", String.valueOf(accountId));
+			}
+
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port + _builder._contextPath +
@@ -1056,8 +1091,10 @@ public interface WishListResource {
 
 			httpInvoker.path("wishListId", wishListId);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}

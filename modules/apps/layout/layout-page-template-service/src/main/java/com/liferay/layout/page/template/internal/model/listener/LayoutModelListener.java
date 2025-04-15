@@ -90,6 +90,33 @@ public class LayoutModelListener extends BaseModelListener<Layout> {
 	}
 
 	@Override
+	public void onAfterRemove(Layout layout) throws ModelListenerException {
+		if (!(layout.isTypeAssetDisplay() || layout.isTypeContent())) {
+			return;
+		}
+
+		LayoutPageTemplateEntry layoutPageTemplateEntry =
+			_layoutPageTemplateEntryLocalService.
+				fetchLayoutPageTemplateEntryByPlid(layout.getPlid());
+
+		if (layoutPageTemplateEntry == null) {
+			return;
+		}
+
+		try {
+			_layoutPageTemplateEntryLocalService.deleteLayoutPageTemplateEntry(
+				layoutPageTemplateEntry);
+		}
+		catch (PortalException portalException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(portalException);
+			}
+
+			throw new ModelListenerException(portalException);
+		}
+	}
+
+	@Override
 	public void onAfterUpdate(Layout originalLayout, Layout layout)
 		throws ModelListenerException {
 
@@ -150,7 +177,11 @@ public class LayoutModelListener extends BaseModelListener<Layout> {
 		}
 
 		return _segmentsExperienceLocalService.addDefaultSegmentsExperience(
-			null, layout.getUserId(), layout.getPlid(), serviceContext);
+			GetterUtil.getString(
+				serviceContext.getAttribute(
+					"defaultSegmentsExperienceExternalReferenceCode"),
+				null),
+			layout.getUserId(), layout.getPlid(), serviceContext);
 	}
 
 	private void _copySiteNavigationMenuId(

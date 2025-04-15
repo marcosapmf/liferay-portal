@@ -3,7 +3,8 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {navigate, openConfirmModal} from 'frontend-js-web';
+import {openConfirmModal} from 'frontend-js-components-web';
+import {navigate} from 'frontend-js-web';
 
 import {IItemsActions} from '../../index';
 import {openPermissionsModal} from '../modals/openPermissionsModal';
@@ -48,6 +49,7 @@ const handleActionClick = ({
 		confirmationMessage,
 		disableHeader,
 		errorMessage,
+		requestBody,
 		size,
 		status,
 		successMessage,
@@ -92,6 +94,7 @@ const handleActionClick = ({
 			executeAsyncItemAction({
 				errorMessage,
 				method: method ?? data?.method,
+				requestBody,
 				setActionItemLoading: setLoading,
 				successMessage,
 				url,

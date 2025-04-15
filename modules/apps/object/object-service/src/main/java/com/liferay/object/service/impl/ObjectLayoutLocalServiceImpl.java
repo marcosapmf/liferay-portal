@@ -39,6 +39,7 @@ import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -201,6 +202,26 @@ public class ObjectLayoutLocalServiceImpl
 			objectDefinitionId);
 	}
 
+	@Override
+	public Map<Long, List<ObjectLayout>> getObjectLayoutsMap(long companyId) {
+		Map<Long, List<ObjectLayout>> objectLayoutsMap = new HashMap<>();
+
+		for (ObjectLayout objectLayout :
+				objectLayoutPersistence.findByC_DOL(companyId, true)) {
+
+			objectLayout.setObjectLayoutTabs(
+				_getObjectLayoutTabs(objectLayout));
+
+			List<ObjectLayout> objectLayouts = objectLayoutsMap.computeIfAbsent(
+				objectLayout.getObjectDefinitionId(),
+				objectDefinitionId -> new ArrayList<>());
+
+			objectLayouts.add(objectLayout);
+		}
+
+		return objectLayoutsMap;
+	}
+
 	@Indexable(type = IndexableType.REINDEX)
 	@Override
 	public ObjectLayout updateObjectLayout(
@@ -315,18 +336,12 @@ public class ObjectLayoutLocalServiceImpl
 			List<ObjectLayoutColumn> objectLayoutColumns)
 		throws PortalException {
 
-		List<ObjectLayoutColumn> addObjectLayoutColumns = new ArrayList<>();
-
-		for (ObjectLayoutColumn objectLayoutColumn : objectLayoutColumns) {
-			addObjectLayoutColumns.add(
-				_addObjectLayoutColumn(
-					user, objectDefinitionId,
-					objectLayoutColumn.getObjectFieldId(), objectLayoutRowId,
-					objectLayoutColumn.getPriority(),
-					objectLayoutColumn.getSize()));
-		}
-
-		return addObjectLayoutColumns;
+		return TransformUtil.unsafeTransform(
+			objectLayoutColumns,
+			objectLayoutColumn -> _addObjectLayoutColumn(
+				user, objectDefinitionId, objectLayoutColumn.getObjectFieldId(),
+				objectLayoutRowId, objectLayoutColumn.getPriority(),
+				objectLayoutColumn.getSize()));
 	}
 
 	private ObjectLayoutRow _addObjectLayoutRow(

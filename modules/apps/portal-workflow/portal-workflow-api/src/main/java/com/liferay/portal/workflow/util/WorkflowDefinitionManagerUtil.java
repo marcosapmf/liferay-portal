@@ -5,6 +5,7 @@
 
 package com.liferay.portal.workflow.util;
 
+import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.workflow.WorkflowDefinition;
@@ -24,15 +25,15 @@ import java.util.List;
 public class WorkflowDefinitionManagerUtil {
 
 	public static WorkflowDefinition deployWorkflowDefinition(
-			long companyId, long userId, String title, String name,
-			byte[] bytes)
+			String externalReferenceCode, long companyId, long userId,
+			String title, String name, byte[] bytes)
 		throws WorkflowException {
 
 		WorkflowDefinitionManager workflowDefinitionManager =
 			_workflowDefinitionManagerSnapshot.get();
 
 		return workflowDefinitionManager.deployWorkflowDefinition(
-			companyId, userId, title, name, bytes);
+			externalReferenceCode, companyId, userId, title, name, bytes);
 	}
 
 	public static int getActiveWorkflowDefinitionsCount(long companyId)
@@ -92,7 +93,7 @@ public class WorkflowDefinitionManagerUtil {
 
 	public static WorkflowDefinition liberalGetWorkflowDefinition(
 			long companyId, String name, int version)
-		throws WorkflowException {
+		throws PortalException {
 
 		WorkflowDefinitionManager workflowDefinitionManager =
 			_workflowDefinitionManagerSnapshot.get();
@@ -128,15 +129,15 @@ public class WorkflowDefinitionManagerUtil {
 	 *         definition
 	 */
 	public static WorkflowDefinition saveWorkflowDefinition(
-			long companyId, long userId, String title, String name,
-			byte[] bytes)
+			String externalReferenceCode, long companyId, long userId,
+			String title, String name, byte[] bytes)
 		throws WorkflowException {
 
 		WorkflowDefinitionManager workflowDefinitionManager =
 			_workflowDefinitionManagerSnapshot.get();
 
 		return workflowDefinitionManager.saveWorkflowDefinition(
-			companyId, userId, title, name, bytes);
+			externalReferenceCode, companyId, userId, title, name, bytes);
 	}
 
 	public static WorkflowDefinition updateActive(

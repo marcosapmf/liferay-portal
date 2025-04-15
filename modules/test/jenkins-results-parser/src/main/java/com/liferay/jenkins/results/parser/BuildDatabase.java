@@ -23,6 +23,8 @@ public interface BuildDatabase {
 
 	public static final String FILE_NAME_BUILD_DATABASE = "build-database.json";
 
+	public File getBuildDatabaseFile();
+
 	public JSONObject getBuildDataJSONObject(String key);
 
 	public JSONObject getBuildDataJSONObject(URL buildURL);
@@ -84,6 +86,10 @@ public interface BuildDatabase {
 	public FilePropagator rsyncBuildDatabaseFile(
 		List<String> distNodes, String distPath, String preDistCommand,
 		String postDistCommand, int threadCount);
+
+	public void uploadBuildDatabaseFileToCloudBucket();
+
+	public void uploadBuildDatabaseFileToCloudBucket(String path);
 
 	public void writeFilteredPropertiesToFile(
 		String destFilePath, Pattern pattern, String key);

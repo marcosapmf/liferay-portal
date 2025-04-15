@@ -6,9 +6,13 @@
 package com.liferay.portal.security.ldap.internal.exportimport;
 
 import com.liferay.expando.kernel.model.ExpandoBridge;
+import com.liferay.expando.kernel.model.ExpandoColumn;
 import com.liferay.expando.kernel.model.ExpandoColumnConstants;
+import com.liferay.expando.kernel.model.ExpandoTable;
 import com.liferay.expando.kernel.model.ExpandoTableConstants;
 import com.liferay.expando.kernel.model.ExpandoValue;
+import com.liferay.expando.kernel.service.ExpandoColumnLocalService;
+import com.liferay.expando.kernel.service.ExpandoTableLocalService;
 import com.liferay.expando.kernel.service.ExpandoValueLocalService;
 import com.liferay.expando.util.ExpandoConverterUtil;
 import com.liferay.petra.string.StringBundler;
@@ -37,6 +41,7 @@ import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.security.exportimport.UserGroupImportTransactionThreadLocal;
 import com.liferay.portal.kernel.security.ldap.AttributesTransformer;
 import com.liferay.portal.kernel.security.ldap.LDAPSettings;
+import com.liferay.portal.kernel.service.ClassNameLocalService;
 import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
@@ -55,6 +60,7 @@ import com.liferay.portal.kernel.util.Props;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.PwdGenerator;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.security.exportimport.UserImporter;
 import com.liferay.portal.security.ldap.ContactConverterKeys;
@@ -275,22 +281,22 @@ public class LDAPUserImporterImpl implements LDAPUserImporter {
 				LDAPUtil.getBaseDNSafeLdapName(ldapServerConfiguration),
 				authSearchSafeLdapFilterTemplate, searchControls);
 
-			if (enumeration.hasMoreElements()) {
-				if (_log.isDebugEnabled()) {
-					_log.debug("Search filter returned at least one result");
-				}
-
-				Binding binding = enumeration.nextElement();
-
-				Attributes attributes = _safePortalLDAP.getUserAttributes(
-					ldapServerId, companyId, safeLdapContext,
-					SafeLdapNameFactory.from(binding));
-
-				return importUser(
-					ldapServerId, companyId, safeLdapContext, attributes, null);
+			if (!enumeration.hasMoreElements()) {
+				return null;
 			}
 
-			return null;
+			if (_log.isDebugEnabled()) {
+				_log.debug("Search filter returned at least one result");
+			}
+
+			Binding binding = enumeration.nextElement();
+
+			Attributes attributes = _safePortalLDAP.getUserAttributes(
+				ldapServerId, companyId, safeLdapContext,
+				SafeLdapNameFactory.from(binding));
+
+			return importUser(
+				ldapServerId, companyId, safeLdapContext, attributes, null);
 		}
 		catch (Exception exception) {
 			if (_log.isWarnEnabled()) {
@@ -927,6 +933,44 @@ public class LDAPUserImporterImpl implements LDAPUserImporter {
 			userExpandoMappings, userMappings);
 	}
 
+	private ExpandoColumn _getOrAddExpandoColumn(long companyId)
+		throws Exception {
+
+		ExpandoTable expandoTable = _expandoTableLocalService.fetchTable(
+			companyId, _classNameLocalService.getClassNameId(UserGroup.class),
+			ExpandoTableConstants.DEFAULT_TABLE_NAME);
+
+		if (expandoTable == null) {
+			expandoTable = _expandoTableLocalService.addTable(
+				companyId, UserGroup.class.getName(),
+				ExpandoTableConstants.DEFAULT_TABLE_NAME);
+		}
+
+		ExpandoColumn expandoColumn = _expandoColumnLocalService.fetchColumn(
+			expandoTable.getTableId(), "ldapServerId");
+
+		if (expandoColumn != null) {
+			return expandoColumn;
+		}
+
+		expandoColumn = _expandoColumnLocalService.addColumn(
+			expandoTable.getTableId(), "ldapServerId",
+			ExpandoColumnConstants.LONG);
+
+		UnicodeProperties unicodeProperties =
+			expandoColumn.getTypeSettingsProperties();
+
+		unicodeProperties.setProperty(
+			ExpandoColumnConstants.INDEX_TYPE,
+			String.valueOf(ExpandoColumnConstants.INDEX_TYPE_KEYWORD));
+		unicodeProperties.setProperty(
+			ExpandoColumnConstants.PROPERTY_HIDDEN, Boolean.TRUE.toString());
+
+		expandoColumn.setTypeSettingsProperties(unicodeProperties);
+
+		return _expandoColumnLocalService.updateExpandoColumn(expandoColumn);
+	}
+
 	private Attribute _getUsers(
 			LDAPImportContext ldapImportContext, Attributes groupAttributes,
 			UserGroup userGroup)
@@ -1174,6 +1218,14 @@ public class LDAPUserImporterImpl implements LDAPUserImporter {
 			}
 		}
 
+		ExpandoColumn expandoColumn = _getOrAddExpandoColumn(
+			ldapImportContext.getCompanyId());
+
+		_expandoValueLocalService.addValue(
+			_classNameLocalService.getClassNameId(UserGroup.class),
+			expandoColumn.getTableId(), expandoColumn.getColumnId(),
+			userGroupId, String.valueOf(ldapImportContext.getLdapServerId()));
+
 		if (_log.isDebugEnabled()) {
 			_log.debug(
 				StringBundler.concat(
@@ -1298,7 +1350,9 @@ public class LDAPUserImporterImpl implements LDAPUserImporter {
 			}
 		}
 
-		_updateUserUserGroups(user.getUserId(), newUserGroupIds);
+		_updateUserUserGroups(
+			ldapImportContext.getLdapServerId(), newUserGroupIds,
+			user.getUserId());
 	}
 
 	private User _importUser(
@@ -1472,22 +1526,22 @@ public class LDAPUserImporterImpl implements LDAPUserImporter {
 				LDAPUtil.getBaseDNSafeLdapName(ldapServerConfiguration),
 				safeLdapFilter, searchControls);
 
-			if (enumeration.hasMoreElements()) {
-				if (_log.isDebugEnabled()) {
-					_log.debug("Search filter returned at least one result");
-				}
-
-				Binding binding = enumeration.nextElement();
-
-				Attributes attributes = _safePortalLDAP.getUserAttributes(
-					ldapServerId, companyId, safeLdapContext,
-					SafeLdapNameFactory.from(binding));
-
-				return importUser(
-					ldapServerId, companyId, safeLdapContext, attributes, null);
+			if (!enumeration.hasMoreElements()) {
+				return null;
 			}
 
-			return null;
+			if (_log.isDebugEnabled()) {
+				_log.debug("Search filter returned at least one result");
+			}
+
+			Binding binding = enumeration.nextElement();
+
+			Attributes attributes = _safePortalLDAP.getUserAttributes(
+				ldapServerId, companyId, safeLdapContext,
+				SafeLdapNameFactory.from(binding));
+
+			return importUser(
+				ldapServerId, companyId, safeLdapContext, attributes, null);
 		}
 		catch (Exception exception) {
 			if (_log.isWarnEnabled()) {
@@ -1534,8 +1588,9 @@ public class LDAPUserImporterImpl implements LDAPUserImporter {
 					userGroup.getDescription(), ldapGroup.getDescription())) {
 
 				_userGroupLocalService.updateUserGroup(
-					companyId, userGroup.getUserGroupId(),
-					ldapGroup.getGroupName(), ldapGroup.getDescription(), null);
+					userGroup.getExternalReferenceCode(), companyId,
+					userGroup.getUserGroupId(), ldapGroup.getGroupName(),
+					ldapGroup.getDescription(), null);
 			}
 		}
 		catch (NoSuchUserGroupException noSuchUserGroupException) {
@@ -1560,8 +1615,8 @@ public class LDAPUserImporterImpl implements LDAPUserImporter {
 
 			try {
 				userGroup = _userGroupLocalService.addUserGroup(
-					guestUserId, companyId, ldapGroup.getGroupName(),
-					ldapGroup.getDescription(), null);
+					StringPool.BLANK, guestUserId, companyId,
+					ldapGroup.getGroupName(), ldapGroup.getDescription(), null);
 
 				if (_log.isDebugEnabled()) {
 					_log.debug(
@@ -1971,7 +2026,8 @@ public class LDAPUserImporterImpl implements LDAPUserImporter {
 		return password;
 	}
 
-	private void _updateUserUserGroups(long userId, Set<Long> userGroupIds)
+	private void _updateUserUserGroups(
+			long ldapServerId, Set<Long> userGroupIds, long userId)
 		throws Exception {
 
 		List<Long> deleteUserGroupIds = new ArrayList<>();
@@ -1986,7 +2042,19 @@ public class LDAPUserImporterImpl implements LDAPUserImporter {
 					userGroupIds.remove(userGroupId);
 				}
 				else {
-					deleteUserGroupIds.add(userGroupId);
+					ExpandoColumn expandoColumn = _getOrAddExpandoColumn(
+						userGroup.getCompanyId());
+
+					ExpandoValue expandoValue =
+						_expandoValueLocalService.getValue(
+							expandoColumn.getTableId(),
+							expandoColumn.getColumnId(), userGroupId);
+
+					if ((expandoValue != null) &&
+						(expandoValue.getLong() == ldapServerId)) {
+
+						deleteUserGroupIds.add(userGroupId);
+					}
 				}
 			}
 		}
@@ -2034,9 +2102,18 @@ public class LDAPUserImporterImpl implements LDAPUserImporter {
 	private BeanProperties _beanProperties;
 
 	@Reference
+	private ClassNameLocalService _classNameLocalService;
+
+	@Reference
 	private CompanyLocalService _companyLocalService;
 
 	private String _companySecurityAuthType;
+
+	@Reference
+	private ExpandoColumnLocalService _expandoColumnLocalService;
+
+	@Reference
+	private ExpandoTableLocalService _expandoTableLocalService;
 
 	@Reference
 	private ExpandoValueLocalService _expandoValueLocalService;

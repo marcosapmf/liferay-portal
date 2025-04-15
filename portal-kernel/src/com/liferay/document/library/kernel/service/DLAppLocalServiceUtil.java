@@ -272,13 +272,14 @@ public class DLAppLocalServiceUtil {
 	 */
 	public static com.liferay.portal.kernel.repository.model.FileShortcut
 			addFileShortcut(
-				long userId, long repositoryId, long folderId,
-				long toFileEntryId,
+				String externalReferenceCode, long userId, long repositoryId,
+				long folderId, long toFileEntryId,
 				com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws PortalException {
 
 		return getService().addFileShortcut(
-			userId, repositoryId, folderId, toFileEntryId, serviceContext);
+			externalReferenceCode, userId, repositoryId, folderId,
+			toFileEntryId, serviceContext);
 	}
 
 	/**
@@ -334,6 +335,14 @@ public class DLAppLocalServiceUtil {
 		throws PortalException {
 
 		getService().deleteFileEntry(fileEntryId);
+	}
+
+	public static void deleteFileEntryByExternalReferenceCode(
+			String externalReferenceCode, long groupId)
+		throws PortalException {
+
+		getService().deleteFileEntryByExternalReferenceCode(
+			externalReferenceCode, groupId);
 	}
 
 	/**
@@ -418,6 +427,22 @@ public class DLAppLocalServiceUtil {
 			groupId, externalReferenceCode);
 	}
 
+	public static com.liferay.portal.kernel.repository.model.FileShortcut
+			fetchFileShortcut(long fileShortcutId)
+		throws PortalException {
+
+		return getService().fetchFileShortcut(fileShortcutId);
+	}
+
+	public static com.liferay.portal.kernel.repository.model.FileShortcut
+			fetchFileShortcutByExternalReferenceCode(
+				String externalReferenceCode, long groupId)
+		throws PortalException {
+
+		return getService().fetchFileShortcutByExternalReferenceCode(
+			externalReferenceCode, groupId);
+	}
+
 	public static com.liferay.portal.kernel.repository.model.Folder
 			fetchFolderByExternalReferenceCode(
 				String externalReferenceCode, long groupId)
@@ -467,11 +492,11 @@ public class DLAppLocalServiceUtil {
 	 */
 	public static com.liferay.portal.kernel.repository.model.FileEntry
 			getFileEntryByExternalReferenceCode(
-				long groupId, String externalReferenceCode)
+				String externalReferenceCode, long groupId)
 		throws PortalException {
 
 		return getService().getFileEntryByExternalReferenceCode(
-			groupId, externalReferenceCode);
+			externalReferenceCode, groupId);
 	}
 
 	/**
@@ -518,6 +543,15 @@ public class DLAppLocalServiceUtil {
 		throws PortalException {
 
 		return getService().getFileShortcut(fileShortcutId);
+	}
+
+	public static com.liferay.portal.kernel.repository.model.FileShortcut
+			getFileShortcutByExternalReferenceCode(
+				String externalReferenceCode, long groupId)
+		throws PortalException {
+
+		return getService().getFileShortcutByExternalReferenceCode(
+			externalReferenceCode, groupId);
 	}
 
 	/**
@@ -626,6 +660,13 @@ public class DLAppLocalServiceUtil {
 			userId, folderId, parentFolderId, serviceContext);
 	}
 
+	public static void subscribeFileEntry(
+			long userId, long groupId, long fileEntryId)
+		throws PortalException {
+
+		getService().subscribeFileEntry(userId, groupId, fileEntryId);
+	}
+
 	/**
 	 * Subscribe the user to changes in documents of the file entry type. This
 	 * method is only supported by the Liferay repository.
@@ -655,6 +696,13 @@ public class DLAppLocalServiceUtil {
 		throws PortalException {
 
 		getService().subscribeFolder(userId, groupId, folderId);
+	}
+
+	public static void unsubscribeFileEntry(
+			long userId, long groupId, long fileEntryId)
+		throws PortalException {
+
+		getService().unsubscribeFileEntry(userId, groupId, fileEntryId);
 	}
 
 	/**

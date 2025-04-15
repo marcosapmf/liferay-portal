@@ -5,6 +5,11 @@
 
 package com.liferay.scim.rest.resource.v1_0.test;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.PropertyNamingStrategy;
+import com.fasterxml.jackson.databind.cfg.MapperConfig;
+import com.fasterxml.jackson.databind.introspect.AnnotatedField;
+
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.expando.kernel.service.ExpandoColumnLocalService;
 import com.liferay.expando.kernel.service.ExpandoTableLocalService;
@@ -13,9 +18,12 @@ import com.liferay.portal.configuration.test.util.ConfigurationTestUtil;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.search.Indexer;
+import com.liferay.portal.kernel.search.IndexerRegistryUtil;
 import com.liferay.portal.kernel.service.ClassNameLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalService;
+import com.liferay.portal.kernel.test.TestInfo;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DataGuard;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
@@ -26,19 +34,27 @@ import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
-import com.liferay.portal.test.rule.FeatureFlags;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.scim.rest.client.dto.v1_0.MultiValuedAttribute;
 import com.liferay.scim.rest.client.dto.v1_0.Name;
+import com.liferay.scim.rest.client.dto.v1_0.Operation;
+import com.liferay.scim.rest.client.dto.v1_0.PatchOp;
 import com.liferay.scim.rest.client.dto.v1_0.User;
+import com.liferay.scim.rest.client.dto.v1_0.UserSchemaExtension;
 import com.liferay.scim.rest.client.http.HttpInvoker;
 import com.liferay.scim.rest.resource.v1_0.test.util.ScimTestUtil;
+import com.liferay.scim.rest.util.ScimClientUtil;
 
 import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Date;
 
-import org.junit.AfterClass;
+import org.apache.commons.lang.time.DateUtils;
+
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Ignore;
@@ -50,7 +66,6 @@ import org.junit.runner.RunWith;
  * @author Olivér Kecskeméty
  */
 @DataGuard(scope = DataGuard.Scope.METHOD)
-@FeatureFlags("LPS-96845")
 @RunWith(Arquillian.class)
 public class UserResourceTest extends BaseUserResourceTestCase {
 
@@ -62,6 +77,12 @@ public class UserResourceTest extends BaseUserResourceTestCase {
 	@BeforeClass
 	public static void setUpClass() throws Exception {
 		BaseUserResourceTestCase.setUpClass();
+	}
+
+	@Before
+	@Override
+	public void setUp() throws Exception {
+		super.setUp();
 
 		_pid = ConfigurationTestUtil.createFactoryConfiguration(
 			"com.liferay.scim.rest.internal.configuration." +
@@ -72,11 +93,14 @@ public class UserResourceTest extends BaseUserResourceTestCase {
 				"matcherField", "email"
 			).put(
 				"oAuth2ApplicationName", "scim-client-test"
+			).put(
+				"userId", TestPropsValues.getUserId()
 			).build());
 	}
 
-	@AfterClass
-	public static void tearDownClass() throws Exception {
+	@After
+	@Override
+	public void tearDown() throws Exception {
 		ConfigurationTestUtil.deleteConfiguration(_pid);
 	}
 
@@ -116,6 +140,11 @@ public class UserResourceTest extends BaseUserResourceTestCase {
 			409,
 			userResource.deleteV2UserHttpResponse(
 				String.valueOf(portalUser.getUserId())));
+
+		ConfigurationTestUtil.deleteConfiguration(_pid);
+
+		assertHttpResponseStatusCode(
+			404, userResource.deleteV2UserHttpResponse("12345"));
 	}
 
 	@Override
@@ -131,6 +160,11 @@ public class UserResourceTest extends BaseUserResourceTestCase {
 
 		assertHttpResponseStatusCode(200, httpResponse);
 		assertValid(User.toDTO(httpResponse.getContent()));
+
+		ConfigurationTestUtil.deleteConfiguration(_pid);
+
+		assertHttpResponseStatusCode(
+			404, userResource.getV2UserByIdHttpResponse(user.getId()));
 	}
 
 	@Override
@@ -138,17 +172,124 @@ public class UserResourceTest extends BaseUserResourceTestCase {
 	public void testGetV2Users() throws Exception {
 		UserTestUtil.addUser();
 
-		_assertListResponse(userResource.getV2Users(5, 0), 0, 0);
+		_assertListResponse(userResource.getV2Users(5, 0, null), 0, 0);
 
 		User user1 = testDeleteV2User_addUser();
 		User user2 = testDeleteV2User_addUser();
 
-		_assertListResponse(userResource.getV2Users(5, 0), 2, 2, user1, user2);
+		_assertListResponse(
+			userResource.getV2Users(5, 0, null), 2, 2, user1, user2);
 
 		User user3 = testDeleteV2User_addUser();
 
 		_assertListResponse(
-			userResource.getV2Users(5, 3), 3, 1, user1, user2, user3);
+			userResource.getV2Users(5, 3, null), 3, 1, user1, user2, user3);
+
+		long userId = GetterUtil.getLong(user3.getId());
+
+		ScimTestUtil.saveSCIMClientId(
+			com.liferay.portal.kernel.model.User.class.getName(), userId,
+			TestPropsValues.getCompanyId(),
+			ScimClientUtil.generateScimClientId(
+				"scim-client-test" + RandomTestUtil.randomString()));
+
+		_reindexUser(userId);
+
+		_assertListResponse(
+			userResource.getV2Users(5, 0, null), 2, 2, user1, user2);
+		_assertListResponse(
+			userResource.getV2Users(
+				5, 0,
+				"externalId eq \"" + RandomTestUtil.randomString() + "\""),
+			0, 0);
+		_assertListResponse(
+			userResource.getV2Users(
+				5, 0, "externalId eq \"" + user1.getExternalId() + "\""),
+			1, 1, user1);
+		_assertListResponse(
+			userResource.getV2Users(
+				5, 0, "userName eq \"" + RandomTestUtil.randomString() + "\""),
+			0, 0);
+		_assertListResponse(
+			userResource.getV2Users(
+				5, 0, "userName eq \"" + user1.getUserName() + "\""),
+			1, 1, user1);
+
+		assertHttpResponseStatusCode(
+			400,
+			userResource.getV2UsersHttpResponse(
+				5, 0,
+				RandomTestUtil.randomString() + "eq \"" +
+					RandomTestUtil.randomString() + "\""));
+
+		ConfigurationTestUtil.deleteConfiguration(_pid);
+
+		assertHttpResponseStatusCode(
+			404, userResource.getV2UsersHttpResponse(5, 0, null));
+	}
+
+	@Override
+	@Test
+	@TestInfo("LPD-48895")
+	public void testPatchV2User() throws Exception {
+		User user = testDeleteV2User_addUser();
+
+		PatchOp patchOp = new PatchOp();
+
+		String title = StringUtil.toLowerCase(RandomTestUtil.randomString());
+
+		patchOp.setOperations(
+			new Operation[] {
+				new Operation() {
+					{
+						setOp("replace");
+						setPath("title");
+						setValue(title);
+					}
+				}
+			});
+		patchOp.setSchemas(
+			new String[] {"\"urn:ietf:params:scim:api:messages:2.0:PatchOp\""});
+
+		HttpInvoker.HttpResponse httpResponse =
+			userResource.patchV2UserHttpResponse(user.getId(), patchOp);
+
+		assertHttpResponseStatusCode(200, httpResponse);
+
+		User patchUser = User.toDTO(httpResponse.getContent());
+
+		assertValid(patchUser);
+
+		Assert.assertEquals(patchUser.getTitle(), title);
+
+		patchOp.setOperations(
+			new Operation[] {
+				new Operation() {
+					{
+						setOp("replace");
+						setPath("active");
+						setValue(false);
+					}
+				}
+			});
+
+		httpResponse = userResource.patchV2UserHttpResponse(
+			user.getId(), patchOp);
+
+		assertHttpResponseStatusCode(200, httpResponse);
+
+		patchUser = User.toDTO(httpResponse.getContent());
+
+		assertValid(patchUser);
+
+		Assert.assertEquals(patchUser.getActive(), false);
+
+		ConfigurationTestUtil.deleteConfiguration(_pid);
+
+		assertHttpResponseStatusCode(
+			404,
+			userResource.patchV2UserHttpResponse(
+				randomUser().getId(), patchOp));
 	}
 
 	@Override
@@ -165,15 +306,44 @@ public class UserResourceTest extends BaseUserResourceTestCase {
 		assertEquals(
 			postUser1, _getUser(String.valueOf(portalUser1.getUserId())));
 
-		// Provision an existing user with no SCIM client ID set
+		// Provision an existing inactive user with SCIM client ID set
+
+		_userLocalService.updateStatus(
+			portalUser1, WorkflowConstants.STATUS_INACTIVE,
+			new ServiceContext());
+
+		Assert.assertFalse(portalUser1.isActive());
+
+		postUser1.setActive(true);
+
+		userResource.postV2User(postUser1);
+
+		com.liferay.portal.kernel.model.User updatedPortalUser1 =
+			_userLocalService.getUserByExternalReferenceCode(
+				postUser1.getExternalId(), TestPropsValues.getCompanyId());
+
+		Assert.assertTrue(updatedPortalUser1.isActive());
+
+		// Provision an existing inactive user with no SCIM client ID set
 
 		com.liferay.portal.kernel.model.User portalUser2 =
 			UserTestUtil.addUser();
+
+		_userLocalService.updateStatus(
+			portalUser2, WorkflowConstants.STATUS_INACTIVE,
+			new ServiceContext());
+
+		Assert.assertFalse(portalUser2.isActive());
 
 		User postUser2 = _createUser(portalUser2);
 
 		HttpInvoker.HttpResponse httpResponse =
 			userResource.postV2UserHttpResponse(postUser2);
+
+		portalUser2 = _userLocalService.getUserByExternalReferenceCode(
+			postUser2.getExternalId(), TestPropsValues.getCompanyId());
+
+		Assert.assertTrue(portalUser2.isActive());
 
 		postUser2 = User.toDTO(httpResponse.getContent());
 
@@ -186,23 +356,6 @@ public class UserResourceTest extends BaseUserResourceTestCase {
 		Assert.assertEquals(
 			postUser2.getExternalId(),
 			updatedPortalUser2.getExternalReferenceCode());
-
-		// Provision an existing inactive user with no SCIM client ID set
-
-		updatedPortalUser2 = _userLocalService.updateStatus(
-			updatedPortalUser2, WorkflowConstants.STATUS_INACTIVE,
-			new ServiceContext());
-
-		Assert.assertFalse(updatedPortalUser2.isActive());
-
-		postUser2.setActive(true);
-
-		userResource.postV2User(postUser2);
-
-		updatedPortalUser2 = _userLocalService.getUserByExternalReferenceCode(
-			postUser2.getExternalId(), TestPropsValues.getCompanyId());
-
-		Assert.assertTrue(updatedPortalUser2.isActive());
 
 		// Provision an existing user provided by another SCIM client
 
@@ -217,6 +370,24 @@ public class UserResourceTest extends BaseUserResourceTestCase {
 
 		assertHttpResponseStatusCode(
 			409, userResource.postV2UserHttpResponse(postUser3));
+
+		User postUser4 = randomUser();
+
+		postUser4.setActive((Boolean)null);
+
+		assertHttpResponseStatusCode(
+			201, userResource.postV2UserHttpResponse(postUser4));
+
+		com.liferay.portal.kernel.model.User portalUser4 =
+			_userLocalService.getUserByExternalReferenceCode(
+				postUser4.getExternalId(), TestPropsValues.getCompanyId());
+
+		Assert.assertTrue(portalUser4.isActive());
+
+		ConfigurationTestUtil.deleteConfiguration(_pid);
+
+		assertHttpResponseStatusCode(
+			404, userResource.postV2UserHttpResponse(randomUser()));
 	}
 
 	@Ignore
@@ -228,23 +399,75 @@ public class UserResourceTest extends BaseUserResourceTestCase {
 	@Override
 	@Test
 	public void testPutV2User() throws Exception {
-		User user = testDeleteV2User_addUser();
+		assertHttpResponseStatusCode(
+			404, userResource.putV2UserHttpResponse("12345", randomUser()));
+
+		com.liferay.portal.kernel.model.User portalUser =
+			UserTestUtil.addUser();
+
+		User user1 = _createUser(portalUser);
+
+		assertHttpResponseStatusCode(
+			404, userResource.putV2UserHttpResponse(user1.getId(), user1));
+
+		User user2 = testDeleteV2User_addUser();
 
 		String newTitle = StringUtil.toLowerCase(RandomTestUtil.randomString());
 
-		user.setTitle(newTitle);
+		user2.setTitle(newTitle);
 
 		HttpInvoker.HttpResponse httpResponse =
-			userResource.putV2UserHttpResponse(user.getId(), user);
+			userResource.putV2UserHttpResponse(user2.getId(), user2);
 
-		assertEquals(user, User.toDTO(httpResponse.getContent()));
+		assertEquals(user2, User.toDTO(httpResponse.getContent()));
+
+		ScimTestUtil.saveSCIMClientId(
+			com.liferay.portal.kernel.model.User.class.getName(),
+			GetterUtil.getLong(user2.getId()), TestPropsValues.getCompanyId(),
+			ScimClientUtil.generateScimClientId(
+				"scim-client-test" + RandomTestUtil.randomString()));
+
+		assertHttpResponseStatusCode(
+			409, userResource.putV2UserHttpResponse(user2.getId(), user2));
+
+		ConfigurationTestUtil.deleteConfiguration(_pid);
+
+		assertHttpResponseStatusCode(
+			404, userResource.putV2UserHttpResponse(user2.getId(), user2));
 	}
 
 	@Override
 	protected String[] getAdditionalAssertFieldNames() {
 		return new String[] {
-			"emails", "externalId", "name", "title", "userName"
+			"emails", "externalId", "name", "title",
+			"urn_ietf_params_scim_schemas_extension_liferay_2_0_User",
+			"userName"
 		};
+	}
+
+	@Override
+	protected ObjectMapper getClientSerDesObjectMapper() {
+		ObjectMapper objectMapper = super.getClientSerDesObjectMapper();
+
+		objectMapper.setPropertyNamingStrategy(
+			new PropertyNamingStrategy() {
+
+				@Override
+				public String nameForField(
+					MapperConfig<?> config, AnnotatedField field,
+					String defaultName) {
+
+					if (!StringUtil.startsWith(defaultName, "urn")) {
+						return super.nameForField(config, field, defaultName);
+					}
+
+					return "urn:ietf:params:scim:schemas:extension:liferay:" +
+						"2.0:User";
+				}
+
+			});
+
+		return objectMapper;
 	}
 
 	@Override
@@ -257,7 +480,7 @@ public class UserResourceTest extends BaseUserResourceTestCase {
 				new MultiValuedAttribute() {
 					{
 						primary = true;
-						type = "default";
+						type = "work";
 						value = user.getUserName() + "@liferay.com";
 					}
 				}
@@ -272,7 +495,17 @@ public class UserResourceTest extends BaseUserResourceTestCase {
 				}
 			});
 		user.setSchemas(
-			new String[] {"urn:ietf:params:scim:schemas:core:2.0:User"});
+			new String[] {
+				"urn:ietf:params:scim:schemas:core:2.0:User",
+				"urn:ietf:params:scim:schemas:extension:liferay:2.0:User"
+			});
+		user.setUrn_ietf_params_scim_schemas_extension_liferay_2_0_User(
+			new UserSchemaExtension() {
+				{
+					birthday = DateUtils.truncate(new Date(), Calendar.DATE);
+					male = true;
+				}
+			});
 
 		return user;
 	}
@@ -359,6 +592,15 @@ public class UserResourceTest extends BaseUserResourceTestCase {
 		Object userObject = userResource.getV2UserById(userId);
 
 		return User.toDTO(userObject.toString());
+	}
+
+	private void _reindexUser(long userId) throws Exception {
+		Indexer<com.liferay.portal.kernel.model.User> indexer =
+			IndexerRegistryUtil.nullSafeGetIndexer(
+				com.liferay.portal.kernel.model.User.class);
+
+		indexer.reindex(
+			com.liferay.portal.kernel.model.User.class.getName(), userId);
 	}
 
 	private static String _pid;

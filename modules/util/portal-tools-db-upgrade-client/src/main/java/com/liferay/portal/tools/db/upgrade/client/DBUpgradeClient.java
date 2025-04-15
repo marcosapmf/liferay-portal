@@ -58,10 +58,10 @@ public class DBUpgradeClient {
 			CommandLine commandLine = commandLineParser.parse(options, args);
 
 			if (commandLine.hasOption("help")) {
-				HelpFormatter helpFormatter = new HelpFormatter();
-
-				helpFormatter.printHelp(
-					"Liferay Portal Tools Database Upgrade Client", options);
+				new HelpFormatter(
+				).printHelp(
+					"Liferay Portal Tools Database Upgrade Client", options
+				);
 
 				return;
 			}
@@ -129,10 +129,10 @@ public class DBUpgradeClient {
 
 			parseException.printStackTrace();
 
-			HelpFormatter helpFormatter = new HelpFormatter();
-
-			helpFormatter.printHelp(
-				"Liferay Portal Tools Database Upgrade Client", options);
+			new HelpFormatter(
+			).printHelp(
+				"Liferay Portal Tools Database Upgrade Client", options
+			);
 		}
 		catch (Exception exception) {
 			System.err.println("Error running upgrade:");
@@ -789,7 +789,7 @@ public class DBUpgradeClient {
 	}
 
 	private static final String[] _APP_SERVER_NAMES = {
-		"jboss", "tomcat", "weblogic", "websphere", "wildfly"
+		"jboss", "tomcat", "weblogic", "wildfly"
 	};
 
 	private static final String[] _DATABASE_TYPES = {
@@ -808,6 +808,7 @@ public class DBUpgradeClient {
 		"--add-opens=java.base/java.lang.invoke=ALL-UNNAMED",
 		"--add-opens=java.base/java.lang.reflect=ALL-UNNAMED",
 		"--add-opens=java.base/java.net=ALL-UNNAMED",
+		"--add-opens java.base/java.util=ALL-UNNAMED",
 		"--add-opens=java.base/sun.net.www.protocol.http=ALL-UNNAMED",
 		"--add-opens=java.base/sun.net.www.protocol.https=ALL-UNNAMED",
 		"--add-opens=java.base/sun.util.calendar=ALL-UNNAMED",

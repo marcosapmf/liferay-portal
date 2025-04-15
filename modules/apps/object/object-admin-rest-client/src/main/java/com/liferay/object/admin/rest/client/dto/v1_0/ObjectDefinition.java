@@ -118,6 +118,48 @@ public class ObjectDefinition implements Cloneable, Serializable {
 
 	protected Boolean active;
 
+	public String getClassName() {
+		return className;
+	}
+
+	public void setClassName(String className) {
+		this.className = className;
+	}
+
+	public void setClassName(
+		UnsafeSupplier<String, Exception> classNameUnsafeSupplier) {
+
+		try {
+			className = classNameUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String className;
+
+	public Creator getCreator() {
+		return creator;
+	}
+
+	public void setCreator(Creator creator) {
+		this.creator = creator;
+	}
+
+	public void setCreator(
+		UnsafeSupplier<Creator, Exception> creatorUnsafeSupplier) {
+
+		try {
+			creator = creatorUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Creator creator;
+
 	public Date getDateCreated() {
 		return dateCreated;
 	}
@@ -223,6 +265,31 @@ public class ObjectDefinition implements Cloneable, Serializable {
 
 	protected Boolean enableComments;
 
+	public Boolean getEnableFriendlyURLCustomization() {
+		return enableFriendlyURLCustomization;
+	}
+
+	public void setEnableFriendlyURLCustomization(
+		Boolean enableFriendlyURLCustomization) {
+
+		this.enableFriendlyURLCustomization = enableFriendlyURLCustomization;
+	}
+
+	public void setEnableFriendlyURLCustomization(
+		UnsafeSupplier<Boolean, Exception>
+			enableFriendlyURLCustomizationUnsafeSupplier) {
+
+		try {
+			enableFriendlyURLCustomization =
+				enableFriendlyURLCustomizationUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Boolean enableFriendlyURLCustomization;
+
 	public Boolean getEnableIndexSearch() {
 		return enableIndexSearch;
 	}
@@ -309,6 +376,31 @@ public class ObjectDefinition implements Cloneable, Serializable {
 	}
 
 	protected Boolean enableObjectEntryHistory;
+
+	public Boolean getEnableObjectEntryVersioning() {
+		return enableObjectEntryVersioning;
+	}
+
+	public void setEnableObjectEntryVersioning(
+		Boolean enableObjectEntryVersioning) {
+
+		this.enableObjectEntryVersioning = enableObjectEntryVersioning;
+	}
+
+	public void setEnableObjectEntryVersioning(
+		UnsafeSupplier<Boolean, Exception>
+			enableObjectEntryVersioningUnsafeSupplier) {
+
+		try {
+			enableObjectEntryVersioning =
+				enableObjectEntryVersioningUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Boolean enableObjectEntryVersioning;
 
 	public String getExternalReferenceCode() {
 		return externalReferenceCode;
@@ -431,6 +523,31 @@ public class ObjectDefinition implements Cloneable, Serializable {
 	}
 
 	protected ObjectAction[] objectActions;
+
+	public ObjectDefinitionSetting[] getObjectDefinitionSettings() {
+		return objectDefinitionSettings;
+	}
+
+	public void setObjectDefinitionSettings(
+		ObjectDefinitionSetting[] objectDefinitionSettings) {
+
+		this.objectDefinitionSettings = objectDefinitionSettings;
+	}
+
+	public void setObjectDefinitionSettings(
+		UnsafeSupplier<ObjectDefinitionSetting[], Exception>
+			objectDefinitionSettingsUnsafeSupplier) {
+
+		try {
+			objectDefinitionSettings =
+				objectDefinitionSettingsUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected ObjectDefinitionSetting[] objectDefinitionSettings;
 
 	public ObjectField[] getObjectFields() {
 		return objectFields;

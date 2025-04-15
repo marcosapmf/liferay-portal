@@ -740,7 +740,7 @@ public class ExportImportHelperImpl implements ExportImportHelper {
 
 		String referencedContentBehavior = "include-always";
 
-		if (!ArrayUtil.isEmpty(referencedContentBehaviorArray)) {
+		if (ArrayUtil.isNotEmpty(referencedContentBehaviorArray)) {
 			referencedContentBehavior = referencedContentBehaviorArray[0];
 		}
 
@@ -763,6 +763,12 @@ public class ExportImportHelperImpl implements ExportImportHelper {
 				 portletDataContext.getCompanyGroupId())) &&
 			(ExportImportThreadLocal.isLayoutExportInProcess() ||
 			 ExportImportThreadLocal.isLayoutStagingInProcess())) {
+
+			return false;
+		}
+
+		if (ExportImportThreadLocal.isLayoutStagingInProcess() &&
+			!_isStagedPortlet(portletDataContext)) {
 
 			return false;
 		}
@@ -1440,6 +1446,17 @@ public class ExportImportHelperImpl implements ExportImportHelper {
 				PortletIdCodec.decodePortletName(portletId));
 	}
 
+	private boolean _isStagedPortlet(PortletDataContext portletDataContext) {
+		Group group = _groupLocalService.fetchGroup(
+			portletDataContext.getGroupId());
+
+		if (group == null) {
+			return false;
+		}
+
+		return group.isStagedPortlet(portletDataContext.getPortletId());
+	}
+
 	private boolean _populateLayoutsJSON(
 		JSONArray layoutsJSONArray, Layout layout, long[] selectedLayoutIds) {
 
@@ -1503,25 +1520,25 @@ public class ExportImportHelperImpl implements ExportImportHelper {
 			StagedModelDataHandlerRegistryUtil.getStagedModelDataHandler(
 				className);
 
-		if ((stagedModelDataHandler == null) ||
-			!stagedModelDataHandler.validateReference(
+		if ((stagedModelDataHandler != null) &&
+			stagedModelDataHandler.validateReference(
 				portletDataContext, element)) {
 
-			MissingReference missingReference = new MissingReference(element);
-
-			Map<Long, Long> groupIds =
-				(Map<Long, Long>)portletDataContext.getNewPrimaryKeysMap(
-					Group.class);
-
-			missingReference.setGroupId(
-				MapUtil.getLong(
-					groupIds,
-					GetterUtil.getLong(element.attributeValue("group-id"))));
-
-			return missingReference;
+			return null;
 		}
 
-		return null;
+		MissingReference missingReference = new MissingReference(element);
+
+		Map<Long, Long> groupIds =
+			(Map<Long, Long>)portletDataContext.getNewPrimaryKeysMap(
+				Group.class);
+
+		missingReference.setGroupId(
+			MapUtil.getLong(
+				groupIds,
+				GetterUtil.getLong(element.attributeValue("group-id"))));
+
+		return missingReference;
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

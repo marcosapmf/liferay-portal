@@ -204,7 +204,19 @@ public class ShippingMethodCommerceCheckoutStep
 				commerceShippingOptions) {
 
 			if (shippingOptionName.equals(commerceShippingOption.getKey())) {
-				return commerceShippingOption.getAmount();
+				BigDecimal shippingAmount = commerceShippingOption.getAmount();
+
+				if (CommerceOrderUtil.isCommerceOrderMultishipping(
+						commerceOrder)) {
+
+					return shippingAmount.multiply(
+						BigDecimal.valueOf(
+							CommerceOrderUtil.
+								getCommerceOrderDeliveryGroupNamesCount(
+									commerceOrder)));
+				}
+
+				return shippingAmount;
 			}
 		}
 
@@ -273,7 +285,7 @@ public class ShippingMethodCommerceCheckoutStep
 							commerceOrder.getCommerceOrderId(),
 							commerceOrder.getBillingAddressId(),
 							commerceOrder.getCommerceAccountId(),
-							commerceOrder.getCommerceCurrencyId(),
+							commerceOrder.getCommerceCurrencyCode(),
 							commerceOrder.getCommerceOrderTypeId(),
 							commerceShippingMethodId,
 							commerceOrder.getDeliveryCommerceTermEntryId(),

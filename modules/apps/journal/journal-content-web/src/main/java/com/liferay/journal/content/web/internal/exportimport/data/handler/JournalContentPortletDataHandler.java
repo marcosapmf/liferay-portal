@@ -71,7 +71,12 @@ public class JournalContentPortletDataHandler extends BasePortletDataHandler {
 	@Activate
 	protected void activate() {
 		setDataLevel(DataLevel.PORTLET_INSTANCE);
-		setDataPortletPreferences("articleId", "ddmTemplateKey", "groupId");
+
+		setDataPortletPreferences(
+			"articleExternalReferenceCode", "articleId",
+			"ddmTemplateExternalReferenceCode", "ddmTemplateKey",
+			"groupExternalReferenceCode", "groupId");
+
 		setExportControls(
 			new PortletDataHandlerBoolean(
 				null, "selected-web-content", true, true, null,
@@ -91,9 +96,12 @@ public class JournalContentPortletDataHandler extends BasePortletDataHandler {
 			return portletPreferences;
 		}
 
-		portletPreferences.setValue("articleId", StringPool.BLANK);
-		portletPreferences.setValue("ddmTemplateKey", StringPool.BLANK);
-		portletPreferences.setValue("groupId", StringPool.BLANK);
+		portletPreferences.setValue(
+			"articleExternalReferenceCode", StringPool.BLANK);
+		portletPreferences.setValue(
+			"ddmTemplateExternalReferenceCode", StringPool.BLANK);
+		portletPreferences.setValue(
+			"groupExternalReferenceCode", StringPool.BLANK);
 
 		return portletPreferences;
 	}

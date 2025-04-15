@@ -161,6 +161,13 @@ public class NotificationQueueEntryResourceTest
 	@Ignore
 	@Override
 	@Test
+	public void testDeleteNotificationQueueEntryBatch() throws Exception {
+		super.testDeleteNotificationQueueEntryBatch();
+	}
+
+	@Ignore
+	@Override
+	@Test
 	public void testGetNotificationQueueEntriesPage() throws Exception {
 		super.testGetNotificationQueueEntriesPage();
 	}
@@ -223,6 +230,13 @@ public class NotificationQueueEntryResourceTest
 	@Test
 	public void testPutNotificationQueueEntryResend() throws Exception {
 		super.testPutNotificationQueueEntryResend();
+	}
+
+	@Ignore
+	@Override
+	@Test
+	public void testVulcanCRUDItemDelegateGetItem() throws Exception {
+		super.testVulcanCRUDItemDelegateGetItem();
 	}
 
 }

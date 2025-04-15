@@ -7,6 +7,10 @@
 
 <%@ include file="/portlet_list/init.jsp" %>
 
+<%
+StagingGroupHelper stagingGroupHelper = StagingGroupHelperUtil.getStagingGroupHelper();
+%>
+
 <liferay-util:buffer
 	var="html"
 >
@@ -25,15 +29,17 @@
 
 		PortletDataHandler portletDataHandler = portlet.getPortletDataHandlerInstance();
 
-		Class<?> portletDataHandlerClass = portletDataHandler.getClass();
-
-		String portletDataHandlerClassName = portletDataHandlerClass.getName();
-
-		if (portletDataHandlerClassNames.contains(portletDataHandlerClassName)) {
+		if (!portletDataHandler.isEnabled(company.getCompanyId()) || (portletDataHandler.isCompany() != stagingGroupHelper.isCompanyGroup(group))) {
 			continue;
 		}
 
-		portletDataHandlerClassNames.add(portletDataHandlerClassName);
+		String portletDataHandlerName = portletDataHandler.getName();
+
+		if (portletDataHandlerNames.contains(portletDataHandlerName)) {
+			continue;
+		}
+
+		portletDataHandlerNames.add(portletDataHandlerName);
 
 		String portletTitle = PortalUtil.getPortletTitle(portlet, application, locale);
 
@@ -45,7 +51,7 @@
 			exportControls = stagingControls;
 		}
 
-		if (ArrayUtil.isEmpty(exportControls) && ArrayUtil.isEmpty(metadataControls)) {
+		if (!portletDataHandler.isEmptyControlsAllowed() && ArrayUtil.isEmpty(exportControls) && ArrayUtil.isEmpty(metadataControls)) {
 			continue;
 		}
 
@@ -64,29 +70,30 @@
 
 		long exportModelCount = portletDataHandler.getExportModelCount(manifestSummary);
 
+		boolean modelCountSupported = portletDataHandler.isModelCountSupported();
 		long modelDeletionCount = manifestSummary.getModelDeletionCount(portletDataHandler.getDeletionSystemEventStagedModelTypes());
 
-		boolean displayCounts = (exportModelCount > 0) || (modelDeletionCount > 0);
+		if (modelCountSupported && (exportModelCount <= 0) && (modelDeletionCount <= 0) && !showAllPortlets) {
+			continue;
+		}
 
 		if (!type.equals(Constants.EXPORT)) {
 			UnicodeProperties liveGroupTypeSettingsUnicodeProperties = liveGroup.getTypeSettingsProperties();
 
-			displayCounts = displayCounts && GetterUtil.getBoolean(liveGroupTypeSettingsUnicodeProperties.getProperty(StagingUtil.getStagedPortletId(portlet.getRootPortletId())), portletDataHandler.isPublishToLiveByDefault());
-		}
-
-		if (!displayCounts && !showAllPortlets) {
-			continue;
+			if (!GetterUtil.getBoolean(liveGroupTypeSettingsUnicodeProperties.getProperty(StagingUtil.getStagedPortletId(portlet.getRootPortletId())), portletDataHandler.isPublishToLiveByDefault())) {
+				continue;
+			}
 		}
 
 		boolean showPortletDataInput = MapUtil.getBoolean(parameterMap, PortletDataHandlerKeys.PORTLET_DATA + StringPool.UNDERLINE + portlet.getPortletId(), portletDataHandler.isPublishToLiveByDefault()) || MapUtil.getBoolean(parameterMap, PortletDataHandlerKeys.PORTLET_DATA_ALL);
 	%>
 
-		<li class="tree-item <%= ((exportModelCount > 0) || showAllPortlets) ? StringPool.BLANK : "deletions" %>">
+		<li class="tree-item <%= ((exportModelCount > 0) || !modelCountSupported || showAllPortlets) ? StringPool.BLANK : "deletions" %>">
 			<liferay-staging:checkbox
 				checked="<%= showPortletDataInput %>"
 				deletions="<%= modelDeletionCount %>"
 				disabled="<%= disableInputs %>"
-				items="<%= exportModelCount %>"
+				items="<%= modelCountSupported ? exportModelCount : 0 %>"
 				label="<%= portletTitle %>"
 				name="<%= PortletDataHandlerKeys.PORTLET_DATA + StringPool.UNDERLINE + portlet.getPortletId() %>"
 			/>
@@ -99,33 +106,35 @@
 			}
 			%>
 
-			<ul class="hide" id="<portlet:namespace />showChangeContent_<%= portlet.getPortletId() %>">
-				<li>
-					<span class="selected-labels" id="<portlet:namespace />selectedContent_<%= portlet.getPortletId() %>"></span>
+			<c:if test="<%= !stagingGroupHelper.isCompanyGroup(group) %>">
+				<ul class="hide" id="<portlet:namespace />showChangeContent_<%= portlet.getPortletId() %>">
+					<li>
+						<span class="selected-labels" id="<portlet:namespace />selectedContent_<%= portlet.getPortletId() %>"></span>
 
-					<span <%= !disableInputs ? StringPool.BLANK : "class=\"hide\"" %>>
-						<clay:button
-							cssClass="content-link modify-link pr-1"
-							data-portletid="<%= portletId %>"
-							data-portlettitle="<%= portletTitle %>"
-							displayType="link"
-							id='<%= liferayPortletResponse.getNamespace() + "contentLink_" + portlet.getPortletId() %>'
-							label="change"
-						/>
+						<span <%= !disableInputs ? StringPool.BLANK : "class=\"hide\"" %>>
+							<clay:button
+								cssClass="content-link modify-link pr-1"
+								data-portletid="<%= portletId %>"
+								data-portlettitle="<%= portletTitle %>"
+								displayType="link"
+								id='<%= liferayPortletResponse.getNamespace() + "contentLink_" + portlet.getPortletId() %>'
+								label="change"
+							/>
 
-						<span id="<portlet:namespace />rightContentArrow_<%= portlet.getPortletId() %>">
-							<clay:icon
-								symbol="angle-right-small"
-							/>
+							<span id="<portlet:namespace />rightContentArrow_<%= portlet.getPortletId() %>">
+								<clay:icon
+									symbol="angle-right-small"
+								/>
+							</span>
+							<span class="hide" id="<portlet:namespace />downContentArrow_<%= portlet.getPortletId() %>">
+								<clay:icon
+									symbol="angle-down-small"
+								/>
+							</span>
 						</span>
-						<span class="hide" id="<portlet:namespace />downContentArrow_<%= portlet.getPortletId() %>">
-							<clay:icon
-								symbol="angle-down-small"
-							/>
-						</span>
-					</span>
-				</li>
-			</ul>
+					</li>
+				</ul>
+			</c:if>
 
 			<div class="<%= (disableInputs && showPortletDataInput) ? StringPool.BLANK : "hide " %>" id="<portlet:namespace />content_<%= portlet.getPortletId() %>">
 				<ul class="lfr-tree list-unstyled">
@@ -235,7 +244,7 @@ html = html.trim();
 	<%= html %>
 </ul>
 
-<c:if test="<%= type.equals(Constants.EXPORT) %>">
+<c:if test="<%= type.equals(Constants.EXPORT) && !stagingGroupHelper.isCompanyGroup(group) %>">
 	<aui:fieldset cssClass="content-options" label="for-each-of-the-selected-content-types,-export-their">
 		<span class="selected-labels" id="<portlet:namespace />selectedContentOptions"></span>
 

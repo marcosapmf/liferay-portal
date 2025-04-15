@@ -10,12 +10,14 @@ import com.liferay.portal.configuration.module.configuration.ConfigurationProvid
 import com.liferay.portal.json.JSONFactoryImpl;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.module.configuration.ConfigurationException;
 import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.search.facet.Facet;
 import com.liferay.portal.kernel.search.facet.collector.FacetCollector;
 import com.liferay.portal.kernel.search.facet.collector.TermCollector;
 import com.liferay.portal.kernel.search.facet.config.FacetConfiguration;
+import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
@@ -26,6 +28,7 @@ import com.liferay.portal.kernel.util.TimeZoneUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.search.web.internal.BaseFacetDisplayContextTestCase;
 import com.liferay.portal.search.web.internal.facet.display.context.BucketDisplayContext;
+import com.liferay.portal.search.web.internal.facet.display.context.FacetDisplayContext;
 import com.liferay.portal.search.web.internal.modified.facet.configuration.ModifiedFacetPortletInstanceConfiguration;
 import com.liferay.portal.search.web.internal.modified.facet.display.context.builder.ModifiedFacetDisplayContextBuilder;
 import com.liferay.portal.search.web.internal.util.DateRangeFactoryUtil;
@@ -164,6 +167,34 @@ public class ModifiedFacetDisplayContextBuilderTest
 	@Override
 	@Test
 	public void testEmptySearchResultsWithPreviousSelection() throws Exception {
+	}
+
+	@Override
+	@Test
+	public void testGetDisplayStyleGroup() throws Exception {
+		setUpGroupLocalServiceUtil(getGroup());
+		setUpPortletDisplayStyleGroupExternalReferenceCode(null);
+
+		_assertDisplayContext(getGroup());
+
+		groupLocalServiceUtilMockedStatic.verifyNoInteractions();
+	}
+
+	@Override
+	@Test
+	public void testGetDisplayStyleGroupWithConfiguration() throws Exception {
+		Group group = getGroup();
+
+		setUpGroupLocalServiceUtil(group);
+		setUpPortletDisplayStyleGroupExternalReferenceCode(
+			group.getExternalReferenceCode());
+
+		_assertDisplayContext(group);
+
+		groupLocalServiceUtilMockedStatic.verify(
+			() -> GroupLocalServiceUtil.fetchGroupByExternalReferenceCode(
+				group.getExternalReferenceCode(), 0L),
+			Mockito.times(1));
 	}
 
 	@Test
@@ -366,6 +397,36 @@ public class ModifiedFacetDisplayContextBuilderTest
 	}
 
 	@Override
+	protected FacetDisplayContext getFacetDisplayContext(Group group)
+		throws Exception {
+
+		return null;
+	}
+
+	@Override
+	protected void setUpPortletDisplayStyleGroupExternalReferenceCode(
+		String externalReferenceCode) {
+
+		ModifiedFacetPortletInstanceConfiguration
+			modifiedFacetPortletInstanceConfiguration = Mockito.mock(
+				ModifiedFacetPortletInstanceConfiguration.class);
+
+		Mockito.when(
+			modifiedFacetPortletInstanceConfiguration.
+				displayStyleGroupExternalReferenceCode()
+		).thenReturn(
+			externalReferenceCode
+		);
+
+		configurationProviderUtilMockedStatic.when(
+			() -> ConfigurationProviderUtil.getPortletInstanceConfiguration(
+				Mockito.any(), Mockito.any())
+		).thenReturn(
+			modifiedFacetPortletInstanceConfiguration
+		);
+	}
+
+	@Override
 	protected void testOrderBy(
 			int[] expectedFrequencies, String[] expectedTerms,
 			int[] frequencies, String order, String[] terms)
@@ -408,6 +469,24 @@ public class ModifiedFacetDisplayContextBuilderTest
 		);
 
 		jsonArray.put(jsonObject);
+	}
+
+	private void _assertDisplayContext(Group group) throws Exception {
+		ModifiedFacetDisplayContextBuilder modifiedFacetDisplayContextBuilder =
+			new ModifiedFacetDisplayContextBuilder(getRenderRequest(group));
+
+		modifiedFacetDisplayContextBuilder.setFacet(_facet);
+		modifiedFacetDisplayContextBuilder.setFromParameterValue("2018-01-01");
+		modifiedFacetDisplayContextBuilder.setTimeZone(
+			TimeZoneUtil.getDefault());
+		modifiedFacetDisplayContextBuilder.setToParameterValue("2018-01-31");
+
+		ModifiedFacetDisplayContext modifiedFacetDisplayContext =
+			modifiedFacetDisplayContextBuilder.build();
+
+		Assert.assertEquals(
+			group.getGroupId(),
+			modifiedFacetDisplayContext.getDisplayStyleGroupId());
 	}
 
 	private void _assertDoesNotHasParameter(String url, String name) {

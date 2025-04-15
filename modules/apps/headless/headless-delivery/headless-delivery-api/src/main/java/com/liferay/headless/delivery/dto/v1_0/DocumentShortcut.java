@@ -19,8 +19,6 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
-import io.swagger.v3.oas.annotations.media.Schema;
-
 import java.io.Serializable;
 
 import java.text.DateFormat;
@@ -59,7 +57,7 @@ public class DocumentShortcut implements Serializable {
 		return ObjectMapperUtil.unsafeReadValue(DocumentShortcut.class, json);
 	}
 
-	@Schema(
+	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "Block of actions allowed by the user making the request."
 	)
 	@Valid
@@ -106,7 +104,7 @@ public class DocumentShortcut implements Serializable {
 	@JsonIgnore
 	private Supplier<Map<String, Map<String, String>>> _actionsSupplier;
 
-	@Schema(
+	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "The key of the asset library to which the document shortcut is scoped."
 	)
 	public String getAssetLibraryKey() {
@@ -151,7 +149,9 @@ public class DocumentShortcut implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _assetLibraryKeySupplier;
 
-	@Schema(description = "The document shortcut's creation date.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The document shortcut's creation date."
+	)
 	public Date getDateCreated() {
 		if (_dateCreatedSupplier != null) {
 			dateCreated = _dateCreatedSupplier.get();
@@ -192,7 +192,7 @@ public class DocumentShortcut implements Serializable {
 	@JsonIgnore
 	private Supplier<Date> _dateCreatedSupplier;
 
-	@Schema(
+	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "The last time a field of the document shortcut changed."
 	)
 	public Date getDateModified() {
@@ -237,7 +237,54 @@ public class DocumentShortcut implements Serializable {
 	@JsonIgnore
 	private Supplier<Date> _dateModifiedSupplier;
 
-	@Schema(description = "The document shortcut's folder ID.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The document shortcut's external reference code."
+	)
+	public String getExternalReferenceCode() {
+		if (_externalReferenceCodeSupplier != null) {
+			externalReferenceCode = _externalReferenceCodeSupplier.get();
+
+			_externalReferenceCodeSupplier = null;
+		}
+
+		return externalReferenceCode;
+	}
+
+	public void setExternalReferenceCode(String externalReferenceCode) {
+		this.externalReferenceCode = externalReferenceCode;
+
+		_externalReferenceCodeSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setExternalReferenceCode(
+		UnsafeSupplier<String, Exception> externalReferenceCodeUnsafeSupplier) {
+
+		_externalReferenceCodeSupplier = () -> {
+			try {
+				return externalReferenceCodeUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField(
+		description = "The document shortcut's external reference code."
+	)
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected String externalReferenceCode;
+
+	@JsonIgnore
+	private Supplier<String> _externalReferenceCodeSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The document shortcut's folder ID."
+	)
 	public Long getFolderId() {
 		if (_folderIdSupplier != null) {
 			folderId = _folderIdSupplier.get();
@@ -278,7 +325,9 @@ public class DocumentShortcut implements Serializable {
 	@JsonIgnore
 	private Supplier<Long> _folderIdSupplier;
 
-	@Schema(description = "The document shortcut's ID.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The document shortcut's ID."
+	)
 	public Long getId() {
 		if (_idSupplier != null) {
 			id = _idSupplier.get();
@@ -317,7 +366,7 @@ public class DocumentShortcut implements Serializable {
 	@JsonIgnore
 	private Supplier<Long> _idSupplier;
 
-	@Schema(
+	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "The ID of the site to which this document shortcut is scoped."
 	)
 	public Long getSiteId() {
@@ -362,7 +411,7 @@ public class DocumentShortcut implements Serializable {
 	@JsonIgnore
 	private Supplier<Long> _siteIdSupplier;
 
-	@Schema(
+	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "The ID of the document to which this shortcut is scoped."
 	)
 	public Long getTargetDocumentId() {
@@ -407,7 +456,7 @@ public class DocumentShortcut implements Serializable {
 	@JsonIgnore
 	private Supplier<Long> _targetDocumentIdSupplier;
 
-	@Schema(
+	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "The title of the document to which this shortcut is scoped."
 	)
 	public String getTitle() {
@@ -452,10 +501,10 @@ public class DocumentShortcut implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _titleSupplier;
 
-	@JsonGetter("viewableBy")
-	@Schema(
+	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "A write-only property that specifies the default permissions."
 	)
+	@JsonGetter("viewableBy")
 	@Valid
 	public ViewableBy getViewableBy() {
 		if (_viewableBySupplier != null) {
@@ -600,6 +649,22 @@ public class DocumentShortcut implements Serializable {
 			sb.append("\"");
 		}
 
+		String externalReferenceCode = getExternalReferenceCode();
+
+		if (externalReferenceCode != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"externalReferenceCode\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(externalReferenceCode));
+
+			sb.append("\"");
+		}
+
 		Long folderId = getFolderId();
 
 		if (folderId != null) {
@@ -685,8 +750,8 @@ public class DocumentShortcut implements Serializable {
 		return sb.toString();
 	}
 
-	@Schema(
-		accessMode = Schema.AccessMode.READ_ONLY,
+	@io.swagger.v3.oas.annotations.media.Schema(
+		accessMode = io.swagger.v3.oas.annotations.media.Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.delivery.dto.v1_0.DocumentShortcut",
 		name = "x-class-name"
 	)

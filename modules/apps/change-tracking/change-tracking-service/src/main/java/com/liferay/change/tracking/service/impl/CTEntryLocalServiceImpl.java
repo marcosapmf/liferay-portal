@@ -12,6 +12,7 @@ import com.liferay.change.tracking.model.CTEntry;
 import com.liferay.change.tracking.model.CTEntryTable;
 import com.liferay.change.tracking.service.base.CTEntryLocalServiceBaseImpl;
 import com.liferay.change.tracking.service.persistence.CTCollectionPersistence;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.sql.dsl.DSLQueryFactoryUtil;
 import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.portal.aop.AopService;
@@ -23,12 +24,19 @@ import com.liferay.portal.kernel.model.change.tracking.CTModel;
 import com.liferay.portal.kernel.search.Indexable;
 import com.liferay.portal.kernel.search.IndexableType;
 import com.liferay.portal.kernel.util.ArrayUtil;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
+import java.io.Serializable;
+
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -56,9 +64,7 @@ public class CTEntryLocalServiceImpl extends CTEntryLocalServiceBaseImpl {
 		CTCollection ctCollection = _ctCollectionPersistence.findByPrimaryKey(
 			ctCollectionId);
 
-		if ((ctCollection.getStatus() != WorkflowConstants.STATUS_DRAFT) &&
-			(ctCollection.getStatus() != WorkflowConstants.STATUS_PENDING)) {
-
+		if (ctCollection.isReadOnly()) {
 			throw new PortalException(
 				"Change tracking collection " + ctCollection + " is read only");
 		}
@@ -79,14 +85,13 @@ public class CTEntryLocalServiceImpl extends CTEntryLocalServiceBaseImpl {
 		return ctEntryPersistence.update(ctEntry);
 	}
 
+	@Indexable(type = IndexableType.DELETE)
 	@Override
 	public CTEntry deleteCTEntry(CTEntry ctEntry) throws PortalException {
 		CTCollection ctCollection = _ctCollectionPersistence.findByPrimaryKey(
 			ctEntry.getCtCollectionId());
 
-		if ((ctCollection.getStatus() != WorkflowConstants.STATUS_DRAFT) &&
-			(ctCollection.getStatus() != WorkflowConstants.STATUS_PENDING)) {
-
+		if (ctCollection.isReadOnly()) {
 			throw new PortalException(
 				"Change tracking collection " + ctCollection + " is read only");
 		}
@@ -136,6 +141,17 @@ public class CTEntryLocalServiceImpl extends CTEntryLocalServiceBaseImpl {
 
 		return ctEntryPersistence.findByC_MCNI(
 			ctCollectionId, modelClassNameId);
+	}
+
+	@Override
+	public List<CTEntry> getCTEntries(long[] ctEntryIds) {
+		Set<Serializable> primaryKeys = new HashSet<>(
+			TransformUtil.transformToList(ctEntryIds, GetterUtil::getLong));
+
+		Map<Serializable, CTEntry> ctEntriesMap =
+			ctEntryPersistence.fetchByPrimaryKeys(primaryKeys);
+
+		return new ArrayList<>(ctEntriesMap.values());
 	}
 
 	@Override
@@ -268,6 +284,7 @@ public class CTEntryLocalServiceImpl extends CTEntryLocalServiceBaseImpl {
 		return true;
 	}
 
+	@Indexable(type = IndexableType.REINDEX)
 	@Override
 	public CTEntry updateCTEntry(CTEntry ctEntry) {
 		CTCollection ctCollection = _ctCollectionPersistence.fetchByPrimaryKey(

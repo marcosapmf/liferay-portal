@@ -3,24 +3,28 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {useOutletContext, useParams} from 'react-router-dom';
-
-import './App.scss';
-
 import classNames from 'classnames';
 import {ReactNode} from 'react';
+import {useOutletContext, useParams} from 'react-router-dom';
 
 import {DetailedCard} from '../../../../../components/DetailedCard/DetailedCard';
 import i18n from '../../../../../i18n';
 import formatLocaleCurrency from '../../../../../utils/formatLocaleCurrency';
-import {isCloudProduct} from '../../../../../utils/productUtils';
+import {
+	getSpecificationByKey,
+	isCloudProduct,
+} from '../../../../../utils/productUtils';
 import {safeJSONParse} from '../../../../../utils/util';
 import getProductPriceModel from '../../../../GetApp/utils/getProductPriceModel';
 import {formatDate} from '../../../../PublisherDashboard/PublisherDashboardPageUtil';
 
+import './App.scss';
+
 const App = () => {
 	const {orderId} = useParams();
 	const {placedOrder, product} = useOutletContext<any>();
+
+	const licenseType = getSpecificationByKey('license-type', product);
 
 	const projectNameField =
 		Object.values(placedOrder.customFields).find((field) =>
@@ -76,7 +80,14 @@ const App = () => {
 							{placedOrder.purchaseOrderNumber || '-'}
 						</p>
 					</div>
+					<div className="row">
+						<div className="col-6 h5">
+							{i18n.translate('license-type')}
+						</div>
+						<p className="col">{licenseType?.value || '-'}</p>
+					</div>
 				</DetailedCard>
+
 				<DetailedCard
 					cardIconAltText="Summary Icon"
 					cardTitle={i18n.translate('summary')}
@@ -103,7 +114,7 @@ const App = () => {
 						<div className="col-8">
 							{placedOrder.placedOrderItems.map(
 								(order: PlacedOrderItems) => {
-									const optionName = safeJSONParse(
+									const optionName = safeJSONParse<any>(
 										order.options,
 										[]
 									);
@@ -142,6 +153,7 @@ const App = () => {
 							)}
 						</div>
 					</div>
+
 					<div className="justify-content-between mb-2 row">
 						<div className="col h5">
 							{i18n.translate('subtotal')}
@@ -188,6 +200,7 @@ const App = () => {
 						</p>
 					</div>
 				</DetailedCard>
+
 				{placedOrder.placedOrderBillingAddress && (
 					<DetailedCard
 						cardIconAltText="Location Icon"

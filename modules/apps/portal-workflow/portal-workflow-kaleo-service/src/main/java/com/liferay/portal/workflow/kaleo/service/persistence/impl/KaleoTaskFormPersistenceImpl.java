@@ -2158,7 +2158,6 @@ public class KaleoTaskFormPersistenceImpl
 		"kaleoTaskForm.kaleoTaskId = ?";
 
 	private FinderPath _finderPathFetchByFormUuid_KTI;
-	private FinderPath _finderPathCountByFormUuid_KTI;
 
 	/**
 	 * Returns the kaleo task form where kaleoTaskId = &#63; and formUuid = &#63; or throws a <code>NoSuchTaskFormException</code> if it could not be found.
@@ -2364,68 +2363,14 @@ public class KaleoTaskFormPersistenceImpl
 	 */
 	@Override
 	public int countByFormUuid_KTI(long kaleoTaskId, String formUuid) {
-		try (SafeCloseable safeCloseable =
-				ctPersistenceHelper.setCTCollectionIdWithSafeCloseable(
-					KaleoTaskForm.class)) {
+		KaleoTaskForm kaleoTaskForm = fetchByFormUuid_KTI(
+			kaleoTaskId, formUuid);
 
-			formUuid = Objects.toString(formUuid, "");
-
-			FinderPath finderPath = _finderPathCountByFormUuid_KTI;
-
-			Object[] finderArgs = new Object[] {kaleoTaskId, formUuid};
-
-			Long count = (Long)finderCache.getResult(
-				finderPath, finderArgs, this);
-
-			if (count == null) {
-				StringBundler sb = new StringBundler(3);
-
-				sb.append(_SQL_COUNT_KALEOTASKFORM_WHERE);
-
-				sb.append(_FINDER_COLUMN_FORMUUID_KTI_KALEOTASKID_2);
-
-				boolean bindFormUuid = false;
-
-				if (formUuid.isEmpty()) {
-					sb.append(_FINDER_COLUMN_FORMUUID_KTI_FORMUUID_3);
-				}
-				else {
-					bindFormUuid = true;
-
-					sb.append(_FINDER_COLUMN_FORMUUID_KTI_FORMUUID_2);
-				}
-
-				String sql = sb.toString();
-
-				Session session = null;
-
-				try {
-					session = openSession();
-
-					Query query = session.createQuery(sql);
-
-					QueryPos queryPos = QueryPos.getInstance(query);
-
-					queryPos.add(kaleoTaskId);
-
-					if (bindFormUuid) {
-						queryPos.add(formUuid);
-					}
-
-					count = (Long)query.uniqueResult();
-
-					finderCache.putResult(finderPath, finderArgs, count);
-				}
-				catch (Exception exception) {
-					throw processException(exception);
-				}
-				finally {
-					closeSession(session);
-				}
-			}
-
-			return count.intValue();
+		if (kaleoTaskForm == null) {
+			return 0;
 		}
+
+		return 1;
 	}
 
 	private static final String _FINDER_COLUMN_FORMUUID_KTI_KALEOTASKID_2 =
@@ -2555,8 +2500,6 @@ public class KaleoTaskFormPersistenceImpl
 				kaleoTaskFormModelImpl.getFormUuid()
 			};
 
-			finderCache.putResult(
-				_finderPathCountByFormUuid_KTI, args, Long.valueOf(1));
 			finderCache.putResult(
 				_finderPathFetchByFormUuid_KTI, args, kaleoTaskFormModelImpl);
 		}
@@ -3222,6 +3165,7 @@ public class KaleoTaskFormPersistenceImpl
 	static {
 		Set<String> ctControlColumnNames = new HashSet<String>();
 		Set<String> ctIgnoreColumnNames = new HashSet<String>();
+		Set<String> ctMergeColumnNames = new HashSet<String>();
 		Set<String> ctStrictColumnNames = new HashSet<String>();
 
 		ctControlColumnNames.add("mvccVersion");
@@ -3232,25 +3176,26 @@ public class KaleoTaskFormPersistenceImpl
 		ctStrictColumnNames.add("userName");
 		ctStrictColumnNames.add("createDate");
 		ctIgnoreColumnNames.add("modifiedDate");
-		ctStrictColumnNames.add("kaleoDefinitionId");
-		ctStrictColumnNames.add("kaleoDefinitionVersionId");
-		ctStrictColumnNames.add("kaleoNodeId");
-		ctStrictColumnNames.add("kaleoTaskId");
-		ctStrictColumnNames.add("kaleoTaskName");
-		ctStrictColumnNames.add("name");
-		ctStrictColumnNames.add("description");
-		ctStrictColumnNames.add("formCompanyId");
-		ctStrictColumnNames.add("formDefinition");
-		ctStrictColumnNames.add("formGroupId");
-		ctStrictColumnNames.add("formId");
-		ctStrictColumnNames.add("formUuid");
-		ctStrictColumnNames.add("metadata");
-		ctStrictColumnNames.add("priority");
+		ctMergeColumnNames.add("kaleoDefinitionId");
+		ctMergeColumnNames.add("kaleoDefinitionVersionId");
+		ctMergeColumnNames.add("kaleoNodeId");
+		ctMergeColumnNames.add("kaleoTaskId");
+		ctMergeColumnNames.add("kaleoTaskName");
+		ctMergeColumnNames.add("name");
+		ctMergeColumnNames.add("description");
+		ctMergeColumnNames.add("formCompanyId");
+		ctMergeColumnNames.add("formDefinition");
+		ctMergeColumnNames.add("formGroupId");
+		ctMergeColumnNames.add("formId");
+		ctMergeColumnNames.add("formUuid");
+		ctMergeColumnNames.add("metadata");
+		ctMergeColumnNames.add("priority");
 
 		_ctColumnNamesMap.put(
 			CTColumnResolutionType.CONTROL, ctControlColumnNames);
 		_ctColumnNamesMap.put(
 			CTColumnResolutionType.IGNORE, ctIgnoreColumnNames);
+		_ctColumnNamesMap.put(CTColumnResolutionType.MERGE, ctMergeColumnNames);
 		_ctColumnNamesMap.put(
 			CTColumnResolutionType.PK,
 			Collections.singleton("kaleoTaskFormId"));
@@ -3359,11 +3304,6 @@ public class KaleoTaskFormPersistenceImpl
 			FINDER_CLASS_NAME_ENTITY, "fetchByFormUuid_KTI",
 			new String[] {Long.class.getName(), String.class.getName()},
 			new String[] {"kaleoTaskId", "formUuid"}, true);
-
-		_finderPathCountByFormUuid_KTI = new FinderPath(
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByFormUuid_KTI",
-			new String[] {Long.class.getName(), String.class.getName()},
-			new String[] {"kaleoTaskId", "formUuid"}, false);
 
 		KaleoTaskFormUtil.setPersistence(this);
 	}

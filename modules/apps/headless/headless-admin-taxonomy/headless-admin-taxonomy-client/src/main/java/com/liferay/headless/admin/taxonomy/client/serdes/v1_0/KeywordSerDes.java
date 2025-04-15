@@ -5,6 +5,7 @@
 
 package com.liferay.headless.admin.taxonomy.client.serdes.v1_0;
 
+import com.liferay.headless.admin.taxonomy.client.dto.v1_0.AssetLibrary;
 import com.liferay.headless.admin.taxonomy.client.dto.v1_0.Keyword;
 import com.liferay.headless.admin.taxonomy.client.json.BaseJSONParser;
 
@@ -60,6 +61,26 @@ public class KeywordSerDes {
 			sb.append(_toJSON(keyword.getActions()));
 		}
 
+		if (keyword.getAssetLibraries() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"assetLibraries\": ");
+
+			sb.append("[");
+
+			for (int i = 0; i < keyword.getAssetLibraries().length; i++) {
+				sb.append(String.valueOf(keyword.getAssetLibraries()[i]));
+
+				if ((i + 1) < keyword.getAssetLibraries().length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
+		}
+
 		if (keyword.getAssetLibraryKey() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -113,6 +134,20 @@ public class KeywordSerDes {
 			sb.append("\"");
 		}
 
+		if (keyword.getExternalReferenceCode() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"externalReferenceCode\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(keyword.getExternalReferenceCode()));
+
+			sb.append("\"");
+		}
+
 		if (keyword.getId() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -143,6 +178,20 @@ public class KeywordSerDes {
 			sb.append("\"");
 
 			sb.append(_escape(keyword.getName()));
+
+			sb.append("\"");
+		}
+
+		if (keyword.getSiteExternalReferenceCode() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"siteExternalReferenceCode\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(keyword.getSiteExternalReferenceCode()));
 
 			sb.append("\"");
 		}
@@ -195,6 +244,14 @@ public class KeywordSerDes {
 			map.put("actions", String.valueOf(keyword.getActions()));
 		}
 
+		if (keyword.getAssetLibraries() == null) {
+			map.put("assetLibraries", null);
+		}
+		else {
+			map.put(
+				"assetLibraries", String.valueOf(keyword.getAssetLibraries()));
+		}
+
 		if (keyword.getAssetLibraryKey() == null) {
 			map.put("assetLibraryKey", null);
 		}
@@ -229,6 +286,15 @@ public class KeywordSerDes {
 				liferayToJSONDateFormat.format(keyword.getDateModified()));
 		}
 
+		if (keyword.getExternalReferenceCode() == null) {
+			map.put("externalReferenceCode", null);
+		}
+		else {
+			map.put(
+				"externalReferenceCode",
+				String.valueOf(keyword.getExternalReferenceCode()));
+		}
+
 		if (keyword.getId() == null) {
 			map.put("id", null);
 		}
@@ -250,6 +316,15 @@ public class KeywordSerDes {
 		}
 		else {
 			map.put("name", String.valueOf(keyword.getName()));
+		}
+
+		if (keyword.getSiteExternalReferenceCode() == null) {
+			map.put("siteExternalReferenceCode", null);
+		}
+		else {
+			map.put(
+				"siteExternalReferenceCode",
+				String.valueOf(keyword.getSiteExternalReferenceCode()));
 		}
 
 		if (keyword.getSiteId() == null) {
@@ -286,6 +361,9 @@ public class KeywordSerDes {
 			if (Objects.equals(jsonParserFieldName, "actions")) {
 				return true;
 			}
+			else if (Objects.equals(jsonParserFieldName, "assetLibraries")) {
+				return false;
+			}
 			else if (Objects.equals(jsonParserFieldName, "assetLibraryKey")) {
 				return false;
 			}
@@ -298,6 +376,11 @@ public class KeywordSerDes {
 			else if (Objects.equals(jsonParserFieldName, "dateModified")) {
 				return false;
 			}
+			else if (Objects.equals(
+						jsonParserFieldName, "externalReferenceCode")) {
+
+				return false;
+			}
 			else if (Objects.equals(jsonParserFieldName, "id")) {
 				return false;
 			}
@@ -305,6 +388,11 @@ public class KeywordSerDes {
 				return false;
 			}
 			else if (Objects.equals(jsonParserFieldName, "name")) {
+				return false;
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "siteExternalReferenceCode")) {
+
 				return false;
 			}
 			else if (Objects.equals(jsonParserFieldName, "siteId")) {
@@ -326,6 +414,22 @@ public class KeywordSerDes {
 				if (jsonParserFieldValue != null) {
 					keyword.setActions(
 						(Map<String, Map<String, String>>)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "assetLibraries")) {
+				if (jsonParserFieldValue != null) {
+					Object[] jsonParserFieldValues =
+						(Object[])jsonParserFieldValue;
+
+					AssetLibrary[] assetLibrariesArray =
+						new AssetLibrary[jsonParserFieldValues.length];
+
+					for (int i = 0; i < assetLibrariesArray.length; i++) {
+						assetLibrariesArray[i] = AssetLibrarySerDes.toDTO(
+							(String)jsonParserFieldValues[i]);
+					}
+
+					keyword.setAssetLibraries(assetLibrariesArray);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "assetLibraryKey")) {
@@ -351,6 +455,14 @@ public class KeywordSerDes {
 						toDate((String)jsonParserFieldValue));
 				}
 			}
+			else if (Objects.equals(
+						jsonParserFieldName, "externalReferenceCode")) {
+
+				if (jsonParserFieldValue != null) {
+					keyword.setExternalReferenceCode(
+						(String)jsonParserFieldValue);
+				}
+			}
 			else if (Objects.equals(jsonParserFieldName, "id")) {
 				if (jsonParserFieldValue != null) {
 					keyword.setId(Long.valueOf((String)jsonParserFieldValue));
@@ -365,6 +477,14 @@ public class KeywordSerDes {
 			else if (Objects.equals(jsonParserFieldName, "name")) {
 				if (jsonParserFieldValue != null) {
 					keyword.setName((String)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "siteExternalReferenceCode")) {
+
+				if (jsonParserFieldValue != null) {
+					keyword.setSiteExternalReferenceCode(
+						(String)jsonParserFieldValue);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "siteId")) {
@@ -423,6 +543,10 @@ public class KeywordSerDes {
 	}
 
 	private static String _toJSON(Object value) {
+		if (value == null) {
+			return "null";
+		}
+
 		if (value instanceof Map) {
 			return _toJSON((Map)value);
 		}

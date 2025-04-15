@@ -295,14 +295,14 @@ public class PageDefinitionDTOConverter
 						long faviconFileEntryId =
 							layout.getFaviconFileEntryId();
 
-						if (faviconFileEntryId != 0) {
-							return ContentDocumentUtil.toContentDocument(
-								_dlURLHelper, "settings.favIcon.image",
-								_dlAppService.getFileEntry(faviconFileEntryId),
-								dtoConverterContext.getUriInfo());
+						if (faviconFileEntryId == 0) {
+							return null;
 						}
 
-						return null;
+						return ContentDocumentUtil.toContentDocument(
+							_dlURLHelper, "settings.favIcon.image",
+							_dlAppService.getFileEntry(faviconFileEntryId),
+							dtoConverterContext.getUriInfo());
 					});
 				setGlobalCSSClientExtensions(
 					() -> _getClientExtensions(
@@ -428,7 +428,7 @@ public class PageDefinitionDTOConverter
 		_layoutPageTemplateEntryLocalService;
 
 	@Reference(
-		target = "(dto.class.name=com.liferay.layout.util.structure.LayoutStructureItem)"
+		target = "(component.name=com.liferay.headless.delivery.internal.dto.v1_0.converter.PageElementDTOConverter)"
 	)
 	private DTOConverter<LayoutStructureItem, PageElement>
 		_pageElementDTOConverter;

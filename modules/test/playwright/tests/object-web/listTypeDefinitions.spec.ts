@@ -3,91 +3,53 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
+import {ObjectDefinition} from '@liferay/object-admin-rest-client-js';
 import {Page, expect, mergeTests} from '@playwright/test';
 
 import {accountSettingsPagesTest} from '../../fixtures/accountSettingsPagesTest';
-import {apiHelpersTest} from '../../fixtures/apiHelpersTest';
+import {dataApiHelpersTest} from '../../fixtures/dataApiHelpersTest';
 import {formsPagesTest} from '../../fixtures/formsPagesTest';
+import {isolatedSiteTest} from '../../fixtures/isolatedSiteTest';
 import {listTypeDefinitionsPagesTest} from '../../fixtures/listTypeDefinitionsPagesTest';
 import {loginTest} from '../../fixtures/loginTest';
 import {objectPagesTest} from '../../fixtures/objectPagesTest';
-import {siteSettingsPageTests} from '../../fixtures/siteSettingsPagesTest';
+import {siteSettingsPagesTest} from '../../fixtures/siteSettingsPagesTest';
 import {getRandomInt} from '../../utils/getRandomInt';
+import {waitForAlert} from '../../utils/waitForAlert';
 
 export const test = mergeTests(
 	accountSettingsPagesTest,
-	apiHelpersTest,
+	dataApiHelpersTest,
 	formsPagesTest,
+	isolatedSiteTest,
 	listTypeDefinitionsPagesTest,
 	loginTest(),
 	objectPagesTest,
-	siteSettingsPageTests
+	siteSettingsPagesTest
 );
 
-let customDefaultSiteLanguage: string;
-let siteLanguage: string;
-let userLanguage: string;
+let siteLanguage = 'en';
+let userLanguage = 'en_US';
 
-const createdEntities = {
-	listTypeDefinitions: [],
-	objectDefinitions: [],
-} as {
-	listTypeDefinitions: ListTypeDefinition[];
-	objectDefinitions: ObjectDefinition[];
-};
+test.afterEach(async ({accountSettingsPage, page}) => {
+	if (siteLanguage !== 'en') {
+		await page.goto('en');
 
-test.afterEach(
-	async ({
-		accountSettingsPage,
-		apiHelpers,
-		page,
-		siteSettingsLocalizationPage,
-	}) => {
-		for (const objectDefinition of createdEntities.objectDefinitions) {
-			await apiHelpers.objectAdmin.deleteObjectDefinition(
-				objectDefinition.id
-			);
-		}
-
-		createdEntities.objectDefinitions = [];
-
-		for (const listTypeDefinition of createdEntities.listTypeDefinitions) {
-			await apiHelpers.listTypeAdmin.deleteListTypeDefinition(
-				listTypeDefinition.id
-			);
-		}
-
-		createdEntities.listTypeDefinitions = [];
-
-		if (siteLanguage !== 'en') {
-			await page.goto('en');
-
-			siteLanguage = 'en';
-		}
-
-		if (userLanguage === 'pt_BR') {
-			await page.goto('en');
-
-			await page.locator('button[data-qa-id="userPersonalMenu"]').click();
-
-			await page
-				.getByRole('menuitem', {name: 'Account Settings'})
-				.click();
-
-			await accountSettingsPage.selectAccountLanguage('en_US');
-
-			userLanguage = 'en_US';
-		}
-
-		if (customDefaultSiteLanguage) {
-			await page.goto('/');
-			await siteSettingsLocalizationPage.goto();
-			await siteSettingsLocalizationPage.selectDefaultLanguageOption();
-			await siteSettingsLocalizationPage.saveConfiguration();
-			customDefaultSiteLanguage = '';
-		}
+		siteLanguage = 'en';
 	}
-);
+
+	if (userLanguage !== 'en_US') {
+		await page.goto('en');
+
+		await page.locator('button[data-qa-id="userPersonalMenu"]').click();
+
+		await page.getByRole('menuitem', {name: 'Account Settings'}).click();
+
+		await accountSettingsPage.selectAccountLanguage('en_US');
+
+		userLanguage = 'en_US';
+	}
+});
 
 test.describe('manage picklists inside the picklists portlet', () => {
 	test('can create a picklist', async ({
@@ -98,7 +60,10 @@ test.describe('manage picklists inside the picklists portlet', () => {
 		const listTypeDefinition: ListTypeDefinition =
 			await apiHelpers.listTypeAdmin.postRandomListTypeDefinition();
 
-		createdEntities.listTypeDefinitions.push(listTypeDefinition);
+		apiHelpers.data.push({
+			id: listTypeDefinition.id,
+			type: 'listTypeDefinition',
+		});
 
 		await listTypeDefinitionPage.goto();
 
@@ -111,22 +76,23 @@ test.describe('manage picklists inside the picklists portlet', () => {
 		apiHelpers,
 		listTypeDefinitionPage,
 		page,
+		site,
 		siteSettingsLocalizationPage,
 	}) => {
-		await page.goto('/');
+		await siteSettingsLocalizationPage.goto(site.friendlyUrlPath);
 
-		await siteSettingsLocalizationPage.goto();
-
-		await siteSettingsLocalizationPage.selectCustomDefaultLanguageOption();
-
-		await siteSettingsLocalizationPage.setCustomDefaultLanguage('pt_BR');
-
-		customDefaultSiteLanguage = 'pt_BR';
+		await siteSettingsLocalizationPage.setCustomDefaultLanguage(
+			'pt_BR',
+			site.friendlyUrlPath
+		);
 
 		const listTypeDefinition: ListTypeDefinition =
 			await apiHelpers.listTypeAdmin.postRandomListTypeDefinition();
 
-		createdEntities.listTypeDefinitions.push(listTypeDefinition);
+		apiHelpers.data.push({
+			id: listTypeDefinition.id,
+			type: 'listTypeDefinition',
+		});
 
 		await listTypeDefinitionPage.goto();
 
@@ -143,7 +109,10 @@ test.describe('manage picklists inside the picklists portlet', () => {
 		const listTypeDefinition: ListTypeDefinition =
 			await apiHelpers.listTypeAdmin.postRandomListTypeDefinition();
 
-		createdEntities.listTypeDefinitions.push(listTypeDefinition);
+		apiHelpers.data.push({
+			id: listTypeDefinition.id,
+			type: 'listTypeDefinition',
+		});
 
 		await listTypeDefinitionPage.goto();
 
@@ -169,17 +138,17 @@ test.describe('manage picklists inside the picklists portlet', () => {
 
 		const frameElement = await page.$('iframe');
 		const frame = await frameElement.contentFrame();
-		await frame.waitForLoadState('load');
+		await frame.waitForLoadState('networkidle');
 
-		const [listTypeDefinitionHeader, listTypeDefinitionContent] =
-			await Promise.all([
-				listTypeDefinitionPage.frameLocator
-					.locator('div.dnd-th')
-					.allInnerTexts(),
-				listTypeDefinitionPage.frameLocator
-					.locator('div.dnd-td')
-					.allInnerTexts(),
-			]);
+		const listTypeDefinitionHeader =
+			await listTypeDefinitionPage.frameLocator
+				.locator('.fds th')
+				.allInnerTexts();
+
+		const listTypeDefinitionContent =
+			await listTypeDefinitionPage.frameLocator
+				.locator('.fds td')
+				.allInnerTexts();
 
 		const listTypeDefinitionHeaderTemplate = [
 			'Name',
@@ -202,6 +171,74 @@ test.describe('manage picklists inside the picklists portlet', () => {
 			);
 		}
 	});
+
+	test('ensure that attempting to add picklist item with empty name/key will show a required error', async ({
+		apiHelpers,
+		listTypeDefinitionPage,
+		page,
+	}) => {
+		const listTypeDefinition: ListTypeDefinition =
+			await apiHelpers.listTypeAdmin.postRandomListTypeDefinition();
+
+		apiHelpers.data.push({
+			id: listTypeDefinition.id,
+			type: 'listTypeDefinition',
+		});
+
+		await listTypeDefinitionPage.goto();
+
+		await page.getByRole('link', {name: listTypeDefinition.name}).click();
+
+		await listTypeDefinitionPage.addPicklistItemButton.click();
+
+		await listTypeDefinitionPage.modalSaveButton.click();
+
+		expect(await page.getByText('Required').count()).toBe(2);
+
+		await listTypeDefinitionPage.modalNameInput.fill(
+			'picklisItem' + getRandomInt()
+		);
+
+		await listTypeDefinitionPage.modalSaveButton.click();
+
+		await waitForAlert(page, 'The picklist item was created successfully.');
+	});
+
+	test('can delete a picklist item', async ({
+		apiHelpers,
+		listTypeDefinitionPage,
+		page,
+	}) => {
+		const listTypeDefinition: ListTypeDefinition =
+			await apiHelpers.listTypeAdmin.postRandomListTypeDefinition();
+
+		apiHelpers.data.push({
+			id: listTypeDefinition.id,
+			type: 'listTypeDefinition',
+		});
+
+		await listTypeDefinitionPage.goto();
+
+		const listTypeDefinitionName: string = listTypeDefinition.name;
+
+		const listTypeDefinitionEntryName = 'ListTypeDefinitionEntryName';
+
+		const listTypeDefinitionEntryKey = 'ListTypeDefinitionEntryKey';
+
+		await listTypeDefinitionPage.addPicklistItem(
+			listTypeDefinitionName,
+			listTypeDefinitionEntryName,
+			listTypeDefinitionEntryKey
+		);
+
+		const frameElement = await page.$('iframe');
+		const frame = await frameElement.contentFrame();
+		await frame.waitForLoadState('load');
+
+		await listTypeDefinitionPage.deletePicklistItem();
+		await frame.waitForLoadState('load');
+		await expect(frame.getByText('No Results Found')).toBeVisible();
+	});
 });
 
 test.describe('ensure picklist translation', () => {
@@ -218,7 +255,10 @@ test.describe('ensure picklist translation', () => {
 		const listTypeDefinition: ListTypeDefinition =
 			await apiHelpers.listTypeAdmin.postRandomListTypeDefinition();
 
-		createdEntities.listTypeDefinitions.push(listTypeDefinition);
+		apiHelpers.data.push({
+			id: listTypeDefinition.id,
+			type: 'listTypeDefinition',
+		});
 
 		const listTypeDefinitionName: string = listTypeDefinition.name;
 
@@ -239,7 +279,10 @@ test.describe('ensure picklist translation', () => {
 				status: {code: 0},
 			});
 
-		createdEntities.objectDefinitions.push(objectDefinition);
+		apiHelpers.data.push({
+			id: objectDefinition.id,
+			type: 'objectDefinition',
+		});
 
 		await page.goto('/');
 
@@ -287,6 +330,7 @@ test.describe('ensure picklist translation', () => {
 		formBuilderSidePanelPage,
 		formSettingsModalPage,
 		listTypeDefinitionPage,
+		modelBuilderDiagramPage,
 		objectFieldsPage,
 		page,
 		viewObjectDefinitionsPage,
@@ -297,7 +341,10 @@ test.describe('ensure picklist translation', () => {
 		const listTypeDefinition: ListTypeDefinition =
 			await apiHelpers.listTypeAdmin.postRandomListTypeDefinition();
 
-		createdEntities.listTypeDefinitions.push(listTypeDefinition);
+		apiHelpers.data.push({
+			id: listTypeDefinition.id,
+			type: 'listTypeDefinition',
+		});
 
 		const listTypeDefinitionName: string = listTypeDefinition.name;
 
@@ -329,8 +376,10 @@ test.describe('ensure picklist translation', () => {
 				objectFolderExternalReferenceCode: 'default',
 				status: {code: 0},
 			});
-
-		createdEntities.objectDefinitions.push(objectDefinition);
+		apiHelpers.data.push({
+			id: objectDefinition.id,
+			type: 'objectDefinition',
+		});
 
 		await viewObjectDefinitionsPage.goto();
 
@@ -340,6 +389,8 @@ test.describe('ensure picklist translation', () => {
 
 		await objectFieldsPage.addObjectField({
 			listTypeDefinitionName: listTypeDefinition.name,
+			objectDefinitionNodes:
+				modelBuilderDiagramPage.objectDefinitionNodes,
 			objectFieldBusinessType: 'Picklist',
 			objectFieldLabel: fieldLabel,
 		});

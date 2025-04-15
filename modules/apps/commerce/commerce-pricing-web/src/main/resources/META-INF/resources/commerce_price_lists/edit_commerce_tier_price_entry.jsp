@@ -16,11 +16,9 @@ long commercePriceEntryId = commerceTierPriceEntryDisplayContext.getCommercePric
 long commercePriceListId = commerceTierPriceEntryDisplayContext.getCommercePriceListId();
 long commerceTierPriceEntryId = commerceTierPriceEntryDisplayContext.getCommerceTierPriceEntryId();
 
-BigDecimal price = BigDecimal.ZERO;
 BigDecimal promoPrice = BigDecimal.ZERO;
 
 if (commerceTierPriceEntry != null) {
-	price = commerceTierPriceEntry.getPrice();
 	promoPrice = commerceTierPriceEntry.getPromoPrice();
 }
 
@@ -44,6 +42,8 @@ if ((commerceTierPriceEntry != null) && (commerceTierPriceEntry.getExpirationDat
 		<aui:input name="commerceTierPriceEntryId" type="hidden" value="<%= commerceTierPriceEntryId %>" />
 
 		<liferay-ui:error exception="<%= CommerceTierPriceEntryMinQuantityException.class %>" message="the-specified-quantity-is-not-allowed" />
+		<liferay-ui:error exception="<%= CommerceTierPriceEntryPriceException.class %>" message="please-enter-a-valid-price" />
+		<liferay-ui:error exception="<%= CommerceTierPriceEntryQuantityException.class %>" message="please-enter-a-valid-quantity" />
 		<liferay-ui:error exception="<%= DuplicateCommerceTierPriceEntryException.class %>" message="there-is-already-a-tier-price-entry-with-the-same-minimum-quantity" />
 
 		<commerce-ui:panel

@@ -40,6 +40,7 @@ import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.model.ResourceConstants;
 import com.liferay.portal.kernel.model.SystemEventConstants;
 import com.liferay.portal.kernel.model.User;
@@ -711,9 +712,10 @@ public class WikiPageLocalServiceImpl extends WikiPageLocalServiceBaseImpl {
 
 		if (pageResource != null) {
 			_systemEventLocalService.addSystemEvent(
-				0, page.getGroupId(), page.getModelClassName(),
-				page.getPrimaryKey(), pageResource.getUuid(), null,
-				SystemEventConstants.TYPE_DELETE, StringPool.BLANK);
+				0, page.getGroupId(), StringPool.BLANK,
+				page.getModelClassName(), page.getPrimaryKey(),
+				pageResource.getUuid(), null, SystemEventConstants.TYPE_DELETE,
+				StringPool.BLANK);
 		}
 	}
 
@@ -805,7 +807,7 @@ public class WikiPageLocalServiceImpl extends WikiPageLocalServiceBaseImpl {
 		long resourcePrimKey, int status, boolean preferApproved) {
 
 		OrderByComparator<WikiPage> orderByComparator =
-			new PageVersionComparator();
+			PageVersionComparator.getInstance(false);
 
 		if (status != WorkflowConstants.STATUS_ANY) {
 			return wikiPagePersistence.fetchByR_S_First(
@@ -833,7 +835,7 @@ public class WikiPageLocalServiceImpl extends WikiPageLocalServiceBaseImpl {
 		long resourcePrimKey, long nodeId, int status, boolean preferApproved) {
 
 		OrderByComparator<WikiPage> orderByComparator =
-			new PageVersionComparator();
+			PageVersionComparator.getInstance(false);
 
 		if (status != WorkflowConstants.STATUS_ANY) {
 			return wikiPagePersistence.fetchByR_N_S_First(
@@ -861,7 +863,7 @@ public class WikiPageLocalServiceImpl extends WikiPageLocalServiceBaseImpl {
 		long nodeId, String title, int status, boolean preferApproved) {
 
 		OrderByComparator<WikiPage> orderByComparator =
-			new PageVersionComparator();
+			PageVersionComparator.getInstance(false);
 
 		if (status != WorkflowConstants.STATUS_ANY) {
 			return wikiPagePersistence.fetchByN_T_S_First(
@@ -898,7 +900,8 @@ public class WikiPageLocalServiceImpl extends WikiPageLocalServiceBaseImpl {
 		long groupId, String externalReferenceCode) {
 
 		return wikiPagePersistence.fetchByG_ERC_First(
-			groupId, externalReferenceCode, new PageVersionComparator());
+			groupId, externalReferenceCode,
+			PageVersionComparator.getInstance(false));
 	}
 
 	@Override
@@ -926,6 +929,20 @@ public class WikiPageLocalServiceImpl extends WikiPageLocalServiceBaseImpl {
 		}
 
 		return wikiPagePersistence.fetchByN_T_V(nodeId, title, version);
+	}
+
+	@Override
+	public PersistedModel fetchPersistedModel(Serializable primaryKeyObj) {
+		PersistedModel persistedModel = wikiPagePersistence.fetchByPrimaryKey(
+			primaryKeyObj);
+
+		if (persistedModel == null) {
+			persistedModel = fetchLatestPage(
+				GetterUtil.getLong(primaryKeyObj),
+				WorkflowConstants.STATUS_APPROVED, false);
+		}
+
+		return persistedModel;
 	}
 
 	@Override
@@ -1142,7 +1159,8 @@ public class WikiPageLocalServiceImpl extends WikiPageLocalServiceBaseImpl {
 		throws PortalException {
 
 		return wikiPagePersistence.findByG_ERC_First(
-			groupId, externalReferenceCode, new PageVersionComparator());
+			groupId, externalReferenceCode,
+			PageVersionComparator.getInstance(false));
 	}
 
 	@Override
@@ -1343,7 +1361,8 @@ public class WikiPageLocalServiceImpl extends WikiPageLocalServiceBaseImpl {
 		long nodeId, boolean head, int start, int end) {
 
 		return getPages(
-			nodeId, head, start, end, new PageCreateDateComparator(false));
+			nodeId, head, start, end,
+			PageCreateDateComparator.getInstance(false));
 	}
 
 	@Override
@@ -1352,7 +1371,7 @@ public class WikiPageLocalServiceImpl extends WikiPageLocalServiceBaseImpl {
 
 		return getPages(
 			nodeId, head, status, start, end,
-			new PageCreateDateComparator(false));
+			PageCreateDateComparator.getInstance(false));
 	}
 
 	@Override
@@ -1382,7 +1401,7 @@ public class WikiPageLocalServiceImpl extends WikiPageLocalServiceBaseImpl {
 	@Override
 	public List<WikiPage> getPages(long nodeId, int start, int end) {
 		return getPages(
-			nodeId, start, end, new PageCreateDateComparator(false));
+			nodeId, start, end, PageCreateDateComparator.getInstance(false));
 	}
 
 	@Override
@@ -1408,11 +1427,12 @@ public class WikiPageLocalServiceImpl extends WikiPageLocalServiceBaseImpl {
 		if (userId > 0) {
 			return wikiPagePersistence.findByU_N_S(
 				userId, nodeId, status, start, end,
-				new PageCreateDateComparator(false));
+				PageCreateDateComparator.getInstance(false));
 		}
 
 		return wikiPagePersistence.findByN_S(
-			nodeId, status, start, end, new PageCreateDateComparator(false));
+			nodeId, status, start, end,
+			PageCreateDateComparator.getInstance(false));
 	}
 
 	@Override
@@ -1443,7 +1463,7 @@ public class WikiPageLocalServiceImpl extends WikiPageLocalServiceBaseImpl {
 
 		return wikiPagePersistence.findByN_T_H(
 			nodeId, title, head, start, end,
-			new PageCreateDateComparator(false));
+			PageCreateDateComparator.getInstance(false));
 	}
 
 	@Override
@@ -1451,7 +1471,8 @@ public class WikiPageLocalServiceImpl extends WikiPageLocalServiceBaseImpl {
 		long nodeId, String title, int start, int end) {
 
 		return wikiPagePersistence.findByN_T(
-			nodeId, title, start, end, new PageCreateDateComparator(false));
+			nodeId, title, start, end,
+			PageCreateDateComparator.getInstance(false));
 	}
 
 	@Override
@@ -1696,7 +1717,8 @@ public class WikiPageLocalServiceImpl extends WikiPageLocalServiceBaseImpl {
 		List<WikiPage> pageVersions = wikiPagePersistence.findByR_N_H(
 			page.getResourcePrimKey(), page.getNodeId(), false);
 
-		pageVersions = ListUtil.sort(pageVersions, new PageVersionComparator());
+		pageVersions = ListUtil.sort(
+			pageVersions, PageVersionComparator.getInstance(false));
 
 		List<ObjectValuePair<Long, Integer>> pageVersionStatusOVPs =
 			new ArrayList<>();
@@ -2105,7 +2127,7 @@ public class WikiPageLocalServiceImpl extends WikiPageLocalServiceBaseImpl {
 
 		WikiPage page = wikiPagePersistence.findByN_T_First(
 			pageResource.getNodeId(), pageResource.getTitle(),
-			new PageVersionComparator());
+			PageVersionComparator.getInstance(false));
 
 		return updateStatus(
 			userId, page, status, serviceContext, new HashMap<>());
@@ -3187,7 +3209,7 @@ public class WikiPageLocalServiceImpl extends WikiPageLocalServiceBaseImpl {
 
 		List<WikiPage> versionPages = wikiPagePersistence.findByN_T(
 			nodeId, title, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
-			new PageVersionComparator());
+			PageVersionComparator.getInstance(false));
 
 		WikiPage page = fetchLatestPage(
 			nodeId, newTitle, WorkflowConstants.STATUS_ANY, false);

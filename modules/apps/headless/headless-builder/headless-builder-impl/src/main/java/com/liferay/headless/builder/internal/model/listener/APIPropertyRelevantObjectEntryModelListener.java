@@ -22,6 +22,7 @@ import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.exception.ModelListenerException;
 import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.model.BaseModelListener;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
@@ -118,8 +119,8 @@ public class APIPropertyRelevantObjectEntryModelListener
 		try {
 			Map<String, Serializable> values = objectEntry.getValues();
 
-			long apiSchemaId = (long)values.get(
-				"r_apiSchemaToAPIProperties_c_apiSchemaId");
+			long apiSchemaId = GetterUtil.getLong(
+				values.get("r_apiSchemaToAPIProperties_l_apiSchemaId"));
 
 			if (!_validationHelper.isValidObjectEntry(
 					"L_API_SCHEMA", apiSchemaId)) {
@@ -181,8 +182,8 @@ public class APIPropertyRelevantObjectEntryModelListener
 				}
 			}
 
-			long parentAPIPropertyId = (long)values.get(
-				"r_apiPropertyToAPIProperties_c_apiPropertyId");
+			long parentAPIPropertyId = GetterUtil.getLong(
+				values.get("r_apiPropertyToAPIProperties_l_apiPropertyId"));
 
 			if (parentAPIPropertyId != 0) {
 				if (!_validationHelper.isValidObjectEntry(
@@ -203,7 +204,7 @@ public class APIPropertyRelevantObjectEntryModelListener
 
 				if (!Objects.equals(
 						apiPropertyValues.get(
-							"r_apiSchemaToAPIProperties_c_apiSchemaId"),
+							"r_apiSchemaToAPIProperties_l_apiSchemaId"),
 						apiSchemaId)) {
 
 					throw new ObjectEntryValuesException.InvalidObjectField(
@@ -237,23 +238,22 @@ public class APIPropertyRelevantObjectEntryModelListener
 				}
 			}
 
-			if (ListUtil.isNotEmpty(
-					_objectEntryLocalService.getValuesList(
-						objectEntry.getGroupId(), objectEntry.getCompanyId(),
-						objectEntry.getUserId(),
-						objectEntry.getObjectDefinitionId(), null,
-						_filterFactory.create(
-							StringBundler.concat(
-								"id ne '", objectEntry.getObjectEntryId(),
-								"' and name eq '", values.get("name"), "' and ",
-								"r_apiPropertyToAPIProperties_c_apiPropertyId ",
-								"eq '", parentAPIPropertyId, "' and ",
-								"r_apiSchemaToAPIProperties_c_apiSchemaId eq '",
-								apiSchemaId, "'"),
-							_objectDefinitionLocalService.getObjectDefinition(
-								objectEntry.getObjectDefinitionId())),
-						null, 0, 1, null))) {
+			int count = _objectEntryLocalService.getValuesListCount(
+				objectEntry.getGroupId(), objectEntry.getCompanyId(),
+				objectEntry.getUserId(), objectEntry.getObjectDefinitionId(),
+				_filterFactory.create(
+					StringBundler.concat(
+						"id ne '", objectEntry.getObjectEntryId(),
+						"' and name eq '", values.get("name"), "' and ",
+						"r_apiPropertyToAPIProperties_l_apiPropertyId eq '",
+						parentAPIPropertyId, "' and ",
+						"r_apiSchemaToAPIProperties_l_apiSchemaId eq '",
+						apiSchemaId, "'"),
+					_objectDefinitionLocalService.getObjectDefinition(
+						objectEntry.getObjectDefinitionId())),
+				null);
 
+			if (count > 0) {
 				throw new ObjectEntryValuesException.InvalidObjectField(
 					null, "API property name must be unique",
 					"api-property-name-must-be-unique");

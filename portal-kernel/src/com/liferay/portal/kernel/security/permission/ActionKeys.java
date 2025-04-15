@@ -124,6 +124,8 @@ public class ActionKeys {
 
 	public static final String ADD_VOTE = "ADD_VOTE";
 
+	public static final String ADVANCED_UPDATE = "ADVANCED_UPDATE";
+
 	public static final String ASSIGN_MEMBERS = "ASSIGN_MEMBERS";
 
 	public static final String ASSIGN_USER_ROLES = "ASSIGN_USER_ROLES";
@@ -248,6 +250,9 @@ public class ActionKeys {
 	public static final String UPDATE_LAYOUT_CONTENT = "UPDATE_LAYOUT_CONTENT";
 
 	public static final String UPDATE_LAYOUT_LIMITED = "UPDATE_LAYOUT_LIMITED";
+
+	public static final String UPDATE_SUBORGANIZATIONS =
+		"UPDATE_SUBORGANIZATIONS";
 
 	public static final String UPDATE_THREAD_PRIORITY =
 		"UPDATE_THREAD_PRIORITY";

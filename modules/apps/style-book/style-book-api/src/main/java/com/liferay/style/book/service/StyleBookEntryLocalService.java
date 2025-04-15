@@ -68,7 +68,7 @@ public interface StyleBookEntryLocalService
 	public StyleBookEntry addStyleBookEntry(
 			String externalReferenceCode, long userId, long groupId,
 			boolean defaultStyleBookEntry, String frontendTokensValues,
-			String name, String styleBookEntryKey,
+			String name, String styleBookEntryKey, String themeId,
 			ServiceContext serviceContext)
 		throws PortalException;
 
@@ -127,6 +127,8 @@ public interface StyleBookEntryLocalService
 	@Override
 	public PersistedModel deletePersistedModel(PersistedModel persistedModel)
 		throws PortalException;
+
+	public void deleteStyleBookEntries(long groupId) throws PortalException;
 
 	/**
 	 * Deletes the style book entry with the primary key from the database. Also notifies the appropriate model listeners.
@@ -240,7 +242,8 @@ public interface StyleBookEntryLocalService
 		DynamicQuery dynamicQuery, Projection projection);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public StyleBookEntry fetchDefaultStyleBookEntry(long groupId);
+	public StyleBookEntry fetchDefaultStyleBookEntry(
+		long groupId, String themeId);
 
 	@Override
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
@@ -328,6 +331,10 @@ public interface StyleBookEntryLocalService
 	public List<StyleBookEntry> getStyleBookEntries(
 		long groupId, int start, int end,
 		OrderByComparator<StyleBookEntry> orderByComparator);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<StyleBookEntry> getStyleBookEntries(
+		long groupId, String themeId);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<StyleBookEntry> getStyleBookEntries(

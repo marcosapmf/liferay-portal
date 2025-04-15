@@ -39,9 +39,9 @@ public class CPSpecificationOptionServiceImpl
 	@Override
 	public CPSpecificationOption addCPSpecificationOption(
 			String externalReferenceCode, long cpOptionCategoryId,
-			long listTypeDefinitionId, Map<Locale, String> titleMap,
+			long[] listTypeDefinitionIds, Map<Locale, String> titleMap,
 			Map<Locale, String> descriptionMap, boolean facetable, String key,
-			double priority, ServiceContext serviceContext)
+			double priority, boolean visible, ServiceContext serviceContext)
 		throws PortalException {
 
 		PortletResourcePermission portletResourcePermission =
@@ -54,8 +54,8 @@ public class CPSpecificationOptionServiceImpl
 
 		return cpSpecificationOptionLocalService.addCPSpecificationOption(
 			externalReferenceCode, getUserId(), cpOptionCategoryId,
-			listTypeDefinitionId, titleMap, descriptionMap, facetable, key,
-			priority, serviceContext);
+			listTypeDefinitionIds, titleMap, descriptionMap, facetable, key,
+			priority, visible, serviceContext);
 	}
 
 	@Override
@@ -137,20 +137,20 @@ public class CPSpecificationOptionServiceImpl
 	@Override
 	public BaseModelSearchResult<CPSpecificationOption>
 			searchCPSpecificationOptions(
-				long companyId, Boolean facetable, String keywords, int start,
-				int end, Sort sort)
+				long companyId, Boolean facetable, Boolean visible,
+				String keywords, int start, int end, Sort sort)
 		throws PortalException {
 
 		return cpSpecificationOptionLocalService.searchCPSpecificationOptions(
-			companyId, facetable, keywords, start, end, sort);
+			companyId, facetable, visible, keywords, start, end, sort);
 	}
 
 	@Override
 	public CPSpecificationOption updateCPSpecificationOption(
 			String externalReferenceCode, long cpSpecificationOptionId,
-			long cpOptionCategoryId, long listTypeDefinitionId,
+			long cpOptionCategoryId, long[] listTypeDefinitionIds,
 			Map<Locale, String> titleMap, Map<Locale, String> descriptionMap,
-			boolean facetable, String key, double priority,
+			boolean facetable, String key, double priority, boolean visible,
 			ServiceContext serviceContext)
 		throws PortalException {
 
@@ -159,8 +159,8 @@ public class CPSpecificationOptionServiceImpl
 
 		return cpSpecificationOptionLocalService.updateCPSpecificationOption(
 			externalReferenceCode, cpSpecificationOptionId, cpOptionCategoryId,
-			listTypeDefinitionId, titleMap, descriptionMap, facetable, key,
-			priority, serviceContext);
+			listTypeDefinitionIds, titleMap, descriptionMap, facetable, key,
+			priority, visible, serviceContext);
 	}
 
 	@Reference(

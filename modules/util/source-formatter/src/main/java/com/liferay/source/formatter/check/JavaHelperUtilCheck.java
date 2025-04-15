@@ -84,8 +84,8 @@ public class JavaHelperUtilCheck extends BaseJavaTermCheck {
 			if (!_isAllowedNonstaticUtilMethod(childJavaTerm, childJavaTerms)) {
 				addMessage(
 					fileName,
-					"'*Util' class can only have static protected or public " +
-						"methods");
+					"\"*Util\" class can only have static protected or " +
+						"public methods");
 
 				return javaTerm.getContent();
 			}
@@ -95,7 +95,7 @@ public class JavaHelperUtilCheck extends BaseJavaTermCheck {
 			addMessage(
 				fileName,
 				"Classes with only static protected or public methods should " +
-					"have name ending with 'Util'");
+					"have name ending with \"Util\"");
 		}
 
 		return javaTerm.getContent();

@@ -3,19 +3,41 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
+import {
+	ObjectDefinition,
+	ObjectDefinitionAPI,
+} from '@liferay/object-admin-rest-client-js';
 import {expect, mergeTests} from '@playwright/test';
 
 import {apiHelpersTest} from '../../fixtures/apiHelpersTest';
+import {dataApiHelpersTest} from '../../fixtures/dataApiHelpersTest';
 import {headlessDiscoveryPagesTest} from '../../fixtures/headlessDiscoveryWebPagesTest';
 import {loginTest} from '../../fixtures/loginTest';
 import {headlessBuilderPagesTest} from './fixtures/headlessBuilderPagesTest';
 
 export const test = mergeTests(
 	apiHelpersTest,
+	dataApiHelpersTest,
 	loginTest(),
 	headlessBuilderPagesTest(),
 	headlessDiscoveryPagesTest
 );
+
+const applicationData = {
+	apiApplicationToAPISchemas: [
+		{
+			description: 'API Application Schema',
+			externalReferenceCode: 'api-application-schema',
+			mainObjectDefinitionERC: 'L_API_APPLICATION',
+			name: 'API Application Schema',
+		},
+	],
+	applicationStatus: 'unpublished',
+	baseURL: 'basic-application',
+	description: 'Test API Application',
+	externalReferenceCode: 'basic-application',
+	title: 'Basic application',
+};
 
 test('can associate and disassociate schema', async ({
 	apiHelpers,
@@ -23,46 +45,32 @@ test('can associate and disassociate schema', async ({
 	headlessBuilderPage,
 	page,
 }) => {
-	const application = await apiHelpers.objectEntry.postObjectEntry(
+	const apiApplication = await apiHelpers.objectEntry.postObjectEntry(
 		{
-			apiApplicationToAPISchemas: [
+			...applicationData,
+			apiApplicationToAPIEndpoints: [
 				{
-					description: 'API Application Schema',
-					externalReferenceCode: 'api-application-schema',
-					mainObjectDefinitionERC: 'L_API_APPLICATION',
-					name: 'API Application Schema',
+					description: 'Test API Endpoint',
+					externalReferenceCode: 'basic-endpoint',
+					httpMethod: 'get',
+					name: 'Basic API Endpoint',
+					path: '/endpoint/',
+					r_responseAPISchemaToAPIEndpoints_l_apiSchemaERC:
+						'api-application-schema',
+					retrieveType: 'collection',
+					scope: 'company',
 				},
 			],
-			applicationStatus: 'unpublished',
-			baseURL: 'basic-application',
-			description: 'Test API Application',
-			externalReferenceCode: 'basic-application',
-			title: 'Basic application',
 		},
 		'headless-builder/applications'
 	);
 
-	const endpoint = await apiHelpers.objectEntry.postObjectEntry(
-		{
-			description: 'Test API Endpoint',
-			externalReferenceCode: 'basic-endpoint',
-			httpMethod: 'get',
-			name: 'Basic API Endpoint',
-			path: '/endpoint/',
-			r_apiApplicationToAPIEndpoints_c_apiApplicationERC:
-				application.externalReferenceCode,
-			r_responseAPISchemaToAPIEndpoints_c_apiSchemaERC:
-				application.apiApplicationToAPISchemas[0].externalReferenceCode,
-			retrieveType: 'collection',
-			scope: 'company',
-		},
-		'headless-builder/endpoints'
-	);
+	apiHelpers.data.push({id: apiApplication.id, type: 'apiApplication'});
 
 	await headlessBuilderPage.goto();
-	await headlessBuilderPage.goToEditApplication(application.title);
+	await headlessBuilderPage.goToEditApplication(applicationData.title);
 	await applicationPage.goToEndpointsTab();
-	await applicationPage.goToEditEndpoint(endpoint.path);
+	await applicationPage.goToEditEndpoint('/endpoint/');
 	await applicationPage.goToEndpointConfigurationTab();
 
 	await page.getByLabel('Response Body Schema').click();
@@ -78,7 +86,7 @@ test('can associate and disassociate schema', async ({
 
 	await applicationPage.goToDetailsTab();
 	await applicationPage.goToEndpointsTab();
-	await applicationPage.goToEditEndpoint(endpoint.path);
+	await applicationPage.goToEditEndpoint('/endpoint/');
 	await applicationPage.goToEndpointConfigurationTab();
 
 	const responseBodySchemaContent = await page
@@ -86,27 +94,39 @@ test('can associate and disassociate schema', async ({
 		.textContent();
 
 	await expect(responseBodySchemaContent).toEqual('Select a Schema');
-
-	await apiHelpers.objectEntry.deleteObjectEntryByExternalReferenceCode(
-		'headless-builder/applications',
-		application.externalReferenceCode
-	);
 });
 
 test('can see available path parameter properties of a singleElement endpoint', async ({
+	apiHelpers,
 	applicationPage,
 	headlessBuilderPage,
 	page,
 }) => {
+	const objectDefinition =
+		(await apiHelpers.objectAdmin.postRandomObjectDefinition({
+			objectFolderExternalReferenceCode: 'default',
+			status: {code: 0},
+		})) as ObjectDefinition;
+
+	apiHelpers.data.push({id: objectDefinition.id, type: 'objectDefinition'});
+
 	await headlessBuilderPage.goto();
 	await headlessBuilderPage.addNewApplicationButton.click();
 	await headlessBuilderPage.newApplicationTitleBox.fill('My-app');
 	await headlessBuilderPage.createApplicationButton.click();
 
+	const apiApplicationPage =
+		await apiHelpers.apiBuilder.getAPIApplicationsPage();
+
+	apiHelpers.data.push({
+		id: apiApplicationPage.items[0].id,
+		type: 'apiApplication',
+	});
+
 	await applicationPage.goToSchemasTab();
 	await applicationPage.addSchemaButton.click();
 	await applicationPage.schemaNameTextBox.fill('API Application schema');
-	await applicationPage.setSchemaMainObjectDefinition('APIApplication');
+	await applicationPage.setSchemaMainObjectDefinition('objectDefinition');
 	await applicationPage.createButton.click();
 
 	await applicationPage.createSingleElementEndpoint(
@@ -124,25 +144,39 @@ test('can see available path parameter properties of a singleElement endpoint', 
 		page.getByRole('menuitem', {name: 'External Reference Code'})
 	).toBeVisible();
 	await expect(page.getByRole('menuitem', {name: 'ID'})).toBeVisible();
-
-	await headlessBuilderPage.goto();
-	await headlessBuilderPage.deleteApplication('My-app');
 });
 
 test('can see path parameter property with map details', async ({
+	apiHelpers,
 	applicationPage,
 	headlessBuilderPage,
 	page,
 }) => {
+	const objectDefinition =
+		(await apiHelpers.objectAdmin.postRandomObjectDefinition({
+			objectFolderExternalReferenceCode: 'default',
+			status: {code: 0},
+		})) as ObjectDefinition;
+
+	apiHelpers.data.push({id: objectDefinition.id, type: 'objectDefinition'});
+
 	await headlessBuilderPage.goto();
 	await headlessBuilderPage.addNewApplicationButton.click();
 	await headlessBuilderPage.newApplicationTitleBox.fill('My-app');
 	await headlessBuilderPage.createApplicationButton.click();
 
+	const apiApplicationPage =
+		await apiHelpers.apiBuilder.getAPIApplicationsPage();
+
+	apiHelpers.data.push({
+		id: apiApplicationPage.items[0].id,
+		type: 'apiApplication',
+	});
+
 	await applicationPage.goToSchemasTab();
 	await applicationPage.addSchemaButton.click();
 	await applicationPage.schemaNameTextBox.fill('API Application schema');
-	await applicationPage.setSchemaMainObjectDefinition('APIApplication');
+	await applicationPage.setSchemaMainObjectDefinition('objectDefinition');
 	await applicationPage.createButton.click();
 
 	await applicationPage.createSingleElementEndpoint(
@@ -166,9 +200,6 @@ test('can see path parameter property with map details', async ({
 			'This property from the schema will be mapped to path Parameter: {entryid}.'
 		)
 	).toBeVisible();
-
-	await headlessBuilderPage.goto();
-	await headlessBuilderPage.deleteApplication('My-app');
 });
 
 test('can see schema unique fields as path parameter properties', async ({
@@ -177,46 +208,32 @@ test('can see schema unique fields as path parameter properties', async ({
 	headlessBuilderPage,
 	page,
 }) => {
-	const application = await apiHelpers.objectEntry.postObjectEntry(
+	const apiApplication = await apiHelpers.objectEntry.postObjectEntry(
 		{
-			apiApplicationToAPISchemas: [
+			...applicationData,
+			apiApplicationToAPIEndpoints: [
 				{
-					description: 'API Application Schema',
-					externalReferenceCode: 'api-application-schema',
-					mainObjectDefinitionERC: 'L_API_APPLICATION',
-					name: 'API Application Schema',
+					description: 'Test API Endpoint',
+					externalReferenceCode: 'basic-endpoint',
+					httpMethod: 'get',
+					name: 'Basic API Endpoint',
+					path: '/endpoint/{pathParam}',
+					r_responseAPISchemaToAPIEndpoints_l_apiSchemaERC:
+						'api-application-schema',
+					retrieveType: 'singleElement',
+					scope: 'company',
 				},
 			],
-			applicationStatus: 'published',
-			baseURL: 'basic-application',
-			description: 'Test API Application',
-			externalReferenceCode: 'basic-application',
-			title: 'Basic application',
 		},
 		'headless-builder/applications'
 	);
 
-	const endpoint = await apiHelpers.objectEntry.postObjectEntry(
-		{
-			description: 'Test API Endpoint',
-			externalReferenceCode: 'basic-endpoint',
-			httpMethod: 'get',
-			name: 'Basic API Endpoint',
-			path: '/endpoint/{pathParam}',
-			r_apiApplicationToAPIEndpoints_c_apiApplicationERC:
-				application.externalReferenceCode,
-			r_responseAPISchemaToAPIEndpoints_c_apiSchemaERC:
-				application.apiApplicationToAPISchemas[0].externalReferenceCode,
-			retrieveType: 'singleElement',
-			scope: 'company',
-		},
-		'headless-builder/endpoints'
-	);
+	apiHelpers.data.push({id: apiApplication.id, type: 'apiApplication'});
 
 	await headlessBuilderPage.goto();
-	await headlessBuilderPage.goToEditApplication(application.title);
+	await headlessBuilderPage.goToEditApplication(applicationData.title);
 	await applicationPage.goToEndpointsTab();
-	await applicationPage.goToEditEndpoint(endpoint.path);
+	await applicationPage.goToEditEndpoint('/endpoint/{pathParam}');
 	await applicationPage.goToEndpointConfigurationTab();
 
 	await page.getByRole('button', {name: 'Select an Option'}).click();
@@ -226,11 +243,6 @@ test('can see schema unique fields as path parameter properties', async ({
 	).toBeVisible();
 	await expect(page.getByRole('menuitem', {name: 'ID'})).toBeVisible();
 	await expect(page.getByRole('menuitem', {name: 'Title'})).toBeVisible();
-
-	await apiHelpers.objectEntry.deleteObjectEntryByExternalReferenceCode(
-		'headless-builder/applications',
-		application.externalReferenceCode
-	);
 });
 
 test('can list site scoped endpoint', async ({
@@ -239,8 +251,11 @@ test('can list site scoped endpoint', async ({
 	headlessBuilderPage,
 	page,
 }) => {
-	const studentSiteDefinition =
-		await apiHelpers.objectAdmin.postObjectDefinition({
+	const objectDefinitionAPIClient =
+		await apiHelpers.buildRestClient(ObjectDefinitionAPI);
+
+	const {body: studentSiteDefinition} =
+		await objectDefinitionAPIClient.postObjectDefinition({
 			active: true,
 			externalReferenceCode: 'site-student-definition',
 			label: {
@@ -304,6 +319,13 @@ test('can list site scoped endpoint', async ({
 		'headless-builder/applications'
 	);
 
+	apiHelpers.data.push({
+		id: studentSiteDefinition.id,
+		type: 'objectDefinition',
+	});
+
+	apiHelpers.data.push({id: studentApplication.id, type: 'apiApplication'});
+
 	await headlessBuilderPage.goto();
 	await headlessBuilderPage.goToEditApplication(studentApplication.title);
 	await applicationPage.createSingleElementEndpoint(
@@ -327,12 +349,4 @@ test('can list site scoped endpoint', async ({
 	await headlessBuilderPage.goToEditApplication(studentApplication.title);
 	await applicationPage.goToEndpointsTab();
 	await applicationPage.goToEditEndpoint('/gettest/{entryerc}/');
-
-	await apiHelpers.objectEntry.deleteObjectEntryByExternalReferenceCode(
-		'headless-builder/applications',
-		studentApplication.externalReferenceCode
-	);
-	await apiHelpers.objectAdmin.deleteObjectDefinition(
-		studentSiteDefinition.id
-	);
 });

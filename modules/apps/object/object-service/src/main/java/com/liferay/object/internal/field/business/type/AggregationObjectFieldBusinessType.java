@@ -88,8 +88,9 @@ public class AggregationObjectFieldBusinessType
 
 	@Override
 	public Map<String, Object> getProperties(
-		ObjectField objectField,
-		ObjectFieldRenderingContext objectFieldRenderingContext) {
+			ObjectField objectField,
+			ObjectFieldRenderingContext objectFieldRenderingContext)
+		throws PortalException {
 
 		return HashMapBuilder.<String, Object>put(
 			"readOnly", true
@@ -111,6 +112,11 @@ public class AggregationObjectFieldBusinessType
 			ObjectFieldSettingConstants.NAME_FUNCTION,
 			ObjectFieldSettingConstants.NAME_OBJECT_FIELD_NAME,
 			ObjectFieldSettingConstants.NAME_OBJECT_RELATIONSHIP_NAME);
+	}
+
+	@Override
+	public boolean isLocalizationSupported(ObjectField objectField) {
+		return false;
 	}
 
 	@Override
@@ -208,14 +214,15 @@ public class AggregationObjectFieldBusinessType
 					function, ObjectFieldSettingConstants.VALUE_COUNT)) {
 
 				ObjectField objectField1 =
-					_objectFieldLocalService.getObjectField(
+					_objectFieldLocalService.fetchObjectField(
 						objectDefinition.getObjectDefinitionId(),
 						GetterUtil.getString(
 							objectFieldSettingsValuesMap.get(
 								ObjectFieldSettingConstants.
 									NAME_OBJECT_FIELD_NAME)));
 
-				if (!ArrayUtil.contains(
+				if ((objectField1 != null) &&
+					!ArrayUtil.contains(
 						_NUMERIC_BUSINESS_TYPES,
 						objectField1.getBusinessType())) {
 
@@ -291,11 +298,11 @@ public class AggregationObjectFieldBusinessType
 				objectDefinition.getObjectDefinitionId(),
 				GetterUtil.getString(objectFilter.getFilterBy()));
 
-			if ((objectField == null) ||
-				objectField.compareBusinessType(
+			if ((objectField != null) &&
+				(objectField.compareBusinessType(
 					ObjectFieldConstants.BUSINESS_TYPE_AGGREGATION) ||
-				objectField.compareBusinessType(
-					ObjectFieldConstants.BUSINESS_TYPE_FORMULA)) {
+				 objectField.compareBusinessType(
+					 ObjectFieldConstants.BUSINESS_TYPE_FORMULA))) {
 
 				throw new ObjectFieldSettingValueException.InvalidValue(
 					objectFieldName, "filterBy",

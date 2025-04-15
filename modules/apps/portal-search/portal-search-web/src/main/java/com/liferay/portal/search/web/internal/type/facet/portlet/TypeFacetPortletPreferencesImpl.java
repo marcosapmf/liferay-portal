@@ -5,6 +5,7 @@
 
 package com.liferay.portal.search.web.internal.type.facet.portlet;
 
+import com.liferay.object.constants.ObjectDefinitionConstants;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.petra.function.transform.TransformUtil;
@@ -58,7 +59,7 @@ public class TypeFacetPortletPreferencesImpl
 					return null;
 				}
 
-				return _getKeyValuePair(locale, assetType);
+				return _getKeyValuePair(assetType, companyId, locale);
 			});
 	}
 
@@ -68,7 +69,7 @@ public class TypeFacetPortletPreferencesImpl
 
 		return TransformUtil.transformToList(
 			getCurrentAssetTypesArray(companyId),
-			assetType -> _getKeyValuePair(locale, assetType));
+			assetType -> _getKeyValuePair(assetType, companyId, locale));
 	}
 
 	@Override
@@ -112,18 +113,23 @@ public class TypeFacetPortletPreferencesImpl
 		return _searchableAssetClassNamesProvider.getClassNames(companyId);
 	}
 
-	private KeyValuePair _getKeyValuePair(Locale locale, String className) {
+	private KeyValuePair _getKeyValuePair(
+		String className, long companyId, Locale locale) {
+
 		String modelResource = ResourceActionsUtil.getModelResource(
 			locale, className);
 
-		if (className.startsWith(ObjectDefinition.class.getName() + "#")) {
-			String[] parts = StringUtil.split(className, "#");
+		if (className.startsWith(
+				ObjectDefinitionConstants.
+					CLASS_NAME_PREFIX_CUSTOM_OBJECT_DEFINITION)) {
 
 			ObjectDefinition objectDefinition =
-				_objectDefinitionLocalService.fetchObjectDefinition(
-					Long.valueOf(parts[1]));
+				_objectDefinitionLocalService.fetchObjectDefinitionByClassName(
+					companyId, className);
 
-			modelResource = objectDefinition.getLabel(locale);
+			if (objectDefinition != null) {
+				modelResource = objectDefinition.getLabel(locale);
+			}
 		}
 
 		return new KeyValuePair(className, modelResource);

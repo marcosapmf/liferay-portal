@@ -13,6 +13,7 @@ import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.vulcan.util.LocalizedMapUtil;
 
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -26,14 +27,15 @@ public class ObjectDefinitionTestUtil {
 
 		ObjectDefinition objectDefinition =
 			ObjectDefinitionLocalServiceUtil.addCustomObjectDefinition(
-				TestPropsValues.getUserId(), 0, false, true, false, false,
+				TestPropsValues.getUserId(), 0, null, false, false, true, false,
+				false, false,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				com.liferay.object.test.util.ObjectDefinitionTestUtil.
 					getRandomName(),
 				null, null,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				true, scope, ObjectDefinitionConstants.STORAGE_TYPE_DEFAULT,
-				objectFields);
+				Collections.emptyList(), objectFields);
 
 		return ObjectDefinitionLocalServiceUtil.publishCustomObjectDefinition(
 			TestPropsValues.getUserId(),

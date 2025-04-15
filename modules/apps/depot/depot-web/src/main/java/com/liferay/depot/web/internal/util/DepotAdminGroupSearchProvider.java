@@ -8,6 +8,7 @@ package com.liferay.depot.web.internal.util;
 import com.liferay.depot.model.DepotEntry;
 import com.liferay.depot.service.DepotEntryService;
 import com.liferay.item.selector.criteria.group.criterion.GroupItemSelectorCriterion;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.model.Company;
@@ -24,7 +25,6 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.site.search.GroupSearch;
 
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 
@@ -45,7 +45,9 @@ public class DepotAdminGroupSearchProvider {
 			PortletRequest portletRequest, PortletURL portletURL)
 		throws PortalException {
 
-		if (!groupItemSelectorCriterion.isIncludeAllVisibleGroups()) {
+		if (Validator.isNull(ParamUtil.getString(portletRequest, "keywords")) &&
+			!groupItemSelectorCriterion.isIncludeAllVisibleGroups()) {
+
 			return _getGroupConnectedDepotGroupsGroupSearch(
 				portletRequest, portletURL);
 		}
@@ -81,13 +83,8 @@ public class DepotAdminGroupSearchProvider {
 						themeDisplay.getScopeGroupId(), groupSearch.getStart(),
 						groupSearch.getEnd());
 
-				List<Group> groups = new ArrayList<>();
-
-				for (DepotEntry depotEntry : depotEntries) {
-					groups.add(depotEntry.getGroup());
-				}
-
-				return groups;
+				return TransformUtil.transform(
+					depotEntries, depotEntry -> depotEntry.getGroup());
 			},
 			_depotEntryService.getGroupConnectedDepotEntriesCount(
 				themeDisplay.getScopeGroupId()));
@@ -124,13 +121,16 @@ public class DepotAdminGroupSearchProvider {
 
 		if (Validator.isNotNull(keywords)) {
 			groupSearch.setResultsAndTotal(
-				() -> _groupService.search(
-					company.getCompanyId(),
-					new long[] {
-						_portal.getClassNameId(DepotEntry.class.getName())
-					},
-					keywords, groupParams, groupSearch.getStart(),
-					groupSearch.getEnd(), groupSearch.getOrderByComparator()),
+				() -> _processGroups(
+					themeDisplay.getScopeGroup(),
+					_groupService.search(
+						company.getCompanyId(),
+						new long[] {
+							_portal.getClassNameId(DepotEntry.class.getName())
+						},
+						keywords, groupParams, groupSearch.getStart(),
+						groupSearch.getEnd(),
+						groupSearch.getOrderByComparator())),
 				_groupService.searchCount(
 					company.getCompanyId(),
 					new long[] {
@@ -140,13 +140,16 @@ public class DepotAdminGroupSearchProvider {
 		}
 		else {
 			groupSearch.setResultsAndTotal(
-				() -> _groupService.search(
-					company.getCompanyId(),
-					new long[] {
-						_portal.getClassNameId(DepotEntry.class.getName())
-					},
-					keywords, groupParams, groupSearch.getStart(),
-					groupSearch.getEnd(), groupSearch.getOrderByComparator()),
+				() -> _processGroups(
+					themeDisplay.getScopeGroup(),
+					_groupService.search(
+						company.getCompanyId(),
+						new long[] {
+							_portal.getClassNameId(DepotEntry.class.getName())
+						},
+						keywords, groupParams, groupSearch.getStart(),
+						groupSearch.getEnd(),
+						groupSearch.getOrderByComparator())),
 				_groupService.searchCount(
 					company.getCompanyId(),
 					new long[] {
@@ -156,6 +159,22 @@ public class DepotAdminGroupSearchProvider {
 		}
 
 		return groupSearch;
+	}
+
+	private List<Group> _processGroups(Group group, List<Group> groups) {
+		if (!group.isStagingGroup()) {
+			return groups;
+		}
+
+		return TransformUtil.transform(
+			groups,
+			curGroup -> {
+				if (curGroup.hasStagingGroup()) {
+					return curGroup.getStagingGroup();
+				}
+
+				return curGroup;
+			});
 	}
 
 	@Reference

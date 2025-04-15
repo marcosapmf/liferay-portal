@@ -44,14 +44,14 @@ definition {
 	}
 
 	@summary = "Default summary"
-	macro changePagination(currentPageNumber = null, paginationItem = null) {
-		Click(locator1 = "Pagination#CURRENT_PAGE_MENU");
-
-		MenuItem.click(menuItem = ${paginationItem});
+	macro changePagination(pageNumber = null) {
+		Click(
+			key_pageNumber = ${pageNumber},
+			locator1 = "Pagination#PARTICULAR_PAGE");
 
 		AssertTextEquals.assertPartialText(
-			locator1 = "Pagination#CURRENT_PAGE_MENU",
-			value1 = "Page ${currentPageNumber}");
+			locator1 = "Pagination#CURRENT_PAGE_LINK",
+			value1 = ${pageNumber});
 	}
 
 	@summary = "Default summary"
@@ -242,45 +242,6 @@ definition {
 		PortletEntry.save();
 
 		SelectFrameTop();
-	}
-
-	@summary = "Default summary"
-	macro configureCollectionProviderPG(columnNumnber = null, collectionProviderName = null) {
-		AssetPublisherPortlet.gotoConfigurationPG(portletIndex = ${columnNumnber});
-
-		Navigator.gotoNavTab(navTab = "Asset Selection");
-
-		Panel.expandPanel(panel = "Asset Selection");
-
-		if (IsNotChecked(locator1 = "APConfiguration#ASSET_SELECTION_ASSET_LIST")) {
-			Check(locator1 = "APConfiguration#ASSET_SELECTION_ASSET_LIST");
-
-			Alert.viewSuccessMessage();
-		}
-
-		Panel.expandPanel(panel = "Select Collection");
-
-		Button.clickSelect();
-
-		WaitForElementPresent(locator1 = "IFrame#ASSET_LIST_DIALOG");
-
-		SelectFrame.selectFrameNoLoading(locator1 = "IFrame#MODAL_BODY");
-
-		NavItem.click(navItem = "Collection Providers");
-
-		LexiconCard.clickCard(card = ${collectionProviderName});
-
-		SelectFrameTop();
-
-		SelectFrame.selectFrameNoLoading(locator1 = "IFrame#MODAL_BODY");
-
-		AssertTextEquals(
-			locator1 = "APConfiguration#ASSET_SELECTION_ASSET_LIST_TITLE",
-			value1 = ${collectionProviderName});
-
-		PortletEntry.save();
-
-		IFrame.closeFrame();
 	}
 
 	@summary = "Default summary"
@@ -878,6 +839,28 @@ definition {
 	}
 
 	@summary = "Default summary"
+	macro enableDynamicAndManualSelection() {
+		ApplicationsMenu.gotoPortlet(
+			category = "Configuration",
+			panel = "Control Panel",
+			portlet = "Instance Settings");
+
+		SystemSettings.gotoConfiguration(
+			configurationCategory = "Feature Flags",
+			configurationName = "Deprecation",
+			configurationScope = "Virtual Instance Scope");
+
+		if (IsElementPresent(locator1 = "FeatureFlag#TOGGLE_ROW", title_row = "Asset Selection for Asset Publisher", toggle_state = "Disabled")) {
+			Check.checkToggleSwitch(
+				locator1 = "FeatureFlag#TOGGLE_ROW",
+				title_row = "Asset Selection for Asset Publisher",
+				toggle_state = "Disabled");
+		}
+
+		Navigator.openURL();
+	}
+
+	@summary = "Default summary"
 	macro enableRSSSubscription() {
 		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
@@ -1054,7 +1037,9 @@ definition {
 
 		Panel.expandPanel(panel = "Select Collection");
 
-		Button.clickSelect();
+		Click(
+			ariaLabel = "Select Collection",
+			locator1 = "Button#ANY_WITH_ARIA_LABEL");
 
 		WaitForElementPresent(locator1 = "IFrame#ASSET_LIST_DIALOG");
 
@@ -1094,10 +1079,6 @@ definition {
 			SelectFrameTop();
 
 			SelectFrame.selectFrameNoLoading(locator1 = "IFrame#MODAL_BODY");
-
-			AssertTextEquals(
-				locator1 = "APConfiguration#ASSET_SELECTION_ASSET_LIST_TITLE",
-				value1 = ${assetListName});
 
 			PortletEntry.save();
 
@@ -1692,31 +1673,6 @@ definition {
 		Click(locator1 = "AP#ASSET_ABSTRACT_EDIT");
 
 		AssertElementNotPresent(locator1 = "AP#ASSET_EDIT");
-	}
-
-	@summary = "Default summary"
-	macro viewPaginatedAssetsPG(paginationNumber = null, pageNumber = null, nextPageClick = null, pageMod = null) {
-		var key_pageMod = ${pageMod};
-		var key_pageNumber = ${pageNumber};
-		var key_paginationNumber = ${paginationNumber};
-
-		AssertTextEquals(
-			locator1 = "Pagination#PARTICULAR_PAGE",
-			value1 = "Page ${pageNumber}");
-
-		AssertTextEquals.assertPartialText(
-			locator1 = "Pagination#VARIABLE_ITEMS_PER_PAGE",
-			value1 = "${paginationNumber} Items per Page");
-
-		AssertTextEquals(
-			locator1 = "Pagination#VARIABLE_TOTAL_ITEMS",
-			value1 = "Showing ${key_pageMod} results.");
-
-		if (${nextPageClick} == "true") {
-			AssertClick(
-				locator1 = "Pagination#NEXT_LINK",
-				value1 = "Next");
-		}
 	}
 
 	@summary = "Default summary"

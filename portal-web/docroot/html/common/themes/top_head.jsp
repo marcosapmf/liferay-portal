@@ -16,7 +16,7 @@
 
 <%-- Portal CSS --%>
 
-<link class="lfr-css-file" data-senna-track="temporary" href="<%= HtmlUtil.escapeAttribute(themeDisplay.getClayCSSURL()) %>" id="liferayAUICSS" rel="stylesheet" type="text/css" />
+<aui:link cssClass="lfr-css-file" href="<%= HtmlUtil.escapeAttribute(themeDisplay.getClayCSSURL()) %>" id="liferayAUICSS" rel="stylesheet" senna="temporary" type="text/css" />
 
 <%
 PortletTreeSet portletTreeSet = null;
@@ -166,20 +166,20 @@ for (Portlet portlet : portletTreeSet) {
 
 <%-- Theme CSS --%>
 
-<link class="lfr-css-file" data-senna-track="temporary" href="<%= HtmlUtil.escapeAttribute(themeDisplay.getMainCSSURL()) %>" id="liferayThemeCSS" rel="stylesheet" type="text/css" />
+<aui:link cssClass="lfr-css-file" href="<%= HtmlUtil.escapeAttribute(themeDisplay.getMainCSSURL()) %>" id="liferayThemeCSS" rel="stylesheet" senna="temporary" type="text/css" />
 
 <%-- User Inputted Layout CSS --%>
 
 <c:if test="<%= (layout != null) && Validator.isNotNull(layout.getCssText()) %>">
-	<style data-senna-track="temporary" type="text/css">
+	<aui:style senna="temporary" type="text/css">
 		<%= _escapeCssBlock(layout.getCssText()) %>
-	</style>
+	</aui:style>
 </c:if>
 
 <%-- User Inputted Portlet CSS --%>
 
 <c:if test="<%= portletTreeSet != null %>">
-	<style data-senna-track="temporary" type="text/css">
+	<aui:style senna="temporary" type="text/css">
 
 		<%
 		for (Portlet portlet : portletTreeSet) {
@@ -211,7 +211,7 @@ for (Portlet portlet : portletTreeSet) {
 		}
 		%>
 
-	</style>
+	</aui:style>
 </c:if>
 
 <liferay-util:dynamic-include key="/html/common/themes/top_head.jsp#post" />

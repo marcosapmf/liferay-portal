@@ -25,6 +25,7 @@ import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.UserGroup;
 import com.liferay.portal.kernel.model.UserGroupGroupRole;
@@ -156,9 +157,16 @@ public class UserSXPParameterContributor implements SXPParameterContributor {
 					StringSXPParameter.class, "email-domain",
 					"user.email_domain"),
 				new SXPParameterContributorDefinition(
+					StringSXPParameter.class, "external-reference-code",
+					"user.external_reference_code"),
+				new SXPParameterContributorDefinition(
 					StringSXPParameter.class, "first-name", "user.first_name"),
 				new SXPParameterContributorDefinition(
 					StringSXPParameter.class, "full-name", "user.full_name"),
+				new SXPParameterContributorDefinition(
+					StringArraySXPParameter.class,
+					"group-external-reference-codes",
+					"user.group_external_reference_codes"),
 				new SXPParameterContributorDefinition(
 					LongArraySXPParameter.class, "group-ids", "user.group_ids"),
 				new SXPParameterContributorDefinition(
@@ -189,6 +197,10 @@ public class UserSXPParameterContributor implements SXPParameterContributor {
 				new SXPParameterContributorDefinition(
 					LongArraySXPParameter.class, "regular-role-ids",
 					"user.regular_role_ids"),
+				new SXPParameterContributorDefinition(
+					StringArraySXPParameter.class,
+					"user-group-external-reference-codes",
+					"user.user_group_external_reference_codes"),
 				new SXPParameterContributorDefinition(
 					LongArraySXPParameter.class, "user-group-ids",
 					"user.user_group_ids")));
@@ -472,9 +484,25 @@ public class UserSXPParameterContributor implements SXPParameterContributor {
 				"user.email_domain", true, _getEmailAddressDomain(user)));
 		sxpParameters.add(
 			new StringSXPParameter(
+				"user.external_reference_code", true,
+				user.getExternalReferenceCode()));
+		sxpParameters.add(
+			new StringSXPParameter(
 				"user.first_name", true, user.getFirstName()));
 		sxpParameters.add(
 			new StringSXPParameter("user.full_name", true, user.getFullName()));
+
+		List<Group> groups = _groupLocalService.getGroups(user.getGroupIds());
+
+		if (!groups.isEmpty()) {
+			sxpParameters.add(
+				new StringArraySXPParameter(
+					"user.group_external_reference_codes", true,
+					TransformUtil.transformToArray(
+						groups, Group::getExternalReferenceCode,
+						String.class)));
+		}
+
 		sxpParameters.add(
 			new LongArraySXPParameter(
 				"user.group_ids", true,
@@ -511,6 +539,12 @@ public class UserSXPParameterContributor implements SXPParameterContributor {
 
 		if (!userGroups.isEmpty()) {
 			sxpParameters.add(
+				new StringArraySXPParameter(
+					"user.user_group_external_reference_codes", true,
+					TransformUtil.transformToArray(
+						userGroups, UserGroup::getExternalReferenceCode,
+						String.class)));
+			sxpParameters.add(
 				new LongArraySXPParameter(
 					"user.user_group_ids", true,
 					TransformUtil.transformToArray(
@@ -522,10 +556,10 @@ public class UserSXPParameterContributor implements SXPParameterContributor {
 	}
 
 	private int _getAge(Date date) {
-		DateFormat formatter = new SimpleDateFormat("yyyyMMdd");
+		DateFormat dateFormat = new SimpleDateFormat("yyyyMMdd");
 
-		int x = GetterUtil.getInteger(formatter.format(date));
-		int y = GetterUtil.getInteger(formatter.format(new Date()));
+		int x = GetterUtil.getInteger(dateFormat.format(date));
+		int y = GetterUtil.getInteger(dateFormat.format(new Date()));
 
 		return (y - x) / 10000;
 	}

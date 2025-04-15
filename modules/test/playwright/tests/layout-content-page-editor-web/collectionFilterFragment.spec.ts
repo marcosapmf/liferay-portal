@@ -17,10 +17,9 @@ import getRandomString from '../../utils/getRandomString';
 import addApprovedStructuredContent from '../../utils/structured-content/addApprovedStructuredContent';
 import getBasicWebContentStructureId from '../../utils/structured-content/getBasicWebContentStructureId';
 import {journalPagesTest} from '../journal-web/fixtures/journalPagesTest';
-import {ANIMALS_COLLECTION_NAME} from '../setup/page-management-site/constants';
+import {ANIMALS_COLLECTION_NAME} from '../setup/page-management-site/constants/animals';
 import createPageWithCollectionAndFilterCollection from './utils/createPageWithCollectionAndFilterCollection';
 import getCollectionDefinition from './utils/getCollectionDefinition';
-import getCollectionItemDefinition from './utils/getCollectionItemDefinition';
 import getFragmentDefinition from './utils/getFragmentDefinition';
 import getPageDefinition from './utils/getPageDefinition';
 
@@ -44,7 +43,7 @@ const test = mergeTests(
 	apiHelpersTest,
 	collectionsPagesTest,
 	featureFlagsTest({
-		'LPS-178052': true,
+		'LPS-178052': {enabled: true},
 	}),
 	journalPagesTest,
 	loginTest(),
@@ -130,21 +129,16 @@ test(
 			pageManagementSite.friendlyUrlPath
 		);
 
-		const animalsCollection = getCollectionItemDefinition(
-			getRandomString(),
-			[
+		const collectionDefinition = getCollectionDefinition({
+			classPK: animalsClassPK,
+			id: getRandomString(),
+			pageElements: [
 				getFragmentDefinition({
 					fragmentFields: FRAGMENT_FIELDS,
 					id: getRandomString(),
 					key: 'BASIC_COMPONENT-heading',
 				}),
-			]
-		);
-
-		const collectionDefinition = getCollectionDefinition({
-			classPK: animalsClassPK,
-			id: getRandomString(),
-			pageElements: [animalsCollection],
+			],
 		});
 
 		// Create a content page and go to edit mode
@@ -359,18 +353,16 @@ test('Enables search field in dropdown list of Collection Filter', async ({
 		pageManagementSite.friendlyUrlPath
 	);
 
-	const animalsCollection = getCollectionItemDefinition(getRandomString(), [
-		getFragmentDefinition({
-			fragmentFields: FRAGMENT_FIELDS,
-			id: getRandomString(),
-			key: 'BASIC_COMPONENT-heading',
-		}),
-	]);
-
 	const collectionDefinition = getCollectionDefinition({
 		classPK: animalsClassPK,
 		id: getRandomString(),
-		pageElements: [animalsCollection],
+		pageElements: [
+			getFragmentDefinition({
+				fragmentFields: FRAGMENT_FIELDS,
+				id: getRandomString(),
+				key: 'BASIC_COMPONENT-heading',
+			}),
+		],
 	});
 
 	// Create a content page and go to edit mode
@@ -452,21 +444,16 @@ test(
 			pageManagementSite.friendlyUrlPath
 		);
 
-		const animalsCollection = getCollectionItemDefinition(
-			getRandomString(),
-			[
+		const collectionDefinition = getCollectionDefinition({
+			classPK: animalsClassPK,
+			id: getRandomString(),
+			pageElements: [
 				getFragmentDefinition({
 					fragmentFields: FRAGMENT_FIELDS,
 					id: getRandomString(),
 					key: 'BASIC_COMPONENT-heading',
 				}),
-			]
-		);
-
-		const collectionDefinition = getCollectionDefinition({
-			classPK: animalsClassPK,
-			id: getRandomString(),
-			pageElements: [animalsCollection],
+			],
 		});
 
 		// Create a content page and go to edit mode
@@ -579,18 +566,16 @@ test('Reset collection filter using applied filters', async ({
 		pageManagementSite.friendlyUrlPath
 	);
 
-	const animalsCollection = getCollectionItemDefinition(getRandomString(), [
-		getFragmentDefinition({
-			fragmentFields: FRAGMENT_FIELDS,
-			id: getRandomString(),
-			key: 'BASIC_COMPONENT-heading',
-		}),
-	]);
-
 	const collectionDefinition = getCollectionDefinition({
 		classPK: animalsClassPK,
 		id: getRandomString(),
-		pageElements: [animalsCollection],
+		pageElements: [
+			getFragmentDefinition({
+				fragmentFields: FRAGMENT_FIELDS,
+				id: getRandomString(),
+				key: 'BASIC_COMPONENT-heading',
+			}),
+		],
 	});
 
 	// Create a content page and go to edit mode
@@ -676,13 +661,15 @@ test('Reset collection filter using applied filters', async ({
 
 	// Remove filter
 
-	await page.getByLabel('Remove Filter', {exact: true}).click();
+	await expect(async () => {
+		await page.getByLabel('Remove Filter', {exact: true}).click();
 
-	await expect(
-		page.getByText('Animal 01 - Dogs and Cats categories')
-	).toBeVisible();
+		await expect(
+			page.getByText('Animal 01 - Dogs and Cats categories')
+		).toBeVisible();
 
-	await expect(page.getByText('Animal 02 - Dogs category')).toBeVisible();
+		await expect(page.getByText('Animal 02 - Dogs category')).toBeVisible();
+	}).toPass();
 
 	// Select category filter: Cats
 
@@ -698,13 +685,15 @@ test('Reset collection filter using applied filters', async ({
 
 	// Clear filter
 
-	await page.getByRole('button', {name: 'Clear Filters'}).click();
+	await expect(async () => {
+		await page.getByRole('button', {name: 'Clear Filters'}).click();
 
-	await expect(
-		page.getByText('Animal 01 - Dogs and Cats categories')
-	).toBeVisible();
+		await expect(
+			page.getByText('Animal 01 - Dogs and Cats categories')
+		).toBeVisible();
 
-	await expect(page.getByText('Animal 02 - Dogs category')).toBeVisible();
+		await expect(page.getByText('Animal 02 - Dogs category')).toBeVisible();
+	}).toPass();
 
 	// Clean up
 

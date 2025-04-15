@@ -6,16 +6,26 @@
 package com.liferay.portal.db.schema.definition.internal.sql.provider;
 
 import com.liferay.petra.string.StringBundler;
+import com.liferay.petra.string.StringUtil;
 import com.liferay.portal.db.DBResourceUtil;
 import com.liferay.portal.kernel.dao.db.DB;
 import com.liferay.portal.kernel.dao.db.DBFactory;
 import com.liferay.portal.kernel.dao.db.DBType;
 import com.liferay.portal.kernel.module.util.SystemBundleUtil;
+import com.liferay.portal.kernel.plugin.PluginPackage;
+import com.liferay.portal.kernel.servlet.ServletContextPool;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.plugin.PluginPackageUtil;
 import com.liferay.portal.upgrade.release.SchemaCreator;
 
+import java.io.InputStream;
+
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.ServiceLoader;
+import java.util.Set;
+
+import javax.servlet.ServletContext;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
@@ -25,12 +35,14 @@ import org.osgi.framework.ServiceReference;
  */
 public abstract class BaseSQLProvider implements SQLProvider {
 
-	public BaseSQLProvider(DBType dbType) throws Exception {
-		db = _getDB(dbType);
+	public BaseSQLProvider() throws Exception {
+		db = _getDB();
 
 		_appendPortalSQL();
 
 		_appendModulesSQL();
+
+		_appendPluginsSQL();
 	}
 
 	@Override
@@ -62,6 +74,24 @@ public abstract class BaseSQLProvider implements SQLProvider {
 		}
 	}
 
+	private void _appendPluginsSQL() throws Exception {
+		Set<String> contextNames = new HashSet<>();
+
+		for (PluginPackage pluginPackage :
+				PluginPackageUtil.getInstalledPluginPackages()) {
+
+			String contextName = pluginPackage.getArtifactId();
+
+			if (!contextNames.add(contextName)) {
+				continue;
+			}
+
+			_appendSQL(
+				_read(contextName, "/WEB-INF/sql/indexes.sql"),
+				_read(contextName, "/WEB-INF/sql/tables.sql"));
+		}
+	}
+
 	private void _appendPortalSQL() throws Exception {
 		_appendSQL(
 			DBResourceUtil.getPortalIndexesSQL(),
@@ -80,17 +110,34 @@ public abstract class BaseSQLProvider implements SQLProvider {
 		}
 	}
 
-	private DB _getDB(DBType dbType) {
+	private DB _getDB() {
 		ServiceLoader<DBFactory> serviceLoader = ServiceLoader.load(
 			DBFactory.class, DBFactory.class.getClassLoader());
 
 		for (DBFactory dbFactory : serviceLoader) {
-			if (dbFactory.getDBType() == dbType) {
+			if (dbFactory.getDBType() == DBType.POSTGRESQL) {
 				return dbFactory.create(0, 0);
 			}
 		}
 
-		throw new IllegalArgumentException("Database type " + dbType);
+		throw new IllegalStateException(
+			"Unable to load database type " + DBType.POSTGRESQL);
+	}
+
+	private String _read(String contextName, String path) throws Exception {
+		ServletContext servletContext = ServletContextPool.get(contextName);
+
+		if (servletContext == null) {
+			return null;
+		}
+
+		InputStream inputStream = servletContext.getResourceAsStream(path);
+
+		if (inputStream == null) {
+			return null;
+		}
+
+		return StringUtil.read(inputStream);
 	}
 
 	private final StringBundler _indexesSQLSB = new StringBundler();

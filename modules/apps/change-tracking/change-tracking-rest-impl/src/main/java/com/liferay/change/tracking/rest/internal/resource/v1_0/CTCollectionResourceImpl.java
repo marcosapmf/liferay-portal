@@ -10,23 +10,18 @@ import com.liferay.change.tracking.mapping.CTMappingTableInfo;
 import com.liferay.change.tracking.on.demand.user.ticket.generator.CTOnDemandUserTicketGenerator;
 import com.liferay.change.tracking.rest.dto.v1_0.CTCollection;
 import com.liferay.change.tracking.rest.internal.odata.entity.v1_0.CTCollectionEntityModel;
-import com.liferay.change.tracking.rest.internal.util.v1_0.PublishUtil;
 import com.liferay.change.tracking.rest.resource.v1_0.CTCollectionResource;
+import com.liferay.change.tracking.scheduler.PublishScheduler;
 import com.liferay.change.tracking.service.CTCollectionLocalService;
 import com.liferay.change.tracking.service.CTCollectionService;
 import com.liferay.change.tracking.service.CTEntryLocalService;
-import com.liferay.change.tracking.service.CTPreferencesLocalService;
 import com.liferay.change.tracking.service.CTPreferencesService;
-import com.liferay.change.tracking.spi.history.CTCollectionHistoryProvider;
-import com.liferay.change.tracking.spi.history.CTCollectionHistoryProviderRegistry;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.change.tracking.CTAware;
 import com.liferay.portal.kernel.change.tracking.CTCollectionThreadLocal;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Ticket;
-import com.liferay.portal.kernel.scheduler.SchedulerEngineHelper;
-import com.liferay.portal.kernel.scheduler.TriggerFactory;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
@@ -43,7 +38,6 @@ import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.portal.vulcan.util.SearchUtil;
-import com.liferay.portal.vulcan.util.TransformUtil;
 
 import java.util.Collections;
 import java.util.Date;
@@ -122,31 +116,6 @@ public class CTCollectionResourceImpl extends BaseCTCollectionResourceImpl {
 		throws Exception {
 
 		return _getShareLink(ctCollectionId);
-	}
-
-	@Override
-	public Page<CTCollection> getCTCollectionsHistoryPage(
-			Integer classNameId, Integer classPK)
-		throws Exception {
-
-		CTCollectionHistoryProvider<?> ctCollectionHistoryProvider =
-			_ctCollectionHistoryProviderRegistry.getCTCollectionHistoryProvider(
-				Long.valueOf(classNameId));
-
-		if (ctCollectionHistoryProvider == null) {
-			return Page.of(
-				TransformUtil.transform(
-					_ctCollectionLocalService.
-						getExclusivePublishedCTCollections(
-							classNameId, classPK),
-					this::_toCTCollection));
-		}
-
-		return Page.of(
-			TransformUtil.transform(
-				ctCollectionHistoryProvider.getCTCollections(
-					classNameId, classPK),
-				this::_toCTCollection));
 	}
 
 	@Override
@@ -334,6 +303,20 @@ public class CTCollectionResourceImpl extends BaseCTCollectionResourceImpl {
 						_ctCollectionModelResourcePermission);
 				}
 			).put(
+				"reactivate",
+				() -> {
+					if (ctCollection.getStatus() !=
+							WorkflowConstants.STATUS_EXPIRED) {
+
+						return null;
+					}
+
+					return addAction(
+						ActionKeys.UPDATE, ctCollection.getCtCollectionId(),
+						"putCTCollection",
+						_ctCollectionModelResourcePermission);
+				}
+			).put(
 				"schedule",
 				() -> {
 					if (!_isPublishEnabled(ctCollection.getCtCollectionId()) ||
@@ -430,15 +413,11 @@ public class CTCollectionResourceImpl extends BaseCTCollectionResourceImpl {
 			_ctCollectionLocalService.fetchCTCollection(ctCollectionId);
 
 		if (ctCollection.getStatus() == WorkflowConstants.STATUS_SCHEDULED) {
-			PublishUtil.unschedulePublish(
-				ctCollectionId, _ctCollectionLocalService,
-				_schedulerEngineHelper);
+			_publishScheduler.unschedulePublish(ctCollectionId);
 		}
 
-		PublishUtil.schedulePublish(
-			ctCollectionId, _ctCollectionLocalService,
-			_ctPreferencesLocalService, _schedulerEngineHelper, publishDate,
-			_triggerFactory, contextUser.getUserId());
+		_publishScheduler.schedulePublish(
+			ctCollectionId, contextUser.getUserId(), publishDate);
 	}
 
 	private CTCollection _toCTCollection(
@@ -482,10 +461,6 @@ public class CTCollectionResourceImpl extends BaseCTCollectionResourceImpl {
 			_ctCollectionDTOConverter;
 
 	@Reference
-	private CTCollectionHistoryProviderRegistry
-		_ctCollectionHistoryProviderRegistry;
-
-	@Reference
 	private CTCollectionLocalService _ctCollectionLocalService;
 
 	@Reference(
@@ -507,15 +482,9 @@ public class CTCollectionResourceImpl extends BaseCTCollectionResourceImpl {
 	private CTOnDemandUserTicketGenerator _ctOnDemandUserTicketGenerator;
 
 	@Reference
-	private CTPreferencesLocalService _ctPreferencesLocalService;
-
-	@Reference
 	private CTPreferencesService _ctPreferencesService;
 
 	@Reference
-	private SchedulerEngineHelper _schedulerEngineHelper;
-
-	@Reference
-	private TriggerFactory _triggerFactory;
+	private PublishScheduler _publishScheduler;
 
 }

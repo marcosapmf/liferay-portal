@@ -36,7 +36,6 @@ import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
-import com.liferay.portal.kernel.util.StringUtil;
 
 import java.io.Serializable;
 
@@ -1148,7 +1147,6 @@ public class AssetEntryAssetCategoryRelPersistenceImpl
 			"assetEntryAssetCategoryRel.assetCategoryId = ?";
 
 	private FinderPath _finderPathFetchByA_A;
-	private FinderPath _finderPathCountByA_A;
 
 	/**
 	 * Returns the asset entry asset category rel where assetEntryId = &#63; and assetCategoryId = &#63; or throws a <code>NoSuchEntryAssetCategoryRelException</code> if it could not be found.
@@ -1278,23 +1276,6 @@ public class AssetEntryAssetCategoryRelPersistenceImpl
 						}
 					}
 					else {
-						if (list.size() > 1) {
-							Collections.sort(list, Collections.reverseOrder());
-
-							if (_log.isWarnEnabled()) {
-								if (!useFinderCache) {
-									finderArgs = new Object[] {
-										assetEntryId, assetCategoryId
-									};
-								}
-
-								_log.warn(
-									"AssetEntryAssetCategoryRelPersistenceImpl.fetchByA_A(long, long, boolean) with parameters (" +
-										StringUtil.merge(finderArgs) +
-											") yields a result set with more than 1 result. This violates the logical unique restriction. There is no order guarantee on which result is returned by this finder.");
-							}
-						}
-
 						AssetEntryAssetCategoryRel assetEntryAssetCategoryRel =
 							list.get(0);
 
@@ -1347,55 +1328,14 @@ public class AssetEntryAssetCategoryRelPersistenceImpl
 	 */
 	@Override
 	public int countByA_A(long assetEntryId, long assetCategoryId) {
-		try (SafeCloseable safeCloseable =
-				ctPersistenceHelper.setCTCollectionIdWithSafeCloseable(
-					AssetEntryAssetCategoryRel.class)) {
+		AssetEntryAssetCategoryRel assetEntryAssetCategoryRel = fetchByA_A(
+			assetEntryId, assetCategoryId);
 
-			FinderPath finderPath = _finderPathCountByA_A;
-
-			Object[] finderArgs = new Object[] {assetEntryId, assetCategoryId};
-
-			Long count = (Long)finderCache.getResult(
-				finderPath, finderArgs, this);
-
-			if (count == null) {
-				StringBundler sb = new StringBundler(3);
-
-				sb.append(_SQL_COUNT_ASSETENTRYASSETCATEGORYREL_WHERE);
-
-				sb.append(_FINDER_COLUMN_A_A_ASSETENTRYID_2);
-
-				sb.append(_FINDER_COLUMN_A_A_ASSETCATEGORYID_2);
-
-				String sql = sb.toString();
-
-				Session session = null;
-
-				try {
-					session = openSession();
-
-					Query query = session.createQuery(sql);
-
-					QueryPos queryPos = QueryPos.getInstance(query);
-
-					queryPos.add(assetEntryId);
-
-					queryPos.add(assetCategoryId);
-
-					count = (Long)query.uniqueResult();
-
-					finderCache.putResult(finderPath, finderArgs, count);
-				}
-				catch (Exception exception) {
-					throw processException(exception);
-				}
-				finally {
-					closeSession(session);
-				}
-			}
-
-			return count.intValue();
+		if (assetEntryAssetCategoryRel == null) {
+			return 0;
 		}
+
+		return 1;
 	}
 
 	private static final String _FINDER_COLUMN_A_A_ASSETENTRYID_2 =
@@ -1542,7 +1482,6 @@ public class AssetEntryAssetCategoryRelPersistenceImpl
 				assetEntryAssetCategoryRelModelImpl.getAssetCategoryId()
 			};
 
-			finderCache.putResult(_finderPathCountByA_A, args, Long.valueOf(1));
 			finderCache.putResult(
 				_finderPathFetchByA_A, args,
 				assetEntryAssetCategoryRelModelImpl);
@@ -2219,22 +2158,27 @@ public class AssetEntryAssetCategoryRelPersistenceImpl
 
 	static {
 		Set<String> ctControlColumnNames = new HashSet<String>();
+		Set<String> ctMergeColumnNames = new HashSet<String>();
 		Set<String> ctStrictColumnNames = new HashSet<String>();
 
 		ctControlColumnNames.add("mvccVersion");
 		ctControlColumnNames.add("ctCollectionId");
 		ctStrictColumnNames.add("companyId");
-		ctStrictColumnNames.add("assetEntryId");
-		ctStrictColumnNames.add("assetCategoryId");
-		ctStrictColumnNames.add("priority");
+		ctMergeColumnNames.add("assetEntryId");
+		ctMergeColumnNames.add("assetCategoryId");
+		ctMergeColumnNames.add("priority");
 
 		_ctColumnNamesMap.put(
 			CTColumnResolutionType.CONTROL, ctControlColumnNames);
+		_ctColumnNamesMap.put(CTColumnResolutionType.MERGE, ctMergeColumnNames);
 		_ctColumnNamesMap.put(
 			CTColumnResolutionType.PK,
 			Collections.singleton("assetEntryAssetCategoryRelId"));
 		_ctColumnNamesMap.put(
 			CTColumnResolutionType.STRICT, ctStrictColumnNames);
+
+		_uniqueIndexColumnNames.add(
+			new String[] {"assetEntryId", "assetCategoryId"});
 	}
 
 	/**
@@ -2297,11 +2241,6 @@ public class AssetEntryAssetCategoryRelPersistenceImpl
 			FINDER_CLASS_NAME_ENTITY, "fetchByA_A",
 			new String[] {Long.class.getName(), Long.class.getName()},
 			new String[] {"assetEntryId", "assetCategoryId"}, true);
-
-		_finderPathCountByA_A = new FinderPath(
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByA_A",
-			new String[] {Long.class.getName(), Long.class.getName()},
-			new String[] {"assetEntryId", "assetCategoryId"}, false);
 
 		AssetEntryAssetCategoryRelUtil.setPersistence(this);
 	}

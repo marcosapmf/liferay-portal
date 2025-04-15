@@ -18,6 +18,7 @@ import com.liferay.frontend.token.definition.FrontendTokenDefinitionRegistry;
 import com.liferay.frontend.token.definition.FrontendTokenMapping;
 import com.liferay.frontend.token.definition.FrontendTokenSet;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
@@ -32,6 +33,7 @@ import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.URLUtil;
@@ -41,7 +43,9 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -73,18 +77,14 @@ public class FrontendTokenDefinitionRegistryTest {
 
 		_layoutSet = _layoutSetLocalService.fetchLayoutSet(
 			_group.getGroupId(), false);
-	}
 
-	@Test
-	public void testGetFrontendTokenDefinition() throws Exception {
-
-		// Client extension entry
+		_layoutSet.setThemeId(_THEME_ID_TEST_LAYOUT_SET);
 
 		User user = UserTestUtil.addUser();
 
-		ClientExtensionEntry clientExtensionEntry =
+		_clientExtensionEntry =
 			_clientExtensionEntryLocalService.addClientExtensionEntry(
-				RandomTestUtil.randomString(), user.getUserId(),
+				_THEME_ID_CLIENT_EXTENSION_ENTRY, user.getUserId(),
 				StringPool.BLANK,
 				HashMapBuilder.put(
 					LocaleUtil.getDefault(), RandomTestUtil.randomString()
@@ -94,39 +94,63 @@ public class FrontendTokenDefinitionRegistryTest {
 				"frontendTokenDefinitionJSON=" +
 					_frontendTokenDefinitionJSONObject.toString());
 
-		ClientExtensionEntryRel clientExtensionEntryRel =
+		_clientExtensionEntryRel =
 			_clientExtensionEntryRelLocalService.addClientExtensionEntryRel(
 				user.getUserId(), _layoutSet.getGroupId(),
 				_portal.getClassNameId(LayoutSet.class),
 				_layoutSet.getLayoutSetId(),
-				clientExtensionEntry.getExternalReferenceCode(),
-				clientExtensionEntry.getType(), StringPool.BLANK,
+				_clientExtensionEntry.getExternalReferenceCode(),
+				_clientExtensionEntry.getType(), StringPool.BLANK,
 				ServiceContextTestUtil.getServiceContext(
 					_group.getGroupId(), TestPropsValues.getUserId()));
+	}
 
-		try {
-			_assertFrontendTokenDefinition(
-				_frontendTokenDefinitionRegistry.getFrontendTokenDefinition(
-					_layoutSet));
-		}
-		finally {
-			_clientExtensionEntryRelLocalService.deleteClientExtensionEntryRel(
-				clientExtensionEntryRel.getClientExtensionEntryRelId());
+	@After
+	public void tearDown() throws PortalException {
+		_clientExtensionEntryRelLocalService.deleteClientExtensionEntryRel(
+			_clientExtensionEntryRel);
 
-			_clientExtensionEntryLocalService.deleteClientExtensionEntry(
-				clientExtensionEntry.getClientExtensionEntryId());
-		}
+		_clientExtensionEntryLocalService.deleteClientExtensionEntry(
+			_clientExtensionEntry);
+	}
 
-		// Theme
+	@Test
+	public void testGetFrontendTokenDefinition() {
+		_assertFrontendTokenDefinition(
+			_THEME_ID_CLIENT_EXTENSION_ENTRY,
+			_frontendTokenDefinitionRegistry.getFrontendTokenDefinition(
+				_layoutSet));
 
-		_layoutSet.setThemeId("testfrontendtokendefinition");
+		_layoutSet.setLayoutSetId(RandomTestUtil.randomLong());
 
 		_assertFrontendTokenDefinition(
+			_THEME_ID_TEST_LAYOUT_SET,
 			_frontendTokenDefinitionRegistry.getFrontendTokenDefinition(
 				_layoutSet));
 	}
 
+	@Test
+	public void testGetFrontendTokenDefinitions() {
+		List<FrontendTokenDefinition> frontendTokenDefinitions =
+			_frontendTokenDefinitionRegistry.getFrontendTokenDefinitions(
+				_layoutSet.getCompanyId());
+
+		Assert.assertTrue(
+			ListUtil.exists(
+				frontendTokenDefinitions,
+				frontendTokenDefinition -> Objects.equals(
+					frontendTokenDefinition.getThemeId(),
+					_THEME_ID_CLIENT_EXTENSION_ENTRY)));
+		Assert.assertTrue(
+			ListUtil.exists(
+				frontendTokenDefinitions,
+				frontendTokenDefinition -> Objects.equals(
+					frontendTokenDefinition.getThemeId(),
+					_THEME_ID_TEST_LAYOUT_SET)));
+	}
+
 	private void _assertFrontendTokenDefinition(
+		String expectedFrontendTokenDefinitionThemeId,
 		FrontendTokenDefinition frontendTokenDefinition) {
 
 		Collection<FrontendTokenCategory> frontendTokenCategories =
@@ -184,10 +208,24 @@ public class FrontendTokenDefinitionRegistryTest {
 					"JSONObject/0")),
 			String.valueOf(
 				frontendTokenMapping.getJSONObject(LocaleUtil.ENGLISH)));
+
+		Assert.assertEquals(
+			expectedFrontendTokenDefinitionThemeId,
+			frontendTokenDefinition.getThemeId());
 	}
+
+	private static final String _THEME_ID_CLIENT_EXTENSION_ENTRY =
+		RandomTestUtil.randomString();
+
+	private static final String _THEME_ID_TEST_LAYOUT_SET =
+		"testfrontendtokendefinition";
+
+	private ClientExtensionEntry _clientExtensionEntry;
 
 	@Inject
 	private ClientExtensionEntryLocalService _clientExtensionEntryLocalService;
+
+	private ClientExtensionEntryRel _clientExtensionEntryRel;
 
 	@Inject
 	private ClientExtensionEntryRelLocalService

@@ -51,7 +51,7 @@ function combine_properties_files {
 function default_set_up {
 	update_portal_ext_properties
 
-	start_app_server
+	start_default_app_server
 
 	deploy_parent_project_osgi_modules
 
@@ -71,32 +71,44 @@ function default_set_up {
 }
 
 function default_tear_down {
-	stop_app_server
+	stop_default_app_server
+}
+
+function delete_property {
+	local liferay_home=${1}
+	local properties_file
+	local property_name=${2}
+
+	for properties_file in ${liferay_home}/tomcat-*/webapps/ROOT/WEB-INF/classes/*.properties
+	do
+		sed -i "s/${property_name}=.*//g" "${properties_file}"
+	done
 }
 
 function deploy_client_extensions {
-	if [[ -n ${1} ]]
-	then
-		for client_extension_dir in ${@}
-		do
-			client_extension_dir=${_PORTAL_PROJECT_DIR}/${client_extension_dir}
+	echo "Deploying client extensions."
 
-			if [[ -d ${client_extension_dir} ]]
-			then
-				echo "Deploy '${client_extension_dir}'"
+	local client_extensions_list_file=${1}
 
-				cd ${client_extension_dir}
+	local client_extension_dir
 
-				local gradlew=$(get_gradlew)
+	for client_extension_dir in $(get_client_extension_dirs ${client_extensions_list_file})
+	do
+		if [[ -d ${client_extension_dir} ]]
+		then
+			echo "Deploying ${client_extension_dir}."
 
-				${gradlew} deploy -Pliferay.workspace.home.dir=${LIFERAY_HOME}
+			cd ${client_extension_dir}
 
-				wait_for_portal_log_inactivity
-			else
-				echo "The directory ${client_extension_dir} does not exist."
-			fi
-		done
-	fi
+			local gradlew=$(get_gradlew)
+
+			${gradlew} deploy -Pliferay.workspace.home.dir=${LIFERAY_HOME}
+
+			wait_for_portal_log_inactivity ${LIFERAY_HOME}
+		else
+			echo "Unable to find client extension in ${client_extension_dir}."
+		fi
+	done
 }
 
 function deploy_deploy_folder {
@@ -122,17 +134,37 @@ function deploy_osgi_configs {
 }
 
 function deploy_osgi_modules {
-	if [[ -n ${1} ]]
-	then
-		mkdir -p ${LIFERAY_HOME}/deploy
+	local osgi_modules_list_file=${1}
 
-		for osgi_module_dir in ${@}
+	if [[ -n $(cat ${osgi_modules_list_file}) ]]
+	then
+		echo "Deploying OSGi modules in ${osgi_modules_list_file}."
+
+		local osgi_module_name
+
+		for osgi_module_name in $(cat ${osgi_modules_list_file})
 		do
-			osgi_module_dir=${_PORTAL_PROJECT_DIR}/${osgi_module_dir}
+			local osgi_module_dir=$(find ${_PORTAL_PROJECT_DIR}/modules/apps -type d -name "${osgi_module_name}" | grep -v .releng | grep -v .npmscripts | grep -v node_modules)
+
+			if [[ $(echo ${osgi_module_dir} | wc -w | grep -o -E '[0-9]+') > 1 ]]
+			then
+				echo "Duplicate OSGi modules found for ${osgi_module_name}:"
+
+				printf "%s\n" ${osgi_module_dir}
+
+				echo "Replace \"${osgi_module_name}\" in ${osgi_modules_list_file} with one of the following:"
+
+				for dir in ${osgi_module_dir}
+				do
+					echo "${dir/${_PORTAL_PROJECT_DIR}\/modules\/}"
+				done
+
+				osgi_module_dir=$(echo ${osgi_module_dir} | awk '{print $1}')
+			fi
 
 			if [[ -f ${osgi_module_dir}/build.gradle ]]
 			then
-				echo "Deploying ${osgi_module_dir}"
+				echo "Deploying ${osgi_module_dir}."
 
 				cd ${osgi_module_dir}
 
@@ -140,9 +172,9 @@ function deploy_osgi_modules {
 
 				${gradlew} deploy
 
-				wait_for_portal_log_inactivity
+				wait_for_portal_log_inactivity ${LIFERAY_HOME}
 			else
-				echo "The directory ${osgi_module_dir} does not exist."
+				echo "Unable to find OSGi module in ${osgi_module_dir}."
 			fi
 		done
 	fi
@@ -153,7 +185,7 @@ function deploy_parent_project_client_extensions {
 	do
 		if [[ -f ${parent_playwright_project_dir}/env/client-extensions.list ]]
 		then
-			deploy_client_extensions $(cat ${parent_playwright_project_dir}/env/client-extensions.list)
+			deploy_client_extensions ${parent_playwright_project_dir}/env/client-extensions.list
 		fi
 	done
 }
@@ -181,7 +213,7 @@ function deploy_parent_project_osgi_modules {
 	do
 		if [[ -f ${parent_playwright_project_dir}/env/osgi-modules.list ]]
 		then
-			deploy_osgi_modules $(cat ${parent_playwright_project_dir}/env/osgi-modules.list)
+			deploy_osgi_modules ${parent_playwright_project_dir}/env/osgi-modules.list
 		fi
 	done
 }
@@ -191,7 +223,7 @@ function deploy_project_client_extensions {
 
 	if [[ -f ${playwright_project_dir}/env/client-extensions.list ]]
 	then
-		deploy_client_extensions $(cat ${playwright_project_dir}/env/client-extensions.list)
+		deploy_client_extensions ${playwright_project_dir}/env/client-extensions.list
 	fi
 }
 
@@ -208,12 +240,70 @@ function deploy_project_osgi_modules {
 
 	if [[ -f ${playwright_project_dir}/env/osgi-modules.list ]]
 	then
-		deploy_osgi_modules $(cat ${playwright_project_dir}/env/osgi-modules.list)
+		deploy_osgi_modules ${playwright_project_dir}/env/osgi-modules.list
 	fi
 }
 
 function get_absolute_dir {
 	echo $(cd -- $(dirname -- $1) &> /dev/null && pwd)
+}
+
+function get_client_extension_dir {
+	local clients_extension_name=${1}
+
+	local client_extension_dir=$(find ${_PORTAL_PROJECT_DIR}/workspaces -type d | grep "${client_extension_name}$" | grep -v .releng | grep -v .npmscripts | grep -v dist | grep -v node_modules)
+
+	if [[ $(echo ${client_extension_dir} | wc -w | grep -o -E '[0-9]+') > 1 ]]
+	then
+		echo "Duplicate client extensions found for ${client_extension_name}:" >&2
+		echo "%s\n" ${client_extension_dir} >&2
+		echo "Replace \"${client_extension_name}\" in ${client_extensions_list_file} with one of the following:" >&2
+
+		for dir in ${client_extension_dir}
+		do
+			echo "${dir/${_PORTAL_PROJECT_DIR}\/workspaces\/}" >&2
+		done
+
+		client_extension_dir=$(echo ${client_extension_dir} | awk '{print $1}')
+	fi
+
+	echo ${client_extension_dir}
+}
+
+function get_client_extension_dirs {
+	local client_extensions_list_file=${1}
+
+	local client_extension_dirs=()
+
+	if [[ -f ${client_extensions_list_file} && -n $(cat ${client_extensions_list_file}) ]]
+	then
+		for client_extension_name in $(cat ${client_extensions_list_file})
+		do
+			client_extension_dirs+=($(get_client_extension_dir))
+		done
+	fi
+
+	echo ${client_extension_dirs[@]}
+}
+
+function get_client_extension_workspace_portal_ext_properties_files {
+	local client_extensions_list_file=${1}
+
+	local workspace_dirs=()
+
+	if [[ -f ${client_extensions_list_file} ]]
+	then
+		local workspace_dir
+
+		for workspace_dir in $(get_workspace_dirs ${client_extensions_list_file})
+		do
+			local portal_ext_properties_file="${workspace_dir}configs/local/portal-ext.properties"
+
+			workspace_dirs+=(${portal_ext_properties_file})
+		done
+	fi
+
+	echo ${workspace_dirs[@]}
 }
 
 function get_gradlew {
@@ -228,6 +318,16 @@ function get_gradlew {
 	else
 		echo $(cd .. ; get_gradlew)
 	fi
+}
+
+function get_parent_client_extension_workspace_portal_ext_properties_files {
+	for parent_playwright_project_dir in $(get_parent_playwright_project_dirs)
+	do
+		if [[ -f ${parent_playwright_project_dir}/env/client-extensions.list ]]
+		then
+			get_client_extension_workspace_portal_ext_properties_files ${parent_playwright_project_dir}/env/client-extensions.list
+		fi
+	done
 }
 
 function get_parent_playwright_project_dirs {
@@ -258,48 +358,65 @@ function get_parent_portal_ext_properties_files {
 	done
 }
 
+function get_playwright_base_dir {
+	echo ${_PLAYWRIGHT_BASE_DIR}
+}
+
 function get_playwright_project_dir {
 	find ${_PLAYWRIGHT_BASE_DIR} -name config.ts -type f -print | xargs grep "name: '${PLAYWRIGHT_PROJECT_NAME}'" | sed -n 's/\(.*\)\/config.ts.*/\1/p'
 }
 
 function get_portal_log_file_size {
-	wc --lines --total=always ${LIFERAY_HOME}/logs/liferay.*.log | grep total | awk '{print $1}'
+	wc --lines --total=always ${1}/logs/liferay.*.log | grep total | awk '{print $1}'
+}
+
+function get_portal_project_dir {
+	echo ${_PORTAL_PROJECT_DIR}
+}
+
+function get_project_client_extension_workspace_portal_ext_properties_files {
+	local playwright_project_dir=$(get_playwright_project_dir)
+
+	if [[ -f ${playwright_project_dir}/env/client-extensions.list ]]
+	then
+		get_client_extension_workspace_portal_ext_properties_files ${playwright_project_dir}/env/client-extensions.list
+	fi
 }
 
 function get_tomcat_dir {
-	find ${LIFERAY_HOME} -type d -name "tomcat*"
+	find ${1} -type d -name "tomcat*"
 }
 
 function get_tomcat_portal_ext_properties_file {
 	find ${LIFERAY_HOME} -type f -name "portal-ext.properties"
 }
 
+function get_workspace_dirs {
+	local client_extensions_list_file=${1}
+
+	local workspace_dirs=()
+
+	local client_extension_dir
+
+	if [[ -f ${client_extensions_list_file} ]]
+	then
+		for client_extension_dir in $(get_client_extension_dirs ${client_extensions_list_file})
+		do
+			local workspace_dir=$(echo ${client_extension_dir} | sed 's/\(.*-workspace\/\).*$/\1/')
+
+			if ! [[ "${workspace_dirs[@]}" =~ "${workspace_dir}" ]]; then
+				workspace_dirs+=(${workspace_dir})
+			fi
+		done
+	fi
+
+	echo ${workspace_dirs[@]}
+}
+
 function main {
-	local playwright_env_dir=$(dirname ${BASH_SOURCE[0]})
+	validate_environment_variables
 
-	_PLAYWRIGHT_BASE_DIR=$(get_absolute_dir ${playwright_env_dir}/../..)
-	_PORTAL_PROJECT_DIR=$(get_absolute_dir ${playwright_env_dir}/../../../../..)
-
-	if [[ "${LIFERAY_HOME}" == "" ]]
-	then
-		echo "Set the environment variable LIFERAY_HOME."
-
-		exit 1
-	fi
-
-	if [[ "${LIFERAY_PORTAL_URL}" == "" ]]
-	then
-		echo "Set the environment variable LIFERAY_PORTAL_URL."
-
-		exit 1
-	fi
-
-	if [[ "${PLAYWRIGHT_PROJECT_NAME}" == "" ]]
-	then
-		echo "Set the environment variable PLAYWRIGHT_PROJECT_NAME."
-
-		exit 1
-	fi
+	set_variables
 }
 
 function reverse {
@@ -311,6 +428,61 @@ function reverse {
 	done
 }
 
+function prepare_additional_bundles {
+	for ((i = 0 ; i < ${1} ; i++))
+	do
+		local app_server_bundles_size=$((1 + ${i}))
+
+		local leading_port_number=$((8 + ${app_server_bundles_size}))
+
+		local liferay_home="${LIFERAY_HOME}-${app_server_bundles_size}"
+
+		if [[ -d ${liferay_home} ]]
+		then
+			rm -fr ${liferay_home}
+		fi
+
+		cp -r ${LIFERAY_HOME} ${liferay_home}
+
+		local tomcat_dir=$(get_tomcat_dir ${liferay_home})
+
+		echo ${tomcat_dir}
+
+		sed -i "s/=\"8\([0-9]\{3\}\)\"/=\"${leading_port_number}\1\"/g" "${tomcat_dir}/conf/server.xml"
+
+		local osgi_console_port=$((11312 + ${app_server_bundles_size}))
+
+		sed -i "s/11312/${osgi_console_port}/g" "${tomcat_dir}/webapps/ROOT/WEB-INF/classes/portal-ext.properties"
+
+		sed -i "s/channel-logic-name/channel-logic-name-${app_server_bundles_size}/g" "${tomcat_dir}/webapps/ROOT/WEB-INF/classes/portal-ext.properties"
+		sed -i "s|liferay.home=${LIFERAY_HOME}|liferay.home=${liferay_home}|g" "${tomcat_dir}/webapps/ROOT/WEB-INF/classes/portal-ext.properties"
+
+		chmod a+x ${tomcat_dir}
+	done
+}
+
+function set_variables {
+	local playwright_env_dir=$(dirname ${BASH_SOURCE[0]})
+
+	_PLAYWRIGHT_BASE_DIR=$(get_absolute_dir ${playwright_env_dir}/../..)
+	_PORTAL_PROJECT_DIR=$(get_absolute_dir ${playwright_env_dir}/../../../../..)
+}
+
+function start_additional_bundles {
+	for ((i = 0 ; i < ${1} ; i++ ))
+	do
+		local app_server_bundles_size=$((1 + ${i}))
+
+		local liferay_home="${LIFERAY_HOME}-${app_server_bundles_size}"
+
+		local leading_port_number=$((8 + ${app_server_bundles_size}))
+
+		local liferay_portal_url="${LIFERAY_PORTAL_URL/\:8/\:"${leading_port_number}"}"
+
+		start_app_server ${liferay_home} ${liferay_portal_url}
+	done
+}
+
 function start_analytics_cloud {
 	cd ${_PORTAL_PROJECT_DIR}
 
@@ -318,18 +490,24 @@ function start_analytics_cloud {
 }
 
 function start_app_server {
-	cd $(get_tomcat_dir)/bin
+	local liferay_home=${1}
+
+	local tomcat_dir=$(get_tomcat_dir ${liferay_home})
+
+	cd ${tomcat_dir}/bin
 
 	/bin/bash catalina.sh run &
 
-	while ! curl --output /dev/null --silent --head --fail ${LIFERAY_PORTAL_URL}
+	local liferay_portal_url=${2}
+
+	while ! curl --output /dev/null --silent --head --fail ${liferay_portal_url}
 	do
 		sleep 5
 	done
 
-	wait_for_portal_log_inactivity
+	wait_for_portal_log_inactivity ${liferay_home}
 
-	echo "${LIFERAY_PORTAL_URL} is now available."
+	echo "${liferay_portal_url} is now available."
 }
 
 function start_client_extension_spring_boot_application {
@@ -380,6 +558,25 @@ function start_client_extension_spring_boot_application {
 	fi
 }
 
+function start_default_app_server {
+	start_app_server ${LIFERAY_HOME} ${LIFERAY_PORTAL_URL}
+}
+
+function stop_additional_bundles {
+	for ((i = 0 ; i < ${1} ; i++))
+	do
+		local app_server_bundles_size=$((1 + ${i}))
+
+		local liferay_home=${LIFERAY_HOME}-${app_server_bundles_size}
+
+		local leading_port_number=$((8 + ${app_server_bundles_size}))
+
+		local liferay_portal_url="${LIFERAY_PORTAL_URL/\:8/\:"${leading_port_number}"}"
+
+		stop_app_server ${liferay_home} ${liferay_portal_url}
+	done
+}
+
 function stop_analytics_cloud {
 	cd ${_PORTAL_PROJECT_DIR}
 
@@ -387,16 +584,20 @@ function stop_analytics_cloud {
 }
 
 function stop_app_server {
-	cd $(get_tomcat_dir)/bin
+	local liferay_home=${1}
+
+	cd $(get_tomcat_dir ${liferay_home})/bin
 
 	/bin/bash shutdown.sh &
 
-	while curl --output /dev/null --silent --head --fail ${LIFERAY_PORTAL_URL}
+	local portal_url=${2}
+
+	while curl --output /dev/null --silent --head --fail ${portal_url}
 	do
 		sleep 5
 	done
 
-	echo "${LIFERAY_PORTAL_URL} is no longer available."
+	echo "${portal_url} is no longer available."
 }
 
 function stop_client_extension_spring_boot_application {
@@ -435,17 +636,60 @@ function stop_client_extension_spring_boot_application {
 	fi
 }
 
+function stop_default_app_server {
+	stop_app_server ${LIFERAY_HOME} ${LIFERAY_PORTAL_URL}
+}
+
 function update_portal_ext_properties {
 	combine_properties_files \
 		$(get_tomcat_portal_ext_properties_file) \
+		\
+		$(get_parent_client_extension_workspace_portal_ext_properties_files) \
+		\
+		$(get_project_client_extension_workspace_portal_ext_properties_files) \
 		\
 		$(get_parent_portal_ext_properties_files) \
 		\
 		$(get_playwright_project_dir)/env/portal-ext.properties
 }
 
+function update_property {
+	local liferay_home=${1}
+	local properties_file
+	local property_name=${2}
+	local property_value=${3}
+
+	for properties_file in ${liferay_home}/tomcat-*/webapps/ROOT/WEB-INF/classes/*.properties
+	do
+		sed -i "s/${property_name}=.*/${property_name}=${property_value}/g" "${properties_file}"
+	done
+}
+
+function validate_environment_variables {
+	if [[ "${LIFERAY_HOME}" == "" ]]
+	then
+		echo "Set the environment variable LIFERAY_HOME."
+
+		exit 1
+	fi
+
+	if [[ "${LIFERAY_PORTAL_URL}" == "" ]]
+	then
+		echo "Set the environment variable LIFERAY_PORTAL_URL."
+
+		exit 1
+	fi
+
+	if [[ "${PLAYWRIGHT_PROJECT_NAME}" == "" ]]
+	then
+		echo "Set the environment variable PLAYWRIGHT_PROJECT_NAME."
+
+		exit 1
+	fi
+}
+
 function wait_for_portal_log_inactivity {
-	local portal_log_file_size=$(get_portal_log_file_size)
+	local portal_log_file_size=$(get_portal_log_file_size ${1})
 
 	local sleep_interval=15
 	local sleep_duration=180
@@ -453,9 +697,9 @@ function wait_for_portal_log_inactivity {
 
 	sleep ${sleep_interval}
 
-	while [[ ${portal_log_file_size} != $(get_portal_log_file_size) ]]
+	while [[ ${portal_log_file_size} != $(get_portal_log_file_size ${1}) ]]
 	do
-		portal_log_file_size=$(get_portal_log_file_size)
+		portal_log_file_size=$(get_portal_log_file_size ${1})
 
 		if [[ ${total_duration} -ge ${sleep_duration} ]]
 		then
@@ -466,10 +710,10 @@ function wait_for_portal_log_inactivity {
 
 		total_duration=$((total_duration + sleep_interval))
 
-		echo "Waiting for portal log inactivity"
+		echo "Waiting for portal log inactivity..."
 	done
 
-	echo "No portal activity in ${sleep_interval}s"
+	echo "No portal activity detected in ${sleep_interval}s."
 }
 
 main "${@}"

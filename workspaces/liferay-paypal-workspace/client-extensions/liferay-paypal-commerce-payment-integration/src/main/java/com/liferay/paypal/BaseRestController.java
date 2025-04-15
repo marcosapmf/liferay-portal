@@ -5,13 +5,14 @@
 
 package com.liferay.paypal;
 
+import com.liferay.portal.kernel.util.HashMapBuilder;
+
 import org.apache.tomcat.util.codec.binary.Base64;
 
 import org.json.JSONObject;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.web.reactive.function.client.WebClient;
 
 /**
  * @author Raymond Augé
@@ -19,34 +20,34 @@ import org.springframework.web.reactive.function.client.WebClient;
  * @author Brian Wing Shun Chan
  */
 public class BaseRestController
-	extends com.liferay.client.extension.util.spring.boot.BaseRestController {
+	extends com.liferay.client.extension.util.spring.boot3.BaseRestController {
 
 	protected String getAuthorization(JSONObject jsonObject) {
-		String authorization =
-			jsonObject.getString("clientId") + ":" +
-				jsonObject.getString("clientSecret");
-
 		JSONObject authorizationRequestJSONObject = new JSONObject(
-			WebClient.create(
-				getPayPalURL(jsonObject.getString("mode"))
-			).post(
-			).uri(
-				"/v1/oauth2/token"
-			).accept(
-				MediaType.APPLICATION_JSON
-			).contentType(
-				MediaType.APPLICATION_FORM_URLENCODED
-			).header(
-				HttpHeaders.AUTHORIZATION,
-				"Basic " + Base64.encodeBase64String(authorization.getBytes())
-			).bodyValue(
-				"grant_type=client_credentials"
-			).retrieve(
-			).bodyToMono(
-				String.class
-			).block());
+			post(
+				"grant_type=client_credentials",
+				HashMapBuilder.put(
+					HttpHeaders.AUTHORIZATION,
+					() -> {
+						String authorization =
+							jsonObject.getString("clientId") + ":" +
+								jsonObject.getString("clientSecret");
+
+						return "Basic " +
+							Base64.encodeBase64String(authorization.getBytes());
+					}
+				).put(
+					HttpHeaders.CONTENT_TYPE,
+					MediaType.APPLICATION_FORM_URLENCODED_VALUE
+				).build(),
+				getPayPalURL(jsonObject.getString("mode")) +
+					"/v1/oauth2/token"));
 
 		return authorizationRequestJSONObject.getString("access_token");
+	}
+
+	protected String getLiferayURL() {
+		return lxcDXPServerProtocol + "://" + lxcDXPMainDomain;
 	}
 
 	protected String getPayPalURL(String mode) {
@@ -55,6 +56,11 @@ public class BaseRestController
 		}
 
 		return "https://api-m.sandbox.paypal.com";
+	}
+
+	@Override
+	protected String getWebClientBaseURL() {
+		return "";
 	}
 
 }

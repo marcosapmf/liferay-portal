@@ -14,7 +14,9 @@ import React, {useState} from 'react';
 import {ModalEditViewColumn} from '../ModalEditViewColumn/ModalEditViewColumn';
 import {TYPES, useViewContext} from '../objectViewContext';
 
-const ViewBuilderScreen: React.FC<{}> = () => {
+const ViewBuilderScreen: React.FC<
+	{children?: React.ReactNode | undefined} & {}
+> = () => {
 	const [visibleEditModal, setVisibleEditModal] = useState(false);
 	const [editingObjectFieldName, setEditingObjectFieldName] = useState('');
 
@@ -44,11 +46,11 @@ const ViewBuilderScreen: React.FC<{}> = () => {
 
 		parentWindow.Liferay.fire('openModalSelectObjectFields', {
 			getName: ({label, name}: ObjectField) =>
-				stringUtils.getLocalizableLabel(
-					creationLanguageId,
-					label,
-					name
-				),
+				stringUtils.getLocalizableLabel({
+					fallbackLabel: name,
+					fallbackLanguageId: creationLanguageId,
+					labels: label,
+				}),
 			header: Liferay.Language.get('add-columns'),
 			items: objectFields.map((objectField) => {
 				return {

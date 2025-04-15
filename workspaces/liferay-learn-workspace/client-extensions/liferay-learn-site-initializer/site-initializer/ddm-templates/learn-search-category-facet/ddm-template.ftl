@@ -179,14 +179,14 @@
 	<#assign vocabularyNames = assetCategoriesSearchFacetDisplayContext.getVocabularyNames()![] />
 	<@liferay_ui.panel
 		collapsible=true
-		cssClass="search-facet search-facet-display-vocabulary"
+		cssClass="p-4 search-facet search-facet-display-vocabulary"
 		id="${namespace + 'facetAssetCategoriesPanel'}"
 		markupView="lexicon"
 		persistState=true
 		title="${(vocabularyNames?size == 1)?then(vocabularyNames[0]!'', 'category')}"
 	>
 		<#if vocabularyNames?has_content>
-			<ul class="treeview treeview-light treeview-nested treeview-vocabulary-display" role="tree">
+			<ul class="learn-treeview treeview treeview-light treeview-nested treeview-vocabulary-display" role="tree">
 				<#list vocabularyNames as vocabularyName>
 					<@treeview_item
 						cssClassTreeItem = "tree-item-vocabulary"
@@ -258,3 +258,27 @@
 		}
 	}
 </@>
+
+<style>
+	.learn-treeview .custom-control-label::before {
+		border-color: var(--gray-600, #6b6c7e);
+	}
+
+	.learn-treeview .custom-control-label-text {
+		font-size: 13px;
+		font-weight: 400;
+	}
+
+	.learn-treeview.treeview .btn {
+		margin-right: 0.5rem;
+		padding: 0px;
+	}
+
+	.learn-treeview.treeview .custom-control {
+		margin: 0rem;
+	}
+
+	.search-facet-display-vocabulary .learn-treeview.treeview-vocabulary-display .tree-item-category {
+		padding-left: 0rem;
+	}
+</style>

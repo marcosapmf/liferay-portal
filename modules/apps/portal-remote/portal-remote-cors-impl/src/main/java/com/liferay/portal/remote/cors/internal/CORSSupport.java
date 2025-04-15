@@ -76,11 +76,7 @@ public class CORSSupport {
 
 		String origin = requestHeadersFunction.apply(ORIGIN);
 
-		if (Validator.isBlank(origin)) {
-			return false;
-		}
-
-		return true;
+		return !Validator.isBlank(origin);
 	}
 
 	public boolean isValidCORSPreflightRequest(
@@ -144,7 +140,8 @@ public class CORSSupport {
 		if (Validator.isBlank(accessControlAllowOrigin) ||
 			StringUtil.equals(accessControlAllowOrigin, StringPool.STAR) ||
 			ArrayUtil.contains(
-				StringUtil.split(accessControlAllowOrigin), origin)) {
+				StringUtil.split(accessControlAllowOrigin, CharPool.SPACE),
+				origin)) {
 
 			return true;
 		}

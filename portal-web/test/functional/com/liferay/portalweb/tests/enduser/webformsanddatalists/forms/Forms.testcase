@@ -40,10 +40,16 @@ definition {
 	test AddFormInGlobal {
 		property portal.acceptance = "true";
 		property portal.upstream = "true";
-		property release.feature.flags.disable.DISABLE_PRIVATE_LAYOUTS = "true";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
-		property testray.component.names = "Training";
+
+		task ("Enable Scope Configuration") {
+			Portlet.enableScopeConfiguration();
+		}
+
+		task ("Enable private pages") {
+			PagesAdmin.enablePrivatePages();
+		}
 
 		Navigator.openURL();
 
@@ -1603,7 +1609,7 @@ definition {
 
 		Navigator.openSpecificURL(url = ${publishedFormPublicURL});
 
-		Alert.viewWarningSpecific(warningMessage = "This form is not available or it was not published.");
+		Alert.viewWarningSpecific(warningMessage = "You do not have the permission to view this form.");
 	}
 
 	@description = "Verify that multiple Forms can be deleted"
@@ -2280,6 +2286,10 @@ definition {
 	test ViewWidgetPageAtTheTop {
 		var portalURL = PropsUtil.get("portal.url");
 
+		task ("Enable dynamic and manual selection") {
+			AssetPublisherPortlet.enableDynamicAndManualSelection();
+		}
+
 		task ("Given an created Web Content") {
 			WebContentNavigator.openWebContentAdmin(siteURLKey = "guest");
 
@@ -2289,7 +2299,7 @@ definition {
 				webContentContent = "WC WebContent Content",
 				webContentTitle = "WC WebContent Title");
 
-			PortletEntry.publish();
+			WebContent.publishWithPermissions();
 
 			Navigator.openURL();
 		}

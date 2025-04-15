@@ -1,6 +1,9 @@
 const currentLength = document.getElementById(
 	`${fragmentNamespace}-current-length`
 );
+const errorMessage = document.getElementById(
+	`${fragmentNamespace}-textarea-error-message`
+);
 const formGroup = document.getElementById(`${fragmentNamespace}-form-group`);
 const lengthInfo = document.getElementById(`${fragmentNamespace}-length-info`);
 const lengthWarning = document.getElementById(
@@ -11,7 +14,7 @@ const lengthWarningText = document.getElementById(
 );
 const textarea = document.getElementById(`${fragmentNamespace}-textarea`);
 
-function enableLenghtWarning() {
+function enableLengthWarning() {
 	formGroup.classList.add('has-error');
 	lengthInfo.classList.add('text-danger', 'font-weight-semi-bold');
 	lengthWarning.classList.remove('sr-only');
@@ -42,8 +45,12 @@ function onInputKeyup(event) {
 
 	currentLength.innerText = length;
 
+	if (errorMessage) {
+		errorMessage.remove();
+	}
+
 	if (length > input.attributes.maxLength) {
-		enableLenghtWarning();
+		enableLengthWarning();
 	}
 	else if (formGroup.classList.contains('has-error')) {
 		disableLengthWarning();
@@ -57,11 +64,52 @@ function main() {
 	else {
 		currentLength.innerText = textarea.value.length;
 
-		if (textarea.value.length > input.attributes.maxLength) {
-			enableLenghtWarning();
+		if (
+			!errorMessage &&
+			textarea.value.length > input.attributes.maxLength
+		) {
+			enableLengthWarning();
 		}
 
 		textarea.addEventListener('keyup', onInputKeyup);
+
+		if (Liferay.FeatureFlags['LPD-37927']) {
+			const defaultLanguageId = themeDisplay.getDefaultLanguageId();
+
+			import('@liferay/fragment-impl').then(
+				({registerLocalizedInput, registerUnlocalizedInput}) => {
+					if (input.localizable) {
+						const {onChange} = registerLocalizedInput({
+							defaultLanguageId,
+							initialValues: input.valueI18n,
+							inputElement: textarea,
+							inputName: input.name,
+							localizationInputsContainer: textarea.parentNode,
+							namespace: fragmentNamespace,
+						});
+
+						textarea.addEventListener('change', (event) => {
+							onChange(event.target.value);
+						});
+					}
+					else {
+						registerUnlocalizedInput({
+							defaultLanguageId,
+							inputElement: textarea,
+							readOnlyInputLabel: document.getElementById(
+								`${fragmentNamespace}-textarea-readonly`
+							),
+							unlocalizedFieldsState:
+								input.attributes.unlocalizedFieldsState,
+							unlocalizedMessageContainer:
+								document.getElementById(
+									`${fragmentNamespace}-unlocalized-info`
+								),
+						});
+					}
+				}
+			);
+		}
 	}
 }
 

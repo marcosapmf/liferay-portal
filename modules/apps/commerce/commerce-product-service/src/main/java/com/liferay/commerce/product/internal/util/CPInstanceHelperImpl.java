@@ -5,29 +5,41 @@
 
 package com.liferay.commerce.product.internal.util;
 
+import com.liferay.account.service.AccountGroupLocalService;
 import com.liferay.adaptive.media.image.html.AMImageHTMLTagFactory;
+import com.liferay.commerce.context.CommerceContextThreadLocal;
+import com.liferay.commerce.currency.model.CommerceMoney;
 import com.liferay.commerce.inventory.CPDefinitionInventoryEngine;
 import com.liferay.commerce.media.CommerceMediaProvider;
 import com.liferay.commerce.media.CommerceMediaResolver;
+import com.liferay.commerce.price.CommerceProductPrice;
+import com.liferay.commerce.price.CommerceProductPriceCalculation;
+import com.liferay.commerce.price.list.service.CommercePriceEntryLocalService;
+import com.liferay.commerce.price.list.service.CommercePriceListLocalService;
 import com.liferay.commerce.product.availability.CPAvailabilityChecker;
 import com.liferay.commerce.product.catalog.CPCatalogEntry;
 import com.liferay.commerce.product.catalog.CPSku;
 import com.liferay.commerce.product.constants.CPAttachmentFileEntryConstants;
+import com.liferay.commerce.product.discovery.CPConfigurationListDiscovery;
 import com.liferay.commerce.product.internal.catalog.CPSkuImpl;
 import com.liferay.commerce.product.internal.util.comparator.CPDefinitionOptionRelComparator;
 import com.liferay.commerce.product.model.CPAttachmentFileEntry;
+import com.liferay.commerce.product.model.CPConfigurationList;
 import com.liferay.commerce.product.model.CPDefinition;
 import com.liferay.commerce.product.model.CPDefinitionOptionRel;
 import com.liferay.commerce.product.model.CPDefinitionOptionValueRel;
 import com.liferay.commerce.product.model.CPInstance;
 import com.liferay.commerce.product.model.CPInstanceOptionValueRel;
+import com.liferay.commerce.product.model.CommerceChannel;
 import com.liferay.commerce.product.permission.CommerceProductViewPermission;
 import com.liferay.commerce.product.service.CPAttachmentFileEntryLocalService;
+import com.liferay.commerce.product.service.CPConfigurationListLocalService;
 import com.liferay.commerce.product.service.CPDefinitionLocalService;
 import com.liferay.commerce.product.service.CPDefinitionOptionRelLocalService;
 import com.liferay.commerce.product.service.CPDefinitionOptionValueRelLocalService;
 import com.liferay.commerce.product.service.CPInstanceLocalService;
 import com.liferay.commerce.product.service.CPInstanceOptionValueRelLocalService;
+import com.liferay.commerce.product.service.CommerceChannelLocalService;
 import com.liferay.commerce.product.util.CPCollectionProviderHelper;
 import com.liferay.commerce.product.util.CPInstanceHelper;
 import com.liferay.commerce.product.util.CPJSONUtil;
@@ -36,15 +48,20 @@ import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.repository.model.FileVersion;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.util.KeyValuePair;
 import com.liferay.portal.kernel.util.Validator;
+
+import java.math.BigDecimal;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -104,8 +121,53 @@ public class CPInstanceHelperImpl implements CPInstanceHelper {
 	}
 
 	@Override
+	public BigDecimal fetchCPInstanceUnitPrice(CPInstance cpInstance) {
+		try {
+			CommerceProductPrice commerceProductPrice =
+				_commerceProductPriceCalculation.getCommerceProductPrice(
+					cpInstance.getCPInstanceId(), BigDecimal.ONE,
+					StringPool.BLANK, CommerceContextThreadLocal.get());
+
+			CommerceMoney unitPriceCommerceMoney =
+				commerceProductPrice.getUnitPrice();
+
+			if (!unitPriceCommerceMoney.isEmpty()) {
+				return unitPriceCommerceMoney.getPrice();
+			}
+		}
+		catch (Exception exception) {
+			_log.error(exception);
+		}
+
+		return null;
+	}
+
+	@Override
+	public BigDecimal fetchCPInstanceUnitPromoPrice(CPInstance cpInstance) {
+		try {
+			CommerceProductPrice commerceProductPrice =
+				_commerceProductPriceCalculation.getCommerceProductPrice(
+					cpInstance.getCPInstanceId(), BigDecimal.ONE,
+					StringPool.BLANK, CommerceContextThreadLocal.get());
+
+			CommerceMoney unitPromoPriceCommerceMoney =
+				commerceProductPrice.getUnitPromoPrice();
+
+			if (!unitPromoPriceCommerceMoney.isEmpty()) {
+				return unitPromoPriceCommerceMoney.getPrice();
+			}
+		}
+		catch (Exception exception) {
+			_log.error(exception);
+		}
+
+		return null;
+	}
+
+	@Override
 	public CPInstance fetchFirstAvailableReplacementCPInstance(
-			long commerceChannelGroupId, long cpInstanceId)
+			long accountEntryId, long commerceChannelGroupId,
+			long commerceOrderTypeId, long cpInstanceId)
 		throws PortalException {
 
 		CPInstance cpInstance = _cpInstanceLocalService.fetchCPInstance(
@@ -113,17 +175,23 @@ public class CPInstanceHelperImpl implements CPInstanceHelper {
 
 		if ((cpInstance == null) || !cpInstance.isDiscontinued() ||
 			_cpAvailabilityChecker.check(
-				commerceChannelGroupId, cpInstance, StringPool.BLANK,
-				_cpDefinitionInventoryEngine.getMinOrderQuantity(cpInstance))) {
+				accountEntryId, commerceChannelGroupId, cpInstance,
+				StringPool.BLANK,
+				_cpDefinitionInventoryEngine.getMinOrderQuantity(
+					_getCPConfigurationListId(
+						accountEntryId, commerceChannelGroupId,
+						commerceOrderTypeId, cpInstance),
+					cpInstance))) {
 
 			return null;
 		}
 
+		cpInstance = _cpInstanceLocalService.fetchCProductInstance(
+			cpInstance.getReplacementCProductId(),
+			cpInstance.getReplacementCPInstanceUuid());
+
 		return _fetchFirstAvailableReplacementCPInstance(
-			commerceChannelGroupId,
-			_cpInstanceLocalService.fetchCProductInstance(
-				cpInstance.getReplacementCProductId(),
-				cpInstance.getReplacementCPInstanceUuid()));
+			accountEntryId, commerceChannelGroupId, 0, cpInstance);
 	}
 
 	@Override
@@ -607,7 +675,9 @@ public class CPInstanceHelperImpl implements CPInstanceHelper {
 			return null;
 		}
 
-		return new CPSkuImpl(cpInstance);
+		return new CPSkuImpl(
+			cpInstance, fetchCPInstanceUnitPrice(cpInstance),
+			fetchCPInstanceUnitPromoPrice(cpInstance));
 	}
 
 	@Override
@@ -838,26 +908,55 @@ public class CPInstanceHelperImpl implements CPInstanceHelper {
 	}
 
 	private CPInstance _fetchFirstAvailableReplacementCPInstance(
-			long commerceChannelGroupId, CPInstance cpInstance)
+			long accountEntryId, long commerceChannelGroupId,
+			long commerceOrderTypeId, CPInstance cpInstance)
 		throws PortalException {
 
 		if ((cpInstance == null) || !cpInstance.isDiscontinued() ||
 			_cpAvailabilityChecker.check(
-				commerceChannelGroupId, cpInstance, StringPool.BLANK,
-				_cpDefinitionInventoryEngine.getMinOrderQuantity(cpInstance))) {
+				accountEntryId, commerceChannelGroupId, cpInstance,
+				StringPool.BLANK,
+				_cpDefinitionInventoryEngine.getMinOrderQuantity(
+					_getCPConfigurationListId(
+						accountEntryId, commerceChannelGroupId,
+						commerceOrderTypeId, cpInstance),
+					cpInstance))) {
 
 			return cpInstance;
 		}
 
 		return _fetchFirstAvailableReplacementCPInstance(
-			commerceChannelGroupId,
+			accountEntryId, commerceChannelGroupId, commerceOrderTypeId,
 			_cpInstanceLocalService.fetchCProductInstance(
 				cpInstance.getReplacementCProductId(),
 				cpInstance.getReplacementCPInstanceUuid()));
 	}
 
+	private long _getCPConfigurationListId(
+			long accountEntryId, long commerceChannelGroupId,
+			long commerceOrderTypeId, CPInstance cpInstance)
+		throws PortalException {
+
+		if (!FeatureFlagManagerUtil.isEnabled("LPD-10889")) {
+			return 0;
+		}
+
+		CommerceChannel commerceChannel =
+			_commerceChannelLocalService.getCommerceChannelByGroupId(
+				commerceChannelGroupId);
+
+		CPConfigurationList cpConfigurationList =
+			_cpConfigurationListDiscovery.getCPConfigurationList(
+				cpInstance.getCompanyId(), cpInstance.getGroupId(),
+				accountEntryId, commerceChannel.getCommerceChannelId(),
+				commerceOrderTypeId);
+
+		return cpConfigurationList.getCPConfigurationListId();
+	}
+
 	private long _getTopId(Map<Long, Integer> idIdHits) {
 		long topId = 0;
+
 		int topIdHits = 0;
 
 		for (Map.Entry<Long, Integer> idIdHitsEntry : idIdHits.entrySet()) {
@@ -891,14 +990,32 @@ public class CPInstanceHelperImpl implements CPInstanceHelper {
 		return true;
 	}
 
+	private static final Log _log = LogFactoryUtil.getLog(
+		CPInstanceHelperImpl.class);
+
+	@Reference
+	private AccountGroupLocalService _accountGroupLocalService;
+
 	@Reference
 	private AMImageHTMLTagFactory _amImageHTMLTagFactory;
+
+	@Reference
+	private CommerceChannelLocalService _commerceChannelLocalService;
 
 	@Reference
 	private CommerceMediaProvider _commerceMediaProvider;
 
 	@Reference
 	private CommerceMediaResolver _commerceMediaResolver;
+
+	@Reference
+	private CommercePriceEntryLocalService _commercePriceEntryLocalService;
+
+	@Reference
+	private CommercePriceListLocalService _commercePriceListLocalService;
+
+	@Reference
+	private CommerceProductPriceCalculation _commerceProductPriceCalculation;
 
 	@Reference
 	private CommerceProductViewPermission _commerceProductViewPermission;
@@ -912,6 +1029,12 @@ public class CPInstanceHelperImpl implements CPInstanceHelper {
 
 	@Reference
 	private CPCollectionProviderHelper _cpCollectionProviderHelper;
+
+	@Reference
+	private CPConfigurationListDiscovery _cpConfigurationListDiscovery;
+
+	@Reference
+	private CPConfigurationListLocalService _cpConfigurationListLocalService;
 
 	@Reference
 	private CPDefinitionInventoryEngine _cpDefinitionInventoryEngine;

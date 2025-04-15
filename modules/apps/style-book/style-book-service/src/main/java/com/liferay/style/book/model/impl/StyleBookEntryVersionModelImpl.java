@@ -72,7 +72,7 @@ public class StyleBookEntryVersionModelImpl
 		{"defaultStyleBookEntry", Types.BOOLEAN},
 		{"frontendTokensValues", Types.CLOB}, {"name", Types.VARCHAR},
 		{"previewFileEntryId", Types.BIGINT},
-		{"styleBookEntryKey", Types.VARCHAR}
+		{"styleBookEntryKey", Types.VARCHAR}, {"themeId", Types.VARCHAR}
 	};
 
 	public static final Map<String, Integer> TABLE_COLUMNS_MAP =
@@ -97,10 +97,11 @@ public class StyleBookEntryVersionModelImpl
 		TABLE_COLUMNS_MAP.put("name", Types.VARCHAR);
 		TABLE_COLUMNS_MAP.put("previewFileEntryId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("styleBookEntryKey", Types.VARCHAR);
+		TABLE_COLUMNS_MAP.put("themeId", Types.VARCHAR);
 	}
 
 	public static final String TABLE_SQL_CREATE =
-		"create table StyleBookEntryVersion (mvccVersion LONG default 0 not null,ctCollectionId LONG default 0 not null,styleBookEntryVersionId LONG not null,version INTEGER,uuid_ VARCHAR(75) null,externalReferenceCode VARCHAR(75) null,styleBookEntryId LONG,groupId LONG,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,defaultStyleBookEntry BOOLEAN,frontendTokensValues TEXT null,name VARCHAR(75) null,previewFileEntryId LONG,styleBookEntryKey VARCHAR(75) null,primary key (styleBookEntryVersionId, ctCollectionId))";
+		"create table StyleBookEntryVersion (mvccVersion LONG default 0 not null,ctCollectionId LONG default 0 not null,styleBookEntryVersionId LONG not null,version INTEGER,uuid_ VARCHAR(75) null,externalReferenceCode VARCHAR(75) null,styleBookEntryId LONG,groupId LONG,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,defaultStyleBookEntry BOOLEAN,frontendTokensValues TEXT null,name VARCHAR(75) null,previewFileEntryId LONG,styleBookEntryKey VARCHAR(75) null,themeId VARCHAR(255) null,primary key (styleBookEntryVersionId, ctCollectionId))";
 
 	public static final String TABLE_SQL_DROP =
 		"drop table StyleBookEntryVersion";
@@ -157,13 +158,19 @@ public class StyleBookEntryVersionModelImpl
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
-	public static final long UUID_COLUMN_BITMASK = 64L;
+	public static final long THEMEID_COLUMN_BITMASK = 64L;
 
 	/**
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
-	public static final long VERSION_COLUMN_BITMASK = 128L;
+	public static final long UUID_COLUMN_BITMASK = 128L;
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
+	public static final long VERSION_COLUMN_BITMASK = 256L;
 
 	/**
 	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
@@ -319,6 +326,8 @@ public class StyleBookEntryVersionModelImpl
 			attributeGetterFunctions.put(
 				"styleBookEntryKey",
 				StyleBookEntryVersion::getStyleBookEntryKey);
+			attributeGetterFunctions.put(
+				"themeId", StyleBookEntryVersion::getThemeId);
 
 			_attributeGetterFunctions = Collections.unmodifiableMap(
 				attributeGetterFunctions);
@@ -410,6 +419,10 @@ public class StyleBookEntryVersionModelImpl
 				"styleBookEntryKey",
 				(BiConsumer<StyleBookEntryVersion, String>)
 					StyleBookEntryVersion::setStyleBookEntryKey);
+			attributeSetterBiConsumers.put(
+				"themeId",
+				(BiConsumer<StyleBookEntryVersion, String>)
+					StyleBookEntryVersion::setThemeId);
 
 			_attributeSetterBiConsumers = Collections.unmodifiableMap(
 				(Map)attributeSetterBiConsumers);
@@ -438,6 +451,7 @@ public class StyleBookEntryVersionModelImpl
 		styleBookEntry.setName(getName());
 		styleBookEntry.setPreviewFileEntryId(getPreviewFileEntryId());
 		styleBookEntry.setStyleBookEntryKey(getStyleBookEntryKey());
+		styleBookEntry.setThemeId(getThemeId());
 	}
 
 	@Override
@@ -842,6 +856,34 @@ public class StyleBookEntryVersionModelImpl
 		return getColumnOriginalValue("styleBookEntryKey");
 	}
 
+	@Override
+	public String getThemeId() {
+		if (_themeId == null) {
+			return "";
+		}
+		else {
+			return _themeId;
+		}
+	}
+
+	@Override
+	public void setThemeId(String themeId) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_themeId = themeId;
+	}
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
+	public String getOriginalThemeId() {
+		return getColumnOriginalValue("themeId");
+	}
+
 	public long getColumnBitmask() {
 		if (_columnBitmask > 0) {
 			return _columnBitmask;
@@ -923,6 +965,7 @@ public class StyleBookEntryVersionModelImpl
 		styleBookEntryVersionImpl.setPreviewFileEntryId(
 			getPreviewFileEntryId());
 		styleBookEntryVersionImpl.setStyleBookEntryKey(getStyleBookEntryKey());
+		styleBookEntryVersionImpl.setThemeId(getThemeId());
 
 		styleBookEntryVersionImpl.resetOriginalValues();
 
@@ -970,6 +1013,8 @@ public class StyleBookEntryVersionModelImpl
 			this.<Long>getColumnOriginalValue("previewFileEntryId"));
 		styleBookEntryVersionImpl.setStyleBookEntryKey(
 			this.<String>getColumnOriginalValue("styleBookEntryKey"));
+		styleBookEntryVersionImpl.setThemeId(
+			this.<String>getColumnOriginalValue("themeId"));
 
 		return styleBookEntryVersionImpl;
 	}
@@ -1158,6 +1203,14 @@ public class StyleBookEntryVersionModelImpl
 			styleBookEntryVersionCacheModel.styleBookEntryKey = null;
 		}
 
+		styleBookEntryVersionCacheModel.themeId = getThemeId();
+
+		String themeId = styleBookEntryVersionCacheModel.themeId;
+
+		if ((themeId != null) && (themeId.length() == 0)) {
+			styleBookEntryVersionCacheModel.themeId = null;
+		}
+
 		return styleBookEntryVersionCacheModel;
 	}
 
@@ -1239,6 +1292,7 @@ public class StyleBookEntryVersionModelImpl
 	private String _name;
 	private long _previewFileEntryId;
 	private String _styleBookEntryKey;
+	private String _themeId;
 
 	public <T> T getColumnValue(String columnName) {
 		columnName = _attributeNames.getOrDefault(columnName, columnName);
@@ -1292,6 +1346,7 @@ public class StyleBookEntryVersionModelImpl
 		_columnOriginalValues.put("name", _name);
 		_columnOriginalValues.put("previewFileEntryId", _previewFileEntryId);
 		_columnOriginalValues.put("styleBookEntryKey", _styleBookEntryKey);
+		_columnOriginalValues.put("themeId", _themeId);
 	}
 
 	private static final Map<String, String> _attributeNames;
@@ -1350,6 +1405,8 @@ public class StyleBookEntryVersionModelImpl
 		columnBitmasks.put("previewFileEntryId", 65536L);
 
 		columnBitmasks.put("styleBookEntryKey", 131072L);
+
+		columnBitmasks.put("themeId", 262144L);
 
 		_columnBitmasks = Collections.unmodifiableMap(columnBitmasks);
 	}

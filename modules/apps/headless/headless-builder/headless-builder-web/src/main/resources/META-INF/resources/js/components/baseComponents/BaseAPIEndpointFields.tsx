@@ -8,7 +8,8 @@ import {Text} from '@clayui/core';
 import ClayForm, {ClayInput} from '@clayui/form';
 import ClayIcon from '@clayui/icon';
 import classNames from 'classnames';
-import {openToast, sub} from 'frontend-js-web';
+import {openToast} from 'frontend-js-components-web';
+import {sub} from 'frontend-js-web';
 import React, {Dispatch, SetStateAction, useEffect, useState} from 'react';
 
 import {Select} from '../fieldComponents/Select';
@@ -89,7 +90,7 @@ export default function BaseAPIEndpointFields({
 
 	useEffect(() => {
 		fetchJSON<FetchedListType>({
-			input: '/o/headless-admin-list-type/v1.0/list-type-definitions/by-external-reference-code/SCOPE_PICKLIST',
+			input: '/o/headless-admin-list-type/v1.0/list-type-definitions/by-external-reference-code/L_API_ENDPOINT_SCOPES',
 		}).then((response) => {
 			const options = response.listTypeEntries
 				? response.listTypeEntries.map((entry) => ({
@@ -107,7 +108,7 @@ export default function BaseAPIEndpointFields({
 		});
 
 		fetchJSON<FetchedListType>({
-			input: '/o/headless-admin-list-type/v1.0/list-type-definitions/by-external-reference-code/RETRIEVE_TYPE_PICKLIST',
+			input: '/o/headless-admin-list-type/v1.0/list-type-definitions/by-external-reference-code/L_API_ENDPOINT_RETRIEVE_TYPES',
 		}).then((response) => {
 			const options = response.listTypeEntries
 				? response.listTypeEntries.map((entry) => ({
@@ -125,7 +126,7 @@ export default function BaseAPIEndpointFields({
 		});
 
 		fetchJSON<FetchedListType>({
-			input: '/o/headless-admin-list-type/v1.0/list-type-definitions/by-external-reference-code/HTTP_METHOD_PICKLIST',
+			input: '/o/headless-admin-list-type/v1.0/list-type-definitions/by-external-reference-code/L_API_ENDPOINT_HTTP_METHODS',
 		}).then((response) => {
 			const options = response.listTypeEntries
 				? response.listTypeEntries.map((entry) => ({
@@ -141,14 +142,14 @@ export default function BaseAPIEndpointFields({
 	}, []);
 
 	useEffect(() => {
-		displayError.r_requestAPISchemaToAPIEndpoints_c_apiSchemaId &&
+		displayError.r_requestAPISchemaToAPIEndpoints_l_apiSchemaId &&
 			openToast({
 				message: Liferay.Language.get(
 					'there-are-errors-on-the-form-please-check-if-any-mandatory-fields-have-not-been-completed'
 				),
 				type: 'danger',
 			});
-	}, [displayError.r_requestAPISchemaToAPIEndpoints_c_apiSchemaId]);
+	}, [displayError.r_requestAPISchemaToAPIEndpoints_l_apiSchemaId]);
 
 	useEffect(() => {
 		if (data.retrieveType?.key && retrieveTypeOptions.length) {
@@ -204,7 +205,7 @@ export default function BaseAPIEndpointFields({
 		}
 		else if (data.httpMethod?.key === HTTP_METHODS.GET) {
 			setData((previousValue) => {
-				delete previousValue.r_requestAPISchemaToAPIEndpoints_c_apiSchemaId;
+				delete previousValue.r_requestAPISchemaToAPIEndpoints_l_apiSchemaId;
 
 				return {
 					...previousValue,
@@ -548,7 +549,7 @@ export default function BaseAPIEndpointFields({
 
 			<div aria-live="assertive" className="sr-only">
 				{(displayError.httpMethod ||
-					displayError.r_requestAPISchemaToAPIEndpoints_c_apiSchemaId ||
+					displayError.r_requestAPISchemaToAPIEndpoints_l_apiSchemaId ||
 					displayError.retrieveType ||
 					displayError.scope ||
 					pathHasErrors) && (

@@ -70,8 +70,6 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
-import javax.portlet.PortletURL;
-
 import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
@@ -90,15 +88,8 @@ public class DefaultCommerceCheckoutStepHttpHelper
 			HttpServletRequest httpServletRequest, CommerceOrder commerceOrder)
 		throws PortalException {
 
-		PortletURL portletURL =
-			_commerceOrderHttpHelper.getCommerceCartPortletURL(
-				httpServletRequest, commerceOrder);
-
-		if (portletURL == null) {
-			return StringPool.BLANK;
-		}
-
-		return portletURL.toString();
+		return _commerceOrderHttpHelper.getCommerceCartPortletURL(
+			httpServletRequest, commerceOrder);
 	}
 
 	@Override
@@ -162,18 +153,22 @@ public class DefaultCommerceCheckoutStepHttpHelper
 				defaultShippingCommerceAddress.getCommerceAddressId();
 		}
 
-		CommerceAddress shippingAddress = commerceOrder.getShippingAddress();
-		CommerceAddress billingAddress = commerceOrder.getBillingAddress();
+		CommerceAddress billingCommerceAddress =
+			commerceOrder.getBillingAddress();
+		CommerceAddress shippingCommerceAddress =
+			commerceOrder.getShippingAddress();
 
 		if (((accountEntry != null) && (defaultBillingCommerceAddressId != 0) &&
 			 (defaultShippingCommerceAddressId != 0) &&
 			 (defaultBillingCommerceAddressId ==
 				 defaultShippingCommerceAddressId) &&
-			 (billingAddress == null) && (shippingAddress == null) &&
+			 (billingCommerceAddress == null) &&
+			 (shippingCommerceAddress == null) &&
 			 commerceOrder.isShippable()) ||
-			((billingAddress != null) && (shippingAddress != null) &&
-			 (billingAddress.getCommerceAddressId() ==
-				 shippingAddress.getCommerceAddressId()))) {
+			((billingCommerceAddress != null) &&
+			 (shippingCommerceAddress != null) &&
+			 (billingCommerceAddress.getCommerceAddressId() ==
+				 shippingCommerceAddress.getCommerceAddressId()))) {
 
 			return false;
 		}
@@ -640,11 +635,7 @@ public class DefaultCommerceCheckoutStepHttpHelper
 			HttpServletRequest httpServletRequest, CommerceOrder commerceOrder)
 		throws PortalException {
 
-		if (BigDecimalUtil.isZero(commerceOrder.getTotal())) {
-			return true;
-		}
-
-		return false;
+		return BigDecimalUtil.isZero(commerceOrder.getTotal());
 	}
 
 	private List<CommercePaymentMethodGroupRel>
@@ -727,22 +718,24 @@ public class DefaultCommerceCheckoutStepHttpHelper
 			HttpServletRequest httpServletRequest)
 		throws PortalException {
 
-		if (commerceShippingMethods.size() == 1) {
-			CommerceShippingMethod commerceShippingMethod =
-				commerceShippingMethods.get(0);
+		if (commerceShippingMethods.size() != 1) {
+			return null;
+		}
 
-			CommerceShippingEngine commerceShippingEngine =
-				_commerceShippingEngineRegistry.getCommerceShippingEngine(
-					commerceShippingMethod.getEngineKey());
+		CommerceShippingMethod commerceShippingMethod =
+			commerceShippingMethods.get(0);
 
-			List<CommerceShippingOption> commerceShippingOptions =
-				commerceShippingEngine.getEnabledCommerceShippingOptions(
-					commerceContext, commerceOrder,
-					_portal.getLocale(httpServletRequest));
+		CommerceShippingEngine commerceShippingEngine =
+			_commerceShippingEngineRegistry.getCommerceShippingEngine(
+				commerceShippingMethod.getEngineKey());
 
-			if (commerceShippingOptions.size() == 1) {
-				return commerceShippingOptions.get(0);
-			}
+		List<CommerceShippingOption> commerceShippingOptions =
+			commerceShippingEngine.getEnabledCommerceShippingOptions(
+				commerceContext, commerceOrder,
+				_portal.getLocale(httpServletRequest));
+
+		if (commerceShippingOptions.size() == 1) {
+			return commerceShippingOptions.get(0);
 		}
 
 		return null;

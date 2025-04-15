@@ -8,7 +8,7 @@ import {Locator, expect, mergeTests} from '@playwright/test';
 import {featureFlagsTest} from '../../../../fixtures/featureFlagsTest';
 import {loginTest} from '../../../../fixtures/loginTest';
 import getRandomString from '../../../../utils/getRandomString';
-import {waitForSuccessAlert} from '../../../../utils/waitForSuccessAlert';
+import {waitForAlert} from '../../../../utils/waitForAlert';
 import {dataSetManagerApiHelpersTest} from '../../fixtures/dataSetManagerApiHelpersTest';
 import checkHelperTooltip from '../../utils/checkHelperTooltip';
 import checkLocalized from '../../utils/checkLocalized';
@@ -16,7 +16,7 @@ import checkRequired from '../../utils/checkRequired';
 import clickRowAction from '../../utils/clickRowAction';
 import getRowByText from '../../utils/getRowByText';
 import getSelectOptionLabels from '../../utils/getSelectOptionLabels';
-import {ECreationActionType, EModalActionVariant} from '../../utils/types';
+import {ECreationActionTarget, EModalActionVariant} from '../../utils/types';
 import {actionsPageTest} from './fixtures/actionsPageTest';
 import {dataSetManagerSetupTest} from './fixtures/dataSetManagerSetupTest';
 
@@ -24,8 +24,8 @@ export const test = mergeTests(
 	actionsPageTest,
 	dataSetManagerApiHelpersTest,
 	featureFlagsTest({
-		'LPS-164563': true,
-		'LPS-178052': true,
+		'LPS-164563': {enabled: true},
+		'LPS-178052': {enabled: true},
 	}),
 	loginTest(),
 	dataSetManagerSetupTest
@@ -147,7 +147,7 @@ test(
 		let headlessActionKey: string = getRandomString();
 		let icon: string = 'arrow-right-full';
 		let label: string = getRandomString();
-		const type: ECreationActionType = ECreationActionType.LINK;
+		const type: ECreationActionTarget = ECreationActionTarget.LINK;
 		let url: string = getRandomString();
 
 		await test.step('Go to creation actions tab', async () => {
@@ -176,7 +176,6 @@ test(
 			});
 
 			await expect(actionRow.getByRole('cell')).toContainText([
-				icon,
 				label,
 				type,
 			]);
@@ -224,7 +223,7 @@ test(
 
 			await actionsPage.actionForm.saveButton.click();
 
-			await waitForSuccessAlert(page);
+			await waitForAlert(page);
 		});
 
 		await test.step('Open edit page of the saved item', async () => {
@@ -260,7 +259,7 @@ test(
 		let icon: string = 'check';
 		let label: string = getRandomString();
 		let title: string = getRandomString();
-		const type: ECreationActionType = ECreationActionType.MODAL;
+		const type: ECreationActionTarget = ECreationActionTarget.MODAL;
 		let url: string = getRandomString();
 		let variant = EModalActionVariant.LARGE;
 
@@ -292,7 +291,6 @@ test(
 			});
 
 			await expect(actionRow.getByRole('cell')).toContainText([
-				icon,
 				label,
 				type,
 			]);
@@ -346,7 +344,7 @@ test(
 
 			await actionsPage.actionForm.saveButton.click();
 
-			await waitForSuccessAlert(page);
+			await waitForAlert(page);
 		});
 
 		await test.step('Open edit page of the saved item', async () => {
@@ -382,7 +380,7 @@ test(
 		let icon: string = 'check';
 		let label: string = getRandomString();
 		let title: string = getRandomString();
-		const type: ECreationActionType = ECreationActionType.MODAL;
+		const type: ECreationActionTarget = ECreationActionTarget.MODAL;
 		let url: string = getRandomString();
 
 		await test.step('Go to creation actions tab', async () => {
@@ -412,7 +410,6 @@ test(
 			});
 
 			await expect(actionRow.getByRole('cell')).toContainText([
-				icon,
 				label,
 				type,
 			]);
@@ -463,7 +460,7 @@ test(
 
 			await actionsPage.actionForm.saveButton.click();
 
-			await waitForSuccessAlert(page);
+			await waitForAlert(page);
 		});
 
 		await test.step('Open edit page of the saved item', async () => {
@@ -533,7 +530,7 @@ test(
 			await dataSetManagerApiHelpers.createDataSetCreationAction({
 				dataSetERC,
 				label_i18n: {en_US: actionLabel},
-				type: ECreationActionType.LINK,
+				target: ECreationActionTarget.LINK,
 			});
 		});
 
@@ -580,6 +577,20 @@ test(
 				row: actionRow,
 			});
 
+			await test.step('Check the modal title and description', async () => {
+				await expect(
+					actionsPage.deletionConfirmationModal.locator(
+						'.modal-title'
+					)
+				).toContainText('Delete Action');
+
+				await expect(
+					actionsPage.deletionConfirmationModal
+				).toContainText(
+					'Are you sure you want to delete this action? It will be removed immediately. Fragments using it will be affected. This action cannot be undone.'
+				);
+			});
+
 			await actionsPage.deletionConfirmationModal
 				.getByRole('button', {
 					name: 'Delete',
@@ -591,6 +602,89 @@ test(
 			).not.toBeInViewport();
 
 			await expect(actionRow).not.toBeInViewport();
+		});
+	}
+);
+
+test(
+	'Deactivate and activate a creation action',
+	{tag: '@LPD-39965'},
+	async ({actionsPage, dataSetManagerApiHelpers, page}) => {
+		const icon: string = 'arrow-right-full';
+		const label: string = getRandomString();
+		const type: ECreationActionTarget = ECreationActionTarget.LINK;
+
+		await test.step('Create an item action with API', async () => {
+			await dataSetManagerApiHelpers.createDataSetCreationAction({
+				dataSetERC,
+				icon,
+				label_i18n: {en_US: label},
+				target: ECreationActionTarget.LINK,
+			});
+		});
+
+		await test.step('Go to creation actions tab', async () => {
+			await actionsPage.gotoCreationActionsTab({dataSetLabel});
+		});
+
+		let actionRow: Locator;
+
+		await test.step('New creation action is displayed on the table and is "Active" by default', async () => {
+			await expect(actionsPage.creationActionsTab).toBeInViewport();
+
+			actionRow = await getRowByText({
+				page,
+				table: actionsPage.creationActionsTable,
+				text: label,
+			});
+
+			await expect(actionRow.getByRole('cell')).toContainText([
+				label,
+				type,
+				'Active',
+			]);
+
+			await expect(actionsPage.activeToggle.first()).toBeVisible();
+		});
+
+		await test.step('Deactivate the creation action', async () => {
+			actionRow = await getRowByText({
+				page,
+				table: actionsPage.creationActionsTable,
+				text: label,
+			});
+
+			await actionsPage.activeToggle.first().click();
+
+			await waitForAlert(page);
+
+			await expect(actionRow.getByRole('cell')).toContainText([
+				label,
+				type,
+				'Inactive',
+			]);
+
+			await expect(actionsPage.inactiveToggle.first()).toBeVisible();
+		});
+
+		await test.step('Activate the creation action', async () => {
+			actionRow = await getRowByText({
+				page,
+				table: actionsPage.creationActionsTable,
+				text: label,
+			});
+
+			await actionsPage.inactiveToggle.first().click();
+
+			await waitForAlert(page);
+
+			await expect(actionRow.getByRole('cell')).toContainText([
+				label,
+				type,
+				'Active',
+			]);
+
+			await expect(actionsPage.activeToggle.first()).toBeVisible();
 		});
 	}
 );

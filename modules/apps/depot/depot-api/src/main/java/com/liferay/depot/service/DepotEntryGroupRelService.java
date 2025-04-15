@@ -54,6 +54,16 @@ public interface DepotEntryGroupRelService extends BaseService {
 		throws PortalException;
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public DepotEntryGroupRel getDepotEntryGroupRelByDepotEntryIdToGroupId(
+			long depotEntryId, long toGroupId)
+		throws PortalException;
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<DepotEntryGroupRel> getDepotEntryGroupRels(
+			DepotEntry depotEntry, int start, int end)
+		throws PortalException;
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<DepotEntryGroupRel> getDepotEntryGroupRels(
 			long groupId, int start, int end)
 		throws PortalException;

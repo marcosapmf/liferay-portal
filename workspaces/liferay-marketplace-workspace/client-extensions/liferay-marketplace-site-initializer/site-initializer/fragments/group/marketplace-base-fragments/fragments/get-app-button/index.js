@@ -23,6 +23,13 @@ const isFreeApp = (productSpecifications = []) =>
 			productSpecification.value === 'Free'
 	);
 
+const isLowCodeConfiguration = (productSpecifications = []) =>
+	productSpecifications.some(
+		(productSpecification) =>
+			productSpecification.specificationKey === 'type' &&
+			productSpecification.value === 'low-code-configuration'
+	);
+
 const trackAnalytics = (key, options) => {
 	if (!window.Analytics) {
 		return;
@@ -35,6 +42,28 @@ const productId = fragmentElement
 	.querySelector('.product-id')
 	.innerText.replace(/[\n\r]+|[\s]{2,}/g, ' ')
 	.trim();
+
+const getHelpModal = () => `
+	<div class="mb-5">
+		<p class="pb-1" style="color: #54555F;">Fragments are installed directly from DXP.</p>
+	
+		<p style="color: #54555F;">In order to install fragments please follow these steps:</p>
+	
+		<ol>
+			<li class="pb-1" style="color: #54555F;">
+				Link your DXP environment to your Liferay Marketplace Account. Check this 
+				<a href="https://learn.liferay.com/w/dxp/liferay-development/marketplace/connecting-liferay-dxp-to-marketplace" target="_blank">
+				documentation</a> to learn how to link the DXP to Marketplace.
+			</li>
+	
+			<li style="color: #54555F;">
+				Install fragments directly from Page Builder. 
+				Check <a href="https://learn.liferay.com/w/dxp/site-building/creating-pages/page-fragments-and-widgets/using-fragments/using-fragments-from-the-marketplace" target="_blank">
+				here</a> to learn how.
+			</li>
+		</ol>
+	</div>
+`;
 
 const getProductPrice = (product) => {
 	const {productSpecifications = []} = product;
@@ -74,8 +103,25 @@ const getProductPrice = (product) => {
 	return `${price} ${licenseTypeText}`;
 };
 
+const openLowCodeHelpModal = () => {
+	Liferay.Util.openModal({
+		bodyHTML: getHelpModal(),
+		center: true,
+		headerHTML: 'How to Install a Low Code App',
+		size: 'md',
+	});
+};
+
 const customizeGetAppButton = (product) => {
+	const isLowCodeApp = isLowCodeConfiguration(product.productSpecifications);
+
 	getAppButtonElement.onclick = () => {
+		if (isLowCodeApp) {
+			openLowCodeHelpModal();
+
+			return;
+		}
+
 		trackAnalytics('Click on Get App Button', {
 			isFree: isFreeApp(product.productSpecifications),
 			productName: product.name,

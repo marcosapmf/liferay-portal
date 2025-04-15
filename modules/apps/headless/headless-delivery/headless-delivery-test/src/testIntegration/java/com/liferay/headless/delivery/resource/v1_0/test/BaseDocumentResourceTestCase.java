@@ -15,6 +15,8 @@ import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 
 import com.liferay.depot.model.DepotEntry;
 import com.liferay.depot.service.DepotEntryLocalServiceUtil;
+import com.liferay.headless.batch.engine.client.dto.v1_0.ImportTask;
+import com.liferay.headless.batch.engine.client.resource.v1_0.ImportTaskResource;
 import com.liferay.headless.delivery.client.dto.v1_0.Document;
 import com.liferay.headless.delivery.client.dto.v1_0.Field;
 import com.liferay.headless.delivery.client.dto.v1_0.Rating;
@@ -24,6 +26,7 @@ import com.liferay.headless.delivery.client.pagination.Pagination;
 import com.liferay.headless.delivery.client.permission.Permission;
 import com.liferay.headless.delivery.client.resource.v1_0.DocumentResource;
 import com.liferay.headless.delivery.client.serdes.v1_0.DocumentSerDes;
+import com.liferay.oauth2.provider.scope.ScopeChecker;
 import com.liferay.petra.function.UnsafeTriConsumer;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.reflect.ReflectionUtil;
@@ -36,13 +39,20 @@ import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.RoleConstants;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
+import com.liferay.portal.kernel.service.GroupLocalService;
+import com.liferay.portal.kernel.service.ResourceActionLocalService;
+import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
+import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.UserLocalService;
+import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.RoleTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
+import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
-import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
+import com.liferay.portal.kernel.util.FastDateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -52,14 +62,20 @@ import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.search.test.rule.SearchTestRule;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import com.liferay.portal.util.PropsValues;
+import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
+import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegate;
+import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegateBuilderRegistry;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
 import java.io.File;
 
 import java.lang.reflect.Method;
 
-import java.text.DateFormat;
+import java.net.URI;
+
+import java.text.Format;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -68,13 +84,20 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
 import javax.annotation.Generated;
 
+import javax.servlet.http.HttpServletRequest;
+
 import javax.ws.rs.core.MultivaluedHashMap;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.PathSegment;
+import javax.ws.rs.core.UriBuilder;
+import javax.ws.rs.core.UriInfo;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -83,6 +106,9 @@ import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
+
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.mock.web.MockHttpServletResponse;
 
 /**
  * @author Javier Gamarra
@@ -93,12 +119,14 @@ public abstract class BaseDocumentResourceTestCase {
 
 	@ClassRule
 	@Rule
-	public static final LiferayIntegrationTestRule liferayIntegrationTestRule =
-		new LiferayIntegrationTestRule();
+	public static final AggregateTestRule aggregateTestRule =
+		new AggregateTestRule(
+			new LiferayIntegrationTestRule(),
+			PermissionCheckerMethodTestRule.INSTANCE);
 
 	@BeforeClass
 	public static void setUpClass() throws Exception {
-		_dateFormat = DateFormatFactoryUtil.getSimpleDateFormat(
+		_format = FastDateFormatFactoryUtil.getSimpleDateFormat(
 			"yyyy-MM-dd'T'HH:mm:ss'Z'");
 	}
 
@@ -123,10 +151,25 @@ public abstract class BaseDocumentResourceTestCase {
 
 		_documentResource.setContextCompany(testCompany);
 
-		DocumentResource.Builder builder = DocumentResource.builder();
+		_testCompanyAdminUser = UserTestUtil.getAdminUser(
+			testCompany.getCompanyId());
 
-		documentResource = builder.authentication(
-			"test@liferay.com", PropsValues.DEFAULT_ADMIN_PASSWORD
+		documentResource = DocumentResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).locale(
+			LocaleUtil.getDefault()
+		).build();
+
+		importTaskResource = ImportTaskResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
 		).locale(
 			LocaleUtil.getDefault()
 		).build();
@@ -140,7 +183,32 @@ public abstract class BaseDocumentResourceTestCase {
 
 	@Test
 	public void testClientSerDesToDTO() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		Document document1 = randomDocument();
+
+		String json = objectMapper.writeValueAsString(document1);
+
+		Document document2 = DocumentSerDes.toDTO(json);
+
+		Assert.assertTrue(equals(document1, document2));
+	}
+
+	@Test
+	public void testClientSerDesToJSON() throws Exception {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		Document document = randomDocument();
+
+		String json1 = objectMapper.writeValueAsString(document);
+		String json2 = DocumentSerDes.toJSON(document);
+
+		Assert.assertEquals(
+			objectMapper.readTree(json1), objectMapper.readTree(json2));
+	}
+
+	protected ObjectMapper getClientSerDesObjectMapper() {
+		return new ObjectMapper() {
 			{
 				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
 				configure(
@@ -155,40 +223,6 @@ public abstract class BaseDocumentResourceTestCase {
 					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
 			}
 		};
-
-		Document document1 = randomDocument();
-
-		String json = objectMapper.writeValueAsString(document1);
-
-		Document document2 = DocumentSerDes.toDTO(json);
-
-		Assert.assertTrue(equals(document1, document2));
-	}
-
-	@Test
-	public void testClientSerDesToJSON() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
-			{
-				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
-				configure(
-					SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true);
-				setDateFormat(new ISO8601DateFormat());
-				setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
-				setSerializationInclusion(JsonInclude.Include.NON_NULL);
-				setVisibility(
-					PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-				setVisibility(
-					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
-			}
-		};
-
-		Document document = randomDocument();
-
-		String json1 = objectMapper.writeValueAsString(document);
-		String json2 = DocumentSerDes.toJSON(document);
-
-		Assert.assertEquals(
-			objectMapper.readTree(json1), objectMapper.readTree(json2));
 	}
 
 	@Test
@@ -201,6 +235,7 @@ public abstract class BaseDocumentResourceTestCase {
 		document.setContentUrl(regex);
 		document.setContentValue(regex);
 		document.setDescription(regex);
+		document.setDocumentFolderExternalReferenceCode(regex);
 		document.setEncodingFormat(regex);
 		document.setExternalReferenceCode(regex);
 		document.setFileExtension(regex);
@@ -218,6 +253,8 @@ public abstract class BaseDocumentResourceTestCase {
 		Assert.assertEquals(regex, document.getContentUrl());
 		Assert.assertEquals(regex, document.getContentValue());
 		Assert.assertEquals(regex, document.getDescription());
+		Assert.assertEquals(
+			regex, document.getDocumentFolderExternalReferenceCode());
 		Assert.assertEquals(regex, document.getEncodingFormat());
 		Assert.assertEquals(regex, document.getExternalReferenceCode());
 		Assert.assertEquals(regex, document.getFileExtension());
@@ -693,13 +730,12 @@ public abstract class BaseDocumentResourceTestCase {
 				getAssetLibraryDocumentByExternalReferenceCodeHttpResponse(
 					testDeleteAssetLibraryDocumentByExternalReferenceCode_getAssetLibraryId(),
 					document.getExternalReferenceCode()));
-
 		assertHttpResponseStatusCode(
 			404,
 			documentResource.
 				getAssetLibraryDocumentByExternalReferenceCodeHttpResponse(
 					testDeleteAssetLibraryDocumentByExternalReferenceCode_getAssetLibraryId(),
-					document.getExternalReferenceCode()));
+					"-"));
 	}
 
 	protected Long
@@ -714,8 +750,9 @@ public abstract class BaseDocumentResourceTestCase {
 			testDeleteAssetLibraryDocumentByExternalReferenceCode_addDocument()
 		throws Exception {
 
-		return documentResource.postSiteDocument(
-			testGroup.getGroupId(), randomDocument(), getMultipartFiles());
+		return documentResource.postAssetLibraryDocument(
+			testDepotEntry.getDepotEntryId(), randomDocument(),
+			getMultipartFiles());
 	}
 
 	@Test
@@ -746,8 +783,9 @@ public abstract class BaseDocumentResourceTestCase {
 			testGetAssetLibraryDocumentByExternalReferenceCode_addDocument()
 		throws Exception {
 
-		return documentResource.postSiteDocument(
-			testGroup.getGroupId(), randomDocument(), getMultipartFiles());
+		return documentResource.postAssetLibraryDocument(
+			testDepotEntry.getDepotEntryId(), randomDocument(),
+			getMultipartFiles());
 	}
 
 	@Test
@@ -966,8 +1004,9 @@ public abstract class BaseDocumentResourceTestCase {
 			testPutAssetLibraryDocumentByExternalReferenceCode_addDocument()
 		throws Exception {
 
-		return documentResource.postSiteDocument(
-			testGroup.getGroupId(), randomDocument(), getMultipartFiles());
+		return documentResource.postAssetLibraryDocument(
+			testDepotEntry.getDepotEntryId(), randomDocument(),
+			getMultipartFiles());
 	}
 
 	@Test
@@ -1669,7 +1708,6 @@ public abstract class BaseDocumentResourceTestCase {
 
 		assertHttpResponseStatusCode(
 			404, documentResource.getDocumentHttpResponse(document.getId()));
-
 		assertHttpResponseStatusCode(
 			404, documentResource.getDocumentHttpResponse(0L));
 	}
@@ -1755,6 +1793,42 @@ public abstract class BaseDocumentResourceTestCase {
 	}
 
 	@Test
+	public void testDeleteDocumentBatch() throws Exception {
+		Document document1 = testDeleteDocumentBatch_addDocument();
+
+		testDeleteDocumentBatch_deleteDocument(
+			"COMPLETED", null, document1.getId());
+
+		assertHttpResponseStatusCode(
+			404, documentResource.getDocumentHttpResponse(document1.getId()));
+	}
+
+	protected Document testDeleteDocumentBatch_addDocument() throws Exception {
+		return testDeleteDocument_addDocument();
+	}
+
+	protected void testDeleteDocumentBatch_deleteDocument(
+			String expectedExecuteStatus, String externalReferenceCode, Long id)
+		throws Exception {
+
+		HttpInvoker.HttpResponse httpResponse =
+			documentResource.deleteDocumentBatchHttpResponse(
+				null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"id", () -> id
+					)));
+
+		Assert.assertEquals(202, httpResponse.getStatusCode());
+
+		waitForFinish(
+			expectedExecuteStatus,
+			JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
+	}
+
+	@Test
 	public void testGetDocument() throws Exception {
 		Document postDocument = testGetDocument_addDocument();
 
@@ -1763,6 +1837,193 @@ public abstract class BaseDocumentResourceTestCase {
 
 		assertEquals(postDocument, getDocument);
 		assertValid(getDocument);
+	}
+
+	@Test
+	public void testVulcanCRUDItemDelegateGetItem() throws Exception {
+		Document postDocument = testGetDocument_addDocument();
+
+		Document getDocument = documentResource.getDocument(
+			postDocument.getId());
+
+		VulcanCRUDItemDelegate vulcanCRUDItemDelegate =
+			_vulcanCRUDItemDelegateBuilderRegistry.builder(
+				testCompany, "com.liferay.headless.delivery.dto.v1_0.Document"
+			).acceptLanguage(
+				new AcceptLanguage() {
+
+					@Override
+					public List<Locale> getLocales() {
+						return Arrays.asList(LocaleUtil.getDefault());
+					}
+
+					@Override
+					public String getPreferredLanguageId() {
+						return LocaleUtil.toLanguageId(LocaleUtil.getDefault());
+					}
+
+					@Override
+					public Locale getPreferredLocale() {
+						return LocaleUtil.getDefault();
+					}
+
+				}
+			).groupLocalService(
+				_groupLocalService
+			).httpServletRequest(
+				testVulcanCRUDItemDelegate_getHttpServletRequest()
+			).httpServletResponse(
+				new MockHttpServletResponse()
+			).resourceActionLocalService(
+				_resourceActionLocalService
+			).resourcePermissionLocalService(
+				_resourcePermissionLocalService
+			).roleLocalService(
+				_roleLocalService
+			).scopeChecker(
+				_scopeChecker
+			).uriInfo(
+				testVulcanCRUDItemDelegate_getUriInfo()
+			).user(
+				testVulcanCRUDItemDelegate_getUser()
+			).build();
+
+		Object item = vulcanCRUDItemDelegate.getItem(postDocument.getId());
+
+		assertEquals(getDocument, DocumentSerDes.toDTO(item.toString()));
+	}
+
+	protected HttpServletRequest
+		testVulcanCRUDItemDelegate_getHttpServletRequest() {
+
+		return new MockHttpServletRequest() {
+
+			@Override
+			public StringBuffer getRequestURL() {
+				return new StringBuffer(
+					StringBundler.concat(
+						"http://localhost:8080/o/v1.0/",
+						RandomTestUtil.randomString(), "/",
+						RandomTestUtil.randomString()));
+			}
+
+		};
+	}
+
+	protected UriInfo testVulcanCRUDItemDelegate_getUriInfo() {
+		String applicationPath = RandomTestUtil.randomString() + "/";
+		String resourcePath = RandomTestUtil.randomString();
+
+		return new UriInfo() {
+
+			@Override
+			public String getPath() {
+				return resourcePath;
+			}
+
+			@Override
+			public String getPath(boolean decode) {
+				return getPath();
+			}
+
+			@Override
+			public List<PathSegment> getPathSegments() {
+				return Collections.emptyList();
+			}
+
+			@Override
+			public List<PathSegment> getPathSegments(boolean decode) {
+				return getPathSegments();
+			}
+
+			@Override
+			public URI getRequestUri() {
+				return URI.create(
+					"http://localhost:8080/o/" + applicationPath +
+						resourcePath);
+			}
+
+			@Override
+			public UriBuilder getRequestUriBuilder() {
+				return UriBuilder.fromUri(getRequestUri());
+			}
+
+			@Override
+			public URI getAbsolutePath() {
+				return getRequestUri();
+			}
+
+			@Override
+			public UriBuilder getAbsolutePathBuilder() {
+				return getRequestUriBuilder();
+			}
+
+			@Override
+			public URI getBaseUri() {
+				return URI.create("http://localhost:8080/o/" + applicationPath);
+			}
+
+			@Override
+			public UriBuilder getBaseUriBuilder() {
+				return UriBuilder.fromUri(getBaseUri());
+			}
+
+			@Override
+			public MultivaluedMap<String, String> getPathParameters() {
+				return new MultivaluedHashMap<>();
+			}
+
+			@Override
+			public MultivaluedMap<String, String> getPathParameters(
+				boolean decode) {
+
+				return getPathParameters();
+			}
+
+			@Override
+			public MultivaluedMap<String, String> getQueryParameters() {
+				return new MultivaluedHashMap<>();
+			}
+
+			@Override
+			public MultivaluedMap<String, String> getQueryParameters(
+				boolean decode) {
+
+				return getQueryParameters();
+			}
+
+			@Override
+			public List<String> getMatchedURIs() {
+				return Collections.emptyList();
+			}
+
+			@Override
+			public List<String> getMatchedURIs(boolean decode) {
+				return getMatchedURIs();
+			}
+
+			@Override
+			public List<Object> getMatchedResources() {
+				return Collections.emptyList();
+			}
+
+			@Override
+			public URI resolve(URI requestUri) {
+				return getBaseUri().resolve(requestUri);
+			}
+
+			@Override
+			public URI relativize(URI uri) {
+				return getBaseUri().relativize(uri);
+			}
+
+		};
+	}
+
+	protected com.liferay.portal.kernel.model.User
+		testVulcanCRUDItemDelegate_getUser() {
+
+		return _testCompanyAdminUser;
 	}
 
 	protected Document testGetDocument_addDocument() throws Exception {
@@ -1930,7 +2191,6 @@ public abstract class BaseDocumentResourceTestCase {
 		assertHttpResponseStatusCode(
 			404,
 			documentResource.getDocumentMyRatingHttpResponse(document.getId()));
-
 		assertHttpResponseStatusCode(
 			404, documentResource.getDocumentMyRatingHttpResponse(0L));
 	}
@@ -2507,13 +2767,12 @@ public abstract class BaseDocumentResourceTestCase {
 				testDeleteSiteDocumentByExternalReferenceCode_getSiteId(
 					document),
 				document.getExternalReferenceCode()));
-
 		assertHttpResponseStatusCode(
 			404,
 			documentResource.getSiteDocumentByExternalReferenceCodeHttpResponse(
 				testDeleteSiteDocumentByExternalReferenceCode_getSiteId(
 					document),
-				document.getExternalReferenceCode()));
+				"-"));
 	}
 
 	protected Long testDeleteSiteDocumentByExternalReferenceCode_getSiteId(
@@ -3328,6 +3587,17 @@ public abstract class BaseDocumentResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals(
+					"documentFolderExternalReferenceCode",
+					additionalAssertFieldName)) {
+
+				if (document.getDocumentFolderExternalReferenceCode() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("documentFolderId", additionalAssertFieldName)) {
 				if (document.getDocumentFolderId() == null) {
 					valid = false;
@@ -3780,6 +4050,20 @@ public abstract class BaseDocumentResourceTestCase {
 				if (!Objects.deepEquals(
 						document1.getDescription(),
 						document2.getDescription())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals(
+					"documentFolderExternalReferenceCode",
+					additionalAssertFieldName)) {
+
+				if (!Objects.deepEquals(
+						document1.getDocumentFolderExternalReferenceCode(),
+						document2.getDocumentFolderExternalReferenceCode())) {
 
 					return false;
 				}
@@ -4346,13 +4630,11 @@ public abstract class BaseDocumentResourceTestCase {
 				sb.append("(");
 				sb.append(entityFieldName);
 				sb.append(" gt ");
-				sb.append(
-					_dateFormat.format(date.getTime() - (2 * Time.SECOND)));
+				sb.append(_format.format(date.getTime() - (2 * Time.SECOND)));
 				sb.append(" and ");
 				sb.append(entityFieldName);
 				sb.append(" lt ");
-				sb.append(
-					_dateFormat.format(date.getTime() + (2 * Time.SECOND)));
+				sb.append(_format.format(date.getTime() + (2 * Time.SECOND)));
 				sb.append(")");
 			}
 			else {
@@ -4362,7 +4644,7 @@ public abstract class BaseDocumentResourceTestCase {
 				sb.append(operator);
 				sb.append(" ");
 
-				sb.append(_dateFormat.format(document.getDateCreated()));
+				sb.append(_format.format(document.getDateCreated()));
 			}
 
 			return sb.toString();
@@ -4377,13 +4659,11 @@ public abstract class BaseDocumentResourceTestCase {
 				sb.append("(");
 				sb.append(entityFieldName);
 				sb.append(" gt ");
-				sb.append(
-					_dateFormat.format(date.getTime() - (2 * Time.SECOND)));
+				sb.append(_format.format(date.getTime() - (2 * Time.SECOND)));
 				sb.append(" and ");
 				sb.append(entityFieldName);
 				sb.append(" lt ");
-				sb.append(
-					_dateFormat.format(date.getTime() + (2 * Time.SECOND)));
+				sb.append(_format.format(date.getTime() + (2 * Time.SECOND)));
 				sb.append(")");
 			}
 			else {
@@ -4393,7 +4673,7 @@ public abstract class BaseDocumentResourceTestCase {
 				sb.append(operator);
 				sb.append(" ");
 
-				sb.append(_dateFormat.format(document.getDateExpired()));
+				sb.append(_format.format(document.getDateExpired()));
 			}
 
 			return sb.toString();
@@ -4408,13 +4688,11 @@ public abstract class BaseDocumentResourceTestCase {
 				sb.append("(");
 				sb.append(entityFieldName);
 				sb.append(" gt ");
-				sb.append(
-					_dateFormat.format(date.getTime() - (2 * Time.SECOND)));
+				sb.append(_format.format(date.getTime() - (2 * Time.SECOND)));
 				sb.append(" and ");
 				sb.append(entityFieldName);
 				sb.append(" lt ");
-				sb.append(
-					_dateFormat.format(date.getTime() + (2 * Time.SECOND)));
+				sb.append(_format.format(date.getTime() + (2 * Time.SECOND)));
 				sb.append(")");
 			}
 			else {
@@ -4424,7 +4702,7 @@ public abstract class BaseDocumentResourceTestCase {
 				sb.append(operator);
 				sb.append(" ");
 
-				sb.append(_dateFormat.format(document.getDateModified()));
+				sb.append(_format.format(document.getDateModified()));
 			}
 
 			return sb.toString();
@@ -4439,13 +4717,11 @@ public abstract class BaseDocumentResourceTestCase {
 				sb.append("(");
 				sb.append(entityFieldName);
 				sb.append(" gt ");
-				sb.append(
-					_dateFormat.format(date.getTime() - (2 * Time.SECOND)));
+				sb.append(_format.format(date.getTime() - (2 * Time.SECOND)));
 				sb.append(" and ");
 				sb.append(entityFieldName);
 				sb.append(" lt ");
-				sb.append(
-					_dateFormat.format(date.getTime() + (2 * Time.SECOND)));
+				sb.append(_format.format(date.getTime() + (2 * Time.SECOND)));
 				sb.append(")");
 			}
 			else {
@@ -4455,7 +4731,7 @@ public abstract class BaseDocumentResourceTestCase {
 				sb.append(operator);
 				sb.append(" ");
 
-				sb.append(_dateFormat.format(document.getDatePublished()));
+				sb.append(_format.format(document.getDatePublished()));
 			}
 
 			return sb.toString();
@@ -4463,6 +4739,52 @@ public abstract class BaseDocumentResourceTestCase {
 
 		if (entityFieldName.equals("description")) {
 			Object object = document.getDescription();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
+
+			return sb.toString();
+		}
+
+		if (entityFieldName.equals("documentFolderExternalReferenceCode")) {
+			Object object = document.getDocumentFolderExternalReferenceCode();
 
 			String value = String.valueOf(object);
 
@@ -4906,6 +5228,8 @@ public abstract class BaseDocumentResourceTestCase {
 				datePublished = RandomTestUtil.nextDate();
 				description = StringUtil.toLowerCase(
 					RandomTestUtil.randomString());
+				documentFolderExternalReferenceCode = StringUtil.toLowerCase(
+					RandomTestUtil.randomString());
 				documentFolderId = RandomTestUtil.randomLong();
 				encodingFormat = StringUtil.toLowerCase(
 					RandomTestUtil.randomString());
@@ -4951,7 +5275,30 @@ public abstract class BaseDocumentResourceTestCase {
 		};
 	}
 
+	protected final JSONObject waitForFinish(
+			String expectedExecuteStatus, JSONObject jsonObject)
+		throws Exception {
+
+		while (true) {
+			ImportTask importTask = importTaskResource.getImportTask(
+				jsonObject.getLong("id"));
+
+			ImportTask.ExecuteStatus executeStatus =
+				importTask.getExecuteStatus();
+
+			if (StringUtil.equals(executeStatus.getValue(), "COMPLETED") ||
+				StringUtil.equals(executeStatus.getValue(), "FAILED")) {
+
+				Assert.assertEquals(
+					expectedExecuteStatus, executeStatus.getValue());
+
+				return jsonObject;
+			}
+		}
+	}
+
 	protected DocumentResource documentResource;
+	protected ImportTaskResource importTaskResource;
 	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
 	protected com.liferay.portal.kernel.model.Company testCompany;
 	protected DepotEntry testDepotEntry;
@@ -4962,12 +5309,12 @@ public abstract class BaseDocumentResourceTestCase {
 		public static void copyProperties(Object source, Object target)
 			throws Exception {
 
-			Class<?> sourceClass = _getSuperClass(source.getClass());
+			Class<?> sourceClass = source.getClass();
 
 			Class<?> targetClass = target.getClass();
 
 			for (java.lang.reflect.Field field :
-					sourceClass.getDeclaredFields()) {
+					_getAllDeclaredFields(sourceClass)) {
 
 				if (field.isSynthetic()) {
 					continue;
@@ -4976,11 +5323,16 @@ public abstract class BaseDocumentResourceTestCase {
 				Method getMethod = _getMethod(
 					sourceClass, field.getName(), "get");
 
-				Method setMethod = _getMethod(
-					targetClass, field.getName(), "set",
-					getMethod.getReturnType());
+				try {
+					Method setMethod = _getMethod(
+						targetClass, field.getName(), "set",
+						getMethod.getReturnType());
 
-				setMethod.invoke(target, getMethod.invoke(source));
+					setMethod.invoke(target, getMethod.invoke(source));
+				}
+				catch (Exception e) {
+					continue;
+				}
 			}
 		}
 
@@ -5012,6 +5364,24 @@ public abstract class BaseDocumentResourceTestCase {
 			setMethod.invoke(bean, _translateValue(parameterTypes[0], value));
 		}
 
+		private static List<java.lang.reflect.Field> _getAllDeclaredFields(
+			Class<?> clazz) {
+
+			List<java.lang.reflect.Field> fields = new ArrayList<>();
+
+			while ((clazz != null) && (clazz != Object.class)) {
+				for (java.lang.reflect.Field field :
+						clazz.getDeclaredFields()) {
+
+					fields.add(field);
+				}
+
+				clazz = clazz.getSuperclass();
+			}
+
+			return fields;
+		}
+
 		private static Method _getMethod(Class<?> clazz, String name) {
 			for (Method method : clazz.getMethods()) {
 				if (name.equals(method.getName()) &&
@@ -5033,16 +5403,6 @@ public abstract class BaseDocumentResourceTestCase {
 			return clazz.getMethod(
 				prefix + StringUtil.upperCaseFirstLetter(fieldName),
 				parameterTypes);
-		}
-
-		private static Class<?> _getSuperClass(Class<?> clazz) {
-			Class<?> superClass = clazz.getSuperclass();
-
-			if ((superClass == null) || (superClass == Object.class)) {
-				return clazz;
-			}
-
-			return superClass;
 		}
 
 		private static Object _translateValue(
@@ -5140,10 +5500,34 @@ public abstract class BaseDocumentResourceTestCase {
 	private static final com.liferay.portal.kernel.log.Log _log =
 		LogFactoryUtil.getLog(BaseDocumentResourceTestCase.class);
 
-	private static DateFormat _dateFormat;
+	private static Format _format;
+
+	private com.liferay.portal.kernel.model.User _testCompanyAdminUser;
 
 	@Inject
 	private com.liferay.headless.delivery.resource.v1_0.DocumentResource
 		_documentResource;
+
+	@Inject
+	private GroupLocalService _groupLocalService;
+
+	@Inject
+	private ResourceActionLocalService _resourceActionLocalService;
+
+	@Inject
+	private ResourcePermissionLocalService _resourcePermissionLocalService;
+
+	@Inject
+	private RoleLocalService _roleLocalService;
+
+	@Inject
+	private ScopeChecker _scopeChecker;
+
+	@Inject
+	private UserLocalService _userLocalService;
+
+	@Inject
+	private VulcanCRUDItemDelegateBuilderRegistry
+		_vulcanCRUDItemDelegateBuilderRegistry;
 
 }

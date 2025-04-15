@@ -7,9 +7,11 @@ import {expect, mergeTests} from '@playwright/test';
 
 import {apiHelpersTest} from '../../fixtures/apiHelpersTest';
 import {changeTrackingPagesTest} from '../../fixtures/changeTrackingPagesTest';
-import {productMenuPageTest} from '../../fixtures/productMenuPageTest';
+import {pageEditorPagesTest} from '../../fixtures/pageEditorPagesTest';
+import {clickAndExpectToBeVisible} from '../../utils/clickAndExpectToBeVisible';
 import getRandomString from '../../utils/getRandomString';
-import {waitForSuccessAlert} from '../../utils/waitForSuccessAlert';
+import {PORTLET_URLS} from '../../utils/portletUrls';
+import {waitForAlert} from '../../utils/waitForAlert';
 import {blogsPagesTest} from '../blogs-web/fixtures/blogsPagesTest';
 import {journalPagesTest} from '../journal-web/fixtures/journalPagesTest';
 
@@ -18,19 +20,106 @@ export const test = mergeTests(
 	blogsPagesTest,
 	changeTrackingPagesTest,
 	journalPagesTest,
-	productMenuPageTest
+	pageEditorPagesTest
+);
+
+test(
+	'Delete hidden system modification conflict publications by discarding',
+	{tag: '@LPD-50810'},
+	async ({
+		apiHelpers,
+		changeTrackingPage,
+		ctCollection,
+		page,
+		pageEditorPage,
+	}) => {
+		const site =
+			await apiHelpers.headlessAdminUser.getSiteByFriendlyUrlPath(
+				'guest'
+			);
+
+		// Add a page with a fragment in production
+
+		await changeTrackingPage.workOnProduction();
+
+		const layoutTitle = getRandomString();
+
+		const layout = await apiHelpers.jsonWebServicesLayout.addLayout({
+			groupId: site.id,
+			options: {type: 'content'},
+			title: layoutTitle,
+		});
+
+		await pageEditorPage.goto(layout, site.friendlyUrlPath);
+
+		await pageEditorPage.addFragment('Basic Components', 'Heading');
+
+		await pageEditorPage.publishPage();
+
+		// Edit fragment in publication
+
+		await changeTrackingPage.workOnPublication(ctCollection);
+
+		await pageEditorPage.goto(layout, site.friendlyUrlPath);
+
+		const headingId = await pageEditorPage.getFragmentId('Heading');
+
+		await pageEditorPage.editTextEditable(
+			headingId,
+			'element-text',
+			'Edited Text'
+		);
+
+		await pageEditorPage.publishPage();
+
+		// Delete fragment from production
+
+		await changeTrackingPage.workOnProduction();
+
+		await pageEditorPage.goto(layout, site.friendlyUrlPath);
+
+		await pageEditorPage.deleteFragment(headingId);
+
+		await pageEditorPage.publishPage();
+
+		// Review and discard publication changes
+
+		await changeTrackingPage.goToReviewChanges(ctCollection.body.name);
+
+		await page.getByRole('link', {name: 'Publish'}).click();
+
+		await expect(page.getByText('Checking Changes')).toBeVisible();
+
+		for (let i = 0; i < 2; i++) {
+			await page
+				.getByRole('link', {name: 'Discard Change'})
+				.first()
+				.click();
+
+			await page.getByRole('button', {name: 'Discard'}).click();
+		}
+
+		// Assert entries deleted
+
+		await page.getByRole('button', {name: 'Publish'}).click();
+
+		await expect(
+			page.getByRole('link', {name: ctCollection.body.name})
+		).toBeVisible();
+
+		await page.goto(`/web${site.friendlyUrlPath}${layout.friendlyURL}`);
+
+		await expect(page.getByText('Heading Example')).not.toBeVisible();
+	}
 );
 
 test('Resolve deletion modification conflict publications by discarding', async ({
 	apiHelpers,
-	blogsEditBlogEntryPage,
-	blogsPage,
 	changeTrackingPage,
 	ctCollection,
 	journalEditArticlePage,
 	journalPage,
 	page,
-	productMenuPage,
 }) => {
 	await changeTrackingPage.workOnProduction();
 
@@ -40,12 +129,9 @@ test('Resolve deletion modification conflict publications by discarding', async 
 
 	await journalEditArticlePage.fillTitle(title);
 
-	await page.getByRole('button', {name: 'Publish'}).click();
+	await journalEditArticlePage.publishArticle();
 
-	await waitForSuccessAlert(
-		page,
-		`Success:${title} was created successfully.`
-	);
+	await waitForAlert(page, `Success:${title} was created successfully.`);
 
 	await changeTrackingPage.workOnPublication(ctCollection);
 
@@ -70,24 +156,25 @@ test('Resolve deletion modification conflict publications by discarding', async 
 
 	await journalEditArticlePage.editArticle(title);
 
-	await page.getByRole('button', {name: 'Publish'}).click();
-
-	await waitForSuccessAlert(
-		page,
-		`Success:${title} was updated successfully.`
-	);
-
-	await blogsEditBlogEntryPage.goto();
-
-	const content = getRandomString();
-
-	await blogsEditBlogEntryPage.editBlogEntry({
-		content,
-		publish: true,
-		title,
+	await clickAndExpectToBeVisible({
+		autoClick: true,
+		target: page.getByRole('menuitem', {
+			exact: true,
+			name: 'Publish',
+		}),
+		trigger: page.getByRole('button', {
+			name: 'Select and Confirm Publish Settings',
+		}),
 	});
 
-	await changeTrackingPage.goToReviewChanges(ctCollection.name);
+	await waitForAlert(page, `Success:${title} was updated successfully.`);
+
+	const site =
+		await apiHelpers.headlessAdminUser.getSiteByFriendlyUrlPath('guest');
+
+	const blog = await apiHelpers.headlessDelivery.postBlog(site.id);
+
+	await changeTrackingPage.goToReviewChanges(ctCollection.body.name);
 
 	const publishLink = page.getByRole('link', {name: 'Publish'});
 
@@ -101,7 +188,7 @@ test('Resolve deletion modification conflict publications by discarding', async 
 
 	await expect(page.getByRole('link', {name: 'History'})).toBeVisible();
 
-	await page.getByRole('link', {name: ctCollection.name}).click();
+	await page.getByRole('link', {name: ctCollection.body.name}).click();
 
 	await expect(page.getByText('Deleted')).toBeVisible();
 
@@ -115,13 +202,18 @@ test('Resolve deletion modification conflict publications by discarding', async 
 
 	await expect(page.getByText(title)).toBeVisible();
 
-	await changeTrackingPage.goToReviewChanges(ctCollection2.name);
+	await changeTrackingPage.goToReviewChanges(ctCollection2.body.name);
 
 	await publishLink.click();
 
 	await expect(page.getByText('Missing entity')).toBeVisible();
 
-	await page.getByRole('link', {name: 'Discard Change'}).click();
+	await page
+		.getByLabel('Test Test added a Web Content')
+		.getByRole('button')
+		.click();
+
+	await page.getByRole('menuitem', {name: 'Discard Change'}).click();
 
 	await page.getByRole('button', {name: 'Discard'}).click();
 
@@ -129,23 +221,88 @@ test('Resolve deletion modification conflict publications by discarding', async 
 
 	await journalPage.goto();
 
-	await expect(page.getByText('No web content was found.')).toBeVisible();
+	await expect(page.getByText(title)).not.toBeVisible();
 
 	await apiHelpers.headlessChangeTracking.deleteCTCollection(
-		ctCollection2.id
+		ctCollection2.body.id
 	);
 
-	await blogsPage.goto();
+	await apiHelpers.headlessDelivery.deleteBlog(blog.id);
+});
 
-	await blogsPage.deleteAllBlogEntries();
+test('Resolve deletion modification conflict publications by restoring from recycle bin', async ({
+	changeTrackingPage,
+	ctCollection,
+	journalEditArticlePage,
+	journalPage,
+	page,
+}) => {
+	await changeTrackingPage.workOnProduction();
 
-	await page.waitForTimeout(300);
+	await journalEditArticlePage.goto();
 
-	await productMenuPage.openProductMenuIfClosed();
+	const title = getRandomString();
 
-	await page.getByRole('menuitem', {name: 'Recycle Bin'}).click();
+	await journalEditArticlePage.fillTitle(title);
 
-	await page.getByLabel('Recycle Bin').getByTestId('app').click();
+	await journalEditArticlePage.publishArticle();
+
+	await waitForAlert(page, `Success:${title} was created successfully.`);
+
+	await changeTrackingPage.workOnPublication(ctCollection);
+
+	await journalPage.goto();
+
+	await journalEditArticlePage.editArticle(title);
+
+	await clickAndExpectToBeVisible({
+		autoClick: true,
+		target: page.getByRole('menuitem', {
+			exact: true,
+			name: 'Publish',
+		}),
+		trigger: page.getByRole('button', {
+			name: 'Select and Confirm Publish Settings',
+		}),
+	});
+
+	await waitForAlert(page, `Success:${title} was updated successfully.`);
+
+	await changeTrackingPage.workOnProduction();
+
+	await journalPage.goto();
+
+	await page.getByLabel(`Actions for ${title}`).click();
+
+	await page.getByRole('menuitem', {name: 'Delete'}).click();
+
+	await page.reload();
+
+	await changeTrackingPage.goToReviewChanges(ctCollection.body.name);
+
+	const publishLink = page.getByRole('link', {name: 'Publish'});
+
+	await publishLink.click();
+
+	await expect(page.getByText('Missing entity')).toBeVisible();
+
+	await page.getByRole('link', {name: 'Restore From Recycle Bin'}).click();
+
+	await waitForAlert(page, 'Success:Your request completed successfully.');
+
+	await journalPage.goto();
+
+	await expect(page.getByText(title)).toBeVisible();
+
+	await changeTrackingPage.workOnProduction();
+
+	await journalPage.goto();
+
+	await page.getByLabel(`Actions for ${title}`).click();
+
+	await page.getByRole('menuitem', {name: 'Delete'}).click();
+
+	await page.goto(`/group/guest${PORTLET_URLS.recycleBin}`);
 
 	await expect(
 		page
@@ -164,8 +321,5 @@ test('Resolve deletion modification conflict publications by discarding', async 
 		.getByRole('button', {name: 'Delete'})
 		.click();
 
-	await waitForSuccessAlert(
-		page,
-		'Success:Your request completed successfully.'
-	);
+	await waitForAlert(page, 'Success:Your request completed successfully.');
 });

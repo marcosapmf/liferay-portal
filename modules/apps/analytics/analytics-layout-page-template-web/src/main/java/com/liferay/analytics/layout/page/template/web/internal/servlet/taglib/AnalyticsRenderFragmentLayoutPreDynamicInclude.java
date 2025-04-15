@@ -117,14 +117,15 @@ public class AnalyticsRenderFragmentLayoutPreDynamicInclude
 		Map<String, Function<T, String>> attributes = _initAttributes(
 			analyticsAssetType, classPK, title);
 
-		StringBundler sb = new StringBundler((attributes.size() * 5) + 1);
+		StringBundler sb = new StringBundler((attributes.size() * 5) + 2);
 
 		sb.append("<div ");
 
-		Set<Map.Entry<String, Function<T, String>>> set = attributes.entrySet();
+		Set<Map.Entry<String, Function<T, String>>> entries =
+			attributes.entrySet();
 
 		Iterator<Map.Entry<String, Function<T, String>>> iterator =
-			set.iterator();
+			entries.iterator();
 
 		while (iterator.hasNext()) {
 			Map.Entry<String, Function<T, String>> entry = iterator.next();

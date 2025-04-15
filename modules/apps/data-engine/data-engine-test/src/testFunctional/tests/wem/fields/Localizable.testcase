@@ -1,4 +1,4 @@
-@component-name = "data-engine"
+@component-name = "portal-bpm"
 definition {
 
 	property portal.release = "true";
@@ -52,14 +52,16 @@ definition {
 			webContentTextFieldLabel = "Text",
 			webContentTitle = "Web Content Title");
 
-		PortletEntry.changeLocale(locale = "pt-BR");
+		PortletEntry.changeLocale(
+			locale = "pt-BR",
+			translated = "true");
 
 		WebContent.addWithStructureCP(
 			webContentText = "This is a Text field - pt-BR",
 			webContentTextFieldLabel = "Text",
 			webContentTitle = "Web Content Title - pt-BR");
 
-		PortletEntry.publish();
+		WebContent.publishWithPermissions();
 
 		NavItem.gotoStructures();
 
@@ -86,7 +88,9 @@ definition {
 			webContentTextFieldLabel = "Text",
 			webContentTitle = "Web Content Title");
 
-		PortletEntry.changeLocale(locale = "pt-BR");
+		PortletEntry.changeLocale(
+			locale = "pt-BR",
+			translated = "true");
 
 		DataEngine.assertNonLocalizableField(fieldFieldName = "Text");
 
@@ -117,14 +121,16 @@ definition {
 			webContentTextFieldLabel = "Text",
 			webContentTitle = "Web Content Title");
 
-		PortletEntry.changeLocale(locale = "pt-BR");
+		PortletEntry.changeLocale(
+			locale = "pt-BR",
+			translated = "true");
 
 		WebContent.addWithStructureCP(
 			webContentText = "This is a Text field - pt-BR edited",
 			webContentTextFieldLabel = "Text",
 			webContentTitle = "Web Content Title - pt-BR edited");
 
-		PortletEntry.publish();
+		WebContent.publishExistingWCArticleWithPermissions();
 
 		WebContent.viewWithStructureCP(
 			webContentText = "This is a Text field",
@@ -156,11 +162,13 @@ definition {
 
 		WebContent.addWithStructureCP(webContentText = "This is a text field");
 
-		PortletEntry.changeLocale(locale = "pt-BR");
+		PortletEntry.changeLocale(
+			locale = "pt-BR",
+			translated = "true");
 
 		WebContent.addCP(webContentTitle = "Título do conteudo da Web");
 
-		PortletEntry.publish();
+		WebContent.publishWithPermissions();
 
 		NavItem.gotoStructures();
 
@@ -178,11 +186,13 @@ definition {
 			predefinedValue = "true",
 			webContentText = "This is a text field");
 
-		PortletEntry.changeLocale(locale = "pt-BR");
+		PortletEntry.changeLocale(
+			locale = "pt-BR",
+			translated = "true");
 
 		DataEngine.assertNonLocalizableField(fieldFieldName = "Text");
 
-		PortletEntry.publish();
+		WebContent.publishExistingWCArticleWithPermissions();
 
 		NavItem.gotoStructures();
 
@@ -200,15 +210,19 @@ definition {
 			predefinedValue = "true",
 			webContentText = "This is a text field");
 
-		PortletEntry.changeLocale(locale = "pt-BR");
+		PortletEntry.changeLocale(
+			locale = "pt-BR",
+			translated = "true");
 
 		WebContent.addWithStructureCP(webContentText = "Este é um campo de texto");
 
-		PortletEntry.publish();
+		WebContent.publishExistingWCArticleWithPermissions();
 
 		WebContentNavigator.gotoEditCP(webContentTitle = "Web Content Title");
 
-		PortletEntry.changeLocale(locale = "pt-BR");
+		PortletEntry.changeLocale(
+			locale = "pt-BR",
+			translated = "true");
 
 		WebContent.viewWithStructureCP(
 			predefinedValue = "true",
@@ -248,15 +262,19 @@ definition {
 			webContentNumeric = 123,
 			webContentText = "This is a text field");
 
-		PortletEntry.changeLocale(locale = "pt-BR");
+		PortletEntry.changeLocale(
+			locale = "pt-BR",
+			translated = "true");
 
 		WebContent.addCP(webContentTitle = "Título do conteudo da Web");
 
-		PortletEntry.publish();
+		WebContent.publishWithPermissions();
 
 		WebContentNavigator.gotoEditCP(webContentTitle = "Web Content Title");
 
-		PortletEntry.changeLocale(locale = "pt-BR");
+		PortletEntry.changeLocale(
+			locale = "pt-BR",
+			translated = "true");
 
 		for (var fieldFieldLabel : list "Text,Date,Numeric") {
 			DataEngine.assertNonLocalizableField(fieldFieldName = ${fieldFieldLabel});
@@ -295,7 +313,9 @@ definition {
 			webContentNumeric = 123,
 			webContentText = "This is a text field");
 
-		PortletEntry.changeLocale(locale = "pt-BR");
+		PortletEntry.changeLocale(
+			locale = "pt-BR",
+			translated = "true");
 
 		WebContent.addCP(webContentTitle = "Título do conteudo da Web");
 
@@ -305,7 +325,7 @@ definition {
 			webContentDate = "09/04/2021",
 			webContentNumeric = 456);
 
-		PortletEntry.publish();
+		WebContent.publishWithPermissions();
 
 		WebContentNavigator.gotoEditCP(webContentTitle = "Web Content Title");
 
@@ -315,7 +335,9 @@ definition {
 			webContentNumeric = 123,
 			webContentText = "This is a text field");
 
-		PortletEntry.changeLocale(locale = "pt-BR");
+		PortletEntry.changeLocale(
+			locale = "pt-BR",
+			translated = "true");
 
 		WebContent.viewWithStructureCP(
 			predefinedValue = "true",
@@ -367,7 +389,9 @@ definition {
 
 		WebContent.addCP(webContentTitle = "Web Content Title");
 
-		PortletEntry.changeLocale(locale = "ca-ES");
+		PortletEntry.changeLocale(
+			locale = "ca-ES",
+			translated = "true");
 
 		WebContent.addCP(webContentTitle = "Web Content Title - ca-ES");
 
@@ -375,7 +399,7 @@ definition {
 			DataEngine.assertNonLocalizableField(fieldFieldName = ${fieldFieldName});
 		}
 
-		PortletEntry.publish();
+		WebContent.publishWithPermissions();
 
 		NavItem.gotoStructures();
 
@@ -400,7 +424,9 @@ definition {
 			webContentText = "This is a Text field - pt-BR",
 			webContentTitle = "Web Content Title - pt-BR");
 
-		PortletEntry.changeLocale(locale = "ca-ES");
+		PortletEntry.changeLocale(
+			locale = "ca-ES",
+			translated = "true");
 
 		WebContent.addWithStructureCP(
 			webContentDate = "03/05/2021",
@@ -408,7 +434,7 @@ definition {
 			webContentText = "This is a Text field - ca-ES",
 			webContentTitle = "Web Content Title - ca-ES");
 
-		PortletEntry.publish();
+		WebContent.publishWithPermissions();
 
 		WebContent.viewWithStructureCP(
 			webContentDate = "04/01/2021",
@@ -456,6 +482,10 @@ definition {
 
 		PortletEntry.changeLocale(locale = "pt-BR");
 
+		PortletEntry.changeLocale(
+			locale = "pt-BR",
+			translated = "true");
+
 		WebContent.addCP(webContentTitle = "Título do conteudo da Web");
 
 		WebContent.addWithStructureCP(
@@ -463,7 +493,7 @@ definition {
 			webContentNumeric = 456,
 			webContentText = "Este é um campo de texto");
 
-		PortletEntry.publish();
+		WebContent.publishWithPermissions();
 
 		WebContentNavigator.gotoEditCP(webContentTitle = "Web Content Title");
 
@@ -473,7 +503,9 @@ definition {
 			webContentNumeric = 123,
 			webContentText = "This is a text field");
 
-		PortletEntry.changeLocale(locale = "pt-BR");
+		PortletEntry.changeLocale(
+			locale = "pt-BR",
+			translated = "true");
 
 		WebContent.viewWithStructureCP(
 			predefinedValue = "true",
@@ -511,7 +543,9 @@ definition {
 			webContentNumeric = 123,
 			webContentText = "This is a text field");
 
-		PortletEntry.changeLocale(locale = "pt-BR");
+		PortletEntry.changeLocale(
+			locale = "pt-BR",
+			translated = "true");
 
 		WebContent.addCP(webContentTitle = "Título do conteudo da Web");
 
@@ -520,7 +554,7 @@ definition {
 			webContentNumeric = 456,
 			webContentText = "Este é um campo de texto");
 
-		PortletEntry.publish();
+		WebContent.publishWithPermissions();
 
 		WebContentNavigator.gotoEditCP(webContentTitle = "Web Content Title");
 
@@ -530,7 +564,9 @@ definition {
 			webContentNumeric = 123,
 			webContentText = "This is a text field");
 
-		PortletEntry.changeLocale(locale = "pt-BR");
+		PortletEntry.changeLocale(
+			locale = "pt-BR",
+			translated = "true");
 
 		WebContent.viewWithStructureCP(
 			predefinedValue = "true",
@@ -627,7 +663,9 @@ definition {
 			webContentTextFieldLabel = "Text",
 			webContentTitle = "Web Content Title");
 
-		PortletEntry.changeLocale(locale = "pt-BR");
+		PortletEntry.changeLocale(
+			locale = "pt-BR",
+			translated = "true");
 
 		WebContent.addCP(webContentTitle = "Web Content Title - pt-BR");
 
@@ -635,7 +673,7 @@ definition {
 			DataEngine.assertNonLocalizableField(fieldFieldName = ${fieldFieldLabel});
 		}
 
-		PortletEntry.publish();
+		WebContent.publishWithPermissions();
 
 		WebContent.viewWithStructureCP(
 			webContentDate = "01/04/2021",

@@ -16,6 +16,8 @@ import com.liferay.portal.vulcan.dto.converter.DTOConverterContext;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 
+import java.util.List;
+
 import org.osgi.annotation.versioning.ProviderType;
 
 /**
@@ -87,6 +89,17 @@ public interface DefaultObjectEntryManager extends ObjectEntryManager {
 			ObjectDefinition objectDefinition, long objectEntryId)
 		throws Exception;
 
+	public ObjectEntry getObjectEntryByVersion(
+			DTOConverterContext dtoConverterContext, Long objectEntryId,
+			Integer version)
+		throws Exception;
+
+	public ObjectEntry getObjectEntryByVersion(
+			DTOConverterContext dtoConverterContext,
+			String externalReferenceCode, ObjectDefinition objectDefinition,
+			Integer version)
+		throws Exception;
+
 	public Page<ObjectEntry> getObjectEntryRelatedObjectEntries(
 			DTOConverterContext dtoConverterContext,
 			ObjectDefinition objectDefinition, Long objectEntryId,
@@ -103,16 +116,46 @@ public interface DefaultObjectEntryManager extends ObjectEntryManager {
 			ObjectDefinition objectDefinition, long primaryKey)
 		throws Exception;
 
+	public Page<ObjectEntry> getVersionedObjectEntries(
+			DTOConverterContext dtoConverterContext, long objectEntryId,
+			Pagination pagination)
+		throws Exception;
+
+	public Page<ObjectEntry> getVersionedObjectEntries(
+			DTOConverterContext dtoConverterContext,
+			String externalReferenceCode, ObjectDefinition objectDefinition,
+			Pagination pagination)
+		throws Exception;
+
 	public ObjectEntry partialUpdateObjectEntry(
 			DTOConverterContext dtoConverterContext,
 			ObjectDefinition objectDefinition, long objectEntryId,
 			ObjectEntry objectEntry)
 		throws Exception;
 
+	public ObjectEntry restoreObjectEntryByVersion(
+			DTOConverterContext dtoConverterContext,
+			ObjectDefinition objectDefinition, long objectEntryId,
+			Integer version)
+		throws Exception;
+
+	public ObjectEntry restoreObjectEntryByVersion(
+			DTOConverterContext dtoConverterContext,
+			String externalReferenceCode, ObjectDefinition objectDefinition,
+			Integer version)
+		throws Exception;
+
 	public ObjectEntry updateObjectEntry(
 			DTOConverterContext dtoConverterContext,
 			ObjectDefinition objectDefinition, long objectEntryId,
 			ObjectEntry objectEntry)
+		throws Exception;
+
+	public void validateObjectEntry(
+			DTOConverterContext dtoConverterContext,
+			ObjectDefinition objectDefinition, ObjectEntry objectEntry,
+			List<String> objectValidationRuleExternalReferenceCodes,
+			String scopeKey)
 		throws Exception;
 
 }

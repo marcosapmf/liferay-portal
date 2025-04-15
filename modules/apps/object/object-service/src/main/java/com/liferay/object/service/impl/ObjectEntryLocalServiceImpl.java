@@ -22,6 +22,8 @@ import com.liferay.dynamic.data.mapping.expression.CreateExpressionRequest;
 import com.liferay.dynamic.data.mapping.expression.DDMExpression;
 import com.liferay.dynamic.data.mapping.expression.DDMExpressionFactory;
 import com.liferay.dynamic.data.mapping.util.NumberUtil;
+import com.liferay.friendly.url.model.FriendlyURLEntry;
+import com.liferay.friendly.url.service.FriendlyURLEntryLocalService;
 import com.liferay.list.type.model.ListTypeEntry;
 import com.liferay.list.type.service.ListTypeEntryLocalService;
 import com.liferay.object.action.engine.ObjectActionEngine;
@@ -29,21 +31,30 @@ import com.liferay.object.action.util.ObjectActionThreadLocal;
 import com.liferay.object.configuration.ObjectConfiguration;
 import com.liferay.object.constants.ObjectActionTriggerConstants;
 import com.liferay.object.constants.ObjectDefinitionConstants;
+import com.liferay.object.constants.ObjectDefinitionSettingConstants;
+import com.liferay.object.constants.ObjectEntryFolderConstants;
 import com.liferay.object.constants.ObjectFieldConstants;
 import com.liferay.object.constants.ObjectFieldSettingConstants;
 import com.liferay.object.constants.ObjectFieldValidationConstants;
 import com.liferay.object.constants.ObjectFilterConstants;
 import com.liferay.object.constants.ObjectRelationshipConstants;
+import com.liferay.object.definition.setting.util.ObjectDefinitionSettingUtil;
+import com.liferay.object.definition.util.ObjectDefinitionThreadLocal;
 import com.liferay.object.entry.ObjectEntryContext;
 import com.liferay.object.entry.contributor.ObjectEntryValuesContributor;
 import com.liferay.object.entry.util.ObjectEntryThreadLocal;
+import com.liferay.object.entry.util.ObjectEntryValuesUtil;
 import com.liferay.object.exception.DuplicateObjectEntryExternalReferenceCodeException;
 import com.liferay.object.exception.NoSuchObjectDefinitionException;
-import com.liferay.object.exception.NoSuchObjectFieldException;
 import com.liferay.object.exception.ObjectDefinitionScopeException;
+import com.liferay.object.exception.ObjectEntryDefaultLanguageIdException;
+import com.liferay.object.exception.ObjectEntryFolderScopeException;
 import com.liferay.object.exception.ObjectEntryStatusException;
+import com.liferay.object.exception.ObjectEntryValidationException;
+import com.liferay.object.exception.ObjectEntryValidationException.ValidationError;
 import com.liferay.object.exception.ObjectEntryValuesException;
 import com.liferay.object.exception.ObjectRelationshipDeletionTypeException;
+import com.liferay.object.exception.ObjectValidationRuleEngineException;
 import com.liferay.object.field.attachment.AttachmentManager;
 import com.liferay.object.field.business.type.ObjectFieldBusinessType;
 import com.liferay.object.field.business.type.ObjectFieldBusinessTypeRegistry;
@@ -59,7 +70,9 @@ import com.liferay.object.internal.filter.parser.ObjectFilterParser;
 import com.liferay.object.internal.sort.SortDSLQueryVisitor;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectEntry;
+import com.liferay.object.model.ObjectEntryFolder;
 import com.liferay.object.model.ObjectEntryTable;
+import com.liferay.object.model.ObjectEntryVersion;
 import com.liferay.object.model.ObjectField;
 import com.liferay.object.model.ObjectFieldSetting;
 import com.liferay.object.model.ObjectFilter;
@@ -79,13 +92,17 @@ import com.liferay.object.scope.CompanyScoped;
 import com.liferay.object.scope.ObjectDefinitionScoped;
 import com.liferay.object.scope.ObjectScopeProvider;
 import com.liferay.object.scope.ObjectScopeProviderRegistry;
+import com.liferay.object.search.StrictObjectReindexThreadLocal;
+import com.liferay.object.service.ObjectEntryVersionLocalService;
 import com.liferay.object.service.ObjectFieldLocalService;
 import com.liferay.object.service.ObjectFieldSettingLocalService;
 import com.liferay.object.service.ObjectRelationshipLocalService;
 import com.liferay.object.service.ObjectStateFlowLocalService;
 import com.liferay.object.service.ObjectStateLocalService;
+import com.liferay.object.service.ObjectValidationRuleLocalService;
 import com.liferay.object.service.base.ObjectEntryLocalServiceBaseImpl;
 import com.liferay.object.service.persistence.ObjectDefinitionPersistence;
+import com.liferay.object.service.persistence.ObjectEntryFolderPersistence;
 import com.liferay.object.service.persistence.ObjectFieldPersistence;
 import com.liferay.object.service.persistence.ObjectFieldSettingPersistence;
 import com.liferay.object.service.persistence.ObjectRelationshipPersistence;
@@ -93,12 +110,14 @@ import com.liferay.object.system.SystemObjectDefinitionManager;
 import com.liferay.object.system.SystemObjectDefinitionManagerRegistry;
 import com.liferay.object.tree.Edge;
 import com.liferay.object.tree.Node;
+import com.liferay.object.tree.ObjectDefinitionTreeFactory;
+import com.liferay.object.tree.ObjectEntryTreeFactory;
 import com.liferay.object.tree.Tree;
-import com.liferay.object.tree.TreeFactory;
 import com.liferay.osgi.service.tracker.collections.list.ServiceTrackerList;
 import com.liferay.osgi.service.tracker.collections.list.ServiceTrackerListFactory;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.lang.CentralizedThreadLocal;
+import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.petra.sql.dsl.Column;
 import com.liferay.petra.sql.dsl.DSLFunctionFactoryUtil;
 import com.liferay.petra.sql.dsl.DSLQueryFactoryUtil;
@@ -112,6 +131,7 @@ import com.liferay.petra.sql.dsl.query.FromStep;
 import com.liferay.petra.sql.dsl.query.GroupByStep;
 import com.liferay.petra.sql.dsl.query.JoinStep;
 import com.liferay.petra.sql.dsl.spi.expression.Scalar;
+import com.liferay.petra.sql.dsl.spi.query.QueryExpression;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
@@ -120,8 +140,13 @@ import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.dao.jdbc.postgresql.PostgreSQLJDBCUtil;
 import com.liferay.portal.kernel.dao.db.DBManagerUtil;
 import com.liferay.portal.kernel.dao.db.DBType;
+import com.liferay.portal.kernel.dao.jdbc.AutoBatchPreparedStatementUtil;
 import com.liferay.portal.kernel.dao.jdbc.CurrentConnection;
+import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.FinderCacheUtil;
+import com.liferay.portal.kernel.dao.orm.Property;
+import com.liferay.portal.kernel.dao.orm.PropertyFactoryUtil;
+import com.liferay.portal.kernel.dao.orm.Session;
 import com.liferay.portal.kernel.encryptor.Encryptor;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
@@ -133,10 +158,14 @@ import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.BaseModel;
+import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.ModelWrapper;
 import com.liferay.portal.kernel.model.OrganizationTable;
+import com.liferay.portal.kernel.model.ResourceAction;
 import com.liferay.portal.kernel.model.ResourceConstants;
+import com.liferay.portal.kernel.model.ResourcePermission;
+import com.liferay.portal.kernel.model.Role;
 import com.liferay.portal.kernel.model.SystemEventConstants;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.Users_OrgsTable;
@@ -148,21 +177,27 @@ import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.search.IndexerRegistryUtil;
 import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
-import com.liferay.portal.kernel.security.auth.GuestOrUserUtil;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.security.auth.PrincipalThreadLocal;
 import com.liferay.portal.kernel.security.permission.InlineSQLHelper;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
+import com.liferay.portal.kernel.security.permission.ResourceActions;
+import com.liferay.portal.kernel.service.ClassNameLocalService;
+import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.GroupLocalService;
+import com.liferay.portal.kernel.service.PermissionService;
 import com.liferay.portal.kernel.service.PersistedModelLocalService;
+import com.liferay.portal.kernel.service.ResourceActionLocalService;
 import com.liferay.portal.kernel.service.ResourceLocalService;
+import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.service.WorkflowInstanceLinkLocalService;
+import com.liferay.portal.kernel.service.permission.ModelPermissions;
 import com.liferay.portal.kernel.systemevent.SystemEvent;
+import com.liferay.portal.kernel.transaction.TransactionCommitCallbackUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.Base64;
 import com.liferay.portal.kernel.util.BigDecimalUtil;
@@ -172,10 +207,10 @@ import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
-import com.liferay.portal.kernel.util.LocaleThreadLocal;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Localization;
 import com.liferay.portal.kernel.util.MapUtil;
+import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.TempFileEntryUtil;
@@ -194,6 +229,8 @@ import com.liferay.portal.search.sort.Sorts;
 import com.liferay.portal.service.PersistedModelLocalServiceRegistryUtil;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterRegistry;
+import com.liferay.portal.vulcan.util.LocalizedMapUtil;
+import com.liferay.sharing.service.SharingEntryLocalService;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -218,6 +255,7 @@ import java.sql.Types;
 import java.time.LocalDateTime;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -228,6 +266,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Supplier;
 
 import javax.crypto.spec.SecretKeySpec;
 
@@ -255,41 +295,62 @@ public class ObjectEntryLocalServiceImpl
 	@Override
 	public ObjectEntry addObjectEntry(
 			long userId, long groupId, long objectDefinitionId,
+			long objectEntryFolderId, String defaultLanguageId,
 			Map<String, Serializable> values, ServiceContext serviceContext)
 		throws PortalException {
+
+		serviceContext.setStrictAdd(true);
+
+		TransactionCommitCallbackUtil.registerCallback(
+			() -> {
+				serviceContext.setStrictAdd(false);
+
+				return null;
+			});
 
 		ObjectDefinition objectDefinition =
 			_objectDefinitionPersistence.findByPrimaryKey(objectDefinitionId);
 
-		_validateGroupId(groupId, objectDefinition.getScope());
+		_validateGroupId(groupId, objectDefinition);
+
+		_validateObjectEntryFolderId(groupId, objectEntryFolderId);
 
 		int workflowAction = serviceContext.getWorkflowAction();
 
 		_validateWorkflowAction(
-			objectDefinition.isEnableObjectEntryDraft(), null, workflowAction);
+			objectDefinition.isEnableObjectEntryDraft(), objectDefinition, null,
+			workflowAction);
 
-		User user = _userLocalService.getUser(userId);
+		defaultLanguageId = _getDefaultLanguageId(defaultLanguageId, groupId);
 
-		_fillDefaultValue(
-			_objectFieldLocalService.getObjectFields(objectDefinitionId),
-			values);
+		_fillDefaultValue(defaultLanguageId, objectDefinitionId, values);
 
 		_contributeValues(groupId, objectDefinition, userId, values);
 
+		Map<ObjectField, Set<DLFileEntry>> dlFileEntriesMap = new HashMap<>();
 		long objectEntryId = counterLocalService.increment();
+		User user = _userLocalService.getUser(userId);
 
 		_validateValues(
-			null, user.isGuestUser(), groupId, objectDefinition, objectEntryId,
-			serviceContext, userId, values);
+			dlFileEntriesMap, null, user.isGuestUser(), groupId,
+			objectDefinition, serviceContext, userId, null, values);
+
+		_addDLFileEntries(
+			dlFileEntriesMap, objectDefinition, objectEntryId, serviceContext,
+			userId, values);
+
+		Map<String, Serializable> insertedValues = new HashMap<>();
 
 		_insertIntoLocalizationTable(
-			objectDefinition, objectEntryId, values, workflowAction);
-		_insertIntoTable(
-			_getDynamicObjectDefinitionTable(objectDefinitionId), objectEntryId,
+			defaultLanguageId, insertedValues, objectDefinition, objectEntryId,
 			values, workflowAction);
-		_insertIntoTable(
+
+		boolean dynamicObjectDefinitionStaticValues = _insertIntoTable(
+			_getDynamicObjectDefinitionTable(objectDefinitionId),
+			insertedValues, objectEntryId, values, workflowAction);
+		boolean extensionDynamicObjectDefinitionStaticValues = _insertIntoTable(
 			_getExtensionDynamicObjectDefinitionTable(objectDefinitionId),
-			objectEntryId, values, workflowAction);
+			insertedValues, objectEntryId, values, workflowAction);
 
 		ObjectEntry objectEntry = objectEntryPersistence.create(objectEntryId);
 
@@ -299,6 +360,9 @@ public class ObjectEntryLocalServiceImpl
 		objectEntry.setUserName(user.getFullName());
 		objectEntry.setCreateDate(new Date());
 		objectEntry.setObjectDefinitionId(objectDefinitionId);
+		objectEntry.setObjectEntryFolderId(objectEntryFolderId);
+		objectEntry.setDefaultLanguageId(defaultLanguageId);
+		objectEntry.setTreePath(objectEntry.buildTreePath());
 
 		_setExternalReferenceCode(objectEntry, values);
 		_setRootObjectEntryId(objectDefinition, objectEntry, values);
@@ -307,32 +371,56 @@ public class ObjectEntryLocalServiceImpl
 		objectEntry.setStatusByUserId(user.getUserId());
 		objectEntry.setStatusDate(serviceContext.getModifiedDate(null));
 
-		_resourceLocalService.addResources(
-			objectEntry.getCompanyId(), objectEntry.getGroupId(),
-			objectEntry.getUserId(), objectDefinition.getClassName(),
-			objectEntry.getPrimaryKey(), false, false, false);
+		if (dynamicObjectDefinitionStaticValues &&
+			extensionDynamicObjectDefinitionStaticValues) {
 
-		try {
-			if (workflowAction == WorkflowConstants.ACTION_SAVE_DRAFT) {
+			_addObjectRelationshipERCFieldValue(
+				objectEntry.getObjectDefinitionId(), insertedValues);
+
+			objectEntry.setValues(insertedValues);
+		}
+
+		if (ListUtil.isNotEmpty(
+				_resourceActions.getModelResourceActions(
+					objectDefinition.getClassName()))) {
+
+			_resourcePermissionLocalService.addResourcePermissions(
+				objectEntry.getCompanyId(), objectEntry.getGroupId(),
+				objectEntry.getUserId(), objectDefinition.getClassName(),
+				String.valueOf(objectEntry.getPrimaryKey()), false,
+				new ServiceContext() {
+					{
+						setIndexingEnabled(false);
+						setStrictAdd(true);
+					}
+				});
+		}
+
+		if (workflowAction == WorkflowConstants.ACTION_SAVE_DRAFT) {
+			try {
 				ObjectEntryThreadLocal.setSkipObjectValidationRules(true);
+
+				objectEntry = objectEntryPersistence.update(objectEntry);
+			}
+			finally {
+				ObjectEntryThreadLocal.setSkipObjectValidationRules(false);
 			}
 
-			objectEntry = objectEntryPersistence.update(objectEntry);
+			_updateAsset(
+				serviceContext.getUserId(), objectEntry,
+				serviceContext.getAssetCategoryIds(),
+				serviceContext.getAssetTagNames(),
+				serviceContext.getAssetLinkEntryIds(),
+				serviceContext.getAssetPriority(), serviceContext);
 		}
-		finally {
-			ObjectEntryThreadLocal.setSkipObjectValidationRules(false);
-		}
 
-		updateAsset(
-			serviceContext.getUserId(), objectEntry,
-			serviceContext.getAssetCategoryIds(),
-			serviceContext.getAssetTagNames(),
-			serviceContext.getAssetLinkEntryIds(),
-			serviceContext.getAssetPriority());
+		_addFriendlyURLEntry(
+			objectDefinition, objectEntry, serviceContext, values);
 
-		_startWorkflowInstance(userId, objectEntry, serviceContext);
+		_startWorkflowInstance(userId, objectEntry, serviceContext, false);
 
-		_reindex(objectEntry);
+		_updateResourcePermissions(
+			objectDefinition, objectEntry, serviceContext);
 
 		boolean clearObjectEntryIdsMap =
 			ObjectActionThreadLocal.isClearObjectEntryIdsMap();
@@ -354,13 +442,15 @@ public class ObjectEntryLocalServiceImpl
 				clearObjectEntryIdsMap);
 		}
 
-		return objectEntry;
+		_deleteTempFileEntries(dlFileEntriesMap);
+
+		return _addObjectEntryVersion(objectDefinition, objectEntry);
 	}
 
 	@Override
 	public ObjectEntry addObjectEntry(
 			String externalReferenceCode, long userId,
-			ObjectDefinition objectDefinition)
+			ObjectDefinition objectDefinition, long objectEntryFolderId)
 		throws PortalException {
 
 		ObjectEntry objectEntry = objectEntryPersistence.create(
@@ -376,6 +466,8 @@ public class ObjectEntryLocalServiceImpl
 
 		objectEntry.setObjectDefinitionId(
 			objectDefinition.getObjectDefinitionId());
+		objectEntry.setObjectEntryFolderId(objectEntryFolderId);
+		objectEntry.setTreePath(objectEntry.buildTreePath());
 		objectEntry.setStatus(WorkflowConstants.STATUS_DRAFT);
 		objectEntry.setStatusDate(new Date());
 
@@ -388,22 +480,29 @@ public class ObjectEntryLocalServiceImpl
 			Map<String, Serializable> values, ServiceContext serviceContext)
 		throws PortalException {
 
+		Map<ObjectField, Set<DLFileEntry>> dlFileEntriesMap = new HashMap<>();
 		User user = _userLocalService.getUser(userId);
 
 		_validateValues(
-			null, user.isGuestUser(), 0, objectDefinition, primaryKey,
-			serviceContext, userId, values);
+			dlFileEntriesMap, null, user.isGuestUser(), 0, objectDefinition,
+			serviceContext, userId, null, values);
+
+		_addDLFileEntries(
+			dlFileEntriesMap, objectDefinition, primaryKey, serviceContext,
+			userId, values);
 
 		insertIntoOrUpdateExtensionTable(
 			userId, objectDefinition.getObjectDefinitionId(), primaryKey,
 			values);
+
+		_deleteTempFileEntries(dlFileEntriesMap);
 	}
 
 	@Override
 	public ObjectEntry addOrUpdateObjectEntry(
 			String externalReferenceCode, long userId, long groupId,
-			long objectDefinitionId, Map<String, Serializable> values,
-			ServiceContext serviceContext)
+			long objectDefinitionId, long objectEntryFolderId,
+			Map<String, Serializable> values, ServiceContext serviceContext)
 		throws PortalException {
 
 		User user = _userLocalService.getUser(userId);
@@ -423,14 +522,15 @@ public class ObjectEntryLocalServiceImpl
 				externalReferenceCode, user.getCompanyId(), objectDefinitionId);
 
 			if (objectEntry != null) {
-				return updateObjectEntry(
+				return objectEntryLocalService.updateObjectEntry(
 					userId, objectEntry.getObjectEntryId(), values,
 					serviceContext);
 			}
 		}
 
-		objectEntry = addObjectEntry(
-			userId, groupId, objectDefinitionId, values, serviceContext);
+		objectEntry = objectEntryLocalService.addObjectEntry(
+			userId, groupId, objectDefinitionId, objectEntryFolderId, null,
+			values, serviceContext);
 
 		if (Validator.isNotNull(externalReferenceCode)) {
 			objectEntry.setExternalReferenceCode(externalReferenceCode);
@@ -490,8 +590,6 @@ public class ObjectEntryLocalServiceImpl
 	public ObjectEntry deleteObjectEntry(ObjectEntry objectEntry)
 		throws PortalException {
 
-		Map<String, Serializable> values = objectEntry.getValues();
-
 		ObjectActionThreadLocal.clearObjectEntryIdsMap();
 
 		objectEntry = objectEntryPersistence.remove(objectEntry);
@@ -500,40 +598,68 @@ public class ObjectEntryLocalServiceImpl
 			_objectDefinitionPersistence.findByPrimaryKey(
 				objectEntry.getObjectDefinitionId());
 
-		_resourceLocalService.deleteResource(
-			objectEntry.getCompanyId(), objectDefinition.getClassName(),
-			ResourceConstants.SCOPE_INDIVIDUAL, objectEntry.getObjectEntryId());
-
-		_assetEntryLocalService.deleteEntry(
-			objectDefinition.getClassName(), objectEntry.getObjectEntryId());
-
 		_workflowInstanceLinkLocalService.deleteWorkflowInstanceLinks(
 			objectEntry.getCompanyId(), objectEntry.getNonzeroGroupId(),
 			objectDefinition.getClassName(), objectEntry.getObjectEntryId());
 
-		_deleteFromTable(
-			objectDefinition.getDBTableName(),
-			objectDefinition.getPKObjectFieldDBColumnName(),
-			objectEntry.getObjectEntryId());
-		_deleteFromTable(
-			objectDefinition.getExtensionDBTableName(),
-			objectDefinition.getPKObjectFieldDBColumnName(),
-			objectEntry.getObjectEntryId());
+		_deleteFileEntries(
+			Collections.emptyMap(), objectDefinition.getObjectDefinitionId(),
+			objectEntry::getValues);
 
-		if (objectDefinition.isEnableLocalization()) {
+		if (!ObjectDefinitionThreadLocal.isDeleteObjectDefinitionId(
+				objectDefinition.getObjectDefinitionId())) {
+
+			_resourceLocalService.deleteResource(
+				objectEntry.getCompanyId(), objectDefinition.getClassName(),
+				ResourceConstants.SCOPE_INDIVIDUAL,
+				objectEntry.getObjectEntryId());
+
+			_assetEntryLocalService.deleteEntry(
+				objectDefinition.getClassName(),
+				objectEntry.getObjectEntryId());
+
+			_friendlyURLEntryLocalService.deleteFriendlyURLEntry(
+				objectEntry.getNonzeroGroupId(),
+				_classNameLocalService.getClassNameId(
+					objectDefinition.getClassName()),
+				objectEntry.getObjectEntryId());
+
 			_deleteFromTable(
-				objectDefinition.getLocalizationDBTableName(),
+				objectDefinition.getDBTableName(),
 				objectDefinition.getPKObjectFieldDBColumnName(),
 				objectEntry.getObjectEntryId());
+			_deleteFromTable(
+				objectDefinition.getExtensionDBTableName(),
+				objectDefinition.getPKObjectFieldDBColumnName(),
+				objectEntry.getObjectEntryId());
+
+			List<ObjectField> localizedObjectFields =
+				_objectFieldLocalService.getLocalizedObjectFields(
+					objectDefinition.getObjectDefinitionId());
+
+			if ((!FeatureFlagManagerUtil.isEnabled(
+					objectDefinition.getCompanyId(), "LPD-32050") &&
+				 objectDefinition.isEnableLocalization()) ||
+				!localizedObjectFields.isEmpty()) {
+
+				_deleteFromTable(
+					objectDefinition.getLocalizationDBTableName(),
+					objectDefinition.getPKObjectFieldDBColumnName(),
+					objectEntry.getObjectEntryId());
+			}
 		}
 
 		deleteRelatedObjectEntries(
 			objectEntry.getGroupId(), objectDefinition.getObjectDefinitionId(),
 			objectEntry.getPrimaryKey());
 
-		_deleteFileEntries(
-			Collections.emptyMap(), objectDefinition.getObjectDefinitionId(),
-			values);
+		_objectEntryVersionLocalService.deleteObjectEntryVersions(
+			objectEntry.getObjectEntryId());
+
+		_sharingEntryLocalService.deleteSharingEntries(
+			_classNameLocalService.getClassNameId(
+				objectDefinition.getClassName()),
+			objectEntry.getObjectEntryId());
 
 		if (!objectDefinition.isActive() ||
 			!objectDefinition.isEnableIndexSearch()) {
@@ -683,6 +809,35 @@ public class ObjectEntryLocalServiceImpl
 
 	@Override
 	public ObjectEntry fetchObjectEntry(
+		long groupId, ObjectDefinition objectDefinition, String urlTitle) {
+
+		ObjectScopeProvider objectScopeProvider =
+			_objectScopeProviderRegistry.getObjectScopeProvider(
+				objectDefinition.getScope());
+
+		if (!objectScopeProvider.isGroupAware()) {
+			Company company = _companyLocalService.fetchCompany(
+				objectDefinition.getCompanyId());
+
+			groupId = company.getGroupId();
+		}
+
+		FriendlyURLEntry friendlyURLEntry =
+			_friendlyURLEntryLocalService.fetchFriendlyURLEntry(
+				groupId,
+				_classNameLocalService.getClassNameId(
+					objectDefinition.getClassName()),
+				urlTitle);
+
+		if (friendlyURLEntry == null) {
+			return null;
+		}
+
+		return fetchObjectEntry(friendlyURLEntry.getClassPK());
+	}
+
+	@Override
+	public ObjectEntry fetchObjectEntry(
 		String externalReferenceCode, long objectDefinitionId) {
 
 		ObjectDefinition objectDefinition =
@@ -769,7 +924,7 @@ public class ObjectEntryLocalServiceImpl
 				objectDefinition.getObjectDefinitionId());
 
 		Expression<?>[] selectExpressions = _getSelectExpressions(
-			extensionDynamicObjectDefinitionTable, null);
+			extensionDynamicObjectDefinitionTable, primaryKey, null);
 
 		List<Object[]> rows = _list(
 			_getExtensionDynamicObjectDefinitionTableSelectDSLQuery(
@@ -853,6 +1008,12 @@ public class ObjectEntryLocalServiceImpl
 	}
 
 	@Override
+	public int getObjectEntriesCount(long objectDefinitionId) {
+		return objectEntryPersistence.countByObjectDefinitionId(
+			objectDefinitionId);
+	}
+
+	@Override
 	public long getObjectEntriesCount(
 			long userId, Date createDate, long objectDefinitionId)
 		throws PortalException {
@@ -931,6 +1092,14 @@ public class ObjectEntryLocalServiceImpl
 	}
 
 	@Override
+	public int getObjectEntryFolderObjectEntriesCount(
+		long groupId, long objectEntryFolderId) {
+
+		return objectEntryPersistence.countByG_OEFI(
+			groupId, objectEntryFolderId);
+	}
+
+	@Override
 	public List<ObjectEntry> getOneToManyObjectEntries(
 			long groupId, long objectRelationshipId, long primaryKey,
 			boolean related, String search, int start, int end)
@@ -969,6 +1138,92 @@ public class ObjectEntryLocalServiceImpl
 		}
 
 		return objectEntryPersistence.dslQueryCount(dslQuery);
+	}
+
+	public List<Long> getPrimaryKeys(
+			long groupId, long companyId, long userId, long objectDefinitionId,
+			Predicate predicate, String search, int start, int end,
+			Sort[] sorts)
+		throws PortalException {
+
+		DynamicObjectDefinitionLocalizationTable
+			dynamicObjectDefinitionLocalizationTable =
+				DynamicObjectDefinitionLocalizationTableFactory.create(
+					_objectDefinitionPersistence.findByPrimaryKey(
+						objectDefinitionId),
+					_objectFieldLocalService);
+		DynamicObjectDefinitionTable dynamicObjectDefinitionTable =
+			_getDynamicObjectDefinitionTable(objectDefinitionId);
+		DynamicObjectDefinitionTable extensionDynamicObjectDefinitionTable =
+			_getExtensionDynamicObjectDefinitionTable(objectDefinitionId);
+		DynamicObjectDefinitionTable rootDynamicObjectDefinitionTable =
+			_getRootDynamicObjectDefinitionTable(objectDefinitionId);
+
+		DSLQuery dslQuery = DSLQueryFactoryUtil.select(
+			ObjectEntryTable.INSTANCE.objectEntryId
+		).from(
+			dynamicObjectDefinitionTable
+		).innerJoinON(
+			extensionDynamicObjectDefinitionTable,
+			extensionDynamicObjectDefinitionTable.getPrimaryKeyColumn(
+			).eq(
+				dynamicObjectDefinitionTable.getPrimaryKeyColumn()
+			)
+		).innerJoinON(
+			ObjectEntryTable.INSTANCE,
+			ObjectEntryTable.INSTANCE.objectEntryId.eq(
+				dynamicObjectDefinitionTable.getPrimaryKeyColumn())
+		).innerJoinON(
+			rootDynamicObjectDefinitionTable,
+			_getInnerJoinRootObjectDefinitionTablePredicate(
+				rootDynamicObjectDefinitionTable)
+		).leftJoinOn(
+			dynamicObjectDefinitionLocalizationTable,
+			ObjectEntrySearchUtil.getLeftJoinLocalizationTablePredicate(
+				dynamicObjectDefinitionLocalizationTable,
+				dynamicObjectDefinitionTable)
+		).where(
+			ObjectEntryTable.INSTANCE.objectDefinitionId.eq(
+				objectDefinitionId
+			).and(
+				() -> {
+					if (groupId == 0) {
+						return null;
+					}
+
+					return ObjectEntryTable.INSTANCE.groupId.eq(groupId);
+				}
+			).and(
+				Predicate.withParentheses(
+					_fillPredicate(objectDefinitionId, predicate, search))
+			).and(
+				_getPermissionWherePredicate(
+					dynamicObjectDefinitionTable, groupId)
+			)
+		).limit(
+			start, end
+		);
+
+		if (sorts != null) {
+			SortDSLQueryVisitor sortDSLQueryVisitor = new SortDSLQueryVisitor(
+				_objectFieldLocalService,
+				_objectRelationshipLocalServiceSnapshot.get());
+
+			for (Sort sort : sorts) {
+				dslQuery = sortDSLQueryVisitor.visit(
+					dslQuery,
+					new com.liferay.object.internal.sort.Sort(
+						_objectDefinitionPersistence.findByPrimaryKey(
+							objectDefinitionId),
+						sort));
+			}
+		}
+
+		return TransformUtil.transform(
+			objectEntryPersistence.dslQuery(dslQuery),
+			value -> (Long)_getResult(
+				value, objectDefinitionId,
+				dynamicObjectDefinitionTable.getPrimaryKeyColumn()));
 	}
 
 	@Override
@@ -1137,10 +1392,13 @@ public class ObjectEntryLocalServiceImpl
 
 		Expression<?>[] selectExpressions = ArrayUtil.append(
 			_getSelectExpressions(dynamicObjectDefinitionLocalizationTable),
-			_getSelectExpressions(dynamicObjectDefinitionTable, null),
+			_getSelectExpressions(
+				dynamicObjectDefinitionTable, objectEntry.getObjectEntryId(),
+				null),
 			ArrayUtil.remove(
 				_getSelectExpressions(
-					extensionDynamicObjectDefinitionTable, null),
+					extensionDynamicObjectDefinitionTable,
+					objectEntry.getObjectEntryId(), null),
 				extensionDynamicObjectDefinitionTable.getPrimaryKeyColumn()));
 
 		List<Object[]> rows = _list(
@@ -1156,7 +1414,7 @@ public class ObjectEntryLocalServiceImpl
 				)
 			).leftJoinOn(
 				dynamicObjectDefinitionLocalizationTable,
-				_getLeftJoinLocalizationTablePredicate(
+				ObjectEntrySearchUtil.getLeftJoinLocalizationTablePredicate(
 					dynamicObjectDefinitionLocalizationTable,
 					dynamicObjectDefinitionTable)
 			).where(
@@ -1176,8 +1434,7 @@ public class ObjectEntryLocalServiceImpl
 			selectExpressions);
 
 		_addLocalizedObjectFieldValues(
-			dynamicObjectDefinitionLocalizationTable,
-			objectEntry.getObjectEntryId(), values);
+			dynamicObjectDefinitionLocalizationTable, objectEntry, values);
 		_addObjectRelationshipERCFieldValue(
 			objectEntry.getObjectDefinitionId(), values);
 
@@ -1187,106 +1444,15 @@ public class ObjectEntryLocalServiceImpl
 	@Override
 	public List<Map<String, Serializable>> getValuesList(
 			long groupId, long companyId, long userId, long objectDefinitionId,
-			String[] selectedObjectFieldNames, Predicate predicate,
-			String search, int start, int end, Sort[] sorts)
+			Predicate predicate, String search, int start, int end,
+			Sort[] sorts)
 		throws PortalException {
 
-		DynamicObjectDefinitionLocalizationTable
-			dynamicObjectDefinitionLocalizationTable =
-				DynamicObjectDefinitionLocalizationTableFactory.create(
-					_objectDefinitionPersistence.findByPrimaryKey(
-						objectDefinitionId),
-					_objectFieldLocalService);
-		DynamicObjectDefinitionTable dynamicObjectDefinitionTable =
-			_getDynamicObjectDefinitionTable(objectDefinitionId);
-		DynamicObjectDefinitionTable extensionDynamicObjectDefinitionTable =
-			_getExtensionDynamicObjectDefinitionTable(objectDefinitionId);
-		DynamicObjectDefinitionTable rootDynamicObjectDefinitionTable =
-			_getRootDynamicObjectDefinitionTable(objectDefinitionId);
-
-		Expression<?>[] selectExpressions = ArrayUtil.append(
-			_getSelectExpressions(dynamicObjectDefinitionLocalizationTable),
-			_getSelectExpressions(
-				dynamicObjectDefinitionTable, selectedObjectFieldNames),
-			ArrayUtil.remove(
-				_getSelectExpressions(
-					extensionDynamicObjectDefinitionTable,
-					selectedObjectFieldNames),
-				extensionDynamicObjectDefinitionTable.getPrimaryKeyColumn()),
-			_EXPRESSIONS);
-
-		DSLQuery dslQuery = DSLQueryFactoryUtil.select(
-			selectExpressions
-		).from(
-			dynamicObjectDefinitionTable
-		).innerJoinON(
-			extensionDynamicObjectDefinitionTable,
-			extensionDynamicObjectDefinitionTable.getPrimaryKeyColumn(
-			).eq(
-				dynamicObjectDefinitionTable.getPrimaryKeyColumn()
-			)
-		).innerJoinON(
-			ObjectEntryTable.INSTANCE,
-			ObjectEntryTable.INSTANCE.objectEntryId.eq(
-				dynamicObjectDefinitionTable.getPrimaryKeyColumn())
-		).innerJoinON(
-			rootDynamicObjectDefinitionTable,
-			_getInnerJoinRootObjectDefinitionTablePredicate(
-				rootDynamicObjectDefinitionTable)
-		).leftJoinOn(
-			dynamicObjectDefinitionLocalizationTable,
-			_getLeftJoinLocalizationTablePredicate(
-				dynamicObjectDefinitionLocalizationTable,
-				dynamicObjectDefinitionTable)
-		).where(
-			ObjectEntryTable.INSTANCE.objectDefinitionId.eq(
-				objectDefinitionId
-			).and(
-				() -> {
-					if (groupId == 0) {
-						return null;
-					}
-
-					return ObjectEntryTable.INSTANCE.groupId.eq(groupId);
-				}
-			).and(
-				Predicate.withParentheses(
-					_fillPredicate(objectDefinitionId, predicate, search))
-			).and(
-				_getPermissionWherePredicate(
-					dynamicObjectDefinitionTable, groupId)
-			)
-		).limit(
-			start, end
-		);
-
-		if (sorts != null) {
-			SortDSLQueryVisitor sortDSLQueryVisitor = new SortDSLQueryVisitor(
-				_objectFieldLocalService,
-				_objectRelationshipLocalServiceSnapshot.get());
-
-			for (Sort sort : sorts) {
-				dslQuery = sortDSLQueryVisitor.visit(
-					dslQuery,
-					new com.liferay.object.internal.sort.Sort(
-						_objectDefinitionPersistence.findByPrimaryKey(
-							objectDefinitionId),
-						sort));
-			}
-		}
-
-		List<Object[]> rows = _list(
-			dslQuery, objectDefinitionId, selectExpressions);
-
-		List<Map<String, Serializable>> valuesList = new ArrayList<>(
-			rows.size());
-
-		for (Object[] objects : rows) {
-			valuesList.add(
-				_getValues(objectDefinitionId, objects, selectExpressions));
-		}
-
-		return valuesList;
+		return TransformUtil.transform(
+			getPrimaryKeys(
+				groupId, companyId, userId, objectDefinitionId, predicate,
+				search, start, end, sorts),
+			this::getValues);
 	}
 
 	@Override
@@ -1328,7 +1494,7 @@ public class ObjectEntryLocalServiceImpl
 				rootDynamicObjectDefinitionTable)
 		).leftJoinOn(
 			dynamicObjectDefinitionLocalizationTable,
-			_getLeftJoinLocalizationTablePredicate(
+			ObjectEntrySearchUtil.getLeftJoinLocalizationTablePredicate(
 				dynamicObjectDefinitionLocalizationTable,
 				dynamicObjectDefinitionTable)
 		).where(
@@ -1397,8 +1563,8 @@ public class ObjectEntryLocalServiceImpl
 		}
 		else {
 			_insertIntoTable(
-				dynamicObjectDefinitionTable, primaryKey, values,
-				WorkflowConstants.ACTION_PUBLISH);
+				dynamicObjectDefinitionTable, new HashMap<>(), primaryKey,
+				values, WorkflowConstants.ACTION_PUBLISH);
 		}
 	}
 
@@ -1471,39 +1637,9 @@ public class ObjectEntryLocalServiceImpl
 			String[] assetTagNames, long[] assetLinkEntryIds, Double priority)
 		throws PortalException {
 
-		ObjectDefinition objectDefinition =
-			_objectDefinitionPersistence.findByPrimaryKey(
-				objectEntry.getObjectDefinitionId());
-
-		if (!objectDefinition.isEnableCategorization()) {
-			assetCategoryIds = null;
-			assetTagNames = null;
-		}
-
-		String title = StringPool.BLANK;
-
-		try {
-			title = objectEntry.getTitleValue();
-		}
-		catch (PortalException portalException) {
-			if (_log.isWarnEnabled()) {
-				_log.warn(portalException);
-			}
-		}
-
-		AssetEntry assetEntry = _assetEntryLocalService.updateEntry(
-			userId, objectEntry.getNonzeroGroupId(),
-			objectEntry.getCreateDate(), objectEntry.getModifiedDate(),
-			objectDefinition.getClassName(), objectEntry.getObjectEntryId(),
-			objectEntry.getUuid(), 0, assetCategoryIds, assetTagNames, true,
-			objectEntry.isApproved(), null, null, null, null,
-			ContentTypes.TEXT_PLAIN, title,
-			String.valueOf(objectEntry.getObjectEntryId()), null, null, null, 0,
-			0, priority);
-
-		_assetLinkLocalService.updateLinks(
-			userId, assetEntry.getEntryId(), assetLinkEntryIds,
-			AssetLinkConstants.TYPE_RELATED);
+		_updateAsset(
+			userId, objectEntry, assetCategoryIds, assetTagNames,
+			assetLinkEntryIds, priority, null);
 	}
 
 	@Override
@@ -1524,20 +1660,28 @@ public class ObjectEntryLocalServiceImpl
 		_contributeValues(
 			objectEntry.getGroupId(), objectDefinition, userId, values);
 
+		Map<ObjectField, Set<DLFileEntry>> dlFileEntriesMap = new HashMap<>();
+
 		_validateValues(
-			objectEntry, user.isGuestUser(), objectEntry.getGroupId(),
-			objectDefinition, objectEntryId, serviceContext, userId, values);
+			dlFileEntriesMap, objectEntry, user.isGuestUser(),
+			objectEntry.getGroupId(), objectDefinition, serviceContext, userId,
+			null, values);
+
+		_addDLFileEntries(
+			dlFileEntriesMap, objectDefinition, objectEntryId, serviceContext,
+			userId, values);
 
 		int workflowAction = serviceContext.getWorkflowAction();
 
 		_validateWorkflowAction(
-			objectDefinition.isEnableObjectEntryDraft(),
+			objectDefinition.isEnableObjectEntryDraft(), objectDefinition,
 			objectEntry.getStatus(), workflowAction);
 
 		Map<String, Serializable> transientValues = objectEntry.getValues();
 
 		_deleteFromLocalizationTable(objectDefinition, objectEntryId);
 		_insertIntoLocalizationTable(
+			objectEntry.getDefaultLanguageId(), new HashMap<>(),
 			objectDefinition, objectEntryId, values, workflowAction);
 		_updateTable(
 			_getDynamicObjectDefinitionTable(
@@ -1558,6 +1702,14 @@ public class ObjectEntryLocalServiceImpl
 
 		_setRootObjectEntryId(objectDefinition, objectEntry, values);
 
+		if ((workflowAction == WorkflowConstants.ACTION_SAVE_DRAFT) &&
+			!objectEntry.isPending()) {
+
+			objectEntry.setStatus(WorkflowConstants.STATUS_DRAFT);
+			objectEntry.setStatusByUserId(user.getUserId());
+			objectEntry.setStatusDate(serviceContext.getModifiedDate(null));
+		}
+
 		objectEntry.setTransientValues(transientValues);
 
 		ObjectEntry originalObjectEntry = objectEntry.cloneWithOriginalValues();
@@ -1573,20 +1725,24 @@ public class ObjectEntryLocalServiceImpl
 			ObjectEntryThreadLocal.setSkipObjectValidationRules(false);
 		}
 
-		updateAsset(
+		_updateAsset(
 			serviceContext.getUserId(), objectEntry,
 			serviceContext.getAssetCategoryIds(),
 			serviceContext.getAssetTagNames(),
 			serviceContext.getAssetLinkEntryIds(),
-			serviceContext.getAssetPriority());
+			serviceContext.getAssetPriority(), serviceContext);
 
-		_startWorkflowInstance(userId, objectEntry, serviceContext);
+		_addFriendlyURLEntry(
+			objectDefinition, objectEntry, serviceContext, values);
+
+		_startWorkflowInstance(userId, objectEntry, serviceContext, true);
+
+		_updateResourcePermissions(
+			objectDefinition, objectEntry, serviceContext);
 
 		_deleteFileEntries(
 			objectEntry.getValues(), objectEntry.getObjectDefinitionId(),
 			transientValues);
-
-		_reindex(objectEntry);
 
 		_executeObjectActions(
 			objectEntry.getCompanyId(),
@@ -1594,7 +1750,108 @@ public class ObjectEntryLocalServiceImpl
 			objectEntry, originalObjectEntry, serviceContext.getLanguageId(),
 			user);
 
-		return objectEntry;
+		_deleteTempFileEntries(dlFileEntriesMap);
+
+		if (objectEntry.isPending() || originalObjectEntry.isDraft()) {
+			_updateLatestObjectEntryVersion(objectDefinition, objectEntry);
+
+			return objectEntry;
+		}
+
+		return _addObjectEntryVersion(objectDefinition, objectEntry);
+	}
+
+	@Override
+	public void updateRootObjectEntryIds(
+			ObjectDefinition objectDefinition1,
+			ObjectDefinition objectDefinition2,
+			ObjectRelationship objectRelationship)
+		throws PortalException {
+
+		Connection connection = _currentConnection.getConnection(
+			objectEntryPersistence.getDataSource());
+
+		AtomicBoolean objectDefinition1RootNode = new AtomicBoolean(false);
+		ObjectField objectField = _objectFieldPersistence.findByPrimaryKey(
+			objectRelationship.getObjectFieldId2());
+
+		try (PreparedStatement preparedStatement1 = connection.prepareStatement(
+				StringBundler.concat(
+					"select ", objectDefinition2.getPKObjectFieldDBColumnName(),
+					" from ", objectField.getDBTableName(), " where ",
+					objectField.getDBColumnName(), " = ?"));
+			PreparedStatement preparedStatement2 =
+				AutoBatchPreparedStatementUtil.concurrentAutoBatch(
+					connection,
+					"update ObjectEntry set rootObjectEntryId = ? where " +
+						"objectEntryId = ?");
+			PreparedStatement preparedStatement3 =
+				AutoBatchPreparedStatementUtil.concurrentAutoBatch(
+					connection,
+					"update ObjectEntry set rootObjectEntryId = ? where " +
+						"rootObjectEntryId = ?")) {
+
+			long objectDefinition2RootObjectDefinitionId =
+				objectDefinition2.getRootObjectDefinitionId();
+
+			_performActions(
+				objectDefinition1.getObjectDefinitionId(),
+				(ObjectEntry objectEntry) -> {
+					try {
+						_updateRootObjectEntryIds(
+							objectDefinition1RootNode, objectDefinition2,
+							objectDefinition2RootObjectDefinitionId,
+							objectEntry, preparedStatement1, preparedStatement2,
+							preparedStatement3);
+					}
+					catch (SQLException sqlException) {
+						throw new SystemException(sqlException);
+					}
+				});
+
+			preparedStatement2.executeBatch();
+
+			if (objectDefinition2RootObjectDefinitionId != 0) {
+				preparedStatement3.executeBatch();
+			}
+		}
+		catch (SQLException sqlException) {
+			throw new SystemException(sqlException);
+		}
+
+		long rootObjectDefinitionId =
+			objectRelationship.getObjectDefinitionId2();
+
+		if (objectDefinition1RootNode.get()) {
+			rootObjectDefinitionId = objectDefinition1.getObjectDefinitionId();
+		}
+
+		ObjectDefinitionTreeFactory objectDefinitionTreeFactory =
+			new ObjectDefinitionTreeFactory(
+				_objectDefinitionPersistence,
+				_objectRelationshipLocalServiceSnapshot.get());
+
+		Tree objectDefinitionTree = objectDefinitionTreeFactory.create(
+			rootObjectDefinitionId);
+
+		Iterator<Node> iterator = objectDefinitionTree.iterator();
+
+		while (iterator.hasNext()) {
+			Node node = iterator.next();
+
+			ObjectDefinition objectDefinition =
+				_objectDefinitionPersistence.findByPrimaryKey(
+					node.getPrimaryKey());
+
+			Indexer<ObjectEntry> indexer = IndexerRegistryUtil.getIndexer(
+				objectDefinition.getClassName());
+
+			_performActions(
+				objectDefinition.getObjectDefinitionId(),
+				(ObjectEntry objectEntry) -> indexer.reindex(objectEntry));
+		}
+
+		objectEntryPersistence.clearCache();
 	}
 
 	@Override
@@ -1603,12 +1860,22 @@ public class ObjectEntryLocalServiceImpl
 			ServiceContext serviceContext)
 		throws PortalException {
 
-		ObjectEntry objectEntry = objectEntryPersistence.findByPrimaryKey(
-			objectEntryId);
+		return updateStatus(
+			userId, objectEntryPersistence.findByPrimaryKey(objectEntryId),
+			status, serviceContext);
+	}
+
+	@Override
+	public ObjectEntry updateStatus(
+			long userId, ObjectEntry objectEntry, int status,
+			ServiceContext serviceContext)
+		throws PortalException {
 
 		if (objectEntry.getStatus() == status) {
 			return objectEntry;
 		}
+
+		ObjectEntry originalObjectEntry = (ObjectEntry)objectEntry.clone();
 
 		objectEntry.setStatus(status);
 
@@ -1637,13 +1904,96 @@ public class ObjectEntryLocalServiceImpl
 			_objectDefinitionPersistence.fetchByPrimaryKey(
 				objectEntry.getObjectDefinitionId());
 
-		_assetEntryLocalService.updateEntry(
-			objectDefinition.getClassName(), objectEntry.getObjectEntryId(),
-			null, null, true, objectEntry.isApproved());
+		if (serviceContext.isStrictAdd()) {
+			boolean indexingEnabled = serviceContext.isIndexingEnabled();
+
+			serviceContext.setIndexingEnabled(false);
+
+			try {
+				_updateAsset(
+					serviceContext.getUserId(), objectEntry,
+					serviceContext.getAssetCategoryIds(),
+					serviceContext.getAssetTagNames(),
+					serviceContext.getAssetLinkEntryIds(),
+					serviceContext.getAssetPriority(), serviceContext);
+			}
+			finally {
+				serviceContext.setIndexingEnabled(indexingEnabled);
+			}
+		}
+		else {
+			_assetEntryLocalService.updateEntry(
+				objectDefinition.getClassName(), objectEntry.getObjectEntryId(),
+				null, null, true, objectEntry.isApproved());
+		}
 
 		_reindex(objectEntry);
 
-		return objectEntry;
+		if (!ObjectActionThreadLocal.isSkipObjectActionExecution()) {
+			_executeObjectActions(
+				objectEntry.getCompanyId(),
+				ObjectActionTriggerConstants.KEY_ON_AFTER_UPDATE,
+				objectDefinition, objectEntry, originalObjectEntry,
+				serviceContext.getLanguageId(), user);
+		}
+
+		if (originalObjectEntry.isDraft() || originalObjectEntry.isPending()) {
+			List<ObjectEntryVersion> objectEntryVersions =
+				_objectEntryVersionLocalService.getObjectEntryVersions(
+					objectEntry.getObjectEntryId());
+
+			if (!objectEntryVersions.isEmpty()) {
+				_updateLatestObjectEntryVersion(objectDefinition, objectEntry);
+			}
+
+			return objectEntry;
+		}
+
+		return _addObjectEntryVersion(objectDefinition, objectEntry);
+	}
+
+	@Override
+	public void validate(
+			long groupId, ObjectEntry objectEntry,
+			List<String> objectValidationRuleExternalReferenceCodes,
+			ServiceContext serviceContext, long userId)
+		throws PortalException {
+
+		List<ValidationError> validationErrors = new ArrayList<>();
+
+		try {
+			_objectValidationRuleLocalService.validate(
+				objectValidationRuleExternalReferenceCodes, objectEntry,
+				userId);
+		}
+		catch (ObjectValidationRuleEngineException
+					objectValidationRuleEngineException) {
+
+			ListUtil.isNotEmptyForEach(
+				objectValidationRuleEngineException.
+					getObjectValidationRuleResults(),
+				objectValidationRuleResult -> validationErrors.add(
+					new ValidationError(
+						objectValidationRuleResult.getErrorMessage(),
+						objectValidationRuleResult.getObjectFieldName(),
+						objectValidationRuleResult.
+							getExternalReferenceCode())));
+		}
+
+		_validateValues(
+			Collections.emptyMap(), objectEntry, false, groupId,
+			_objectDefinitionPersistence.findByPrimaryKey(
+				objectEntry.getObjectDefinitionId()),
+			serviceContext, serviceContext.getUserId(), validationErrors,
+			objectEntry.getValues());
+
+		if (ListUtil.isNotEmpty(validationErrors)) {
+			throw new ObjectEntryValidationException() {
+				{
+					setValidationErrors(validationErrors);
+				}
+			};
+		}
 	}
 
 	@Activate
@@ -1685,61 +2035,163 @@ public class ObjectEntryLocalServiceImpl
 			ObjectConfiguration.class, properties);
 	}
 
-	private void _addFileEntry(
-			DLFileEntry dlFileEntry, Map.Entry<String, Serializable> entry,
+	private void _addDLFileEntries(
+			Map<ObjectField, Set<DLFileEntry>> dlFileEntriesMap,
 			ObjectDefinition objectDefinition, long objectEntryId,
-			long objectFieldId, List<ObjectFieldSetting> objectFieldSettings,
-			ServiceContext serviceContext, long userId)
+			ServiceContext serviceContext, long userId,
+			Map<String, Serializable> values)
 		throws PortalException {
 
-		try {
-			String fileSource = ObjectFieldSettingUtil.getValue(
-				"fileSource", objectFieldSettings);
+		for (Map.Entry<ObjectField, Set<DLFileEntry>> entry :
+				dlFileEntriesMap.entrySet()) {
 
-			if (Objects.equals(fileSource, "documentsAndMedia")) {
-				return;
-			}
-
-			DLFolder dlFileEntryFolder = dlFileEntry.getFolder();
-
-			DLFolder dlFolder = _attachmentManager.getDLFolder(
-				dlFileEntry.getCompanyId(), dlFileEntry.getGroupId(),
-				objectFieldId, serviceContext, userId);
-
-			if (Objects.equals(
-					dlFileEntryFolder.getFolderId(), dlFolder.getFolderId())) {
-
-				return;
-			}
-
-			String originalFileName = TempFileEntryUtil.getOriginalTempFileName(
-				dlFileEntry.getFileName());
-
-			serviceContext.setAttribute(
-				"className", objectDefinition.getClassName());
-			serviceContext.setAttribute("classPK", objectEntryId);
-
-			FileEntry fileEntry = _dlAppLocalService.addFileEntry(
-				null, userId, dlFolder.getRepositoryId(),
-				dlFolder.getFolderId(),
-				DLUtil.getUniqueFileName(
-					dlFileEntry.getGroupId(), dlFolder.getFolderId(),
-					originalFileName, true),
-				dlFileEntry.getMimeType(),
-				DLUtil.getUniqueTitle(
-					dlFileEntry.getGroupId(), dlFolder.getFolderId(),
-					FileUtil.stripExtension(originalFileName)),
-				StringPool.BLANK, null, null, dlFileEntry.getContentStream(),
-				dlFileEntry.getSize(), null, null, null, serviceContext);
-
-			entry.setValue(fileEntry.getFileEntryId());
-		}
-		finally {
-			if (dlFileEntry != null) {
-				TempFileEntryUtil.deleteTempFileEntry(
-					dlFileEntry.getFileEntryId());
+			for (DLFileEntry dlFileEntry : entry.getValue()) {
+				_addDLFileEntry(
+					dlFileEntry, objectDefinition, objectEntryId,
+					entry.getKey(), serviceContext, userId, values);
 			}
 		}
+	}
+
+	private void _addDLFileEntry(
+			DLFileEntry dlFileEntry, ObjectDefinition objectDefinition,
+			long objectEntryId, ObjectField objectField,
+			ServiceContext serviceContext, long userId,
+			Map<String, Serializable> values)
+		throws PortalException {
+
+		String fileSource = ObjectFieldSettingUtil.getValue(
+			"fileSource", objectField.getObjectFieldSettings());
+
+		if (Objects.equals(fileSource, "documentsAndMedia")) {
+			return;
+		}
+
+		DLFolder dlFileEntryFolder = dlFileEntry.getFolder();
+
+		DLFolder dlFolder = _attachmentManager.getDLFolder(
+			dlFileEntry.getCompanyId(), dlFileEntry.getGroupId(),
+			objectField.getObjectFieldId(), serviceContext, userId);
+
+		if (Objects.equals(
+				dlFileEntryFolder.getFolderId(), dlFolder.getFolderId())) {
+
+			return;
+		}
+
+		String originalFileName = TempFileEntryUtil.getOriginalTempFileName(
+			dlFileEntry.getFileName());
+
+		serviceContext.setAttribute(
+			"className", objectDefinition.getClassName());
+		serviceContext.setAttribute("classPK", objectEntryId);
+
+		FileEntry fileEntry = _dlAppLocalService.addFileEntry(
+			null, userId, dlFolder.getRepositoryId(), dlFolder.getFolderId(),
+			DLUtil.getUniqueFileName(
+				dlFileEntry.getGroupId(), dlFolder.getFolderId(),
+				originalFileName, true),
+			dlFileEntry.getMimeType(),
+			DLUtil.getUniqueTitle(
+				dlFileEntry.getGroupId(), dlFolder.getFolderId(),
+				FileUtil.stripExtension(originalFileName)),
+			StringPool.BLANK, null, null, dlFileEntry.getContentStream(),
+			dlFileEntry.getSize(), null, null, null, serviceContext);
+
+		if (objectField.isLocalized()) {
+			Map<String, Serializable> localizedValues =
+				(Map<String, Serializable>)values.get(
+					objectField.getI18nObjectFieldName());
+
+			for (Map.Entry<String, Serializable> entry :
+					localizedValues.entrySet()) {
+
+				if (dlFileEntry.getFileEntryId() != GetterUtil.getLong(
+						entry.getValue())) {
+
+					continue;
+				}
+
+				entry.setValue(fileEntry.getFileEntryId());
+			}
+		}
+		else {
+			values.put(objectField.getName(), fileEntry.getFileEntryId());
+		}
+	}
+
+	private void _addFriendlyURLEntry(
+			ObjectDefinition objectDefinition, ObjectEntry objectEntry,
+			ServiceContext serviceContext, Map<String, Serializable> values)
+		throws PortalException {
+
+		if (!FeatureFlagManagerUtil.isEnabled("LPD-21926")) {
+			return;
+		}
+
+		long classNameId = _classNameLocalService.getClassNameId(
+			objectDefinition.getClassName());
+
+		Map<String, String> friendlyUrlMap = new HashMap<>();
+
+		if (objectDefinition.isEnableFriendlyURLCustomization()) {
+			friendlyUrlMap = (Map<String, String>)serviceContext.getAttribute(
+				"friendlyUrlMap");
+		}
+
+		long groupId = objectEntry.getNonzeroGroupId();
+		ObjectField objectField = _objectFieldLocalService.fetchObjectField(
+			objectDefinition.getTitleObjectFieldId());
+		Map<String, String> urlTitleMap = new HashMap<>();
+
+		for (Map.Entry<String, String> entry : friendlyUrlMap.entrySet()) {
+			if (Validator.isNotNull(entry.getValue())) {
+				urlTitleMap.put(
+					entry.getKey(),
+					_friendlyURLEntryLocalService.getUniqueUrlTitle(
+						groupId, classNameId, objectEntry.getObjectEntryId(),
+						entry.getValue(), entry.getKey()));
+
+				continue;
+			}
+
+			urlTitleMap.put(
+				entry.getKey(),
+				_getUrlTitle(
+					classNameId, groupId, entry.getKey(), objectEntry,
+					objectField,
+					HashMapBuilder.<String, Object>putAll(
+						values
+					).putAll(
+						objectEntry.getModelAttributes()
+					).build()));
+		}
+
+		Map<String, Object> localizedValues =
+			(Map<String, Object>)values.getOrDefault(
+				objectField.getI18nObjectFieldName(), new HashMap<>());
+
+		for (Map.Entry<String, Object> entry : localizedValues.entrySet()) {
+			urlTitleMap.computeIfAbsent(
+				entry.getKey(),
+				key -> _getUrlTitle(
+					classNameId, groupId, entry.getKey(), objectEntry,
+					objectField, new HashMap<>(values)));
+		}
+
+		urlTitleMap.computeIfAbsent(
+			_language.getLanguageId(LocaleUtil.getSiteDefault()),
+			key -> _getUrlTitle(
+				classNameId, groupId, null, objectEntry, objectField,
+				HashMapBuilder.<String, Object>putAll(
+					values
+				).putAll(
+					objectEntry.getModelAttributes()
+				).build()));
+
+		_friendlyURLEntryLocalService.addFriendlyURLEntry(
+			groupId, classNameId, objectEntry.getObjectEntryId(), urlTitleMap,
+			serviceContext);
 	}
 
 	private JoinStep _addInnerJoinON(
@@ -1766,29 +2218,31 @@ public class ObjectEntryLocalServiceImpl
 	}
 
 	private void _addLocalizedObjectFieldValues(
-		DynamicObjectDefinitionLocalizationTable
-			dynamicObjectDefinitionLocalizationTable,
-		long objectEntryId, Map<String, Serializable> values) {
+			DynamicObjectDefinitionLocalizationTable
+				dynamicObjectDefinitionLocalizationTable,
+			ObjectEntry objectEntry, Map<String, Serializable> values)
+		throws PortalException {
 
 		if (dynamicObjectDefinitionLocalizationTable == null) {
 			return;
 		}
 
-		List<Object[]> rows = objectEntryPersistence.dslQuery(
+		Expression<?>[] selectExpressions = ArrayUtil.append(
+			_getSelectExpressions(dynamicObjectDefinitionLocalizationTable),
+			dynamicObjectDefinitionLocalizationTable.getLanguageIdColumn());
+
+		List<Object[]> rows = _list(
 			DSLQueryFactoryUtil.select(
-				ArrayUtil.append(
-					_getSelectExpressions(
-						dynamicObjectDefinitionLocalizationTable),
-					dynamicObjectDefinitionLocalizationTable.
-						getLanguageIdColumn())
+				selectExpressions
 			).from(
 				dynamicObjectDefinitionLocalizationTable
 			).where(
 				dynamicObjectDefinitionLocalizationTable.getForeignKeyColumn(
 				).eq(
-					objectEntryId
+					objectEntry.getObjectEntryId()
 				)
-			));
+			),
+			objectEntry.getObjectDefinitionId(), selectExpressions);
 
 		if (ListUtil.isEmpty(rows)) {
 			return;
@@ -1800,31 +2254,46 @@ public class ObjectEntryLocalServiceImpl
 					getObjectFieldColumns();
 
 		for (int i = 0; i < objectFieldColumns.size(); i++) {
-			Map<String, String> localizedValues = new HashMap<>();
+			Column<DynamicObjectDefinitionLocalizationTable, ?>
+				objectFieldColumn = objectFieldColumns.get(i);
+
+			Map<String, Serializable> localizedValues = new HashMap<>();
 
 			for (Object[] row : rows) {
 				Object localizedValue = row[i];
 
-				if (Validator.isNull(localizedValue)) {
+				if (!(localizedValue instanceof Long) &&
+					Validator.isNull(localizedValue)) {
+
 					continue;
 				}
 
-				localizedValues.put(
+				_putValue(
+					objectFieldColumn.getJavaType(),
 					String.valueOf(row[objectFieldColumns.size()]),
-					String.valueOf(localizedValue));
+					localizedValue, localizedValues);
 			}
 
-			Column<DynamicObjectDefinitionLocalizationTable, ?>
-				objectFieldColumn = objectFieldColumns.get(i);
-
-			values.put(
-				objectFieldColumn.getName() + "i18n",
-				(Serializable)localizedValues);
-			values.putIfAbsent(
-				StringUtil.removeLast(
-					objectFieldColumn.getName(), StringPool.UNDERLINE),
-				StringPool.BLANK);
+			_putLocalizedValues(
+				objectFieldColumn.getName(), (Serializable)localizedValues,
+				values);
 		}
+	}
+
+	private ObjectEntry _addObjectEntryVersion(
+			ObjectDefinition objectDefinition, ObjectEntry objectEntry)
+		throws PortalException {
+
+		if (!objectDefinition.isEnableObjectEntryVersioning()) {
+			return objectEntry;
+		}
+
+		ObjectEntryVersion objectEntryVersion =
+			_objectEntryVersionLocalService.addObjectEntryVersion(objectEntry);
+
+		objectEntry.setVersion(objectEntryVersion.getVersion());
+
+		return objectEntryPersistence.update(objectEntry);
 	}
 
 	private void _addObjectRelationshipERCFieldValue(
@@ -1938,25 +2407,30 @@ public class ObjectEntryLocalServiceImpl
 		Map<String, Serializable> newValues, long objectDefinitionId,
 		Map<String, Serializable> oldValues) {
 
+		_deleteFileEntries(newValues, objectDefinitionId, () -> oldValues);
+	}
+
+	private void _deleteFileEntries(
+		Map<String, Serializable> newValues, long objectDefinitionId,
+		Supplier<Map<String, Serializable>> oldValuesSupplier) {
+
 		List<ObjectField> objectFields =
 			_objectFieldPersistence.findByObjectDefinitionId(
 				objectDefinitionId);
 
+		Map<String, Serializable> oldValues = null;
+
 		for (ObjectField objectField : objectFields) {
-			if (objectField.isSystem()) {
+			if (objectField.isSystem() ||
+				!Objects.equals(
+					objectField.getBusinessType(),
+					ObjectFieldConstants.BUSINESS_TYPE_ATTACHMENT)) {
+
 				continue;
 			}
 
-			String objectFieldName = objectField.getName();
-
-			if (!Objects.equals(
-					objectField.getBusinessType(),
-					ObjectFieldConstants.BUSINESS_TYPE_ATTACHMENT) ||
-				Objects.equals(
-					GetterUtil.getLong(newValues.get(objectFieldName)),
-					GetterUtil.getLong(oldValues.get(objectFieldName)))) {
-
-				continue;
+			if (oldValues == null) {
+				oldValues = oldValuesSupplier.get();
 			}
 
 			ObjectFieldSetting objectFieldSetting =
@@ -1978,9 +2452,58 @@ public class ObjectEntryLocalServiceImpl
 				continue;
 			}
 
-			try {
-				_dlFileEntryLocalService.deleteFileEntry(
+			List<Long> orphanedFileEntryIds = new ArrayList<>();
+
+			if (objectField.isLocalized()) {
+				Map<String, Serializable> oldLocalizedValues =
+					(Map<String, Serializable>)oldValues.get(
+						objectField.getI18nObjectFieldName());
+
+				if (oldLocalizedValues == null) {
+					continue;
+				}
+
+				Map<String, Serializable> newLocalizedValues =
+					(Map<String, Serializable>)newValues.getOrDefault(
+						objectField.getI18nObjectFieldName(),
+						(Serializable)Collections.emptyMap());
+
+				Collection<Serializable> values = newLocalizedValues.values();
+
+				for (Map.Entry<String, Serializable> entry :
+						oldLocalizedValues.entrySet()) {
+
+					if (values.contains(entry.getValue())) {
+						continue;
+					}
+
+					orphanedFileEntryIds.add(
+						GetterUtil.getLong(entry.getValue()));
+				}
+			}
+			else {
+				String objectFieldName = objectField.getName();
+
+				if (Objects.equals(
+						GetterUtil.getLong(newValues.get(objectFieldName)),
+						GetterUtil.getLong(oldValues.get(objectFieldName)))) {
+
+					continue;
+				}
+
+				orphanedFileEntryIds.add(
 					GetterUtil.getLong(oldValues.get(objectFieldName)));
+			}
+
+			try {
+				for (Long orphanedFileEntryId : orphanedFileEntryIds) {
+					if (orphanedFileEntryId == 0) {
+						continue;
+					}
+
+					_dlFileEntryLocalService.deleteFileEntry(
+						orphanedFileEntryId);
+				}
 			}
 			catch (PortalException portalException) {
 				if (_log.isDebugEnabled()) {
@@ -2014,12 +2537,40 @@ public class ObjectEntryLocalServiceImpl
 			long primaryKey)
 		throws PortalException {
 
-		runSQL(
-			StringBundler.concat(
-				"delete from ", dbTableName, " where ",
-				pkObjectFieldDBColumnName, " = ", primaryKey));
+		Session session = objectEntryPersistence.openSession();
+
+		try {
+			session.apply(
+				connection -> {
+					try (PreparedStatement preparedStatement =
+							connection.prepareStatement(
+								StringBundler.concat(
+									"delete from ", dbTableName, " where ",
+									pkObjectFieldDBColumnName, " = ?"))) {
+
+						preparedStatement.setLong(1, primaryKey);
+
+						preparedStatement.executeUpdate();
+					}
+				});
+		}
+		finally {
+			objectEntryPersistence.closeSession(session);
+		}
 
 		FinderCacheUtil.clearDSLQueryCache(dbTableName);
+	}
+
+	private void _deleteTempFileEntries(
+			Map<ObjectField, Set<DLFileEntry>> dlFileEntriesMap)
+		throws PortalException {
+
+		for (Set<DLFileEntry> dlFileEntries : dlFileEntriesMap.values()) {
+			for (DLFileEntry dlFileEntry : dlFileEntries) {
+				TempFileEntryUtil.deleteTempFileEntry(
+					dlFileEntry.getFileEntryId());
+			}
+		}
 	}
 
 	private void _executeObjectActions(
@@ -2034,13 +2585,21 @@ public class ObjectEntryLocalServiceImpl
 
 		objectActionEngine.executeObjectActions(
 			objectDefinition.getClassName(), companyId, objectActionTrigger,
-			() -> ObjectEntryUtil.getPayloadJSONObject(
-				_dtoConverterRegistry, _jsonFactory, objectActionTrigger,
-				objectDefinition, objectEntry, originalObjectEntry,
-				preferredLanguageId, user),
+			() -> {
+				JSONObject payloadJSONObject =
+					ObjectEntryUtil.getPayloadJSONObject(
+						_dtoConverterRegistry, _jsonFactory,
+						objectActionTrigger, objectDefinition, objectEntry,
+						originalObjectEntry, preferredLanguageId, user);
+
+				objectEntry.setValues(null);
+
+				return payloadJSONObject;
+			},
 			user.getUserId());
 
-		if (!FeatureFlagManagerUtil.isEnabled("LPS-187142") ||
+		if (!FeatureFlagManagerUtil.isEnabled(
+				objectDefinition.getCompanyId(), "LPD-34594") ||
 			(!objectDefinition.isRootDescendantNode() &&
 			 (!objectDefinition.isRootNode() ||
 			  StringUtil.equals(
@@ -2060,29 +2619,67 @@ public class ObjectEntryLocalServiceImpl
 		objectActionEngine.executeObjectActions(
 			rootObjectEntry.getModelClassName(), companyId,
 			ObjectActionTriggerConstants.KEY_ON_AFTER_ROOT_UPDATE,
-			() -> ObjectEntryUtil.getPayloadJSONObject(
-				_dtoConverterRegistry, _jsonFactory,
-				ObjectActionTriggerConstants.KEY_ON_AFTER_ROOT_UPDATE,
-				_objectDefinitionPersistence.findByPrimaryKey(
-					rootObjectEntry.getObjectDefinitionId()),
-				rootObjectEntry, null, preferredLanguageId, user),
+			() -> {
+				JSONObject payloadJSONObject =
+					ObjectEntryUtil.getPayloadJSONObject(
+						_dtoConverterRegistry, _jsonFactory,
+						ObjectActionTriggerConstants.KEY_ON_AFTER_ROOT_UPDATE,
+						_objectDefinitionPersistence.fetchByPrimaryKey(
+							rootObjectEntry.getObjectDefinitionId()),
+						rootObjectEntry, null, preferredLanguageId, user);
+
+				rootObjectEntry.setValues(null);
+
+				return payloadJSONObject;
+			},
 			user.getUserId());
 	}
 
 	private void _fillDefaultValue(
-		List<ObjectField> objectFields, Map<String, Serializable> values) {
+		String defaultLanguageId, long objectDefinitionId,
+		Map<String, Serializable> values) {
 
-		for (ObjectField objectField : objectFields) {
-			if (values.get(objectField.getName()) != null) {
+		for (ObjectField objectField :
+				_objectFieldPersistence.findByObjectDefinitionId(
+					objectDefinitionId)) {
+
+			Map<String, Object> localizedValues =
+				(Map<String, Object>)values.getOrDefault(
+					objectField.getI18nObjectFieldName(), new HashMap<>());
+
+			if ((objectField.isLocalized() &&
+				 (localizedValues.get(defaultLanguageId) != null)) ||
+				(!objectField.isLocalized() &&
+				 (values.get(objectField.getName()) != null))) {
+
 				continue;
 			}
 
-			String value = ObjectFieldSettingUtil.getDefaultValueAsString(
-				_ddmExpressionFactory, objectField.getObjectFieldId(),
-				_objectFieldSettingLocalService, (Map)values);
+			objectField.setObjectFieldSettings(
+				_objectFieldSettingLocalService.
+					getObjectFieldObjectFieldSettings(
+						objectField.getObjectFieldId()));
+
+			Object value = ObjectFieldSettingUtil.getDefaultValue(
+				_ddmExpressionFactory, objectField, (Map)values);
 
 			if (value != null) {
-				values.put(objectField.getName(), value);
+				values.put(objectField.getName(), (Serializable)value);
+
+				if (!objectField.isLocalized()) {
+					continue;
+				}
+
+				if (localizedValues.isEmpty()) {
+					values.put(
+						objectField.getI18nObjectFieldName(),
+						HashMapBuilder.put(
+							defaultLanguageId, value
+						).build());
+				}
+				else {
+					localizedValues.putIfAbsent(defaultLanguageId, value);
+				}
 			}
 		}
 	}
@@ -2127,8 +2724,7 @@ public class ObjectEntryLocalServiceImpl
 			else {
 				objectFieldPredicate =
 					ObjectEntrySearchUtil.getObjectFieldPredicate(
-						(Column<?, Object>)column, objectField.getDBType(),
-						search);
+						column, objectField.getDBType(), search);
 			}
 
 			if (objectFieldPredicate == null) {
@@ -2542,6 +3138,22 @@ public class ObjectEntryLocalServiceImpl
 		return objectFieldBusinessType.getDBType();
 	}
 
+	private String _getDefaultLanguageId(String defaultLanguageId, long groupId)
+		throws PortalException {
+
+		if (Validator.isNull(defaultLanguageId)) {
+			return _language.getLanguageId(
+				_portal.getSiteDefaultLocale(groupId));
+		}
+
+		if (_language.isAvailableLocale(defaultLanguageId)) {
+			return defaultLanguageId;
+		}
+
+		throw new ObjectEntryDefaultLanguageIdException(
+			"Language ID " + defaultLanguageId + " is not available");
+	}
+
 	private DynamicObjectDefinitionTable _getDynamicObjectDefinitionTable(
 			long objectDefinitionId)
 		throws PortalException {
@@ -2667,40 +3279,6 @@ public class ObjectEntryLocalServiceImpl
 			PropsValues.OBJECT_ENCRYPTION_ALGORITHM);
 	}
 
-	private Predicate _getLeftJoinLocalizationTablePredicate(
-			DynamicObjectDefinitionLocalizationTable
-				dynamicObjectDefinitionLocalizationTable,
-			DynamicObjectDefinitionTable dynamicObjectDefinitionTable)
-		throws PortalException {
-
-		if (dynamicObjectDefinitionLocalizationTable == null) {
-			return null;
-		}
-
-		Locale locale = LocaleThreadLocal.getThemeDisplayLocale();
-
-		if (locale == null) {
-			locale = LocaleThreadLocal.getSiteDefaultLocale();
-		}
-
-		if (locale == null) {
-			User user = GuestOrUserUtil.getGuestOrUser(
-				CompanyThreadLocal.getCompanyId());
-
-			locale = user.getLocale();
-		}
-
-		return dynamicObjectDefinitionLocalizationTable.getForeignKeyColumn(
-		).eq(
-			dynamicObjectDefinitionTable.getPrimaryKeyColumn()
-		).and(
-			dynamicObjectDefinitionLocalizationTable.getLanguageIdColumn(
-			).eq(
-				LocaleUtil.toLanguageId(locale)
-			)
-		);
-	}
-
 	private Set<Locale> _getLocales(
 		long companyId, List<ObjectField> objectFields,
 		Map<String, Serializable> values) {
@@ -2725,15 +3303,16 @@ public class ObjectEntryLocalServiceImpl
 			locales, _language.getCompanyAvailableLocales(companyId));
 	}
 
-	private String _getLocalizedValue(
-		String languageId, Map<String, String> localizedValues) {
+	private Object _getLocalizedValue(
+		String languageId, Map<String, Object> localizedValues) {
 
-		if (localizedValues == null) {
+		if ((localizedValues == null) ||
+			!localizedValues.containsKey(languageId)) {
+
 			return StringPool.BLANK;
 		}
 
-		return Objects.toString(
-			localizedValues.get(languageId), StringPool.BLANK);
+		return localizedValues.get(languageId);
 	}
 
 	private GroupByStep _getManyToManyObjectEntriesGroupByStep(
@@ -2801,7 +3380,7 @@ public class ObjectEntryLocalServiceImpl
 			)
 		).leftJoinOn(
 			dynamicObjectDefinitionLocalizationTable,
-			_getLeftJoinLocalizationTablePredicate(
+			ObjectEntrySearchUtil.getLeftJoinLocalizationTablePredicate(
 				dynamicObjectDefinitionLocalizationTable,
 				dynamicObjectDefinitionTable)
 		).leftJoinOn(
@@ -2851,14 +3430,14 @@ public class ObjectEntryLocalServiceImpl
 				}
 			).and(
 				() -> {
-					if (objectDefinition1.getObjectDefinitionId() ==
+					if (objectDefinition1.getObjectDefinitionId() !=
 							objectDefinition2.getObjectDefinitionId()) {
 
-						return dynamicObjectDefinitionTablePrimaryKeyColumn.neq(
-							primaryKey);
+						return null;
 					}
 
-					return null;
+					return dynamicObjectDefinitionTablePrimaryKeyColumn.neq(
+						primaryKey);
 				}
 			).and(
 				ObjectEntrySearchUtil.getRelatedModelsPredicate(
@@ -2915,7 +3494,7 @@ public class ObjectEntryLocalServiceImpl
 				rootDynamicObjectDefinitionTable)
 		).leftJoinOn(
 			dynamicObjectDefinitionLocalizationTable,
-			_getLeftJoinLocalizationTablePredicate(
+			ObjectEntrySearchUtil.getLeftJoinLocalizationTablePredicate(
 				dynamicObjectDefinitionLocalizationTable,
 				dynamicObjectDefinitionTable)
 		).where(
@@ -2923,7 +3502,7 @@ public class ObjectEntryLocalServiceImpl
 				objectRelationship.getCompanyId()
 			).and(
 				() -> {
-					if (!related) {
+					if (!related && (groupId > 0)) {
 						return ObjectEntryTable.INSTANCE.groupId.eq(groupId);
 					}
 
@@ -3056,6 +3635,104 @@ public class ObjectEntryLocalServiceImpl
 		return ObjectEntryTable.INSTANCE.objectEntryId;
 	}
 
+	private Map<String, Object> _getQueryExpressions(
+			ObjectDefinition objectDefinition2, long primaryKey, String script)
+		throws PortalException {
+
+		Map<String, Object> queryExpressions = new HashMap<>();
+
+		for (ObjectRelationship objectRelationship :
+				_objectRelationshipPersistence.findByObjectDefinitionId2(
+					objectDefinition2.getObjectDefinitionId())) {
+
+			ObjectField relationshipObjectField =
+				_objectFieldLocalService.fetchObjectField(
+					objectRelationship.getObjectFieldId2());
+
+			if (!script.contains(
+					relationshipObjectField.getName() + StringPool.UNDERLINE)) {
+
+				continue;
+			}
+
+			ObjectDefinition objectDefinition1 =
+				_objectDefinitionPersistence.findByPrimaryKey(
+					objectRelationship.getObjectDefinitionId1());
+
+			Table<?> objectDefinition2Table = _objectFieldLocalService.getTable(
+				objectDefinition2.getObjectDefinitionId(),
+				relationshipObjectField.getName());
+
+			Column<?, Long> objectDefinition2PrimaryKeyColumn =
+				ObjectEntrySearchUtil.getPrimaryKeyColumn(
+					objectDefinition2.getPKObjectFieldDBColumnName(),
+					objectDefinition2Table);
+
+			for (ObjectField objectField :
+					_objectFieldLocalService.getObjectFields(
+						objectDefinition1.getObjectDefinitionId())) {
+
+				String key =
+					relationshipObjectField.getName() + StringPool.UNDERLINE +
+						objectField.getName();
+
+				if (!script.contains(key)) {
+					continue;
+				}
+
+				Table<?> objectDefinition1Table =
+					_objectFieldLocalService.getTable(
+						objectDefinition1.getObjectDefinitionId(),
+						objectField.getName());
+
+				Column<?, Long> objectDefinition1PrimaryKeyColumn =
+					ObjectEntrySearchUtil.getPrimaryKeyColumn(
+						objectDefinition1.getPKObjectFieldDBColumnName(),
+						objectDefinition1Table);
+
+				Predicate predicate = null;
+
+				if (objectField.isLocalized()) {
+					DynamicObjectDefinitionLocalizationTable
+						dynamicObjectDefinitionLocalizationTable =
+							(DynamicObjectDefinitionLocalizationTable)
+								objectDefinition1Table;
+
+					predicate =
+						dynamicObjectDefinitionLocalizationTable.
+							getLanguageIdColumn(
+							).eq(
+								ObjectEntrySearchUtil.getLanguageId()
+							);
+				}
+
+				queryExpressions.put(
+					key,
+					new QueryExpression<>(
+						DSLQueryFactoryUtil.select(
+							objectDefinition1Table.getColumn(
+								objectField.getDBColumnName())
+						).from(
+							objectDefinition1Table
+						).innerJoinON(
+							objectDefinition2Table,
+							objectDefinition1PrimaryKeyColumn.eq(
+								(Column<?, Long>)
+									objectDefinition2Table.getColumn(
+										relationshipObjectField.getName()))
+						).where(
+							objectDefinition2PrimaryKeyColumn.eq(
+								primaryKey
+							).and(
+								predicate
+							)
+						)));
+			}
+		}
+
+		return queryExpressions;
+	}
+
 	private Predicate _getRelationshipObjectFieldPredicate(
 			Column<?, ?> column, ObjectField objectField, String search)
 		throws PortalException {
@@ -3081,7 +3758,7 @@ public class ObjectEntryLocalServiceImpl
 				ObjectEntryTable.INSTANCE.objectEntryId)) {
 
 			return ObjectEntrySearchUtil.getObjectFieldPredicate(
-				(Column<?, Object>)column, objectField.getDBType(), search);
+				column, objectField.getDBType(), search);
 		}
 
 		Predicate relatedModelsPredicate =
@@ -3202,7 +3879,7 @@ public class ObjectEntryLocalServiceImpl
 
 	private Expression<?>[] _getSelectExpressions(
 			DynamicObjectDefinitionTable dynamicObjectDefinitionTable,
-			String[] selectedObjectFieldNames)
+			long primaryKey, String[] selectedObjectFieldNames)
 		throws PortalException {
 
 		List<Expression<?>> selectExpressions = new ArrayList<>();
@@ -3305,6 +3982,9 @@ public class ObjectEntryLocalServiceImpl
 						).build());
 
 				ddmExpression.setVariables(columns);
+				ddmExpression.setVariables(
+					_getQueryExpressions(
+						objectDefinition, primaryKey, String.valueOf(script)));
 
 				Class<?> clazz = Double.class;
 
@@ -3328,6 +4008,27 @@ public class ObjectEntryLocalServiceImpl
 		}
 
 		return selectExpressions.toArray(new Expression<?>[0]);
+	}
+
+	private String _getUrlTitle(
+		long classNameId, long groupId, String languageId,
+		ObjectEntry objectEntry, ObjectField objectField,
+		Map<String, Object> values) {
+
+		String urlTitle = GetterUtil.getString(
+			ObjectEntryValuesUtil.getValue(languageId, objectField, values));
+
+		if (Validator.isNull(urlTitle)) {
+			urlTitle = objectEntry.getExternalReferenceCode();
+
+			if (Validator.isNull(urlTitle)) {
+				urlTitle = objectEntry.getUuid();
+			}
+		}
+
+		return _friendlyURLEntryLocalService.getUniqueUrlTitle(
+			groupId, classNameId, objectEntry.getObjectEntryId(), urlTitle,
+			languageId);
 	}
 
 	/**
@@ -3443,7 +4144,21 @@ public class ObjectEntryLocalServiceImpl
 		return values;
 	}
 
+	private void _handle(
+			ObjectEntryValuesException objectEntryValuesException,
+			List<ValidationError> validationErrors)
+		throws ObjectEntryValuesException {
+
+		if (validationErrors == null) {
+			throw objectEntryValuesException;
+		}
+
+		validationErrors.add(
+			new ValidationError(objectEntryValuesException.getMessage()));
+	}
+
 	private void _insertIntoLocalizationTable(
+			String defaultLanguageId, Map<String, Serializable> insertedValues,
 			ObjectDefinition objectDefinition, long objectEntryId,
 			Map<String, Serializable> values, int workflowAction)
 		throws PortalException {
@@ -3464,12 +4179,13 @@ public class ObjectEntryLocalServiceImpl
 			return;
 		}
 
-		Set<Locale> locales = _getLocales(
-			objectDefinition.getCompanyId(), objectFields, values);
+		List<String> columnNames = new ArrayList<>();
 
-		if (locales.isEmpty()) {
-			return;
-		}
+		columnNames.add(
+			dynamicObjectDefinitionLocalizationTable.getForeignKeyColumnName());
+		columnNames.add("languageId");
+
+		int count = 2;
 
 		StringBundler sb = new StringBundler();
 
@@ -3480,21 +4196,34 @@ public class ObjectEntryLocalServiceImpl
 			dynamicObjectDefinitionLocalizationTable.getForeignKeyColumnName());
 		sb.append(", languageId");
 
-		int count = 2;
-
 		for (ObjectField objectField : objectFields) {
-			if (objectField.isRequired() &&
-				!values.containsKey(objectField.getI18nObjectFieldName()) &&
+			Map<String, Serializable> localizedValues =
+				(Map<String, Serializable>)values.get(
+					objectField.getI18nObjectFieldName());
+
+			if ((MapUtil.isEmpty(localizedValues) ||
+				 Validator.isNull(
+					 MapUtil.getString(localizedValues, defaultLanguageId))) &&
+				objectField.isRequired() &&
 				(workflowAction != WorkflowConstants.ACTION_SAVE_DRAFT)) {
 
-				throw new ObjectEntryValuesException.Required(
-					objectField.getName());
+				throw new ObjectEntryValuesException.RequiredLanguageId(
+					defaultLanguageId, objectField.getName());
 			}
+
+			columnNames.add(objectField.getDBColumnName());
+
+			count++;
 
 			sb.append(", ");
 			sb.append(objectField.getDBColumnName());
+		}
 
-			count++;
+		Set<Locale> locales = _getLocales(
+			objectDefinition.getCompanyId(), objectFields, values);
+
+		if (locales.isEmpty()) {
+			return;
 		}
 
 		sb.append(") values (?");
@@ -3523,21 +4252,41 @@ public class ObjectEntryLocalServiceImpl
 				int index = 1;
 
 				_setColumn(
-					preparedStatement, index++, Types.BIGINT, objectEntryId);
+					columnNames, index++, insertedValues, preparedStatement,
+					Types.BIGINT, objectEntryId);
 				_setColumn(
-					preparedStatement, index++, Types.VARCHAR, languageId);
+					columnNames, index++, new HashMap<>(), preparedStatement,
+					Types.VARCHAR, languageId);
 
 				for (ObjectField objectField : objectFields) {
 					Column<?, ?> column =
 						dynamicObjectDefinitionLocalizationTable.getColumn(
 							objectField.getDBColumnName());
 
+					Map<String, Serializable> insertedLocalizedValue =
+						new HashMap<>(1);
+
 					_setColumn(
-						preparedStatement, index++, column.getSQLType(),
+						column, columnNames, index++, insertedLocalizedValue,
+						objectField, preparedStatement,
 						_getLocalizedValue(
 							languageId,
-							(Map<String, String>)values.get(
+							(Map<String, Object>)values.get(
 								objectField.getI18nObjectFieldName())));
+
+					Map<String, Serializable> localizedValues =
+						(Map<String, Serializable>)insertedValues.getOrDefault(
+							column.getName() + "i18n", new HashMap<>());
+
+					localizedValues.put(
+						languageId,
+						insertedLocalizedValue.get(
+							StringUtil.removeLast(
+								column.getName(), StringPool.UNDERLINE)));
+
+					_putLocalizedValues(
+						column.getName(), (Serializable)localizedValues,
+						insertedValues);
 				}
 
 				preparedStatement.addBatch();
@@ -3553,29 +4302,41 @@ public class ObjectEntryLocalServiceImpl
 		}
 	}
 
-	private void _insertIntoTable(
+	private boolean _insertIntoTable(
 			DynamicObjectDefinitionTable dynamicObjectDefinitionTable,
-			long objectEntryId, Map<String, Serializable> values,
-			int workflowAction)
+			Map<String, Serializable> insertedValues, long objectEntryId,
+			Map<String, Serializable> values, int workflowAction)
 		throws PortalException {
+
+		List<String> columnNames = new ArrayList<>();
+
+		Column<DynamicObjectDefinitionTable, Long> primaryKeyColumn =
+			dynamicObjectDefinitionTable.getPrimaryKeyColumn();
+
+		columnNames.add(primaryKeyColumn.getName());
+
+		int count = 1;
+		List<ObjectField> objectFields =
+			dynamicObjectDefinitionTable.getObjectFields();
 
 		StringBundler sb = new StringBundler();
 
 		sb.append("insert into ");
 		sb.append(dynamicObjectDefinitionTable.getName());
 		sb.append(" (");
-
-		Column<DynamicObjectDefinitionTable, Long> primaryKeyColumn =
-			dynamicObjectDefinitionTable.getPrimaryKeyColumn();
-
 		sb.append(primaryKeyColumn.getName());
 
-		int count = 1;
-
-		List<ObjectField> objectFields =
-			dynamicObjectDefinitionTable.getObjectFields();
+		boolean staticValues = true;
 
 		for (ObjectField objectField : objectFields) {
+			if (objectField.compareBusinessType(
+					ObjectFieldConstants.BUSINESS_TYPE_AGGREGATION) ||
+				objectField.compareBusinessType(
+					ObjectFieldConstants.BUSINESS_TYPE_FORMULA)) {
+
+				staticValues = false;
+			}
+
 			if (!objectField.hasInsertValues() || objectField.isLocalized()) {
 				continue;
 			}
@@ -3591,6 +4352,9 @@ public class ObjectEntryLocalServiceImpl
 				sb.append(objectField.getDBColumnName());
 				sb.append(", ");
 				sb.append(objectField.getSortableDBColumnName());
+
+				columnNames.add(objectField.getDBColumnName());
+				columnNames.add(objectField.getSortableDBColumnName());
 
 				count += 2;
 
@@ -3624,10 +4388,12 @@ public class ObjectEntryLocalServiceImpl
 					dynamicObjectDefinitionTable);
 			}
 
-			sb.append(", ");
-			sb.append(objectField.getDBColumnName());
+			columnNames.add(objectField.getDBColumnName());
 
 			count++;
+
+			sb.append(", ");
+			sb.append(objectField.getDBColumnName());
 		}
 
 		sb.append(") values (?");
@@ -3652,7 +4418,9 @@ public class ObjectEntryLocalServiceImpl
 
 			int index = 1;
 
-			_setColumn(preparedStatement, index++, Types.BIGINT, objectEntryId);
+			_setColumn(
+				columnNames, index++, insertedValues, preparedStatement,
+				Types.BIGINT, objectEntryId);
 
 			for (ObjectField objectField : objectFields) {
 				if (!objectField.hasInsertValues() ||
@@ -3683,13 +4451,15 @@ public class ObjectEntryLocalServiceImpl
 							values.get(objectField.getName())));
 
 					_setColumn(
-						preparedStatement, index++, column.getSQLType(), value);
+						columnNames, index++, insertedValues, preparedStatement,
+						column.getSQLType(), value);
 
 					column = dynamicObjectDefinitionTable.getColumn(
 						objectField.getSortableDBColumnName());
 
 					_setColumn(
-						preparedStatement, index++, column.getSQLType(),
+						columnNames, index++, insertedValues, preparedStatement,
+						column.getSQLType(),
 						_getAutoIncrementSortableValue(prefix, suffix, value));
 
 					continue;
@@ -3700,8 +4470,10 @@ public class ObjectEntryLocalServiceImpl
 				}
 
 				_setColumn(
-					dynamicObjectDefinitionTable, index++, objectField,
-					preparedStatement, values);
+					dynamicObjectDefinitionTable.getColumn(
+						objectField.getDBColumnName()),
+					columnNames, index++, insertedValues, objectField,
+					preparedStatement, values.get(objectField.getName()));
 			}
 
 			preparedStatement.executeUpdate();
@@ -3712,6 +4484,8 @@ public class ObjectEntryLocalServiceImpl
 		catch (Exception exception) {
 			throw new SystemException(exception);
 		}
+
+		return staticValues;
 	}
 
 	private List<Object[]> _list(
@@ -3742,6 +4516,51 @@ public class ObjectEntryLocalServiceImpl
 		}
 
 		return results;
+	}
+
+	private void _performActions(
+			long objectDefinitionId,
+			ActionableDynamicQuery.PerformActionMethod<?> performActionMethod)
+		throws PortalException {
+
+		ActionableDynamicQuery actionableDynamicQuery =
+			getActionableDynamicQuery();
+
+		actionableDynamicQuery.setAddCriteriaMethod(
+			dynamicQuery -> {
+				Property objectDefinitionIdProperty =
+					PropertyFactoryUtil.forName("objectDefinitionId");
+
+				dynamicQuery.add(
+					objectDefinitionIdProperty.eq(objectDefinitionId));
+			});
+		actionableDynamicQuery.setParallel(true);
+		actionableDynamicQuery.setPerformActionMethod(performActionMethod);
+
+		actionableDynamicQuery.performActions();
+	}
+
+	private void _putInsertedValue(
+		Map<String, Serializable> insertedValues, String key,
+		Serializable serializable) {
+
+		if (!key.isEmpty() &&
+			(key.charAt(key.length() - 1) == CharPool.UNDERLINE)) {
+
+			key = key.substring(0, key.length() - 1);
+		}
+
+		insertedValues.put(key, serializable);
+	}
+
+	private void _putLocalizedValues(
+		String columnName, Serializable localizedValues,
+		Map<String, Serializable> values) {
+
+		values.put(columnName + "i18n", localizedValues);
+		values.putIfAbsent(
+			StringUtil.removeLast(columnName, StringPool.UNDERLINE),
+			StringPool.BLANK);
 	}
 
 	private void _putObjectFilterParser(
@@ -3880,7 +4699,13 @@ public class ObjectEntryLocalServiceImpl
 			values.put(name, number);
 		}
 		else if (javaTypeClass == String.class) {
-			values.put(name, (String)object);
+			String string = (String)object;
+
+			if (string == null) {
+				string = StringPool.BLANK;
+			}
+
+			values.put(name, string);
 		}
 		else if (javaTypeClass == Timestamp.class) {
 			values.put(name, (Timestamp)object);
@@ -3903,27 +4728,26 @@ public class ObjectEntryLocalServiceImpl
 		Indexer<ObjectEntry> indexer = IndexerRegistryUtil.getIndexer(
 			objectDefinition.getClassName());
 
-		indexer.reindex(
-			objectDefinition.getClassName(), objectEntry.getObjectEntryId());
+		try (SafeCloseable safeCloseable =
+				StrictObjectReindexThreadLocal.
+					setStrictObjectReindexWithSafeCloseable(true)) {
+
+			indexer.reindex(objectEntry);
+		}
 	}
 
 	private void _setColumn(
-			DynamicObjectDefinitionTable dynamicObjectDefinitionTable,
-			int index, ObjectField objectField,
-			PreparedStatement preparedStatement,
-			Map<String, Serializable> values)
+			Column<?, ?> column, List<String> columnNames, int index,
+			Map<String, Serializable> insertedValues, ObjectField objectField,
+			PreparedStatement preparedStatement, Object value)
 		throws Exception {
-
-		Column<?, ?> column = dynamicObjectDefinitionTable.getColumn(
-			objectField.getDBColumnName());
-
-		Object value = values.get(objectField.getName());
 
 		if (objectField.compareBusinessType(
 				ObjectFieldConstants.BUSINESS_TYPE_ENCRYPTED)) {
 
 			_setColumn(
-				preparedStatement, index, column.getSQLType(),
+				columnNames, index, insertedValues, preparedStatement,
+				column.getSQLType(),
 				_encryptor.encrypt(_getKey(), (String)value));
 		}
 		else if (objectField.compareBusinessType(
@@ -3942,10 +4766,13 @@ public class ObjectEntryLocalServiceImpl
 			}
 
 			_setColumn(
-				preparedStatement, index, column.getSQLType(), valueString);
+				columnNames, index, insertedValues, preparedStatement,
+				column.getSQLType(), valueString);
 		}
 		else {
-			_setColumn(preparedStatement, index, column.getSQLType(), value);
+			_setColumn(
+				columnNames, index, insertedValues, preparedStatement,
+				column.getSQLType(), value);
 		}
 	}
 
@@ -3953,12 +4780,18 @@ public class ObjectEntryLocalServiceImpl
 	 * @see com.liferay.portal.upgrade.util.Table#setColumn
 	 */
 	private void _setColumn(
-			PreparedStatement preparedStatement, int index, int sqlType,
-			Object value)
+			List<String> columnNames, int index,
+			Map<String, Serializable> insertedValues,
+			PreparedStatement preparedStatement, int sqlType, Object value)
 		throws Exception {
 
 		if (sqlType == Types.BIGINT) {
-			preparedStatement.setLong(index, GetterUtil.getLong(value));
+			Long longValue = GetterUtil.getLong(value);
+
+			preparedStatement.setLong(index, longValue);
+
+			_putInsertedValue(
+				insertedValues, columnNames.get(index - 1), longValue);
 		}
 		else if (sqlType == Types.BLOB) {
 			if (PostgreSQLJDBCUtil.isPGStatement(preparedStatement)) {
@@ -3968,9 +4801,17 @@ public class ObjectEntryLocalServiceImpl
 			else {
 				preparedStatement.setBytes(index, (byte[])value);
 			}
+
+			_putInsertedValue(
+				insertedValues, columnNames.get(index - 1), (byte[])value);
 		}
 		else if (sqlType == Types.BOOLEAN) {
-			preparedStatement.setBoolean(index, GetterUtil.getBoolean(value));
+			Boolean booleanValue = GetterUtil.getBoolean(value);
+
+			preparedStatement.setBoolean(index, booleanValue);
+
+			_putInsertedValue(
+				insertedValues, columnNames.get(index - 1), booleanValue);
 		}
 		else if (sqlType == Types.CLOB) {
 			String valueString = String.valueOf(value);
@@ -3984,21 +4825,28 @@ public class ObjectEntryLocalServiceImpl
 				preparedStatement.setClob(
 					index, new StringReader(valueString), valueString.length());
 			}
+
+			_putInsertedValue(
+				insertedValues, columnNames.get(index - 1), valueString);
 		}
 		else if ((sqlType == Types.DATE) || (sqlType == Types.TIMESTAMP)) {
+			Timestamp timestamp = null;
+
 			String valueString = GetterUtil.getString(value);
 
 			if (value instanceof Date) {
 				Date date = (Date)value;
 
-				preparedStatement.setTimestamp(
-					index, new Timestamp(date.getTime()));
+				timestamp = new Timestamp(date.getTime());
+
+				preparedStatement.setTimestamp(index, timestamp);
 			}
 			else if (value instanceof LocalDateTime) {
 				LocalDateTime localDateTime = (LocalDateTime)value;
 
-				preparedStatement.setTimestamp(
-					index, Timestamp.valueOf(localDateTime));
+				timestamp = Timestamp.valueOf(localDateTime);
+
+				preparedStatement.setTimestamp(index, timestamp);
 			}
 			else if (valueString.isEmpty()) {
 				preparedStatement.setTimestamp(index, null);
@@ -4007,30 +4855,56 @@ public class ObjectEntryLocalServiceImpl
 				Date date = DateUtil.parseDate(
 					"yyyy-MM-dd", valueString, LocaleUtil.getSiteDefault());
 
-				preparedStatement.setTimestamp(
-					index, new Timestamp(date.getTime()));
+				timestamp = new Timestamp(date.getTime());
+
+				preparedStatement.setTimestamp(index, timestamp);
 			}
+
+			_putInsertedValue(
+				insertedValues, columnNames.get(index - 1), timestamp);
 		}
 		else if (sqlType == Types.DECIMAL) {
 			if (Validator.isNull(String.valueOf(value))) {
 				value = BigDecimal.ZERO;
 			}
 
-			preparedStatement.setBigDecimal(
-				index,
-				new BigDecimal(_toPeriodSeparator(String.valueOf(value))));
+			BigDecimal bigDecimal = new BigDecimal(
+				_toPeriodSeparator(String.valueOf(value)));
+
+			preparedStatement.setBigDecimal(index, bigDecimal);
+
+			_putInsertedValue(
+				insertedValues, columnNames.get(index - 1),
+				BigDecimalUtil.stripTrailingZeros(bigDecimal));
 		}
 		else if (sqlType == Types.DOUBLE) {
-			preparedStatement.setDouble(
-				index,
-				GetterUtil.getDouble(
-					_toPeriodSeparator(String.valueOf(value))));
+			Double doubleValue = GetterUtil.getDouble(
+				_toPeriodSeparator(String.valueOf(value)));
+
+			preparedStatement.setDouble(index, doubleValue);
+
+			_putInsertedValue(
+				insertedValues, columnNames.get(index - 1), doubleValue);
 		}
 		else if (sqlType == Types.INTEGER) {
-			preparedStatement.setInt(index, GetterUtil.getInteger(value));
+			Integer integer = GetterUtil.getInteger(value);
+
+			preparedStatement.setInt(index, integer);
+
+			_putInsertedValue(
+				insertedValues, columnNames.get(index - 1), integer);
 		}
 		else if (sqlType == Types.VARCHAR) {
-			preparedStatement.setString(index, String.valueOf(value));
+			String string = null;
+
+			if (value != null) {
+				string = String.valueOf(value);
+			}
+
+			preparedStatement.setString(index, string);
+
+			_putInsertedValue(
+				insertedValues, columnNames.get(index - 1), string);
 		}
 		else {
 			throw new IllegalArgumentException(
@@ -4076,9 +4950,12 @@ public class ObjectEntryLocalServiceImpl
 			return;
 		}
 
-		TreeFactory treeFactory = _treeFactorySnapshot.get();
+		ObjectDefinitionTreeFactory objectDefinitionTreeFactory =
+			new ObjectDefinitionTreeFactory(
+				_objectDefinitionPersistence,
+				_objectRelationshipLocalServiceSnapshot.get());
 
-		Tree objectDefinitionTree = treeFactory.createObjectDefinitionTree(
+		Tree objectDefinitionTree = objectDefinitionTreeFactory.create(
 			objectDefinition.getRootObjectDefinitionId());
 
 		Node objectDefinitionNode = objectDefinitionTree.getNode(
@@ -4100,10 +4977,15 @@ public class ObjectEntryLocalServiceImpl
 				parentObjectEntry.getRootObjectEntryId()) &&
 			(objectEntry.getRootObjectEntryId() != 0)) {
 
-			Tree objectEntryTree = treeFactory.createObjectEntryTree(
+			ObjectEntryTreeFactory objectEntryTreeFactory =
+				new ObjectEntryTreeFactory(
+					objectEntryLocalService,
+					_objectRelationshipLocalServiceSnapshot.get());
+
+			Tree tree = objectEntryTreeFactory.create(
 				objectEntry.getObjectEntryId());
 
-			Iterator<Node> iterator = objectEntryTree.iterator();
+			Iterator<Node> iterator = tree.iterator();
 
 			while (iterator.hasNext()) {
 				Node objectEntryNode = iterator.next();
@@ -4114,7 +4996,7 @@ public class ObjectEntryLocalServiceImpl
 				nodeObjectEntry.setRootObjectEntryId(
 					parentObjectEntry.getRootObjectEntryId());
 
-				updateObjectEntry(nodeObjectEntry);
+				objectEntryLocalService.updateObjectEntry(nodeObjectEntry);
 			}
 		}
 
@@ -4123,18 +5005,21 @@ public class ObjectEntryLocalServiceImpl
 	}
 
 	private void _startWorkflowInstance(
-			long userId, ObjectEntry objectEntry, ServiceContext serviceContext)
+			long userId, ObjectEntry objectEntry, ServiceContext serviceContext,
+			boolean skipModelListener)
 		throws PortalException {
 
 		ObjectDefinition objectDefinition =
 			_objectDefinitionPersistence.findByPrimaryKey(
 				objectEntry.getObjectDefinitionId());
-
+		boolean skipObjectActionExecution =
+			ObjectActionThreadLocal.isSkipObjectActionExecution();
 		boolean workflowEnabled = WorkflowThreadLocal.isEnabled();
 
 		try {
-			_skipModelListeners.set(true);
+			_skipModelListeners.set(skipModelListener);
 
+			ObjectActionThreadLocal.setSkipObjectActionExecution(true);
 			WorkflowThreadLocal.setEnabled(true);
 
 			WorkflowHandlerRegistryUtil.startWorkflowInstance(
@@ -4145,6 +5030,8 @@ public class ObjectEntryLocalServiceImpl
 		finally {
 			_skipModelListeners.set(false);
 
+			ObjectActionThreadLocal.setSkipObjectActionExecution(
+				skipObjectActionExecution);
 			WorkflowThreadLocal.setEnabled(workflowEnabled);
 		}
 	}
@@ -4159,20 +5046,187 @@ public class ObjectEntryLocalServiceImpl
 			'.');
 	}
 
+	private void _updateAsset(
+			long userId, ObjectEntry objectEntry, long[] assetCategoryIds,
+			String[] assetTagNames, long[] assetLinkEntryIds, Double priority,
+			ServiceContext serviceContext)
+		throws PortalException {
+
+		ObjectDefinition objectDefinition =
+			_objectDefinitionPersistence.findByPrimaryKey(
+				objectEntry.getObjectDefinitionId());
+
+		if (!objectDefinition.isEnableCategorization()) {
+			assetCategoryIds = null;
+			assetTagNames = null;
+		}
+
+		String mimeType = ContentTypes.TEXT_PLAIN;
+		String title = StringPool.BLANK;
+
+		Map<Locale, String> titleMap = objectEntry.getTitleMap();
+
+		if (MapUtil.isNotEmpty(titleMap)) {
+			title = _localization.getXml(
+				LocalizedMapUtil.getLanguageIdMap(titleMap),
+				objectEntry.getDefaultLanguageId(), "title");
+
+			if (Validator.isXml(title)) {
+				mimeType = ContentTypes.TEXT_HTML;
+			}
+		}
+		else {
+			try {
+				title = objectEntry.getTitleValue();
+			}
+			catch (PortalException portalException) {
+				if (_log.isWarnEnabled()) {
+					_log.warn(portalException);
+				}
+			}
+		}
+
+		AssetEntry assetEntry = _assetEntryLocalService.updateEntry(
+			userId, objectEntry.getNonzeroGroupId(),
+			objectEntry.getCreateDate(), objectEntry.getModifiedDate(),
+			objectDefinition.getClassName(), objectEntry.getObjectEntryId(),
+			objectEntry.getUuid(), 0, assetCategoryIds, assetTagNames, true,
+			objectEntry.isApproved(), null, null, null, null, mimeType, title,
+			String.valueOf(objectEntry.getObjectEntryId()), null, null, null, 0,
+			0, priority, serviceContext);
+
+		if (assetLinkEntryIds != null) {
+			_assetLinkLocalService.updateLinks(
+				userId, assetEntry.getEntryId(), assetLinkEntryIds,
+				AssetLinkConstants.TYPE_RELATED);
+		}
+	}
+
+	private void _updateLatestObjectEntryVersion(
+			ObjectDefinition objectDefinition, ObjectEntry objectEntry)
+		throws PortalException {
+
+		if (!objectDefinition.isEnableObjectEntryVersioning()) {
+			return;
+		}
+
+		_objectEntryVersionLocalService.updateLatestObjectEntryVersion(
+			objectEntry);
+	}
+
+	private void _updateResourcePermissions(
+			ObjectDefinition objectDefinition, ObjectEntry objectEntry,
+			ServiceContext serviceContext)
+		throws PortalException {
+
+		ModelPermissions modelPermissions =
+			serviceContext.getModelPermissions();
+
+		if (modelPermissions == null) {
+			return;
+		}
+
+		_permissionService.checkPermission(
+			objectEntry.getGroupId(), objectDefinition.getClassName(),
+			String.valueOf(objectEntry.getObjectEntryId()));
+
+		Collection<String> roleNames = modelPermissions.getRoleNames();
+
+		for (ResourcePermission resourcePermission :
+				_resourcePermissionLocalService.getResourcePermissions(
+					objectDefinition.getCompanyId(),
+					objectDefinition.getClassName(),
+					ResourceConstants.SCOPE_INDIVIDUAL,
+					String.valueOf(objectEntry.getObjectEntryId()))) {
+
+			Role role = _roleLocalService.fetchRole(
+				resourcePermission.getRoleId());
+
+			if ((role == null) || roleNames.contains(role.getName())) {
+				continue;
+			}
+
+			for (ResourceAction resourceAction :
+					_resourceActionLocalService.getResourceActions(
+						objectDefinition.getClassName())) {
+
+				_resourcePermissionLocalService.removeResourcePermission(
+					objectDefinition.getCompanyId(),
+					objectDefinition.getClassName(),
+					ResourceConstants.SCOPE_INDIVIDUAL,
+					String.valueOf(objectEntry.getObjectEntryId()),
+					role.getRoleId(), resourceAction.getActionId());
+			}
+		}
+
+		_resourcePermissionLocalService.updateResourcePermissions(
+			objectEntry.getCompanyId(), objectEntry.getGroupId(),
+			objectDefinition.getClassName(),
+			String.valueOf(objectEntry.getObjectEntryId()), modelPermissions);
+	}
+
+	private void _updateRootObjectEntryIds(
+			AtomicBoolean objectDefinition1RootNode,
+			ObjectDefinition objectDefinition2,
+			long objectDefinition2RootObjectDefinitionId,
+			ObjectEntry objectEntry, PreparedStatement preparedStatement1,
+			PreparedStatement preparedStatement2,
+			PreparedStatement preparedStatement3)
+		throws SQLException {
+
+		long rootObjectEntryId = objectEntry.getRootObjectEntryId();
+
+		if (rootObjectEntryId == 0) {
+			rootObjectEntryId = objectEntry.getObjectEntryId();
+
+			preparedStatement2.setLong(1, rootObjectEntryId);
+
+			preparedStatement2.setLong(2, objectEntry.getObjectEntryId());
+
+			preparedStatement2.addBatch();
+
+			objectDefinition1RootNode.set(true);
+		}
+
+		preparedStatement1.setLong(1, objectEntry.getObjectEntryId());
+
+		try (ResultSet resultSet = preparedStatement1.executeQuery()) {
+			while (resultSet.next()) {
+				long relatedObjectEntryId = resultSet.getLong(
+					objectDefinition2.getPKObjectFieldDBColumnName());
+
+				if (objectDefinition2RootObjectDefinitionId == 0) {
+					preparedStatement2.setLong(1, rootObjectEntryId);
+					preparedStatement2.setLong(2, relatedObjectEntryId);
+
+					preparedStatement2.addBatch();
+
+					continue;
+				}
+
+				preparedStatement3.setLong(1, rootObjectEntryId);
+				preparedStatement3.setLong(2, relatedObjectEntryId);
+
+				preparedStatement3.addBatch();
+			}
+		}
+	}
+
 	private void _updateTable(
 			DynamicObjectDefinitionTable dynamicObjectDefinitionTable,
 			long objectEntryId, Map<String, Serializable> values,
 			int workflowAction)
 		throws PortalException {
 
+		List<String> columnNames = new ArrayList<>();
+		int count = 0;
+		ObjectEntry objectEntry = fetchObjectEntry(objectEntryId);
+
 		StringBundler sb = new StringBundler();
 
 		sb.append("update ");
 		sb.append(dynamicObjectDefinitionTable.getName());
 		sb.append(" set ");
-
-		int count = 0;
-		ObjectEntry objectEntry = fetchObjectEntry(objectEntryId);
 
 		List<ObjectField> objectFields =
 			dynamicObjectDefinitionTable.getObjectFields();
@@ -4213,14 +5267,16 @@ public class ObjectEntryLocalServiceImpl
 					dynamicObjectDefinitionTable, objectEntryId);
 			}
 
-			if (count > 0) {
+			columnNames.add(objectField.getDBColumnName());
+
+			count++;
+
+			if (count > 1) {
 				sb.append(", ");
 			}
 
 			sb.append(objectField.getDBColumnName());
 			sb.append(" = ?");
-
-			count++;
 		}
 
 		if (count == 0) {
@@ -4233,13 +5289,15 @@ public class ObjectEntryLocalServiceImpl
 			return;
 		}
 
-		sb.append(" where ");
-
 		Column<DynamicObjectDefinitionTable, Long> primaryKeyColumn =
 			dynamicObjectDefinitionTable.getPrimaryKeyColumn();
 
-		sb.append(primaryKeyColumn.getName());
+		columnNames.add(primaryKeyColumn.getName());
 
+		Map<String, Serializable> insertedValues = new HashMap<>();
+
+		sb.append(" where ");
+		sb.append(primaryKeyColumn.getName());
 		sb.append(" = ?");
 
 		String sql = sb.toString();
@@ -4265,11 +5323,15 @@ public class ObjectEntryLocalServiceImpl
 				}
 
 				_setColumn(
-					dynamicObjectDefinitionTable, index++, objectField,
-					preparedStatement, values);
+					dynamicObjectDefinitionTable.getColumn(
+						objectField.getDBColumnName()),
+					columnNames, index++, insertedValues, objectField,
+					preparedStatement, values.get(objectField.getName()));
 			}
 
-			_setColumn(preparedStatement, index++, Types.BIGINT, objectEntryId);
+			_setColumn(
+				columnNames, index++, insertedValues, preparedStatement,
+				Types.BIGINT, objectEntryId);
 
 			preparedStatement.executeUpdate();
 
@@ -4352,34 +5414,42 @@ public class ObjectEntryLocalServiceImpl
 	}
 
 	private void _validateFileExtension(
-			String fileExtension, long objectFieldId, String objectFieldName)
+			String fileExtension, long objectFieldId, String objectFieldName,
+			List<ValidationError> validationErrors)
 		throws PortalException {
 
 		if (!ArrayUtil.contains(
 				_attachmentManager.getAcceptedFileExtensions(objectFieldId),
 				fileExtension, true)) {
 
-			throw new ObjectEntryValuesException.InvalidFileExtension(
-				fileExtension, objectFieldName);
+			_handle(
+				new ObjectEntryValuesException.InvalidFileExtension(
+					fileExtension, objectFieldName),
+				validationErrors);
 		}
 	}
 
 	private void _validateFileSize(
 			boolean guestUser, long fileSize, long objectFieldId,
-			String objectFieldName)
+			String objectFieldName, List<ValidationError> validationErrors)
 		throws PortalException {
 
 		long maximumFileSize = _attachmentManager.getMaximumFileSize(
 			objectFieldId, !guestUser);
 
 		if ((maximumFileSize > 0) && (fileSize > maximumFileSize)) {
-			throw new ObjectEntryValuesException.ExceedsMaxFileSize(
-				maximumFileSize / (1024 * 1024), objectFieldName);
+			_handle(
+				new ObjectEntryValuesException.ExceedsMaxFileSize(
+					maximumFileSize / (1024 * 1024), objectFieldName),
+				validationErrors);
 		}
 	}
 
-	private void _validateGroupId(long groupId, String scope)
+	private void _validateGroupId(
+			long groupId, ObjectDefinition objectDefinition)
 		throws PortalException {
+
+		String scope = objectDefinition.getScope();
 
 		ObjectScopeProvider objectScopeProvider =
 			_objectScopeProviderRegistry.getObjectScopeProvider(scope);
@@ -4390,10 +5460,33 @@ public class ObjectEntryLocalServiceImpl
 					"Group ID ", groupId, " is not valid for scope \"", scope,
 					"\""));
 		}
+
+		if (!StringUtil.equals(scope, ObjectDefinitionConstants.SCOPE_DEPOT) ||
+			GetterUtil.getBoolean(
+				ObjectDefinitionSettingUtil.getValue(
+					ObjectDefinitionSettingConstants.NAME_ACCEPT_ALL_GROUPS,
+					objectDefinition.getObjectDefinitionSettings()))) {
+
+			return;
+		}
+
+		String acceptedGroupIds = ObjectDefinitionSettingUtil.getValue(
+			ObjectDefinitionSettingConstants.NAME_ACCEPTED_GROUP_IDS,
+			objectDefinition.getObjectDefinitionSettings());
+
+		if (Validator.isNull(acceptedGroupIds) ||
+			!ArrayUtil.exists(
+				acceptedGroupIds.split("\\s*,\\s*"),
+				acceptedGroupId -> acceptedGroupId.equals(
+					String.valueOf(groupId)))) {
+
+			throw new NoSuchObjectDefinitionException();
+		}
 	}
 
 	private void _validateListTypeEntryKey(
-			String listTypeEntryKey, ObjectField objectField)
+			String listTypeEntryKey, ObjectField objectField,
+			List<ValidationError> validationErrors)
 		throws PortalException {
 
 		ListTypeEntry listTypeEntry =
@@ -4404,31 +5497,58 @@ public class ObjectEntryLocalServiceImpl
 			(Validator.isNotNull(listTypeEntryKey) ||
 			 objectField.isRequired())) {
 
-			throw new ObjectEntryValuesException.ListTypeEntry(
-				objectField.getName());
+			_handle(
+				new ObjectEntryValuesException.ListTypeEntry(
+					objectField.getName()),
+				validationErrors);
+		}
+	}
+
+	private void _validateObjectEntryFolderId(
+			long groupId, long objectEntryFolderId)
+		throws PortalException {
+
+		if (objectEntryFolderId ==
+				ObjectEntryFolderConstants.
+					PARENT_OBJECT_ENTRY_FOLDER_ID_DEFAULT) {
+
+			return;
+		}
+
+		ObjectEntryFolder objectEntryFolder =
+			_objectEntryFolderPersistence.findByPrimaryKey(objectEntryFolderId);
+
+		if (objectEntryFolder.getGroupId() != groupId) {
+			throw new ObjectEntryFolderScopeException(
+				StringBundler.concat(
+					"Group ID ", groupId,
+					" does not match parent object entry folder group ID ",
+					objectEntryFolder.getGroupId()));
 		}
 	}
 
 	private void _validateObjectStateTransition(
-			Map.Entry<String, Serializable> entry, long listTypeDefinitionId,
-			ObjectEntry objectEntry, long objectFieldId, long userId)
+			ObjectEntry existingObjectEntry, long listTypeDefinitionId,
+			ObjectField objectField, long userId,
+			List<ValidationError> validationErrors, Serializable value)
 		throws PortalException {
 
-		Map<String, Serializable> values = objectEntry.getValues();
+		Map<String, Serializable> existingValues =
+			existingObjectEntry.getValues();
 
-		Serializable value = values.get(entry.getKey());
+		Serializable existingValue = existingValues.get(objectField.getName());
 
-		if (value == null) {
+		if (existingValue == null) {
 			return;
 		}
 
 		ListTypeEntry originalListTypeEntry =
 			_listTypeEntryLocalService.getListTypeEntry(
-				listTypeDefinitionId, String.valueOf(value));
+				listTypeDefinitionId, String.valueOf(existingValue));
 
 		ObjectStateFlow objectStateFlow =
 			_objectStateFlowLocalService.fetchObjectFieldObjectStateFlow(
-				objectFieldId);
+				objectField.getObjectFieldId());
 
 		ObjectState sourceObjectState =
 			_objectStateLocalService.getObjectStateFlowObjectState(
@@ -4437,7 +5557,7 @@ public class ObjectEntryLocalServiceImpl
 
 		ListTypeEntry listTypeEntry =
 			_listTypeEntryLocalService.getListTypeEntry(
-				listTypeDefinitionId, String.valueOf(entry.getValue()));
+				listTypeDefinitionId, String.valueOf(value));
 
 		ObjectState targetObjectState =
 			_objectStateLocalService.getObjectStateFlowObjectState(
@@ -4466,10 +5586,12 @@ public class ObjectEntryLocalServiceImpl
 		if (invalidObjectStateTransition) {
 			User user = _userLocalService.getUser(userId);
 
-			throw new ObjectEntryValuesException.InvalidObjectStateTransition(
-				originalListTypeEntry.getName(user.getLocale()),
-				sourceObjectState, listTypeEntry.getName(user.getLocale()),
-				targetObjectState);
+			_handle(
+				new ObjectEntryValuesException.InvalidObjectStateTransition(
+					originalListTypeEntry.getName(user.getLocale()),
+					sourceObjectState, listTypeEntry.getName(user.getLocale()),
+					targetObjectState),
+				validationErrors);
 		}
 	}
 
@@ -4550,10 +5672,10 @@ public class ObjectEntryLocalServiceImpl
 
 	private void _validateTextMaxLength(
 			int defaultMaxLength, String objectEntryValue, long objectFieldId,
-			String objectFieldName)
+			String objectFieldName, List<ValidationError> validationErrors)
 		throws PortalException {
 
-		int maxLength = defaultMaxLength;
+		int maxLength;
 
 		ObjectFieldSetting objectFieldSetting =
 			_objectFieldSettingPersistence.fetchByOFI_N(
@@ -4562,25 +5684,33 @@ public class ObjectEntryLocalServiceImpl
 		if (objectFieldSetting != null) {
 			maxLength = GetterUtil.getInteger(objectFieldSetting.getValue());
 		}
+		else {
+			maxLength = defaultMaxLength;
+		}
 
 		if (objectEntryValue.length() > maxLength) {
-			throw new ObjectEntryValuesException.ExceedsTextMaxLength(
-				maxLength, objectFieldName);
+			_handle(
+				new ObjectEntryValuesException.ExceedsTextMaxLength(
+					maxLength, objectFieldName),
+				validationErrors);
 		}
 	}
 
 	private void _validateTextMaxLength280(
-			ObjectField objectField, String value)
+			ObjectField objectField, List<ValidationError> validationErrors,
+			String value)
 		throws PortalException {
 
 		_validateTextMaxLength(
-			280, value, objectField.getObjectFieldId(), objectField.getName());
+			280, value, objectField.getObjectFieldId(), objectField.getName(),
+			validationErrors);
 	}
 
 	private void _validateUniqueValues(
-			long groupId, ObjectEntry existingObjectEntry,
+			ObjectEntry existingObjectEntry, long groupId,
 			ObjectDefinition objectDefinition, ObjectField objectField,
-			long userId, Object value)
+			long userId, List<ValidationError> validationErrors, Object value,
+			String valueLanguageId)
 		throws PortalException {
 
 		long objectEntriesCount = 0;
@@ -4597,9 +5727,6 @@ public class ObjectEntryLocalServiceImpl
 			Predicate predicate = null;
 
 			if (objectField.isLocalized()) {
-				Map.Entry<String, String> entry =
-					(Map.Entry<String, String>)value;
-
 				DynamicObjectDefinitionLocalizationTable
 					dynamicObjectDefinitionLocalizationTable =
 						(DynamicObjectDefinitionLocalizationTable)table;
@@ -4614,13 +5741,11 @@ public class ObjectEntryLocalServiceImpl
 						dynamicObjectDefinitionLocalizationTable.
 							getLanguageIdColumn(
 							).eq(
-								entry.getKey()
+								valueLanguageId
 							).and(
-								column.eq(entry.getValue())
+								column.eq(value)
 							)
 					));
-
-				value = entry.getValue();
 			}
 			else {
 				predicate =
@@ -4647,116 +5772,131 @@ public class ObjectEntryLocalServiceImpl
 		}
 
 		User user = _userLocalService.getUser(userId);
+		Table<?> finalTable = table;
 
-		throw new ObjectEntryValuesException.UniqueValueConstraintViolation(
-			objectField.getDBColumnName(), (Serializable)value,
-			objectField.getLabel(user.getLocale()), table.getTableName(), null);
+		_handle(
+			new ObjectEntryValuesException.UniqueValueConstraintViolation(
+				objectField.getDBColumnName(), (Serializable)value,
+				objectField.getLabel(user.getLocale()),
+				finalTable.getTableName(), null),
+			validationErrors);
 	}
 
 	private void _validateValues(
-			Map.Entry<String, Serializable> entry,
+			Map<ObjectField, Set<DLFileEntry>> dlFileEntriesMap,
 			ObjectEntry existingObjectEntry, boolean guestUser, long groupId,
-			ObjectDefinition objectDefinition, long objectEntryId,
+			ObjectDefinition objectDefinition, ObjectField objectField,
 			ServiceContext serviceContext, long userId,
-			Map<String, Serializable> values)
+			List<ValidationError> validationErrors, Serializable value,
+			String valueLanguageId)
 		throws PortalException {
 
-		ObjectField objectField = null;
-
-		try {
-			objectField = _objectFieldLocalService.getObjectField(
-				objectDefinition.getObjectDefinitionId(), entry.getKey());
-		}
-		catch (NoSuchObjectFieldException noSuchObjectFieldException) {
-			if (_log.isDebugEnabled()) {
-				_log.debug(noSuchObjectFieldException);
-			}
-
-			return;
-		}
-
-		if (Validator.isNull(values.get(objectField.getName())) &&
+		if (Validator.isNull(value) && !objectField.isLocalized() &&
 			objectField.isRequired() &&
 			(serviceContext.getWorkflowAction() !=
 				WorkflowConstants.ACTION_SAVE_DRAFT)) {
 
-			throw new ObjectEntryValuesException.Required(
-				objectField.getName());
+			_handle(
+				new ObjectEntryValuesException.Required(objectField.getName()),
+				validationErrors);
 		}
 		else if (StringUtil.equals(
 					objectField.getBusinessType(),
 					ObjectFieldConstants.BUSINESS_TYPE_ATTACHMENT)) {
 
 			DLFileEntry dlFileEntry = _dlFileEntryLocalService.fetchDLFileEntry(
-				GetterUtil.getLong(entry.getValue()));
+				GetterUtil.getLong(value));
 
 			if (dlFileEntry != null) {
 				_validateFileExtension(
 					dlFileEntry.getExtension(), objectField.getObjectFieldId(),
-					objectField.getName());
+					objectField.getName(), validationErrors);
 				_validateFileSize(
 					guestUser, dlFileEntry.getSize(),
-					objectField.getObjectFieldId(), objectField.getName());
+					objectField.getObjectFieldId(), objectField.getName(),
+					validationErrors);
 
 				if (existingObjectEntry != null) {
 					Map<String, Serializable> existingValues =
 						existingObjectEntry.getValues();
 
 					if (dlFileEntry.getFileEntryId() == GetterUtil.getLong(
-							existingValues.get(entry.getKey()))) {
+							existingValues.get(objectField.getName()))) {
 
 						return;
 					}
 				}
 
-				_addFileEntry(
-					dlFileEntry, entry, objectDefinition, objectEntryId,
-					objectField.getObjectFieldId(),
-					objectField.getObjectFieldSettings(), serviceContext,
-					userId);
+				Set<DLFileEntry> dlFileEntries =
+					dlFileEntriesMap.computeIfAbsent(
+						objectField, key -> new HashSet<>());
+
+				dlFileEntries.add(dlFileEntry);
 
 				return;
 			}
 
-			if (Validator.isNotNull(entry.getValue())) {
-				throw new ObjectEntryValuesException.InvalidValue(
-					objectField.getName());
+			if (Validator.isNotNull(value)) {
+				_handle(
+					new ObjectEntryValuesException.InvalidValue(
+						objectField.getName()),
+					validationErrors);
 			}
 			else if (objectField.isRequired() &&
 					 (serviceContext.getWorkflowAction() !=
 						 WorkflowConstants.ACTION_SAVE_DRAFT)) {
 
-				throw new ObjectEntryValuesException.Required(
-					objectField.getName());
+				_handle(
+					new ObjectEntryValuesException.Required(
+						objectField.getName()),
+					validationErrors);
 			}
 		}
 		else if (objectField.compareBusinessType(
 					ObjectFieldConstants.BUSINESS_TYPE_BOOLEAN)) {
 
-			if (!GetterUtil.getBoolean(entry.getValue()) &&
-				objectField.isRequired()) {
-
-				throw new ObjectEntryValuesException.Required(
-					objectField.getName());
+			if (!GetterUtil.getBoolean(value) && objectField.isRequired()) {
+				_handle(
+					new ObjectEntryValuesException.Required(
+						objectField.getName()),
+					validationErrors);
 			}
 		}
 		else if (objectField.compareBusinessType(
 					ObjectFieldConstants.BUSINESS_TYPE_ENCRYPTED)) {
 
 			_validateTextMaxLength280(
-				objectField, GetterUtil.getString(entry.getValue()));
+				objectField, validationErrors, GetterUtil.getString(value));
 		}
 		else if (StringUtil.equals(
 					objectField.getBusinessType(),
 					ObjectFieldConstants.BUSINESS_TYPE_LONG_TEXT)) {
 
 			_validateTextMaxLength(
-				65000, GetterUtil.getString(entry.getValue()),
-				objectField.getObjectFieldId(), objectField.getName());
+				65000, GetterUtil.getString(value),
+				objectField.getObjectFieldId(), objectField.getName(),
+				validationErrors);
 		}
 		else if (StringUtil.equals(
 					objectField.getBusinessType(),
 					ObjectFieldConstants.BUSINESS_TYPE_RELATIONSHIP)) {
+
+			if (StringUtil.equals(
+					objectDefinition.getScope(),
+					ObjectDefinitionConstants.SCOPE_DEPOT)) {
+
+				ObjectEntry relatedObjectEntry = fetchObjectEntry(
+					GetterUtil.getLong(value));
+
+				if ((relatedObjectEntry != null) &&
+					(groupId != relatedObjectEntry.getGroupId())) {
+
+					_handle(
+						new ObjectEntryValuesException.InvalidValue(
+							objectField.getName()),
+						validationErrors);
+				}
+			}
 
 			if (!objectDefinition.isAccountEntryRestricted() ||
 				!Objects.equals(
@@ -4772,18 +5912,19 @@ public class ObjectEntryLocalServiceImpl
 					objectField.getDBType(),
 					ObjectFieldConstants.DB_TYPE_INTEGER)) {
 
-			Serializable entryValue = entry.getValue();
-
-			String entryValueString = entryValue.toString();
+			String entryValueString = String.valueOf(value);
 
 			if (!entryValueString.isEmpty()) {
-				int value = GetterUtil.getInteger(entryValue);
+				int entryValueInteger = GetterUtil.getInteger(entryValueString);
 
-				if (!StringUtil.equals(
-						String.valueOf(value), entryValueString)) {
+				if ((entryValueInteger == 0) &&
+					!StringUtil.equals(
+						String.valueOf(entryValueInteger), entryValueString)) {
 
-					throw new ObjectEntryValuesException.ExceedsIntegerSize(
-						9, objectField.getName());
+					_handle(
+						new ObjectEntryValuesException.ExceedsIntegerSize(
+							9, objectField.getName()),
+						validationErrors);
 				}
 			}
 		}
@@ -4791,34 +5932,39 @@ public class ObjectEntryLocalServiceImpl
 					objectField.getDBType(),
 					ObjectFieldConstants.DB_TYPE_LONG)) {
 
-			Serializable entryValue = entry.getValue();
-
-			String entryValueString = entryValue.toString();
+			String entryValueString = String.valueOf(value);
 
 			if (!entryValueString.isEmpty()) {
-				long value = GetterUtil.getLong(entryValue);
+				long entryValueLong = GetterUtil.getLong(entryValueString);
 
-				if (!StringUtil.equals(
-						String.valueOf(value), entryValue.toString())) {
+				if ((entryValueLong == 0) &&
+					!StringUtil.equals(
+						String.valueOf(entryValueLong), entryValueString)) {
 
-					throw new ObjectEntryValuesException.ExceedsLongSize(
-						16, objectField.getName());
+					_handle(
+						new ObjectEntryValuesException.ExceedsLongSize(
+							16, objectField.getName()),
+						validationErrors);
 				}
-				else if (value > ObjectFieldValidationConstants.
+				else if (entryValueLong > ObjectFieldValidationConstants.
 							BUSINESS_TYPE_LONG_VALUE_MAX) {
 
-					throw new ObjectEntryValuesException.ExceedsLongMaxSize(
-						ObjectFieldValidationConstants.
-							BUSINESS_TYPE_LONG_VALUE_MAX,
-						objectField.getName());
+					_handle(
+						new ObjectEntryValuesException.ExceedsLongMaxSize(
+							ObjectFieldValidationConstants.
+								BUSINESS_TYPE_LONG_VALUE_MAX,
+							objectField.getName()),
+						validationErrors);
 				}
-				else if (value < ObjectFieldValidationConstants.
+				else if (entryValueLong < ObjectFieldValidationConstants.
 							BUSINESS_TYPE_LONG_VALUE_MIN) {
 
-					throw new ObjectEntryValuesException.ExceedsLongMinSize(
-						ObjectFieldValidationConstants.
-							BUSINESS_TYPE_LONG_VALUE_MIN,
-						objectField.getName());
+					_handle(
+						new ObjectEntryValuesException.ExceedsLongMinSize(
+							ObjectFieldValidationConstants.
+								BUSINESS_TYPE_LONG_VALUE_MIN,
+							objectField.getName()),
+						validationErrors);
 				}
 			}
 		}
@@ -4826,13 +5972,14 @@ public class ObjectEntryLocalServiceImpl
 					objectField.getDBType(),
 					ObjectFieldConstants.DB_TYPE_STRING)) {
 
-			_validateTextMaxLength280(
-				objectField, GetterUtil.getString(entry.getValue()));
+			_validateTextMaxLength(
+				DynamicObjectDefinitionTableUtil.getMaxLength(
+					objectField.getBusinessType()),
+				GetterUtil.getString(value), objectField.getObjectFieldId(),
+				objectField.getName(), validationErrors);
 		}
 
 		if (objectField.getListTypeDefinitionId() != 0) {
-			Serializable value = entry.getValue();
-
 			if (objectField.compareBusinessType(
 					ObjectFieldConstants.BUSINESS_TYPE_MULTISELECT_PICKLIST)) {
 
@@ -4851,47 +5998,60 @@ public class ObjectEntryLocalServiceImpl
 					(serviceContext.getWorkflowAction() !=
 						WorkflowConstants.ACTION_SAVE_DRAFT)) {
 
-					throw new ObjectEntryValuesException.Required(
-						objectField.getName());
+					_handle(
+						new ObjectEntryValuesException.Required(
+							objectField.getName()),
+						validationErrors);
 				}
 
 				for (String listTypeEntryKey : listTypeEntryKeys) {
-					_validateListTypeEntryKey(listTypeEntryKey, objectField);
+					_validateListTypeEntryKey(
+						listTypeEntryKey, objectField, validationErrors);
 				}
 			}
 			else {
-				_validateListTypeEntryKey(String.valueOf(value), objectField);
+				_validateListTypeEntryKey(
+					String.valueOf(value), objectField, validationErrors);
 
 				if ((existingObjectEntry != null) && objectField.isState()) {
 					_validateObjectStateTransition(
-						entry, objectField.getListTypeDefinitionId(),
-						existingObjectEntry, objectField.getObjectFieldId(),
-						userId);
+						existingObjectEntry,
+						objectField.getListTypeDefinitionId(), objectField,
+						userId, validationErrors, value);
 				}
 			}
 		}
 
-		if (!objectField.hasUniqueValues() || objectField.isLocalized()) {
-			return;
+		if (objectField.hasUniqueValues()) {
+			_validateUniqueValues(
+				existingObjectEntry, groupId, objectDefinition, objectField,
+				userId, validationErrors, value, valueLanguageId);
 		}
-
-		_validateUniqueValues(
-			groupId, existingObjectEntry, objectDefinition, objectField, userId,
-			entry.getValue());
 	}
 
 	private void _validateValues(
+			Map<ObjectField, Set<DLFileEntry>> dlFileEntriesMap,
 			ObjectEntry existingObjectEntry, boolean guestUser, long groupId,
-			ObjectDefinition objectDefinition, long objectEntryId,
-			ServiceContext serviceContext, long userId,
+			ObjectDefinition objectDefinition, ServiceContext serviceContext,
+			long userId, List<ValidationError> validationErrors,
 			Map<String, Serializable> values)
 		throws PortalException {
 
 		List<ObjectField> objectFields =
-			_objectFieldLocalService.getLocalizedObjectFields(
+			_objectFieldLocalService.getObjectFields(
 				objectDefinition.getObjectDefinitionId());
 
 		for (ObjectField objectField : objectFields) {
+			if (!objectField.isLocalized() &&
+				values.containsKey(objectField.getName())) {
+
+				_validateValues(
+					dlFileEntriesMap, existingObjectEntry, guestUser, groupId,
+					objectDefinition, objectField, serviceContext, userId,
+					validationErrors, values.get(objectField.getName()),
+					StringPool.BLANK);
+			}
+
 			Map<String, String> localizedValues =
 				(Map<String, String>)values.get(
 					objectField.getI18nObjectFieldName());
@@ -4901,48 +6061,26 @@ public class ObjectEntryLocalServiceImpl
 			}
 
 			for (Map.Entry<String, String> entry : localizedValues.entrySet()) {
-				if (objectField.compareBusinessType(
-						ObjectFieldConstants.BUSINESS_TYPE_LONG_TEXT)) {
-
-					_validateTextMaxLength(
-						65000, entry.getValue(), objectField.getObjectFieldId(),
-						objectField.getI18nObjectFieldName());
-				}
-				else if (objectField.compareBusinessType(
-							ObjectFieldConstants.BUSINESS_TYPE_TEXT)) {
-
-					_validateTextMaxLength(
-						280, entry.getValue(), objectField.getObjectFieldId(),
-						objectField.getI18nObjectFieldName());
-				}
-
-				if (!objectField.hasUniqueValues()) {
-					continue;
-				}
-
-				_validateUniqueValues(
-					groupId, existingObjectEntry, objectDefinition, objectField,
-					userId, entry);
+				_validateValues(
+					dlFileEntriesMap, existingObjectEntry, guestUser, groupId,
+					objectDefinition, objectField, serviceContext, userId,
+					validationErrors, entry.getValue(), entry.getKey());
 			}
-		}
-
-		for (Map.Entry<String, Serializable> entry : values.entrySet()) {
-			_validateValues(
-				entry, existingObjectEntry, guestUser, groupId,
-				objectDefinition, objectEntryId, serviceContext, userId,
-				values);
 		}
 	}
 
 	private void _validateWorkflowAction(
-			boolean enableObjectEntryDraft, Integer status,
-			Integer workflowAction)
+			boolean enableObjectEntryDraft, ObjectDefinition objectDefinition,
+			Integer status, Integer workflowAction)
 		throws PortalException {
 
-		if ((!enableObjectEntryDraft ||
-			 ((status != null) &&
-			  (status != WorkflowConstants.STATUS_DRAFT))) &&
-			(workflowAction == WorkflowConstants.ACTION_SAVE_DRAFT)) {
+		if (workflowAction != WorkflowConstants.ACTION_SAVE_DRAFT) {
+			return;
+		}
+
+		if (!enableObjectEntryDraft ||
+			((status != null) && (status != WorkflowConstants.STATUS_DRAFT) &&
+			 !objectDefinition.isEnableObjectEntryVersioning())) {
 
 			throw new ObjectEntryStatusException("Draft status is not allowed");
 		}
@@ -4971,9 +6109,6 @@ public class ObjectEntryLocalServiceImpl
 		new CentralizedThreadLocal<>(
 			ObjectEntryLocalServiceImpl.class + "._skipModelListeners",
 			() -> false);
-	private static final Snapshot<TreeFactory> _treeFactorySnapshot =
-		new Snapshot<>(
-			ObjectEntryLocalServiceImpl.class, TreeFactory.class, null, true);
 
 	@Reference
 	private AssetEntryLocalService _assetEntryLocalService;
@@ -4983,6 +6118,12 @@ public class ObjectEntryLocalServiceImpl
 
 	@Reference
 	private AttachmentManager _attachmentManager;
+
+	@Reference
+	private ClassNameLocalService _classNameLocalService;
+
+	@Reference
+	private CompanyLocalService _companyLocalService;
 
 	@Reference
 	private CurrentConnection _currentConnection;
@@ -5008,6 +6149,9 @@ public class ObjectEntryLocalServiceImpl
 	private FilterFactory<Predicate> _filterFactory;
 
 	@Reference
+	private FriendlyURLEntryLocalService _friendlyURLEntryLocalService;
+
+	@Reference
 	private GroupLocalService _groupLocalService;
 
 	@Reference
@@ -5029,6 +6173,12 @@ public class ObjectEntryLocalServiceImpl
 
 	@Reference
 	private ObjectDefinitionPersistence _objectDefinitionPersistence;
+
+	@Reference
+	private ObjectEntryFolderPersistence _objectEntryFolderPersistence;
+
+	@Reference
+	private ObjectEntryVersionLocalService _objectEntryVersionLocalService;
 
 	@Reference
 	private ObjectFieldBusinessTypeRegistry _objectFieldBusinessTypeRegistry;
@@ -5065,7 +6215,25 @@ public class ObjectEntryLocalServiceImpl
 	private ObjectStateLocalService _objectStateLocalService;
 
 	@Reference
+	private ObjectValidationRuleLocalService _objectValidationRuleLocalService;
+
+	@Reference
+	private PermissionService _permissionService;
+
+	@Reference
+	private Portal _portal;
+
+	@Reference
+	private ResourceActionLocalService _resourceActionLocalService;
+
+	@Reference
+	private ResourceActions _resourceActions;
+
+	@Reference
 	private ResourceLocalService _resourceLocalService;
+
+	@Reference
+	private ResourcePermissionLocalService _resourcePermissionLocalService;
 
 	@Reference
 	private RoleLocalService _roleLocalService;
@@ -5078,6 +6246,9 @@ public class ObjectEntryLocalServiceImpl
 
 	private ServiceTrackerList<ObjectEntryValuesContributor>
 		_serviceTrackerList;
+
+	@Reference
+	private SharingEntryLocalService _sharingEntryLocalService;
 
 	@Reference
 	private Sorts _sorts;

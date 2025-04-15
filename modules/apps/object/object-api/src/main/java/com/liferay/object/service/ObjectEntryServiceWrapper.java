@@ -27,25 +27,28 @@ public class ObjectEntryServiceWrapper
 
 	@Override
 	public com.liferay.object.model.ObjectEntry addObjectEntry(
-			long groupId, long objectDefinitionId,
+			long groupId, long objectDefinitionId, long objectEntryFolderId,
+			String defaultLanguageId,
 			java.util.Map<String, java.io.Serializable> values,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _objectEntryService.addObjectEntry(
-			groupId, objectDefinitionId, values, serviceContext);
+			groupId, objectDefinitionId, objectEntryFolderId, defaultLanguageId,
+			values, serviceContext);
 	}
 
 	@Override
 	public com.liferay.object.model.ObjectEntry addOrUpdateObjectEntry(
 			String externalReferenceCode, long groupId, long objectDefinitionId,
+			long objectEntryFolderId,
 			java.util.Map<String, java.io.Serializable> values,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _objectEntryService.addOrUpdateObjectEntry(
-			externalReferenceCode, groupId, objectDefinitionId, values,
-			serviceContext);
+			externalReferenceCode, groupId, objectDefinitionId,
+			objectEntryFolderId, values, serviceContext);
 	}
 
 	@Override
@@ -135,6 +138,15 @@ public class ObjectEntryServiceWrapper
 
 	@Override
 	public com.liferay.object.model.ObjectEntry getObjectEntry(
+			String externalReferenceCode, long objectDefinitionId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _objectEntryService.getObjectEntry(
+			externalReferenceCode, objectDefinitionId);
+	}
+
+	@Override
+	public com.liferay.object.model.ObjectEntry getObjectEntry(
 			String externalReferenceCode, long companyId, long groupId)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
@@ -220,6 +232,18 @@ public class ObjectEntryServiceWrapper
 
 		return _objectEntryService.updateObjectEntry(
 			objectEntryId, values, serviceContext);
+	}
+
+	@Override
+	public void validate(
+			long groupId, com.liferay.object.model.ObjectEntry objectEntry,
+			java.util.List<String> objectValidationRuleExternalReferenceCodes,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		_objectEntryService.validate(
+			groupId, objectEntry, objectValidationRuleExternalReferenceCodes,
+			serviceContext);
 	}
 
 	@Override

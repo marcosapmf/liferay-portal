@@ -6,6 +6,8 @@
 package com.liferay.layout.taglib.internal.servlet.taglib;
 
 import com.liferay.layout.taglib.internal.util.SegmentsExperienceUtil;
+import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.content.security.policy.ContentSecurityPolicyNonceProviderUtil;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.servlet.taglib.BaseDynamicInclude;
@@ -56,8 +58,8 @@ public class LayoutStructureCommonStylesCSSTopHeadDynamicInclude
 
 		Layout layout = themeDisplay.getLayout();
 
-		if (!layout.isTypeAssetDisplay() && !layout.isTypeCollection() &&
-			!layout.isTypeContent() && !layout.isTypeUtility() &&
+		if (!layout.isTypeAssetDisplay() && !layout.isTypeContent() &&
+			!layout.isTypeUtility() &&
 			((layout.getMasterLayoutPlid() == 0) || !layout.isTypePortlet())) {
 
 			return;
@@ -86,7 +88,11 @@ public class LayoutStructureCommonStylesCSSTopHeadDynamicInclude
 			_addModifiedDate(printWriter, masterLayout);
 		}
 
-		printWriter.print("\" rel=\"stylesheet\" type=\"text/css\">");
+		printWriter.print(StringPool.QUOTE);
+		printWriter.print(
+			ContentSecurityPolicyNonceProviderUtil.getNonceAttribute(
+				httpServletRequest));
+		printWriter.print(" rel=\"stylesheet\" type=\"text/css\">");
 	}
 
 	@Override

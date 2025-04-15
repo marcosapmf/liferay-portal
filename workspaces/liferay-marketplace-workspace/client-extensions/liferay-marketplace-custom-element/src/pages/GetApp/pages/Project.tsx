@@ -7,20 +7,19 @@ import ClayButton from '@clayui/button';
 import ClayIcon from '@clayui/icon';
 import ClayLoadingIndicator from '@clayui/loading-indicator';
 import {useContext, useMemo} from 'react';
-
-import './index.scss';
-
 import {useNavigate, useOutletContext} from 'react-router-dom';
 
 import RadioCardList from '../../../components/RadioCardList/RadioCardList';
 import {MarketplaceContext} from '../../../context/MarketplaceContext';
 import i18n from '../../../i18n';
 import {Liferay} from '../../../liferay/liferay';
-import {ConsoleUserProject} from '../../../services/oauth/MarketplaceSpringBootOAuth2';
+import {ConsoleUserProject} from '../../../services/oauth/types';
 import {useGetAppContext} from '../GetAppContextProvider';
 import {GetAppOutletContext} from '../GetAppOutlet';
 import Container from '../containers/Container';
 import {convertMegabyteToGigabyte} from '../hooks/useGetResourceInfo';
+
+import './index.scss';
 
 const getCardContent = (project: ConsoleUserProject) => {
 	const cpu =
@@ -185,7 +184,7 @@ const ProjectSelection = () => {
 				{`${i18n.translate('not-seeing-a-specific-project')} `}
 				<a
 					className="font-weight-bold project-selection-page-link"
-					href={properties.contactSupportUrl}
+					href={properties.contactSupportURL}
 					target="_blank"
 				>
 					{i18n.translate('contact-support')}

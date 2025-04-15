@@ -32,6 +32,7 @@ import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.test.util.ConfigurationTestUtil;
 import com.liferay.portal.kernel.cache.CacheRegistryUtil;
+import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.model.Group;
@@ -58,12 +59,14 @@ import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
+import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
+import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.MapUtil;
@@ -171,8 +174,12 @@ public class JournalTransformerTest {
 
 	@Test
 	public void testCreateTemplateNode() {
+		_testCreateTemplateNodeDocumentLibraryDDMFormField();
+		_testCreateTemplateNodeSelectTypeDDMFormFieldWithNoOptions();
 		_testCreateTemplateNodeSelectTypeDDMFormFieldWithOptions();
 		_testCreateTemplateNodeSelectTypeDDMFormFieldWithoutOptions();
+		_testCreateTemplateNodeTextDDMFormFieldWithHTML();
+		_testCreateTemplateNodeTextDDMFormFieldWithPlainText();
 	}
 
 	@Test
@@ -332,7 +339,7 @@ public class JournalTransformerTest {
 				null, false, "${name.getData()}", null, Constants.VIEW));
 
 		Assert.assertEquals(
-			"Joao da Silva",
+			"João da Silva",
 			_transformMethod.invoke(
 				_journalTransformer, _journalArticle, null, _journalHelper,
 				LocaleUtil.toLanguageId(LocaleUtil.BRAZIL),
@@ -673,12 +680,9 @@ public class JournalTransformerTest {
 			break;
 		}
 
-		Assert.assertNotNull(templateVariableDefinition);
-
 		Assert.assertEquals(
 			templateVariableDefinition.getLabel(), label,
 			templateVariableDefinition.getLabel());
-
 		Assert.assertEquals(
 			expectedValue,
 			_transformMethod.invoke(
@@ -693,6 +697,78 @@ public class JournalTransformerTest {
 	private String _read(String fileName) throws Exception {
 		return new String(
 			FileUtil.getBytes(getClass(), "dependencies/" + fileName));
+	}
+
+	private void _testCreateTemplateNodeDocumentLibraryDDMFormField() {
+		DDMFormField ddmFormField = new DDMFormField(
+			"name", DDMFormFieldTypeConstants.DOCUMENT_LIBRARY);
+
+		ddmFormField.setDataType("document_library");
+
+		Document document = SAXReaderUtil.createDocument();
+
+		Element rootElement = document.addElement("root");
+
+		Element dynamicContentElement = rootElement.addElement(
+			"dynamic-content");
+
+		JSONObject jsonObject = JSONUtil.put(
+			"fileEntryId", RandomTestUtil.randomLong()
+		).put(
+			"groupId", RandomTestUtil.randomLong()
+		);
+
+		dynamicContentElement.setText(jsonObject.toString());
+
+		TemplateNode templateNode = ReflectionTestUtil.invoke(
+			_journalTransformer, "_createTemplateNode",
+			new Class<?>[] {
+				DDMFormField.class, Element.class, Locale.class,
+				ThemeDisplay.class
+			},
+			ddmFormField, rootElement, LocaleUtil.getDefault(),
+			new ThemeDisplay());
+
+		Assert.assertEquals(
+			jsonObject.getString("fileEntryId"),
+			templateNode.getAttribute("fileEntryId"));
+		Assert.assertEquals(
+			jsonObject.getString("groupId"),
+			templateNode.getAttribute("groupId"));
+	}
+
+	private void _testCreateTemplateNodeSelectTypeDDMFormFieldWithNoOptions() {
+		DDMFormField ddmFormField = new DDMFormField(
+			"name", DDMFormFieldTypeConstants.SELECT);
+
+		ddmFormField.setDataType("string");
+		ddmFormField.setMultiple(true);
+
+		Document document = SAXReaderUtil.createDocument();
+
+		Element rootElement = document.addElement("root");
+
+		rootElement.addElement("dynamic-content");
+
+		TemplateNode templateNode = ReflectionTestUtil.invoke(
+			_journalTransformer, "_createTemplateNode",
+			new Class<?>[] {
+				DDMFormField.class, Element.class, Locale.class,
+				ThemeDisplay.class
+			},
+			ddmFormField, rootElement, LocaleUtil.getDefault(),
+			new ThemeDisplay());
+
+		Assert.assertTrue(MapUtil.isEmpty(templateNode.getAttributes()));
+		Assert.assertEquals(StringPool.BLANK, templateNode.getData());
+		Assert.assertEquals("name", templateNode.getName());
+		Assert.assertEquals("select", templateNode.getType());
+
+		List<String> options = templateNode.getOptions();
+
+		Assert.assertEquals(options.toString(), 0, options.size());
+
+		Assert.assertTrue(MapUtil.isEmpty(templateNode.getOptionsMap()));
 	}
 
 	private void _testCreateTemplateNodeSelectTypeDDMFormFieldWithOptions() {
@@ -772,6 +848,42 @@ public class JournalTransformerTest {
 		Assert.assertEquals("select", templateNode.getType());
 		Assert.assertTrue(ListUtil.isEmpty(templateNode.getOptions()));
 		Assert.assertTrue(MapUtil.isEmpty(templateNode.getOptionsMap()));
+	}
+
+	private void _testCreateTemplateNodeTextDDMFormField(String text) {
+		DDMFormField ddmFormField = new DDMFormField(
+			"text", DDMFormFieldTypeConstants.TEXT);
+
+		ddmFormField.setDataType("text");
+
+		Document document = SAXReaderUtil.createDocument();
+
+		Element rootElement = document.addElement("root");
+
+		Element dynamicContentElement = rootElement.addElement(
+			"dynamic-content");
+
+		dynamicContentElement.setText(text);
+
+		TemplateNode templateNode = ReflectionTestUtil.invoke(
+			_journalTransformer, "_createTemplateNode",
+			new Class<?>[] {
+				DDMFormField.class, Element.class, Locale.class,
+				ThemeDisplay.class
+			},
+			ddmFormField, rootElement, LocaleUtil.getDefault(),
+			new ThemeDisplay());
+
+		Assert.assertEquals(HtmlUtil.escape(text), templateNode.getData());
+	}
+
+	private void _testCreateTemplateNodeTextDDMFormFieldWithHTML() {
+		_testCreateTemplateNodeTextDDMFormField(
+			"<img src=\"x\" onerror=alert(document.cookie)>");
+	}
+
+	private void _testCreateTemplateNodeTextDDMFormFieldWithPlainText() {
+		_testCreateTemplateNodeTextDDMFormField(RandomTestUtil.randomString());
 	}
 
 	private static Object _journalTransformer;

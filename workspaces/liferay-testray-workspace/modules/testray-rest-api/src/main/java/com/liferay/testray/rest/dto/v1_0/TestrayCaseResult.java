@@ -85,6 +85,47 @@ public class TestrayCaseResult implements Serializable {
 	private Supplier<String> _commentSupplier;
 
 	@Schema
+	public Long getDuration() {
+		if (_durationSupplier != null) {
+			duration = _durationSupplier.get();
+
+			_durationSupplier = null;
+		}
+
+		return duration;
+	}
+
+	public void setDuration(Long duration) {
+		this.duration = duration;
+
+		_durationSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setDuration(
+		UnsafeSupplier<Long, Exception> durationUnsafeSupplier) {
+
+		_durationSupplier = () -> {
+			try {
+				return durationUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected Long duration;
+
+	@JsonIgnore
+	private Supplier<Long> _durationSupplier;
+
+	@Schema
 	public String getError() {
 		if (_errorSupplier != null) {
 			error = _errorSupplier.get();
@@ -990,6 +1031,18 @@ public class TestrayCaseResult implements Serializable {
 			sb.append("\"");
 		}
 
+		Long duration = getDuration();
+
+		if (duration != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"duration\": ");
+
+			sb.append(duration);
+		}
+
 		String error = getError();
 
 		if (error != null) {
@@ -1350,7 +1403,10 @@ public class TestrayCaseResult implements Serializable {
 				Object[] valueArray = (Object[])value;
 
 				for (int i = 0; i < valueArray.length; i++) {
-					if (valueArray[i] instanceof String) {
+					if (valueArray[i] instanceof Map) {
+						sb.append(_toJSON((Map<String, ?>)valueArray[i]));
+					}
+					else if (valueArray[i] instanceof String) {
 						sb.append("\"");
 						sb.append(valueArray[i]);
 						sb.append("\"");

@@ -89,6 +89,10 @@ definition {
 	@description = "Add a web content and associate a page scope in Web Content Display widget."
 	@priority = 3
 	test AddWebContentUnderPageScope {
+		task ("Enable Scope Configuration") {
+			Portlet.enableScopeConfiguration();
+		}
+
 		task ("Add two widget pages") {
 			for (var i : list "1,2") {
 				JSONLayout.addPublicLayout(
@@ -185,7 +189,7 @@ definition {
 
 			CKEditor.addSourceContent(content = '''<p><span><a href="${portalURL}/web/test-site-name/test-page-name/-/com_liferay_site_navigation_language_web_portlet_SiteNavigationLanguagePortlet">text</a></span></p>''');
 
-			PortletEntry.publish();
+			WebContent.publishWithPermissions();
 		}
 
 		task ("View web content title is shown") {
@@ -216,7 +220,6 @@ definition {
 	@priority = 5
 	test AddWithStructure {
 		property portal.acceptance = "true";
-		property testray.component.names = "Training";
 
 		task ("Add a web content structure with a single line Text field and a multiple lines Text field") {
 			WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
@@ -328,7 +331,7 @@ Welcome to Liferay Community Edition Portal 7.4.0 CE GA1''';
 				structureName = "Basic Web Content",
 				templateName = "Basic Web Content");
 
-			PortletEntry.publish();
+			WebContent.publishExistingWCArticleWithPermissions();
 		}
 
 		task ("View web content is shown in Web Content Display") {
@@ -350,20 +353,6 @@ Welcome to Liferay Community Edition Portal 7.4.0 CE GA1''';
 			AssertVisible(
 				key_portletName = "Web Content Display",
 				locator1 = "Portlet#TITLE");
-
-			for (var borderType : list "top,right,bottom,left") {
-				AssertCssValue(
-					locator1 = "Portlet#PORTLET_CONTENT",
-					locator2 = "border-${borderType}-width",
-					value1 = "1px");
-			}
-
-			for (var borderType : list "top,right,bottom,left") {
-				AssertCssValue(
-					locator1 = "Portlet#PORTLET_CONTENT",
-					locator2 = "border-${borderType}-color",
-					value1 = "rgba(0, 0, 0, 0)");
-			}
 		}
 
 		task ("Define the border width and border color of WCD") {
@@ -444,7 +433,7 @@ Welcome to Liferay Community Edition Portal 7.4.0 CE GA1''';
 
 			WebContent.addWithStructureCP(webContentTitle = "Web Content Title");
 
-			PortletEntry.publish();
+			WebContent.publishWithPermissions();
 		}
 
 		task ("Add a widget page") {
@@ -489,7 +478,6 @@ Welcome to Liferay Community Edition Portal 7.4.0 CE GA1''';
 		property portal.acceptance = "true";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
-		property testray.component.names = "Training,Web Content Administration";
 
 		task ("Enable the FFMPEG Audio Converter in System Settings") {
 			DMNavigator.openToConfigInSystemSettings(portlet = "FFMPEG Audio Converter");
@@ -536,7 +524,13 @@ Welcome to Liferay Community Edition Portal 7.4.0 CE GA1''';
 				dmDocumentURL = ${dmDocumentURL},
 				navTab = "URL");
 
-			PortletEntry.publish();
+			WebContent.publishExistingWCArticleWithPermissions();
+
+			LexiconEntry.changeDisplayStyle(displayStyle = "list");
+
+			AssertElementPresent(
+				key_webContentTitle = "Web Content Title",
+				locator1 = "WC#ENTRY_LIST_TITLE");
 		}
 
 		task ("Select the web content article in Web Content Display") {
@@ -560,7 +554,6 @@ Welcome to Liferay Community Edition Portal 7.4.0 CE GA1''';
 	@priority = 5
 	test DisplayWebContentImage {
 		property portal.acceptance = "true";
-		property testray.component.names = "Training,Web Content Administration";
 
 		task ("Add a web content") {
 			JSONWebcontent.addWebContent(
@@ -580,7 +573,13 @@ Welcome to Liferay Community Edition Portal 7.4.0 CE GA1''';
 				navTab = "Documents and Media",
 				uploadFileName = "Document_3.png");
 
-			PortletEntry.publish();
+			WebContent.publishExistingWCArticleWithPermissions();
+
+			LexiconEntry.changeDisplayStyle(displayStyle = "list");
+
+			AssertElementPresent(
+				key_webContentTitle = "Web Content Title",
+				locator1 = "WC#ENTRY_LIST_TITLE");
 		}
 
 		task ("Select the web content article in Web Content Display") {
@@ -605,7 +604,6 @@ Welcome to Liferay Community Edition Portal 7.4.0 CE GA1''';
 	test DisplayWebContentVideo {
 		property dummy.socket.proxy.disabled = "true";
 		property portal.upstream = "quarantine";
-		property testray.component.names = "Web Content Administration";
 
 		task ("Add an external video shortcut") {
 			DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "test-site-name");
@@ -631,7 +629,7 @@ Welcome to Liferay Community Edition Portal 7.4.0 CE GA1''';
 				navTab = "Documents and Media",
 				videoShortcutTitle = "Liferay Digital Experience Platform");
 
-			PortletEntry.publish();
+			WebContent.publishExistingWCArticleWithPermissions();
 		}
 
 		task ("Select the web content article in Web Content Display") {
@@ -651,49 +649,59 @@ Welcome to Liferay Community Edition Portal 7.4.0 CE GA1''';
 		}
 	}
 
-	@description = "This is a use case for LPS-130033. Display web content with Geolocation field in Web Content Display."
-	@priority = 4
-	test DisplayWebContentWithGeolocationField {
-		task ("Add a web content structure with a Geolocation field") {
-			WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
+	@description = "This is a test for LPS-97189. A user can edit displayed content in a Web Content Display widget through Contents panel."
+	@priority = 5
+	test EditDisplayedWebContentInWebContentDisplay {
+		property portal.acceptance = "true";
 
-			NavItem.gotoStructures();
-
-			WebContentStructures.addCP(structureName = "WC Structure Name");
-
-			DataEngine.addField(
-				fieldFieldLabel = "Geolocation",
-				fieldName = "Geolocation");
-
-			WebContentStructures.saveCP();
+		task ("Add a content page") {
+			JSONLayout.addPublicLayout(
+				groupName = "Test Site Name",
+				layoutName = "Test Content Page Name",
+				type = "content");
 		}
 
-		task ("Add a web content based on new structure") {
-			WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
+		task ("Add a web content based on Basic Web Content") {
+			JSONWebcontent.addWebContent(
+				content = "Web Content Content",
+				groupName = "Test Site Name",
+				title = "WC WebContent Title");
+		}
 
-			WebContentNavigator.gotoAddWithStructureCP(structureName = "WC Structure Name");
+		task ("Add a Web Content Display to page") {
+			ContentPagesNavigator.openEditContentPage(
+				pageName = "Test Content Page Name",
+				siteName = "Test Site Name");
 
-			WebContent.addWithStructureCP(webContentTitle = "Web Content Title");
-
-			PortletEntry.publish();
+			PageEditor.addWidget(portletName = "Web Content Display");
 		}
 
 		task ("Select the web content in Web Content Display") {
-			Navigator.gotoSitePage(
-				pageName = "Test Page Name",
-				siteName = "Test Site Name");
-
-			WebContentDisplayPortlet.selectWebContent(webContentTitle = "Web Content Title");
-
-			IFrame.closeFrame();
+			WebContentDisplayPortlet.selectWebContent(webContentTitle = "WC WebContent Title");
 		}
 
-		task ("View the web content is shown in Web Content Display") {
-			Portlet.viewTitle(portletName = "Web Content Title");
+		task ("Edit the displayed web content via Contents panel") {
+			ContentPagesNavigator.openEditContentPage(
+				pageName = "Test Content Page Name",
+				siteName = "Test Site Name");
 
-			AssertVisible(
-				key_content = "//div[contains(@id,'Geolocation')]",
-				locator1 = "WCD#WEB_CONTENT_CONTENT_ANY");
+			WebContent.editViaContentPanel(
+				webContentContentEdit = "WC WebContent Content Edit",
+				webContentTitle = "WC WebContent Title",
+				webContentTitleEdit = "WC WebContent Title Edit");
+		}
+
+		task ("View the edited web content in Web Content Display") {
+			AssertTextEquals(
+				index = 1,
+				locator1 = "WCD#WEB_CONTENT_CONTENT",
+				value1 = "WC WebContent Content Edit");
+
+			PageEditor.publish();
+		}
+
+		task ("View the edited web content in view mode") {
+			WebContentDisplayPortlet.viewContent(webContentContent = "WC WebContent Content Edit");
 		}
 	}
 
@@ -870,7 +878,6 @@ Welcome to Liferay Community Edition Portal 7.4.0 CE GA1''';
 	@priority = 5
 	test SelectWebContent {
 		property portal.acceptance = "true";
-		property testray.component.names = "Web Content Display,Training";
 
 		task ("Add a web content") {
 			JSONWebcontent.addWebContent(
@@ -899,6 +906,10 @@ Welcome to Liferay Community Edition Portal 7.4.0 CE GA1''';
 	@description = "User can select a web content that belongs to Global site in Web Content Display widget."
 	@priority = 3
 	test SelectWebContentFromGlobalScope {
+		task ("Enable Scope Configuration") {
+			Portlet.enableScopeConfiguration();
+		}
+
 		task ("Add a web content in Global site") {
 			JSONWebcontent.addWebContent(
 				content = "Web Content Content",
@@ -1101,7 +1112,7 @@ ${company.getKeyObj()}
 
 			WebContent.addWithStructureCP(webContentTitle = "Web Content Title");
 
-			PortletEntry.publish();
+			WebContent.publishWithPermissions();
 		}
 
 		task ("Select the web content in Web Content Display") {
@@ -1168,7 +1179,7 @@ ${runtimeInstance}
 
 			WebContent.addWithStructureCP(webContentTitle = "Web Content Title");
 
-			PortletEntry.publish();
+			WebContent.publishWithPermissions();
 		}
 
 		task ("Select the web content in Web Content Display") {
@@ -1275,13 +1286,15 @@ ${runtimeInstance}
 
 			WebContentNavigator.gotoEditCP(webContentTitle = "Web Content Title 1");
 
-			PortletEntry.changeLocale(locale = "es-ES");
+			PortletEntry.changeLocale(
+				locale = "es-ES",
+				translated = "true");
 
 			WebContent.addCP(
 				webContentContent = "Web Contenido Contenido 1",
 				webContentTitle = "Web Contenido Título 1");
 
-			PortletEntry.publish();
+			WebContent.publishExistingWCArticleWithPermissions();
 		}
 
 		task ("View web content title is shown") {
@@ -1294,6 +1307,7 @@ ${runtimeInstance}
 			WebContent.addExistingRelatedAssetCP(
 				assetTitle = "Web Content Title 2",
 				assetType = "Basic Web Content",
+				edit = "true",
 				siteName = "Test Site Name");
 		}
 
@@ -1326,8 +1340,6 @@ ${runtimeInstance}
 	@description = "View content is not shown in Web Content Display for guest without permission."
 	@priority = 4
 	test ViewArticleWithGuestViewPermission {
-		property testray.component.names = "Permissions";
-
 		task ("Add a web content") {
 			JSONWebcontent.addWebContent(
 				content = "Web Content Content",
@@ -1631,7 +1643,7 @@ ${httpUtil.URLtoString(request.getAttribute("CTX").getResource(".").toURI().crea
 
 			WebContent.addWithStructureCP(webContentTitle = "Web Content Title");
 
-			PortletEntry.publish();
+			WebContent.publishWithPermissions();
 		}
 
 		task ("Select the web content in Web Content Display") {
@@ -1652,8 +1664,6 @@ ${httpUtil.URLtoString(request.getAttribute("CTX").getResource(".").toURI().crea
 	@description = "View pagination in related assets within a web content."
 	@priority = 3
 	test ViewRelatedAssetsAfterChangePagination {
-		property testray.component.names = "Related Assets,Web Content Administration";
-
 		task ("Add six web contents") {
 			for (var i : list "1,2,3,4,5,6") {
 				JSONWebcontent.addWebContent(
@@ -1690,6 +1700,7 @@ ${httpUtil.URLtoString(request.getAttribute("CTX").getResource(".").toURI().crea
 			WebContent.addExistingRelatedAssetCP(
 				assetTitle = "Web Content Title 5",
 				assetType = "Basic Web Content",
+				edit = "true",
 				siteName = "Test Site Name");
 		}
 

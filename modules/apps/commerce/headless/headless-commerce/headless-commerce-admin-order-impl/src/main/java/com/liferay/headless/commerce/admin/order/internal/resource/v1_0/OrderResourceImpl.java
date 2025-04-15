@@ -12,7 +12,6 @@ import com.liferay.commerce.constants.CommerceOrderConstants;
 import com.liferay.commerce.constants.CommerceOrderPaymentConstants;
 import com.liferay.commerce.context.CommerceContextFactory;
 import com.liferay.commerce.currency.model.CommerceCurrency;
-import com.liferay.commerce.currency.service.CommerceCurrencyService;
 import com.liferay.commerce.exception.NoSuchOrderException;
 import com.liferay.commerce.model.CommerceAddress;
 import com.liferay.commerce.model.CommerceOrder;
@@ -42,16 +41,16 @@ import com.liferay.headless.commerce.admin.order.internal.util.v1_0.BillingAddre
 import com.liferay.headless.commerce.admin.order.internal.util.v1_0.OrderItemUtil;
 import com.liferay.headless.commerce.admin.order.internal.util.v1_0.ShippingAddressUtil;
 import com.liferay.headless.commerce.admin.order.resource.v1_0.OrderResource;
+import com.liferay.headless.commerce.core.util.ActionUtil;
+import com.liferay.headless.commerce.core.util.CommerceCurrencyUtil;
 import com.liferay.headless.commerce.core.util.DateConfig;
 import com.liferay.headless.commerce.core.util.ExpandoUtil;
 import com.liferay.headless.commerce.core.util.ServiceContextHelper;
 import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.search.Field;
-import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
@@ -74,21 +73,16 @@ import com.liferay.portal.vulcan.util.SearchUtil;
 
 import java.io.Serializable;
 
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
-
 import java.math.BigDecimal;
 
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-import javax.ws.rs.HttpMethod;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
@@ -122,7 +116,7 @@ public class OrderResourceImpl extends BaseOrderResourceImpl {
 		throws Exception {
 
 		CommerceOrder commerceOrder =
-			_commerceOrderService.fetchByExternalReferenceCode(
+			_commerceOrderService.fetchCommerceOrderByExternalReferenceCode(
 				externalReferenceCode, contextCompany.getCompanyId());
 
 		if (commerceOrder == null) {
@@ -160,7 +154,7 @@ public class OrderResourceImpl extends BaseOrderResourceImpl {
 		throws Exception {
 
 		CommerceOrder commerceOrder =
-			_commerceOrderService.fetchByExternalReferenceCode(
+			_commerceOrderService.fetchCommerceOrderByExternalReferenceCode(
 				externalReferenceCode, contextCompany.getCompanyId());
 
 		if (commerceOrder == null) {
@@ -214,7 +208,7 @@ public class OrderResourceImpl extends BaseOrderResourceImpl {
 		throws Exception {
 
 		CommerceOrder commerceOrder =
-			_commerceOrderService.fetchByExternalReferenceCode(
+			_commerceOrderService.fetchCommerceOrderByExternalReferenceCode(
 				externalReferenceCode, contextCompany.getCompanyId());
 
 		if (commerceOrder == null) {
@@ -234,7 +228,23 @@ public class OrderResourceImpl extends BaseOrderResourceImpl {
 
 	@Override
 	public Order postOrder(Order order) throws Exception {
-		CommerceOrder commerceOrder = _addOrUpdateOrder(order);
+		CommerceOrder commerceOrder = _addOrUpdateOrder(
+			order.getExternalReferenceCode(), order);
+
+		return _toOrder(
+			commerceOrder.getCommerceOrderId(),
+			contextAcceptLanguage.getPreferredLocale(),
+			contextAcceptLanguage.isAcceptAllLanguages(), contextUser,
+			contextUriInfo, _getActions(commerceOrder));
+	}
+
+	@Override
+	public Order putOrderByExternalReferenceCode(
+			String externalReferenceCode, Order order)
+		throws Exception {
+
+		CommerceOrder commerceOrder = _addOrUpdateOrder(
+			externalReferenceCode, order);
 
 		return _toOrder(
 			commerceOrder.getCommerceOrderId(),
@@ -246,7 +256,7 @@ public class OrderResourceImpl extends BaseOrderResourceImpl {
 	private Map<String, String> _addAction(
 			String actionId, long commerceOrderId, UriInfo uriInfo,
 			String methodName, Class<?> clazz)
-		throws NoSuchMethodException, PortalException {
+		throws Exception {
 
 		if (!_commerceOrderModelResourcePermission.contains(
 				PermissionThreadLocal.getPermissionChecker(), commerceOrderId,
@@ -261,17 +271,22 @@ public class OrderResourceImpl extends BaseOrderResourceImpl {
 				UriBuilder uriBuilder = uriInfo.getBaseUriBuilder();
 
 				return uriBuilder.path(
-					_getVersion(uriInfo)
+					ActionUtil.getVersion(uriInfo)
 				).path(
 					clazz.getSuperclass(), methodName
 				).toTemplate();
 			}
 		).put(
-			"method", _getHttpMethodName(clazz, _getMethod(clazz, methodName))
+			"method",
+			ActionUtil.getHttpMethodName(
+				clazz, ActionUtil.getMethod(clazz, methodName))
 		).build();
 	}
 
-	private CommerceOrder _addOrUpdateOrder(Order order) throws Exception {
+	private CommerceOrder _addOrUpdateOrder(
+			String externalReferenceCode, Order order)
+		throws Exception {
+
 		CommerceChannel commerceChannel =
 			_commerceChannelLocalService.getCommerceChannel(
 				order.getChannelId());
@@ -280,9 +295,10 @@ public class OrderResourceImpl extends BaseOrderResourceImpl {
 
 		if (billingAddressId == 0) {
 			CommerceAddress commerceAddress =
-				_commerceAddressService.fetchByExternalReferenceCode(
-					order.getBillingAddressExternalReferenceCode(),
-					contextCompany.getCompanyId());
+				_commerceAddressService.
+					fetchCommerceAddressByExternalReferenceCode(
+						order.getBillingAddressExternalReferenceCode(),
+						contextCompany.getCompanyId());
 
 			if (commerceAddress != null) {
 				billingAddressId = commerceAddress.getCommerceAddressId();
@@ -301,8 +317,8 @@ public class OrderResourceImpl extends BaseOrderResourceImpl {
 
 			accountEntry =
 				_accountEntryService.fetchAccountEntryByExternalReferenceCode(
-					commerceChannel.getCompanyId(),
-					order.getAccountExternalReferenceCode());
+					order.getAccountExternalReferenceCode(),
+					commerceChannel.getCompanyId());
 		}
 
 		if (accountEntry == null) {
@@ -310,8 +326,10 @@ public class OrderResourceImpl extends BaseOrderResourceImpl {
 		}
 
 		CommerceCurrency commerceCurrency =
-			_commerceCurrencyService.getCommerceCurrency(
-				commerceChannel.getCompanyId(), order.getCurrencyCode());
+			CommerceCurrencyUtil.getCommerceCurrency(
+				commerceChannel.getCompanyId(), order.getCurrencyCode(),
+				order.getCurrencyExternalReferenceCode(),
+				GetterUtil.getLong(order.getCurrencyId()));
 
 		long commerceShippingMethodId = 0;
 
@@ -329,9 +347,10 @@ public class OrderResourceImpl extends BaseOrderResourceImpl {
 
 		if (shippingAddressId == 0) {
 			CommerceAddress commerceAddress =
-				_commerceAddressService.fetchByExternalReferenceCode(
-					order.getShippingAddressExternalReferenceCode(),
-					contextCompany.getCompanyId());
+				_commerceAddressService.
+					fetchCommerceAddressByExternalReferenceCode(
+						order.getShippingAddressExternalReferenceCode(),
+						contextCompany.getCompanyId());
 
 			if (commerceAddress != null) {
 				shippingAddressId = commerceAddress.getCommerceAddressId();
@@ -343,12 +362,12 @@ public class OrderResourceImpl extends BaseOrderResourceImpl {
 
 		CommerceOrder commerceOrder =
 			_commerceOrderService.addOrUpdateCommerceOrder(
-				order.getExternalReferenceCode(), commerceChannel.getGroupId(),
+				externalReferenceCode, commerceChannel.getGroupId(),
 				billingAddressId, accountEntry.getAccountEntryId(),
-				commerceCurrency.getCommerceCurrencyId(),
-				_getCommerceOrderTypeId(order), commerceShippingMethodId,
-				shippingAddressId, order.getAdvanceStatus(),
-				order.getPaymentMethod(), GetterUtil.getString(order.getName()),
+				commerceCurrency.getCode(), _getCommerceOrderTypeId(order),
+				commerceShippingMethodId, shippingAddressId,
+				order.getAdvanceStatus(), order.getPaymentMethod(),
+				GetterUtil.getString(order.getName()),
 				GetterUtil.getInteger(
 					order.getOrderStatus(),
 					CommerceOrderConstants.ORDER_STATUS_PENDING),
@@ -361,9 +380,9 @@ public class OrderResourceImpl extends BaseOrderResourceImpl {
 				order.getTaxAmount(), order.getTotal(),
 				order.getTotalWithTaxAmount(),
 				_commerceContextFactory.create(
-					contextCompany.getCompanyId(), commerceChannel.getGroupId(),
-					contextUser.getUserId(), 0,
-					accountEntry.getAccountEntryId()),
+					accountEntry.getAccountEntryId(),
+					commerceChannel.getGroupId(), null, 0,
+					contextCompany.getCompanyId()),
 				serviceContext);
 
 		// Order date
@@ -466,7 +485,7 @@ public class OrderResourceImpl extends BaseOrderResourceImpl {
 
 	private Map<String, Map<String, String>> _getActions(
 			CommerceOrder commerceOrder)
-		throws NoSuchMethodException, PortalException {
+		throws Exception {
 
 		if (contextUriInfo == null) {
 			return Collections.emptyMap();
@@ -496,9 +515,10 @@ public class OrderResourceImpl extends BaseOrderResourceImpl {
 		}
 
 		CommerceOrderType commerceOrderType =
-			_commerceOrderTypeService.fetchByExternalReferenceCode(
-				order.getOrderTypeExternalReferenceCode(),
-				contextCompany.getCompanyId());
+			_commerceOrderTypeService.
+				fetchCommerceOrderTypeByExternalReferenceCode(
+					order.getOrderTypeExternalReferenceCode(),
+					contextCompany.getCompanyId());
 
 		if (commerceOrderType == null) {
 			return 0;
@@ -514,41 +534,6 @@ public class OrderResourceImpl extends BaseOrderResourceImpl {
 			CommerceOrderItem.class.getName(), contextCompany.getCompanyId(),
 			orderItem.getCustomFields(),
 			contextAcceptLanguage.getPreferredLocale());
-	}
-
-	private String _getHttpMethodName(Class<?> clazz, Method method)
-		throws NoSuchMethodException {
-
-		Class<?> superClass = clazz.getSuperclass();
-
-		Method superMethod = superClass.getMethod(
-			method.getName(), method.getParameterTypes());
-
-		for (Annotation annotation : superMethod.getAnnotations()) {
-			Class<? extends Annotation> annotationType =
-				annotation.annotationType();
-
-			Annotation[] annotations = annotationType.getAnnotationsByType(
-				HttpMethod.class);
-
-			if (annotations.length > 0) {
-				HttpMethod httpMethod = (HttpMethod)annotations[0];
-
-				return httpMethod.value();
-			}
-		}
-
-		return null;
-	}
-
-	private Method _getMethod(Class<?> clazz, String methodName) {
-		for (Method method : clazz.getMethods()) {
-			if (methodName.equals(method.getName())) {
-				return method;
-			}
-		}
-
-		return null;
 	}
 
 	private String[] _getOrderItemExternalReferenceCodes(
@@ -605,9 +590,7 @@ public class OrderResourceImpl extends BaseOrderResourceImpl {
 			CommerceOrder.class.getName(), search, pagination,
 			queryConfig -> queryConfig.setSelectedFieldNames(
 				Field.ENTRY_CLASS_PK),
-			object -> {
-				SearchContext searchContext = (SearchContext)object;
-
+			searchContext -> {
 				searchContext.setAttribute(
 					"useSearchResultPermissionFilter",
 					useSearchResultPermissionFilter);
@@ -624,16 +607,6 @@ public class OrderResourceImpl extends BaseOrderResourceImpl {
 				}
 			},
 			sorts, transformUnsafeFunction);
-	}
-
-	private String _getVersion(UriInfo uriInfo) {
-		List<String> matchedURIs = uriInfo.getMatchedURIs();
-
-		if (matchedURIs.isEmpty()) {
-			return "";
-		}
-
-		return matchedURIs.get(matchedURIs.size() - 1);
 	}
 
 	private Order _toOrder(
@@ -667,14 +640,14 @@ public class OrderResourceImpl extends BaseOrderResourceImpl {
 				CommerceOrderItem commerceOrderItem =
 					OrderItemUtil.addOrUpdateCommerceOrderItem(
 						_cpInstanceService, _cpInstanceUnitOfMeasureService,
-						_commerceOrderItemService,
+						_commerceAddressService, _commerceOrderItemService,
 						_commerceOrderModelResourcePermission, orderItem,
 						commerceOrder,
 						_commerceContextFactory.create(
-							contextCompany.getCompanyId(),
-							commerceOrder.getGroupId(), contextUser.getUserId(),
+							commerceOrder.getCommerceAccountId(),
+							commerceOrder.getGroupId(), null,
 							commerceOrder.getCommerceOrderId(),
-							commerceOrder.getCommerceAccountId()),
+							contextCompany.getCompanyId()),
 						_serviceContextHelper.getServiceContext(
 							commerceOrder.getGroupId()));
 
@@ -719,9 +692,10 @@ public class OrderResourceImpl extends BaseOrderResourceImpl {
 
 		if (billingAddressId == 0) {
 			CommerceAddress commerceAddress =
-				_commerceAddressService.fetchByExternalReferenceCode(
-					order.getBillingAddressExternalReferenceCode(),
-					contextCompany.getCompanyId());
+				_commerceAddressService.
+					fetchCommerceAddressByExternalReferenceCode(
+						order.getBillingAddressExternalReferenceCode(),
+						contextCompany.getCompanyId());
 
 			if (commerceAddress == null) {
 				billingAddressId = commerceOrder.getBillingAddressId();
@@ -748,9 +722,10 @@ public class OrderResourceImpl extends BaseOrderResourceImpl {
 
 		if (shippingAddressId == 0) {
 			CommerceAddress commerceAddress =
-				_commerceAddressService.fetchByExternalReferenceCode(
-					order.getShippingAddressExternalReferenceCode(),
-					contextCompany.getCompanyId());
+				_commerceAddressService.
+					fetchCommerceAddressByExternalReferenceCode(
+						order.getShippingAddressExternalReferenceCode(),
+						contextCompany.getCompanyId());
 
 			if (commerceAddress == null) {
 				shippingAddressId = commerceOrder.getShippingAddressId();
@@ -799,11 +774,10 @@ public class OrderResourceImpl extends BaseOrderResourceImpl {
 				order.getTotalWithTaxAmount(),
 				commerceOrder.getTotalWithTaxAmount()),
 			_commerceContextFactory.create(
-				contextCompany.getCompanyId(), commerceOrder.getGroupId(),
-				contextUser.getUserId(), 0,
 				GetterUtil.getLong(
-					order.getAccountId(),
-					commerceOrder.getCommerceAccountId())),
+					order.getAccountId(), commerceOrder.getCommerceAccountId()),
+				commerceOrder.getGroupId(), null, 0,
+				contextCompany.getCompanyId()),
 			false);
 
 		_commerceOrderService.updateCommerceOrderPrices(
@@ -1035,9 +1009,6 @@ public class OrderResourceImpl extends BaseOrderResourceImpl {
 
 	@Reference
 	private CommerceContextFactory _commerceContextFactory;
-
-	@Reference
-	private CommerceCurrencyService _commerceCurrencyService;
 
 	@Reference
 	private CommerceOrderEngine _commerceOrderEngine;

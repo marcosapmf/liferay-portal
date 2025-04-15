@@ -303,7 +303,7 @@ public abstract class BaseDB implements DB {
 		}
 
 		for (IndexMetadata indexMetadata :
-				getIndexes(connection, tableName, null, false)) {
+				getIndexMetadatas(connection, tableName, null, false)) {
 
 			indexMetadatas.add(
 				new IndexMetadata(
@@ -316,6 +316,29 @@ public abstract class BaseDB implements DB {
 	}
 
 	@Override
+	public void dropIndexes(
+			Connection connection, List<String> indexNames, String tableName)
+		throws Exception {
+
+		DBInspector dbInspector = new DBInspector(connection);
+
+		for (String indexName : indexNames) {
+			if (_log.isInfoEnabled()) {
+				_log.info(
+					String.format(
+						"Dropping index %s from table %s", indexName,
+						tableName));
+			}
+
+			if (dbInspector.hasIndex(tableName, indexName)) {
+				runSQL(
+					StringBundler.concat(
+						"drop index ", indexName, " on ", tableName));
+			}
+		}
+	}
+
+	@Override
 	public List<IndexMetadata> dropIndexes(
 			Connection connection, String tableName, String columnName)
 		throws IOException, SQLException {
@@ -324,7 +347,7 @@ public abstract class BaseDB implements DB {
 			return Collections.emptyList();
 		}
 
-		List<IndexMetadata> indexMetadatas = getIndexes(
+		List<IndexMetadata> indexMetadatas = getIndexMetadatas(
 			connection, tableName, columnName, false);
 
 		for (IndexMetadata indexMetadata : indexMetadatas) {
@@ -353,13 +376,13 @@ public abstract class BaseDB implements DB {
 	@Override
 	public List<Index> getIndexes(Connection connection) throws SQLException {
 		return TransformUtil.transform(
-			getIndexes(connection, null, null, false),
+			getIndexMetadatas(connection, null, null, false),
 			index -> new Index(
 				index.getIndexName(), index.getTableName(), index.isUnique()));
 	}
 
 	@Override
-	public List<IndexMetadata> getIndexes(
+	public List<IndexMetadata> getIndexMetadatas(
 			Connection connection, String tableName, String columnName,
 			boolean onlyUnique)
 		throws SQLException {
@@ -447,9 +470,10 @@ public abstract class BaseDB implements DB {
 
 						columnNames = ArrayUtil.append(
 							columnNames,
-							dbInspector.normalizeName(
-								indexResultSet.getString("COLUMN_NAME"),
-								databaseMetaData));
+							getIndexColumnName(
+								dbInspector.normalizeName(
+									indexResultSet.getString("COLUMN_NAME"),
+									databaseMetaData)));
 					}
 
 					if ((previousIndexName != null) &&
@@ -1388,6 +1412,10 @@ public abstract class BaseDB implements DB {
 			" where 1 = 0");
 	}
 
+	protected String getIndexColumnName(String indexColumnName) {
+		return indexColumnName;
+	}
+
 	protected String getRenameTableSQL(
 		String oldTableName, String newTableName) {
 
@@ -1583,7 +1611,7 @@ public abstract class BaseDB implements DB {
 		throws Exception {
 
 		return TransformUtil.transform(
-			getIndexes(connection, tableName, null, false),
+			getIndexMetadatas(connection, tableName, null, false),
 			index -> new Index(
 				index.getIndexName(), index.getTableName(), index.isUnique()));
 	}

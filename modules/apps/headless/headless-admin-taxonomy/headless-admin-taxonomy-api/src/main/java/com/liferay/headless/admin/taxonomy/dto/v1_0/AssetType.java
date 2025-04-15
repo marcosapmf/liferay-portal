@@ -16,8 +16,6 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
-import io.swagger.v3.oas.annotations.media.Schema;
-
 import java.io.Serializable;
 
 import java.util.Iterator;
@@ -51,7 +49,9 @@ public class AssetType implements Serializable {
 		return ObjectMapperUtil.unsafeReadValue(AssetType.class, json);
 	}
 
-	@Schema(description = "A flag that marks if this type is required.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "A flag that marks if this type is required."
+	)
 	public Boolean getRequired() {
 		if (_requiredSupplier != null) {
 			required = _requiredSupplier.get();
@@ -92,7 +92,9 @@ public class AssetType implements Serializable {
 	@JsonIgnore
 	private Supplier<Boolean> _requiredSupplier;
 
-	@Schema(description = "The asset's subtype.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The asset's subtype."
+	)
 	public String getSubtype() {
 		if (_subtypeSupplier != null) {
 			subtype = _subtypeSupplier.get();
@@ -133,7 +135,7 @@ public class AssetType implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _subtypeSupplier;
 
-	@Schema(
+	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "The asset's type (e.g., `BlogPosting`, `Document`, etc.)."
 	)
 	public String getType() {
@@ -175,6 +177,49 @@ public class AssetType implements Serializable {
 
 	@JsonIgnore
 	private Supplier<String> _typeSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The classNameId of the asset's type."
+	)
+	public Long getTypeId() {
+		if (_typeIdSupplier != null) {
+			typeId = _typeIdSupplier.get();
+
+			_typeIdSupplier = null;
+		}
+
+		return typeId;
+	}
+
+	public void setTypeId(Long typeId) {
+		this.typeId = typeId;
+
+		_typeIdSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setTypeId(
+		UnsafeSupplier<Long, Exception> typeIdUnsafeSupplier) {
+
+		_typeIdSupplier = () -> {
+			try {
+				return typeIdUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField(description = "The classNameId of the asset's type.")
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected Long typeId;
+
+	@JsonIgnore
+	private Supplier<Long> _typeIdSupplier;
 
 	@Override
 	public boolean equals(Object object) {
@@ -247,13 +292,25 @@ public class AssetType implements Serializable {
 			sb.append("\"");
 		}
 
+		Long typeId = getTypeId();
+
+		if (typeId != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"typeId\": ");
+
+			sb.append(typeId);
+		}
+
 		sb.append("}");
 
 		return sb.toString();
 	}
 
-	@Schema(
-		accessMode = Schema.AccessMode.READ_ONLY,
+	@io.swagger.v3.oas.annotations.media.Schema(
+		accessMode = io.swagger.v3.oas.annotations.media.Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.admin.taxonomy.dto.v1_0.AssetType",
 		name = "x-class-name"
 	)

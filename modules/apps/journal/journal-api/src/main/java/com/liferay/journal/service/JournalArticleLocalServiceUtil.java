@@ -881,6 +881,21 @@ public class JournalArticleLocalServiceUtil {
 			groupId, externalReferenceCode);
 	}
 
+	public static JournalArticle fetchLatestArticleByExternalReferenceCode(
+		long groupId, String externalReferenceCode, int status,
+		boolean preferApproved) {
+
+		return getService().fetchLatestArticleByExternalReferenceCode(
+			groupId, externalReferenceCode, status, preferApproved);
+	}
+
+	public static JournalArticle fetchLatestArticleByExternalReferenceCode(
+		long groupId, String externalReferenceCode, int[] statuses) {
+
+		return getService().fetchLatestArticleByExternalReferenceCode(
+			groupId, externalReferenceCode, statuses);
+	}
+
 	public static JournalArticle fetchLatestArticleByUrlTitle(
 		long groupId, String urlTitle, int status) {
 
@@ -901,6 +916,12 @@ public class JournalArticleLocalServiceUtil {
 		long resourcePrimKey) {
 
 		return getService().fetchLatestIndexableArticle(resourcePrimKey);
+	}
+
+	public static PersistedModel fetchPersistedModel(
+		Serializable primaryKeyObj) {
+
+		return getService().fetchPersistedModel(primaryKeyObj);
 	}
 
 	public static com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery
@@ -1538,10 +1559,11 @@ public class JournalArticleLocalServiceUtil {
 	}
 
 	public static List<JournalArticle> getArticlesByReviewDate(
-		java.util.Date previousCheckDate, java.util.Date reviewDate) {
+		long companyId, java.util.Date previousCheckDate,
+		java.util.Date reviewDate) {
 
 		return getService().getArticlesByReviewDate(
-			previousCheckDate, reviewDate);
+			companyId, previousCheckDate, reviewDate);
 	}
 
 	/**
@@ -2052,6 +2074,15 @@ public class JournalArticleLocalServiceUtil {
 
 		return getService().getLatestArticleByExternalReferenceCode(
 			groupId, externalReferenceCode);
+	}
+
+	public static JournalArticle getLatestArticleByExternalReferenceCode(
+			long groupId, String externalReferenceCode, int status,
+			boolean preferApproved)
+		throws PortalException {
+
+		return getService().getLatestArticleByExternalReferenceCode(
+			groupId, externalReferenceCode, status, preferApproved);
 	}
 
 	/**

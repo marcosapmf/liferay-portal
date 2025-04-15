@@ -26,8 +26,8 @@ import com.liferay.asset.list.service.AssetListEntryLocalServiceUtil;
 import com.liferay.asset.list.service.AssetListEntrySegmentsEntryRelLocalServiceUtil;
 import com.liferay.asset.list.util.comparator.ClassNameModelResourceComparator;
 import com.liferay.asset.list.web.internal.constants.AssetListWebKeys;
+import com.liferay.asset.tags.item.selector.AssetTagsItemSelectorCriterion;
 import com.liferay.asset.tags.item.selector.AssetTagsItemSelectorReturnType;
-import com.liferay.asset.tags.item.selector.criterion.AssetTagsItemSelectorCriterion;
 import com.liferay.asset.util.AssetRendererFactoryClassProvider;
 import com.liferay.asset.util.comparator.AssetRendererFactoryTypeNameComparator;
 import com.liferay.dynamic.data.mapping.util.DDMIndexer;
@@ -85,8 +85,8 @@ import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.segments.configuration.provider.SegmentsConfigurationProvider;
 import com.liferay.segments.constants.SegmentsEntryConstants;
 import com.liferay.segments.constants.SegmentsPortletKeys;
+import com.liferay.segments.item.selector.SegmentsEntryItemSelectorCriterion;
 import com.liferay.segments.item.selector.SegmentsEntryItemSelectorReturnType;
-import com.liferay.segments.item.selector.criterion.SegmentsEntryItemSelectorCriterion;
 import com.liferay.segments.model.SegmentsEntry;
 import com.liferay.segments.service.SegmentsEntryLocalServiceUtil;
 import com.liferay.segments.service.SegmentsEntryServiceUtil;
@@ -396,22 +396,22 @@ public class EditAssetListDisplayContext {
 					_httpServletRequest, "queryCategoryIds" + queryLogicIndex,
 					queryValues);
 
-				List<AssetCategory> categories = _filterAssetCategories(
+				List<AssetCategory> assetCategories = _filterAssetCategories(
 					GetterUtil.getLongValues(queryValues.split(",")));
 
-				if (ListUtil.isEmpty(categories)) {
+				if (ListUtil.isEmpty(assetCategories)) {
 					continue;
 				}
 
 				List<HashMap<String, Object>> selectedItems = new ArrayList<>();
 
-				for (AssetCategory category : categories) {
+				for (AssetCategory assetCategory : assetCategories) {
 					selectedItems.add(
 						HashMapBuilder.<String, Object>put(
 							"label",
-							category.getTitle(_themeDisplay.getLocale())
+							assetCategory.getTitle(_themeDisplay.getLocale())
 						).put(
-							"value", category.getCategoryId()
+							"value", assetCategory.getCategoryId()
 						).build());
 				}
 
@@ -680,10 +680,10 @@ public class EditAssetListDisplayContext {
 		).put(
 			"segmentsEntriesAvailables",
 			() -> {
-				List<SegmentsEntry> segmentsEntriesAvailables =
+				List<SegmentsEntry> availableSegmentsEntries =
 					getAvailableSegmentsEntries();
 
-				return !segmentsEntriesAvailables.isEmpty();
+				return !availableSegmentsEntries.isEmpty();
 			}
 		).put(
 			"updateVariationsPriorityURL",
@@ -992,7 +992,7 @@ public class EditAssetListDisplayContext {
 	}
 
 	public List<Long> getVocabularyIds() throws PortalException {
-		List<AssetVocabulary> vocabularies = ListUtil.filter(
+		List<AssetVocabulary> assetVocabularies = ListUtil.filter(
 			AssetVocabularyServiceUtil.getGroupsVocabularies(
 				PortalUtil.getCurrentAndAncestorSiteGroupIds(
 					getReferencedModelsGroupIds())),
@@ -1031,7 +1031,7 @@ public class EditAssetListDisplayContext {
 			});
 
 		return ListUtil.toList(
-			vocabularies, AssetVocabulary.VOCABULARY_ID_ACCESSOR);
+			assetVocabularies, AssetVocabulary.VOCABULARY_ID_ACCESSOR);
 	}
 
 	public Boolean isAnyAssetType() {
@@ -1075,11 +1075,7 @@ public class EditAssetListDisplayContext {
 	public Boolean isNoAssetTypeSelected() {
 		String anyAssetType = _unicodeProperties.getProperty("anyAssetType");
 
-		if (Validator.isNull(anyAssetType)) {
-			return true;
-		}
-
-		return false;
+		return Validator.isNull(anyAssetType);
 	}
 
 	public boolean isSegmentationEnabled(long companyId) {
@@ -1122,7 +1118,7 @@ public class EditAssetListDisplayContext {
 	}
 
 	private List<AssetCategory> _filterAssetCategories(long[] categoryIds) {
-		List<AssetCategory> filteredCategories = new ArrayList<>();
+		List<AssetCategory> filteredAssetCategories = new ArrayList<>();
 
 		for (long categoryId : categoryIds) {
 			AssetCategory category =
@@ -1132,10 +1128,10 @@ public class EditAssetListDisplayContext {
 				continue;
 			}
 
-			filteredCategories.add(category);
+			filteredAssetCategories.add(category);
 		}
 
-		return filteredCategories;
+		return filteredAssetCategories;
 	}
 
 	private String _filterAssetTagNames(long groupId, String assetTagNames) {

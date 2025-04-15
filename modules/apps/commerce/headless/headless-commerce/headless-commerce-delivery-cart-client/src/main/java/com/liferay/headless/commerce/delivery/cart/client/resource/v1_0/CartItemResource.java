@@ -109,12 +109,14 @@ public interface CartItemResource {
 		throws Exception;
 
 	public Page<CartItem> getCartByExternalReferenceCodeItemsPage(
-			String externalReferenceCode, Long skuId, Pagination pagination)
+			String externalReferenceCode, String search, Long skuId,
+			Pagination pagination)
 		throws Exception;
 
 	public HttpInvoker.HttpResponse
 			getCartByExternalReferenceCodeItemsPageHttpResponse(
-				String externalReferenceCode, Long skuId, Pagination pagination)
+				String externalReferenceCode, String search, Long skuId,
+				Pagination pagination)
 		throws Exception;
 
 	public CartItem postCartByExternalReferenceCodeItem(
@@ -127,11 +129,11 @@ public interface CartItemResource {
 		throws Exception;
 
 	public Page<CartItem> getCartItemsPage(
-			Long cartId, Long skuId, Pagination pagination)
+			Long cartId, String search, Long skuId, Pagination pagination)
 		throws Exception;
 
 	public HttpInvoker.HttpResponse getCartItemsPageHttpResponse(
-			Long cartId, Long skuId, Pagination pagination)
+			Long cartId, String search, Long skuId, Pagination pagination)
 		throws Exception;
 
 	public CartItem postCartItem(Long cartId, CartItem cartItem)
@@ -239,8 +241,8 @@ public interface CartItemResource {
 		private Map<String, String> _headers = new LinkedHashMap<>();
 		private String _host = "localhost";
 		private Locale _locale;
-		private String _login = "";
-		private String _password = "";
+		private String _login;
+		private String _password;
 		private Map<String, String> _parameters = new LinkedHashMap<>();
 		private int _port = 8080;
 		private String _scheme = "http";
@@ -349,8 +351,10 @@ public interface CartItemResource {
 
 			httpInvoker.path("externalReferenceCode", externalReferenceCode);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
@@ -455,8 +459,10 @@ public interface CartItemResource {
 
 			httpInvoker.path("externalReferenceCode", externalReferenceCode);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
@@ -563,8 +569,10 @@ public interface CartItemResource {
 
 			httpInvoker.path("externalReferenceCode", externalReferenceCode);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
@@ -671,8 +679,10 @@ public interface CartItemResource {
 
 			httpInvoker.path("externalReferenceCode", externalReferenceCode);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
@@ -772,8 +782,10 @@ public interface CartItemResource {
 
 			httpInvoker.path("cartItemId", cartItemId);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
@@ -869,8 +881,10 @@ public interface CartItemResource {
 					_builder._port + _builder._contextPath +
 						"/o/headless-commerce-delivery-cart/v1.0/cart-items/batch");
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
@@ -969,8 +983,10 @@ public interface CartItemResource {
 
 			httpInvoker.path("cartItemId", cartItemId);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
@@ -1074,8 +1090,10 @@ public interface CartItemResource {
 
 			httpInvoker.path("cartItemId", cartItemId);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
@@ -1179,8 +1197,10 @@ public interface CartItemResource {
 
 			httpInvoker.path("cartItemId", cartItemId);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
@@ -1276,19 +1296,22 @@ public interface CartItemResource {
 					_builder._port + _builder._contextPath +
 						"/o/headless-commerce-delivery-cart/v1.0/cart-items/batch");
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
 
 		public Page<CartItem> getCartByExternalReferenceCodeItemsPage(
-				String externalReferenceCode, Long skuId, Pagination pagination)
+				String externalReferenceCode, String search, Long skuId,
+				Pagination pagination)
 			throws Exception {
 
 			HttpInvoker.HttpResponse httpResponse =
 				getCartByExternalReferenceCodeItemsPageHttpResponse(
-					externalReferenceCode, skuId, pagination);
+					externalReferenceCode, search, skuId, pagination);
 
 			String content = httpResponse.getContent();
 
@@ -1351,7 +1374,7 @@ public interface CartItemResource {
 
 		public HttpInvoker.HttpResponse
 				getCartByExternalReferenceCodeItemsPageHttpResponse(
-					String externalReferenceCode, Long skuId,
+					String externalReferenceCode, String search, Long skuId,
 					Pagination pagination)
 			throws Exception {
 
@@ -1376,6 +1399,10 @@ public interface CartItemResource {
 
 			httpInvoker.httpMethod(HttpInvoker.HttpMethod.GET);
 
+			if (search != null) {
+				httpInvoker.parameter("search", String.valueOf(search));
+			}
+
 			if (skuId != null) {
 				httpInvoker.parameter("skuId", String.valueOf(skuId));
 			}
@@ -1394,8 +1421,10 @@ public interface CartItemResource {
 
 			httpInvoker.path("externalReferenceCode", externalReferenceCode);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
@@ -1502,18 +1531,20 @@ public interface CartItemResource {
 
 			httpInvoker.path("externalReferenceCode", externalReferenceCode);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
 
 		public Page<CartItem> getCartItemsPage(
-				Long cartId, Long skuId, Pagination pagination)
+				Long cartId, String search, Long skuId, Pagination pagination)
 			throws Exception {
 
 			HttpInvoker.HttpResponse httpResponse =
-				getCartItemsPageHttpResponse(cartId, skuId, pagination);
+				getCartItemsPageHttpResponse(cartId, search, skuId, pagination);
 
 			String content = httpResponse.getContent();
 
@@ -1575,7 +1606,7 @@ public interface CartItemResource {
 		}
 
 		public HttpInvoker.HttpResponse getCartItemsPageHttpResponse(
-				Long cartId, Long skuId, Pagination pagination)
+				Long cartId, String search, Long skuId, Pagination pagination)
 			throws Exception {
 
 			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
@@ -1599,6 +1630,10 @@ public interface CartItemResource {
 
 			httpInvoker.httpMethod(HttpInvoker.HttpMethod.GET);
 
+			if (search != null) {
+				httpInvoker.parameter("search", String.valueOf(search));
+			}
+
 			if (skuId != null) {
 				httpInvoker.parameter("skuId", String.valueOf(skuId));
 			}
@@ -1617,8 +1652,10 @@ public interface CartItemResource {
 
 			httpInvoker.path("cartId", cartId);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
@@ -1722,8 +1759,10 @@ public interface CartItemResource {
 
 			httpInvoker.path("cartId", cartId);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}

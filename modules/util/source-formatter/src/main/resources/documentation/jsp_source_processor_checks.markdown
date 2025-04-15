@@ -1,4 +1,4 @@
-# Checks for .jsp, .jspf, .jspx, .tag, .tpl or .vm
+# Checks for .jsp, .jspf, .jspx, .tag, .tpl, or .vm
 
 Check | Category | Description
 ----- | -------- | -----------
@@ -7,7 +7,9 @@ AppendCheck | [Styling](styling_checks.markdown#styling-checks) | Checks instanc
 [ArrayTypeStyleCheck](https://checkstyle.sourceforge.io/checks/misc/arraytypestyle.html) | [Styling](styling_checks.markdown#styling-checks) | Checks the style of array type definitions. |
 ArrayUtilCheck | [Styling](styling_checks.markdown#styling-checks) | Checks for utilization of class `ArrayUtil`. |
 [AvoidNestedBlocksCheck](https://checkstyle.sourceforge.io/checks/blocks/avoidnestedblocks.html) | [Styling](styling_checks.markdown#styling-checks) | Finds nested blocks (blocks that are used freely in the code). |
+BrandNameCheck | [Naming Conventions](naming_conventions_checks.markdown#naming-conventions-checks) | Checks the correct brand name. |
 [CamelCaseNameCheck](check/camel_case_name_check.markdown#camelcasenamecheck) | [Naming Conventions](naming_conventions_checks.markdown#naming-conventions-checks) | Checks variable names for correct use of `CamelCase`. |
+CapsNameCheck | [Naming Conventions](naming_conventions_checks.markdown#naming-conventions-checks) | Checks the correct caps name. |
 ChainingCheck | [Styling](styling_checks.markdown#styling-checks) | Checks that method chaining can be used when possible. |
 [CompanyIterationCheck](check/company_iteration_check.markdown#companyiterationcheck) | [Bug Prevention](bug_prevention_checks.markdown#bug-prevention-checks) | Checks that `CompanyLocalService.forEachCompany` or `CompanyLocalService.forEachCompanyId` is used when iterating over companies. |
 CompatClassImportsCheck | [Bug Prevention](bug_prevention_checks.markdown#bug-prevention-checks) | Checks that classes are imported from `compat` modules, when possible. |
@@ -71,6 +73,7 @@ JSPXSSVulnerabilitiesCheck | [Security](security_checks.markdown#security-checks
 LiteralStringEqualsCheck | [Styling](styling_checks.markdown#styling-checks) | Finds cases where `Objects.equals` should be used. |
 [LocalFinalVariableNameCheck](https://checkstyle.sourceforge.io/checks/naming/localfinalvariablename.html) | [Naming Conventions](naming_conventions_checks.markdown#naming-conventions-checks) | Checks that local final variable names conform to a specified pattern. |
 [LocalVariableNameCheck](https://checkstyle.sourceforge.io/checks/naming/localvariablename.html) | [Naming Conventions](naming_conventions_checks.markdown#naming-conventions-checks) | Checks that local, non-final variable names conform to a specified pattern. |
+LocalVariableTypeInferenceCheck | [Performance](performance_checks.markdown#performance-checks) | Finds usage of `var` in local variable declaration. |
 LocaleUtilCheck | [Bug Prevention](bug_prevention_checks.markdown#bug-prevention-checks) | Finds cases where `com.liferay.portal.kernel.util.LocaleUtil` should be used (instead of `java.util.Locale`). |
 LogParametersCheck | [Bug Prevention](bug_prevention_checks.markdown#bug-prevention-checks) | Validates the values of parameters passed to `_log.*` calls. |
 [MapBuilderCheck](check/builder_check.markdown#buildercheck) | [Miscellaneous](miscellaneous_checks.markdown#miscellaneous-checks) | Checks that `ConcurrentHashMapBuilder`, `HashMapBuilder`, `LinkedHashMapBuilder` or `TreeMapBuilder` is used when possible. |
@@ -113,7 +116,6 @@ StringCastCheck | [Performance](performance_checks.markdown#performance-checks) 
 [StringMethodsCheck](check/string_methods_check.markdown#stringmethodscheck) | [Performance](performance_checks.markdown#performance-checks) | Checks if performance can be improved by using different String operation methods. |
 SubstringCheck | [Performance](performance_checks.markdown#performance-checks) | Finds cases like `s.substring(1, s.length())` (use `s.substring(1)` instead). |
 TernaryOperatorCheck | [Styling](styling_checks.markdown#styling-checks) | Finds use of ternary operator in `java` files (use if statement instead). |
-[UnnecessaryParenthesesCheck](https://checkstyle.sourceforge.io/checks/coding/unnecessaryparentheses.html) | [Styling](styling_checks.markdown#styling-checks) | Checks if unnecessary parentheses are used in a statement or expression. |
 UnnecessaryTypeCastCheck | [Performance](performance_checks.markdown#performance-checks) | Finds unnecessary Type Casting. |
 UnparameterizedClassCheck | [Bug Prevention](bug_prevention_checks.markdown#bug-prevention-checks) | Finds `Class` instantiation without generic type. |
 [ValidatorEqualsCheck](check/validator_equals_check.markdown#validatorequalscheck) | [Performance](performance_checks.markdown#performance-checks) | Checks that there are no calls to `Validator.equals(Object, Object)`. |

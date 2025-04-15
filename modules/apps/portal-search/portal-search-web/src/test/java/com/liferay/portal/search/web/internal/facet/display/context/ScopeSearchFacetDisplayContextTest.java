@@ -12,6 +12,7 @@ import com.liferay.portal.kernel.module.configuration.ConfigurationException;
 import com.liferay.portal.kernel.search.facet.collector.TermCollector;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.search.web.internal.BaseFacetDisplayContextTestCase;
 import com.liferay.portal.search.web.internal.facet.display.context.builder.ScopeSearchFacetDisplayContextBuilder;
 import com.liferay.portal.search.web.internal.site.facet.configuration.SiteFacetPortletInstanceConfiguration;
@@ -64,6 +65,8 @@ public class ScopeSearchFacetDisplayContextTest
 		scopeSearchFacetDisplayContextBuilder.setFrequenciesVisible(true);
 		scopeSearchFacetDisplayContextBuilder.setGroupLocalService(
 			_groupLocalService);
+		scopeSearchFacetDisplayContextBuilder.setLocale(
+			LocaleUtil.getDefault());
 		scopeSearchFacetDisplayContextBuilder.setOrder(order);
 		scopeSearchFacetDisplayContextBuilder.setParameterValue(parameterValue);
 
@@ -96,6 +99,18 @@ public class ScopeSearchFacetDisplayContextTest
 	}
 
 	@Override
+	protected FacetDisplayContext getFacetDisplayContext(Group group)
+		throws Exception {
+
+		ScopeSearchFacetDisplayContextBuilder
+			scopeSearchFacetDisplayContextBuilder =
+				new ScopeSearchFacetDisplayContextBuilder(
+					getRenderRequest(group));
+
+		return scopeSearchFacetDisplayContextBuilder.build();
+	}
+
+	@Override
 	protected String getFilterValue(String term) {
 		return String.valueOf(_groupId);
 	}
@@ -105,6 +120,29 @@ public class ScopeSearchFacetDisplayContextTest
 		_groupId = RandomTestUtil.randomLong();
 
 		_addGroup(_groupId, term);
+	}
+
+	@Override
+	protected void setUpPortletDisplayStyleGroupExternalReferenceCode(
+		String externalReferenceCode) {
+
+		SiteFacetPortletInstanceConfiguration
+			siteFacetPortletInstanceConfiguration = Mockito.mock(
+				SiteFacetPortletInstanceConfiguration.class);
+
+		Mockito.when(
+			siteFacetPortletInstanceConfiguration.
+				displayStyleGroupExternalReferenceCode()
+		).thenReturn(
+			externalReferenceCode
+		);
+
+		configurationProviderUtilMockedStatic.when(
+			() -> ConfigurationProviderUtil.getPortletInstanceConfiguration(
+				Mockito.any(), Mockito.any())
+		).thenReturn(
+			siteFacetPortletInstanceConfiguration
+		);
 	}
 
 	@Override

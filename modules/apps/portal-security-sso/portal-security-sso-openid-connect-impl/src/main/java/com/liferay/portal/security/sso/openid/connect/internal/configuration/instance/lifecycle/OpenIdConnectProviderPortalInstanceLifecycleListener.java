@@ -109,6 +109,8 @@ public class OpenIdConnectProviderPortalInstanceLifecycleListener
 			guestUserId, _generateAuthRequestParametersJSON(properties),
 			_updateOAuthClientASLocalMetadata(guestUserId, properties),
 			_generateInfoJSON(properties),
+			GetterUtil.getLong(
+				properties.get("discoveryEndPointCacheInMillis")),
 			OAuthClientEntryConstants.OIDC_USER_INFO_MAPPER_JSON,
 			_generateTokenRequestParametersJSON(properties));
 	}
@@ -441,6 +443,8 @@ public class OpenIdConnectProviderPortalInstanceLifecycleListener
 						_updateOAuthClientASLocalMetadata(
 							guestUserId, properties),
 						_generateInfoJSON(properties),
+						GetterUtil.getLong(
+							properties.get("discoveryEndPointCacheInMillis")),
 						oldOAuthClientEntry.getOIDCUserInfoMapperJSON(),
 						_generateTokenRequestParametersJSON(properties));
 				}
@@ -504,7 +508,8 @@ public class OpenIdConnectProviderPortalInstanceLifecycleListener
 			}
 			else {
 				try (SafeCloseable safeCloseable =
-						CompanyThreadLocal.setWithSafeCloseable(companyId)) {
+						CompanyThreadLocal.setCompanyIdWithSafeCloseable(
+							companyId)) {
 
 					_deleteOAuthClientEntry(companyId, properties);
 				}
@@ -539,7 +544,8 @@ public class OpenIdConnectProviderPortalInstanceLifecycleListener
 			}
 
 			try (SafeCloseable safeCloseable =
-					CompanyThreadLocal.setWithSafeCloseable(companyId)) {
+					CompanyThreadLocal.setCompanyIdWithSafeCloseable(
+						companyId)) {
 
 				_updateOAuthClientEntry(companyId, oldProperties, properties);
 			}

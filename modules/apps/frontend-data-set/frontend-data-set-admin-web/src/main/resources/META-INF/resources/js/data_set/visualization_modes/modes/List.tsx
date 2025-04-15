@@ -8,11 +8,12 @@ import {ClayInput} from '@clayui/form';
 import ClayLayout from '@clayui/layout';
 import ClayTable from '@clayui/table';
 import classNames from 'classnames';
-import {fetch, openModal} from 'frontend-js-web';
+import {openModal} from 'frontend-js-components-web';
+import {fetch} from 'frontend-js-web';
 import React, {useEffect, useState} from 'react';
 
 import '../../../../css/ListVisualizationMode.scss';
-import FieldSelectModalContent from '../../../components/FieldSelectModalContent';
+import FieldSelectModalContent from '../../../components/AddDataSourceFieldsModalContent';
 import {
 	API_URL,
 	DEFAULT_FETCH_HEADERS,
@@ -22,6 +23,7 @@ import openDefaultFailureToast from '../../../utils/openDefaultFailureToast';
 import openDefaultSuccessToast from '../../../utils/openDefaultSuccessToast';
 import {IField, IFieldTreeItem} from '../../../utils/types';
 import {IDataSetSectionProps} from '../../DataSet';
+import AddCustomFieldModalContent from '../components/AddCustomFieldModalContent';
 import FieldAssignmentControls from '../components/FieldAssignmentControls';
 
 interface IFDSListSection {
@@ -55,7 +57,7 @@ export default function List(props: IDataSetSectionProps) {
 
 	const getFDSListSections = async () => {
 		const response = await fetch(
-			`${API_URL.LIST_SECTIONS}?filter=(${OBJECT_RELATIONSHIP.DATA_SET_LIST_SECTION_ERC} eq '${dataSet.externalReferenceCode}')`,
+			`${API_URL.LIST_SECTIONS}?filter=(${OBJECT_RELATIONSHIP.DATA_SET_LIST_SECTIONS_ERC} eq '${dataSet.externalReferenceCode}')`,
 			{
 				headers: DEFAULT_FETCH_HEADERS,
 			}
@@ -176,7 +178,7 @@ export default function List(props: IDataSetSectionProps) {
 
 		const response = await fetch(url, {
 			body: JSON.stringify({
-				[OBJECT_RELATIONSHIP.DATA_SET_LIST_SECTION_ERC]:
+				[OBJECT_RELATIONSHIP.DATA_SET_LIST_SECTIONS_ERC]:
 					dataSet.externalReferenceCode,
 				fieldName: field.name,
 				name: listSection.name,
@@ -303,8 +305,26 @@ function ListSection({
 }: IListSectionProps) {
 	const {field, fieldTreeItems, label} = listSection;
 
-	const openSelectFieldModal = () => {
+	const openAddCustomFieldModal = () => {
 		openModal({
+			contentComponent: ({closeModal}: {closeModal: Function}) => (
+				<AddCustomFieldModalContent
+					{...modalProps}
+					closeModal={closeModal}
+					onSaveButtonClick={(selectedField: IField) => {
+						onSelect({
+							closeModal,
+							selectedField,
+						});
+					}}
+				/>
+			),
+		});
+	};
+
+	const openAddDataSourceFieldsModal = () => {
+		openModal({
+			className: 'modal-height-full',
 			contentComponent: ({closeModal}: {closeModal: Function}) => (
 				<FieldSelectModalContent
 					{...modalProps}
@@ -324,7 +344,7 @@ function ListSection({
 					selectedFields={field ? [field] : []}
 				/>
 			),
-			size: 'full-screen',
+			size: 'lg',
 		});
 	};
 
@@ -354,7 +374,10 @@ function ListSection({
 							field={field}
 							label={label}
 							onClearSelection={onClearSelection}
-							openSelectFieldModal={openSelectFieldModal}
+							openAddCustomFieldModal={openAddCustomFieldModal}
+							openAddDataSourceFieldsModal={
+								openAddDataSourceFieldsModal
+							}
 						/>
 					</ClayInput.GroupItem>
 				</ClayInput.Group>

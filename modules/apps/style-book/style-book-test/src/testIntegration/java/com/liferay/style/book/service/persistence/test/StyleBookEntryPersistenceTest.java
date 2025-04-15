@@ -151,6 +151,8 @@ public class StyleBookEntryPersistenceTest {
 
 		newStyleBookEntry.setStyleBookEntryKey(RandomTestUtil.randomString());
 
+		newStyleBookEntry.setThemeId(RandomTestUtil.randomString());
+
 		_styleBookEntries.add(_persistence.update(newStyleBookEntry));
 
 		StyleBookEntry existingStyleBookEntry = _persistence.findByPrimaryKey(
@@ -203,6 +205,9 @@ public class StyleBookEntryPersistenceTest {
 		Assert.assertEquals(
 			existingStyleBookEntry.getStyleBookEntryKey(),
 			newStyleBookEntry.getStyleBookEntryKey());
+		Assert.assertEquals(
+			existingStyleBookEntry.getThemeId(),
+			newStyleBookEntry.getThemeId());
 	}
 
 	@Test
@@ -235,6 +240,7 @@ public class StyleBookEntryPersistenceTest {
 			styleBookEntry.getPreviewFileEntryId());
 		draftStyleBookEntry.setStyleBookEntryKey(
 			styleBookEntry.getStyleBookEntryKey());
+		draftStyleBookEntry.setThemeId(styleBookEntry.getThemeId());
 
 		_styleBookEntries.add(_persistence.update(draftStyleBookEntry));
 
@@ -279,6 +285,8 @@ public class StyleBookEntryPersistenceTest {
 		Assert.assertEquals(
 			styleBookEntry.getStyleBookEntryKey(),
 			draftStyleBookEntry.getStyleBookEntryKey());
+		Assert.assertEquals(
+			styleBookEntry.getThemeId(), draftStyleBookEntry.getThemeId());
 	}
 
 	@Test(
@@ -326,6 +334,8 @@ public class StyleBookEntryPersistenceTest {
 		styleBookEntry2.setPreviewFileEntryId(RandomTestUtil.nextLong());
 
 		styleBookEntry2.setStyleBookEntryKey(RandomTestUtil.randomString());
+
+		styleBookEntry2.setThemeId(RandomTestUtil.randomString());
 
 		_styleBookEntries.add(_persistence.update(styleBookEntry2));
 	}
@@ -489,6 +499,53 @@ public class StyleBookEntryPersistenceTest {
 	}
 
 	@Test
+	public void testCountByG_T() throws Exception {
+		_persistence.countByG_T(RandomTestUtil.nextLong(), "");
+
+		_persistence.countByG_T(0L, "null");
+
+		_persistence.countByG_T(0L, (String)null);
+	}
+
+	@Test
+	public void testCountByG_T_Head() throws Exception {
+		_persistence.countByG_T_Head(
+			RandomTestUtil.nextLong(), "", RandomTestUtil.randomBoolean());
+
+		_persistence.countByG_T_Head(
+			0L, "null", RandomTestUtil.randomBoolean());
+
+		_persistence.countByG_T_Head(
+			0L, (String)null, RandomTestUtil.randomBoolean());
+	}
+
+	@Test
+	public void testCountByG_D_T() throws Exception {
+		_persistence.countByG_D_T(
+			RandomTestUtil.nextLong(), RandomTestUtil.randomBoolean(), "");
+
+		_persistence.countByG_D_T(0L, RandomTestUtil.randomBoolean(), "null");
+
+		_persistence.countByG_D_T(
+			0L, RandomTestUtil.randomBoolean(), (String)null);
+	}
+
+	@Test
+	public void testCountByG_D_T_Head() throws Exception {
+		_persistence.countByG_D_T_Head(
+			RandomTestUtil.nextLong(), RandomTestUtil.randomBoolean(), "",
+			RandomTestUtil.randomBoolean());
+
+		_persistence.countByG_D_T_Head(
+			0L, RandomTestUtil.randomBoolean(), "null",
+			RandomTestUtil.randomBoolean());
+
+		_persistence.countByG_D_T_Head(
+			0L, RandomTestUtil.randomBoolean(), (String)null,
+			RandomTestUtil.randomBoolean());
+	}
+
+	@Test
 	public void testCountByERC_G() throws Exception {
 		_persistence.countByERC_G("", RandomTestUtil.nextLong());
 
@@ -546,7 +603,8 @@ public class StyleBookEntryPersistenceTest {
 			"styleBookEntryId", true, "groupId", true, "companyId", true,
 			"userId", true, "userName", true, "createDate", true,
 			"modifiedDate", true, "defaultStyleBookEntry", true, "name", true,
-			"previewFileEntryId", true, "styleBookEntryKey", true);
+			"previewFileEntryId", true, "styleBookEntryKey", true, "themeId",
+			true);
 	}
 
 	@Test
@@ -890,6 +948,8 @@ public class StyleBookEntryPersistenceTest {
 		styleBookEntry.setPreviewFileEntryId(RandomTestUtil.nextLong());
 
 		styleBookEntry.setStyleBookEntryKey(RandomTestUtil.randomString());
+
+		styleBookEntry.setThemeId(RandomTestUtil.randomString());
 
 		_styleBookEntries.add(_persistence.update(styleBookEntry));
 

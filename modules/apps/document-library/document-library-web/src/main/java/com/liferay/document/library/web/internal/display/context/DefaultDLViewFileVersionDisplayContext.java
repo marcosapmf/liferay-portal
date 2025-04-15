@@ -39,7 +39,6 @@ import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuilder;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -133,6 +132,12 @@ public class DefaultDLViewFileVersionDisplayContext
 						_uiItemsBuilder::isCheckinActionAvailable,
 						_uiItemsBuilder.createCheckinDropdownItem()
 					).add(
+						_uiItemsBuilder::isSubscribeActionAvailable,
+						_uiItemsBuilder.createSubscribeDropdownItem()
+					).add(
+						_uiItemsBuilder::isUnsubscribeActionAvailable,
+						_uiItemsBuilder.createUnsubscribeDropdownItem()
+					).add(
 						_uiItemsBuilder::
 							isCollectDigitalSignatureActionAvailable,
 						_uiItemsBuilder.
@@ -141,6 +146,14 @@ public class DefaultDLViewFileVersionDisplayContext
 						_uiItemsBuilder::isHistoryActionAvailable,
 						_uiItemsBuilder.createHistoryDropdownItem()
 					).add(
+						_uiItemsBuilder.createViewUsagesDropdownItem()
+					).build());
+				dropdownGroupItem.setSeparator(true);
+			}
+		).addGroup(
+			dropdownGroupItem -> {
+				dropdownGroupItem.setDropdownItems(
+					DropdownItemListBuilder.add(
 						_uiItemsBuilder::isMoveActionAvailable,
 						_uiItemsBuilder.createMoveDropdownItem()
 					).add(
@@ -256,12 +269,6 @@ public class DefaultDLViewFileVersionDisplayContext
 
 	@Override
 	public boolean hasApprovedVersion() {
-		if (!FeatureFlagManagerUtil.isEnabled(
-				_fileVersion.getCompanyId(), "LPD-10701")) {
-
-			return false;
-		}
-
 		DLFileVersion dlFileVersion =
 			DLFileVersionLocalServiceUtil.fetchLatestFileVersion(
 				_fileVersion.getFileEntryId(), false,
@@ -310,11 +317,7 @@ public class DefaultDLViewFileVersionDisplayContext
 
 	@Override
 	public boolean isActionsVisible() {
-		if (_dlPortletInstanceSettingsHelper.isShowActions()) {
-			return true;
-		}
-
-		return false;
+		return _dlPortletInstanceSettingsHelper.isShowActions();
 	}
 
 	@Override
@@ -335,11 +338,7 @@ public class DefaultDLViewFileVersionDisplayContext
 
 	@Override
 	public boolean isVersionInfoVisible() {
-		if (_isSystemDLFileEntryType()) {
-			return false;
-		}
-
-		return true;
+		return !_isSystemDLFileEntryType();
 	}
 
 	@Override

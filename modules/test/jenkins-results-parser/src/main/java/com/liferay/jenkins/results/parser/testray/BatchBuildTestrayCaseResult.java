@@ -11,6 +11,7 @@ import com.liferay.jenkins.results.parser.DownstreamBuild;
 import com.liferay.jenkins.results.parser.JenkinsResultsParserUtil;
 import com.liferay.jenkins.results.parser.Job;
 import com.liferay.jenkins.results.parser.QAWebsitesGitRepositoryJob;
+import com.liferay.jenkins.results.parser.TestResult;
 import com.liferay.jenkins.results.parser.TopLevelBuild;
 import com.liferay.jenkins.results.parser.job.property.JobProperty;
 import com.liferay.jenkins.results.parser.job.property.JobPropertyFactory;
@@ -349,6 +350,121 @@ public class BatchBuildTestrayCaseResult extends BuildTestrayCaseResult {
 		}
 
 		return testrayAttachments;
+	}
+
+	protected TestResult getTestResult() {
+		return null;
+	}
+
+	protected long getTestResultDuration() {
+		TestResult testResult = getTestResult();
+
+		if (testResult == null) {
+			return 0;
+		}
+
+		return testResult.getDuration();
+	}
+
+	protected String getTestResultErrors() {
+		String testResultErrors = null;
+
+		Build build = getBuild();
+
+		TestResult testResult = getTestResult();
+
+		if (testResult == null) {
+			if (build == null) {
+				return "Unable to run build on CI";
+			}
+
+			String result = build.getResult();
+
+			testResultErrors = "Failed prior to running test";
+
+			if (result == null) {
+				testResultErrors = "Unable to finish build on CI";
+			}
+
+			if (result.equals("ABORTED")) {
+				testResultErrors =
+					build.getJobName() + " timed out after 2 hours";
+			}
+
+			if (result.equals("SUCCESS") || result.equals("UNSTABLE")) {
+				testResultErrors = "Unable to run test on CI";
+			}
+
+			String failureMessage = build.getFailureMessage();
+
+			if (JenkinsResultsParserUtil.isNullOrEmpty(failureMessage)) {
+				return testResultErrors;
+			}
+
+			return testResultErrors + ": " + failureMessage;
+		}
+
+		if (testResult.isSkipped()) {
+			return "Failed to run test on CI";
+		}
+
+		if (!testResult.isFailing()) {
+			return null;
+		}
+
+		testResultErrors = testResult.getErrorDetails();
+
+		if (JenkinsResultsParserUtil.isNullOrEmpty(testResultErrors)) {
+			testResultErrors = build.getFailureMessage();
+		}
+
+		if (JenkinsResultsParserUtil.isNullOrEmpty(testResultErrors)) {
+			return "Failed for unknown reason";
+		}
+
+		if (testResultErrors.contains("\n")) {
+			testResultErrors = testResultErrors.substring(
+				0, testResultErrors.indexOf("\n"));
+		}
+
+		testResultErrors = testResultErrors.trim();
+
+		if (JenkinsResultsParserUtil.isNullOrEmpty(testResultErrors)) {
+			return "Failed for unknown reason";
+		}
+
+		return testResultErrors;
+	}
+
+	protected Status getTestResultStatus() {
+		Build build = getBuild();
+
+		if (build == null) {
+			return Status.UNTESTED;
+		}
+
+		TestResult testResult = getTestResult();
+
+		if (testResult == null) {
+			String result = build.getResult();
+
+			if ((result == null) || result.equals("SUCCESS") ||
+				result.equals("UNSTABLE")) {
+
+				return Status.UNTESTED;
+			}
+
+			return Status.FAILED;
+		}
+
+		if (testResult.isFailing()) {
+			return Status.FAILED;
+		}
+		else if (testResult.isSkipped()) {
+			return Status.UNTESTED;
+		}
+
+		return Status.PASSED;
 	}
 
 	@Override

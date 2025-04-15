@@ -81,7 +81,7 @@ public class PlacedOrderItemShipmentResourceTest
 			RandomTestUtil.randomString(), "business", 1, _serviceContext);
 
 		_commerceCurrency = _commerceCurrencyLocalService.addCommerceCurrency(
-			_user.getUserId(), RandomTestUtil.randomString(),
+			null, _user.getUserId(), RandomTestUtil.randomString(),
 			RandomTestUtil.randomLocaleStringMap(),
 			RandomTestUtil.randomString(), BigDecimal.ONE, new HashMap<>(), 2,
 			2, "HALF_EVEN", false, RandomTestUtil.nextDouble(), true);
@@ -100,9 +100,9 @@ public class PlacedOrderItemShipmentResourceTest
 
 		_commercePriceList =
 			_commercePriceListLocalService.addCommercePriceList(
-				RandomTestUtil.randomString(), testGroup.getGroupId(),
-				_user.getUserId(), _commerceCurrency.getCommerceCurrencyId(),
-				true, CommercePriceListConstants.TYPE_PRICE_LIST, 0, true,
+				RandomTestUtil.randomString(), _user.getUserId(),
+				testGroup.getGroupId(), _commerceCurrency.getCode(), true,
+				CommercePriceListConstants.TYPE_PRICE_LIST, 0, true,
 				RandomTestUtil.randomString(), RandomTestUtil.nextDouble(), 1,
 				1, 2022, 12, 0, 0, 0, 0, 0, 0, true, _serviceContext);
 
@@ -148,12 +148,12 @@ public class PlacedOrderItemShipmentResourceTest
 		Address localShippingAddress = _addressLocalService.addAddress(
 			RandomTestUtil.randomString(), _user.getUserId(),
 			AccountEntry.class.getName(), _accountEntry.getAccountEntryId(),
+			_country.getCountryId(), 0, _region.getRegionId(),
+			RandomTestUtil.randomString(), RandomTestUtil.randomString(), true,
+			RandomTestUtil.randomString(), false, RandomTestUtil.randomString(),
+			RandomTestUtil.randomString(), RandomTestUtil.randomString(), null,
 			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
-			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
-			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
-			RandomTestUtil.randomString(), _region.getRegionId(),
-			_country.getCountryId(), 0, true, false,
-			RandomTestUtil.randomString(), _serviceContext);
+			_serviceContext);
 
 		_addresses.add(localShippingAddress);
 

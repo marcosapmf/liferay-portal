@@ -21,6 +21,11 @@ import com.liferay.headless.commerce.admin.catalog.dto.v1_0.OptionValue;
 import com.liferay.headless.commerce.admin.catalog.dto.v1_0.Pin;
 import com.liferay.headless.commerce.admin.catalog.dto.v1_0.Product;
 import com.liferay.headless.commerce.admin.catalog.dto.v1_0.ProductConfiguration;
+import com.liferay.headless.commerce.admin.catalog.dto.v1_0.ProductConfigurationList;
+import com.liferay.headless.commerce.admin.catalog.dto.v1_0.ProductConfigurationListAccount;
+import com.liferay.headless.commerce.admin.catalog.dto.v1_0.ProductConfigurationListAccountGroup;
+import com.liferay.headless.commerce.admin.catalog.dto.v1_0.ProductConfigurationListChannel;
+import com.liferay.headless.commerce.admin.catalog.dto.v1_0.ProductConfigurationListOrderType;
 import com.liferay.headless.commerce.admin.catalog.dto.v1_0.ProductGroup;
 import com.liferay.headless.commerce.admin.catalog.dto.v1_0.ProductGroupProduct;
 import com.liferay.headless.commerce.admin.catalog.dto.v1_0.ProductOption;
@@ -50,6 +55,11 @@ import com.liferay.headless.commerce.admin.catalog.resource.v1_0.OptionValueReso
 import com.liferay.headless.commerce.admin.catalog.resource.v1_0.PinResource;
 import com.liferay.headless.commerce.admin.catalog.resource.v1_0.ProductAccountGroupResource;
 import com.liferay.headless.commerce.admin.catalog.resource.v1_0.ProductChannelResource;
+import com.liferay.headless.commerce.admin.catalog.resource.v1_0.ProductConfigurationListAccountGroupResource;
+import com.liferay.headless.commerce.admin.catalog.resource.v1_0.ProductConfigurationListAccountResource;
+import com.liferay.headless.commerce.admin.catalog.resource.v1_0.ProductConfigurationListChannelResource;
+import com.liferay.headless.commerce.admin.catalog.resource.v1_0.ProductConfigurationListOrderTypeResource;
+import com.liferay.headless.commerce.admin.catalog.resource.v1_0.ProductConfigurationListResource;
 import com.liferay.headless.commerce.admin.catalog.resource.v1_0.ProductConfigurationResource;
 import com.liferay.headless.commerce.admin.catalog.resource.v1_0.ProductGroupProductResource;
 import com.liferay.headless.commerce.admin.catalog.resource.v1_0.ProductGroupResource;
@@ -68,8 +78,6 @@ import com.liferay.headless.commerce.admin.catalog.resource.v1_0.SkuVirtualSetti
 import com.liferay.headless.commerce.admin.catalog.resource.v1_0.SpecificationResource;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.function.UnsafeFunction;
-import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
@@ -235,6 +243,52 @@ public class Mutation {
 			productConfigurationResourceComponentServiceObjects;
 	}
 
+	public static void
+		setProductConfigurationListResourceComponentServiceObjects(
+			ComponentServiceObjects<ProductConfigurationListResource>
+				productConfigurationListResourceComponentServiceObjects) {
+
+		_productConfigurationListResourceComponentServiceObjects =
+			productConfigurationListResourceComponentServiceObjects;
+	}
+
+	public static void
+		setProductConfigurationListAccountResourceComponentServiceObjects(
+			ComponentServiceObjects<ProductConfigurationListAccountResource>
+				productConfigurationListAccountResourceComponentServiceObjects) {
+
+		_productConfigurationListAccountResourceComponentServiceObjects =
+			productConfigurationListAccountResourceComponentServiceObjects;
+	}
+
+	public static void
+		setProductConfigurationListAccountGroupResourceComponentServiceObjects(
+			ComponentServiceObjects
+				<ProductConfigurationListAccountGroupResource>
+					productConfigurationListAccountGroupResourceComponentServiceObjects) {
+
+		_productConfigurationListAccountGroupResourceComponentServiceObjects =
+			productConfigurationListAccountGroupResourceComponentServiceObjects;
+	}
+
+	public static void
+		setProductConfigurationListChannelResourceComponentServiceObjects(
+			ComponentServiceObjects<ProductConfigurationListChannelResource>
+				productConfigurationListChannelResourceComponentServiceObjects) {
+
+		_productConfigurationListChannelResourceComponentServiceObjects =
+			productConfigurationListChannelResourceComponentServiceObjects;
+	}
+
+	public static void
+		setProductConfigurationListOrderTypeResourceComponentServiceObjects(
+			ComponentServiceObjects<ProductConfigurationListOrderTypeResource>
+				productConfigurationListOrderTypeResourceComponentServiceObjects) {
+
+		_productConfigurationListOrderTypeResourceComponentServiceObjects =
+			productConfigurationListOrderTypeResourceComponentServiceObjects;
+	}
+
 	public static void setProductGroupResourceComponentServiceObjects(
 		ComponentServiceObjects<ProductGroupResource>
 			productGroupResourceComponentServiceObjects) {
@@ -365,6 +419,34 @@ public class Mutation {
 					externalReferenceCode));
 
 		return true;
+	}
+
+	@GraphQLField
+	public Attachment patchAttachmentByExternalReferenceCode(
+			@GraphQLName("externalReferenceCode") String externalReferenceCode,
+			@GraphQLName("attachment") Attachment attachment)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_attachmentResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			attachmentResource ->
+				attachmentResource.patchAttachmentByExternalReferenceCode(
+					externalReferenceCode, attachment));
+	}
+
+	@GraphQLField
+	public Attachment updateAttachmentByExternalReferenceCode(
+			@GraphQLName("externalReferenceCode") String externalReferenceCode,
+			@GraphQLName("attachment") Attachment attachment)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_attachmentResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			attachmentResource ->
+				attachmentResource.putAttachmentByExternalReferenceCode(
+					externalReferenceCode, attachment));
 	}
 
 	@GraphQLField
@@ -601,6 +683,20 @@ public class Mutation {
 	}
 
 	@GraphQLField
+	public Catalog updateCatalogByExternalReferenceCode(
+			@GraphQLName("externalReferenceCode") String externalReferenceCode,
+			@GraphQLName("catalog") Catalog catalog)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_catalogResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			catalogResource ->
+				catalogResource.putCatalogByExternalReferenceCode(
+					externalReferenceCode, catalog));
+	}
+
+	@GraphQLField
 	public Response deleteCatalog(@GraphQLName("id") Long id) throws Exception {
 		return _applyComponentServiceObjects(
 			_catalogResourceComponentServiceObjects,
@@ -741,6 +837,35 @@ public class Mutation {
 			this::_populateResourceContext,
 			currencyResource -> currencyResource.postCurrencyBatch(
 				callbackURL, object));
+	}
+
+	@GraphQLField
+	public boolean deleteCurrencyByExternalReferenceCode(
+			@GraphQLName("externalReferenceCode") String externalReferenceCode)
+		throws Exception {
+
+		_applyVoidComponentServiceObjects(
+			_currencyResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			currencyResource ->
+				currencyResource.deleteCurrencyByExternalReferenceCode(
+					externalReferenceCode));
+
+		return true;
+	}
+
+	@GraphQLField
+	public Currency patchCurrencyByExternalReferenceCode(
+			@GraphQLName("externalReferenceCode") String externalReferenceCode,
+			@GraphQLName("currency") Currency currency)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_currencyResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			currencyResource ->
+				currencyResource.patchCurrencyByExternalReferenceCode(
+					externalReferenceCode, currency));
 	}
 
 	@GraphQLField
@@ -947,6 +1072,39 @@ public class Mutation {
 	}
 
 	@GraphQLField
+	public boolean deleteSpecificationListTypeDefinition(
+			@GraphQLName("specificationId") Long specificationId,
+			@GraphQLName("listTypeDefinitionId") Long listTypeDefinitionId)
+		throws Exception {
+
+		_applyVoidComponentServiceObjects(
+			_listTypeDefinitionResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			listTypeDefinitionResource ->
+				listTypeDefinitionResource.
+					deleteSpecificationListTypeDefinition(
+						specificationId, listTypeDefinitionId));
+
+		return true;
+	}
+
+	@GraphQLField
+	public boolean createSpecificationListTypeDefinition(
+			@GraphQLName("specificationId") Long specificationId,
+			@GraphQLName("listTypeDefinitionId") Long listTypeDefinitionId)
+		throws Exception {
+
+		_applyVoidComponentServiceObjects(
+			_listTypeDefinitionResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			listTypeDefinitionResource ->
+				listTypeDefinitionResource.postSpecificationListTypeDefinition(
+					specificationId, listTypeDefinitionId));
+
+		return true;
+	}
+
+	@GraphQLField
 	public Response createLowStockActionsPageExportBatch(
 			@GraphQLName("callbackURL") String callbackURL,
 			@GraphQLName("contentType") String contentType,
@@ -1114,6 +1272,19 @@ public class Mutation {
 	}
 
 	@GraphQLField
+	public Option updateOptionByExternalReferenceCode(
+			@GraphQLName("externalReferenceCode") String externalReferenceCode,
+			@GraphQLName("option") Option option)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_optionResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			optionResource -> optionResource.putOptionByExternalReferenceCode(
+				externalReferenceCode, option));
+	}
+
+	@GraphQLField
 	public Response deleteOption(@GraphQLName("id") Long id) throws Exception {
 		return _applyComponentServiceObjects(
 			_optionResourceComponentServiceObjects,
@@ -1220,6 +1391,20 @@ public class Mutation {
 				optionCategoryResource.
 					patchOptionCategoryByExternalReferenceCode(
 						externalReferenceCode, optionCategory));
+	}
+
+	@GraphQLField
+	public OptionCategory updateOptionCategoryByExternalReferenceCode(
+			@GraphQLName("externalReferenceCode") String externalReferenceCode,
+			@GraphQLName("optionCategory") OptionCategory optionCategory)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_optionCategoryResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			optionCategoryResource ->
+				optionCategoryResource.putOptionCategoryByExternalReferenceCode(
+					externalReferenceCode, optionCategory));
 	}
 
 	@GraphQLField
@@ -1503,6 +1688,20 @@ public class Mutation {
 	}
 
 	@GraphQLField
+	public Product updateProductByExternalReferenceCode(
+			@GraphQLName("externalReferenceCode") String externalReferenceCode,
+			@GraphQLName("product") Product product)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_productResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			productResource ->
+				productResource.putProductByExternalReferenceCode(
+					externalReferenceCode, product));
+	}
+
+	@GraphQLField
 	public boolean deleteProductByExternalReferenceCodeByVersion(
 			@GraphQLName("externalReferenceCode") String externalReferenceCode,
 			@GraphQLName("version") Integer version)
@@ -1648,6 +1847,132 @@ public class Mutation {
 	}
 
 	@GraphQLField
+	public ProductConfiguration
+			createProductConfigurationListByExternalReferenceCodeProductConfiguration(
+				@GraphQLName("externalReferenceCode") String
+					externalReferenceCode,
+				@GraphQLName("productConfiguration") ProductConfiguration
+					productConfiguration)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_productConfigurationResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			productConfigurationResource ->
+				productConfigurationResource.
+					postProductConfigurationListByExternalReferenceCodeProductConfiguration(
+						externalReferenceCode, productConfiguration));
+	}
+
+	@GraphQLField
+	public ProductConfiguration
+			createProductConfigurationListIdProductConfiguration(
+				@GraphQLName("id") Long id,
+				@GraphQLName("productConfiguration") ProductConfiguration
+					productConfiguration)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_productConfigurationResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			productConfigurationResource ->
+				productConfigurationResource.
+					postProductConfigurationListIdProductConfiguration(
+						id, productConfiguration));
+	}
+
+	@GraphQLField
+	public Response createProductConfigurationListIdProductConfigurationBatch(
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("object") Object object)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_productConfigurationResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			productConfigurationResource ->
+				productConfigurationResource.
+					postProductConfigurationListIdProductConfigurationBatch(
+						callbackURL, object));
+	}
+
+	@GraphQLField
+	public boolean deleteProductConfigurationByExternalReferenceCode(
+			@GraphQLName("externalReferenceCode") String externalReferenceCode)
+		throws Exception {
+
+		_applyVoidComponentServiceObjects(
+			_productConfigurationResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			productConfigurationResource ->
+				productConfigurationResource.
+					deleteProductConfigurationByExternalReferenceCode(
+						externalReferenceCode));
+
+		return true;
+	}
+
+	@GraphQLField
+	public ProductConfiguration
+			patchProductConfigurationByExternalReferenceCode(
+				@GraphQLName("externalReferenceCode") String
+					externalReferenceCode,
+				@GraphQLName("productConfiguration") ProductConfiguration
+					productConfiguration)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_productConfigurationResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			productConfigurationResource ->
+				productConfigurationResource.
+					patchProductConfigurationByExternalReferenceCode(
+						externalReferenceCode, productConfiguration));
+	}
+
+	@GraphQLField
+	public boolean deleteProductConfiguration(@GraphQLName("id") Long id)
+		throws Exception {
+
+		_applyVoidComponentServiceObjects(
+			_productConfigurationResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			productConfigurationResource ->
+				productConfigurationResource.deleteProductConfiguration(id));
+
+		return true;
+	}
+
+	@GraphQLField
+	public Response deleteProductConfigurationBatch(
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("object") Object object)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_productConfigurationResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			productConfigurationResource ->
+				productConfigurationResource.deleteProductConfigurationBatch(
+					callbackURL, object));
+	}
+
+	@GraphQLField
+	public ProductConfiguration patchProductConfiguration(
+			@GraphQLName("id") Long id,
+			@GraphQLName("productConfiguration") ProductConfiguration
+				productConfiguration)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_productConfigurationResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			productConfigurationResource ->
+				productConfigurationResource.patchProductConfiguration(
+					id, productConfiguration));
+	}
+
+	@GraphQLField
 	public Response patchProductByExternalReferenceCodeConfiguration(
 			@GraphQLName("externalReferenceCode") String externalReferenceCode,
 			@GraphQLName("productConfiguration") ProductConfiguration
@@ -1676,6 +2001,480 @@ public class Mutation {
 			productConfigurationResource ->
 				productConfigurationResource.patchProductIdConfiguration(
 					id, productConfiguration));
+	}
+
+	@GraphQLField
+	public Response createProductConfigurationListsPageExportBatch(
+			@GraphQLName("catalogId") Long catalogId,
+			@GraphQLName("search") String search,
+			@GraphQLName("filter") String filterString,
+			@GraphQLName("sort") String sortsString,
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("contentType") String contentType,
+			@GraphQLName("fieldNames") String fieldNames)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_productConfigurationListResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			productConfigurationListResource ->
+				productConfigurationListResource.
+					postProductConfigurationListsPageExportBatch(
+						catalogId, search,
+						_filterBiFunction.apply(
+							productConfigurationListResource, filterString),
+						_sortsBiFunction.apply(
+							productConfigurationListResource, sortsString),
+						callbackURL, contentType, fieldNames));
+	}
+
+	@GraphQLField
+	public ProductConfigurationList createProductConfigurationList(
+			@GraphQLName("productConfigurationList") ProductConfigurationList
+				productConfigurationList)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_productConfigurationListResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			productConfigurationListResource ->
+				productConfigurationListResource.postProductConfigurationList(
+					productConfigurationList));
+	}
+
+	@GraphQLField
+	public Response createProductConfigurationListBatch(
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("object") Object object)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_productConfigurationListResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			productConfigurationListResource ->
+				productConfigurationListResource.
+					postProductConfigurationListBatch(callbackURL, object));
+	}
+
+	@GraphQLField
+	public boolean deleteProductConfigurationListByExternalReferenceCode(
+			@GraphQLName("externalReferenceCode") String externalReferenceCode)
+		throws Exception {
+
+		_applyVoidComponentServiceObjects(
+			_productConfigurationListResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			productConfigurationListResource ->
+				productConfigurationListResource.
+					deleteProductConfigurationListByExternalReferenceCode(
+						externalReferenceCode));
+
+		return true;
+	}
+
+	@GraphQLField
+	public ProductConfigurationList
+			patchProductConfigurationListByExternalReferenceCode(
+				@GraphQLName("externalReferenceCode") String
+					externalReferenceCode,
+				@GraphQLName("productConfigurationList")
+					ProductConfigurationList productConfigurationList)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_productConfigurationListResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			productConfigurationListResource ->
+				productConfigurationListResource.
+					patchProductConfigurationListByExternalReferenceCode(
+						externalReferenceCode, productConfigurationList));
+	}
+
+	@GraphQLField
+	public boolean deleteProductConfigurationList(@GraphQLName("id") Long id)
+		throws Exception {
+
+		_applyVoidComponentServiceObjects(
+			_productConfigurationListResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			productConfigurationListResource ->
+				productConfigurationListResource.deleteProductConfigurationList(
+					id));
+
+		return true;
+	}
+
+	@GraphQLField
+	public Response deleteProductConfigurationListBatch(
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("object") Object object)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_productConfigurationListResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			productConfigurationListResource ->
+				productConfigurationListResource.
+					deleteProductConfigurationListBatch(callbackURL, object));
+	}
+
+	@GraphQLField
+	public ProductConfigurationList patchProductConfigurationList(
+			@GraphQLName("id") Long id,
+			@GraphQLName("productConfigurationList") ProductConfigurationList
+				productConfigurationList)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_productConfigurationListResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			productConfigurationListResource ->
+				productConfigurationListResource.patchProductConfigurationList(
+					id, productConfigurationList));
+	}
+
+	@GraphQLField
+	public boolean deleteProductConfigurationListAccount(
+			@GraphQLName("productConfigurationListAccountId") Long
+				productConfigurationListAccountId)
+		throws Exception {
+
+		_applyVoidComponentServiceObjects(
+			_productConfigurationListAccountResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			productConfigurationListAccountResource ->
+				productConfigurationListAccountResource.
+					deleteProductConfigurationListAccount(
+						productConfigurationListAccountId));
+
+		return true;
+	}
+
+	@GraphQLField
+	public Response deleteProductConfigurationListAccountBatch(
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("object") Object object)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_productConfigurationListAccountResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			productConfigurationListAccountResource ->
+				productConfigurationListAccountResource.
+					deleteProductConfigurationListAccountBatch(
+						callbackURL, object));
+	}
+
+	@GraphQLField
+	public ProductConfigurationListAccount
+			createProductConfigurationListByExternalReferenceCodeProductConfigurationListAccount(
+				@GraphQLName("externalReferenceCode") String
+					externalReferenceCode,
+				@GraphQLName("productConfigurationListAccount")
+					ProductConfigurationListAccount
+						productConfigurationListAccount)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_productConfigurationListAccountResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			productConfigurationListAccountResource ->
+				productConfigurationListAccountResource.
+					postProductConfigurationListByExternalReferenceCodeProductConfigurationListAccount(
+						externalReferenceCode,
+						productConfigurationListAccount));
+	}
+
+	@GraphQLField
+	public ProductConfigurationListAccount
+			createProductConfigurationListIdProductConfigurationListAccount(
+				@GraphQLName("id") Long id,
+				@GraphQLName("productConfigurationListAccount")
+					ProductConfigurationListAccount
+						productConfigurationListAccount)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_productConfigurationListAccountResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			productConfigurationListAccountResource ->
+				productConfigurationListAccountResource.
+					postProductConfigurationListIdProductConfigurationListAccount(
+						id, productConfigurationListAccount));
+	}
+
+	@GraphQLField
+	public Response
+			createProductConfigurationListIdProductConfigurationListAccountBatch(
+				@GraphQLName("callbackURL") String callbackURL,
+				@GraphQLName("object") Object object)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_productConfigurationListAccountResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			productConfigurationListAccountResource ->
+				productConfigurationListAccountResource.
+					postProductConfigurationListIdProductConfigurationListAccountBatch(
+						callbackURL, object));
+	}
+
+	@GraphQLField
+	public boolean deleteProductConfigurationListAccountGroup(
+			@GraphQLName("productConfigurationListAccountGroupId") Long
+				productConfigurationListAccountGroupId)
+		throws Exception {
+
+		_applyVoidComponentServiceObjects(
+			_productConfigurationListAccountGroupResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			productConfigurationListAccountGroupResource ->
+				productConfigurationListAccountGroupResource.
+					deleteProductConfigurationListAccountGroup(
+						productConfigurationListAccountGroupId));
+
+		return true;
+	}
+
+	@GraphQLField
+	public Response deleteProductConfigurationListAccountGroupBatch(
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("object") Object object)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_productConfigurationListAccountGroupResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			productConfigurationListAccountGroupResource ->
+				productConfigurationListAccountGroupResource.
+					deleteProductConfigurationListAccountGroupBatch(
+						callbackURL, object));
+	}
+
+	@GraphQLField
+	public ProductConfigurationListAccountGroup
+			createProductConfigurationListByExternalReferenceCodeProductConfigurationListAccountGroup(
+				@GraphQLName("externalReferenceCode") String
+					externalReferenceCode,
+				@GraphQLName("productConfigurationListAccountGroup")
+					ProductConfigurationListAccountGroup
+						productConfigurationListAccountGroup)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_productConfigurationListAccountGroupResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			productConfigurationListAccountGroupResource ->
+				productConfigurationListAccountGroupResource.
+					postProductConfigurationListByExternalReferenceCodeProductConfigurationListAccountGroup(
+						externalReferenceCode,
+						productConfigurationListAccountGroup));
+	}
+
+	@GraphQLField
+	public ProductConfigurationListAccountGroup
+			createProductConfigurationListIdProductConfigurationListAccountGroup(
+				@GraphQLName("id") Long id,
+				@GraphQLName("productConfigurationListAccountGroup")
+					ProductConfigurationListAccountGroup
+						productConfigurationListAccountGroup)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_productConfigurationListAccountGroupResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			productConfigurationListAccountGroupResource ->
+				productConfigurationListAccountGroupResource.
+					postProductConfigurationListIdProductConfigurationListAccountGroup(
+						id, productConfigurationListAccountGroup));
+	}
+
+	@GraphQLField
+	public Response
+			createProductConfigurationListIdProductConfigurationListAccountGroupBatch(
+				@GraphQLName("callbackURL") String callbackURL,
+				@GraphQLName("object") Object object)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_productConfigurationListAccountGroupResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			productConfigurationListAccountGroupResource ->
+				productConfigurationListAccountGroupResource.
+					postProductConfigurationListIdProductConfigurationListAccountGroupBatch(
+						callbackURL, object));
+	}
+
+	@GraphQLField
+	public boolean deleteProductConfigurationListChannel(
+			@GraphQLName("productConfigurationListChannelId") Long
+				productConfigurationListChannelId)
+		throws Exception {
+
+		_applyVoidComponentServiceObjects(
+			_productConfigurationListChannelResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			productConfigurationListChannelResource ->
+				productConfigurationListChannelResource.
+					deleteProductConfigurationListChannel(
+						productConfigurationListChannelId));
+
+		return true;
+	}
+
+	@GraphQLField
+	public Response deleteProductConfigurationListChannelBatch(
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("object") Object object)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_productConfigurationListChannelResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			productConfigurationListChannelResource ->
+				productConfigurationListChannelResource.
+					deleteProductConfigurationListChannelBatch(
+						callbackURL, object));
+	}
+
+	@GraphQLField
+	public ProductConfigurationListChannel
+			createProductConfigurationListByExternalReferenceCodeProductConfigurationListChannel(
+				@GraphQLName("externalReferenceCode") String
+					externalReferenceCode,
+				@GraphQLName("productConfigurationListChannel")
+					ProductConfigurationListChannel
+						productConfigurationListChannel)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_productConfigurationListChannelResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			productConfigurationListChannelResource ->
+				productConfigurationListChannelResource.
+					postProductConfigurationListByExternalReferenceCodeProductConfigurationListChannel(
+						externalReferenceCode,
+						productConfigurationListChannel));
+	}
+
+	@GraphQLField
+	public ProductConfigurationListChannel
+			createProductConfigurationListIdProductConfigurationListChannel(
+				@GraphQLName("id") Long id,
+				@GraphQLName("productConfigurationListChannel")
+					ProductConfigurationListChannel
+						productConfigurationListChannel)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_productConfigurationListChannelResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			productConfigurationListChannelResource ->
+				productConfigurationListChannelResource.
+					postProductConfigurationListIdProductConfigurationListChannel(
+						id, productConfigurationListChannel));
+	}
+
+	@GraphQLField
+	public Response
+			createProductConfigurationListIdProductConfigurationListChannelBatch(
+				@GraphQLName("callbackURL") String callbackURL,
+				@GraphQLName("object") Object object)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_productConfigurationListChannelResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			productConfigurationListChannelResource ->
+				productConfigurationListChannelResource.
+					postProductConfigurationListIdProductConfigurationListChannelBatch(
+						callbackURL, object));
+	}
+
+	@GraphQLField
+	public boolean deleteProductConfigurationListOrderType(
+			@GraphQLName("productConfigurationListOrderTypeId") Long
+				productConfigurationListOrderTypeId)
+		throws Exception {
+
+		_applyVoidComponentServiceObjects(
+			_productConfigurationListOrderTypeResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			productConfigurationListOrderTypeResource ->
+				productConfigurationListOrderTypeResource.
+					deleteProductConfigurationListOrderType(
+						productConfigurationListOrderTypeId));
+
+		return true;
+	}
+
+	@GraphQLField
+	public Response deleteProductConfigurationListOrderTypeBatch(
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("object") Object object)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_productConfigurationListOrderTypeResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			productConfigurationListOrderTypeResource ->
+				productConfigurationListOrderTypeResource.
+					deleteProductConfigurationListOrderTypeBatch(
+						callbackURL, object));
+	}
+
+	@GraphQLField
+	public ProductConfigurationListOrderType
+			createProductConfigurationListByExternalReferenceCodeProductConfigurationListOrderType(
+				@GraphQLName("externalReferenceCode") String
+					externalReferenceCode,
+				@GraphQLName("productConfigurationListOrderType")
+					ProductConfigurationListOrderType
+						productConfigurationListOrderType)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_productConfigurationListOrderTypeResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			productConfigurationListOrderTypeResource ->
+				productConfigurationListOrderTypeResource.
+					postProductConfigurationListByExternalReferenceCodeProductConfigurationListOrderType(
+						externalReferenceCode,
+						productConfigurationListOrderType));
+	}
+
+	@GraphQLField
+	public ProductConfigurationListOrderType
+			createProductConfigurationListIdProductConfigurationListOrderType(
+				@GraphQLName("id") Long id,
+				@GraphQLName("productConfigurationListOrderType")
+					ProductConfigurationListOrderType
+						productConfigurationListOrderType)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_productConfigurationListOrderTypeResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			productConfigurationListOrderTypeResource ->
+				productConfigurationListOrderTypeResource.
+					postProductConfigurationListIdProductConfigurationListOrderType(
+						id, productConfigurationListOrderType));
+	}
+
+	@GraphQLField
+	public Response
+			createProductConfigurationListIdProductConfigurationListOrderTypeBatch(
+				@GraphQLName("callbackURL") String callbackURL,
+				@GraphQLName("object") Object object)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_productConfigurationListOrderTypeResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			productConfigurationListOrderTypeResource ->
+				productConfigurationListOrderTypeResource.
+					postProductConfigurationListIdProductConfigurationListOrderTypeBatch(
+						callbackURL, object));
 	}
 
 	@GraphQLField
@@ -1750,6 +2549,20 @@ public class Mutation {
 			this::_populateResourceContext,
 			productGroupResource ->
 				productGroupResource.patchProductGroupByExternalReferenceCode(
+					externalReferenceCode, productGroup));
+	}
+
+	@GraphQLField
+	public ProductGroup updateProductGroupByExternalReferenceCode(
+			@GraphQLName("externalReferenceCode") String externalReferenceCode,
+			@GraphQLName("productGroup") ProductGroup productGroup)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_productGroupResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			productGroupResource ->
+				productGroupResource.putProductGroupByExternalReferenceCode(
 					externalReferenceCode, productGroup));
 	}
 
@@ -2053,6 +2866,40 @@ public class Mutation {
 	}
 
 	@GraphQLField
+	public boolean deleteProductSpecificationByExternalReferenceCode(
+			@GraphQLName("externalReferenceCode") String externalReferenceCode)
+		throws Exception {
+
+		_applyVoidComponentServiceObjects(
+			_productSpecificationResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			productSpecificationResource ->
+				productSpecificationResource.
+					deleteProductSpecificationByExternalReferenceCode(
+						externalReferenceCode));
+
+		return true;
+	}
+
+	@GraphQLField
+	public ProductSpecification
+			patchProductSpecificationByExternalReferenceCode(
+				@GraphQLName("externalReferenceCode") String
+					externalReferenceCode,
+				@GraphQLName("productSpecification") ProductSpecification
+					productSpecification)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_productSpecificationResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			productSpecificationResource ->
+				productSpecificationResource.
+					patchProductSpecificationByExternalReferenceCode(
+						externalReferenceCode, productSpecification));
+	}
+
+	@GraphQLField
 	public boolean deleteProductSpecification(@GraphQLName("id") Long id)
 		throws Exception {
 
@@ -2092,6 +2939,24 @@ public class Mutation {
 			productSpecificationResource ->
 				productSpecificationResource.patchProductSpecification(
 					id, productSpecification));
+	}
+
+	@GraphQLField
+	public ProductSpecification
+			createProductByExternalReferenceCodeProductSpecification(
+				@GraphQLName("externalReferenceCode") String
+					externalReferenceCode,
+				@GraphQLName("productSpecification") ProductSpecification
+					productSpecification)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_productSpecificationResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			productSpecificationResource ->
+				productSpecificationResource.
+					postProductByExternalReferenceCodeProductSpecification(
+						externalReferenceCode, productSpecification));
 	}
 
 	@GraphQLField
@@ -2404,6 +3269,18 @@ public class Mutation {
 	}
 
 	@GraphQLField
+	public Sku updateSkuByExternalReferenceCode(
+			@GraphQLName("externalReferenceCode") String externalReferenceCode,
+			@GraphQLName("sku") Sku sku)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_skuResourceComponentServiceObjects, this::_populateResourceContext,
+			skuResource -> skuResource.putSkuByExternalReferenceCode(
+				externalReferenceCode, sku));
+	}
+
+	@GraphQLField
 	public Response deleteSku(@GraphQLName("id") Long id) throws Exception {
 		return _applyComponentServiceObjects(
 			_skuResourceComponentServiceObjects, this::_populateResourceContext,
@@ -2656,6 +3533,20 @@ public class Mutation {
 			this::_populateResourceContext,
 			specificationResource ->
 				specificationResource.patchSpecificationByExternalReferenceCode(
+					externalReferenceCode, specification));
+	}
+
+	@GraphQLField
+	public Specification updateSpecificationByExternalReferenceCode(
+			@GraphQLName("externalReferenceCode") String externalReferenceCode,
+			@GraphQLName("specification") Specification specification)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_specificationResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			specificationResource ->
+				specificationResource.putSpecificationByExternalReferenceCode(
 					externalReferenceCode, specification));
 	}
 
@@ -3076,6 +3967,150 @@ public class Mutation {
 		productConfigurationResource.setContextUser(_user);
 		productConfigurationResource.setGroupLocalService(_groupLocalService);
 		productConfigurationResource.setRoleLocalService(_roleLocalService);
+
+		productConfigurationResource.setVulcanBatchEngineExportTaskResource(
+			_vulcanBatchEngineExportTaskResource);
+
+		productConfigurationResource.setVulcanBatchEngineImportTaskResource(
+			_vulcanBatchEngineImportTaskResource);
+	}
+
+	private void _populateResourceContext(
+			ProductConfigurationListResource productConfigurationListResource)
+		throws Exception {
+
+		productConfigurationListResource.setContextAcceptLanguage(
+			_acceptLanguage);
+		productConfigurationListResource.setContextCompany(_company);
+		productConfigurationListResource.setContextHttpServletRequest(
+			_httpServletRequest);
+		productConfigurationListResource.setContextHttpServletResponse(
+			_httpServletResponse);
+		productConfigurationListResource.setContextUriInfo(_uriInfo);
+		productConfigurationListResource.setContextUser(_user);
+		productConfigurationListResource.setGroupLocalService(
+			_groupLocalService);
+		productConfigurationListResource.setRoleLocalService(_roleLocalService);
+
+		productConfigurationListResource.setVulcanBatchEngineExportTaskResource(
+			_vulcanBatchEngineExportTaskResource);
+
+		productConfigurationListResource.setVulcanBatchEngineImportTaskResource(
+			_vulcanBatchEngineImportTaskResource);
+	}
+
+	private void _populateResourceContext(
+			ProductConfigurationListAccountResource
+				productConfigurationListAccountResource)
+		throws Exception {
+
+		productConfigurationListAccountResource.setContextAcceptLanguage(
+			_acceptLanguage);
+		productConfigurationListAccountResource.setContextCompany(_company);
+		productConfigurationListAccountResource.setContextHttpServletRequest(
+			_httpServletRequest);
+		productConfigurationListAccountResource.setContextHttpServletResponse(
+			_httpServletResponse);
+		productConfigurationListAccountResource.setContextUriInfo(_uriInfo);
+		productConfigurationListAccountResource.setContextUser(_user);
+		productConfigurationListAccountResource.setGroupLocalService(
+			_groupLocalService);
+		productConfigurationListAccountResource.setRoleLocalService(
+			_roleLocalService);
+
+		productConfigurationListAccountResource.
+			setVulcanBatchEngineExportTaskResource(
+				_vulcanBatchEngineExportTaskResource);
+
+		productConfigurationListAccountResource.
+			setVulcanBatchEngineImportTaskResource(
+				_vulcanBatchEngineImportTaskResource);
+	}
+
+	private void _populateResourceContext(
+			ProductConfigurationListAccountGroupResource
+				productConfigurationListAccountGroupResource)
+		throws Exception {
+
+		productConfigurationListAccountGroupResource.setContextAcceptLanguage(
+			_acceptLanguage);
+		productConfigurationListAccountGroupResource.setContextCompany(
+			_company);
+		productConfigurationListAccountGroupResource.
+			setContextHttpServletRequest(_httpServletRequest);
+		productConfigurationListAccountGroupResource.
+			setContextHttpServletResponse(_httpServletResponse);
+		productConfigurationListAccountGroupResource.setContextUriInfo(
+			_uriInfo);
+		productConfigurationListAccountGroupResource.setContextUser(_user);
+		productConfigurationListAccountGroupResource.setGroupLocalService(
+			_groupLocalService);
+		productConfigurationListAccountGroupResource.setRoleLocalService(
+			_roleLocalService);
+
+		productConfigurationListAccountGroupResource.
+			setVulcanBatchEngineExportTaskResource(
+				_vulcanBatchEngineExportTaskResource);
+
+		productConfigurationListAccountGroupResource.
+			setVulcanBatchEngineImportTaskResource(
+				_vulcanBatchEngineImportTaskResource);
+	}
+
+	private void _populateResourceContext(
+			ProductConfigurationListChannelResource
+				productConfigurationListChannelResource)
+		throws Exception {
+
+		productConfigurationListChannelResource.setContextAcceptLanguage(
+			_acceptLanguage);
+		productConfigurationListChannelResource.setContextCompany(_company);
+		productConfigurationListChannelResource.setContextHttpServletRequest(
+			_httpServletRequest);
+		productConfigurationListChannelResource.setContextHttpServletResponse(
+			_httpServletResponse);
+		productConfigurationListChannelResource.setContextUriInfo(_uriInfo);
+		productConfigurationListChannelResource.setContextUser(_user);
+		productConfigurationListChannelResource.setGroupLocalService(
+			_groupLocalService);
+		productConfigurationListChannelResource.setRoleLocalService(
+			_roleLocalService);
+
+		productConfigurationListChannelResource.
+			setVulcanBatchEngineExportTaskResource(
+				_vulcanBatchEngineExportTaskResource);
+
+		productConfigurationListChannelResource.
+			setVulcanBatchEngineImportTaskResource(
+				_vulcanBatchEngineImportTaskResource);
+	}
+
+	private void _populateResourceContext(
+			ProductConfigurationListOrderTypeResource
+				productConfigurationListOrderTypeResource)
+		throws Exception {
+
+		productConfigurationListOrderTypeResource.setContextAcceptLanguage(
+			_acceptLanguage);
+		productConfigurationListOrderTypeResource.setContextCompany(_company);
+		productConfigurationListOrderTypeResource.setContextHttpServletRequest(
+			_httpServletRequest);
+		productConfigurationListOrderTypeResource.setContextHttpServletResponse(
+			_httpServletResponse);
+		productConfigurationListOrderTypeResource.setContextUriInfo(_uriInfo);
+		productConfigurationListOrderTypeResource.setContextUser(_user);
+		productConfigurationListOrderTypeResource.setGroupLocalService(
+			_groupLocalService);
+		productConfigurationListOrderTypeResource.setRoleLocalService(
+			_roleLocalService);
+
+		productConfigurationListOrderTypeResource.
+			setVulcanBatchEngineExportTaskResource(
+				_vulcanBatchEngineExportTaskResource);
+
+		productConfigurationListOrderTypeResource.
+			setVulcanBatchEngineImportTaskResource(
+				_vulcanBatchEngineImportTaskResource);
 	}
 
 	private void _populateResourceContext(
@@ -3418,6 +4453,20 @@ public class Mutation {
 		_productChannelResourceComponentServiceObjects;
 	private static ComponentServiceObjects<ProductConfigurationResource>
 		_productConfigurationResourceComponentServiceObjects;
+	private static ComponentServiceObjects<ProductConfigurationListResource>
+		_productConfigurationListResourceComponentServiceObjects;
+	private static ComponentServiceObjects
+		<ProductConfigurationListAccountResource>
+			_productConfigurationListAccountResourceComponentServiceObjects;
+	private static ComponentServiceObjects
+		<ProductConfigurationListAccountGroupResource>
+			_productConfigurationListAccountGroupResourceComponentServiceObjects;
+	private static ComponentServiceObjects
+		<ProductConfigurationListChannelResource>
+			_productConfigurationListChannelResourceComponentServiceObjects;
+	private static ComponentServiceObjects
+		<ProductConfigurationListOrderTypeResource>
+			_productConfigurationListOrderTypeResourceComponentServiceObjects;
 	private static ComponentServiceObjects<ProductGroupResource>
 		_productGroupResourceComponentServiceObjects;
 	private static ComponentServiceObjects<ProductGroupProductResource>
@@ -3451,12 +4500,15 @@ public class Mutation {
 
 	private AcceptLanguage _acceptLanguage;
 	private com.liferay.portal.kernel.model.Company _company;
-	private BiFunction<Object, String, Filter> _filterBiFunction;
+	private BiFunction
+		<Object, String, com.liferay.portal.kernel.search.filter.Filter>
+			_filterBiFunction;
 	private GroupLocalService _groupLocalService;
 	private HttpServletRequest _httpServletRequest;
 	private HttpServletResponse _httpServletResponse;
 	private RoleLocalService _roleLocalService;
-	private BiFunction<Object, String, Sort[]> _sortsBiFunction;
+	private BiFunction<Object, String, com.liferay.portal.kernel.search.Sort[]>
+		_sortsBiFunction;
 	private UriInfo _uriInfo;
 	private com.liferay.portal.kernel.model.User _user;
 	private VulcanBatchEngineExportTaskResource

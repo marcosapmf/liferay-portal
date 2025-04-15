@@ -5,6 +5,8 @@
 
 package com.liferay.ups;
 
+import com.liferay.client.extension.util.spring.boot3.BaseRestController;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -35,7 +37,7 @@ public class DescriptionRestController extends BaseRestController {
 		return new ResponseEntity<>(
 			new JSONObject(
 			).put(
-				"description", "Ship via UPS."
+				"description", "Ship using UPS."
 			).toString(),
 			HttpStatus.OK);
 	}

@@ -71,7 +71,7 @@ definition {
 			webContentNumeric = 100,
 			webContentTitle = "WC WebContent Title");
 
-		PortletEntry.publish();
+		WebContent.publishWithPermissions();
 
 		Translations.gotoTranslate(webContentTitle = "WC WebContent Title");
 
@@ -167,7 +167,7 @@ definition {
 			webContentRichText = '''<h2 class="text-center">This is a HTML title</h2>''',
 			webContentTitle = "WC WebContent Title");
 
-		PortletEntry.publish();
+		WebContent.publishWithPermissions();
 
 		Translations.gotoTranslate(webContentTitle = "WC WebContent Title");
 
@@ -263,7 +263,7 @@ definition {
 			webContentText = "Text",
 			webContentTitle = "WC WebContent Title");
 
-		PortletEntry.publish();
+		WebContent.publishWithPermissions();
 
 		Translations.gotoTranslate(webContentTitle = "WC WebContent Title");
 
@@ -312,6 +312,7 @@ definition {
 
 		WebContent.viewWithStructureCP(
 			description = "WC WebContent Descripción",
+			translated = "true",
 			webContentLocaleFieldLabel = "es-ES",
 			webContentText = "Mensaje de texto",
 			webContentTitle = "WC WebContent Title",
@@ -402,14 +403,18 @@ definition {
 			version = "1.1",
 			webContentTitle = "WC WebContent Title");
 
-		PortletEntry.changeLocale(locale = "es-ES");
+		PortletEntry.changeLocale(
+			locale = "es-ES",
+			translated = "true");
 
 		WebContent.viewCP(
 			webContentContent = "WC WebContent Contenido",
 			webContentDescription = "WC WebContent Descripción",
 			webContentTitle = "WC WebContent Título");
 
-		PortletEntry.changeLocale(locale = "ja-JP");
+		PortletEntry.changeLocale(
+			locale = "ja-JP",
+			translated = "true");
 
 		WebContent.viewCP(
 			webContentContent = "wc webcontentコンテンツ",
@@ -427,61 +432,6 @@ definition {
 			language = "ja-JP",
 			status = "Approved",
 			title = "Translation of WC WebContent Title to ja-JP");
-	}
-
-	@description = "This test covers LPS-142169. It ensures that translate side by side shows the duplicate fields."
-	@priority = 4
-	test CanViewDuplicateFields {
-		property portal.release = "quarantine";
-
-		WebContentNavigator.openWebContentAdmin(siteURLKey = "guest");
-
-		NavItem.gotoStructures();
-
-		WebContentStructures.addCP(
-			structureDescription = "WC Structure Description",
-			structureName = "WC Structure Name");
-
-		DataEngine.addField(
-			fieldFieldLabel = "Text",
-			fieldName = "Text");
-
-		DataEngine.toggleFieldRepeatable(fieldFieldLabel = "Text");
-
-		WebContentStructures.saveCP(structureName = "WC Structure Name");
-
-		WebContentNavigator.openWebContentAdmin(siteURLKey = "guest");
-
-		NavItem.gotoTemplates();
-
-		WebContentTemplates.addCP(
-			structureName = "WC Structure Name",
-			templateDescription = "WC Template Description",
-			templateName = "WC Template Name");
-
-		WebContentNavigator.openWebContentAdmin(siteURLKey = "guest");
-
-		WebContentNavigator.gotoAddWithStructureCP(structureName = "WC Structure Name");
-
-		WebContent.addWithStructureCP(
-			description = "WC WebContent Description",
-			duplicateField = "true",
-			webContentText = "Text",
-			webContentTitle = "WC WebContent Title");
-
-		PortletEntry.publish();
-
-		Translations.gotoTranslate(webContentTitle = "WC WebContent Title");
-
-		Translations.viewBaseFields(
-			webContentDescription = "WC WebContent Description",
-			webContentText = "Text",
-			webContentTitle = "WC WebContent Title");
-
-		Translations.viewBaseFields(
-			webContentDescription = "WC WebContent Description",
-			webContentText = "Text Duplicate Field",
-			webContentTitle = "WC WebContent Title");
 	}
 
 	@description = "This ensures that translate side by side shows the latest values after editing the web content article."
@@ -525,13 +475,15 @@ definition {
 			version = "1.1",
 			webContentTitle = "WC WebContent Title");
 
-		PortletEntry.changeLocale(locale = "es-ES");
+		PortletEntry.changeLocale(
+			locale = "es-ES",
+			translated = "true");
 
 		WebContent.addCP(
 			webContentContent = "WC WebContent Contenido editar",
 			webContentTitle = "WC WebContent Título editar");
 
-		PortletEntry.publish();
+		WebContent.publishExistingWCArticleWithPermissions();
 
 		WebContentNavigator.openWebContentAdmin(siteURLKey = "guest");
 

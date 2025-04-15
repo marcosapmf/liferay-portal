@@ -3,28 +3,23 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import ClayAlert from '@clayui/alert';
 import {
 	API,
 	Card,
-	Input,
 	SidePanelForm,
-	SingleSelect,
 	openToast,
 	saveAndReload,
 } from '@liferay/object-js-components-web';
-import {InputLocalized} from 'frontend-js-components-web';
-import React from 'react';
+import {ILearnResourceContext} from 'frontend-js-components-web';
+import React, {FormEvent, useState} from 'react';
 
-import {
-	ObjectRelationshipFormBase,
-	useObjectRelationshipForm,
-} from './ObjectRelationshipFormBase';
-import SelectObjectRelationship from './SelectObjectRelationship';
+import {EditObjectRelationshipContent} from './EditObjectRelationshipContent';
+import {useObjectRelationshipForm} from './useObjectRelationshipForm';
 
 interface EditObjectRelationshipProps {
 	baseResourceURL: string;
 	hasUpdateObjectDefinitionPermission: boolean;
+	learnResources: ILearnResourceContext;
 	objectDefinitionExternalReferenceCode: string;
 	objectRelationship: ObjectRelationship;
 	objectRelationshipDeletionTypes: LabelValueObject[];
@@ -35,18 +30,26 @@ interface EditObjectRelationshipProps {
 export default function EditObjectRelationship({
 	baseResourceURL,
 	hasUpdateObjectDefinitionPermission,
+	learnResources,
 	objectDefinitionExternalReferenceCode,
 	objectRelationship: initialValues,
 	objectRelationshipDeletionTypes,
 	parameterRequired,
 	restContextPath,
 }: EditObjectRelationshipProps) {
-	const onSubmit = async (objectRelationship: ObjectRelationship) => {
-		try {
-			if (!Liferay.FeatureFlags['LPS-187142']) {
-				delete objectRelationship.edge;
-			}
+	const [submitError, setSubmitError] = useState<SubmitError>(null);
 
+	const {errors, handleChange, handleValidate, setValues, values} =
+		useObjectRelationshipForm({
+			initialValues,
+			onSubmit: () => {},
+			parameterRequired,
+		});
+
+	const onSubmit = async (
+		objectRelationship: Partial<ObjectRelationship> = values
+	) => {
+		try {
 			await API.putObjectRelationship(objectRelationship);
 			saveAndReload();
 
@@ -59,21 +62,52 @@ export default function EditObjectRelationship({
 		catch (error: unknown) {
 			const {message} = error as Error;
 
-			openToast({message, type: 'danger'});
+			if (!Liferay.FeatureFlags['LPD-34594']) {
+				openToast({message, type: 'danger'});
+			}
+			else {
+				setSubmitError(message);
+			}
 		}
 	};
 
-	const {errors, handleChange, handleSubmit, setValues, values} =
-		useObjectRelationshipForm({
-			initialValues,
-			onSubmit,
-			parameterRequired,
-		});
+	const handleSubmit = (event: FormEvent) => {
+		event.preventDefault();
+
+		const validationErrors = handleValidate();
+
+		if (!Object.keys(validationErrors).length) {
+			onSubmit(values);
+		}
+	};
 
 	const readOnly =
 		!hasUpdateObjectDefinitionPermission ||
 		values.reverse ||
 		initialValues.system;
+
+	const handleInheritanceCheckboxChange = ({
+		target,
+	}: React.ChangeEvent<HTMLInputElement>) => {
+		if (target.checked) {
+			setValues({
+				...values,
+				edge: true,
+			});
+		}
+		else {
+			const parentWindow = Liferay.Util.getOpener();
+
+			parentWindow.Liferay.fire('openModalDisableInheritance', {
+				handleDisable: async () => {
+					setValues({
+						...values,
+						edge: false,
+					});
+				},
+			});
+		}
+	};
 
 	return (
 		<SidePanelForm
@@ -87,74 +121,27 @@ export default function EditObjectRelationship({
 			readOnly={readOnly}
 			title={Liferay.Language.get('relationship')}
 		>
-			<Card title={Liferay.Language.get('basic-info')}>
-				{values.reverse && (
-					<ClayAlert
-						displayType="warning"
-						title={`${Liferay.Language.get('warning')}:`}
-					>
-						{Liferay.Language.get(
-							'reverse-object-relationships-cannot-be-updated'
-						)}
-					</ClayAlert>
-				)}
-
-				<InputLocalized
-					disabled={readOnly}
-					error={errors.label}
-					label={Liferay.Language.get('label')}
-					onChange={(label) => setValues({label})}
-					required
-					translations={values.label as LocalizedValue<string>}
-				/>
-
-				<ObjectRelationshipFormBase
-					baseResourceURL={baseResourceURL}
-					errors={errors}
-					handleChange={handleChange}
-					objectDefinitionExternalReferenceCode1={
-						objectDefinitionExternalReferenceCode
-					}
-					readonly
-					setValues={setValues}
-					values={values}
-				/>
-
-				<SingleSelect
-					disabled={
-						readOnly ||
-						(Liferay.FeatureFlags['LPS-187142'] && values.edge)
-					}
-					items={objectRelationshipDeletionTypes}
-					label={Liferay.Language.get('deletion-type')}
-					onSelectionChange={(value) =>
-						setValues({deletionType: value as string})
-					}
-					required
-					selectedKey={values.deletionType}
-				/>
-			</Card>
-
-			{parameterRequired && values.type === 'oneToMany' && (
-				<Card title={Liferay.Language.get('parameters')}>
-					<Input
-						label={Liferay.Language.get('api-endpoint')}
-						readOnly
-						value={restContextPath}
-					/>
-
-					<SelectObjectRelationship
-						error={errors.parameterObjectFieldName}
-						objectDefinitionExternalReferenceCode1={
-							values.objectDefinitionExternalReferenceCode2 as string
-						}
-						onChange={(parameterObjectFieldName) =>
-							setValues({parameterObjectFieldName})
-						}
-						value={values.parameterObjectFieldName}
-					/>
-				</Card>
-			)}
+			<EditObjectRelationshipContent
+				baseResourceURL={baseResourceURL}
+				containerWrapper={Card}
+				errors={errors}
+				handleChange={handleChange}
+				learnResources={learnResources}
+				objectDefinitionExternalReferenceCode={
+					objectDefinitionExternalReferenceCode
+				}
+				objectRelationshipDeletionTypes={
+					objectRelationshipDeletionTypes
+				}
+				onChangeInheritanceCheckbox={handleInheritanceCheckboxChange}
+				onSubmit={onSubmit}
+				parameterRequired={parameterRequired}
+				readOnly={readOnly}
+				restContextPath={restContextPath}
+				setValues={setValues}
+				submitError={submitError}
+				values={values}
+			/>
 		</SidePanelForm>
 	);
 }

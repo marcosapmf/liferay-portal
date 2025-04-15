@@ -41,23 +41,17 @@ import com.liferay.portal.kernel.util.MethodKey;
  */
 public class CTProcessServiceHttp {
 
-	public static java.util.List<com.liferay.change.tracking.model.CTProcess>
-			getCTProcesses(
-				HttpPrincipal httpPrincipal, long companyId, long userId,
-				String keywords, int status, int type, int start, int end,
-				com.liferay.portal.kernel.util.OrderByComparator
-					<com.liferay.change.tracking.model.CTProcess>
-						orderByComparator)
+	public static com.liferay.change.tracking.model.CTProcess deleteCTProcess(
+			HttpPrincipal httpPrincipal, long ctProcessId)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		try {
 			MethodKey methodKey = new MethodKey(
-				CTProcessServiceUtil.class, "getCTProcesses",
-				_getCTProcessesParameterTypes0);
+				CTProcessServiceUtil.class, "deleteCTProcess",
+				_deleteCTProcessParameterTypes0);
 
 			MethodHandler methodHandler = new MethodHandler(
-				methodKey, companyId, userId, keywords, status, type, start,
-				end, orderByComparator);
+				methodKey, ctProcessId);
 
 			Object returnObj = null;
 
@@ -76,8 +70,7 @@ public class CTProcessServiceHttp {
 					exception);
 			}
 
-			return (java.util.List<com.liferay.change.tracking.model.CTProcess>)
-				returnObj;
+			return (com.liferay.change.tracking.model.CTProcess)returnObj;
 		}
 		catch (com.liferay.portal.kernel.exception.SystemException
 					systemException) {
@@ -168,47 +161,10 @@ public class CTProcessServiceHttp {
 		}
 	}
 
-	public static int getCTProcessesCount(
-		HttpPrincipal httpPrincipal, long companyId, long userId,
-		String keywords, int status, int type) {
-
-		try {
-			MethodKey methodKey = new MethodKey(
-				CTProcessServiceUtil.class, "getCTProcessesCount",
-				_getCTProcessesCountParameterTypes3);
-
-			MethodHandler methodHandler = new MethodHandler(
-				methodKey, companyId, userId, keywords, status, type);
-
-			Object returnObj = null;
-
-			try {
-				returnObj = TunnelUtil.invoke(httpPrincipal, methodHandler);
-			}
-			catch (Exception exception) {
-				throw new com.liferay.portal.kernel.exception.SystemException(
-					exception);
-			}
-
-			return ((Integer)returnObj).intValue();
-		}
-		catch (com.liferay.portal.kernel.exception.SystemException
-					systemException) {
-
-			_log.error(systemException, systemException);
-
-			throw systemException;
-		}
-	}
-
 	private static Log _log = LogFactoryUtil.getLog(CTProcessServiceHttp.class);
 
-	private static final Class<?>[] _getCTProcessesParameterTypes0 =
-		new Class[] {
-			long.class, long.class, String.class, int.class, int.class,
-			int.class, int.class,
-			com.liferay.portal.kernel.util.OrderByComparator.class
-		};
+	private static final Class<?>[] _deleteCTProcessParameterTypes0 =
+		new Class[] {long.class};
 	private static final Class<?>[] _getCTProcessesParameterTypes1 =
 		new Class[] {
 			long.class, long.class, String.class, int.class, int.class,
@@ -216,9 +172,5 @@ public class CTProcessServiceHttp {
 		};
 	private static final Class<?>[] _getCTProcessesCountParameterTypes2 =
 		new Class[] {long.class, long.class, String.class, int.class};
-	private static final Class<?>[] _getCTProcessesCountParameterTypes3 =
-		new Class[] {
-			long.class, long.class, String.class, int.class, int.class
-		};
 
 }

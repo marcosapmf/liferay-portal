@@ -13,7 +13,9 @@ import com.liferay.headless.delivery.dto.v1_0.ContentSetElement;
 import com.liferay.headless.delivery.dto.v1_0.ContentStructure;
 import com.liferay.headless.delivery.dto.v1_0.ContentTemplate;
 import com.liferay.headless.delivery.dto.v1_0.Document;
+import com.liferay.headless.delivery.dto.v1_0.DocumentDataDefinitionType;
 import com.liferay.headless.delivery.dto.v1_0.DocumentFolder;
+import com.liferay.headless.delivery.dto.v1_0.DocumentMetadataSet;
 import com.liferay.headless.delivery.dto.v1_0.DocumentShortcut;
 import com.liferay.headless.delivery.dto.v1_0.KnowledgeBaseArticle;
 import com.liferay.headless.delivery.dto.v1_0.KnowledgeBaseAttachment;
@@ -39,7 +41,9 @@ import com.liferay.headless.delivery.resource.v1_0.ContentElementResource;
 import com.liferay.headless.delivery.resource.v1_0.ContentSetElementResource;
 import com.liferay.headless.delivery.resource.v1_0.ContentStructureResource;
 import com.liferay.headless.delivery.resource.v1_0.ContentTemplateResource;
+import com.liferay.headless.delivery.resource.v1_0.DocumentDataDefinitionTypeResource;
 import com.liferay.headless.delivery.resource.v1_0.DocumentFolderResource;
+import com.liferay.headless.delivery.resource.v1_0.DocumentMetadataSetResource;
 import com.liferay.headless.delivery.resource.v1_0.DocumentResource;
 import com.liferay.headless.delivery.resource.v1_0.DocumentShortcutResource;
 import com.liferay.headless.delivery.resource.v1_0.KnowledgeBaseArticleResource;
@@ -59,8 +63,6 @@ import com.liferay.headless.delivery.resource.v1_0.WikiPageAttachmentResource;
 import com.liferay.headless.delivery.resource.v1_0.WikiPageResource;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.function.UnsafeFunction;
-import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
@@ -159,12 +161,29 @@ public class Query {
 			documentResourceComponentServiceObjects;
 	}
 
+	public static void
+		setDocumentDataDefinitionTypeResourceComponentServiceObjects(
+			ComponentServiceObjects<DocumentDataDefinitionTypeResource>
+				documentDataDefinitionTypeResourceComponentServiceObjects) {
+
+		_documentDataDefinitionTypeResourceComponentServiceObjects =
+			documentDataDefinitionTypeResourceComponentServiceObjects;
+	}
+
 	public static void setDocumentFolderResourceComponentServiceObjects(
 		ComponentServiceObjects<DocumentFolderResource>
 			documentFolderResourceComponentServiceObjects) {
 
 		_documentFolderResourceComponentServiceObjects =
 			documentFolderResourceComponentServiceObjects;
+	}
+
+	public static void setDocumentMetadataSetResourceComponentServiceObjects(
+		ComponentServiceObjects<DocumentMetadataSetResource>
+			documentMetadataSetResourceComponentServiceObjects) {
+
+		_documentMetadataSetResourceComponentServiceObjects =
+			documentMetadataSetResourceComponentServiceObjects;
 	}
 
 	public static void setDocumentShortcutResourceComponentServiceObjects(
@@ -448,7 +467,7 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {blogPostingImage(blogPostingImageId: ___){contentUrl, contentValue, encodingFormat, fileExtension, id, sizeInBytes, title, viewableBy}}"}' -u 'test@liferay.com:test'
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {blogPostingImage(blogPostingImageId: ___){contentUrl, contentValue, encodingFormat, externalReferenceCode, fileExtension, id, sizeInBytes, title, viewableBy}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField(
 		description = "Retrieves the blog post's image. The binary image is returned as a relative URL to the image itself."
@@ -496,6 +515,28 @@ public class Query {
 					Pagination.of(page, pageSize),
 					_sortsBiFunction.apply(
 						blogPostingImageResource, sortsString))));
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {blogPostingImageByExternalReferenceCode(externalReferenceCode: ___, siteKey: ___){contentUrl, contentValue, encodingFormat, externalReferenceCode, fileExtension, id, sizeInBytes, title, viewableBy}}"}' -u 'test@liferay.com:test'
+	 */
+	@GraphQLField(
+		description = "Retrieves the site's blog post image by external reference code. The binary image is returned as a relative URL to the image itself."
+	)
+	public BlogPostingImage blogPostingImageByExternalReferenceCode(
+			@GraphQLName("siteKey") @NotEmpty String siteKey,
+			@GraphQLName("externalReferenceCode") String externalReferenceCode)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_blogPostingImageResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			blogPostingImageResource ->
+				blogPostingImageResource.
+					getSiteBlogPostingImageByExternalReferenceCode(
+						Long.valueOf(siteKey), externalReferenceCode));
 	}
 
 	/**
@@ -876,6 +917,29 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {contentSetProviderByKeyContentSetElements(key: ___, page: ___, pageSize: ___, siteKey: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
+	 */
+	@GraphQLField
+	public ContentSetElementPage contentSetProviderByKeyContentSetElements(
+			@GraphQLName("siteKey") @NotEmpty String siteKey,
+			@GraphQLName("key") String key,
+			@GraphQLName("pageSize") int pageSize,
+			@GraphQLName("page") int page)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_contentSetElementResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			contentSetElementResource -> new ContentSetElementPage(
+				contentSetElementResource.
+					getSiteContentSetProviderByKeyContentSetElementsPage(
+						Long.valueOf(siteKey), key,
+						Pagination.of(page, pageSize))));
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
 	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {contentSetByKeyContentSetElements(key: ___, page: ___, pageSize: ___, siteKey: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField(
@@ -1177,7 +1241,7 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {assetLibraryDocumentByExternalReferenceCode(assetLibraryId: ___, externalReferenceCode: ___){actions, adaptedImages, aggregateRating, assetLibraryKey, contentUrl, contentValue, creator, customFields, dateCreated, dateExpired, dateModified, datePublished, description, documentFolderId, documentType, encodingFormat, externalReferenceCode, fileExtension, fileName, friendlyUrlPath, id, keywords, numberOfComments, relatedContents, renderedContents, siteId, sizeInBytes, taxonomyCategoryBriefs, taxonomyCategoryIds, title, viewableBy}}"}' -u 'test@liferay.com:test'
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {assetLibraryDocumentByExternalReferenceCode(assetLibraryId: ___, externalReferenceCode: ___){actions, adaptedImages, aggregateRating, assetLibraryKey, contentUrl, contentValue, creator, customFields, dateCreated, dateExpired, dateModified, datePublished, description, documentFolderExternalReferenceCode, documentFolderId, documentType, encodingFormat, externalReferenceCode, fileExtension, fileName, friendlyUrlPath, id, keywords, numberOfComments, relatedContents, renderedContents, siteId, sizeInBytes, taxonomyCategoryBriefs, taxonomyCategoryIds, title, viewableBy}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField(
 		description = "Retrieves the asset library's document by external reference code."
@@ -1270,7 +1334,7 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {document(documentId: ___){actions, adaptedImages, aggregateRating, assetLibraryKey, contentUrl, contentValue, creator, customFields, dateCreated, dateExpired, dateModified, datePublished, description, documentFolderId, documentType, encodingFormat, externalReferenceCode, fileExtension, fileName, friendlyUrlPath, id, keywords, numberOfComments, relatedContents, renderedContents, siteId, sizeInBytes, taxonomyCategoryBriefs, taxonomyCategoryIds, title, viewableBy}}"}' -u 'test@liferay.com:test'
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {document(documentId: ___){actions, adaptedImages, aggregateRating, assetLibraryKey, contentUrl, contentValue, creator, customFields, dateCreated, dateExpired, dateModified, datePublished, description, documentFolderExternalReferenceCode, documentFolderId, documentType, encodingFormat, externalReferenceCode, fileExtension, fileName, friendlyUrlPath, id, keywords, numberOfComments, relatedContents, renderedContents, siteId, sizeInBytes, taxonomyCategoryBriefs, taxonomyCategoryIds, title, viewableBy}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField(description = "Retrieves the document.")
 	public Document document(@GraphQLName("documentId") Long documentId)
@@ -1374,7 +1438,7 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {documentByExternalReferenceCode(externalReferenceCode: ___, siteKey: ___){actions, adaptedImages, aggregateRating, assetLibraryKey, contentUrl, contentValue, creator, customFields, dateCreated, dateExpired, dateModified, datePublished, description, documentFolderId, documentType, encodingFormat, externalReferenceCode, fileExtension, fileName, friendlyUrlPath, id, keywords, numberOfComments, relatedContents, renderedContents, siteId, sizeInBytes, taxonomyCategoryBriefs, taxonomyCategoryIds, title, viewableBy}}"}' -u 'test@liferay.com:test'
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {documentByExternalReferenceCode(externalReferenceCode: ___, siteKey: ___){actions, adaptedImages, aggregateRating, assetLibraryKey, contentUrl, contentValue, creator, customFields, dateCreated, dateExpired, dateModified, datePublished, description, documentFolderExternalReferenceCode, documentFolderId, documentType, encodingFormat, externalReferenceCode, fileExtension, fileName, friendlyUrlPath, id, keywords, numberOfComments, relatedContents, renderedContents, siteId, sizeInBytes, taxonomyCategoryBriefs, taxonomyCategoryIds, title, viewableBy}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField(
 		description = "Retrieves the site's document by external reference code."
@@ -1429,6 +1493,99 @@ public class Query {
 			documentResource -> new DocumentPage(
 				documentResource.getSiteDocumentsRatedByMePage(
 					Long.valueOf(siteKey), Pagination.of(page, pageSize))));
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {assetLibraryDocumentDataDefinitionTypes(aggregation: ___, assetLibraryId: ___, filter: ___, page: ___, pageSize: ___, search: ___, sorts: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
+	 */
+	@GraphQLField
+	public DocumentDataDefinitionTypePage
+			assetLibraryDocumentDataDefinitionTypes(
+				@GraphQLName("assetLibraryId") @NotEmpty String assetLibraryId,
+				@GraphQLName("search") String search,
+				@GraphQLName("aggregation") List<String> aggregations,
+				@GraphQLName("filter") String filterString,
+				@GraphQLName("pageSize") int pageSize,
+				@GraphQLName("page") int page,
+				@GraphQLName("sort") String sortsString)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_documentDataDefinitionTypeResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			documentDataDefinitionTypeResource ->
+				new DocumentDataDefinitionTypePage(
+					documentDataDefinitionTypeResource.
+						getAssetLibraryDocumentDataDefinitionTypesPage(
+							Long.valueOf(assetLibraryId), search,
+							_aggregationBiFunction.apply(
+								documentDataDefinitionTypeResource,
+								aggregations),
+							_filterBiFunction.apply(
+								documentDataDefinitionTypeResource,
+								filterString),
+							Pagination.of(page, pageSize),
+							_sortsBiFunction.apply(
+								documentDataDefinitionTypeResource,
+								sortsString))));
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {documentDataDefinitionType(documentDataDefinitionTypeId: ___){actions, assetLibraryKey, availableLanguages, creator, dataDefinitionFields, dataLayout, dateCreated, dateModified, description, description_i18n, documentMetadataSetIds, externalReferenceCode, id, name, name_i18n, siteId, viewableBy}}"}' -u 'test@liferay.com:test'
+	 */
+	@GraphQLField
+	public DocumentDataDefinitionType documentDataDefinitionType(
+			@GraphQLName("documentDataDefinitionTypeId") Long
+				documentDataDefinitionTypeId)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_documentDataDefinitionTypeResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			documentDataDefinitionTypeResource ->
+				documentDataDefinitionTypeResource.
+					getDocumentDataDefinitionType(
+						documentDataDefinitionTypeId));
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {documentDataDefinitionTypes(aggregation: ___, filter: ___, page: ___, pageSize: ___, search: ___, siteKey: ___, sorts: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
+	 */
+	@GraphQLField
+	public DocumentDataDefinitionTypePage documentDataDefinitionTypes(
+			@GraphQLName("siteKey") @NotEmpty String siteKey,
+			@GraphQLName("search") String search,
+			@GraphQLName("aggregation") List<String> aggregations,
+			@GraphQLName("filter") String filterString,
+			@GraphQLName("pageSize") int pageSize,
+			@GraphQLName("page") int page,
+			@GraphQLName("sort") String sortsString)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_documentDataDefinitionTypeResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			documentDataDefinitionTypeResource ->
+				new DocumentDataDefinitionTypePage(
+					documentDataDefinitionTypeResource.
+						getSiteDocumentDataDefinitionTypesPage(
+							Long.valueOf(siteKey), search,
+							_aggregationBiFunction.apply(
+								documentDataDefinitionTypeResource,
+								aggregations),
+							_filterBiFunction.apply(
+								documentDataDefinitionTypeResource,
+								filterString),
+							Pagination.of(page, pageSize),
+							_sortsBiFunction.apply(
+								documentDataDefinitionTypeResource,
+								sortsString))));
 	}
 
 	/**
@@ -1695,6 +1852,112 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {assetLibraryDocumentMetadataSets(assetLibraryId: ___, page: ___, pageSize: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
+	 */
+	@GraphQLField
+	public DocumentMetadataSetPage assetLibraryDocumentMetadataSets(
+			@GraphQLName("assetLibraryId") @NotEmpty String assetLibraryId,
+			@GraphQLName("pageSize") int pageSize,
+			@GraphQLName("page") int page)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_documentMetadataSetResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			documentMetadataSetResource -> new DocumentMetadataSetPage(
+				documentMetadataSetResource.
+					getAssetLibraryDocumentMetadataSetsPage(
+						Long.valueOf(assetLibraryId),
+						Pagination.of(page, pageSize))));
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {assetLibraryDocumentMetadataSetByExternalReferenceCode(assetLibraryId: ___, externalReferenceCode: ___){actions, assetLibraryKey, availableLanguages, dataDefinitionFields, dataLayout, dateCreated, dateModified, description, description_i18n, externalReferenceCode, id, name, name_i18n, siteId}}"}' -u 'test@liferay.com:test'
+	 */
+	@GraphQLField(
+		description = "Retrieves the asset library's Document Metadata Set by external reference code."
+	)
+	public DocumentMetadataSet
+			assetLibraryDocumentMetadataSetByExternalReferenceCode(
+				@GraphQLName("assetLibraryId") @NotEmpty String assetLibraryId,
+				@GraphQLName("externalReferenceCode") String
+					externalReferenceCode)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_documentMetadataSetResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			documentMetadataSetResource ->
+				documentMetadataSetResource.
+					getAssetLibraryDocumentMetadataSetByExternalReferenceCode(
+						Long.valueOf(assetLibraryId), externalReferenceCode));
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {documentMetadataSet(documentMetadataSetId: ___){actions, assetLibraryKey, availableLanguages, dataDefinitionFields, dataLayout, dateCreated, dateModified, description, description_i18n, externalReferenceCode, id, name, name_i18n, siteId}}"}' -u 'test@liferay.com:test'
+	 */
+	@GraphQLField(description = "Retrieves the document metadata set.")
+	public DocumentMetadataSet documentMetadataSet(
+			@GraphQLName("documentMetadataSetId") Long documentMetadataSetId)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_documentMetadataSetResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			documentMetadataSetResource ->
+				documentMetadataSetResource.getDocumentMetadataSet(
+					documentMetadataSetId));
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {documentMetadataSets(page: ___, pageSize: ___, siteKey: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
+	 */
+	@GraphQLField
+	public DocumentMetadataSetPage documentMetadataSets(
+			@GraphQLName("siteKey") @NotEmpty String siteKey,
+			@GraphQLName("pageSize") int pageSize,
+			@GraphQLName("page") int page)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_documentMetadataSetResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			documentMetadataSetResource -> new DocumentMetadataSetPage(
+				documentMetadataSetResource.getSiteDocumentMetadataSetsPage(
+					Long.valueOf(siteKey), Pagination.of(page, pageSize))));
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {documentMetadataSetByExternalReferenceCode(externalReferenceCode: ___, siteKey: ___){actions, assetLibraryKey, availableLanguages, dataDefinitionFields, dataLayout, dateCreated, dateModified, description, description_i18n, externalReferenceCode, id, name, name_i18n, siteId}}"}' -u 'test@liferay.com:test'
+	 */
+	@GraphQLField(
+		description = "Retrieves the site's Document Metadata Set by external reference code."
+	)
+	public DocumentMetadataSet documentMetadataSetByExternalReferenceCode(
+			@GraphQLName("siteKey") @NotEmpty String siteKey,
+			@GraphQLName("externalReferenceCode") String externalReferenceCode)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_documentMetadataSetResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			documentMetadataSetResource ->
+				documentMetadataSetResource.
+					getSiteDocumentMetadataSetByExternalReferenceCode(
+						Long.valueOf(siteKey), externalReferenceCode));
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
 	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {assetLibraryDocumentShortcuts(assetLibraryId: ___, page: ___, pageSize: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField
@@ -1716,7 +1979,7 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {documentShortcut(documentShortcutId: ___){actions, assetLibraryKey, dateCreated, dateModified, folderId, id, siteId, targetDocumentId, title, viewableBy}}"}' -u 'test@liferay.com:test'
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {documentShortcut(documentShortcutId: ___){actions, assetLibraryKey, dateCreated, dateModified, externalReferenceCode, folderId, id, siteId, targetDocumentId, title, viewableBy}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField(description = "Retrieves the document shortcut.")
 	public DocumentShortcut documentShortcut(
@@ -1749,6 +2012,28 @@ public class Query {
 			documentShortcutResource -> new DocumentShortcutPage(
 				documentShortcutResource.getSiteDocumentShortcutsPage(
 					Long.valueOf(siteKey), Pagination.of(page, pageSize))));
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {documentShortcutByExternalReferenceCode(externalReferenceCode: ___, siteKey: ___){actions, assetLibraryKey, dateCreated, dateModified, externalReferenceCode, folderId, id, siteId, targetDocumentId, title, viewableBy}}"}' -u 'test@liferay.com:test'
+	 */
+	@GraphQLField(
+		description = "Retrieves the site's document shortcut by external reference code."
+	)
+	public DocumentShortcut documentShortcutByExternalReferenceCode(
+			@GraphQLName("siteKey") @NotEmpty String siteKey,
+			@GraphQLName("externalReferenceCode") String externalReferenceCode)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_documentShortcutResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			documentShortcutResource ->
+				documentShortcutResource.
+					getSiteDocumentShortcutByExternalReferenceCode(
+						Long.valueOf(siteKey), externalReferenceCode));
 	}
 
 	/**
@@ -2863,7 +3148,7 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {navigationMenu(navigationMenuId: ___){actions, creator, dateCreated, dateModified, id, name, navigationMenuItems, navigationType, siteId}}"}' -u 'test@liferay.com:test'
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {navigationMenu(navigationMenuId: ___){actions, creator, dateCreated, dateModified, externalReferenceCode, id, name, navigationMenuItems, navigationType, siteId}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField
 	public NavigationMenu navigationMenu(
@@ -2914,6 +3199,28 @@ public class Query {
 			navigationMenuResource -> new NavigationMenuPage(
 				navigationMenuResource.getSiteNavigationMenusPage(
 					Long.valueOf(siteKey), Pagination.of(page, pageSize))));
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {navigationMenuByExternalReferenceCode(externalReferenceCode: ___, siteKey: ___){actions, creator, dateCreated, dateModified, externalReferenceCode, id, name, navigationMenuItems, navigationType, siteId}}"}' -u 'test@liferay.com:test'
+	 */
+	@GraphQLField(
+		description = "Retrieves the navigation menu by external reference code."
+	)
+	public NavigationMenu navigationMenuByExternalReferenceCode(
+			@GraphQLName("siteKey") @NotEmpty String siteKey,
+			@GraphQLName("externalReferenceCode") String externalReferenceCode)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_navigationMenuResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			navigationMenuResource ->
+				navigationMenuResource.
+					getSiteNavigationMenuByExternalReferenceCode(
+						Long.valueOf(siteKey), externalReferenceCode));
 	}
 
 	/**
@@ -5802,6 +6109,46 @@ public class Query {
 
 	}
 
+	@GraphQLName("DocumentDataDefinitionTypePage")
+	public class DocumentDataDefinitionTypePage {
+
+		public DocumentDataDefinitionTypePage(
+			Page documentDataDefinitionTypePage) {
+
+			actions = documentDataDefinitionTypePage.getActions();
+
+			facets = documentDataDefinitionTypePage.getFacets();
+
+			items = documentDataDefinitionTypePage.getItems();
+			lastPage = documentDataDefinitionTypePage.getLastPage();
+			page = documentDataDefinitionTypePage.getPage();
+			pageSize = documentDataDefinitionTypePage.getPageSize();
+			totalCount = documentDataDefinitionTypePage.getTotalCount();
+		}
+
+		@GraphQLField
+		protected Map<String, Map<String, String>> actions;
+
+		@GraphQLField
+		protected List<Facet> facets;
+
+		@GraphQLField
+		protected java.util.Collection<DocumentDataDefinitionType> items;
+
+		@GraphQLField
+		protected long lastPage;
+
+		@GraphQLField
+		protected long page;
+
+		@GraphQLField
+		protected long pageSize;
+
+		@GraphQLField
+		protected long totalCount;
+
+	}
+
 	@GraphQLName("DocumentFolderPage")
 	public class DocumentFolderPage {
 
@@ -5825,6 +6172,44 @@ public class Query {
 
 		@GraphQLField
 		protected java.util.Collection<DocumentFolder> items;
+
+		@GraphQLField
+		protected long lastPage;
+
+		@GraphQLField
+		protected long page;
+
+		@GraphQLField
+		protected long pageSize;
+
+		@GraphQLField
+		protected long totalCount;
+
+	}
+
+	@GraphQLName("DocumentMetadataSetPage")
+	public class DocumentMetadataSetPage {
+
+		public DocumentMetadataSetPage(Page documentMetadataSetPage) {
+			actions = documentMetadataSetPage.getActions();
+
+			facets = documentMetadataSetPage.getFacets();
+
+			items = documentMetadataSetPage.getItems();
+			lastPage = documentMetadataSetPage.getLastPage();
+			page = documentMetadataSetPage.getPage();
+			pageSize = documentMetadataSetPage.getPageSize();
+			totalCount = documentMetadataSetPage.getTotalCount();
+		}
+
+		@GraphQLField
+		protected Map<String, Map<String, String>> actions;
+
+		@GraphQLField
+		protected List<Facet> facets;
+
+		@GraphQLField
+		protected java.util.Collection<DocumentMetadataSet> items;
 
 		@GraphQLField
 		protected long lastPage;
@@ -6813,6 +7198,26 @@ public class Query {
 	}
 
 	private void _populateResourceContext(
+			DocumentDataDefinitionTypeResource
+				documentDataDefinitionTypeResource)
+		throws Exception {
+
+		documentDataDefinitionTypeResource.setContextAcceptLanguage(
+			_acceptLanguage);
+		documentDataDefinitionTypeResource.setContextCompany(_company);
+		documentDataDefinitionTypeResource.setContextHttpServletRequest(
+			_httpServletRequest);
+		documentDataDefinitionTypeResource.setContextHttpServletResponse(
+			_httpServletResponse);
+		documentDataDefinitionTypeResource.setContextUriInfo(_uriInfo);
+		documentDataDefinitionTypeResource.setContextUser(_user);
+		documentDataDefinitionTypeResource.setGroupLocalService(
+			_groupLocalService);
+		documentDataDefinitionTypeResource.setRoleLocalService(
+			_roleLocalService);
+	}
+
+	private void _populateResourceContext(
 			DocumentFolderResource documentFolderResource)
 		throws Exception {
 
@@ -6826,6 +7231,22 @@ public class Query {
 		documentFolderResource.setContextUser(_user);
 		documentFolderResource.setGroupLocalService(_groupLocalService);
 		documentFolderResource.setRoleLocalService(_roleLocalService);
+	}
+
+	private void _populateResourceContext(
+			DocumentMetadataSetResource documentMetadataSetResource)
+		throws Exception {
+
+		documentMetadataSetResource.setContextAcceptLanguage(_acceptLanguage);
+		documentMetadataSetResource.setContextCompany(_company);
+		documentMetadataSetResource.setContextHttpServletRequest(
+			_httpServletRequest);
+		documentMetadataSetResource.setContextHttpServletResponse(
+			_httpServletResponse);
+		documentMetadataSetResource.setContextUriInfo(_uriInfo);
+		documentMetadataSetResource.setContextUser(_user);
+		documentMetadataSetResource.setGroupLocalService(_groupLocalService);
+		documentMetadataSetResource.setRoleLocalService(_roleLocalService);
 	}
 
 	private void _populateResourceContext(
@@ -7093,8 +7514,12 @@ public class Query {
 		_contentTemplateResourceComponentServiceObjects;
 	private static ComponentServiceObjects<DocumentResource>
 		_documentResourceComponentServiceObjects;
+	private static ComponentServiceObjects<DocumentDataDefinitionTypeResource>
+		_documentDataDefinitionTypeResourceComponentServiceObjects;
 	private static ComponentServiceObjects<DocumentFolderResource>
 		_documentFolderResourceComponentServiceObjects;
+	private static ComponentServiceObjects<DocumentMetadataSetResource>
+		_documentMetadataSetResourceComponentServiceObjects;
 	private static ComponentServiceObjects<DocumentShortcutResource>
 		_documentShortcutResourceComponentServiceObjects;
 	private static ComponentServiceObjects<KnowledgeBaseArticleResource>
@@ -7132,12 +7557,15 @@ public class Query {
 	private BiFunction<Object, List<String>, Aggregation>
 		_aggregationBiFunction;
 	private com.liferay.portal.kernel.model.Company _company;
-	private BiFunction<Object, String, Filter> _filterBiFunction;
+	private BiFunction
+		<Object, String, com.liferay.portal.kernel.search.filter.Filter>
+			_filterBiFunction;
 	private GroupLocalService _groupLocalService;
 	private HttpServletRequest _httpServletRequest;
 	private HttpServletResponse _httpServletResponse;
 	private RoleLocalService _roleLocalService;
-	private BiFunction<Object, String, Sort[]> _sortsBiFunction;
+	private BiFunction<Object, String, com.liferay.portal.kernel.search.Sort[]>
+		_sortsBiFunction;
 	private UriInfo _uriInfo;
 	private com.liferay.portal.kernel.model.User _user;
 

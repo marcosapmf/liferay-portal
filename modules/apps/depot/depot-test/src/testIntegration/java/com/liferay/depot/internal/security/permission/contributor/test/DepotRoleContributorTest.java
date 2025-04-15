@@ -12,6 +12,7 @@ import com.liferay.depot.service.DepotEntryGroupRelLocalService;
 import com.liferay.depot.service.DepotEntryLocalService;
 import com.liferay.depot.test.util.DepotTestUtil;
 import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.model.GroupConstants;
 import com.liferay.portal.kernel.model.Role;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.PermissionCheckerFactory;
@@ -21,9 +22,11 @@ import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
+import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.test.rule.FeatureFlags;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 
@@ -52,6 +55,30 @@ public class DepotRoleContributorTest {
 		_depotEntry = _addDepotEntry();
 
 		_group = GroupTestUtil.addGroup();
+	}
+
+	@FeatureFlags("LPD-17564")
+	@Test
+	public void testCMSConsumerRoleAssignment() throws Exception {
+		Group group = GroupTestUtil.addGroup(
+			_group.getCompanyId(), TestPropsValues.getUserId(),
+			GroupConstants.DEFAULT_PARENT_GROUP_ID, GroupConstants.CMS);
+
+		DepotTestUtil.withSiteMember(
+			group,
+			user -> {
+				PermissionChecker permissionChecker =
+					_permissionCheckerFactory.create(user);
+
+				long[] roleIds = permissionChecker.getRoleIds(
+					user.getUserId(), group.getGroupId());
+
+				Role role = _roleLocalService.getRole(
+					_group.getCompanyId(), DepotRolesConstants.CMS_CONSUMER);
+
+				Assert.assertTrue(
+					ArrayUtil.contains(roleIds, role.getRoleId()));
+			});
 	}
 
 	@Test

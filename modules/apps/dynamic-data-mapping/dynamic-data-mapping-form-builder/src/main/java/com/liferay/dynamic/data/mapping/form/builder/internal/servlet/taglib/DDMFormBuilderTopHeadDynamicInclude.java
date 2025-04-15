@@ -6,6 +6,8 @@
 package com.liferay.dynamic.data.mapping.form.builder.internal.servlet.taglib;
 
 import com.liferay.petra.string.StringBundler;
+import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.content.security.policy.ContentSecurityPolicyNonceProviderUtil;
 import com.liferay.portal.kernel.servlet.taglib.BaseDynamicInclude;
 import com.liferay.portal.kernel.servlet.taglib.DynamicInclude;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
@@ -41,14 +43,17 @@ public class DDMFormBuilderTopHeadDynamicInclude extends BaseDynamicInclude {
 
 		PrintWriter printWriter = httpServletResponse.getWriter();
 
-		String content = "<link href=\"".concat(
+		printWriter.print("<link href=\"");
+		printWriter.print(
 			_portal.getStaticResourceURL(
 				httpServletRequest,
 				StringBundler.concat(
 					themeDisplay.getCDNBaseURL(), _postfix, "/css/main.css")));
-
-		printWriter.println(
-			content.concat("\" rel=\"stylesheet\" type = \"text/css\" />"));
+		printWriter.print(StringPool.QUOTE);
+		printWriter.print(
+			ContentSecurityPolicyNonceProviderUtil.getNonceAttribute(
+				httpServletRequest));
+		printWriter.println(" rel=\"stylesheet\" type = \"text/css\" />");
 	}
 
 	@Override

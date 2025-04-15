@@ -40,6 +40,7 @@ export function FormValidationModal({onCloseModal, onPublish}) {
 
 	return (
 		<ClayModal
+			center
 			className="page-editor__form-validation-modal"
 			observer={observer}
 			status="warning"
@@ -77,7 +78,8 @@ export function FormValidationModal({onCloseModal, onPublish}) {
 								{formValidation.errors.map((error) => {
 									const {summary} = getFormErrorDescription({
 										name: typeLabel,
-										type: error,
+										steps: error.steps,
+										type: error.type,
 									});
 
 									return (
@@ -107,7 +109,7 @@ FormValidationModal.propTypes = {
 };
 
 function SingleErrorModal({formValidation, observer, onClose, onPublish}) {
-	const [errorType] = formValidation.errors;
+	const [error] = formValidation.errors;
 
 	const typeLabel = config.formTypes.find(
 		({value}) => value === formValidation.classNameId
@@ -115,11 +117,13 @@ function SingleErrorModal({formValidation, observer, onClose, onPublish}) {
 
 	const {message, title} = getFormErrorDescription({
 		name: typeLabel,
-		type: errorType,
+		steps: error.steps,
+		type: error.type,
 	});
 
 	return (
 		<ClayModal
+			center
 			className="page-editor__form-validation-modal"
 			observer={observer}
 			status="warning"

@@ -9,32 +9,50 @@ import {accountsPagesTest} from '../../../fixtures/accountsPagesTest';
 import {applicationsMenuPageTest} from '../../../fixtures/applicationsMenuPageTest';
 import {commercePagesTest} from '../../../fixtures/commercePagesTest';
 import {dataApiHelpersTest} from '../../../fixtures/dataApiHelpersTest';
+import {displayPageTemplatesPagesTest} from '../../../fixtures/displayPageTemplatesPagesTest';
+import {featureFlagsTest} from '../../../fixtures/featureFlagsTest';
+import {isolatedSiteTest} from '../../../fixtures/isolatedSiteTest';
 import {loginTest} from '../../../fixtures/loginTest';
 import {notificationPagesTest} from '../../../fixtures/notificationPagesTest';
+import {pageEditorPagesTest} from '../../../fixtures/pageEditorPagesTest';
+import {pageViewModePagesTest} from '../../../fixtures/pageViewModePagesTest';
+import {systemSettingsPageTest} from '../../../fixtures/systemSettingsPageTest';
+import {liferayConfig} from '../../../liferay.config';
 import getRandomString from '../../../utils/getRandomString';
-import {waitForSuccessAlert} from '../../../utils/waitForSuccessAlert';
+import {waitForAlert} from '../../../utils/waitForAlert';
+import getPageDefinition from '../../layout-content-page-editor-web/utils/getPageDefinition';
+import getWidgetDefinition from '../../layout-content-page-editor-web/utils/getWidgetDefinition';
+import {getDateFormatted, setFutureDate} from '../utils/date';
 
 export const test = mergeTests(
 	applicationsMenuPageTest,
 	accountsPagesTest,
 	commercePagesTest,
 	dataApiHelpersTest,
+	displayPageTemplatesPagesTest,
+	featureFlagsTest({
+		'LPD-20379': {enabled: true},
+		'LPS-178052': {enabled: true},
+	}),
+	isolatedSiteTest,
 	loginTest(),
-	notificationPagesTest
+	notificationPagesTest,
+	pageEditorPagesTest,
+	pageViewModePagesTest,
+	systemSettingsPageTest
 );
 
 test('LPD-25860 Checkout widget configuration to display full addresses and phone number', async ({
 	apiHelpers,
-	applicationsMenuPage,
 	checkoutPage,
-	commerceLayoutsPage,
 	page,
+	site,
+	widgetPagePage,
 }) => {
-	const site = await apiHelpers.headlessSite.createSite({
-		name: getRandomString(),
+	const layout = await apiHelpers.jsonWebServicesLayout.addLayout({
+		groupId: site.id,
+		title: getRandomString(),
 	});
-
-	apiHelpers.data.push({id: site.id, type: 'site'});
 
 	const channel = await apiHelpers.headlessCommerceAdminChannel.postChannel({
 		name: getRandomString(),
@@ -85,13 +103,9 @@ test('LPD-25860 Checkout widget configuration to display full addresses and phon
 		channel.id
 	);
 
-	await applicationsMenuPage.goToSite(site.name);
-	await commerceLayoutsPage.goToPages(false);
-	await commerceLayoutsPage.createWidgetPage(getRandomString());
+	await page.goto(`/web${site.friendlyUrlPath}${layout.friendlyURL}`);
 
-	await page.goto(`/web/${site.name}`);
-
-	await checkoutPage.addCheckoutWidget();
+	await widgetPagePage.addPortlet('Checkout');
 
 	const phoneNumber = '1234567890';
 	const region = 'Florida';
@@ -107,12 +121,22 @@ test('LPD-25860 Checkout widget configuration to display full addresses and phon
 
 	await checkoutPage.continueButton.click();
 
-	await expect(checkoutPage.billingAddress).not.toContainText(phoneNumber);
-	await expect(checkoutPage.billingAddress).not.toContainText(region);
-	await expect(checkoutPage.billingAddress).not.toContainText(zipCode);
-	await expect(checkoutPage.shippingAddress).not.toContainText(phoneNumber);
-	await expect(checkoutPage.shippingAddress).not.toContainText(region);
-	await expect(checkoutPage.shippingAddress).not.toContainText(zipCode);
+	await expect(checkoutPage.commerceBillingAddress).not.toContainText(
+		phoneNumber
+	);
+	await expect(checkoutPage.commerceBillingAddress).not.toContainText(region);
+	await expect(checkoutPage.commerceBillingAddress).not.toContainText(
+		zipCode
+	);
+	await expect(checkoutPage.commerceShippingAddress).not.toContainText(
+		phoneNumber
+	);
+	await expect(checkoutPage.commerceShippingAddress).not.toContainText(
+		region
+	);
+	await expect(checkoutPage.commerceShippingAddress).not.toContainText(
+		zipCode
+	);
 
 	await checkoutPage.optionsButton.click();
 	await checkoutPage.configurationMenuItem.click();
@@ -120,42 +144,45 @@ test('LPD-25860 Checkout widget configuration to display full addresses and phon
 	await checkoutPage.configurationIFrameShowFullAddressToggle.check();
 	await checkoutPage.configurationIFrameShowPhoneNumberToggle.check();
 	await checkoutPage.configurationIFrameSaveButton.click();
-	await waitForSuccessAlert(checkoutPage.configurationIFrame);
+	await waitForAlert(checkoutPage.configurationIFrame);
 
 	await page.reload();
 
-	await expect(checkoutPage.billingAddress).toContainText(phoneNumber);
-	await expect(checkoutPage.billingAddress).toContainText(region);
-	await expect(checkoutPage.billingAddress).toContainText(zipCode);
-	await expect(checkoutPage.shippingAddress).toContainText(phoneNumber);
-	await expect(checkoutPage.shippingAddress).toContainText(region);
-	await expect(checkoutPage.shippingAddress).toContainText(zipCode);
+	await expect(checkoutPage.commerceBillingAddress).toContainText(
+		phoneNumber
+	);
+	await expect(checkoutPage.commerceBillingAddress).toContainText(region);
+	await expect(checkoutPage.commerceBillingAddress).toContainText(zipCode);
+	await expect(checkoutPage.commerceShippingAddress).toContainText(
+		phoneNumber
+	);
+	await expect(checkoutPage.commerceShippingAddress).toContainText(region);
+	await expect(checkoutPage.commerceShippingAddress).toContainText(zipCode);
 });
 
 test('LPP-55128 Payment Term is reset correctly', async ({
 	accountsPage,
 	apiHelpers,
-	applicationsMenuPage,
 	checkoutPage,
 	commerceAdminChannelDetailsPage,
 	commerceAdminChannelsPage,
-	commerceLayoutsPage,
 	editAccountChannelDefaultsPage,
 	editAccountPage,
 	page,
+	site,
+	widgetPagePage,
 }) => {
-	const site = await apiHelpers.headlessSite.createSite({
-		name: getRandomString(),
+	const layout = await apiHelpers.jsonWebServicesLayout.addLayout({
+		groupId: site.id,
+		title: getRandomString(),
 	});
-
-	apiHelpers.data.push({id: site.id, type: 'site'});
 
 	const channel = await apiHelpers.headlessCommerceAdminChannel.postChannel({
 		name: getRandomString(),
 		siteGroupId: site.id,
 	});
 
-	const paymentTerm1 = await apiHelpers.headlessCommerceAdminOrder.postTerms({
+	const paymentTerm1 = await apiHelpers.headlessCommerceAdminOrder.postTerm({
 		label: {
 			en_US: 'MoneyA',
 		},
@@ -163,7 +190,7 @@ test('LPP-55128 Payment Term is reset correctly', async ({
 		priority: 0,
 		type: 'payment-terms',
 	});
-	const paymentTerm2 = await apiHelpers.headlessCommerceAdminOrder.postTerms({
+	const paymentTerm2 = await apiHelpers.headlessCommerceAdminOrder.postTerm({
 		label: {
 			en_US: 'MoneyB',
 		},
@@ -171,7 +198,7 @@ test('LPP-55128 Payment Term is reset correctly', async ({
 		priority: 1,
 		type: 'payment-terms',
 	});
-	const paymentTerm3 = await apiHelpers.headlessCommerceAdminOrder.postTerms({
+	const paymentTerm3 = await apiHelpers.headlessCommerceAdminOrder.postTerm({
 		label: {
 			en_US: 'PayPalA',
 		},
@@ -179,7 +206,7 @@ test('LPP-55128 Payment Term is reset correctly', async ({
 		priority: 2,
 		type: 'payment-terms',
 	});
-	const paymentTerm4 = await apiHelpers.headlessCommerceAdminOrder.postTerms({
+	const paymentTerm4 = await apiHelpers.headlessCommerceAdminOrder.postTerm({
 		label: {
 			en_US: 'MoneyC',
 		},
@@ -244,7 +271,7 @@ test('LPP-55128 Payment Term is reset correctly', async ({
 	);
 
 	await accountsPage.goto();
-	await (await accountsPage.accountsTableRowLink(account.name)).click();
+	await (await accountsPage.accountsTable.cellLink(account.name)).click();
 	await editAccountPage.channelDefaultsLink.click();
 	await editAccountChannelDefaultsPage.addDefaultPaymentTerm(paymentTerm2.id);
 
@@ -302,12 +329,9 @@ test('LPP-55128 Payment Term is reset correctly', async ({
 		'Payment Methods'
 	);
 
-	await applicationsMenuPage.goToSite(site.name);
-	await commerceLayoutsPage.goToPages(false);
-	await commerceLayoutsPage.createWidgetPage(getRandomString());
+	await page.goto(`/web${site.friendlyUrlPath}${layout.friendlyURL}`);
 
-	await page.goto(`/web/${site.name}`);
-	await checkoutPage.addCheckoutWidget();
+	await widgetPagePage.addPortlet('Checkout');
 
 	await checkoutPage.addressInput.fill('123 Main St');
 	await checkoutPage.cityInput.fill('Miami');
@@ -338,4 +362,291 @@ test('LPP-55128 Payment Term is reset correctly', async ({
 	await checkoutPage.continueButton.click();
 	await page.waitForURL((url) => url.href.includes('payment-terms'));
 	expect(page.getByLabel('MoneyB')).toBeChecked();
+});
+
+test('LPD-35329 Delivery group multishipping checkout summary', async ({
+	apiHelpers,
+	checkoutPage,
+	commerceAdminChannelDetailsPage,
+	commerceAdminChannelsPage,
+	page,
+}) => {
+	test.setTimeout(180000);
+
+	const site = await apiHelpers.headlessSite.createSite({
+		name: getRandomString(),
+	});
+
+	apiHelpers.data.push({id: site.id, type: 'site'});
+
+	const channel = await apiHelpers.headlessCommerceAdminChannel.postChannel({
+		name: getRandomString(),
+		siteGroupId: site.id,
+	});
+
+	await commerceAdminChannelsPage.changeCommerceChannelSiteType(
+		channel.name,
+		'B2B'
+	);
+
+	await waitForAlert(page);
+
+	await (
+		await commerceAdminChannelDetailsPage.generalCommerceAdminChannelTableLink(
+			'Flat Rate'
+		)
+	).click();
+	await commerceAdminChannelDetailsPage.activateChannelConfiguration(
+		'Flat Rate',
+		'Shipping Methods'
+	);
+	await commerceAdminChannelDetailsPage.addFlatRateShippingOption(
+		getRandomString()
+	);
+	await commerceAdminChannelDetailsPage.addFlatRateShippingOption(
+		getRandomString()
+	);
+
+	const account = await apiHelpers.headlessAdminUser.postAccount({
+		name: getRandomString(),
+		type: 'business',
+	});
+
+	apiHelpers.data.push({id: account.id, type: 'account'});
+
+	const catalog = await apiHelpers.headlessCommerceAdminCatalog.postCatalog({
+		name: getRandomString(),
+	});
+
+	const product = await apiHelpers.headlessCommerceAdminCatalog.postProduct({
+		catalogId: catalog.id,
+		name: {en_US: getRandomString()},
+		shippingConfiguration: {
+			freeShipping: false,
+			shippable: true,
+			shippingSeparately: false,
+		},
+	});
+
+	const productSkus = await apiHelpers.headlessCommerceAdminCatalog
+		.getProduct(product.productId)
+		.then((product) => {
+			return product.skus;
+		});
+
+	const sku = productSkus[0];
+
+	const address = await apiHelpers.headlessCommerceAdminAccount.postAddress(
+		account.id,
+		{phoneNumber: '1234567890', regionISOCode: 'AL'}
+	);
+
+	const cart = await apiHelpers.headlessCommerceDeliveryCart.postCart(
+		{
+			accountId: account.id,
+			cartItems: [
+				{
+					deliveryGroupName: getRandomString(),
+					quantity: 1,
+					requestedDeliveryDate: setFutureDate(7),
+					shippingAddressId: address.id,
+					skuId: sku.id,
+				},
+			],
+		},
+		channel.id
+	);
+
+	const layout = await apiHelpers.headlessDelivery.createSitePage({
+		pageDefinition: getPageDefinition([
+			getWidgetDefinition({
+				id: getRandomString(),
+				widgetName:
+					'com_liferay_commerce_cart_content_web_internal_portlet_CommerceCartContentTotalPortlet',
+			}),
+			getWidgetDefinition({
+				id: getRandomString(),
+				widgetName:
+					'com_liferay_commerce_checkout_web_internal_portlet_CommerceCheckoutPortlet',
+			}),
+		]),
+		siteId: site.id,
+		title: getRandomString(),
+	});
+
+	const cartItems = await apiHelpers.headlessCommerceDeliveryCart
+		.getCartItems(cart.id)
+		.then((response) => {
+			return response.items;
+		});
+
+	const cartItem = cartItems[0];
+
+	await page.goto(
+		`${liferayConfig.environment.baseUrl}/web${site.friendlyUrlPath}${layout.friendlyUrlPath}`
+	);
+
+	const locale = await page.evaluate(() => {
+		return Liferay.ThemeDisplay.getBCP47LanguageId();
+	});
+
+	await expect(
+		(await checkoutPage.tableRow(0, cartItem.deliveryGroupName, true)).row
+	).toBeVisible();
+	await expect(
+		(
+			await checkoutPage.tableRow(
+				1,
+				address.street1 + ', ' + address.city + ', ' + 'United States',
+				true
+			)
+		).row
+	).toBeVisible();
+	await expect(
+		(
+			await checkoutPage.tableRow(
+				2,
+				getDateFormatted(cartItem.requestedDeliveryDate, locale),
+				true
+			)
+		).row
+	).toBeVisible();
+
+	await checkoutPage.viewDeliveryGroupTableButton.click();
+
+	await expect(
+		checkoutPage.headingDeliveryGroupModal(cartItem.deliveryGroup)
+	).toBeVisible();
+	await expect(
+		checkoutPage.assertDataDeliveryGroupModal(address.street1)
+	).toBeVisible();
+	await expect(
+		checkoutPage.assertDataDeliveryGroupModal(address.street2)
+	).toBeVisible();
+	await expect(
+		checkoutPage.assertDataDeliveryGroupModal(address.street3)
+	).toBeVisible();
+	await expect(
+		checkoutPage.assertDataDeliveryGroupModal(
+			address.city + ' , ' + 'Alabama'
+		)
+	).toBeVisible();
+	await expect(
+		checkoutPage.assertDataDeliveryGroupModal(
+			address.zip + ' , ' + 'United States'
+		)
+	).toBeVisible();
+	await expect(
+		checkoutPage.configurationIFrame.getByText(
+			getDateFormatted(cartItem.requestedDeliveryDate, locale)
+		)
+	).toBeVisible();
+
+	await checkoutPage.iframeOkButton.click();
+	await checkoutPage.continueButton.click();
+	await checkoutPage.continueButton.click();
+
+	await expect(checkoutPage.orderItemsTabLink).toBeVisible();
+	await expect(checkoutPage.multishippingTabLink).toBeVisible();
+	await checkoutPage.orderItemsTabLink.click();
+	await expect(checkoutPage.orderItemsTableLocator).toBeVisible();
+	await checkoutPage.multishippingTabLink.click();
+	await expect(checkoutPage.multishippingTableLocator).toBeVisible();
+	await expect(page.getByText('Shipping Address & Date')).toBeVisible();
+	await expect(page.getByText('Billing Address')).toBeVisible();
+	await expect(checkoutPage.orderSummaryShippingMethod).toBeVisible();
+});
+
+test('LPD-40425 Checkout order detail redirect works correctly when order DPT is enabled', async ({
+	apiHelpers,
+	checkoutPage,
+	commerceLayoutsPage,
+	displayPageTemplatesPage,
+	page,
+	pageEditorPage,
+	site,
+	widgetPagePage,
+}) => {
+	const layout = await apiHelpers.jsonWebServicesLayout.addLayout({
+		groupId: site.id,
+		title: getRandomString(),
+	});
+
+	const account = await apiHelpers.headlessAdminUser.postAccount({
+		name: getRandomString(),
+		type: 'person',
+	});
+
+	apiHelpers.data.push({id: account.id, type: 'account'});
+
+	await displayPageTemplatesPage.goto(site.friendlyUrlPath);
+
+	const displayPageTemplateName = getRandomString();
+
+	await displayPageTemplatesPage.createTemplate({
+		contentType: 'Order',
+		name: displayPageTemplateName,
+	});
+	await displayPageTemplatesPage.editTemplate(displayPageTemplateName);
+
+	await pageEditorPage.addFragment('Basic Components', 'Heading');
+
+	await expect(page.getByText('Heading Example')).toBeVisible();
+
+	await pageEditorPage.waitForChangesSaved();
+
+	await displayPageTemplatesPage.publishTemplate();
+	await displayPageTemplatesPage.clickMoreActions(
+		displayPageTemplateName,
+		'Mark as Default'
+	);
+
+	await waitForAlert(page);
+
+	await expect(
+		commerceLayoutsPage.defaultDisplayPageTemplateIcon
+	).toBeVisible();
+
+	const channel = await apiHelpers.headlessCommerceAdminChannel.postChannel({
+		siteGroupId: site.id,
+	});
+
+	const catalog = await apiHelpers.headlessCommerceAdminCatalog.postCatalog();
+
+	const product = await apiHelpers.headlessCommerceAdminCatalog.postProduct({
+		catalogId: catalog.id,
+	});
+
+	const sku = product.skus[0];
+
+	await apiHelpers.headlessCommerceDeliveryCart.postCart(
+		{
+			accountId: account.id,
+			cartItems: [
+				{
+					quantity: 1,
+					skuId: sku.id,
+				},
+			],
+		},
+		channel.id
+	);
+
+	await page.goto(`/web${site.friendlyUrlPath}${layout.friendlyURL}`);
+
+	await widgetPagePage.addPortlet('Checkout');
+
+	await checkoutPage.performCheckout({
+		shippingAddress: {
+			city: 'testCity',
+			countryLabel: 'United States',
+			name: 'John Doe',
+			regionLabel: 'Florida',
+			street: 'testStreet',
+			zip: '12345',
+		},
+	});
+	await checkoutPage.goToOrderDetailsButton.click();
+
+	await expect(page.getByText('Heading Example')).toBeVisible();
 });

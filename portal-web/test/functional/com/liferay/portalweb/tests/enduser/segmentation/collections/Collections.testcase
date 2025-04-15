@@ -1,9 +1,10 @@
-@component-name = "portal-page-management"
+@component-name = "portal-search"
 definition {
 
 	property ci.retries.disabled = "true";
 	property custom.properties = "jsonws.web.service.paths.excludes=";
 	property portal.release = "true";
+	property portal.suite.search.engine = "elasticsearch7,opensearch2,solr";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Collections";
 
@@ -11,6 +12,10 @@ definition {
 		TestCase.setUpPortalInstance();
 
 		User.firstLoginPG();
+
+		task ("Enable dynamic and manual selection") {
+			AssetPublisherPortlet.enableDynamicAndManualSelection();
+		}
 
 		HeadlessSite.addSite(siteName = "Test Site Name");
 	}

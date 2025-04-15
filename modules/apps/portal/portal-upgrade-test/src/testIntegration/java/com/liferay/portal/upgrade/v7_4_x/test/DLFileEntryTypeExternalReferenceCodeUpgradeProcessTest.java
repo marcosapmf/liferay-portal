@@ -21,6 +21,7 @@ import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.upgrade.BaseExternalReferenceCodeUpgradeProcess;
+import com.liferay.portal.kernel.upgrade.UpgradeProcess;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.version.Version;
@@ -50,7 +51,7 @@ public class DLFileEntryTypeExternalReferenceCodeUpgradeProcessTest
 				group, TestPropsValues.getUserId());
 
 		DDMStructure ddmStructure = _ddmStructureLocalService.addStructure(
-			TestPropsValues.getUserId(), group.getGroupId(),
+			null, TestPropsValues.getUserId(), group.getGroupId(),
 			DDMStructureConstants.DEFAULT_PARENT_STRUCTURE_ID,
 			PortalUtil.getClassNameId(DLFileEntryMetadata.class),
 			StringPool.BLANK,
@@ -87,7 +88,7 @@ public class DLFileEntryTypeExternalReferenceCodeUpgradeProcessTest
 	}
 
 	@Override
-	protected BaseExternalReferenceCodeUpgradeProcess getUpgradeProcess() {
+	protected UpgradeProcess getUpgradeProcess() {
 		return new BaseExternalReferenceCodeUpgradeProcess() {
 
 			@Override

@@ -8,10 +8,12 @@ package com.liferay.portal.workflow.kaleo.model;
 import com.liferay.portal.kernel.bean.AutoEscape;
 import com.liferay.portal.kernel.exception.LocaleException;
 import com.liferay.portal.kernel.model.BaseModel;
+import com.liferay.portal.kernel.model.ExternalReferenceCodeModel;
 import com.liferay.portal.kernel.model.GroupedModel;
 import com.liferay.portal.kernel.model.LocalizedModel;
 import com.liferay.portal.kernel.model.MVCCModel;
 import com.liferay.portal.kernel.model.ShardedModel;
+import com.liferay.portal.kernel.model.StagedAuditedModel;
 import com.liferay.portal.kernel.model.change.tracking.CTModel;
 
 import java.util.Date;
@@ -33,8 +35,9 @@ import org.osgi.annotation.versioning.ProviderType;
  */
 @ProviderType
 public interface KaleoDefinitionModel
-	extends BaseModel<KaleoDefinition>, CTModel<KaleoDefinition>, GroupedModel,
-			LocalizedModel, MVCCModel, ShardedModel {
+	extends BaseModel<KaleoDefinition>, CTModel<KaleoDefinition>,
+			ExternalReferenceCodeModel, GroupedModel, LocalizedModel, MVCCModel,
+			ShardedModel, StagedAuditedModel {
 
 	/*
 	 * NOTE FOR DEVELOPERS:
@@ -89,6 +92,40 @@ public interface KaleoDefinitionModel
 	 */
 	@Override
 	public void setCtCollectionId(long ctCollectionId);
+
+	/**
+	 * Returns the uuid of this kaleo definition.
+	 *
+	 * @return the uuid of this kaleo definition
+	 */
+	@AutoEscape
+	@Override
+	public String getUuid();
+
+	/**
+	 * Sets the uuid of this kaleo definition.
+	 *
+	 * @param uuid the uuid of this kaleo definition
+	 */
+	@Override
+	public void setUuid(String uuid);
+
+	/**
+	 * Returns the external reference code of this kaleo definition.
+	 *
+	 * @return the external reference code of this kaleo definition
+	 */
+	@AutoEscape
+	@Override
+	public String getExternalReferenceCode();
+
+	/**
+	 * Sets the external reference code of this kaleo definition.
+	 *
+	 * @param externalReferenceCode the external reference code of this kaleo definition
+	 */
+	@Override
+	public void setExternalReferenceCode(String externalReferenceCode);
 
 	/**
 	 * Returns the kaleo definition ID of this kaleo definition.

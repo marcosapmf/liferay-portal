@@ -171,6 +171,15 @@ public class ServletDataImpl implements ServletData {
 							CTProcessResourceImpl.class,
 							"postCTProcessesPageExportBatch"));
 					put(
+						"mutation#deleteCTProcess",
+						new ObjectValuePair<>(
+							CTProcessResourceImpl.class, "deleteCTProcess"));
+					put(
+						"mutation#deleteCTProcessBatch",
+						new ObjectValuePair<>(
+							CTProcessResourceImpl.class,
+							"deleteCTProcessBatch"));
+					put(
 						"mutation#createCTProcessRevert",
 						new ObjectValuePair<>(
 							CTProcessResourceImpl.class,
@@ -230,11 +239,6 @@ public class ServletDataImpl implements ServletData {
 							CTCollectionResourceImpl.class,
 							"getCTCollectionShareLink"));
 					put(
-						"query#cTCollectionsHistory",
-						new ObjectValuePair<>(
-							CTCollectionResourceImpl.class,
-							"getCTCollectionsHistoryPage"));
-					put(
 						"query#cTCollection",
 						new ObjectValuePair<>(
 							CTCollectionResourceImpl.class, "getCTCollection"));
@@ -248,6 +252,11 @@ public class ServletDataImpl implements ServletData {
 						new ObjectValuePair<>(
 							CTEntryResourceImpl.class,
 							"getCtCollectionCTEntryByModelClassNameByModelClassPkModelClassPK"));
+					put(
+						"query#cTEntriesHistory",
+						new ObjectValuePair<>(
+							CTEntryResourceImpl.class,
+							"getCTEntriesHistoryPage"));
 					put(
 						"query#cTEntry",
 						new ObjectValuePair<>(

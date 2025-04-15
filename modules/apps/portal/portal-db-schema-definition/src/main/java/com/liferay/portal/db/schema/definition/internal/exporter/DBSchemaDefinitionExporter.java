@@ -110,14 +110,10 @@ public class DBSchemaDefinitionExporter {
 						DBSchemaDefinitionExporterConfiguration.class,
 						properties);
 
-			DBType dbType = DBType.valueOf(
-				StringUtil.toUpperCase(
-					dbSchemaDefinitionExporterConfiguration.databaseType()));
-
-			SQLWriter sqlWriter = new SQLWriter(dbType);
+			SQLWriter sqlWriter = new SQLWriter();
 
 			File file = new File(
-				dbSchemaDefinitionExporterConfiguration.path());
+				dbSchemaDefinitionExporterConfiguration.exportFilesPath());
 
 			sqlWriter.writeFiles(file);
 
@@ -128,7 +124,7 @@ public class DBSchemaDefinitionExporter {
 			}
 
 			_generateReport(
-				dbSchemaDefinitionExporterConfiguration.path(), dbType);
+				dbSchemaDefinitionExporterConfiguration.exportFilesPath());
 		}
 		catch (Exception exception) {
 			_log.error(
@@ -139,16 +135,14 @@ public class DBSchemaDefinitionExporter {
 		}
 	}
 
-	private void _generateReport(String dirName, DBType exportDBType)
-		throws Exception {
-
+	private void _generateReport(String dirName) throws Exception {
 		String installedPatchNames = StringUtil.merge(
 			PatcherValues.INSTALLED_PATCH_NAMES, StringPool.COMMA_AND_SPACE);
 		Release release = _releaseLocalService.fetchRelease(
 			ReleaseConstants.DEFAULT_SERVLET_CONTEXT_NAME);
 
 		FileUtil.write(
-			new File(dirName, "db_schema_definition_export_report.info"),
+			new File(dirName, "db_schema_definition_export_report.txt"),
 			StringUtil.merge(
 				new Object[] {
 					"Export date: " + _toString(new Date()),
@@ -158,7 +152,7 @@ public class DBSchemaDefinitionExporter {
 					"Portal schema version: " + release.getSchemaVersion(),
 					StringPool.NEW_LINE,
 					"Database type: " + DBManagerUtil.getDBType(),
-					"Export database type: " + exportDBType,
+					"Export database type: " + DBType.POSTGRESQL,
 					StringPool.NEW_LINE, _getTablesInfo(dirName)
 				},
 				StringPool.NEW_LINE));

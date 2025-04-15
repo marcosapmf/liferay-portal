@@ -27,7 +27,6 @@ import com.liferay.portal.vulcan.fields.NestedField;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -59,8 +58,9 @@ public class PriceListChannelResourceImpl
 		throws Exception {
 
 		CommercePriceList commercePriceList =
-			_commercePriceListService.fetchByExternalReferenceCode(
-				externalReferenceCode, contextCompany.getCompanyId());
+			_commercePriceListService.
+				fetchCommercePriceListByExternalReferenceCode(
+					externalReferenceCode, contextCompany.getCompanyId());
 
 		if (commercePriceList == null) {
 			throw new NoSuchPriceListException(
@@ -74,14 +74,14 @@ public class PriceListChannelResourceImpl
 				pagination.getStartPosition(), pagination.getEndPosition(),
 				null);
 
-		int totalItems =
+		int totalCount =
 			_commercePriceListChannelRelService.
 				getCommercePriceListChannelRelsCount(
 					commercePriceList.getCommercePriceListId());
 
 		return Page.of(
 			_toPriceListChannels(commercePriceListChannelRels), pagination,
-			totalItems);
+			totalCount);
 	}
 
 	@NestedField(parentClass = PriceList.class, value = "priceListChannels")
@@ -96,13 +96,13 @@ public class PriceListChannelResourceImpl
 				id, search, pagination.getStartPosition(),
 				pagination.getEndPosition());
 
-		int totalItems =
+		int totalCount =
 			_commercePriceListChannelRelService.
 				getCommercePriceListChannelRelsCount(id, search);
 
 		return Page.of(
 			_toPriceListChannels(commercePriceListChannelRels), pagination,
-			totalItems);
+			totalCount);
 	}
 
 	@Override
@@ -112,8 +112,9 @@ public class PriceListChannelResourceImpl
 		throws Exception {
 
 		CommercePriceList commercePriceList =
-			_commercePriceListService.fetchByExternalReferenceCode(
-				externalReferenceCode, contextCompany.getCompanyId());
+			_commercePriceListService.
+				fetchCommercePriceListByExternalReferenceCode(
+					externalReferenceCode, contextCompany.getCompanyId());
 
 		if (commercePriceList == null) {
 			throw new NoSuchPriceListException(
@@ -181,18 +182,11 @@ public class PriceListChannelResourceImpl
 			List<CommercePriceListChannelRel> commercePriceListChannelRels)
 		throws Exception {
 
-		List<PriceListChannel> priceListChannels = new ArrayList<>();
-
-		for (CommercePriceListChannelRel commercePriceListChannelRel :
-				commercePriceListChannelRels) {
-
-			priceListChannels.add(
-				_toPriceListChannel(
-					commercePriceListChannelRel.
-						getCommercePriceListChannelRelId()));
-		}
-
-		return priceListChannels;
+		return transform(
+			commercePriceListChannelRels,
+			commercePriceListChannelRel -> _toPriceListChannel(
+				commercePriceListChannelRel.
+					getCommercePriceListChannelRelId()));
 	}
 
 	@Reference

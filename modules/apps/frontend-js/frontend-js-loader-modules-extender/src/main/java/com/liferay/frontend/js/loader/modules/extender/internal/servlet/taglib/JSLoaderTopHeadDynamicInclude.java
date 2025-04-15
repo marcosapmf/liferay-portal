@@ -10,6 +10,7 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.kernel.content.security.policy.ContentSecurityPolicyNonceProvider;
 import com.liferay.portal.kernel.content.security.policy.ContentSecurityPolicyNonceProviderUtil;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.frontend.esm.FrontendESMUtil;
 import com.liferay.portal.kernel.servlet.PortalWebResourceConstants;
 import com.liferay.portal.kernel.servlet.PortalWebResourcesUtil;
@@ -53,6 +54,16 @@ public class JSLoaderTopHeadDynamicInclude extends BaseDynamicInclude {
 			HttpServletResponse httpServletResponse, String key)
 		throws IOException {
 
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
+
+		if (!FeatureFlagManagerUtil.isEnabled(
+				themeDisplay.getCompanyId(), "LPD-48372")) {
+
+			return;
+		}
+
 		PrintWriter printWriter = httpServletResponse.getWriter();
 
 		printWriter.write("<script");
@@ -61,13 +72,7 @@ public class JSLoaderTopHeadDynamicInclude extends BaseDynamicInclude {
 				httpServletRequest));
 		printWriter.write(" data-senna-track=\"temporary\" type=\"");
 		printWriter.write(ContentTypes.TEXT_JAVASCRIPT);
-		printWriter.write("\">window.__CONFIG__= {basePath: '',");
-
-		ThemeDisplay themeDisplay =
-			(ThemeDisplay)httpServletRequest.getAttribute(
-				WebKeys.THEME_DISPLAY);
-
-		printWriter.write("combine: ");
+		printWriter.write("\">window.__CONFIG__= {basePath: '', combine: ");
 		printWriter.write(Boolean.toString(themeDisplay.isThemeJsFastLoad()));
 		printWriter.write(", defaultURLParams: ");
 		printWriter.write(_getDefaultURLParams(themeDisplay));

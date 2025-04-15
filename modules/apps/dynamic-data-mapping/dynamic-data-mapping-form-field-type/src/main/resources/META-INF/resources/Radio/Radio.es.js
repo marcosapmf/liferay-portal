@@ -64,6 +64,7 @@ const Radio = ({
 			<div className="ddm__radio" onBlur={onBlur} onFocus={onFocus}>
 				<ClayRadioGroup
 					inline={inline}
+					name={name}
 					onChange={(value) => {
 						setCurrentValue(value);
 						onChange({target: {value}});
@@ -78,16 +79,16 @@ const Radio = ({
 					}}
 					value={currentValue}
 				>
-					{options.map((option, index) => (
+					{options.map((option) => (
 						<ClayRadio
 							aria-required={otherProps.required}
 							containerProps={{
 								'data-checked': currentValue === option.value,
 							}}
+							data-option-reference={option.reference}
 							disabled={disabled}
 							key={option.value}
 							label={option.label}
-							name={`${name}_${index}`}
 							value={option.value}
 						/>
 					))}

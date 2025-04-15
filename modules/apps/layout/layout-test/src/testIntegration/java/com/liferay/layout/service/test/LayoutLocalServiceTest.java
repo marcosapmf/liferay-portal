@@ -17,6 +17,7 @@ import com.liferay.layout.test.util.LayoutTestUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.DuplicateLayoutExternalReferenceCodeException;
+import com.liferay.portal.kernel.exception.LayoutJavaScriptException;
 import com.liferay.portal.kernel.exception.MasterLayoutException;
 import com.liferay.portal.kernel.model.ColorScheme;
 import com.liferay.portal.kernel.model.Group;
@@ -44,6 +45,7 @@ import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
+import com.liferay.portal.kernel.util.UnicodePropertiesBuilder;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
@@ -570,7 +572,7 @@ public class LayoutLocalServiceTest {
 				"fragment-entry-key", RandomTestUtil.randomString(),
 				StringPool.BLANK, "<div>" + keyword + "</div>",
 				StringPool.BLANK, false, StringPool.BLANK, null, 0, false,
-				FragmentConstants.TYPE_COMPONENT, null,
+				false, FragmentConstants.TYPE_COMPONENT, null,
 				WorkflowConstants.STATUS_APPROVED, _serviceContext);
 
 		Layout draftLayout = layout.fetchDraftLayout();
@@ -581,7 +583,7 @@ public class LayoutLocalServiceTest {
 			fragmentEntry.getJs(), draftLayout,
 			fragmentEntry.getFragmentEntryKey(),
 			_segmentsExperienceLocalService.fetchDefaultSegmentsExperienceId(
-				layout.getPlid()),
+				draftLayout.getPlid()),
 			fragmentEntry.getType());
 
 		ContentLayoutTestUtil.publishLayout(draftLayout, layout);
@@ -684,6 +686,28 @@ public class LayoutLocalServiceTest {
 			serviceContext);
 
 		Assert.assertEquals("/home", layout.getFriendlyURL(LocaleUtil.US));
+	}
+
+	@Test(expected = LayoutJavaScriptException.class)
+	public void testUpdateLayoutWithJavaScriptIvalidValue1() throws Exception {
+		Layout layout = LayoutTestUtil.addTypePortletLayout(_group);
+
+		_layoutLocalService.updateLayout(
+			layout.getGroupId(), layout.isPrivateLayout(), layout.getLayoutId(),
+			UnicodePropertiesBuilder.put(
+				"javascript", "<script>"
+			).buildString());
+	}
+
+	@Test(expected = LayoutJavaScriptException.class)
+	public void testUpdateLayoutWithJavaScriptIvalidValue2() throws Exception {
+		Layout layout = LayoutTestUtil.addTypePortletLayout(_group);
+
+		_layoutLocalService.updateLayout(
+			layout.getGroupId(), layout.isPrivateLayout(), layout.getLayoutId(),
+			UnicodePropertiesBuilder.put(
+				"javascript", "</script>"
+			).buildString());
 	}
 
 	@Test

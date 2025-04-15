@@ -17,6 +17,7 @@ import com.liferay.commerce.order.engine.CommerceOrderEngine;
 import com.liferay.commerce.service.CommerceOrderLocalService;
 import com.liferay.commerce.service.CommerceShipmentItemLocalService;
 import com.liferay.commerce.service.CommerceShipmentLocalService;
+import com.liferay.object.constants.ObjectEntryFolderConstants;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectEntry;
 import com.liferay.object.service.ObjectDefinitionLocalService;
@@ -79,6 +80,7 @@ public class CommerceReturnItemPermissionObjectValidationRuleEngineImplTest
 			List<CommerceInventoryWarehouse> commerceInventoryWarehouses =
 				_commerceInventoryWarehouseLocalService.
 					getCommerceInventoryWarehouses(
+						commerceOrder.getCommerceAccountId(),
 						commerceChannel.getGroupId(),
 						commerceOrderItem.getSku());
 
@@ -123,6 +125,8 @@ public class CommerceReturnItemPermissionObjectValidationRuleEngineImplTest
 		_objectEntry = _objectEntryLocalService.addObjectEntry(
 			commerceReturnObjectDefinition.getUserId(), 0,
 			commerceReturnObjectDefinition.getObjectDefinitionId(),
+			ObjectEntryFolderConstants.PARENT_OBJECT_ENTRY_FOLDER_ID_DEFAULT,
+			null,
 			HashMapBuilder.<String, Serializable>put(
 				"r_accountToCommerceReturns_accountEntryId",
 				accountEntry.getAccountEntryId()
@@ -147,7 +151,7 @@ public class CommerceReturnItemPermissionObjectValidationRuleEngineImplTest
 					HashMapBuilder.<String, Object>put(
 						"authorized", 1
 					).put(
-						"r_commerceReturnToCommerceReturnItems_c_" +
+						"r_commerceReturnToCommerceReturnItems_l_" +
 							"commerceReturnId",
 						_objectEntry.getObjectEntryId()
 					).build()
@@ -161,7 +165,7 @@ public class CommerceReturnItemPermissionObjectValidationRuleEngineImplTest
 					HashMapBuilder.<String, Object>put(
 						"authorized", 0
 					).put(
-						"r_commerceReturnToCommerceReturnItems_c_" +
+						"r_commerceReturnToCommerceReturnItems_l_" +
 							"commerceReturnId",
 						_objectEntry.getObjectEntryId()
 					).build()
@@ -202,7 +206,7 @@ public class CommerceReturnItemPermissionObjectValidationRuleEngineImplTest
 					HashMapBuilder.<String, Object>put(
 						"authorizeReturnWithoutReturningProducts", true
 					).put(
-						"r_commerceReturnToCommerceReturnItems_c_" +
+						"r_commerceReturnToCommerceReturnItems_l_" +
 							"commerceReturnId",
 						_objectEntry.getObjectEntryId()
 					).build()
@@ -216,7 +220,7 @@ public class CommerceReturnItemPermissionObjectValidationRuleEngineImplTest
 					HashMapBuilder.<String, Object>put(
 						"authorizeReturnWithoutReturningProducts", false
 					).put(
-						"r_commerceReturnToCommerceReturnItems_c_" +
+						"r_commerceReturnToCommerceReturnItems_l_" +
 							"commerceReturnId",
 						_objectEntry.getObjectEntryId()
 					).build()
@@ -238,7 +242,7 @@ public class CommerceReturnItemPermissionObjectValidationRuleEngineImplTest
 				).put(
 					"properties",
 					HashMapBuilder.<String, Object>put(
-						"r_commerceReturnToCommerceReturnItems_c_" +
+						"r_commerceReturnToCommerceReturnItems_l_" +
 							"commerceReturnId",
 						_objectEntry.getObjectEntryId()
 					).build()
@@ -250,7 +254,7 @@ public class CommerceReturnItemPermissionObjectValidationRuleEngineImplTest
 				).put(
 					"properties",
 					HashMapBuilder.<String, Object>put(
-						"r_commerceReturnToCommerceReturnItems_c_" +
+						"r_commerceReturnToCommerceReturnItems_l_" +
 							"commerceReturnId",
 						_objectEntry.getObjectEntryId()
 					).build()
@@ -276,7 +280,7 @@ public class CommerceReturnItemPermissionObjectValidationRuleEngineImplTest
 					HashMapBuilder.<String, Object>put(
 						"quantity", 1
 					).put(
-						"r_commerceReturnToCommerceReturnItems_c_" +
+						"r_commerceReturnToCommerceReturnItems_l_" +
 							"commerceReturnId",
 						_objectEntry.getObjectEntryId()
 					).build()
@@ -290,7 +294,7 @@ public class CommerceReturnItemPermissionObjectValidationRuleEngineImplTest
 					HashMapBuilder.<String, Object>put(
 						"quantity", 0
 					).put(
-						"r_commerceReturnToCommerceReturnItems_c_" +
+						"r_commerceReturnToCommerceReturnItems_l_" +
 							"commerceReturnId",
 						_objectEntry.getObjectEntryId()
 					).build()
@@ -324,7 +328,7 @@ public class CommerceReturnItemPermissionObjectValidationRuleEngineImplTest
 					).put(
 						"quantity", 1
 					).put(
-						"r_commerceReturnToCommerceReturnItems_c_" +
+						"r_commerceReturnToCommerceReturnItems_l_" +
 							"commerceReturnId",
 						_objectEntry.getObjectEntryId()
 					).build()
@@ -338,7 +342,7 @@ public class CommerceReturnItemPermissionObjectValidationRuleEngineImplTest
 					HashMapBuilder.<String, Object>put(
 						"quantity", 0
 					).put(
-						"r_commerceReturnToCommerceReturnItems_c_" +
+						"r_commerceReturnToCommerceReturnItems_l_" +
 							"commerceReturnId",
 						_objectEntry.getObjectEntryId()
 					).build()
@@ -362,7 +366,7 @@ public class CommerceReturnItemPermissionObjectValidationRuleEngineImplTest
 				).put(
 					"properties",
 					HashMapBuilder.<String, Object>put(
-						"r_commerceReturnToCommerceReturnItems_c_" +
+						"r_commerceReturnToCommerceReturnItems_l_" +
 							"commerceReturnId",
 						_objectEntry.getObjectEntryId()
 					).put(
@@ -376,7 +380,7 @@ public class CommerceReturnItemPermissionObjectValidationRuleEngineImplTest
 				).put(
 					"properties",
 					HashMapBuilder.<String, Object>put(
-						"r_commerceReturnToCommerceReturnItems_c_" +
+						"r_commerceReturnToCommerceReturnItems_l_" +
 							"commerceReturnId",
 						_objectEntry.getObjectEntryId()
 					).put(
@@ -402,7 +406,7 @@ public class CommerceReturnItemPermissionObjectValidationRuleEngineImplTest
 				).put(
 					"properties",
 					HashMapBuilder.<String, Object>put(
-						"r_commerceReturnToCommerceReturnItems_c_" +
+						"r_commerceReturnToCommerceReturnItems_l_" +
 							"commerceReturnId",
 						_objectEntry.getObjectEntryId()
 					).put(
@@ -416,7 +420,7 @@ public class CommerceReturnItemPermissionObjectValidationRuleEngineImplTest
 				).put(
 					"properties",
 					HashMapBuilder.<String, Object>put(
-						"r_commerceReturnToCommerceReturnItems_c_" +
+						"r_commerceReturnToCommerceReturnItems_l_" +
 							"commerceReturnId",
 						_objectEntry.getObjectEntryId()
 					).put(
@@ -450,7 +454,7 @@ public class CommerceReturnItemPermissionObjectValidationRuleEngineImplTest
 				).put(
 					"properties",
 					HashMapBuilder.<String, Object>put(
-						"r_commerceReturnToCommerceReturnItems_c_" +
+						"r_commerceReturnToCommerceReturnItems_l_" +
 							"commerceReturnId",
 						_objectEntry.getObjectEntryId()
 					).put(
@@ -464,7 +468,7 @@ public class CommerceReturnItemPermissionObjectValidationRuleEngineImplTest
 				).put(
 					"properties",
 					HashMapBuilder.<String, Object>put(
-						"r_commerceReturnToCommerceReturnItems_c_" +
+						"r_commerceReturnToCommerceReturnItems_l_" +
 							"commerceReturnId",
 						_objectEntry.getObjectEntryId()
 					).put(

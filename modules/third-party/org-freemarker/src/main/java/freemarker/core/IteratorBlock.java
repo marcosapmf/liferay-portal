@@ -288,7 +288,7 @@ final class IteratorBlock extends TemplateElement {
                 if (listNotEmpty) {
                     if (loopVar1Name != null) {
                         listLoop: do {
-                        	_checkIndex(loopCountThreshold);
+                            _checkIndex(loopCountThreshold);
 
                             loopVar1Value = iterModel.next();
                             hasNext = iterModel.hasNext();
@@ -320,7 +320,7 @@ final class IteratorBlock extends TemplateElement {
                 if (listNotEmpty) {
                     if (loopVar1Name != null) {
                             listLoop: for (index = 0; index < size; index++) {
-                            	_checkIndex(loopCountThreshold);
+                                _checkIndex(loopCountThreshold);
 
                                 loopVar1Value = seqModel.get(index);
                                 hasNext = (size > index + 1);
@@ -385,7 +385,7 @@ final class IteratorBlock extends TemplateElement {
                     if (hashNotEmpty) {
                         if (loopVar1Name != null) {
                             listLoop: do {
-                            	_checkIndex(loopCountThreshold);
+                                _checkIndex(loopCountThreshold);
 
                                 KeyValuePair kvp = kvpIter.next();
                                 loopVar1Value = kvp.getKey();
@@ -417,7 +417,7 @@ final class IteratorBlock extends TemplateElement {
                     if (hashNotEmpty) {
                         if (loopVar1Name != null) {
                             listLoop: do {
-                            	_checkIndex(loopCountThreshold);
+                                _checkIndex(loopCountThreshold);
 
                                 loopVar1Value = keysIter.next();
                                 if (!(loopVar1Value instanceof TemplateScalarModel)) {

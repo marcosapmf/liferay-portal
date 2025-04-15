@@ -50,7 +50,7 @@ public class PortalHotfixReleasePortalTopLevelBuild
 			"PATCHER_BUILD_PATCHER_PORTAL_VERSION");
 
 		if (PortalRelease.isQuarterlyRelease(portalVersion)) {
-			return "master";
+			return _getQuarterlyReleaseBranchName(portalVersion);
 		}
 
 		String majorVersion = matcher.group("majorVersion");
@@ -331,6 +331,24 @@ public class PortalHotfixReleasePortalTopLevelBuild
 				return null;
 			}
 
+			portalBranchUsername = "liferay";
+
+			Matcher patcherPortalVersionDXPMatcher =
+				_patcherPortalVersionDXPPattern.matcher(patcherPortalVersion);
+
+			if (patcherPortalVersionDXPMatcher.find()) {
+				StringBuilder sb = new StringBuilder();
+
+				sb.append("https://github.com/");
+				sb.append(portalBranchUsername);
+				sb.append("/");
+				sb.append(getReleaseRepositoryName());
+				sb.append("/tree/");
+				sb.append(patcherPortalVersion);
+
+				return sb.toString();
+			}
+
 			Matcher patcherPortalVersionMatcher =
 				_patcherPortalVersionPattern.find(patcherPortalVersion);
 
@@ -355,7 +373,6 @@ public class PortalHotfixReleasePortalTopLevelBuild
 				}
 			}
 
-			portalBranchUsername = "liferay";
 			portalBranchName = sb.toString();
 		}
 
@@ -369,6 +386,18 @@ public class PortalHotfixReleasePortalTopLevelBuild
 		sb.append(portalBranchName);
 
 		return sb.toString();
+	}
+
+	private String _getQuarterlyReleaseBranchName(String portalVersion) {
+		Matcher quarterlyReleaseBranchMatcher =
+			_quarterlyReleaseBranchNamePattern.matcher(portalVersion);
+
+		if (quarterlyReleaseBranchMatcher.find()) {
+			return "release-" +
+				quarterlyReleaseBranchMatcher.group("branchName");
+		}
+
+		return "master";
 	}
 
 	private static final MultiPattern _hotfixZipURLPattern = new MultiPattern(
@@ -394,6 +423,8 @@ public class PortalHotfixReleasePortalTopLevelBuild
 				"(?<fixVersion>\\d{2})(?<updateVersion>-(ep|u)\\d+)?",
 			"(?<majorVersion>\\d{4}).(?<minorVersion>q\\d+)." +
 				"(?<fixVersion>\\d+)");
+	private static final Pattern _quarterlyReleaseBranchNamePattern =
+		Pattern.compile("(?<branchName>\\d{4}.[Qq]\\d+).\\d+");
 
 	private PortalFixpackRelease _portalFixpackRelease;
 	private PortalHotfixRelease _portalHotfixRelease;

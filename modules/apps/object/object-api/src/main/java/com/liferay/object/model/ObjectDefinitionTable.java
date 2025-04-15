@@ -72,13 +72,11 @@ public class ObjectDefinitionTable extends BaseTable<ObjectDefinitionTable> {
 			Column.FLAG_DEFAULT);
 	public final Column<ObjectDefinitionTable, Boolean> active = createColumn(
 		"active_", Boolean.class, Types.BOOLEAN, Column.FLAG_DEFAULT);
+	public final Column<ObjectDefinitionTable, String> className = createColumn(
+		"className", String.class, Types.VARCHAR, Column.FLAG_DEFAULT);
 	public final Column<ObjectDefinitionTable, String> dbTableName =
 		createColumn(
 			"dbTableName", String.class, Types.VARCHAR, Column.FLAG_DEFAULT);
-	public final Column<ObjectDefinitionTable, String> label = createColumn(
-		"label", String.class, Types.VARCHAR, Column.FLAG_DEFAULT);
-	public final Column<ObjectDefinitionTable, String> className = createColumn(
-		"className", String.class, Types.VARCHAR, Column.FLAG_DEFAULT);
 	public final Column<ObjectDefinitionTable, Boolean> enableCategorization =
 		createColumn(
 			"enableCategorization", Boolean.class, Types.BOOLEAN,
@@ -86,6 +84,10 @@ public class ObjectDefinitionTable extends BaseTable<ObjectDefinitionTable> {
 	public final Column<ObjectDefinitionTable, Boolean> enableComments =
 		createColumn(
 			"enableComments", Boolean.class, Types.BOOLEAN,
+			Column.FLAG_DEFAULT);
+	public final Column<ObjectDefinitionTable, Boolean>
+		enableFriendlyURLCustomization = createColumn(
+			"enableFriendlyURLCustomization", Boolean.class, Types.BOOLEAN,
 			Column.FLAG_DEFAULT);
 	public final Column<ObjectDefinitionTable, Boolean> enableIndexSearch =
 		createColumn(
@@ -103,6 +105,12 @@ public class ObjectDefinitionTable extends BaseTable<ObjectDefinitionTable> {
 		enableObjectEntryHistory = createColumn(
 			"enableObjectEntryHistory", Boolean.class, Types.BOOLEAN,
 			Column.FLAG_DEFAULT);
+	public final Column<ObjectDefinitionTable, Boolean>
+		enableObjectEntryVersioning = createColumn(
+			"enableObjectEntryVersioning", Boolean.class, Types.BOOLEAN,
+			Column.FLAG_DEFAULT);
+	public final Column<ObjectDefinitionTable, String> label = createColumn(
+		"label", String.class, Types.VARCHAR, Column.FLAG_DEFAULT);
 	public final Column<ObjectDefinitionTable, Boolean> modifiable =
 		createColumn(
 			"modifiable", Boolean.class, Types.BOOLEAN, Column.FLAG_DEFAULT);

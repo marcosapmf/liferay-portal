@@ -38,11 +38,38 @@ type TDiscountRule = {
 	typeSettings?: string;
 };
 
+type TDiscountSku = {
+	discountExternalReferenceCode?: string;
+	discountSkuId?: number;
+	productId?: number;
+	productName?: string;
+	sku?: [
+		{
+			basePrice?: number;
+			basePriceFormatted?: string;
+			basePromoPrice?: number;
+			basePromoPriceFormatted?: string;
+		},
+	];
+	skuExternalReferenceCode?: string;
+	skuId: number;
+	unitOfMeasureKey?: string;
+};
+
 class TPriceEntry {
 	skuId: number;
 	price: number;
 	priceEntryId?: number;
+	priceFormatted?: string;
 	priceListId: number;
+}
+
+class TPriceList {
+	catalogId: number;
+	currencyCode: string;
+	id?: number;
+	name: string;
+	type: string;
 }
 
 export class HeadlessCommerceAdminPricingApiHelper {
@@ -59,6 +86,11 @@ export class HeadlessCommerceAdminPricingApiHelper {
 			`${this.apiHelpers.baseUrl}${this.basePath}/discounts/${discountId}`
 		);
 	}
+	async deleteDiscountSku(discountSkuId: number) {
+		return this.apiHelpers.delete(
+			`${this.apiHelpers.baseUrl}${this.basePath}/discount-skus/${discountSkuId}`
+		);
+	}
 
 	async deletePriceEntry(priceEntryId: number) {
 		return this.apiHelpers.delete(
@@ -66,9 +98,9 @@ export class HeadlessCommerceAdminPricingApiHelper {
 		);
 	}
 
-	async getBasePriceLists(catalogId: number) {
-		return this.apiHelpers.get(
-			`${this.apiHelpers.baseUrl}${this.basePath}/price-lists?filter=catalogId/any(x:(x eq ${catalogId})) and catalogBasePriceList eq true`
+	async deletePriceList(priceListId: number) {
+		return this.apiHelpers.delete(
+			`${this.apiHelpers.baseUrl}${this.basePath}/price-lists/${priceListId}`
 		);
 	}
 
@@ -78,29 +110,16 @@ export class HeadlessCommerceAdminPricingApiHelper {
 		);
 	}
 
+	async getBasePriceLists(catalogId: number) {
+		return this.apiHelpers.get(
+			`${this.apiHelpers.baseUrl}${this.basePath}/price-lists?filter=catalogId/any(x:(x eq ${catalogId})) and catalogBasePriceList eq true`
+		);
+	}
+
 	async getBasePromoPriceListId(catalogId: number) {
 		return this.apiHelpers.get(
 			`${this.apiHelpers.baseUrl}${this.basePath}/price-lists?filter=catalogId/any(x:(x eq ${catalogId})) and catalogBasePriceList eq true and type eq 'promotion'&fields=id`
 		);
-	}
-
-	async postPriceEntry(priceEntry: TPriceEntry) {
-		priceEntry = await this.apiHelpers.post(
-			`${this.apiHelpers.baseUrl}${this.basePath}/price-lists/${priceEntry.priceListId}/price-entries`,
-			{
-				data: priceEntry,
-				failOnStatusCode: true,
-			}
-		);
-
-		if (this.apiHelpers instanceof DataApiHelpers) {
-			this.apiHelpers.data.push({
-				id: priceEntry.priceEntryId,
-				type: 'price-entry',
-			});
-		}
-
-		return priceEntry;
 	}
 
 	async postDiscount(discount?: TDiscount) {
@@ -159,5 +178,53 @@ export class HeadlessCommerceAdminPricingApiHelper {
 		}
 
 		return discountRule;
+	}
+
+	async postDiscountSku(discountId: number, discountSku?: TDiscountSku) {
+		discountSku = await this.apiHelpers.post(
+			`${this.apiHelpers.baseUrl}${this.basePath}/discounts/${discountId}/discount-skus`,
+			{
+				data: discountSku,
+			}
+		);
+
+		return discountSku;
+	}
+
+	async postPriceEntry(priceEntry: TPriceEntry) {
+		priceEntry = await this.apiHelpers.post(
+			`${this.apiHelpers.baseUrl}${this.basePath}/price-lists/${priceEntry.priceListId}/price-entries`,
+			{
+				data: priceEntry,
+				failOnStatusCode: true,
+			}
+		);
+
+		if (this.apiHelpers instanceof DataApiHelpers) {
+			this.apiHelpers.data.push({
+				id: priceEntry.priceEntryId,
+				type: 'price-entry',
+			});
+		}
+
+		return priceEntry;
+	}
+
+	async postPriceList(priceList?: TPriceList) {
+		priceList = await this.apiHelpers.post(
+			`${this.apiHelpers.baseUrl}${this.basePath}/price-lists`,
+			{
+				data: priceList,
+			}
+		);
+
+		if (this.apiHelpers instanceof DataApiHelpers) {
+			this.apiHelpers.data.push({
+				id: priceList.id,
+				type: 'price-list',
+			});
+		}
+
+		return priceList;
 	}
 }

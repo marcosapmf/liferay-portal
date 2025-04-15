@@ -28,7 +28,6 @@ import com.liferay.portal.vulcan.fields.NestedField;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -59,8 +58,9 @@ public class PriceModifierCategoryResourceImpl
 		throws Exception {
 
 		CommercePriceModifier commercePriceModifier =
-			_commercePriceModifierService.fetchByExternalReferenceCode(
-				externalReferenceCode, contextCompany.getCompanyId());
+			_commercePriceModifierService.
+				fetchCommercePriceModifierByExternalReferenceCode(
+					externalReferenceCode, contextCompany.getCompanyId());
 
 		if (commercePriceModifier == null) {
 			throw new NoSuchPriceModifierException(
@@ -74,14 +74,14 @@ public class PriceModifierCategoryResourceImpl
 				AssetCategory.class.getName(), pagination.getStartPosition(),
 				pagination.getEndPosition(), null);
 
-		int totalItems =
+		int totalCount =
 			_commercePriceModifierRelService.getCommercePriceModifierRelsCount(
 				commercePriceModifier.getCommercePriceModifierId(),
 				AssetCategory.class.getName());
 
 		return Page.of(
 			_toPriceModifierCategories(commercePriceModifierRels), pagination,
-			totalItems);
+			totalCount);
 	}
 
 	@NestedField(
@@ -100,13 +100,13 @@ public class PriceModifierCategoryResourceImpl
 					id, search, pagination.getStartPosition(),
 					pagination.getEndPosition());
 
-		int totalItems =
+		int totalCount =
 			_commercePriceModifierRelService.
 				getCategoriesCommercePriceModifierRelsCount(id, search);
 
 		return Page.of(
 			_toPriceModifierCategories(commercePriceModifierRels), pagination,
-			totalItems);
+			totalCount);
 	}
 
 	@Override
@@ -117,8 +117,9 @@ public class PriceModifierCategoryResourceImpl
 		throws Exception {
 
 		CommercePriceModifier commercePriceModifier =
-			_commercePriceModifierService.fetchByExternalReferenceCode(
-				externalReferenceCode, contextCompany.getCompanyId());
+			_commercePriceModifierService.
+				fetchCommercePriceModifierByExternalReferenceCode(
+					externalReferenceCode, contextCompany.getCompanyId());
 
 		if (commercePriceModifier == null) {
 			throw new NoSuchPriceModifierException(
@@ -170,17 +171,10 @@ public class PriceModifierCategoryResourceImpl
 			List<CommercePriceModifierRel> commercePriceModifierRels)
 		throws Exception {
 
-		List<PriceModifierCategory> priceModifierCategories = new ArrayList<>();
-
-		for (CommercePriceModifierRel commercePriceModifierRel :
-				commercePriceModifierRels) {
-
-			priceModifierCategories.add(
-				_toPriceModifierCategory(
-					commercePriceModifierRel.getCommercePriceModifierRelId()));
-		}
-
-		return priceModifierCategories;
+		return transform(
+			commercePriceModifierRels,
+			commercePriceModifierRel -> _toPriceModifierCategory(
+				commercePriceModifierRel.getCommercePriceModifierRelId()));
 	}
 
 	private PriceModifierCategory _toPriceModifierCategory(

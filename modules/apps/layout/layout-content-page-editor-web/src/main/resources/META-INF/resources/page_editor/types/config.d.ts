@@ -16,6 +16,7 @@ export interface Config {
 	addPortletURL: string;
 	addRuleURL: string;
 	addSegmentsExperienceURL: string;
+	addStepperFragmentEntryLinkURL: string;
 
 	assetCategoryTreeNodeItemSelectorURL: string;
 
@@ -79,6 +80,7 @@ export interface Config {
 	>;
 
 	contentPagePersonalizationLearnURL: string;
+	copyItemsURL: string;
 	createLayoutPageTemplateEntryURL: string;
 
 	defaultEditorConfigurations: Record<
@@ -94,6 +96,7 @@ export interface Config {
 	defaultSegmentsExperienceId: string;
 	defaultStyleBookEntryImagePreviewURL: string;
 	defaultStyleBookEntryName: string;
+	deleteFormStepURL: string;
 	deleteFragmentEntryLinkCommentURL: string;
 	deleteRuleURL: string;
 	deleteSegmentsExperienceURL: string;
@@ -103,6 +106,13 @@ export interface Config {
 	editFragmentEntryLinkCommentURL: string;
 	editFragmentEntryLinkURL: string;
 	editSegmentsEntryURL: string;
+	formTypes: Array<{
+		className: string;
+		isRestricted: boolean;
+		label: string;
+		subtypes: Array<{label: string; value: string}>;
+		value: string;
+	}>;
 	frontendTokens: {
 		[key: string]:
 			| {
@@ -148,6 +158,9 @@ export interface Config {
 	infoItemPreviewSelectorURL: string;
 	infoItemSelectorURL: string;
 	isConversionDraft: boolean;
+	isMarketplaceButtonVisited: boolean;
+	fragmentPortletNamespace: string;
+	fragmentsImportURL: string;
 	isPrivateLayoutsEnabled: boolean;
 	layoutConversionWarningMessages: string[] | null;
 	layoutItemSelectorURL: String;
@@ -161,7 +174,8 @@ export interface Config {
 		name: string;
 	}>;
 	masterUsed: boolean;
-	moveItemURL: string;
+	moveItemsURL: string;
+	moveStepperFragmentEntryLinkURL: string;
 	paddingOptions: Array<{
 		label: string;
 		value: string;
@@ -203,6 +217,7 @@ export interface Config {
 	themeColorsCssClasses: string[];
 	toolbarId: string;
 
+	undoUpdateFormConfigURL: string;
 	unmarkItemsForDeletionURL: string;
 	updateCollectionDisplayConfigURL: string;
 	updateConfigurationValuesURL: string;

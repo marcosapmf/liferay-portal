@@ -10,15 +10,15 @@ import {isolatedLayoutTest} from '../../../../fixtures/isolatedLayoutTest';
 import {loginTest} from '../../../../fixtures/loginTest';
 import getRandomString from '../../../../utils/getRandomString';
 import {dataSetManagerApiHelpersTest} from '../../fixtures/dataSetManagerApiHelpersTest';
-import {fdsFragmentPageTest} from './fixtures/fdsFragmentPageTest';
+import {dataSetFragmentPageTest} from './fixtures/dataSetFragmentPageTest';
 
 export const test = mergeTests(
 	dataSetManagerApiHelpersTest,
 	featureFlagsTest({
-		'LPS-178052': true,
+		'LPS-178052': {enabled: true},
 	}),
 	loginTest(),
-	fdsFragmentPageTest,
+	dataSetFragmentPageTest,
 	isolatedLayoutTest({publish: false})
 );
 
@@ -43,26 +43,41 @@ test.afterEach(async ({dataSetManagerApiHelpers}) => {
 
 test.describe('Visualization Modes in Data Set fragment', () => {
 	test('Show mapped fields in the fragment', async ({
+		dataSetFragmentPage,
 		dataSetManagerApiHelpers,
-		fdsFragmentPage,
 		layout,
 		page,
 	}) => {
 		const SAMPLE_SCALAR_FIELD = 'id';
-		const SAMPLE_OBJECT_FIELD = 'fdsViewFDSFieldRelationship';
+		const SAMPLE_OBJECT_FIELD = 'dataSetToDataSetTableSections';
 		const SAMPLE_OBJECT_CHILD_FIELD = 'label';
 
+		await test.step('Update Data Set to include additionalAPIURLParameters', async () => {
+			await dataSetManagerApiHelpers.updateDataSet({
+				additionalAPIURLParameters:
+					'fields=dataSetToDataSetTableSections.label,id,label',
+				erc: dataSetERC,
+			});
+		});
+
 		await test.step('Create table fields', async () => {
-			await dataSetManagerApiHelpers.createDataSetField({
+			await dataSetManagerApiHelpers.createDataSetTableSection({
 				dataSetERC,
-				label_i18n: {en_US: 'Label'},
-				name: `${SAMPLE_OBJECT_FIELD}.${SAMPLE_OBJECT_CHILD_FIELD}`,
+				fieldName: `${SAMPLE_OBJECT_FIELD}.${SAMPLE_OBJECT_CHILD_FIELD}`,
+				label_i18n: {en_US: 'Data Set Label'},
 				type: 'string',
 			});
-			await dataSetManagerApiHelpers.createDataSetField({
+			await dataSetManagerApiHelpers.createDataSetTableSection({
 				dataSetERC,
+				fieldName: `${SAMPLE_OBJECT_CHILD_FIELD}`,
+				label_i18n: {en_US: 'Table Section Label'},
+				type: 'string',
+			});
+			await dataSetManagerApiHelpers.createDataSetTableSection({
+				dataSetERC,
+				fieldName: `${SAMPLE_SCALAR_FIELD}`,
 				label_i18n: {en_US: 'Id'},
-				name: `${SAMPLE_SCALAR_FIELD}`,
+				sortable: true,
 				type: 'string',
 			});
 		});
@@ -94,22 +109,22 @@ test.describe('Visualization Modes in Data Set fragment', () => {
 		});
 
 		await test.step('Configure Data Set in the page', async () => {
-			await fdsFragmentPage.configureDataSetFragment({
+			await dataSetFragmentPage.configureDataSetFragment({
 				dataSetLabel,
 				layout,
 			});
 		});
 
 		await test.step('Check Data Set Cards are present', async () => {
-			await fdsFragmentPage.fdsCardsWrapper.waitFor({
+			await dataSetFragmentPage.cardsWrapper.waitFor({
 				state: 'visible',
 			});
 
-			await expect(fdsFragmentPage.fdsCardsWrapper).toBeInViewport();
+			await expect(dataSetFragmentPage.cardsWrapper).toBeInViewport();
 
-			await fdsFragmentPage.page.locator('.card').first().waitFor();
+			await dataSetFragmentPage.page.locator('.card').first().waitFor();
 
-			const firstCard = fdsFragmentPage.page.locator('.card').first();
+			const firstCard = dataSetFragmentPage.page.locator('.card').first();
 
 			await expect(firstCard.locator('.card-title')).toContainText(
 				dataSetLabel
@@ -119,22 +134,22 @@ test.describe('Visualization Modes in Data Set fragment', () => {
 		});
 
 		await test.step('Change visualization mode to List', async () => {
-			await fdsFragmentPage.changeVisualizationMode('List');
+			await dataSetFragmentPage.changeVisualizationMode('List');
 		});
 
 		await test.step('Check Data Set List is present', async () => {
-			await fdsFragmentPage.fdsListWrapper.waitFor({
+			await dataSetFragmentPage.listWrapper.waitFor({
 				state: 'visible',
 			});
 
-			await expect(fdsFragmentPage.fdsListWrapper).toBeInViewport();
+			await expect(dataSetFragmentPage.listWrapper).toBeInViewport();
 
-			await fdsFragmentPage.page
+			await dataSetFragmentPage.page
 				.locator('.list-group-item')
 				.first()
 				.waitFor();
 
-			const firstListItem = fdsFragmentPage.page
+			const firstListItem = dataSetFragmentPage.page
 				.locator('.list-group-item')
 				.first();
 
@@ -148,76 +163,98 @@ test.describe('Visualization Modes in Data Set fragment', () => {
 		});
 
 		await test.step('Change visualization mode to Table', async () => {
-			await fdsFragmentPage.changeVisualizationMode('Table');
+			await dataSetFragmentPage.changeVisualizationMode('Table');
 		});
 
 		await test.step('Data Set Table is in the page', async () => {
-			await fdsFragmentPage.fdsTableWrapper.waitFor({
-				state: 'visible',
+			expect(
+				await dataSetFragmentPage.table.headRow
+					.locator('th')
+					.allInnerTexts()
+			).toEqual(['Data Set Label', 'Table Section Label', 'Id', '']);
+		});
+
+		await test.step('Data Set request URL contains additionalAPIURLParameters and nestedFields', async () => {
+			const nestedFieldsValue =
+				'nestedFields=dataSetToDataSetTableSections';
+			const additionalAPIURLParameters =
+				'fields=dataSetToDataSetTableSections.label%2Cid%2Clabel';
+
+			const datasetRequestPromise = page.waitForRequest((request) => {
+				return request
+					.url()
+					.includes(
+						`${nestedFieldsValue}&page=1&pageSize=20&sort=id%3Aasc&${additionalAPIURLParameters}`
+					);
 			});
 
-			await expect(
-				await fdsFragmentPage.fdsTableWrapper
-			).toBeInViewport();
+			// Force data request
 
-			expect(
-				await page
-					.locator('.dnd-thead > div')
-					.first()
-					.locator('.dnd-th')
-					.allInnerTexts()
-			).toEqual(['Label', 'Id', '']);
+			await dataSetFragmentPage.sortBy(SAMPLE_SCALAR_FIELD);
+
+			const datasetRequest = await datasetRequestPromise;
+
+			let datasetRequestUrl: string;
+
+			if (datasetRequest) {
+				try {
+					datasetRequestUrl = datasetRequest.url();
+				}
+				catch (error) {
+					console.error(
+						'Error reading request datasetRequest.url:',
+						error
+					);
+				}
+			}
+			else {
+				console.error('Request not received within the timeout period');
+			}
+
+			expect(datasetRequestUrl).toContain(nestedFieldsValue);
+
+			expect(datasetRequestUrl).toContain(additionalAPIURLParameters);
 		});
 	});
 
 	test('Show mapped scalar array field in the fragment @LPD-11769', async ({
+		dataSetFragmentPage,
 		dataSetManagerApiHelpers,
-		fdsFragmentPage,
 		layout,
-		page,
 	}) => {
 		const SAMPLE_SCALAR_ARRAY_FIELD = 'keywords';
 		const SAMPLE_SCALAR_ARRAY_CONTENT = ['one', 'two', 'three'];
 
 		await test.step('Create table fields', async () => {
-			await dataSetManagerApiHelpers.createDataSetField({
+			await dataSetManagerApiHelpers.createDataSetTableSection({
 				dataSetERC,
 				extraBodyParams: {
 					keywords: SAMPLE_SCALAR_ARRAY_CONTENT,
 				},
+				fieldName: SAMPLE_SCALAR_ARRAY_FIELD,
 				label_i18n: {en_US: SAMPLE_SCALAR_ARRAY_FIELD},
-				name: SAMPLE_SCALAR_ARRAY_FIELD,
 				type: 'array',
 			});
 		});
 
 		await test.step('Configure Data Set in the page', async () => {
-			await fdsFragmentPage.configureDataSetFragment({
+			await dataSetFragmentPage.configureDataSetFragment({
 				dataSetLabel,
 				layout,
 			});
 		});
 
 		await test.step('Data Set Table is in the page', async () => {
-			await fdsFragmentPage.fdsTableWrapper.waitFor({
-				state: 'visible',
-			});
-
-			await expect(fdsFragmentPage.fdsTableWrapper).toBeInViewport();
-
 			expect(
-				await page
-					.locator('.dnd-thead > div')
-					.first()
-					.locator('.dnd-th')
+				await dataSetFragmentPage.table.headRow
+					.locator('th')
 					.allInnerTexts()
 			).toEqual([SAMPLE_SCALAR_ARRAY_FIELD, '']);
 
 			expect(
-				await page
-					.locator('.dnd-tbody > div')
+				await dataSetFragmentPage.table.bodyRows
 					.first()
-					.locator('.dnd-td')
+					.locator('td')
 					.allInnerTexts()
 			).toEqual(['one, two, three', '']);
 		});

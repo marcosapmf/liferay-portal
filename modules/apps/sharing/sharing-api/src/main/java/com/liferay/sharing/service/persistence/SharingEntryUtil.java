@@ -1755,78 +1755,156 @@ public class SharingEntryUtil {
 	}
 
 	/**
-	 * Returns the sharing entry where toUserId = &#63; and classNameId = &#63; and classPK = &#63; or throws a <code>NoSuchEntryException</code> if it could not be found.
+	 * Returns the sharing entry where toUserGroupId = &#63; and toUserId = &#63; and classNameId = &#63; and classPK = &#63; or throws a <code>NoSuchEntryException</code> if it could not be found.
 	 *
+	 * @param toUserGroupId the to user group ID
 	 * @param toUserId the to user ID
 	 * @param classNameId the class name ID
 	 * @param classPK the class pk
 	 * @return the matching sharing entry
 	 * @throws NoSuchEntryException if a matching sharing entry could not be found
 	 */
-	public static SharingEntry findByTU_C_C(
-			long toUserId, long classNameId, long classPK)
+	public static SharingEntry findByTUG_TU_C_C(
+			long toUserGroupId, long toUserId, long classNameId, long classPK)
 		throws com.liferay.sharing.exception.NoSuchEntryException {
 
-		return getPersistence().findByTU_C_C(toUserId, classNameId, classPK);
+		return getPersistence().findByTUG_TU_C_C(
+			toUserGroupId, toUserId, classNameId, classPK);
 	}
 
 	/**
-	 * Returns the sharing entry where toUserId = &#63; and classNameId = &#63; and classPK = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
+	 * Returns the sharing entry where toUserGroupId = &#63; and toUserId = &#63; and classNameId = &#63; and classPK = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
 	 *
+	 * @param toUserGroupId the to user group ID
 	 * @param toUserId the to user ID
 	 * @param classNameId the class name ID
 	 * @param classPK the class pk
 	 * @return the matching sharing entry, or <code>null</code> if a matching sharing entry could not be found
 	 */
-	public static SharingEntry fetchByTU_C_C(
-		long toUserId, long classNameId, long classPK) {
+	public static SharingEntry fetchByTUG_TU_C_C(
+		long toUserGroupId, long toUserId, long classNameId, long classPK) {
 
-		return getPersistence().fetchByTU_C_C(toUserId, classNameId, classPK);
+		return getPersistence().fetchByTUG_TU_C_C(
+			toUserGroupId, toUserId, classNameId, classPK);
 	}
 
 	/**
-	 * Returns the sharing entry where toUserId = &#63; and classNameId = &#63; and classPK = &#63; or returns <code>null</code> if it could not be found, optionally using the finder cache.
+	 * Returns the sharing entry where toUserGroupId = &#63; and toUserId = &#63; and classNameId = &#63; and classPK = &#63; or returns <code>null</code> if it could not be found, optionally using the finder cache.
 	 *
+	 * @param toUserGroupId the to user group ID
 	 * @param toUserId the to user ID
 	 * @param classNameId the class name ID
 	 * @param classPK the class pk
 	 * @param useFinderCache whether to use the finder cache
 	 * @return the matching sharing entry, or <code>null</code> if a matching sharing entry could not be found
 	 */
-	public static SharingEntry fetchByTU_C_C(
-		long toUserId, long classNameId, long classPK, boolean useFinderCache) {
+	public static SharingEntry fetchByTUG_TU_C_C(
+		long toUserGroupId, long toUserId, long classNameId, long classPK,
+		boolean useFinderCache) {
 
-		return getPersistence().fetchByTU_C_C(
-			toUserId, classNameId, classPK, useFinderCache);
+		return getPersistence().fetchByTUG_TU_C_C(
+			toUserGroupId, toUserId, classNameId, classPK, useFinderCache);
 	}
 
 	/**
-	 * Removes the sharing entry where toUserId = &#63; and classNameId = &#63; and classPK = &#63; from the database.
+	 * Removes the sharing entry where toUserGroupId = &#63; and toUserId = &#63; and classNameId = &#63; and classPK = &#63; from the database.
 	 *
+	 * @param toUserGroupId the to user group ID
 	 * @param toUserId the to user ID
 	 * @param classNameId the class name ID
 	 * @param classPK the class pk
 	 * @return the sharing entry that was removed
 	 */
-	public static SharingEntry removeByTU_C_C(
-			long toUserId, long classNameId, long classPK)
+	public static SharingEntry removeByTUG_TU_C_C(
+			long toUserGroupId, long toUserId, long classNameId, long classPK)
 		throws com.liferay.sharing.exception.NoSuchEntryException {
 
-		return getPersistence().removeByTU_C_C(toUserId, classNameId, classPK);
+		return getPersistence().removeByTUG_TU_C_C(
+			toUserGroupId, toUserId, classNameId, classPK);
 	}
 
 	/**
-	 * Returns the number of sharing entries where toUserId = &#63; and classNameId = &#63; and classPK = &#63;.
+	 * Returns the number of sharing entries where toUserGroupId = &#63; and toUserId = &#63; and classNameId = &#63; and classPK = &#63;.
 	 *
+	 * @param toUserGroupId the to user group ID
 	 * @param toUserId the to user ID
 	 * @param classNameId the class name ID
 	 * @param classPK the class pk
 	 * @return the number of matching sharing entries
 	 */
-	public static int countByTU_C_C(
-		long toUserId, long classNameId, long classPK) {
+	public static int countByTUG_TU_C_C(
+		long toUserGroupId, long toUserId, long classNameId, long classPK) {
 
-		return getPersistence().countByTU_C_C(toUserId, classNameId, classPK);
+		return getPersistence().countByTUG_TU_C_C(
+			toUserGroupId, toUserId, classNameId, classPK);
+	}
+
+	/**
+	 * Returns the sharing entry where externalReferenceCode = &#63; and groupId = &#63; or throws a <code>NoSuchEntryException</code> if it could not be found.
+	 *
+	 * @param externalReferenceCode the external reference code
+	 * @param groupId the group ID
+	 * @return the matching sharing entry
+	 * @throws NoSuchEntryException if a matching sharing entry could not be found
+	 */
+	public static SharingEntry findByERC_G(
+			String externalReferenceCode, long groupId)
+		throws com.liferay.sharing.exception.NoSuchEntryException {
+
+		return getPersistence().findByERC_G(externalReferenceCode, groupId);
+	}
+
+	/**
+	 * Returns the sharing entry where externalReferenceCode = &#63; and groupId = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
+	 *
+	 * @param externalReferenceCode the external reference code
+	 * @param groupId the group ID
+	 * @return the matching sharing entry, or <code>null</code> if a matching sharing entry could not be found
+	 */
+	public static SharingEntry fetchByERC_G(
+		String externalReferenceCode, long groupId) {
+
+		return getPersistence().fetchByERC_G(externalReferenceCode, groupId);
+	}
+
+	/**
+	 * Returns the sharing entry where externalReferenceCode = &#63; and groupId = &#63; or returns <code>null</code> if it could not be found, optionally using the finder cache.
+	 *
+	 * @param externalReferenceCode the external reference code
+	 * @param groupId the group ID
+	 * @param useFinderCache whether to use the finder cache
+	 * @return the matching sharing entry, or <code>null</code> if a matching sharing entry could not be found
+	 */
+	public static SharingEntry fetchByERC_G(
+		String externalReferenceCode, long groupId, boolean useFinderCache) {
+
+		return getPersistence().fetchByERC_G(
+			externalReferenceCode, groupId, useFinderCache);
+	}
+
+	/**
+	 * Removes the sharing entry where externalReferenceCode = &#63; and groupId = &#63; from the database.
+	 *
+	 * @param externalReferenceCode the external reference code
+	 * @param groupId the group ID
+	 * @return the sharing entry that was removed
+	 */
+	public static SharingEntry removeByERC_G(
+			String externalReferenceCode, long groupId)
+		throws com.liferay.sharing.exception.NoSuchEntryException {
+
+		return getPersistence().removeByERC_G(externalReferenceCode, groupId);
+	}
+
+	/**
+	 * Returns the number of sharing entries where externalReferenceCode = &#63; and groupId = &#63;.
+	 *
+	 * @param externalReferenceCode the external reference code
+	 * @param groupId the group ID
+	 * @return the number of matching sharing entries
+	 */
+	public static int countByERC_G(String externalReferenceCode, long groupId) {
+		return getPersistence().countByERC_G(externalReferenceCode, groupId);
 	}
 
 	/**

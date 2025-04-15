@@ -249,10 +249,10 @@ const filterSchema = {
 			overrides(baseFilters.team, {
 				isCustomFilter: true,
 				name: 'testrayTeamIds',
-				resource: ({buildId}) => {
+				resource: ({projectId}) => {
 					const filter = `${SearchBuilder.eq(
-						'teamToComponents/componentToCases/caseToBuildsCases/r_buildToBuildsCases_c_buildId',
-						buildId as string
+						'projectId',
+						projectId as string
 					)}`;
 
 					return `/teams?fields=id,name&filter=${filter}&pageSize=-1&sort=name:asc`;
@@ -277,10 +277,10 @@ const filterSchema = {
 			overrides(baseFilters.team, {
 				isCustomFilter: true,
 				name: 'testrayTeamIds',
-				resource: ({buildId}) => {
+				resource: ({projectId}) => {
 					const filter = `${SearchBuilder.eq(
-						'teamToComponents/componentToCases/caseToBuildsCases/r_buildToBuildsCases_c_buildId',
-						buildId as string
+						'projectId',
+						projectId as string
 					)}`;
 
 					return `/teams?fields=id,name&filter=${filter}&pageSize=-1&sort=name:asc`;
@@ -336,10 +336,10 @@ const filterSchema = {
 			overrides(baseFilters.team, {
 				isCustomFilter: true,
 				name: 'testrayTeamIds',
-				resource: ({buildId}) => {
+				resource: ({projectId}) => {
 					const filter = `${SearchBuilder.eq(
-						'teamToComponents/componentToCases/caseToBuildsCases/r_buildToBuildsCases_c_buildId',
-						buildId as string
+						'projectId',
+						projectId as string
 					)}`;
 
 					return `/teams?fields=id,name&filter=${filter}&pageSize=-1&sort=name:asc`;
@@ -349,10 +349,10 @@ const filterSchema = {
 			overrides(baseFilters.component, {
 				isCustomFilter: true,
 				name: 'testrayComponentIds',
-				resource: ({buildId}) => {
+				resource: ({projectId}) => {
 					const filter = `${SearchBuilder.eq(
-						'componentToCases/caseToBuildsCases/r_buildToBuildsCases_c_buildId',
-						buildId as string
+						'projectId',
+						projectId as string
 					)}`;
 
 					return `/components?fields=id,name&filter=${filter}&pageSize=-1&sort=name:asc`;
@@ -396,6 +396,10 @@ const filterSchema = {
 					{
 						label: i18n.translate('in-progress'),
 						value: CaseResultStatuses.IN_PROGRESS,
+					},
+					{
+						label: i18n.translate('incomplete'),
+						value: CaseResultStatuses.INCOMPLETE,
 					},
 					{
 						label: i18n.translate('passed'),
@@ -476,6 +480,10 @@ const filterSchema = {
 						value: CaseResultStatuses.IN_PROGRESS,
 					},
 					{
+						label: 'Incomplete',
+						value: CaseResultStatuses.INCOMPLETE,
+					},
+					{
 						label: 'Passed',
 						value: CaseResultStatuses.PASSED,
 					},
@@ -536,10 +544,10 @@ const filterSchema = {
 			overrides(baseFilters.team, {
 				isCustomFilter: true,
 				name: 'testrayTeamIds',
-				resource: ({buildId}) => {
+				resource: ({projectId}) => {
 					const filter = `${SearchBuilder.eq(
-						'teamToComponents/componentToCases/caseToBuildsCases/r_buildToBuildsCases_c_buildId',
-						buildId as string
+						'projectId',
+						projectId as string
 					)}`;
 
 					return `/teams?fields=id,name&filter=${filter}&pageSize=-1&sort=name:asc`;
@@ -563,10 +571,10 @@ const filterSchema = {
 			overrides(baseFilters.team, {
 				isCustomFilter: true,
 				name: 'testrayTeamIds',
-				resource: ({buildId}) => {
+				resource: ({projectId}) => {
 					const filter = `${SearchBuilder.eq(
-						'teamToComponents/componentToCases/caseToBuildsCases/r_buildToBuildsCases_c_buildId',
-						buildId as string
+						'projectId',
+						projectId as string
 					)}`;
 
 					return `/teams?fields=id,name&filter=${filter}&pageSize=-1&sort=name:asc`;
@@ -963,6 +971,55 @@ const filterSchema = {
 		] as RendererFields[],
 		name: 'requirements',
 	},
+	routineDuration: {
+		fields: [
+			{
+				isCustomFilter: true,
+				label: i18n.translate('flaky'),
+				name: 'flaky',
+				options: [
+					{
+						label: i18n.translate('true'),
+						value: true,
+					},
+					{
+						label: i18n.translate('false'),
+						value: false,
+					},
+				],
+				removeQuoteMark: true,
+				type: 'select',
+			},
+			overrides(baseFilters.priority, {
+				isCustomFilter: true,
+				name: 'priority',
+				removeQuoteMark: true,
+				type: 'multiselect',
+			}),
+			{
+				isCustomFilter: true,
+				label: i18n.translate('case-name'),
+				name: 'testrayCaseName',
+				type: 'text',
+			},
+			overrides(baseFilters.caseType, {
+				isCustomFilter: true,
+				name: 'testrayCaseTypeIds',
+				type: 'multiselect',
+			}),
+			overrides(baseFilters.component, {
+				isCustomFilter: true,
+				name: 'testrayComponentIds',
+				type: 'multiselect',
+			}),
+			overrides(baseFilters.team, {
+				isCustomFilter: true,
+				name: 'testrayTeamIds',
+				type: 'multiselect',
+			}),
+		] as RendererFields[],
+		name: 'routineDuration',
+	},
 	routines: {
 		fields: [
 			overrides(baseFilters.priority, {
@@ -1014,10 +1071,10 @@ const filterSchema = {
 			overrides(baseFilters.team, {
 				isCustomFilter: true,
 				name: 'testrayTeamIds',
-				resource: ({buildId}) => {
+				resource: ({projectId}) => {
 					const filter = `${SearchBuilder.eq(
-						'teamToComponents/componentToCases/caseToBuildsCases/r_buildToBuildsCases_c_buildId',
-						buildId as string
+						'projectId',
+						projectId as string
 					)}`;
 
 					return `/teams?fields=id,name&filter=${filter}&pageSize=-1&sort=name:asc`;
@@ -1027,10 +1084,10 @@ const filterSchema = {
 			overrides(baseFilters.component, {
 				isCustomFilter: true,
 				name: 'testrayComponentIds',
-				resource: ({buildId}) => {
+				resource: ({projectId}) => {
 					const filter = `${SearchBuilder.eq(
-						'componentToCases/caseToBuildsCases/r_buildToBuildsCases_c_buildId',
-						buildId as string
+						'projectId',
+						projectId as string
 					)}`;
 
 					return `/components?fields=id,name&filter=${filter}&pageSize=-1&sort=name:asc`;
@@ -1074,6 +1131,10 @@ const filterSchema = {
 					{
 						label: i18n.translate('in-progress'),
 						value: CaseResultStatuses.IN_PROGRESS,
+					},
+					{
+						label: i18n.translate('incomplete'),
+						value: CaseResultStatuses.INCOMPLETE,
 					},
 					{
 						label: i18n.translate('passed'),

@@ -11,7 +11,6 @@ import com.liferay.commerce.price.list.exception.CommercePriceEntryExpirationDat
 import com.liferay.commerce.price.list.exception.CommercePriceEntryUnitOfMeasureKeyException;
 import com.liferay.commerce.price.list.exception.CommercePriceListMaxPriceValueException;
 import com.liferay.commerce.price.list.exception.CommercePriceListMinPriceValueException;
-import com.liferay.commerce.price.list.exception.DuplicateCommercePriceEntryException;
 import com.liferay.commerce.price.list.exception.NoSuchPriceEntryException;
 import com.liferay.commerce.price.list.model.CommercePriceEntry;
 import com.liferay.commerce.price.list.model.CommercePriceEntryTable;
@@ -131,13 +130,6 @@ public class CommercePriceEntryLocalServiceImpl
 
 		User user = _userLocalService.getUser(serviceContext.getUserId());
 
-		if (Validator.isBlank(externalReferenceCode)) {
-			externalReferenceCode = null;
-		}
-
-		_validateExternalReferenceCode(
-			externalReferenceCode, serviceContext.getCompanyId());
-
 		CPInstance cpInstance = _cpInstanceLocalService.fetchCPInstance(
 			cProductId, cpInstanceUuid);
 
@@ -185,6 +177,8 @@ public class CommercePriceEntryLocalServiceImpl
 		commercePriceEntry.setExpirationDate(expirationDate);
 		commercePriceEntry.setPrice(price);
 		commercePriceEntry.setPriceOnApplication(priceOnApplication);
+		commercePriceEntry.setPricingQuantity(
+			_getPricingQuantity(cpInstanceId, unitOfMeasureKey));
 		commercePriceEntry.setPromoPrice(promoPrice);
 		commercePriceEntry.setQuantity(
 			_getQuantity(cpInstanceId, unitOfMeasureKey));
@@ -257,11 +251,7 @@ public class CommercePriceEntryLocalServiceImpl
 
 		CommercePriceEntry commercePriceEntry = null;
 
-		if (Validator.isBlank(externalReferenceCode)) {
-			externalReferenceCode = null;
-		}
-
-		if (!Validator.isBlank(externalReferenceCode)) {
+		if (Validator.isNotNull(externalReferenceCode)) {
 			commercePriceEntry = commercePriceEntryPersistence.fetchByERC_C(
 				externalReferenceCode, serviceContext.getCompanyId());
 		}
@@ -406,18 +396,6 @@ public class CommercePriceEntryLocalServiceImpl
 
 		return commercePriceEntryLocalService.deleteCommercePriceEntry(
 			commercePriceEntry);
-	}
-
-	@Override
-	public CommercePriceEntry fetchByExternalReferenceCode(
-		String externalReferenceCode, long companyId) {
-
-		if (Validator.isBlank(externalReferenceCode)) {
-			return null;
-		}
-
-		return commercePriceEntryPersistence.fetchByERC_C(
-			externalReferenceCode, companyId);
 	}
 
 	@Override
@@ -729,6 +707,8 @@ public class CommercePriceEntryLocalServiceImpl
 		commercePriceEntry.setExpirationDate(expirationDate);
 		commercePriceEntry.setPrice(price);
 		commercePriceEntry.setPriceOnApplication(priceOnApplication);
+		commercePriceEntry.setPricingQuantity(
+			_getPricingQuantity(cpInstanceId, unitOfMeasureKey));
 		commercePriceEntry.setPromoPrice(promoPrice);
 		commercePriceEntry.setQuantity(
 			_getQuantity(cpInstanceId, unitOfMeasureKey));
@@ -764,10 +744,6 @@ public class CommercePriceEntryLocalServiceImpl
 	public CommercePriceEntry updateExternalReferenceCode(
 			String externalReferenceCode, CommercePriceEntry commercePriceEntry)
 		throws PortalException {
-
-		if (Validator.isBlank(externalReferenceCode)) {
-			externalReferenceCode = null;
-		}
 
 		commercePriceEntry.setExternalReferenceCode(externalReferenceCode);
 
@@ -1009,6 +985,24 @@ public class CommercePriceEntryLocalServiceImpl
 		);
 	}
 
+	private BigDecimal _getPricingQuantity(
+		long cpInstanceId, String unitOfMeasureKey) {
+
+		if (Validator.isBlank(unitOfMeasureKey) || (cpInstanceId == 0)) {
+			return null;
+		}
+
+		CPInstanceUnitOfMeasure cpInstanceUnitOfMeasure =
+			_cpInstanceUnitOfMeasureLocalService.fetchCPInstanceUnitOfMeasure(
+				cpInstanceId, unitOfMeasureKey);
+
+		if (cpInstanceUnitOfMeasure == null) {
+			return null;
+		}
+
+		return cpInstanceUnitOfMeasure.getPricingQuantity();
+	}
+
 	private BigDecimal _getQuantity(
 		long cpInstanceId, String unitOfMeasureKey) {
 
@@ -1020,15 +1014,15 @@ public class CommercePriceEntryLocalServiceImpl
 			_cpInstanceUnitOfMeasureLocalService.fetchCPInstanceUnitOfMeasure(
 				cpInstanceId, unitOfMeasureKey);
 
-		if (cpInstanceUnitOfMeasure != null) {
-			BigDecimal incrementalOrderQuantity =
-				cpInstanceUnitOfMeasure.getIncrementalOrderQuantity();
-
-			return incrementalOrderQuantity.setScale(
-				cpInstanceUnitOfMeasure.getPrecision(), RoundingMode.HALF_UP);
+		if (cpInstanceUnitOfMeasure == null) {
+			return null;
 		}
 
-		return null;
+		BigDecimal incrementalOrderQuantity =
+			cpInstanceUnitOfMeasure.getIncrementalOrderQuantity();
+
+		return incrementalOrderQuantity.setScale(
+			cpInstanceUnitOfMeasure.getPrecision(), RoundingMode.HALF_UP);
 	}
 
 	private String _getUnitOfMeasureKey(
@@ -1042,24 +1036,24 @@ public class CommercePriceEntryLocalServiceImpl
 			_cpInstanceUnitOfMeasureLocalService.
 				getCPInstanceUnitOfMeasuresCount(cpInstanceId);
 
-		if ((cpInstanceUnitOfMeasuresCount == 1) &&
-			Validator.isBlank(unitOfMeasureKey)) {
+		if ((cpInstanceUnitOfMeasuresCount != 1) ||
+			!Validator.isBlank(unitOfMeasureKey)) {
 
-			List<CPInstanceUnitOfMeasure> cpInstanceUnitOfMeasures =
-				_cpInstanceUnitOfMeasureLocalService.
-					getCPInstanceUnitOfMeasures(cpInstanceId, 0, 1, null);
-
-			if (ListUtil.isEmpty(cpInstanceUnitOfMeasures)) {
-				return null;
-			}
-
-			CPInstanceUnitOfMeasure cpInstanceUnitOfMeasure =
-				cpInstanceUnitOfMeasures.get(0);
-
-			return cpInstanceUnitOfMeasure.getKey();
+			return null;
 		}
 
-		return null;
+		List<CPInstanceUnitOfMeasure> cpInstanceUnitOfMeasures =
+			_cpInstanceUnitOfMeasureLocalService.getCPInstanceUnitOfMeasures(
+				cpInstanceId, 0, 1, null);
+
+		if (ListUtil.isEmpty(cpInstanceUnitOfMeasures)) {
+			return null;
+		}
+
+		CPInstanceUnitOfMeasure cpInstanceUnitOfMeasure =
+			cpInstanceUnitOfMeasures.get(0);
+
+		return cpInstanceUnitOfMeasure.getKey();
 	}
 
 	private void _reindexCPDefinition(long cpDefinitionId)
@@ -1115,25 +1109,6 @@ public class CommercePriceEntryLocalServiceImpl
 			CommercePriceEntry.class.getName(),
 			commercePriceEntry.getCommercePriceEntryId(), commercePriceEntry,
 			serviceContext, workflowContext);
-	}
-
-	private void _validateExternalReferenceCode(
-			String externalReferenceCode, long companyId)
-		throws PortalException {
-
-		if (Validator.isNull(externalReferenceCode)) {
-			return;
-		}
-
-		CommercePriceEntry commercePriceEntry =
-			commercePriceEntryPersistence.fetchByERC_C(
-				externalReferenceCode, companyId);
-
-		if (commercePriceEntry != null) {
-			throw new DuplicateCommercePriceEntryException(
-				"There is another commerce price entry with external " +
-					"reference code " + externalReferenceCode);
-		}
 	}
 
 	private void _validatePrice(

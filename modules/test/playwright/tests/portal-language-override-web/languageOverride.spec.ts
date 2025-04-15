@@ -5,9 +5,9 @@
 
 import {expect, mergeTests} from '@playwright/test';
 
-import {languageOverridePageTest} from '../../fixtures/LanguageOverridePageTest';
+import {languageOverridePageTest} from '../../fixtures/languageOverridePageTest';
 import {loginTest} from '../../fixtures/loginTest';
-import {TTranslation} from '../../pages/portal-language-override-web/LanguageOverridePage';
+import {TLanguageKey} from '../../pages/portal-language-override-web/LanguageOverridePage';
 import getRandomString from '../../utils/getRandomString';
 import {readFileFromZip} from '../../utils/zip';
 
@@ -17,10 +17,10 @@ test('LPD-33373 assert that overriden translations can be exported', async ({
 	languageOverridePage,
 	page,
 }) => {
-	const translations: TTranslation[] = [
+	const languageKeys: TLanguageKey[] = [
 		{
 			key: getRandomString(),
-			values: [
+			translations: [
 				{
 					languageId: 'en-US',
 					value: getRandomString(),
@@ -37,7 +37,7 @@ test('LPD-33373 assert that overriden translations can be exported', async ({
 		},
 		{
 			key: getRandomString(),
-			values: [
+			translations: [
 				{
 					languageId: 'en-US',
 					value: getRandomString(),
@@ -48,12 +48,12 @@ test('LPD-33373 assert that overriden translations can be exported', async ({
 
 	await languageOverridePage.goto();
 
-	await languageOverridePage.addTranslations(translations);
+	await languageOverridePage.addLanguageKeys(languageKeys);
 
 	page.on('download', async (download) => {
-		for (const translation of translations) {
-			for (let i = 0; i < translation.values.length; i++) {
-				const {languageId, value} = translation.values[i];
+		for (const languageKey of languageKeys) {
+			for (let i = 0; i < languageKey.translations.length; i++) {
+				const {languageId, value} = languageKey.translations[i];
 
 				const fileContent = (await readFileFromZip(
 					`Language_${languageId.replace('-', '_')}.properties`,
@@ -61,7 +61,7 @@ test('LPD-33373 assert that overriden translations can be exported', async ({
 				)) as string;
 
 				expect(
-					fileContent.includes(`${translation.key}=${value}`)
+					fileContent.includes(`${languageKey.key}=${value}`)
 				).toBeTruthy();
 			}
 		}
@@ -77,7 +77,7 @@ test('LPD-33373 assert that overriden translations can be filtered', async ({
 
 	const translation1 = {
 		key: getRandomString(),
-		values: [
+		translations: [
 			{
 				languageId: 'en-US',
 				value: getRandomString(),
@@ -88,9 +88,9 @@ test('LPD-33373 assert that overriden translations can be filtered', async ({
 			},
 		],
 	};
-	const translation2: TTranslation = {
+	const translation2: TLanguageKey = {
 		key: getRandomString(),
-		values: [
+		translations: [
 			{
 				languageId: 'en-US',
 				value: getRandomString(),
@@ -98,33 +98,33 @@ test('LPD-33373 assert that overriden translations can be filtered', async ({
 		],
 	};
 
-	await languageOverridePage.addTranslation(translation1);
+	await languageOverridePage.addLanguageKey(translation1);
 
-	await languageOverridePage.addTranslation(translation2);
+	await languageOverridePage.addLanguageKey(translation2);
 
 	await languageOverridePage.changeFilter('Selected Language');
 
 	await languageOverridePage.changeLocale('en-US', 'pt-BR');
 
-	await languageOverridePage.searchTranslation(translation1.key);
+	await languageOverridePage.searchLanguageKey(translation1.key);
 
-	await languageOverridePage.assertTranslationInListView(translation1);
+	await languageOverridePage.assertLanguageKeyInListView(translation1);
 
-	await languageOverridePage.searchTranslation(translation2.key);
+	await languageOverridePage.searchLanguageKey(translation2.key);
 
-	await languageOverridePage.assertTranslationNotInListView(translation2);
+	await languageOverridePage.assertLanguageKeyNotInListView(translation2.key);
 
 	await languageOverridePage.changeFilter('Any Language');
 
 	await languageOverridePage.changeLocale('pt-BR', 'en-US');
 
-	await languageOverridePage.searchTranslation(translation1.key);
+	await languageOverridePage.searchLanguageKey(translation1.key);
 
-	await languageOverridePage.assertTranslationInListView(translation1);
+	await languageOverridePage.assertLanguageKeyInListView(translation1);
 
-	await languageOverridePage.searchTranslation(translation2.key);
+	await languageOverridePage.searchLanguageKey(translation2.key);
 
-	await languageOverridePage.assertTranslationInListView(translation2);
+	await languageOverridePage.assertLanguageKeyInListView(translation2);
 });
 
 test('LPD-33373 assert that default and overriden translations show up when no filters are applied', async ({
@@ -132,9 +132,9 @@ test('LPD-33373 assert that default and overriden translations show up when no f
 }) => {
 	await languageOverridePage.goto();
 
-	const translation: TTranslation = {
+	const languageKey: TLanguageKey = {
 		key: getRandomString(),
-		values: [
+		translations: [
 			{
 				languageId: 'en-US',
 				value: getRandomString(),
@@ -146,14 +146,14 @@ test('LPD-33373 assert that default and overriden translations show up when no f
 		],
 	};
 
-	await languageOverridePage.addTranslation(translation);
+	await languageOverridePage.addLanguageKey(languageKey);
 
-	await languageOverridePage.assertTranslationInListView({
+	await languageOverridePage.assertLanguageKeyInListView({
 		key: '0-analytics-cloud-connection',
-		values: [],
+		translations: [],
 	});
 
-	await languageOverridePage.searchTranslation(translation.key);
+	await languageOverridePage.searchLanguageKey(languageKey.key);
 
-	await languageOverridePage.assertTranslationInListView(translation);
+	await languageOverridePage.assertLanguageKeyInListView(languageKey);
 });

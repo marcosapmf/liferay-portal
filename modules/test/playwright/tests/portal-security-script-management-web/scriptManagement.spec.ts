@@ -3,6 +3,12 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
+import {
+	ObjectActionAPI,
+	ObjectDefinition,
+	ObjectDefinitionAPI,
+	ObjectValidationRuleAPI,
+} from '@liferay/object-admin-rest-client-js';
 import {expect, mergeTests} from '@playwright/test';
 
 import {apiHelpersTest} from '../../fixtures/apiHelpersTest';
@@ -21,9 +27,12 @@ const createdEntities = {
 };
 
 test.afterEach(async ({apiHelpers, scriptManagementPage}) => {
+	const objectDefinitionAPIClient =
+		await apiHelpers.buildRestClient(ObjectDefinitionAPI);
+
 	if (createdEntities.objectDefinitionsIds.length) {
 		for (const id of createdEntities.objectDefinitionsIds) {
-			await apiHelpers.objectAdmin.deleteObjectDefinition(id);
+			await objectDefinitionAPIClient.deleteObjectDefinition(id);
 		}
 	}
 	await scriptManagementPage.enableScriptManagementConfiguration();
@@ -38,6 +47,7 @@ test.describe('Script management container', () => {
 
 	test('cannot save the configuration with a active Object Action with Groovy Script', async ({
 		apiHelpers,
+
 		scriptManagementPage,
 	}) => {
 		const objectDefinition =
@@ -50,7 +60,10 @@ test.describe('Script management container', () => {
 
 		const groovyObjectActionName = 'groovyObjectAction' + getRandomInt();
 
-		await apiHelpers.objectAdmin.postObjectActionByExternalReferenceCode(
+		const objectActionAPIClient =
+			await apiHelpers.buildRestClient(ObjectActionAPI);
+
+		await objectActionAPIClient.postObjectDefinitionByExternalReferenceCodeObjectAction(
 			objectDefinition.externalReferenceCode,
 			{
 				active: true,
@@ -86,6 +99,7 @@ test.describe('Script management container', () => {
 
 	test('cannot save the configuration with a active Object Validation with Groovy Script', async ({
 		apiHelpers,
+
 		scriptManagementPage,
 	}) => {
 		const objectDefinition =
@@ -99,7 +113,11 @@ test.describe('Script management container', () => {
 		const objectValidationName =
 			'Groovy Object Validation' + getRandomInt();
 
-		await apiHelpers.objectAdmin.postObjectValidation(
+		const objectValidationRuleAPIClient = await apiHelpers.buildRestClient(
+			ObjectValidationRuleAPI
+		);
+
+		await objectValidationRuleAPIClient.postObjectDefinitionByExternalReferenceCodeObjectValidationRule(
 			objectDefinition.externalReferenceCode,
 			{
 				active: true,

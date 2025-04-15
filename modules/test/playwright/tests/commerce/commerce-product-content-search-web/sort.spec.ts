@@ -31,7 +31,7 @@ async function setAndCheckSorting({
 	sortingOption2,
 }) {
 	await applicationsMenuPage.goToSite(siteName);
-	await page.waitForTimeout(2000);
+	await page.waitForLoadState('networkidle');
 
 	await commerceThemeMiniumCatalogPage.optionsButton.click();
 	await commerceThemeMiniumCatalogPage.configurationMenuItem.click();
@@ -42,19 +42,21 @@ async function setAndCheckSorting({
 	await commerceThemeMiniumCatalogPage.configurationIFrameCloseButton.click();
 	await page.reload();
 
-	expect(
+	await expect(
 		await commerceThemeMiniumCatalogPage.orderByButton.innerText()
 	).toContain(sortingOption1);
-	expect(
+	await expect(
 		await commerceThemeMiniumCatalogPage.firstCardItem.innerText()
 	).toContain(firstCardItem);
 
 	await commerceThemeMiniumCatalogPage.orderByButton.click();
 	await commerceThemeMiniumCatalogPage.selectSorting(sortingOption2);
 
-	expect(
-		await commerceThemeMiniumCatalogPage.firstCardItem.innerText()
-	).toContain(firstCardItemAfterChange);
+	await expect(async () => {
+		await expect(
+			await commerceThemeMiniumCatalogPage.firstCardItem.innerText()
+		).toContain(firstCardItemAfterChange);
+	}).toPass();
 }
 
 test('LPD-18714 Setting default sort for commerce products', async ({

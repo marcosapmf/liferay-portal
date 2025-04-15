@@ -35,11 +35,6 @@ import com.liferay.portal.tools.rest.builder.internal.yaml.openapi.RequestBody;
 import com.liferay.portal.tools.rest.builder.internal.yaml.openapi.Response;
 import com.liferay.portal.tools.rest.builder.internal.yaml.openapi.ResponseCode;
 import com.liferay.portal.tools.rest.builder.internal.yaml.openapi.Schema;
-import com.liferay.portal.vulcan.aggregation.Aggregation;
-import com.liferay.portal.vulcan.multipart.MultipartBody;
-import com.liferay.portal.vulcan.pagination.Page;
-import com.liferay.portal.vulcan.pagination.Pagination;
-import com.liferay.portal.vulcan.permission.Permission;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -95,7 +90,8 @@ public class ResourceOpenAPIParser {
 									javaDataTypeMap, operation,
 									requestBodyMediaTypes);
 							String methodName = _getMethodName(
-								operation, path, returnType, schemaName,
+								configYAML, operation, path, returnType,
+								schemaName,
 								configYAML.isForcePredictableOperationId());
 
 							JavaMethodSignature javaMethodSignature =
@@ -294,6 +290,25 @@ public class ResourceOpenAPIParser {
 		return sb.toString();
 	}
 
+	public static List<JavaMethodSignature>
+		getResourceGetPageJavaMethodSignatures(
+			List<JavaMethodSignature> javaMethodSignatures) {
+
+		List<JavaMethodSignature> getPageJavaMethodSignatures =
+			new ArrayList<>();
+
+		for (JavaMethodSignature javaMethodSignature : javaMethodSignatures) {
+			if (StringUtil.startsWith(
+					javaMethodSignature.getReturnType(),
+					"com.liferay.portal.vulcan.pagination.Page<")) {
+
+				getPageJavaMethodSignatures.add(javaMethodSignature);
+			}
+		}
+
+		return getPageJavaMethodSignatures;
+	}
+
 	public static String getResourceMethodName(
 		List<JavaMethodSignature> javaMethodSignatures, String propertyName) {
 
@@ -427,9 +442,11 @@ public class ResourceOpenAPIParser {
 		String javaDataType, List<JavaMethodSignature> javaMethodSignatures) {
 
 		String pageJavaDataType = StringBundler.concat(
-			Page.class.getName(), "<", javaDataType, ">");
+			"com.liferay.portal.vulcan.pagination.Page<", javaDataType, ">");
 
-		for (JavaMethodSignature javaMethodSignature : javaMethodSignatures) {
+		for (JavaMethodSignature javaMethodSignature :
+				getResourceGetPageJavaMethodSignatures(javaMethodSignatures)) {
+
 			if (StringUtil.equals(
 					pageJavaDataType, javaMethodSignature.getReturnType())) {
 
@@ -473,10 +490,12 @@ public class ResourceOpenAPIParser {
 		}
 
 		Operation batchOperation = _getBatchOperation(
-			batchOperationType, javaMethodSignature, methodName, schemaName);
+			batchOperationType, configYAML, javaMethodSignature, methodName,
+			schemaName);
 
 		String batchPath = _getBatchPath(
-			batchOperationType, javaMethodSignature.getPath(), schemaName);
+			batchOperationType, configYAML, javaMethodSignature.getPath(),
+			schemaName);
 
 		for (JavaMethodSignature existingJavaMethodSignature :
 				javaMethodSignatures) {
@@ -499,7 +518,8 @@ public class ResourceOpenAPIParser {
 				javaMethodSignature.getJavaMethodParameters()) {
 
 			if (_isValidParameter(
-					javaMethodParameter.getParameterName(), schemaName)) {
+					configYAML, javaMethodParameter.getParameterName(),
+					schemaName)) {
 
 				javaMethodParameters.add(javaMethodParameter);
 			}
@@ -585,7 +605,7 @@ public class ResourceOpenAPIParser {
 	}
 
 	private static Operation _getBatchOperation(
-		BatchOperationType batchOperationType,
+		BatchOperationType batchOperationType, ConfigYAML configYAML,
 		JavaMethodSignature javaMethodSignature, String methodName,
 		String schemaName) {
 
@@ -615,7 +635,8 @@ public class ResourceOpenAPIParser {
 		}
 
 		batchOperation.setParameters(
-			_getBatchParameters(batchOperationType, operation, schemaName));
+			_getBatchParameters(
+				batchOperationType, configYAML, operation, schemaName));
 		batchOperation.setTags(operation.getTags());
 
 		Response response = new Response();
@@ -636,13 +657,15 @@ public class ResourceOpenAPIParser {
 	}
 
 	private static List<Parameter> _getBatchParameters(
-		BatchOperationType batchOperationType, Operation operation,
-		String schemaName) {
+		BatchOperationType batchOperationType, ConfigYAML configYAML,
+		Operation operation, String schemaName) {
 
 		List<Parameter> parameters = new ArrayList<>();
 
 		for (Parameter parameter : operation.getParameters()) {
-			if (_isValidParameter(parameter.getName(), schemaName)) {
+			if (_isValidParameter(
+					configYAML, parameter.getName(), schemaName)) {
+
 				parameters.add(parameter);
 			}
 		}
@@ -658,16 +681,21 @@ public class ResourceOpenAPIParser {
 	}
 
 	private static String _getBatchPath(
-		BatchOperationType batchOperationType, String path, String schemaName) {
+		BatchOperationType batchOperationType, ConfigYAML configYAML,
+		String path, String schemaName) {
 
 		if (batchOperationType == BatchOperationType.EXPORT) {
 			return path + "/export-batch";
 		}
 		else if (batchOperationType == BatchOperationType.IMPORT) {
+			String schemaVarName = StringUtil.lowerCaseFirstLetter(schemaName);
+
+			if (ConfigUtil.isVersionCompatible(configYAML, 8)) {
+				schemaVarName = OpenAPIParserUtil.getSchemaVarName(schemaName);
+			}
+
 			String batchPath = StringUtil.removeSubstrings(
-				path,
-				"/{" + StringUtil.lowerCaseFirstLetter(schemaName) + "Id}",
-				"/{id}");
+				path, "/{" + schemaVarName + "Id}", "/{id}");
 
 			return batchPath + "/batch";
 		}
@@ -757,12 +785,14 @@ public class ResourceOpenAPIParser {
 
 			javaMethodParameters.add(
 				new JavaMethodParameter(
-					"permissions", Permission[].class.getName()));
+					"permissions",
+					"[Lcom.liferay.portal.vulcan.permission.Permission;"));
 		}
 
 		if (parameterNames.contains("aggregationTerms")) {
 			JavaMethodParameter javaMethodParameter = new JavaMethodParameter(
-				"aggregation", Aggregation.class.getName());
+				"aggregation",
+				"com.liferay.portal.vulcan.aggregation.Aggregation");
 
 			javaMethodParameters.add(javaMethodParameter);
 		}
@@ -778,7 +808,8 @@ public class ResourceOpenAPIParser {
 			parameterNames.contains("pageSize")) {
 
 			JavaMethodParameter javaMethodParameter = new JavaMethodParameter(
-				"pagination", Pagination.class.getName());
+				"pagination",
+				"com.liferay.portal.vulcan.pagination.Pagination");
 
 			javaMethodParameters.add(javaMethodParameter);
 		}
@@ -800,7 +831,8 @@ public class ResourceOpenAPIParser {
 			else if (requestBodyMediaTypes.contains("multipart/form-data")) {
 				javaMethodParameters.add(
 					new JavaMethodParameter(
-						"multipartBody", MultipartBody.class.getName()));
+						"multipartBody",
+						"com.liferay.portal.vulcan.multipart.MultipartBody"));
 			}
 			else {
 				if (schema == null) {
@@ -905,7 +937,8 @@ public class ResourceOpenAPIParser {
 	}
 
 	private static String _getMethodName(
-		Operation operation, String path, String returnType, String schemaName,
+		ConfigYAML configYAML, Operation operation, String path,
+		String returnType, String schemaName,
 		boolean forcePredictableOperationId) {
 
 		if (!forcePredictableOperationId &&
@@ -915,7 +948,7 @@ public class ResourceOpenAPIParser {
 		}
 
 		boolean collection = StringUtil.startsWith(
-			returnType, Page.class.getName() + "<");
+			returnType, "com.liferay.portal.vulcan.pagination.Page<");
 
 		List<String> methodNameSegments = new ArrayList<>();
 
@@ -957,7 +990,8 @@ public class ResourceOpenAPIParser {
 				String previousMethodNameSegment = methodNameSegments.get(
 					methodNameSegments.size() - 1);
 
-				String pageClassName = Page.class.getName();
+				String pageClassName =
+					"com.liferay.portal.vulcan.pagination.Page";
 
 				String elementClassName = returnType.substring(
 					pageClassName.length() + 1, returnType.length() - 1);
@@ -995,7 +1029,8 @@ public class ResourceOpenAPIParser {
 			else if ((i != (pathSegments.length - 1)) ||
 					 !Objects.equals(returnType, String.class.getName())) {
 
-				String segment = OpenAPIUtil.formatSingular(pathName);
+				String segment = OpenAPIUtil.formatSingular(
+					configYAML, pathName);
 
 				String s = StringUtil.toLowerCase(segment);
 
@@ -1041,7 +1076,7 @@ public class ResourceOpenAPIParser {
 
 	private static String _getPageClassName(String returnType) {
 		return StringBundler.concat(
-			Page.class.getName(), "<",
+			"com.liferay.portal.vulcan.pagination.Page<",
 			OpenAPIParserUtil.getElementClassName(returnType), ">");
 	}
 
@@ -1059,7 +1094,9 @@ public class ResourceOpenAPIParser {
 
 		String parameterType = javaMethodParameter.getParameterType();
 
-		if (Objects.equals(parameterType, Aggregation.class.getName()) &&
+		if (Objects.equals(
+				parameterType,
+				"com.liferay.portal.vulcan.aggregation.Aggregation") &&
 			parameterNames.contains("aggregationTerms")) {
 
 			return "@javax.ws.rs.core.Context";
@@ -1071,7 +1108,9 @@ public class ResourceOpenAPIParser {
 			return "@javax.ws.rs.core.Context";
 		}
 
-		if (Objects.equals(parameterType, Pagination.class.getName()) &&
+		if (Objects.equals(
+				parameterType,
+				"com.liferay.portal.vulcan.pagination.Pagination") &&
 			parameterNames.contains("page") &&
 			parameterNames.contains("pageSize")) {
 
@@ -1309,7 +1348,7 @@ public class ResourceOpenAPIParser {
 				path.endsWith("/permissions")) {
 
 				return _getPageClassName(
-					"[L" + Permission.class.getName() + ";");
+					"[Lcom.liferay.portal.vulcan.permission.Permission;");
 			}
 
 			for (Content content : sortedContents.values()) {
@@ -1367,10 +1406,11 @@ public class ResourceOpenAPIParser {
 			return true;
 		}
 
-		if (returnType.startsWith(Page.class.getName() + "<") &&
+		if (returnType.startsWith(
+				"com.liferay.portal.vulcan.pagination.Page<") &&
 			returnType.endsWith(">")) {
 
-			String pageClassName = Page.class.getName();
+			String pageClassName = "com.liferay.portal.vulcan.pagination.Page";
 
 			String className = returnType.substring(
 				pageClassName.length() + 1, returnType.length() - 1);
@@ -1383,8 +1423,14 @@ public class ResourceOpenAPIParser {
 		return false;
 	}
 
-	private static boolean _isValidParameter(String name, String schemaName) {
+	private static boolean _isValidParameter(
+		ConfigYAML configYAML, String name, String schemaName) {
+
 		String schemaVarName = StringUtil.lowerCaseFirstLetter(schemaName);
+
+		if (ConfigUtil.isVersionCompatible(configYAML, 8)) {
+			schemaVarName = OpenAPIParserUtil.getSchemaVarName(schemaName);
+		}
 
 		if (StringUtil.equals(name, "aggregation") ||
 			StringUtil.equals(name, "aggregationTerms") ||

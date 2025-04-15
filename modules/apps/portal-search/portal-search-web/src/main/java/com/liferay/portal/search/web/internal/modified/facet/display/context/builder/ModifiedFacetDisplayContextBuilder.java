@@ -27,6 +27,7 @@ import com.liferay.portal.search.web.internal.modified.facet.configuration.Modif
 import com.liferay.portal.search.web.internal.modified.facet.display.context.ModifiedFacetCalendarDisplayContext;
 import com.liferay.portal.search.web.internal.modified.facet.display.context.ModifiedFacetDisplayContext;
 import com.liferay.portal.search.web.internal.util.DateRangeFactoryUtil;
+import com.liferay.portal.search.web.internal.util.DisplayContextHelperUtil;
 import com.liferay.portal.search.web.internal.util.comparator.BucketDisplayContextComparatorFactoryUtil;
 
 import java.io.Serializable;
@@ -140,14 +141,10 @@ public class ModifiedFacetDisplayContextBuilder implements Serializable {
 	}
 
 	protected long getDisplayStyleGroupId() {
-		long displayStyleGroupId =
-			_modifiedFacetPortletInstanceConfiguration.displayStyleGroupId();
-
-		if (displayStyleGroupId <= 0) {
-			displayStyleGroupId = _themeDisplay.getScopeGroupId();
-		}
-
-		return displayStyleGroupId;
+		return DisplayContextHelperUtil.getDisplayStyleGroupId(
+			_modifiedFacetPortletInstanceConfiguration.
+				displayStyleGroupExternalReferenceCode(),
+			_themeDisplay);
 	}
 
 	protected int getFrequency(TermCollector termCollector) {
@@ -200,6 +197,7 @@ public class ModifiedFacetDisplayContextBuilder implements Serializable {
 		bucketDisplayContext.setFrequency(
 			getFrequency(getTermCollector(range)));
 		bucketDisplayContext.setFrequencyVisible(_frequenciesVisible);
+		bucketDisplayContext.setLocale(_locale);
 		bucketDisplayContext.setSelected(_selectedRanges.contains(label));
 
 		return bucketDisplayContext;
@@ -309,16 +307,16 @@ public class ModifiedFacetDisplayContextBuilder implements Serializable {
 	}
 
 	private String _getCustomRangeURL() {
-		DateFormat format = DateFormatFactoryUtil.getSimpleDateFormat(
+		DateFormat dateFormat = DateFormatFactoryUtil.getSimpleDateFormat(
 			"yyyy-MM-dd");
 
 		Calendar calendar = CalendarFactoryUtil.getCalendar(_timeZone);
 
-		String to = format.format(calendar.getTime());
+		String to = dateFormat.format(calendar.getTime());
 
 		calendar.add(Calendar.DATE, -1);
 
-		String from = format.format(calendar.getTime());
+		String from = dateFormat.format(calendar.getTime());
 
 		String rangeURL = HttpComponentsUtil.removeParameter(
 			_currentURL, "modified");

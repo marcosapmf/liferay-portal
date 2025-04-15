@@ -25,8 +25,6 @@ import com.liferay.object.admin.rest.resource.v1_0.ObjectValidationRuleResource;
 import com.liferay.object.admin.rest.resource.v1_0.ObjectViewResource;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.function.UnsafeFunction;
-import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
@@ -224,7 +222,7 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {objectDefinitionByExternalReferenceCode(externalReferenceCode: ___){accountEntryRestricted, accountEntryRestrictedObjectFieldName, actions, active, dateCreated, dateModified, defaultLanguageId, enableCategorization, enableComments, enableIndexSearch, enableLocalization, enableObjectEntryDraft, enableObjectEntryHistory, externalReferenceCode, id, label, modifiable, name, objectActions, objectFields, objectFolderExternalReferenceCode, objectLayouts, objectRelationships, objectValidationRules, objectViews, panelAppOrder, panelCategoryKey, parameterRequired, pluralLabel, portlet, restContextPath, rootObjectDefinitionExternalReferenceCode, scope, status, storageType, system, titleObjectFieldName}}"}' -u 'test@liferay.com:test'
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {objectDefinitionByExternalReferenceCode(externalReferenceCode: ___){accountEntryRestricted, accountEntryRestrictedObjectFieldName, actions, active, className, creator, dateCreated, dateModified, defaultLanguageId, enableCategorization, enableComments, enableFriendlyURLCustomization, enableIndexSearch, enableLocalization, enableObjectEntryDraft, enableObjectEntryHistory, enableObjectEntryVersioning, externalReferenceCode, id, label, modifiable, name, objectActions, objectDefinitionSettings, objectFields, objectFolderExternalReferenceCode, objectLayouts, objectRelationships, objectValidationRules, objectViews, panelAppOrder, panelCategoryKey, parameterRequired, pluralLabel, portlet, restContextPath, rootObjectDefinitionExternalReferenceCode, scope, status, storageType, system, titleObjectFieldName}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField
 	public ObjectDefinition objectDefinitionByExternalReferenceCode(
@@ -243,7 +241,7 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {objectDefinition(objectDefinitionId: ___){accountEntryRestricted, accountEntryRestrictedObjectFieldName, actions, active, dateCreated, dateModified, defaultLanguageId, enableCategorization, enableComments, enableIndexSearch, enableLocalization, enableObjectEntryDraft, enableObjectEntryHistory, externalReferenceCode, id, label, modifiable, name, objectActions, objectFields, objectFolderExternalReferenceCode, objectLayouts, objectRelationships, objectValidationRules, objectViews, panelAppOrder, panelCategoryKey, parameterRequired, pluralLabel, portlet, restContextPath, rootObjectDefinitionExternalReferenceCode, scope, status, storageType, system, titleObjectFieldName}}"}' -u 'test@liferay.com:test'
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {objectDefinition(objectDefinitionId: ___){accountEntryRestricted, accountEntryRestrictedObjectFieldName, actions, active, className, creator, dateCreated, dateModified, defaultLanguageId, enableCategorization, enableComments, enableFriendlyURLCustomization, enableIndexSearch, enableLocalization, enableObjectEntryDraft, enableObjectEntryHistory, enableObjectEntryVersioning, externalReferenceCode, id, label, modifiable, name, objectActions, objectDefinitionSettings, objectFields, objectFolderExternalReferenceCode, objectLayouts, objectRelationships, objectValidationRules, objectViews, panelAppOrder, panelCategoryKey, parameterRequired, pluralLabel, portlet, restContextPath, rootObjectDefinitionExternalReferenceCode, scope, status, storageType, system, titleObjectFieldName}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField
 	public ObjectDefinition objectDefinition(
@@ -517,7 +515,7 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {objectRelationship(objectRelationshipId: ___){actions, deletionType, edge, externalReferenceCode, id, label, name, objectDefinitionExternalReferenceCode1, objectDefinitionExternalReferenceCode2, objectDefinitionId1, objectDefinitionId2, objectDefinitionModifiable2, objectDefinitionName2, objectDefinitionSystem2, objectField, parameterObjectFieldId, parameterObjectFieldName, reverse, system, type}}"}' -u 'test@liferay.com:test'
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {objectRelationship(objectRelationshipId: ___){actions, deletionType, edge, externalReferenceCode, id, label, name, objectDefinitionExternalReferenceCode1, objectDefinitionExternalReferenceCode2, objectDefinitionId1, objectDefinitionId2, objectDefinitionModifiable2, objectDefinitionName2, objectDefinitionScope2, objectDefinitionSystem2, objectField, parameterObjectFieldId, parameterObjectFieldName, reverse, system, type}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField
 	public ObjectRelationship objectRelationship(
@@ -1464,12 +1462,15 @@ public class Query {
 	private BiFunction<Object, List<String>, Aggregation>
 		_aggregationBiFunction;
 	private com.liferay.portal.kernel.model.Company _company;
-	private BiFunction<Object, String, Filter> _filterBiFunction;
+	private BiFunction
+		<Object, String, com.liferay.portal.kernel.search.filter.Filter>
+			_filterBiFunction;
 	private GroupLocalService _groupLocalService;
 	private HttpServletRequest _httpServletRequest;
 	private HttpServletResponse _httpServletResponse;
 	private RoleLocalService _roleLocalService;
-	private BiFunction<Object, String, Sort[]> _sortsBiFunction;
+	private BiFunction<Object, String, com.liferay.portal.kernel.search.Sort[]>
+		_sortsBiFunction;
 	private UriInfo _uriInfo;
 	private com.liferay.portal.kernel.model.User _user;
 

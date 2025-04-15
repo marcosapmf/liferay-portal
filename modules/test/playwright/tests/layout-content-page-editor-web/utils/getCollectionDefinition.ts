@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
+import getRandomString from '../../../utils/getRandomString';
+
 type ListStyle =
 	| 'Bordered List (Collection Provider)'
 	| 'Bulleted List (Collection Provider)'
@@ -17,7 +19,10 @@ type Props = {
 	id: string;
 	listStyle?: ListStyle;
 	pageElements?: PageElement[];
-	provider?: 'Recent Content';
+	provider?:
+		| 'Highest Rated Assets'
+		| 'Items with Categories in the Same Vocabularies'
+		| 'Recent Content';
 };
 
 const DEFAULT_CONFIG = {
@@ -26,6 +31,10 @@ const DEFAULT_CONFIG = {
 };
 
 const COLLECTION_PROVIDERS = {
+	'Highest Rated Assets':
+		'com.liferay.asset.internal.info.collection.provider.HighestRatedAssetsInfoCollectionProvider',
+	'Items with Categories in the Same Vocabularies':
+		'com.liferay.asset.internal.info.collection.provider.AssetEntriesWithAssetCategoriesInTheSameAssetVocabulariesRelatedInfoItemCollectionProvider',
 	'Recent Content':
 		'com.liferay.asset.internal.info.collection.provider.RecentContentInfoCollectionProvider',
 };
@@ -88,7 +97,17 @@ export default function getCollectionDefinition({
 			listStyle: LIST_STYLES[listStyle] || '',
 		},
 		id,
-		pageElements,
+		pageElements: [getCollectionItemDefinition(pageElements)],
 		type: 'Collection',
+	};
+}
+
+function getCollectionItemDefinition(
+	pageElements: PageElement[] = []
+): PageElement {
+	return {
+		id: getRandomString(),
+		pageElements,
+		type: 'CollectionItem',
 	};
 }

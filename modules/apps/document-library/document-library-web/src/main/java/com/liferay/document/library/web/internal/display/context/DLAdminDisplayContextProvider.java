@@ -10,11 +10,13 @@ import com.liferay.asset.auto.tagger.configuration.AssetAutoTaggerConfigurationF
 import com.liferay.asset.kernel.service.AssetVocabularyService;
 import com.liferay.depot.group.provider.SiteConnectedGroupGroupProvider;
 import com.liferay.document.library.configuration.DLFileOrderConfigurationProvider;
+import com.liferay.document.library.kernel.service.DLFileEntryTypeService;
 import com.liferay.document.library.kernel.versioning.VersioningStrategy;
 import com.liferay.document.library.web.internal.display.context.helper.DLRequestHelper;
 import com.liferay.document.library.web.internal.helper.DLTrashHelper;
 import com.liferay.item.selector.ItemSelector;
 import com.liferay.petra.reflect.ReflectionUtil;
+import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.trash.TrashHelper;
@@ -45,8 +47,8 @@ public class DLAdminDisplayContextProvider {
 
 		return new DLAdminDisplayContext(
 			_getAssetAutoTaggerConfiguration(dlRequestHelper),
-			_dlFileOrderConfigurationProvider, httpServletRequest,
-			dlRequestHelper.getLiferayPortletRequest(),
+			_configurationProvider, _dlFileOrderConfigurationProvider,
+			httpServletRequest, dlRequestHelper.getLiferayPortletRequest(),
 			dlRequestHelper.getLiferayPortletResponse(), _trashHelper,
 			_versioningStrategy);
 	}
@@ -61,9 +63,9 @@ public class DLAdminDisplayContextProvider {
 			httpServletRequest);
 
 		return new DLAdminManagementToolbarDisplayContext(
-			_assetVocabularyService, dlAdminDisplayContext, _dlTrashHelper,
-			httpServletRequest, _itemSelector,
-			dlRequestHelper.getLiferayPortletRequest(),
+			_assetVocabularyService, dlAdminDisplayContext,
+			_dlFileEntryTypeService, _dlTrashHelper, httpServletRequest,
+			_itemSelector, dlRequestHelper.getLiferayPortletRequest(),
 			dlRequestHelper.getLiferayPortletResponse(),
 			_siteConnectedGroupGroupProvider);
 	}
@@ -88,6 +90,12 @@ public class DLAdminDisplayContextProvider {
 
 	@Reference
 	private AssetVocabularyService _assetVocabularyService;
+
+	@Reference
+	private ConfigurationProvider _configurationProvider;
+
+	@Reference
+	private DLFileEntryTypeService _dlFileEntryTypeService;
 
 	@Reference
 	private DLFileOrderConfigurationProvider _dlFileOrderConfigurationProvider;

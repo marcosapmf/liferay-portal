@@ -77,14 +77,14 @@ KBArticleViewDisplayContext kbArticleViewDisplayContext = new KBArticleViewDispl
 
 				<liferay-ui:search-container-column-text
 					align="right"
-					name="num-of-kb-folders"
+					name="num-of-folders"
 				>
 					<%= kbArticleViewDisplayContext.getKBFoldersCount(scopeGroupId, kbFolder.getKbFolderId()) %>
 				</liferay-ui:search-container-column-text>
 
 				<liferay-ui:search-container-column-text
 					align="right"
-					name="num-of-kb-articles"
+					name="num-of-articles"
 				>
 					<%= kbArticleViewDisplayContext.getKBFolderKBArticlesCount(scopeGroupId, kbFolder.getKbFolderId()) %>
 				</liferay-ui:search-container-column-text>
@@ -178,13 +178,13 @@ KBArticleViewDisplayContext kbArticleViewDisplayContext = new KBArticleViewDispl
 
 				<liferay-ui:search-container-column-text
 					align="right"
-					name="num-of-kb-folders"
+					name="num-of-folders"
 					value="--"
 				/>
 
 				<liferay-ui:search-container-column-text
 					align="right"
-					name="num-of-kb-articles"
+					name="num-of-articles"
 				>
 					<%= kbArticleViewDisplayContext.getChildKBArticlesCount(scopeGroupId, kbArticle) %>
 				</liferay-ui:search-container-column-text>
@@ -210,7 +210,7 @@ KBArticleViewDisplayContext kbArticleViewDisplayContext = new KBArticleViewDispl
 					name="status"
 				>
 					<c:choose>
-						<c:when test='<%= FeatureFlagManagerUtil.isEnabled("LPS-188058") && kbArticle.isScheduled() %>'>
+						<c:when test="<%= kbArticle.isScheduled() %>">
 
 							<%
 							String displayDateString = StringPool.BLANK;

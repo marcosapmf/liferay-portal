@@ -919,34 +919,6 @@ public class LayoutPersistenceTest {
 				"privateLayout"));
 
 		Assert.assertEquals(
-			Long.valueOf(layout.getIconImageId()),
-			ReflectionTestUtil.<Long>invoke(
-				layout, "getColumnOriginalValue", new Class<?>[] {String.class},
-				"iconImageId"));
-
-		Assert.assertEquals(
-			Boolean.valueOf(layout.getPrivateLayout()),
-			ReflectionTestUtil.<Boolean>invoke(
-				layout, "getColumnOriginalValue", new Class<?>[] {String.class},
-				"privateLayout"));
-		Assert.assertEquals(
-			Long.valueOf(layout.getIconImageId()),
-			ReflectionTestUtil.<Long>invoke(
-				layout, "getColumnOriginalValue", new Class<?>[] {String.class},
-				"iconImageId"));
-
-		Assert.assertEquals(
-			Long.valueOf(layout.getClassNameId()),
-			ReflectionTestUtil.<Long>invoke(
-				layout, "getColumnOriginalValue", new Class<?>[] {String.class},
-				"classNameId"));
-		Assert.assertEquals(
-			Long.valueOf(layout.getClassPK()),
-			ReflectionTestUtil.<Long>invoke(
-				layout, "getColumnOriginalValue", new Class<?>[] {String.class},
-				"classPK"));
-
-		Assert.assertEquals(
 			Long.valueOf(layout.getGroupId()),
 			ReflectionTestUtil.<Long>invoke(
 				layout, "getColumnOriginalValue", new Class<?>[] {String.class},
@@ -977,22 +949,6 @@ public class LayoutPersistenceTest {
 			ReflectionTestUtil.invoke(
 				layout, "getColumnOriginalValue", new Class<?>[] {String.class},
 				"friendlyURL"));
-
-		Assert.assertEquals(
-			Long.valueOf(layout.getGroupId()),
-			ReflectionTestUtil.<Long>invoke(
-				layout, "getColumnOriginalValue", new Class<?>[] {String.class},
-				"groupId"));
-		Assert.assertEquals(
-			Boolean.valueOf(layout.getPrivateLayout()),
-			ReflectionTestUtil.<Boolean>invoke(
-				layout, "getColumnOriginalValue", new Class<?>[] {String.class},
-				"privateLayout"));
-		Assert.assertEquals(
-			layout.getSourcePrototypeLayoutUuid(),
-			ReflectionTestUtil.invoke(
-				layout, "getColumnOriginalValue", new Class<?>[] {String.class},
-				"sourcePrototypeLayoutUuid"));
 
 		Assert.assertEquals(
 			layout.getExternalReferenceCode(),

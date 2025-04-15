@@ -1,9 +1,8 @@
 {
-	"@generated": "7b93e6586a1ee09d4b93ad426e4de740cfe63681",
+	"@generated": "52a64b70e4108b1f45658339c7c2f3ccfc7a3608",
 	"@readonly": "** AUTO-GENERATED: DO NOT EDIT **",
 	"compilerOptions": {
 		"allowSyntheticDefaultImports": true,
-		"baseUrl": ".",
 		"checkJs": false,
 		"composite": true,
 		"declarationDir": "../../../../../../../../.tsc/types",
@@ -22,7 +21,10 @@
 				"../../../../../../../asset/asset-taglib/src/main/resources/META-INF/resources/js/index.js"
 			],
 			"frontend-editor-ckeditor-web": [
-				"../../../../../../../frontend-editor/frontend-editor-ckeditor-web/src/main/resources/META-INF/resources/index.d.ts"
+				"../../../../../../../frontend-editor/frontend-editor-ckeditor-web/src/main/resources/META-INF/resources/js/index.ts"
+			],
+			"frontend-js-components-web": [
+				"../../../../../../../frontend-js/frontend-js-components-web/src/main/resources/META-INF/resources/index.ts"
 			],
 			"frontend-js-web": [
 				"../../../../../../../frontend-js/frontend-js-web/src/main/resources/META-INF/resources/index.d.ts"
@@ -55,6 +57,9 @@
 		},
 		{
 			"path": "../../../../../../../frontend-editor/frontend-editor-ckeditor-web/src/main/resources/META-INF/resources/tsconfig.json"
+		},
+		{
+			"path": "../../../../../../../frontend-js/frontend-js-components-web/src/main/resources/META-INF/resources/tsconfig.json"
 		},
 		{
 			"path": "../../../../../../../frontend-js/frontend-js-web/src/main/resources/META-INF/resources/tsconfig.json"

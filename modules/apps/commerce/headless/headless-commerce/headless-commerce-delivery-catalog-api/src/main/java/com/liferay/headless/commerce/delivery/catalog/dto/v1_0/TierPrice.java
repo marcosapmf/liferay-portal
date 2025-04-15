@@ -16,8 +16,6 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
-import io.swagger.v3.oas.annotations.media.Schema;
-
 import java.io.Serializable;
 
 import java.math.BigDecimal;
@@ -53,7 +51,7 @@ public class TierPrice implements Serializable {
 		return ObjectMapperUtil.unsafeReadValue(TierPrice.class, json);
 	}
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getCurrency() {
 		if (_currencySupplier != null) {
 			currency = _currencySupplier.get();
@@ -94,7 +92,7 @@ public class TierPrice implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _currencySupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public Double getPrice() {
 		if (_priceSupplier != null) {
 			price = _priceSupplier.get();
@@ -135,7 +133,7 @@ public class TierPrice implements Serializable {
 	@JsonIgnore
 	private Supplier<Double> _priceSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getPriceFormatted() {
 		if (_priceFormattedSupplier != null) {
 			priceFormatted = _priceFormattedSupplier.get();
@@ -176,8 +174,94 @@ public class TierPrice implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _priceFormattedSupplier;
 
+	@io.swagger.v3.oas.annotations.media.Schema
+	public Double getPricingQuantityPrice() {
+		if (_pricingQuantityPriceSupplier != null) {
+			pricingQuantityPrice = _pricingQuantityPriceSupplier.get();
+
+			_pricingQuantityPriceSupplier = null;
+		}
+
+		return pricingQuantityPrice;
+	}
+
+	public void setPricingQuantityPrice(Double pricingQuantityPrice) {
+		this.pricingQuantityPrice = pricingQuantityPrice;
+
+		_pricingQuantityPriceSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setPricingQuantityPrice(
+		UnsafeSupplier<Double, Exception> pricingQuantityPriceUnsafeSupplier) {
+
+		_pricingQuantityPriceSupplier = () -> {
+			try {
+				return pricingQuantityPriceUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected Double pricingQuantityPrice;
+
+	@JsonIgnore
+	private Supplier<Double> _pricingQuantityPriceSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema
+	public String getPricingQuantityPriceFormatted() {
+		if (_pricingQuantityPriceFormattedSupplier != null) {
+			pricingQuantityPriceFormatted =
+				_pricingQuantityPriceFormattedSupplier.get();
+
+			_pricingQuantityPriceFormattedSupplier = null;
+		}
+
+		return pricingQuantityPriceFormatted;
+	}
+
+	public void setPricingQuantityPriceFormatted(
+		String pricingQuantityPriceFormatted) {
+
+		this.pricingQuantityPriceFormatted = pricingQuantityPriceFormatted;
+
+		_pricingQuantityPriceFormattedSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setPricingQuantityPriceFormatted(
+		UnsafeSupplier<String, Exception>
+			pricingQuantityPriceFormattedUnsafeSupplier) {
+
+		_pricingQuantityPriceFormattedSupplier = () -> {
+			try {
+				return pricingQuantityPriceFormattedUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected String pricingQuantityPriceFormatted;
+
+	@JsonIgnore
+	private Supplier<String> _pricingQuantityPriceFormattedSupplier;
+
 	@DecimalMin("0")
-	@Schema(example = "202.1")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "202.1")
 	@Valid
 	public BigDecimal getQuantity() {
 		if (_quantitySupplier != null) {
@@ -290,6 +374,35 @@ public class TierPrice implements Serializable {
 			sb.append("\"");
 		}
 
+		Double pricingQuantityPrice = getPricingQuantityPrice();
+
+		if (pricingQuantityPrice != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"pricingQuantityPrice\": ");
+
+			sb.append(pricingQuantityPrice);
+		}
+
+		String pricingQuantityPriceFormatted =
+			getPricingQuantityPriceFormatted();
+
+		if (pricingQuantityPriceFormatted != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"pricingQuantityPriceFormatted\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(pricingQuantityPriceFormatted));
+
+			sb.append("\"");
+		}
+
 		BigDecimal quantity = getQuantity();
 
 		if (quantity != null) {
@@ -307,8 +420,8 @@ public class TierPrice implements Serializable {
 		return sb.toString();
 	}
 
-	@Schema(
-		accessMode = Schema.AccessMode.READ_ONLY,
+	@io.swagger.v3.oas.annotations.media.Schema(
+		accessMode = io.swagger.v3.oas.annotations.media.Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.commerce.delivery.catalog.dto.v1_0.TierPrice",
 		name = "x-class-name"
 	)

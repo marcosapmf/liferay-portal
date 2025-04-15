@@ -1,9 +1,8 @@
 {
-	"@generated": "362b678d867125f06f61208297e1cb40a57950a8",
+	"@generated": "717d97325f62d125435f5f7575891e856545cc51",
 	"@readonly": "** AUTO-GENERATED: DO NOT EDIT **",
 	"compilerOptions": {
 		"allowSyntheticDefaultImports": true,
-		"baseUrl": ".",
 		"checkJs": false,
 		"composite": true,
 		"declarationDir": "../../../../../../../../.tsc/types",
@@ -15,8 +14,14 @@
 			"@liferay/frontend-icons-web": [
 				"../../../../../../../frontend-icons/frontend-icons-web/src/main/resources/META-INF/resources/js/index.ts"
 			],
+			"@liferay/frontend-js-react-web": [
+				"../../../../../../../frontend-js/frontend-js-react-web/src/main/resources/META-INF/resources/js/index.ts"
+			],
 			"@liferay/layout-js-components-web": [
 				"../../../../../../layout-js-components-web/src/main/resources/META-INF/resources/js/index.ts"
+			],
+			"frontend-js-components-web": [
+				"../../../../../../../frontend-js/frontend-js-components-web/src/main/resources/META-INF/resources/index.ts"
 			],
 			"frontend-js-web": [
 				"../../../../../../../frontend-js/frontend-js-web/src/main/resources/META-INF/resources/index.d.ts"
@@ -42,7 +47,13 @@
 			"path": "../../../../../../../frontend-icons/frontend-icons-web/src/main/resources/META-INF/resources/tsconfig.json"
 		},
 		{
+			"path": "../../../../../../../frontend-js/frontend-js-react-web/src/main/resources/META-INF/resources/tsconfig.json"
+		},
+		{
 			"path": "../../../../../../layout-js-components-web/src/main/resources/META-INF/resources/tsconfig.json"
+		},
+		{
+			"path": "../../../../../../../frontend-js/frontend-js-components-web/src/main/resources/META-INF/resources/tsconfig.json"
 		},
 		{
 			"path": "../../../../../../../frontend-js/frontend-js-web/src/main/resources/META-INF/resources/tsconfig.json"

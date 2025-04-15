@@ -3,11 +3,13 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {Locator, Page} from '@playwright/test';
+import {Locator, Page, expect} from '@playwright/test';
 
+import {clickAndExpectToBeHidden} from '../../utils/clickAndExpectToBeHidden';
 import {clickAndExpectToBeVisible} from '../../utils/clickAndExpectToBeVisible';
+import {hoverAndExpectToBeVisible} from '../../utils/hoverAndExpectToBeVisible';
 import {PORTLET_URLS} from '../../utils/portletUrls';
-import {waitForSuccessAlert} from '../../utils/waitForSuccessAlert';
+import {waitForAlert} from '../../utils/waitForAlert';
 
 export class DisplayPageTemplatesPage {
 	readonly page: Page;
@@ -28,33 +30,56 @@ export class DisplayPageTemplatesPage {
 		);
 	}
 
-	async clickMoreActions(name: string) {
+	async clickMoreActions(name: string, actionName: string) {
 		await this.page
 			.locator('.card-page-item')
 			.filter({hasText: name})
 			.getByLabel('More actions')
 			.click();
-	}
-
-	async delete(name: string) {
-		await this.clickMoreActions(name);
 
 		await this.page
 			.getByRole('menuitem', {
 				exact: true,
-				name: 'Delete',
+				name: actionName,
 			})
 			.click();
+	}
+
+	async copyTemplate(name: string) {
+		await clickAndExpectToBeVisible({
+			autoClick: false,
+			target: this.page.getByRole('menuitem', {name: 'Make a Copy'}),
+			trigger: this.page
+				.locator('.card-page-item')
+				.filter({hasText: name})
+				.getByLabel('More actions'),
+		});
+
+		await hoverAndExpectToBeVisible({
+			autoClick: true,
+			target: this.page.getByText('Display Page', {exact: true}).nth(1),
+			trigger: this.page.getByRole('menuitem', {name: 'Make a Copy'}),
+		});
+
+		await waitForAlert(this.page);
+	}
+
+	async deleteTemplate(name: string) {
+		await this.clickMoreActions(name, 'Delete');
 
 		await this.page.getByRole('button', {name: 'Delete'}).click();
 
-		await waitForSuccessAlert(
+		await waitForAlert(
 			this.page,
 			'Success:You successfully deleted 1 display page template(s).'
 		);
 	}
 
 	async deleteAllDisplayPageTemplates() {
+		await expect(
+			this.page.getByLabel('Search for', {exact: true})
+		).toBeEnabled();
+
 		await this.page
 			.getByLabel('Select All Items on the Page')
 			.setChecked(true);
@@ -68,14 +93,7 @@ export class DisplayPageTemplatesPage {
 	}
 
 	async editTemplate(name: string) {
-		await this.clickMoreActions(name);
-
-		await this.page
-			.getByRole('menuitem', {
-				exact: true,
-				name: 'Edit',
-			})
-			.click();
+		await this.clickMoreActions(name, 'Edit');
 
 		await this.page
 			.getByText('Select a Page Element', {exact: true})
@@ -83,7 +101,7 @@ export class DisplayPageTemplatesPage {
 	}
 
 	async viewUsages(name: string) {
-		await this.clickMoreActions(name);
+		await this.clickMoreActions(name, 'View Usages');
 
 		await clickAndExpectToBeVisible({
 			target: this.page.getByRole('row').getByRole('checkbox').first(),
@@ -95,41 +113,91 @@ export class DisplayPageTemplatesPage {
 		});
 	}
 
+	async mapConfiguration({
+		field,
+		mappingField,
+	}: {
+		field: string;
+		mappingField: string;
+	}) {
+		await this.page
+			.locator('.form-group')
+			.filter({has: this.page.getByLabel(field, {exact: true})})
+			.getByTitle('Map', {exact: true})
+			.click();
+
+		await this.page
+			.getByLabel('Field', {exact: true})
+			.selectOption(mappingField);
+
+		await this.page
+			.locator('.dpt-mapping-panel')
+			.getByRole('button')
+			.click();
+
+		await this.saveConfiguration();
+	}
+
 	async markAsDefault(name: string) {
 		this.page.once('dialog', (dialog) => {
 			dialog.accept().catch(() => {});
 		});
 
-		await this.clickMoreActions(name);
+		await this.clickMoreActions(name, 'Mark as Default');
 
-		await this.page
-			.getByRole('menuitem', {
-				exact: true,
-				name: 'Mark as Default',
-			})
-			.click();
-
-		await waitForSuccessAlert(this.page);
+		await waitForAlert(this.page);
 	}
 
-	async rename(newName: string, oldName: string) {
-		await this.clickMoreActions(oldName);
-
-		await this.page
-			.getByRole('menuitem', {
-				exact: true,
-				name: 'Rename',
-			})
-			.click();
+	async renameTemplate(newName: string, oldName: string) {
+		await this.clickMoreActions(oldName, 'Rename');
 
 		await this.page.getByLabel('Name', {exact: true}).fill(newName);
 
 		await this.page.getByRole('button', {name: 'Save'}).click();
 
-		await waitForSuccessAlert(this.page);
+		await waitForAlert(this.page);
 	}
 
-	async createFolder(name: string) {
+	async saveConfiguration() {
+		await this.page
+			.getByRole('button', {exact: true, name: 'Save'})
+			.click();
+
+		await waitForAlert(
+			this.page,
+			'Success:The page was updated successfully.'
+		);
+	}
+
+	async changePreviewItem(title: string) {
+		await clickAndExpectToBeVisible({
+			autoClick: true,
+			target: this.page.getByRole('menuitem', {
+				name: 'Select Other Item',
+			}),
+			trigger: this.page.getByLabel('Preview With'),
+		});
+
+		const folderCard = this.page
+			.frameLocator('iframe[title="Select"]')
+			.getByRole('link', {name: 'Animals'});
+
+		const articleCard = this.page
+			.frameLocator('iframe[title="Select"]')
+			.getByText(title, {exact: false});
+
+		await clickAndExpectToBeVisible({
+			target: articleCard,
+			trigger: folderCard,
+		});
+
+		await clickAndExpectToBeHidden({
+			target: this.page.locator('.modal-dialog'),
+			trigger: articleCard,
+		});
+	}
+
+	async createFolder(name: string, description?: string) {
 		await clickAndExpectToBeVisible({
 			autoClick: true,
 			target: this.page.getByRole('menuitem', {name: 'Folder'}),
@@ -140,9 +208,32 @@ export class DisplayPageTemplatesPage {
 
 		await this.page.getByLabel('Name').fill(name);
 
-		await this.page.getByRole('button', {name: 'Create'}).click();
+		if (description) {
+			await this.page.getByLabel('Description').fill(description);
+		}
 
-		await waitForSuccessAlert(this.page);
+		await this.page.getByRole('button', {name: 'Create'}).click();
+		await waitForAlert(this.page);
+	}
+
+	async copyFolderTo(sourceName: string, targetName: string) {
+		await clickAndExpectToBeVisible({
+			autoClick: true,
+			target: this.page.getByRole('menuitem', {name: 'Copy To'}),
+			trigger: this.page
+				.locator('.card-page-item')
+				.filter({hasText: sourceName})
+				.getByLabel('More actions'),
+		});
+
+		const frameLocator = this.page.frameLocator('iframe');
+
+		await frameLocator
+			.getByRole('treeitem', {name: 'Home'})
+			.locator('.component-expander')
+			.click();
+
+		await frameLocator.getByRole('treeitem', {name: targetName}).click();
 	}
 
 	async createTemplate({
@@ -160,24 +251,21 @@ export class DisplayPageTemplatesPage {
 			await this.page.getByRole('link', {name: folderName}).click();
 
 			await this.page.getByText(folderName, {exact: true}).waitFor();
-
-			await clickAndExpectToBeVisible({
-				autoClick: false,
-				target: this.page.getByRole('menuitem', {
-					name: 'Display Page Template',
-				}),
-				trigger: this.newButton,
-			});
-
-			await this.page
-				.getByRole('menuitem', {
-					name: 'Display Page Template',
-				})
-				.click();
 		}
-		else {
-			await this.newButton.click();
-		}
+
+		await clickAndExpectToBeVisible({
+			autoClick: false,
+			target: this.page.getByRole('menuitem', {
+				name: 'Display Page Template',
+			}),
+			trigger: this.newButton,
+		});
+
+		await this.page
+			.getByRole('menuitem', {
+				name: 'Display Page Template',
+			})
+			.click();
 
 		await this.page.getByRole('button', {name: 'Blank'}).click();
 		await this.page.getByLabel('Name', {exact: true}).fill(name);
@@ -194,7 +282,7 @@ export class DisplayPageTemplatesPage {
 
 		await this.page.getByRole('button', {name: 'Save'}).click();
 
-		await waitForSuccessAlert(
+		await waitForAlert(
 			this.page,
 			'Success:The display page template was created successfully.'
 		);
@@ -206,7 +294,7 @@ export class DisplayPageTemplatesPage {
 		await this.publishButton.waitFor();
 		await this.publishButton.click();
 
-		await waitForSuccessAlert(
+		await waitForAlert(
 			this.page,
 			'Success:The display page template was published successfully.'
 		);

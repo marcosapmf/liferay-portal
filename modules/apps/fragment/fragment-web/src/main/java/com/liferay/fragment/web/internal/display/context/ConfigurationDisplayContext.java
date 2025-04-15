@@ -9,10 +9,12 @@ import com.liferay.fragment.contributor.FragmentCollectionContributorRegistry;
 import com.liferay.fragment.helper.DefaultInputFragmentEntryConfigurationProvider;
 import com.liferay.fragment.model.FragmentEntry;
 import com.liferay.fragment.service.FragmentEntryLocalServiceUtil;
+import com.liferay.fragment.web.internal.info.field.type.FormButtonInfoFieldType;
 import com.liferay.info.field.type.BooleanInfoFieldType;
 import com.liferay.info.field.type.DateInfoFieldType;
 import com.liferay.info.field.type.DateTimeInfoFieldType;
 import com.liferay.info.field.type.FileInfoFieldType;
+import com.liferay.info.field.type.FriendlyURLInfoFieldType;
 import com.liferay.info.field.type.HTMLInfoFieldType;
 import com.liferay.info.field.type.InfoFieldType;
 import com.liferay.info.field.type.LongTextInfoFieldType;
@@ -22,7 +24,6 @@ import com.liferay.info.field.type.RelationshipInfoFieldType;
 import com.liferay.info.field.type.SelectInfoFieldType;
 import com.liferay.info.field.type.TextInfoFieldType;
 import com.liferay.portal.kernel.json.JSONObject;
-import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
@@ -89,32 +90,17 @@ public class ConfigurationDisplayContext {
 							() -> _getFragmentName(
 								themeDisplay.getCompanyId(), fragmentEntries,
 								defaultInputFragmentEntryKeysJSONObject.
-									getJSONObject(infoFieldType.getName()))
+									getJSONObject(
+										_getInfoFieldTypeName(infoFieldType)))
+						).put(
+							"inputType", infoFieldType.getName()
 						).put(
 							"label",
 							infoFieldType.getLabel(themeDisplay.getLocale())
 						).put(
-							"name", infoFieldType.getName()
+							"name", _getInfoFieldTypeName(infoFieldType)
 						).build());
 				}
-
-				formTypes.add(
-					HashMapBuilder.put(
-						"fragmentName",
-						() -> _getFragmentName(
-							themeDisplay.getCompanyId(), fragmentEntries,
-							defaultInputFragmentEntryKeysJSONObject.
-								getJSONObject(
-									DefaultInputFragmentEntryConfigurationProvider.FORM_INPUT_SUBMIT_BUTTON))
-					).put(
-						"label",
-						LanguageUtil.get(
-							themeDisplay.getLocale(), "submit-button")
-					).put(
-						"name",
-						DefaultInputFragmentEntryConfigurationProvider.
-							FORM_INPUT_SUBMIT_BUTTON
-					).build());
 
 				return formTypes;
 			}
@@ -167,9 +153,19 @@ public class ConfigurationDisplayContext {
 		return null;
 	}
 
+	private String _getInfoFieldTypeName(InfoFieldType infoFieldType) {
+		if (infoFieldType == FormButtonInfoFieldType.INSTANCE) {
+			return DefaultInputFragmentEntryConfigurationProvider.
+				FORM_INPUT_SUBMIT_BUTTON;
+		}
+
+		return infoFieldType.getName();
+	}
+
 	private static final InfoFieldType[] _INFO_FIELD_TYPES = {
 		BooleanInfoFieldType.INSTANCE, DateInfoFieldType.INSTANCE,
 		DateTimeInfoFieldType.INSTANCE, FileInfoFieldType.INSTANCE,
+		FormButtonInfoFieldType.INSTANCE, FriendlyURLInfoFieldType.INSTANCE,
 		HTMLInfoFieldType.INSTANCE, LongTextInfoFieldType.INSTANCE,
 		MultiselectInfoFieldType.INSTANCE, NumberInfoFieldType.INSTANCE,
 		RelationshipInfoFieldType.INSTANCE, SelectInfoFieldType.INSTANCE,

@@ -8,6 +8,8 @@ import {render, screen} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import React from 'react';
 
+import {KeyboardMovementContextProvider} from '../../../../../../../../../src/main/resources/META-INF/resources/page_editor/app/contexts/KeyboardMovementContext';
+import {StoreAPIContextProvider} from '../../../../../../../../../src/main/resources/META-INF/resources/page_editor/app/contexts/StoreContext';
 import updateItemStyle from '../../../../../../../../../src/main/resources/META-INF/resources/page_editor/app/utils/updateItemStyle';
 import VisibilityButton from '../../../../../../../../../src/main/resources/META-INF/resources/page_editor/plugins/browser/components/page_structure/components/VisibilityButton';
 
@@ -18,17 +20,26 @@ jest.mock(
 
 const renderComponent = () =>
 	render(
-		<VisibilityButton
-			node={{hidden: true, id: 'fragment01'}}
-			selectedViewportSize="tablet"
-		/>
+		<StoreAPIContextProvider
+			dispatch={() => {}}
+			getState={() => ({
+				selectedViewportSize: 'tablet',
+			})}
+		>
+			<KeyboardMovementContextProvider>
+				<VisibilityButton
+					node={{hidden: true, id: 'fragment01'}}
+					selectedViewportSize="tablet"
+				/>
+			</KeyboardMovementContextProvider>
+		</StoreAPIContextProvider>
 	);
 
 describe('VisibilityButton', () => {
-	it('calls updateItemStyle when the visibility button is pressed', () => {
+	it('calls updateItemStyle when the visibility button is pressed', async () => {
 		renderComponent();
 
-		userEvent.click(screen.getByLabelText('show-x'));
+		await userEvent.click(screen.getByLabelText('show-x'));
 
 		expect(updateItemStyle).toBeCalledWith(
 			expect.objectContaining({

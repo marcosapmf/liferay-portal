@@ -64,11 +64,10 @@ export default function UpperToolbar({
 		setShowAlert,
 		setShowDefinitionInfo,
 		setSourceView,
-		setVersion,
 		setWorkflowDefinitionVersions,
 		showAlert,
 		sourceView,
-		version,
+		workflowDefinitionVersions,
 	} = useContext(DefinitionBuilderContext);
 
 	const [showGroovyScriptWarningModal, setShowGroovyScriptWarningModal] =
@@ -124,7 +123,7 @@ export default function UpperToolbar({
 				{
 					description: definitionDescription,
 					name: definitionName,
-					version,
+					version: workflowDefinitionVersions.length,
 				},
 				elements.filter(isNode),
 				elements.filter(isEdge)
@@ -135,7 +134,7 @@ export default function UpperToolbar({
 					metadata: {
 						description: definitionDescription,
 						name: definitionName,
-						version,
+						version: workflowDefinitionVersions.length,
 					},
 					xmlDefinition,
 				}
@@ -179,7 +178,8 @@ export default function UpperToolbar({
 		}
 	};
 
-	const definitionNotPublished = version === 0 || !active;
+	const definitionNotPublished =
+		!workflowDefinitionVersions.length || !active;
 
 	const redirectToSavedDefinition = (name, version) => {
 		const definitionURL = new URL(window.location.href);
@@ -245,27 +245,19 @@ export default function UpperToolbar({
 		}
 
 		setDefinitionName(publishedOrSavedDefinitionResponseJSON.name);
-		setVersion(
-			parseInt(publishedOrSavedDefinitionResponseJSON.version, 10)
-		);
 
-		if (Liferay.FeatureFlags['LPD-29635']) {
-			setWorkflowDefinitionVersions((prevValues) => [
-				{
-					creatorName:
-						publishedOrSavedDefinitionResponseJSON.creator?.name,
-					dateCreated:
-						publishedOrSavedDefinitionResponseJSON.dateModified,
-					version: String(
-						parseInt(
-							publishedOrSavedDefinitionResponseJSON.version,
-							10
-						)
-					),
-				},
-				...prevValues,
-			]);
-		}
+		setWorkflowDefinitionVersions((prevValues) => [
+			{
+				creatorName:
+					publishedOrSavedDefinitionResponseJSON.creator?.name,
+				dateCreated:
+					publishedOrSavedDefinitionResponseJSON.dateModified,
+				version: String(
+					parseInt(publishedOrSavedDefinitionResponseJSON.version, 10)
+				),
+			},
+			...prevValues,
+		]);
 
 		if (publishedOrSavedDefinitionResponseJSON.version === '1') {
 			localStorage.setItem(
@@ -461,7 +453,7 @@ export default function UpperToolbar({
 							/>
 						</ClayToolbar.Item>
 
-						{version !== 0 && (
+						{workflowDefinitionVersions.length !== 0 && (
 							<ClayToolbar.Item>
 								<ClayButtonWithIcon
 									aria-label={Liferay.Language.get(

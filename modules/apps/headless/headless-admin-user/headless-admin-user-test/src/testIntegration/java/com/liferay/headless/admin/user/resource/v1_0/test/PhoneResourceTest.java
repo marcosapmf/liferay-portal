@@ -11,6 +11,7 @@ import com.liferay.account.model.AccountEntry;
 import com.liferay.account.service.AccountEntryLocalService;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.headless.admin.user.client.dto.v1_0.Phone;
+import com.liferay.headless.admin.user.client.pagination.Page;
 import com.liferay.portal.kernel.model.Contact;
 import com.liferay.portal.kernel.model.ListType;
 import com.liferay.portal.kernel.model.ListTypeConstants;
@@ -24,15 +25,19 @@ import com.liferay.portal.kernel.test.util.OrganizationTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.SynchronousMailTestRule;
 
 import java.util.List;
+import java.util.Objects;
 
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 
 /**
@@ -65,6 +70,23 @@ public class PhoneResourceTest extends BasePhoneResourceTestCase {
 	}
 
 	@Override
+	@Test
+	public void testDeletePhone() throws Exception {
+		super.testDeletePhone();
+
+		_testDeletePrimaryPhone();
+	}
+
+	@Override
+	@Test
+	public void testPatchPhone() throws Exception {
+		super.testPatchPhone();
+
+		_testPatchPhoneNotPrimary();
+		_testPatchPhoneType();
+	}
+
+	@Override
 	protected String[] getAdditionalAssertFieldNames() {
 		return new String[] {"extension", "phoneNumber", "primary"};
 	}
@@ -75,9 +97,26 @@ public class PhoneResourceTest extends BasePhoneResourceTestCase {
 			{
 				extension = String.valueOf(RandomTestUtil.randomInt());
 				phoneNumber = RandomTestUtil.randomString();
+				phoneType = "business";
 				primary = false;
 			}
 		};
+	}
+
+	@Override
+	protected Phone testDeletePhone_addPhone() throws Exception {
+		return _addPhone(
+			randomPhone(), Contact.class.getName(), _user.getContactId(),
+			ListTypeConstants.CONTACT_PHONE);
+	}
+
+	@Override
+	protected Phone testDeletePhoneByExternalReferenceCode_addPhone()
+		throws Exception {
+
+		return _addPhone(
+			randomPhone(), Contact.class.getName(), _user.getContactId(),
+			ListTypeConstants.CONTACT_PHONE);
 	}
 
 	@Override
@@ -158,6 +197,15 @@ public class PhoneResourceTest extends BasePhoneResourceTestCase {
 	}
 
 	@Override
+	protected Phone testGetPhoneByExternalReferenceCode_addPhone()
+		throws Exception {
+
+		return _addPhone(
+			randomPhone(), Contact.class.getName(), _user.getContactId(),
+			ListTypeConstants.CONTACT_PHONE);
+	}
+
+	@Override
 	protected Phone
 			testGetUserAccountByExternalReferenceCodePhonesPage_addPhone(
 				String externalReferenceCode, Phone phone)
@@ -196,15 +244,32 @@ public class PhoneResourceTest extends BasePhoneResourceTestCase {
 		return testGetPhone_addPhone();
 	}
 
+	@Override
+	protected Phone testPatchPhone_addPhone() throws Exception {
+		return _addPhone(
+			randomPhone(), Contact.class.getName(), _user.getContactId(),
+			ListTypeConstants.CONTACT_PHONE);
+	}
+
+	@Override
+	protected Phone testPatchPhoneByExternalReferenceCode_addPhone()
+		throws Exception {
+
+		return _addPhone(
+			randomPhone(), Contact.class.getName(), _user.getContactId(),
+			ListTypeConstants.CONTACT_PHONE);
+	}
+
 	private Phone _addPhone(
 			Phone phone, String className, long classPK, String listTypeId)
 		throws Exception {
 
 		return _toPhone(
 			PhoneLocalServiceUtil.addPhone(
-				_user.getUserId(), className, classPK, phone.getPhoneNumber(),
-				phone.getExtension(), _getListTypeId(listTypeId),
-				phone.getPrimary(), new ServiceContext()));
+				RandomTestUtil.randomString(), _user.getUserId(), className,
+				classPK, phone.getPhoneNumber(), phone.getExtension(),
+				_getListTypeId(listTypeId), phone.getPrimary(),
+				new ServiceContext()));
 	}
 
 	private long _getListTypeId(String listTypeId) {
@@ -216,12 +281,83 @@ public class PhoneResourceTest extends BasePhoneResourceTestCase {
 		return listType.getListTypeId();
 	}
 
-	private Phone _toPhone(com.liferay.portal.kernel.model.Phone phone) {
+	private void _testDeletePrimaryPhone() throws Exception {
+		Phone phone1 = randomPhone();
+
+		phone1.setPrimary(true);
+
+		phone1 = _addPhone(
+			phone1, Contact.class.getName(), _user.getContactId(),
+			ListTypeConstants.CONTACT_PHONE);
+
+		Assert.assertTrue(phone1.getPrimary());
+
+		Phone phone2 = testDeletePhone_addPhone();
+
+		Assert.assertFalse(phone2.getPrimary());
+
+		phoneResource.deletePhone(phone1.getId());
+
+		phone2 = phoneResource.getPhone(phone2.getId());
+
+		Assert.assertTrue(phone2.getPrimary());
+	}
+
+	private void _testPatchPhoneNotPrimary() throws Exception {
+		Phone randomPhone = randomPhone();
+
+		randomPhone.setPrimary(true);
+
+		randomPhone = _addPhone(
+			randomPhone, Contact.class.getName(), _user.getContactId(),
+			ListTypeConstants.CONTACT_PHONE);
+
+		testPatchPhone_addPhone();
+
+		randomPhone.setPrimary(false);
+
+		Phone patchPhone = phoneResource.patchPhone(
+			randomPhone.getId(), randomPhone);
+
+		Page<Phone> phonesPage = phoneResource.getUserAccountPhonesPage(
+			_user.getUserId());
+
+		Assert.assertTrue(
+			ListUtil.exists(
+				ListUtil.fromCollection(phonesPage.getItems()),
+				phone ->
+					phone.getPrimary() &&
+					!Objects.equals(phone.getId(), patchPhone.getId())));
+	}
+
+	private void _testPatchPhoneType() throws Exception {
+		Phone postPhone = testPatchPhone_addPhone();
+
+		Phone randomPatchPhone = randomPatchPhone();
+
+		randomPatchPhone.setPhoneType("personal");
+
+		Phone patchPhone = phoneResource.patchPhone(
+			postPhone.getId(), randomPatchPhone);
+
+		Phone getPhone = phoneResource.getPhone(patchPhone.getId());
+
+		Assert.assertEquals(
+			randomPatchPhone.getPhoneType(), getPhone.getPhoneType());
+	}
+
+	private Phone _toPhone(com.liferay.portal.kernel.model.Phone phone)
+		throws Exception {
+
+		ListType listType = phone.getListType();
+
 		return new Phone() {
 			{
 				extension = phone.getExtension();
+				externalReferenceCode = phone.getExternalReferenceCode();
 				id = phone.getPhoneId();
 				phoneNumber = phone.getNumber();
+				phoneType = listType.getName();
 				primary = phone.isPrimary();
 			}
 		};

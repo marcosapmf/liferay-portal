@@ -151,4 +151,8 @@ public interface TemplateHandler {
 	 */
 	public boolean isDisplayTemplateHandler();
 
+	public default boolean isEnabled(long companyId) {
+		return true;
+	}
+
 }

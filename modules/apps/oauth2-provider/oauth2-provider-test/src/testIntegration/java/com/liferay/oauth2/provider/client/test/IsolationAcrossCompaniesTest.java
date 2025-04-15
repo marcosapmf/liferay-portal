@@ -21,7 +21,6 @@ import javax.ws.rs.core.Response;
 
 import org.junit.Assert;
 import org.junit.ClassRule;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -31,7 +30,6 @@ import org.osgi.framework.BundleActivator;
 /**
  * @author Carlos Sierra Andrés
  */
-@Ignore
 @RunWith(Arquillian.class)
 public class IsolationAcrossCompaniesTest extends BaseClientTestCase {
 
@@ -62,7 +60,7 @@ public class IsolationAcrossCompaniesTest extends BaseClientTestCase {
 
 			Response response = builder.get();
 
-			Assert.assertEquals(403, response.getStatus());
+			Assert.assertEquals(401, response.getStatus());
 		}
 	}
 
@@ -88,7 +86,7 @@ public class IsolationAcrossCompaniesTest extends BaseClientTestCase {
 
 			Response response = builder.get();
 
-			Assert.assertEquals(403, response.getStatus());
+			Assert.assertEquals(401, response.getStatus());
 		}
 	}
 

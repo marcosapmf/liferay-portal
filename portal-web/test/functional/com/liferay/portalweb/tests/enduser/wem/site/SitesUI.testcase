@@ -129,7 +129,9 @@ definition {
 	@priority = 4
 	@uitest
 	test CreateDefaultPageAsPrivateFromSiteTemplate {
-		property release.feature.flags.disable.DISABLE_PRIVATE_LAYOUTS = "true";
+		task ("Enable private pages") {
+			PagesAdmin.enablePrivatePages();
+		}
 
 		task ("Given a page creator has a site with a page from a site template") {
 			task ("Add a site template") {

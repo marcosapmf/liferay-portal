@@ -97,11 +97,28 @@ public class DepotEntryGroupRelLocalServiceImpl
 	}
 
 	@Override
+	public DepotEntryGroupRel getDepotEntryGroupRelByDepotEntryIdToGroupId(
+			long depotEntryId, long toGroupId)
+		throws PortalException {
+
+		return depotEntryGroupRelPersistence.findByD_TGI(
+			depotEntryId, toGroupId);
+	}
+
+	@Override
 	public List<DepotEntryGroupRel> getDepotEntryGroupRels(
 		DepotEntry depotEntry) {
 
 		return depotEntryGroupRelPersistence.findByDepotEntryId(
 			depotEntry.getDepotEntryId());
+	}
+
+	@Override
+	public List<DepotEntryGroupRel> getDepotEntryGroupRels(
+		DepotEntry depotEntry, int start, int end) {
+
+		return depotEntryGroupRelPersistence.findByDepotEntryId(
+			depotEntry.getDepotEntryId(), start, end);
 	}
 
 	@Override

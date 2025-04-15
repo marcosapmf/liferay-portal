@@ -161,7 +161,8 @@ public class DDMFormInstanceLocalServiceImpl
 		throws PortalException {
 
 		DDMStructure ddmStructure = _ddmStructureLocalService.addStructure(
-			userId, groupId, DDMStructureConstants.DEFAULT_PARENT_STRUCTURE_ID,
+			null, userId, groupId,
+			DDMStructureConstants.DEFAULT_PARENT_STRUCTURE_ID,
 			_classNameLocalService.getClassNameId(DDMFormInstance.class),
 			StringPool.BLANK, nameMap, descriptionMap, ddmForm, ddmFormLayout,
 			_getStorageType(settingsDDMFormValues),
@@ -295,6 +296,13 @@ public class DDMFormInstanceLocalServiceImpl
 		throws PortalException {
 
 		return ddmFormInstancePersistence.findByUUID_G(uuid, ddmFormInstanceId);
+	}
+
+	@Override
+	public DDMFormInstance getFormInstanceByStructureId(long structureId)
+		throws PortalException {
+
+		return ddmFormInstancePersistence.findByStructureId(structureId);
 	}
 
 	@Override

@@ -40,7 +40,7 @@
 			<liferay-ui:message key="unable-to-validate-referenced-web-content-article" />
 		</c:when>
 		<c:when test="<%= eicve.getType() == ExportImportContentValidationException.FILE_ENTRY_NOT_FOUND %>">
-			<liferay-ui:message arguments="<%= new String[] {MapUtil.toString(eicve.getDlReferenceParameters()), eicve.getDlReference()} %>" key="unable-to-validate-referenced-document-because-it-cannot-be-found-with-the-following-parameters-x-when-analyzing-link-x" />
+			<liferay-ui:message arguments="<%= new String[] {MapUtil.toString(eicve.getDLReferenceParameters()), eicve.getDLReference()} %>" key="unable-to-validate-referenced-document-because-it-cannot-be-found-with-the-following-parameters-x-when-analyzing-link-x" />
 		</c:when>
 		<c:when test="<%= eicve.getType() == ExportImportContentValidationException.JOURNAL_FEED_NOT_FOUND %>">
 			<liferay-ui:message arguments="<%= eicve.getJournalArticleFeedURL() %>" key="unable-to-validate-referenced-journal-feed-because-it-cannot-be-found-with-url-x" />
@@ -69,6 +69,7 @@
 	<liferay-ui:message arguments="<%= LanguageUtil.formatStorageSize(fileSizeException.getMaxSize(), locale) %>" key="please-enter-a-file-with-a-valid-file-size-no-larger-than-x" translateArguments="<%= false %>" />
 </liferay-ui:error>
 
+<liferay-ui:error exception="<%= FriendlyURLLocalizationUrlTitleException.MustNotHaveTrailingSlash.class %>" message="please-enter-a-friendly-url-that-does-not-end-with-a-slash" />
 <liferay-ui:error exception="<%= InvalidDDMStructureException.class %>" message="the-structure-you-selected-is-not-valid-for-this-folder" />
 
 <liferay-ui:error exception="<%= LiferayFileItemException.class %>">

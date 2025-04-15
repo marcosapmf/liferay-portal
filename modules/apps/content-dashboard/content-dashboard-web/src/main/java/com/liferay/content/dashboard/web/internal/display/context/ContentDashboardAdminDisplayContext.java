@@ -10,7 +10,7 @@ import com.liferay.content.dashboard.info.item.ClassNameClassPKInfoItemIdentifie
 import com.liferay.content.dashboard.item.ContentDashboardItem;
 import com.liferay.content.dashboard.item.type.ContentDashboardItemSubtype;
 import com.liferay.content.dashboard.item.type.ContentDashboardItemSubtypeFactoryRegistry;
-import com.liferay.content.dashboard.web.internal.item.selector.criteria.content.dashboard.type.criterion.ContentDashboardItemSubtypeItemSelectorCriterion;
+import com.liferay.content.dashboard.web.internal.item.selector.ContentDashboardItemSubtypeItemSelectorCriterion;
 import com.liferay.content.dashboard.web.internal.item.type.ContentDashboardItemSubtypeUtil;
 import com.liferay.content.dashboard.web.internal.model.AssetVocabularyMetric;
 import com.liferay.content.dashboard.web.internal.servlet.taglib.util.ContentDashboardDropdownItemsProvider;
@@ -299,6 +299,32 @@ public class ContentDashboardAdminDisplayContext {
 		}
 
 		return _contentDashboardItemSubtypePayloads;
+	}
+
+	public String getContentPerformanceDataFetchURL(
+		InfoItemReference infoItemReference) {
+
+		InfoItemIdentifier infoItemIdentifier =
+			infoItemReference.getInfoItemIdentifier();
+
+		if (!(infoItemIdentifier instanceof ClassPKInfoItemIdentifier)) {
+			return null;
+		}
+
+		ClassPKInfoItemIdentifier classPKInfoItemIdentifier =
+			(ClassPKInfoItemIdentifier)infoItemIdentifier;
+
+		return ResourceURLBuilder.createResourceURL(
+			_liferayPortletResponse
+		).setBackURL(
+			_portal.getCurrentURL(_liferayPortletRequest)
+		).setParameter(
+			"className", infoItemReference.getClassName()
+		).setParameter(
+			"classPK", String.valueOf(classPKInfoItemIdentifier.getClassPK())
+		).setResourceID(
+			"/content_dashboard/get_content_performance_info"
+		).buildString();
 	}
 
 	public Map<String, Object> getData() {

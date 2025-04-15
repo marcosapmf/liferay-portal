@@ -40,7 +40,7 @@ class HeadlessCommerceAdminCatalog {
 		categories,
 		description,
 		name,
-		productChannels,
+		productSpecifications,
 		productStatus,
 		workflowStatusInfo,
 	}: {
@@ -48,23 +48,23 @@ class HeadlessCommerceAdminCatalog {
 		categories: Partial<Categories>[];
 		description: string;
 		name: string;
-		productChannels?: Partial<Channel>[];
+		productSpecifications?: any;
 		productStatus?: number;
 		workflowStatusInfo?: number;
 	}) {
 		return fetcher.post(
-			`/o/headless-commerce-admin-catalog/v1.0/products`,
+			`/o/headless-commerce-admin-catalog/v1.0/products?nestedFields=productVirtualSettings`,
 			{
 				active: true,
 				catalogId,
 				categories,
 				description: {en_US: description},
 				name: {en_US: name},
-				productChannels,
 				productConfiguration: {
 					allowBackOrder: true,
 					maxOrderQuantity: 1,
 				},
+				productSpecifications,
 				productStatus,
 				productType: 'virtual',
 				productVirtualSettings: {},

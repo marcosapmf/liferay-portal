@@ -8,7 +8,7 @@ import {
 	openModal,
 	openSelectionModal,
 	openSimpleInputModal,
-} from 'frontend-js-web';
+} from 'frontend-js-components-web';
 
 import openDeleteLayoutModal from './openDeleteLayoutModal';
 
@@ -42,7 +42,7 @@ const ACTIONS = {
 	}) {
 		if (message !== '') {
 			openConfirmModal({
-				message: Liferay.Language.get(message),
+				message,
 				onConfirm: (isConfirmed) => {
 					if (isConfirmed) {
 						send(markAsDefaultLayoutUtilityPageEntryURL);

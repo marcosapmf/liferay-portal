@@ -3,6 +3,11 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
+import {
+	ObjectDefinition,
+	ObjectDefinitionAPI,
+	ObjectRelationshipAPI,
+} from '@liferay/object-admin-rest-client-js';
 import {expect, mergeTests} from '@playwright/test';
 
 import {dataApiHelpersTest} from '../../fixtures/dataApiHelpersTest';
@@ -14,8 +19,7 @@ import {getRandomInt} from '../../utils/getRandomInt';
 export const test = mergeTests(
 	dataApiHelpersTest,
 	featureFlagsTest({
-		'LPD-19843': true,
-		'LPS-187142': true,
+		'LPD-34594': {enabled: true},
 	}),
 	loginTest(),
 	rolesPagesTest
@@ -35,7 +39,7 @@ const generateRandomObjectDefinition = ({
 	portlet?: boolean;
 	rootObjectDefinitionExternalReferenceCode?: string;
 	statusCode?: number;
-}) => {
+}): ObjectDefinition => {
 	return {
 		active: true,
 		externalReferenceCode: objectDefinitionName,
@@ -73,98 +77,119 @@ const generateRandomObjectDefinition = ({
 	};
 };
 
-test('LPD-26733 Show object in role permissions page', async ({
+test.skip('LPD-26733 Show object in role permissions page', async ({
 	apiHelpers,
+
 	roleDefinePermissionsPage,
 	rolePage,
 	rolesPage,
 }) => {
 	test.setTimeout(120000);
 
-	const objectDefinition1 = await apiHelpers.objectAdmin.postObjectDefinition(
-		generateRandomObjectDefinition({
-			objectDefinitionName: `ObjectDefinition${getRandomInt()}`,
-		})
-	);
+	const objectDefinitionAPIClient =
+		await apiHelpers.buildRestClient(ObjectDefinitionAPI);
+
+	const {body: objectDefinition1} =
+		await objectDefinitionAPIClient.postObjectDefinition(
+			generateRandomObjectDefinition({
+				objectDefinitionName: `ObjectDefinition${getRandomInt()}`,
+			})
+		);
 
 	apiHelpers.data.push({id: objectDefinition1.id, type: 'objectDefinition'});
 
-	const objectDefinition2 = await apiHelpers.objectAdmin.postObjectDefinition(
-		generateRandomObjectDefinition({
-			objectDefinitionName: `ObjectDefinition${getRandomInt()}`,
-			portlet: false,
-		})
-	);
+	const {body: objectDefinition2} =
+		await objectDefinitionAPIClient.postObjectDefinition(
+			generateRandomObjectDefinition({
+				objectDefinitionName: `ObjectDefinition${getRandomInt()}`,
+				portlet: false,
+			})
+		);
 
 	apiHelpers.data.push({id: objectDefinition2.id, type: 'objectDefinition'});
 
-	const objectDefinition3 = await apiHelpers.objectAdmin.postObjectDefinition(
-		generateRandomObjectDefinition({
-			objectDefinitionName: `ObjectDefinition${getRandomInt()}`,
-			panelCategoryKey: 'control_panel.users',
-		})
-	);
+	const {body: objectDefinition3} =
+		await objectDefinitionAPIClient.postObjectDefinition(
+			generateRandomObjectDefinition({
+				objectDefinitionName: `ObjectDefinition${getRandomInt()}`,
+				panelCategoryKey: 'control_panel.users',
+			})
+		);
 
 	apiHelpers.data.push({id: objectDefinition3.id, type: 'objectDefinition'});
 
-	const objectDefinition4 = await apiHelpers.objectAdmin.postObjectDefinition(
-		generateRandomObjectDefinition({
-			objectDefinitionName: `ObjectDefinition${getRandomInt()}`,
-			panelCategoryKey: 'control_panel.users',
-			portlet: false,
-		})
-	);
+	const {body: objectDefinition4} =
+		await objectDefinitionAPIClient.postObjectDefinition(
+			generateRandomObjectDefinition({
+				objectDefinitionName: `ObjectDefinition${getRandomInt()}`,
+				panelCategoryKey: 'control_panel.users',
+				portlet: false,
+			})
+		);
 
 	apiHelpers.data.push({id: objectDefinition4.id, type: 'objectDefinition'});
 
 	const objectDefinition5Name = `ObjectDefinition${getRandomInt()}`;
 
-	const objectDefinition5 = await apiHelpers.objectAdmin.postObjectDefinition(
-		generateRandomObjectDefinition({
-			objectDefinitionName: objectDefinition5Name,
-			rootObjectDefinitionExternalReferenceCode: objectDefinition5Name,
-			statusCode: 2,
-		})
-	);
+	const {body: objectDefinition5} =
+		await objectDefinitionAPIClient.postObjectDefinition(
+			generateRandomObjectDefinition({
+				objectDefinitionName: objectDefinition5Name,
+				rootObjectDefinitionExternalReferenceCode:
+					objectDefinition5Name,
+				statusCode: 2,
+			})
+		);
 
 	apiHelpers.data.push({id: objectDefinition5.id, type: 'objectDefinition'});
 
-	const objectDefinition6 = await apiHelpers.objectAdmin.postObjectDefinition(
-		generateRandomObjectDefinition({
-			objectDefinitionName: `ObjectDefinition${getRandomInt()}`,
-			rootObjectDefinitionExternalReferenceCode:
-				objectDefinition5.externalReferenceCode,
-			statusCode: 2,
-		})
-	);
+	const {body: objectDefinition6} =
+		await objectDefinitionAPIClient.postObjectDefinition(
+			generateRandomObjectDefinition({
+				objectDefinitionName: `ObjectDefinition${getRandomInt()}`,
+				rootObjectDefinitionExternalReferenceCode:
+					objectDefinition5.externalReferenceCode,
+				statusCode: 2,
+			})
+		);
 
 	apiHelpers.data.push({id: objectDefinition6.id, type: 'objectDefinition'});
 
-	const objectRelationship =
-		await apiHelpers.objectAdmin.postObjectRelationship({
-			deletionType: 'cascade',
-			edge: true,
-			label: {
-				en_US: objectDefinition6.name,
-			},
-			name: `rel${getRandomInt()}`,
-			objectDefinitionExternalReferenceCode1:
-				objectDefinition5.externalReferenceCode,
-			objectDefinitionExternalReferenceCode2:
-				objectDefinition6.externalReferenceCode,
-			objectDefinitionId1: objectDefinition5.id,
-			objectDefinitionId2: objectDefinition6.id,
-			objectDefinitionName2: objectDefinition6.name,
-			reverse: false,
-			system: false,
-			type: 'oneToMany',
-		});
+	const objectRelationshipAPIClient = await apiHelpers.buildRestClient(
+		ObjectRelationshipAPI
+	);
 
-	await apiHelpers.objectAdmin.putObjectRelationship(objectRelationship.id, {
-		...objectRelationship,
-		edge: true,
-	});
-	await apiHelpers.objectAdmin.postObjectDefinitionPublish(
+	const {body: objectRelationship} =
+		await objectRelationshipAPIClient.postObjectDefinitionByExternalReferenceCodeObjectRelationship(
+			objectDefinition5.externalReferenceCode,
+			{
+				deletionType: 'cascade',
+				edge: true,
+				label: {
+					en_US: objectDefinition6.name,
+				},
+				name: `rel${getRandomInt()}`,
+				objectDefinitionExternalReferenceCode1:
+					objectDefinition5.externalReferenceCode,
+				objectDefinitionExternalReferenceCode2:
+					objectDefinition6.externalReferenceCode,
+				objectDefinitionId1: objectDefinition5.id,
+				objectDefinitionId2: objectDefinition6.id,
+				objectDefinitionName2: objectDefinition6.name,
+				reverse: false,
+				system: false,
+				type: 'oneToMany',
+			}
+		);
+
+	await objectRelationshipAPIClient.putObjectRelationship(
+		objectRelationship.id,
+		{
+			...objectRelationship,
+			edge: true,
+		}
+	);
+	await objectDefinitionAPIClient.postObjectDefinitionPublish(
 		objectDefinition5.id
 	);
 

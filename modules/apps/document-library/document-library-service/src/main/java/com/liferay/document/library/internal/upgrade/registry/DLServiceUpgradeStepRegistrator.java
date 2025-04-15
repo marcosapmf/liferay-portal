@@ -14,6 +14,7 @@ import com.liferay.document.library.internal.upgrade.v1_1_0.SchemaUpgradeProcess
 import com.liferay.document.library.internal.upgrade.v1_1_2.DLFileEntryTypeUpgradeProcess;
 import com.liferay.document.library.internal.upgrade.v2_0_0.UpgradeCompanyId;
 import com.liferay.document.library.internal.upgrade.v3_2_1.DDMStructureLinkUpgradeProcess;
+import com.liferay.document.library.internal.upgrade.v3_2_10.DLFolderAdvancedUpdateResourcePermissionUpgradeProcess;
 import com.liferay.document.library.internal.upgrade.v3_2_2.DLFileEntryUpgradeProcess;
 import com.liferay.document.library.internal.upgrade.v3_2_4.DLSizeLimitConfigurationUpgradeProcess;
 import com.liferay.document.library.internal.upgrade.v3_2_5.DLFileEntryTypesDDMStructureUpgradeProcess;
@@ -28,6 +29,7 @@ import com.liferay.portal.kernel.service.ClassNameLocalService;
 import com.liferay.portal.kernel.service.ResourceActionLocalService;
 import com.liferay.portal.kernel.service.ResourceLocalService;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
+import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.kernel.upgrade.CTModelUpgradeProcess;
 import com.liferay.portal.kernel.upgrade.DummyUpgradeStep;
 import com.liferay.portal.kernel.upgrade.MVCCVersionUpgradeProcess;
@@ -57,9 +59,12 @@ public class DLServiceUpgradeStepRegistrator implements UpgradeStepRegistrator {
 					"repositoryId = 0"));
 
 		registry.register(
-			"1.0.1", "1.0.2",
+			"1.0.1", "1.0.1.step-1",
 			new DLConfigurationUpgradeProcess(
-				_prefsPropsToConfigurationUpgradeHelper),
+				_prefsPropsToConfigurationUpgradeHelper));
+
+		registry.register(
+			"1.0.1.step-1", "1.0.2",
 			new DLFileEntryConfigurationUpgradeProcess(
 				_prefsPropsToConfigurationUpgradeHelper));
 
@@ -87,7 +92,7 @@ public class DLServiceUpgradeStepRegistrator implements UpgradeStepRegistrator {
 					UPDATE));
 
 		registry.register(
-			"3.0.1", "3.1.0",
+			"3.0.1", "3.0.2",
 			new MVCCVersionUpgradeProcess() {
 
 				@Override
@@ -95,20 +100,29 @@ public class DLServiceUpgradeStepRegistrator implements UpgradeStepRegistrator {
 					return new String[] {"DLFileVersionPreview"};
 				}
 
-			},
+			});
+
+		registry.register(
+			"3.0.2", "3.1.0",
 			new CTModelUpgradeProcess("DLFileVersionPreview"));
 
 		registry.register("3.1.0", "3.1.1", new DummyUpgradeStep());
 
 		registry.register(
-			"3.1.1", "3.2.0",
+			"3.1.1", "3.1.2",
 			new com.liferay.document.library.internal.upgrade.v3_2_0.
-				SchemaUpgradeProcess(),
+				SchemaUpgradeProcess());
+
+		registry.register(
+			"3.1.2", "3.2.0",
 			new com.liferay.document.library.internal.upgrade.v3_2_0.
 				StorageQuotaUpgradeProcess());
 
 		registry.register(
-			"3.2.0", "3.2.1", new DDMStructureLinkUpgradeProcess(),
+			"3.2.0", "3.2.0.step-1", new DDMStructureLinkUpgradeProcess());
+
+		registry.register(
+			"3.2.0.step-1", "3.2.1",
 			new com.liferay.document.library.internal.upgrade.v3_2_1.
 				UpgradeDLFileEntryType());
 
@@ -143,18 +157,29 @@ public class DLServiceUpgradeStepRegistrator implements UpgradeStepRegistrator {
 					_dlConfigurationUpgradeHelper));
 
 		registry.register(
-			"3.2.8", "3.2.9",
+			"3.2.8", "3.2.8.step-1",
 			new com.liferay.document.library.internal.upgrade.v3_2_9.
 				DLConfigurationUpgradeProcess(
 					_dlConfigurationUpgradeHelper,
-					_prefsPropsToConfigurationUpgradeHelper),
+					_prefsPropsToConfigurationUpgradeHelper));
+
+		registry.register(
+			"3.2.8.step-1", "3.2.8.step-2",
 			new com.liferay.document.library.internal.upgrade.v3_2_9.
 				DLFileEntryConfigurationUpgradeProcess(
 					_dlConfigurationUpgradeHelper,
-					_prefsPropsToConfigurationUpgradeHelper),
+					_prefsPropsToConfigurationUpgradeHelper));
+
+		registry.register(
+			"3.2.8.step-2", "3.2.9",
 			new com.liferay.document.library.internal.upgrade.v3_2_9.
 				DLSizeLimitConfigurationUpgradeProcess(
 					_dlConfigurationUpgradeHelper));
+
+		registry.register(
+			"3.2.9", "3.2.10",
+			new DLFolderAdvancedUpdateResourcePermissionUpgradeProcess(
+				_resourceActionLocalService));
 	}
 
 	@Reference
@@ -183,6 +208,9 @@ public class DLServiceUpgradeStepRegistrator implements UpgradeStepRegistrator {
 
 	@Reference
 	private ResourcePermissionLocalService _resourcePermissionLocalService;
+
+	@Reference
+	private RoleLocalService _roleLocalService;
 
 	@Reference(target = "(default=true)")
 	private Store _store;

@@ -24,7 +24,6 @@ import org.osgi.service.component.annotations.Reference;
  * @author Marco Leo
  */
 @Component(
-	enabled = false,
 	property = "object.scope.provider.key=" + ObjectDefinitionConstants.SCOPE_DEPOT,
 	service = ObjectScopeProvider.class
 )
@@ -44,7 +43,7 @@ public class DepotObjectScopeProviderImpl implements ObjectScopeProvider {
 
 	@Override
 	public String getLabel(Locale locale) {
-		return _language.get(locale, "depot");
+		return _language.get(locale, "asset-library");
 	}
 
 	@Override

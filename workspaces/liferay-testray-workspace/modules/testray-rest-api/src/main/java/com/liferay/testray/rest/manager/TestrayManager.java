@@ -5,6 +5,7 @@
 
 package com.liferay.testray.rest.manager;
 
+import com.liferay.object.model.ObjectEntry;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.testray.rest.dto.v1_0.TestrayCache;
 
@@ -18,6 +19,15 @@ import org.w3c.dom.Document;
  * @author José Abelenda
  */
 public interface TestrayManager {
+
+	public int autofillTestrayBuilds(
+			long companyId, long testrayBuild1, long testrayBuild2, long userId)
+		throws Exception;
+
+	public int createTestraySubtasks(
+			long companyId, long testrayBuildId, long testrayTaskId,
+			long userId)
+		throws Exception;
 
 	public Map<String, Object> fetchTestrayCaseFlakyParameters(
 			long companyId, OffsetDateTime offsetDateTime, long testrayCaseId)
@@ -36,6 +46,10 @@ public interface TestrayManager {
 			long companyId, Document document, String fileName, long fileSize,
 			ServiceContext serviceContext, TestrayCache testrayCache,
 			long userId)
+		throws Exception;
+
+	public ObjectEntry updateTestrayBuildSummary(
+			long companyId, long testrayBuildId, long userId)
 		throws Exception;
 
 }

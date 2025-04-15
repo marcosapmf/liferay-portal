@@ -1,9 +1,8 @@
 {
-	"@generated": "bb56d1823bb64c7019f971931b4f6d824288c744",
+	"@generated": "d13b1c2d62f9982b43444192fc330dad7abb9175",
 	"@readonly": "** AUTO-GENERATED: DO NOT EDIT **",
 	"compilerOptions": {
 		"allowSyntheticDefaultImports": true,
-		"baseUrl": ".",
 		"checkJs": false,
 		"composite": true,
 		"declarationDir": "../../../../../../../../.tsc/types",
@@ -14,6 +13,9 @@
 		"paths": {
 			"@liferay/frontend-js-react-web": [
 				"../../../../../../../frontend-js/frontend-js-react-web/src/main/resources/META-INF/resources/js/index.ts"
+			],
+			"@liferay/marketplace-js-components-web": [
+				"../../../../../../../marketplace/marketplace-js-components-web/src/main/resources/META-INF/resources/js/index.ts"
 			],
 			"frontend-js-components-web": [
 				"../../../../../../../frontend-js/frontend-js-components-web/src/main/resources/META-INF/resources/index.ts"
@@ -40,6 +42,9 @@
 	"references": [
 		{
 			"path": "../../../../../../../frontend-js/frontend-js-react-web/src/main/resources/META-INF/resources/tsconfig.json"
+		},
+		{
+			"path": "../../../../../../../marketplace/marketplace-js-components-web/src/main/resources/META-INF/resources/tsconfig.json"
 		},
 		{
 			"path": "../../../../../../../frontend-js/frontend-js-components-web/src/main/resources/META-INF/resources/tsconfig.json"

@@ -7,13 +7,17 @@ package com.liferay.source.formatter.check;
 
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.json.JSONObjectImpl;
+import com.liferay.portal.kernel.json.JSONArray;
+import com.liferay.portal.kernel.json.JSONException;
+import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.json.JSONUtil;
+import com.liferay.source.formatter.check.comparator.PropertyValueComparator;
+import com.liferay.source.formatter.check.util.JsonSourceUtil;
 import com.liferay.source.formatter.util.FileUtil;
 
-import java.io.IOException;
-
+import java.util.Comparator;
 import java.util.Objects;
-
-import org.json.JSONObject;
 
 /**
  * @author Alan Huang
@@ -29,7 +33,7 @@ public class JSONPackageJSONCheck extends BaseFileCheck {
 	@Override
 	protected String doProcess(
 			String fileName, String absolutePath, String content)
-		throws IOException {
+		throws JSONException {
 
 		if (!absolutePath.endsWith("/package.json") ||
 			(!absolutePath.contains("/modules/apps/") &&
@@ -47,7 +51,7 @@ public class JSONPackageJSONCheck extends BaseFileCheck {
 			return content;
 		}
 
-		JSONObject jsonObject = new JSONObject(content);
+		JSONObject jsonObject = new JSONObjectImpl(content);
 
 		if (jsonObject.isNull("scripts")) {
 			return content;
@@ -88,15 +92,38 @@ public class JSONPackageJSONCheck extends BaseFileCheck {
 		_checkScript(
 			fileName, scriptsJSONObject, "format", true, "fix", "format");
 
-		return content;
+		return _checkJest(content);
 	}
 
 	private void _checkIncorrectEntry(
 		String fileName, JSONObject jsonObject, String entryName) {
 
 		if (!jsonObject.isNull(entryName)) {
-			addMessage(fileName, "Entry '" + entryName + "' is not allowed");
+			addMessage(fileName, "Entry \"" + entryName + "\" is not allowed");
 		}
+	}
+
+	private String _checkJest(String content) throws JSONException {
+		JSONObject jsonObject = new JSONObjectImpl(content);
+
+		JSONObject jestJSONObject = jsonObject.getJSONObject("jest");
+
+		if (jestJSONObject == null) {
+			return content;
+		}
+
+		JSONArray testMatchJSONArray = jestJSONObject.getJSONArray("testMatch");
+
+		if (testMatchJSONArray != null) {
+			jestJSONObject.put(
+				"testMatch",
+				JsonSourceUtil.sortJSONArray(
+					testMatchJSONArray, new TestMatchComparator()));
+		}
+
+		jsonObject.put("jest", jestJSONObject);
+
+		return JSONUtil.toString(jsonObject) + "\n";
 	}
 
 	private void _checkScript(
@@ -106,7 +133,7 @@ public class JSONPackageJSONCheck extends BaseFileCheck {
 		if (scriptsJSONObject.isNull(key)) {
 			if (requiredScript) {
 				addMessage(
-					fileName, "Missing entry '" + key + "' in 'scripts'");
+					fileName, "Missing entry \"" + key + "\" in \"scripts\"");
 			}
 
 			return;
@@ -126,32 +153,43 @@ public class JSONPackageJSONCheck extends BaseFileCheck {
 			addMessage(
 				fileName,
 				StringBundler.concat(
-					"Value '", value, "' for entry '", key,
-					"' should end with '", allowedValues[0], "'"));
+					"Value \"", value, "\" for entry \"", key,
+					"\" should end with \"", allowedValues[0], "\""));
 
 			return;
 		}
 
 		StringBundler sb = new StringBundler((allowedValues.length * 4) + 5);
 
-		sb.append("Value '");
+		sb.append("Value \"");
 		sb.append(value);
-		sb.append("' for entry '");
+		sb.append("\" for entry \"");
 		sb.append(key);
 		sb.append(
-			"' should end with (or be exactly) one of the following values: ");
+			"\" should end with (or be exactly) one of the following values: ");
 
 		for (int i = 0; i < allowedValues.length; i++) {
 			if (i > 0) {
 				sb.append(", ");
 			}
 
-			sb.append(StringPool.APOSTROPHE);
+			sb.append(StringPool.QUOTE);
 			sb.append(allowedValues[i]);
-			sb.append(StringPool.APOSTROPHE);
+			sb.append(StringPool.QUOTE);
 		}
 
 		addMessage(fileName, sb.toString());
+	}
+
+	private class TestMatchComparator implements Comparator<Object> {
+
+		@Override
+		public int compare(Object object1, Object object2) {
+			PropertyValueComparator comparator = new PropertyValueComparator();
+
+			return comparator.compare(object1.toString(), object2.toString());
+		}
+
 	}
 
 }

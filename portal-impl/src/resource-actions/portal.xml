@@ -217,6 +217,7 @@
 				<action-key>MANAGE_USERS</action-key>
 				<action-key>PERMISSIONS</action-key>
 				<action-key>UPDATE</action-key>
+				<action-key>UPDATE_SUBORGANIZATIONS</action-key>
 				<action-key>VIEW</action-key>
 				<action-key>VIEW_MEMBERS</action-key>
 			</supports>
@@ -232,6 +233,7 @@
 				<action-key>MANAGE_USERS</action-key>
 				<action-key>PERMISSIONS</action-key>
 				<action-key>UPDATE</action-key>
+				<action-key>UPDATE_SUBORGANIZATIONS</action-key>
 				<action-key>VIEW</action-key>
 				<action-key>VIEW_MEMBERS</action-key>
 			</guest-unsupported>

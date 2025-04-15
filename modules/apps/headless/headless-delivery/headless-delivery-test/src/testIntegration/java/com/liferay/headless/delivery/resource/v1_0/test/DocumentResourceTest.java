@@ -56,7 +56,6 @@ import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.kernel.util.Validator;
-import com.liferay.portal.test.rule.FeatureFlags;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
@@ -113,7 +112,6 @@ public class DocumentResourceTest extends BaseDocumentResourceTestCase {
 				irrelevantDocument.getId()));
 	}
 
-	@FeatureFlags("LPD-10701")
 	@Override
 	@Test
 	public void testGetDocument() throws Exception {
@@ -237,7 +235,7 @@ public class DocumentResourceTest extends BaseDocumentResourceTestCase {
 	public void testPutSiteDocumentByExternalReferenceCode() throws Exception {
 		super.testPutSiteDocumentByExternalReferenceCode();
 
-		DLFolder dlFolder = _dlFolderLocalService.addFolder(
+		DLFolder dlFolder1 = _dlFolderLocalService.addFolder(
 			null, TestPropsValues.getUserId(), testGroup.getGroupId(),
 			testGroup.getGroupId(), false,
 			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
@@ -246,7 +244,7 @@ public class DocumentResourceTest extends BaseDocumentResourceTestCase {
 
 		Document randomDocument = randomDocument();
 
-		randomDocument.setDocumentFolderId(dlFolder.getFolderId());
+		randomDocument.setDocumentFolderId(dlFolder1.getFolderId());
 
 		Document putDocument =
 			documentResource.putSiteDocumentByExternalReferenceCode(
@@ -255,7 +253,24 @@ public class DocumentResourceTest extends BaseDocumentResourceTestCase {
 				getMultipartFiles());
 
 		Assert.assertEquals(
-			(Long)dlFolder.getFolderId(), putDocument.getDocumentFolderId());
+			(Long)dlFolder1.getFolderId(), putDocument.getDocumentFolderId());
+
+		DLFolder dlFolder2 = _dlFolderLocalService.addFolder(
+			null, TestPropsValues.getUserId(), testGroup.getGroupId(),
+			testGroup.getGroupId(), false,
+			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
+			RandomTestUtil.randomString(), RandomTestUtil.randomString(), false,
+			ServiceContextTestUtil.getServiceContext(testGroup.getGroupId()));
+
+		putDocument.setDocumentFolderExternalReferenceCode(
+			dlFolder2.getExternalReferenceCode());
+
+		putDocument = documentResource.putSiteDocumentByExternalReferenceCode(
+			putDocument.getSiteId(), putDocument.getExternalReferenceCode(),
+			putDocument, getMultipartFiles());
+
+		Assert.assertEquals(
+			(Long)dlFolder2.getFolderId(), putDocument.getDocumentFolderId());
 	}
 
 	@Override
@@ -299,16 +314,6 @@ public class DocumentResourceTest extends BaseDocumentResourceTestCase {
 	}
 
 	@Override
-	protected Document
-			testDeleteAssetLibraryDocumentByExternalReferenceCode_addDocument()
-		throws Exception {
-
-		return documentResource.postAssetLibraryDocument(
-			testDepotEntry.getDepotEntryId(), randomDocument(),
-			getMultipartFiles());
-	}
-
-	@Override
 	protected Long
 			testDeleteAssetLibraryDocumentByExternalReferenceCode_getAssetLibraryId()
 		throws Exception {
@@ -325,15 +330,6 @@ public class DocumentResourceTest extends BaseDocumentResourceTestCase {
 		documentResource.putDocumentMyRating(document.getId(), randomRating());
 
 		return document;
-	}
-
-	@Override
-	protected Document
-			testGetAssetLibraryDocumentByExternalReferenceCode_addDocument()
-		throws Exception {
-
-		return testPostAssetLibraryDocument_addDocument(
-			randomDocument(), getMultipartFiles());
 	}
 
 	@Override
@@ -428,7 +424,7 @@ public class DocumentResourceTest extends BaseDocumentResourceTestCase {
 
 	private DLFileEntryType _addFileEntryType(Group group) throws Exception {
 		DDMStructure ddmStructure = _ddmStructureLocalService.addStructure(
-			group.getCreatorUserId(), group.getGroupId(),
+			null, group.getCreatorUserId(), group.getGroupId(),
 			DDMStructureConstants.DEFAULT_PARENT_STRUCTURE_ID,
 			PortalUtil.getClassNameId(DLFileEntryMetadata.class),
 			StringPool.BLANK,

@@ -1,0 +1,41 @@
+/**
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
+ */
+
+import {ORDER_TYPES, ORDER_WORKFLOW_STATUS_CODE} from '../enums/Order';
+import {safeJSONParse} from '../utils/util';
+
+export default class MarketplaceDeliveryOrder {
+	constructor(private order: PlacedOrder) {}
+
+	get createDate() {
+		return this.order.createDate;
+	}
+
+	get isDownloadable() {
+		return [
+			ORDER_TYPES.CLIENT_EXTENSION,
+			ORDER_TYPES.COMPOSITE_APP,
+			ORDER_TYPES.DXPAPP,
+		].includes(this.order.orderTypeExternalReferenceCode as ORDER_TYPES);
+	}
+
+	get isFreeApp() {
+		const orderOptions = safeJSONParse<
+			Array<{key: string; value: string[]}>
+		>(this.order.placedOrderItems?.[0]?.options, []);
+
+		return (
+			this.order.placedOrderItems?.[0]?.price?.price === 0 &&
+			!orderOptions.some(({value}) => value.includes('trial'))
+		);
+	}
+
+	get isOrderStatusCompleted() {
+		return (
+			this.order.orderStatusInfo?.code ===
+			ORDER_WORKFLOW_STATUS_CODE.COMPLETED
+		);
+	}
+}

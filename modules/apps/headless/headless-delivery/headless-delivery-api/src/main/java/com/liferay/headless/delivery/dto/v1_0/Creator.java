@@ -16,8 +16,6 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
-import io.swagger.v3.oas.annotations.media.Schema;
-
 import java.io.Serializable;
 
 import java.util.Iterator;
@@ -53,7 +51,9 @@ public class Creator implements Serializable {
 		return ObjectMapperUtil.unsafeReadValue(Creator.class, json);
 	}
 
-	@Schema(description = "The author's additional name (e.g., middle name).")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The author's additional name (e.g., middle name)."
+	)
 	public String getAdditionalName() {
 		if (_additionalNameSupplier != null) {
 			additionalName = _additionalNameSupplier.get();
@@ -96,7 +96,9 @@ public class Creator implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _additionalNameSupplier;
 
-	@Schema(description = "The type of the content.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The type of the content."
+	)
 	public String getContentType() {
 		if (_contentTypeSupplier != null) {
 			contentType = _contentTypeSupplier.get();
@@ -137,7 +139,52 @@ public class Creator implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _contentTypeSupplier;
 
-	@Schema(description = "The author's surname.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The external reference code of the author."
+	)
+	public String getExternalReferenceCode() {
+		if (_externalReferenceCodeSupplier != null) {
+			externalReferenceCode = _externalReferenceCodeSupplier.get();
+
+			_externalReferenceCodeSupplier = null;
+		}
+
+		return externalReferenceCode;
+	}
+
+	public void setExternalReferenceCode(String externalReferenceCode) {
+		this.externalReferenceCode = externalReferenceCode;
+
+		_externalReferenceCodeSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setExternalReferenceCode(
+		UnsafeSupplier<String, Exception> externalReferenceCodeUnsafeSupplier) {
+
+		_externalReferenceCodeSupplier = () -> {
+			try {
+				return externalReferenceCodeUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField(description = "The external reference code of the author.")
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected String externalReferenceCode;
+
+	@JsonIgnore
+	private Supplier<String> _externalReferenceCodeSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The author's surname."
+	)
 	public String getFamilyName() {
 		if (_familyNameSupplier != null) {
 			familyName = _familyNameSupplier.get();
@@ -178,7 +225,9 @@ public class Creator implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _familyNameSupplier;
 
-	@Schema(description = "The author's first name.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The author's first name."
+	)
 	public String getGivenName() {
 		if (_givenNameSupplier != null) {
 			givenName = _givenNameSupplier.get();
@@ -219,7 +268,9 @@ public class Creator implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _givenNameSupplier;
 
-	@Schema(description = "The author's ID.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The author's ID."
+	)
 	public Long getId() {
 		if (_idSupplier != null) {
 			id = _idSupplier.get();
@@ -258,7 +309,9 @@ public class Creator implements Serializable {
 	@JsonIgnore
 	private Supplier<Long> _idSupplier;
 
-	@Schema(description = "A relative URL to the author's profile image.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "A relative URL to the author's profile image."
+	)
 	public String getImage() {
 		if (_imageSupplier != null) {
 			image = _imageSupplier.get();
@@ -299,7 +352,9 @@ public class Creator implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _imageSupplier;
 
-	@Schema(description = "The author's full name.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The author's full name."
+	)
 	public String getName() {
 		if (_nameSupplier != null) {
 			name = _nameSupplier.get();
@@ -338,7 +393,7 @@ public class Creator implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _nameSupplier;
 
-	@Schema(
+	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "A relative URL to the author's user profile. Optional field, can be embedded with nestedFields."
 	)
 	public String getProfileURL() {
@@ -383,7 +438,9 @@ public class Creator implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _profileURLSupplier;
 
-	@Schema(description = "A list of userGroups information.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "A list of userGroups information."
+	)
 	@Valid
 	public UserGroupBrief[] getUserGroupBriefs() {
 		if (_userGroupBriefsSupplier != null) {
@@ -481,6 +538,22 @@ public class Creator implements Serializable {
 			sb.append("\"");
 
 			sb.append(_escape(contentType));
+
+			sb.append("\"");
+		}
+
+		String externalReferenceCode = getExternalReferenceCode();
+
+		if (externalReferenceCode != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"externalReferenceCode\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(externalReferenceCode));
 
 			sb.append("\"");
 		}
@@ -604,8 +677,8 @@ public class Creator implements Serializable {
 		return sb.toString();
 	}
 
-	@Schema(
-		accessMode = Schema.AccessMode.READ_ONLY,
+	@io.swagger.v3.oas.annotations.media.Schema(
+		accessMode = io.swagger.v3.oas.annotations.media.Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.delivery.dto.v1_0.Creator",
 		name = "x-class-name"
 	)
